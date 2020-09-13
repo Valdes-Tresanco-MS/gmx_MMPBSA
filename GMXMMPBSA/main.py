@@ -623,6 +623,8 @@ class MMPBSA_App(object):
                 self.normal_system.Mask('all', in_complex=True)
         self.sync_mpi()
         self.timer.stop_timer('setup')
+        print 'kkkkkk', os.path.exists(FILES.complex_prmtop)
+
 
     def write_final_outputs(self):
         """ Writes the final output files for MMPBSA.py """
@@ -705,6 +707,7 @@ class MMPBSA_App(object):
             args = sys.argv
         if self.master:
             self.FILES = self.clparser.parse_args(args)
+            print self.FILES
         else:
             self.FILES = object()
         # Broadcast the FILES

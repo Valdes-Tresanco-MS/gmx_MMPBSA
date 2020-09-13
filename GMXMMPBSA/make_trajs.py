@@ -45,6 +45,10 @@ def make_trajectories(INPUT, FILES, size, cpptraj, pre):
    This function creates the necessary trajectory files, and creates thread-
    specific trajectories for parallel calculations
    """
+
+   import os
+   print os.path.exists(FILES.complex_prmtop)
+
    # If we have a solvated_prmtop, set up our trajectory and strip the solvent
    stability = not FILES.receptor_prmtop and not FILES.ligand_prmtop
 
@@ -56,14 +60,17 @@ def make_trajectories(INPUT, FILES, size, cpptraj, pre):
 
    # Make sure we set up for a solvated topology; image, strip solvent, etc.
    if FILES.solvated_prmtop:
-      traj = Trajectory(FILES.solvated_prmtop, FILES.mdcrd, cpptraj)
+      traj = Trajectory(FILES.solvated_prmtop, FILES.complex_trajs, cpptraj)
       traj.Setup(INPUT['startframe'], INPUT['endframe'], INPUT['interval'])
       if not stability: 
          traj.Image()
       traj.StripSolvent(INPUT['strip_mask'])
    # If we do not have a solvated topology...
    else:
-      traj = Trajectory(FILES.complex_prmtop, FILES.mdcrd, cpptraj)
+      print FILES.complex_prmtop, FILES.complex_trajs, cpptraj
+
+
+      traj = Trajectory(FILES.complex_prmtop, FILES.complex_trajs, cpptraj)
       traj.Setup(INPUT['startframe'], INPUT['endframe'], INPUT['interval'])
    # RMS fit
    traj.rms('!(%s)' % INPUT['strip_mask'])

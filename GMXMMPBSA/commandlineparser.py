@@ -149,6 +149,13 @@ group.add_argument('-lg', dest='ligand_group', metavar='index', default=None,
 group.add_argument('-lt', dest='ligand_trajs', nargs='*', metavar='TRJ',
                    help='''Input trajectories of the unbound ligand. Allowed formats: *.xtc (recommended), *.trr, *.pdb
                   (specify as many as you'd like).''')
+group.add_argument('-lm2', dest='ligand_mol2', metavar='mol2', default=None,
+                   help='If ligand is not protein, a mol2 and frcmod (see -lf ) files are needed. Please entry the '
+                        'mol2 and frcmod files generated when make ligand parametrization')
+group.add_argument('-lf', dest='ligand_frcmod', metavar='frcmod', default=None,
+                   help='If ligand is not protein, a frcmod and mol2 (see -lm2) files are needed. Please entry the '
+                        'frcmod and mol2 files generated when make ligand parametrization')
+
 
 group = parser.add_argument_group('Mutant', ligand_group_des)
 group.add_argument('-mc', dest='mutant_complex_tpr',
@@ -165,6 +172,25 @@ group.add_argument('-ml', dest='mutant_ligand_tpr',
                   mutant receptor (see -mc above). If omitted, the mutation is
                   assumed to be in the receptor.''')
 
+
+group.add_argument('-sp', dest='solvated_prmtop', metavar='<Topology File>',
+                  help='''Topology file of a fully solvated system. If provided,
+                  the atoms specified by <strip_mask> will be stripped from the
+                  trajectory file. The complex topology file (-cp) must be
+                  consistent with this stripped trajectory''')
+group.add_argument('-srp', dest='solvated_receptor_prmtop',
+                  metavar='<Topology File>', help='''Receptor ligand topology
+                  file. For use with multiple-trajectory simulations when the
+                  receptor trajectory is solvated. This will trigger the atoms
+                  specified by 'strip_mask' to be removed from the receptor
+                  trajectory''')
+group.add_argument('-slp', dest='solvated_ligand_prmtop',
+                  metavar='<Topology File>', help='''Solvated ligand topology
+                  file. See -srp description above.''')
+group = parser.add_argument_group('Input Trajectory Files', '''These files
+                  contain the snapshots analyzed by MM/PBSA-type
+                  calculations.''')
+
 group = parser.add_argument_group('Miscellaneous Actions')
 group.add_argument('-make-mdins', dest='make_mdins', default=False,
                    action='store_true', help='''Create the input files for each
@@ -180,5 +206,5 @@ group.add_argument('-rewrite-output', dest='rewrite_output', default=False,
                   rewrite the output files.''')
 group.add_argument('--clean', dest='clean', action='store_true', default=False,
                    help='''Clean temporary files and quit.''')
-k = parser.parse_args(['sdfsd'])
-print k
+# k = parser.parse_args(['sdfsd'])
+# print k

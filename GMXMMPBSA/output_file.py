@@ -917,10 +917,10 @@ class OutputFile(object):
                        FILES.mutant_ligand_prmtop)
 
       self.write('|Initial mdcrd(s):                ')
-      for i in range(len(FILES.mdcrd)):
-         if i == 0: self.writeline(FILES.mdcrd[i])
+      for i in range(len(FILES.complex_trajs)):
+         if i == 0: self.writeline(FILES.complex_trajs[i])
          else: self.writeline('|                                 %s' %
-                          FILES.mdcrd[i])
+                          FILES.complex_trajs[i])
 
       if FILES.receptor_trajs:
          self.write('|Initial Receptor mdcrd(s):       ')
