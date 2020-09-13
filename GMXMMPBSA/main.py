@@ -561,14 +561,6 @@ class MMPBSA_App(object):
                               self.INPUT['ligand_mask'], self.pre)
             self.calc_list.append(c, '', timer_key='qh')
 
-    def makeTops(self):
-        """
-        Make amber topologies from Gromacs files
-        :return:
-        """
-
-
-
     def loadcheck_prmtops(self):
         """ Loads the topology files and checks their consistency """
         # Start setup timer and make sure we've already set up our input
@@ -582,16 +574,18 @@ class MMPBSA_App(object):
         self.stdout.write('Loading and checking parameter files for '
                           'compatibility...\n')
 
-        self.maketop = CheckMakeTop(FILES)
+        # Make amber topologies
+        maketop = CheckMakeTop(FILES, INPUT['alarun'])
+        (FILES.complex_prmtop, FILES.receptor_prmtop, FILES.ligand_prmtop, FILES.mutant_complex_prmtop,
+         FILES.mutant_receptor_prmtop, FILES.mutant_ligand_prmtop) = maketop.makeToptleap()
 
         self.normal_system = MMPBSA_System(FILES.complex_prmtop, FILES.receptor_prmtop, FILES.ligand_prmtop)
         self.using_chamber = self.normal_system.complex_prmtop.chamber
         self.mutant_system = None
         if INPUT['alarun']:
-            if (FILES.mutant_receptor_prmtop is None and
-                    FILES.mutant_ligand_prmtop is None and not self.stability):
-                raise MMPBSA_Error('Alanine scanning requires either a mutated '
-                                   'receptor or mutated ligand topology file!')
+            if (FILES.mutant_receptor_prmtop is None and FILES.mutant_ligand_prmtop is None and not self.stability):
+                raise MMPBSA_Error('Alanine scanning requires either a mutated receptor or mutated ligand topology '
+                                   'file!')
             if FILES.mutant_receptor_prmtop is None:
                 FILES.mutant_receptor_prmtop = FILES.receptor_prmtop
             elif FILES.mutant_ligand_prmtop is None:
