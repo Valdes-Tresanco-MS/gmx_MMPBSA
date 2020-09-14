@@ -430,37 +430,40 @@ class CheckMakeTop:
             tif.write('source leaprc.RNA.OL3\n')
             tif.write('source leaprc.{}\n'.format(self.FILES.ligand_ff))
             tif.write('set default PBRadii mbondi2\n')
-            tif.write('com = loadpdb {}\n'.format(self.complex_pdb_fixed))
-            tif.write('saveamberparm com {t} {p}COM.inpcrd\n'.format(t=self.complex_pmrtop, p=self.FILES.prefix))
-            if self.mutant:
-                tif.write('mut_com = loadpdb {}\n'.format(self.mutant_complex_pdb_fixed))
-                tif.write('saveamberparm mut_com {t} {p}MUT_COM.inpcrd\n'.format(t=self.mutant_complex_pmrtop,
-                                                                           p=self.FILES.prefix))
-            else:
-                self.mutant_complex_pmrtop = None # FIXME: needed?
+
             if not self.FILES.stability:
-                tif.write('rec = loadpdb {}\n'.format(self.receptor_pdb_fixed))
-                tif.write('saveamberparm rec {t} {p}REC.inpcrd\n'.format(t=self.receptor_pmrtop, p=self.FILES.prefix))
+                tif.write('REC = loadpdb {}\n'.format(self.receptor_pdb_fixed))
+                tif.write('saveamberparm REC {t} {p}REC.inpcrd\n'.format(t=self.receptor_pmrtop, p=self.FILES.prefix))
                 if self.mutant and self.mutant_part == 'REC':
                     tif.write('mut_rec = loadpdb {}\n'.format(self.mutant_receptor_pdb_fixed))
                     tif.write('saveamberparm mut_rec {t} {p}MUT_REC.inpcrd\n'.format(t=self.mutant_receptor_pmrtop,
                                                                             p=self.FILES.prefix))
                     self.mutant_ligand_pmrtop = None
                 if self.ligand_isProt:
-                    tif.write('lig = loadpdb {}\n'.format(self.ligand_pdb_fixed))
+                    tif.write('LIG = loadpdb {}\n'.format(self.ligand_pdb_fixed))
                     if self.mutant and self.mutant_part == 'LIG':
                         tif.write('mut_lig = loadpdb {}\n'.format(self.mutant_ligand_pdb_fixed))
                         self.mutant_receptor_pmrtop = self.receptor_pmrtop
                         tif.write('saveamberparm mut_lig {t} {p}MUT_LIG.inpcrd\n'.format(t=self.mutant_ligand_pmrtop,
                                                                                 p=self.FILES.prefix))
                 else:
-                    tif.write('lig = loadmol2 {}\n'.format(self.FILES.ligand_mol2))
-                    tif.write('check lig\n')
+                    tif.write('LIG = loadmol2 {}\n'.format(self.FILES.ligand_mol2))
+                    tif.write('check LIG\n')
                     tif.write('loadamberparams {}\n'.format(self.FILES.ligand_frcmod))
                     if self.mutant:
                         self.mutant_receptor_pmrtop = None
-                tif.write('saveamberparm lig {t} {p}LIG.inpcrd\n'.format(t=self.ligand_pmrtop, p=self.FILES.prefix))
+                tif.write('saveamberparm LIG {t} {p}LIG.inpcrd\n'.format(t=self.ligand_pmrtop, p=self.FILES.prefix))
 
+
+            tif.write('complex = loadpdb {}\n'.format(self.complex_pdb_fixed))
+
+            tif.write('saveamberparm complex {t} {p}COM.inpcrd\n'.format(t=self.complex_pmrtop, p=self.FILES.prefix))
+            if self.mutant:
+                tif.write('mut_com = loadpdb {}\n'.format(self.mutant_complex_pdb_fixed))
+                tif.write('saveamberparm mut_com {t} {p}MUT_COM.inpcrd\n'.format(t=self.mutant_complex_pmrtop,
+                                                                                 p=self.FILES.prefix))
+            else:
+                self.mutant_complex_pmrtop = None  # FIXME: needed?
             tif.write('quit')
         print 'tleap -f {}'.format(self.FILES.prefix + 'leap.in')
         print os.path.exists(self.FILES.prefix + 'leap.in')
