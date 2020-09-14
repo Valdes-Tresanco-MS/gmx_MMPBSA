@@ -300,7 +300,7 @@ class CheckMakeTop:
         self.properCYS(self.complex_str)
         # For some reason removing the hydrogens returns the hydrogen-bound atoms to their original names. This is
         # problematic with ILE switching from CD to CD1. parmed bug?
-        self.complex_str.strip('@/H') #
+        self.complex_str.strip('@/H') # This amber mask delete all H of std aa
         self.properATOMS(self.complex_str)
         self.complex_str.save(self.complex_pdb_fixed, 'pdb', True)
 
@@ -318,6 +318,7 @@ class CheckMakeTop:
             # fix receptor structure
             self.properHIS(self.receptor_str)
             self.properCYS(self.receptor_str)
+            # FIXME: Delete H of std aa??
             self.receptor_str.strip('@/H')
             self.properATOMS(self.receptor_str)
 
@@ -337,6 +338,7 @@ class CheckMakeTop:
                 # fix ligand structure if is protein
                 self.properHIS(self.ligand_str)
                 self.properCYS(self.ligand_str)
+                # FIXME: Delete H of std aa??
                 self.ligand_str.strip('@/H')
                 self.properATOMS(self.ligand_str)
                 self.ligand_str.save(self.ligand_pdb_fixed, 'pdb', True)
@@ -496,7 +498,7 @@ class CheckMakeTop:
 # ff = getForceField('../MMGBSA_test/topol_xtc_gro_tpr/test/COM.top')
 #     print ff
 # g = CheckTop('../MMGBSA_test/topol_xtc_gro_tpr/1X1U_md_free.tpr', None, None, 'amber14sb')
-# # g.getPDB('/media/mario/Dynamics/4uwh/complex.pdb')
+# g.getPDB('/media/mario/Dynamics/4uwh/complex.pdb')
 # g.getPDB('test_ssbond.pdb')
 # g.getPDB('5ivo.pdb')
 # g.properHIS()
@@ -504,12 +506,15 @@ class CheckMakeTop:
 
 # s = parmed.read_PDB('/media/mario/Dynamics/4uwh/COM/com.pdb')
 # s = parmed.read_PDB('/media/mario/Dynamics/4uwh/COM/com.pdb')
-# s = parmed.read_PDB('/media/mario/Dynamics/4uwh/complex.pdb')
+# s = parmed.read_PDB('/home/mario/Drive/scripts/MMGBSA/MMGBSA_test/topol_xtc_gro_tpr/test2/_GMXMMPBSA_COM.pdb')
 # s = parmed.read_PDB('../MMGBSA_test/complex.pdb')
 # s = parmed.read_PDB('../MMGBSA_test/topol_xtc_gro_tpr/test/test_conect.pdb')
-# s = parmed.read_PDB('/home/mario/Drive/scripts/MMGBSA/MMGBSA_test/topol_xtc_gro_tpr/test_lig_charged/test.pdb')
+# s = parmed.read_PDB('/home/mario/Drive/scripts/MMGBSA/MMGBSA_test/topol_xtc_gro_tpr/test_tleap_complex/test/complex.pdb')
 #
-#
+
+# s.strip(':{} & @/H'.format(','.join(std_aa)))
+# s.save('/home/mario/Drive/scripts/MMGBSA/MMGBSA_test/topol_xtc_gro_tpr/test_tleap_complex/test/complex1.pdb', 'pdb',
+#        True)
 # for res in s.residues:
 #     if res.name == 'ILE':
 #         for atom in res.atoms:
