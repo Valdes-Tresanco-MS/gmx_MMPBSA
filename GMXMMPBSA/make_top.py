@@ -42,6 +42,9 @@ class CheckMakeTop:
         # create local variables based on mutant to avoid duplicate
         self.mutant = mutant
 
+        self.ligand_tpr = None
+        self.ligand_mol2 = None
+
         # create the * prmtop variables for compatibility with the original code
         self.complex_pmrtop = 'COM.prmtop'
         self.receptor_pmrtop = 'REC.prmtop'
@@ -178,10 +181,18 @@ class CheckMakeTop:
             # if cl2.wait():  # if it quits with return code != 0
             #     raise MMPBSA_Error('%s failed when querying %s' % (gmx + 'make_ndx', self.FILES.mutant_complex_tpr))
         # =============================================================================================
+        if os.path.splitext(self.FILES.ligand_tprOmol2)[1] == '.tpr':
+            self.ligand_isProt = True
+            self.ligand_tpr = self.FILES.ligand_tprOmol2
+        else:
+            self.ligand_isProt = False
+            self.ligand_mol2 = self.FILES.ligand_tprOmol2
+
+
 
         # check if stability
         if self.FILES.stability:
-            if (self.FILES.receptor_tpr or self.FILES.ligand_tpr):
+            if (self.FILES.receptor_tpr or self.ligand_tpr):
                 warnings.warn(
                     'When Stability calculation mode is selected receptor and ligand are not needed. However, '
                     'the receptor and/or the ligand are defined, so we will ignore them.', StabilityWarning)
@@ -209,14 +220,14 @@ class CheckMakeTop:
             print 'Using receptor structure from complex to make amber topology'
 
         # ligand
-        # check consistence
-        if self.FILES.ligand_tpr and (self.FILES.ligand_mol2 or self.FILES.ligand_frcmod):
-            raise MMPBSA_Error('Inconsistencies found. Both the tpr and the (mol2 or frcmod) of the ligand were '
-                               'defined. Note that tpr is used for protein-like molecules, while mol2 and frcmod are '
-                               'result of the parametrization of a small molecule in the antechamber. Define one of '
-                               'them according to your system.')
+        # # check consistence
+        # if self.FILES.ligand_tpr and (self.FILES.ligand_mol2 or self.FILES.ligand_frcmod):
+        #     raise MMPBSA_Error('Inconsistencies found. Both the tpr and the (mol2 or frcmod) of the ligand were '
+        #                        'defined. Note that tpr is used for protein-like molecules, while mol2 and frcmod are '
+        #                        'result of the parametrization of a small molecule in the antechamber. Define one of '
+        #                        'them according to your system.')
 
-        if self.FILES.ligand_tpr:  # ligand is protein
+        if self.ligand_tpr:  # ligand is protein
             l1 = subprocess.Popen(['echo', '{}'.format(self.FILES.ligand_group)], stdout=subprocess.PIPE)
             # we get only first trajectory for extract a pdb file for make amber topology
             l2 = subprocess.Popen([gmx, "trjconv", '-f', self.FILES.ligand_trajs[0], '-s',
@@ -224,8 +235,14 @@ class CheckMakeTop:
                                   stdin=l1.stdout, stdout=subprocess.PIPE)
             if l2.wait():  # if it quits with return code != 0
                 raise MMPBSA_Error('%s failed when querying %s' % (gmx + 'make_ndx', self.FILES.ligand_tpr))
-        elif self.FILES.ligand_mol2 and self.FILES.ligand_frcmod:
-            self.ligand_isProt = False
+        elif self.ligand_mol2:
+            lig_name = os.path.splitext(os.path.split(self.ligand_mol2)[1])[0]
+            self.ligand_frcmod = self.FILES.prefix + lig_name + '.frcmod'
+            # run parmchk2
+            l3 = subprocess.Popen(['parmchk2', '-i', self.ligand_mol2, '-f', 'mol2', '-o', self.ligand_frcmod],
+                                  stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            if l3.wait():
+                raise MMPBSA_Error('%s failed when querying %s' % ('parmchk2', self.ligand_mol2))
         else:
             print 'Using ligand structure from complex to make amber topology'
 
@@ -447,9 +464,9 @@ class CheckMakeTop:
                         tif.write('saveamberparm mut_lig {t} {p}MUT_LIG.inpcrd\n'.format(t=self.mutant_ligand_pmrtop,
                                                                                 p=self.FILES.prefix))
                 else:
-                    tif.write('LIG = loadmol2 {}\n'.format(self.FILES.ligand_mol2))
+                    tif.write('LIG = loadmol2 {}\n'.format(self.ligand_mol2))
                     tif.write('check LIG\n')
-                    tif.write('loadamberparams {}\n'.format(self.FILES.ligand_frcmod))
+                    tif.write('loadamberparams {}\n'.format(self.ligand_frcmod))
                     if self.mutant:
                         self.mutant_receptor_pmrtop = None
                 tif.write('saveamberparm LIG {t} {p}LIG.inpcrd\n'.format(t=self.ligand_pmrtop, p=self.FILES.prefix))
