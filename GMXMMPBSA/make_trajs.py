@@ -59,19 +59,19 @@ def make_trajectories(INPUT, FILES, size, cpptraj, pre):
       trj_suffix = 'mdcrd'
 
    # Make sure we set up for a solvated topology; image, strip solvent, etc.
-   if FILES.solvated_prmtop:
-      traj = Trajectory(FILES.solvated_prmtop, FILES.complex_trajs, cpptraj)
-      traj.Setup(INPUT['startframe'], INPUT['endframe'], INPUT['interval'])
-      if not stability: 
-         traj.Image()
-      traj.StripSolvent(INPUT['strip_mask'])
-   # If we do not have a solvated topology...
-   else:
-      print FILES.complex_prmtop, FILES.complex_trajs, cpptraj
+   # if FILES.solvated_prmtop:
+   #    traj = Trajectory(FILES.solvated_prmtop, FILES.complex_trajs, cpptraj)
+   #    traj.Setup(INPUT['startframe'], INPUT['endframe'], INPUT['interval'])
+   #    if not stability:
+   #       traj.Image()
+   #    traj.StripSolvent(INPUT['strip_mask'])
+   # # If we do not have a solvated topology...
+   # else:
+   #    print FILES.complex_prmtop, FILES.complex_trajs, cpptraj
 
 
-      traj = Trajectory(FILES.complex_prmtop, FILES.complex_trajs, cpptraj)
-      traj.Setup(INPUT['startframe'], INPUT['endframe'], INPUT['interval'])
+   traj = Trajectory(FILES.complex_prmtop, FILES.complex_trajs, cpptraj)
+   traj.Setup(INPUT['startframe'], INPUT['endframe'], INPUT['interval'])
    # RMS fit
    traj.rms('!(%s)' % INPUT['strip_mask'])
 
@@ -144,15 +144,15 @@ def make_trajectories(INPUT, FILES, size, cpptraj, pre):
    # trajectory approach
    if not stability and FILES.receptor_trajs:
       # Different actions depending on solvation...
-      if FILES.solvated_receptor_prmtop:
-         rectraj = Trajectory(FILES.solvated_receptor_prmtop, 
-                              FILES.receptor_trajs, cpptraj)
-         rectraj.Setup(INPUT['startframe'],INPUT['endframe'],INPUT['interval'])
-         rectraj.StripSolvent(INPUT['strip_mask'])
-      else:
-         rectraj = Trajectory(FILES.receptor_prmtop, 
-                              FILES.receptor_trajs, cpptraj)
-         rectraj.Setup(INPUT['startframe'],INPUT['endframe'],INPUT['interval'])
+      # if FILES.solvated_receptor_prmtop:
+      #    rectraj = Trajectory(FILES.solvated_receptor_prmtop,
+      #                         FILES.receptor_trajs, cpptraj)
+      #    rectraj.Setup(INPUT['startframe'],INPUT['endframe'],INPUT['interval'])
+      #    rectraj.StripSolvent(INPUT['strip_mask'])
+      # else:
+      rectraj = Trajectory(FILES.receptor_prmtop,
+                           FILES.receptor_trajs, cpptraj)
+      rectraj.Setup(INPUT['startframe'],INPUT['endframe'],INPUT['interval'])
       rectraj.rms('!(%s)' % INPUT['strip_mask'])
       if INPUT['full_traj'] or INPUT['entropy']:
          rectraj.Outtraj(pre + 'receptor.%s' % trj_suffix, 
@@ -183,14 +183,14 @@ def make_trajectories(INPUT, FILES, size, cpptraj, pre):
 
    if not stability and FILES.ligand_trajs:
       # Different actions depending on solvation...
-      if FILES.solvated_ligand_prmtop:
-         ligtraj = Trajectory(FILES.solvated_ligand_prmtop, 
-                              FILES.ligand_trajs, cpptraj)
-         ligtraj.Setup(INPUT['startframe'],INPUT['endframe'],INPUT['interval'])
-         ligtraj.StripSolvent(INPUT['strip_mask'])
-      else:
-         ligtraj = Trajectory(FILES.ligand_prmtop, FILES.ligand_trajs, cpptraj)
-         ligtraj.Setup(INPUT['startframe'],INPUT['endframe'],INPUT['interval'])
+      # if FILES.solvated_ligand_prmtop:
+      #    ligtraj = Trajectory(FILES.solvated_ligand_prmtop,
+      #                         FILES.ligand_trajs, cpptraj)
+      #    ligtraj.Setup(INPUT['startframe'],INPUT['endframe'],INPUT['interval'])
+      #    ligtraj.StripSolvent(INPUT['strip_mask'])
+      # else:
+      ligtraj = Trajectory(FILES.ligand_prmtop, FILES.ligand_trajs, cpptraj)
+      ligtraj.Setup(INPUT['startframe'],INPUT['endframe'],INPUT['interval'])
       ligtraj.rms('!(%s)' % INPUT['strip_mask'])
       ligtraj.Outtraj(pre + 'ligand.%s'%trj_suffix,filetype=INPUT['netcdf'])
       ligtraj.Outtraj(pre + 'ligand.pdb', frames='1', filetype='pdb')

@@ -168,25 +168,6 @@ group.add_argument('-ml', dest='mutant_ligand_tpr',
                   mutant receptor (see -mc above). If omitted, the mutation is
                   assumed to be in the receptor.''')
 
-
-group.add_argument('-sp', dest='solvated_prmtop', metavar='<Topology File>',
-                  help='''Topology file of a fully solvated system. If provided,
-                  the atoms specified by <strip_mask> will be stripped from the
-                  trajectory file. The complex topology file (-cp) must be
-                  consistent with this stripped trajectory''')
-group.add_argument('-srp', dest='solvated_receptor_prmtop',
-                  metavar='<Topology File>', help='''Receptor ligand topology
-                  file. For use with multiple-trajectory simulations when the
-                  receptor trajectory is solvated. This will trigger the atoms
-                  specified by 'strip_mask' to be removed from the receptor
-                  trajectory''')
-group.add_argument('-slp', dest='solvated_ligand_prmtop',
-                  metavar='<Topology File>', help='''Solvated ligand topology
-                  file. See -srp description above.''')
-group = parser.add_argument_group('Input Trajectory Files', '''These files
-                  contain the snapshots analyzed by MM/PBSA-type
-                  calculations.''')
-
 group = parser.add_argument_group('Miscellaneous Actions')
 group.add_argument('-make-mdins', dest='make_mdins', default=False,
                    action='store_true', help='''Create the input files for each

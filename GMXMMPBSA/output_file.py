@@ -886,24 +886,24 @@ class OutputFile(object):
 
       self.writeline('|MMPBSA.py Version=%s' % GMXMMPBSA.__version__)
 
-      if FILES.solvated_prmtop:
-         self.writeline('|Solvated complex topology file:  %s' %
-                    FILES.solvated_prmtop)
+      # if FILES.solvated_prmtop:
+      #    self.writeline('|Solvated complex topology file:  %s' %
+      #               FILES.solvated_prmtop)
       self.writeline('|Complex topology file:           %s' %
                   FILES.complex_prmtop)
 
       if not stability:
-         if FILES.receptor_trajs:
-            if FILES.solvated_receptor_prmtop:
-               self.writeline('|Solvated receptor topology file: %s' %
-                          FILES.solvated_receptor_prmtop)
+         # if FILES.receptor_trajs:
+         #    if FILES.solvated_receptor_prmtop:
+         #       self.writeline('|Solvated receptor topology file: %s' %
+         #                  FILES.solvated_receptor_prmtop)
          self.writeline('|Receptor topology file:          %s' %
                     FILES.receptor_prmtop)
 
-         if FILES.ligand_trajs:
-            if FILES.solvated_ligand_prmtop:
-               self.writeline('|Solvated ligand topology file:   %s' %
-                          FILES.solvated_ligand_prmtop)
+         # if FILES.ligand_trajs:
+            # if FILES.solvated_ligand_prmtop:
+            #    self.writeline('|Solvated ligand topology file:   %s' %
+            #               FILES.solvated_ligand_prmtop)
          self.writeline('|Ligand topology file:            %s' %
                     FILES.ligand_prmtop)
 
