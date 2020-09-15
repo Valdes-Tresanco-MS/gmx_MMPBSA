@@ -132,27 +132,100 @@ class CheckMakeTop:
         if c4.wait():  # if it quits with return code != 0
             raise MMPBSA_Error('%s failed when querying %s' % (gmx + 'make_ndx', self.FILES.complex_tpr))
 
-        # wt complex receptor
-        print 'Complex: Save group {} in {} (gromacs index) file as {}'.format(rec_group, self.FILES.complex_index,
-                                                                               self.receptor_pdb)
-        cp1 = subprocess.Popen(['echo', '{}'.format(rec_group)], stdout=subprocess.PIPE)
-        # we get only first trajectory to extract a pdb file for make amber topology
-        cp2 = subprocess.Popen([gmx, "trjconv", '-f', self.FILES.complex_trajs[0], '-s', self.FILES.complex_tpr, '-o',
-                                self.receptor_pdb, '-n', self.FILES.complex_index, '-b', '0', '-e', '0'],
-                               stdin=cp1.stdout, stdout=subprocess.PIPE)
-        if cp2.wait():  # if it quits with return code != 0
-            raise MMPBSA_Error('%s failed when querying %s' % (gmx + 'make_ndx', self.FILES.complex_tpr))
+        # check lig before extract from complex
+        if os.path.splitext(self.FILES.ligand_tprOmol2)[1] == '.tpr':
+            self.ligand_isProt = True
+            self.ligand_tpr = self.FILES.ligand_tprOmol2
+        else:
+            self.ligand_isProt = False
+            self.ligand_mol2 = self.FILES.ligand_tprOmol2
+
+        # Put receptor and ligand (explicitly defined) to avoid overwrite them
+        # check if ligand is not protein. In any case, non-protein ligand always most be processed
+        if not self.ligand_isProt:
+            lig_name = os.path.splitext(os.path.split(self.ligand_mol2)[1])[0]
+            self.ligand_frcmod = self.FILES.prefix + lig_name + '.frcmod'
+            # run parmchk2
+            l3 = subprocess.Popen(['parmchk2', '-i', self.ligand_mol2, '-f', 'mol2', '-o', self.ligand_frcmod],
+                                  stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            if l3.wait():
+                raise MMPBSA_Error('%s failed when querying %s' % ('parmchk2', self.ligand_mol2))
+
+        # check if stability
+        if self.FILES.stability:
+            if (self.FILES.receptor_tpr or self.ligand_tpr):
+                warnings.warn(
+                    'When Stability calculation mode is selected receptor and ligand are not needed. However, '
+                    'the receptor and/or the ligand are defined, so we will ignore them.', StabilityWarning)
+            if self.mutation and (self.FILES.mutant_receptor_tpr or self.FILES.mutant_ligand_tpr):
+                warnings.warn(
+                    'When Stability calculation mode is selected mutant receptor and/or mutant ligand are not '
+                    'needed. However, the receptor or the ligand (mutant) are defined, so we will ignore them.',
+                    StabilityWarning)
+            return
+
+        # wt receptor
+        if self.FILES.receptor_tpr:
+            print 'Save group {} in {} (gromacs index) file as {}'.format(self.FILES.receptor_group,
+                                                                          self.FILES.receptor_index,
+                                                                          self.receptor_pdb)
+            print 'Force to use this receptor structure instead the generated from complex'
+            p1 = subprocess.Popen(['echo', '{}'.format(rec_group)], stdout=subprocess.PIPE)
+            # we get only first trajectory to extract a pdb file for make amber topology
+            cp2 = subprocess.Popen([gmx, "trjconv", '-f', self.FILES.receptor_trajs[0], '-s', self.FILES.receptor_tpr,
+                                    '-o', self.receptor_pdb, '-n', self.FILES.receptor_index, '-b', '0', '-e', '0'],
+                                   stdin=p1.stdout, stdout=subprocess.PIPE)
+            if cp2.wait():  # if it quits with return code != 0
+                raise MMPBSA_Error('%s failed when querying %s' % (gmx + 'make_ndx', self.FILES.receptor_tpr))
+        else:
+            print 'Using receptor structure from complex to make amber topology'
+            # wt complex receptor
+            print 'Complex: Save group {} in {} (gromacs index) file as {}'.format(rec_group, self.FILES.complex_index,
+                                                                                   self.receptor_pdb)
+            cp1 = subprocess.Popen(['echo', '{}'.format(rec_group)], stdout=subprocess.PIPE)
+            # we get only first trajectory to extract a pdb file for make amber topology
+            cp2 = subprocess.Popen(
+                [gmx, "trjconv", '-f', self.FILES.complex_trajs[0], '-s', self.FILES.complex_tpr, '-o',
+                 self.receptor_pdb, '-n', self.FILES.complex_index, '-b', '0', '-e', '0'],
+                stdin=cp1.stdout, stdout=subprocess.PIPE)
+            if cp2.wait():  # if it quits with return code != 0
+                raise MMPBSA_Error('%s failed when querying %s' % (gmx + 'make_ndx', self.FILES.complex_tpr))
+
+        # ligand
+        # # check consistence
+        # if self.FILES.ligand_tpr and (self.FILES.ligand_mol2 or self.FILES.ligand_frcmod):
+        #     raise MMPBSA_Error('Inconsistencies found. Both the tpr and the (mol2 or frcmod) of the ligand were '
+        #                        'defined. Note that tpr is used for protein-like molecules, while mol2 and frcmod are '
+        #                        'result of the parametrization of a small molecule in the antechamber. Define one of '
+        #                        'them according to your system.')
+
+        if self.ligand_tpr:  # ligand is protein
+            l1 = subprocess.Popen(['echo', '{}'.format(self.FILES.ligand_group)], stdout=subprocess.PIPE)
+            # we get only first trajectory for extract a pdb file for make amber topology
+            l2 = subprocess.Popen([gmx, "trjconv", '-f', self.FILES.ligand_trajs[0], '-s',
+                                   self.FILES.ligand_tpr, '-o', self.ligand_pdb, '-b', '0', '-e', '0'],
+                                  stdin=l1.stdout, stdout=subprocess.PIPE)
+            if l2.wait():  # if it quits with return code != 0
+                raise MMPBSA_Error('%s failed when querying %s' % (gmx + 'make_ndx', self.FILES.ligand_tpr))
+        elif self.ligand_mol2:
+            # done above
+            pass
+        else:
+            print 'Using ligand structure from complex to make amber topology'
+            print 'Save group {} in {} (gromacs index) file as {}'.format(lig_group, self.FILES.complex_index,
+                                                                          self.ligand_pdb)
+            cl1 = subprocess.Popen(['echo', '{}'.format(lig_group)], stdout=subprocess.PIPE)
+            # we get only  first trajectory to extract a pdb file for make amber topology
+            cl2 = subprocess.Popen([gmx, "trjconv", '-f', self.FILES.complex_trajs[0], '-s', self.FILES.complex_tpr,
+                                    '-o', self.ligand_pdb, '-n', self.FILES.complex_index, '-b', '0', '-e', '0'],
+                                   stdin=cl1.stdout, stdout=subprocess.PIPE)
+            if cl2.wait():  # if it quits with return code != 0
+                raise MMPBSA_Error('%s failed when querying %s' % (gmx + 'make_ndx', self.FILES.complex_tpr))
+        # FIXME: no needed when stability
+
 
         # wt complex ligand
-        print 'Save group {} in {} (gromacs index) file as {}'.format(lig_group, self.FILES.complex_index,
-                                                                      self.ligand_pdb)
-        cl1 = subprocess.Popen(['echo', '{}'.format(lig_group)], stdout=subprocess.PIPE)
-        # we get only  first trajectory to extract a pdb file for make amber topology
-        cl2 = subprocess.Popen([gmx, "trjconv", '-f', self.FILES.complex_trajs[0], '-s', self.FILES.complex_tpr,
-                                '-o', self.ligand_pdb, '-n', self.FILES.complex_index, '-b', '0', '-e', '0'],
-                               stdin=cl1.stdout, stdout=subprocess.PIPE)
-        if cl2.wait():  # if it quits with return code != 0
-            raise MMPBSA_Error('%s failed when querying %s' % (gmx + 'make_ndx', self.FILES.complex_tpr))
+
 
         # ============================ MUTANT =================================================================
         # if self.mutation:
@@ -207,70 +280,10 @@ class CheckMakeTop:
             # if cl2.wait():  # if it quits with return code != 0
             #     raise MMPBSA_Error('%s failed when querying %s' % (gmx + 'make_ndx', self.FILES.mutant_complex_tpr))
         # =============================================================================================
-        if os.path.splitext(self.FILES.ligand_tprOmol2)[1] == '.tpr':
-            self.ligand_isProt = True
-            self.ligand_tpr = self.FILES.ligand_tprOmol2
-        else:
-            self.ligand_isProt = False
-            self.ligand_mol2 = self.FILES.ligand_tprOmol2
 
 
 
-        # check if stability
-        if self.FILES.stability:
-            if (self.FILES.receptor_tpr or self.ligand_tpr):
-                warnings.warn(
-                    'When Stability calculation mode is selected receptor and ligand are not needed. However, '
-                    'the receptor and/or the ligand are defined, so we will ignore them.', StabilityWarning)
-            if self.mutation and (self.FILES.mutant_receptor_tpr or self.FILES.mutant_ligand_tpr):
-                warnings.warn(
-                    'When Stability calculation mode is selected mutant receptor and/or mutant ligand are not '
-                    'needed. However, the receptor or the ligand (mutant) are defined, so we will ignore them.',
-                    StabilityWarning)
-            return
 
-        # wt receptor
-        if self.FILES.receptor_tpr:
-            print 'Save group {} in {} (gromacs index) file as {}'.format(self.FILES.receptor_group,
-                                                                          self.FILES.receptor_index,
-                                                                          self.receptor_pdb)
-            print 'Force to use this receptor structure instead the generated from complex'
-            p1 = subprocess.Popen(['echo', '{}'.format(rec_group)], stdout=subprocess.PIPE)
-            # we get only first trajectory to extract a pdb file for make amber topology
-            cp2 = subprocess.Popen([gmx, "trjconv", '-f', self.FILES.receptor_trajs[0], '-s', self.FILES.receptor_tpr,
-                                    '-o', self.receptor_pdb, '-n', self.FILES.receptor_index, '-b', '0', '-e', '0'],
-                                   stdin=p1.stdout, stdout=subprocess.PIPE)
-            if cp2.wait():  # if it quits with return code != 0
-                raise MMPBSA_Error('%s failed when querying %s' % (gmx + 'make_ndx', self.FILES.receptor_tpr))
-        else:
-            print 'Using receptor structure from complex to make amber topology'
-
-        # ligand
-        # # check consistence
-        # if self.FILES.ligand_tpr and (self.FILES.ligand_mol2 or self.FILES.ligand_frcmod):
-        #     raise MMPBSA_Error('Inconsistencies found. Both the tpr and the (mol2 or frcmod) of the ligand were '
-        #                        'defined. Note that tpr is used for protein-like molecules, while mol2 and frcmod are '
-        #                        'result of the parametrization of a small molecule in the antechamber. Define one of '
-        #                        'them according to your system.')
-
-        if self.ligand_tpr:  # ligand is protein
-            l1 = subprocess.Popen(['echo', '{}'.format(self.FILES.ligand_group)], stdout=subprocess.PIPE)
-            # we get only first trajectory for extract a pdb file for make amber topology
-            l2 = subprocess.Popen([gmx, "trjconv", '-f', self.FILES.ligand_trajs[0], '-s',
-                                   self.FILES.ligand_tpr, '-o', self.ligand_pdb, '-b', '0', '-e', '0'],
-                                  stdin=l1.stdout, stdout=subprocess.PIPE)
-            if l2.wait():  # if it quits with return code != 0
-                raise MMPBSA_Error('%s failed when querying %s' % (gmx + 'make_ndx', self.FILES.ligand_tpr))
-        elif self.ligand_mol2:
-            lig_name = os.path.splitext(os.path.split(self.ligand_mol2)[1])[0]
-            self.ligand_frcmod = self.FILES.prefix + lig_name + '.frcmod'
-            # run parmchk2
-            l3 = subprocess.Popen(['parmchk2', '-i', self.ligand_mol2, '-f', 'mol2', '-o', self.ligand_frcmod],
-                                  stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            if l3.wait():
-                raise MMPBSA_Error('%s failed when querying %s' % ('parmchk2', self.ligand_mol2))
-        else:
-            print 'Using ligand structure from complex to make amber topology'
 
         # ------------------------------------------------------------------------------------------------------
         # if self.mutation:
