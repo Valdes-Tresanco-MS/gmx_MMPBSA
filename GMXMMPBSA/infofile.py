@@ -126,8 +126,7 @@ class InfoFile(object):
                setattr(self.app, var, val)
             continue
       # Determine stability here:
-      self.app.stability = (self.app.FILES.receptor_prmtop is None and
-                            self.app.FILES.ligand_prmtop is None)
+      self.app.stability = self.app.FILES.stability
       if self.app.FILES.receptor_trajs or self.app.FILES.ligand_trajs:
          self.app.traj_protocol = 'MTP'
       else:

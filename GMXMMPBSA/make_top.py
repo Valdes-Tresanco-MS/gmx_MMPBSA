@@ -35,12 +35,12 @@ gmx = '/usr/local/gromacs/bin/gmx'
 # FIXME: check if gromacs exists (findprog module)
 
 class CheckMakeTop:
-    def __init__(self, FILES, mutant=False):
+    def __init__(self, FILES, alarun=False):
         self.FILES = FILES
         self.ligand_isProt = True
         mutprefix = ''
         # create local variables based on mutant to avoid duplicate
-        self.mutant = mutant
+        self.mutation = alarun
 
         self.ligand_tpr = None
         self.ligand_mol2 = None
@@ -133,28 +133,32 @@ class CheckMakeTop:
             raise MMPBSA_Error('%s failed when querying %s' % (gmx + 'make_ndx', self.FILES.complex_tpr))
 
         # ============================ MUTANT =================================================================
-        if self.mutant:
-            # Mut complex
-            mrec_group, mlig_group = self.FILES.mutant_complex_groups
-            print '''Mutant Complex: Save group {}_{} in {} (gromacs index) file as 
-                 {}'''.format(mrec_group, mlig_group, self.FILES.mutant_complex_index, self.mutant_complex_pdb)
-            # merge both (rec and lig) groups into mutant complex group
-            c1 = subprocess.Popen(['echo', '"{r}" | "{l}"\n q\n'.format(r=mrec_group, l=mlig_group)],
-                                  stdout=subprocess.PIPE)
-            c2 = subprocess.Popen([gmx, "make_ndx", '-f', self.FILES.mutant_complex_tpr, '-n',
-                                   self.FILES.mutant_complex_index], stdin=c1.stdout, stdout=subprocess.PIPE)
-            if c2.wait():  # if it quits with return code != 0
-                raise MMPBSA_Error('%s failed when querying %s' % (gmx + 'make_ndx', self.FILES.mutant_complex_tpr))
+        # if self.mutation:
+            # mutate complex
 
-            c3 = subprocess.Popen(['echo', '"{}_{}"'.format(mrec_group, mlig_group)], stdout=subprocess.PIPE)
-            # we get only first trajectory to extract a pdb file and make amber topology for complex
-            c4 = subprocess.Popen(
-                [gmx, "trjconv", '-f', self.FILES.mutant_complex_trajs[0], '-s', self.FILES.mutant_complex_tpr,
-                 '-o', self.mutant_complex_pdb, '-n', self.FILES.mutant_complex_index, '-b', '0', '-e',
-                 '0'],
-                stdin=c3.stdout, stdout=subprocess.PIPE)
-            if c4.wait():  # if it quits with return code != 0
-                raise MMPBSA_Error('%s failed when querying %s' % (gmx + 'make_ndx', self.FILES.mutant_complex_tpr))
+            # normal_complex = parmed.read_PDB(self.complex_pdb)
+            #
+            # # Mut complex
+            # mrec_group, mlig_group = self.FILES.mutant_complex_groups
+            # print '''Mutant Complex: Save group {}_{} in {} (gromacs index) file as
+            #      {}'''.format(mrec_group, mlig_group, self.FILES.mutant_complex_index, self.mutant_complex_pdb)
+            # # merge both (rec and lig) groups into mutant complex group
+            # c1 = subprocess.Popen(['echo', '"{r}" | "{l}"\n q\n'.format(r=mrec_group, l=mlig_group)],
+            #                       stdout=subprocess.PIPE)
+            # c2 = subprocess.Popen([gmx, "make_ndx", '-f', self.FILES.mutant_complex_tpr, '-n',
+            #                        self.FILES.mutant_complex_index], stdin=c1.stdout, stdout=subprocess.PIPE)
+            # if c2.wait():  # if it quits with return code != 0
+            #     raise MMPBSA_Error('%s failed when querying %s' % (gmx + 'make_ndx', self.FILES.mutant_complex_tpr))
+            #
+            # c3 = subprocess.Popen(['echo', '"{}_{}"'.format(mrec_group, mlig_group)], stdout=subprocess.PIPE)
+            # # we get only first trajectory to extract a pdb file and make amber topology for complex
+            # c4 = subprocess.Popen(
+            #     [gmx, "trjconv", '-f', self.FILES.mutant_complex_trajs[0], '-s', self.FILES.mutant_complex_tpr,
+            #      '-o', self.mutant_complex_pdb, '-n', self.FILES.mutant_complex_index, '-b', '0', '-e',
+            #      '0'],
+            #     stdin=c3.stdout, stdout=subprocess.PIPE)
+            # if c4.wait():  # if it quits with return code != 0
+            #     raise MMPBSA_Error('%s failed when querying %s' % (gmx + 'make_ndx', self.FILES.mutant_complex_tpr))
 
             # # mutant complex receptor
             # print 'Complex: Save group {} in {} (gromacs index) file as {}'.format(mrec_group,
@@ -196,7 +200,7 @@ class CheckMakeTop:
                 warnings.warn(
                     'When Stability calculation mode is selected receptor and ligand are not needed. However, '
                     'the receptor and/or the ligand are defined, so we will ignore them.', StabilityWarning)
-            if self.mutant and (self.FILES.mutant_receptor_tpr or self.FILES.mutant_ligand_tpr):
+            if self.mutation and (self.FILES.mutant_receptor_tpr or self.FILES.mutant_ligand_tpr):
                 warnings.warn(
                     'When Stability calculation mode is selected mutant receptor and/or mutant ligand are not '
                     'needed. However, the receptor or the ligand (mutant) are defined, so we will ignore them.',
@@ -247,40 +251,40 @@ class CheckMakeTop:
             print 'Using ligand structure from complex to make amber topology'
 
         # ------------------------------------------------------------------------------------------------------
-        if self.mutant:
-            # mutant recept
-            if self.FILES.mutant_receptor_tpr:
-                print '''MUTANT RECEPTOR: Save group {} in {} (gromacs index) file as 
-                {}'''.format(self.FILES.mutant_receptor_group, self.FILES.mutant_receptor_index, self.mutant_receptor_pdb)
-
-                p1 = subprocess.Popen(['echo', '{}'.format(rec_group)], stdout=subprocess.PIPE)
-                # we get only first trajectory to extract a pdb file for make amber topology
-                cp2 = subprocess.Popen([gmx, "trjconv", '-f', self.FILES.mutant_receptor_trajs[0], '-s',
-                                        self.FILES.mutant_receptor_tpr, '-o', self.mutant_receptor_pdb, '-n',
-                                        self.FILES.mutant_receptor_index, '-b', '0', '-e', '0'], stdin=p1.stdout,
-                                       stdout=subprocess.PIPE)
-                if cp2.wait():  # if it quits with return code != 0
-                    raise MMPBSA_Error('%s failed when querying %s' % (gmx + 'make_ndx', self.FILES.mutant_receptor_tpr))
-            else:
-                print 'Using receptor structure from complex to make amber topology'
-                self.mutant_receptor_pdb = self.receptor_pdb
-            # mutant ligand
-            # check consistence
-            if self.FILES.mutant_ligand_tpr and not self.ligand_isProt:
-                raise MMPBSA_Error('Inconsistencies found. The mutant ligand tpr were defined but the ligand bound in '
-                                   'normal complex is non-protein type. The mutation is only possible for protein type.')
-
-            if self.FILES.mutant_ligand_tpr:  # ligand is protein
-                l1 = subprocess.Popen(['echo', '{}'.format(self.FILES.mutant_ligand_group)], stdout=subprocess.PIPE)
-                # we get only first trajectory for extract a pdb file for make amber topology
-                l2 = subprocess.Popen([gmx, "trjconv", '-f', self.FILES.mutant_ligand_trajs[0], '-s',
-                                       self.FILES.mutant_ligand_tpr, '-o', self.mutant_ligand_pdb, '-b', '0', '-e', '0'],
-                                      stdin=l1.stdout, stdout=subprocess.PIPE)
-                if l2.wait():  # if it quits with return code != 0
-                    raise MMPBSA_Error('%s failed when querying %s' % (gmx + 'make_ndx', self.FILES.mutant_ligand_tpr))
-            else:
-                print 'Using ligand structure from complex to make amber topology'
-                # self.mutant_ligand_pdb = self.ligand_pdb # I can't be sure what kind of type it is
+        # if self.mutation:
+        #     # mutant recept
+        #     if self.FILES.mutant_receptor_tpr:
+        #         print '''MUTANT RECEPTOR: Save group {} in {} (gromacs index) file as
+        #         {}'''.format(self.FILES.mutant_receptor_group, self.FILES.mutant_receptor_index, self.mutant_receptor_pdb)
+        #
+        #         p1 = subprocess.Popen(['echo', '{}'.format(rec_group)], stdout=subprocess.PIPE)
+        #         # we get only first trajectory to extract a pdb file for make amber topology
+        #         cp2 = subprocess.Popen([gmx, "trjconv", '-f', self.FILES.mutant_receptor_trajs[0], '-s',
+        #                                 self.FILES.mutant_receptor_tpr, '-o', self.mutant_receptor_pdb, '-n',
+        #                                 self.FILES.mutant_receptor_index, '-b', '0', '-e', '0'], stdin=p1.stdout,
+        #                                stdout=subprocess.PIPE)
+        #         if cp2.wait():  # if it quits with return code != 0
+        #             raise MMPBSA_Error('%s failed when querying %s' % (gmx + 'make_ndx', self.FILES.mutant_receptor_tpr))
+        #     else:
+        #         print 'Using receptor structure from complex to make amber topology'
+        #         self.mutant_receptor_pdb = self.receptor_pdb
+        #     # mutant ligand
+        #     # check consistence
+        #     if self.FILES.mutant_ligand_tpr and not self.ligand_isProt:
+        #         raise MMPBSA_Error('Inconsistencies found. The mutant ligand tpr were defined but the ligand bound in '
+        #                            'normal complex is non-protein type. The mutation is only possible for protein type.')
+        #
+        #     if self.FILES.mutant_ligand_tpr:  # ligand is protein
+        #         l1 = subprocess.Popen(['echo', '{}'.format(self.FILES.mutant_ligand_group)], stdout=subprocess.PIPE)
+        #         # we get only first trajectory for extract a pdb file for make amber topology
+        #         l2 = subprocess.Popen([gmx, "trjconv", '-f', self.FILES.mutant_ligand_trajs[0], '-s',
+        #                                self.FILES.mutant_ligand_tpr, '-o', self.mutant_ligand_pdb, '-b', '0', '-e', '0'],
+        #                               stdin=l1.stdout, stdout=subprocess.PIPE)
+        #         if l2.wait():  # if it quits with return code != 0
+        #             raise MMPBSA_Error('%s failed when querying %s' % (gmx + 'make_ndx', self.FILES.mutant_ligand_tpr))
+        #     else:
+        #         print 'Using ligand structure from complex to make amber topology'
+        #         # self.mutant_ligand_pdb = self.ligand_pdb # I can't be sure what kind of type it is
 
     def checkPDB(self):
         """
@@ -304,25 +308,21 @@ class CheckMakeTop:
         self.properATOMS(self.complex_str)
         self.complex_str.save(self.complex_pdb_fixed, 'pdb', True)
 
-        if self.mutant:
-            self.mutant_complex_str = parmed.read_PDB(self.mutant_complex_pdb)
-            # fix mutant complex structure and save
-            self.properHIS(self.mutant_complex_str)
-            self.properCYS(self.mutant_complex_str)
-            self.mutant_complex_str.strip('@/H')
-            self.properATOMS(self.mutant_complex_str)
-            self.mutant_complex_str.save(self.mutant_complex_pdb_fixed, 'pdb', True)
+        if self.mutation:
+            self.mutant_complex_str = parmed.read_PDB(self.complex_pdb_fixed)
+            # make mutation and save
+            self.mutatexala(self.mutant_complex_str)
+            self.mutant_complex_str.save(self.mutant_complex_pdb_fixed, 'pdb')
 
         if not self.FILES.stability:
             self.receptor_str = parmed.read_PDB(self.receptor_pdb)
             # fix receptor structure
             self.properHIS(self.receptor_str)
             self.properCYS(self.receptor_str)
-            # FIXME: Delete H of std aa??
             self.receptor_str.strip('@/H')
             self.properATOMS(self.receptor_str)
-
             self.receptor_str.save(self.receptor_pdb_fixed, 'pdb', True)
+
             # fix ligand structure
             if self.ligand_isProt and not self.FILES.ligand_tpr:  # ligand from complex
                 # check if ligand (from complex structure) is really protein-like.
@@ -338,35 +338,52 @@ class CheckMakeTop:
                 # fix ligand structure if is protein
                 self.properHIS(self.ligand_str)
                 self.properCYS(self.ligand_str)
-                # FIXME: Delete H of std aa??
                 self.ligand_str.strip('@/H')
                 self.properATOMS(self.ligand_str)
                 self.ligand_str.save(self.ligand_pdb_fixed, 'pdb', True)
 
-            if self.mutant:
-                if self.mutant_receptor_pdb == self.receptor_pdb: # ligand mutant
-                    self.mutant_receptor_pdb_fixed = self.receptor_pdb_fixed
-                    self.mutant_part = 'LIG'
-                    if self.ligand_isProt:
-                        self.mutant_ligand_str = parmed.read_PDB(self.mutant_ligand_pdb)
-                        self.properHIS(self.mutant_ligand_str)
-                        self.properCYS(self.mutant_ligand_str)
-                        self.mutant_ligand_str.strip('@/H')
-                        self.properATOMS(self.mutant_ligand_str)
-                        self.mutant_ligand_str.save(self.ligand_pdb_fixed, 'pdb', True)
+            if self.mutation:
+                if self.FILES.mutant == 'REC':
+                    self.mutant_receptor_str = parmed.read_PDB(self.receptor_pdb_fixed)
+                    # fix mutant receptor structure
+                    self.mutatexala(self.mutant_receptor_str)
+                    self.mutant_receptor_str.save(self.mutant_receptor_pdb_fixed, 'pdb', True)
 
-                else: # receptor mutant
-                    if self.ligand_isProt:
-                        self.mutant_part = 'REC'
-                        self.mutant_ligand_pdb_fixed = self.ligand_pdb_fixed
-                        self.mutant_receptor_str = parmed.read_PDB(self.mutant_receptor_pdb)
-                        # fix mutant receptor structure
-                        self.properHIS(self.mutant_receptor_str)
-                        self.properCYS(self.mutant_receptor_str)
-                        self.mutant_receptor_str.strip('@/H')
-                        self.properATOMS(self.mutant_receptor_str)
-                        self.mutant_receptor_str.save(self.mutant_receptor_pdb_fixed, 'pdb', True)
+                elif self.FILES.mutant == 'LIG':
+                    if not self.ligand_isProt:
+                        raise MMPBSA_Error('Mutation is only possible if the ligand is protein-like')
+                    self.mutant_ligand_str = parmed.read_PDB(self.ligand_pdb_fixed)
+                    self.mutatexala(self.mutant_ligand_str)
+                    self.mutant_ligand_str.save(self.mutant_ligand_pdb_fixed, 'pdb', True)
 
+
+    def mutatexala(self, structure):
+        idx = 0
+        found = False
+        if not self.FILES.mutant_residue:
+            raise MMPBSA_Error("No residue for mutation was defined")
+        chain, resnum = self.FILES.mutant_residue.split(':')
+
+        print '#@#@#@#@#', chain, resnum
+
+        if not chain or not resnum:
+            raise MMPBSA_Error("No residue was defined")
+        for res in structure.residues:
+            print res.name, res.chain, res.number
+            if res.number == int(resnum) and res.chain == chain:
+                found = True
+                print 'encontrado', res.name, res.chain, res.number
+                break
+            idx += 1
+        if found:
+            structure.residues[idx].name = 'ALA'
+            print structure.residues[idx].name
+            excluded_mask = ':{} &!@CB,C,CA,N,O'.format(idx + 1)
+            print excluded_mask
+            structure.strip(excluded_mask)
+            print [atm.name for atm in structure.residues[idx]]
+        else:
+            raise MMPBSA_Error('Residue {}:{} not found'.format(chain, resnum))
 
 
     def properATOMS(self, structure):
@@ -449,47 +466,64 @@ class CheckMakeTop:
             tif.write('source leaprc.RNA.OL3\n')
             tif.write('source leaprc.{}\n'.format(self.FILES.ligand_ff))
             tif.write('set default PBRadii mbondi2\n')
+            # check if ligand is not protein and always load
+            if not self.ligand_isProt:
+                tif.write('LIG = loadmol2 {}\n'.format(self.ligand_mol2))
+                tif.write('check LIG\n')
+                tif.write('loadamberparams {}\n'.format(self.ligand_frcmod))
 
             if not self.FILES.stability:
                 tif.write('REC = loadpdb {}\n'.format(self.receptor_pdb_fixed))
                 tif.write('saveamberparm REC {t} {p}REC.inpcrd\n'.format(t=self.receptor_pmrtop, p=self.FILES.prefix))
-                if self.mutant and self.mutant_part == 'REC':
-                    tif.write('mut_rec = loadpdb {}\n'.format(self.mutant_receptor_pdb_fixed))
-                    tif.write('saveamberparm mut_rec {t} {p}MUT_REC.inpcrd\n'.format(t=self.mutant_receptor_pmrtop,
-                                                                            p=self.FILES.prefix))
-                    self.mutant_ligand_pmrtop = None
                 if self.ligand_isProt:
                     tif.write('LIG = loadpdb {}\n'.format(self.ligand_pdb_fixed))
-                    if self.mutant and self.mutant_part == 'LIG':
-                        tif.write('mut_lig = loadpdb {}\n'.format(self.mutant_ligand_pdb_fixed))
-                        self.mutant_receptor_pmrtop = self.receptor_pmrtop
-                        tif.write('saveamberparm mut_lig {t} {p}MUT_LIG.inpcrd\n'.format(t=self.mutant_ligand_pmrtop,
-                                                                                p=self.FILES.prefix))
-                else:
-                    tif.write('LIG = loadmol2 {}\n'.format(self.ligand_mol2))
-                    tif.write('check LIG\n')
-                    tif.write('loadamberparams {}\n'.format(self.ligand_frcmod))
-                    if self.mutant:
-                        self.mutant_receptor_pmrtop = None
                 tif.write('saveamberparm LIG {t} {p}LIG.inpcrd\n'.format(t=self.ligand_pmrtop, p=self.FILES.prefix))
 
-
             tif.write('complex = loadpdb {}\n'.format(self.complex_pdb_fixed))
-
             tif.write('saveamberparm complex {t} {p}COM.inpcrd\n'.format(t=self.complex_pmrtop, p=self.FILES.prefix))
-            if self.mutant:
-                tif.write('mut_com = loadpdb {}\n'.format(self.mutant_complex_pdb_fixed))
-                tif.write('saveamberparm mut_com {t} {p}MUT_COM.inpcrd\n'.format(t=self.mutant_complex_pmrtop,
-                                                                                 p=self.FILES.prefix))
-            else:
-                self.mutant_complex_pmrtop = None  # FIXME: needed?
             tif.write('quit')
-        print 'tleap -f {}'.format(self.FILES.prefix + 'leap.in')
-        print os.path.exists(self.FILES.prefix + 'leap.in')
+
         tleap = '/home/mario/programs/amber18/bin/tleap'
         p = subprocess.check_output('{t} -f {f}'.format(t=tleap, f=self.FILES.prefix + 'leap.in'),
                                     stderr=subprocess.STDOUT, shell=True)
         print p.decode()
+
+        if self.mutation:
+            with open(self.FILES.prefix + 'mut_leap.in', 'w') as mtif:
+                mtif.write('source {}\n'.format(ff_list[self.FILES.protein_ff]))
+                mtif.write('source leaprc.DNA.bsc1\n')
+                mtif.write('source leaprc.RNA.OL3\n')
+                mtif.write('source leaprc.{}\n'.format(self.FILES.ligand_ff))
+                mtif.write('set default PBRadii mbondi2\n')
+                # check if ligand is not protein and always load
+                if not self.ligand_isProt:
+                    mtif.write('LIG = loadmol2 {}\n'.format(self.ligand_mol2))
+                    mtif.write('check LIG\n')
+                    mtif.write('loadamberparams {}\n'.format(self.ligand_frcmod))
+
+                if not self.FILES.stability:
+                    if self.FILES.mutant == 'REC':
+                        mtif.write('mut_rec = loadpdb {}\n'.format(self.mutant_receptor_pdb_fixed))
+                        mtif.write('saveamberparm mut_rec {t} {p}MUT_REC.inpcrd\n'.format(t=self.mutant_receptor_pmrtop,
+                                                                                p=self.FILES.prefix))
+                        self.mutant_ligand_pmrtop = None
+                    else:
+                        mtif.write('mut_lig = loadpdb {}\n'.format(self.mutant_ligand_pdb_fixed))
+                        self.mutant_receptor_pmrtop = self.receptor_pmrtop
+                        mtif.write('saveamberparm mut_lig {t} {p}MUT_LIG.inpcrd\n'.format(t=self.mutant_ligand_pmrtop,
+                                                                                    p=self.FILES.prefix))
+                        self.mutant_receptor_pmrtop = None
+                mtif.write('mut_com = loadpdb {}\n'.format(self.mutant_complex_pdb_fixed))
+                mtif.write('saveamberparm mut_com {t} {p}MUT_COM.inpcrd\n'.format(t=self.mutant_complex_pmrtop,
+                                                                                 p=self.FILES.prefix))
+                mtif.write('quit')
+
+            p1 = subprocess.check_output('{t} -f {f}'.format(t=tleap, f=self.FILES.prefix + 'mut_leap.in'),
+                                    stderr=subprocess.STDOUT, shell=True)
+            print p1.decode()
+
+        else:
+            self.mutant_complex_pmrtop = None
 
         return (self.complex_pmrtop, self.receptor_pmrtop, self.ligand_pmrtop, self.mutant_complex_pmrtop,
                 self.mutant_receptor_pmrtop, self.mutant_ligand_pmrtop)
@@ -516,10 +550,11 @@ class CheckMakeTop:
 # s.save('/home/mario/Drive/scripts/MMGBSA/MMGBSA_test/topol_xtc_gro_tpr/test_tleap_complex/test/complex1.pdb', 'pdb',
 #        True)
 # for res in s.residues:
-#     if res.name == 'ILE':
-#         for atom in res.atoms:
-#             if atom.name == 'CD':
-#                 print atom.name
+#     print res.chain
+    # if res.name == 'ILE':
+    #     for atom in res.atoms:
+    #         if atom.name == 'CD':
+    #             print atom.name
 #                 atom.name = 'CD1'
 #                 print atom.name
 #

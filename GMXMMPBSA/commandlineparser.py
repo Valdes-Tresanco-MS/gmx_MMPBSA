@@ -115,14 +115,14 @@ group.add_argument('-lff', dest='ligand_ff', metavar='<Forcefield>', default='ga
                    help='Used forcefield to make the ligand MD in Gromacs. Allowed: gaff, gaff2. (Default: gaff)')
 
 group = parser.add_argument_group('Complex', complex_group_des)
-group.add_argument('-cs', dest='complex_tpr', metavar='<Structure File>', default=None, required=True,
+group.add_argument('-cs', dest='complex_tpr', metavar='<Structure File>', default=None,
                    help='''Structure file of the bound complex''')
-group.add_argument('-ci', dest='complex_index', metavar='<Index File>', default=None, required=True,
+group.add_argument('-ci', dest='complex_index', metavar='<Index File>', default=None,
                    help='Index file of the bound complex.')
-group.add_argument('-cg', dest='complex_groups', metavar='index', nargs=2, default=None, required=True,
+group.add_argument('-cg', dest='complex_groups', metavar='index', nargs=2, default=None,
                    help='Groups of the receptor and ligand in complex index file. The notation is as follows: "-cg '
                         '<Receptor group> <Ligand group>"')
-group.add_argument('-ct', dest='complex_trajs', nargs='*', metavar='TRJ', required=True,
+group.add_argument('-ct', dest='complex_trajs', nargs='*', metavar='TRJ',
                    help='''Input trajectories of the complex. Allowed formats: *.xtc (recommended), *.trr, *.pdb
                   (specify as many as you'd like).''')
 
@@ -154,19 +154,14 @@ group.add_argument('-lt', dest='ligand_trajs', nargs='*', metavar='TRJ',
 
 
 group = parser.add_argument_group('Mutant', ligand_group_des)
-group.add_argument('-mc', dest='mutant_complex_tpr',
-                   metavar='<Topology File>', help='''Complex topology file of
-                  the mutant complex in which one residue has been mutated to
-                  either a glycine or alanine to perform computational alanine
-                  (or glycine) scanning.''')
-group.add_argument('-mr', dest='mutant_receptor_tpr',
-                   metavar='<Topology File>', help='''Receptor topology file of
-                  the mutant receptor (see -mc above). If omitted, the mutation
-                  is assumed to be in the ligand.''')
-group.add_argument('-ml', dest='mutant_ligand_tpr',
-                   metavar='<Topology File>', help='''Ligand topology file of the
-                  mutant receptor (see -mc above). If omitted, the mutation is
-                  assumed to be in the receptor.''')
+group.add_argument('-m', dest='mutant', metavar='<REC or LIG>', choices=['REC', 'LIG'], default=None,
+                   help='Name of the protein (Receptor or Ligand) in which a residue will be mutated to an alanine to '
+                        'perform a computational alanine scan. If stability calculation is selected can be omitted. ('
+                        'Default: REC)')
+group.add_argument('-mr', dest='mutant_residue', metavar='CHAIN:RESNUM', default=None,
+                   help='Residues that will be mutated. The notation is as follow: CHAIN:RESNUM (eg: A:10). Take in '
+                        'account that Gromacs rename chains.')
+
 
 group = parser.add_argument_group('Miscellaneous Actions')
 group.add_argument('-make-mdins', dest='make_mdins', default=False,
