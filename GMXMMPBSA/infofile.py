@@ -106,17 +106,20 @@ class InfoFile(object):
             rematch = inputre.match(line)
             if rematch:
                 var, val = rematch.groups()
+                print var, val, 1
                 val = _determine_type(val)
                 self.app.INPUT[var] = val
                 continue
             rematch = filesre.match(line)
             if rematch:
                 var, val = rematch.groups()
+                print var, val, 2
                 val = _determine_type(val)
                 setattr(self.app.FILES, var, val)
             rematch = otherre.match(line)
             if rematch:
                 var, val = rematch.groups()
+                print var, val, 3
                 val = _determine_type(val)
                 if var == 'size':
                     self.app.mpi_size = val
@@ -125,6 +128,8 @@ class InfoFile(object):
                 continue
         # Determine stability here:
         self.app.stability = self.app.FILES.stability
+        # Set app.pre as prefix
+        self.app.pre = self.app.FILES.prefix
         if self.app.FILES.receptor_trajs or self.app.FILES.ligand_trajs:
             self.app.traj_protocol = 'MTP'
         else:
@@ -171,6 +176,7 @@ def _determine_type(thing):
         pass
 
     # Check for list
+    print type(thing), thing
     if thing.startswith('[') and thing.endswith(']'):
         return eval(thing)
 
