@@ -321,14 +321,15 @@ class InputFile(object):
     # -#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
 
     def Parse(self, filename):
-        """ This subroutine parses the input file. Only data in namelists are
+        """
+        This subroutine parses the input file. Only data in namelists are
           parsed, and all namelists must be set prior to calling this routine.
 
           It will create a dictionary of Input variables for all variables in
           all namelists. They all flood the same namespace. If there are any
           conflicts between variables in namelists, an error will be raised.
           Make sure all input variables are unique!
-      """
+        """
         from os.path import exists
 
         # Make sure our file exists

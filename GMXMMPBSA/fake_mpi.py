@@ -26,45 +26,45 @@ make sure that this is loaded #ifndef MPI and related ones.
 #+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 class MPI(object):
-   """ Fake MPI class :) """
+    """ Fake MPI class :) """
 
-   class Communicator(object):
+    class Communicator(object):
 
-      #-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
+        #-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
 
-      def Get_rank(self):
-         """ The rank of a serial process is always 0 """
-         return 0
+        def Get_rank(self):
+            """ The rank of a serial process is always 0 """
+            return 0
 
-      #-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
+        #-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
 
-      def Get_size(self):
-         """ The size of a serial version is always 1 """
-         return 1
+        def Get_size(self):
+            """ The size of a serial version is always 1 """
+            return 1
 
-      #-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
+        #-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
 
-      def bcast(self, inp, root=0):
-         """ Mimics an MPI_Bcast """
-         return inp
+        def bcast(self, inp, root=0):
+            """ Mimics an MPI_Bcast """
+            return inp
 
-      #-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
+        #-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
 
-      def Barrier(self):
-         """ Mimics an MPI_Barrier """
-         pass
+        def Barrier(self):
+            """ Mimics an MPI_Barrier """
+            pass
 
-      #-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
+        #-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
 
-      def Abort(self, status=1):
-         """ Just exits """
-         from sys import exit
-         exit(status)
+        def Abort(self, status=1):
+            """ Just exits """
+            from sys import exit
+            exit(status)
 
-   @staticmethod
-   def Finalize():
-       return
+    @staticmethod
+    def Finalize():
+        return
 
-   COMM_WORLD = Communicator()
+    COMM_WORLD = Communicator()
 
 #+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+

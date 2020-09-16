@@ -623,7 +623,6 @@ class MMPBSA_App(object):
         self.timer.stop_timer('setup')
         print 'kkkkkk', os.path.exists(FILES.complex_prmtop)
 
-
     def write_final_outputs(self):
         """ Writes the final output files for MMPBSA.py """
         self.timer.add_timer('output', 'Statistics calculation & output writing:')
