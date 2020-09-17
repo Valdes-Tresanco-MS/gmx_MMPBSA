@@ -26,15 +26,14 @@ import parmed
 import warnings
 from GMXMMPBSA.exceptions import *
 import subprocess
-from openbabel import openbabel
 
 ff_list = {'amber03': 'oldff/leaprc.ff03', 'amber99': 'oldff/leaprc.ff99', 'amber99sb': 'oldff/leaprc.ff99SB',
            'amber99sb-ildn': 'oldff/leaprc.ffSBildn', 'amber94': 'oldff/leaprc.ff94', 'amber96': 'oldff/leaprc.ff96',
            'amber14sb': 'leaprc.protein.ff14SB'}
-for x in ff_list:
-    print x
+# for x in ff_list:
+#     print(
 lig_ff = ['gaff', 'gaff2']
-# print os.path.splitext('../COM.top')
+# print(s.path.splitext('../COM.top')
 
 babel_elements = {0: 'Xx', 1: 'H', 2: 'He', 3: 'Li', 4: 'Be', 5: 'B', 6: 'C', 7: 'N', 8: 'O', 9: 'F', 10: 'Ne',
                   11: 'Na', 12: 'Mg', 13: 'Al', 14: 'Si', 15: 'P', 16: 'S', 17: 'Cl', 18: 'Ar', 19: 'K', 20: 'Ca',
@@ -103,9 +102,9 @@ class CheckMakeTop:
         # make index for extract pdb structure
         rec_group, lig_group = self.FILES.complex_groups
 
-        print 'WildType Complex: Save group {}_{} in {} (gromacs index) file as {}'.format(rec_group, lig_group,
+        print('WildType Complex: Save group {}_{} in {} (gromacs index) file as {}'.format(rec_group, lig_group,
                                                                                            self.FILES.complex_index,
-                                                                                           self.complex_pdb)
+                                                                                           self.complex_pdb))
         # merge both (rec and lig) groups into complex group, modify index and create a copy
         # 1-rename groups, 2-merge
         c1 = subprocess.Popen(['echo', 'name {r} GMXMMPBSA_REC\n name {l} GMXMMPBSA_LIG\n  {r} | {l}\n'
@@ -120,7 +119,7 @@ class CheckMakeTop:
         self.FILES.complex_index = com_ndx
 
         c3 = subprocess.Popen(['echo', 'GMXMMPBSA_REC_GMXMMPBSA_LIG'], stdout=subprocess.PIPE)
-        print 'echo', '"GMXMMPBSA_REC_GMXMMPBSA_LIG"'
+        print('echo', '"GMXMMPBSA_REC_GMXMMPBSA_LIG"')
         # we get only first trajectory to extract a pdb file and make amber topology for complex
         c4 = subprocess.Popen([gmx, "trjconv", '-f', self.FILES.complex_trajs[0], '-s', self.FILES.complex_tpr,
                                '-o', self.complex_pdb, '-n', self.FILES.complex_index, '-b', '0', '-e', '0'],
@@ -162,10 +161,10 @@ class CheckMakeTop:
 
         # wt receptor
         if self.FILES.receptor_tpr:
-            print 'Save group {} in {} (gromacs index) file as {}'.format(self.FILES.receptor_group,
+            print('Save group {} in {} (gromacs index) file as {}'.format(self.FILES.receptor_group,
                                                                           self.FILES.receptor_index,
-                                                                          self.receptor_pdb)
-            print 'Force to use this receptor structure instead the generated from complex'
+                                                                          self.receptor_pdb))
+            print('Force to use this receptor structure instead the generated from complex')
             p1 = subprocess.Popen(['echo', '{}'.format(rec_group)], stdout=subprocess.PIPE)
             # we get only first trajectory to extract a pdb file for make amber topology
             cp2 = subprocess.Popen([gmx, "trjconv", '-f', self.FILES.receptor_trajs[0], '-s', self.FILES.receptor_tpr,
@@ -174,10 +173,10 @@ class CheckMakeTop:
             if cp2.wait():  # if it quits with return code != 0
                 raise MMPBSA_Error('%s failed when querying %s' % (gmx + 'make_ndx', self.FILES.receptor_tpr))
         else:
-            print 'Using receptor structure from complex to make amber topology'
+            print('Using receptor structure from complex to make amber topology')
             # wt complex receptor
-            print 'Complex: Save group {} in {} (gromacs index) file as {}'.format(rec_group, self.FILES.complex_index,
-                                                                                   self.receptor_pdb)
+            print('Complex: Save group {} in {} (gromacs index) file as {}'.format(rec_group, self.FILES.complex_index,
+                                                                                   self.receptor_pdb))
             cp1 = subprocess.Popen(['echo', '{}'.format(rec_group)], stdout=subprocess.PIPE)
             # we get only first trajectory to extract a pdb file for make amber topology
             cp2 = subprocess.Popen(
@@ -203,9 +202,9 @@ class CheckMakeTop:
             pass
         else:
             # wt complex ligand
-            print 'Using ligand structure from complex to make amber topology'
-            print 'Save group {} in {} (gromacs index) file as {}'.format(lig_group, self.FILES.complex_index,
-                                                                          self.ligand_pdb)
+            print('Using ligand structure from complex to make amber topology')
+            print('Save group {} in {} (gromacs index) file as {}'.format(lig_group, self.FILES.complex_index,
+                                                                          self.ligand_pdb))
             cl1 = subprocess.Popen(['echo', '{}'.format(lig_group)], stdout=subprocess.PIPE)
             # we get only  first trajectory to extract a pdb file for make amber topology
             cl2 = subprocess.Popen([gmx, "trjconv", '-f', self.FILES.complex_trajs[0], '-s', self.FILES.complex_tpr,
@@ -291,24 +290,24 @@ class CheckMakeTop:
             raise MMPBSA_Error("No residue for mutation was defined")
         chain, resnum = self.FILES.mutant_residue.split(':')
 
-        print '#@#@#@#@#', chain, resnum
+        print('#@#@#@#@#', chain, resnum)
 
         if not chain or not resnum:
             raise MMPBSA_Error("No residue was defined")
         for res in structure.residues:
-            print res.name, res.chain, res.number
+            print(res.name, res.chain, res.number)
             if res.number == int(resnum) and res.chain == chain:
                 found = True
-                print 'encontrado', res.name, res.chain, res.number
+                print('encontrado', res.name, res.chain, res.number)
                 break
             idx += 1
         if found:
             structure.residues[idx].name = 'ALA'
-            print structure.residues[idx].name
+            print(structure.residues[idx].name)
             excluded_mask = ':{} &!@CB,C,CA,N,O'.format(idx + 1)
-            print excluded_mask
+            print(excluded_mask)
             structure.strip(excluded_mask)
-            print [atm.name for atm in structure.residues[idx]]
+            print([atm.name for atm in structure.residues[idx]])
         else:
             raise MMPBSA_Error('Residue {}:{} not found'.format(chain, resnum))
 
@@ -356,7 +355,7 @@ class CheckMakeTop:
         """
         cys_name = ['CYS', 'CYX', 'CYM']
         allcys = [residue for residue in structure.residues if residue.name in cys_name]
-        # print allcys
+        # print(llcys
         xcys = []
         for residue in allcys:
             for atom in residue.atoms:
@@ -412,7 +411,7 @@ class CheckMakeTop:
         tleap = '/home/mario/programs/amber18/bin/tleap'
         p = subprocess.check_output('{t} -f {f}'.format(t=tleap, f=self.FILES.prefix + 'leap.in'),
                                     stderr=subprocess.STDOUT, shell=True)
-        print p.decode()
+        print(p.decode())
 
         if self.mutation:
             with open(self.FILES.prefix + 'mut_leap.in', 'w') as mtif:
@@ -446,7 +445,7 @@ class CheckMakeTop:
 
             p1 = subprocess.check_output('{t} -f {f}'.format(t=tleap, f=self.FILES.prefix + 'mut_leap.in'),
                                          stderr=subprocess.STDOUT, shell=True)
-            print p1.decode()
+            print(p1.decode())
 
         else:
             self.mutant_complex_pmrtop = None

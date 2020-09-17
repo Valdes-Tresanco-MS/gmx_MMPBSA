@@ -219,7 +219,6 @@ class RISMCalculation(Calculation):
         self.polardecomp  = INPUT['polardecomp']
         self.ng           = INPUT['ng'].replace(' ','') # get rid of spaces
         self.solvbox      = INPUT['solvbox']
-        self.closureorder = INPUT['closureorder']
         self.buffer       = INPUT['buffer']
         self.grdspc       = str(INPUT['grdspc']).replace(' ','')
         self.solvcut      = INPUT['solvcut']
@@ -254,7 +253,6 @@ class RISMCalculation(Calculation):
         Calculation.setup(self)
         self.command_args.extend( ('--xvv', self.xvvfile,
                                    '--closure', self.closure,
-                                   '--closureorder', self.closureorder,
                                    '--buffer', self.buffer,
                                    '--grdspc', self.grdspc,
                                    '--solvcut', self.solvcut,
@@ -351,7 +349,7 @@ class QuasiHarmCalc(Calculation):
         # Make sure masks are a list, and that there are enough masks
 
         # First thing we need is the average PDB as a reference
-        ptraj_str = 'trajin %s\naverage %savgcomplex.pdb pdb\ngo' % (self.inptraj,
+        ptraj_str = 'trajin %s\naverage %savgcomplex.pdb pdb chainid " "\ngo' % (self.inptraj,
                                                                      prefix)
 
         outfile = open(self.fnpre + 'create_average.out','w')

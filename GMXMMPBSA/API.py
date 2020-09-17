@@ -23,7 +23,6 @@ the full power of Python's extensions, if they want (e.g., numpy, scipy, etc.)
 #  for more details.                                                           #
 # ##############################################################################
 
-from __future__ import division
 from copy import deepcopy
 from GMXMMPBSA import infofile, main, amber_outputs
 from GMXMMPBSA.exceptions import SetupError, NoFileExists

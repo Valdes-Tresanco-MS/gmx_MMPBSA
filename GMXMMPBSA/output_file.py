@@ -445,7 +445,7 @@ def write_decomp_stability_output(FILES, INPUT, size, prmtop_system,
     """ Write output file for stability decomposition calculations """
     from csv import writer
     from datetime import datetime
-    from amber_outputs import DecompOut, PairDecompOut, idecompString
+    from GMXMMPBSA.amber_outputs import DecompOut, PairDecompOut, idecompString
 
     if INPUT['idecomp'] in [1, 2]:
         DecompClass = DecompOut
@@ -604,7 +604,7 @@ def write_decomp_binding_output(FILES, INPUT, size, prmtop_system,
     """ Write output file for binding free energy decomposition calculations """
     from csv import writer
     from datetime import datetime
-    from amber_outputs import (DecompOut, PairDecompOut, DecompBinding,
+    from GMXMMPBSA.amber_outputs import (DecompOut, PairDecompOut, DecompBinding,
                                PairDecompBinding, MultiTrajDecompBinding,
                                MultiTrajPairDecompBinding)
 

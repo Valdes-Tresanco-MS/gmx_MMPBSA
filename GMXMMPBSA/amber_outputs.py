@@ -581,7 +581,7 @@ class NMODEout(object):
 
         while rawline:
             if rawline[0:35] == '   |---- Entropy not Calculated---|':
-                print >> sys.stderr, 'Not all frames minimized within tolerance'
+                sys.stderr.write('Not all frames minimized within tolerance')
 
             if rawline[0:6] == 'Total:':
                 self.data['Total'].append(float(rawline.split()[3]) *
@@ -2094,8 +2094,8 @@ class DecompBinding(object):
     def _calc_avg_stdev(self):
         """ Calculates the averages and standard deviations of all of the data """
         # Do population averages and such
-        for key1 in self.data.keys():
-            for key2 in self.data[key1].keys():
+        for key1 in list(self.data.keys()):
+            for key2 in list(self.data[key1].keys()):
                 for i in range(self.num_terms):
                     myavg = self.data[key1][key2][0][i] / self.numframes
                     myavg2 = self.data[key1][key2][1][i] / self.numframes
@@ -2540,8 +2540,8 @@ class MultiTrajDecompBinding(DecompBinding):
     def _calc_avg_stdev(self):
         """ Calculates standard deviation and averages """
         # Use error propagation and deltas of averages
-        for key1 in self.data.keys():
-            for key2 in self.data[key1].keys():
+        for key1 in list(self.data.keys()):
+            for key2 in list(self.data[key1].keys()):
                 num_rec_terms, num_lig_terms = 0, 0
                 for i in range(self.com.num_terms):
                     # Get the value of the other term -- either in ligand
@@ -2576,8 +2576,8 @@ class MultiTrajPairDecompBinding(MultiTrajDecompBinding, PairDecompBinding):
     def _calc_avg_stdev(self):
         """ Calculates standard deviation and averages """
         # Use error propagation and deltas of averages
-        for key1 in self.data.keys():
-            for key2 in self.data[key1].keys():
+        for key1 in list(self.data.keys()):
+            for key2 in list(self.data[key1].keys()):
                 num_rec_terms, num_lig_terms = 0, 0
                 for i in range(self.num_terms):
                     # Get the value of the other term -- either in ligand

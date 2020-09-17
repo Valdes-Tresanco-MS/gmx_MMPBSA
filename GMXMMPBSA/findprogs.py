@@ -52,7 +52,7 @@ def find_progs(INPUT):
 
     search_path = INPUT['search_path']
 
-    for prog in used_progs.keys():
+    for prog in list(used_progs.keys()):
         my_progs[prog] = ExternProg(prog, used_progs[prog], search_path)
         if used_progs[prog]:
             if not my_progs[prog].full_path:

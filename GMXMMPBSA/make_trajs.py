@@ -47,7 +47,6 @@ def make_trajectories(INPUT, FILES, size, cpptraj, pre):
     """
 
     import os
-    print os.path.exists(FILES.complex_prmtop)
 
     # If we have a solvated_prmtop, set up our trajectory and strip the solvent
     stability = not FILES.receptor_prmtop and not FILES.ligand_prmtop
@@ -302,7 +301,7 @@ def make_trajectories(INPUT, FILES, size, cpptraj, pre):
 def make_mutant_trajectories(INPUT, FILES, rank, cpptraj,
                              norm_sys, mut_sys, pre):
     """ Mutates given trajectories and outputs dummy files for mutants """
-    from alamdcrd import MutantMdcrd, GlyMutantMdcrd
+    from GMXMMPBSA.alamdcrd import MutantMdcrd, GlyMutantMdcrd
     import shutil
     if not INPUT['alarun']: return None, None
 

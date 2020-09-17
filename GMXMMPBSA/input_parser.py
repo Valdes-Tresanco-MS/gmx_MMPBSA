@@ -166,15 +166,15 @@ class Namelist(object):
     def addVariable(self, varname, datatype, default=None, description=None):
         """ Adds a variable to this namelist. It checks to make sure that it's
           going to create a conflict with an existing variable.
-      """
+        """
 
-        if varname in self.variables.keys():
+        if varname in list(self.variables.keys()):
             raise InternalError('Duplicated variable %s in Namelist' % varname)
 
         # See if we need to update the minimum number of characters that any
         # variables need based on similarities with this variable
         tomatch = self.MIN_CHARS_TO_MATCH
-        for var in self.variables.keys():
+        for var in list(self.variables.keys()):
             # Trigger never appears, so ignore it
             if var == self.trigger: continue
             hit_difference = False
@@ -439,8 +439,7 @@ class InputFile(object):
                     # see if this is the variable we want.
 
                     found = False
-                    for key in self.namelists[declared_namelists[i]]. \
-                            variables.keys():
+                    for key in list(self.namelists[declared_namelists[i]].variables.keys()):
                         if self.namelists[declared_namelists[i]].variables[key] == \
                                 var[0]:
                             self.namelists[declared_namelists[i]].variables[key]. \
@@ -457,7 +456,7 @@ class InputFile(object):
         INPUT = {}
 
         for nml in self.ordered_namelist_keys:
-            for var in self.namelists[nml].variables.keys():
+            for var in list(self.namelists[nml].variables.keys()):
 
                 # Here, the triggers are just bool types, so protect from accessing
                 # an attribute that doesn't exist! We only allow Variable types and

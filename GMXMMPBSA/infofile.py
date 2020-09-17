@@ -59,7 +59,7 @@ class InfoFile(object):
             outfile.write("INPUT['%s'] = %s\n" % (var,
                                                   self.write_var(self.app.INPUT[var])))
         outfile.write('#\n# MODIFY NOTHING BELOW HERE, OR GET WHAT YOU DESERVE\n')
-        for var in self.app.INPUT.keys():
+        for var in list(self.app.INPUT.keys()):
             if var in InfoFile.EDITABLE_INFO_VARS: continue
             outfile.write("INPUT['%s'] = %s\n" % (var,
                                                   self.write_var(self.app.INPUT[var])))
@@ -106,20 +106,18 @@ class InfoFile(object):
             rematch = inputre.match(line)
             if rematch:
                 var, val = rematch.groups()
-                print var, val, 1
                 val = _determine_type(val)
                 self.app.INPUT[var] = val
                 continue
             rematch = filesre.match(line)
             if rematch:
                 var, val = rematch.groups()
-                print var, val, 2
                 val = _determine_type(val)
                 setattr(self.app.FILES, var, val)
+                continue
             rematch = otherre.match(line)
             if rematch:
                 var, val = rematch.groups()
-                print var, val, 3
                 val = _determine_type(val)
                 if var == 'size':
                     self.app.mpi_size = val
@@ -176,7 +174,6 @@ def _determine_type(thing):
         pass
 
     # Check for list
-    print type(thing), thing
     if thing.startswith('[') and thing.endswith(']'):
         return eval(thing)
 
