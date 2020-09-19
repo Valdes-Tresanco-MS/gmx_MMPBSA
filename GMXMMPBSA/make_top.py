@@ -128,12 +128,13 @@ class CheckMakeTop:
             raise MMPBSA_Error('%s failed when querying %s' % (gmx + 'make_ndx', self.FILES.complex_tpr))
 
         # check lig before extract from complex
-        if os.path.splitext(self.FILES.ligand_tprOmol2)[1] == '.tpr':
-            self.ligand_isProt = True
-            self.ligand_tpr = self.FILES.ligand_tprOmol2
-        else:
-            self.ligand_isProt = False
-            self.ligand_mol2 = self.FILES.ligand_tprOmol2
+        if self.FILES.ligand_tprOmol2:
+            if os.path.splitext(self.FILES.ligand_tprOmol2)[1] == '.tpr':
+                self.ligand_isProt = True
+                self.ligand_tpr = self.FILES.ligand_tprOmol2
+            else:
+                self.ligand_isProt = False
+                self.ligand_mol2 = self.FILES.ligand_tprOmol2
 
         # Put receptor and ligand (explicitly defined) to avoid overwrite them
         # check if ligand is not protein. In any case, non-protein ligand always most be processed
@@ -193,10 +194,10 @@ class CheckMakeTop:
             l1 = subprocess.Popen(['echo', '{}'.format(self.FILES.ligand_group)], stdout=subprocess.PIPE)
             # we get only first trajectory for extract a pdb file for make amber topology
             l2 = subprocess.Popen([gmx, "trjconv", '-f', self.FILES.ligand_trajs[0], '-s',
-                                   self.FILES.ligand_tpr, '-o', self.ligand_pdb, '-b', '0', '-e', '0'],
+                                   self.ligand_tpr, '-o', self.ligand_pdb, '-b', '0', '-e', '0'],
                                   stdin=l1.stdout, stdout=subprocess.PIPE)
             if l2.wait():  # if it quits with return code != 0
-                raise MMPBSA_Error('%s failed when querying %s' % (gmx + 'make_ndx', self.FILES.ligand_tpr))
+                raise MMPBSA_Error('%s failed when querying %s' % (gmx + 'make_ndx', self.ligand_tpr))
         elif self.ligand_mol2:
             # done above
             pass
@@ -251,7 +252,7 @@ class CheckMakeTop:
             self.receptor_str.save(self.receptor_pdb_fixed, 'pdb', True)
 
             # fix ligand structure
-            if self.ligand_isProt and not self.FILES.ligand_tpr:  # ligand from complex
+            if self.ligand_isProt and not self.ligand_tpr:  # ligand from complex
                 # check if ligand (from complex structure) is really protein-like.
                 self.ligand_str = parmed.read_PDB(self.ligand_pdb)
                 for res in self.ligand_str.residues:
