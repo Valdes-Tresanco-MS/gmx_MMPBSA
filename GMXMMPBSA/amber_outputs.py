@@ -1962,43 +1962,29 @@ class DecompBinding(object):
             self.resnums[0][0] = '%3s%4d' % (self.prmtop_system.complex_prmtop.
                                              parm_data['RESIDUE_LABEL'][com_token[0]-1], com_token[0])
             if self.prmtop_system.res_list[com_token[0]-1].receptor_number:
-                self.resnums[1][0] = 'R %3s%4d' % (
-                    self.prmtop_system.complex_prmtop.parm_data['RESIDUE_LABEL'][
-                        com_token[0]-1],
-                    self.prmtop_system.res_list[com_token[0]-1].receptor_number)
+                self.resnums[1][0] = 'R %3s%4d' % (self.prmtop_system.complex_prmtop.parm_data['RESIDUE_LABEL'][
+                                                        com_token[0]-1],
+                                                   self.prmtop_system.res_list[com_token[0]-1].receptor_number)
                 other_token = self.rec.get_next_term(searched_token, framenum)
             else:
-                self.resnums[1][0] = 'L %3s%4d' % (
-                    self.prmtop_system.complex_prmtop.parm_data['RESIDUE_LABEL'][
-                        com_token[0]-1],
-                    self.prmtop_system.res_list[com_token[0]-1].ligand_number)
+                self.resnums[1][0] = 'L %3s%4d' % (self.prmtop_system.complex_prmtop.parm_data['RESIDUE_LABEL'][
+                                                        com_token[0]-1],
+                                                   self.prmtop_system.res_list[com_token[0]-1].ligand_number)
                 other_token = self.lig.get_next_term(searched_token, framenum)
 
             # Fill the data array
-            self.data[searched_token]['int'][0][0] += (com_token[1] -
-                                                       other_token[1])
-            self.data[searched_token]['int'][1][0] += (com_token[1] -
-                                                       other_token[1]) * (com_token[1] - other_token[1])
-            self.data[searched_token]['vdw'][0][0] += (com_token[2] -
-                                                       other_token[2])
-            self.data[searched_token]['vdw'][1][0] += (com_token[2] -
-                                                       other_token[2]) * (com_token[2] - other_token[2])
-            self.data[searched_token]['eel'][0][0] += (com_token[3] -
-                                                       other_token[3])
-            self.data[searched_token]['eel'][1][0] += (com_token[3] -
-                                                       other_token[3]) * (com_token[3] - other_token[3])
-            self.data[searched_token]['pol'][0][0] += (com_token[4] -
-                                                       other_token[4])
-            self.data[searched_token]['pol'][1][0] += (com_token[4] -
-                                                       other_token[4]) * (com_token[4] - other_token[4])
-            self.data[searched_token]['sas'][0][0] += (com_token[5] -
-                                                       other_token[5])
-            self.data[searched_token]['sas'][1][0] += (com_token[5] -
-                                                       other_token[5]) * (com_token[5] - other_token[5])
-            self.data[searched_token]['tot'][0][0] += (com_token[6] -
-                                                       other_token[6])
-            self.data[searched_token]['tot'][1][0] += (com_token[6] -
-                                                       other_token[6]) * (com_token[6] - other_token[6])
+            self.data[searched_token]['int'][0][0] += (com_token[1] - other_token[1])
+            self.data[searched_token]['int'][1][0] += (com_token[1] - other_token[1]) * (com_token[1] - other_token[1])
+            self.data[searched_token]['vdw'][0][0] += (com_token[2] - other_token[2])
+            self.data[searched_token]['vdw'][1][0] += (com_token[2] - other_token[2]) * (com_token[2] - other_token[2])
+            self.data[searched_token]['eel'][0][0] += (com_token[3] - other_token[3])
+            self.data[searched_token]['eel'][1][0] += (com_token[3] - other_token[3]) * (com_token[3] - other_token[3])
+            self.data[searched_token]['pol'][0][0] += (com_token[4] - other_token[4])
+            self.data[searched_token]['pol'][1][0] += (com_token[4] - other_token[4]) * (com_token[4] - other_token[4])
+            self.data[searched_token]['sas'][0][0] += (com_token[5] - other_token[5])
+            self.data[searched_token]['sas'][1][0] += (com_token[5] - other_token[5]) * (com_token[5] - other_token[5])
+            self.data[searched_token]['tot'][0][0] += (com_token[6] - other_token[6])
+            self.data[searched_token]['tot'][1][0] += (com_token[6] - other_token[6]) * (com_token[6] - other_token[6])
             if self.csvwriter:
                 self.csvwriter[searched_token].writerow([framenum,
                                                          self.resnums[0][0],
@@ -2038,30 +2024,24 @@ class DecompBinding(object):
                             com_token[0]-1],
                         self.prmtop_system.res_list[com_token[0]-1].ligand_number)
                 # Now fill the arrays
-                self.data[searched_token]['int'][0][i] += (com_token[1] -
-                                                           other_token[1])
-                self.data[searched_token]['int'][1][i] += (com_token[1] -
-                                                           other_token[1]) * (com_token[1] - other_token[1])
-                self.data[searched_token]['vdw'][0][i] += (com_token[2] -
-                                                           other_token[2])
-                self.data[searched_token]['vdw'][1][i] += (com_token[2] -
-                                                           other_token[2]) * (com_token[2] - other_token[2])
-                self.data[searched_token]['eel'][0][i] += (com_token[3] -
-                                                           other_token[3])
-                self.data[searched_token]['eel'][1][i] += (com_token[3] -
-                                                           other_token[3]) * (com_token[3] - other_token[3])
-                self.data[searched_token]['pol'][0][i] += (com_token[4] -
-                                                           other_token[4])
-                self.data[searched_token]['pol'][1][i] += (com_token[4] -
-                                                           other_token[4]) * (com_token[4] - other_token[4])
-                self.data[searched_token]['sas'][0][i] += (com_token[5] -
-                                                           other_token[5])
-                self.data[searched_token]['sas'][1][i] += (com_token[5] -
-                                                           other_token[5]) * (com_token[5] - other_token[5])
-                self.data[searched_token]['tot'][0][i] += (com_token[6] -
-                                                           other_token[6])
-                self.data[searched_token]['tot'][1][i] += (com_token[6] -
-                                                           other_token[6]) * (com_token[6] - other_token[6])
+                self.data[searched_token]['int'][0][i] += (com_token[1] - other_token[1])
+                self.data[searched_token]['int'][1][i] += (com_token[1] - other_token[1])\
+                                                          * (com_token[1] - other_token[1])
+                self.data[searched_token]['vdw'][0][i] += (com_token[2] - other_token[2])
+                self.data[searched_token]['vdw'][1][i] += (com_token[2] - other_token[2])\
+                                                          * (com_token[2] - other_token[2])
+                self.data[searched_token]['eel'][0][i] += (com_token[3] - other_token[3])
+                self.data[searched_token]['eel'][1][i] += (com_token[3] - other_token[3])\
+                                                          * (com_token[3] - other_token[3])
+                self.data[searched_token]['pol'][0][i] += (com_token[4] - other_token[4])
+                self.data[searched_token]['pol'][1][i] += (com_token[4] - other_token[4])\
+                                                          * (com_token[4] - other_token[4])
+                self.data[searched_token]['sas'][0][i] += (com_token[5] - other_token[5])
+                self.data[searched_token]['sas'][1][i] += (com_token[5] - other_token[5])\
+                                                          * (com_token[5] - other_token[5])
+                self.data[searched_token]['tot'][0][i] += (com_token[6] - other_token[6])
+                self.data[searched_token]['tot'][1][i] += (com_token[6] - other_token[6])\
+                                                          * (com_token[6] - other_token[6])
                 if self.csvwriter:
                     self.csvwriter[searched_token].writerow([framenum,
                                                              self.resnums[0][i],
@@ -2077,7 +2057,8 @@ class DecompBinding(object):
             searched_token = self.allowed_tokens[token_counter %
                                                  len(self.allowed_tokens)]
             # We are going on to the next frame
-            if token_counter % len(self.allowed_tokens) == 0: framenum += 1
+            if token_counter % len(self.allowed_tokens) == 0:
+                framenum += 1
             # Get the first com_token of the next searched_token
             com_token = self.com.get_next_term(searched_token, framenum)
 
@@ -2252,30 +2233,18 @@ class PairDecompBinding(DecompBinding):
                     other_token = [0,0,0,0,0,0,0,0]
 
             # Fill the data array
-            self.data[searched_token]['int'][0][0] += (com_token[2] -
-                                                       other_token[2])
-            self.data[searched_token]['int'][1][0] += (com_token[2] -
-                                                       other_token[2]) * (com_token[2] - other_token[2])
-            self.data[searched_token]['vdw'][0][0] += (com_token[3] -
-                                                       other_token[3])
-            self.data[searched_token]['vdw'][1][0] += (com_token[3] -
-                                                       other_token[3]) * (com_token[3] - other_token[3])
-            self.data[searched_token]['eel'][0][0] += (com_token[4] -
-                                                       other_token[4])
-            self.data[searched_token]['eel'][1][0] += (com_token[4] -
-                                                       other_token[4]) * (com_token[4] - other_token[4])
-            self.data[searched_token]['pol'][0][0] += (com_token[5] -
-                                                       other_token[5])
-            self.data[searched_token]['pol'][1][0] += (com_token[5] -
-                                                       other_token[5]) * (com_token[5] - other_token[5])
-            self.data[searched_token]['sas'][0][0] += (com_token[6] -
-                                                       other_token[6])
-            self.data[searched_token]['sas'][1][0] += (com_token[6] -
-                                                       other_token[6]) * (com_token[6] - other_token[6])
-            self.data[searched_token]['tot'][0][0] += (com_token[7] -
-                                                       other_token[7])
-            self.data[searched_token]['tot'][1][0] += (com_token[7] -
-                                                       other_token[7]) * (com_token[7] - other_token[7])
+            self.data[searched_token]['int'][0][0] += (com_token[2] - other_token[2])
+            self.data[searched_token]['int'][1][0] += (com_token[2] - other_token[2]) * (com_token[2] - other_token[2])
+            self.data[searched_token]['vdw'][0][0] += (com_token[3] - other_token[3])
+            self.data[searched_token]['vdw'][1][0] += (com_token[3] - other_token[3]) * (com_token[3] - other_token[3])
+            self.data[searched_token]['eel'][0][0] += (com_token[4] - other_token[4])
+            self.data[searched_token]['eel'][1][0] += (com_token[4] - other_token[4]) * (com_token[4] - other_token[4])
+            self.data[searched_token]['pol'][0][0] += (com_token[5] - other_token[5])
+            self.data[searched_token]['pol'][1][0] += (com_token[5] - other_token[5]) * (com_token[5] - other_token[5])
+            self.data[searched_token]['sas'][0][0] += (com_token[6] - other_token[6])
+            self.data[searched_token]['sas'][1][0] += (com_token[6] - other_token[6]) * (com_token[6] - other_token[6])
+            self.data[searched_token]['tot'][0][0] += (com_token[7] - other_token[7])
+            self.data[searched_token]['tot'][1][0] += (com_token[7] - other_token[7]) * (com_token[7] - other_token[7])
             if self.csvwriter:
                 self.csvwriter[searched_token].writerow([framenum,
                                                          self.resnums[0][0],
@@ -2308,30 +2277,24 @@ class PairDecompBinding(DecompBinding):
                         other_token = [0,0,0,0,0,0,0,0]
 
                 # Now fill the arrays
-                self.data[searched_token]['int'][0][i] += (com_token[2] -
-                                                           other_token[2])
-                self.data[searched_token]['int'][1][i] += (com_token[2] -
-                                                           other_token[2]) * (com_token[2] - other_token[2])
-                self.data[searched_token]['vdw'][0][i] += (com_token[3] -
-                                                           other_token[3])
-                self.data[searched_token]['vdw'][1][i] += (com_token[3] -
-                                                           other_token[3]) * (com_token[3] - other_token[3])
-                self.data[searched_token]['eel'][0][i] += (com_token[4] -
-                                                           other_token[4])
-                self.data[searched_token]['eel'][1][i] += (com_token[4] -
-                                                           other_token[4]) * (com_token[4] - other_token[4])
-                self.data[searched_token]['pol'][0][i] += (com_token[5] -
-                                                           other_token[5])
-                self.data[searched_token]['pol'][1][i] += (com_token[5] -
-                                                           other_token[5]) * (com_token[5] - other_token[5])
-                self.data[searched_token]['sas'][0][i] += (com_token[6] -
-                                                           other_token[6])
-                self.data[searched_token]['sas'][1][i] += (com_token[6] -
-                                                           other_token[6]) * (com_token[6] - other_token[6])
-                self.data[searched_token]['tot'][0][i] += (com_token[7] -
-                                                           other_token[7])
-                self.data[searched_token]['tot'][1][i] += (com_token[7] -
-                                                           other_token[7]) * (com_token[7] - other_token[7])
+                self.data[searched_token]['int'][0][i] += (com_token[2] - other_token[2])
+                self.data[searched_token]['int'][1][i] += (com_token[2] - other_token[2])\
+                                                            * (com_token[2] - other_token[2])
+                self.data[searched_token]['vdw'][0][i] += (com_token[3] - other_token[3])
+                self.data[searched_token]['vdw'][1][i] += (com_token[3] - other_token[3])\
+                                                            * (com_token[3] - other_token[3])
+                self.data[searched_token]['eel'][0][i] += (com_token[4] - other_token[4])
+                self.data[searched_token]['eel'][1][i] += (com_token[4] - other_token[4])\
+                                                            * (com_token[4] - other_token[4])
+                self.data[searched_token]['pol'][0][i] += (com_token[5] - other_token[5])
+                self.data[searched_token]['pol'][1][i] += (com_token[5] - other_token[5])\
+                                                            * (com_token[5] - other_token[5])
+                self.data[searched_token]['sas'][0][i] += (com_token[6] - other_token[6])
+                self.data[searched_token]['sas'][1][i] += (com_token[6] - other_token[6])\
+                                                            * (com_token[6] - other_token[6])
+                self.data[searched_token]['tot'][0][i] += (com_token[7] - other_token[7])
+                self.data[searched_token]['tot'][1][i] += (com_token[7] - other_token[7])\
+                                                            * (com_token[7] - other_token[7])
                 if self.csvwriter:
                     self.csvwriter[searched_token].writerow([framenum,
                                                              self.resnums[0][i],
