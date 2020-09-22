@@ -30,6 +30,7 @@ from matplotlib.backends import qt_compat
 from matplotlib.figure import Figure
 import numpy as np
 
+
 class NavigationToolbar(NavigationToolbar2QT):
     """
     overwrite NavigatorToolbar to get control over save action.
@@ -75,8 +76,10 @@ class Charts(QMdiSubWindow):
         super(Charts, self).__init__(*args)
         self.item = None
         self.col = None
+
     def closeEvent(self, closeEvent: QCloseEvent) -> None:
         self.item.setCheckState(self.col, Qt.Unchecked)
+
 
 class CustomItem(QTreeWidgetItem):
     def __init__(self, *args):
@@ -87,12 +90,14 @@ class CustomItem(QTreeWidgetItem):
         self.name = None
         self.keyslist = []
 
+
 class MplCanvas(FigureCanvasQTAgg):
 
     def __init__(self, parent=None, width=5, height=4, dpi=100):
         fig = Figure(figsize=(width, height), dpi=dpi)
         self.axes = fig.add_subplot(111)
         super(MplCanvas, self).__init__(fig)
+
 
 class GMX_MMPBSA_GUI(QMainWindow):
     def __init__(self, info_file=None):
@@ -110,7 +115,7 @@ class GMX_MMPBSA_GUI(QMainWindow):
         self.opendirAct.triggered.connect(self.getInfoFile)
         self.fileMenu = self.menuBar().addMenu("&File")
         self.fileMenu.addAction(self.opendirAct)
-        self.fileMenu.addAction('Close All..',self.mdi.closeAllSubWindows)
+        self.fileMenu.addAction('Close All..', self.mdi.closeAllSubWindows)
         self.viewMenu = self.menuBar().addMenu("&View")
         self.viewMenu.addAction('Tile SubWindows', self.mdi.tileSubWindows)
         self.viewMenu.addAction('Cascade SubWindows', self.mdi.cascadeSubWindows)
@@ -128,17 +133,18 @@ class GMX_MMPBSA_GUI(QMainWindow):
 
     def getInfoFile(self):
         info_file, _ = QFileDialog.getOpenFileName(self, "Output Directory", QDir.currentPath(), '*_info',
-                                                options=QFileDialog.DontResolveSymlinks)
+                                                   options=QFileDialog.DontResolveSymlinks)
         if info_file:
             self.infofile = Path(info_file)
             self.getData()
 
     def getData(self):
         os.chdir(self.infofile.parent)
-        print(os.getcwd())
+        # print(os.getcwd())
 
         data, self.app = API.load_gmxmmpbsa_info(self.infofile.as_posix())
-        print(self.app.INPUT)
+        # print(data)
+        # print(self.app.INPUT)
         self.data = {}
         for calc_type in data:
             self.data[calc_type] = {}
@@ -154,9 +160,14 @@ class GMX_MMPBSA_GUI(QMainWindow):
                     if 'receptor' in data[calc_type][decomp_calc_type]:
                         rec = data[calc_type][decomp_calc_type]['receptor']
                         lig = data[calc_type][decomp_calc_type]['ligand']
-
+                    # print(com)
+                    # print(rec)
+                    # print(lig)
                     for p in com:
                         self.data[calc_type][decomp_calc_type][p] = {}
+
+                        # print('ppppppppppppppp', p)
+
                         for res in com[p]:
                             # print(res)
                             if res not in self.data[calc_type][decomp_calc_type][p]:
@@ -205,11 +216,11 @@ class GMX_MMPBSA_GUI(QMainWindow):
         self.makeTree()
 
     def showdata(self, item: CustomItem, col):
-        print(item, col, item.subwindows)
+        # print(item, col, item.subwindows)
         if col == 1:
             s = item.subwindows[1]
             if item.checkState(col) == Qt.Checked:
-                if s: # check if any subwindow has been store
+                if s:  # check if any subwindow has been store
                     if not s.isVisible():
                         s.show()
                 else:
@@ -219,7 +230,6 @@ class GMX_MMPBSA_GUI(QMainWindow):
                     sub.item = item
                     sub.col = col
                     item.subwindows[col] = sub
-                    sm = sub.systemMenu()
 
                     x = [x1 for x1 in range(0, len(item.dataperframe['data']), item.dataperframe['interval'])]
                     x = np.array(x)
@@ -232,6 +242,7 @@ class GMX_MMPBSA_GUI(QMainWindow):
                     mainwidgetmdi.setCentralWidget(self._main)
                     layout = QVBoxLayout(self._main)
                     sc = MplCanvas(self, width=5, height=4, dpi=100)
+                    sc.axes.set_title(item.dataperframe['name'])
                     sc.axes.plot(x, y, color='black', linewidth=0.5)
                     sc.axes.set_xlabel(item.dataperframe['xaxis'])
                     sc.axes.set_ylabel(item.dataperframe['yaxis'])
@@ -240,7 +251,6 @@ class GMX_MMPBSA_GUI(QMainWindow):
                     toolbar = NavigationToolbar(sc, self)
                     layout.addWidget(sc)
                     layout.addWidget(toolbar)
-
 
                     sub.setWidget(mainwidgetmdi)
                     sub.setWindowTitle(item.dataperframe['name'])
@@ -259,7 +269,7 @@ class GMX_MMPBSA_GUI(QMainWindow):
         elif col == 2:
             s = item.subwindows[2]
             if item.checkState(col) == Qt.Checked:
-                if s: # check if any subwindow has been store
+                if s:  # check if any subwindow has been store
                     if not s.isVisible():
                         s.show()
                 else:
@@ -278,21 +288,20 @@ class GMX_MMPBSA_GUI(QMainWindow):
                     mainwidgetmdi.setCentralWidget(self._main)
                     layout = QVBoxLayout(self._main)
                     sc = MplCanvas(self, width=5, height=4, dpi=100)
-
+                    sc.axes.set_title(item.datamean['name'])
                     data_len = len(item.datamean['xaxis'])
 
-                    sc.axes.set_xlim(0, data_len+1)
-                    sc.axes.set_xticks([x for x in range(1, data_len+1)])
+                    sc.axes.set_xlim(0, data_len + 1)
+                    sc.axes.set_xticks([x for x in range(1, data_len + 1)])
                     sc.axes.set_xticklabels(item.datamean['xaxis'])
                     sc.axes.set_ylabel(item.datamean['yaxis'])
                     for label in sc.axes.get_xticklabels():
                         label.set_rotation(40)
                         label.set_horizontalalignment('right')
 
-
                     bottom = 0
                     for i in range(0, data_len):
-                        sc.axes.bar(i+1, y[i])
+                        sc.axes.bar(i + 1, y[i])
                         bottom += y[i]
 
                     # Create toolbar, passing canvas as first parament, parent (self, the MainWindow) as second.
@@ -319,7 +328,6 @@ class GMX_MMPBSA_GUI(QMainWindow):
             #         if x.objectName() == btn.name:
             #             self.mdi.removeSubWindow(x)
 
-
     def makeTree(self):
         self.treeWidget = QTreeWidget(self)
         self.treeWidget.itemChanged.connect(self.showdata)
@@ -330,7 +338,6 @@ class GMX_MMPBSA_GUI(QMainWindow):
         self.normalitem.setExpanded(True)
         self.treeWidget.addTopLevelItem(self.normalitem)
 
-
         for level in self.data:
             item = CustomItem([level.upper()])
             # item.setCheckState(0, Qt.Unchecked)
@@ -340,15 +347,15 @@ class GMX_MMPBSA_GUI(QMainWindow):
                 #     item.
                 cd = []
                 for level1 in self.data[level]:
-                    item1= CustomItem([str(level1).upper()])
-                    item1.setCheckState(1,Qt.Unchecked)
+                    item1 = CustomItem([str(level1).upper()])
+                    item1.setCheckState(1, Qt.Unchecked)
                     item1.dataperframe = {'name': '{} {} Energy (Per-Frame)'.format(level.upper(), level1),
                                           'xaxis': 'frames', 'yaxis': 'Energy (kcal/mol)', 'interval':
                                               self.app.INPUT['interval'], 'data': self.data[level][level1]}
-                    print(level1, self.data[level][level1].mean())
+                    # print(level1, self.data[level][level1].mean())
                     cd.append([level1, self.data[level][level1].mean()])
                     if level1 == 'TOTAL':
-                        item1.setCheckState(2,Qt.Unchecked)
+                        item1.setCheckState(2, Qt.Unchecked)
                         item1.datamean = {'name': '{} {} Energy (Mean)'.format(level.upper(), level1),
                                           'xaxis': [x[0] for x in cd], 'yaxis': 'Energy (kcal/mol)',
                                           'data': np.array([x[1] for x in cd]), }
@@ -368,19 +375,19 @@ class GMX_MMPBSA_GUI(QMainWindow):
                         item1.addChild(item2)
                         item2.setCheckState(1, Qt.Unchecked)
                         item2.setCheckState(2, Qt.Unchecked)
-                        lvl2_data = np.zeros(int(self.app.numframes/self.app.INPUT['interval']))
+                        lvl2_data = np.zeros(int(self.app.numframes / self.app.INPUT['interval']))
                         lvl2_meandata = []
                         for level3 in self.data[level][level1][level2]:
                             item3 = CustomItem([str(level3).upper()])
                             item2.addChild(item3)
-                            lvl3_data = np.zeros(int(self.app.numframes/self.app.INPUT['interval']))
+                            lvl3_data = np.zeros(int(self.app.numframes / self.app.INPUT['interval']))
                             lvl3_meandata = []
                             lvl4_data = []
                             lvl4_meandata = []
                             for level4 in self.data[level][level1][level2][level3]:
                                 item4 = CustomItem([str(level4).upper()])
                                 item3.addChild(item4)
-                                print(level4)
+                                # print(level4)
                                 lvl5_meandata = []
                                 if self.app.INPUT['idecomp'] in [3, 4]:
                                     for level5 in self.data[level][level1][level2][level3][level4]:
@@ -391,13 +398,16 @@ class GMX_MMPBSA_GUI(QMainWindow):
                                             'name': 'Docomposition ({}) {} Residue {} Pair {} {} Energy '
                                                     '(Per-Frame)'.format(level1, level2, level3, level4, level5),
                                             'xaxis': 'frames', 'yaxis': 'Energy (kcal/mol)', 'interval':
-                                                self.app.INPUT['interval'], 'data': self.data[level][level1][level2][level3][level4][level5]}
+                                                self.app.INPUT['interval'],
+                                            'data': self.data[level][level1][level2][level3][level4][level5]}
                                         lvl5_meandata.append([level5, self.data[level][level1][level2][level3][
                                             level4][level5].mean()])
                                         if level5 == 'tot':
                                             item5.setCheckState(2, Qt.Unchecked)
                                             lvl3_data += self.data[level][level1][level2][level3][level4][level5]
-                                            lvl3_meandata.append([level4, self.data[level][level1][level2][level3][level4][level5].mean()])
+                                            lvl3_meandata.append([level4,
+                                                                  self.data[level][level1][level2][level3][level4][
+                                                                      level5].mean()])
 
                                             item5.datamean = {'name': 'Decomposition ({}) {} Residue {} Pair {} '
                                                                       'Total Energy (Mean)'.format(level1, level2,
@@ -441,7 +451,6 @@ class GMX_MMPBSA_GUI(QMainWindow):
                                 lvl2_data += lvl3_data
                                 lvl2_meandata.append([level3, lvl3_data.mean()])
 
-
                                 item3.datamean = {'name': 'Decomposition ({}) {} Residue {} Energy ('
                                                           'Mean) from Pairs'.format(level1, level2, level3),
                                                   'xaxis': [x[0] for x in lvl3_meandata], 'yaxis': 'Energy (kcal/mol)',
@@ -454,8 +463,8 @@ class GMX_MMPBSA_GUI(QMainWindow):
                                               'data': lvl2_data}
                         lvl2_meandata.extend([['TOTAL', sum([x[1] for x in lvl2_meandata])]])
                         item2.datamean = {'name': 'Decomposition ({}) {} Energy (Mean)'.format(level1, level2),
-                                                  'xaxis': [x[0] for x in lvl2_meandata], 'yaxis': 'Energy (kcal/mol)',
-                                                  'data': np.array([x[1] for x in lvl2_meandata]) }
+                                          'xaxis': [x[0] for x in lvl2_meandata], 'yaxis': 'Energy (kcal/mol)',
+                                          'data': np.array([x[1] for x in lvl2_meandata])}
         # if self.data.mutant:
         #     self.mutantitem = CustomItem(['Mutant System'])
         #     self.treeWidget.addTopLevelItem(self.mutantitem)
@@ -466,7 +475,6 @@ class GMX_MMPBSA_GUI(QMainWindow):
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     app.setApplicationName('GMX-MMPBSA')
-
 
     w = GMX_MMPBSA_GUI('/home/mario/Drive/scripts/MMGBSA/test/decomp-0_idecomp-4_prot/_GMXMMPBSA_info')
     w.show()
