@@ -291,6 +291,72 @@ class APIPairDecompOut(amber_outputs.PairDecompOut):
                         self.array_data[key][dkey]['sas'][i] = sas
                         self.array_data[key][dkey]['tot'][i] = tot
 
+class APIDecompOutGMX(amber_outputs.DecompOut):
+
+    def __init__(self, basename, surften, num_files, verbose, nframes, lig_num=None):
+        amber_outputs.DecompOut.__init__(self, basename, None, surften, False,
+                                         num_files, verbose)
+        self.array_data = {}
+        # Make a new dict for all printed tokens (TDC,SDC,BDC)
+        for key in self.allowed_tokens:
+            self.array_data[key] = {}
+            for i in range(nframes):
+                n = 0
+                for j in range(self.num_terms):
+                    rnum, internal, vdw, eel, pol, sas, tot = self.get_next_term(key)
+                    if lig_num:
+                        if n == len(lig_num):
+                            n = 0
+                        rnum = lig_num[n]
+                        n += 1
+                    if rnum not in self.array_data[key]:
+                        self.array_data[key][rnum] = {}
+                        for k in ('int', 'vdw', 'eel', 'pol', 'sas', 'tot'):
+                            self.array_data[key][rnum][k] = make_array_len(nframes)
+                    self.array_data[key][rnum]['int'][i] = internal
+                    self.array_data[key][rnum]['vdw'][i] = vdw
+                    self.array_data[key][rnum]['eel'][i] = eel
+                    self.array_data[key][rnum]['pol'][i] = pol
+                    self.array_data[key][rnum]['sas'][i] = sas
+                    self.array_data[key][rnum]['tot'][i] = tot
+
+class APIPairDecompOutGMX(amber_outputs.PairDecompOut):
+
+    def __init__(self, basename, surften, num_files, verbose, nframes, lig_num=None):
+        amber_outputs.DecompOut.__init__(self, basename, None, surften, False,
+                                         num_files, verbose)
+        self.array_data = {}
+        # Make a new dict for all printed tokens (TDC,SDC,BDC)
+        for key in self.allowed_tokens:
+            self.array_data[key] = {}
+
+        for i in range(nframes):
+            for key in self.allowed_tokens:
+                m = 0
+                n = 0
+                for j in range(self.num_terms):
+                    rnum, rnum2, internal, vdw, eel, pol, sas, tot = self.get_next_term(key)
+                    if lig_num: # rename lig residues like complex lig names
+                        if n == len(lig_num):
+                            m += 1
+                            n = 0
+                        rnum = lig_num[m]
+                        rnum2 = lig_num[n]
+                        n += 1
+                    if rnum not in self.array_data[key]:
+                        self.array_data[key][rnum] = {}
+                    if rnum2 not in self.array_data[key][rnum]:
+                        self.array_data[key][rnum][rnum2] =  {}
+                        for k in ('int', 'vdw', 'eel', 'pol', 'sas', 'tot'):
+                            self.array_data[key][rnum][rnum2][k] = make_array_len(nframes)
+                    self.array_data[key][rnum][rnum2]['int'][i] = internal
+                    self.array_data[key][rnum][rnum2]['vdw'][i] = vdw
+                    self.array_data[key][rnum][rnum2]['eel'][i] = eel
+                    self.array_data[key][rnum][rnum2]['pol'][i] = pol
+                    self.array_data[key][rnum][rnum2]['sas'][i] = sas
+                    self.array_data[key][rnum][rnum2]['tot'][i] = tot
+
+
 def load_mmpbsa_info(fname):
     """
     Loads up an MMPBSA.py info file and returns a mmpbsa_data instance with all
@@ -376,6 +442,8 @@ def load_mmpbsa_info(fname):
                 return_data['decomp']['gb']['complex'] = DecompClass(
                     app.FILES.prefix + 'complex_gb.mdout',
                     app.INPUT['surften']).array_data
+
+
                 if not app.stability:
                     return_data['decomp']['gb']['receptor'] = DecompClass(
                         app.FILES.prefix + 'receptor_gb.mdout',
@@ -423,6 +491,152 @@ def load_mmpbsa_info(fname):
                     return_data.mutant['decomp']['pb']['ligand'] = DecompClass(
                         app.FILES.prefix + 'mutant_ligand_pb.mdout',
                         app.INPUT['surften']).array_data
-
+        else:
+            return_data.mutant = None
 
     return return_data
+
+def load_gmxmmpbsa_info(fname):
+    """
+    Loads up an GMX-MMPBSA.py info file and returns a mmpbsa_data instance with all
+    of the data available in numpy arrays if numpy is available. The returned
+    object is a mmpbsa_data instance.
+
+    change the structure to get more easy way to graph per residue
+
+    mmpbsa_data attributes:
+    -----------------------
+       o  Derived from "dict"
+       o  Each solvent model is a dictionary key for a numpy array (if numpy is
+          available) or array.array (if numpy is unavailable) for each of the
+          species (complex, receptor, ligand) present in the calculation.
+       o  The alanine scanning mutant data is under another dict denoted by the
+          'mutant' key.
+
+    Data Layout:
+    ------------
+       Solvent Model     |  Dictionary Key    |  Data Keys Available
+       -------------------------------------------------------------------
+       Generalized Born  |  'gb'              |  EGB, ESURF, *
+       Poisson-Boltzmann |  'pb'              |  EPB, EDISPER, ECAVITY, *
+       3D-RISM (GF)      |  'rism gf'         |
+       3D-RISM (Standard)|  'rism std'        |
+       Normal Mode       |  'nmode'           |
+       Quasi-harmonic    |  'qh'              |
+
+    * == TOTAL, VDW, EEL, 1-4 EEL, 1-4 VDW, BOND, ANGLE, DIHED
+
+    The keys above are entries for the main dict as well as the sub-dict whose
+    key is 'mutant' in the main dict.  Each entry in the main (and mutant sub-)
+    dict is, itself, a dict with 1 or 3 keys; 'complex', 'receptor', 'ligand';
+    where 'receptor' and 'ligand' are missing for stability calculations.
+    If numpy is available, all data will be numpy.ndarray instances.  Otherwise,
+    all data will be array.array instances.
+
+    All of the objects referenced by the listed 'Dictionary Key's are dicts in
+    which the listed 'Data Keys Available' are keys to the data arrays themselves
+
+    Examples:
+    ---------
+       # Load numpy for our analyses (optional)
+       import numpy as np
+
+       # Load the _MMPBSA_info file:
+       mydata = load_mmpbsa_info('_MMPBSA_info')
+
+       # Access the complex GB data structure and calculate the autocorr. fcn.
+       autocorr = np.correlate(mydata['gb']['complex']['TOTAL'],
+                               mydata['gb']['complex']['TOTAL'])
+
+       # Calculate the standard deviation of the alanine mutant receptor in PB
+       print mydata.mutant['pb']['receptor']['TOTAL'].std()
+    """
+    if not HAS_NUMPY:
+        warnings.warn('numpy was not found. Data will be packed in normal Python '
+                      'arrays. Install numpy for more efficient array handling.',
+                      NotImplemented)
+
+    if not os.path.exists(fname):
+        raise NoFileExists("cannot find %s!" % fname)
+    app = main.MMPBSA_App(MPI)
+    info = infofile.InfoFile(app)
+    info.read_info(fname)
+    app.normal_system = app.mutant_system = None
+    app.parse_output_files()
+    return_data = mmpbsa_data(app)
+    # Since Decomp data is parsed in a memory-efficient manner (by not storing
+    # all of the data in arrays, but rather by printing each data point as it's
+    # parsed), we need to handle the decomp data separately here
+    lig_res = None
+    if app.INPUT['decomprun']:
+        # Simplify the decomp class instance creation
+        if app.INPUT['idecomp'] in (1, 2):
+            DecompClass = lambda x, y, z=None: APIDecompOutGMX(x, y, app.mpi_size,
+                                                    app.INPUT['dec_verbose'], app.numframes, lig_num=z)
+        else:
+            DecompClass = lambda x, y, z=None: APIPairDecompOutGMX(x, y, app.mpi_size,
+                                                        app.INPUT['dec_verbose'], app.numframes, lig_num=z)
+
+        if not app.INPUT['mutant_only']:
+            # Do normal GB
+            if app.INPUT['gbrun']:
+                return_data['decomp'] = {'gb' : {}}
+                return_data['decomp']['gb']['complex'] = DecompClass(app.FILES.prefix + 'complex_gb.mdout',
+                                                                     app.INPUT['surften']).array_data
+                com_res = []
+                for k in return_data['decomp']['gb']['complex']['TDC']:
+                    if k not in com_res:
+                        com_res.append(k)
+
+                if not app.stability:
+                    return_data['decomp']['gb']['receptor'] = DecompClass(app.FILES.prefix + 'receptor_gb.mdout',
+                                                                          app.INPUT['surften']).array_data
+                    rec_res = []
+                    for k in return_data['decomp']['gb']['receptor']['TDC']:
+                        if k not in rec_res:
+                            rec_res.append(k)
+                    lig_res = com_res[len(rec_res):]
+                    return_data['decomp']['gb']['ligand'] = DecompClass(app.FILES.prefix + 'ligand_gb.mdout',
+                                                                        app.INPUT['surften'], lig_res).array_data
+            # Do normal PB
+            if app.INPUT['pbrun']:
+                return_data['decomp'] = {'pb' : {}}
+                return_data['decomp']['pb']['complex'] = DecompClass(app.FILES.prefix + 'complex_pb.mdout',
+                                                                     app.INPUT['surften']).array_data
+                if not app.stability:
+                    return_data['decomp']['pb']['receptor'] = DecompClass(app.FILES.prefix + 'receptor_pb.mdout',
+                                                                          app.INPUT['surften']).array_data
+                    return_data['decomp']['pb']['ligand'] = DecompClass(app.FILES.prefix + 'ligand_pb.mdout',
+                                                                        app.INPUT['surften'], lig_res).array_data
+        if app.INPUT['alarun']:
+            # Do mutant GB
+            if app.INPUT['gbrun']:
+                return_data.mutant['decomp'] = {'gb' : {}}
+                return_data.mutant['decomp']['gb']['complex'] = DecompClass(app.FILES.prefix +
+                                                                             'mutant_complex_gb.mdout',
+                                                                            app.INPUT['surften']).array_data
+                if not app.stability:
+                    return_data.mutant['decomp']['gb']['receptor'] = DecompClass(app.FILES.prefix +
+                                                                                  'mutant_receptor_gb.mdout',
+                                                                                 app.INPUT['surften']).array_data
+                    return_data.mutant['decomp']['gb']['ligand'] = DecompClass(app.FILES.prefix +
+                                                                                'mutant_ligand_gb.mdout',
+                                                                               app.INPUT['surften'], lig_res).array_data
+            # Do mutant PB
+            if app.INPUT['pbrun']:
+                return_data.mutant['decomp'] = {'pb' : {}}
+                return_data.mutant['decomp']['pb']['complex'] = DecompClass(app.FILES.prefix +
+                                                                             'mutant_complex_pb.mdout',
+                                                                            app.INPUT['surften']).array_data
+                if not app.stability:
+                    return_data.mutant['decomp']['pb']['receptor'] = DecompClass(app.FILES.prefix +
+                                                                                  'mutant_receptor_pb.mdout',
+                                                                                 app.INPUT['surften']).array_data
+                    return_data.mutant['decomp']['pb']['ligand'] = DecompClass(app.FILES.prefix +
+                                                                                'mutant_ligand_pb.mdout',
+                                                                               app.INPUT['surften'], lig_res).array_data
+        else:
+            return_data.mutant = None
+
+    return return_data, app
+
