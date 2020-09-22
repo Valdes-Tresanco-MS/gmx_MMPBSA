@@ -23,11 +23,52 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from GMXMMPBSA import API
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
-from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
+from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
 import matplotlib.pyplot as plt
 import matplotlib.backend_bases
+from matplotlib.backends import qt_compat
 from matplotlib.figure import Figure
 import numpy as np
+
+class NavigationToolbar(NavigationToolbar2QT):
+    """
+    overwrite NavigatorToolbar to get control over save action.
+    Now we can set custom dpi value
+    """
+
+    def save_figure(self, *args):
+        filetypes = self.canvas.get_supported_filetypes_grouped()
+        sorted_filetypes = sorted(filetypes.items())
+        default_filetype = self.canvas.get_default_filetype()
+
+        startpath = os.path.expanduser(
+            matplotlib.rcParams['savefig.directory'])
+        start = os.path.join(startpath, self.canvas.get_default_filename())
+        filters = []
+        selectedFilter = None
+        for name, exts in sorted_filetypes:
+            exts_list = " ".join(['*.%s' % ext for ext in exts])
+            filter = '%s (%s)' % (name, exts_list)
+            if default_filetype in exts:
+                selectedFilter = filter
+            filters.append(filter)
+        filters = ';;'.join(filters)
+
+        fname, filter = qt_compat._getSaveFileName(
+            self.canvas.parent(), "Choose a filename to save to", start,
+            filters, selectedFilter)
+        if fname:
+            # Save dir for next time, unless empty str (i.e., use cwd).
+            if startpath != "":
+                matplotlib.rcParams['savefig.directory'] = (
+                    os.path.dirname(fname))
+            try:
+                self.canvas.figure.savefig(fname, dpi=300)
+            except Exception as e:
+                QMessageBox.critical(
+                    self, "Error saving file", str(e),
+                    QMessageBox.Ok, QMessageBox.NoButton)
+
 
 class Charts(QMdiSubWindow):
     def __init__(self, *args):
@@ -120,30 +161,34 @@ class GMX_MMPBSA_GUI(QMainWindow):
                             # print(res)
                             if res not in self.data[calc_type][decomp_calc_type][p]:
                                 self.data[calc_type][decomp_calc_type][p][res] = {}
-                            if rec and res in rec[p]:
-                                for resp, resp1 in zip(com[p][res], rec[p][res]):
-                                    # d = com[p][res][resp] - rec[p][res][resp1]
-                                    self.data[calc_type][decomp_calc_type][p][res][resp] = {}
-                                    for para in com[p][res][resp]:
-                                        d = com[p][res][resp][para] - rec[p][res][resp1][para]
-                                        self.data[calc_type][decomp_calc_type][p][res][resp][para] = d
-                                for resp in com[p][res]:
-                                    self.data[calc_type][decomp_calc_type][p][res][resp] = com[p][res][resp]
-                            elif lig and res in lig[p]:
-                                for resp, resp1 in zip(list(com[p][res])[(len(com[p][res]) - len(lig[p][res])):],
-                                                       lig[p][res]):
-                                    # d = com[p][res][resp] - rec[p][res][resp1]
-                                    self.data[calc_type][decomp_calc_type][p][res][resp] = {}
-                                    for para in com[p][res][resp]:
-                                        # if para == 'tot':
-                                        #     print('############',res, resp, resp1, (com[p][res][resp][para]-
-                                        #           lig[p][res][resp1][para]).mean())
-                                        #     break
-
-                                        d = com[p][res][resp][para] - lig[p][res][resp1][para]
-                                        self.data[calc_type][decomp_calc_type][p][res][resp][para] = d
-                                for resp in com[p][res]:
-                                    self.data[calc_type][decomp_calc_type][p][res][resp] = com[p][res][resp]
+                            if self.app.INPUT['idecomp'] in [1, 2]:
+                                if rec and res in rec[p]:
+                                    for para in com[p][res]:
+                                        d = com[p][res][para] - rec[p][res][para]
+                                        self.data[calc_type][decomp_calc_type][p][res][para] = d
+                                elif lig and res in lig[p]:
+                                    for para in com[p][res]:
+                                        d = com[p][res][para] - lig[p][res][para]
+                                        self.data[calc_type][decomp_calc_type][p][res][para] = d
+                            else:
+                                if rec and res in rec[p]:
+                                    for resp, resp1 in zip(com[p][res], rec[p][res]):
+                                        # d = com[p][res][resp] - rec[p][res][resp1]
+                                        self.data[calc_type][decomp_calc_type][p][res][resp] = {}
+                                        for para in com[p][res][resp]:
+                                            d = com[p][res][resp][para] - rec[p][res][resp1][para]
+                                            self.data[calc_type][decomp_calc_type][p][res][resp][para] = d
+                                    for resp in com[p][res]:
+                                        self.data[calc_type][decomp_calc_type][p][res][resp] = com[p][res][resp]
+                                elif lig and res in lig[p]:
+                                    for resp, resp1 in zip(list(com[p][res])[(len(com[p][res]) - len(lig[p][res])):],
+                                                           lig[p][res]):
+                                        self.data[calc_type][decomp_calc_type][p][res][resp] = {}
+                                        for para in com[p][res][resp]:
+                                            d = com[p][res][resp][para] - lig[p][res][resp1][para]
+                                            self.data[calc_type][decomp_calc_type][p][res][resp][para] = d
+                                    for resp in com[p][res]:
+                                        self.data[calc_type][decomp_calc_type][p][res][resp] = com[p][res][resp]
 
             else:
                 com = data[calc_type]['complex']
@@ -206,16 +251,6 @@ class GMX_MMPBSA_GUI(QMainWindow):
                     sc.draw()
                     sc.figure.tight_layout()
                     sc.draw()
-
-                # ax = plt.gca()
-                # ax.set_title(item.dataperframe['name'])
-                # # sub.figure.suptitle(xvg_file.title)
-                #
-                # print(x, y)
-                # plt.plot(x, y, color='black', linewidth=0.3)
-                # sub.show()
-                # sub.canvas.draw()
-                # sub.figure.tight_layout()
             else:
                 if s:  # check if any subwindow has been store
                     if s.isVisible():
@@ -233,10 +268,7 @@ class GMX_MMPBSA_GUI(QMainWindow):
                     sub.item = item
                     sub.col = col
                     item.subwindows[col] = sub
-                    sm = sub.systemMenu()
 
-                    # x = item.datamean['data']
-                    # print(x)
                     y = item.datamean['data']
 
                     sub.setMinimumSize(500, 300)
@@ -248,7 +280,6 @@ class GMX_MMPBSA_GUI(QMainWindow):
                     sc = MplCanvas(self, width=5, height=4, dpi=100)
 
                     data_len = len(item.datamean['xaxis'])
-                    # print(data_len, item.datamean['xaxis'], y)
 
                     sc.axes.set_xlim(0, data_len+1)
                     sc.axes.set_xticks([x for x in range(1, data_len+1)])
@@ -261,11 +292,8 @@ class GMX_MMPBSA_GUI(QMainWindow):
 
                     bottom = 0
                     for i in range(0, data_len):
-                        # print(i)
                         sc.axes.bar(i+1, y[i])
                         bottom += y[i]
-
-                    # sc.axes.plot(x, y, color='black', linewidth=0.3)
 
                     # Create toolbar, passing canvas as first parament, parent (self, the MainWindow) as second.
                     toolbar = NavigationToolbar(sc, self)
@@ -279,16 +307,6 @@ class GMX_MMPBSA_GUI(QMainWindow):
                     sc.draw()
                     sc.figure.tight_layout()
                     sc.draw()
-                    # elif item.checkState(col) == Qt.Unchecked and col == 1:
-                    #     try:
-                    #         item.subwindows[col].close()
-                    #     except:
-                    #         pass
-                    # elif item.checkState(col) == Qt.Unchecked and col == 2:
-                    #     try:
-                    #         item.subwindows[col].close()
-                    #     except:
-                    #         pass
             else:
                 if s:  # check if any subwindow has been store
                     if s.isVisible():
@@ -348,22 +366,96 @@ class GMX_MMPBSA_GUI(QMainWindow):
                     for level2 in self.data[level][level1]:
                         item2 = CustomItem([str(level2).upper()])
                         item1.addChild(item2)
+                        item2.setCheckState(1, Qt.Unchecked)
+                        item2.setCheckState(2, Qt.Unchecked)
+                        lvl2_data = np.zeros(int(self.app.numframes/self.app.INPUT['interval']))
+                        lvl2_meandata = []
                         for level3 in self.data[level][level1][level2]:
                             item3 = CustomItem([str(level3).upper()])
                             item2.addChild(item3)
+                            lvl3_data = np.zeros(int(self.app.numframes/self.app.INPUT['interval']))
+                            lvl3_meandata = []
+                            lvl4_data = []
+                            lvl4_meandata = []
                             for level4 in self.data[level][level1][level2][level3]:
                                 item4 = CustomItem([str(level4).upper()])
                                 item3.addChild(item4)
                                 print(level4)
-                                for level5 in self.data[level][level1][level2][level3][level4]:
-                                    item5 = CustomItem([str(level5).upper()])
-                                    item4.addChild(item5)
-                                    # if self.app.INPUT['idecomp'] in (3, 4):
-                                    #
-                                    #     for level6 in self.data[level][level1][level2][level3][level4][level5]:
-                                    #         item6 = CustomItem([str(level6).upper()])
-                                    #         item5.addChild(item6)
+                                lvl5_meandata = []
+                                if self.app.INPUT['idecomp'] in [3, 4]:
+                                    for level5 in self.data[level][level1][level2][level3][level4]:
+                                        item5 = CustomItem([str(level5).upper()])
+                                        item4.addChild(item5)
+                                        item5.setCheckState(1, Qt.Unchecked)
+                                        item5.dataperframe = {
+                                            'name': 'Docomposition ({}) {} Residue {} Pair {} {} Energy '
+                                                    '(Per-Frame)'.format(level1, level2, level3, level4, level5),
+                                            'xaxis': 'frames', 'yaxis': 'Energy (kcal/mol)', 'interval':
+                                                self.app.INPUT['interval'], 'data': self.data[level][level1][level2][level3][level4][level5]}
+                                        lvl5_meandata.append([level5, self.data[level][level1][level2][level3][
+                                            level4][level5].mean()])
+                                        if level5 == 'tot':
+                                            item5.setCheckState(2, Qt.Unchecked)
+                                            lvl3_data += self.data[level][level1][level2][level3][level4][level5]
+                                            lvl3_meandata.append([level4, self.data[level][level1][level2][level3][level4][level5].mean()])
 
+                                            item5.datamean = {'name': 'Decomposition ({}) {} Residue {} Pair {} '
+                                                                      'Total Energy (Mean)'.format(level1, level2,
+                                                                                                   level3, level4),
+                                                              'xaxis': [x[0] for x in lvl5_meandata],
+                                                              'yaxis': 'Energy (kcal/mol)',
+                                                              'data': np.array([x[1] for x in lvl5_meandata]), }
+                                else:
+                                    lvl3_data += self.data[level][level1][level2][level3][level4]
+                                    lvl3_meandata.append(
+                                        [level4, self.data[level][level1][level2][level3][level4].mean()])
+                                    item4.setCheckState(1, Qt.Unchecked)
+                                    item4.dataperframe = {
+                                        'name': 'Docomposition ({}) {} Residue {} {} Energy '
+                                                '(Per-Frame)'.format(level1, level2, level3, level4),
+                                        'xaxis': 'frames', 'yaxis': 'Energy (kcal/mol)', 'interval':
+                                            self.app.INPUT['interval'],
+                                        'data': self.data[level][level1][level2][level3][level4]}
+                                    lvl4_meandata.append(
+                                        [level4, self.data[level][level1][level2][level3][level4].mean()])
+                                    if level4 == 'tot':
+                                        item4.setCheckState(2, Qt.Unchecked)
+                                        item4.datamean = {'name': 'Decomposition ({}) {} Residue {} '
+                                                                  'Total Energy (Mean)'.format(level1, level2,
+                                                                                               level3),
+                                                          'xaxis': [x[0] for x in lvl4_meandata],
+                                                          'yaxis': 'Energy (kcal/mol)',
+                                                          'data': np.array([x[1] for x in lvl4_meandata]), }
+
+                            if 'tot' in self.data[level][level1][level2][level3]:  # Per-residue
+                                lvl2_data += lvl3_data
+                                lvl2_meandata.append([level3, lvl3_data.mean()])
+
+                            else:  # Per-wise
+                                item3.setCheckState(1, Qt.Unchecked)
+                                item3.dataperframe = {'name': 'Decomposition ({})  {} Residue {} Energy ('
+                                                              'Per-Frame)'.format(level1, level2, level3),
+                                                      'xaxis': 'frames', 'yaxis': 'Energy (kcal/mol)', 'interval':
+                                                          self.app.INPUT['interval'], 'data': lvl3_data}
+                                lvl3_meandata.extend([['TOTAL', sum([x[1] for x in lvl3_meandata])]])
+                                lvl2_data += lvl3_data
+                                lvl2_meandata.append([level3, lvl3_data.mean()])
+
+
+                                item3.datamean = {'name': 'Decomposition ({}) {} Residue {} Energy ('
+                                                          'Mean) from Pairs'.format(level1, level2, level3),
+                                                  'xaxis': [x[0] for x in lvl3_meandata], 'yaxis': 'Energy (kcal/mol)',
+                                                  'data': np.array([x[1] for x in lvl3_meandata]), }
+                                item3.setCheckState(2, Qt.Unchecked)
+
+                        item2.dataperframe = {'name': 'Decomposition ({})  {} Energy '
+                                                      '(Per-Frame)'.format(level1, level2), 'xaxis': 'frames',
+                                              'yaxis': 'Energy (kcal/mol)', 'interval': self.app.INPUT['interval'],
+                                              'data': lvl2_data}
+                        lvl2_meandata.extend([['TOTAL', sum([x[1] for x in lvl2_meandata])]])
+                        item2.datamean = {'name': 'Decomposition ({}) {} Energy (Mean)'.format(level1, level2),
+                                                  'xaxis': [x[0] for x in lvl2_meandata], 'yaxis': 'Energy (kcal/mol)',
+                                                  'data': np.array([x[1] for x in lvl2_meandata]) }
         # if self.data.mutant:
         #     self.mutantitem = CustomItem(['Mutant System'])
         #     self.treeWidget.addTopLevelItem(self.mutantitem)
@@ -376,6 +468,6 @@ if __name__ == '__main__':
     app.setApplicationName('GMX-MMPBSA')
 
 
-    w = GMX_MMPBSA_GUI(sys.argv[1])
+    w = GMX_MMPBSA_GUI('/home/mario/Drive/scripts/MMGBSA/test/decomp-0_idecomp-4_prot/_GMXMMPBSA_info')
     w.show()
     sys.exit(app.exec())
