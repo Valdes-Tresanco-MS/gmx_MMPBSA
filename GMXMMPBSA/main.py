@@ -755,6 +755,10 @@ class MMPBSA_App(object):
         if self.INPUT['decomprun']:
             self.INPUT['gbsa'] = 2
 
+        # Force to use Sander when intdiel is defined
+        if self.INPUT['intdiel']:
+            self.INPUT['use_sander'] = 1
+
         # Stability: no terms cancel, so print them all
         if self.stability:
             self.INPUT['verbose'] = 2
@@ -868,6 +872,10 @@ class MMPBSA_App(object):
                                      INPUT['probe'] != 1.4):
             warnings.warn('offset and probe are molsurf-only options',
                           InputWarning)
+
+        # User warning when intdiel > 10
+        if self.INPUT['intdiel'] > 10:
+            warnings.warn('Intdiel should be less than 10, but it is {}'.format(self.INPUT['intdiel']), InputWarning)
 
     def remove(self, flag):
         """ Removes temporary files """
