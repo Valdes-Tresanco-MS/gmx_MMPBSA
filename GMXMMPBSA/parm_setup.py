@@ -557,7 +557,7 @@ class MMPBSA_System(object):
           If in_complex is true, then the group inputs returned will correspond
           to the residues inside the complex. If it's false, then it will
           correspond to just the selection in the receptor/ligand prmtops
-      """
+        """
 
         if selection.lower() == 'all':
             selection = '1-%d' % self.complex_prmtop.ptr('nres')

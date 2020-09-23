@@ -214,9 +214,9 @@ class Namelist(object):
 
     def __str__(self):
         """
-      Prints out the full contents of this namelist in the Fortran namelist
-      format
-      """
+        Prints out the full contents of this namelist in the Fortran namelist
+        format
+        """
         maxlen = max([len(v) + len(str(self.variables[v].value))
                       for v in self.variables if v is not self.trigger]) + 7
         maxlen = max(maxlen, 25)
@@ -288,7 +288,7 @@ class InputFile(object):
           has the information [varname, datatype, default, chars to match]. The
           'trigger' is the logical variable that gets set to true if this
           namelist is specified in the input file.
-      """
+        """
 
         if name in self.ordered_namelist_keys:
             raise InputError('Namelist %s defined multiple times' % name)
@@ -508,6 +508,7 @@ input_file.addNamelist('gb', 'gb',
                        [
                            ['ifqnt', int, 0, 'Use QM on part of the system'],
                            ['igb', int, 5, 'GB model to use'],
+                           ['intdiel', float, 0, 'Internal dielectric constant for sander'],
                            ['qm_theory', str, '', 'Semi-empirical QM theory to use.'],
                            ['qm_residues', str, '', 'Residues to treat with QM'],
                            ['qmcharge_com', int, 0, 'Charge of QM region in complex'],
