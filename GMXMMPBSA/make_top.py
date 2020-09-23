@@ -26,26 +26,12 @@ import parmed
 import warnings
 from GMXMMPBSA.exceptions import *
 import subprocess
+from math import sqrt
 
 ff_list = {'amber03': 'oldff/leaprc.ff03', 'amber99': 'oldff/leaprc.ff99', 'amber99sb': 'oldff/leaprc.ff99SB',
            'amber99sb-ildn': 'oldff/leaprc.ffSBildn', 'amber94': 'oldff/leaprc.ff94', 'amber96': 'oldff/leaprc.ff96',
            'amber14sb': 'leaprc.protein.ff14SB'}
-# for x in ff_list:
-#     print(
 lig_ff = ['gaff', 'gaff2']
-# print(s.path.splitext('../COM.top')
-
-babel_elements = {0: 'Xx', 1: 'H', 2: 'He', 3: 'Li', 4: 'Be', 5: 'B', 6: 'C', 7: 'N', 8: 'O', 9: 'F', 10: 'Ne',
-                  11: 'Na', 12: 'Mg', 13: 'Al', 14: 'Si', 15: 'P', 16: 'S', 17: 'Cl', 18: 'Ar', 19: 'K', 20: 'Ca',
-                  21: 'Sc', 22: 'Ti', 23: 'V', 24: 'Cr', 25: 'Mn', 26: 'Fe', 27: 'Co', 28: 'Ni', 29: 'Cu', 30: 'Zn',
-                  31: 'Ga', 32: 'Ge', 33: 'As', 34: 'Se', 35: 'Br', 36: 'Kr', 37: 'Rb', 38: 'Sr', 39: 'Y', 40: 'Zr',
-                  41: 'Nb', 42: 'Mo', 43: 'Tc', 44: 'Ru', 45: 'Rh', 46: 'Pd', 47: 'Ag', 48: 'Cd', 49: 'In', 50: 'Sn',
-                  51: 'Sb', 52: 'Te', 53: 'I', 54: 'Xe', 55: 'Cs', 56: 'Ba', 57: 'La', 58: 'Ce', 59: 'Pr', 60: 'Nd',
-                  61: 'Pm', 62: 'Sm', 63: 'Eu', 64: 'Gd', 65: 'Tb', 66: 'Dy', 67: 'Ho', 68: 'Er', 69: 'Tm', 70: 'Yb',
-                  71: 'Lu', 72: 'Hf', 73: 'Ta', 74: 'W', 75: 'Re', 76: 'Os', 77: 'Ir', 78: 'Pt', 79: 'Au', 80: 'Hg',
-                  81: 'Tl', 82: 'Pb', 83: 'Bi', 84: 'Po', 85: 'At', 86: 'Rn', 87: 'Fr', 88: 'Ra', 89: 'Ac', 90: 'Th',
-                  91: 'Pa', 92: 'U', 93: 'Np', 94: 'Pu', 95: 'Am', 96: 'Cm', 97: 'Bk', 98: 'Cf', 99: 'Es', 100: 'Fm',
-                  101: 'Md', 102: 'No', 106: 'Lr', 107: 'D'}
 
 std_aa = ['ALA', 'ARG', 'ASN', 'ASP', 'CYS', 'CYX', 'GLN', 'GLU', 'GLY', 'HID', 'HIE', 'HIP', 'ILE', 'LEU', 'LYS',
           'MET', 'PHE', 'PRO', 'SER', 'THR', 'TRP', 'TYR', 'VAL', 'HIS']
@@ -55,13 +41,20 @@ gmx = '/usr/local/gromacs/bin/gmx'
 
 # FIXME: check if gromacs exists (findprog module)
 
+def dist(coor1, coor2):
+    return sqrt((coor2[0] - coor1[0]) ** 2 + (coor2[1] - coor1[1]) ** 2 + (coor2[2] - coor1[2]) ** 2)
+
 class CheckMakeTop:
-    def __init__(self, FILES, alarun=False):
+    def __init__(self, FILES, INPUT):
         self.FILES = FILES
         self.ligand_isProt = True
-        mutprefix = ''
-        # create local variables based on mutant to avoid duplicate
-        self.mutation = alarun
+        self.INPUT = INPUT
+
+        self.use_temp = False
+        self.print_residues = self.INPUT['print_res'].split()[0] == 'within'  # FIXME: this is pretty ugly
+        self.within = 4
+        if self.print_residues:
+            self.within = float(self.INPUT['print_res'].split()[1])
 
         self.ligand_tpr = None
         self.ligand_mol2 = None
@@ -146,6 +139,20 @@ class CheckMakeTop:
                                   stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             if l3.wait():
                 raise MMPBSA_Error('%s failed when querying %s' % ('parmchk2', self.ligand_mol2))
+
+        # make a temp receptor pdb (even when stability) if decomp to get correct receptor residues from complex. This
+        # avoid get multiples molecules from complex.split()
+        if self.INPUT['decomprun'] and self.print_residues:
+            if self.FILES.stability:
+                self.use_temp = True
+                cp1 = subprocess.Popen(['echo', '{}'.format(rec_group)], stdout=subprocess.PIPE)
+                # we get only first trajectory to extract a pdb file for make amber topology
+                cp2 = subprocess.Popen(
+                    [gmx, "trjconv", '-f', self.FILES.complex_trajs[0], '-s', self.FILES.complex_tpr, '-o',
+                     'rec_temp.pdb', '-n', self.FILES.complex_index, '-b', '0', '-e', '0'],
+                    stdin=cp1.stdout, stdout=subprocess.PIPE)
+                if cp2.wait():  # if it quits with return code != 0
+                    raise MMPBSA_Error('%s failed when querying %s' % (gmx + 'make_ndx', self.FILES.complex_tpr))
 
         # check if stability
         if self.FILES.stability:
@@ -283,6 +290,39 @@ class CheckMakeTop:
                     self.mutant_ligand_str = parmed.read_PDB(self.ligand_pdb_fixed)
                     self.mutatexala(self.mutant_ligand_str)
                     self.mutant_ligand_str.save(self.mutant_ligand_pdb_fixed, 'pdb', True)
+
+        # Get residue form receptor-ligand interface
+        res_list = []
+        if self.print_residues:
+            if self.use_temp:
+                temp_str = parmed.read_PDB('rec_temp.pdb')
+                rec_resnum = len(temp_str.residues)
+            else:
+                rec_resnum = len(self.receptor_str.residues)
+            print('############', rec_resnum)
+            res_list = []
+            res_ndx = 1
+            for rres in self.complex_str.residues[:rec_resnum]:  # iterate over receptor residues
+                lres_ndx = rec_resnum + 1
+                for lres in self.complex_str.residues[rec_resnum:]:  # iterate over ligand residues
+                    print(lres)
+                    for rat in rres.atoms:
+                        rat_coor = [rat.xx, rat.xy, rat.xz]
+                        for lat in lres.atoms:
+                            lat_coor = [lat.xx, lat.xy, lat.xz]
+                            if dist(rat_coor, lat_coor) <= self.within:
+                                if res_ndx not in res_list:
+                                    res_list.append(res_ndx)
+                                    print(self.within, rres.name, res_ndx, lres.name, lres_ndx, dist(rat_coor,
+                                                                                                       lat_coor))
+                                if lres_ndx not in res_list:
+                                    res_list.append(lres_ndx)
+                                break
+                    lres_ndx += 1
+                res_ndx += 1
+            res_list.sort()
+            print(res_list)
+            self.INPUT['print_res'] = ','.join([str(x) for x in res_list])
 
     def mutatexala(self, structure):
         idx = 0

@@ -573,7 +573,7 @@ class MMPBSA_App(object):
                           'compatibility...\n')
 
         # Make amber topologies
-        maketop = CheckMakeTop(FILES, INPUT['alarun'])
+        maketop = CheckMakeTop(FILES, INPUT)
         (FILES.complex_prmtop, FILES.receptor_prmtop, FILES.ligand_prmtop, FILES.mutant_complex_prmtop,
          FILES.mutant_receptor_prmtop, FILES.mutant_ligand_prmtop) = maketop.makeToptleap()
 

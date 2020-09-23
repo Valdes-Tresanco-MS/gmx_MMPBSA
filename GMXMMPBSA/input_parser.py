@@ -577,7 +577,7 @@ input_file.addNamelist('decomp', 'decomposition',
                            ['csv_format', int, 1, 'Write decomposition data in CSV format'],
                            ['dec_verbose', int, 0, 'Control energy terms are printed to the output'],
                            ['idecomp', int, 0, 'Which type of decomposition analysis to do'],
-                           ['print_res', str, 'all', 'Which residues to print decomposition data for']
+                           ['print_res', str, 'within 6', 'Which residues to print decomposition data for']
                        ], trigger='decomprun')
 
 input_file.addNamelist('rism', 'rism',
