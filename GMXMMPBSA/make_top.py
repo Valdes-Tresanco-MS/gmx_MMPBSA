@@ -160,7 +160,7 @@ class CheckMakeTop:
                 warnings.warn(
                     'When Stability calculation mode is selected receptor and ligand are not needed. However, '
                     'the receptor and/or the ligand are defined, so we will ignore them.', StabilityWarning)
-            if self.mutation and (self.FILES.mutant_receptor_tpr or self.FILES.mutant_ligand_tpr):
+            if self.INPUT['alarun'] and (self.FILES.mutant_receptor_tpr or self.FILES.mutant_ligand_tpr):
                 warnings.warn(
                     'When Stability calculation mode is selected mutant receptor and/or mutant ligand are not '
                     'needed. However, the receptor or the ligand (mutant) are defined, so we will ignore them.',
@@ -243,7 +243,7 @@ class CheckMakeTop:
         self.properATOMS(self.complex_str)
         self.complex_str.save(self.complex_pdb_fixed, 'pdb', True)
 
-        if self.mutation:
+        if self.INPUT['alarun']:
             self.mutant_complex_str = parmed.read_PDB(self.complex_pdb_fixed)
             # make mutation and save
             self.mutatexala(self.mutant_complex_str)
@@ -277,14 +277,14 @@ class CheckMakeTop:
                 self.properATOMS(self.ligand_str)
                 self.ligand_str.save(self.ligand_pdb_fixed, 'pdb', True)
 
-            if self.mutation:
-                if self.FILES.mutant == 'REC':
+            if self.INPUT['alarun']:
+                if self.INPUT['mutant'].lower() in ['rec', 'receptor']:
                     self.mutant_receptor_str = parmed.read_PDB(self.receptor_pdb_fixed)
                     # fix mutant receptor structure
                     self.mutatexala(self.mutant_receptor_str)
                     self.mutant_receptor_str.save(self.mutant_receptor_pdb_fixed, 'pdb', True)
 
-                elif self.FILES.mutant == 'LIG':
+                else:
                     if not self.ligand_isProt:
                         raise MMPBSA_Error('Mutation is only possible if the ligand is protein-like')
                     self.mutant_ligand_str = parmed.read_PDB(self.ligand_pdb_fixed)
@@ -292,7 +292,6 @@ class CheckMakeTop:
                     self.mutant_ligand_str.save(self.mutant_ligand_pdb_fixed, 'pdb', True)
 
         # Get residue form receptor-ligand interface
-        res_list = []
         if self.print_residues:
             if self.use_temp:
                 temp_str = parmed.read_PDB('rec_temp.pdb')
@@ -327,16 +326,15 @@ class CheckMakeTop:
     def mutatexala(self, structure):
         idx = 0
         found = False
-        if not self.FILES.mutant_residue:
+        if not self.INPUT['mutant_res']:
             raise MMPBSA_Error("No residue for mutation was defined")
-        chain, resnum = self.FILES.mutant_residue.split(':')
+        chain, resnum = self.INPUT['mutant_res'].split(':')
 
         print('#@#@#@#@#', chain, resnum)
 
         if not chain or not resnum:
             raise MMPBSA_Error("No residue was defined")
         for res in structure.residues:
-            print(res.name, res.chain, res.number)
             if res.number == int(resnum) and res.chain == chain:
                 found = True
                 print('encontrado', res.name, res.chain, res.number)
@@ -454,7 +452,7 @@ class CheckMakeTop:
                                     stderr=subprocess.STDOUT, shell=True)
         print(p.decode())
 
-        if self.mutation:
+        if self.INPUT['alarun']:
             with open(self.FILES.prefix + 'mut_leap.in', 'w') as mtif:
                 mtif.write('source {}\n'.format(ff_list[self.FILES.protein_ff]))
                 mtif.write('source leaprc.DNA.bsc1\n')
@@ -468,7 +466,7 @@ class CheckMakeTop:
                     mtif.write('loadamberparams {}\n'.format(self.ligand_frcmod))
 
                 if not self.FILES.stability:
-                    if self.FILES.mutant == 'REC':
+                    if self.INPUT['mutant'].lower() in ['rec', 'receptor']:
                         mtif.write('mut_rec = loadpdb {}\n'.format(self.mutant_receptor_pdb_fixed))
                         mtif.write('saveamberparm mut_rec {t} {p}MUT_REC.inpcrd\n'.format(t=self.mutant_receptor_pmrtop,
                                                                                           p=self.FILES.prefix))

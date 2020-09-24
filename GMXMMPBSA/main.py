@@ -876,6 +876,9 @@ class MMPBSA_App(object):
         # User warning when intdiel > 10
         if self.INPUT['intdiel'] > 10:
             warnings.warn('Intdiel should be less than 10, but it is {}'.format(self.INPUT['intdiel']), InputWarning)
+        # check mutant definition
+        if not self.INPUT['mutant'].lower() in ['rec', 'receptor', 'lig', 'ligand']:
+            raise InputError('The mutant most be receptor (or rec) or ligand (or lig)')
 
     def remove(self, flag):
         """ Removes temporary files """

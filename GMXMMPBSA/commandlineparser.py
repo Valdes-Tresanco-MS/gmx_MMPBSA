@@ -152,17 +152,6 @@ group.add_argument('-lt', dest='ligand_trajs', nargs='*', metavar='TRJ',
                    help='''Input trajectories of the unbound ligand. Allowed formats: *.xtc (recommended), *.trr, *.pdb
                   (specify as many as you'd like).''')
 
-
-group = parser.add_argument_group('Mutant', ligand_group_des)
-group.add_argument('-m', dest='mutant', metavar='<REC or LIG>', choices=['REC', 'LIG'], default=None,
-                   help='Name of the protein (Receptor or Ligand) in which a residue will be mutated to an alanine to '
-                        'perform a computational alanine scan. If stability calculation is selected can be omitted. ('
-                        'Default: REC)')
-group.add_argument('-mr', dest='mutant_residue', metavar='CHAIN:RESNUM', default=None,
-                   help='Residues that will be mutated. The notation is as follow: CHAIN:RESNUM (eg: A:10). Take in '
-                        'account that Gromacs rename chains.')
-
-
 group = parser.add_argument_group('Miscellaneous Actions')
 group.add_argument('-make-mdins', dest='make_mdins', default=False,
                    action='store_true', help='''Create the input files for each

@@ -557,7 +557,9 @@ input_file.addNamelist('pb', 'pb',
                        ], trigger='pbrun')
 
 input_file.addNamelist('ala', 'alanine_scanning',
-                       [['mutant_only', int, 0, 'Only compute mutant energies']],
+                       [['mutant_only', int, 0, 'Only compute mutant energies'],
+                        ['mutant', str, 'receptor', 'Define if mutation is made in Receptor or Ligand'],
+                        ['mutant_res', str, None, 'Which residue will be mutated by ALA']],
                        trigger='alarun')
 
 input_file.addNamelist('nmode', 'nmode',
