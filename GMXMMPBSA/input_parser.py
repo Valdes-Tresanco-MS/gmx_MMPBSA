@@ -508,7 +508,7 @@ input_file.addNamelist('gb', 'gb',
                        [
                            ['ifqnt', int, 0, 'Use QM on part of the system'],
                            ['igb', int, 5, 'GB model to use'],
-                           ['intdiel', float, 0, 'Internal dielectric constant for sander'],
+                           ['intdiel', float, 1.0, 'Internal dielectric constant for sander'],
                            ['qm_theory', str, '', 'Semi-empirical QM theory to use.'],
                            ['qm_residues', str, '', 'Residues to treat with QM'],
                            ['qmcharge_com', int, 0, 'Charge of QM region in complex'],

@@ -756,7 +756,7 @@ class MMPBSA_App(object):
             self.INPUT['gbsa'] = 2
 
         # Force to use Sander when intdiel is defined
-        if self.INPUT['intdiel']:
+        if self.INPUT['intdiel'] > 1.0:
             self.INPUT['use_sander'] = 1
 
         # Stability: no terms cancel, so print them all
