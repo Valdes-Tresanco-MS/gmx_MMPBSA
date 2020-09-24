@@ -150,14 +150,12 @@ class GMX_MMPBSA_GUI(QMainWindow):
                     data_out[calc_type][decomp_calc_type] = {}
                     # complex, if stability: receptor, ligand
                     com = data[calc_type][decomp_calc_type]['complex']
-                    # for res in com:
                     rec = lig = None
                     if 'receptor' in data[calc_type][decomp_calc_type]:
                         rec = data[calc_type][decomp_calc_type]['receptor']
                         lig = data[calc_type][decomp_calc_type]['ligand']
                     for p in com:
                         data_out[calc_type][decomp_calc_type][p] = {}
-
                         for res in com[p]:
                             if res not in data_out[calc_type][decomp_calc_type][p]:
                                 data_out[calc_type][decomp_calc_type][p][res] = {}
@@ -330,17 +328,17 @@ class GMX_MMPBSA_GUI(QMainWindow):
                 for level1 in data[level]:
                     item1 = CustomItem([str(level1).upper()])
                     item1.setCheckState(1, Qt.Unchecked)
-                    item1.dataperframe = {'name': mut_pre + '{} {} Energy (Per-Frame)'.format(level.upper(),
-                                                                                              level1.upper()),
-                                          'xaxis': 'frames', 'yaxis': 'Energy (kcal/mol)', 'interval':
-                                              self.app.INPUT['interval'], 'data': data[level][level1]}
+                    item1.dataperframe = {
+                        'name': mut_pre + '{} {} Energy (Per-Frame)'.format(level.upper(), level1.upper()),
+                        'xaxis': 'frames', 'yaxis': 'Energy (kcal/mol)', 'interval': self.app.INPUT['interval'],
+                        'data': data[level][level1]}
                     cd.append([level1, data[level][level1].mean()])
                     if level1 == 'TOTAL':
                         item1.setCheckState(2, Qt.Unchecked)
-                        item1.datamean = {'name': mut_pre + '{} {} Energy (Mean)'.format(level.upper(), level1.upper()),
-                                          'xaxis': [x[0].upper() for x in cd], 'yaxis': 'Energy (kcal/mol)',
-                                          'data': np.array([x[1] for x in cd]), }
-
+                        item1.datamean = {
+                            'name': mut_pre + '{} {} Energy (Mean)'.format(level.upper(), level1.upper()),
+                            'xaxis': [x[0].upper() for x in cd], 'yaxis': 'Energy (kcal/mol)',
+                            'data': np.array([x[1] for x in cd]), }
                     item.addChild(item1)
 
             elif level == 'decomp':
@@ -373,29 +371,26 @@ class GMX_MMPBSA_GUI(QMainWindow):
                                         item5.dataperframe = {
                                             'name': mut_pre + 'Docomposition ({}) {} Residue {} Pair {} {} Energy '
                                                               '(Per-Frame)'.format(level1.upper(), level2.upper(),
-                                                                                   level3,
-                                                                                   level4, level5.upper()),
+                                                                                   level3, level4, level5.upper()),
                                             'xaxis': 'frames', 'yaxis': 'Energy (kcal/mol)', 'interval':
                                                 self.app.INPUT['interval'],
                                             'data': data[level][level1][level2][level3][level4][level5]}
-                                        lvl5_meandata.append([level5, data[level][level1][level2][level3][
-                                            level4][level5].mean()])
+                                        lvl5_meandata.append(
+                                            [level5, data[level][level1][level2][level3][level4][level5].mean()])
                                         if level5 == 'tot':
                                             item5.setCheckState(2, Qt.Unchecked)
                                             lvl3_data += data[level][level1][level2][level3][level4][level5]
-                                            lvl3_meandata.append([level4,
-                                                                  data[level][level1][level2][level3][level4][
-                                                                      level5].mean()])
+                                            lvl3_meandata.append(
+                                                [level4, data[level][level1][level2][level3][level4][level5].mean()])
 
                                             item5.datamean = {
                                                 'name': mut_pre + 'Decomposition ({}) {} Residue {} Pair {} '
                                                                   'Total Energy (Mean)'.format(level1.upper(),
                                                                                                level2.upper(),
-                                                                                               level3,
-                                                                                               level4),
+                                                                                               level3, level4),
                                                 'xaxis': [x[0].upper() for x in lvl5_meandata],
                                                 'yaxis': 'Energy (kcal/mol)',
-                                                'data': np.array([x[1] for x in lvl5_meandata]), }
+                                                'data': np.array([x[1] for x in lvl5_meandata])}
                                 else:
                                     lvl3_data += data[level][level1][level2][level3][level4]
                                     lvl3_meandata.append(
@@ -412,49 +407,41 @@ class GMX_MMPBSA_GUI(QMainWindow):
                                         [level4, data[level][level1][level2][level3][level4].mean()])
                                     if level4 == 'tot':
                                         item4.setCheckState(2, Qt.Unchecked)
-                                        item4.datamean = {'name': mut_pre + 'Decomposition ({}) {} Residue {} '
-                                                                            'Total Energy (Mean)'.format(level1.upper(),
-                                                                                                         level2.upper(),
-                                                                                                         level3),
-                                                          'xaxis': [x[0].upper() for x in lvl4_meandata],
-                                                          'yaxis': 'Energy (kcal/mol)',
-                                                          'data': np.array([x[1] for x in lvl4_meandata]), }
+                                        item4.datamean = {
+                                            'name': mut_pre + 'Decomposition ({}) {} Residue {} Total Energy ('
+                                                              'Mean)'.format(level1.upper(), level2.upper(), level3),
+                                            'xaxis': [x[0].upper() for x in lvl4_meandata],
+                                            'yaxis': 'Energy (kcal/mol)',
+                                            'data': np.array([x[1] for x in lvl4_meandata]), }
 
                             if 'tot' in data[level][level1][level2][level3]:  # Per-residue
                                 lvl2_data += lvl3_data
                                 lvl2_meandata.append([level3, lvl3_data.mean()])
-
                             else:  # Per-wise
                                 item3.setCheckState(1, Qt.Unchecked)
-                                item3.dataperframe = {'name': mut_pre + 'Decomposition ({})  {} Residue {} Energy ('
-                                                                        'Per-Frame)'.format(level1.upper(),
-                                                                                            level2.upper(),
-                                                                                            level3),
-                                                      'xaxis': 'frames', 'yaxis': 'Energy (kcal/mol)', 'interval':
-                                                          self.app.INPUT['interval'], 'data': lvl3_data}
+                                item3.dataperframe = {
+                                    'name': mut_pre + 'Decomposition ({})  {} Residue {} Energy (Per-Frame)'.format(
+                                        level1.upper(), level2.upper(), level3), 'xaxis': 'frames',
+                                    'yaxis': 'Energy (kcal/mol)', 'interval': self.app.INPUT['interval'],
+                                    'data': lvl3_data}
                                 lvl3_meandata.extend([['TOTAL', sum([x[1] for x in lvl3_meandata])]])
                                 lvl2_data += lvl3_data
                                 lvl2_meandata.append([level3, lvl3_data.mean()])
-
-                                item3.datamean = {'name': mut_pre + 'Decomposition ({}) {} Residue {} Energy ('
-                                                                    'Mean) from Pairs'.format(level1.upper(),
-                                                                                              level2.upper(),
-                                                                                              level3),
-                                                  'xaxis': [x[0] for x in lvl3_meandata], 'yaxis': 'Energy ('
-                                                                                                   'kcal/mol)',
-                                                  'data': np.array([x[1] for x in lvl3_meandata]), }
+                                item3.datamean = {
+                                    'name': mut_pre + 'Decomposition ({}) {} Residue {} Energy (Mean) from '
+                                                      'Pairs'.format(level1.upper(), level2.upper(), level3),
+                                    'xaxis': [x[0] for x in lvl3_meandata], 'yaxis': 'Energy (kcal/mol)',
+                                    'data': np.array([x[1] for x in lvl3_meandata]), }
                                 item3.setCheckState(2, Qt.Unchecked)
-
-                        item2.dataperframe = {'name': mut_pre + 'Decomposition ({})  {} Energy '
-                                                                '(Per-Frame)'.format(level1.upper(), level2.upper()),
-                                              'xaxis': 'frames',
-                                              'yaxis': 'Energy (kcal/mol)', 'interval': self.app.INPUT['interval'],
-                                              'data': lvl2_data}
+                        item2.dataperframe = {
+                            'name': mut_pre + 'Decomposition ({})  {} Energy (Per-Frame)'.format(
+                                level1.upper(), level2.upper()), 'xaxis': 'frames', 'yaxis': 'Energy (kcal/mol)',
+                            'interval': self.app.INPUT['interval'], 'data': lvl2_data}
                         lvl2_meandata.extend([['TOTAL', sum([x[1] for x in lvl2_meandata])]])
-                        item2.datamean = {'name': mut_pre + 'Decomposition ({}) {} Energy (Mean)'.format(level1.upper(),
-                                                                                                         level2.upper()),
-                                          'xaxis': [x[0] for x in lvl2_meandata], 'yaxis': 'Energy (kcal/mol)',
-                                          'data': np.array([x[1] for x in lvl2_meandata])}
+                        item2.datamean = {
+                            'name': mut_pre + 'Decomposition ({}) {} Energy (Mean)'.format(
+                                level1.upper(), level2.upper()), 'xaxis': [x[0] for x in lvl2_meandata],
+                            'yaxis': 'Energy (kcal/mol)', 'data': np.array([x[1] for x in lvl2_meandata])}
 
     def makeTree(self):
         self.treeWidget = QTreeWidget(self)
@@ -466,13 +453,14 @@ class GMX_MMPBSA_GUI(QMainWindow):
         self.normalitem.setExpanded(True)
         self.treeWidget.addTopLevelItem(self.normalitem)
         self.makeItems(self.data, self.normalitem)
+        self.normalitem.setExpanded(True)
 
         if self.mutant_data:
             self.mutantitem = CustomItem(['Mutant System'])
             self.treeWidget.addTopLevelItem(self.mutantitem)
             self.makeItems(self.mutant_data, self.mutantitem, True)
+            self.mutantitem.setExpanded(True)
 
-        self.normalitem.setExpanded(True)
         self.treeWidget.header().setSectionResizeMode(QHeaderView.ResizeToContents)
 
 
