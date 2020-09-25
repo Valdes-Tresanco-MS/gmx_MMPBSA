@@ -103,7 +103,7 @@ case the whole variable name is required). For example, “star” in &general w
 
 **&general namelist variables**
 
-`debug_printlevel` MMPBSA.py prints errors by raising exceptions, and not catching fatal errors. If debug_printlevel 
+**debug_printlevel** MMPBSA.py prints errors by raising exceptions, and not catching fatal errors. If debug_printlevel 
             is set to 0, then detailed tracebacks (effectively the call stack showing exactly where in the program the 
             error occurred) is suppressed, so only the error message is printed. If debug_printlevel is set to 1 or 
             higher, all tracebacks are printed, which aids in debugging of issues. Default: 0. (Advanced Option)
@@ -347,7 +347,7 @@ ranges. The different fields must be either comma- or semicolon-delimited. For e
 -since that’s 62500 pairs!) It is not unusual for the output file to take a significant amount of time to print if you
 -have a lot of data. This is most applicable to pairwise decomp, since the amount of data scales as O(N 2 ).
 
-+ Based on the above, we decided to limit the selection of the residuals that will be displayed by default. In turn, 
++ Based on the above, we decided to limit the selection of the residues that will be displayed by default. In turn, 
 + we facilitate this selection since now it is not necessary to explicitly define the list of amino acids. We define a 
 + selection method with the following structure:
 + "within 6"
