@@ -116,7 +116,8 @@ group.add_argument('-lff', dest='ligand_ff', metavar='<Forcefield>', default='ga
 
 group = parser.add_argument_group('Complex', complex_group_des)
 group.add_argument('-cs', dest='complex_tpr', metavar='<Structure File>', default=None,
-                   help='''Structure file of the bound complex''')
+                   help='Structure file of the bound complex. If it is Protein-Ligand (small molecule) complex, '
+                        'make sure that you define -lm option')
 group.add_argument('-ci', dest='complex_index', metavar='<Index File>', default=None,
                    help='Index file of the bound complex.')
 group.add_argument('-cg', dest='complex_groups', metavar='index', nargs=2, default=None,
@@ -139,11 +140,13 @@ group.add_argument('-rt', dest='receptor_trajs', nargs='*', metavar='TRJ',
                    *.pdb. (specify as many as you'd like).''')
 
 group = parser.add_argument_group('Ligand', ligand_group_des)
-group.add_argument('-ls', dest='ligand_tprOmol2', metavar='<Structure File>', default=None,
-                   help='Structure file of the unbound ligand. Can be tpr file if ligand is protein-like or mol2 '
-                        'file if is a small molecule. If omitted, is protein-like and stability is False the '
-                        'structure from complex will be used. If ligand is a small molecule, this option always most '
-                        'be defined and the rest (-li, -lg and -lt) are not needed')
+group.add_argument('-lm', dest='ligand_mol2', metavar='<Structure File>', default=None,
+                   help='Structure file of the unbound ligand used to parametrize ligand for Gromacs. Most be '
+                        'defined if Protein-Ligand (small molecule) complex was define.')
+group.add_argument('-ls', dest='ligand_tpr', metavar='<Structure File>', default=None,
+                   help='Structure file of the unbound ligand. If omitted, is protein-like and stability is False the '
+                        'structure from complex will be used. If ligand is a small molecule, make sure that you '
+                        'definde above -lm option')
 group.add_argument('-li', dest='ligand_index', metavar='<Index File>',
                    default=None, help='Index file of the unbound ligand. Only if tpr file was define in -ls.')
 group.add_argument('-lg', dest='ligand_group', metavar='index', default=None,

@@ -121,24 +121,25 @@ class CheckMakeTop:
             raise MMPBSA_Error('%s failed when querying %s' % (gmx + 'make_ndx', self.FILES.complex_tpr))
 
         # check lig before extract from complex
-        if self.FILES.ligand_tprOmol2:
-            if os.path.splitext(self.FILES.ligand_tprOmol2)[1] == '.tpr':
-                self.ligand_isProt = True
-                self.ligand_tpr = self.FILES.ligand_tprOmol2
-            else:
-                self.ligand_isProt = False
-                self.ligand_mol2 = self.FILES.ligand_tprOmol2
+        if self.FILES.ligand_mol2:
+            self.ligand_isProt = False
+
+            # if os.path.splitext(self.FILES.ligand_tprOmol2)[1] == '.tpr':
+            #     self.ligand_isProt = True
+            #     self.ligand_tpr = self.FILES.ligand_tprOmol2
+            # else:
+            #     self.ligand_mol2 = self.FILES.ligand_tprOmol2
 
         # Put receptor and ligand (explicitly defined) to avoid overwrite them
         # check if ligand is not protein. In any case, non-protein ligand always most be processed
         if not self.ligand_isProt:
-            lig_name = os.path.splitext(os.path.split(self.ligand_mol2)[1])[0]
+            lig_name = os.path.splitext(os.path.split(self.FILES.ligand_mol2)[1])[0]
             self.ligand_frcmod = self.FILES.prefix + lig_name + '.frcmod'
             # run parmchk2
-            l3 = subprocess.Popen(['parmchk2', '-i', self.ligand_mol2, '-f', 'mol2', '-o', self.ligand_frcmod],
+            l3 = subprocess.Popen(['parmchk2', '-i', self.FILES.ligand_mol2, '-f', 'mol2', '-o', self.ligand_frcmod],
                                   stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             if l3.wait():
-                raise MMPBSA_Error('%s failed when querying %s' % ('parmchk2', self.ligand_mol2))
+                raise MMPBSA_Error('%s failed when querying %s' % ('parmchk2', self.FILES.ligand_mol2))
 
         # make a temp receptor pdb (even when stability) if decomp to get correct receptor residues from complex. This
         # avoid get multiples molecules from complex.split()
@@ -156,7 +157,7 @@ class CheckMakeTop:
 
         # check if stability
         if self.FILES.stability:
-            if (self.FILES.receptor_tpr or self.ligand_tpr):
+            if (self.FILES.receptor_tpr or self.FILES.ligand_tpr):
                 warnings.warn(
                     'When Stability calculation mode is selected receptor and ligand are not needed. However, '
                     'the receptor and/or the ligand are defined, so we will ignore them.', StabilityWarning)
@@ -196,18 +197,18 @@ class CheckMakeTop:
 
         # ligand
         # # check consistence
-        if self.ligand_tpr:  # ligand is protein
+        if self.FILES.ligand_tpr:  # ligand is protein
             # wt ligand
             l1 = subprocess.Popen(['echo', '{}'.format(self.FILES.ligand_group)], stdout=subprocess.PIPE)
             # we get only first trajectory for extract a pdb file for make amber topology
             l2 = subprocess.Popen([gmx, "trjconv", '-f', self.FILES.ligand_trajs[0], '-s',
-                                   self.ligand_tpr, '-o', self.ligand_pdb, '-b', '0', '-e', '0'],
+                                   self.FILES.ligand_tpr, '-o', self.ligand_pdb, '-b', '0', '-e', '0'],
                                   stdin=l1.stdout, stdout=subprocess.PIPE)
             if l2.wait():  # if it quits with return code != 0
-                raise MMPBSA_Error('%s failed when querying %s' % (gmx + 'make_ndx', self.ligand_tpr))
-        elif self.ligand_mol2:
+                raise MMPBSA_Error('%s failed when querying %s' % (gmx + 'make_ndx', self.FILES.ligand_tpr))
+        # elif self.ligand_mol2:
             # done above
-            pass
+            # pass
         else:
             # wt complex ligand
             print('Using ligand structure from complex to make amber topology')
@@ -259,23 +260,23 @@ class CheckMakeTop:
             self.receptor_str.save(self.receptor_pdb_fixed, 'pdb', True)
 
             # fix ligand structure
-            if self.ligand_isProt and not self.ligand_tpr:  # ligand from complex
+            # if self.ligand_isProt and not self.ligand_tpr:  # ligand from complex
                 # check if ligand (from complex structure) is really protein-like.
-                self.ligand_str = parmed.read_PDB(self.ligand_pdb)
-                for res in self.ligand_str.residues:
-                    if res.name not in std_aa:
-                        self.ligand_isProt = False
-                        raise MMPBSA_Error(
-                            'It appears that the ligand that defined based on complex is non-protein type. '
-                            'This ligand type requires a structure (mol2) and a parameter (frcmod) files. '
-                            'Please define these parameters to perform the calculation correctly.')
+            self.ligand_str = parmed.read_PDB(self.ligand_pdb)
+                # for res in self.ligand_str.residues:
+                #     if res.name not in std_aa:
+                #         self.ligand_isProt = False
+                #         raise MMPBSA_Error(
+                #             'It appears that the ligand that defined based on complex is non-protein type. '
+                #             'This ligand type requires a structure (mol2) and a parameter (frcmod) files. '
+                #             'Please define these parameters to perform the calculation correctly.')
 
-                # fix ligand structure if is protein
-                self.properHIS(self.ligand_str)
-                self.properCYS(self.ligand_str)
-                self.ligand_str.strip('@/H')
-                self.properATOMS(self.ligand_str)
-                self.ligand_str.save(self.ligand_pdb_fixed, 'pdb', True)
+            # fix ligand structure if is protein
+            self.properHIS(self.ligand_str)
+            self.properCYS(self.ligand_str)
+            self.ligand_str.strip('@/H')
+            self.properATOMS(self.ligand_str)
+            self.ligand_str.save(self.ligand_pdb_fixed, 'pdb', True)
 
             if self.INPUT['alarun']:
                 if self.INPUT['mutant'].lower() in ['rec', 'receptor']:
@@ -432,7 +433,7 @@ class CheckMakeTop:
             tif.write('set default PBRadii mbondi2\n')
             # check if ligand is not protein and always load
             if not self.ligand_isProt:
-                tif.write('LIG = loadmol2 {}\n'.format(self.ligand_mol2))
+                tif.write('LIG = loadmol2 {}\n'.format(self.FILES.ligand_mol2))
                 tif.write('check LIG\n')
                 tif.write('loadamberparams {}\n'.format(self.ligand_frcmod))
 
@@ -461,7 +462,7 @@ class CheckMakeTop:
                 mtif.write('set default PBRadii mbondi2\n')
                 # check if ligand is not protein and always load
                 if not self.ligand_isProt:
-                    mtif.write('LIG = loadmol2 {}\n'.format(self.ligand_mol2))
+                    mtif.write('LIG = loadmol2 {}\n'.format(self.FILES.ligand_mol2))
                     mtif.write('check LIG\n')
                     mtif.write('loadamberparams {}\n'.format(self.ligand_frcmod))
 
