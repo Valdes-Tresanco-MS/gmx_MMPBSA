@@ -128,12 +128,12 @@ class CheckMakeTop:
                 print('echo', '"GMXMMPBSA_REC_GMXMMPBSA_LIG"')
                 # we get only first trajectory to extract a pdb file and make amber topology for complex
                 c6 = subprocess.Popen([gmx, "trjconv", '-f', self.FILES.complex_trajs[0], '-s', self.FILES.complex_tpr,
-                                       '-o', self.FILES.prefix + 'COM_traj-{}.xtc'.format(i), '-n',
+                                       '-o', 'COM_traj_{}.xtc'.format(i), '-n',
                                        self.FILES.complex_index], # FIXME: start and end frames???
                                       stdin=c5.stdout, stdout=subprocess.PIPE)
                 if c6.wait():  # if it quits with return code != 0
                     raise MMPBSA_Error('%s failed when querying %s' % (gmx + 'trjconv', self.FILES.complex_tpr))
-                new_trajs.append(self.FILES.prefix + 'COM_traj-{}.xtc'.format(i))
+                new_trajs.append('COM_traj_{}.xtc'.format(i))
             self.FILES.complex_trajs = new_trajs
 
         # Put receptor and ligand (explicitly defined) to avoid overwrite them
@@ -196,12 +196,12 @@ class CheckMakeTop:
                     # we get only first trajectory to extract a pdb file and make amber topology for complex
                     c6 = subprocess.Popen(
                         [gmx, "trjconv", '-f', self.FILES.receptor_trajs[0], '-s', self.FILES.receptor_tpr,
-                         '-o', self.FILES.prefix + 'REC_traj-{}.xtc'.format(i), '-n',
+                         '-o', 'REC_traj_{}.xtc'.format(i), '-n',
                          self.FILES.receptor_index],  # FIXME: start and end frames???
                         stdin=c5.stdout, stdout=subprocess.PIPE)
                     if c6.wait():  # if it quits with return code != 0
                         raise MMPBSA_Error('%s failed when querying %s' % (gmx + 'trjconv', self.FILES.receptor_tpr))
-                    new_trajs.append(self.FILES.prefix + 'REC_traj-{}.xtc'.format(i))
+                    new_trajs.append('REC_traj_{}.xtc'.format(i))
                 self.FILES.receptor_trajs = new_trajs
         else:
             print('Using receptor structure from complex to make amber topology')
@@ -238,13 +238,13 @@ class CheckMakeTop:
                     # we get only first trajectory to extract a pdb file and make amber topology for complex
                     c6 = subprocess.Popen(
                         [gmx, "trjconv", '-f', self.FILES.ligand_trajs[0], '-s', self.FILES.ligand_tpr,
-                         '-o', self.FILES.prefix + 'LIG_traj-{}.xtc'.format(i), '-n',
+                         '-o', 'LIG_traj_{}.xtc'.format(i), '-n',
                          self.FILES.ligand_index],  # FIXME: start and end frames???
                         stdin=c5.stdout, stdout=subprocess.PIPE)
                     if c6.wait():  # if it quits with return code != 0
                         raise MMPBSA_Error(
                             '%s failed when querying %s' % (gmx + 'trjconv', self.FILES.ligand_tpr))
-                    new_trajs.append(self.FILES.prefix + 'LIG_traj-{}.xtc'.format(i))
+                    new_trajs.append('LIG_traj_{}.xtc'.format(i))
                 self.FILES.ligand_trajs = new_trajs
         else:
             # wt complex ligand
