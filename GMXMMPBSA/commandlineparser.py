@@ -113,6 +113,9 @@ group.add_argument('-pff', dest='protein_ff', default='amber14sb', metavar='<For
                         'amber99sb, amber03, amber99, amber96, amber94. (Default: amber14sb)')
 group.add_argument('-lff', dest='ligand_ff', metavar='<Forcefield>', default='gaff',
                    help='Used forcefield to make the ligand MD in Gromacs. Allowed: gaff, gaff2. (Default: gaff)')
+group.add_argument('-st', dest='solvated_traj', action='store_true', default=True,
+                   help='Define if complex, receptor and ligand trajectories is solvated. We assume that the path '
+                        'contains ions and water')
 
 group = parser.add_argument_group('Complex', complex_group_des)
 group.add_argument('-cs', dest='complex_tpr', metavar='<Structure File>', default=None,

@@ -47,7 +47,6 @@ def dist(coor1, coor2):
 class CheckMakeTop:
     def __init__(self, FILES, INPUT):
         self.FILES = FILES
-        self.ligand_isProt = True
         self.INPUT = INPUT
 
         self.use_temp = False
@@ -118,21 +117,28 @@ class CheckMakeTop:
                                '-o', self.complex_pdb, '-n', self.FILES.complex_index, '-b', '0', '-e', '0'],
                               stdin=c3.stdout, stdout=subprocess.PIPE)
         if c4.wait():  # if it quits with return code != 0
-            raise MMPBSA_Error('%s failed when querying %s' % (gmx + 'make_ndx', self.FILES.complex_tpr))
+            raise MMPBSA_Error('%s failed when querying %s' % (gmx + 'trjconv', self.FILES.complex_tpr))
 
-        # check lig before extract from complex
-        if self.FILES.ligand_mol2:
-            self.ligand_isProt = False
-
-            # if os.path.splitext(self.FILES.ligand_tprOmol2)[1] == '.tpr':
-            #     self.ligand_isProt = True
-            #     self.ligand_tpr = self.FILES.ligand_tprOmol2
-            # else:
-            #     self.ligand_mol2 = self.FILES.ligand_tprOmol2
+        # clear trajectory
+        if self.FILES.solvated_traj:
+            print('Clear complex trajectories...')
+            new_trajs = []
+            for i in range(len(self.FILES.complex_trajs)):
+                c5 = subprocess.Popen(['echo', 'GMXMMPBSA_REC_GMXMMPBSA_LIG'], stdout=subprocess.PIPE)
+                print('echo', '"GMXMMPBSA_REC_GMXMMPBSA_LIG"')
+                # we get only first trajectory to extract a pdb file and make amber topology for complex
+                c6 = subprocess.Popen([gmx, "trjconv", '-f', self.FILES.complex_trajs[0], '-s', self.FILES.complex_tpr,
+                                       '-o', self.FILES.prefix + 'COM_traj-{}.xtc'.format(i), '-n',
+                                       self.FILES.complex_index], # FIXME: start and end frames???
+                                      stdin=c5.stdout, stdout=subprocess.PIPE)
+                if c6.wait():  # if it quits with return code != 0
+                    raise MMPBSA_Error('%s failed when querying %s' % (gmx + 'trjconv', self.FILES.complex_tpr))
+                new_trajs.append(self.FILES.prefix + 'COM_traj-{}.xtc'.format(i))
+            self.FILES.complex_trajs = new_trajs
 
         # Put receptor and ligand (explicitly defined) to avoid overwrite them
         # check if ligand is not protein. In any case, non-protein ligand always most be processed
-        if not self.ligand_isProt:
+        if self.FILES.ligand_mol2:
             lig_name = os.path.splitext(os.path.split(self.FILES.ligand_mol2)[1])[0]
             self.ligand_frcmod = self.FILES.prefix + lig_name + '.frcmod'
             # run parmchk2
@@ -174,13 +180,29 @@ class CheckMakeTop:
                                                                           self.FILES.receptor_index,
                                                                           self.receptor_pdb))
             print('Force to use this receptor structure instead the generated from complex')
-            p1 = subprocess.Popen(['echo', '{}'.format(rec_group)], stdout=subprocess.PIPE)
+            p1 = subprocess.Popen(['echo', '{}'.format(self.FILES.receptor_group)], stdout=subprocess.PIPE)
             # we get only first trajectory to extract a pdb file for make amber topology
             cp2 = subprocess.Popen([gmx, "trjconv", '-f', self.FILES.receptor_trajs[0], '-s', self.FILES.receptor_tpr,
                                     '-o', self.receptor_pdb, '-n', self.FILES.receptor_index, '-b', '0', '-e', '0'],
                                    stdin=p1.stdout, stdout=subprocess.PIPE)
             if cp2.wait():  # if it quits with return code != 0
                 raise MMPBSA_Error('%s failed when querying %s' % (gmx + 'make_ndx', self.FILES.receptor_tpr))
+            # clear trajectory
+            if self.FILES.solvated_traj:
+                print('Clear receptor trajectories...')
+                new_trajs = []
+                for i in range(len(self.FILES.receptor_trajs)):
+                    c5 = subprocess.Popen(['echo', '{}'.format(self.FILES.receptor_group)], stdout=subprocess.PIPE)
+                    # we get only first trajectory to extract a pdb file and make amber topology for complex
+                    c6 = subprocess.Popen(
+                        [gmx, "trjconv", '-f', self.FILES.receptor_trajs[0], '-s', self.FILES.receptor_tpr,
+                         '-o', self.FILES.prefix + 'REC_traj-{}.xtc'.format(i), '-n',
+                         self.FILES.receptor_index],  # FIXME: start and end frames???
+                        stdin=c5.stdout, stdout=subprocess.PIPE)
+                    if c6.wait():  # if it quits with return code != 0
+                        raise MMPBSA_Error('%s failed when querying %s' % (gmx + 'trjconv', self.FILES.receptor_tpr))
+                    new_trajs.append(self.FILES.prefix + 'REC_traj-{}.xtc'.format(i))
+                self.FILES.receptor_trajs = new_trajs
         else:
             print('Using receptor structure from complex to make amber topology')
             # wt complex receptor
@@ -206,9 +228,24 @@ class CheckMakeTop:
                                   stdin=l1.stdout, stdout=subprocess.PIPE)
             if l2.wait():  # if it quits with return code != 0
                 raise MMPBSA_Error('%s failed when querying %s' % (gmx + 'make_ndx', self.FILES.ligand_tpr))
-        # elif self.ligand_mol2:
-            # done above
-            # pass
+
+            # clear trajectory
+            if self.FILES.solvated_traj:
+                print('Clear ligand trajectories...')
+                new_trajs = []
+                for i in range(len(self.FILES.ligand_trajs)):
+                    c5 = subprocess.Popen(['echo', '{}'.format(self.FILES.ligand_group)], stdout=subprocess.PIPE)
+                    # we get only first trajectory to extract a pdb file and make amber topology for complex
+                    c6 = subprocess.Popen(
+                        [gmx, "trjconv", '-f', self.FILES.ligand_trajs[0], '-s', self.FILES.ligand_tpr,
+                         '-o', self.FILES.prefix + 'LIG_traj-{}.xtc'.format(i), '-n',
+                         self.FILES.ligand_index],  # FIXME: start and end frames???
+                        stdin=c5.stdout, stdout=subprocess.PIPE)
+                    if c6.wait():  # if it quits with return code != 0
+                        raise MMPBSA_Error(
+                            '%s failed when querying %s' % (gmx + 'trjconv', self.FILES.ligand_tpr))
+                    new_trajs.append(self.FILES.prefix + 'LIG_traj-{}.xtc'.format(i))
+                self.FILES.ligand_trajs = new_trajs
         else:
             # wt complex ligand
             print('Using ligand structure from complex to make amber topology')
@@ -286,7 +323,7 @@ class CheckMakeTop:
                     self.mutant_receptor_str.save(self.mutant_receptor_pdb_fixed, 'pdb', True)
 
                 else:
-                    if not self.ligand_isProt:
+                    if self.FILES.ligand_mol2:
                         raise MMPBSA_Error('Mutation is only possible if the ligand is protein-like')
                     self.mutant_ligand_str = parmed.read_PDB(self.ligand_pdb_fixed)
                     self.mutatexala(self.mutant_ligand_str)
@@ -419,7 +456,7 @@ class CheckMakeTop:
         if self.FILES.protein_ff not in ff_list:
             raise ValueError('This forcefield {} does not match any of the allowed '
                              '({})'.format(self.FILES.protein_ff, ', '.join([x for x in ff_list])))
-        if not self.ligand_isProt and self.FILES.ligand_ff not in lig_ff:
+        if self.FILES.ligand_mol2 and self.FILES.ligand_ff not in lig_ff:
             raise ValueError('This forcefield {} does not match any of the allowed '
                              '({})'.format(self.FILES.ligand_ff, ', '.join([x for x in ff_list])))
 
@@ -432,7 +469,7 @@ class CheckMakeTop:
             tif.write('source leaprc.{}\n'.format(self.FILES.ligand_ff))
             tif.write('set default PBRadii mbondi2\n')
             # check if ligand is not protein and always load
-            if not self.ligand_isProt:
+            if self.FILES.ligand_mol2:
                 tif.write('LIG = loadmol2 {}\n'.format(self.FILES.ligand_mol2))
                 tif.write('check LIG\n')
                 tif.write('loadamberparams {}\n'.format(self.ligand_frcmod))
@@ -440,7 +477,7 @@ class CheckMakeTop:
             if not self.FILES.stability:
                 tif.write('REC = loadpdb {}\n'.format(self.receptor_pdb_fixed))
                 tif.write('saveamberparm REC {t} {p}REC.inpcrd\n'.format(t=self.receptor_pmrtop, p=self.FILES.prefix))
-                if self.ligand_isProt:
+                if not self.FILES.ligand_mol2:
                     tif.write('LIG = loadpdb {}\n'.format(self.ligand_pdb_fixed))
                 tif.write('saveamberparm LIG {t} {p}LIG.inpcrd\n'.format(t=self.ligand_pmrtop, p=self.FILES.prefix))
 
@@ -461,7 +498,7 @@ class CheckMakeTop:
                 mtif.write('source leaprc.{}\n'.format(self.FILES.ligand_ff))
                 mtif.write('set default PBRadii mbondi2\n')
                 # check if ligand is not protein and always load
-                if not self.ligand_isProt:
+                if self.FILES.ligand_mol2:
                     mtif.write('LIG = loadmol2 {}\n'.format(self.FILES.ligand_mol2))
                     mtif.write('check LIG\n')
                     mtif.write('loadamberparams {}\n'.format(self.ligand_frcmod))
