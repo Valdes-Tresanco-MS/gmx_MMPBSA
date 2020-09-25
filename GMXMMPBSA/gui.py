@@ -108,6 +108,11 @@ class GMX_MMPBSA_GUI(QMainWindow):
         self.app = None
         self.infofile = Path(info_file)
 
+        self.gb_data = None
+        self.mut_gb_data = None
+        self.pb_data = None
+        self.mut_pb_data = None
+
         self.mdi = QMdiArea(self)
         self.setCentralWidget(self.mdi)
 
@@ -116,6 +121,7 @@ class GMX_MMPBSA_GUI(QMainWindow):
         self.opendirAct.triggered.connect(self.getInfoFile)
         self.fileMenu = self.menuBar().addMenu("&File")
         self.fileMenu.addAction(self.opendirAct)
+        self.fileMenu.addAction('Export GB/PB energy (csv)', self.exportCSV)
         self.fileMenu.addAction('Close All..', self.mdi.closeAllSubWindows)
         self.viewMenu = self.menuBar().addMenu("&View")
         self.viewMenu.addAction('Tile SubWindows', self.mdi.tileSubWindows)
@@ -203,6 +209,7 @@ class GMX_MMPBSA_GUI(QMainWindow):
         self.data = self.restructureData(data)
         if data.mutant:
             self.mutant_data = self.restructureData(data.mutant)
+
         self.makeTree()
 
     def showdata(self, item: CustomItem, col):
@@ -220,7 +227,7 @@ class GMX_MMPBSA_GUI(QMainWindow):
                     sub.col = col
                     item.subwindows[col] = sub
 
-                    x = [x1 for x1 in range(0, len(item.dataperframe['data']), item.dataperframe['interval'])]
+                    x = item.dataperframe['frames']
                     x = np.array(x)
                     y = item.dataperframe['data']
 
@@ -314,6 +321,39 @@ class GMX_MMPBSA_GUI(QMainWindow):
             #     if hasattr(item, 'name'):
             #         if x.objectName() == btn.name:
             #             self.mdi.removeSubWindow(x)
+    def writeData(self, outfile, data):
+        for i in range(len(self.frames)):
+            outfile.write(','.join([str(self.frames[i])] + [str(x[1][i]) for x in data]) + '\n')
+
+    def exportCSV(self):
+        out_file = open('TOTAL_ENERGY.csv', 'w')
+
+        if self.gb_data:
+            out_file.write('GB data\n')
+            out_file.write(','.join(['FRAME'] + [x[0].upper() for x in self.gb_data]) + '\n')
+
+            self.writeData(out_file, self.gb_data)
+
+        if self.mut_gb_data:
+            out_file.write('Mutant GB data\n')
+            out_file.write(','.join(['FRAME'] + [x[0].upper() for x in self.mut_gb_data]) + '\n')
+
+            self.writeData(out_file, self.mut_gb_data)
+
+        if self.pb_data:
+            out_file.write('PB data\n')
+            out_file.write(','.join(['FRAME'] + [x[0].upper() for x in self.pb_data]) + '\n')
+            self.writeData(out_file, self.pb_data)
+
+        if self.mut_pb_data:
+            out_file.write('Mutant PB data\n')
+            out_file.write(','.join(['FRAME'] + [x[0].upper() for x in self.mut_pb_data]) + '\n')
+            self.writeData(out_file, self.mut_pb_data)
+
+        out_file.close()
+
+    def makeCSV(self, data):
+        pass
 
     def makeItems(self, data, topItem, mutant=False):
         mut_pre = ''
@@ -325,14 +365,19 @@ class GMX_MMPBSA_GUI(QMainWindow):
             topItem.addChild(item)
             if level in ['gb', 'pb']:
                 cd = []
+                dat = []
                 for level1 in data[level]:
                     item1 = CustomItem([str(level1).upper()])
                     item1.setCheckState(1, Qt.Unchecked)
+                    # FIXME: frames (start, end, interval) ???
+                    end = len(data[level][level1]) * self.app.INPUT['interval'] + self.app.INPUT['startframe']
+                    self.frames = [x for x in range(self.app.INPUT['startframe'], end, self.app.INPUT['interval'])]
                     item1.dataperframe = {
                         'name': mut_pre + '{} {} Energy (Per-Frame)'.format(level.upper(), level1.upper()),
-                        'xaxis': 'frames', 'yaxis': 'Energy (kcal/mol)', 'interval': self.app.INPUT['interval'],
+                        'xaxis': 'frames', 'yaxis': 'Energy (kcal/mol)', 'frames': self.frames,
                         'data': data[level][level1]}
                     cd.append([level1, data[level][level1].mean()])
+                    dat.append([level1, data[level][level1]])
                     if level1 == 'TOTAL':
                         item1.setCheckState(2, Qt.Unchecked)
                         item1.datamean = {
@@ -340,6 +385,17 @@ class GMX_MMPBSA_GUI(QMainWindow):
                             'xaxis': [x[0].upper() for x in cd], 'yaxis': 'Energy (kcal/mol)',
                             'data': np.array([x[1] for x in cd]), }
                     item.addChild(item1)
+                # To export data in csv
+                if level == 'gb':
+                    if mutant:
+                        self.mut_gb_data = dat
+                    else:
+                        self.gb_data = dat
+                else:
+                    if mutant:
+                        self.mut_pb_data = dat
+                    else:
+                        self.pb_data = dat
 
             elif level == 'decomp':
                 for level1 in data[level]:
@@ -368,12 +424,13 @@ class GMX_MMPBSA_GUI(QMainWindow):
                                         item5 = CustomItem([str(level5).upper()])
                                         item4.addChild(item5)
                                         item5.setCheckState(1, Qt.Unchecked)
+                                        end = len(data[level][level1][level2][level3][level4][level5]) * \
+                                              self.app.INPUT['interval'] + self.app.INPUT['startframe']
                                         item5.dataperframe = {
                                             'name': mut_pre + 'Docomposition ({}) {} Residue {} Pair {} {} Energy '
                                                               '(Per-Frame)'.format(level1.upper(), level2.upper(),
                                                                                    level3, level4, level5.upper()),
-                                            'xaxis': 'frames', 'yaxis': 'Energy (kcal/mol)', 'interval':
-                                                self.app.INPUT['interval'],
+                                            'xaxis': 'frames', 'yaxis': 'Energy (kcal/mol)', 'frames': self.frames,
                                             'data': data[level][level1][level2][level3][level4][level5]}
                                         lvl5_meandata.append(
                                             [level5, data[level][level1][level2][level3][level4][level5].mean()])
@@ -396,12 +453,13 @@ class GMX_MMPBSA_GUI(QMainWindow):
                                     lvl3_meandata.append(
                                         [level4, data[level][level1][level2][level3][level4].mean()])
                                     item4.setCheckState(1, Qt.Unchecked)
+                                    end = len(data[level][level1][level2][level3][level4]) * \
+                                              self.app.INPUT['interval'] + self.app.INPUT['startframe']
                                     item4.dataperframe = {
                                         'name': mut_pre + 'Docomposition ({}) {} Residue {} {} Energy '
                                                           '(Per-Frame)'.format(level1.upper(), level2.upper(), level3,
                                                                                level4.upper()),
-                                        'xaxis': 'frames', 'yaxis': 'Energy (kcal/mol)', 'interval':
-                                            self.app.INPUT['interval'],
+                                        'xaxis': 'frames', 'yaxis': 'Energy (kcal/mol)', 'frames': self.frames,
                                         'data': data[level][level1][level2][level3][level4]}
                                     lvl4_meandata.append(
                                         [level4, data[level][level1][level2][level3][level4].mean()])
@@ -419,10 +477,11 @@ class GMX_MMPBSA_GUI(QMainWindow):
                                 lvl2_meandata.append([level3, lvl3_data.mean()])
                             else:  # Per-wise
                                 item3.setCheckState(1, Qt.Unchecked)
+                                end = len(lvl3_data) * self.app.INPUT['interval'] + self.app.INPUT['startframe']
                                 item3.dataperframe = {
                                     'name': mut_pre + 'Decomposition ({})  {} Residue {} Energy (Per-Frame)'.format(
                                         level1.upper(), level2.upper(), level3), 'xaxis': 'frames',
-                                    'yaxis': 'Energy (kcal/mol)', 'interval': self.app.INPUT['interval'],
+                                    'yaxis': 'Energy (kcal/mol)', 'frames': self.frames,
                                     'data': lvl3_data}
                                 lvl3_meandata.extend([['TOTAL', sum([x[1] for x in lvl3_meandata])]])
                                 lvl2_data += lvl3_data
@@ -433,10 +492,11 @@ class GMX_MMPBSA_GUI(QMainWindow):
                                     'xaxis': [x[0] for x in lvl3_meandata], 'yaxis': 'Energy (kcal/mol)',
                                     'data': np.array([x[1] for x in lvl3_meandata]), }
                                 item3.setCheckState(2, Qt.Unchecked)
+                        end = len(lvl2_data) * self.app.INPUT['interval'] + self.app.INPUT['startframe']
                         item2.dataperframe = {
                             'name': mut_pre + 'Decomposition ({})  {} Energy (Per-Frame)'.format(
                                 level1.upper(), level2.upper()), 'xaxis': 'frames', 'yaxis': 'Energy (kcal/mol)',
-                            'interval': self.app.INPUT['interval'], 'data': lvl2_data}
+                            'frames': self.frames, 'data': lvl2_data}
                         lvl2_meandata.extend([['TOTAL', sum([x[1] for x in lvl2_meandata])]])
                         item2.datamean = {
                             'name': mut_pre + 'Decomposition ({}) {} Energy (Mean)'.format(
