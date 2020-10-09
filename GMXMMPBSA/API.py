@@ -63,6 +63,7 @@ class mmpbsa_data(dict):
         self.stability = app.stability
         # Now load the data
         for key in app.calc_types:
+            print('key', key, app.calc_types[key].keys())
             if key == 'mutant' or key =='qh':
                 has_mutant = True
                 continue
@@ -74,14 +75,17 @@ class mmpbsa_data(dict):
             if not self.stability:
                 tmpdict = {}
                 for dkey in app.calc_types[key]['receptor'].data:
-                    tmpdict[dkey] = make_array(
-                        app.calc_types[key]['receptor'].data[dkey])
+                    tmpdict[dkey] = make_array(app.calc_types[key]['receptor'].data[dkey])
                 self[key]['receptor'] = tmpdict
                 tmpdict = {}
                 for dkey in app.calc_types[key]['ligand'].data:
-                    tmpdict[dkey] = make_array(
-                        app.calc_types[key]['ligand'].data[dkey])
+                    tmpdict[dkey] = make_array(app.calc_types[key]['ligand'].data[dkey])
                 self[key]['ligand'] = tmpdict
+                tmpdict = {}
+                for dkey in app.calc_types[key]['delta'].data:
+                    tmpdict[dkey] = make_array(app.calc_types[key]['delta'].data[dkey])
+                self[key]['delta'] = tmpdict
+
         # Are we doing a mutant?
         if has_mutant:
             self.mutant = {}
@@ -105,6 +109,12 @@ class mmpbsa_data(dict):
                         tmpdict[dkey] = make_array(
                             app.calc_types['mutant'][key]['ligand'].data[dkey])
                     self.mutant[key]['ligand'] = tmpdict
+                    tmpdict = {}
+                    for dkey in app.calc_types['mutant'][key]['delta'].data:
+                        tmpdict[dkey] = make_array(
+                            app.calc_types['mutant'][key]['delta'].data[dkey])
+                    self.mutant[key]['delta'] = tmpdict
+
 
     def __iadd__(self, other):
         """
@@ -356,6 +366,55 @@ class APIPairDecompOutGMX(amber_outputs.PairDecompOut):
                     self.array_data[key][rnum][rnum2]['sas'][i] = sas
                     self.array_data[key][rnum][rnum2]['tot'][i] = tot
 
+def get_delta_decomp(app, decomp_calc_type, data):
+    """
+
+    :param calc_type: gb or pb
+    :param data:
+    :return:
+    """
+    data_out = {decomp_calc_type: {'delta': {}}}
+    # data_out[decomp_calc_type] = {'delta': {}}
+    tempdict = {}
+    # complex, if stability: receptor, ligand
+    com = data[decomp_calc_type]['complex']
+    rec = data[decomp_calc_type]['receptor']
+    lig = data[decomp_calc_type]['ligand']
+    for p in com:
+        tempdict[p] = {}
+        for res in com[p]:
+            if res not in tempdict[p]:
+                tempdict[p][res] = {}
+            if app.INPUT['idecomp'] in [1, 2]:
+                if rec and res in rec[p]:
+                    for para in com[p][res]:
+                        d = com[p][res][para] - rec[p][res][para]
+                        tempdict[p][res][para] = d
+                elif lig and res in lig[p]:
+                    for para in com[p][res]:
+                        d = com[p][res][para] - lig[p][res][para]
+                        tempdict[p][res][para] = d
+            else:
+                if rec and res in rec[p]:
+                    for resp, resp1 in zip(com[p][res], rec[p][res]):
+                        tempdict[p][res][resp] = {}
+                        for para in com[p][res][resp]:
+                            d = com[p][res][resp][para] - rec[p][res][resp1][para]
+                            tempdict[p][res][resp][para] = d
+                    for resp in com[p][res]:
+                        tempdict[p][res][resp] = com[p][res][resp]
+                elif lig and res in lig[p]:
+                    for resp, resp1 in zip(list(com[p][res])[(len(com[p][res]) - len(lig[p][res])):],
+                                           lig[p][res]):
+                        tempdict[p][res][resp] = {}
+                        for para in com[p][res][resp]:
+                            d = com[p][res][resp][para] - lig[p][res][resp1][para]
+                            tempdict[p][res][resp][para] = d
+                    for resp in com[p][res]:
+                        tempdict[p][res][resp] = com[p][res][resp]
+        # data_out[decomp_calc_type]['delta'] = tempdict
+        # print(data_out[decomp_calc_type])
+        return tempdict
 
 def load_mmpbsa_info(fname):
     """
@@ -442,8 +501,6 @@ def load_mmpbsa_info(fname):
                 return_data['decomp']['gb']['complex'] = DecompClass(
                     app.FILES.prefix + 'complex_gb.mdout',
                     app.INPUT['surften']).array_data
-
-
                 if not app.stability:
                     return_data['decomp']['gb']['receptor'] = DecompClass(
                         app.FILES.prefix + 'receptor_gb.mdout',
@@ -598,6 +655,11 @@ def load_gmxmmpbsa_info(fname):
                     lig_res = com_res[len(rec_res):]
                     return_data['decomp']['gb']['ligand'] = DecompClass(app.FILES.prefix + 'ligand_gb.mdout',
                                                                         app.INPUT['surften'], lig_res).array_data
+                    return_data['decomp']['gb']['delta'] = get_delta_decomp(app, 'gb', return_data['decomp'])
+                    # print(get_delta_decomp(app, 'gb', return_data['decomp']))
+                    # print('######################')
+                    # print(return_data['decomp']['gb'])
+
             # Do normal PB
             if app.INPUT['pbrun']:
                 return_data['decomp'] = {'pb' : {}}
@@ -608,6 +670,7 @@ def load_gmxmmpbsa_info(fname):
                                                                           app.INPUT['surften']).array_data
                     return_data['decomp']['pb']['ligand'] = DecompClass(app.FILES.prefix + 'ligand_pb.mdout',
                                                                         app.INPUT['surften'], lig_res).array_data
+                    return_data['decomp']['pb']['delta'] = get_delta_decomp(app, 'pb', return_data['decomp'])
         if app.INPUT['alarun']:
             # Do mutant GB
             if app.INPUT['gbrun']:
@@ -622,6 +685,8 @@ def load_gmxmmpbsa_info(fname):
                     return_data.mutant['decomp']['gb']['ligand'] = DecompClass(app.FILES.prefix +
                                                                                 'mutant_ligand_gb.mdout',
                                                                                app.INPUT['surften'], lig_res).array_data
+                    return_data.mutant['decomp']['gb']['delta'] = get_delta_decomp(app, 'gb',
+                                                                                   return_data.mutant['decomp'])
             # Do mutant PB
             if app.INPUT['pbrun']:
                 return_data.mutant['decomp'] = {'pb' : {}}
@@ -635,6 +700,8 @@ def load_gmxmmpbsa_info(fname):
                     return_data.mutant['decomp']['pb']['ligand'] = DecompClass(app.FILES.prefix +
                                                                                 'mutant_ligand_pb.mdout',
                                                                                app.INPUT['surften'], lig_res).array_data
+                    return_data.mutant['decomp']['pb']['delta'] = get_delta_decomp(app, 'pb',
+                                                                                   return_data.mutant['decomp'])
         else:
             return_data.mutant = None
 
