@@ -327,10 +327,11 @@ error of the mean will be calculated and included for all data. If set to 0, the
 used for the output file. Default is 1 (CSV-formatted output file)
 
 `dec_verbose` Set the level of output to print in the decmop_output file.
-0 - DELTA energy, total contribution only
-1 - DELTA energy, total, sidechain, and backbone contributions
-2 - Complex, Receptor, Ligand, and DELTA energies, total contribution only
-3 - Complex, Receptor, Ligand, and DELTA energies, total, sidechain, and backbone contributions
+* 0 - DELTA energy, total contribution only
+* 1 - DELTA energy, total, sidechain, and backbone contributions
+* 2 - Complex, Receptor, Ligand, and DELTA energies, total contribution only
+* 3 - Complex, Receptor, Ligand, and DELTA energies, total, sidechain, and backbone contributions
+
 Note: If the values 0 or 2 are chosen, only the Total contributions are required, so only those will be printed
 to the mdout files to cut down on the size of the mdout files and the time required to parse them. However,
 this means that -rewrite-output cannot be used to change the default verbosity to print out sidechain and/or
