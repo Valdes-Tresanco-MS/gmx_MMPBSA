@@ -25,7 +25,7 @@ import io
 from GMXMMPBSA.amber_outputs import EnergyVector
 from GMXMMPBSA.exceptions import LengthError
 from GMXMMPBSA import utils
-from math import sqrt
+from math import sqrt, ceil
 from os import linesep as ls
 
 
@@ -87,7 +87,7 @@ def write_stability_output(app):
     final_output.separate()
 
     # Start with entropies
-    if INPUT['entropy']:
+    if INPUT['entropy'] == 1:
         if not INPUT['mutant_only']:
             qhnorm = app.calc_types['qh']
             final_output.writeline('ENTROPY RESULTS (QUASI-HARMONIC ' +
@@ -165,7 +165,7 @@ def write_stability_output(app):
                 energyvectors.writerow([])
 
             # Combine with the entropy(ies)
-            if INPUT['entropy']:
+            if INPUT['entropy'] == 1:
                 final_output.add_section('Using Quasi-harmonic Entropy ' +
                                          'Approximation: FREE ENERGY (G) = %9.4f\n' %
                                          (com_norm.data['TOTAL'].avg() - qhnorm.total_avg()))
@@ -194,7 +194,7 @@ def write_stability_output(app):
                 energyvectors.writerow([])
 
             # Combine with the entropy(ies)
-            if INPUT['entropy']:
+            if INPUT['entropy'] == 1:
                 final_output.add_section('Using Quasi-harmonic Entropy ' +
                                          'Approximation: DELTA G binding = %9.4f\n' %
                                          (com_mut.data['TOTAL'].avg() - qhmutant.total_avg()))
@@ -218,7 +218,7 @@ def write_stability_output(app):
             dstdev = diff_array.stdev()
             final_output.write(('\nRESULT OF ALANINE SCANNING: (%s) DELTA ' +
                                 'G = %9.4f  +/- %9.4f\n') % (mut_str, davg, dstdev))
-            if INPUT['entropy']:
+            if INPUT['entropy'] == 1:
                 final_output.write(('\n   (quasi-harmonic entropy) (%s) DELTA ' +
                                     'G = %9.4f\n') % (mut_str,
                                                       davg + qhnorm.total_avg() - qhmutant.total_avg()))
@@ -307,7 +307,7 @@ def write_binding_output(app):
     final_output.separate()
 
     # First do the entropies
-    if INPUT['entropy']:
+    if INPUT['entropy'] == 1:
         if not INPUT['mutant_only']:
             qhnorm = app.calc_types['qh']
             final_output.writeline('ENTROPY RESULTS (QUASI-HARMONIC '
@@ -378,7 +378,7 @@ def write_binding_output(app):
                 energyvectors.writerow([])
 
             # Combine with the entropy(ies)
-            if INPUT['entropy']:
+            if INPUT['entropy'] == 1:
                 if isinstance(sys_norm.data['DELTA TOTAL'], EnergyVector):
                     final_output.add_section('Using Quasi-harmonic Entropy ' +
                                              'Approximation: DELTA G binding = %9.4f\n' %
@@ -387,6 +387,21 @@ def write_binding_output(app):
                     final_output.add_section('Using Quasi-harmonic Entropy ' +
                                              'Approximation: DELTA G binding = %9.4f\n' %
                                              (sys_norm.data['DELTA TOTAL'][0] - qhnorm.total_avg()))
+            elif INPUT['entropy'] == 2:
+                b = 0
+                if len(sys_norm.data['TS']) > 4:
+                    b = ceil(len(sys_norm.data['TS']) /4)
+                norm_ts = sys_norm.data['TS'][b:].mean()
+                if isinstance(sys_norm.data['DELTA TOTAL'], EnergyVector):
+                    final_output.add_section('Using Interaction Entropy ' +
+                                             'Approximation: DELTA G binding = %9.4f\n' %
+                                             (sys_norm.data['DELTA TOTAL'].avg() - norm_ts))
+                    print('mean', sys_norm.data['DELTA TOTAL'].avg())
+                else:
+                    final_output.add_section('Using Interaction Entropy ' +
+                                             'Approximation: DELTA G binding = %9.4f\n' %
+                                             (sys_norm.data['DELTA TOTAL'][0] - norm_ts))
+                    print(sys_norm.data['DELTA TOTAL'][0])
             if INPUT['nmoderun']:
                 davg, dstdev = sys_norm.diff(nm_sys_norm, 'DELTA TOTAL', 'Total')
                 final_output.add_section('Using Normal Mode Entropy Approxima' +
@@ -403,7 +418,7 @@ def write_binding_output(app):
                 energyvectors.writerow([])
 
             # Combine with the entropy(ies)
-            if INPUT['entropy']:
+            if INPUT['entropy'] == 1:
                 if isinstance(sys_mut.data['DELTA TOTAL'], EnergyVector):
                     final_output.add_section('Using Quasi-harmonic Entropy ' +
                                              'Approximation: DELTA G binding = %9.4f\n' %
@@ -412,6 +427,21 @@ def write_binding_output(app):
                     final_output.add_section('Using Quasi-harmonic Entropy ' +
                                              'Approximation: DELTA G binding = %9.4f\n' %
                                              (sys_mut.data['DELTA TOTAL'][0] - qhmutant.total_avg()))
+            elif INPUT['entropy'] == 2:
+                b = 0
+                if len(sys_mut.data['TS']) > 4:
+                    b = ceil(len(sys_mut.data['TS']) /4)
+                mut_ts = sys_mut.data['TS'][b:].mean()
+                if isinstance(sys_mut.data['DELTA TOTAL'], EnergyVector):
+                    final_output.add_section('Using Interaction Entropy ' +
+                                             'Approximation: DELTA G binding = %9.4f\n' %
+                                             (sys_mut.data['DELTA TOTAL'].avg() - mut_ts))
+                    print('mean', sys_mut.data['DELTA TOTAL'].avg())
+                else:
+                    final_output.add_section('Using Interaction Entropy ' +
+                                             'Approximation: DELTA G binding = %9.4f\n' %
+                                             (sys_mut.data['DELTA TOTAL'][0] - mut_ts))
+                    print(sys_mut.data['DELTA TOTAL'][0])
             if INPUT['nmoderun']:
                 davg, dstdev = sys_mut.diff(nm_sys_mut, 'DELTA TOTAL', 'Total')
                 final_output.add_section('Using Normal Mode Entropy Approxima' +
@@ -421,21 +451,24 @@ def write_binding_output(app):
             davg, dstdev = sys_norm.diff(sys_mut, 'DELTA TOTAL', 'DELTA TOTAL')
             final_output.write(('\nRESULT OF ALANINE SCANNING: (%s) DELTA ' +
                                 'DELTA G binding = %9.4f  +/- %9.4f\n') % (mut_str, davg, dstdev))
-            if INPUT['entropy']:
+            if INPUT['entropy'] == 1:
                 final_output.write(('\n   (quasi-harmonic entropy) (%s) DELTA ' +
                                     'DELTA G binding = %9.4f\n') % (mut_str,
                                                                     davg + qhnorm.total_avg() - qhmutant.total_avg()))
+            elif INPUT['entropy'] == 2:
+                final_output.write(('\n   (interaction entropy) (%s) DELTA ' +
+                                    'DELTA G binding = %9.4f\n') % (mut_str, davg + norm_ts - mut_ts))
             if INPUT['nmoderun']:
                 davg1, dstdev1 = nm_sys_norm.diff(nm_sys_mut, 'Total', 'Total')
                 final_output.write(('\n      (normal mode entropy) (%s) DELTA ' +
-                                    'DELTA G binding = %9.4f +/- %9.4f\n') % (mut_str,
-                                                                              davg - davg1,
+                                    'DELTA G binding = %9.4f +/- %9.4f\n') % (mut_str, davg - davg1,
                                                                               sqrt(dstdev ** 2 + dstdev1 ** 2)))
             final_output.separate()
 
     # end for solv in ['gbrun', 'pbrun', ...]
 
-    if FILES.energyout: ene_csv.close()
+    if FILES.energyout:
+        ene_csv.close()
 
 
 # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
