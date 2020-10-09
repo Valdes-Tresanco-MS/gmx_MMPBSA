@@ -388,13 +388,13 @@ class GMX_MMPBSA_GUI(QMainWindow):
                             'data': np.array([x[1] for x in cd])}
                         dh = data[level]['delta'][level1].mean()
                     item.addChild(item1)
-                    if level1 == 'TS':
+                    if level1 == '-TDS':
                         itemd = CustomItem(['DELTA G'])
                         itemd.setCheckState(2, Qt.Unchecked)
                         s = 1
-                        if len(data[level]['delta']['TS']) * self.app.INPUT['entropy_seg']/100 > 1:
-                            s = ceil(len(data[level]['delta']['TS']) * (1 - app.INPUT['entropy_seg']/100))
-                        ts = data[level]['delta']['TS'][s:].mean() * -1
+                        if len(data[level]['delta']['-TDS']) * self.app.INPUT['entropy_seg']/100 > 1:
+                            s = ceil(len(data[level]['delta']['-TDS']) * (1 - self.app.INPUT['entropy_seg']/100))
+                        ts = data[level]['delta']['-TDS'][s:].mean()
                         itemd.datamean = {
                             'name': mut_pre + '{} Total Energy (with Entropy)'.format(level.upper()),
                             'xaxis': ['Enthalpy', 'Entropy', 'Delta G'], 'yaxis': 'Energy (kcal/mol)',
