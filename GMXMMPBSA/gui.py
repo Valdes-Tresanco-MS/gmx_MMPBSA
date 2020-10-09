@@ -392,8 +392,8 @@ class GMX_MMPBSA_GUI(QMainWindow):
                         itemd = CustomItem(['DELTA G'])
                         itemd.setCheckState(2, Qt.Unchecked)
                         s = 1
-                        if len(data[level]['delta']['TS']) * 0.25 > 1: # FIXME: cambiar por parametro
-                            s = ceil(len(data[level]['delta']['TS']) * 0.25)
+                        if len(data[level]['delta']['TS']) * self.app.INPUT['entropy_seg']/100 > 1:
+                            s = ceil(len(data[level]['delta']['TS']) * (1 - app.INPUT['entropy_seg']/100))
                         ts = data[level]['delta']['TS'][s:].mean() * -1
                         itemd.datamean = {
                             'name': mut_pre + '{} Total Energy (with Entropy)'.format(level.upper()),

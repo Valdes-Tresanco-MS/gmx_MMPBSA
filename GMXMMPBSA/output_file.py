@@ -389,8 +389,8 @@ def write_binding_output(app):
                                              (sys_norm.data['DELTA TOTAL'][0] - qhnorm.total_avg()))
             elif INPUT['entropy'] == 2:
                 b = 0
-                if len(sys_norm.data['TS']) > 4:
-                    b = ceil(len(sys_norm.data['TS']) /4)
+                if len(sys_norm.data['TS']) * app.INPUT['entropy_seg']/100 > 1:
+                    b = ceil(len(sys_norm.data['TS']) * (1 - app.INPUT['entropy_seg']/100))
                 norm_ts = sys_norm.data['TS'][b:].mean()
                 if isinstance(sys_norm.data['DELTA TOTAL'], EnergyVector):
                     final_output.add_section('Using Interaction Entropy ' +
