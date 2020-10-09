@@ -79,8 +79,12 @@ def write_stability_output(app):
 
     final_output.add_comment('All units are reported in kcal/mole.')
     if INPUT['nmoderun'] or INPUT['entropy']:
-        final_output.add_comment('All entropy results have units kcal/mol ' +
-                                 '(Temperature is %.2f K).' % INPUT['temp'])
+        if INPUT['entropy'] == 2:
+            final_output.add_comment('All entropy results have units kcal/mol ' +
+                                 '(Temperature is %.2f K).' % INPUT['entropy_temp'])
+        else:
+            final_output.add_comment('All entropy results have units kcal/mol ' +
+                                     '(Temperature is %.2f K).' % INPUT['temp'])
     if INPUT['ifqnt']:
         final_output.add_comment(('QM/MM: Residues %s are treated with the ' +
                                   'Quantum Hamiltonian %s') % (INPUT['qm_residues'], INPUT['qm_theory']))
@@ -299,8 +303,12 @@ def write_binding_output(app):
 
     final_output.add_comment('All units are reported in kcal/mole.')
     if INPUT['nmoderun'] or INPUT['entropy']:
-        final_output.add_comment('All entropy results have units kcal/mol ' +
-                                 '(Temperature is %.2f K).' % INPUT['temp'])
+        if INPUT['entropy'] == 2:
+            final_output.add_comment('All entropy results have units kcal/mol ' +
+                                     '(Temperature is %.2f K).' % INPUT['entropy_temp'])
+        else:
+            final_output.add_comment('All entropy results have units kcal/mol ' +
+                                     '(Temperature is %.2f K).' % INPUT['temp'])
     if INPUT['ifqnt']:
         final_output.add_comment(('QM/MM: Residues %s are treated with the ' +
                                   'Quantum Hamiltonian %s') % (INPUT['qm_residues'], INPUT['qm_theory']))
@@ -389,17 +397,19 @@ def write_binding_output(app):
                                              (sys_norm.data['DELTA TOTAL'][0] - qhnorm.total_avg()))
             elif INPUT['entropy'] == 2:
                 b = 0
-                if len(sys_norm.data['TS']) * app.INPUT['entropy_seg']/100 > 1:
-                    b = ceil(len(sys_norm.data['TS']) * (1 - app.INPUT['entropy_seg']/100))
-                norm_ts = sys_norm.data['TS'][b:].mean()
+                if len(sys_norm.data['-TDS']) * app.INPUT['entropy_seg']/100 > 1:
+                    b = ceil(len(sys_norm.data['-TDS']) * (1 - app.INPUT['entropy_seg']/100))
+                norm_ts = sys_norm.data['-TDS'][b:].mean()
                 if isinstance(sys_norm.data['DELTA TOTAL'], EnergyVector):
-                    final_output.add_section('Using Interaction Entropy ' +
+                    final_output.add_section('Interaction Entropy (-TDS): %9.4f\n' % norm_ts +
+                                             'Using Interaction Entropy ' +
                                              'Approximation: DELTA G binding = %9.4f\n' %
-                                             (sys_norm.data['DELTA TOTAL'].avg() - norm_ts))
+                                             (sys_norm.data['DELTA TOTAL'].avg() + norm_ts))
                 else:
-                    final_output.add_section('Using Interaction Entropy ' +
+                    final_output.add_section('Interaction Entropy (-TDS): %9.4f\n' % norm_ts +
+                                             'Using Interaction Entropy ' +
                                              'Approximation: DELTA G binding = %9.4f\n' %
-                                             (sys_norm.data['DELTA TOTAL'][0] - norm_ts))
+                                             (sys_norm.data['DELTA TOTAL'][0] + norm_ts))
             if INPUT['nmoderun']:
                 davg, dstdev = sys_norm.diff(nm_sys_norm, 'DELTA TOTAL', 'Total')
                 final_output.add_section('Using Normal Mode Entropy Approxima' +
@@ -427,17 +437,19 @@ def write_binding_output(app):
                                              (sys_mut.data['DELTA TOTAL'][0] - qhmutant.total_avg()))
             elif INPUT['entropy'] == 2:
                 b = 0
-                if len(sys_mut.data['TS']) > 4:
-                    b = ceil(len(sys_mut.data['TS']) /4)
-                mut_ts = sys_mut.data['TS'][b:].mean()
+                if len(sys_mut.data['-TDS']) * app.INPUT['entropy_seg']/100 > 1:
+                    b = ceil(len(sys_mut.data['-TDS']) * app.INPUT['entropy_seg']/100 > 1)
+                mut_ts = sys_mut.data['-TDS'][b:].mean()
                 if isinstance(sys_mut.data['DELTA TOTAL'], EnergyVector):
-                    final_output.add_section('Using Interaction Entropy ' +
+                    final_output.add_section('Interaction Entropy (-TDS): %9.4f\n' % mut_ts +
+                                             'Using Interaction Entropy ' +
                                              'Approximation: DELTA G binding = %9.4f\n' %
-                                             (sys_mut.data['DELTA TOTAL'].avg() - mut_ts))
+                                             (sys_mut.data['DELTA TOTAL'].avg() + mut_ts))
                 else:
-                    final_output.add_section('Using Interaction Entropy ' +
+                    final_output.add_section('Interaction Entropy (-TDS): %9.4f\n' % mut_ts +
+                                             'Using Interaction Entropy ' +
                                              'Approximation: DELTA G binding = %9.4f\n' %
-                                             (sys_mut.data['DELTA TOTAL'][0] - mut_ts))
+                                             (sys_mut.data['DELTA TOTAL'][0] + mut_ts))
             if INPUT['nmoderun']:
                 davg, dstdev = sys_mut.diff(nm_sys_mut, 'DELTA TOTAL', 'Total')
                 final_output.add_section('Using Normal Mode Entropy Approxima' +
