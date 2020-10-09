@@ -172,7 +172,7 @@ def create_inputs(INPUT, prmtop_system, pre):
 
     # end if decomprun
 
-    if INPUT['entropy']:  # quasi-harmonic approximation input file
+    if INPUT['entropy'] == 1:  # quasi-harmonic approximation input file
         trj_suffix = 'mdcrd'
         if INPUT['netcdf']: trj_suffix = 'nc'
         com_mask, rec_mask, lig_mask = prmtop_system.Mask('all', True)
