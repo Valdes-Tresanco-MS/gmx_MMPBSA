@@ -63,7 +63,6 @@ class mmpbsa_data(dict):
         self.stability = app.stability
         # Now load the data
         for key in app.calc_types:
-            print('key', key, app.calc_types[key].keys())
             if key == 'mutant' or key =='qh':
                 has_mutant = True
                 continue
@@ -412,8 +411,6 @@ def get_delta_decomp(app, decomp_calc_type, data):
                             tempdict[p][res][resp][para] = d
                     for resp in com[p][res]:
                         tempdict[p][res][resp] = com[p][res][resp]
-        # data_out[decomp_calc_type]['delta'] = tempdict
-        # print(data_out[decomp_calc_type])
         return tempdict
 
 def load_mmpbsa_info(fname):
@@ -656,10 +653,6 @@ def load_gmxmmpbsa_info(fname):
                     return_data['decomp']['gb']['ligand'] = DecompClass(app.FILES.prefix + 'ligand_gb.mdout',
                                                                         app.INPUT['surften'], lig_res).array_data
                     return_data['decomp']['gb']['delta'] = get_delta_decomp(app, 'gb', return_data['decomp'])
-                    # print(get_delta_decomp(app, 'gb', return_data['decomp']))
-                    # print('######################')
-                    # print(return_data['decomp']['gb'])
-
             # Do normal PB
             if app.INPUT['pbrun']:
                 return_data['decomp'] = {'pb' : {}}

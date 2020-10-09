@@ -997,7 +997,6 @@ class MMPBSA_App(object):
                         self.calc_types[key]['ligand'],
                         self.INPUT['verbose'], self.using_chamber)
 
-                    print(key, 'delta', self.calc_types[key]['delta'].data['DELTA ' + 'G gas'])
                     if self.INPUT['entropy'] == 2:
                         self.calculate_interaction_entropy(key)
                 else:

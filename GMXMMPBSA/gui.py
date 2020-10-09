@@ -414,7 +414,6 @@ class GMX_MMPBSA_GUI(QMainWindow):
 
             elif level == 'decomp':
                 for level1 in data[level]:
-                    print(data[level][level1]['delta'].keys())
                     item1 = CustomItem([str(level1).upper()])
                     item.addChild(item1)
                     for level2 in data[level][level1]['delta']:

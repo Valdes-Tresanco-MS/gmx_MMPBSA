@@ -396,12 +396,10 @@ def write_binding_output(app):
                     final_output.add_section('Using Interaction Entropy ' +
                                              'Approximation: DELTA G binding = %9.4f\n' %
                                              (sys_norm.data['DELTA TOTAL'].avg() - norm_ts))
-                    print('mean', sys_norm.data['DELTA TOTAL'].avg())
                 else:
                     final_output.add_section('Using Interaction Entropy ' +
                                              'Approximation: DELTA G binding = %9.4f\n' %
                                              (sys_norm.data['DELTA TOTAL'][0] - norm_ts))
-                    print(sys_norm.data['DELTA TOTAL'][0])
             if INPUT['nmoderun']:
                 davg, dstdev = sys_norm.diff(nm_sys_norm, 'DELTA TOTAL', 'Total')
                 final_output.add_section('Using Normal Mode Entropy Approxima' +
@@ -436,12 +434,10 @@ def write_binding_output(app):
                     final_output.add_section('Using Interaction Entropy ' +
                                              'Approximation: DELTA G binding = %9.4f\n' %
                                              (sys_mut.data['DELTA TOTAL'].avg() - mut_ts))
-                    print('mean', sys_mut.data['DELTA TOTAL'].avg())
                 else:
                     final_output.add_section('Using Interaction Entropy ' +
                                              'Approximation: DELTA G binding = %9.4f\n' %
                                              (sys_mut.data['DELTA TOTAL'][0] - mut_ts))
-                    print(sys_mut.data['DELTA TOTAL'][0])
             if INPUT['nmoderun']:
                 davg, dstdev = sys_mut.diff(nm_sys_mut, 'DELTA TOTAL', 'Total')
                 final_output.add_section('Using Normal Mode Entropy Approxima' +
