@@ -110,17 +110,20 @@ case the whole variable name is required). For example, “star” in &general w
             
 `endframe` The frame from which to stop extracting snapshots from the full, concatenated trajectory comprised of every 
             trajectory file supplied on the command-line. (Default = 9999999)
-            
+```diff
+@@ Input variable modified. Included Interaction entropy aproximation @@
+```            
 `entropy` It specifies whether to make a quasi-harmonic entropy (QH) approximation with ptraj or the interaction 
             entropy (IE) approximation. The allowed values are: 0 Don’t. 1: make QH. 2 make IE (default = 0)
 ```diff
-+ Added new parameters
++ New input variable added
 ```
-
 `entropy_seg` Specify the representative segment (%), starting from the end of the trajectory, for the calculation of 
             the interaction entropy, ie: 25 is equivalent to the frames contained in the last quartile of the 
             trajectory. Default: 25 (Only if `entropy` = 2)
-            
+```diff
++ New input variable added
+```
 `entropy_temp` Specify the temperature to calculate the entropy (Only if `entropy` = 2). Avoid inconsistencies with 
             defined internal temperature (298.15 K) when nmode is used. 
       
@@ -128,16 +131,14 @@ case the whole variable name is required). For example, “star” in &general w
             every 2nd frame beginning at startframe and ending less than or equal to endframe. (Default = 1)
 
 ```diff
-+We need to get all file to make analysis charts, so now always be 1. See section x
--`keep_files` The variable that specifies which temporary files are kept. All temporary files have the prefix 
--            `_MMPBSA_` prepended to them (unless you change the prefix on the command-line—see subsection 
--            Subsection 34.3.2 for details). Allowed values are 0, 1, and 2.
--0: Keep no temporary files
--1: Keep all generated trajectory files and mdout files created by sander simulations
--2: Keep all temporary files. Temporary files are only deleted if MMPBSA.py completes successfully
--(Default = 1) A verbose level of 1 is sufficient to use -rewrite-output and recreate the output file without
--rerunning any simulations.
+- Input variable deleted. All files are needed for analysis with charts
 ``` 
+~~-`keep_files` The variable that specifies which temporary files are kept. All temporary files have the prefix 
+`_MMPBSA_` prepended to them (unless you change the prefix on the command-line—see subsection Subsection 34.3.2 for 
+details). Allowed values are 0, 1, and 2. 0: Keep no temporary files 1: Keep all generated trajectory files and mdout 
+files created by sander simulations 2: Keep all temporary files. Temporary files are only deleted if MMPBSA.py 
+completes successfully (Default = 1) A verbose level of 1 is sufficient to use -rewrite-output and recreate the output
+ file without rerunning any simulations.~~
 
 `ligand_mask` The mask that specifies the ligand residues within the complex prmtop (NOT the solvated prmtop if there 
             is one). The default guess is generally sufficient and will only fail as stated above. You should use the 
@@ -159,12 +160,13 @@ because it provides a good error catch. It uses the “Amber mask” syntax desc
 This will be replaced with the default receptor_mask if ligand_mask (below) is not also set.
 
 ```diff
-+ alawys search in PATH to get gromacs executable
--`search_path` Advanced option. By default, MMPBSA.py will only search for executables in $AMBERHOME/bin .
--To enable it to search for binaries in your full PATH if they can’t be found in $AMBERHOME/bin , set
--search_path to 1. Default 0 (do not search through the PATH ). This is particularly useful if you are using
--an older version of sander that is not in AMBERHOME .
+- Input variable deleted. ALways must be defined to get gromacs
 ```
+~~-`search_path` Advanced option. By default, MMPBSA.py will only search for executables in $AMBERHOME/bin .
+To enable it to search for binaries in your full PATH if they can’t be found in $AMBERHOME/bin , set
+search_path to 1. Default 0 (do not search through the PATH ). This is particularly useful if you are using
+an older version of sander that is not in AMBERHOME .~~
+
 
 `startframe` The frame from which to begin extracting snapshots from the full, concatenated trajectory comprised
 of every trajectory file placed on the command-line. This is always the first frame read. (Default = 1)
@@ -187,7 +189,7 @@ trajectory of all frames analyzed across all processors for the complex, recepto
 0, 1, and 2. A value of 0 will simply print difference terms, 1 will print all complex, receptor, and ligand
 terms, and 2 will also print bonded terms if one trajectory is used. (Default = 1)
 ```diff
-+Added two option to change the Intenal dielectric constant without having to make and use extenal mdin file for sander
++ Input variable added. Define Internal dielectric constant without use external mdin file
 ```
 `intdiel` Define a new intenal dielectric constant (Default=1.0)
 
