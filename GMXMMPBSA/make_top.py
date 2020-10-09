@@ -25,6 +25,7 @@ import os
 import parmed
 import warnings
 from GMXMMPBSA.exceptions import *
+from GMXMMPBSA.findprogs import find_progs
 import subprocess
 from math import sqrt
 
@@ -36,11 +37,6 @@ lig_ff = ['gaff', 'gaff2']
 std_aa = ['ALA', 'ARG', 'ASN', 'ASP', 'CYS', 'CYX', 'GLN', 'GLU', 'GLY', 'HID', 'HIE', 'HIP', 'ILE', 'LEU', 'LYS',
           'MET', 'PHE', 'PRO', 'SER', 'THR', 'TRP', 'TYR', 'VAL', 'HIS']
 
-gmx = '/usr/local/gromacs/bin/gmx'
-
-
-# FIXME: check if gromacs exists (findprog module)
-
 def dist(coor1, coor2):
     return sqrt((coor2[0] - coor1[0]) ** 2 + (coor2[1] - coor1[1]) ** 2 + (coor2[2] - coor1[2]) ** 2)
 
@@ -48,7 +44,8 @@ class CheckMakeTop:
     def __init__(self, FILES, INPUT):
         self.FILES = FILES
         self.INPUT = INPUT
-
+        self.external_progs = find_progs(self.INPUT)
+        self.log = open('make_top.log', 'a')
         self.use_temp = False
         self.print_residues = self.INPUT['print_res'].split()[0] == 'within'  # FIXME: this is pretty ugly
         self.within = 4
@@ -90,11 +87,11 @@ class CheckMakeTop:
         Get PDB file to make topology
         :return:
         """
+        gmx = self.external_progs['gmx'].full_path
         # wt complex
         # make index for extract pdb structure
         rec_group, lig_group = self.FILES.complex_groups
-
-        print('WildType Complex: Save group {}_{} in {} (gromacs index) file as {}'.format(rec_group, lig_group,
+        print('Normal Complex: Save group {}_{} in {} (gromacs index) file as {}'.format(rec_group, lig_group,
                                                                                            self.FILES.complex_index,
                                                                                            self.complex_pdb))
         # merge both (rec and lig) groups into complex group, modify index and create a copy
@@ -105,32 +102,30 @@ class CheckMakeTop:
         com_ndx = self.FILES.prefix + 'COM_index.ndx'
 
         c2 = subprocess.Popen([gmx, "make_ndx", '-n', self.FILES.complex_index, '-o', com_ndx],
-                              stdin=c1.stdout, stdout=subprocess.PIPE)
+                              stdin=c1.stdout, stdout=self.log, stderr=self.log)
         if c2.wait():  # if it quits with return code != 0
             raise MMPBSA_Error('%s failed when querying %s' % (gmx + 'make_ndx', self.FILES.receptor_tpr))
         self.FILES.complex_index = com_ndx
 
         c3 = subprocess.Popen(['echo', 'GMXMMPBSA_REC_GMXMMPBSA_LIG'], stdout=subprocess.PIPE)
-        print('echo', '"GMXMMPBSA_REC_GMXMMPBSA_LIG"')
         # we get only first trajectory to extract a pdb file and make amber topology for complex
         c4 = subprocess.Popen([gmx, "trjconv", '-f', self.FILES.complex_trajs[0], '-s', self.FILES.complex_tpr,
                                '-o', self.complex_pdb, '-n', self.FILES.complex_index, '-b', '0', '-e', '0'],
-                              stdin=c3.stdout, stdout=subprocess.PIPE)
+                              stdin=c3.stdout, stdout=self.log, stderr=self.log)
         if c4.wait():  # if it quits with return code != 0
             raise MMPBSA_Error('%s failed when querying %s' % (gmx + 'trjconv', self.FILES.complex_tpr))
 
         # clear trajectory
         if self.FILES.solvated_traj:
-            print('Clear complex trajectories...')
+            print('Clear normal complex trajectories...')
             new_trajs = []
             for i in range(len(self.FILES.complex_trajs)):
                 c5 = subprocess.Popen(['echo', 'GMXMMPBSA_REC_GMXMMPBSA_LIG'], stdout=subprocess.PIPE)
-                print('echo', '"GMXMMPBSA_REC_GMXMMPBSA_LIG"')
                 # we get only first trajectory to extract a pdb file and make amber topology for complex
                 c6 = subprocess.Popen([gmx, "trjconv", '-f', self.FILES.complex_trajs[0], '-s', self.FILES.complex_tpr,
                                        '-o', 'COM_traj_{}.xtc'.format(i), '-n',
                                        self.FILES.complex_index], # FIXME: start and end frames???
-                                      stdin=c5.stdout, stdout=subprocess.PIPE)
+                                      stdin=c5.stdout, stdout=self.log, stderr=self.log)
                 if c6.wait():  # if it quits with return code != 0
                     raise MMPBSA_Error('%s failed when querying %s' % (gmx + 'trjconv', self.FILES.complex_tpr))
                 new_trajs.append('COM_traj_{}.xtc'.format(i))
@@ -143,7 +138,7 @@ class CheckMakeTop:
             self.ligand_frcmod = self.FILES.prefix + lig_name + '.frcmod'
             # run parmchk2
             l3 = subprocess.Popen(['parmchk2', '-i', self.FILES.ligand_mol2, '-f', 'mol2', '-o', self.ligand_frcmod],
-                                  stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                                  stdout=self.log, stderr=self.log)
             if l3.wait():
                 raise MMPBSA_Error('%s failed when querying %s' % ('parmchk2', self.FILES.ligand_mol2))
 
@@ -157,7 +152,7 @@ class CheckMakeTop:
                 cp2 = subprocess.Popen(
                     [gmx, "trjconv", '-f', self.FILES.complex_trajs[0], '-s', self.FILES.complex_tpr, '-o',
                      'rec_temp.pdb', '-n', self.FILES.complex_index, '-b', '0', '-e', '0'],
-                    stdin=cp1.stdout, stdout=subprocess.PIPE)
+                    stdin=cp1.stdout, stdout=self.log, stderr=self.log)
                 if cp2.wait():  # if it quits with return code != 0
                     raise MMPBSA_Error('%s failed when querying %s' % (gmx + 'make_ndx', self.FILES.complex_tpr))
 
@@ -176,20 +171,19 @@ class CheckMakeTop:
 
         # wt receptor
         if self.FILES.receptor_tpr:
-            print('Save group {} in {} (gromacs index) file as {}'.format(self.FILES.receptor_group,
+            print('Normal receptor: Save group {} in {} (gromacs index) file as {}'.format(self.FILES.receptor_group,
                                                                           self.FILES.receptor_index,
                                                                           self.receptor_pdb))
-            print('Force to use this receptor structure instead the generated from complex')
             p1 = subprocess.Popen(['echo', '{}'.format(self.FILES.receptor_group)], stdout=subprocess.PIPE)
             # we get only first trajectory to extract a pdb file for make amber topology
             cp2 = subprocess.Popen([gmx, "trjconv", '-f', self.FILES.receptor_trajs[0], '-s', self.FILES.receptor_tpr,
                                     '-o', self.receptor_pdb, '-n', self.FILES.receptor_index, '-b', '0', '-e', '0'],
-                                   stdin=p1.stdout, stdout=subprocess.PIPE)
+                                   stdin=p1.stdout, stdout=self.log, stderr=self.log)
             if cp2.wait():  # if it quits with return code != 0
                 raise MMPBSA_Error('%s failed when querying %s' % (gmx + 'make_ndx', self.FILES.receptor_tpr))
             # clear trajectory
             if self.FILES.solvated_traj:
-                print('Clear receptor trajectories...')
+                print('Clear normal receptor trajectories...')
                 new_trajs = []
                 for i in range(len(self.FILES.receptor_trajs)):
                     c5 = subprocess.Popen(['echo', '{}'.format(self.FILES.receptor_group)], stdout=subprocess.PIPE)
@@ -198,7 +192,7 @@ class CheckMakeTop:
                         [gmx, "trjconv", '-f', self.FILES.receptor_trajs[0], '-s', self.FILES.receptor_tpr,
                          '-o', 'REC_traj_{}.xtc'.format(i), '-n',
                          self.FILES.receptor_index],  # FIXME: start and end frames???
-                        stdin=c5.stdout, stdout=subprocess.PIPE)
+                        stdin=c5.stdout, stdout=self.log, stderr=self.log)
                     if c6.wait():  # if it quits with return code != 0
                         raise MMPBSA_Error('%s failed when querying %s' % (gmx + 'trjconv', self.FILES.receptor_tpr))
                     new_trajs.append('REC_traj_{}.xtc'.format(i))
@@ -206,14 +200,15 @@ class CheckMakeTop:
         else:
             print('Using receptor structure from complex to make amber topology')
             # wt complex receptor
-            print('Complex: Save group {} in {} (gromacs index) file as {}'.format(rec_group, self.FILES.complex_index,
+            print('Normal Complex: Save group {} in {} (gromacs index) file as {}'.format(rec_group,
+                                                                                     self.FILES.complex_index,
                                                                                    self.receptor_pdb))
             cp1 = subprocess.Popen(['echo', '{}'.format(rec_group)], stdout=subprocess.PIPE)
             # we get only first trajectory to extract a pdb file for make amber topology
             cp2 = subprocess.Popen(
                 [gmx, "trjconv", '-f', self.FILES.complex_trajs[0], '-s', self.FILES.complex_tpr, '-o',
                  self.receptor_pdb, '-n', self.FILES.complex_index, '-b', '0', '-e', '0'],
-                stdin=cp1.stdout, stdout=subprocess.PIPE)
+                stdin=cp1.stdout, stdout=self.log, stderr=self.log)
             if cp2.wait():  # if it quits with return code != 0
                 raise MMPBSA_Error('%s failed when querying %s' % (gmx + 'make_ndx', self.FILES.complex_tpr))
 
@@ -225,13 +220,13 @@ class CheckMakeTop:
             # we get only first trajectory for extract a pdb file for make amber topology
             l2 = subprocess.Popen([gmx, "trjconv", '-f', self.FILES.ligand_trajs[0], '-s',
                                    self.FILES.ligand_tpr, '-o', self.ligand_pdb, '-b', '0', '-e', '0'],
-                                  stdin=l1.stdout, stdout=subprocess.PIPE)
+                                  stdin=l1.stdout, stdout=self.log, stderr=self.log)
             if l2.wait():  # if it quits with return code != 0
                 raise MMPBSA_Error('%s failed when querying %s' % (gmx + 'make_ndx', self.FILES.ligand_tpr))
 
             # clear trajectory
             if self.FILES.solvated_traj:
-                print('Clear ligand trajectories...')
+                print('Clear normal ligand trajectories...')
                 new_trajs = []
                 for i in range(len(self.FILES.ligand_trajs)):
                     c5 = subprocess.Popen(['echo', '{}'.format(self.FILES.ligand_group)], stdout=subprocess.PIPE)
@@ -240,7 +235,7 @@ class CheckMakeTop:
                         [gmx, "trjconv", '-f', self.FILES.ligand_trajs[0], '-s', self.FILES.ligand_tpr,
                          '-o', 'LIG_traj_{}.xtc'.format(i), '-n',
                          self.FILES.ligand_index],  # FIXME: start and end frames???
-                        stdin=c5.stdout, stdout=subprocess.PIPE)
+                        stdin=c5.stdout, stdout=self.log, stderr=self.log)
                     if c6.wait():  # if it quits with return code != 0
                         raise MMPBSA_Error(
                             '%s failed when querying %s' % (gmx + 'trjconv', self.FILES.ligand_tpr))
@@ -255,7 +250,7 @@ class CheckMakeTop:
             # we get only  first trajectory to extract a pdb file for make amber topology
             cl2 = subprocess.Popen([gmx, "trjconv", '-f', self.FILES.complex_trajs[0], '-s', self.FILES.complex_tpr,
                                     '-o', self.ligand_pdb, '-n', self.FILES.complex_index, '-b', '0', '-e', '0'],
-                                   stdin=cl1.stdout, stdout=subprocess.PIPE)
+                                   stdin=cl1.stdout, stdout=self.log, stderr=self.log)
             if cl2.wait():  # if it quits with return code != 0
                 raise MMPBSA_Error('%s failed when querying %s' % (gmx + 'make_ndx', self.FILES.complex_tpr))
 
@@ -285,7 +280,7 @@ class CheckMakeTop:
             self.mutant_complex_str = parmed.read_PDB(self.complex_pdb_fixed)
             # make mutation and save
             self.mutatexala(self.mutant_complex_str)
-            self.mutant_complex_str.save(self.mutant_complex_pdb_fixed, 'pdb')
+            self.mutant_complex_str.save(self.mutant_complex_pdb_fixed, 'pdb', overwrite=True)
 
         if not self.FILES.stability:
             self.receptor_str = parmed.read_PDB(self.receptor_pdb)
@@ -336,13 +331,11 @@ class CheckMakeTop:
                 rec_resnum = len(temp_str.residues)
             else:
                 rec_resnum = len(self.receptor_str.residues)
-            print('############', rec_resnum)
             res_list = []
             res_ndx = 1
             for rres in self.complex_str.residues[:rec_resnum]:  # iterate over receptor residues
                 lres_ndx = rec_resnum + 1
                 for lres in self.complex_str.residues[rec_resnum:]:  # iterate over ligand residues
-                    print(lres)
                     for rat in rres.atoms:
                         rat_coor = [rat.xx, rat.xy, rat.xz]
                         for lat in lres.atoms:
@@ -350,15 +343,14 @@ class CheckMakeTop:
                             if dist(rat_coor, lat_coor) <= self.within:
                                 if res_ndx not in res_list:
                                     res_list.append(res_ndx)
-                                    print(self.within, rres.name, res_ndx, lres.name, lres_ndx, dist(rat_coor,
-                                                                                                       lat_coor))
+                                    # print(self.within, rres.name, res_ndx, lres.name, lres_ndx, dist(rat_coor,
+                                    #                                                                    lat_coor))
                                 if lres_ndx not in res_list:
                                     res_list.append(lres_ndx)
                                 break
                     lres_ndx += 1
                 res_ndx += 1
             res_list.sort()
-            print(res_list)
             self.INPUT['print_res'] = ','.join([str(x) for x in res_list])
 
     def mutatexala(self, structure):
@@ -368,23 +360,17 @@ class CheckMakeTop:
             raise MMPBSA_Error("No residue for mutation was defined")
         chain, resnum = self.INPUT['mutant_res'].split(':')
 
-        print('#@#@#@#@#', chain, resnum)
-
         if not chain or not resnum:
             raise MMPBSA_Error("No residue was defined")
         for res in structure.residues:
             if res.number == int(resnum) and res.chain == chain:
                 found = True
-                print('encontrado', res.name, res.chain, res.number)
                 break
             idx += 1
         if found:
             structure.residues[idx].name = 'ALA'
-            print(structure.residues[idx].name)
             excluded_mask = ':{} &!@CB,C,CA,N,O'.format(idx + 1)
-            print(excluded_mask)
             structure.strip(excluded_mask)
-            print([atm.name for atm in structure.residues[idx]])
         else:
             raise MMPBSA_Error('Residue {}:{} not found'.format(chain, resnum))
 
@@ -485,10 +471,11 @@ class CheckMakeTop:
             tif.write('saveamberparm complex {t} {p}COM.inpcrd\n'.format(t=self.complex_pmrtop, p=self.FILES.prefix))
             tif.write('quit')
 
-        tleap = '/home/mario/programs/amber18/bin/tleap'
-        p = subprocess.check_output('{t} -f {f}'.format(t=tleap, f=self.FILES.prefix + 'leap.in'),
-                                    stderr=subprocess.STDOUT, shell=True)
-        print(p.decode())
+        tleap = self.external_progs['tleap'].full_path
+        p = subprocess.Popen([tleap, '-f', '{}'.format(self.FILES.prefix + 'leap.in')], stdout=self.log,
+                             stderr=self.log)
+        if p.wait():
+            raise MMPBSA_Error('%s failed when querying %s' % (tleap))
 
         if self.INPUT['alarun']:
             with open(self.FILES.prefix + 'mut_leap.in', 'w') as mtif:
@@ -520,9 +507,12 @@ class CheckMakeTop:
                                                                                   p=self.FILES.prefix))
                 mtif.write('quit')
 
-            p1 = subprocess.check_output('{t} -f {f}'.format(t=tleap, f=self.FILES.prefix + 'mut_leap.in'),
-                                         stderr=subprocess.STDOUT, shell=True)
-            print(p1.decode())
+            # p1 = subprocess.check_output('{t} -f {f}'.format(t=tleap, f=self.FILES.prefix + 'mut_leap.in'),
+            #                              stderr=subprocess.STDOUT, shell=True)
+            p1 = subprocess.Popen([tleap, '-f', '{}'.format(self.FILES.prefix + 'mut_leap.in')], stdout=self.log,
+                                 stderr=self.log)
+            if p1.wait():
+                raise MMPBSA_Error('%s failed when querying %s' % (tleap))
 
         else:
             self.mutant_complex_pmrtop = None
