@@ -926,7 +926,7 @@ class MMPBSA_App(object):
             aeceint = exp_energy_int.mean()
             cts = k * self.INPUT['entropy_temp'] * log(aeceint)
             ts = np.append(ts, cts)
-            calc_types[key]['delta'].data['TS'] = ts
+            calc_types[key]['delta'].data['-TDS'] = ts
 
     def parse_output_files(self):
         """
