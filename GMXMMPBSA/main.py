@@ -821,6 +821,8 @@ class MMPBSA_App(object):
             raise InputError('IDECOMP cannot be used with sander.APBS!')
         if not INPUT['entropy'] in [0, 1, 2]:
             raise InputError('ENTROPY (%s) must be 0, 1 or 2!' % INPUT['entropy'])
+        if INPUT['entropy_seg'] not in range(1, 101):
+            raise InputError('Entropy Segment (%s) must be in 1-100!' % INPUT['entropy_seg'])
         if not INPUT['sander_apbs'] in [0, 1]:
             raise InputError('SANDER_APBS must be 0 or 1!')
         if INPUT['alarun'] and INPUT['netcdf'] != '':
@@ -919,14 +921,12 @@ class MMPBSA_App(object):
             a_energy_int = np.append(a_energy_int, aeint)
             deint = eint - aeint
             d_energy_int = np.append(d_energy_int, deint)
-            eceint = exp(deint / (k * self.INPUT['temp']))
+            eceint = exp(deint / (k * self.INPUT['entropy_temp']))
             exp_energy_int = np.append(exp_energy_int, eceint)
             aeceint = exp_energy_int.mean()
-            cts = k * self.INPUT['temp'] * log(aeceint)
+            cts = k * self.INPUT['entropy_temp'] * log(aeceint)
             ts = np.append(ts, cts)
             calc_types[key]['delta'].data['TS'] = ts
-
-        print('###### ts', ts.mean())
 
     def parse_output_files(self):
         """
