@@ -158,10 +158,13 @@ found in succession within the complex prmtop. You should use the default mask a
 because it provides a good error catch. It uses the “Amber mask” syntax described elsewhere in this manual.
 This will be replaced with the default receptor_mask if ligand_mask (below) is not also set.
 
-`search_path` Advanced option. By default, MMPBSA.py will only search for executables in $AMBERHOME/bin .
-To enable it to search for binaries in your full PATH if they can’t be found in $AMBERHOME/bin , set
-search_path to 1. Default 0 (do not search through the PATH ). This is particularly useful if you are using
-an older version of sander that is not in AMBERHOME .
+```diff
++ alawys search in PATH to get gromacs executable
+-`search_path` Advanced option. By default, MMPBSA.py will only search for executables in $AMBERHOME/bin .
+-To enable it to search for binaries in your full PATH if they can’t be found in $AMBERHOME/bin , set
+-search_path to 1. Default 0 (do not search through the PATH ). This is particularly useful if you are using
+-an older version of sander that is not in AMBERHOME .
+```
 
 `startframe` The frame from which to begin extracting snapshots from the full, concatenated trajectory comprised
 of every trajectory file placed on the command-line. This is always the first frame read. (Default = 1)
