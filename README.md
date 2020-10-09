@@ -111,9 +111,19 @@ case the whole variable name is required). For example, “star” in &general w
 `endframe` The frame from which to stop extracting snapshots from the full, concatenated trajectory comprised of every 
             trajectory file supplied on the command-line. (Default = 9999999)
             
-`entropy` Specifies whether or not a quasi-harmonic entropy approximation is made with ptraj. Allowed values are 
-            0: Don’t. 1: Do (Default = 0)
+`entropy` It specifies whether to make a quasi-harmonic entropy (QH) approximation with ptraj or the interaction 
+            entropy (IE) approximation. The allowed values are: 0 Don’t. 1: make QH. 2 make IE (default = 0)
+```diff
++ Added new parameters
+```
+
+`entropy_seg` Specify the representative segment (%), starting from the end of the trajectory, for the calculation of 
+            the interaction entropy, ie: 25 is equivalent to the frames contained in the last quartile of the 
+            trajectory. Default: 25 (Only if `entropy` = 2)
             
+`entropy_temp` Specify the temperature to calculate the entropy (Only if `entropy` = 2). Avoid inconsistencies with 
+            defined internal temperature (298.15 K) when nmode is used. 
+      
 `interval` The offset from which to choose frames from each trajectory file. For example, an interval of 2 will pull
             every 2nd frame beginning at startframe and ending less than or equal to endframe. (Default = 1)
 
