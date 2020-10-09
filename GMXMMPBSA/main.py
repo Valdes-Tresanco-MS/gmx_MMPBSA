@@ -26,6 +26,8 @@ import os
 import signal
 import sys
 import warnings
+import numpy as np
+from math import exp, log
 
 # Import MMPBSA modules
 from GMXMMPBSA import utils
@@ -190,7 +192,7 @@ class MMPBSA_App(object):
             self.timer.add_timer('rism', 'Total 3D-RISM calculation time:')
         if INPUT['nmoderun']:
             self.timer.add_timer('nmode', 'Total normal mode calculation time:')
-        if INPUT['entropy']:
+        if INPUT['entropy'] == 1:
             self.timer.add_timer('qh', 'Total quasi-harmonic calculation time:')
 
         self.sync_mpi()
@@ -210,7 +212,8 @@ class MMPBSA_App(object):
 
         # Load the list of calculations we need to do, then run them.
 
-        if master: self.timer.start_timer('calc')
+        if master:
+            self.timer.start_timer('calc')
 
         self.load_calc_list()
 
@@ -546,7 +549,7 @@ class MMPBSA_App(object):
         # end if self.INPUT['nmoderun']
 
         # Only master does entropy calculations
-        if self.INPUT['entropy']:
+        if self.INPUT['entropy'] == 1:
             self.calc_list.append(
                 PrintCalc('\nBeginning quasi-harmonic calculations with %s' %
                           progs['qh']), timer_key='qh')
@@ -676,7 +679,7 @@ class MMPBSA_App(object):
             if self.INPUT['nmoderun']:
                 self.timer.print_('nmode', self.stdout)
 
-            if self.INPUT['entropy']:
+            if self.INPUT['entropy'] == 1:
                 self.timer.print_('qh', self.stdout)
 
             self.stdout.write('\n')
@@ -816,8 +819,8 @@ class MMPBSA_App(object):
                              INPUT['idecomp'])
         if INPUT['idecomp'] != 0 and INPUT['sander_apbs'] == 1:
             raise InputError('IDECOMP cannot be used with sander.APBS!')
-        if not INPUT['entropy'] in [0, 1]:
-            raise InputError('ENTROPY (%s) must be 0 or 1!' % INPUT['entropy'])
+        if not INPUT['entropy'] in [0, 1, 2]:
+            raise InputError('ENTROPY (%s) must be 0, 1 or 2!' % INPUT['entropy'])
         if not INPUT['sander_apbs'] in [0, 1]:
             raise InputError('SANDER_APBS must be 0 or 1!')
         if INPUT['alarun'] and INPUT['netcdf'] != '':
@@ -890,6 +893,41 @@ class MMPBSA_App(object):
         """ Throws up a barrier """
         self.MPI.COMM_WORLD.Barrier()
 
+    def calculate_interaction_entropy(self, key, mutant=False):
+        """
+        Calculate the interaction entropy described FIXME: article
+        :param key:
+        :return:
+        """
+        # gases constant in kcal/mol
+        k = 0.001987
+        if mutant:
+            calc_types = self.calc_types['mutant']
+        else:
+            calc_types = self.calc_types
+        energy_int = np.array([], dtype=np.float)
+        a_energy_int = np.array([], dtype=np.float)
+        d_energy_int = np.array([], dtype=np.float)
+        exp_energy_int = np.array([], dtype=np.float)
+        ts = np.array([], dtype=np.float)
+
+        ggas = calc_types[key]['delta'].data['DELTA G gas']
+
+        for eint in ggas:
+            energy_int = np.append(energy_int, eint)
+            aeint = energy_int.mean()
+            a_energy_int = np.append(a_energy_int, aeint)
+            deint = eint - aeint
+            d_energy_int = np.append(d_energy_int, deint)
+            eceint = exp(deint / (k * self.INPUT['temp']))
+            exp_energy_int = np.append(exp_energy_int, eceint)
+            aeceint = exp_energy_int.mean()
+            cts = k * self.INPUT['temp'] * log(aeceint)
+            ts = np.append(ts, cts)
+            calc_types[key]['delta'].data['TS'] = ts
+
+        print('###### ts', ts.mean())
+
     def parse_output_files(self):
         """
         This parses the output files and loads them into dicts for easy access
@@ -903,7 +941,7 @@ class MMPBSA_App(object):
         if INPUT['alarun']:
             self.calc_types['mutant'] = {}
         # Quasi-harmonic analysis is a special-case, so handle that separately
-        if INPUT['entropy']:
+        if INPUT['entropy'] == 1:
             if not INPUT['mutant_only']:
                 self.calc_types['qh'] = QHout(self.pre + 'cpptraj_entropy.out',
                                               INPUT['temp'])
@@ -958,6 +996,10 @@ class MMPBSA_App(object):
                         self.calc_types[key]['receptor'],
                         self.calc_types[key]['ligand'],
                         self.INPUT['verbose'], self.using_chamber)
+
+                    print(key, 'delta', self.calc_types[key]['delta'].data['DELTA ' + 'G gas'])
+                    if self.INPUT['entropy'] == 2:
+                        self.calculate_interaction_entropy(key)
                 else:
                     self.calc_types[key]['complex'].fill_composite_terms()
             # Time for mutant
@@ -977,6 +1019,8 @@ class MMPBSA_App(object):
                         self.calc_types['mutant'][key]['receptor'],
                         self.calc_types['mutant'][key]['ligand'],
                         self.INPUT['verbose'], self.using_chamber)
+                    if self.INPUT['entropy'] == 2:
+                        self.calculate_interaction_entropy(key, mutant=True)
                 else:
                     self.calc_types['mutant'][key]['complex'].fill_composite_terms()
 
