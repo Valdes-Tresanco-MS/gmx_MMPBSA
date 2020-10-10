@@ -26,8 +26,7 @@ in GMX-MMPBSA.py will be assigned as attributes to the returned class.
 
 import os, sys
 from GMXMMPBSA import __version__, __mmpbsa_version__
-from argparse import ArgumentParser, RawDescriptionHelpFormatter, ArgumentDefaultsHelpFormatter
-import textwrap
+from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 
 
 class OptionList(object):
@@ -172,8 +171,8 @@ group.add_argument('--clean', dest='clean', action='store_true', default=False,
 guiparser = ArgumentParser(epilog='''This program is part of GMX-MMPBSA and will show a workspace with 
                             charts to analyze the results''',
                            description=description,
-                           formatter_class=RawDescriptionHelpFormatter)
+                           formatter_class=ArgumentDefaultsHelpFormatter)
 guiparser.add_argument('-v', '--version', action='version',
                        version='%%(prog)s %s based on MMPBSA version %s' % (__version__, __mmpbsa_version__))
 guiparser.add_argument('-p', '--path', dest='path', help='Path to GMX-MMPBSA info file',
-                       default='.')
+                       default=None)
