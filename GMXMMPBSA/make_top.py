@@ -137,7 +137,8 @@ class CheckMakeTop:
             lig_name = os.path.splitext(os.path.split(self.FILES.ligand_mol2)[1])[0]
             self.ligand_frcmod = self.FILES.prefix + lig_name + '.frcmod'
             # run parmchk2
-            l3 = subprocess.Popen(['parmchk2', '-i', self.FILES.ligand_mol2, '-f', 'mol2', '-o', self.ligand_frcmod],
+            parmchk2 = self.external_progs['parmchk2'].full_path
+            l3 = subprocess.Popen([parmchk2, '-i', self.FILES.ligand_mol2, '-f', 'mol2', '-o', self.ligand_frcmod],
                                   stdout=self.log, stderr=self.log)
             if l3.wait():
                 raise MMPBSA_Error('%s failed when querying %s' % ('parmchk2', self.FILES.ligand_mol2))

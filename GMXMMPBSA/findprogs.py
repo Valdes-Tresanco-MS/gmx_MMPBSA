@@ -36,7 +36,7 @@ from GMXMMPBSA.exceptions import MMPBSA_Error
 def find_progs(INPUT):
     """ Find the necessary programs based in the user INPUT """
     # List all of the used programs with the conditions that they are needed
-    used_progs = { 'cpptraj' : True, 'gmx': True, 'tleap': True,
+    used_progs = { 'cpptraj' : True, 'gmx': True, 'tleap': True, 'parmchk2': True,
                    'mmpbsa_py_energy' : ((INPUT['pbrun'] or INPUT['gbrun'])
                                          and not (INPUT['use_sander'] or
                                                   INPUT['decomprun'])),
