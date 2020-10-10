@@ -15,8 +15,11 @@ amber.python ../../GMX_MMPBSA.py -cs COM_ion_em.tpr -ci index.ndx -cg 1 13 -ct t
 **Note: We do not intend to replace the original [MMPBSA.py](https://pubs.acs.org/doi/10.1021/ct300418h); instead, 
 we have implemented and improved some functionalities, and what is most important, made this valuable tool available 
 for Gromacs users. Most of the documentation below is found in the [Amber manual](https://ambermd.org/doc12/Amber20.pdf#chapter.34), 
-we will just point out what is new or different. Note: You can review some of the answers to the questions that we consider 
-most common here. If you find a bug or have any doubts, consider opening an issue**
+we will just point out what is new or different. You can review some of the answers to the questions that we consider 
+most common here. If you find a bug or have any question, please consider opening an 
+[issue](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA/issues)**
+
+sdfsdfsdsf
 
 Neither of these should be considered as a “black-box”, and users should be familiar with Amber before at-
 tempting these sorts of calculations. These scripts automate a series of calculations, and cannot trap all the types
