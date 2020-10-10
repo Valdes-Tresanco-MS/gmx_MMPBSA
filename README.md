@@ -1,7 +1,6 @@
 # GMX-MMPBSA
 
 ## Install
-### Requirements
 
 amber.python -m pip install GMX-MMPBSA
 
@@ -154,6 +153,12 @@ completes successfully (Default = 1) A verbose level of 1 is sufficient to use -
             scanning. Default value is 0.<br>
             0: Do NOT use temporary NetCDF trajectories<br>
             1: Use temporary NetCDF trajectories
+ 
+ `PBRadii` Specifies which PBRadii is selected to build Amber topology from Gromacs file. Allowed values are:
+ 1. bondi (which should be used with igb = 7)
+ 2. mbondi (recommended parameter set for igb = 1)
+ 3. 
+ 
         
 `receptor_mask` The mask that specifies the receptor residues within the complex prmtop (NOT the solvated prm-
 top if there is one). The default guess is generally sufficient and will only fail if the ligand residues are not
