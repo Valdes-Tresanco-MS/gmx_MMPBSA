@@ -101,6 +101,9 @@ group.add_argument('-deo', dest='dec_energies', metavar='FILE',
                   residue in decomposition calculations. File name forced to end
                   in [.csv]. This file is only written when specified on the
                   command-line.''')
+group.add_argument('-gui', dest='gui', action='store_true', default=True,
+                   help='Open charts application when all calculations finished')
+
 group = parser.add_argument_group('Options',
                                   '''These options specify explicit calculation type and forcefield to prepare the 
 Amber topologies''')
@@ -114,8 +117,8 @@ group.add_argument('-pff', dest='protein_ff', default='amber14sb', metavar='<For
 group.add_argument('-lff', dest='ligand_ff', metavar='<Forcefield>', default='gaff',
                    help='Used forcefield to make the ligand MD in Gromacs. Allowed: gaff, gaff2. (Default: gaff)')
 group.add_argument('-st', dest='solvated_traj', action='store_true', default=True,
-                   help='Define if complex, receptor and ligand trajectories is solvated. We assume that the path '
-                        'contains ions and water')
+                   help='Define if complex, receptor and ligand trajectories is solvated. We assume that the entry '
+                        'trajectory contains ions and water')
 
 group = parser.add_argument_group('Complex', complex_group_des)
 group.add_argument('-cs', dest='complex_tpr', metavar='<Structure File>', default=None,
