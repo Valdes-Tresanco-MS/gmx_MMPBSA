@@ -35,5 +35,5 @@ setup(
     long_description=LONG_DESCRIPTION,
     long_description_content_type='text/markdown',
     keywords=['GMX-MMPBSA', 'MMPBSA', 'GROMACS', 'AmberTools'],
-    scripts=['GMX_MMPBSA.py']
+    scripts=['GMX_MMPBSA.py', 'GMX_MMPBSA_GUI.py']
 )
