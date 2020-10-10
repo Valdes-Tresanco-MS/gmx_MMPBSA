@@ -26,7 +26,7 @@ Classes:
 #  Copyright (C) 2020  Mario S. Valdes-Tresanco and Mario E. Valdes-Tresanco   #
 #  Copyright (C) 2014  Jason Swails, Bill Miller III, and Dwight McGee         #
 #                                                                              #
-#   Project: https://github.com/Valdes-Tresanco-MS/GMX-MMGBSA                  #
+#   Project: https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA                  #
 #                                                                              #
 #   This program is free software; you can redistribute it and/or modify it    #
 #  under the terms of the GNU General Public License version 3 as published    #
@@ -114,7 +114,7 @@ def create_inputs(INPUT, prmtop_system, pre):
                 gb_mdin = GBNabInput(INPUT)
                 gb_mdin.write_input(pre + 'gb.mdin')
             else:
-                # We need separate input files for QM/MMGBSA
+                # We need separate input files for QM/GMX-MMPBSA
                 if INPUT['ifqnt']:
                     com_input = deepcopy(INPUT)
                     rec_input = deepcopy(INPUT)

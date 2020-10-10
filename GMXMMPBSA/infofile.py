@@ -10,7 +10,7 @@ re-supplying all of the information again.
 #  Copyright (C) 2020  Mario S. Valdes-Tresanco and Mario E. Valdes-Tresanco   #
 #  Copyright (C) 2014  Jason Swails, Bill Miller III, and Dwight McGee         #
 #                                                                              #
-#   Project: https://github.com/Valdes-Tresanco-MS/GMX-MMGBSA                  #
+#   Project: https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA                  #
 #                                                                              #
 #   This program is free software; you can redistribute it and/or modify it    #
 #  under the terms of the GNU General Public License version 3 as published    #
