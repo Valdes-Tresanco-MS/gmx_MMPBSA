@@ -175,3 +175,15 @@ group.add_argument('--clean', dest='clean', action='store_true', default=False,
                    help='''Clean temporary files and quit.''')
 # k = parser.parse_args(['sdfsd'])
 # print k
+
+#### GUI parser
+guiparser = ArgumentParser(epilog='''This program is part of GMX-MMPBSA and will show a workspace with 
+                            charts to analyze the results''',
+                            description=description,
+                            formatter_class=RawDescriptionHelpFormatter)
+guiparser.add_argument('-v', '--version', action='version',
+                    version='%%(prog)s %s based on MMPBSA version %s' % (__version__, __mmpbsa_version__))
+guiparser.add_argument('-p', '--path', dest='path', help='Path to GMX-MMPBSA info file',
+                    default='.')
+
+# k = parser.parse_args(['sdfsd'])
