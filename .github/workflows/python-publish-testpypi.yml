@@ -3,9 +3,11 @@
 
 name: Publish package to TestPyPI
 
-on: [push]
-  release:
-    types: [created]
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
 
 jobs:
   deploy:
