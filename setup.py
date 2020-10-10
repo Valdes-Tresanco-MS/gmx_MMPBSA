@@ -38,5 +38,5 @@ setup(
     entry_points={
         "console_scripts": [
             "gmx_mmpbsa=GMXMMPBSA.app:gmxmmpbsa",
-            "gmx_mmpbsa_gui=GMXMMPBSA.app:gmxmmpbsa_gui",]}
+            "gmx_mmpbsa_gui=GMXMMPBSA.app:gmxmmpbsa_gui"]}
 )
