@@ -16,28 +16,33 @@ we have implemented and improved some functionalities, and what is most importan
 for Gromacs users. Most of the documentation below is found in the [Amber manual](https://ambermd.org/doc12/Amber20.pdf#chapter.34), 
 we will just point out what is new or different. You can review some of the answers to the questions that we consider 
 most common here. If you find a bug or have any question, please consider opening an 
-[issue](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA/issues)**
+[issue](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA/issues).**
 
-sdfsdfsdsf
-
-Neither of these should be considered as a “black-box”, and users should be familiar with Amber before at-
-tempting these sorts of calculations. These scripts automate a series of calculations, and cannot trap all the types
+Neither of these should be considered as a “black-box”, and users should be familiar with Amber and MM/PB(GB)SA method 
+before at-tempting these sorts of calculations. These scripts automate a series of calculations, and cannot trap all the types
 of errors that might occur. You should be sure that you know how to carry out an MM-PBSA calculation “by
 hand” (i.e., without using the scripts); if you don’t understand in detail what is going on, you will have no good
 reason to trust the results. Also, if something goes awry (and this is not all that uncommon), you will need to run
 and examine the individual steps to carry out useful debugging.
 
 ## Introduction
-This section describes the use of the python script GMX-MMPBSA.py [676] to perform Molecular Mechanics / Pois-
-son Boltzmann (or Generalized Born) Surface Area (MM/PB(GB)SA) calculations for Gromacs. This is a post-processing
+This section describes the use of the python script gmx_MMPBSA.py to perform Molecular Mechanics / Poisson 
+Boltzmann (or Generalized Born) Surface Area (MM/PB(GB)SA) calculations for Gromacs. This is a post-processing
 method in which representative snapshots from an ensemble of conformations are used to calculate the free energy
 change between two states (typically a bound and free state of a receptor and ligand). Free energy differences are
-calculated by combining the so-called gas phase energy contributions that are independent of the chosen solvent
+calculated by combining the so-called gas phase energy contributions (MM term) that are independent of the chosen solvent
 model as well as solvation free energy components (both polar and non-polar) calculated from an implicit solvent
-model for each species. Entropy contributions to the total free energy may be added as a further refinement. The
-entropy calculations can be done in either a HCT Generalized Born solvation model [185, 196] or in the gas phase
-using a mmpbsa_py_nabnmode program written in the nab programming language, or via the quasi-harmonic
-approximation in ptraj.
+model combination (PBSA or GBSA) for each species. Entropy contributions to the total free energy may be added as a further 
+refinement. The entropy calculations can be done in either a HCT Generalized Born solvation model [185, 196] or in the 
+gas phase using a mmpbsa_py_nabnmode program written in the nab programming language, or via the quasi-harmonic
+approximation in ptraj as in the orginal [MMPBSA.py](https://pubs.acs.org/doi/10.1021/ct300418h). In this new module, 
+entropy term (−TΔS) can be also estimated using the so-called [Interaction Entropy](https://pubs.acs.org/doi/abs/10.1021/jacs.6b02682)
+method, which is theoretically rigorous, computationally efficient, and numerically reliable for calculating entropic 
+contribution to free energy in protein–ligand binding and other interaction processes.
+
+
+
+
 The gas phase free energy contributions are calculated by sander within the Amber program suite or
 mmpbsa_py_energy within the AmberTools package according to the force field with which the topology files were
 created. The solvation free energy contributions may be further decomposed into an electrostatic and hydrophobic
