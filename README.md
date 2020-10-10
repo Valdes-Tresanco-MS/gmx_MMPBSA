@@ -201,7 +201,6 @@ terms, and 2 will also print bonded terms if one trajectory is used. (Default = 
 ```diff
 + Input variable added. Define Internal dielectric constant without use external mdin file
 ```
-`intdiel` Define a new intenal dielectric constant (Default=1.0)
 
 **&gb namelist variables**
 
@@ -216,6 +215,8 @@ quantum mechanics in the receptor or ligand to obtain meaningful results. If the
 then MMPBSA.py will figure out which residues should be treated with QM in the receptor and ligand.
 Otherwise, skeleton mdin files will be created and you will have to manually enter qmmask in the ligand and
 receptor topology files. There is no default, this must be specified.
+
+`intdiel` Define a new intenal dielectric constant (Default=1.0)
 
 `qm_theory` Which semi-empirical Hamiltonian should be used for the quantum calculation. No default, this must
 be specified. See its description in the QM/MM section of the manual for options.
