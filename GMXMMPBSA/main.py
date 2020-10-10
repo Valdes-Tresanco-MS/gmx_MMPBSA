@@ -837,6 +837,8 @@ class MMPBSA_App(object):
             raise InputError('Alanine scanning is incompatible with NETCDF != 0!')
         if INPUT['decomprun'] and INPUT['idecomp'] == 0:
             raise InputError('IDECOMP cannot be 0 for Decomposition analysis!')
+        if INPUT['PBRadii'] not in [1, 2, 3, 4]:
+            raise InputError('PBRadii must be 1, 2, 3 or 4!')
         if not INPUT['use_sander'] in [0, 1]:
             raise InputError('USE_SANDER must be set to 0 or 1!')
         if not INPUT['ifqnt'] in [0, 1]:

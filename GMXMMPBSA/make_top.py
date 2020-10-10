@@ -453,7 +453,7 @@ class CheckMakeTop:
             tif.write('source leaprc.DNA.bsc1\n')
             tif.write('source leaprc.RNA.OL3\n')
             tif.write('source leaprc.{}\n'.format(self.FILES.ligand_ff))
-            tif.write('set default PBRadii mbondi2\n')
+            tif.write('set default PBRadii {}\n'.format(self.INPUT['PBRadii']))
             # check if ligand is not protein and always load
             if self.FILES.ligand_mol2:
                 tif.write('LIG = loadmol2 {}\n'.format(self.FILES.ligand_mol2))
@@ -483,7 +483,7 @@ class CheckMakeTop:
                 mtif.write('source leaprc.DNA.bsc1\n')
                 mtif.write('source leaprc.RNA.OL3\n')
                 mtif.write('source leaprc.{}\n'.format(self.FILES.ligand_ff))
-                mtif.write('set default PBRadii mbondi2\n')
+                mtif.write('set default PBRadii {}\n'.format(self.INPUT['PBRadii']))
                 # check if ligand is not protein and always load
                 if self.FILES.ligand_mol2:
                     mtif.write('LIG = loadmol2 {}\n'.format(self.FILES.ligand_mol2))
