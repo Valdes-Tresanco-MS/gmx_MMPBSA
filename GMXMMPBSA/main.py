@@ -55,6 +55,7 @@ from GMXMMPBSA.output_file import (write_stability_output,
 from GMXMMPBSA.parm_setup import MMPBSA_System
 from GMXMMPBSA.make_top import CheckMakeTop
 from GMXMMPBSA.timer import Timer
+from GMXMMPBSA.gui import run as GUI_run
 
 # Global variables for the excepthook replacement at the bottom. Override these
 # in the MMPBSA_App constructor and input file reading
@@ -693,9 +694,14 @@ class MMPBSA_App(object):
                           'cite us if you publish this work with this paper:\n   '
                           'Miller III, B. R., McGee Jr., T. D., Swails, J. M. '
                           'Homeyer, N. Gohlke, H. and Roitberg, A. E.\n   '
-                          'J. Chem. Theory Comput., 2012, 8 (9) pp 3314--3321\n')
+                          'J. Chem. Theory Comput., 2012, 8 (9) pp 3314-3321\n')
         self.MPI.Finalize()
-        sys.exit(0)
+
+        if self.FILES.gui:
+            self.stdout.write('Opening GUI to analyze results...')
+            GUI_run(self.FILES.prefix + 'info')
+        else:
+            sys.exit(0)
 
     def get_cl_args(self, args=None):
         """
