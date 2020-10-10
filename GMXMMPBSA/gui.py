@@ -532,6 +532,12 @@ class GMX_MMPBSA_GUI(QMainWindow):
 
         self.treeWidget.header().setSectionResizeMode(QHeaderView.ResizeToContents)
 
+def run(infofile):
+    app = QApplication(sys.argv)
+    app.setApplicationName('GMX-MMPBSA')
+    w = GMX_MMPBSA_GUI(infofile)
+    w.show()
+    sys.exit(app.exec())
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
