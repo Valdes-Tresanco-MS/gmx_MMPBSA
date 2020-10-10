@@ -1,7 +1,7 @@
 """
 This is a module that contains functions generally useful for the
-MMPBSA.py script. A full list of functions/subroutines is shown below.
-It must be included to insure proper functioning of MMPBSA.py
+GMX-MMPBSA.py script. A full list of functions/subroutines is shown below.
+It must be included to insure proper functioning of GMX-MMPBSA.py
 
 List of functions and a brief description of their purpose
 -remove: Removes temporary work files in this directory. It has a number of

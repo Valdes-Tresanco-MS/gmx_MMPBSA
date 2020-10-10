@@ -1,5 +1,5 @@
 """
-This module provides a means for users to take advantage of MMPBSA.py's parsing
+This module provides a means for users to take advantage of GMX-MMPBSA.py's parsing
 ability. It exposes the free energy data (optionally to numpy arrays) so that
 users can write a simple script to carry out custom data analyses, leveraging
 the full power of Python's extensions, if they want (e.g., numpy, scipy, etc.)

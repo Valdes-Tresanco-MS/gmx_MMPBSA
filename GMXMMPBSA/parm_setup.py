@@ -5,7 +5,7 @@ in the context of a complex/receptor/ligand system. It will also be able
 to translate complex atom selections into either Amber masks or Amber
 group input selection strings for the complex, receptor, and ligand.
 It will also check through the systems and make sure that the prmtop
-files are compatible, as well. Necessary for MMPBSA.py functioning.
+files are compatible, as well. Necessary for GMX-MMPBSA.py functioning.
 """
 
 # ##############################################################################
@@ -90,7 +90,7 @@ class MMPBSA_System(object):
 
     com_group, rec_group, lig_group = new_sys.Group(selection, in_complex=True)
 
-    The following will run sanity checks on the MMPBSA system to make sure stuff
+    The following will run sanity checks on the GMX-MMPBSA system to make sure stuff
     is consistent.
 
     new_sys.CheckConsistency()

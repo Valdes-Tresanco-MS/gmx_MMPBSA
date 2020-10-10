@@ -1,5 +1,5 @@
 """
-This is a module that contains the timer facility for MMPBSA.py. It's 
+This is a module that contains the timer facility for GMX-MMPBSA.py. It's
 useful for profiling the performance of the script.                   
 """
 

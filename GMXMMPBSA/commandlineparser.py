@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 This module contains classes and such that are responsible for parsing
-command-line arguments for MMPBSA.py.  All of the files specified for use
-in MMPBSA.py will be assigned as attributes to the returned class.
+command-line arguments for GMX-MMPBSA.py.  All of the files specified for use
+in GMX-MMPBSA.py will be assigned as attributes to the returned class.
 
 """
 
@@ -33,7 +33,7 @@ import textwrap
 class OptionList(object):
     """
     Just a container to hold the command-line options. Necessary when reading in
-    a MMPBSA.py info file to have a container to load the results from the
+    a GMX-MMPBSA.py info file to have a container to load the results from the
     parser.
     """
     pass
@@ -46,7 +46,7 @@ else:
 
 description = '''GMX-MMPBSA is an effort to implement the GB / PB and others calculations in 
                 Gromacs. This program is an adaptation of Amber's MMPBSA.py and essentially works as such. As 
-                GMX-MMPBSA adapts MMPBSA, since it has all the resources of this script and work with any 
+                GMX-MMPBSA adapts MMPBSA.py, since it has all the resources of this script and work with any 
                 Gromacs version.'''
 
 complex_group_des = '''Complex files and info that are needed to perform the calculation. If the receptor and / or the 

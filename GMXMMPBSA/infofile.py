@@ -52,7 +52,7 @@ class InfoFile(object):
         # input_file_text, mut_str
 
         # Start with INPUT (and the editable vars). Allow this to recognize INFO
-        # files from the last version of MMPBSA.py
+        # files from the last version of GMX-MMPBSA.py
         outfile.write('# You can alter the variables below to change what info '
                       'is printed out\n')
         for var in InfoFile.EDITABLE_INFO_VARS:

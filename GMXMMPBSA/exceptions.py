@@ -1,5 +1,5 @@
 """
-This is a module that contains the exceptions thrown by MMPBSA.py
+This is a module that contains the exceptions thrown by GMX-MMPBSA.py
 """
 
 # ##############################################################################
@@ -21,9 +21,9 @@ This is a module that contains the exceptions thrown by MMPBSA.py
 # ##############################################################################
 
 class MMPBSA_Error(Exception):
-    """ Base MMPBSA error class """
+    """ Base GMX-MMPBSA error class """
 
-    def __init__(self, msg='MMPBSA error'):
+    def __init__(self, msg='GMX-MMPBSA error'):
         self.msg = msg
 
     def __str__(self):
@@ -31,9 +31,9 @@ class MMPBSA_Error(Exception):
 
 
 class MMPBSA_Warning(Warning):
-    """ Base MMPBSA warning class """
+    """ Base GMX-MMPBSA warning class """
 
-    def __init__(self, msg='MMPBSA warning'):
+    def __init__(self, msg='GMX-MMPBSA warning'):
         self.msg = msg
 
     def __str__(self):

@@ -933,7 +933,8 @@ class OutputFile(object):
         import GMXMMPBSA
         stability = not FILES.receptor_prmtop
 
-        self.writeline('|MMPBSA.py Version=%s' % GMXMMPBSA.__version__)
+        self.writeline('|GMX-MMPBSA.py Version=%s based on MMPBSA.py v.%s' % (GMXMMPBSA.__version__,
+                                                                              GMXMMPBSA.__mmpbsa_version__))
 
         # if FILES.solvated_prmtop:
         #    self.writeline('|Solvated complex topology file:  %s' %

@@ -1,7 +1,7 @@
 """
 This is a module that contains functions responsible for mutating
-the trajectory file for alanine scanning in MMPBSA.py. It must be    
-included with MMPBSA.py to insure proper functioning of alanine      
+the trajectory file for alanine scanning in GMX-MMPBSA.py. It must be
+included with GMX-MMPBSA.py to insure proper functioning of alanine
 scanning.
 """
 
@@ -105,7 +105,7 @@ def _getnumatms(resname):
         return 24
 
     raise MutateError(('Unrecognized residue! Add %s to _getnumatms(resname) ' +
-                       'in alamdcrd.py and reinstall MMPBSA.py' % resname))
+                       'in alamdcrd.py and reinstall GMX-MMPBSA.py' % resname))
 
 #+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
@@ -251,7 +251,7 @@ class MutantMdcrd(object):
             # First line is always a comment
             if counter == 1:
                 new_mdcrd.write('%-80s' % (line.strip() +
-                                           ' and mutated by MMPBSA.py for alanine scanning'))
+                                           ' and mutated by GMX-MMPBSA.py for alanine scanning'))
                 continue
 
             if location == 0 and coords_done <= max(resstart * 3 - 4, 0) and \
