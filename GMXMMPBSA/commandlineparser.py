@@ -26,6 +26,8 @@ in MMPBSA.py will be assigned as attributes to the returned class.
 
 import os, sys
 from GMXMMPBSA import __version__, __mmpbsa_version__
+from argparse import ArgumentParser, RawDescriptionHelpFormatter, ArgumentDefaultsHelpFormatter
+import textwrap
 
 
 class OptionList(object):
@@ -42,38 +44,27 @@ if os.getenv('AMBERHOME'):
 else:
     rism = None
 
-description = """
-                            🅶🅼🆇-🅼🅼🅿🅱🆂🅰 
-                                🅥.{}
-asdlml asdnllmasd asdjalsjdpasd asdljsadkpasd asdlkaspdkpoaskd askdaskdp1123123a
- """.format(__version__)
-complex_group_des = """
-Complex structure file (tpr), Gromacs index file (ndx), Receptor and Ligand 
-groups names in the index file and forcefield to make Amber topology. 
-If is necessary we split complex to generate Receptor and Ligand topology like 
-ante-MMPBSA"""
-receptor_group_des = """
-Complex structure file (tpr), Gromacs index file (ndx), Receptor and Ligand 
-groups names in the index file and forcefield to make Amber topology. 
-If is necessary we split complex to generate Receptor and Ligand topology like 
-ante-MMPBSA"""
-ligand_group_des = """
-Complex structure file (tpr), Gromacs index file (ndx), Receptor and Ligand 
-groups names in the index file and forcefield to make Amber topology. 
-If is necessary we split complex to generate Receptor and Ligand topology like 
-ante-MMPBSA"""
+description = '''GMX-MMPBSA is an effort to implement the GB / PB and others calculations in 
+                Gromacs. This program is an adaptation of Amber's MMPBSA.py and essentially works as such. As 
+                GMX-MMPBSA adapts MMPBSA, since it has all the resources of this script and work with any 
+                Gromacs version.'''
+
+complex_group_des = '''Complex files and info that are needed to perform the calculation. If the receptor and / or the 
+                        ligand are not defined, we generate it from the complex.'''
+
+receptor_group_des = '''Receptor files and info that are needed to perform the calculation. If the receptor are not 
+                        defined, we generate it from the complex.'''
+
+ligand_group_des = '''Ligand files and info that are needed to perform the calculation. If the ligand are not defined, 
+                        we generate it from the complex.'''
 # Set up the MM/PBSA parser here. It clutters up the MMPBSA_App to do it there
-from argparse import ArgumentParser, RawDescriptionHelpFormatter
 
 # noinspection PyTypeChecker
-parser = ArgumentParser(epilog='''This program will calculate binding free
-                        energies using end-state free energy methods on an
-                        ensemble of snapshots using a variety of implicit
-                        solvent models''',
-                        description=description,
-                        formatter_class=RawDescriptionHelpFormatter)
+parser = ArgumentParser(epilog='''This program will calculate binding free energies using end-state free energy 
+                                    methods on an ensemble of snapshots using a variety of implicit solvent models''',
+                        description=description, formatter_class=ArgumentDefaultsHelpFormatter)
 parser.add_argument('-v', '--version', action='version',
-                    version='%%(prog)s %s based on MMPBSA version %s' % (__version__, __mmpbsa_version__))
+                    version='''%%(prog)s %s based on MMPBSA version %s''' % (__version__, __mmpbsa_version__))
 parser.add_argument('--input-file-help', dest='infilehelp', action='store_true',
                     help='Print all available options in the input file.',
                     default=False)
@@ -127,8 +118,8 @@ group.add_argument('-cs', dest='complex_tpr', metavar='<Structure File>', defaul
 group.add_argument('-ci', dest='complex_index', metavar='<Index File>', default=None,
                    help='Index file of the bound complex.')
 group.add_argument('-cg', dest='complex_groups', metavar='index', nargs=2, default=None,
-                   help='Groups of the receptor and ligand in complex index file. The notation is as follows: "-cg '
-                        '<Receptor group> <Ligand group>"')
+                   help='Groups of receptor and ligand in complex index file. The notation is as follows: "-cg '
+                        '<Receptor group> <Ligand group>", ie. -cg 1 13')
 group.add_argument('-ct', dest='complex_trajs', nargs='*', metavar='TRJ',
                    help='''Input trajectories of the complex. Allowed formats: *.xtc (recommended), *.trr, *.pdb
                   (specify as many as you'd like).''')
@@ -136,14 +127,14 @@ group.add_argument('-ct', dest='complex_trajs', nargs='*', metavar='TRJ',
 group = parser.add_argument_group('Receptor', receptor_group_des)
 group.add_argument('-rs', dest='receptor_tpr', metavar='<Structure File>', default=None,
                    help='''Structure file of the unbound receptor. If omitted and stability is False, the structure 
-                   from complex will be used.''')
+                   from complex will be used and other options are not needed.''')
 group.add_argument('-ri', dest='receptor_index', metavar='<Index File>', default=None,
                    help='Index file of the unbound receptor.')
 group.add_argument('-rg', dest='receptor_group', metavar='index', default=None,
-                   help='Group of the receptor in receptor index file.')
+                   help='Group of receptor in receptor index file.')
 group.add_argument('-rt', dest='receptor_trajs', nargs='*', metavar='TRJ',
-                   help='''Input trajectories of the unbound receptor. Allowed formats: *.xtc (recommended), *.trr, 
-                   *.pdb. (specify as many as you'd like).''')
+                   help='''Input trajectories of the unbound receptor for multiple trajectory approach. Allowed 
+                   formats: *.xtc (recommended), *.trr, *.pdb.''')
 
 group = parser.add_argument_group('Ligand', ligand_group_des)
 group.add_argument('-lm', dest='ligand_mol2', metavar='<Structure File>', default=None,
@@ -151,15 +142,15 @@ group.add_argument('-lm', dest='ligand_mol2', metavar='<Structure File>', defaul
                         'defined if Protein-Ligand (small molecule) complex was define.')
 group.add_argument('-ls', dest='ligand_tpr', metavar='<Structure File>', default=None,
                    help='Structure file of the unbound ligand. If omitted, is protein-like and stability is False the '
-                        'structure from complex will be used. If ligand is a small molecule, make sure that you '
-                        'definde above -lm option')
+                        'structure from complex will be used and other options are not needed. If ligand is a small '
+                        'molecule, make sure that you definde above -lm option')
 group.add_argument('-li', dest='ligand_index', metavar='<Index File>',
                    default=None, help='Index file of the unbound ligand. Only if tpr file was define in -ls.')
 group.add_argument('-lg', dest='ligand_group', metavar='index', default=None,
                    help='Group of the ligand in ligand index file. Only if tpr file was define in -ls.')
 group.add_argument('-lt', dest='ligand_trajs', nargs='*', metavar='TRJ',
-                   help='''Input trajectories of the unbound ligand. Allowed formats: *.xtc (recommended), *.trr, *.pdb
-                  (specify as many as you'd like).''')
+                   help='''Input trajectories of the unbound ligand for multiple trajectory approach. Allowed 
+                   formats: *.xtc (recommended), *.trr, *.pdb.''')
 
 group = parser.add_argument_group('Miscellaneous Actions')
 group.add_argument('-make-mdins', dest='make_mdins', default=False,
@@ -176,17 +167,13 @@ group.add_argument('-rewrite-output', dest='rewrite_output', default=False,
                   rewrite the output files.''')
 group.add_argument('--clean', dest='clean', action='store_true', default=False,
                    help='''Clean temporary files and quit.''')
-# k = parser.parse_args(['sdfsd'])
-# print k
 
 #### GUI parser
 guiparser = ArgumentParser(epilog='''This program is part of GMX-MMPBSA and will show a workspace with 
                             charts to analyze the results''',
-                            description=description,
-                            formatter_class=RawDescriptionHelpFormatter)
+                           description=description,
+                           formatter_class=RawDescriptionHelpFormatter)
 guiparser.add_argument('-v', '--version', action='version',
-                    version='%%(prog)s %s based on MMPBSA version %s' % (__version__, __mmpbsa_version__))
+                       version='%%(prog)s %s based on MMPBSA version %s' % (__version__, __mmpbsa_version__))
 guiparser.add_argument('-p', '--path', dest='path', help='Path to GMX-MMPBSA info file',
-                    default='.')
-
-# k = parser.parse_args(['sdfsd'])
+                       default='.')
