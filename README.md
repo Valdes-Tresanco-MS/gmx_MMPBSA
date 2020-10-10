@@ -157,12 +157,12 @@ completes successfully (Default = 1) A verbose level of 1 is sufficient to use -
             0: Do NOT use temporary NetCDF trajectories<br>
             1: Use temporary NetCDF trajectories
  
- `PBRadii` Specifies which PBRadii is selected to build Amber topology from Gromacs file. Allowed values are:
+`PBRadii` Specifies which PBRadii is selected to build Amber topology from Gromacs file (Default 3). Allowed values are:
  1. bondi (which should be used with igb = 7)
  2. mbondi (recommended parameter set for igb = 1)
- 3. 
+ 3. mbondi2 (should be used with igb = 2 or 5)
+ 4. mbondi3, (recommended for use with igb = 8)
  
-        
 `receptor_mask` The mask that specifies the receptor residues within the complex prmtop (NOT the solvated prm-
 top if there is one). The default guess is generally sufficient and will only fail if the ligand residues are not
 found in succession within the complex prmtop. You should use the default mask assignment if possible
