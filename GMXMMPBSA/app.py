@@ -37,17 +37,20 @@ from pathlib import Path
 
 
 def gmxmmpbsa():
-    # Set up the MPI version or not based on whether our executable name ends in MPI
-    if sys.argv[0].endswith('MPI'):
+    # Adapted to run with MPI ?
+    if len(sys.argv) > 1 and sys.argv[1] in ['MPI', 'mpi']:
+        args = sys.argv
+        args.pop(1)  # remove mpi arg before passed it to app
         try:
             from mpi4py import MPI
         except ImportError:
             raise MMPBSA_Error('Could not import mpi4py package! Use serial version '
                                'or install mpi4py.')
     else:
-        # If we're not running MMPBSA.py.MPI, bring MPI into the top-level namespace
+        # If we're not running "GMX-MMPBSA.py MPI", bring MPI into the top-level namespace
         # (which will overwrite the MPI from mpi4py, which we *want* to do in serial)
         from GMXMMPBSA.fake_mpi import MPI
+        args = sys.argv
 
     # Set up error/signal handlers
     main.setup_run()
@@ -57,7 +60,7 @@ def gmxmmpbsa():
 
     # Read the command-line arguments
     try:
-        app.get_cl_args(sys.argv[1:])
+        app.get_cl_args(args[1:])
     except CommandlineError as e:
         sys.stderr.write('%s: %s' % (type(e).__name__, e) + '\n')
         sys.exit(1)
