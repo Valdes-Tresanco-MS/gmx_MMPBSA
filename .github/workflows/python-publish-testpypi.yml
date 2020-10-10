@@ -20,15 +20,13 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: '3.x'
-        repository_url: https://test.pypi.org/legacy/
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install setuptools wheel twine
-    - name: Build and publish
-      env:
-        TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
-        TWINE_PASSWORD: ${{ secrets.TESTPYPI_PASSWORD }}
-      run: |
-        python setup.py sdist bdist_wheel
-        twine upload dist/*
+    - uses: pypa/gh-action-pypi-publish@master
+      with:
+        user: __token__
+        password: ${{ secrets.TESTPYPI_PASSWORD }}
+        repository_url: https://test.pypi.org/legacy/
+      
