@@ -103,7 +103,11 @@ def gmxmmpbsa():
 
 def gmxmmpbsa_gui():
     app = QApplication(sys.argv)
-    parser = guiparser.parse_args(sys.argv[1:])
+    try:
+        parser = guiparser.parse_args(sys.argv)
+    except CommandlineError as e:
+        sys.stderr.write('%s: %s' % (type(e).__name__, e) + '\n')
+        sys.exit(1)
     path = Path(parser.path).absolute()
     if not path.exists():
         print('Path not found')
@@ -112,3 +116,6 @@ def gmxmmpbsa_gui():
     w = GMX_MMPBSA_GUI(path.as_posix())
     w.show()
     sys.exit(app.exec())
+
+if __name__ == '__main__':
+    gmxmmpbsa_gui()
