@@ -14,53 +14,52 @@ amber.python ../../GMX_MMPBSA.py -cs COM_ion_em.tpr -ci index.ndx -cg 1 13 -ct t
 **Note: We do not intend to replace the original [MMPBSA.py](https://pubs.acs.org/doi/10.1021/ct300418h); instead, 
 we have implemented and improved some functionalities, and what is most important, made this valuable tool available 
 for Gromacs users. Most of the documentation below is found in the [Amber manual](https://ambermd.org/doc12/Amber20.pdf#chapter.34), 
-we will just point out what is new or different. You can review some of the answers to the questions that we consider 
-most common here. If you find a bug or have any question, please consider opening an 
-[issue](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA/issues).**
-
-Neither of these should be considered as a “black-box”, and users should be familiar with Amber and MM/PB(GB)SA method 
-before at-tempting these sorts of calculations. These scripts automate a series of calculations, and cannot trap all the types
-of errors that might occur. You should be sure that you know how to carry out an MM-PBSA calculation “by
-hand” (i.e., without using the scripts); if you don’t understand in detail what is going on, you will have no good
-reason to trust the results. Also, if something goes awry (and this is not all that uncommon), you will need to run
-and examine the individual steps to carry out useful debugging.
+we will point out what is new or different. Neither of these should be considered as a “black-box”, and users 
+should be familiar with Amber and MM/PB(GB)SA method before at-tempting these sorts of calculations. These scripts 
+automate a series of calculations, and cannot trap all the types of errors that might occur. You can review some of the 
+answers to the questions that we consider most common here. If you find a bug or have any question, please consider 
+opening an [issue](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA/issues).**
 
 ## Introduction
-This section describes the use of the python script gmx_MMPBSA.py to perform Molecular Mechanics / Poisson 
-Boltzmann (or Generalized Born) Surface Area (MM/PB(GB)SA) calculations for Gromacs. This is a post-processing
+Molecular Mechanics / Poisson Boltzmann (or Generalized Born) Surface Area (MM/PB(GB)SA) calculations is a post-processing
 method in which representative snapshots from an ensemble of conformations are used to calculate the free energy
 change between two states (typically a bound and free state of a receptor and ligand). Free energy differences are
 calculated by combining the so-called gas phase energy contributions (MM term) that are independent of the chosen solvent
 model as well as solvation free energy components (both polar and non-polar) calculated from an implicit solvent
 model combination (PBSA or GBSA) for each species. Entropy contributions to the total free energy may be added as a further 
-refinement. The entropy calculations can be done in either a HCT Generalized Born solvation model [185, 196] or in the 
-gas phase using a mmpbsa_py_nabnmode program written in the nab programming language, or via the quasi-harmonic
-approximation in ptraj as in the orginal [MMPBSA.py](https://pubs.acs.org/doi/10.1021/ct300418h). In this new module, 
-entropy term (−TΔS) can be also estimated using the so-called [Interaction Entropy](https://pubs.acs.org/doi/abs/10.1021/jacs.6b02682)
-method, which is theoretically rigorous, computationally efficient, and numerically reliable for calculating entropic 
-contribution to free energy in protein–ligand binding and other interaction processes.
+refinement. 
 
+The gas phase free energy contributions are calculated by sander or mmpbsa_py_energy within the AmberTools package 
+according to the force field used in the MD simulation. The solvation free energy contributions may be further 
+decomposed into a polar and non-polar contributions. The polar portion is calculated using the Poisson Boltzmann (PB) 
+equation, the Generalized Born method, or the Reference Interaction Site Model (RISM). The PB equation is solved 
+numerically by either the pbsa program included with AmberTools or by the Adaptive Poisson Boltzmann Solver (APBS) 
+program (for more information, see http://www.poissonboltzmann.org/apbs). The non-polar contribution is approximated by 
+the LCPO method [170] implemented within sander or the molsurf method as implemented in cpptraj. The entropy calculations 
+can be done in either a HCT Generalized Born solvation model [185, 196] or in the gas phase using a mmpbsa_py_nabnmode 
+program written in the nab programming language, or via the quasi-harmonic approximation in ptraj as in the original 
+[MMPBSA.py](https://pubs.acs.org/doi/10.1021/ct300418h). In this new module, entropy term (−TΔS) can be also estimated 
+using the so-called [Interaction Entropy](https://pubs.acs.org/doi/abs/10.1021/jacs.6b02682) method, which is 
+theoretically rigorous, computationally efficient, and numerically reliable for calculating entropic contribution to 
+free energy in protein–ligand binding and other interaction processes.
 
+Usually, the Single Trajectory (ST) approximation is employed when performing MM/PB(GB)SA calculations. This approximation
+assumes that the configurational space explored by the systems are very similar between the bound and unbound states, 
+so every snapshot for each species (i.e. complex, receptor, and ligand) is extracted from the same trajectory file. This
+approximation improves binding free energies convergence and also reduces the computing time. However, it only should be 
+applied when the molecules in the unbound state present a similar behavior to that of the bound state. On the other 
+hand, in the so-called Multiple Trajectory (MT) approximation, the snapshots for each one of the species (i.e. complex, 
+receptor, and ligand) are extracted from their own trajectory file. This approximation, theoretically more rigorous though,
+leads to higher standard deviation of the binding free energies.  
 
+Further information can be found in the foundational papers: 
+[Srinivasan J. et al., 1998](https://pubs.acs.org/doi/abs/10.1021/ja981844+), 
+[Kollman P. A. et al., 2000](https://pubs.acs.org/doi/abs/10.1021/ar000033j),
+[Gohlke H., Case D. A. 2004](https://onlinelibrary.wiley.com/doi/abs/10.1002/jcc.10379)
 
-The gas phase free energy contributions are calculated by sander within the Amber program suite or
-mmpbsa_py_energy within the AmberTools package according to the force field with which the topology files were
-created. The solvation free energy contributions may be further decomposed into an electrostatic and hydrophobic
-contribution. The electrostatic portion is calculated using the Poisson Boltzmann (PB) equation, the Generalized
-Born method, or the Reference Interaction Site Model (RISM). The PB equation is solved numerically by either the
-pbsa program included with AmberTools or by the Adaptive Poisson Boltzmann Solver (APBS) program through
-the iAPBS interface[446] with Amber (for more information, see http://www.poissonboltzmann.org/apbs). The
-hydrophobic contribution is approximated by the LCPO method [170] implemented within sander or the molsurf
-method as implemented in cpptraj.
-MM/PB(GB)SA typically employs the approximation that the configurational space explored by the systems are
-very similar between the bound and unbound states, so every snapshot for each species is extracted from the same
-trajectory file, although GMX-MMPBSA.py will accept separate trajectory files for each species. Furthermore, explicit
-solvent and ions are stripped from the trajectory file(s) to hasten convergence by preventing solvent-solvent inter-
-actions from dominating the energy terms. A more detailed explanation of the theory can be found in Srinivasan,
-et. al.[677] You may also wish to refer to reviews summarizing many of the applications of this model,[678, 679]
-as well as to papers describing some of its applications.[680–684]
-Many popular types of MM/PBSA calculations can be performed using just AmberTools, while some of the
-more advanced functionality requires the sander (now included in AmberTools) program from Amber.
+as well as some reviews: [Genheden S., Ryde U. 2015](https://www.tandfonline.com/doi/full/10.1517/17460441.2015.1032936),
+[Wang et. al., 2018](https://www.frontiersin.org/articles/10.3389/fmolb.2017.00087/full), 
+[Wang et. al., 2019](https://pubs.acs.org/doi/abs/10.1021/acs.chemrev.9b00055)
 
 ## Preparing for an MM/PB(GB)SA calculation
 MM/PB(GB)SA is often a very useful tool for obtaining relative free energies of binding when comparing
@@ -68,7 +67,7 @@ ligands. Perhaps its biggest advantage is that it is very computationally inexpe
 calculations, such as TI or FEP. Following the advice given below before any MD simulations are run will make
 running MMPBSA.py successfully much easier.
 
-### Building Topology Files
+### Building Amber Topology Files
 As converting a topology from Gromacs to Amber is somewhat unpredictable and can be inconsistent, so we decided to 
 build the topology from a structure. To build the topology, GMX-MMPBSA requires the following (see options):
 * Structure file (tpr)
