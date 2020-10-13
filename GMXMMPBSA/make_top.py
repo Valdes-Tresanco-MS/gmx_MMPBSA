@@ -37,6 +37,8 @@ lig_ff = ['gaff', 'gaff2']
 std_aa = ['ALA', 'ARG', 'ASN', 'ASP', 'CYS', 'CYX', 'GLN', 'GLU', 'GLY', 'HID', 'HIE', 'HIP', 'ILE', 'LEU', 'LYS',
           'MET', 'PHE', 'PRO', 'SER', 'THR', 'TRP', 'TYR', 'VAL', 'HIS']
 
+PBRadii = {1: 'bondi', 2: 'mbondi', 3: 'mbondi2', 4: 'mbondi3'}
+
 def dist(coor1, coor2):
     return sqrt((coor2[0] - coor1[0]) ** 2 + (coor2[1] - coor1[1]) ** 2 + (coor2[2] - coor1[2]) ** 2)
 
@@ -454,7 +456,7 @@ class CheckMakeTop:
             tif.write('source leaprc.DNA.bsc1\n')
             tif.write('source leaprc.RNA.OL3\n')
             tif.write('source leaprc.{}\n'.format(self.FILES.ligand_ff))
-            tif.write('set default PBRadii {}\n'.format(self.INPUT['PBRadii']))
+            tif.write('set default PBRadii {}\n'.format(PBRadii[self.INPUT['PBRadii']]))
             # check if ligand is not protein and always load
             if self.FILES.ligand_mol2:
                 tif.write('LIG = loadmol2 {}\n'.format(self.FILES.ligand_mol2))
@@ -484,7 +486,7 @@ class CheckMakeTop:
                 mtif.write('source leaprc.DNA.bsc1\n')
                 mtif.write('source leaprc.RNA.OL3\n')
                 mtif.write('source leaprc.{}\n'.format(self.FILES.ligand_ff))
-                mtif.write('set default PBRadii {}\n'.format(self.INPUT['PBRadii']))
+                mtif.write('set default PBRadii {}\n'.format(PBRadii[self.INPUT['PBRadii']]))
                 # check if ligand is not protein and always load
                 if self.FILES.ligand_mol2:
                     mtif.write('LIG = loadmol2 {}\n'.format(self.FILES.ligand_mol2))
