@@ -1,5 +1,3 @@
-# GMX-MMPBSA
-
 ## Install
 
 amber.python -m pip install GMX-MMPBSA
@@ -10,7 +8,6 @@ amber.python ../../GMX_MMPBSA.py -cs COM_ion_em.tpr -ci index.ndx -cg 1 13 -ct t
 ## Test
 
 ## Documentation
-# GMX-MMPBSA.py
 **Note: We do not intend to replace the original [MMPBSA.py](https://pubs.acs.org/doi/10.1021/ct300418h); instead, 
 we have implemented and improved some functionalities, and what is most important, made this valuable tool available 
 for Gromacs users. Most of the documentation below is found in the [Amber manual](https://ambermd.org/doc12/Amber20.pdf#chapter.34), 
@@ -49,10 +46,10 @@ so every snapshot for each species (i.e. complex, receptor, and ligand) is extra
 approximation improves binding free energies convergence and also reduces the computing time. However, it only should be 
 applied when the molecules in the unbound state present a similar behavior to that of the bound state. On the other 
 hand, in the so-called Multiple Trajectory (MT) approximation, the snapshots for each one of the species (i.e. complex, 
-receptor, and ligand) are extracted from their own trajectory file. This approximation, theoretically more rigorous though,
-leads to higher standard deviation of the binding free energies.  
+receptor, and ligand) are extracted from their own trajectory file. This approximation, theoretically more rigorous 
+though, leads to higher standard deviation of the binding free energies.  
 
-Further information can be found in the foundational papers: 
+Further information can be found in the foundational papers:
 [Srinivasan J. et al., 1998](https://pubs.acs.org/doi/abs/10.1021/ja981844+), 
 [Kollman P. A. et al., 2000](https://pubs.acs.org/doi/abs/10.1021/ar000033j),
 [Gohlke H., Case D. A. 2004](https://onlinelibrary.wiley.com/doi/abs/10.1002/jcc.10379)
@@ -61,21 +58,43 @@ as well as some reviews: [Genheden S., Ryde U. 2015](https://www.tandfonline.com
 [Wang et. al., 2018](https://www.frontiersin.org/articles/10.3389/fmolb.2017.00087/full), 
 [Wang et. al., 2019](https://pubs.acs.org/doi/abs/10.1021/acs.chemrev.9b00055)
 
-## Preparing for an MM/PB(GB)SA calculation
-MM/PB(GB)SA is often a very useful tool for obtaining relative free energies of binding when comparing
-ligands. Perhaps its biggest advantage is that it is very computationally inexpensive compared to other free energy
-calculations, such as TI or FEP. Following the advice given below before any MD simulations are run will make
-running MMPBSA.py successfully much easier.
+# gmx-MMPBSA.py in a nutshell
+gmx-MMPBSA.py brings all the [MMPBSA.py](https://pubs.acs.org/doi/10.1021/ct300418h) functionalities to Gromacs users. 
+In addition, few other functionalities were implemented that eases a number of calculations (e.g. MM/PB(GB)SA 
+with different internal dielectric constant, interaction entropy calculation). A GUI application is also incorporated 
+that allows for visualizing the results and saving high-quality images.
 
-### Building Amber Topology Files
-As converting a topology from Gromacs to Amber is somewhat unpredictable and can be inconsistent, so we decided to 
-build the topology from a structure. To build the topology, GMX-MMPBSA requires the following (see options):
-* Structure file (tpr)
-* Index file (ndx)
-* Receptor and ligand group number in the index file
+## Protein-protein binding free energy calculations
+In its simplest version, gmx-MMPBSA.py requires:
 
-With these requirements we can build the topology and extract the dry trajectory that are necessary to be able to carry
- out the calculation with MMPBSA.
+* The structure file (*.tpr) -- *.tpr used as input in mdrun program for MD simulation
+* An index file (*.ndx) -- *.ndx file containing the receptor and ligand in separated groups
+* Receptor and ligand group numbers in the index file
+* A trajectory file (*.xtc, *.pdb, *.crd) -- final MD trajectory, fitted and with no pbc.
+* An input parameters file (*.in) -- input file containing all the specification regarding the type of calculation that is 
+going to be performed
+
+That being said, once you are in the folder containing all files, the command-line will be as follows:
+
+`amber.python path/to/gmx_MMPBSA.py -cs md.tpr -ci index.ndx -cg 1 13 -ct traj.xtc -i mmpbsa.in`
+
+where the `mmpbsa.in` input file, is a text file containing the following lines:
+
+```
+Sample input file for GB calculation
+&general
+startframe=5, endframe=100, interval=5, verbose=2
+/
+&gb
+igb=2, saltcon=0.150,
+```
+
+In this case, a single trajectory (ST) approximation is followed, which means the receptor and ligand (in this case, the 
+ligand is also another protein) amber format topologies will be obtained from that of the complex. To do so, a MD *.tpr 
+file (`md.tpr`), an index file (`index.ndx`), a trajectory file (`traj.xtc`), and the receptor and ligand group numbers 
+in the index file (`1 13`) are needed. The `mmpbsa.in` input file will contain all the parameters needed for the 
+MM/PB(GB)SA calculation. In this case, 19 frames `(endframe-startframe)/interval = (100-5)/5` are going to be used when 
+performing the the MM/PB(GB)SA calculation with the igb5 (GB-OBC2) model and a salt concentration = 0.15M. 
 
 The most common procedure is to obtain the receptor and ligand topologies from the complex, so we have directly 
 included a functionality similar to ante-MMPBSA.py (see Amber manual). Additionally we define explicitly the stability 
