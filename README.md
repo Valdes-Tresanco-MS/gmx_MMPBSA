@@ -49,14 +49,15 @@ hand, in the so-called Multiple Trajectory (MT) approximation, the snapshots for
 receptor, and ligand) are extracted from their own trajectory file. This approximation, theoretically more rigorous 
 though, leads to higher standard deviation of the binding free energies.  
 
-Further information can be found in the foundational papers:
-[Srinivasan J. et al., 1998](https://pubs.acs.org/doi/abs/10.1021/ja981844+), 
-[Kollman P. A. et al., 2000](https://pubs.acs.org/doi/abs/10.1021/ar000033j),
-[Gohlke H., Case D. A. 2004](https://onlinelibrary.wiley.com/doi/abs/10.1002/jcc.10379)
+Further information can be found in the foundational papers: <br>
+[Srinivasan J. et al., 1998](https://pubs.acs.org/doi/abs/10.1021/ja981844+) <br>
+[Kollman P. A. et al., 2000](https://pubs.acs.org/doi/abs/10.1021/ar000033j) <br>
+[Gohlke H., Case D. A. 2004](https://onlinelibrary.wiley.com/doi/abs/10.1002/jcc.10379) <br>
 
-as well as some reviews: [Genheden S., Ryde U. 2015](https://www.tandfonline.com/doi/full/10.1517/17460441.2015.1032936),
-[Wang et. al., 2018](https://www.frontiersin.org/articles/10.3389/fmolb.2017.00087/full), 
-[Wang et. al., 2019](https://pubs.acs.org/doi/abs/10.1021/acs.chemrev.9b00055)
+as well as some reviews: <br>
+[Genheden S., Ryde U. 2015](https://www.tandfonline.com/doi/full/10.1517/17460441.2015.1032936) <br>
+[Wang et. al., 2018](https://www.frontiersin.org/articles/10.3389/fmolb.2017.00087/full) <br> 
+[Wang et. al., 2019](https://pubs.acs.org/doi/abs/10.1021/acs.chemrev.9b00055) <br>
 
 # gmx-MMPBSA.py in a nutshell
 gmx-MMPBSA.py brings all the [MMPBSA.py](https://pubs.acs.org/doi/10.1021/ct300418h) functionalities to Gromacs users. 
@@ -92,7 +93,7 @@ igb=2, saltcon=0.150,
 ```
 
 _See a detailed list of all the options in gmx_MMPBSA.py input file [here](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA#the-input-file) 
-as well as some [examples](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA#sample-input-files)_
+as well as several [examples](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA#sample-input-files)_
 
 In this case, a single trajectory (ST) approximation is followed, which means the receptor and ligand (in this case, the 
 ligand is also another protein) amber format topologies will be obtained from that of the complex. To do so, a MD *.tpr 
@@ -123,44 +124,25 @@ igb=2, saltcon=0.150,
 ```
 
 _See a detailed list of all the options in gmx_MMPBSA.py input file [here](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA#the-input-file) 
-as well as some [examples](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA#sample-input-files)_
+as well as several [examples](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA#sample-input-files)_
 
-
-
-
-
-
-
-The most common procedure is to obtain the receptor and ligand topologies from the complex, so we have directly 
-included a functionality similar to ante-MMPBSA.py (see Amber manual). Additionally we define explicitly the stability 
-calculation mode, so GMX-MMPBSA only requires the complex structure(tpr) or if you prefer the complex, receptor and 
-ligand structures (tpr and mol2 if ligand is a small molecule). In case of only defining the complex structure like 
-Protein-Protein type, we will build the receptor and ligand topologies from it. If the complex is like Protein-ligand 
-type (small molecule), the mol2 file used to parameterize the ligand must be defined.
-
-You will always need a topology for the entire complex, but you can define also receptor and ligand. Moreover, they 
-must be compatible with one another (i.e., each must have the same charges for the same atoms and the same force field 
-must be used for all three of the required structures (tpr)).
-
-Unlike MMPBSA, it can perform an alanine scan without having to provide a topology of the mutant system. Simply define 
-the amino acid you want to mutate and we build the topology.
-
-## Running MMPBSA.py
 ### The input file
-The input file was designed to be as syntactically similar to other programs in Amber as possible. The input
-file has the same namelist structure as both sander and pmemd. The allowed namelists are &general, &gb, &pb,
-&rism, &alanine_scanning, &nmode, and &decomp. The input variables recognized in each namelist are described
-below, but those in &general are typically variables that apply to all aspects of the calculation. The &gb namelist
-is unique to Generalized Born calculations, &pb is unique to Poisson Boltzmann calculations, &rism is unique to
-3D-RISM calculations, &alanine_scanning is unique to alanine scanning calculations, &nmode is unique to the
+As gmx_MMPBSA.py is based on [MMPBSA.py](https://pubs.acs.org/doi/10.1021/ct300418h), it uses an input file containing 
+all the specification for the MM/PB(GB)SA calculation. The input file is designed to be as syntactically similar to 
+other programs in Amber as possible. The input file has the same namelist structure as both sander and pmemd. The allowed 
+namelists are &general, &gb, &pb, &rism, &alanine_scanning, &nmode, and &decomp. The input variables recognized in each 
+namelist are described below, but those in &general are typically variables that apply to all aspects of the calculation. 
+The &gb namelist is unique to Generalized Born calculations, &pb is unique to Poisson Boltzmann calculations, &rism is 
+unique to 3D-RISM calculations, &alanine_scanning is unique to alanine scanning calculations, &nmode is unique to the
 normal mode calculations used to approximate vibrational entropies, and &decomp is unique to the decomposition
 scheme. All of the input variables are described below according to their respective namelists. Integers and floating
 point variables should be typed as-is while strings should be put in either single- or double-quotes. All variables
-should be set with “variable = value” and separated by commas. See the examples below. Variables will usually
-be matched to the minimum number of characters required to uniquely identify that variable within that namelist.
-Variables require at least 4 characters to be matched unless that variable name has fewer than 4 characters (in which
-case the whole variable name is required). For example, “star” in &general will match “startframe”. However,
-“stare” and “sta” will match nothing.
+should be set with `variable = value` and separated by commas. See several 
+[examples](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA#sample-input-files) below. Variables will usually be matched 
+to the minimum number of characters required to uniquely identify that variable within that namelist. Variables require 
+at least 4 characters to be matched unless that variable name has fewer than 4 characters (in which case the whole 
+variable name is required). For example, “star” in &general will match “startframe”. However, “stare” and “sta” will 
+match nothing.
 
 
 **&general namelist variables**
@@ -169,31 +151,38 @@ case the whole variable name is required). For example, “star” in &general w
             is set to 0, then detailed tracebacks (effectively the call stack showing exactly where in the program the 
             error occurred) is suppressed, so only the error message is printed. If debug_printlevel is set to 1 or 
             higher, all tracebacks are printed, which aids in debugging of issues. Default: 0. (Advanced Option)
-            
+
+`startframe` The frame from which to begin extracting snapshots from the full, concatenated trajectory comprised
+of every trajectory file placed on the command-line. This is always the first frame read. (Default = 1)  
+          
 `endframe` The frame from which to stop extracting snapshots from the full, concatenated trajectory comprised of every 
-            trajectory file supplied on the command-line. (Default = 9999999)
+           trajectory file supplied on the command-line. (Default = 9999999)
 ```diff
 @@ Input variable modified. Included Interaction entropy aproximation @@
 ```            
-`entropy` It specifies whether to make a quasi-harmonic entropy (QH) approximation with ptraj or the interaction 
-            entropy (IE) approximation. The allowed values are: 0 Don’t. 1: make QH. 2 make IE (default = 0)
+`entropy` It specifies whether to perform a quasi-harmonic entropy (QH) approximation with ptraj or the 
+          [Interaction Entropy (IE)](https://pubs.acs.org/doi/abs/10.1021/jacs.6b02682) approximation. The allowed 
+          values are (default = 0): 
+          * 0: Don’t 
+          * 1: perform QH 
+          * 2: perform IE 
 ```diff
 + New input variable added
 ```
-`entropy_seg` Specify the representative segment (%), starting from the end of the trajectory, for the calculation of 
-            the interaction entropy, ie: 25 is equivalent to the frames contained in the last quartile of the 
-            trajectory. Default: 25 (Only if `entropy` = 2)
+`entropy_seg` Specify the representative segment (in %), starting from the end of the trajectory, for the calculation of 
+              the Interaction Entropy, e.g: 25 is equivalent to the frames contained in the last quartile of the 
+              trajectory. Default: 25 (Only if `entropy` = 2)
 ```diff
 + New input variable added
 ```
-`entropy_temp` Specify the temperature to calculate the entropy (Only if `entropy` = 2). Avoid inconsistencies with 
-            defined internal temperature (298.15 K) when nmode is used. 
+`entropy_temp` Specify the temperature to calculate the entropy term `−TΔS` (Only if `entropy` = 2). Avoid 
+               inconsistencies with defined internal temperature (298.15 K) when nmode is used.
       
 `interval` The offset from which to choose frames from each trajectory file. For example, an interval of 2 will pull
-            every 2nd frame beginning at startframe and ending less than or equal to endframe. (Default = 1)
+           every 2nd frame beginning at startframe and ending less than or equal to endframe. (Default = 1)
 
 ```diff
-- Input variable deleted. All files are needed for analysis with charts
+- Input variable deleted. All files are needed for plotting
 ``` 
 ~~-`keep_files` The variable that specifies which temporary files are kept. All temporary files have the prefix 
 `_MMPBSA_` prepended to them (unless you change the prefix on the command-line—see subsection Subsection 34.3.2 for 
@@ -201,31 +190,18 @@ details). Allowed values are 0, 1, and 2. 0: Keep no temporary files 1: Keep all
 files created by sander simulations 2: Keep all temporary files. Temporary files are only deleted if MMPBSA.py 
 completes successfully (Default = 1) A verbose level of 1 is sufficient to use -rewrite-output and recreate the output
  file without rerunning any simulations.~~
-
-`ligand_mask` The mask that specifies the ligand residues within the complex prmtop (NOT the solvated prmtop if there 
-            is one). The default guess is generally sufficient and will only fail as stated above. You should use the 
-            default mask assignment if possible because it provides a good error catch. This follows the same 
-            description as the receptor_mask above.
             
 `netcdf` Specifies whether or not to use NetCDF trajectories internally rather than writing temporary ASCII trajectory 
-            files. NOTE: NetCDF trajectories can be used as input for MMPBSA.py regardless of what this variable is set 
-            to, but NetCDF trajectories are faster to write and read. For very large trajectories, this could offer 
-            significant speedups, and requires less temporary space. However, this option is incompatible with alanine
-            scanning. Default value is 0.<br>
-            0: Do NOT use temporary NetCDF trajectories<br>
-            1: Use temporary NetCDF trajectories
+         files. For very large trajectories, this could offer significant speedups, and requires less temporary space.
+         However, this option is incompatible with alanine scanning. Default value is 0.
+         * 0: Do NOT use temporary NetCDF trajectories
+         * 1: Use temporary NetCDF trajectories
  
-`PBRadii` Specifies which PBRadii is selected to build Amber topology from Gromacs file (Default 3). Allowed values are:
- 1. bondi (which should be used with igb = 7)
- 2. mbondi (recommended parameter set for igb = 1)
- 3. mbondi2 (should be used with igb = 2 or 5)
- 4. mbondi3, (recommended for use with igb = 8)
- 
-`receptor_mask` The mask that specifies the receptor residues within the complex prmtop (NOT the solvated prm-
-top if there is one). The default guess is generally sufficient and will only fail if the ligand residues are not
-found in succession within the complex prmtop. You should use the default mask assignment if possible
-because it provides a good error catch. It uses the “Amber mask” syntax described elsewhere in this manual.
-This will be replaced with the default receptor_mask if ligand_mask (below) is not also set.
+`PBRadii` PBRadii in amber topology files. Allowed values are (default = 3): 
+ * 1: bondi, recommended when igb = 7 
+ * 2: mbondi, recommended when igb = 1 
+ * 3: mbondi2, recommended when igb = 2 or 5 
+ * 4: mbondi3, recommended when igb = 8 
 
 ```diff
 - Input variable deleted. ALways must be defined to get gromacs
@@ -235,37 +211,23 @@ To enable it to search for binaries in your full PATH if they can’t be found i
 search_path to 1. Default 0 (do not search through the PATH ). This is particularly useful if you are using
 an older version of sander that is not in AMBERHOME .~~
 
+`use_sander` Forces MMPBSA.py to use sander for energy calculations, even when mmpbsa_py_energy will suffice (Default = 0)
+* 0: Use mmpbsa_py_energy when possible
+* 1: Always use sander
 
-`startframe` The frame from which to begin extracting snapshots from the full, concatenated trajectory comprised
-of every trajectory file placed on the command-line. This is always the first frame read. (Default = 1)
-
-`strip_mask` The variable that specifies which atoms are stripped from the trajectory file if a solvated_prmtop is
-provided on the command-line. See 34.3.2. (Default = “:WAT:CL:CIO:CS:IB:K:LI:MG:NA:RB”)
-
-`use_sander` Forces MMPBSA.py to use sander for energy calculations, even when mmpbsa_py_energy will suf-
-fice (Default 0)
-0 - Use mmpbsa_py_energy when possible
-1 - Always use sander
-
-`full_traj` This variable is for calculations performed in parallel to control whether complete trajectories are made of
-the complex, receptor, and ligand. In parallel calculations, a different trajectory is made for each processor to
-analyze only the selected frames for that processor. A value of 0 will only create the intermediate trajectories
-analyzed by each processor, while a value of 1 will additionally combine those trajectories to make a single
-trajectory of all frames analyzed across all processors for the complex, receptor, and ligand. (Default = 0)
-
-`verbose` The variable that specifies how much output is printed in the output file. There are three allowed values:
-0, 1, and 2. A value of 0 will simply print difference terms, 1 will print all complex, receptor, and ligand
-terms, and 2 will also print bonded terms if one trajectory is used. (Default = 1)
-```diff
-+ Input variable added. Define Internal dielectric constant without use external mdin file
-```
+`verbose` The variable that specifies how much output is printed in the output file. There are three allowed 
+values (Default = 1): 
+* 0: print difference terms 
+* 1: print all complex, receptor, and ligand terms 
+* 2: also print bonded terms if one trajectory is used 
 
 **&gb namelist variables**
 
-`ifqnt` Specifies whether a part of the system is treated with quantum mechanics. 1: Use QM/MM, 0: Potential
-function is strictly classical (Default = 0). This functionality requires sander
-igb Generalized Born method to use (seeSection 4). Allowed values are 1, 2, 5, 7 and 8. (Default = 5) All models
-are now available with both mmpbsa_py_energy and sander
+`ifqnt` Specifies whether a part of the system is treated with quantum mechanics. (Default = 0) <br>
+* 0: Potential function is strictly classical 
+* 1: Use QM/MM <br>
+This functionality requires sander igb Generalized Born method to use (seeSection 4). Allowed values are 1, 2, 5, 7 and 
+8. (Default = 5) All models are now available with both mmpbsa_py_energy and sander.
 
 `qm_residues` Comma- or semicolon-delimited list of complex residues to treat with quantum mechanics. All
 whitespace is ignored. All residues treated with quantum mechanics in the complex must be treated with
@@ -274,7 +236,10 @@ then MMPBSA.py will figure out which residues should be treated with QM in the r
 Otherwise, skeleton mdin files will be created and you will have to manually enter qmmask in the ligand and
 receptor topology files. There is no default, this must be specified.
 
-`intdiel` Define a new intenal dielectric constant (Default=1.0)
+```diff
++ Input variable added. Define Internal dielectric constant without use external mdin file
+```
+`intdiel` Define a new intenal dielectric constant (Default = 1.0)
 
 `qm_theory` Which semi-empirical Hamiltonian should be used for the quantum calculation. No default, this must
 be specified. See its description in the QM/MM section of the manual for options.
@@ -301,18 +266,24 @@ When set to 0, use LCPO (Linear Combination of Pairwise Overlaps). (Default 0)
 determining the molecular surface (only applicable when molsurf is set to 1). Default is 1.4.
 
 `msoffset` Offset to apply to the individual atomic radii in the system when calculating the molsurf surface. See
-
-the description of the molsurf action command in cpptraj. Default is 0.
+the description of the molsurf action command in [cpptraj](https://ambermd.org/doc12/Amber20.pdf#chapter.32). Default is 0.
 
 **&pb namelist variables**
 
-`inp` Nonpolar optimization method (Default = 2).
+`inp` Option to select different methods to compute non-polar solvation free energy (Default = 2). <br>
+0: No non-polar solvation free energy is computed <br>
+1: The total non-polar solvation free energy is modeled as a single term linearly proportional to the solvent accessible
+surface area, as in the PARSE parameter set, that is, if INP = 1, USE_SAV must be equal to 0. <br>
+2: The total non-polar solvation free energy is modeled as two terms: the cavity term and the dispersion term. The 
+dispersion term is computed with a surface-based integration method closely related to the PCM solvent for quantum 
+chemical programs. Under this framework, the cavity term is still computed as a term linearly proportional to the 
+molecular solvent-accessible-surface area (SASA) or the molecular volume enclosed by SASA. <br>
 
 `cavity_offset` Offset value used to correct non-polar free energy contribution (Default = -0.5692) This is not used
 for APBS.
 
-`cavity_surften` Surface tension. (Default = 0.0378 kcal/mol Angstrom 2 ). Unit conversion to kJ done automati-
-cally for APBS.
+`cavity_surften` Surface tension. (Default = 0.0378 kcal/mol Angstrom 2 ). Unit conversion to kJ done automatically for 
+APBS.
 
 `exdi` External dielectric constant (Default = 80.0).
 
@@ -333,7 +304,7 @@ cally for APBS.
 manual for more complete description). (Default = 1)
 
 `sander_apbs` Option to use APBS for PB calculation instead of the built-in PBSA solver. This will work only
-through the iAPBS interface[446] built into sander.APBS. Instructions for this can be found online at the
+through the iAPBS interface built into sander.APBS. Instructions for this can be found online at the
 iAPBS/APBS websites. Allowed values are 0: Don’t use APBS, or 1: Use sander.APBS. (Default = 0)
 
 `memopt` Turn on membrane protein support (Default = 0).
@@ -345,9 +316,10 @@ iAPBS/APBS websites. Allowed values are 0: Don’t use APBS, or 1: Use sander.AP
 `mctrdz` Absolute membrane center in the z-direction (Default=0.0, use protein center as the membrane center).
 
 `poretype` Turn on the automatic membrane channel/pore finding method (Default=1).
-A more thorough description of these and other options can be found in Chapter 6. Please also note that the default
-options have changed over time. For a detailed discussion of all related options on the quality of the MM/PBSA
-calculations, please refer to our recent publication [234].
+
+A more thorough description of these and other options can be found [here](https://ambermd.org/doc12/Amber20.pdf#chapter.6).
+Please also note that the default options have changed over time. For a detailed discussion of all related options on 
+the quality of the MM/PB(GB)SA calculations, please check this [publication](https://onlinelibrary.wiley.com/doi/10.1002/jcc.24467).
 
 **&alanine_scanning namelist variables**
 
@@ -356,13 +328,13 @@ original or 1: Do mutant only (Default = 0)
 Note that all calculation details are controlled in the other namelists, though for alanine scanning to be performed,
 the namelist must be included (blank if desired)
 ```diff
-+Added two option to make more aesy the alanine_scanning performace
++Two options added to ease the alanine_scanning calculations
 ```
-`mutant` Define if the moutation will be make in receptor or ligand. Allowed values are: receptor, rec, ligand or lig
+`mutant` Define if the mutation will be make in receptor or ligand. Allowed values are: receptor, rec, ligand or lig
  in any capitalization (Default = receptor or REC)
 
-`mutant_res` Define the specific residue that do you want to mutate in format CHAIN:RESNUM (eg: 'A:350'). Please, make 
-sure that your selection is based on consistent structure file.
+`mutant_res` Define the specific residue that is going to be mutated. Use the following format CHAIN:RESNUM (eg: 'A:350').
+Please, make sure that your selection is correct and based on Gromacs numbering in processed files.
 
 **&nmode namelist variables**
 
@@ -377,13 +349,13 @@ sure that your selection is based on consistent structure file.
 `nmendframe` ∗ Frame number to stop performing nmode calculations on (Default = 1000000)
 
 `nmode_igb` Value for Generalized Born model to be used in calculations. Options are 0: Vacuum, 1: HCT GB
-model [185, 196] (Default 1)
+model (Default 1)
 
-`nmode_istrng` Ionic strength to use in nmode calculations. Units are Molarity. Non-zero values are ignored if
-
-`nmode_igb` is 0 above. (Default = 0.0)
+`nmode_istrng` Ionic strength to use in nmode calculations. Units are Molarity. Non-zero values are ignored if `nmode_igb`
+ is 0 above. (Default = 0.0)
 
 `nmstartframe` ∗ Frame number to begin performing nmode calculations on (Default = 1)
+
 * These variables will choose a subset of the frames chosen from the variables in the &general namelist. Thus, the
 “trajectory” from which snapshots will be chosen for nmode calculations will be the collection of snapshots upon
 which the other calculations were performed.
@@ -395,51 +367,41 @@ in most spreadsheets. If set to 1, this variable will cause the data to be writt
 error of the mean will be calculated and included for all data. If set to 0, the standard, ASCII format will be
 used for the output file. Default is 1 (CSV-formatted output file)
 
-`dec_verbose` Set the level of output to print in the decmop_output file.
-* 0 - DELTA energy, total contribution only
-* 1 - DELTA energy, total, sidechain, and backbone contributions
-* 2 - Complex, Receptor, Ligand, and DELTA energies, total contribution only
-* 3 - Complex, Receptor, Ligand, and DELTA energies, total, sidechain, and backbone contributions
+`dec_verbose` Set the level of output to print in the decomp_output file.
+* 0: DELTA energy, total contribution only
+* 1: DELTA energy, total, sidechain, and backbone contributions
+* 2: Complex, Receptor, Ligand, and DELTA energies, total contribution only
+* 3: Complex, Receptor, Ligand, and DELTA energies, total, sidechain, and backbone contributions
 
 Note: If the values 0 or 2 are chosen, only the Total contributions are required, so only those will be printed
-to the mdout files to cut down on the size of the mdout files and the time required to parse them. However,
-this means that -rewrite-output cannot be used to change the default verbosity to print out sidechain and/or
-backbone energies, but it can be used to reduce the amount of information printed to the final output. The
-parser will extract as much information from the mdout files as it can, but will complain and quit if it cannot
-find everything it’s being asked for.
-Default = 0
+to the mdout files to cut down on the size of the mdout files and the time required to parse them. Default = 0
 
 `idecomp` Energy decomposition scheme to use:
-1. Per-residue decomp with 1-4 terms added to internal potential terms
-2. Per-residue decomp with 1-4 EEL added to EEL and 1-4 VDW added to VDW potential terms.
-3. Pairwise decomp with 1-4 terms added to internal potential terms
-4. Pairwise decomp with 1-4 EEL added to EEL and 1-4 VDW added to VDW potential terms
+* 1: Per-residue decomp with 1-4 terms added to internal potential terms
+* 2: Per-residue decomp with 1-4 EEL added to EEL and 1-4 VDW added to VDW potential terms.
+* 3: Pairwise decomp with 1-4 terms added to internal potential terms
+* 4: Pairwise decomp with 1-4 EEL added to EEL and 1-4 VDW added to VDW potential terms
 
 (No default. This must be specified!) This functionality requires sander.
 
-`print_res` Select residues from the complex prmtop to print. The receptor/ligand residues will be automatically
-figured out if the default mask assignments are used. If you specify your own masks, you will need to
-modify the mdin files created by MMPBSA.py and rerun MMPBSA.py with the -use-mdins flag. Note that
-the DELTAs will not be computed in this case. This variable accepts a sequence of individual residues and/or
+`print_res` Select residues from the complex to print. This variable accepts a sequence of individual residues and/or
 ranges. The different fields must be either comma- or semicolon-delimited. For example: print_res = “1,
 3-10, 15, 100”, or print_res = “1; 3-10; 15; 100”. Both of these will print residues 1, 3 through 10, 15, and
-100 from the complex prmtop and the corresponding residues in either the ligand and/or receptor prmtops.
+100 from the complex topology file and the corresponding residues in either the ligand and/or receptor topology files. 
+(Default: print all residues).
 ```diff
--(Default: print all residues)*
 - *Please note: Using idecomp=3 or 4 (pairwise) with a very large number of printed residues and a large number
 -of frames can quickly create very, very large temporary mdout files. Large print selections also demand a large
 -amount of memory to parse the mdout files and write decomposition output file (~500 MB for just 250 residues,
 -since that’s 62500 pairs!) It is not unusual for the output file to take a significant amount of time to print if you
 -have a lot of data. This is most applicable to pairwise decomp, since the amount of data scales as O(N 2 ).
 
-+ Based on the above, we decided to limit the selection of the residues that will be displayed by default. In turn, 
-+ we facilitate this selection since now it is not necessary to explicitly define the list of amino acids. We define a 
-+ selection method with the following structure:
-+ "within 6"
-+ where within corresponds to the keyword and 6 to the maximum distance criterion in angstroms necessary to select any
-+ residue from  receptor and ligand
++ Based on the above, we decided to add a new option that limits the selection of the residues that will be displayed 
+by default. We defined a selection method with the following structure:
++ print_res = "within 6"
++ where _within_ corresponds to the keyword and _6_ to the maximum distance criterion in Angstroms necessary to select any
++ residue from both the receptor and ligand.
 ```
-(Default: print_res="within 6")
 
 **&rism namelist variables***
 
@@ -487,9 +449,9 @@ This has a strong effect on the cost of 3D-RISM calculations. (Default = 1e-5).
 
 * 3D-RISM calculations are performed with the rism3d.snglpnt program built with AmberTools, written by
 Tyler Luchko. It is the most expensive, yet most statistical mechanically rigorous solvation model available in
-MMPBSA.py. See Chapter 7 for a more thorough description of options and theory. A list of references can be
-found there, too. One advantage of 3D-RISM is that an arbitrary solvent can be chosen; you just need to change
-the xvvfile specified on the command line (see 34.3.2).
+MMPBSA.py. See [Chapter 7](https://ambermd.org/doc12/Amber20.pdf#chapter.7) for a more thorough description of options 
+and theory. A list of references can be found there, too. One advantage of 3D-RISM is that an arbitrary solvent can 
+be chosen; you just need to change the xvvfile specified on the command line (see [34.3.2](https://ambermd.org/doc12/Amber20.pdf#subsection.34.3.2)).
 
 #### Sample input files
 ```
