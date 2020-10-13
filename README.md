@@ -70,9 +70,11 @@ In its simplest version, gmx-MMPBSA.py requires:
 * The structure file (*.tpr) -- *.tpr used as input in mdrun program for MD simulation
 * An index file (*.ndx) -- *.ndx file containing the receptor and ligand in separated groups
 * Receptor and ligand group numbers in the index file
-* A trajectory file (*.xtc, *.pdb, *.crd) -- final MD trajectory, fitted and with no pbc.
-* An input parameters file (*.in) -- input file containing all the specification regarding the type of calculation that is 
-going to be performed
+* A trajectory file (*.xtc, *.pdb, *.trr) -- final Gromacs MD trajectory, fitted and with no pbc.
+* An input parameters file (*.in) -- input file containing all the specifications regarding the type of calculation that
+is going to be performed
+
+_See a detailed list of all the flags in gmx_MMPBSA.py command line [here](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA#calling-mmpbsapy-from-the-command-line)_
 
 That being said, once you are in the folder containing all files, the command-line will be as follows:
 
@@ -89,12 +91,45 @@ startframe=5, endframe=100, interval=5, verbose=2
 igb=2, saltcon=0.150,
 ```
 
+_See a detailed list of all the options in gmx_MMPBSA.py input file [here](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA#the-input-file) 
+as well as some [examples](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA#sample-input-files)_
+
 In this case, a single trajectory (ST) approximation is followed, which means the receptor and ligand (in this case, the 
 ligand is also another protein) amber format topologies will be obtained from that of the complex. To do so, a MD *.tpr 
-file (`md.tpr`), an index file (`index.ndx`), a trajectory file (`traj.xtc`), and the receptor and ligand group numbers 
+file (`md.tpr`), an index file (`index.ndx`), a trajectory file (`traj.xtc`), and both the receptor and ligand group numbers 
 in the index file (`1 13`) are needed. The `mmpbsa.in` input file will contain all the parameters needed for the 
-MM/PB(GB)SA calculation. In this case, 19 frames `(endframe-startframe)/interval = (100-5)/5` are going to be used when 
-performing the the MM/PB(GB)SA calculation with the igb5 (GB-OBC2) model and a salt concentration = 0.15M. 
+MM/PB(GB)SA calculation. In this case, 19 frames `(endframe-startframe)/interval = (100-5)/5 = 19` are going to be used 
+when performing the the MM/PB(GB)SA calculation with the igb5 (GB-OBC2) model and a salt concentration = 0.15M. 
+
+## Protein-ligand binding free energy calculations
+
+This case is very similar to that of described previously, with the only difference that ligand *.mol2 file must be 
+defined. This *.mol2 file should contain all the charges as well as the bonds for the ligand. A *.mol2 output file from
+[antechamber](http://ambermd.org/tutorials/basic/tutorial4b/index.php) is recommended.
+
+That being said, once you are in the folder containing all files, the command-line will be as follows:
+
+`amber.python path/to/gmx_MMPBSA.py -cs md.tpr -ci index.ndx -cg 1 13 -ct traj.xtc -lm ligand.mol2 -i mmpbsa.in`
+
+where the `mmpbsa.in` input file, is a text file containing the following lines:
+
+```
+Sample input file for GB calculation
+&general
+startframe=5, endframe=100, interval=5, verbose=2
+/
+&gb
+igb=2, saltcon=0.150,
+```
+
+_See a detailed list of all the options in gmx_MMPBSA.py input file [here](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA#the-input-file) 
+as well as some [examples](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA#sample-input-files)_
+
+
+
+
+
+
 
 The most common procedure is to obtain the receptor and ligand topologies from the complex, so we have directly 
 included a functionality similar to ante-MMPBSA.py (see Amber manual). Additionally we define explicitly the stability 
