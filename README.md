@@ -3,7 +3,7 @@
 amber.python -m pip install GMX-MMPBSA
 
 ## Run GMX-MMPBSA
-amber.python ../../GMX_MMPBSA.py -cs COM_ion_em.tpr -ci index.ndx -cg 1 13 -ct traj.xtc -i mmpbsa_igb2.in -lm ligand.mol2
+amber.python ../../gmx_MMPBSA.py -cs COM_ion_em.tpr -ci index.ndx -cg 1 13 -ct traj.xtc -i mmpbsa_igb2.in -lm ligand.mol2
 
 ## Test
 
@@ -32,8 +32,8 @@ decomposed into a polar and non-polar contributions. The polar portion is calcul
 equation, the Generalized Born method, or the Reference Interaction Site Model (RISM). The PB equation is solved 
 numerically by either the pbsa program included with AmberTools or by the Adaptive Poisson Boltzmann Solver (APBS) 
 program (for more information, see http://www.poissonboltzmann.org/apbs). The non-polar contribution is approximated by 
-the LCPO method [170] implemented within sander or the molsurf method as implemented in cpptraj. The entropy calculations 
-can be done in either a HCT Generalized Born solvation model [185, 196] or in the gas phase using a mmpbsa_py_nabnmode 
+the LCPO method implemented within sander or the molsurf method as implemented in cpptraj. The entropy calculations 
+can be done in either a HCT Generalized Born solvation model or in the gas phase using a mmpbsa_py_nabnmode 
 program written in the nab programming language, or via the quasi-harmonic approximation in ptraj as in the original 
 [MMPBSA.py](https://pubs.acs.org/doi/10.1021/ct300418h). In this new module, entropy term (−TΔS) can be also estimated 
 using the so-called [Interaction Entropy](https://pubs.acs.org/doi/abs/10.1021/jacs.6b02682) method, which is 
@@ -147,25 +147,25 @@ match nothing.
 
 **&general namelist variables**
 
-**debug_printlevel** MMPBSA.py prints errors by raising exceptions, and not catching fatal errors. If debug_printlevel 
-            is set to 0, then detailed tracebacks (effectively the call stack showing exactly where in the program the 
-            error occurred) is suppressed, so only the error message is printed. If debug_printlevel is set to 1 or 
-            higher, all tracebacks are printed, which aids in debugging of issues. Default: 0. (Advanced Option)
+`debug_printlevel` MMPBSA.py prints errors by raising exceptions, and not catching fatal errors. If debug_printlevel 
+is set to 0, then detailed tracebacks (effectively the call stack showing exactly where in the program the 
+error occurred) is suppressed, so only the error message is printed. If debug_printlevel is set to 1 or 
+higher, all tracebacks are printed, which aids in debugging of issues. Default: 0. (Advanced Option)
 
 `startframe` The frame from which to begin extracting snapshots from the full, concatenated trajectory comprised
 of every trajectory file placed on the command-line. This is always the first frame read. (Default = 1)  
           
 `endframe` The frame from which to stop extracting snapshots from the full, concatenated trajectory comprised of every 
-           trajectory file supplied on the command-line. (Default = 9999999)
+ trajectory file supplied on the command-line. (Default = 9999999)
+
 ```diff
 @@ Input variable modified. Included Interaction entropy aproximation @@
 ```            
 `entropy` It specifies whether to perform a quasi-harmonic entropy (QH) approximation with ptraj or the 
-          [Interaction Entropy (IE)](https://pubs.acs.org/doi/abs/10.1021/jacs.6b02682) approximation. The allowed 
-          values are (default = 0): 
-          * 0: Don’t 
-          * 1: perform QH 
-          * 2: perform IE 
+[Interaction Entropy (IE)](https://pubs.acs.org/doi/abs/10.1021/jacs.6b02682) approximation. The allowed values are (default = 0): 
+* 0: Don’t 
+* 1: perform QH 
+* 2: perform IE 
 ```diff
 + New input variable added
 ```
@@ -176,10 +176,10 @@ of every trajectory file placed on the command-line. This is always the first fr
 + New input variable added
 ```
 `entropy_temp` Specify the temperature to calculate the entropy term `−TΔS` (Only if `entropy` = 2). Avoid 
-               inconsistencies with defined internal temperature (298.15 K) when nmode is used.
+inconsistencies with defined internal temperature (298.15 K) when nmode is used.
       
 `interval` The offset from which to choose frames from each trajectory file. For example, an interval of 2 will pull
-           every 2nd frame beginning at startframe and ending less than or equal to endframe. (Default = 1)
+every 2nd frame beginning at startframe and ending less than or equal to endframe. (Default = 1)
 
 ```diff
 - Input variable deleted. All files are needed for plotting
@@ -192,16 +192,16 @@ completes successfully (Default = 1) A verbose level of 1 is sufficient to use -
  file without rerunning any simulations.~~
             
 `netcdf` Specifies whether or not to use NetCDF trajectories internally rather than writing temporary ASCII trajectory 
-         files. For very large trajectories, this could offer significant speedups, and requires less temporary space.
-         However, this option is incompatible with alanine scanning. Default value is 0.
-         * 0: Do NOT use temporary NetCDF trajectories
-         * 1: Use temporary NetCDF trajectories
+files. For very large trajectories, this could offer significant speedups, and requires less temporary space.
+However, this option is incompatible with alanine scanning. Default value is 0.
+* 0: Do NOT use temporary NetCDF trajectories
+* 1: Use temporary NetCDF trajectories
  
 `PBRadii` PBRadii in amber topology files. Allowed values are (default = 3): 
- * 1: bondi, recommended when igb = 7 
- * 2: mbondi, recommended when igb = 1 
- * 3: mbondi2, recommended when igb = 2 or 5 
- * 4: mbondi3, recommended when igb = 8 
+* 1: bondi, recommended when igb = 7 
+* 2: mbondi, recommended when igb = 1 
+* 3: mbondi2, recommended when igb = 2 or 5 
+* 4: mbondi3, recommended when igb = 8 
 
 ```diff
 - Input variable deleted. ALways must be defined to get gromacs
@@ -223,11 +223,11 @@ values (Default = 1):
 
 **&gb namelist variables**
 
-`ifqnt` Specifies whether a part of the system is treated with quantum mechanics. (Default = 0) <br>
+`ifqnt` Specifies whether a part of the system is treated with quantum mechanics. This functionality requires sander 
+igb Generalized Born method to use (seeSection 4). Allowed values are 1, 2, 5, 7 and 8. (Default = 5) All models are 
+now available with both mmpbsa_py_energy and sander.(Default = 0)
 * 0: Potential function is strictly classical 
 * 1: Use QM/MM <br>
-This functionality requires sander igb Generalized Born method to use (seeSection 4). Allowed values are 1, 2, 5, 7 and 
-8. (Default = 5) All models are now available with both mmpbsa_py_energy and sander.
 
 `qm_residues` Comma- or semicolon-delimited list of complex residues to treat with quantum mechanics. All
 whitespace is ignored. All residues treated with quantum mechanics in the complex must be treated with
@@ -239,7 +239,7 @@ receptor topology files. There is no default, this must be specified.
 ```diff
 + Input variable added. Define Internal dielectric constant without use external mdin file
 ```
-`intdiel` Define a new intenal dielectric constant (Default = 1.0)
+`intdiel` Define a new internal dielectric constant (Default = 1.0)
 
 `qm_theory` Which semi-empirical Hamiltonian should be used for the quantum calculation. No default, this must
 be specified. See its description in the QM/MM section of the manual for options.
@@ -540,10 +540,10 @@ A few important notes about input files. Comments are allowed by placing a # at 
 pace is ignored). Variable initialization may span multiple lines. In-line comments (i.e., putting a # for a comment
 after a variable is initialized in the same line) is not allowed and will result in an input error. Variable declarations
 must be comma-delimited, though all whitespace is ignored. Finally, all lines between namelists are ignored, so
-comments may be put before each namelist without using #.
+comments can be added before each namelist without using #.
 
 ### Calling MMPBSA.py from the command-line
-GMX_MMPBSA.py is invoked through the command line as follows:
+gmx_MMPBSA.py is invoked through the command line as follows:
 ```
 usage: gmx_MMPBSA [-h] [-v] [--input-file-help] [-O] [-prefix <file prefix>] [-i FILE] [-xvvfile XVVFILE] [-o FILE] 
                   [-do FILE] [-eo FILE] [-deo FILE] [-gui] [-s] [-pff <Forcefield>] [-lff <Forcefield>] [-st] 
@@ -552,8 +552,8 @@ usage: gmx_MMPBSA [-h] [-v] [--input-file-help] [-O] [-prefix <file prefix>] [-i
                   [-ls <Structure File>] [-li <Index File>] [-lg index] [-lt [TRJ [TRJ ...]]] [-make-mdins] [-use-mdins]
                   [-rewrite-output] [--clean]
 
-GMX-MMPBSA is an effort to implement the GB / PB and others calculations in Gromacs. This program is an adaptation of 
-Amber's MMPBSA.py and essentially works as such. As GMX-MMPBSA adapts MMPBSA.py, since it has all the resources of this 
+gmx-MMPBSA.py is an effort to implement the GB / PB and others calculations in Gromacs. This program is an adaptation of 
+Amber's MMPBSA.py and essentially works as such. As gmx-MMPBSA adapts MMPBSA.py, since it has all the resources of this 
 script and work with any Gromacs version.
 
 optional arguments:
