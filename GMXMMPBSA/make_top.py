@@ -29,10 +29,9 @@ from GMXMMPBSA.findprogs import find_progs
 import subprocess
 from math import sqrt
 
-ff_list = {'amber03': 'oldff/leaprc.ff03', 'amber99': 'oldff/leaprc.ff99', 'amber99sb': 'oldff/leaprc.ff99SB',
-           'amber99sb-ildn': 'oldff/leaprc.ffSBildn', 'amber94': 'oldff/leaprc.ff94', 'amber96': 'oldff/leaprc.ff96',
-           'amber14sb': 'leaprc.protein.ff14SB'}
-lig_ff = ['gaff', 'gaff2']
+protein_ff = {1:'oldff/leaprc.ff99', 2: 'oldff/leaprc.ff03', 3: 'oldff/leaprc.ff99SB', 4: 'oldff/leaprc.ffSBildn',
+           5: 'leaprc.protein.ff14SB'}
+ligand_ff = {1: 'gaff', 2: 'gaff2'}
 
 std_aa = ['ALA', 'ARG', 'ASN', 'ASP', 'CYS', 'CYX', 'GLN', 'GLU', 'GLY', 'HID', 'HIE', 'HIP', 'ILE', 'LEU', 'LYS',
           'MET', 'PHE', 'PRO', 'SER', 'THR', 'TRP', 'TYR', 'VAL', 'HIS']
@@ -118,7 +117,7 @@ class CheckMakeTop:
             raise MMPBSA_Error('%s failed when querying %s' % (gmx + 'trjconv', self.FILES.complex_tpr))
 
         # clear trajectory
-        if self.FILES.solvated_traj:
+        if self.INPUT['solvated_trajectory']:
             print('Clear normal complex trajectories...')
             new_trajs = []
             for i in range(len(self.FILES.complex_trajs)):
@@ -185,7 +184,7 @@ class CheckMakeTop:
             if cp2.wait():  # if it quits with return code != 0
                 raise MMPBSA_Error('%s failed when querying %s' % (gmx + 'make_ndx', self.FILES.receptor_tpr))
             # clear trajectory
-            if self.FILES.solvated_traj:
+            if self.INPUT['solvated_trajectory']:
                 print('Clear normal receptor trajectories...')
                 new_trajs = []
                 for i in range(len(self.FILES.receptor_trajs)):
@@ -228,7 +227,7 @@ class CheckMakeTop:
                 raise MMPBSA_Error('%s failed when querying %s' % (gmx + 'make_ndx', self.FILES.ligand_tpr))
 
             # clear trajectory
-            if self.FILES.solvated_traj:
+            if self.INPUT['solvated_trajectory']:
                 print('Clear normal ligand trajectories...')
                 new_trajs = []
                 for i in range(len(self.FILES.ligand_trajs)):
@@ -441,21 +440,21 @@ class CheckMakeTop:
         for cys in xcys:
             cys.name = 'CYX'
 
-    def checkForceField(self):
-        if self.FILES.protein_ff not in ff_list:
-            raise ValueError('This forcefield {} does not match any of the allowed '
-                             '({})'.format(self.FILES.protein_ff, ', '.join([x for x in ff_list])))
-        if self.FILES.ligand_mol2 and self.FILES.ligand_ff not in lig_ff:
-            raise ValueError('This forcefield {} does not match any of the allowed '
-                             '({})'.format(self.FILES.ligand_ff, ', '.join([x for x in ff_list])))
+    # def checkForceField(self):
+    #     if self.INPUT['protein_forcefield'] not in protein_ff:
+    #         raise ValueError('This forcefield {} does not match any of the allowed '
+    #                          '({})'.format(self.INPUT['protein_forcefield'], ', '.join([x for x in protein_ff.values()])))
+    #     if self.FILES.ligand_mol2 and ligand_ff[self.INPUT['ligand_forcefield']] not in ligand_ff:
+    #         raise ValueError('This forcefield {} does not match any of the allowed '
+    #                          '({})'.format(ligand_ff[self.INPUT['ligand_forcefield']], ', '.join([x for x in
+    #                                                                                      ligand_ff.values()])))
 
     def makeToptleap(self):
-        self.checkForceField()
         with open(self.FILES.prefix + 'leap.in', 'w') as tif:
-            tif.write('source {}\n'.format(ff_list[self.FILES.protein_ff]))
+            tif.write('source {}\n'.format(protein_ff[self.INPUT['protein_forcefield']]))
             tif.write('source leaprc.DNA.bsc1\n')
             tif.write('source leaprc.RNA.OL3\n')
-            tif.write('source leaprc.{}\n'.format(self.FILES.ligand_ff))
+            tif.write('source leaprc.{}\n'.format(ligand_ff[self.INPUT['ligand_forcefield']]))
             tif.write('set default PBRadii {}\n'.format(PBRadii[self.INPUT['PBRadii']]))
             # check if ligand is not protein and always load
             if self.FILES.ligand_mol2:
@@ -482,10 +481,10 @@ class CheckMakeTop:
 
         if self.INPUT['alarun']:
             with open(self.FILES.prefix + 'mut_leap.in', 'w') as mtif:
-                mtif.write('source {}\n'.format(ff_list[self.FILES.protein_ff]))
+                mtif.write('source {}\n'.format(protein_ff[self.INPUT['protein_forcefield']]))
                 mtif.write('source leaprc.DNA.bsc1\n')
                 mtif.write('source leaprc.RNA.OL3\n')
-                mtif.write('source leaprc.{}\n'.format(self.FILES.ligand_ff))
+                mtif.write('source leaprc.{}\n'.format(ligand_ff[self.INPUT['ligand_forcefield']]))
                 mtif.write('set default PBRadii {}\n'.format(PBRadii[self.INPUT['PBRadii']]))
                 # check if ligand is not protein and always load
                 if self.FILES.ligand_mol2:

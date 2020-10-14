@@ -93,22 +93,10 @@ group.add_argument('-deo', dest='dec_energies', metavar='FILE',
                   command-line.''')
 group.add_argument('-gui', dest='gui', action='store_true', default=True,
                    help='Open charts application when all calculations finished')
-
-group = parser.add_argument_group('Options',
-                                  '''These options specify explicit calculation type and forcefield to prepare the 
-Amber topologies''')
 group.add_argument('-s', dest='stability', action='store_true', default=False,
                    help='Perform stability calculation. Only the complex parameter are required. Only, if ligand is '
                         'non-Protein (small molecule) type will required the ligand parameters. IN any other case '
                         'receptor and ligand parameters will be ignored')
-group.add_argument('-pff', dest='protein_ff', default='amber14sb', metavar='<Forcefield>',
-                   help='Used forcefield to make the protein MD in Gromacs. Allowed: amber14sb, amber99sb-ildn, '
-                        'amber99sb, amber03, amber99, amber96, amber94. (Default: amber14sb)')
-group.add_argument('-lff', dest='ligand_ff', metavar='<Forcefield>', default='gaff',
-                   help='Used forcefield to make the ligand MD in Gromacs. Allowed: gaff, gaff2. (Default: gaff)')
-group.add_argument('-st', dest='solvated_traj', action='store_true', default=True,
-                   help='Define if complex, receptor and ligand trajectories is solvated. We assume that the entry '
-                        'trajectory contains ions and water')
 
 group = parser.add_argument_group('Complex', complex_group_des)
 group.add_argument('-cs', dest='complex_tpr', metavar='<Structure File>', default=None,

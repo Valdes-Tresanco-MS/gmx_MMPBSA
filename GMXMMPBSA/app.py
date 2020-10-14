@@ -121,4 +121,5 @@ def gmxmmpbsa_gui():
     sys.exit(app.exec())
 
 if __name__ == '__main__':
-    gmxmmpbsa_gui()
+    gmxmmpbsa()
+    # gmxmmpbsa_gui()
