@@ -607,18 +607,9 @@ Input and Output Files:
                          File name forced to end in [.csv]. This file is only written when specified on the command-line.
                          (default: None)
   -gui                  Open charts application when all calculations finished (default: True)
-
-Options:
-  These options specify explicit calculation type and forcefield to prepare the Amber topologies
-
   -s                    Perform stability calculation. Only the complex parameter are required. If ligand is non-Protein
                          (small molecule) type will required the ligand mol2 file parameters. In any other case receptor
                          and ligand parameters will be ignored. See description bellow (default: False)
-  -pff <Forcefield>     Used forcefield to make the protein MD in Gromacs. Allowed: amber14sb, amber99sb-ildn, 
-                         amber99sb, amber03, amber99, amber96, amber94. (default: amber14sb)
-  -lff <Forcefield>     Used forcefield to make the ligand MD in Gromacs. Allowed: gaff, gaff2. (default: gaff)
-  -st                   Define if complex, receptor and ligand trajectories is solvated. We assume that the entry 
-                         trajectory contains ions and water (default: True)
 
 Complex:
   Complex files and info that are needed to perform the calculation. If the receptor and / or the ligand are not 
