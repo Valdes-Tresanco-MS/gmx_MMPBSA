@@ -1,10 +1,10 @@
-## Install
+# Install
 
 amber.python -m pip install GMX-MMPBSA
 
-## Test
+# Test
 
-## Documentation
+# Documentation
 **Note: We do not intend to replace the original [MMPBSA.py](https://pubs.acs.org/doi/10.1021/ct300418h); instead, 
 we have implemented and improved some functionalities, and what is most important, made this valuable tool available 
 for Gromacs users. Most of the documentation below is found in the [Amber manual](https://ambermd.org/doc12/Amber20.pdf#chapter.34), 
@@ -39,10 +39,10 @@ free energy in protein–ligand binding and other interaction processes.
 
 Usually, the Single Trajectory (ST) approximation is employed when performing MM/PB(GB)SA calculations. This approximation
 assumes that the configurational space explored by the systems are very similar between the bound and unbound states, 
-so every snapshot for each species (i.e. complex, receptor, and ligand) is extracted from the same trajectory file. This
+so every snapshot for each species (_i.e._ complex, receptor, and ligand) is extracted from the same trajectory file. This
 approximation improves binding free energies convergence and also reduces the computing time. However, it only should be 
 applied when the molecules in the unbound state present a similar behavior to that of the bound state. On the other 
-hand, in the so-called Multiple Trajectory (MT) approximation, the snapshots for each one of the species (i.e. complex, 
+hand, in the so-called Multiple Trajectory (MT) approximation, the snapshots for each one of the species (_i.e._ complex, 
 receptor, and ligand) are extracted from their own trajectory file. This approximation, theoretically more rigorous 
 though, leads to higher standard deviation of the binding free energies.  
 
@@ -65,7 +65,7 @@ as well as some reviews:
 
 ## gmx_MMPBSA in a nutshell
 gmx_MMPBSA brings all the [MMPBSA.py](https://pubs.acs.org/doi/10.1021/ct300418h) functionalities to Gromacs users. 
-In addition, few other functionalities were implemented that eases a number of calculations (e.g. MM/PB(GB)SA 
+In addition, few other functionalities were implemented that eases a number of calculations (_e.g._ MM/PB(GB)SA 
 with different internal dielectric constant, interaction entropy calculation). A GUI application is also incorporated 
 that allows for visualizing the results and saving high-quality images.
 
@@ -112,7 +112,7 @@ In its simplest version, gmx_MMPBSA requires:
 * An input parameters file (*.in) -- input file containing all the specifications regarding the type of calculation that
 is going to be performed
 
-_See a detailed list of all the flags in gmx_MMPBSA command line [here](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA#calling-mmpbsapy-from-the-command-line)_
+_See a detailed list of all the flags in gmx_MMPBSA command line [here](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA#calling-gmx_mmpbsa-from-the-command-line)_
 
 That being said, once you are in the folder containing all files, the command-line will be as follows:
 
@@ -291,7 +291,7 @@ or
 
 `mpirun -np 2 gmx_MMPBSA mpi -O -i mmpbsa.in -cs com_md.tpr -ci index.ndx -cg 1 13 -ct com_traj.xtc`
 
-#### The input file
+### The input file
 As gmx_MMPBSA is based on [MMPBSA.py](https://pubs.acs.org/doi/10.1021/ct300418h), it uses an input file containing 
 all the specification for the MM/PB(GB)SA calculation. The input file is designed to be as syntactically similar to 
 other programs in Amber as possible. The input file has the same namelist structure as both sander and pmemd. The allowed 
@@ -335,7 +335,7 @@ of every trajectory file placed on the command-line. This is always the first fr
 + New input variable added
 ```
 `entropy_seg` Specify the representative segment (in %), starting from the `endframe`, for the calculation of 
-the Interaction Entropy, e.g: `entropy_seg = 25` means that the last quartile of the total number of frames 
+the Interaction Entropy, _e.g._: `entropy_seg = 25` means that the last quartile of the total number of frames 
 (`(endframe-startframe)/interval`) will be used to calculate the average Interaction Entropy. Default: 25 (Only if `entropy = 2`)
 
 ```diff
@@ -344,9 +344,6 @@ the Interaction Entropy, e.g: `entropy_seg = 25` means that the last quartile of
 `entropy_temp` Specify the temperature to calculate the entropy term `−TΔS` (Only if `entropy = 2`). Avoid 
 inconsistencies with defined internal temperature (298.15 K) when nmode is used.
 
-`entropy_seg` Specify the representative segment (in %), starting from the end of the trajectory, for the calculation of 
-              the Interaction Entropy, e.g: 25 is equivalent to the frames contained in the last quartile of the 
-              trajectory (Default: 25) (Only if `entropy` = 2)
 ```diff
 + New input variable added
 ```
@@ -610,7 +607,7 @@ receptor topology files.
 `buffer` Minimum distance between solute and edge of solvation box. Specify this with grdspc below. Mutually
 exclusive with ng and solvbox. Set buffer < 0 if you wish to use ng and solvbox. (Default = 14 Å)
 closure The approximation to the closure relation. Allowed choices are kh (Kovalenko-Hirata), hnc (Hypernetted-
-chain), or psen (Partial Series Expansion of order-n) where “n” is a positive integer (e.g., “pse3”). (Default
+chain), or psen (Partial Series Expansion of order-n) where “n” is a positive integer (_e.g._, “pse3”). (Default
 = ‘kh’)
 
 `closureorder` (Deprecated) The order at which the PSE-n closure is truncated if closure is specified as “pse” or
@@ -739,7 +736,7 @@ maxarcdot=15000
 ```
 
 A few important notes about input files. Comments are allowed by placing a # at the beginning of the line (whites-
-pace is ignored). Variable initialization may span multiple lines. In-line comments (i.e., putting a # for a comment
+pace is ignored). Variable initialization may span multiple lines. In-line comments (_i.e._, putting a # for a comment
 after a variable is initialized in the same line) is not allowed and will result in an input error. Variable declarations
 must be comma-delimited, though all whitespace is ignored. Finally, all lines between namelists are ignored, so
 comments can be added before each namelist without using #.
