@@ -171,12 +171,12 @@ of every trajectory file placed on the command-line. This is always the first fr
 ```
 `entropy_seg` Specify the representative segment (in %), starting from the end of the trajectory, for the calculation of 
               the Interaction Entropy, e.g: 25 is equivalent to the frames contained in the last quartile of the 
-              trajectory. Default: 25 (Only if `entropy` = 2)
+              trajectory (Default: 25) (Only if `entropy` = 2)
 ```diff
 + New input variable added
 ```
 `entropy_temp` Specify the temperature to calculate the entropy term `−TΔS` (Only if `entropy` = 2). Avoid 
-inconsistencies with defined internal temperature (298.15 K) when nmode is used.
+inconsistencies with defined internal temperature (298.15 K) when nmode is used (Default = 298.15)
       
 `interval` The offset from which to choose frames from each trajectory file. For example, an interval of 2 will pull
 every 2nd frame beginning at startframe and ending less than or equal to endframe. (Default = 1)
@@ -196,13 +196,41 @@ files. For very large trajectories, this could offer significant speedups, and r
 However, this option is incompatible with alanine scanning. Default value is 0.
 * 0: Do NOT use temporary NetCDF trajectories
 * 1: Use temporary NetCDF trajectories
- 
-`PBRadii` PBRadii in amber topology files. Allowed values are (default = 3): 
+
+```diff
++ New input variable added
+``` 
+`PBRadii` PBRadii in amber topology files (Default = 3)
 * 1: bondi, recommended when igb = 7 
 * 2: mbondi, recommended when igb = 1 
 * 3: mbondi2, recommended when igb = 2 or 5 
 * 4: mbondi3, recommended when igb = 8 
 
+```diff
++ New input variable added
+```
+`protein_forcefield` Define the force field used to build Amber topology for proteins. Make sure this force field is 
+the same as the one used in Gromacs (Default = 3)
+1. amber99
+2. amber03
+3. amber99SB
+4. amber99SB-ildn
+5. amber14SB
+
+```diff
++ New input variable added
+```
+`ligand_forcefield` Define the force field used to build Amber topology for small molecules. Make sure this force field
+ is the same as the one used in Gromacs (Default = 1). Allowed values are:
+1. gaff
+2. gaff2
+
+```diff
++ New input variable added
+```
+`solvated_trajectory` Define if it is necessary to build a clean trajectory (Default = 1)
+* 0 Don’t
+* 1 Build clear trajectory
 ```diff
 - Input variable deleted. ALways must be defined to get gromacs
 ```
