@@ -215,7 +215,7 @@ Complex:
   -ci <Index File>      Index file of the bound complex. (default: None)
   -cg index index       Groups of receptor and ligand in complex index file. The notation is as follows: "-cg <Receptor
                          group> <Ligand group>", ie. -cg 1 13 (default: None)
-  -ct [TRJ [TRJ ...]]   Input trajectory of the complex. Make sure the trajectoiry is fitted and pbc have benn removed
+  -ct [TRJ [TRJ ...]]   Input trajectories of the complex. Make sure the trajectoiry is fitted and pbc have benn removed
                          Allowed formats: *.xtc (recommended), *.trr, *.pdb (specify as many as you'd like). (default: None)
 
 Receptor:
@@ -226,7 +226,7 @@ Receptor:
                          complex will be used and other options are not needed. (default: None)
   -ri <Index File>      Index file of the unbound receptor. (default: None)
   -rg index             Group of receptor in receptor index file. (default: None)
-  -rt [TRJ [TRJ ...]]   Input trajectory of the unbound receptor for multiple trajectory approach. Allowed formats: 
+  -rt [TRJ [TRJ ...]]   Input trajectories of the unbound receptor for multiple trajectory approach. Allowed formats: 
                          *.xtc (recommended), *.trr, *.pdb. (specify as many as you'd like). (default: None)
 
 Ligand:
@@ -240,7 +240,7 @@ Ligand:
                          molecule, make sure that you definde above -lm option (default: None)
   -li <Index File>      Index file of the unbound ligand. Only if tpr file was define in -ls. (default: None)
   -lg index             Group of the ligand in ligand index file. Only if tpr file was define in -ls. (default: None)
-  -lt [TRJ [TRJ ...]]   Input trajectory of the unbound ligand for multiple trajectory approach. Allowed formats: 
+  -lt [TRJ [TRJ ...]]   Input trajectories of the unbound ligand for multiple trajectory approach. Allowed formats: 
                          *.xtc (recommended), *.trr, *.pdb. (specify as many as you'd like). (default: None)
 
 Miscellaneous Actions:
