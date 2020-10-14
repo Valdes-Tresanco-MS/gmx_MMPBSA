@@ -167,7 +167,7 @@ as well as several [examples](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA#s
 gmx_MMPBSA is invoked through the command line as follows:
 ```
 usage: gmx_MMPBSA [-h] [-v] [--input-file-help] [-O] [-prefix <file prefix>] [-i FILE] [-xvvfile XVVFILE] [-o FILE] 
-                  [-do FILE] [-eo FILE] [-deo FILE] [-gui] [-s] [-pff <Forcefield>] [-lff <Forcefield>] [-st] 
+                  [-do FILE] [-eo FILE] [-deo FILE] [-gui] [-s] [-st] 
                   [-cs <Structure File>] [-ci <Index File>] [-cg index index] [-ct [TRJ [TRJ ...]]] 
                   [-rs <Structure File>] [-ri <Index File>] [-rg index] [-rt [TRJ [TRJ ...]]] [-lm <Structure File>]
                   [-ls <Structure File>] [-li <Index File>] [-lg index] [-lt [TRJ [TRJ ...]]] [-make-mdins] [-use-mdins]
@@ -207,9 +207,6 @@ Options:
   -s                    Perform stability calculation. Only the complex parameter are required. If ligand is non-Protein
                          (small molecule) type will required the ligand mol2 file parameters. In any other case receptor
                          and ligand parameters will be ignored. See description bellow (default: False)
-  -pff <Forcefield>     Used forcefield to make the protein MD in Gromacs. Allowed: amber14sb, amber99sb-ildn, 
-                         amber99sb, amber03, amber99, amber96, amber94. (default: amber14sb)
-  -lff <Forcefield>     Used forcefield to make the ligand MD in Gromacs. Allowed: gaff, gaff2. (default: gaff)
   -st                   Define if complex, receptor and ligand trajectories is solvated. We assume that the entry 
                          trajectory contains ions and water (default: True)
 
@@ -337,7 +334,6 @@ of every trajectory file placed on the command-line. This is always the first fr
 ```diff
 + New input variable added
 ```
-<<<<<<< HEAD
 `entropy_seg` Specify the representative segment (in %), starting from the `endframe`, for the calculation of 
 the Interaction Entropy, e.g: `entropy_seg = 25` means that the last quartile of the total number of frames 
 (`(endframe-startframe)/interval`) will be used to calculate the average Interaction Entropy. Default: 25 (Only if `entropy = 2`)
@@ -347,7 +343,7 @@ the Interaction Entropy, e.g: `entropy_seg = 25` means that the last quartile of
 ```
 `entropy_temp` Specify the temperature to calculate the entropy term `−TΔS` (Only if `entropy = 2`). Avoid 
 inconsistencies with defined internal temperature (298.15 K) when nmode is used.
-=======
+
 `entropy_seg` Specify the representative segment (in %), starting from the end of the trajectory, for the calculation of 
               the Interaction Entropy, e.g: 25 is equivalent to the frames contained in the last quartile of the 
               trajectory (Default: 25) (Only if `entropy` = 2)
@@ -356,7 +352,6 @@ inconsistencies with defined internal temperature (298.15 K) when nmode is used.
 ```
 `entropy_temp` Specify the temperature to calculate the entropy term `−TΔS` (Only if `entropy` = 2). Avoid 
 inconsistencies with defined internal temperature (298.15 K) when nmode is used (Default = 298.15)
->>>>>>> origin/master
       
 `interval` The offset from which to choose frames from each trajectory file. For example, an interval of 2 will pull
 every 2nd frame beginning at startframe and ending less than or equal to endframe. (Default = 1)
@@ -379,49 +374,41 @@ However, this option is incompatible with alanine scanning. Default value is 0.
 
 ```diff
 + New input variable added
-<<<<<<< HEAD
 ```
-`PBRadii` PBRadii in amber topology files. Allowed values are (default = 3): 
-=======
-``` 
-`PBRadii` PBRadii in amber topology files (Default = 3)
->>>>>>> origin/master
-* 1: bondi, recommended when igb = 7 
-* 2: mbondi, recommended when igb = 1 
-* 3: mbondi2, recommended when igb = 2 or 5 
-* 4: mbondi3, recommended when igb = 8 
+`PBRadii` PBRadii in amber topology files. Allowed values are (default = 3):
+* 1: bondi, recommended when igb = 7
+* 2: mbondi, recommended when igb = 1
+* 3: mbondi2, recommended when igb = 2 or 5
+* 4: mbondi3, recommended when igb = 8
 
 ```diff
-<<<<<<< HEAD
-- Input variable deleted. Always must be defined to get gromacs
-=======
 + New input variable added
 ```
 `protein_forcefield` Define the force field used to build Amber topology for proteins. Make sure this force field is 
 the same as the one used in Gromacs (Default = 3)
-1. amber99
-2. amber03
-3. amber99SB
-4. amber99SB-ildn
-5. amber14SB
+* 1: amber99
+* 2: amber03
+* 3: amber99SB
+* 4: amber99SB-ildn
+* 5: amber14SB
 
 ```diff
 + New input variable added
 ```
 `ligand_forcefield` Define the force field used to build Amber topology for small molecules. Make sure this force field
  is the same as the one used in Gromacs (Default = 1). Allowed values are:
-1. gaff
-2. gaff2
+* 1: gaff
+* 2: gaff2
 
 ```diff
 + New input variable added
 ```
-`solvated_trajectory` Define if it is necessary to build a clean trajectory (Default = 1)
-* 0 Don’t
-* 1 Build clear trajectory
+`solvated_trajectory` Define if it is necessary to build a clean trajectory with no water and ions (Default = 1)
+* 0: Don’t
+* 1: Build clean trajectory
+
 ```diff
 - Input variable deleted. ALways must be defined to get gromacs
->>>>>>> origin/master
 ```
 ~~-`search_path` Advanced option. By default, MMPBSA.py will only search for executables in $AMBERHOME/bin .
 To enable it to search for binaries in your full PATH if they can’t be found in $AMBERHOME/bin , set
@@ -757,166 +744,6 @@ after a variable is initialized in the same line) is not allowed and will result
 must be comma-delimited, though all whitespace is ignored. Finally, all lines between namelists are ignored, so
 comments can be added before each namelist without using #.
 
-<<<<<<< HEAD
-=======
-### Calling MMPBSA.py from the command-line
-gmx_MMPBSA.py is invoked through the command line as follows:
-```
-usage: gmx_MMPBSA [-h] [-v] [--input-file-help] [-O] [-prefix <file prefix>] [-i FILE] [-xvvfile XVVFILE] [-o FILE] 
-                  [-do FILE] [-eo FILE] [-deo FILE] [-gui] [-s] [-pff <Forcefield>] [-lff <Forcefield>] [-st] 
-                  [-cs <Structure File>] [-ci <Index File>] [-cg index index] [-ct [TRJ [TRJ ...]]] 
-                  [-rs <Structure File>] [-ri <Index File>] [-rg index] [-rt [TRJ [TRJ ...]]] [-lm <Structure File>]
-                  [-ls <Structure File>] [-li <Index File>] [-lg index] [-lt [TRJ [TRJ ...]]] [-make-mdins] [-use-mdins]
-                  [-rewrite-output] [--clean]
-
-gmx-MMPBSA.py is an effort to implement the GB / PB and others calculations in Gromacs. This program is an adaptation of 
-Amber's MMPBSA.py and essentially works as such. As gmx-MMPBSA adapts MMPBSA.py, since it has all the resources of this 
-script and work with any Gromacs version.
-
-optional arguments:
-  -h, --help            show this help message and exit
-  -v, --version         show program's version number and exit
-  --input-file-help     Print all available options in the input file. (default: False)
-
-Miscellaneous Options:
-  -O, --overwrite       Allow output files to be overwritten (default: False)
-  -prefix <file prefix>
-                        Prefix for intermediate files. (default: _GMXMMPBSA_)
-
-Input and Output Files:
-  These options specify the input files and optional output files.
-
-  -i FILE               MM/PBSA input file. (default: None)
-  -xvvfile XVVFILE      XVV file for 3D-RISM. (default: /home/mario/programs/amber20/dat/mmpbsa/spc.xvv)
-  -o FILE               Output file with MM/PBSA statistics. (default: FINAL_RESULTS_MMPBSA.dat)
-  -do FILE              Output file for decomposition statistics summary. (default: FINAL_DECOMP_MMPBSA.dat)
-  -eo FILE              CSV-format output of all energy terms for every frame in every calculation. File name forced to
-                         end in [.csv]. This file is only written when specified on the command-line. (default: None)
-  -deo FILE             CSV-format output of all energy terms for each printed residue in decomposition calculations. 
-                         File name forced to end in [.csv]. This file is only written when specified on the command-line.
-                         (default: None)
-  -gui                  Open charts application when all calculations finished (default: True)
-  -s                    Perform stability calculation. Only the complex parameter are required. If ligand is non-Protein
-                         (small molecule) type will required the ligand mol2 file parameters. In any other case receptor
-                         and ligand parameters will be ignored. See description bellow (default: False)
-
-Complex:
-  Complex files and info that are needed to perform the calculation. If the receptor and / or the ligand are not 
-   defined, we generate it from the complex.
-
-  -cs <Structure File>  Structure file of the bound complex. If it is Protein-Ligand (small molecule) complex, make 
-                         sure that you define -lm option (default: None)
-  -ci <Index File>      Index file of the bound complex. (default: None)
-  -cg index index       Groups of receptor and ligand in complex index file. The notation is as follows: "-cg <Receptor
-                         group> <Ligand group>", ie. -cg 1 13 (default: None)
-  -ct [TRJ [TRJ ...]]   Input trajectories of the complex. Allowed formats: *.xtc (recommended), *.trr, *.pdb (specify 
-                         as many as you'd like). (default: None)
-
-Receptor:
-  Receptor files and info that are needed to perform the calculation. If the receptor are not defined, we generate it 
-   from the complex.
-
-  -rs <Structure File>  Structure file of the unbound receptor. If omitted and stability is False, the structure from 
-                         complex will be used and other options are not needed. (default: None)
-  -ri <Index File>      Index file of the unbound receptor. (default: None)
-  -rg index             Group of receptor in receptor index file. (default: None)
-  -rt [TRJ [TRJ ...]]   Input trajectories of the unbound receptor for multiple trajectory approach. Allowed formats: 
-                         *.xtc (recommended), *.trr, *.pdb. (default: None)
-
-Ligand:
-  Ligand files and info that are needed to perform the calculation. If the ligand are not defined, we generate it from 
-   the complex.
-
-  -lm <Structure File>  Structure file of the unbound ligand used to parametrize ligand for Gromacs. Most be defined if 
-                         Protein-Ligand (small molecule) complex was define. (default: None)
-  -ls <Structure File>  Structure file of the unbound ligand. If omitted, is protein-like and stability is False the 
-                         structure from complex will be used and other options are not needed. If ligand is a small 
-                         molecule, make sure that you definde above -lm option (default: None)
-  -li <Index File>      Index file of the unbound ligand. Only if tpr file was define in -ls. (default: None)
-  -lg index             Group of the ligand in ligand index file. Only if tpr file was define in -ls. (default: None)
-  -lt [TRJ [TRJ ...]]   Input trajectories of the unbound ligand for multiple trajectory approach. Allowed formats: 
-                         *.xtc (recommended), *.trr, *.pdb. (default: None)
-
-Miscellaneous Actions:
-  -make-mdins           Create the input files for each calculation and quit. This allows you to modify them and re-run
-                         using -use-mdins (default: False)
-  -use-mdins            Use existing input files for each calculation. If they do not exist with the appropriate names, 
-                         gmx_MMPBSA will quit in error. (default: False)
-  -rewrite-output       Do not re-run any calculations, just parse the output files from the previous calculation and 
-                         rewrite the output files. (default: False)
-  --clean               Clean temporary files and quit. (default: False)
-
-This program will calculate binding free energies using end-state free energy methods on an ensemble of snapshots using a variety of implicit solvent models
-```
-
-`-make-mdins` and `-use-mdins` are intended to give added flexibility to user input. If the MM/PBSA input file does
-not expose a variable you require, you may use the -make-mdins flag to generate the MDIN files and then quit.
-Then, edit those MDIN files, changing the variables you need to, then running MMPBSA.py with -use-mdins to
-use those modified files.
-
-`--clean` will remove all temporary files created by MMPBSA.py in a previous calculation.
-
-`--version` will display the program version and exit.
-
-### Running MMPBSA.py
-#### Serial version
-This version is installed via pip as described above. AMBERHOME must be set, or it will quit on error. An example 
-command-line call is shown below:
-
-`gmx_MMPBSA -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 1 13 -ct com_traj.xtc -lm lig.mol2`
-
-You can found test files in GitHub (https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA)
-
-#### Parallel (MPI) version (No tested)
-
-This version is installed with Amber during the parallel install. The python package mpi4py is included with
-the MMPBSA.py source code and must be successfully installed in order to run the MPI version of MMPBSA.py.
-It is run in the same way that the serial version is above, except MPI directions must be given on the command
-line as well. Note, if mpi4py does not install correctly, you must install it yourself in order to use
-MMPBSA.py.MPI. One note: at a certain level, running RISM in parallel may actually hurt performance, since
-previous solutions are used as an initial guess for the next frame, hastening convergence. Running in parallel loses
-this advantage. Also, due to the overhead involved in which each thread is required to load every topology file
-when calculating energies, parallel scaling will begin to fall off as the number of threads reaches the number of
-frames. A usage example is shown below:
-
-`mpirun -np 2 gmx_MMPBSA MPI -O -i mmpbsa.in -cp com.top -rp rec.top -lp lig.top -y traj.crd`
-
-or
-
-`mpirun -np 2 gmx_MMPBSA mpi -O -i mmpbsa.in -cp com.top -rp rec.top -lp lig.top -y traj.crd`
-
-### Types of calculations you can do
-There are many different options for running gmx_MMPBSA. Among the types of calculations you can do are:
-* Normal binding free energies, with either PB or GB implicit solvent models. Each can be done with either
-1, 2, or 3 different trajectories, but the complex, receptor, and ligand topology files must all be defined. The
-complex trajectory must always be provided. Whichever trajectories of the receptor and/or ligand that are NOT
-specified will be extracted from the complex trajectory. This allows a 1-, 2-, or 3-trajectory analysis. All PB
-calculations and GB models can be performed with just AmberTools via the mmpbsa_py_energy program
-installed with MMPBSA.py.
-* Stability calculations with any calculation type. 
-* Alanine scanning with either PB or GB implicit solvent models. All trajectories will be mutated to match
-the mutated topology files, and whichever calculations that would be carried out for the normal systems are
-also carried out for the mutated systems. Note that only 1 mutation is allowed per simulation, and it must
-be to an alanine. If mutant_only is not set to 1, differences resulting from the mutations are calculated. This
-option is incompatible with intermediate NetCDF trajectories (see the netcdf = 1 option above). This has the
-same program requirements as option 1 above.
-* Entropy corrections. An entropy term can be added to the free energies calculated above using either the
-quasi-harmonic approximation, the normal mode approximation or interaction entropy aproximation. Calculations will be 
-done for the normal and mutated systems (alanine scanning) as requested. Normal mode calculations are done with the
-mmpbsa_py_nabnmode program included with AmberTools.
-* Decomposition schemes. The energy terms will be decomposed according to the decomposition scheme
-outlined in the idecomp variable description. This should work with all of the above, though entropy terms
-cannot be decomposed. APBS energies cannot be decomposed, either. Neither can PBSA surface area terms.
-This functionality requires sander from the Amber 11 (or later) package.
-* QM/MMGBSA. This is a binding free energy (or stability calculation) using the Generalized Born solvent
-model allowing you to treat part of your system with a quantum mechanical Hamiltonian. See “Advanced
-Options” for tips about optimizing this option. This functionality requires sander from the Amber package.
-* MM/3D-RISM. This is a binding free energy (or stability calculation) using the 3D-RISM solvation model.
-This functionality is performed with rism3d.snglpnt built with AmberTools.
-* Membrane Protein MMPBSA (Not tested). Calculate the MMPBSA binding free energy for a ligand bound to a protein
-that is embedded into a membrane. Only use_sander=1 is supported.
-
->>>>>>> origin/master
 ### The Output File
 The header of the output file will contain information about the calculation. It will show a copy of the input
 file as well as the names of all files that were used in the calculation (topology files and coordinate file(s)). If the
