@@ -69,7 +69,40 @@ In addition, few other functionalities were implemented that eases a number of c
 with different internal dielectric constant, interaction entropy calculation). A GUI application is also incorporated 
 that allows for visualizing the results and saving high-quality images.
 
-### Protein-protein binding free energy calculations
+### Types of calculations you can do
+There are many different options for running gmx_MMPBSA. Among the types of calculations you can do are:
+* **Normal binding free energies**, with either PB or GB implicit solvent models. Each can be done with either
+1, 2, or 3 different trajectories, but the complex, receptor, and ligand topology files must all be defined. The
+complex trajectory must always be provided. Whichever trajectories of the receptor and/or ligand that are NOT
+specified will be extracted from the complex trajectory. This allows a 1-, 2-, or 3-trajectory analysis. All PB
+calculations and GB models can be performed with just AmberTools via the mmpbsa_py_energy program installed with 
+MMPBSA.py.
+* **Stability** calculations with any calculation type.
+* **Alanine scanning** with either PB or GB implicit solvent models. All trajectories will be mutated to match
+the mutated topology files, and whichever calculations that would be carried out for the normal systems are
+also carried out for the mutated systems. Note that only 1 mutation is allowed per simulation, and it must
+be to an alanine. If mutant_only is not set to 1, differences resulting from the mutations are calculated. This
+option is incompatible with intermediate NetCDF trajectories (see the netcdf = 1 option above). This has the
+same program requirements as option 1 above.
+* **Entropy corrections**. An entropy term can be added to the free energies calculated above using either the
+quasi-harmonic approximation, the normal mode approximation or interaction entropy approximations. Calculations will be 
+done for the normal and mutated systems (alanine scanning) as requested. Normal mode calculations are done with the
+mmpbsa_py_nabnmode program included with AmberTools.
+* **Decomposition schemes**. The energy terms will be decomposed according to the decomposition scheme
+outlined in the idecomp variable description. This should work with all of the above, though entropy terms
+cannot be decomposed. APBS energies cannot be decomposed, either. Neither can PBSA surface area terms.
+This functionality requires sander from the Amber 11 (or later) package.
+* **QM/MMGBSA**. This is a binding free energy (or stability calculation) using the Generalized Born solvent
+model allowing you to treat part of your system with a quantum mechanical Hamiltonian. See [“Advanced
+Options”](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA#Advanced-Options) for tips about optimizing this option. 
+This functionality requires sander from the Amber package.
+* **MM/3D-RISM**. This is a binding free energy (or stability calculation) using the 3D-RISM solvation model.
+This functionality is performed with rism3d.snglpnt built with AmberTools.
+* **Membrane Protein MMPBSA**. Calculate the MMPBSA binding free energy for a ligand bound to a protein
+that is embedded into a membrane. Only use_sander=1 is supported.
+
+### Two examples...
+#### Protein-protein binding free energy calculations
 In its simplest version, gmx_MMPBSA requires:
 
 * The structure file (*.tpr) -- *.tpr used as input in mdrun program for MD simulation
@@ -106,7 +139,7 @@ in the index file (`1 13`) are needed. The `mmpbsa.in` input file will contain a
 MM/PB(GB)SA calculation. In this case, 19 frames `(endframe-startframe)/interval = (100-5)/5 = 19` are going to be used 
 when performing the the MM/PB(GB)SA calculation with the igb5 (GB-OBC2) model and a salt concentration = 0.15M.
 
-### Protein-ligand binding free energy calculations
+#### Protein-ligand binding free energy calculations
 
 This case is very similar to that of described previously, with the only difference that ligand *.mol2 file must be 
 defined. This *.mol2 file should contain all the charges as well as the bonds for the ligand. A *.mol2 output file from
@@ -129,38 +162,6 @@ igb=2, saltcon=0.150,
 
 _See a detailed list of all the options in gmx_MMPBSA input file [here](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA#the-input-file) 
 as well as several [examples](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA#sample-input-files)_
-
-### Types of calculations you can do
-There are many different options for running gmx_MMPBSA. Among the types of calculations you can do are:
-* **Normal binding free energies**, with either PB or GB implicit solvent models. Each can be done with either
-1, 2, or 3 different trajectories, but the complex, receptor, and ligand topology files must all be defined. The
-complex trajectory must always be provided. Whichever trajectories of the receptor and/or ligand that are NOT
-specified will be extracted from the complex trajectory. This allows a 1-, 2-, or 3-trajectory analysis. All PB
-calculations and GB models can be performed with just AmberTools via the mmpbsa_py_energy program installed with 
-MMPBSA.py.
-* **Stability** calculations with any calculation type.
-* **Alanine scanning** with either PB or GB implicit solvent models. All trajectories will be mutated to match
-the mutated topology files, and whichever calculations that would be carried out for the normal systems are
-also carried out for the mutated systems. Note that only 1 mutation is allowed per simulation, and it must
-be to an alanine. If mutant_only is not set to 1, differences resulting from the mutations are calculated. This
-option is incompatible with intermediate NetCDF trajectories (see the netcdf = 1 option above). This has the
-same program requirements as option 1 above.
-* **Entropy corrections**. An entropy term can be added to the free energies calculated above using either the
-quasi-harmonic approximation, the normal mode approximation or interaction entropy approximations. Calculations will be 
-done for the normal and mutated systems (alanine scanning) as requested. Normal mode calculations are done with the
-mmpbsa_py_nabnmode program included with AmberTools.
-* **Decomposition schemes**. The energy terms will be decomposed according to the decomposition scheme
-outlined in the idecomp variable description. This should work with all of the above, though entropy terms
-cannot be decomposed. APBS energies cannot be decomposed, either. Neither can PBSA surface area terms.
-This functionality requires sander from the Amber 11 (or later) package.
-* **QM/MMGBSA**. This is a binding free energy (or stability calculation) using the Generalized Born solvent
-model allowing you to treat part of your system with a quantum mechanical Hamiltonian. See [“Advanced
-Options”](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA#Advanced-Options) for tips about optimizing this option. 
-This functionality requires sander from the Amber package.
-* **MM/3D-RISM**. This is a binding free energy (or stability calculation) using the 3D-RISM solvation model.
-This functionality is performed with rism3d.snglpnt built with AmberTools.
-* **Membrane Protein MMPBSA**. Calculate the MMPBSA binding free energy for a ligand bound to a protein
-that is embedded into a membrane. Only use_sander=1 is supported.
 
 ### Calling gmx_MMPBSA from the command-line
 gmx_MMPBSA is invoked through the command line as follows:
