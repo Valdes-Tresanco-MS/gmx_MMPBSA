@@ -1,5 +1,5 @@
 """
-This is a module that contains the exceptions thrown by GMX-MMPBSA.py
+This is a module that contains the exceptions thrown by gmx_MMPBSA
 """
 
 # ##############################################################################
@@ -8,7 +8,7 @@ This is a module that contains the exceptions thrown by GMX-MMPBSA.py
 #  Copyright (C) 2020  Mario S. Valdes-Tresanco and Mario E. Valdes-Tresanco   #
 #  Copyright (C) 2014  Jason Swails, Bill Miller III, and Dwight McGee         #
 #                                                                              #
-#   Project: https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA                  #
+#   Project: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA                  #
 #                                                                              #
 #   This program is free software; you can redistribute it and/or modify it    #
 #  under the terms of the GNU General Public License version 3 as published    #
@@ -21,9 +21,9 @@ This is a module that contains the exceptions thrown by GMX-MMPBSA.py
 # ##############################################################################
 
 class MMPBSA_Error(Exception):
-    """ Base GMX-MMPBSA error class """
+    """ Base gmx_MMPBSA error class """
 
-    def __init__(self, msg='GMX-MMPBSA error'):
+    def __init__(self, msg='gmx_MMPBSA error'):
         self.msg = msg
 
     def __str__(self):
@@ -31,9 +31,9 @@ class MMPBSA_Error(Exception):
 
 
 class MMPBSA_Warning(Warning):
-    """ Base GMX-MMPBSA warning class """
+    """ Base gmx_MMPBSA warning class """
 
-    def __init__(self, msg='GMX-MMPBSA warning'):
+    def __init__(self, msg='gmx_MMPBSA warning'):
         self.msg = msg
 
     def __str__(self):

@@ -933,7 +933,7 @@ class OutputFile(object):
         import GMXMMPBSA
         stability = not FILES.receptor_prmtop
 
-        self.writeline('|GMX-MMPBSA.py Version=%s based on MMPBSA.py v.%s' % (GMXMMPBSA.__version__,
+        self.writeline('|GMX-MMPBSA Version=%s based on MMPBSA.py v.%s' % (GMXMMPBSA.__version__,
                                                                               GMXMMPBSA.__mmpbsa_version__))
 
         # if FILES.solvated_prmtop:

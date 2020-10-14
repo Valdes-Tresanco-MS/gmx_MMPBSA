@@ -1,6 +1,6 @@
 """
 This is a module that contains functions responsible for parsing the
-input file for GMX-MMPBSA.py. It must be included with GMX-MMPBSA.py to
+input file for GMX-MMPBSA. It must be included with GMX-MMPBSA to
 ensure proper functioning.
 """
 
@@ -496,10 +496,15 @@ input_file.addNamelist('general', 'general',
                            ['interval', int, 1, 'Number of frames between adjacent frames analyzed.'],
                            ['keep_files', int, 1, 'How many files to keep after successful completion.'],
                            ['ligand_mask', str, None, 'Amber mask of ligand atoms in complex prmtop.'],
+                           ['ligand_forcefield', int, 1, 'Define the force field to build Amber topology for '
+                                                             'ligand (small molecule)'],
                            ['netcdf', int, 0, 'Use NetCDF intermediate trajectories.'],
                            ['PBRadii', int, 3, 'Define PBRadii to build amber topology from Gromacs files.'],
+                           ['protein_forcefield', int, 3, 'Define the force field to build Amber topology for '
+                                                             'protein'],
                            ['receptor_mask', str, None, 'Amber mask of receptor atoms in complex prmtop.'],
                            # ['search_path', int, 0, 'Look for intermediate programs in all of PATH'],
+                           ['solvated_trajectory', int, 1, 'Define if it is necessary to build a clean trajectory'],
                            ['startframe', int, 1, 'First frame to analyze.'],
                            ['strip_mask', str, strip_mask, 'Amber mask to strip from solvated prmtop'],
                            ['use_sander', int, 0, 'Use sander to compute energies.'],

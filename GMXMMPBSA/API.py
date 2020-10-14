@@ -1,5 +1,5 @@
 """
-This module provides a means for users to take advantage of GMX-MMPBSA.py's parsing
+This module provides a means for users to take advantage of gmx_MMPBSA's parsing
 ability. It exposes the free energy data (optionally to numpy arrays) so that
 users can write a simple script to carry out custom data analyses, leveraging
 the full power of Python's extensions, if they want (e.g., numpy, scipy, etc.)
@@ -552,7 +552,7 @@ def load_mmpbsa_info(fname):
 
 def load_gmxmmpbsa_info(fname):
     """
-    Loads up an GMX-MMPBSA.py info file and returns a mmpbsa_data instance with all
+    Loads up an gmx_MMPBSA info file and returns a mmpbsa_data instance with all
     of the data available in numpy arrays if numpy is available. The returned
     object is a mmpbsa_data instance.
 
