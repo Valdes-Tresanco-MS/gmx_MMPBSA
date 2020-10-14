@@ -2,8 +2,6 @@
 
 amber.python -m pip install GMX-MMPBSA
 
-# Test
-
 # Documentation
 **Note: We do not intend to replace the original [MMPBSA.py](https://pubs.acs.org/doi/10.1021/ct300418h); instead, 
 we have implemented and improved some functionalities, and what is most important, made this valuable tool available 
@@ -167,7 +165,7 @@ as well as several [examples](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA#s
 gmx_MMPBSA is invoked through the command line as follows:
 ```
 usage: gmx_MMPBSA [-h] [-v] [--input-file-help] [-O] [-prefix <file prefix>] [-i FILE] [-xvvfile XVVFILE] [-o FILE] 
-                  [-do FILE] [-eo FILE] [-deo FILE] [-gui] [-s] [-st] 
+                  [-do FILE] [-eo FILE] [-deo FILE] [-gui] [-s]
                   [-cs <Structure File>] [-ci <Index File>] [-cg index index] [-ct [TRJ [TRJ ...]]] 
                   [-rs <Structure File>] [-ri <Index File>] [-rg index] [-rt [TRJ [TRJ ...]]] [-lm <Structure File>]
                   [-ls <Structure File>] [-li <Index File>] [-lg index] [-lt [TRJ [TRJ ...]]] [-make-mdins] [-use-mdins]
@@ -207,8 +205,6 @@ Options:
   -s                    Perform stability calculation. Only the complex parameters are required. If ligand is non-Protein
                          (small molecule) type, then ligand *.mol2 file is required. In any other case receptor
                          and ligand parameters will be ignored. See description bellow (default: False)
-  -st                   Define if complex, receptor and ligand trajectories are solvated. We assume that the entry 
-                         trajectory contains ions and water (default: True)
 
 Complex:
   Complex files and info that are needed to perform the calculation. If the receptor and / or the ligand are not 
@@ -219,8 +215,8 @@ Complex:
   -ci <Index File>      Index file of the bound complex. (default: None)
   -cg index index       Groups of receptor and ligand in complex index file. The notation is as follows: "-cg <Receptor
                          group> <Ligand group>", ie. -cg 1 13 (default: None)
-  -ct [TRJ [TRJ ...]]   Input trajectories of the complex. Allowed formats: *.xtc (recommended), *.trr, *.pdb (specify 
-                         as many as you'd like). (default: None)
+  -ct [TRJ [TRJ ...]]   Input trajectory of the complex. Make sure the trajectoiry is fitted and pbc have benn removed
+                         Allowed formats: *.xtc (recommended), *.trr, *.pdb (specify as many as you'd like). (default: None)
 
 Receptor:
   Receptor files and info that are needed to perform the calculation. If the receptor are not defined, we generate it 
@@ -230,8 +226,8 @@ Receptor:
                          complex will be used and other options are not needed. (default: None)
   -ri <Index File>      Index file of the unbound receptor. (default: None)
   -rg index             Group of receptor in receptor index file. (default: None)
-  -rt [TRJ [TRJ ...]]   Input trajectories of the unbound receptor for multiple trajectory approach. Allowed formats: 
-                         *.xtc (recommended), *.trr, *.pdb. (default: None)
+  -rt [TRJ [TRJ ...]]   Input trajectory of the unbound receptor for multiple trajectory approach. Allowed formats: 
+                         *.xtc (recommended), *.trr, *.pdb. (specify as many as you'd like). (default: None)
 
 Ligand:
   Ligand files and info that are needed to perform the calculation. If the ligand are not defined, we generate it from 
@@ -244,8 +240,8 @@ Ligand:
                          molecule, make sure that you definde above -lm option (default: None)
   -li <Index File>      Index file of the unbound ligand. Only if tpr file was define in -ls. (default: None)
   -lg index             Group of the ligand in ligand index file. Only if tpr file was define in -ls. (default: None)
-  -lt [TRJ [TRJ ...]]   Input trajectories of the unbound ligand for multiple trajectory approach. Allowed formats: 
-                         *.xtc (recommended), *.trr, *.pdb. (default: None)
+  -lt [TRJ [TRJ ...]]   Input trajectory of the unbound ligand for multiple trajectory approach. Allowed formats: 
+                         *.xtc (recommended), *.trr, *.pdb. (specify as many as you'd like). (default: None)
 
 Miscellaneous Actions:
   -make-mdins           Create the input files for each calculation and quit. This allows you to modify them and re-run
@@ -258,11 +254,6 @@ Miscellaneous Actions:
 This program will calculate binding free energies using end-state free energy methods on an ensemble of snapshots using 
 a variety of implicit solvent models
 ```
-
-`-make-mdins` and `-use-mdins` are intended to give added flexibility to user input. If the MM/PBSA input file does
-not expose a variable you require, you may use the -make-mdins flag to generate the MDIN files and then quit.
-Then, edit those MDIN files, changing the variables you need to, then running gmx_MMPBSA with -use-mdins to
-use those modified files.
 
 ### Running gmx_MMPBSA
 #### Serial version
@@ -923,6 +914,11 @@ care must be taken. The mdin files created by MMPBSA.py have been tested and are
 be consistent. Modifying certain variables (such as imin=5) may prevent the script from working, so this
 should only be done with care. It is recommended that users start with the existing mdin files (generated by
 the -make-mdins flag above), and add and/or modify parameters from there.
+
+`-make-mdins` and `-use-mdins` are intended to give added flexibility to user input. If the MM/PBSA input file does
+not expose a variable you require, you may use the -make-mdins flag to generate the MDIN files and then quit.
+Then, edit those MDIN files, changing the variables you need to, then running gmx_MMPBSA with -use-mdins to
+use those modified files.
 
 `QM/MMGBSA` There are a lot of options for QM/MM calculations in sander, but not all of those options were
 made available via options in the MMPBSA.py input file. In order to take advantage of these other options,
