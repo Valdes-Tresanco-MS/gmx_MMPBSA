@@ -1529,7 +1529,7 @@ class DecompOut(object):
         # Return [res #, internal, vdw, eel, pol, sas]
         if expected_type and expected_type != line[0:3]:
             raise OutputError(('Expecting %s type, but got %s type. Re-run ' +
-                               'GMX-MMPBSA with the correct dec_verbose') % (expected_type, line[0:3]))
+                               'gmx_MMPBSA with the correct dec_verbose') % (expected_type, line[0:3]))
         resnum = int(line[4:10])
         internal = float(line[11:20])
         vdw = float(line[21:30])
@@ -1704,7 +1704,7 @@ class PairDecompOut(DecompOut):
         # Return [res #, internal, vdw, eel, pol, sas]
         if expected_type and expected_type != line[0:3]:
             raise OutputError(('Expecting %s type, but got %s type. Re-run ' +
-                               'GMX-MMPBSA with the correct dec_verbose') % (expected_type, line[0:3]))
+                               'gmx_MMPBSA with the correct dec_verbose') % (expected_type, line[0:3]))
         resnum = int(line[4:11])
         resnum2 = int(line[13:20])
         internal = float(line[21:33])

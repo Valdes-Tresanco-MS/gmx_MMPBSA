@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 This module contains classes and such that are responsible for parsing
-command-line arguments for GMX-MMPBSA.py.  All of the files specified for use
-in GMX-MMPBSA.py will be assigned as attributes to the returned class.
+command-line arguments for gmx_MMPBSA.  All of the files specified for use
+in gmx_MMPBSA will be assigned as attributes to the returned class.
 
 """
 
@@ -32,7 +32,7 @@ from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 class OptionList(object):
     """
     Just a container to hold the command-line options. Necessary when reading in
-    a GMX-MMPBSA.py info file to have a container to load the results from the
+    a gmx_MMPBSA info file to have a container to load the results from the
     parser.
     """
     pass
@@ -43,9 +43,9 @@ if os.getenv('AMBERHOME'):
 else:
     rism = None
 
-description = '''GMX-MMPBSA is an effort to implement the GB / PB and others calculations in 
+description = '''gmx_MMPBSA is an effort to implement the GB / PB and others calculations in 
                 Gromacs. This program is an adaptation of Amber's MMPBSA.py and essentially works as such. As 
-                GMX-MMPBSA adapts MMPBSA.py, since it has all the resources of this script and work with any 
+                gmx_MMPBSA adapts MMPBSA.py, since it has all the resources of this script and work with any 
                 Gromacs version.'''
 
 complex_group_des = '''Complex files and info that are needed to perform the calculation. If the receptor and / or the 
@@ -156,11 +156,11 @@ group.add_argument('--clean', dest='clean', action='store_true', default=False,
                    help='''Clean temporary files and quit.''')
 
 #### GUI parser
-guiparser = ArgumentParser(epilog='''This program is part of GMX-MMPBSA and will show a workspace with 
+guiparser = ArgumentParser(epilog='''This program is part of gmx_MMPBSA and will show a workspace with 
                             charts to analyze the results''',
                            description=description,
                            formatter_class=ArgumentDefaultsHelpFormatter)
 guiparser.add_argument('-v', '--version', action='version',
                        version='%%(prog)s %s based on MMPBSA version %s' % (__version__, __mmpbsa_version__))
-guiparser.add_argument('-p', '--path', dest='path', help='Path to GMX-MMPBSA info file',
+guiparser.add_argument('-p', '--path', dest='path', help='Path to gmx_MMPBSA info file',
                        default=None)

@@ -118,7 +118,7 @@ class GMX_MMPBSA_GUI(QMainWindow):
         self.setCentralWidget(self.mdi)
 
         self.menubar = self.menuBar()
-        self.opendirAct = QAction("Open GMX-MMPBSA Dir...", self)
+        self.opendirAct = QAction("Open gmx_MMPBSA Dir...", self)
         self.opendirAct.triggered.connect(self.getInfoFile)
         self.fileMenu = self.menuBar().addMenu("&File")
         self.fileMenu.addAction(self.opendirAct)

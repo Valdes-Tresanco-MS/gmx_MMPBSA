@@ -1,5 +1,5 @@
 """
- This package contains all of the functions for GMX-MMPBSA.py that it
+ This package contains all of the functions for gmx_MMPBSA that it
  needs to run smoothly.
 """
 

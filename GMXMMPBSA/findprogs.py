@@ -1,6 +1,6 @@
 """
 This module is responsible for finding the necessary programs for all of the
-desired calculations in the GMX-MMPBSA calculation.
+desired calculations in the gmx_MMPBSA calculation.
 
 Methods:
          find_progs(INPUT): Determines which programs are needed and sees if

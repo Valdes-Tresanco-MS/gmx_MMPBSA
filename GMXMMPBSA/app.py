@@ -47,7 +47,7 @@ def gmxmmpbsa():
             raise MMPBSA_Error('Could not import mpi4py package! Use serial version '
                                'or install mpi4py.')
     else:
-        # If we're not running "GMX-MMPBSA.py MPI", bring MPI into the top-level namespace
+        # If we're not running "gmx_MMPBSA MPI", bring MPI into the top-level namespace
         # (which will overwrite the MPI from mpi4py, which we *want* to do in serial)
         from GMXMMPBSA.fake_mpi import MPI
         args = sys.argv

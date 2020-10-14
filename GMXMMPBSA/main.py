@@ -1,5 +1,5 @@
 """
- This is a module that contains the class of the main GMX-MMPBSA.py
+ This is a module that contains the class of the main GMX-MMPBSA
  Application.
 """
 
@@ -627,7 +627,7 @@ class MMPBSA_App(object):
         self.timer.stop_timer('setup')
 
     def write_final_outputs(self):
-        """ Writes the final output files for GMX-MMPBSA.py """
+        """ Writes the final output files for GMX-MMPBSA """
         self.timer.add_timer('output', 'Statistics calculation & output writing:')
         self.timer.start_timer('output')
         if (not hasattr(self, 'input_file_text') or not hasattr(self, 'FILES') or
@@ -690,7 +690,7 @@ class MMPBSA_App(object):
 
         self.remove(self.INPUT['keep_files'])
 
-        self.stdout.write('\n\nGMX-MMPBSA.py Finished! Thank you for using. Please '
+        self.stdout.write('\n\nGMX-MMPBSA Finished! Thank you for using. Please '
                           'cite us if you publish this work with this paper:\n   '
                           'Comming soon\n   '
                           ' and \n'
@@ -1072,7 +1072,7 @@ def setup_run():
     """
     Replace the uncaught exception handler to control traceback printing. Also
     add a signal handler for a SIGINT (Ctrl-C). However, we only want to do this
-    if we're running GMX-MMPBSA.py -- for the API, we don't want to clobber the
+    if we're running GMX-MMPBSA -- for the API, we don't want to clobber the
     users' python environments like this.
     """
     sys.excepthook = excepthook
