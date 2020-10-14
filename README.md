@@ -191,7 +191,7 @@ Input and Output Files:
   These options specify the input files and optional output files.
 
   -i FILE               MM/PBSA input file. (default: None)
-  -xvvfile XVVFILE      XVV file for 3D-RISM. (default: /home/mario/programs/amber20/dat/mmpbsa/spc.xvv)
+  -xvvfile XVVFILE      XVV file for 3D-RISM. (default: $AMBERHOME/dat/mmpbsa/spc.xvv)
   -o FILE               Output file with MM/PBSA statistics. (default: FINAL_RESULTS_MMPBSA.dat)
   -do FILE              Output file for decomposition statistics summary. (default: FINAL_DECOMP_MMPBSA.dat)
   -eo FILE              CSV-format output of all energy terms for every frame in every calculation. File name forced to
@@ -199,15 +199,15 @@ Input and Output Files:
   -deo FILE             CSV-format output of all energy terms for each printed residue in decomposition calculations. 
                          File name forced to end in [.csv]. This file is only written when specified on the command-line.
                          (default: None)
-  -gui                  Open charts application when all calculations finished (default: True)
+  -gui                  Open GUI plotting app when all calculations are finished (default: True)
 
 Options:
   These options specify explicit calculation type and forcefield to prepare the Amber topologies
 
-  -s                    Perform stability calculation. Only the complex parameter are required. If ligand is non-Protein
-                         (small molecule) type will required the ligand mol2 file parameters. In any other case receptor
+  -s                    Perform stability calculation. Only the complex parameters are required. If ligand is non-Protein
+                         (small molecule) type, then ligand *.mol2 file is required. In any other case receptor
                          and ligand parameters will be ignored. See description bellow (default: False)
-  -st                   Define if complex, receptor and ligand trajectories is solvated. We assume that the entry 
+  -st                   Define if complex, receptor and ligand trajectories are solvated. We assume that the entry 
                          trajectory contains ions and water (default: True)
 
 Complex:
