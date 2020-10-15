@@ -114,7 +114,7 @@ _See a detailed list of all the flags in gmx_MMPBSA command line [here](https://
 
 That being said, once you are in the folder containing all files, the command-line will be as follows:
 
-`gmx_MMPBSA -O -i mmpbsa.in -cs com_md.tpr -ci index.ndx -cg 1 13 -ct com_traj.xtc`
+`gmx_MMPBSA -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 19 20 -ct com_traj.xtc`
 
 where the `mmpbsa.in` input file, is a text file containing the following lines:
 
@@ -132,8 +132,8 @@ as well as several [examples](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA#s
 
 In this case, a single trajectory (ST) approximation is followed, which means the receptor and ligand (in this case, the 
 ligand is also another protein) amber format topologies will be obtained from that of the complex. To do so, a MD *.tpr 
-file (`com_md.tpr`), an index file (`index.ndx`), a trajectory file (`com_traj.xtc`), and both the receptor and ligand group numbers 
-in the index file (`1 13`) are needed. The `mmpbsa.in` input file will contain all the parameters needed for the 
+file (`com.tpr`), an index file (`index.ndx`), a trajectory file (`com_traj.xtc`), and both the receptor and ligand group numbers 
+in the index file (`19 20`) are needed. The `mmpbsa.in` input file will contain all the parameters needed for the 
 MM/PB(GB)SA calculation. In this case, 19 frames `(endframe-startframe)/interval = (100-5)/5 = 19` are going to be used 
 when performing the the MM/PB(GB)SA calculation with the igb5 (GB-OBC2) model and a salt concentration = 0.15M.
 
@@ -145,7 +145,7 @@ defined. This *.mol2 file should contain all the charges as well as the bonds fo
 
 That being said, once you are in the folder containing all files, the command-line will be as follows:
 
-`gmx_MMPBSA -O -i mmpbsa.in -cs com_md.tpr -ci index.ndx -cg 1 13 -ct com_traj.xtc -lm ligand.mol2`
+`gmx_MMPBSA -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 1 13 -ct com_traj.xtc -lm ligand.mol2`
 
 where the `mmpbsa.in` input file, is a text file containing the following lines:
 
