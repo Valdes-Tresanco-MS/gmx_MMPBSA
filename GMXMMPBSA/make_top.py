@@ -278,53 +278,38 @@ class CheckMakeTop:
         self.properATOMS(self.complex_str)
         self.complex_str.save(self.complex_pdb_fixed, 'pdb', True)
 
+        # if not self.FILES.stability:
+        self.receptor_str = parmed.read_PDB(self.receptor_pdb)
+        # fix receptor structure
+        self.properHIS(self.receptor_str)
+        self.properCYS(self.receptor_str)
+        self.receptor_str.strip('@/H')
+        self.properATOMS(self.receptor_str)
+        self.receptor_str.save(self.receptor_pdb_fixed, 'pdb', True)
+
+        # fix ligand structure
+        # if self.ligand_isProt and not self.ligand_tpr:  # ligand from complex
+            # check if ligand (from complex structure) is really protein-like.
+        self.ligand_str = parmed.read_PDB(self.ligand_pdb)
+        # fix ligand structure if is protein
+        self.properHIS(self.ligand_str)
+        self.properCYS(self.ligand_str)
+        self.ligand_str.strip('@/H')
+        self.properATOMS(self.ligand_str)
+        self.ligand_str.save(self.ligand_pdb_fixed, 'pdb', True)
+
         if self.INPUT['alarun']:
-            self.mutant_complex_str = parmed.read_PDB(self.complex_pdb_fixed)
-            # make mutation and save
-            self.mutatexala(self.mutant_complex_str)
-            self.mutant_complex_str.save(self.mutant_complex_pdb_fixed, 'pdb', overwrite=True)
-
-        if not self.FILES.stability:
-            self.receptor_str = parmed.read_PDB(self.receptor_pdb)
-            # fix receptor structure
-            self.properHIS(self.receptor_str)
-            self.properCYS(self.receptor_str)
-            self.receptor_str.strip('@/H')
-            self.properATOMS(self.receptor_str)
-            self.receptor_str.save(self.receptor_pdb_fixed, 'pdb', True)
-
-            # fix ligand structure
-            # if self.ligand_isProt and not self.ligand_tpr:  # ligand from complex
-                # check if ligand (from complex structure) is really protein-like.
-            self.ligand_str = parmed.read_PDB(self.ligand_pdb)
-                # for res in self.ligand_str.residues:
-                #     if res.name not in std_aa:
-                #         self.ligand_isProt = False
-                #         raise MMPBSA_Error(
-                #             'It appears that the ligand that defined based on complex is non-protein type. '
-                #             'This ligand type requires a structure (mol2) and a parameter (frcmod) files. '
-                #             'Please define these parameters to perform the calculation correctly.')
-
-            # fix ligand structure if is protein
-            self.properHIS(self.ligand_str)
-            self.properCYS(self.ligand_str)
-            self.ligand_str.strip('@/H')
-            self.properATOMS(self.ligand_str)
-            self.ligand_str.save(self.ligand_pdb_fixed, 'pdb', True)
-
-            if self.INPUT['alarun']:
-                if self.INPUT['mutant'].lower() in ['rec', 'receptor']:
-                    self.mutant_receptor_str = parmed.read_PDB(self.receptor_pdb_fixed)
-                    # fix mutant receptor structure
-                    self.mutatexala(self.mutant_receptor_str)
-                    self.mutant_receptor_str.save(self.mutant_receptor_pdb_fixed, 'pdb', True)
-
-                else:
-                    if self.FILES.ligand_mol2:
-                        raise MMPBSA_Error('Mutation is only possible if the ligand is protein-like')
-                    self.mutant_ligand_str = parmed.read_PDB(self.ligand_pdb_fixed)
-                    self.mutatexala(self.mutant_ligand_str)
-                    self.mutant_ligand_str.save(self.mutant_ligand_pdb_fixed, 'pdb', True)
+            if self.INPUT['mutant'].lower() in ['rec', 'receptor']:
+                self.mutant_receptor_str = parmed.read_PDB(self.receptor_pdb_fixed)
+                # fix mutant receptor structure
+                self.mutatexala(self.mutant_receptor_str)
+                self.mutant_receptor_str.save(self.mutant_receptor_pdb_fixed, 'pdb', True)
+            else:
+                if self.FILES.ligand_mol2:
+                    raise MMPBSA_Error('Mutation is only possible if the ligand is protein-like')
+                self.mutant_ligand_str = parmed.read_PDB(self.ligand_pdb_fixed)
+                self.mutatexala(self.mutant_ligand_str)
+                self.mutant_ligand_str.save(self.mutant_ligand_pdb_fixed, 'pdb', True)
 
         # Get residue form receptor-ligand interface
         if self.print_residues:
@@ -460,14 +445,16 @@ class CheckMakeTop:
                 tif.write('check LIG\n')
                 tif.write('loadamberparams {}\n'.format(self.ligand_frcmod))
 
+        # if not self.FILES.stability:
+            tif.write('REC = loadpdb {}\n'.format(self.receptor_pdb_fixed))
             if not self.FILES.stability:
-                tif.write('REC = loadpdb {}\n'.format(self.receptor_pdb_fixed))
                 tif.write('saveamberparm REC {t} {p}REC.inpcrd\n'.format(t=self.receptor_pmrtop, p=self.FILES.prefix))
-                if not self.FILES.ligand_mol2:
-                    tif.write('LIG = loadpdb {}\n'.format(self.ligand_pdb_fixed))
+            if not self.FILES.ligand_mol2:
+                tif.write('LIG = loadpdb {}\n'.format(self.ligand_pdb_fixed))
+            if not self.FILES.stability:
                 tif.write('saveamberparm LIG {t} {p}LIG.inpcrd\n'.format(t=self.ligand_pmrtop, p=self.FILES.prefix))
 
-            tif.write('complex = loadpdb {}\n'.format(self.complex_pdb_fixed))
+            tif.write('complex = combine { REC LIG }\n')
             tif.write('saveamberparm complex {t} {p}COM.inpcrd\n'.format(t=self.complex_pmrtop, p=self.FILES.prefix))
             tif.write('quit')
 
@@ -488,19 +475,20 @@ class CheckMakeTop:
                     mtif.write('check LIG\n')
                     mtif.write('loadamberparams {}\n'.format(self.ligand_frcmod))
 
-                if not self.FILES.stability:
-                    if self.INPUT['mutant'].lower() in ['rec', 'receptor']:
-                        mtif.write('mut_rec = loadpdb {}\n'.format(self.mutant_receptor_pdb_fixed))
-                        mtif.write('saveamberparm mut_rec {t} {p}MUT_REC.inpcrd\n'.format(t=self.mutant_receptor_pmrtop,
-                                                                                          p=self.FILES.prefix))
-                        self.mutant_ligand_pmrtop = None
-                    else:
-                        mtif.write('mut_lig = loadpdb {}\n'.format(self.mutant_ligand_pdb_fixed))
-                        self.mutant_receptor_pmrtop = self.receptor_pmrtop
-                        mtif.write('saveamberparm mut_lig {t} {p}MUT_LIG.inpcrd\n'.format(t=self.mutant_ligand_pmrtop,
-                                                                                          p=self.FILES.prefix))
-                        self.mutant_receptor_pmrtop = None
-                mtif.write('mut_com = loadpdb {}\n'.format(self.mutant_complex_pdb_fixed))
+                if self.INPUT['mutant'].lower() in ['rec', 'receptor']:
+                    mtif.write('REC = loadpdb {}\n'.format(self.mutant_receptor_pdb_fixed))
+                    if not self.FILES.stability:
+                        mtif.write('saveamberparm REC {t} {p}MUT_REC.inpcrd\n'.format(t=self.mutant_receptor_pmrtop,
+                                                                                      p=self.FILES.prefix))
+                    self.mutant_ligand_pmrtop = None
+                else:
+                    mtif.write('LIG = loadpdb {}\n'.format(self.mutant_ligand_pdb_fixed))
+                    self.mutant_receptor_pmrtop = self.receptor_pmrtop
+                    if not self.FILES.stability:
+                        mtif.write('saveamberparm LIG {t} {p}MUT_LIG.inpcrd\n'.format(t=self.mutant_ligand_pmrtop,
+                                                                                      p=self.FILES.prefix))
+                    self.mutant_receptor_pmrtop = None
+                mtif.write('mut_com = combine { REC LIG }\n')
                 mtif.write('saveamberparm mut_com {t} {p}MUT_COM.inpcrd\n'.format(t=self.mutant_complex_pmrtop,
                                                                                   p=self.FILES.prefix))
                 mtif.write('quit')
