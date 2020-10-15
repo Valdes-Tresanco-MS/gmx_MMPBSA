@@ -452,8 +452,6 @@ class CheckMakeTop:
     def makeToptleap(self):
         with open(self.FILES.prefix + 'leap.in', 'w') as tif:
             tif.write('source {}\n'.format(protein_ff[self.INPUT['protein_forcefield']]))
-            tif.write('source leaprc.DNA.bsc1\n')
-            tif.write('source leaprc.RNA.OL3\n')
             tif.write('source leaprc.{}\n'.format(ligand_ff[self.INPUT['ligand_forcefield']]))
             tif.write('set default PBRadii {}\n'.format(PBRadii[self.INPUT['PBRadii']]))
             # check if ligand is not protein and always load
@@ -482,8 +480,6 @@ class CheckMakeTop:
         if self.INPUT['alarun']:
             with open(self.FILES.prefix + 'mut_leap.in', 'w') as mtif:
                 mtif.write('source {}\n'.format(protein_ff[self.INPUT['protein_forcefield']]))
-                mtif.write('source leaprc.DNA.bsc1\n')
-                mtif.write('source leaprc.RNA.OL3\n')
                 mtif.write('source leaprc.{}\n'.format(ligand_ff[self.INPUT['ligand_forcefield']]))
                 mtif.write('set default PBRadii {}\n'.format(PBRadii[self.INPUT['PBRadii']]))
                 # check if ligand is not protein and always load
