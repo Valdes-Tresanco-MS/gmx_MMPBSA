@@ -107,7 +107,7 @@ def gmxmmpbsa():
 def gmxmmpbsa_gui():
     app = QApplication(sys.argv)
     try:
-        parser = guiparser.parse_args(sys.argv)
+        parser = guiparser.parse_args(sys.argv[1:])
     except CommandlineError as e:
         sys.stderr.write('%s: %s' % (type(e).__name__, e) + '\n')
         sys.exit(1)
