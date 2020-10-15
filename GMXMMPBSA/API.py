@@ -621,6 +621,8 @@ def load_gmxmmpbsa_info(fname):
     # Since Decomp data is parsed in a memory-efficient manner (by not storing
     # all of the data in arrays, but rather by printing each data point as it's
     # parsed), we need to handle the decomp data separately here
+    if not app.INPUT['alarun']:
+        return_data.mutant = None
     lig_res = None
     if app.INPUT['decomprun']:
         # Simplify the decomp class instance creation
