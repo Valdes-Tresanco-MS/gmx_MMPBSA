@@ -787,7 +787,7 @@ Finally, all warnings generated during the calculation that do not result in fat
 details but before any results.
 
 ### Temporary Files
-gmx_MMPBSA creates working files during the execution of the script beginning with the prefix _GMXMMPBSA_.
+gmx_MMPBSA creates working files during the execution of the script beginning with the prefix `_GMXMMPBSA_`.
 If gmx_MMPBSA does not finish successfully, several of these files may be helpful in diagnosing the problem.
 For that reason, every temporary file is described below. Note that not every temporary file is generated in every 
 simulation. At the end of each description, the lowest value of the original “keep_files” variable that will retain 
@@ -921,7 +921,7 @@ receptor for all snapshots. (1)
 `_GMXMMPBSA_complex_nm.out.#` Output file from mmpbsa_py_nabnmode that contains the entropy data for the com-
 plex for all snapshots. (1)
 
-`_GMXMMPBSA_mutant_...` These files are analogs of the files that only start with _GMXMMPBSA_ described above, but
+`_GMXMMPBSA_mutant_...` These files are analogs of the files that only start with `_GMXMMPBSA_` described above, but
 instead refer to the mutant system of alanine scanning calculations.
 
 `_GMXMMPBSA_*out.#` These files are thread-specific files. For serial simulations, only #=0 files are created. For
