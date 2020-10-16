@@ -35,7 +35,7 @@ we will point out what is new or different. Neither of these should be considere
 should be familiar with Amber and MM/PB(GB)SA method before at-tempting these sorts of calculations. These scripts 
 automate a series of calculations, and cannot trap all the types of errors that might occur. You can review some of the 
 answers to the questions that we consider most common here. If you find a bug or have any question, please consider 
-opening an [issue](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA/issues).**
+opening an [issue](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/issues).**
 
 ## Introduction
 Molecular Mechanics / Poisson Boltzmann (or Generalized Born) Surface Area (MM/PB(GB)SA) calculations is a post-processing
@@ -117,7 +117,7 @@ cannot be decomposed. APBS energies cannot be decomposed, either. Neither can PB
 This functionality requires sander from the Amber 11 (or later) package.
 * **QM/MMGBSA**. This is a binding free energy (or stability calculation) using the Generalized Born solvent
 model allowing you to treat part of your system with a quantum mechanical Hamiltonian. See [“Advanced
-Options”](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA#Advanced-Options) for tips about optimizing this option. 
+Options”](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA#Advanced-Options) for tips about optimizing this option. 
 This functionality requires sander from the Amber package.
 * **MM/3D-RISM**. This is a binding free energy (or stability calculation) using the 3D-RISM solvation model.
 This functionality is performed with rism3d.snglpnt built with AmberTools.
@@ -135,7 +135,7 @@ In its simplest version, gmx_MMPBSA requires:
 * An input parameters file (*.in) -- input file containing all the specifications regarding the type of calculation that
 is going to be performed
 
-_See a detailed list of all the flags in gmx_MMPBSA command line [here](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA#calling-gmx_mmpbsa-from-the-command-line)_
+_See a detailed list of all the flags in gmx_MMPBSA command line [here](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA#calling-gmx_mmpbsa-from-the-command-line)_
 
 That being said, once you are in the folder containing all files, the command-line will be as follows:
 
@@ -152,8 +152,8 @@ startframe=5, endframe=100, interval=5, verbose=2
 igb=2, saltcon=0.150,
 ```
 
-_See a detailed list of all the options in gmx_MMPBSA input file [here](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA#the-input-file) 
-as well as several [examples](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA#sample-input-files)_
+_See a detailed list of all the options in gmx_MMPBSA input file [here](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA#the-input-file) 
+as well as several [examples](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA#sample-input-files)_
 
 In this case, a single trajectory (ST) approximation is followed, which means the receptor and ligand (in this case, the 
 ligand is also another protein) amber format topologies will be obtained from that of the complex. To do so, a MD *.tpr 
@@ -183,8 +183,8 @@ startframe=5, endframe=100, interval=5, verbose=2
 igb=2, saltcon=0.150,
 ```
 
-_See a detailed list of all the options in gmx_MMPBSA input file [here](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA#the-input-file) 
-as well as several [examples](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA#sample-input-files)_
+_See a detailed list of all the options in gmx_MMPBSA input file [here](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA#the-input-file) 
+as well as several [examples](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA#sample-input-files)_
 
 ### Calling gmx_MMPBSA from the command-line
 gmx_MMPBSA is invoked through the command line as follows:
@@ -287,7 +287,7 @@ command-line call is shown below:
 
 `gmx_MMPBSA -O -i mmpbsa.in -cs com_md.tpr -ci index.ndx -cg 1 13 -ct com_traj.xtc`
 
-You can found test files in GitHub (https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA)
+You can found test files in GitHub (https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA)
 
 #### Parallel (MPI) version
 
@@ -319,7 +319,7 @@ normal mode calculations used to approximate vibrational entropies, and &decomp 
 scheme. All of the input variables are described below according to their respective namelists. Integers and floating
 point variables should be typed as-is while strings should be put in either single- or double-quotes. All variables
 should be set with `variable = value` and separated by commas. See several 
-[examples](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA#sample-input-files) below. Variables will usually be matched 
+[examples](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA#sample-input-files) below. Variables will usually be matched 
 to the minimum number of characters required to uniquely identify that variable within that namelist. Variables require 
 at least 4 characters to be matched unless that variable name has fewer than 4 characters (in which case the whole 
 variable name is required). For example, “star” in &general will match “startframe”. However, “stare” and “sta” will 
