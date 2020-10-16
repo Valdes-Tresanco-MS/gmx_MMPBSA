@@ -388,7 +388,7 @@ However, this option is incompatible with alanine scanning. Default value is 0.
 ```diff
 + New input variable added
 ```
-`PBRadii` PBRadii in amber topology files. Allowed values are (default = 3):
+`PBRadii` PBRadii to build amber topology files (Default = 3):
 * 1: bondi, recommended when igb = 7
 * 2: mbondi, recommended when igb = 1
 * 3: mbondi2, recommended when igb = 2 or 5
@@ -409,14 +409,14 @@ the same as the one used in Gromacs (Default = 3)
 + New input variable added
 ```
 `ligand_forcefield` Define the force field used to build Amber topology for small molecules. Make sure this force field
- is the same as the one used in Gromacs (Default = 1). Allowed values are:
+ is the same as the one used to parametrize the ligand for Gromacs (Default = 1). Allowed values are:
 * 1: gaff
 * 2: gaff2
 
 ```diff
 + New input variable added
 ```
-`solvated_trajectory` Define if it is necessary to build a clean trajectory with no water and ions (Default = 1)
+`solvated_trajectory` Define if it is necessary to clean the trajectories to leave only defined groups (Default = 1)
 * 0: Don’t
 * 1: Build clean trajectory
 
