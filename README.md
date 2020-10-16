@@ -290,22 +290,28 @@ command-line call is shown below:
 You can found test files in GitHub (https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA)
 
 #### Parallel (MPI) version
+Unlike MMPBSA.py gmx_MMPBSA installs as a separate package from the Amber installation. When installing Amber with mpi
+a version of MMPBSA.py (MMPBSA.py.MPI) is installed as well. Since we cannot detect if Amber was installed one way or
+another, we simply decided to adapt the gmx_MMPBSA executable to use an argument. That is, gmx_MMPBSA is a single script
+that executes the serial version or the version in parallel with mpi depending on whether the user defines the "mpi" or
+"MPI" argument. In principle, both the serial and parallel versions should work correctly when Amber is installed
+normally. In order for it to actually run in parallel you must make sure that AmberTools was installed in parallel. 
 
-This version is installed with Amber during the parallel install. The python package mpi4py is included with
-the MMPBSA.py source code and must be successfully installed in order to run the MPI version of MMPBSA.py.
-It is run in the same way that the serial version is above, except MPI directions must be given on the command
-line as well. Note, if mpi4py does not install correctly, you must install it yourself in order to use
-MMPBSA.py.MPI. One note: at a certain level, running RISM in parallel may actually hurt performance, since
-previous solutions are used as an initial guess for the next frame, hastening convergence. Running in parallel loses
-this advantage. Also, due to the overhead involved in which each thread is required to load every topology file
-when calculating energies, parallel scaling will begin to fall off as the number of threads reaches the number of
-frames. A usage example is shown below:
+The parallel version, like MMPBSA.py.MPI requires the mpi4py module. If you did the parallel installation of Amber it 
+should have installed. In any case I could install it in the following way:
 
-`mpirun -np 2 gmx_MMPBSA MPI -O -i mmpbsa.in -cs com_md.tpr -ci index.ndx -cg 1 13 -ct com_traj.xtc`
+    `amber.python -m pip install mpi4py`
+    
+One note: at a certain level, running RISM in parallel may actually hurt performance, since previous solutions are used 
+as an initial guess for the next frame, hastening convergence. Running in parallel loses this advantage. Also, due to 
+the overhead involved in which each thread is required to load every topology file when calculating energies, parallel 
+scaling will begin to fall off as the number of threads reaches the number of frames. A usage example is shown below:
+
+    `mpirun -np 2 gmx_MMPBSA MPI -O -i mmpbsa.in -cs com_md.tpr -ci index.ndx -cg 1 13 -ct com_traj.xtc`
 
 or
 
-`mpirun -np 2 gmx_MMPBSA mpi -O -i mmpbsa.in -cs com_md.tpr -ci index.ndx -cg 1 13 -ct com_traj.xtc`
+    `mpirun -np 2 gmx_MMPBSA mpi -O -i mmpbsa.in -cs com_md.tpr -ci index.ndx -cg 1 13 -ct com_traj.xtc`
 
 ### The input file
 As gmx_MMPBSA is based on [MMPBSA.py](https://pubs.acs.org/doi/10.1021/ct300418h), it uses an input file containing 
@@ -342,7 +348,8 @@ of every trajectory file placed on the command-line. This is always the first fr
 @@ Input variable modified. Included Interaction entropy aproximation @@
 ```            
 `entropy` It specifies whether to perform a quasi-harmonic entropy (QH) approximation with ptraj or the 
-[Interaction Entropy (IE)](https://pubs.acs.org/doi/abs/10.1021/jacs.6b02682) approximation. The allowed values are (default = 0): 
+[Interaction Entropy (IE)](https://pubs.acs.org/doi/abs/10.1021/jacs.6b02682) approximation. The allowed values are 
+(default = 0): 
 * 0: Don’t
 * 1: perform QH
 * 2: perform IE
