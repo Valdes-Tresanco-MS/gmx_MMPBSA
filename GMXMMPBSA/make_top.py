@@ -235,8 +235,7 @@ class CheckMakeTop:
                     # we get only first trajectory to extract a pdb file and make amber topology for complex
                     c6 = subprocess.Popen(
                         [gmx, "trjconv", '-f', self.FILES.ligand_trajs[0], '-s', self.FILES.ligand_tpr,
-                         '-o', 'LIG_traj_{}.xtc'.format(i), '-n',
-                         self.FILES.ligand_index],  # FIXME: start and end frames???
+                         '-o', 'LIG_traj_{}.xtc'.format(i), '-n', self.FILES.ligand_index],
                         stdin=c5.stdout, stdout=self.log, stderr=self.log)
                     if c6.wait():  # if it quits with return code != 0
                         raise MMPBSA_Error(
@@ -498,7 +497,7 @@ class CheckMakeTop:
             p1 = subprocess.Popen([tleap, '-f', '{}'.format(self.FILES.prefix + 'mut_leap.in')], stdout=self.log,
                                  stderr=self.log)
             if p1.wait():
-                raise MMPBSA_Error('%s failed when querying %s' % (tleap))
+                raise MMPBSA_Error('%s failed when querying %s' % (tleap, self.FILES.prefix + 'mut_leap.in'))
 
         else:
             self.mutant_complex_pmrtop = None
