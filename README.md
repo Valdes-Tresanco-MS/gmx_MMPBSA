@@ -149,7 +149,8 @@ Sample input file for GB calculation
 startframe=5, endframe=100, interval=5, verbose=2
 /
 &gb
-igb=2, saltcon=0.150,
+igb=2, saltcon=0.150
+/
 ```
 
 _See a detailed list of all the options in gmx_MMPBSA input file [here](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA#the-input-file) 
@@ -180,7 +181,8 @@ Sample input file for GB calculation
 startframe=5, endframe=100, interval=5, verbose=2
 /
 &gb
-igb=2, saltcon=0.150,
+igb=2, saltcon=0.150
+/
 ```
 
 _See a detailed list of all the options in gmx_MMPBSA input file [here](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA#the-input-file) 
