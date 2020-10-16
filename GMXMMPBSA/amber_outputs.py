@@ -1211,11 +1211,9 @@ class SingleTrajBinding(BindingStatistics):
         self.lig.fill_composite_terms()
 
         for key in self.com.data_keys:
-            self.data[key] = (self.com.data[key] - self.rec.data[key] -
-                              self.lig.data[key])
+            self.data[key] = self.com.data[key] - self.rec.data[key] - self.lig.data[key]
         for key in self.com.composite_keys:
-            self.data['DELTA ' + key] = (self.com.data[key] - self.rec.data[key] -
-                                         self.lig.data[key])
+            self.data['DELTA ' + key] = self.com.data[key] - self.rec.data[key] - self.lig.data[key]
 
     #==================================================
 
@@ -1291,20 +1289,20 @@ class MultiTrajBinding(BindingStatistics):
         self.lig.fill_composite_terms()
 
         for key in self.com.data_keys:
-            self.data[key] = [self.com.data[key].avg() - self.rec.data[key].avg() -
-                              self.lig.data[key].avg(),
-                              sqrt(self.com.data[key].stdev() ** 2 +
-                                   self.rec.data[key].stdev() ** 2 +
-                                   self.lig.data[key].stdev() ** 2) ]
-
+            self.data[key] = self.com.data[key] - self.rec.data[key] - self.lig.data[key]
+            # self.data[key] = [self.com.data[key].avg() - self.rec.data[key].avg() -
+            #                   self.lig.data[key].avg(),
+            #                   sqrt(self.com.data[key].stdev() ** 2 +
+            #                        self.rec.data[key].stdev() ** 2 +
+            #                        self.lig.data[key].stdev() ** 2) ]
         for key in self.com.composite_keys:
-            self.data['DELTA ' + key] = \
-                [self.com.data[key].avg() - self.rec.data[key].avg() -
-                 self.lig.data[key].avg(),
-                 sqrt(self.com.data[key].stdev() ** 2 +
-                      self.rec.data[key].stdev() ** 2 +
-                      self.lig.data[key].stdev() ** 2) ]
-
+            self.data['DELTA ' + key] = self.com.data[key] - self.rec.data[key]- self.lig.data[key]
+            # self.data['DELTA ' + key] = \
+            #     [self.com.data[key].avg() - self.rec.data[key].avg() -
+            #      self.lig.data[key].avg(),
+            #      sqrt(self.com.data[key].stdev() ** 2 +
+            #           self.rec.data[key].stdev() ** 2 +
+            #           self.lig.data[key].stdev() ** 2) ]
     #==================================================
 
     def print_summary_csv(self, csvwriter):

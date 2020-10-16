@@ -207,10 +207,6 @@ class GMX_MMPBSA_GUI(QMainWindow):
     def getData(self):
         os.chdir(self.infofile.parent)
         self.data, self.app = API.load_gmxmmpbsa_info(self.infofile.as_posix())
-        # self.data = self.restructureData(data)
-        # if data.mutant:
-        #     self.mutant_data = self.restructureData(data.mutant)
-
         self.makeTree()
 
     def showdata(self, item: CustomItem, col):
