@@ -1,6 +1,31 @@
 # Install
+## Requirements
+gmx_MMPBSA contain a module that allows the results analysis in graphical form. For this it requires the installation 
+of PyQt5.
 
-amber.python -m pip install GMX-MMPBSA
+    `amber.python -m pip install PyQt5`
+
+## Install gmx_MMPBSA
+You can install gmx_MMPBSA from `stable` version
+
+    `amber.python -m pip install gmx_MMPBSA` 
+
+or `development` version from GitHub
+
+    `amber.python -m pip git+https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA --upgrade`
+
+####  Update
+If you already install a version of gmx_MMPBSA you can update it as follows:
+
+`stable` version ( this is probably enough and recommended ):
+
+    `amber.python -m pip install gmx_MMPBSA --upgrade`
+
+`development` version:
+
+    `amber.python -m pip git+https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA --upgrade` 
+    
+**We will do our best to keep the PYPI package up to date.**
 
 # Documentation
 **Note: We do not intend to replace the original [MMPBSA.py](https://pubs.acs.org/doi/10.1021/ct300418h); instead, 
