@@ -363,12 +363,6 @@ the Interaction Entropy, _e.g._: `entropy_seg = 25` means that the last quartile
 ```diff
 + New input variable added
 ```
-`entropy_temp` Specify the temperature to calculate the entropy term `−TΔS` (Only if `entropy = 2`). Avoid 
-inconsistencies with defined internal temperature (298.15 K) when nmode is used.
-
-```diff
-+ New input variable added
-```
 `entropy_temp` Specify the temperature to calculate the entropy term `−TΔS` (Only if `entropy` = 2). Avoid 
 inconsistencies with defined internal temperature (298.15 K) when nmode is used (Default = 298.15)
       
