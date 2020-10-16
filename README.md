@@ -318,7 +318,8 @@ As gmx_MMPBSA is based on [MMPBSA.py](https://pubs.acs.org/doi/10.1021/ct300418h
 all the specification for the MM/PB(GB)SA calculation. The input file is designed to be as syntactically similar to 
 other programs in Amber as possible. The input file has the same namelist structure as both sander and pmemd. The allowed 
 namelists are &general, &gb, &pb, &rism, &alanine_scanning, &nmode, and &decomp. The input variables recognized in each 
-namelist are described below, but those in &general are typically variables that apply to all aspects of the calculation. 
+namelist are described below, but those in &general are typically variables that apply to all aspects of the calculation
+or parameters required for build amber topologies from Gromacs files. 
 The &gb namelist is unique to Generalized Born calculations, &pb is unique to Poisson Boltzmann calculations, &rism is 
 unique to 3D-RISM calculations, &alanine_scanning is unique to alanine scanning calculations, &nmode is unique to the
 normal mode calculations used to approximate vibrational entropies, and &decomp is unique to the decomposition
