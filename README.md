@@ -192,11 +192,10 @@ as well as several [examples](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA#s
 gmx_MMPBSA is invoked through the command line as follows:
 ```
 usage: gmx_MMPBSA [-h] [-v] [--input-file-help] [-O] [-prefix <file prefix>] [-i FILE] [-xvvfile XVVFILE] [-o FILE] 
-                  [-do FILE] [-eo FILE] [-deo FILE] [-gui] [-s]
-                  [-cs <Structure File>] [-ci <Index File>] [-cg index index] [-ct [TRJ [TRJ ...]]] 
-                  [-rs <Structure File>] [-ri <Index File>] [-rg index] [-rt [TRJ [TRJ ...]]] [-lm <Structure File>]
-                  [-ls <Structure File>] [-li <Index File>] [-lg index] [-lt [TRJ [TRJ ...]]] [-make-mdins] [-use-mdins]
-                  [-rewrite-output]
+                  [-do FILE] [-eo FILE] [-deo FILE] [-gui] [-s] [-cs <Structure File>] [-ci <Index File>] 
+                  [-cg index index] [-ct [TRJ [TRJ ...]]] [-rs <Structure File>] [-ri <Index File>] [-rg index] 
+                  [-rt [TRJ [TRJ ...]]] [-lm <Structure File>] [-ls <Structure File>] [-li <Index File>] [-lg index]
+                  [-lt [TRJ [TRJ ...]]] [-make-mdins] [-use-mdins] [-rewrite-output]
 
 gmx_MMPBSA is an effort to bring Amber's MMPBSA.py functionalities and more to Gromacs users. This program is based on 
 Amber's MMPBSA.py and essentially works as such. gmx_MMPBSA lacks any compatibility-related issue since it will process
@@ -222,16 +221,12 @@ Input and Output Files:
   -eo FILE              CSV-format output of all energy terms for every frame in every calculation. File name forced to
                          end in [.csv]. This file is only written when specified on the command-line. (default: None)
   -deo FILE             CSV-format output of all energy terms for each printed residue in decomposition calculations. 
-                         File name forced to end in [.csv]. This file is only written when specified on the command-line.
-                         (default: None)
+                         File name forced to end in [.csv]. This file is only written when specified on the 
+                         command-line. (default: None)
   -gui                  Open GUI plotting app when all calculations are finished (default: True)
-
-Options:
-  These options specify explicit calculation type and forcefield to prepare the Amber topologies
-
-  -s                    Perform stability calculation. Only the complex parameters are required. If ligand is non-Protein
-                         (small molecule) type, then ligand *.mol2 file is required. In any other case receptor
-                         and ligand parameters will be ignored. See description bellow (default: False)
+  -s                    Perform stability calculation. Only the complex parameters are required. If ligand is 
+                         non-Protein (small molecule) type, then ligand *.mol2 file is required. In any other case 
+                         receptor and ligand parameters will be ignored. See description bellow (default: False)
 
 Complex:
   Complex files and info that are needed to perform the calculation. If the receptor and / or the ligand are not 
@@ -243,7 +238,8 @@ Complex:
   -cg index index       Groups of receptor and ligand in complex index file. The notation is as follows: "-cg <Receptor
                          group> <Ligand group>", ie. -cg 1 13 (default: None)
   -ct [TRJ [TRJ ...]]   Input trajectories of the complex. Make sure the trajectoiry is fitted and pbc have benn removed
-                         Allowed formats: *.xtc (recommended), *.trr, *.pdb (specify as many as you'd like). (default: None)
+                         Allowed formats: *.xtc (recommended), *.trr, *.pdb (specify as many as you'd like). 
+                         (default: None)
 
 Receptor:
   Receptor files and info that are needed to perform the calculation. If the receptor are not defined, we generate it 
