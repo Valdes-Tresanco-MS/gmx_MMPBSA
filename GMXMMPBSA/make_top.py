@@ -221,7 +221,8 @@ class CheckMakeTop:
             l1 = subprocess.Popen(['echo', '{}'.format(self.FILES.ligand_group)], stdout=subprocess.PIPE)
             # we get only first trajectory for extract a pdb file for make amber topology
             l2 = subprocess.Popen([gmx, "trjconv", '-f', self.FILES.ligand_trajs[0], '-s',
-                                   self.FILES.ligand_tpr, '-o', self.ligand_pdb, '-b', '0', '-e', '0'],
+                                   self.FILES.ligand_tpr, '-o', self.ligand_pdb, '-n', self.FILES.ligand_index,
+                                   '-b', '0', '-e', '0'],
                                   stdin=l1.stdout, stdout=self.log, stderr=self.log)
             if l2.wait():  # if it quits with return code != 0
                 raise MMPBSA_Error('%s failed when querying %s' % (gmx + 'make_ndx', self.FILES.ligand_tpr))

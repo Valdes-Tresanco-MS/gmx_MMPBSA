@@ -1,27 +1,26 @@
 # Install
 ## Requirements
-gmx_MMPBSA contain a module that allows the results analysis in graphical form. For this it requires the installation 
-of PyQt5.
+gmx_MMPBSA contains a module that allows for plotting the results. For this it requires the installation of PyQt5.
 
     amber.python -m pip install PyQt5
 
 ## Install gmx_MMPBSA
-You can install gmx_MMPBSA from `stable` version
+You can install gmx_MMPBSA from the `stable` version on PYPI:
 
     amber.python -m pip install gmx_MMPBSA 
 
-or `development` version from GitHub
+or the `development` version from GitHub:
 
     amber.python -m pip git+https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA --upgrade
 
-####  Update
-If you already install a version of gmx_MMPBSA you can update it as follows:
+### Update
+If you already have installed a previous gmx_MMPBSA version, you can update it as follows:
 
-`stable` version ( this is probably enough and recommended ):
+`stable` version (recommended):
 
     amber.python -m pip install gmx_MMPBSA --upgrade
 
-`development` version:
+`development` version from GitHub:
 
     amber.python -m pip git+https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA --upgrade 
     
@@ -146,9 +145,11 @@ where the `mmpbsa.in` input file, is a text file containing the following lines:
 ```
 Sample input file for GB calculation
 &general
-startframe=5, endframe=100, interval=5, verbose=2
+startframe=5, endframe=21, verbose=2
 /
 &gb
+igb=2, saltcon=0.150,
+/
 igb=2, saltcon=0.150
 /
 ```
@@ -160,7 +161,7 @@ In this case, a single trajectory (ST) approximation is followed, which means th
 ligand is also another protein) amber format topologies will be obtained from that of the complex. To do so, a MD *.tpr 
 file (`com.tpr`), an index file (`index.ndx`), a trajectory file (`com_traj.xtc`), and both the receptor and ligand group numbers 
 in the index file (`19 20`) are needed. The `mmpbsa.in` input file will contain all the parameters needed for the 
-MM/PB(GB)SA calculation. In this case, 19 frames `(endframe-startframe)/interval = (100-5)/5 = 19` are going to be used 
+MM/PB(GB)SA calculation. In this case, 16 frames `(endframe-startframe)/interval = (21-5)/1 = 16` are going to be used 
 when performing the the MM/PB(GB)SA calculation with the igb5 (GB-OBC2) model and a salt concentration = 0.15M.
 
 #### Protein-ligand binding free energy calculations
@@ -178,7 +179,7 @@ where the `mmpbsa.in` input file, is a text file containing the following lines:
 ```
 Sample input file for GB calculation
 &general
-startframe=5, endframe=100, interval=5, verbose=2
+startframe=5, endframe=21, verbose=2
 /
 &gb
 igb=2, saltcon=0.150
@@ -198,7 +199,7 @@ usage: gmx_MMPBSA [-h] [-v] [--input-file-help] [-O] [-prefix <file prefix>] [-i
                   [-lt [TRJ [TRJ ...]]] [-make-mdins] [-use-mdins] [-rewrite-output]
 
 gmx_MMPBSA is an effort to bring Amber's MMPBSA.py functionalities and more to Gromacs users. This program is based on 
-Amber's MMPBSA.py and essentially works as such. gmx_MMPBSA lacks any compatibility-related issue since it will process
+Amber's MMPBSA.py and essentially works as such. gmx_MMPBSA minimizes compatibility-related issues since it will process
 any Gromacs files compatible with the Gromacs in the path.
 
 optional arguments:
@@ -216,7 +217,7 @@ Input and Output Files:
 
   -i FILE               MM/PBSA input file. (default: None)
   -xvvfile XVVFILE      XVV file for 3D-RISM. (default: $AMBERHOME/dat/mmpbsa/spc.xvv)
-  -o FILE               Output file with MM/PBSA statistics. (default: FINAL_RESULTS_MMPBSA.dat)
+  -o FILE               Output file with MM/PB(GB)SA statistics. (default: FINAL_RESULTS_MMPBSA.dat)
   -do FILE              Output file for decomposition statistics summary. (default: FINAL_DECOMP_MMPBSA.dat)
   -eo FILE              CSV-format output of all energy terms for every frame in every calculation. File name forced to
                          end in [.csv]. This file is only written when specified on the command-line. (default: None)
@@ -229,8 +230,8 @@ Input and Output Files:
                          receptor and ligand parameters will be ignored. See description bellow (default: False)
 
 Complex:
-  Complex files and info that are needed to perform the calculation. If the receptor and / or the ligand are not 
-   defined, we generate it from the complex.
+  Complex files and info that are needed to perform the calculation. If the receptor and / or the ligand info is not 
+   defined, we generate them from that of the complex.
 
   -cs <Structure File>  Structure file of the bound complex. If it is Protein-Ligand (small molecule) complex, make 
                          sure that you define -lm option (default: None)
@@ -240,31 +241,39 @@ Complex:
   -ct [TRJ [TRJ ...]]   Input trajectories of the complex. Make sure the trajectoiry is fitted and pbc have benn removed
                          Allowed formats: *.xtc (recommended), *.trr, *.pdb (specify as many as you'd like). 
                          (default: None)
+  -cs <Structure File>  Structure file of the complex. If it is Protein-Ligand (small molecule) complex, make 
+                         sure that you define -lm option. Allowed formats: *.tpr (recommended), *.pdb, *.gro (default: None)
+  -ci <Index File>      Index file of the complex. (default: None)
+  -cg index index       Receptor and ligand groups in complex index file. The notation is as follows: "-cg <Receptor
+                         group> <Ligand group>", e.g. -cg 1 13 (default: None)
+  -ct [TRJ [TRJ ...]]   Input trajectories of the complex. Make sure the trajectoiry is fitted and pbc have been removed
+                         Allowed formats: *.xtc (recommended), *.trr, *.pdb, *.gro (specify as many as you'd like). (default: None)
 
 Receptor:
-  Receptor files and info that are needed to perform the calculation. If the receptor are not defined, we generate it 
-   from the complex.
+  Receptor files and info that are needed to perform the calculation. If the receptor info is not defined, we generate it 
+   from that of the complex.
 
-  -rs <Structure File>  Structure file of the unbound receptor. If omitted and stability is False, the structure from 
-                         complex will be used and other options are not needed. (default: None)
+  -rs <Structure File>  Structure file of the unbound receptor for multiple trajectory approach. Allowed formats: 
+                         *.tpr (recommended), *.pdb, *.gro (default: None)
   -ri <Index File>      Index file of the unbound receptor. (default: None)
-  -rg index             Group of receptor in receptor index file. (default: None)
+  -rg index             Receptor group in receptor index file. The notation is as follows: "-lg <Receptor group>", 
+                         e.g. -rg 1 (default: None)
   -rt [TRJ [TRJ ...]]   Input trajectories of the unbound receptor for multiple trajectory approach. Allowed formats: 
-                         *.xtc (recommended), *.trr, *.pdb. (specify as many as you'd like). (default: None)
+                         *.xtc (recommended), *.trr, *.pdb, *.gro (specify as many as you'd like). (default: None)
 
 Ligand:
-  Ligand files and info that are needed to perform the calculation. If the ligand are not defined, we generate it from 
-   the complex.
+  Ligand files and info that are needed to perform the calculation. If the ligand are not defined, we generate it 
+   from that of the complex.
 
-  -lm <Structure File>  Structure file of the unbound ligand used to parametrize ligand for Gromacs. Most be defined if 
-                         Protein-Ligand (small molecule) complex was define. (default: None)
-  -ls <Structure File>  Structure file of the unbound ligand. If omitted, is protein-like and stability is False the 
-                         structure from complex will be used and other options are not needed. If ligand is a small 
-                         molecule, make sure that you definde above -lm option (default: None)
-  -li <Index File>      Index file of the unbound ligand. Only if tpr file was define in -ls. (default: None)
-  -lg index             Group of the ligand in ligand index file. Only if tpr file was define in -ls. (default: None)
+  -lm <Structure File>  A *.mol2 file of the unbound ligand used to parametrize ligand for Gromacs. Most be defined if 
+                         Protein-Ligand (small molecule) complex was define. Antechamber output *.mol2 is recommended (default: None)
+  -ls <Structure File>  Structure file of the unbound ligand. If ligand is a small molecule, make sure that you definde 
+                         above -lm option. Allowed formats: *.tpr (recommended), *.pdb, *.gro (default: None)
+  -li <Index File>      Index file of the unbound ligand. (default: None)
+  -lg index             Ligand group in ligand index file. The notation is as follows: "-lg <Ligand group>", 
+                         e.g. -lg 13 (default: None)
   -lt [TRJ [TRJ ...]]   Input trajectories of the unbound ligand for multiple trajectory approach. Allowed formats: 
-                         *.xtc (recommended), *.trr, *.pdb. (specify as many as you'd like). (default: None)
+                         *.xtc (recommended), *.trr, *.pdb, *.gro (specify as many as you'd like). (default: None)
 
 Miscellaneous Actions:
   -make-mdins           Create the input files for each calculation and quit. This allows you to modify them and re-run
@@ -280,36 +289,37 @@ a variety of implicit solvent models
 
 ### Running gmx_MMPBSA
 #### Serial version
-This version is installed via pip as described above. AMBERHOME must be set, or it will quit on error. An example 
+This version is installed via pip as described above. AMBERHOME variable must be set, or it will quit with an error. An example 
 command-line call is shown below:
 
-    gmx_MMPBSA -O -i mmpbsa.in -cs com_md.tpr -ci index.ndx -cg 1 13 -ct com_traj.xtc
+    gmx_MMPBSA -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 1 13 -ct com_traj.xtc
 
-You can found test files in GitHub (https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA)
+You can found test files in GitHub (https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/test_files)
 
 #### Parallel (MPI) version
-Unlike MMPBSA.py gmx_MMPBSA installs as a separate package from the Amber installation. When installing Amber with mpi
-a version of MMPBSA.py (MMPBSA.py.MPI) is installed as well. Since we cannot detect if Amber was installed one way or
+Unlike MMPBSA.py, gmx_MMPBSA will be installed as a separate package from the Amber installation. When installing Amber with mpi,
+a MMPBSA.py version called "MMPBSA.py.MPI" will be installed as well. Since we cannot detect if Amber was installed one way or
 another, we simply decided to adapt the gmx_MMPBSA executable to use an argument. That is, gmx_MMPBSA is a single script
-that executes the serial version or the version in parallel with mpi depending on whether the user defines the "mpi" or
-"MPI" argument. In principle, both the serial and parallel versions should work correctly when Amber is installed
-normally. In order for it to actually run in parallel you must make sure that AmberTools was installed in parallel. 
+that executes the serial version or the parallel version with mpi depending on whether the user defines the "mpi" or
+"MPI" argument. In principle, both the serial and parallel versions should work correctly when Amber was installed in parallel.
 
-The parallel version, like MMPBSA.py.MPI requires the mpi4py module. If you did the parallel installation of Amber it 
-should have installed. In any case I could install it in the following way:
+The parallel version, like MMPBSA.py.MPI requires the mpi4py module. If you did the parallel installation of Amber, it 
+should be installed. In any case, it could be installed in the following way:
 
     amber.python -m pip install mpi4py
+    
+A usage example is shown below:
+
+    mpirun -np 2 gmx_MMPBSA MPI -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 1 13 -ct com_traj.xtc
+
+or
+
+    mpirun -np 2 gmx_MMPBSA mpi -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 1 13 -ct com_traj.xtc
     
 One note: at a certain level, running RISM in parallel may actually hurt performance, since previous solutions are used 
 as an initial guess for the next frame, hastening convergence. Running in parallel loses this advantage. Also, due to 
 the overhead involved in which each thread is required to load every topology file when calculating energies, parallel 
-scaling will begin to fall off as the number of threads reaches the number of frames. A usage example is shown below:
-
-    mpirun -np 2 gmx_MMPBSA MPI -O -i mmpbsa.in -cs com_md.tpr -ci index.ndx -cg 1 13 -ct com_traj.xtc
-
-or
-
-    mpirun -np 2 gmx_MMPBSA mpi -O -i mmpbsa.in -cs com_md.tpr -ci index.ndx -cg 1 13 -ct com_traj.xtc
+scaling will begin to fall off as the number of threads reaches the number of frames. 
 
 ### The input file
 As gmx_MMPBSA is based on [MMPBSA.py](https://pubs.acs.org/doi/10.1021/ct300418h), it uses an input file containing 
@@ -373,7 +383,7 @@ every 2nd frame beginning at startframe and ending less than or equal to endfram
 - Input variable deleted. All files are needed for plotting
 ``` 
 ~~-`keep_files` The variable that specifies which temporary files are kept. All temporary files have the prefix 
-`_MMPBSA_` prepended to them (unless you change the prefix on the command-line—see subsection Subsection 34.3.2 for 
+`_GMXMMPBSA_` prepended to them (unless you change the prefix on the command-line—see subsection Subsection 34.3.2 for 
 details). Allowed values are 0, 1, and 2. 0: Keep no temporary files 1: Keep all generated trajectory files and mdout 
 files created by sander simulations 2: Keep all temporary files. Temporary files are only deleted if MMPBSA.py 
 completes successfully (Default = 1) A verbose level of 1 is sufficient to use -rewrite-output and recreate the output
@@ -409,14 +419,14 @@ the same as the one used in Gromacs (Default = 3)
 + New input variable added
 ```
 `ligand_forcefield` Define the force field used to build Amber topology for small molecules. Make sure this force field
- is the same as the one used to parametrize the ligand for Gromacs (Default = 1). Allowed values are:
+ is the same as the one used in Gromacs (Default = 1). Allowed values are:
 * 1: gaff
 * 2: gaff2
 
 ```diff
 + New input variable added
 ```
-`solvated_trajectory` Define if it is necessary to clean the trajectories to leave only defined groups (Default = 1)
+`solvated_trajectory` Define if it is necessary to build a clean trajectory with no water and ions (Default = 1)
 * 0: Don’t
 * 1: Build clean trajectory
 
@@ -776,141 +786,144 @@ Finally, all warnings generated during the calculation that do not result in fat
 details but before any results.
 
 ### Temporary Files
-MMPBSA.py creates working files during the execution of the script beginning with the prefix _MMPBSA_.
-The variable “keep_files” controls how many of these files are kept after the script finishes successfully. If the
-script quits in error, all files will be kept. You can clean all temporary files from a directory by running MMPBSA
-–clean described above.
-If MMPBSA.py does not finish successfully, several of these files may be helpful in diagnosing the problem.
-For that reason, every temporary file is described below. Note that not every temporary file is generated in every simulation. At the end of each description, the lowest value of “keep_files” that will retain this file will be shown
-in parentheses.
+gmx_MMPBSA creates working files during the execution of the script beginning with the prefix `_GMXMMPBSA_`.
+If gmx_MMPBSA does not finish successfully, several of these files may be helpful in diagnosing the problem.
+For that reason, every temporary file is described below. Note that not every temporary file is generated in every 
+simulation. At the end of each description, the lowest value of the original “keep_files” variable that will retain 
+this file will be shown in parentheses. Nevertheless, in the current version, all the files are retained for plotting 
+purposes.
 
-`_MMPBSA_gb.mdin` Input file that controls the GB calculation done in sander. (2)
+`make_top.log` This file contains the output coming from all the Gromacs programs.
 
-`_MMPBSA_pb.mdin` Input file that controls the PB calculation done in sander. (2)
+`leap.log` This file contains the output coming from tleap program.
 
-`_MMPBSA_gb_decomp_com.mdin` Input file that controls the GB decomp calculation for the complex done in
+`_GMXMMPBSA_gb.mdin` Input file that controls the GB calculation done in sander. (2)
+
+`_GMXMMPBSA_pb.mdin` Input file that controls the PB calculation done in sander. (2)
+
+`_GMXMMPBSA_gb_decomp_com.mdin` Input file that controls the GB decomp calculation for the complex done in
 sander. (2)
 
-`_MMPBSA_gb_decomp_rec.mdin` Input file that controls the GB decomp calculation for the receptor done in
+`_GMXMMPBSA_gb_decomp_rec.mdin` Input file that controls the GB decomp calculation for the receptor done in
 sander. (2)
 
-`_MMPBSA_gb_decomp_lig.mdin` Input file that controls the GB decomp calculation for the ligand done in sander.
+`_GMXMMPBSA_gb_decomp_lig.mdin` Input file that controls the GB decomp calculation for the ligand done in sander.
 (2)
 
-`_MMPBSA_pb_decomp_com.mdin` Input file that controls the PB decomp calculation for the complex done in
+`_GMXMMPBSA_pb_decomp_com.mdin` Input file that controls the PB decomp calculation for the complex done in
 sander. (2)
 
-`_MMPBSA_pb_decomp_rec.mdin` Input file that controls the PB decomp calculation for the receptor done in
+`_GMXMMPBSA_pb_decomp_rec.mdin` Input file that controls the PB decomp calculation for the receptor done in
 sander. (2)
 
-`_MMPBSA_pb_decomp_lig.mdin` Input file that controls the PB decomp calculation for the ligand done in sander.
+`_GMXMMPBSA_pb_decomp_lig.mdin` Input file that controls the PB decomp calculation for the ligand done in sander.
 (2)
 
-`_MMPBSA_gb_qmmm_com.mdin` Input file that controls the GB QM/MM calculation for the complex done in sander.
+`_GMXMMPBSA_gb_qmmm_com.mdin` Input file that controls the GB QM/MM calculation for the complex done in sander.
 (2)
 
-`_MMPBSA_gb_qmmm_rec.mdin` Input file that controls the GB QM/MM calculation for the receptor done in sander.
+`_GMXMMPBSA_gb_qmmm_rec.mdin` Input file that controls the GB QM/MM calculation for the receptor done in sander.
 (2)
 
-`_MMPBSA_gb_qmmm_lig.mdin` Input file that controls the GB QM/MM calculation for the ligand done in sander.
+`_GMXMMPBSA_gb_qmmm_lig.mdin` Input file that controls the GB QM/MM calculation for the ligand done in sander.
 (2)
 
-`_MMPBSA_complex.mdcrd.#` Trajectory file(s) that contains only those complex snapshots that will be processed
+`_GMXMMPBSA_complex.mdcrd.#` Trajectory file(s) that contains only those complex snapshots that will be processed
 by MMPBSA.py. (1)
 
-`_MMPBSA_ligand.mdcrd.#` Trajectory file(s) that contains only those ligand snapshots that will be processed by
+`_GMXMMPBSA_ligand.mdcrd.#` Trajectory file(s) that contains only those ligand snapshots that will be processed by
 MMPBSA.py. (1)
 
-`_MMPBSA_receptor.mdcrd.#` Trajectory file(s) that contains only those receptor snapshots that will be processed
+`_GMXMMPBSA_receptor.mdcrd.#` Trajectory file(s) that contains only those receptor snapshots that will be processed
 by MMPBSA.py. (1)
 
-`_MMPBSA_complex_nc.#` Same as _MMPBSA_complex.mdcrd.#, except in the NetCDF format. (1)
+`_GMXMMPBSA_complex_nc.#` Same as _GMXMMPBSA_complex.mdcrd.#, except in the NetCDF format. (1)
 
-`_MMPBSA_receptor_nc.#` Same as _MMPBSA_receptor.mdcrd.#, except in the NetCDF format. (1)
+`_GMXMMPBSA_receptor_nc.#` Same as _GMXMMPBSA_receptor.mdcrd.#, except in the NetCDF format. (1)
 
-`_MMPBSA_ligand_nc.#` Same as _MMPBSA_ligand.mdcrd.#, except in the NetCDF format. (1)
+`_GMXMMPBSA_ligand_nc.#` Same as _GMXMMPBSA_ligand.mdcrd.#, except in the NetCDF format. (1)
 
-`_MMPBSA_dummycomplex.inpcrd` Dummy inpcrd file generated by _MMPBSA_complexinpcrd.in for use with
+`_GMXMMPBSA_dummycomplex.inpcrd` Dummy inpcrd file generated by _GMXMMPBSA_complexinpcrd.in for use with
 imin=5 functionality in sander. (1)
 
-`_MMPBSA_dummyreceptor.inpcrd` Same as above, but for the receptor. (1)
+`_GMXMMPBSA_dummyreceptor.inpcrd` Same as above, but for the receptor. (1)
 
-`_MMPBSA_dummyligand.inpcrd` Same as above, but for the ligand. (1)
+`_GMXMMPBSA_dummyligand.inpcrd` Same as above, but for the ligand. (1)
 
-`_MMPBSA_complex.pdb` Dummy PDB file of the complex required to set molecule up in nab programs
+`_GMXMMPBSA_complex.pdb` Dummy PDB file of the complex required to set molecule up in nab programs
 
-`_MMPBSA_receptor.pdb` Dummy PDB file of the receptor required to set molecule up in nab programs
+`_GMXMMPBSA_receptor.pdb` Dummy PDB file of the receptor required to set molecule up in nab programs
 
-`_MMPBSA_ligand.pdb` Dummy PDB file of the ligand required to set molecule up in nab programs
+`_GMXMMPBSA_ligand.pdb` Dummy PDB file of the ligand required to set molecule up in nab programs
 
-`_MMPBSA_complex_nm.mdcrd.#` Trajectory file(s) for each thread with snapshots used for normal mode calcula-
+`_GMXMMPBSA_complex_nm.mdcrd.#` Trajectory file(s) for each thread with snapshots used for normal mode calcula-
 tions on the complex. (1)
 
-`_MMPBSA_receptor_nm.mdcrd.#` Trajectory file for each thread with snapshots used for normal mode calcula-
+`_GMXMMPBSA_receptor_nm.mdcrd.#` Trajectory file for each thread with snapshots used for normal mode calcula-
 tions on the receptor. (1)
 
-`_MMPBSA_ligand_nm.mdcrd.#` Trajectory file for each thread with snapshots used for normal mode calculations
+`_GMXMMPBSA_ligand_nm.mdcrd.#` Trajectory file for each thread with snapshots used for normal mode calculations
 on the ligand. (1)
 
-`_MMPBSA_ptrajentropy.in` Input file that calculates the entropy via the quasi-harmonic approximation. This
+`_GMXMMPBSA_ptrajentropy.in` Input file that calculates the entropy via the quasi-harmonic approximation. This
 file is processed by ptraj. (2)
 
-`_MMPBSA_avgcomplex.pdb` PDB file containing the average positions of all complex conformations processed by
+`_GMXMMPBSA_avgcomplex.pdb` PDB file containing the average positions of all complex conformations processed by
 
-`_MMPBSA_cenptraj.in.` It is used as the reference for the _MMPBSA_ptrajentropy.in file above.
+`_GMXMMPBSA_cenptraj.in.` It is used as the reference for the _GMXMMPBSA_ptrajentropy.in file above.
 (1)
 
-`_MMPBSA_complex_entropy.out` File into which the entropy results from _MMPBSA_ptrajentropy.in analysis
+`_GMXMMPBSA_complex_entropy.out` File into which the entropy results from _GMXMMPBSA_ptrajentropy.in analysis
 on the complex are dumped. (1)
 
-`_MMPBSA_receptor_entropy.out` Same as above, but for the receptor. (1)
+`_GMXMMPBSA_receptor_entropy.out` Same as above, but for the receptor. (1)
 
-`_MMPBSA_ligand_entropy.out` Same as above, but for the ligand. (1)
+`_GMXMMPBSA_ligand_entropy.out` Same as above, but for the ligand. (1)
 
-`_MMPBSA_ptraj_entropy.out` Output from running ptraj using _MMPBSA_ptrajentropy.in. (1)
+`_GMXMMPBSA_ptraj_entropy.out` Output from running ptraj using _GMXMMPBSA_ptrajentropy.in. (1)
 
-`_MMPBSA_complex_gb.mdout.#` sander output file containing energy components of all complex snapshots done
+`_GMXMMPBSA_complex_gb.mdout.#` sander output file containing energy components of all complex snapshots done
 in GB. (1)
 
-`_MMPBSA_receptor_gb.mdout.#` sander output file containing energy components of all receptor snapshots done
+`_GMXMMPBSA_receptor_gb.mdout.#` sander output file containing energy components of all receptor snapshots done
 in GB. (1)
 
-`_MMPBSA_ligand_gb.mdout.#` sander output file containing energy components of all ligand snapshots done in
+`_GMXMMPBSA_ligand_gb.mdout.#` sander output file containing energy components of all ligand snapshots done in
 GB. (1)
 
-`_MMPBSA_complex_pb.mdout.#` sander output file containing energy components of all complex snapshots done
+`_GMXMMPBSA_complex_pb.mdout.#` sander output file containing energy components of all complex snapshots done
 in PB. (1)
 
-`_MMPBSA_receptor_pb.mdout.#` sander output file containing energy components of all receptor snapshots done
+`_GMXMMPBSA_receptor_pb.mdout.#` sander output file containing energy components of all receptor snapshots done
 in PB. (1)
 
-`_MMPBSA_ligand_pb.mdout.#` sander output file containing energy components of all ligand snapshots done in
+`_GMXMMPBSA_ligand_pb.mdout.#` sander output file containing energy components of all ligand snapshots done in
 PB. (1)
 
-`_MMPBSA_complex_rism.out.#` rism3d.snglpnt output file containing energy components of all complex snap-
+`_GMXMMPBSA_complex_rism.out.#` rism3d.snglpnt output file containing energy components of all complex snap-
 shots done with 3D-RISM (1)
 
-`_MMPBSA_receptor_rism.out.#` rism3d.snglpnt output file containing energy components of all receptor snap-
+`_GMXMMPBSA_receptor_rism.out.#` rism3d.snglpnt output file containing energy components of all receptor snap-
 shots done with 3D-RISM (1)
 
-`_MMPBSA_ligand_rism.out.#` rism3d.snglpnt output file containing energy components of all ligand snapshots
+`_GMXMMPBSA_ligand_rism.out.#` rism3d.snglpnt output file containing energy components of all ligand snapshots
 done with 3D-RISM (1)
 
-`_MMPBSA_pbsanderoutput.junk.#` File containing the information dumped by sander.APBS to STDOUT. (1)
+`_GMXMMPBSA_pbsanderoutput.junk.#` File containing the information dumped by sander.APBS to STDOUT. (1)
 
-`_MMPBSA_ligand_nm.out.#` Output file from mmpbsa_py_nabnmode that contains the entropy data for the ligand
+`_GMXMMPBSA_ligand_nm.out.#` Output file from mmpbsa_py_nabnmode that contains the entropy data for the ligand
 for all snapshots. (1)
 
-`_MMPBSA_receptor_nm.out.#` Output file from mmpbsa_py_nabnmode that contains the entropy data for the
+`_GMXMMPBSA_receptor_nm.out.#` Output file from mmpbsa_py_nabnmode that contains the entropy data for the
 receptor for all snapshots. (1)
 
-`_MMPBSA_complex_nm.out.#` Output file from mmpbsa_py_nabnmode that contains the entropy data for the com-
+`_GMXMMPBSA_complex_nm.out.#` Output file from mmpbsa_py_nabnmode that contains the entropy data for the com-
 plex for all snapshots. (1)
 
-`_MMPBSA_mutant_...` These files are analogs of the files that only start with _MMPBSA_ described above, but
+`_GMXMMPBSA_mutant_...` These files are analogs of the files that only start with `_GMXMMPBSA_` described above, but
 instead refer to the mutant system of alanine scanning calculations.
 
-`_MMPBSA_*out.#` These files are thread-specific files. For serial simulations, only #=0 files are created. For
+`_GMXMMPBSA_*out.#` These files are thread-specific files. For serial simulations, only #=0 files are created. For
 parallel, #=0 through NUM_PROC - 1 are created.
 
 ### Advanced Options
@@ -923,17 +936,17 @@ the source code.
 
 `-make-mdins` This flag will create all of the mdin and input files used by sander and nmode so that additional
 control can be granted to the user beyond the variables detailed in the input file section above. The files
-created are _MMPBSA_gb.mdin which controls GB calculation; _MMPBSA_pb.mdin which controls the
-PB calculation; _MMPBSA_sander_nm_min.mdin which controls the sander minimization of snapshots to
-be prepared for nmode calculations; and _MMPBSA_nmode.in which controls the nmode calculation. If
-no input file is specified, all files above are created with default values, and _MMPBSA_pb.mdin is created
+created are _GMXMMPBSA_gb.mdin which controls GB calculation; _GMXMMPBSA_pb.mdin which controls the
+PB calculation; _GMXMMPBSA_sander_nm_min.mdin which controls the sander minimization of snapshots to
+be prepared for nmode calculations; and _GMXMMPBSA_nmode.in which controls the nmode calculation. If
+no input file is specified, all files above are created with default values, and _GMXMMPBSA_pb.mdin is created
 for AmberTools’s pbsa. If you wish to create a file for sander.APBS, you must include an input file with
 “sander_apbs=1” specified to generate the desired input file. Note that if an input file is specified, only those
 mdin files pertinent to the calculation described therein will be created!
 
 `-use-mdins` This flag will prevent MMPBSA.py from creating the input files that control the vari-
-ous calculations (_MMPBSA_gb.mdin, _MMPBSA_pb.mdin, _MMPBSA_sander_nm_min.mdin, and
-_MMPBSA_nmode.in). It will instead attempt to use existing input files (though they must have those
+ous calculations (_GMXMMPBSA_gb.mdin, _GMXMMPBSA_pb.mdin, _GMXMMPBSA_sander_nm_min.mdin, and
+_GMXMMPBSA_nmode.in). It will instead attempt to use existing input files (though they must have those
 names above!) in their place. In this way, the user has full control over the calculations performed, however
 care must be taken. The mdin files created by MMPBSA.py have been tested and are (generally) known to
 be consistent. Modifying certain variables (such as imin=5) may prevent the script from working, so this
@@ -948,6 +961,6 @@ use those modified files.
 `QM/MMGBSA` There are a lot of options for QM/MM calculations in sander, but not all of those options were
 made available via options in the MMPBSA.py input file. In order to take advantage of these other options,
 you’ll have to make use of the -make-mdins and -use-mdins flags as detailed above and change the resulting
-_MMPBSA_gb_qmmm_com/rec/lig.mdin files to fit your desired calculation. Additionally, MMPBSA.py
+_GMXMMPBSA_gb_qmmm_com/rec/lig.mdin files to fit your desired calculation. Additionally, MMPBSA.py
 suffers all shortcomings of sander, one of those being that PB and QM/MM are incompatible. Therefore,
 only QM/MMGBSA is a valid option right now.
