@@ -162,5 +162,6 @@ guiparser = ArgumentParser(epilog='''This program is part of gmx_MMPBSA and will
                            formatter_class=ArgumentDefaultsHelpFormatter)
 guiparser.add_argument('-v', '--version', action='version',
                        version='%%(prog)s %s based on MMPBSA version %s' % (__version__, __mmpbsa_version__))
-guiparser.add_argument('-p', '--path', dest='path', help='Path to gmx_MMPBSA info file',
+group = guiparser.add_argument_group('Info file')
+group.add_argument('-p', '--path', dest='path', help='Path to gmx_MMPBSA info file', required=True,
                        default=None)
