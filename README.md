@@ -3,27 +3,27 @@
 gmx_MMPBSA contain a module that allows the results analysis in graphical form. For this it requires the installation 
 of PyQt5.
 
-    `amber.python -m pip install PyQt5`
+    amber.python -m pip install PyQt5
 
 ## Install gmx_MMPBSA
 You can install gmx_MMPBSA from `stable` version
 
-    `amber.python -m pip install gmx_MMPBSA` 
+    amber.python -m pip install gmx_MMPBSA 
 
 or `development` version from GitHub
 
-    `amber.python -m pip git+https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA --upgrade`
+    amber.python -m pip git+https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA --upgrade
 
 ####  Update
 If you already install a version of gmx_MMPBSA you can update it as follows:
 
 `stable` version ( this is probably enough and recommended ):
 
-    `amber.python -m pip install gmx_MMPBSA --upgrade`
+    amber.python -m pip install gmx_MMPBSA --upgrade
 
 `development` version:
 
-    `amber.python -m pip git+https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA --upgrade` 
+    amber.python -m pip git+https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA --upgrade 
     
 **We will do our best to keep the PYPI package up to date.**
 
@@ -139,7 +139,7 @@ _See a detailed list of all the flags in gmx_MMPBSA command line [here](https://
 
 That being said, once you are in the folder containing all files, the command-line will be as follows:
 
-`gmx_MMPBSA -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 19 20 -ct com_traj.xtc`
+    gmx_MMPBSA -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 19 20 -ct com_traj.xtc
 
 where the `mmpbsa.in` input file, is a text file containing the following lines:
 
@@ -170,7 +170,7 @@ defined. This *.mol2 file should contain all the charges as well as the bonds fo
 
 That being said, once you are in the folder containing all files, the command-line will be as follows:
 
-`gmx_MMPBSA -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 1 13 -ct com_traj.xtc -lm ligand.mol2`
+    gmx_MMPBSA -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 1 13 -ct com_traj.xtc -lm ligand.mol2
 
 where the `mmpbsa.in` input file, is a text file containing the following lines:
 
@@ -285,7 +285,7 @@ a variety of implicit solvent models
 This version is installed via pip as described above. AMBERHOME must be set, or it will quit on error. An example 
 command-line call is shown below:
 
-`gmx_MMPBSA -O -i mmpbsa.in -cs com_md.tpr -ci index.ndx -cg 1 13 -ct com_traj.xtc`
+    gmx_MMPBSA -O -i mmpbsa.in -cs com_md.tpr -ci index.ndx -cg 1 13 -ct com_traj.xtc
 
 You can found test files in GitHub (https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA)
 
@@ -300,18 +300,18 @@ normally. In order for it to actually run in parallel you must make sure that Am
 The parallel version, like MMPBSA.py.MPI requires the mpi4py module. If you did the parallel installation of Amber it 
 should have installed. In any case I could install it in the following way:
 
-    `amber.python -m pip install mpi4py`
+    amber.python -m pip install mpi4py
     
 One note: at a certain level, running RISM in parallel may actually hurt performance, since previous solutions are used 
 as an initial guess for the next frame, hastening convergence. Running in parallel loses this advantage. Also, due to 
 the overhead involved in which each thread is required to load every topology file when calculating energies, parallel 
 scaling will begin to fall off as the number of threads reaches the number of frames. A usage example is shown below:
 
-    `mpirun -np 2 gmx_MMPBSA MPI -O -i mmpbsa.in -cs com_md.tpr -ci index.ndx -cg 1 13 -ct com_traj.xtc`
+    mpirun -np 2 gmx_MMPBSA MPI -O -i mmpbsa.in -cs com_md.tpr -ci index.ndx -cg 1 13 -ct com_traj.xtc
 
 or
 
-    `mpirun -np 2 gmx_MMPBSA mpi -O -i mmpbsa.in -cs com_md.tpr -ci index.ndx -cg 1 13 -ct com_traj.xtc`
+    mpirun -np 2 gmx_MMPBSA mpi -O -i mmpbsa.in -cs com_md.tpr -ci index.ndx -cg 1 13 -ct com_traj.xtc
 
 ### The input file
 As gmx_MMPBSA is based on [MMPBSA.py](https://pubs.acs.org/doi/10.1021/ct300418h), it uses an input file containing 
