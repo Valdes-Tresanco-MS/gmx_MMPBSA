@@ -280,11 +280,11 @@ Miscellaneous Actions:
                          modify them and re-run using -use-mdins (default: False)
   -use-mdins            Use existing input files for each calculation. If they do not exist with the
                          appropriate names, gmx_MMPBSA will quit in error. (default: False)
-  -rewrite-output       Do not re-run any calculations, just parse the output files from the previous
-                         calculation and rewrite the output files. (default: False)
+  -rewrite-output       Do not re-run any calculations, just parse the output files from the 
+                         previous calculation and rewrite the output files. (default: False)
 
-This program will calculate binding free energies using end-state free energy methods on an ensemble of
-snapshots using a variety of implicit solvent models
+This program will calculate binding free energies using end-state free energy methods on an ensemble
+of snapshots using a variety of implicit solvent models
 ```
 
 ### Running gmx_MMPBSA
