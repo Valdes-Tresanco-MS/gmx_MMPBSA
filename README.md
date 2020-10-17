@@ -233,61 +233,58 @@ Input and Output Files:
                          See description bellow (default: False)
 
 Complex:
-  Complex files and info that are needed to perform the calculation. If the receptor and / or the ligand info is not 
-   defined, we generate them from that of the complex.
+  Complex files and info that are needed to perform the calculation. If the receptor and / or the
+    ligand info is not defined, we generate them from that of the complex.
 
-  -cs <Structure File>  Structure file of the bound complex. If it is Protein-Ligand (small molecule) complex, make 
-                         sure that you define -lm option (default: None)
+  -cs <Structure File>  Structure file of the complex. If it is Protein-Ligand (small molecule)
+                         complex, make sure that you define -lm option (default: None)
   -ci <Index File>      Index file of the bound complex. (default: None)
-  -cg index index       Groups of receptor and ligand in complex index file. The notation is as follows: "-cg <Receptor
-                         group> <Ligand group>", ie. -cg 1 13 (default: None)
-  -ct [TRJ [TRJ ...]]   Input trajectories of the complex. Make sure the trajectoiry is fitted and pbc have benn removed
-                         Allowed formats: *.xtc (recommended), *.trr, *.pdb (specify as many as you'd like). 
-                         (default: None)
-  -cs <Structure File>  Structure file of the complex. If it is Protein-Ligand (small molecule) complex, make 
-                         sure that you define -lm option. Allowed formats: *.tpr (recommended), *.pdb, *.gro (default: None)
-  -ci <Index File>      Index file of the complex. (default: None)
-  -cg index index       Receptor and ligand groups in complex index file. The notation is as follows: "-cg <Receptor
-                         group> <Ligand group>", e.g. -cg 1 13 (default: None)
-  -ct [TRJ [TRJ ...]]   Input trajectories of the complex. Make sure the trajectoiry is fitted and pbc have been removed
-                         Allowed formats: *.xtc (recommended), *.trr, *.pdb, *.gro (specify as many as you'd like). (default: None)
+  -cg index index       Groups of receptor and ligand in complex index file. (default: None)
+                         Notation: "-cg <Receptor group> <Ligand group>", ie. -cg 1 13
+  -ct [TRJ [TRJ ...]]   Input trajectories of the complex. Make sure the trajectory is fitted and
+                         pbc have been removed. Allowed formats: *.xtc (recommended), *.trr, *.pdb
+                         (specify as many as you'd like). (default: None)
 
 Receptor:
-  Receptor files and info that are needed to perform the calculation. If the receptor info is not defined, we generate it 
-   from that of the complex.
+  Receptor files and info that are needed to perform the calculation. If the receptor info is not 
+   defined, we generate it from that of the complex.
 
-  -rs <Structure File>  Structure file of the unbound receptor for multiple trajectory approach. Allowed formats: 
-                         *.tpr (recommended), *.pdb, *.gro (default: None)
+  -rs <Structure File>  Structure file of the unbound receptor for multiple trajectory approach.
+                         Allowed formats: *.tpr (recommended), *.pdb, *.gro (default: None)
   -ri <Index File>      Index file of the unbound receptor. (default: None)
-  -rg index             Receptor group in receptor index file. The notation is as follows: "-lg <Receptor group>", 
+  -rg index             Receptor group in receptor index file. Notation: "-lg <Receptor group>", 
                          e.g. -rg 1 (default: None)
-  -rt [TRJ [TRJ ...]]   Input trajectories of the unbound receptor for multiple trajectory approach. Allowed formats: 
-                         *.xtc (recommended), *.trr, *.pdb, *.gro (specify as many as you'd like). (default: None)
+  -rt [TRJ [TRJ ...]]   Input trajectories of the unbound receptor for multiple trajectory approach.
+                         Allowed formats: *.xtc (recommended), *.trr, *.pdb, *.gro (specify as many
+                         as you'd like). (default: None)
 
 Ligand:
-  Ligand files and info that are needed to perform the calculation. If the ligand are not defined, we generate it 
-   from that of the complex.
+  Ligand files and info that are needed to perform the calculation. If the ligand are not defined, 
+   we generate it from that of the complex.
 
-  -lm <Structure File>  A *.mol2 file of the unbound ligand used to parametrize ligand for Gromacs. Most be defined if 
-                         Protein-Ligand (small molecule) complex was define. Antechamber output *.mol2 is recommended (default: None)
-  -ls <Structure File>  Structure file of the unbound ligand. If ligand is a small molecule, make sure that you definde 
-                         above -lm option. Allowed formats: *.tpr (recommended), *.pdb, *.gro (default: None)
+  -lm <Structure File>  A *.mol2 file of the unbound ligand used to parametrize ligand for Gromacs.
+                         Must be defined if Protein-Ligand (small molecule) complex was define. 
+                         Antechamber output *.mol2 is recommended (default: None)
+  -ls <Structure File>  Structure file of the unbound ligand. If ligand is a small molecule, make 
+                         sure that you define above -lm option. Allowed formats: *.tpr (recommended),
+                         *.pdb, *.gro (default: None)
   -li <Index File>      Index file of the unbound ligand. (default: None)
-  -lg index             Ligand group in ligand index file. The notation is as follows: "-lg <Ligand group>", 
+  -lg index             Ligand group in ligand index file. Notation: "-lg <Ligand group>", 
                          e.g. -lg 13 (default: None)
-  -lt [TRJ [TRJ ...]]   Input trajectories of the unbound ligand for multiple trajectory approach. Allowed formats: 
-                         *.xtc (recommended), *.trr, *.pdb, *.gro (specify as many as you'd like). (default: None)
+  -lt [TRJ [TRJ ...]]   Input trajectories of the unbound ligand for multiple trajectory approach. 
+                         Allowed formats: *.xtc (recommended), *.trr, *.pdb, *.gro (specify as many
+                         as you'd like). (default: None)
 
 Miscellaneous Actions:
-  -make-mdins           Create the input files for each calculation and quit. This allows you to modify them and re-run
-                         using -use-mdins (default: False)
-  -use-mdins            Use existing input files for each calculation. If they do not exist with the appropriate names, 
-                         gmx_MMPBSA will quit in error. (default: False)
-  -rewrite-output       Do not re-run any calculations, just parse the output files from the previous calculation and 
-                         rewrite the output files. (default: False)
+  -make-mdins           Create the input files for each calculation and quit. This allows you to 
+                         modify them and re-run using -use-mdins (default: False)
+  -use-mdins            Use existing input files for each calculation. If they do not exist with the
+                         appropriate names, gmx_MMPBSA will quit in error. (default: False)
+  -rewrite-output       Do not re-run any calculations, just parse the output files from the previous
+                         calculation and rewrite the output files. (default: False)
 
-This program will calculate binding free energies using end-state free energy methods on an ensemble of snapshots using 
-a variety of implicit solvent models
+This program will calculate binding free energies using end-state free energy methods on an ensemble of
+snapshots using a variety of implicit solvent models
 ```
 
 ### Running gmx_MMPBSA
