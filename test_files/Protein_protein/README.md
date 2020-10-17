@@ -8,7 +8,7 @@ In its simplest version, gmx_MMPBSA requires:
 * An input parameters file (*.in) -- input file containing all the specifications regarding the type of calculation that
 is going to be performed
 
-_See a detailed list of all the flags in gmx_MMPBSA command line [here](../../GMX-MMPBSA#calling-gmx_mmpbsa-from-the-command-line)_
+_See a detailed list of all the flags in gmx_MMPBSA command line [here](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA#calling-gmx_mmpbsa-from-the-command-line)_
 
 That being said, once you are in the folder containing all files, the command-line will be as follows:
 
