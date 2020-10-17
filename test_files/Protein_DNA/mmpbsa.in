@@ -1,0 +1,7 @@
+Sample input file for GB calculation
+&general
+startframe=5, endframe=20, verbose=2, PBRadii=4
+/
+&gb
+igb=8, saltcon=0.150, intdiel=10
+/

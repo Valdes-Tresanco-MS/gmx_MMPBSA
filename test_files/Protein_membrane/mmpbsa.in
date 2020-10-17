@@ -1,0 +1,12 @@
+Sample input file for PB calculation (Prot-memb system)
+&general
+startframe=1, endframe=4, verbose=2, interval=1, debug_printlevel=2, use_sander=1,
+/
+&pb
+radiopt=0, indi=20.0, istrng=0.150,
+fillratio=1.25, ipb=1, nfocus=1,
+bcopt=10, eneopt=1, cutfd=7.0, cutnb=99.0,
+npbverb=1, solvopt=2, inp=2,
+memopt=1, emem=7.0, mctrdz=-10.383, mthick=36.086, poretype=1,
+maxarcdot=15000
+/
