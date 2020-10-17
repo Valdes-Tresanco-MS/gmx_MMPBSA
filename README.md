@@ -327,18 +327,19 @@ all the specification for the MM/PB(GB)SA calculation. The input file is designe
 other programs in Amber as possible. The input file has the same namelist structure as both sander and pmemd. The allowed 
 namelists are &general, &gb, &pb, &rism, &alanine_scanning, &nmode, and &decomp. The input variables recognized in each 
 namelist are described below, but those in &general are typically variables that apply to all aspects of the calculation
-or parameters required for build amber topologies from Gromacs files. 
+or parameters required for build amber topologies from Gromacs files.
 The &gb namelist is unique to Generalized Born calculations, &pb is unique to Poisson Boltzmann calculations, &rism is 
 unique to 3D-RISM calculations, &alanine_scanning is unique to alanine scanning calculations, &nmode is unique to the
 normal mode calculations used to approximate vibrational entropies, and &decomp is unique to the decomposition
 scheme. All of the input variables are described below according to their respective namelists. Integers and floating
 point variables should be typed as-is while strings should be put in either single- or double-quotes. All variables
 should be set with `variable = value` and separated by commas. See several 
-[examples](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA#sample-input-files) below. Variables will usually be matched 
-to the minimum number of characters required to uniquely identify that variable within that namelist. Variables require 
-at least 4 characters to be matched unless that variable name has fewer than 4 characters (in which case the whole 
-variable name is required). For example, “star” in &general will match “startframe”. However, “stare” and “sta” will 
-match nothing.
+[examples](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA#sample-input-files) below. As you will see, several 
+calculations can be performed in the same run (_i.e._ &gb and &pb, &gb and &alanine_scanning, &pb and &decomp, etc).
+Variables will usually be matched to the minimum number of characters required to uniquely identify that variable 
+within that namelist. Variables require at least 4 characters to be matched unless that variable name has fewer than 4 
+characters (in which case the whole variable name is required). For example, “star” in &general will match “startframe”. 
+However, “stare” and “sta” will match nothing.
 
 **&general namelist variables**
 
@@ -748,14 +749,14 @@ polardecomp=1, thermo="gf"
 --------------------------------------------------------
 Sample input file for MMPBSA with membrane proteins
 &general
-use_sander=1,
-startframe=1, endframe=100, interval=1, debug_printlevel=2
+startframe=1, endframe=100, interval=1, 
+debug_printlevel=2, use_sander=1,
 /
 &pb
 radiopt=0, indi=20.0, istrng=0.150,
 fillratio=1.25, ipb=1, nfocus=1,
 bcopt=10, eneopt=1, cutfd=7.0, cutnb=99.0,
-npbverb=1, solvopt=2, inp=1,
+npbverb=1, solvopt=2, inp=2,
 memopt=1, emem=7.0, mctrdz=-10.383, mthick=36.086, poretype=1,
 maxarcdot=15000
 /
