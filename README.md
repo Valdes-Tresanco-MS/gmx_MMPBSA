@@ -150,8 +150,6 @@ startframe=5, endframe=21, verbose=2
 &gb
 igb=2, saltcon=0.150,
 /
-igb=2, saltcon=0.150
-/
 ```
 
 _See a detailed list of all the options in gmx_MMPBSA input file [here](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA#the-input-file) 
@@ -192,15 +190,16 @@ as well as several [examples](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA#s
 ### Calling gmx_MMPBSA from the command-line
 gmx_MMPBSA is invoked through the command line as follows:
 ```
-usage: gmx_MMPBSA [-h] [-v] [--input-file-help] [-O] [-prefix <file prefix>] [-i FILE] [-xvvfile XVVFILE] [-o FILE] 
-                  [-do FILE] [-eo FILE] [-deo FILE] [-gui] [-s] [-cs <Structure File>] [-ci <Index File>] 
-                  [-cg index index] [-ct [TRJ [TRJ ...]]] [-rs <Structure File>] [-ri <Index File>] [-rg index] 
-                  [-rt [TRJ [TRJ ...]]] [-lm <Structure File>] [-ls <Structure File>] [-li <Index File>] [-lg index]
-                  [-lt [TRJ [TRJ ...]]] [-make-mdins] [-use-mdins] [-rewrite-output]
+usage: gmx_MMPBSA [-h] [-v] [--input-file-help] [-O] [-prefix <file prefix>] [-i FILE] [-xvvfile XVVFILE] 
+                  [-o FILE] [-do FILE] [-eo FILE] [-deo FILE] [-gui] [-s] [-cs <Structure File>] 
+                  [-ci <Index File>] [-cg index index] [-ct [TRJ [TRJ ...]]] [-rs <Structure File>] 
+                  [-ri <Index File>] [-rg index] [-rt [TRJ [TRJ ...]]] [-lm <Structure File>] 
+                  [-ls <Structure File>] [-li <Index File>] [-lg index] [-lt [TRJ [TRJ ...]]] [-make-mdins] 
+                  [-use-mdins] [-rewrite-output]
 
-gmx_MMPBSA is an effort to bring Amber's MMPBSA.py functionalities and more to Gromacs users. This program is based on 
-Amber's MMPBSA.py and essentially works as such. gmx_MMPBSA minimizes compatibility-related issues since it will process
-any Gromacs files compatible with the Gromacs in the path.
+gmx_MMPBSA is an effort to bring Amber's MMPBSA.py functionalities and more to Gromacs users. This program
+is based on Amber's MMPBSA.py and essentially works as such. gmx_MMPBSA minimizes compatibility-related 
+issues since it will process any Gromacs files compatible with the Gromacs in the path.
 
 optional arguments:
   -h, --help            show this help message and exit
