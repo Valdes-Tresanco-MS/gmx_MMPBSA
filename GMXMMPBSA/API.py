@@ -309,7 +309,8 @@ class APIDecompOutGMX(amber_outputs.DecompOut):
         # Make a new dict for all printed tokens (TDC,SDC,BDC)
         for key in self.allowed_tokens:
             self.array_data[key] = {}
-            for i in range(nframes):
+        for i in range(nframes):
+            for key in self.allowed_tokens:
                 n = 0
                 for j in range(self.num_terms):
                     rnum, internal, vdw, eel, pol, sas, tot = self.get_next_term(key)
@@ -411,7 +412,7 @@ def get_delta_decomp(app, decomp_calc_type, data):
                             tempdict[p][res][resp][para] = d
                     for resp in com[p][res]:
                         tempdict[p][res][resp] = com[p][res][resp]
-        return tempdict
+    return tempdict
 
 def load_mmpbsa_info(fname):
     """
