@@ -197,9 +197,10 @@ usage: gmx_MMPBSA [-h] [-v] [--input-file-help] [-O] [-prefix <file prefix>] [-i
                   [-lm <Structure File>] [-ls <Structure File>] [-li <Index File>] [-lg index] 
                   [-lt [TRJ [TRJ ...]]] [-make-mdins] [-use-mdins] [-rewrite-output]
 
-gmx_MMPBSA is an effort to bring Amber's MMPBSA.py functionalities and more to Gromacs users. This program
-is based on Amber's MMPBSA.py and essentially works as such. gmx_MMPBSA minimizes compatibility-related 
-issues since it will process any Gromacs files compatible with the Gromacs in the path.
+gmx_MMPBSA is an effort to bring Amber's MMPBSA.py functionalities and more to Gromacs users. This 
+program is based on Amber's MMPBSA.py and essentially works as such. gmx_MMPBSA minimizes 
+compatibility-related issues since it will process any Gromacs files compatible with the Gromacs 
+in the path.
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -217,16 +218,19 @@ Input and Output Files:
   -i FILE               MM/PBSA input file. (default: None)
   -xvvfile XVVFILE      XVV file for 3D-RISM. (default: $AMBERHOME/dat/mmpbsa/spc.xvv)
   -o FILE               Output file with MM/PB(GB)SA statistics. (default: FINAL_RESULTS_MMPBSA.dat)
-  -do FILE              Output file for decomposition statistics summary. (default: FINAL_DECOMP_MMPBSA.dat)
-  -eo FILE              CSV-format output of all energy terms for every frame in every calculation. File name forced to
-                         end in [.csv]. This file is only written when specified on the command-line. (default: None)
-  -deo FILE             CSV-format output of all energy terms for each printed residue in decomposition calculations. 
-                         File name forced to end in [.csv]. This file is only written when specified on the 
-                         command-line. (default: None)
+  -do FILE              Output file for decomposition statistics. (default: FINAL_DECOMP_MMPBSA.dat)
+  -eo FILE              CSV-format output of all energy terms for every frame in every calculation.
+                         File name forced to end in [.csv]. This file is only written when specified
+                         on the command-line. (default: None)
+  -deo FILE             CSV-format output of all energy terms for each printed residue in
+                         decomposition calculations. 
+                         File name forced to end in [.csv]. This file is only written when specified
+                         on the command-line. (default: None)
   -gui                  Open GUI plotting app when all calculations are finished (default: True)
-  -s                    Perform stability calculation. Only the complex parameters are required. If ligand is 
-                         non-Protein (small molecule) type, then ligand *.mol2 file is required. In any other case 
-                         receptor and ligand parameters will be ignored. See description bellow (default: False)
+  -s                    Perform stability calculation. Only the complex parameters are required. If
+                         ligand is non-Protein (small molecule) type, then ligand *.mol2 file is 
+                         required. In any other case receptor and ligand parameters will be ignored.
+                         See description bellow (default: False)
 
 Complex:
   Complex files and info that are needed to perform the calculation. If the receptor and / or the ligand info is not 
