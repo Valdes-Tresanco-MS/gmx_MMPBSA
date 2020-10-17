@@ -7,7 +7,7 @@ gmx_MMPBSA contains a module that allows for plotting the results. For this it r
 ## Install gmx_MMPBSA
 You can install gmx_MMPBSA from the `stable` version on PYPI:
 
-    amber.python -m pip install gmx_MMPBSA 
+    amber.python -m pip install gmx_MMPBSA
 
 or the `development` version from GitHub:
 
@@ -725,7 +725,7 @@ startframe=5, endframe=100, interval=5,
 igb=5, saltcon=0.150,
 /
 &decomp
-idecomp=2, dec_verbose=3,
+idecomp=2, dec_verbose=3, 
 print_res="20, 40-80, 200"
 /
 --------------------------------------------------------
@@ -734,7 +734,7 @@ Sample input file for QM/MMGBSA
 startframe=5, endframe=100, interval=5,
 /
 &gb
-igb=5, saltcon=0.100, ifqnt=1, qmcharge=0,
+igb=5, saltcon=0.100, ifqnt=1, qmcharge_com=0,
 qm_residues="100-105, 200", qm_theory="PM3"
 /
 --------------------------------------------------------
