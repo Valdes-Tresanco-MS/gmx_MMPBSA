@@ -616,17 +616,18 @@ through 10, 15, and 100 from the complex topology file and the corresponding res
 receptor topology files. 
 
 ```diff
-- *Please note: Using idecomp=3 or 4 (pairwise) with a very large number of printed residues and a large number
-- of frames can quickly create very, very large temporary mdout files. Large print selections also demand a large
-- amount of memory to parse the mdout files and write decomposition output file (~500 MB for just 250 residues,
-- since that’s 62500 pairs!) It is not unusual for the output file to take a significant amount of time to print if you
-- have a lot of data. This is most applicable to pairwise decomp, since the amount of data scales as O(N 2 ).
+- *Please note: Using idecomp=3 or 4 (pairwise) with a very large number of printed residues and a
+-  large number of frames can quickly create very, very large temporary mdout files. Large print 
+-  selections also demand a large amount of memory to parse the mdout files and write 
+-  decomposition output file (~500 MB for just 250 residues, since that’s 62500 pairs!) It is not
+-  unusual for the output file to take a significant amount of time to print if you have a lot of
+-  data. This is most applicable to pairwise decomp, since the amount of data scales as O(N 2 ).
 
-+ Based on the above, we decided to add a new option that limits the selection of the residues that will be printed 
-+ by default. We defined a selection method with the following structure:
-+ print_res = "within 6"
-+ where _within_ corresponds to the keyword and _6_ to the maximum distance criterion in Angstroms necessary to select 
-+ the residues from both the receptor and ligand.
++ Based on the above, we decided to add a new option that limits the selection of the residues 
++ that will be printed by default. We defined a selection method with the following structure:
++ print_res = "within 6" where _within_ corresponds to the keyword and _6_ to the maximum 
++ distance criterion in Angstroms necessary to select the residues from both the receptor and
++ the ligand.
 ```
 
 **&rism namelist variables***
@@ -721,6 +722,7 @@ maxcyc=50000, drms=0.0001,
 Sample input file with decomposition analysis
 #make sure to include at least one residue from both the receptor
 #and ligand in the print_res mask of the &decomp section.
+#http://archive.ambermd.org/201308/0075.html
 &general
 startframe=5, endframe=100, interval=5,
 /
