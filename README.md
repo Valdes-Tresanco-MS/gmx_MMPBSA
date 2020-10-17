@@ -684,7 +684,7 @@ be chosen; you just need to change the xvvfile specified on the command line (se
 Sample input file for GB and PB calculation
 &general
 startframe=5, endframe=100, interval=5,
-verbose=2
+verbose=2, protein_forcefield=3, ligand_forcefield=1,
 /
 &gb
 igb=5, saltcon=0.150,
@@ -695,19 +695,19 @@ istrng=0.15, fillratio=4.0
 --------------------------------------------------------
 Sample input file for Alanine scanning
 &general
-verbose=2,
+startframe=5, verbose=2, PBRadii=4,
 /
 &gb
-igb=2, saltcon=0.10
+igb=8, saltcon=0.10
 /
 &alanine_scanning
 mutant='receptor'
-mutant_res='A:350'
+mutant_res='A:98'
 /
 --------------------------------------------------------
 Sample input file with nmode analysis
 &general
-startframe=5, endframe=100, interval=5,
+startframe=5, endframe=100,
 verbose=2
 /
 &gb
@@ -719,6 +719,8 @@ maxcyc=50000, drms=0.0001,
 /
 --------------------------------------------------------
 Sample input file with decomposition analysis
+#make sure to include at least one residue from both the receptor
+#and ligand in the print_res mask of the &decomp section.
 &general
 startframe=5, endframe=100, interval=5,
 /
@@ -726,7 +728,7 @@ startframe=5, endframe=100, interval=5,
 igb=5, saltcon=0.150,
 /
 &decomp
-idecomp=2, dec_verbose=3, 
+idecomp=2, dec_verbose=3,
 print_res="20, 40-80, 200"
 /
 --------------------------------------------------------
@@ -741,7 +743,7 @@ qm_residues="100-105, 200", qm_theory="PM3"
 --------------------------------------------------------
 Sample input file for MM/3D-RISM
 &general
-startframe=5, endframe=100, interval=5,
+startframe=20, endframe=100, interval=5,
 /
 &rism
 polardecomp=1, thermo="gf"
