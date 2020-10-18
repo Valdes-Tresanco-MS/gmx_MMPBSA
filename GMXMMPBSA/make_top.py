@@ -472,22 +472,34 @@ class CheckMakeTop:
                 # check if ligand is not protein and always load
                 if self.FILES.ligand_mol2:
                     mtif.write('LIG = loadmol2 {}\n'.format(self.FILES.ligand_mol2))
+                    self.mutant_ligand_pmrtop = None
                     mtif.write('check LIG\n')
                     mtif.write('loadamberparams {}\n'.format(self.ligand_frcmod))
-
-                if self.INPUT['mutant'].lower() in ['rec', 'receptor']:
                     mtif.write('REC = loadpdb {}\n'.format(self.mutant_receptor_pdb_fixed))
                     if not self.FILES.stability:
                         mtif.write('saveamberparm REC {t} {p}MUT_REC.inpcrd\n'.format(t=self.mutant_receptor_pmrtop,
                                                                                       p=self.FILES.prefix))
-                    self.mutant_ligand_pmrtop = None
+                        mtif.write('saveamberparm LIG {t} {p}LIG.inpcrd\n'.format(t=self.ligand_pmrtop,
+                                                                                  p=self.FILES.prefix))
                 else:
-                    mtif.write('LIG = loadpdb {}\n'.format(self.mutant_ligand_pdb_fixed))
-                    self.mutant_receptor_pmrtop = self.receptor_pmrtop
-                    if not self.FILES.stability:
-                        mtif.write('saveamberparm LIG {t} {p}MUT_LIG.inpcrd\n'.format(t=self.mutant_ligand_pmrtop,
-                                                                                      p=self.FILES.prefix))
-                    self.mutant_receptor_pmrtop = None
+                    if self.INPUT['mutant'].lower() in ['rec', 'receptor']:
+                        mtif.write('REC = loadpdb {}\n'.format(self.mutant_receptor_pdb_fixed))
+                        self.mutant_ligand_pmrtop = None
+                        mtif.write('LIG = loadpdb {}\n'.format(self.ligand_pdb_fixed))
+                        if not self.FILES.stability:
+                            mtif.write('saveamberparm REC {t} {p}MUT_REC.inpcrd\n'.format(t=self.mutant_receptor_pmrtop,
+                                                                                          p=self.FILES.prefix))
+                            mtif.write('saveamberparm LIG {t} {p}LIG.inpcrd\n'.format(t=self.ligand_pmrtop,
+                                                                                     p=self.FILES.prefix))
+                    else:
+                        mtif.write('LIG = loadpdb {}\n'.format(self.mutant_ligand_pdb_fixed))
+                        self.mutant_receptor_pmrtop = None
+                        mtif.write('REC = loadpdb {}\n'.format(self.receptor_pdb_fixed))
+                        if not self.FILES.stability:
+                            mtif.write('saveamberparm LIG {t} {p}MUT_LIG.inpcrd\n'.format(t=self.mutant_ligand_pmrtop,
+                                                                                          p=self.FILES.prefix))
+                            mtif.write('saveamberparm REC {t} {p}REC.inpcrd\n'.format(t=self.receptor_pmrtop,
+                                                                                     p=self.FILES.prefix))
                 mtif.write('mut_com = combine { REC LIG }\n')
                 mtif.write('saveamberparm mut_com {t} {p}MUT_COM.inpcrd\n'.format(t=self.mutant_complex_pmrtop,
                                                                                   p=self.FILES.prefix))
