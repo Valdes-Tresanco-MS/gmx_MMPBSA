@@ -3,7 +3,7 @@ In its simplest version, gmx_MMPBSA requires:
 
 * An input parameters file (*.in) -- input file containing all the specifications regarding the type of calculation that
 is going to be performed
-* The structure file (*.tpr, *.pdb, *.gro)
+* The MD Structure+mass(db) file (*.tpr, *.pdb, *.gro) 
 * An index file (*.ndx) -- *.ndx file containing the receptor and ligand in separated groups
 * Receptor and ligand group numbers in the index file
 * A trajectory file (*.xtc, *.pdb, *.gro, *.trr) -- final Gromacs MD trajectory, fitted and with no pbc.
