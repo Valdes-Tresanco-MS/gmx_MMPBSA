@@ -241,7 +241,7 @@ command-line call is shown below:
 
     gmx_MMPBSA -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 1 13 -ct com_traj.xtc
 
-You can found test files in GitHub (https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA/test_files)
+You can found test files in [GitHub](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA/tree/master/test_files)
 
 #### Parallel (MPI) version
 Unlike MMPBSA.py, gmx_MMPBSA will be installed as a separate package from the Amber installation. When installing Amber with mpi,
