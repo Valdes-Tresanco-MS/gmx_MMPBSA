@@ -46,6 +46,7 @@ contain all the parameters needed for the MM/PB(GB)SA calculation. In this case,
 are going to be used when performing the the MM/PB(GB)SA calculation with the igb2 (GB-OBC1) model and a salt 
 concentration = 0.15M.
 
-In this case, [Interaction Entropy (IE)](https://pubs.acs.org/doi/abs/10.1021/jacs.6b02682) will be calculated. Of note,
-two other methods (QH and nmode) can be used for estimating the entropic contribution, though they are way more expensive 
-in computation as compared with IE method.
+[Interaction Entropy (IE)](https://pubs.acs.org/doi/abs/10.1021/jacs.6b02682) will be calculated and the average for the
+last quartile (`entropy_seg=25`) of the total number of frames will be reported. Of note, two other methods (QH and nmode)
+can be used for estimating the entropic contribution, though they are way more expensive in computation as compared 
+with IE method.
