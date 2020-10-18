@@ -1,6 +1,7 @@
-Sample input file for PB calculation (Prot-memb system)
+Sample input file for MMPBSA with membrane proteins
 &general
-startframe=1, endframe=4, verbose=2, interval=1, debug_printlevel=2, use_sander=1,
+startframe=1, endframe=4, interval=1,
+debug_printlevel=2, use_sander=1,
 /
 &pb
 radiopt=0, indi=20.0, istrng=0.150,

@@ -116,7 +116,7 @@ cannot be decomposed. APBS energies cannot be decomposed, either. Neither can PB
 This functionality requires sander from the Amber 11 (or later) package.
 * **QM/MMGBSA**. This is a binding free energy (or stability calculation) using the Generalized Born solvent
 model allowing you to treat part of your system with a quantum mechanical Hamiltonian. See [“Advanced
-Options”](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA#Advanced-Options) for tips about optimizing this option. 
+Options”](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA#Advanced-Options) for tips about optimizing this option. 
 This functionality requires sander from the Amber package.
 * **MM/3D-RISM**. This is a binding free energy (or stability calculation) using the 3D-RISM solvation model.
 This functionality is performed with rism3d.snglpnt built with AmberTools.
@@ -124,43 +124,7 @@ This functionality is performed with rism3d.snglpnt built with AmberTools.
 that is embedded into a membrane. Only use_sander=1 is supported.
 
 ### Two examples...
-#### Protein-protein binding free energy calculations
-In its simplest version, gmx_MMPBSA requires:
 
-* The structure file (*.tpr) -- *.tpr used as input in mdrun program for MD simulation
-* An index file (*.ndx) -- *.ndx file containing the receptor and ligand in separated groups
-* Receptor and ligand group numbers in the index file
-* A trajectory file (*.xtc, *.pdb, *.trr) -- final Gromacs MD trajectory, fitted and with no pbc.
-* An input parameters file (*.in) -- input file containing all the specifications regarding the type of calculation that
-is going to be performed
-
-_See a detailed list of all the flags in gmx_MMPBSA command line [here](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA#calling-gmx_mmpbsa-from-the-command-line)_
-
-That being said, once you are in the folder containing all files, the command-line will be as follows:
-
-    gmx_MMPBSA -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 19 20 -ct com_traj.xtc
-
-where the `mmpbsa.in` input file, is a text file containing the following lines:
-
-```
-Sample input file for GB calculation
-&general
-startframe=5, endframe=21, verbose=2
-/
-&gb
-igb=2, saltcon=0.150,
-/
-```
-
-_See a detailed list of all the options in gmx_MMPBSA input file [here](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA#the-input-file) 
-as well as several [examples](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA#sample-input-files)_
-
-In this case, a single trajectory (ST) approximation is followed, which means the receptor and ligand (in this case, the 
-ligand is also another protein) amber format topologies will be obtained from that of the complex. To do so, a MD *.tpr 
-file (`com.tpr`), an index file (`index.ndx`), a trajectory file (`com_traj.xtc`), and both the receptor and ligand group numbers 
-in the index file (`19 20`) are needed. The `mmpbsa.in` input file will contain all the parameters needed for the 
-MM/PB(GB)SA calculation. In this case, 16 frames `(endframe-startframe)/interval = (21-5)/1 = 16` are going to be used 
-when performing the the MM/PB(GB)SA calculation with the igb5 (GB-OBC2) model and a salt concentration = 0.15M.
 
 #### Protein-ligand binding free energy calculations
 
@@ -184,8 +148,8 @@ igb=2, saltcon=0.150
 /
 ```
 
-_See a detailed list of all the options in gmx_MMPBSA input file [here](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA#the-input-file) 
-as well as several [examples](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA#sample-input-files)_
+_See a detailed list of all the options in gmx_MMPBSA input file [here](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA#the-input-file) 
+as well as several [examples](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA#sample-input-files)_
 
 ### Calling gmx_MMPBSA from the command-line
 gmx_MMPBSA is invoked through the command line as follows:
@@ -237,7 +201,8 @@ Complex:
     ligand info is not defined, we generate them from that of the complex.
 
   -cs <Structure File>  Structure file of the complex. If it is Protein-Ligand (small molecule)
-                         complex, make sure that you define -lm option (default: None)
+                         complex, make sure that you define -lm option. 
+                         Allowed formats: *.tpr (recommended), *.pdb, *.gro (default: None)
   -ci <Index File>      Index file of the bound complex. (default: None)
   -cg index index       Groups of receptor and ligand in complex index file. (default: None)
                          Notation: "-cg <Receptor group> <Ligand group>", ie. -cg 1 13
@@ -334,7 +299,7 @@ normal mode calculations used to approximate vibrational entropies, and &decomp 
 scheme. All of the input variables are described below according to their respective namelists. Integers and floating
 point variables should be typed as-is while strings should be put in either single- or double-quotes. All variables
 should be set with `variable = value` and separated by commas. See several 
-[examples](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA#sample-input-files) below. As you will see, several 
+[examples](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA#sample-input-files) below. As you will see, several 
 calculations can be performed in the same run (_i.e._ &gb and &pb, &gb and &alanine_scanning, &pb and &decomp, etc).
 Variables will usually be matched to the minimum number of characters required to uniquely identify that variable 
 within that namelist. Variables require at least 4 characters to be matched unless that variable name has fewer than 4 
