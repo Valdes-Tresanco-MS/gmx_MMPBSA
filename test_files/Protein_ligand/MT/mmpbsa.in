@@ -1,8 +1,9 @@
 Sample input file for GB calculation
 &general
 startframe=5, endframe=20, verbose=2,
+protein_forcefield=3, ligand_forcefield=1
 /
 &gb
-igb=2, saltcon=0.150,
+igb=5, saltcon=0.150,
 /
 

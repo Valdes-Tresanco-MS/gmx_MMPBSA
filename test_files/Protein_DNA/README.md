@@ -27,15 +27,14 @@ igb=8, saltcon=0.150, intdiel=10
 /
 ```
 
-_See a detailed list of all the options in gmx_MMPBSA input file [here](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA#the-input-file) 
-as well as several [examples](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA#sample-input-files)_
+_See a detailed list of all the options in gmx_MMPBSA input file [here](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA#the-input-file) 
+as well as several [examples](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA#sample-input-files)_
 
 In this case, a single trajectory (ST) approximation is followed, which means the receptor and ligand (in this case, the 
 ligand is DNA) amber format topologies and trajectories will be obtained from that of the complex. To 
-do so, a MD *.tpr file (`com.tpr`), an index file (`index.ndx`), a trajectory file (`com_traj.xtc`), and both the 
-receptor and ligand group numbers in the index file (`1 12`) are needed. The `mmpbsa.in` input file will contain all 
-the parameters needed for the MM/PB(GB)SA calculation. In this case, 16 frames 
-`(endframe-startframe)/interval = (21-5)/1 = 16` are going to be used when performing the the MM/PB(GB)SA calculation 
-with the igb8 (GB-Neck2) model and a salt concentration = 0.15M. Of note, mbondi3 radii (`PBRadii=4`) will be used as 
-recommended for GB-Neck2 solvation model. Also a high dielectric constant `intdiel=10` will be used because of the high 
-number of charged residues at the interface.
+do so, a MD Structure+mass(db) file (`com.tpr`), an index file (`index.ndx`), a trajectory file (`com_traj.xtc`), and
+both the receptor and ligand group numbers in the index file (`1 12`) are needed. The `mmpbsa.in` input file will contain
+all  the parameters needed for the MM/PB(GB)SA calculation. In this case, 16 frames `(endframe-startframe)/interval = (21-5)/1 = 16`
+are going to be used when performing the the MM/PB(GB)SA calculation with the igb8 (GB-Neck2) model and a salt 
+concentration = 0.15M. Of note, mbondi3 radii (`PBRadii=4`) will be used as recommended for GB-Neck2 solvation model. 
+Also a high dielectric constant `intdiel=10` will be used because of the high number of charged residues at the interface.
