@@ -1,0 +1,13 @@
+Sample input file for Alanine scanning
+&general
+startframe=5, endframe=21, verbose=2,
+protein_forcefield=3, PBRadii=4
+/
+&gb
+igb=8, saltcon=0.150, intdiel=10
+/
+&alanine_scanning
+#make sure to change this parameter to 'ligand' is the mutation is going to be performed in the ligand
+mutant='receptor'
+mutant_res='B:65'
+/
