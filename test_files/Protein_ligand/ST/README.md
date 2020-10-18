@@ -1,4 +1,4 @@
-# Protein-ligand binding free energy calculations
+# Protein-ligand binding free energy calculations (Single Trajectory method)
 In this case, gmx_MMPBSA requires:
 
 * An input parameters file (*.in) -- input file containing all the specifications regarding the type of calculation that

@@ -123,33 +123,12 @@ This functionality is performed with rism3d.snglpnt built with AmberTools.
 * **Membrane Protein MMPBSA**. Calculate the MMPBSA binding free energy for a ligand bound to a protein
 that is embedded into a membrane. Only use_sander=1 is supported.
 
-### Two examples...
-
-
-#### Protein-ligand binding free energy calculations
-
-This case is very similar to that of described previously, with the only difference that ligand *.mol2 file must be 
-defined. This *.mol2 file should contain all the charges as well as the bonds for the ligand. A *.mol2 output file from
-[antechamber](http://ambermd.org/tutorials/basic/tutorial4b/index.php) is recommended.
-
-That being said, once you are in the folder containing all files, the command-line will be as follows:
-
-    gmx_MMPBSA -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 1 13 -ct com_traj.xtc -lm ligand.mol2
-
-where the `mmpbsa.in` input file, is a text file containing the following lines:
-
-```
-Sample input file for GB calculation
-&general
-startframe=5, endframe=21, verbose=2
-/
-&gb
-igb=2, saltcon=0.150
-/
-```
-
-_See a detailed list of all the options in gmx_MMPBSA input file [here](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA#the-input-file) 
-as well as several [examples](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA#sample-input-files)_
+### Examples...
+* [Protein-DNA binding free energy calculations](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA/tree/master/test_files/Protein_DNA)
+* [Protein-ligand binding free energy calculations (Single Trajectory method)](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA/tree/master/test_files/Protein_ligand/ST)
+* [Protein-ligand binding free energy calculations (Multiple Trajectory method)](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA/tree/master/test_files/Protein_ligand/MT)
+* [MMPBSA with membrane proteins](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA/tree/master/test_files/Protein_membrane)
+* [Protein-protein binding free energy calculations](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA/tree/master/test_files/Protein_protein)
 
 ### Calling gmx_MMPBSA from the command-line
 gmx_MMPBSA is invoked through the command line as follows:
