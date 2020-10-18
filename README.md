@@ -11,7 +11,7 @@ You can install gmx_MMPBSA from the `stable` version on PYPI:
 
 or the `development` version from GitHub:
 
-    amber.python -m pip git+https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA --upgrade
+    amber.python -m pip git+https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA --upgrade
 
 ### Update
 If you already have installed a previous gmx_MMPBSA version, you can update it as follows:
@@ -22,7 +22,7 @@ If you already have installed a previous gmx_MMPBSA version, you can update it a
 
 `development` version from GitHub:
 
-    amber.python -m pip git+https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA --upgrade 
+    amber.python -m pip git+https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA --upgrade 
     
 **We will do our best to keep the PYPI package up to date.**
 
@@ -34,7 +34,7 @@ we will point out what is new or different. Neither of these should be considere
 should be familiar with Amber and MM/PB(GB)SA method before at-tempting these sorts of calculations. These scripts 
 automate a series of calculations, and cannot trap all the types of errors that might occur. You can review some of the 
 answers to the questions that we consider most common here. If you find a bug or have any question, please consider 
-opening an [issue](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/issues).**
+opening an [issue](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA/issues).**
 
 ## Introduction
 Molecular Mechanics / Poisson Boltzmann (or Generalized Born) Surface Area (MM/PB(GB)SA) calculations is a post-processing
@@ -241,7 +241,7 @@ command-line call is shown below:
 
     gmx_MMPBSA -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 1 13 -ct com_traj.xtc
 
-You can found test files in GitHub (https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/test_files)
+You can found test files in GitHub (https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA/test_files)
 
 #### Parallel (MPI) version
 Unlike MMPBSA.py, gmx_MMPBSA will be installed as a separate package from the Amber installation. When installing Amber with mpi,
