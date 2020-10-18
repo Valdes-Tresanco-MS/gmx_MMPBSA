@@ -19,7 +19,7 @@ where the `mmpbsa.in` input file, is a text file containing the following lines:
 ```
 Sample input file for GB calculation
 &general
-startframe=5, endframe=21, verbose=2, interaval=1,
+startframe=5, endframe=21, verbose=2, interval=1,
 protein_forcefield=3,
 /
 &gb
