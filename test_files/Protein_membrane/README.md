@@ -3,7 +3,7 @@ In this case, gmx_MMPBSA requires:
 
 * An input parameters file (*.in) -- input file containing all the specifications regarding the type of calculation that
 is going to be performed
-* The structure file (*.tpr, *.pdb, *.gro)
+* The MD Structure+mass(db) file (*.tpr, *.pdb, *.gro)
 * An index file (*.ndx) -- *.ndx file containing the receptor and ligand in separated groups
 * Receptor and ligand group numbers in the index file
 * A trajectory file (*.xtc, *.pdb, *.gro, *.trr) -- final Gromacs MD trajectory, fitted and with no pbc.
@@ -38,7 +38,7 @@ _See a detailed list of all the options in gmx_MMPBSA input file [here](https://
 as well as several [examples](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA#sample-input-files)_
 
 In this case, a single trajectory (ST) approximation is followed, which means the receptor and ligand structures and
-trajectories will be obtained from that of the complex. To do so, a MD *.tpr file (`com.pdb`), an index file (`index.ndx`),
+trajectories will be obtained from that of the complex. To do so, a MD Structure+mass(db) file (`com.pdb`), an index file (`index.ndx`),
 a trajectory file (`com_traj.pdb`), and both the receptor and ligand group numbers in the index file (`1 13`) are needed.
 A ligand .mol2 file is also needed for generating the ligand topology. The `mmpbsa.in` input file will contain all the
 parameters needed for the MM/PB(GB)SA calculation. Of note, special parameters for MMPBSA with membrane proteins have
