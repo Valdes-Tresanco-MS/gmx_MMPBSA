@@ -46,7 +46,7 @@ class CheckMakeTop:
         self.FILES = FILES
         self.INPUT = INPUT
         self.external_progs = find_progs(self.INPUT)
-        self.log = open('make_top.log', 'w')
+        self.log = open('make_top.log', 'a')
         self.use_temp = False
         self.print_residues = self.INPUT['print_res'].split()[0] == 'within'  # FIXME: this is pretty ugly
         self.within = 4
