@@ -1,10 +1,24 @@
-# Install
+# Documentation
+**Note: We do not intend to replace the original [MMPBSA.py](https://pubs.acs.org/doi/10.1021/ct300418h); instead, 
+we have implemented and improved some functionalities, and what is most important, made this valuable tool available 
+for Gromacs users. Most of the documentation below is found in the [Amber manual](https://ambermd.org/doc12/Amber20.pdf#chapter.34), 
+we will point out what is new or different. Neither of these should be considered as a “black-box”, and users 
+should be familiar with Amber and MM/PB(GB)SA method before at-tempting these sorts of calculations. These scripts 
+automate a series of calculations, and cannot trap all the types of errors that might occur. You can review some of the 
+answers to the questions that we consider most common here. If you find a bug or have any question, please consider 
+opening an [issue](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA/issues).**
+
 ## Requirements
-gmx_MMPBSA contains a module that allows for plotting the results. For this it requires the installation of PyQt5.
+gmx_MMPBSA requires AmberTools20 to be installed in your machine and the shell environment correctly set up for Amber. 
+For a detailed installation guide, please check [Amber Manual](https://ambermd.org/doc12/Amber20.pdf#section.2.1). Of note,
+you can have more than 1 AmberTools installed in your machine. In case AmberTools20 is not the default Amber in your 
+computer, just make sure to source AmberTools20 before installing/updating/running gmx_MMPBSA.
+
+gmx_MMPBSA contains a module that allows for plotting the results. For this, it requires the installation of PyQt5.
 
     amber.python -m pip install PyQt5
 
-## Install gmx_MMPBSA
+## Installing gmx_MMPBSA
 You can install gmx_MMPBSA from the `stable` version on PYPI:
 
     amber.python -m pip install gmx_MMPBSA
@@ -25,16 +39,6 @@ If you already have installed a previous gmx_MMPBSA version, you can update it a
     amber.python -m pip git+https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA --upgrade 
     
 **We will do our best to keep the PYPI package up to date.**
-
-# Documentation
-**Note: We do not intend to replace the original [MMPBSA.py](https://pubs.acs.org/doi/10.1021/ct300418h); instead, 
-we have implemented and improved some functionalities, and what is most important, made this valuable tool available 
-for Gromacs users. Most of the documentation below is found in the [Amber manual](https://ambermd.org/doc12/Amber20.pdf#chapter.34), 
-we will point out what is new or different. Neither of these should be considered as a “black-box”, and users 
-should be familiar with Amber and MM/PB(GB)SA method before at-tempting these sorts of calculations. These scripts 
-automate a series of calculations, and cannot trap all the types of errors that might occur. You can review some of the 
-answers to the questions that we consider most common here. If you find a bug or have any question, please consider 
-opening an [issue](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA/issues).**
 
 ## Introduction
 Molecular Mechanics / Poisson Boltzmann (or Generalized Born) Surface Area (MM/PB(GB)SA) calculations is a post-processing
@@ -132,6 +136,7 @@ that is embedded into a membrane. Only use_sander=1 is supported.
 * [Alanine scanning](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA/tree/master/test_files/Alanine_scanning)
 * [Decomposition analysis](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA/tree/master/test_files/Decomposition_analysis)
 * [Entropy calculations](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA/tree/master/test_files/Entropy_calculations)
+* [Stability calculations](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA/tree/master/test_files/Stability)
 
 ### Calling gmx_MMPBSA from the command-line
 gmx_MMPBSA is invoked through the command line as follows:
