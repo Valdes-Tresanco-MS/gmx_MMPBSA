@@ -648,42 +648,50 @@ istrng=0.15, fillratio=4.0
 --------------------------------------------------------
 Sample input file for Alanine scanning
 &general
-startframe=5, verbose=2, PBRadii=4,
+startframe=5, endframe=21, verbose=2, interval=1,
+protein_forcefield=3, PBRadii=4
 /
 &gb
-igb=8, saltcon=0.10
+igb=8, saltcon=0.150, intdiel=10
 /
 &alanine_scanning
+#make sure to change this parameter to 'ligand' is the mutation is going to be performed in the ligand
 mutant='receptor'
-mutant_res='A:98'
+mutant_res='B:65'
 /
 --------------------------------------------------------
-Sample input file with nmode analysis
+Sample input file for entropy calculations
 &general
-startframe=5, endframe=100,
-verbose=2
+#
+startframe=5, endframe=21, verbose=2, interval=1,
+#entropy variable control whether to perform a quasi-harmonic entropy (QH) approximation or the 
+#Interaction Entropy (IE)(https://pubs.acs.org/doi/abs/10.1021/jacs.6b02682) approximation
+protein_forcefield=3, entropy=2, entropy_seg=25, entropy_temp=298
 /
 &gb
-igb=5, saltcon=0.150,
+igb=2, saltcon=0.150,
 /
-&nmode
-nmstartframe=2, nmendframe=20, nminterval=2,
-maxcyc=50000, drms=0.0001,
+#uncomment the next 4 lines for normal mode calculations
+#&nmode
+#nmstartframe=5, nmendframe=21, nminterval=2,
+#maxcyc=50000, drms=0.0001,
+#/
 /
 --------------------------------------------------------
-Sample input file with decomposition analysis
 #make sure to include at least one residue from both the receptor
 #and ligand in the print_res mask of the &decomp section.
 #http://archive.ambermd.org/201308/0075.html
 &general
-startframe=5, endframe=100, interval=5,
+startframe=5, endframe=21, interval=1,
 /
 &gb
 igb=5, saltcon=0.150,
 /
 &decomp
 idecomp=2, dec_verbose=3,
-print_res="20, 40-80, 200"
+print_res="within 4"
+#check _GMXMMPBSA_COM_FIXED.pdb file to select which residues are going to be printed in the output file
+#print_res="40-41,44,47,78,81-82,85,88,115,118,122,215,218-220,232,241"
 /
 --------------------------------------------------------
 Sample input file for QM/MMGBSA
