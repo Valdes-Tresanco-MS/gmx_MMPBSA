@@ -655,7 +655,8 @@ protein_forcefield=3, PBRadii=4
 igb=8, saltcon=0.150, intdiel=10
 /
 &alanine_scanning
-#make sure to change this parameter to 'ligand' is the mutation is going to be performed in the ligand
+#make sure to change this parameter to 'ligand' is the mutation is going to be performed 
+#in the ligand
 mutant='receptor'
 mutant_res='B:65'
 /
@@ -690,7 +691,8 @@ igb=5, saltcon=0.150,
 &decomp
 idecomp=2, dec_verbose=3,
 print_res="within 4"
-#check _GMXMMPBSA_COM_FIXED.pdb file to select which residues are going to be printed in the output file
+#check _GMXMMPBSA_COM_FIXED.pdb file to select which residues are going to be printed
+#in the output file
 #print_res="40-41,44,47,78,81-82,85,88,115,118,122,215,218-220,232,241"
 /
 --------------------------------------------------------
