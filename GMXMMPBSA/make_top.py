@@ -162,14 +162,14 @@ class CheckMakeTop:
         if self.FILES.stability:
             if (self.FILES.receptor_tpr or self.FILES.ligand_tpr):
                 warnings.warn(
-                    'When Stability calculation mode is selected receptor and ligand are not needed. However, '
-                    'the receptor and/or the ligand are defined, so we will ignore them.', StabilityWarning)
+                    'When Stability calculation mode is selected, receptor and ligand files are not needed...',
+                    StabilityWarning)
             if self.INPUT['alarun'] and (self.FILES.mutant_receptor_tpr or self.FILES.mutant_ligand_tpr):
                 warnings.warn(
-                    'When Stability calculation mode is selected mutant receptor and/or mutant ligand are not '
-                    'needed. However, the receptor or the ligand (mutant) are defined, so we will ignore them.',
+                    'When Stability calculation mode is selected, mutant receptor/mutant ligand file is not '
+                    'needed...',
                     StabilityWarning)
-            return
+
 
         # wt receptor
         if self.FILES.receptor_tpr:
@@ -447,12 +447,10 @@ class CheckMakeTop:
 
         # if not self.FILES.stability:
             tif.write('REC = loadpdb {}\n'.format(self.receptor_pdb_fixed))
-            if not self.FILES.stability:
-                tif.write('saveamberparm REC {t} {p}REC.inpcrd\n'.format(t=self.receptor_pmrtop, p=self.FILES.prefix))
+            tif.write('saveamberparm REC {t} {p}REC.inpcrd\n'.format(t=self.receptor_pmrtop, p=self.FILES.prefix))
             if not self.FILES.ligand_mol2:
                 tif.write('LIG = loadpdb {}\n'.format(self.ligand_pdb_fixed))
-            if not self.FILES.stability:
-                tif.write('saveamberparm LIG {t} {p}LIG.inpcrd\n'.format(t=self.ligand_pmrtop, p=self.FILES.prefix))
+            tif.write('saveamberparm LIG {t} {p}LIG.inpcrd\n'.format(t=self.ligand_pmrtop, p=self.FILES.prefix))
 
             tif.write('complex = combine { REC LIG }\n')
             tif.write('saveamberparm complex {t} {p}COM.inpcrd\n'.format(t=self.complex_pmrtop, p=self.FILES.prefix))
@@ -476,29 +474,26 @@ class CheckMakeTop:
                     mtif.write('check LIG\n')
                     mtif.write('loadamberparams {}\n'.format(self.ligand_frcmod))
                     mtif.write('REC = loadpdb {}\n'.format(self.mutant_receptor_pdb_fixed))
-                    if not self.FILES.stability:
-                        mtif.write('saveamberparm REC {t} {p}MUT_REC.inpcrd\n'.format(t=self.mutant_receptor_pmrtop,
-                                                                                      p=self.FILES.prefix))
-                        mtif.write('saveamberparm LIG {t} {p}LIG.inpcrd\n'.format(t=self.ligand_pmrtop,
+                    mtif.write('saveamberparm REC {t} {p}MUT_REC.inpcrd\n'.format(t=self.mutant_receptor_pmrtop,
+                                                                                  p=self.FILES.prefix))
+                    mtif.write('saveamberparm LIG {t} {p}LIG.inpcrd\n'.format(t=self.ligand_pmrtop,
                                                                                   p=self.FILES.prefix))
                 else:
                     if self.INPUT['mutant'].lower() in ['rec', 'receptor']:
                         mtif.write('REC = loadpdb {}\n'.format(self.mutant_receptor_pdb_fixed))
                         self.mutant_ligand_pmrtop = None
                         mtif.write('LIG = loadpdb {}\n'.format(self.ligand_pdb_fixed))
-                        if not self.FILES.stability:
-                            mtif.write('saveamberparm REC {t} {p}MUT_REC.inpcrd\n'.format(t=self.mutant_receptor_pmrtop,
+                        mtif.write('saveamberparm REC {t} {p}MUT_REC.inpcrd\n'.format(t=self.mutant_receptor_pmrtop,
                                                                                           p=self.FILES.prefix))
-                            mtif.write('saveamberparm LIG {t} {p}LIG.inpcrd\n'.format(t=self.ligand_pmrtop,
+                        mtif.write('saveamberparm LIG {t} {p}LIG.inpcrd\n'.format(t=self.ligand_pmrtop,
                                                                                      p=self.FILES.prefix))
                     else:
                         mtif.write('LIG = loadpdb {}\n'.format(self.mutant_ligand_pdb_fixed))
                         self.mutant_receptor_pmrtop = None
                         mtif.write('REC = loadpdb {}\n'.format(self.receptor_pdb_fixed))
-                        if not self.FILES.stability:
-                            mtif.write('saveamberparm LIG {t} {p}MUT_LIG.inpcrd\n'.format(t=self.mutant_ligand_pmrtop,
+                        mtif.write('saveamberparm LIG {t} {p}MUT_LIG.inpcrd\n'.format(t=self.mutant_ligand_pmrtop,
                                                                                           p=self.FILES.prefix))
-                            mtif.write('saveamberparm REC {t} {p}REC.inpcrd\n'.format(t=self.receptor_pmrtop,
+                        mtif.write('saveamberparm REC {t} {p}REC.inpcrd\n'.format(t=self.receptor_pmrtop,
                                                                                      p=self.FILES.prefix))
                 mtif.write('mut_com = combine { REC LIG }\n')
                 mtif.write('saveamberparm mut_com {t} {p}MUT_COM.inpcrd\n'.format(t=self.mutant_complex_pmrtop,

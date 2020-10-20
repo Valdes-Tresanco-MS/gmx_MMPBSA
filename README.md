@@ -1,10 +1,24 @@
-# Install
+# Documentation
+**Note: We do not intend to replace the original [MMPBSA.py](https://pubs.acs.org/doi/10.1021/ct300418h); instead, 
+we have implemented and improved some functionalities, and what is most important, made this valuable tool available 
+for Gromacs users. Most of the documentation below is found in the [Amber manual](https://ambermd.org/doc12/Amber20.pdf#chapter.34), 
+we will point out what is new or different. Neither of these should be considered as a “black-box”, and users 
+should be familiar with Amber and MM/PB(GB)SA method before at-tempting these sorts of calculations. These scripts 
+automate a series of calculations, and cannot trap all the types of errors that might occur. You can review some of the 
+answers to the questions that we consider most common here. If you find a bug or have any question, please consider 
+opening an [issue](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA/issues).**
+
 ## Requirements
-gmx_MMPBSA contains a module that allows for plotting the results. For this it requires the installation of PyQt5.
+gmx_MMPBSA requires AmberTools20 to be installed in your machine and the shell environment correctly set up for Amber. 
+For a detailed installation guide, please check [Amber Manual](https://ambermd.org/doc12/Amber20.pdf#section.2.1). Of note,
+you can have more than 1 AmberTools installed in your machine. In case AmberTools20 is not the default Amber in your 
+computer, just make sure to source AmberTools20 before installing/updating/running gmx_MMPBSA.
+
+gmx_MMPBSA contains a module that allows for plotting the results. For this, it requires the installation of PyQt5.
 
     amber.python -m pip install PyQt5
 
-## Install gmx_MMPBSA
+## Installing gmx_MMPBSA
 You can install gmx_MMPBSA from the `stable` version on PYPI:
 
     amber.python -m pip install gmx_MMPBSA
@@ -25,16 +39,6 @@ If you already have installed a previous gmx_MMPBSA version, you can update it a
     amber.python -m pip git+https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA --upgrade 
     
 **We will do our best to keep the PYPI package up to date.**
-
-# Documentation
-**Note: We do not intend to replace the original [MMPBSA.py](https://pubs.acs.org/doi/10.1021/ct300418h); instead, 
-we have implemented and improved some functionalities, and what is most important, made this valuable tool available 
-for Gromacs users. Most of the documentation below is found in the [Amber manual](https://ambermd.org/doc12/Amber20.pdf#chapter.34), 
-we will point out what is new or different. Neither of these should be considered as a “black-box”, and users 
-should be familiar with Amber and MM/PB(GB)SA method before at-tempting these sorts of calculations. These scripts 
-automate a series of calculations, and cannot trap all the types of errors that might occur. You can review some of the 
-answers to the questions that we consider most common here. If you find a bug or have any question, please consider 
-opening an [issue](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA/issues).**
 
 ## Introduction
 Molecular Mechanics / Poisson Boltzmann (or Generalized Born) Surface Area (MM/PB(GB)SA) calculations is a post-processing
@@ -132,6 +136,7 @@ that is embedded into a membrane. Only use_sander=1 is supported.
 * [Alanine scanning](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA/tree/master/test_files/Alanine_scanning)
 * [Decomposition analysis](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA/tree/master/test_files/Decomposition_analysis)
 * [Entropy calculations](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA/tree/master/test_files/Entropy_calculations)
+* [Stability calculations](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA/tree/master/test_files/Stability)
 
 ### Calling gmx_MMPBSA from the command-line
 gmx_MMPBSA is invoked through the command line as follows:
@@ -643,42 +648,52 @@ istrng=0.15, fillratio=4.0
 --------------------------------------------------------
 Sample input file for Alanine scanning
 &general
-startframe=5, verbose=2, PBRadii=4,
+startframe=5, endframe=21, verbose=2, interval=1,
+protein_forcefield=3, PBRadii=4
 /
 &gb
-igb=8, saltcon=0.10
+igb=8, saltcon=0.150, intdiel=10
 /
 &alanine_scanning
+#make sure to change this parameter to 'ligand' is the mutation is going to be performed 
+#in the ligand
 mutant='receptor'
-mutant_res='A:98'
+mutant_res='B:65'
 /
 --------------------------------------------------------
-Sample input file with nmode analysis
+Sample input file for entropy calculations
 &general
-startframe=5, endframe=100,
-verbose=2
+#
+startframe=5, endframe=21, verbose=2, interval=1,
+#entropy variable control whether to perform a quasi-harmonic entropy (QH) approximation or the 
+#Interaction Entropy (IE)(https://pubs.acs.org/doi/abs/10.1021/jacs.6b02682) approximation
+protein_forcefield=3, entropy=2, entropy_seg=25, entropy_temp=298
 /
 &gb
-igb=5, saltcon=0.150,
+igb=2, saltcon=0.150,
 /
-&nmode
-nmstartframe=2, nmendframe=20, nminterval=2,
-maxcyc=50000, drms=0.0001,
+#uncomment the next 4 lines for normal mode calculations
+#&nmode
+#nmstartframe=5, nmendframe=21, nminterval=2,
+#maxcyc=50000, drms=0.0001,
+#/
 /
 --------------------------------------------------------
-Sample input file with decomposition analysis
 #make sure to include at least one residue from both the receptor
 #and ligand in the print_res mask of the &decomp section.
 #http://archive.ambermd.org/201308/0075.html
 &general
-startframe=5, endframe=100, interval=5,
+startframe=5, endframe=21, interval=1,
 /
 &gb
 igb=5, saltcon=0.150,
 /
 &decomp
 idecomp=2, dec_verbose=3,
-print_res="20, 40-80, 200"
+print_res="within 4"
+#check _GMXMMPBSA_COM_FIXED.pdb file to select which residues are going to be printed
+#in the output file
+#print_res="40-41,44,47,78,81-82,85,88,115,118,122,215,218-220,232,241"
 /
 --------------------------------------------------------
 Sample input file for QM/MMGBSA

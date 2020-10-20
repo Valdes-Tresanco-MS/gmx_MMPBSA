@@ -699,7 +699,7 @@ class MMPBSA_App(object):
                           'J. Chem. Theory Comput., 2012, 8 (9) pp 3314-3321\n')
         self.MPI.Finalize()
 
-        if self.FILES.gui:
+        if self.FILES.gui and not self.FILES.stability:
             self.stdout.write('Opening GUI to analyze results...')
             GUI_run(self.FILES.prefix + 'info')
         else:
