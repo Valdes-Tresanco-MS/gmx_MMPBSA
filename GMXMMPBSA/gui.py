@@ -22,6 +22,9 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from GMXMMPBSA import API
+from GMXMMPBSA.make_trajs import Trajectory
+from GMXMMPBSA.utils import PDB
+from GMXMMPBSA.findprogs import find_progs
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
 import matplotlib.pyplot as plt
@@ -180,7 +183,7 @@ class GMX_MMPBSA_GUI(QMainWindow):
         self.mut_gb_data = None
         self.pb_data = None
         self.mut_pb_data = None
-
+        self.decomp = {}
         self.mdi = QMdiArea(self)
         self.setCentralWidget(self.mdi)
 
@@ -389,6 +392,9 @@ class GMX_MMPBSA_GUI(QMainWindow):
     def writeData(self, outfile, data):
         for i in range(len(self.frames)):
             outfile.write(','.join([str(self.frames[i])] + [str(x[1][i]) for x in data]) + '\n')
+
+    def energy2bfactor(self):
+        self.exportpdb.show()
 
     def exportCSV(self):
         out_file = open('TOTAL_ENERGY.csv', 'w')
