@@ -220,64 +220,6 @@ class GMX_MMPBSA_GUI(QMainWindow):
             self.infofile = Path(info_file)
             self.getData()
 
-    def restructureData(self, data):
-        data_out = {}
-        for calc_type in data:
-            data_out[calc_type] = {}
-
-            if calc_type == 'decomp':
-                # gb or pb
-                for decomp_calc_type in data[calc_type]:
-                    data_out[calc_type][decomp_calc_type] = {}
-                    # complex, if stability: receptor, ligand
-                    com = data[calc_type][decomp_calc_type]['complex']
-                    rec = lig = None
-                    if 'receptor' in data[calc_type][decomp_calc_type]:
-                        rec = data[calc_type][decomp_calc_type]['receptor']
-                        lig = data[calc_type][decomp_calc_type]['ligand']
-                    for p in com:
-                        data_out[calc_type][decomp_calc_type][p] = {}
-                        for res in com[p]:
-                            if res not in data_out[calc_type][decomp_calc_type][p]:
-                                data_out[calc_type][decomp_calc_type][p][res] = {}
-                            if self.app.INPUT['idecomp'] in [1, 2]:
-                                if rec and res in rec[p]:
-                                    for para in com[p][res]:
-                                        d = com[p][res][para] - rec[p][res][para]
-                                        data_out[calc_type][decomp_calc_type][p][res][para] = d
-                                elif lig and res in lig[p]:
-                                    for para in com[p][res]:
-                                        d = com[p][res][para] - lig[p][res][para]
-                                        data_out[calc_type][decomp_calc_type][p][res][para] = d
-                            else:
-                                if rec and res in rec[p]:
-                                    for resp, resp1 in zip(com[p][res], rec[p][res]):
-                                        data_out[calc_type][decomp_calc_type][p][res][resp] = {}
-                                        for para in com[p][res][resp]:
-                                            d = com[p][res][resp][para] - rec[p][res][resp1][para]
-                                            data_out[calc_type][decomp_calc_type][p][res][resp][para] = d
-                                    for resp in com[p][res]:
-                                        data_out[calc_type][decomp_calc_type][p][res][resp] = com[p][res][resp]
-                                elif lig and res in lig[p]:
-                                    for resp, resp1 in zip(list(com[p][res])[(len(com[p][res]) - len(lig[p][res])):],
-                                                           lig[p][res]):
-                                        data_out[calc_type][decomp_calc_type][p][res][resp] = {}
-                                        for para in com[p][res][resp]:
-                                            d = com[p][res][resp][para] - lig[p][res][resp1][para]
-                                            data_out[calc_type][decomp_calc_type][p][res][resp][para] = d
-                                    for resp in com[p][res]:
-                                        data_out[calc_type][decomp_calc_type][p][res][resp] = com[p][res][resp]
-            else:
-                com = data[calc_type]['complex']
-                if not self.app.stability:
-                    rec = data[calc_type]['receptor']
-                    lig = data[calc_type]['ligand']
-                    for k in com:
-                        data_out[calc_type][k] = com[k] - (rec[k] + lig[k])
-                else:
-                    data_out[calc_type] = com
-        return data_out
-
     def getData(self):
         os.chdir(self.infofile.parent)
         self.data, self.app = API.load_gmxmmpbsa_info(self.infofile.as_posix())
