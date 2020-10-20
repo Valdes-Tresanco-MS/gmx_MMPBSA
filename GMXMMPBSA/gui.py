@@ -100,6 +100,73 @@ class MplCanvas(FigureCanvasQTAgg):
         super(MplCanvas, self).__init__(fig)
 
 
+class ExportDialog(QDialog):
+    def __init__(self, parent=None):
+        super(ExportDialog, self).__init__(parent)
+        self.parent = parent
+        self.setWindowTitle('Save Energy to b-factor')
+        self.current_frame_s = QSpinBox()
+        self.current_frame_l = QLabel('Frame:')
+
+        self.output_label = QLabel('Output:')
+        self.output_text = QLineEdit('complex_e2bfactor')
+        self.output_text.setPlaceholderText('complex_e2bfactor')
+        self.save_btn = QPushButton('Save')
+        self.save_btn.clicked.connect(self.save)
+        self.close_btn = QPushButton('Close')
+        self.close_btn.clicked.connect(self.close)
+
+        self.out_layout = QHBoxLayout()
+        self.out_layout.addWidget(self.output_label)
+        self.out_layout.addWidget(self.output_text)
+
+        self.frame_layout = QHBoxLayout()
+        self.frame_layout.addWidget(self.current_frame_l)
+        self.frame_layout.addWidget(self.current_frame_s)
+        # self.frame_layout.addWidget(self.interval_l, alignment=Qt.AlignRight)
+        # self.frame_layout.addWidget(self.interval_s)
+
+        self.btn_layout = QHBoxLayout()
+        self.btn_layout.addStretch(1)
+        self.btn_layout.addWidget(self.save_btn, alignment=Qt.AlignRight)
+        self.btn_layout.addWidget(self.close_btn, alignment=Qt.AlignRight)
+
+        self.layout = QVBoxLayout(self)
+        self.layout.addLayout(self.out_layout)
+        # self.layout.addWidget(self.location_btn)
+        self.layout.addLayout(self.frame_layout)
+        self.layout.addLayout(self.btn_layout)
+
+        self.getdata()
+
+    def getdata(self):
+        ext_prog = find_progs(self.parent.app.INPUT)
+        self.ntraj = Trajectory(self.parent.app.FILES.complex_prmtop, self.parent.app.FILES.complex_trajs,
+                                ext_prog['cpptraj'].full_path)
+        self.ntraj.Setup(1, 999999, 1)
+        last = self.parent.app.INPUT['startframe'] + (self.ntraj.processed_frames - 1) * self.parent.app.INPUT['interval']
+        self.current_frame_s.setRange(self.parent.app.INPUT['startframe'], last)
+        self.current_frame_s.setSingleStep(self.parent.app.INPUT['interval'])
+        self.current_frame_s.setValue(self.parent.app.INPUT['startframe'])
+
+    @pyqtSlot()
+    def save(self):
+        self.ntraj.Outtraj('_temp_.pdb', frames=str(self.current_frame_s.value()),
+                           filetype='pdb')
+        self.ntraj.Run('cpptraj.out')
+        pdb = PDB()
+        pdb.parse('_temp_.pdb')
+        with open(str(self.output_text.text()) + '.pdb', 'w') as pdbout:
+            for atm in pdb.allAtoms:
+                if atm['resnum'] in self.parent.decomp:
+                    atm['b_factor'] = self.parent.decomp[atm['resnum']]
+                else:
+                    atm['b_factor'] = 0.0
+                pdbout.write(pdb.getOutLine(atm))
+        os.remove('_temp_.pdb')
+        self.parent.statusbar.showMessage('Saving {} file... Done'.format(self.output_text.text() + '.pdb'))
+        self.close()
+
 class GMX_MMPBSA_GUI(QMainWindow):
     def __init__(self, info_file=None):
         super(GMX_MMPBSA_GUI, self).__init__()
