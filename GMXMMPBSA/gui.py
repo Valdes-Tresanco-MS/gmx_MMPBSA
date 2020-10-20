@@ -518,9 +518,11 @@ class GMX_MMPBSA_GUI(QMainWindow):
                             'yaxis': 'Energy (kcal/mol)', 'data': np.array([x[1] for x in lvl2_meandata])}
 
             elif level in ['nmode', 'qh']:
-                for term in data[level]:
-                    item1 = CustomItem([str(term).upper()])
-                    item1.setCheckState(2, Qt.Unchecked)
+                item.setCheckState(2, Qt.Unchecked)
+                item.datamean = {
+                        'name': mut_pre + 'Entropy ({})'.format(level.upper()),
+                        'xaxis': [x[0].upper() for x in data[level]['delta'].items()], 'yaxis': 'Energy (kcal/mol)',
+                        'data': np.array([x[1] for x in data[level]['delta'].items()])}
 
     def makeTree(self):
         self.treeWidget = QTreeWidget(self)
