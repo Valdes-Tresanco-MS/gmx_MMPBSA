@@ -154,3 +154,54 @@ class Unbuffered(object):
 
     def __getattr__(self, attr):
         return getattr(self._handle, attr)
+
+
+class PDB:
+    def __init__(self):
+
+        self.allAtoms = []
+        self.info = []
+        self.element = None
+
+    def parse(self, filename):
+        ofile = open(filename).readlines()
+        model = 0
+        for line in ofile:
+            if 'MODEL' in line:
+                model += 1
+                if model > 1:
+                    raise ValueError('Only one Model is allowed')
+            elif 'ATOM' in line[0:6] or 'HETATM' in line[0:6]:
+                atm = {}
+                atm['id'] = line[0:6].strip()
+                atm["number"] = int(line[6:11].strip())
+                atm["name"] = line[12:16].strip()
+                atm["alternate_location"] = line[16].strip()
+                atm["resname"] = line[17:21].strip()
+                atm["chain"] = line[21].strip()
+                atm["resnum"] = int(line[22:26].strip())
+                atm["i_code"] = line[26].strip()
+                atm["x"] = float(line[30:38].strip())
+                atm["y"] = float(line[38:46].strip())
+                atm["z"] = float(line[46:54].strip())
+                atm["occupancy"] = float(line[54:60].strip())
+                atm["b_factor"] = float(line[60:66].strip())
+                atm['segment_id'] = line[72:76].strip()
+                atm["element"] = line[76:78]
+                atm["charge"] = line[78:80]
+                self.allAtoms.append(atm)
+            elif 'TER' in line[0:6]:
+                continue
+            elif 'ENDML' in line[0:6]:
+                continue
+            else:
+                self.info.append(line)
+
+    def getOutLine(self, atm):
+        # Create the PDB line.
+        atomrec = '%-6s%5d %-4s%1s%-3s %1s%4d%1s   %8.3f%8.3f%8.3f%6.2f%6.2f      %-4s%2s%-2s\n' % (
+            atm['id'], atm["number"], atm["name"], atm["alternate_location"], atm["resname"], atm["chain"],
+            atm["resnum"], atm["i_code"], atm["x"], atm["y"], atm["z"], atm["occupancy"], atm["b_factor"],
+            atm['segment_id'], atm["element"], atm["charge"]
+        )
+        return atomrec
