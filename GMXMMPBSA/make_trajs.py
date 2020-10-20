@@ -46,10 +46,7 @@ def make_trajectories(INPUT, FILES, size, cpptraj, pre):
     specific trajectories for parallel calculations
     """
 
-    import os
-
-    # If we have a solvated_prmtop, set up our trajectory and strip the solvent
-    stability = not FILES.receptor_prmtop and not FILES.ligand_prmtop
+    stability = FILES.stability
 
     # File suffix is dependent on file type
     if INPUT['netcdf']:
@@ -305,7 +302,7 @@ def make_mutant_trajectories(INPUT, FILES, rank, cpptraj,
     import shutil
     if not INPUT['alarun']: return None, None
 
-    stability = not FILES.receptor_prmtop and not FILES.ligand_prmtop
+    stability = FILES.stability
 
     if INPUT['netcdf']:
         trj_suffix = 'nc'
