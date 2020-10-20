@@ -205,8 +205,13 @@ class GMX_MMPBSA_GUI(QMainWindow):
         self.optionDockWidget.setWindowTitle('Options')
         self.addDockWidget(Qt.RightDockWidgetArea, self.optionDockWidget)
 
-        if self.infofile:
-            self.getData()
+        self.getData()
+        if 'gb' in self.data or 'pb' in self.data:
+            self.fileMenu.addAction('Export GB/PB energy (csv)', self.exportCSV)
+        if 'decomp' in self.data:
+            self.fileMenu.addAction('Energy to bfactor', self.energy2bfactor)
+
+        self.exportpdb = ExportDialog(self)
 
     def getInfoFile(self):
         info_file, _ = QFileDialog.getOpenFileName(self, "Output Directory", QDir.currentPath(), '*_info',
