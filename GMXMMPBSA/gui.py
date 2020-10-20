@@ -327,13 +327,6 @@ class GMX_MMPBSA_GUI(QMainWindow):
                 if s:  # check if any subwindow has been store
                     if s.isVisible():
                         s.close()
-        else:
-            pass
-            # windows = self.mdi.subWindowList()
-            # for x in windows:
-            #     if hasattr(item, 'name'):
-            #         if x.objectName() == btn.name:
-            #             self.mdi.removeSubWindow(x)
 
     def writeData(self, outfile, data):
         for i in range(len(self.frames)):
@@ -343,34 +336,24 @@ class GMX_MMPBSA_GUI(QMainWindow):
         self.exportpdb.show()
 
     def exportCSV(self):
-        out_file = open('TOTAL_ENERGY.csv', 'w')
-
-        if self.gb_data:
-            out_file.write('GB data\n')
-            out_file.write(','.join(['FRAME'] + [x[0].upper() for x in self.gb_data]) + '\n')
-
-            self.writeData(out_file, self.gb_data)
-
-        if self.mut_gb_data:
-            out_file.write('Mutant GB data\n')
-            out_file.write(','.join(['FRAME'] + [x[0].upper() for x in self.mut_gb_data]) + '\n')
-
-            self.writeData(out_file, self.mut_gb_data)
-
-        if self.pb_data:
-            out_file.write('PB data\n')
-            out_file.write(','.join(['FRAME'] + [x[0].upper() for x in self.pb_data]) + '\n')
-            self.writeData(out_file, self.pb_data)
-
-        if self.mut_pb_data:
-            out_file.write('Mutant PB data\n')
-            out_file.write(','.join(['FRAME'] + [x[0].upper() for x in self.mut_pb_data]) + '\n')
-            self.writeData(out_file, self.mut_pb_data)
-
-        out_file.close()
-
-    def makeCSV(self, data):
-        pass
+        with open('TOTAL_ENERGY.csv', 'w') as out_file:
+            if self.gb_data:
+                out_file.write('GB data\n')
+                out_file.write(','.join(['FRAME'] + [x[0].upper() for x in self.gb_data]) + '\n')
+                self.writeData(out_file, self.gb_data)
+            if self.mut_gb_data:
+                out_file.write('Mutant GB data\n')
+                out_file.write(','.join(['FRAME'] + [x[0].upper() for x in self.mut_gb_data]) + '\n')
+                self.writeData(out_file, self.mut_gb_data)
+            if self.pb_data:
+                out_file.write('PB data\n')
+                out_file.write(','.join(['FRAME'] + [x[0].upper() for x in self.pb_data]) + '\n')
+                self.writeData(out_file, self.pb_data)
+            if self.mut_pb_data:
+                out_file.write('Mutant PB data\n')
+                out_file.write(','.join(['FRAME'] + [x[0].upper() for x in self.mut_pb_data]) + '\n')
+                self.writeData(out_file, self.mut_pb_data)
+        self.statusbar.showMessage('Exporting PB/GB energy to csv file... Done.')
 
     def makeItems(self, data, topItem, mutant=False):
         mut_pre = ''
@@ -501,6 +484,8 @@ class GMX_MMPBSA_GUI(QMainWindow):
                             if 'tot' in data[level][level1]['delta'][level2][level3]:  # Per-residue
                                 lvl2_data += lvl3_data
                                 lvl2_meandata.append([level3, lvl3_data.mean()])
+                                if level2 == 'TDC':
+                                    self.decomp[level3] = lvl3_data.mean()
                             else:  # Per-wise
                                 item3.setCheckState(1, Qt.Unchecked)
                                 item3.dataperframe = {
@@ -508,14 +493,17 @@ class GMX_MMPBSA_GUI(QMainWindow):
                                         level1.upper(), level2.upper(), level3), 'xaxis': 'frames',
                                     'yaxis': 'Energy (kcal/mol)', 'frames': self.frames,
                                     'data': lvl3_data}
+                                if level2 == 'TDC':
+                                    self.decomp[level3] = sum([x[1] for x in lvl3_meandata])
                                 lvl3_meandata.extend([['TOTAL', sum([x[1] for x in lvl3_meandata])]])
                                 lvl2_data += lvl3_data
                                 lvl2_meandata.append([level3, lvl3_data.mean()])
+
                                 item3.datamean = {
                                     'name': mut_pre + 'Decomposition ({}) {} Residue {} Energy (Mean) from '
                                                       'Pairs'.format(level1.upper(), level2.upper(), level3),
                                     'xaxis': [x[0] for x in lvl3_meandata], 'yaxis': 'Energy (kcal/mol)',
-                                    'data': np.array([x[1] for x in lvl3_meandata]), }
+                                    'data': np.array([x[1] for x in lvl3_meandata])}
                                 item3.setCheckState(2, Qt.Unchecked)
                         item2.dataperframe = {
                             'name': mut_pre + 'Decomposition ({})  {} Energy (Per-Frame)'.format(
