@@ -131,14 +131,7 @@ class MMPBSA_App(object):
             self.remove(-1)
         elif master and not FILES.rewrite_output:
             self.remove(0)
-        # Find external programs IFF we are doing a calc
-        if not FILES.make_mdins:
-            external_progs = {}
-            if master:
-                external_progs = find_progs(self.INPUT)
-            external_progs = self.MPI.COMM_WORLD.bcast(external_progs, root=0)
-            # Make external_progs an instance attribute
-            self.external_progs = external_progs
+
         # Create input files based on INPUT dict
         if master and not FILES.use_mdins:
             create_inputs(INPUT, self.normal_system, self.pre)
@@ -155,9 +148,8 @@ class MMPBSA_App(object):
 
         if master:
             self.stdout.write('Preparing trajectories for simulation...\n')
-            self.numframes, self.numframes_nmode = make_trajectories(INPUT, FILES,
-                                                                     self.mpi_size, str(external_progs['cpptraj']),
-                                                                     self.pre)
+            self.numframes, self.numframes_nmode = make_trajectories(INPUT, FILES, self.mpi_size,
+                                                                     self.external_progs['cpptraj'].full_path, self.pre)
 
         self.MPI.COMM_WORLD.Barrier()
 
@@ -169,7 +161,7 @@ class MMPBSA_App(object):
         if INPUT['alarun']:
             self.stdout.write('Mutating trajectories...\n')
         self.mut_str, mutant_residue = make_mutant_trajectories(INPUT, FILES,
-                                                                self.mpi_rank, str(external_progs['cpptraj']),
+                                                                self.mpi_rank, self.external_progs['cpptraj'].full_path,
                                                                 self.normal_system, self.mutant_system, self.pre)
 
         self.MPI.COMM_WORLD.Barrier()
@@ -575,9 +567,17 @@ class MMPBSA_App(object):
         # Now load the parms and check them
         self.stdout.write('Loading and checking parameter files for '
                           'compatibility...\n')
+        # Find external programs IFF we are doing a calc
+        if not FILES.make_mdins:
+            external_progs = {}
+            if self.master:
+                external_progs = find_progs(self.INPUT)
+            external_progs = self.MPI.COMM_WORLD.bcast(external_progs, root=0)
+            # Make external_progs an instance attribute
+            self.external_progs = external_progs
 
         # Make amber topologies
-        maketop = CheckMakeTop(FILES, INPUT)
+        maketop = CheckMakeTop(FILES, INPUT, self.external_progs)
         (FILES.complex_prmtop, FILES.receptor_prmtop, FILES.ligand_prmtop, FILES.mutant_complex_prmtop,
          FILES.mutant_receptor_prmtop, FILES.mutant_ligand_prmtop) = maketop.makeToptleap()
 

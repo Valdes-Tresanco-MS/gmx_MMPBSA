@@ -42,10 +42,10 @@ def dist(coor1, coor2):
     return sqrt((coor2[0] - coor1[0]) ** 2 + (coor2[1] - coor1[1]) ** 2 + (coor2[2] - coor1[2]) ** 2)
 
 class CheckMakeTop:
-    def __init__(self, FILES, INPUT):
+    def __init__(self, FILES, INPUT, external_programs):
         self.FILES = FILES
         self.INPUT = INPUT
-        self.external_progs = find_progs(self.INPUT)
+        self.external_progs = external_programs
         self.log = open('make_top.log', 'a')
         self.use_temp = False
         self.print_residues = self.INPUT['print_res'].split()[0] == 'within'  # FIXME: this is pretty ugly
