@@ -51,4 +51,6 @@ are going to be used when performing the the MM/PB(GB)SA calculation with the ig
 concentration = 0.15M.
 
 nmode will be used for estimating the entropic contribution, though it's way more expensive in computation as compared 
-with IE method.
+with IE method. Once the calculation is done, the GUI app (gmx_MMPBSA_gui) will show up. In this app, you can visualize the 
+results for the GB calculation. The results can be saved as *.csv file by clicking "File" in the upper left corner 
+and then "Export GB/PB energy (csv)".
