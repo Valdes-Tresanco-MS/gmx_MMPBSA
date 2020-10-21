@@ -31,11 +31,6 @@ protein_forcefield=3, entropy=2, entropy_seg=25, entropy_temp=298
 &gb
 igb=2, saltcon=0.150,
 /
-#uncomment the next 4 lines for normal mode calculations
-#&nmode
-#nmstartframe=5, nmendframe=21, nminterval=2,
-#maxcyc=50000, drms=0.0001,
-#/
 ```
 
 _See a detailed list of all the options in gmx_MMPBSA input file [here](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA#the-input-file) 

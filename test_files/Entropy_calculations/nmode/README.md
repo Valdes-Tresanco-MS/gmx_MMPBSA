@@ -29,8 +29,10 @@ protein_forcefield=3,
 &gb
 igb=2, saltcon=0.150,
 /
-#note that nmode will use only a fraction of the no. of frames selected in &general variable (21-5/1=16 in this case). This way, nmode will only process 2 frames (15th and 16th frames)
-#note also that some parameters have been change to perform the calculation faster (maxcyc=5, drms=100). The typical values for these parameters are (maxcyc=50000, drms=0.0001)
+#note that nmode will use only a fraction of the no. of frames selected in &general variable (21-5/1=16 in this case).
+#This way, nmode will only process 2 frames (15th and 16th frames)
+#note also that some parameters have been changed to perform the calculation faster (maxcyc=5, drms=100). The typical
+#values for these parameters are (maxcyc=50000, drms=0.0001)
 &nmode
 nmstartframe=15, nmendframe=16, nminterval=1,
 maxcyc=5, drms=100,
@@ -49,4 +51,8 @@ are going to be used when performing the the MM/PB(GB)SA calculation with the ig
 concentration = 0.15M.
 
 nmode will be used for estimating the entropic contribution, though it's way more expensive in computation as compared 
-with IE method.
+with IE method. 
+
+Once the calculation is done, the GUI app (gmx_MMPBSA_gui) will show up. In this app, you can visualize the 
+results for the GB calculation. The results can be saved as *.csv file by clicking "File" in the upper left corner 
+and then "Export GB/PB energy (csv)".
