@@ -1,4 +1,4 @@
-# Protein-protein binding free energy calculations
+# Protein-protein binding free energy calculations with MM/3D-RISM
 In its simplest version, gmx_MMPBSA requires:
 
 * An input parameters file (*.in) -- input file containing all the specifications regarding the type of calculation that
