@@ -525,7 +525,7 @@ class GMX_MMPBSA_GUI(QMainWindow):
                 item.datamean = {
                         'name': mut_pre + 'Entropy ({})'.format(level.upper()),
                         'xaxis': [x[0].upper() for x in data[level]['delta'].items()], 'yaxis': 'Energy (kcal/mol)',
-                        'data': np.array([x[1] for x in data[level]['delta'].items()])}
+                        'data': np.array([x[1][0] for x in data[level]['delta'].items()])}
 
     def makeTree(self):
         self.treeWidget = QTreeWidget(self)
