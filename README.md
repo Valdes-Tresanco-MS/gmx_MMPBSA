@@ -683,6 +683,7 @@ igb=2, saltcon=0.150,
 #/
 /
 --------------------------------------------------------
+Sample input file with decomposition analysis
 #make sure to include at least one residue from both the receptor
 #and ligand in the print_res mask of the &decomp section.
 #http://archive.ambermd.org/201308/0075.html

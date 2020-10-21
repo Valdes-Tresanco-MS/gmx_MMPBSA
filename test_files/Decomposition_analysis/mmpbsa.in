@@ -1,12 +1,16 @@
-#make sure to include at least one residue from both the receptor
-#and ligand in the print_res mask of the &decomp section.
-#http://archive.ambermd.org/201308/0075.html
+Sample input file with decomposition analysis
+#This input file is mean to show only that gmx_MMPBSA works. Althought, we tried to used the input files as recommended in the 
+#Amber manual, some parameters have been changed to perform more expensive calculations. Feel free to change the parameters 
+#according to what is better for your system.
 &general
 startframe=5, endframe=21, interval=1,
 /
 &gb
 igb=5, saltcon=0.150,
 /
+#make sure to include at least one residue from both the receptor
+#and ligand in the print_res mask of the &decomp section.
+#http://archive.ambermd.org/201308/0075.html
 &decomp
 idecomp=2, dec_verbose=3,
 print_res="within 4"
