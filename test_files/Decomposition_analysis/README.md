@@ -55,7 +55,12 @@ that are going to be printed in the output file in two different ways:
 
 Once the calculation is done, the GUI app (gmx_MMPBSA_gui) will show up. In this app, you can visualize the results for 
 the GB calculation as well as the decomposition analysis. The results can be saved as *.csv file by clicking "File" in 
-the upper left corner and then "Export GB/PB energy (csv)". Besides, a *.pdb file can be saved with the per-residue 
-energies in the b-factor column by clicking "File" in the upper left corner and then "Energy to bfactor". This way, 
+the upper left corner and then "Export GB/PB energy (csv)". Besides, a *.pdb file with per-residue energies in the 
+b-factor column, can be saved by clicking "File" in the upper left corner and then "Energy to bfactor". This way, 
 the contribution energy of every residue with its structure can be visualized in a molecular visualization 
-program (_e.g._ PyMOL, Chimera, VMD).
+program.
+
+Follow these tutorials for coloring residues in a *.pdb file according to their contributions:
+* [PyMOL]()
+* [UCSF-Chimera]()
+* [VMD]()

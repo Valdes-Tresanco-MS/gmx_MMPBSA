@@ -42,4 +42,8 @@ trajectories will be obtained from that of the complex. To do so, a MD Structure
 a trajectory file (`com_traj.pdb`), and both the receptor and ligand group numbers in the index file (`1 13`) are needed.
 A ligand .mol2 file is also needed for generating the ligand topology. The `mmpbsa.in` input file will contain all the
 parameters needed for the MM/PB(GB)SA calculation. Of note, special parameters for MMPBSA with membrane proteins have
-been included. See more [here](https://ambermd.org/doc12/Amber20.pdf#subsection.6.2.4)
+been included. See more [here](https://ambermd.org/doc12/Amber20.pdf#subsection.6.2.4).
+
+Once the calculation is done, the GUI app (gmx_MMPBSA_gui) will show up. In this app, you can visualize the results for 
+the PB calculation. The results can be saved as *.csv file by clicking "File" in the upper left corner and then 
+"Export GB/PB energy (csv)".

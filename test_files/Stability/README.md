@@ -40,3 +40,7 @@ concentration = 0.15M.
 
 "Stability" calculation will be performed, and you will get statistics based on only a single system (complex). Any 
 additional receptor or ligand information given will be ignored.
+
+Once the calculation is done, the GUI app (gmx_MMPBSA_gui) will show up. In this app, you can visualize the results for 
+the GB calculation. The results can be saved as *.csv file by clicking "File" in the upper left corner and then 
+"Export GB/PB energy (csv)".

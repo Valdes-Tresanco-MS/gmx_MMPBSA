@@ -50,3 +50,7 @@ concentration = 0.15M.
 last quartile (`entropy_seg=25`) of the total number of frames will be reported. Of note, two other methods (QH and nmode)
 can be used for estimating the entropic contribution, though they are way more expensive in computation as compared 
 with IE method.
+
+Once the calculation is done, the GUI app (gmx_MMPBSA_gui) will show up. In this app, you can visualize the results for 
+the GB calculation. The results can be saved as *.csv file by clicking "File" in the upper left corner and then 
+"Export GB/PB energy (csv)".
