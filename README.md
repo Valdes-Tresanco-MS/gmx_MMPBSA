@@ -133,6 +133,7 @@ that is embedded into a membrane. Only use_sander=1 is supported.
 * [Protein-ligand binding free energy calculations (Multiple Trajectory method)](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA/tree/master/test_files/Protein_ligand/MT) (based on this [tutorial](https://ambermd.org/tutorials/advanced/tutorial3/py_script/section1.php))
 * [MMPBSA with membrane proteins](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA/tree/master/test_files/Protein_membrane)
 * [Protein-protein binding free energy calculations](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA/tree/master/test_files/Protein_protein) (based on this [tutorial](https://ambermd.org/tutorials/advanced/tutorial3/py_script/section2.php))
+* [Protein-protein binding free energy calculations with MM/3D-RISM](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA/tree/master/test_files/3D-RISM)
 * [Alanine scanning](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA/tree/master/test_files/Alanine_scanning) (based on this [tutorial](https://ambermd.org/tutorials/advanced/tutorial3/py_script/section3.php))
 * [Decomposition analysis](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA/tree/master/test_files/Decomposition_analysis) (based on this [tutorial](https://ambermd.org/tutorials/advanced/tutorial3/py_script/section6.php))
 * [Entropy calculations](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA/tree/master/test_files/Entropy_calculations) (based on this [tutorial](https://ambermd.org/tutorials/advanced/tutorial3/py_script/section5.php))
