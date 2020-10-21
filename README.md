@@ -11,7 +11,7 @@ opening an [issue](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA/issues).**
 ## Requirements
 gmx_MMPBSA requires AmberTools20 to be installed in your machine and the shell environment correctly set up for Amber. 
 For a detailed installation guide, please check [Amber Manual](https://ambermd.org/doc12/Amber20.pdf#section.2.1). Of note,
-you can have more than 1 AmberTools installed in your machine. In case AmberTools20 is not the default Amber in your 
+you can have more than one AmberTools installed in your machine. In case AmberTools20 is not the default Amber in your 
 computer, just make sure to source AmberTools20 before installing/updating/running gmx_MMPBSA.
 
 gmx_MMPBSA contains a module that allows for plotting the results. For this, it requires the installation of PyQt5.
