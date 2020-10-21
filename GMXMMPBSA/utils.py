@@ -191,17 +191,23 @@ class PDB:
                 atm["charge"] = line[78:80]
                 self.allAtoms.append(atm)
             elif 'TER' in line[0:6]:
-                continue
+                atm = {}
+                atm['id'] = 'TER'
+                self.allAtoms.append(atm)
             elif 'ENDML' in line[0:6]:
                 continue
             else:
                 self.info.append(line)
 
-    def getOutLine(self, atm):
+    def getOutLine(self, atm, ter=False):
         # Create the PDB line.
-        atomrec = '%-6s%5d %-4s%1s%-3s %1s%4d%1s   %8.3f%8.3f%8.3f%6.2f%6.2f      %-4s%2s%-2s\n' % (
-            atm['id'], atm["number"], atm["name"], atm["alternate_location"], atm["resname"], atm["chain"],
-            atm["resnum"], atm["i_code"], atm["x"], atm["y"], atm["z"], atm["occupancy"], atm["b_factor"],
-            atm['segment_id'], atm["element"], atm["charge"]
-        )
-        return atomrec
+        if ter == False:
+            atomrec = '%-6s%5d %-4s%1s%-3s %1s%4d%1s   %8.3f%8.3f%8.3f%6.2f%6.2f      %-4s%2s%-2s\n' % (
+                atm['id'], atm["number"], atm["name"], atm["alternate_location"], atm["resname"], atm["chain"],
+                atm["resnum"], atm["i_code"], atm["x"], atm["y"], atm["z"], atm["occupancy"], atm["b_factor"],
+                atm['segment_id'], atm["element"], atm["charge"]
+            )
+            return atomrec
+        elif ter == True:
+            atomrec = '%-6s\n' % (atm['id'])
+            return atomrec

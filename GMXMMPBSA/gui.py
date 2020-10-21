@@ -163,12 +163,15 @@ class ExportDialog(QDialog):
         pdb.parse('_temp_.pdb')
         with open(str(self.output_text.text()) + '.pdb', 'w') as pdbout:
             for atm in pdb.allAtoms:
-                if atm['resnum'] in self.parent.decomp and atm['resname'] in std_aa:
-                    atm['b_factor'] = self.parent.decomp[atm['resnum']]
+                if atm['id']=='TER':
+                    pdbout.write(pdb.getOutLine(atm, ter=True))
                 else:
-                    atm['b_factor'] = 0.0
-                pdbout.write(pdb.getOutLine(atm))
-        os.remove('_temp_.pdb')
+                    if atm['resnum'] in self.parent.decomp and atm['resname'] in std_aa:
+                        atm['b_factor'] = self.parent.decomp[atm['resnum']]
+                    else:
+                        atm['b_factor'] = 0.0
+                    pdbout.write(pdb.getOutLine(atm, ter=False))
+        #os.remove('_temp_.pdb')
         self.parent.statusbar.showMessage('Saving {} file... Done'.format(self.output_text.text() + '.pdb'))
         self.close()
 
