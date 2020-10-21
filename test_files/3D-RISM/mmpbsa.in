@@ -1,0 +1,7 @@
+Sample input file for MM/3D-RISM
+&general
+startframe=5, endframe=21,
+/
+&rism
+polardecomp=0, thermo="gf"
+/
