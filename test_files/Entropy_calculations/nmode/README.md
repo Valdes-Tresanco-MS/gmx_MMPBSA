@@ -29,8 +29,10 @@ protein_forcefield=3,
 &gb
 igb=2, saltcon=0.150,
 /
-#note that nmode will use only a fraction of the no. of frames selected in &general variable (21-5/1=16 in this case). This way, nmode will only process 2 frames (15th and 16th frames)
-#note also that some parameters have been change to perform the calculation faster (maxcyc=5, drms=100). The typical values for these parameters are (maxcyc=50000, drms=0.0001)
+#note that nmode will use only a fraction of the no. of frames selected in &general variable (21-5/1=16 in this case).
+#This way, nmode will only process 2 frames (15th and 16th frames)
+#note also that some parameters have been changed to perform the calculation faster (maxcyc=5, drms=100). The typical
+#values for these parameters are (maxcyc=50000, drms=0.0001)
 &nmode
 nmstartframe=15, nmendframe=16, nminterval=1,
 maxcyc=5, drms=100,
