@@ -72,6 +72,7 @@ hand, in the so-called Multiple Trajectory (MT) approximation, the snapshots for
 receptor, and ligand) are extracted from their own trajectory file. This approximation, theoretically more rigorous 
 though, leads to higher standard deviation of the binding free energies.  
 
+### Literature
 Further information can be found in [Amber manual](https://ambermd.org/doc12/Amber20.pdf):
 * [MMPBSA.py](https://ambermd.org/doc12/Amber20.pdf#chapter.34)
 * [The Generalized Born/Surface Area Model](https://ambermd.org/doc12/Amber20.pdf#chapter.4)
