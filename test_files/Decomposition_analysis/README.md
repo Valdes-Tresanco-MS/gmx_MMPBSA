@@ -7,6 +7,7 @@ is going to be performed
 * An index file (*.ndx) -- *.ndx file containing the receptor and ligand in separated groups
 * Receptor and ligand group numbers in the index file
 * A trajectory file (*.xtc, *.pdb, *.gro, *.trr) -- final Gromacs MD trajectory, fitted and with no pbc.
+* A *.mol2 file of the unbound ligand used to parametrize ligand for Gromacs. -- Antechamber output *.mol2 is recommended
 
 _See a detailed list of all the flags in gmx_MMPBSA command line [here](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA#calling-gmx_mmpbsa-from-the-command-line)_
 
@@ -51,3 +52,10 @@ that are going to be printed in the output file in two different ways:
 
 * print_res="within 4" -- print all the residues within 4A of the ligand
 * print_res="40,41,44,47,78,81,82,85,88,115,118,122,215,218,219,220,232,241" -- print those residues in the output file
+
+Once the calculation is done, the GUI app (gmx_MMPBSA_gui) will show up. In this app, you can visualize the results for 
+the GB calculation as well as the decomposition analysis. The results can be saved as *.csv file by clicking "File" in 
+the upper left corner and then "Export GB/PB energy (csv)". Besides, a *.pdb file can be saved with the per-residue 
+energies in the b-factor column by clicking "File" in the upper left corner and then "Energy to bfactor". This way, 
+the contribution energy of every residue with its structure can be visualized in a molecular visualization 
+program (_e.g._ PyMOL, Chimera, VMD).

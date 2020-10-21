@@ -129,13 +129,13 @@ that is embedded into a membrane. Only use_sander=1 is supported.
 
 ### Examples...
 * [Protein-DNA binding free energy calculations](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA/tree/master/test_files/Protein_DNA)
-* [Protein-ligand binding free energy calculations (Single Trajectory method)](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA/tree/master/test_files/Protein_ligand/ST)
-* [Protein-ligand binding free energy calculations (Multiple Trajectory method)](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA/tree/master/test_files/Protein_ligand/MT)
+* [Protein-ligand binding free energy calculations (Single Trajectory method)](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA/tree/master/test_files/Protein_ligand/ST) (based on this [tutorial](https://ambermd.org/tutorials/advanced/tutorial3/py_script/section1.php))
+* [Protein-ligand binding free energy calculations (Multiple Trajectory method)](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA/tree/master/test_files/Protein_ligand/MT) (based on this [tutorial](https://ambermd.org/tutorials/advanced/tutorial3/py_script/section1.php))
 * [MMPBSA with membrane proteins](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA/tree/master/test_files/Protein_membrane)
-* [Protein-protein binding free energy calculations](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA/tree/master/test_files/Protein_protein)
-* [Alanine scanning](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA/tree/master/test_files/Alanine_scanning)
-* [Decomposition analysis](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA/tree/master/test_files/Decomposition_analysis)
-* [Entropy calculations](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA/tree/master/test_files/Entropy_calculations)
+* [Protein-protein binding free energy calculations](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA/tree/master/test_files/Protein_protein) (based on this [tutorial](https://ambermd.org/tutorials/advanced/tutorial3/py_script/section2.php))
+* [Alanine scanning](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA/tree/master/test_files/Alanine_scanning) (based on this [tutorial](https://ambermd.org/tutorials/advanced/tutorial3/py_script/section3.php))
+* [Decomposition analysis](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA/tree/master/test_files/Decomposition_analysis) (based on this [tutorial](https://ambermd.org/tutorials/advanced/tutorial3/py_script/section6.php))
+* [Entropy calculations](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA/tree/master/test_files/Entropy_calculations) (based on this [tutorial](https://ambermd.org/tutorials/advanced/tutorial3/py_script/section5.php))
 * [Stability calculations](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA/tree/master/test_files/Stability)
 
 ### Calling gmx_MMPBSA from the command-line
@@ -561,11 +561,13 @@ to the mdout files to cut down on the size of the mdout files and the time requi
 
 (No default. This must be specified!) This functionality requires sander.
 
-`print_res` Select residues from the complex to print. Default is print all residues. This variable also accepts a 
+`print_res` Select residues from the complex to print. Default is print "within 6". This variable also accepts a 
 sequence of individual residues and/or ranges. The different fields must be either comma- or semicolon-delimited. 
-For example: print_res = “1, 3-10, 15, 100”, or print_res = “1; 3-10; 15; 100”. Both of these will print residues 1, 3 
-through 10, 15, and 100 from the complex topology file and the corresponding residues in either the ligand and/or 
-receptor topology files. 
+For example: print_res = "within 6", where _within_ corresponds to the keyword and _6_ to the maximum distance 
+criterion in Angstroms necessary to select the residues from both the receptor and the ligand; or 
+print_res = “1, 3-10, 15, 100”, or print_res = “1; 3-10; 15; 100”. Both of these will print residues 1, 3 
+through 10, 15, and 100 from the complex topology file and the corresponding residues in either the ligand 
+and/or receptor topology files.
 
 ```diff
 - *Please note: Using idecomp=3 or 4 (pairwise) with a very large number of printed residues and a
