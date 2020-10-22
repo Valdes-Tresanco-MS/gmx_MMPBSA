@@ -112,8 +112,8 @@ be to an alanine. If mutant_only is not set to 1, differences resulting from the
 option is incompatible with intermediate NetCDF trajectories (see the netcdf = 1 option above). This has the
 same program requirements as option 1 above.
 * **Entropy corrections**. An entropy term can be added to the free energies calculated above using either the
-quasi-harmonic approximation, the normal mode approximation or interaction entropy approximations. Calculations will be 
-done for the normal and mutated systems (alanine scanning) as requested. Normal mode calculations are done with the
+quasi-harmonic, the normal mode or interaction entropy approximations. Calculations will be PERFORMED for the normal 
+and mutated systems (alanine scanning) as requested. Normal mode calculations are done with the
 mmpbsa_py_nabnmode program included with AmberTools.
 * **Decomposition schemes**. The energy terms will be decomposed according to the decomposition scheme
 outlined in the idecomp variable description. This should work with all of the above, though entropy terms
