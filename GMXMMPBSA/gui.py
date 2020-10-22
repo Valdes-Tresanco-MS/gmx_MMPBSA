@@ -27,7 +27,6 @@ from GMXMMPBSA.utils import PDB
 from GMXMMPBSA.findprogs import find_progs
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
-import matplotlib.pyplot as plt
 import matplotlib.backend_bases
 from matplotlib.backends import qt_compat
 from matplotlib.figure import Figure
@@ -37,11 +36,15 @@ from math import ceil
 std_aa = ['ALA', 'ARG', 'ASN', 'ASP', 'CYS', 'CYX', 'GLN', 'GLU', 'GLY', 'HID', 'HIE', 'HIP', 'ILE', 'LEU', 'LYS',
           'MET', 'PHE', 'PRO', 'SER', 'THR', 'TRP', 'TYR', 'VAL', 'HIS']
 
+
 class NavigationToolbar(NavigationToolbar2QT):
     """
     overwrite NavigatorToolbar to get control over save action.
     Now we can set custom dpi value
     """
+
+    def _init_toolbar(self):
+        pass
 
     def save_figure(self, *args):
         filetypes = self.canvas.get_supported_filetypes_grouped()
@@ -149,7 +152,8 @@ class ExportDialog(QDialog):
         self.ntraj = Trajectory(self.parent.app.FILES.complex_prmtop, self.parent.app.FILES.complex_trajs,
                                 ext_prog['cpptraj'].full_path)
         self.ntraj.Setup(1, 999999, 1)
-        last = self.parent.app.INPUT['startframe'] + (self.ntraj.processed_frames - 1) * self.parent.app.INPUT['interval']
+        last = self.parent.app.INPUT['startframe'] + (self.ntraj.processed_frames - 1) * self.parent.app.INPUT[
+            'interval']
         self.current_frame_s.setRange(self.parent.app.INPUT['startframe'], last)
         self.current_frame_s.setSingleStep(self.parent.app.INPUT['interval'])
         self.current_frame_s.setValue(self.parent.app.INPUT['startframe'])
@@ -163,7 +167,7 @@ class ExportDialog(QDialog):
         pdb.parse('_temp_.pdb')
         with open(str(self.output_text.text()) + '.pdb', 'w') as pdbout:
             for atm in pdb.allAtoms:
-                if atm['id']=='TER':
+                if atm['id'] == 'TER':
                     pdbout.write(pdb.getOutLine(atm, ter=True))
                 else:
                     if atm['resnum'] in self.parent.decomp and atm['resname'] in std_aa:
@@ -171,9 +175,10 @@ class ExportDialog(QDialog):
                     else:
                         atm['b_factor'] = 0.0
                     pdbout.write(pdb.getOutLine(atm, ter=False))
-        #os.remove('_temp_.pdb')
+        # os.remove('_temp_.pdb')
         self.parent.statusbar.showMessage('Saving {} file... Done'.format(self.output_text.text() + '.pdb'))
         self.close()
+
 
 class ExportDialogCSV(QDialog):
     def __init__(self, parent=None):
@@ -223,6 +228,7 @@ class ExportDialogCSV(QDialog):
                 self.parent.writeData(out_file, self.parent.mut_pb_data)
         self.parent.statusbar.showMessage('Exporting PB/GB energy to csv file... Done.')
         self.close()
+
 
 class GMX_MMPBSA_GUI(QMainWindow):
     def __init__(self, info_file=None):
@@ -431,7 +437,7 @@ class GMX_MMPBSA_GUI(QMainWindow):
                         itemd.datamean = {
                             'name': mut_pre + '{} Binding Energy (with Entropy (nmode))'.format(level.upper()),
                             'xaxis': ['ΔH', '-TΔS', 'ΔG'], 'yaxis': 'Energy (kcal/mol)',
-                            'data': np.array([dh, entropy*-1, dh - entropy])}
+                            'data': np.array([dh, entropy * -1, dh - entropy])}
                         item.addChild(itemd)
                     if level1 == 'DELTA TOTAL' and 'qh' in data:
                         itemd = CustomItem(['DELTA G Binding (QH)'])
@@ -440,14 +446,14 @@ class GMX_MMPBSA_GUI(QMainWindow):
                         itemd.datamean = {
                             'name': mut_pre + '{} Binding Energy (with Entropy (qh))'.format(level.upper()),
                             'xaxis': ['ΔH', '-TΔS', 'ΔG'], 'yaxis': 'Energy (kcal/mol)',
-                            'data': np.array([dh, entropy*-1, dh - entropy])}
+                            'data': np.array([dh, entropy * -1, dh - entropy])}
                         item.addChild(itemd)
                     if level1 == '-TDS':
                         itemd = CustomItem(['DELTA G Binding (IE)'])
                         itemd.setCheckState(2, Qt.Unchecked)
                         s = 1
-                        if len(data[level]['delta']['-TDS']) * self.app.INPUT['entropy_seg']/100 > 1:
-                            s = ceil(len(data[level]['delta']['-TDS']) * (1 - self.app.INPUT['entropy_seg']/100))
+                        if len(data[level]['delta']['-TDS']) * self.app.INPUT['entropy_seg'] / 100 > 1:
+                            s = ceil(len(data[level]['delta']['-TDS']) * (1 - self.app.INPUT['entropy_seg'] / 100))
                         ts = data[level]['delta']['-TDS'][s:].mean()
                         itemd.datamean = {
                             'name': mut_pre + '{} Total Energy (with Entropy)'.format(level.upper()),
@@ -500,12 +506,14 @@ class GMX_MMPBSA_GUI(QMainWindow):
                                             'xaxis': 'frames', 'yaxis': 'Energy (kcal/mol)', 'frames': self.frames,
                                             'data': data[level][level1]['delta'][level2][level3][level4][level5]}
                                         lvl5_meandata.append(
-                                            [level5, data[level][level1]['delta'][level2][level3][level4][level5].mean()])
+                                            [level5,
+                                             data[level][level1]['delta'][level2][level3][level4][level5].mean()])
                                         if level5 == 'tot':
                                             item5.setCheckState(2, Qt.Unchecked)
                                             lvl3_data += data[level][level1]['delta'][level2][level3][level4][level5]
                                             lvl3_meandata.append(
-                                                [level4, data[level][level1]['delta'][level2][level3][level4][level5].mean()])
+                                                [level4,
+                                                 data[level][level1]['delta'][level2][level3][level4][level5].mean()])
 
                                             item5.datamean = {
                                                 'name': mut_pre + 'Decomposition ({}) {} Residue {} Pair {} '
@@ -574,9 +582,9 @@ class GMX_MMPBSA_GUI(QMainWindow):
             elif level in ['nmode', 'qh']:
                 item.setCheckState(2, Qt.Unchecked)
                 item.datamean = {
-                        'name': mut_pre + 'Entropy ({})'.format(level.upper()),
-                        'xaxis': [x[0].upper() for x in data[level]['delta'].items()], 'yaxis': 'Energy (kcal/mol)',
-                        'data': np.array([x[1][0] for x in data[level]['delta'].items()])}
+                    'name': mut_pre + 'Entropy ({})'.format(level.upper()),
+                    'xaxis': [x[0].upper() for x in data[level]['delta'].items()], 'yaxis': 'Energy (kcal/mol)',
+                    'data': np.array([x[1][0] for x in data[level]['delta'].items()])}
 
     def makeTree(self):
         self.treeWidget = QTreeWidget(self)
@@ -598,12 +606,14 @@ class GMX_MMPBSA_GUI(QMainWindow):
 
         self.treeWidget.header().setSectionResizeMode(QHeaderView.ResizeToContents)
 
+
 def run(infofile):
     app = QApplication(sys.argv)
     app.setApplicationName('GMX-MMPBSA')
     w = GMX_MMPBSA_GUI(infofile)
     w.show()
     sys.exit(app.exec())
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
