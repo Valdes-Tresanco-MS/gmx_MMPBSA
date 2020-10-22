@@ -175,6 +175,55 @@ class ExportDialog(QDialog):
         self.parent.statusbar.showMessage('Saving {} file... Done'.format(self.output_text.text() + '.pdb'))
         self.close()
 
+class ExportDialogCSV(QDialog):
+    def __init__(self, parent=None):
+        super(ExportDialogCSV, self).__init__(parent)
+        self.parent = parent
+        self.setWindowTitle('Export Energy to CSV')
+
+        self.output_label = QLabel('Output:')
+        self.output_text = QLineEdit('TOTAL_ENERGY')
+        self.output_text.setPlaceholderText('TOTAL_ENERGY')
+        self.save_btn = QPushButton('Save')
+        self.save_btn.clicked.connect(self.save)
+        self.close_btn = QPushButton('Close')
+        self.close_btn.clicked.connect(self.close)
+
+        self.out_layout = QHBoxLayout()
+        self.out_layout.addWidget(self.output_label)
+        self.out_layout.addWidget(self.output_text)
+
+        self.btn_layout = QHBoxLayout()
+        self.btn_layout.addStretch(1)
+        self.btn_layout.addWidget(self.save_btn, alignment=Qt.AlignRight)
+        self.btn_layout.addWidget(self.close_btn, alignment=Qt.AlignRight)
+
+        self.layout = QVBoxLayout(self)
+        self.layout.addLayout(self.out_layout)
+        self.layout.addLayout(self.btn_layout)
+
+    @pyqtSlot()
+    def save(self):
+        with open(str(self.output_text.text()) + '.csv', 'w') as out_file:
+            if self.parent.gb_data:
+                out_file.write('GB data\n')
+                out_file.write(','.join(['FRAME'] + [x[0].upper() for x in self.parent.gb_data]) + '\n')
+                self.parent.writeData(out_file, self.parent.gb_data)
+            if self.parent.mut_gb_data:
+                out_file.write('Mutant GB data\n')
+                out_file.write(','.join(['FRAME'] + [x[0].upper() for x in self.parent.mut_gb_data]) + '\n')
+                self.parent.writeData(out_file, self.parent.mut_gb_data)
+            if self.parent.pb_data:
+                out_file.write('PB data\n')
+                out_file.write(','.join(['FRAME'] + [x[0].upper() for x in self.parent.pb_data]) + '\n')
+                self.parent.writeData(out_file, self.parent.pb_data)
+            if self.parent.mut_pb_data:
+                out_file.write('Mutant PB data\n')
+                out_file.write(','.join(['FRAME'] + [x[0].upper() for x in self.parent.mut_pb_data]) + '\n')
+                self.parent.writeData(out_file, self.parent.mut_pb_data)
+        self.parent.statusbar.showMessage('Exporting PB/GB energy to csv file... Done.')
+        self.close()
+
 class GMX_MMPBSA_GUI(QMainWindow):
     def __init__(self, info_file=None):
         super(GMX_MMPBSA_GUI, self).__init__()
@@ -217,6 +266,7 @@ class GMX_MMPBSA_GUI(QMainWindow):
             self.fileMenu.addAction('Energy to bfactor', self.energy2bfactor)
 
         self.exportpdb = ExportDialog(self)
+        self.exportcsv = ExportDialogCSV(self)
 
     def getInfoFile(self):
         info_file, _ = QFileDialog.getOpenFileName(self, "Output Directory", QDir.currentPath(), '*_info',
@@ -341,24 +391,7 @@ class GMX_MMPBSA_GUI(QMainWindow):
         self.exportpdb.show()
 
     def exportCSV(self):
-        with open('TOTAL_ENERGY.csv', 'w') as out_file:
-            if self.gb_data:
-                out_file.write('GB data\n')
-                out_file.write(','.join(['FRAME'] + [x[0].upper() for x in self.gb_data]) + '\n')
-                self.writeData(out_file, self.gb_data)
-            if self.mut_gb_data:
-                out_file.write('Mutant GB data\n')
-                out_file.write(','.join(['FRAME'] + [x[0].upper() for x in self.mut_gb_data]) + '\n')
-                self.writeData(out_file, self.mut_gb_data)
-            if self.pb_data:
-                out_file.write('PB data\n')
-                out_file.write(','.join(['FRAME'] + [x[0].upper() for x in self.pb_data]) + '\n')
-                self.writeData(out_file, self.pb_data)
-            if self.mut_pb_data:
-                out_file.write('Mutant PB data\n')
-                out_file.write(','.join(['FRAME'] + [x[0].upper() for x in self.mut_pb_data]) + '\n')
-                self.writeData(out_file, self.mut_pb_data)
-        self.statusbar.showMessage('Exporting PB/GB energy to csv file... Done.')
+        self.exportcsv.show()
 
     def makeItems(self, data, topItem, mutant=False):
         mut_pre = ''
