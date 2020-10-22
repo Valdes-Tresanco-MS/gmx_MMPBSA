@@ -112,8 +112,8 @@ be to an alanine. If mutant_only is not set to 1, differences resulting from the
 option is incompatible with intermediate NetCDF trajectories (see the netcdf = 1 option above). This has the
 same program requirements as option 1 above.
 * **Entropy corrections**. An entropy term can be added to the free energies calculated above using either the
-quasi-harmonic approximation, the normal mode approximation or interaction entropy approximations. Calculations will be 
-done for the normal and mutated systems (alanine scanning) as requested. Normal mode calculations are done with the
+quasi-harmonic, the normal mode or interaction entropy approximations. Calculations will be PERFORMED for the normal 
+and mutated systems (alanine scanning) as requested. Normal mode calculations are done with the
 mmpbsa_py_nabnmode program included with AmberTools.
 * **Decomposition schemes**. The energy terms will be decomposed according to the decomposition scheme
 outlined in the idecomp variable description. This should work with all of the above, though entropy terms
@@ -137,7 +137,8 @@ that is embedded into a membrane. Only use_sander=1 is supported.
 * [Protein-protein binding free energy calculations with MM/3D-RISM](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA/tree/master/test_files/3D-RISM)
 * [Alanine scanning](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA/tree/master/test_files/Alanine_scanning) (based on this [tutorial](https://ambermd.org/tutorials/advanced/tutorial3/py_script/section3.php))
 * [Decomposition analysis](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA/tree/master/test_files/Decomposition_analysis) (based on this [tutorial](https://ambermd.org/tutorials/advanced/tutorial3/py_script/section6.php))
-* [Entropy calculations](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA/tree/master/test_files/Entropy_calculations) (based on this [tutorial](https://ambermd.org/tutorials/advanced/tutorial3/py_script/section5.php))
+* [Entropy calculations with normal modes](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA/tree/master/test_files/Entropy_calculations/nmode) (based on this [tutorial](https://ambermd.org/tutorials/advanced/tutorial3/py_script/section5.php))
+* [Entropy calculations with Interaction Entropy](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA/tree/master/test_files/Entropy_calculations/Interaction_Entropy)
 * [Stability calculations](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA/tree/master/test_files/Stability)
 
 ### Calling gmx_MMPBSA from the command-line
