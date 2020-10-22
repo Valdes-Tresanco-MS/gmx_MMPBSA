@@ -391,8 +391,26 @@ class GMX_MMPBSA_GUI(QMainWindow):
                             'data': np.array([x[1] for x in cd])}
                         dh = data[level]['delta'][level1].mean()
                     item.addChild(item1)
+                    if level1 == 'DELTA TOTAL' and 'nmode' in data:
+                        itemd = CustomItem(['DELTA G Binding (NM)'])
+                        itemd.setCheckState(2, Qt.Unchecked)
+                        entropy = data['nmode']['delta']['Total'][0]
+                        itemd.datamean = {
+                            'name': mut_pre + '{} Binding Energy (with Entropy (nmode))'.format(level.upper()),
+                            'xaxis': ['ΔH', '-TΔS', 'ΔG'], 'yaxis': 'Energy (kcal/mol)',
+                            'data': np.array([dh, entropy*-1, dh - entropy])}
+                        item.addChild(itemd)
+                    if level1 == 'DELTA TOTAL' and 'qh' in data:
+                        itemd = CustomItem(['DELTA G Binding (QH)'])
+                        itemd.setCheckState(2, Qt.Unchecked)
+                        entropy = data['qh']['delta']['Total'][0]
+                        itemd.datamean = {
+                            'name': mut_pre + '{} Binding Energy (with Entropy (qh))'.format(level.upper()),
+                            'xaxis': ['ΔH', '-TΔS', 'ΔG'], 'yaxis': 'Energy (kcal/mol)',
+                            'data': np.array([dh, entropy*-1, dh - entropy])}
+                        item.addChild(itemd)
                     if level1 == '-TDS':
-                        itemd = CustomItem(['DELTA G'])
+                        itemd = CustomItem(['DELTA G Binding (IE)'])
                         itemd.setCheckState(2, Qt.Unchecked)
                         s = 1
                         if len(data[level]['delta']['-TDS']) * self.app.INPUT['entropy_seg']/100 > 1:
@@ -400,7 +418,7 @@ class GMX_MMPBSA_GUI(QMainWindow):
                         ts = data[level]['delta']['-TDS'][s:].mean()
                         itemd.datamean = {
                             'name': mut_pre + '{} Total Energy (with Entropy)'.format(level.upper()),
-                            'xaxis': ['Enthalpy', 'Entropy', 'Delta G'], 'yaxis': 'Energy (kcal/mol)',
+                            'xaxis': [['ΔH', '-TΔS', 'ΔG']], 'yaxis': 'Energy (kcal/mol)',
                             'data': np.array([dh, ts, dh + ts])}
                         item.addChild(itemd)
                 # To export data in csv
