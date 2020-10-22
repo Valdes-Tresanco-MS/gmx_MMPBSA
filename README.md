@@ -137,7 +137,8 @@ that is embedded into a membrane. Only use_sander=1 is supported.
 * [Protein-protein binding free energy calculations with MM/3D-RISM](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA/tree/master/test_files/3D-RISM)
 * [Alanine scanning](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA/tree/master/test_files/Alanine_scanning) (based on this [tutorial](https://ambermd.org/tutorials/advanced/tutorial3/py_script/section3.php))
 * [Decomposition analysis](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA/tree/master/test_files/Decomposition_analysis) (based on this [tutorial](https://ambermd.org/tutorials/advanced/tutorial3/py_script/section6.php))
-* [Entropy calculations](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA/tree/master/test_files/Entropy_calculations) (based on this [tutorial](https://ambermd.org/tutorials/advanced/tutorial3/py_script/section5.php))
+* [Entropy calculations with normal modes](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA/tree/master/test_files/Entropy_calculations/nmode) (based on this [tutorial](https://ambermd.org/tutorials/advanced/tutorial3/py_script/section5.php))
+* [Entropy calculations with Interaction Entropy](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA/tree/master/test_files/Entropy_calculations/Interaction_Entropy)
 * [Stability calculations](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA/tree/master/test_files/Stability)
 
 ### Calling gmx_MMPBSA from the command-line
