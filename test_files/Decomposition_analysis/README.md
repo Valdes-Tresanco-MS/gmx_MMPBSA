@@ -65,6 +65,6 @@ the contribution energy of every residue with its structure can be visualized in
 program.
 
 Follow these tutorials for coloring residues in a *.pdb file according to their contributions:
-* [PyMOL]()
-* [UCSF-Chimera]()
-* [VMD]()
+* [PyMOL](https://youtu.be/ScoMb6Am6II)
+* [UCSF-Chimera](https://youtu.be/jKA4fuYuKps)
+* [VMD](https://youtu.be/PeboM8KE5SA)
