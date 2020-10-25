@@ -113,7 +113,7 @@ class CheckMakeTop:
         c2 = subprocess.Popen(make_ndx + ['-n', self.FILES.complex_index, '-o', com_ndx],
                               stdin=c1.stdout, stdout=self.log, stderr=self.log)
         if c2.wait():  # if it quits with return code != 0
-            raise MMPBSA_Error('%s failed when querying %s' % (gmx + 'make_ndx', self.FILES.receptor_tpr))
+            raise MMPBSA_Error('%s failed when querying %s' % (' '.join(make_ndx), self.FILES.receptor_tpr))
         self.FILES.complex_index = com_ndx
 
         c3 = subprocess.Popen(['echo', 'GMXMMPBSA_REC_GMXMMPBSA_LIG'], stdout=subprocess.PIPE)
@@ -122,7 +122,7 @@ class CheckMakeTop:
                                '-o', self.complex_pdb, '-n', self.FILES.complex_index, '-b', '0', '-e', '0'],
                               stdin=c3.stdout, stdout=self.log, stderr=self.log)
         if c4.wait():  # if it quits with return code != 0
-            raise MMPBSA_Error('%s failed when querying %s' % (gmx + 'trjconv', self.FILES.complex_tpr))
+            raise MMPBSA_Error('%s failed when querying %s' % (' '.join(trjconv), self.FILES.complex_tpr))
 
         # clear trajectory
         if self.INPUT['solvated_trajectory']:
@@ -136,7 +136,7 @@ class CheckMakeTop:
                                        self.FILES.complex_index], # FIXME: start and end frames???
                                       stdin=c5.stdout, stdout=self.log, stderr=self.log)
                 if c6.wait():  # if it quits with return code != 0
-                    raise MMPBSA_Error('%s failed when querying %s' % (gmx + 'trjconv', self.FILES.complex_tpr))
+                    raise MMPBSA_Error('%s failed when querying %s' % (' '.join(trjconv), self.FILES.complex_tpr))
                 new_trajs.append('COM_traj_{}.xtc'.format(i))
             self.FILES.complex_trajs = new_trajs
 
@@ -164,7 +164,7 @@ class CheckMakeTop:
                      'rec_temp.pdb', '-n', self.FILES.complex_index, '-b', '0', '-e', '0'],
                     stdin=cp1.stdout, stdout=self.log, stderr=self.log)
                 if cp2.wait():  # if it quits with return code != 0
-                    raise MMPBSA_Error('%s failed when querying %s' % (gmx + 'make_ndx', self.FILES.complex_tpr))
+                    raise MMPBSA_Error('%s failed when querying %s' % (' '.join(trjconv), self.FILES.complex_tpr))
 
         # check if stability
         if self.FILES.stability:
@@ -190,7 +190,7 @@ class CheckMakeTop:
                                     '-o', self.receptor_pdb, '-n', self.FILES.receptor_index, '-b', '0', '-e', '0'],
                                    stdin=p1.stdout, stdout=self.log, stderr=self.log)
             if cp2.wait():  # if it quits with return code != 0
-                raise MMPBSA_Error('%s failed when querying %s' % (gmx + 'make_ndx', self.FILES.receptor_tpr))
+                raise MMPBSA_Error('%s failed when querying %s' % (' '.join(trjconv), self.FILES.receptor_tpr))
             # clear trajectory
             if self.INPUT['solvated_trajectory']:
                 print('Clear normal receptor trajectories...')
@@ -204,7 +204,7 @@ class CheckMakeTop:
                          self.FILES.receptor_index],  # FIXME: start and end frames???
                         stdin=c5.stdout, stdout=self.log, stderr=self.log)
                     if c6.wait():  # if it quits with return code != 0
-                        raise MMPBSA_Error('%s failed when querying %s' % (gmx + 'trjconv', self.FILES.receptor_tpr))
+                        raise MMPBSA_Error('%s failed when querying %s' % (' '.join(trjconv), self.FILES.receptor_tpr))
                     new_trajs.append('REC_traj_{}.xtc'.format(i))
                 self.FILES.receptor_trajs = new_trajs
         else:
@@ -220,7 +220,7 @@ class CheckMakeTop:
                  self.receptor_pdb, '-n', self.FILES.complex_index, '-b', '0', '-e', '0'],
                 stdin=cp1.stdout, stdout=self.log, stderr=self.log)
             if cp2.wait():  # if it quits with return code != 0
-                raise MMPBSA_Error('%s failed when querying %s' % (gmx + 'make_ndx', self.FILES.complex_tpr))
+                raise MMPBSA_Error('%s failed when querying %s' % (' '.join(trjconv), self.FILES.complex_tpr))
 
         # ligand
         # # check consistence
@@ -233,7 +233,7 @@ class CheckMakeTop:
                                    '-b', '0', '-e', '0'],
                                   stdin=l1.stdout, stdout=self.log, stderr=self.log)
             if l2.wait():  # if it quits with return code != 0
-                raise MMPBSA_Error('%s failed when querying %s' % (gmx + 'make_ndx', self.FILES.ligand_tpr))
+                raise MMPBSA_Error('%s failed when querying %s' % (' '.join(trjconv), self.FILES.ligand_tpr))
 
             # clear trajectory
             if self.INPUT['solvated_trajectory']:
@@ -248,7 +248,7 @@ class CheckMakeTop:
                         stdin=c5.stdout, stdout=self.log, stderr=self.log)
                     if c6.wait():  # if it quits with return code != 0
                         raise MMPBSA_Error(
-                            '%s failed when querying %s' % (gmx + 'trjconv', self.FILES.ligand_tpr))
+                            '%s failed when querying %s' % (' '.join(trjconv), self.FILES.ligand_tpr))
                     new_trajs.append('LIG_traj_{}.xtc'.format(i))
                 self.FILES.ligand_trajs = new_trajs
         else:
@@ -262,7 +262,7 @@ class CheckMakeTop:
                                     '-o', self.ligand_pdb, '-n', self.FILES.complex_index, '-b', '0', '-e', '0'],
                                    stdin=cl1.stdout, stdout=self.log, stderr=self.log)
             if cl2.wait():  # if it quits with return code != 0
-                raise MMPBSA_Error('%s failed when querying %s' % (gmx + 'make_ndx', self.FILES.complex_tpr))
+                raise MMPBSA_Error('%s failed when querying %s' % (' '.join(trjconv), self.FILES.complex_tpr))
 
     def checkPDB(self):
         """
