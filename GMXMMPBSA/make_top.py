@@ -89,6 +89,14 @@ class CheckMakeTop:
         :return:
         """
         gmx = self.external_progs['gmx'].full_path
+        # check if Gromacs 4.x exists
+        make_ndx = [self.external_progs['make_ndx'].full_path]
+        trjconv = [self.external_progs['trjconv'].full_path]
+        if gmx:
+            make_ndx = [gmx, 'make_ndx']
+            trjconv = [gmx, 'trjconv']
+
+
         # wt complex
         # make index for extract pdb structure
         rec_group, lig_group = self.FILES.complex_groups
@@ -102,7 +110,7 @@ class CheckMakeTop:
         # FIXME: overwrite the user index file???
         com_ndx = self.FILES.prefix + 'COM_index.ndx'
 
-        c2 = subprocess.Popen([gmx, "make_ndx", '-n', self.FILES.complex_index, '-o', com_ndx],
+        c2 = subprocess.Popen(make_ndx + ['-n', self.FILES.complex_index, '-o', com_ndx],
                               stdin=c1.stdout, stdout=self.log, stderr=self.log)
         if c2.wait():  # if it quits with return code != 0
             raise MMPBSA_Error('%s failed when querying %s' % (gmx + 'make_ndx', self.FILES.receptor_tpr))
@@ -110,7 +118,7 @@ class CheckMakeTop:
 
         c3 = subprocess.Popen(['echo', 'GMXMMPBSA_REC_GMXMMPBSA_LIG'], stdout=subprocess.PIPE)
         # we get only first trajectory to extract a pdb file and make amber topology for complex
-        c4 = subprocess.Popen([gmx, "trjconv", '-f', self.FILES.complex_trajs[0], '-s', self.FILES.complex_tpr,
+        c4 = subprocess.Popen(trjconv + ['-f', self.FILES.complex_trajs[0], '-s', self.FILES.complex_tpr,
                                '-o', self.complex_pdb, '-n', self.FILES.complex_index, '-b', '0', '-e', '0'],
                               stdin=c3.stdout, stdout=self.log, stderr=self.log)
         if c4.wait():  # if it quits with return code != 0
@@ -123,7 +131,7 @@ class CheckMakeTop:
             for i in range(len(self.FILES.complex_trajs)):
                 c5 = subprocess.Popen(['echo', 'GMXMMPBSA_REC_GMXMMPBSA_LIG'], stdout=subprocess.PIPE)
                 # we get only first trajectory to extract a pdb file and make amber topology for complex
-                c6 = subprocess.Popen([gmx, "trjconv", '-f', self.FILES.complex_trajs[0], '-s', self.FILES.complex_tpr,
+                c6 = subprocess.Popen(trjconv + ['-f', self.FILES.complex_trajs[0], '-s', self.FILES.complex_tpr,
                                        '-o', 'COM_traj_{}.xtc'.format(i), '-n',
                                        self.FILES.complex_index], # FIXME: start and end frames???
                                       stdin=c5.stdout, stdout=self.log, stderr=self.log)
@@ -152,7 +160,7 @@ class CheckMakeTop:
                 cp1 = subprocess.Popen(['echo', '{}'.format(rec_group)], stdout=subprocess.PIPE)
                 # we get only first trajectory to extract a pdb file for make amber topology
                 cp2 = subprocess.Popen(
-                    [gmx, "trjconv", '-f', self.FILES.complex_trajs[0], '-s', self.FILES.complex_tpr, '-o',
+                    trjconv + ['-f', self.FILES.complex_trajs[0], '-s', self.FILES.complex_tpr, '-o',
                      'rec_temp.pdb', '-n', self.FILES.complex_index, '-b', '0', '-e', '0'],
                     stdin=cp1.stdout, stdout=self.log, stderr=self.log)
                 if cp2.wait():  # if it quits with return code != 0
@@ -178,7 +186,7 @@ class CheckMakeTop:
                                                                           self.receptor_pdb))
             p1 = subprocess.Popen(['echo', '{}'.format(self.FILES.receptor_group)], stdout=subprocess.PIPE)
             # we get only first trajectory to extract a pdb file for make amber topology
-            cp2 = subprocess.Popen([gmx, "trjconv", '-f', self.FILES.receptor_trajs[0], '-s', self.FILES.receptor_tpr,
+            cp2 = subprocess.Popen(trjconv + ['-f', self.FILES.receptor_trajs[0], '-s', self.FILES.receptor_tpr,
                                     '-o', self.receptor_pdb, '-n', self.FILES.receptor_index, '-b', '0', '-e', '0'],
                                    stdin=p1.stdout, stdout=self.log, stderr=self.log)
             if cp2.wait():  # if it quits with return code != 0
@@ -191,7 +199,7 @@ class CheckMakeTop:
                     c5 = subprocess.Popen(['echo', '{}'.format(self.FILES.receptor_group)], stdout=subprocess.PIPE)
                     # we get only first trajectory to extract a pdb file and make amber topology for complex
                     c6 = subprocess.Popen(
-                        [gmx, "trjconv", '-f', self.FILES.receptor_trajs[0], '-s', self.FILES.receptor_tpr,
+                        trjconv + ['-f', self.FILES.receptor_trajs[0], '-s', self.FILES.receptor_tpr,
                          '-o', 'REC_traj_{}.xtc'.format(i), '-n',
                          self.FILES.receptor_index],  # FIXME: start and end frames???
                         stdin=c5.stdout, stdout=self.log, stderr=self.log)
@@ -208,7 +216,7 @@ class CheckMakeTop:
             cp1 = subprocess.Popen(['echo', '{}'.format(rec_group)], stdout=subprocess.PIPE)
             # we get only first trajectory to extract a pdb file for make amber topology
             cp2 = subprocess.Popen(
-                [gmx, "trjconv", '-f', self.FILES.complex_trajs[0], '-s', self.FILES.complex_tpr, '-o',
+                trjconv + ['-f', self.FILES.complex_trajs[0], '-s', self.FILES.complex_tpr, '-o',
                  self.receptor_pdb, '-n', self.FILES.complex_index, '-b', '0', '-e', '0'],
                 stdin=cp1.stdout, stdout=self.log, stderr=self.log)
             if cp2.wait():  # if it quits with return code != 0
@@ -220,7 +228,7 @@ class CheckMakeTop:
             # wt ligand
             l1 = subprocess.Popen(['echo', '{}'.format(self.FILES.ligand_group)], stdout=subprocess.PIPE)
             # we get only first trajectory for extract a pdb file for make amber topology
-            l2 = subprocess.Popen([gmx, "trjconv", '-f', self.FILES.ligand_trajs[0], '-s',
+            l2 = subprocess.Popen(trjconv + ['-f', self.FILES.ligand_trajs[0], '-s',
                                    self.FILES.ligand_tpr, '-o', self.ligand_pdb, '-n', self.FILES.ligand_index,
                                    '-b', '0', '-e', '0'],
                                   stdin=l1.stdout, stdout=self.log, stderr=self.log)
@@ -235,7 +243,7 @@ class CheckMakeTop:
                     c5 = subprocess.Popen(['echo', '{}'.format(self.FILES.ligand_group)], stdout=subprocess.PIPE)
                     # we get only first trajectory to extract a pdb file and make amber topology for complex
                     c6 = subprocess.Popen(
-                        [gmx, "trjconv", '-f', self.FILES.ligand_trajs[0], '-s', self.FILES.ligand_tpr,
+                        trjconv + ['-f', self.FILES.ligand_trajs[0], '-s', self.FILES.ligand_tpr,
                          '-o', 'LIG_traj_{}.xtc'.format(i), '-n', self.FILES.ligand_index],
                         stdin=c5.stdout, stdout=self.log, stderr=self.log)
                     if c6.wait():  # if it quits with return code != 0
@@ -250,7 +258,7 @@ class CheckMakeTop:
                                                                           self.ligand_pdb))
             cl1 = subprocess.Popen(['echo', '{}'.format(lig_group)], stdout=subprocess.PIPE)
             # we get only  first trajectory to extract a pdb file for make amber topology
-            cl2 = subprocess.Popen([gmx, "trjconv", '-f', self.FILES.complex_trajs[0], '-s', self.FILES.complex_tpr,
+            cl2 = subprocess.Popen(trjconv + ['-f', self.FILES.complex_trajs[0], '-s', self.FILES.complex_tpr,
                                     '-o', self.ligand_pdb, '-n', self.FILES.complex_index, '-b', '0', '-e', '0'],
                                    stdin=cl1.stdout, stdout=self.log, stderr=self.log)
             if cl2.wait():  # if it quits with return code != 0

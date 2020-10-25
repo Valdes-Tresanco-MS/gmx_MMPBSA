@@ -36,7 +36,9 @@ from GMXMMPBSA.exceptions import MMPBSA_Error
 def find_progs(INPUT):
     """ Find the necessary programs based in the user INPUT """
     # List all of the used programs with the conditions that they are needed
-    used_progs = { 'cpptraj' : True, 'gmx': True, 'tleap': True, 'parmchk2': True,
+    used_progs = { 'cpptraj' : True, 'gmx': True,
+                   # look for gromacs 4.x
+                   'make_ndx': True, 'trjconv': True, 'tleap': True, 'parmchk2': True,
                    'mmpbsa_py_energy' : ((INPUT['pbrun'] or INPUT['gbrun'])
                                          and not (INPUT['use_sander'] or
                                                   INPUT['decomprun'])),
@@ -51,13 +53,23 @@ def find_progs(INPUT):
     my_progs = {}
 
     search_path = True
+    gromacs5x = True
+    gromacs4x = True
 
     for prog in list(used_progs.keys()):
         my_progs[prog] = ExternProg(prog, used_progs[prog], search_path)
         if used_progs[prog]:
             if not my_progs[prog].full_path:
+                if prog == 'gmx':
+                    gromacs5x = False
+                    continue
+                if prog in ['make_ndx', 'trjconv']:
+                    gromacs4x = False
+                    continue
                 raise MMPBSA_Error('Could not find necessary program [%s]' % prog)
             print('%s found! Using %s' % (prog, str(my_progs[prog])))
+    if not gromacs5x and not gromacs4x:
+        raise MMPBSA_Error('Could not find necessary Gromacs program')
 
     return my_progs
 
