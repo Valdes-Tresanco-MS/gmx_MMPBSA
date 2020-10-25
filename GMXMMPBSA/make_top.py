@@ -33,9 +33,6 @@ protein_ff = {1:'oldff/leaprc.ff99', 2: 'oldff/leaprc.ff03', 3: 'oldff/leaprc.ff
            5: 'leaprc.protein.ff14SB'}
 ligand_ff = {1: 'gaff', 2: 'gaff2'}
 
-std_aa = ['ALA', 'ARG', 'ASN', 'ASP', 'CYS', 'CYX', 'GLN', 'GLU', 'GLY', 'HID', 'HIE', 'HIP', 'ILE', 'LEU', 'LYS',
-          'MET', 'PHE', 'PRO', 'SER', 'THR', 'TRP', 'TYR', 'VAL', 'HIS']
-
 PBRadii = {1: 'bondi', 2: 'mbondi', 3: 'mbondi2', 4: 'mbondi3'}
 
 def dist(coor1, coor2):
@@ -296,8 +293,6 @@ class CheckMakeTop:
         self.receptor_str.save(self.receptor_pdb_fixed, 'pdb', True)
 
         # fix ligand structure
-        # if self.ligand_isProt and not self.ligand_tpr:  # ligand from complex
-            # check if ligand (from complex structure) is really protein-like.
         self.ligand_str = parmed.read_PDB(self.ligand_pdb)
         # fix ligand structure if is protein
         self.properHIS(self.ligand_str)
@@ -338,8 +333,6 @@ class CheckMakeTop:
                             if dist(rat_coor, lat_coor) <= self.within:
                                 if res_ndx not in res_list:
                                     res_list.append(res_ndx)
-                                    # print(self.within, rres.name, res_ndx, lres.name, lres_ndx, dist(rat_coor,
-                                    #                                                                    lat_coor))
                                 if lres_ndx not in res_list:
                                     res_list.append(lres_ndx)
                                 break
@@ -433,15 +426,6 @@ class CheckMakeTop:
         for cys in xcys:
             cys.name = 'CYX'
 
-    # def checkForceField(self):
-    #     if self.INPUT['protein_forcefield'] not in protein_ff:
-    #         raise ValueError('This forcefield {} does not match any of the allowed '
-    #                          '({})'.format(self.INPUT['protein_forcefield'], ', '.join([x for x in protein_ff.values()])))
-    #     if self.FILES.ligand_mol2 and ligand_ff[self.INPUT['ligand_forcefield']] not in ligand_ff:
-    #         raise ValueError('This forcefield {} does not match any of the allowed '
-    #                          '({})'.format(ligand_ff[self.INPUT['ligand_forcefield']], ', '.join([x for x in
-    #                                                                                      ligand_ff.values()])))
-
     def makeToptleap(self):
         with open(self.FILES.prefix + 'leap.in', 'w') as tif:
             tif.write('source {}\n'.format(protein_ff[self.INPUT['protein_forcefield']]))
@@ -453,7 +437,6 @@ class CheckMakeTop:
                 tif.write('check LIG\n')
                 tif.write('loadamberparams {}\n'.format(self.ligand_frcmod))
 
-        # if not self.FILES.stability:
             tif.write('REC = loadpdb {}\n'.format(self.receptor_pdb_fixed))
             tif.write('saveamberparm REC {t} {p}REC.inpcrd\n'.format(t=self.receptor_pmrtop, p=self.FILES.prefix))
             if not self.FILES.ligand_mol2:
@@ -508,13 +491,10 @@ class CheckMakeTop:
                                                                                   p=self.FILES.prefix))
                 mtif.write('quit')
 
-            # p1 = subprocess.check_output('{t} -f {f}'.format(t=tleap, f=self.FILES.prefix + 'mut_leap.in'),
-            #                              stderr=subprocess.STDOUT, shell=True)
             p1 = subprocess.Popen([tleap, '-f', '{}'.format(self.FILES.prefix + 'mut_leap.in')], stdout=self.log,
                                  stderr=self.log)
             if p1.wait():
                 raise MMPBSA_Error('%s failed when querying %s' % (tleap, self.FILES.prefix + 'mut_leap.in'))
-
         else:
             self.mutant_complex_pmrtop = None
 
