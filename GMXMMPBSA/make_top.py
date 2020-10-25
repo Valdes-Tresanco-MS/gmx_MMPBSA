@@ -288,6 +288,9 @@ class CheckMakeTop:
         # fix receptor structure
         self.properHIS(self.receptor_str)
         self.properCYS(self.receptor_str)
+        self.fix_H_ATOMS(self.receptor_str)
+        # For some reason removing the hydrogens returns the hydrogen-bound atoms to their original names. This is
+        # problematic with ILE switching from CD to CD1. parmed bug?
         self.receptor_str.strip('@/H')
         self.properATOMS(self.receptor_str)
         self.receptor_str.save(self.receptor_pdb_fixed, 'pdb', True)
@@ -297,6 +300,7 @@ class CheckMakeTop:
         # fix ligand structure if is protein
         self.properHIS(self.ligand_str)
         self.properCYS(self.ligand_str)
+        self.fix_H_ATOMS(self.ligand_str)
         self.ligand_str.strip('@/H')
         self.properATOMS(self.ligand_str)
         self.ligand_str.save(self.ligand_pdb_fixed, 'pdb', True)
@@ -361,6 +365,17 @@ class CheckMakeTop:
             structure.strip(excluded_mask)
         else:
             raise MMPBSA_Error('Residue {}:{} not found'.format(chain, resnum))
+
+    def fix_H_ATOMS(self, structure):
+        """
+        Gromacs 4.x save the pdb without atom element column, so parmed not recognize some H atoms. Parmed assigns 0 to
+        the atomic number of these atoms. In order to correctly eliminate hydrogens, it is necessary to correctly
+        assign the atomic number.
+        """
+        for residue in structure.residues:
+            for atom in residue.atoms:
+                if 'H' in atom.name and atom.atomic_number == 0:
+                    atom.atomic_number = 1
 
     def properATOMS(self, structure):
         """
