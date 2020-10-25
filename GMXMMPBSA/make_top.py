@@ -275,13 +275,13 @@ class CheckMakeTop:
         """
         self.complex_str = parmed.read_PDB(self.complex_pdb)  # can always be initialized
         # fix complex structure and save
-        self.properHIS(self.complex_str)
-        self.properCYS(self.complex_str)
+        # self.properHIS(self.complex_str)
+        # self.properCYS(self.complex_str)
         # For some reason removing the hydrogens returns the hydrogen-bound atoms to their original names. This is
         # problematic with ILE switching from CD to CD1. parmed bug?
-        self.complex_str.strip('@/H')
-        self.properATOMS(self.complex_str)
-        self.complex_str.save(self.complex_pdb_fixed, 'pdb', True)
+        # self.complex_str.strip('@/H')
+        # self.properATOMS(self.complex_str)
+        # self.complex_str.save(self.complex_pdb_fixed, 'pdb', True)
 
         # if not self.FILES.stability:
         self.receptor_str = parmed.read_PDB(self.receptor_pdb)
@@ -451,7 +451,7 @@ class CheckMakeTop:
         p = subprocess.Popen([tleap, '-f', '{}'.format(self.FILES.prefix + 'leap.in')], stdout=self.log,
                              stderr=self.log)
         if p.wait():
-            raise MMPBSA_Error('%s failed when querying %s' % (tleap))
+            raise MMPBSA_Error('%s failed when querying %s' % (tleap, self.FILES.prefix + 'leap.in'))
 
         if self.INPUT['alarun']:
             with open(self.FILES.prefix + 'mut_leap.in', 'w') as mtif:
@@ -497,6 +497,5 @@ class CheckMakeTop:
                 raise MMPBSA_Error('%s failed when querying %s' % (tleap, self.FILES.prefix + 'mut_leap.in'))
         else:
             self.mutant_complex_pmrtop = None
-
         return (self.complex_pmrtop, self.receptor_pmrtop, self.ligand_pmrtop, self.mutant_complex_pmrtop,
                 self.mutant_receptor_pmrtop, self.mutant_ligand_pmrtop)
