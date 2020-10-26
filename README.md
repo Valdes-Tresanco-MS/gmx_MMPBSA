@@ -10,9 +10,13 @@ opening an [issue](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA/issues).**
 
 ## Requirements
 gmx_MMPBSA requires AmberTools20 to be installed in your machine and the shell environment correctly set up for Amber. 
-For a detailed installation guide, please check [Amber Manual](https://ambermd.org/doc12/Amber20.pdf#section.2.1). Of note,
-you can have more than one AmberTools installed in your machine. In case AmberTools20 is not the default Amber in your 
-computer, just make sure to source AmberTools20 before installing/updating/running gmx_MMPBSA.
+The AmberTools suite is free of charge and you can check [Amber Manual](https://ambermd.org/doc12/Amber20.pdf#section.2.1)
+for a detailed installation guide. Of note, you can have more than one AmberTools installed in your machine. In case 
+AmberTools20 is not the default Amber in your computer, just make sure to source AmberTools20 before 
+installing/updating/running gmx_MMPBSA.
+gmx_MMPBSA also requires Gromacs (series 4.x.x or 5.x.x or 20xx.x) to be installed in your computer and the shell 
+environment correctly set up for Gromacs. gmx_MMPBSA has been tested with Gromacs4.6.7, 5.1.2 and 2018.3, although it
+should run smoothly with any Gromacs present in the PATH and that is compatible with the files you are using.
 
 gmx_MMPBSA contains a module that allows for plotting the results. For this, it requires the installation of PyQt5.
 
@@ -91,7 +95,7 @@ as well as some reviews:
 * [Wang et. al., 2019](https://pubs.acs.org/doi/abs/10.1021/acs.chemrev.9b00055) 
 
 ## gmx_MMPBSA in a nutshell
-gmx_MMPBSA brings all the [MMPBSA.py](https://pubs.acs.org/doi/10.1021/ct300418h) functionalities to Gromacs users. 
+gmx_MMPBSA brings in all the [MMPBSA.py](https://pubs.acs.org/doi/10.1021/ct300418h) functionalities to Gromacs users. 
 In addition, few other functionalities were implemented that eases a number of calculations (_e.g._ MM/PB(GB)SA 
 with different internal dielectric constant, interaction entropy calculation). A GUI application is also incorporated 
 that allows for visualizing the results and saving high-quality images.
@@ -151,7 +155,7 @@ usage: gmx_MMPBSA [-h] [-v] [--input-file-help] [-O] [-prefix <file prefix>] [-i
                   [-lm <Structure File>] [-ls <Structure File>] [-li <Index File>] [-lg index] 
                   [-lt [TRJ [TRJ ...]]] [-make-mdins] [-use-mdins] [-rewrite-output]
 
-gmx_MMPBSA is an effort to bring Amber's MMPBSA.py functionalities and more to Gromacs users. This 
+gmx_MMPBSA is an effort to bring in Amber's MMPBSA.py functionalities and more to Gromacs users. This 
 program is based on Amber's MMPBSA.py and essentially works as such. gmx_MMPBSA minimizes 
 compatibility-related issues since it will process any Gromacs files compatible with the Gromacs 
 in the path.
