@@ -413,7 +413,7 @@ class CheckMakeTop:
                 atoms = [atom.name for atom in residue.atoms]
                 if 'HD2' in atoms:
                     residue.name = 'ASH'
-            elif residue.name == 'ASP':
+            elif residue.name == 'GLU':
                 atoms = [atom.name for atom in residue.atoms]
                 if 'HE2' in atoms:
                     residue.name = 'GLH'
