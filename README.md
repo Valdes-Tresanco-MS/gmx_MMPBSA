@@ -22,10 +22,12 @@ gmx_MMPBSA contains a module that allows for plotting the results. For this, it 
 You can install gmx_MMPBSA from the `stable` version on PYPI:
 
     amber.python -m pip install gmx_MMPBSA
-
 or the `development` version from GitHub:
+    
+    amber.python -m pip install git+https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA
+Make sure that you have `git` installed. If not you can install it as follow:
 
-    amber.python -m pip git+https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA --upgrade
+    sudo apt install git
 
 ### Update
 If you already have installed a previous gmx_MMPBSA version, you can update it as follows:
@@ -36,7 +38,8 @@ If you already have installed a previous gmx_MMPBSA version, you can update it a
 
 `development` version from GitHub:
 
-    amber.python -m pip git+https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA --upgrade 
+    amber.python -m pip intall git+https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA --upgrade 
+Make sure that you have `git` installed.
     
 **We will do our best to keep the PYPI package up to date.**
 
