@@ -288,6 +288,7 @@ class CheckMakeTop:
         # fix receptor structure
         self.properHIS(self.receptor_str)
         self.properCYS(self.receptor_str)
+        self.properAspGluLys(self.receptor_str)
         self.fix_H_ATOMS(self.receptor_str)
         # For some reason removing the hydrogens returns the hydrogen-bound atoms to their original names. This is
         # problematic with ILE switching from CD to CD1. parmed bug?
@@ -300,6 +301,7 @@ class CheckMakeTop:
         # fix ligand structure if is protein
         self.properHIS(self.ligand_str)
         self.properCYS(self.ligand_str)
+        self.properAspGluLys(self.ligand_str)
         self.fix_H_ATOMS(self.ligand_str)
         self.ligand_str.strip('@/H')
         self.properATOMS(self.ligand_str)
@@ -397,6 +399,24 @@ class CheckMakeTop:
                     atom.name = 'O  '
                 elif atom.name == 'OC2':
                     atom.name = 'OXT'
+
+    def properAspGluLys(self, structure):
+        """
+        Proper name for residues Asp, Glu and Lys
+        """
+        for residue in structure.residues:
+            if residue.name == 'LYS':
+                atoms = [atom.name for atom in residue.atoms]
+                if not 'HZ3' in atoms:
+                    residue.name = 'LYN'
+            elif residue.name == 'ASP':
+                atoms = [atom.name for atom in residue.atoms]
+                if 'HD2' in atoms:
+                    residue.name = 'ASH'
+            elif residue.name == 'ASP':
+                atoms = [atom.name for atom in residue.atoms]
+                if 'HE2' in atoms:
+                    residue.name = 'GLH'
 
     def properHIS(self, structure):
         """

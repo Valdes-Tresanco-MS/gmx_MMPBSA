@@ -33,8 +33,8 @@ from matplotlib.figure import Figure
 import numpy as np
 from math import ceil
 
-std_aa = ['ALA', 'ARG', 'ASN', 'ASP', 'CYS', 'CYX', 'GLN', 'GLU', 'GLY', 'HID', 'HIE', 'HIP', 'ILE', 'LEU', 'LYS',
-          'MET', 'PHE', 'PRO', 'SER', 'THR', 'TRP', 'TYR', 'VAL', 'HIS']
+std_aa = ['ALA', 'ARG', 'ASN', 'ASP', 'ASH', 'CYS', 'CYX', 'GLN', 'GLU', 'GLH', 'GLY', 'HID', 'HIE', 'HIP', 'ILE',
+          'LEU', 'LYS', 'LYN', 'MET', 'PHE', 'PRO', 'SER', 'THR', 'TRP', 'TYR', 'VAL', 'HIS']
 
 
 class NavigationToolbar(NavigationToolbar2QT):
