@@ -1,5 +1,5 @@
 """
-Make Amber topology files from Gromacs
+Generate Amber topology files from Gromacs files
 """
 
 # ##############################################################################
@@ -82,7 +82,7 @@ class CheckMakeTop:
 
     def getPDBfromTpr(self):
         """
-        Get PDB file to make topology
+        Generate PDB file to make topology
         :return:
         """
         gmx = self.external_progs['gmx'].full_path
@@ -263,7 +263,7 @@ class CheckMakeTop:
 
     def checkPDB(self):
         """
-        Get parmed structure object for complex, receptor and ligand if is protein-like
+        Generate parmed structure object for complex, receptor and ligand if is protein-like
 
         1 - Rename HIS
         2 - Rename CYS
@@ -368,9 +368,9 @@ class CheckMakeTop:
 
     def fix_H_ATOMS(self, structure):
         """
-        Gromacs 4.x save the pdb without atom element column, so parmed not recognize some H atoms. Parmed assigns 0 to
-        the atomic number of these atoms. In order to correctly eliminate hydrogens, it is necessary to correctly
-        assign the atomic number.
+        Gromacs 4.x save the pdb without atom element column, so parmed does not recognize some H atoms. Parmed assigns
+        0 to the atomic number of these atoms. In order to correctly eliminate hydrogens, it is necessary to assign the
+        atomic number.
         """
         for residue in structure.residues:
             for atom in residue.atoms:
@@ -416,7 +416,7 @@ class CheckMakeTop:
 
     def properCYS(self, structure):
         """
-        Rename the cys that form a disulfide bond
+        Rename the cys in disulfide bond
         :return:
         """
         cys_name = ['CYS', 'CYX', 'CYM']
