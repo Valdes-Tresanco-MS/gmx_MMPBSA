@@ -44,7 +44,7 @@ Make sure that you have `git` installed.
 **We will do our best to keep the PYPI package up to date.**
 
 ## Introduction
-Molecular Mechanics / Poisson Boltzmann (or Generalized Born) Surface Area (MM/PB(GB)SA) calculations is a post-processing
+Molecular Mechanics / Poisson Boltzmann (or Generalized Born) Surface Area (MM/PB(GB)SA) is a post-processing
 method in which representative snapshots from an ensemble of conformations are used to calculate the free energy
 change between two states (typically a bound and free state of a receptor and ligand). Free energy differences are
 calculated by combining the so-called gas phase energy contributions (MM term) that are independent of the chosen solvent
@@ -115,7 +115,7 @@ be to an alanine. If mutant_only is not set to 1, differences resulting from the
 option is incompatible with intermediate NetCDF trajectories (see the netcdf = 1 option above). This has the
 same program requirements as option 1 above.
 * **Entropy corrections**. An entropy term can be added to the free energies calculated above using either the
-quasi-harmonic, the normal mode or interaction entropy approximations. Calculations will be PERFORMED for the normal 
+quasi-harmonic, the normal mode or interaction entropy approximations. Calculations will be performed for the normal 
 and mutated systems (alanine scanning) as requested. Normal mode calculations are done with the
 mmpbsa_py_nabnmode program included with AmberTools.
 * **Decomposition schemes**. The energy terms will be decomposed according to the decomposition scheme
