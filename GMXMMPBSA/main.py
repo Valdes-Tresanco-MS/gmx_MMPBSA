@@ -690,9 +690,9 @@ class MMPBSA_App(object):
 
         self.remove(self.INPUT['keep_files'])
 
-        self.stdout.write('\n\nGMX-MMPBSA Finished! Thank you for using. Please '
+        self.stdout.write('\n\ngmx_MMPBSA Finished! Thank you for using. Please '
                           'cite us if you publish this work with this paper:\n   '
-                          'Comming soon\n   '
+                          'Coming soon\n   '
                           ' and \n'
                           'Miller III, B. R., McGee Jr., T. D., Swails, J. M. '
                           'Homeyer, N. Gohlke, H. and Roitberg, A. E.\n   '
