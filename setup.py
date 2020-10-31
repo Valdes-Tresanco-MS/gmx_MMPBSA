@@ -22,7 +22,7 @@ with open("README.md", "r") as f:
     LONG_DESCRIPTION = f.read()
 
 setup(
-    name='gmx_MMPBSA',
+    name='gmx_MMPBSA-Valdes-Tresanco-MS',
     version='1.0.0',
     packages=['GMXMMPBSA'],
     license='GPLv3',
@@ -41,6 +41,11 @@ setup(
         "Publications": "Coming soon",
         "Source": "https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA",
     },
+    classifiers=[
+        "Programming Language :: Python :: 3.8",
+        "License :: GPLv3",
+        "Operating System :: OS Linux",
+    ],
     keywords=['gmx_MMPBSA', 'MMPBSA', 'MMGBSA', 'GROMACS', 'AmberTools'],
     entry_points={
         "console_scripts": [
