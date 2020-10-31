@@ -9,13 +9,16 @@ List of functions and a brief description of their purpose
 -concatenate: combines 2 files into a single, common file
 """
 
+# TODO get rid of this file altogether and move these functions into the main
+# app class
+
 # ##############################################################################
 #                           GPLv3 LICENSE INFO                                 #
 #                                                                              #
 #  Copyright (C) 2020  Mario S. Valdes-Tresanco and Mario E. Valdes-Tresanco   #
 #  Copyright (C) 2014  Jason Swails, Bill Miller III, and Dwight McGee         #
 #                                                                              #
-#   Project: https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA                  #
+#   Project: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA                  #
 #                                                                              #
 #   This program is free software; you can redistribute it and/or modify it    #
 #  under the terms of the GNU General Public License version 3 as published    #
@@ -26,9 +29,6 @@ List of functions and a brief description of their purpose
 #  or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License    #
 #  for more details.                                                           #
 # ##############################################################################
-
-# TODO get rid of this file altogether and move these functions into the main
-# app class
 
 import os
 
