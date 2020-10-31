@@ -6,7 +6,7 @@ we will point out what is new or different. Neither of these should be considere
 should be familiar with Amber and MM/PB(GB)SA method before at-tempting these sorts of calculations. These scripts 
 automate a series of calculations, and cannot trap all the types of errors that might occur. You can review some of the 
 answers to the questions that we consider most common here. If you find a bug or have any question, please consider 
-opening an [issue](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA/issues).**
+opening an [issue](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/issues).**
 
 ## Requirements
 gmx_MMPBSA requires AmberTools20 to be installed in your machine and the shell environment correctly set up for Amber. 
@@ -28,7 +28,7 @@ You can install gmx_MMPBSA from the `stable` version on PYPI:
     amber.python -m pip install gmx_MMPBSA
 or the `development` version from GitHub:
     
-    amber.python -m pip install git+https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA
+    amber.python -m pip install git+https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA
 Make sure that you have `git` installed. If not you can install it as follow:
 
     sudo apt install git
@@ -42,7 +42,7 @@ If you already have installed a previous gmx_MMPBSA version, you can update it a
 
 `development` version from GitHub:
 
-    amber.python -m pip intall git+https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA --upgrade 
+    amber.python -m pip intall git+https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA --upgrade 
 Make sure that you have `git` installed.
     
 **We will do our best to keep the PYPI package up to date.**
@@ -128,7 +128,7 @@ cannot be decomposed. APBS energies cannot be decomposed, either. Neither can PB
 This functionality requires sander from the Amber 11 (or later) package.
 * **QM/MMGBSA**. This is a binding free energy (or stability calculation) using the Generalized Born solvent
 model allowing you to treat part of your system with a quantum mechanical Hamiltonian. See [“Advanced
-Options”](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA#Advanced-Options) for tips about optimizing this option. 
+Options”](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA#Advanced-Options) for tips about optimizing this option. 
 This functionality requires sander from the Amber package.
 * **MM/3D-RISM**. This is a binding free energy (or stability calculation) using the 3D-RISM solvation model.
 This functionality is performed with rism3d.snglpnt built with AmberTools.
@@ -136,17 +136,17 @@ This functionality is performed with rism3d.snglpnt built with AmberTools.
 that is embedded into a membrane. Only use_sander=1 is supported.
 
 ### Examples...
-* [Protein-DNA binding free energy calculations](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA/tree/master/test_files/Protein_DNA)
-* [Protein-ligand binding free energy calculations (Single Trajectory method)](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA/tree/master/test_files/Protein_ligand/ST) (based on this [tutorial](https://ambermd.org/tutorials/advanced/tutorial3/py_script/section1.php))
-* [Protein-ligand binding free energy calculations (Multiple Trajectory method)](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA/tree/master/test_files/Protein_ligand/MT) (based on this [tutorial](https://ambermd.org/tutorials/advanced/tutorial3/py_script/section1.php))
-* [MMPBSA with membrane proteins](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA/tree/master/test_files/Protein_membrane)
-* [Protein-protein binding free energy calculations](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA/tree/master/test_files/Protein_protein) (based on this [tutorial](https://ambermd.org/tutorials/advanced/tutorial3/py_script/section2.php))
-* [Protein-protein binding free energy calculations with MM/3D-RISM](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA/tree/master/test_files/3D-RISM)
-* [Alanine scanning](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA/tree/master/test_files/Alanine_scanning) (based on this [tutorial](https://ambermd.org/tutorials/advanced/tutorial3/py_script/section3.php))
-* [Decomposition analysis](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA/tree/master/test_files/Decomposition_analysis) (based on this [tutorial](https://ambermd.org/tutorials/advanced/tutorial3/py_script/section6.php))
-* [Entropy calculations with normal modes](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA/tree/master/test_files/Entropy_calculations/nmode) (based on this [tutorial](https://ambermd.org/tutorials/advanced/tutorial3/py_script/section5.php))
-* [Entropy calculations with Interaction Entropy](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA/tree/master/test_files/Entropy_calculations/Interaction_Entropy)
-* [Stability calculations](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA/tree/master/test_files/Stability)
+* [Protein-DNA binding free energy calculations](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/test_files/Protein_DNA)
+* [Protein-ligand binding free energy calculations (Single Trajectory method)](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/test_files/Protein_ligand/ST) (based on this [tutorial](https://ambermd.org/tutorials/advanced/tutorial3/py_script/section1.php))
+* [Protein-ligand binding free energy calculations (Multiple Trajectory method)](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/test_files/Protein_ligand/MT) (based on this [tutorial](https://ambermd.org/tutorials/advanced/tutorial3/py_script/section1.php))
+* [MMPBSA with membrane proteins](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/test_files/Protein_membrane)
+* [Protein-protein binding free energy calculations](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/test_files/Protein_protein) (based on this [tutorial](https://ambermd.org/tutorials/advanced/tutorial3/py_script/section2.php))
+* [Protein-protein binding free energy calculations with MM/3D-RISM](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/test_files/3D-RISM)
+* [Alanine scanning](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/test_files/Alanine_scanning) (based on this [tutorial](https://ambermd.org/tutorials/advanced/tutorial3/py_script/section3.php))
+* [Decomposition analysis](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/test_files/Decomposition_analysis) (based on this [tutorial](https://ambermd.org/tutorials/advanced/tutorial3/py_script/section6.php))
+* [Entropy calculations with normal modes](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/test_files/Entropy_calculations/nmode) (based on this [tutorial](https://ambermd.org/tutorials/advanced/tutorial3/py_script/section5.php))
+* [Entropy calculations with Interaction Entropy](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/test_files/Entropy_calculations/Interaction_Entropy)
+* [Stability calculations](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/test_files/Stability)
 
 ### Calling gmx_MMPBSA from the command-line
 gmx_MMPBSA is invoked through the command line as follows:
@@ -256,7 +256,7 @@ command-line call is shown below:
 
     gmx_MMPBSA -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 1 13 -ct com_traj.xtc
 
-You can found test files in [GitHub](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA/tree/master/test_files)
+You can found test files in [GitHub](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/test_files)
 
 #### Parallel (MPI) version
 Unlike MMPBSA.py, gmx_MMPBSA will be installed as a separate package from the Amber installation. When installing Amber with mpi,
@@ -296,7 +296,7 @@ normal mode calculations used to approximate vibrational entropies, and &decomp 
 scheme. All of the input variables are described below according to their respective namelists. Integers and floating
 point variables should be typed as-is while strings should be put in either single- or double-quotes. All variables
 should be set with `variable = value` and separated by commas. See several 
-[examples](https://github.com/Valdes-Tresanco-MS/GMX-MMPBSA#sample-input-files) below. As you will see, several 
+[examples](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA#sample-input-files) below. As you will see, several 
 calculations can be performed in the same run (_i.e._ &gb and &pb, &gb and &alanine_scanning, &pb and &decomp, etc).
 Variables will usually be matched to the minimum number of characters required to uniquely identify that variable 
 within that namelist. Variables require at least 4 characters to be matched unless that variable name has fewer than 4 
