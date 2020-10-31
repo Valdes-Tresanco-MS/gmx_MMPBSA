@@ -943,3 +943,9 @@ you’ll have to make use of the -make-mdins and -use-mdins flags as detailed ab
 _GMXMMPBSA_gb_qmmm_com/rec/lig.mdin files to fit your desired calculation. Additionally, MMPBSA.py
 suffers all shortcomings of sander, one of those being that PB and QM/MM are incompatible. Therefore,
 only QM/MMGBSA is a valid option right now.
+
+[<img src="https://github.com/Valdes-Tresanco-MS/AMDock/blob/master/AMDock/AMDock/images/jetbrains-variant-4.png" height="100" align="right" />](https://www.jetbrains.com/?from=https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA)
+## Support
+This project is possible thanks to the Open Source license of the 
+[JetBrains](https://www.jetbrains.com/?from=https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA
+) programs.
