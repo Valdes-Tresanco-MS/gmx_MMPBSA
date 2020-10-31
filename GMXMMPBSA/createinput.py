@@ -114,7 +114,7 @@ def create_inputs(INPUT, prmtop_system, pre):
                 gb_mdin = GBNabInput(INPUT)
                 gb_mdin.write_input(pre + 'gb.mdin')
             else:
-                # We need separate input files for QM/GMX-MMPBSA
+                # We need separate input files for QM/gmx_MMPBSA
                 if INPUT['ifqnt']:
                     com_input = deepcopy(INPUT)
                     rec_input = deepcopy(INPUT)

@@ -1,6 +1,6 @@
 """
 This is a module that contains functions responsible for parsing the
-input file for GMX-MMPBSA. It must be included with GMX-MMPBSA to
+input file for gmx_MMPBSA. It must be included with gmx_MMPBSA to
 ensure proper functioning.
 """
 

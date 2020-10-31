@@ -1,5 +1,5 @@
 """
- This is a module that contains the class of the main GMX-MMPBSA
+ This is a module that contains the class of the main gmx_MMPBSA
  Application.
 """
 
@@ -30,7 +30,7 @@ import warnings
 import numpy as np
 from math import exp, log
 
-# Import GMX-MMPBSA modules
+# Import gmx_MMPBSA modules
 from GMXMMPBSA import utils
 from GMXMMPBSA.amber_outputs import (QHout, NMODEout, QMMMout, GBout, PBout,
                                      PolarRISM_std_Out, RISM_std_Out,
@@ -81,7 +81,7 @@ class MMPBSA_App(object):
 
     def __init__(self, MPI, stdout=None, stderr=None, size=None):
         """
-        Sets up the main GMX-MMPBSA driver class. All we set up here is the output
+        Sets up the main gmx_MMPBSA driver class. All we set up here is the output
         and error streams (unbuffered by default) and the prefix for the
         intermediate files. Also set up empty INPUT dict
         """
@@ -614,7 +614,7 @@ class MMPBSA_App(object):
         if (INPUT['receptor_mask'] is None and INPUT['ligand_mask'] is not None):
             warnings.warn('ligand_mask overwritten with default\n')
             INPUT['ligand_mask'] = None
-        # Map the GMX-MMPBSA systems with the input masks, and get the default ones if
+        # Map the gmx_MMPBSA systems with the input masks, and get the default ones if
         # the masks were not input
         self.normal_system.Map(INPUT['receptor_mask'], INPUT['ligand_mask'])
         self.normal_system.CheckConsistency()
@@ -628,7 +628,7 @@ class MMPBSA_App(object):
         self.timer.stop_timer('setup')
 
     def write_final_outputs(self):
-        """ Writes the final output files for GMX-MMPBSA """
+        """ Writes the final output files for gmx_MMPBSA """
         self.timer.add_timer('output', 'Statistics calculation & output writing:')
         self.timer.start_timer('output')
         if (not hasattr(self, 'input_file_text') or not hasattr(self, 'FILES') or
@@ -1073,7 +1073,7 @@ def setup_run():
     """
     Replace the uncaught exception handler to control traceback printing. Also
     add a signal handler for a SIGINT (Ctrl-C). However, we only want to do this
-    if we're running GMX-MMPBSA -- for the API, we don't want to clobber the
+    if we're running gmx_MMPBSA -- for the API, we don't want to clobber the
     users' python environments like this.
     """
     sys.excepthook = excepthook

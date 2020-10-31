@@ -609,7 +609,7 @@ class GMX_MMPBSA_GUI(QMainWindow):
 
 def run(infofile):
     app = QApplication(sys.argv)
-    app.setApplicationName('GMX-MMPBSA')
+    app.setApplicationName('gmx_MMPBSA')
     w = GMX_MMPBSA_GUI(infofile)
     w.show()
     sys.exit(app.exec())
@@ -617,8 +617,8 @@ def run(infofile):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    app.setApplicationName('GMX-MMPBSA')
+    app.setApplicationName('gmx_MMPBSA')
 
-    w = GMX_MMPBSA_GUI('/home/mario/Drive/scripts/GMX-MMPBSA/test/qh/_GMXMMPBSA_info')
+    w = GMX_MMPBSA_GUI('/home/mario/Drive/scripts/gmx_MMPBSA/test/qh/_GMXMMPBSA_info')
     w.show()
     sys.exit(app.exec())

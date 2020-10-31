@@ -115,7 +115,7 @@ def gmxmmpbsa_gui():
     if not path.exists():
         print('Path not found')
         sys.exit(1)
-    app.setApplicationName('GMX-MMPBSA-GUI')
+    app.setApplicationName('gmx_MMPBSA_gui')
     w = GMX_MMPBSA_GUI(path.as_posix())
     w.show()
     sys.exit(app.exec())

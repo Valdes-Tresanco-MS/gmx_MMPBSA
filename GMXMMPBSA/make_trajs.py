@@ -2,7 +2,7 @@
 This module contains classes and such that are responsible for generating
 trajectories for MM/PBSA based on input, starting trajectories. It will
 strip trajectories and output the ones that will be used for the calculations.
-Needed for proper operation of GMX-MMPBSA
+Needed for proper operation of gmx_MMPBSA
 
 Methods:
          make_trajectories(INPUT, FILES, size): Makes all of the non-mutant
