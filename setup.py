@@ -22,7 +22,7 @@ with open("README.md", "r") as f:
     LONG_DESCRIPTION = f.read()
 
 setup(
-    name='gmx_MMPBSA-Valdes-Tresanco-MS',
+    name='gmx_MMPBSA',
     version='1.0.0',
     packages=['GMXMMPBSA'],
     license='GPLv3',
