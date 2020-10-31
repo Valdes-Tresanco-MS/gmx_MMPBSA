@@ -22,7 +22,7 @@ with open("README.md", "r") as f:
     LONG_DESCRIPTION = f.read()
 
 setup(
-    name='GMX-MMPBSA',
+    name='gmx_MMPBSA',
     version='1.0.0',
     packages=['GMXMMPBSA'],
     license='GPLv3',
@@ -30,11 +30,18 @@ setup(
     author_email='mariosergiovaldes145@gmail.com',
     maintainer='Mario S. Valdes-Trasanco',
     maintainer_email='mariosergiovaldes145@gmail.com',
-    url='https://github.com/Valdes-Tresanco-MS/GMX-MMGBSA',
-    description='Adaptation of MMPBSA.py (AMBER) to use Gromacs files',
+    url='https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA',
+    description='gmx_MMPBSA is a new tool aid to perform end-state free energy'
+                'calculations with GROMACS files.',
     long_description=LONG_DESCRIPTION,
     long_description_content_type='text/markdown',
-    keywords=['GMX-MMPBSA', 'MMPBSA', 'GROMACS', 'AmberTools'],
+    project_urls={
+        "Documentation": "https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA",
+        "Issues": "https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/issues",
+        "Publications": "Coming soon",
+        "Source": "https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA",
+    },
+    keywords=['gmx_MMPBSA', 'MMPBSA', 'MMGBSA', 'GROMACS', 'AmberTools'],
     entry_points={
         "console_scripts": [
             "gmx_MMPBSA=GMXMMPBSA.app:gmxmmpbsa",
