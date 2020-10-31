@@ -41,11 +41,6 @@ setup(
         "Publications": "Coming soon",
         "Source": "https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA",
     },
-    classifiers=[
-        "Programming Language :: Python :: 3.8",
-        "License :: GPLv3",
-        "Operating System :: OS Linux",
-    ],
     keywords=['gmx_MMPBSA', 'MMPBSA', 'MMGBSA', 'GROMACS', 'AmberTools'],
     entry_points={
         "console_scripts": [
