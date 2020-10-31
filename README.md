@@ -15,7 +15,7 @@ for a detailed installation guide. Of note, you can have more than one AmberTool
 AmberTools20 is not the default Amber in your computer, just make sure to source AmberTools20 before 
 installing/updating/running gmx_MMPBSA.
 gmx_MMPBSA also requires Gromacs (series 4.x.x or 5.x.x or 20xx.x) to be installed in your computer and the shell 
-environment correctly set up for Gromacs. gmx_MMPBSA has been tested with Gromacs4.6.7, 5.1.2 and 2018.3, although it
+environment correctly set up for Gromacs. gmx_MMPBSA has been tested with Gromacs 4.6.7, 5.1.2 and 2018.3, although it
 should run smoothly with any Gromacs present in the PATH and that is compatible with the files you are using.
 
 gmx_MMPBSA contains a module that allows for plotting the results. For this, it requires the installation of PyQt5.
