@@ -35,12 +35,6 @@ setup(
                 'calculations with GROMACS files.',
     long_description=LONG_DESCRIPTION,
     long_description_content_type='text/markdown',
-    project_urls={
-        "Documentation": "https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA",
-        "Issues": "https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/issues",
-        "Publications": "Coming soon",
-        "Source": "https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA",
-    },
     keywords=['gmx_MMPBSA', 'MMPBSA', 'MMGBSA', 'GROMACS', 'AmberTools'],
     entry_points={
         "console_scripts": [
