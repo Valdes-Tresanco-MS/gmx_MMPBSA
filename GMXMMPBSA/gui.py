@@ -30,8 +30,11 @@ from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
 import matplotlib.backend_bases
 from matplotlib.backends import qt_compat
 from matplotlib.figure import Figure
+import matplotlib.pyplot as plt
 import numpy as np
 from math import ceil
+
+plt.style.use('seaborn')
 
 std_aa = ['ALA', 'ARG', 'ASN', 'ASP', 'ASH', 'CYS', 'CYX', 'GLN', 'GLU', 'GLH', 'GLY', 'HID', 'HIE', 'HIP', 'ILE',
           'LEU', 'LYS', 'LYN', 'MET', 'PHE', 'PRO', 'SER', 'THR', 'TRP', 'TYR', 'VAL', 'HIS']
