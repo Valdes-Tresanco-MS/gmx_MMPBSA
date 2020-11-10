@@ -48,10 +48,10 @@ Make sure that you have `git` installed.
 **We will do our best to keep the PYPI package up to date.**
 
 ### After Install
-Once the installation is complete, the following warning may appear:
+Once the installation is completed, the following warning may appear:
 
     WARNING: The scripts gmx_MMPBSA and gmx_MMPBSA_gui are installed in 
-    '/home/user/path_to_install/amber20/miniconda/bin' which is not on PATH.
+    '/home/user/path_to_amber_install/amber20/miniconda/bin' which is not on PATH.
 This warning is because `pip` installs the executables (gmx_MMPBSA and gmx_MMPBSA_gui) in \*/amber20/miniconda/bin.
 
 You have two options to solve this:
@@ -59,10 +59,10 @@ You have two options to solve this:
 Add this folder (*/amber20/miniconda/bin) to PATH:
 
     export PATH="/home/user/path_to_install/amber20/miniconda/bin:$PATH"
-*This option is more permanent and is recommended if you don't want to have to activate and deactivate the 
+*This option is more permanent and is recommended if you don't want to activate and deactivate the 
 conda environment*
 
-**Note:** Make sure to update **user** and **path_to_install** in the PATH variable
+**Note:** Make sure to update **user** and **path_to_amber_install** in the PATH variable
 
 or
 
@@ -74,10 +74,10 @@ You can deactivate like this:
     
     conda deactivate
 
-After using one of the above options, the gmx_MMPBSA and gmx_MMPBSA_gui executables should appear in your terminal
+After using one of the above options, you should be able to run gmx_MMPBSA and gmx_MMPBSA_gui through the terminal
 
 
-If when running the program you get an error like this:
+If when running gmx_MMPBSA, you get an error like this:
 
     ModuleNotFoundError: No module named 'parmed'
 
