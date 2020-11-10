@@ -51,7 +51,7 @@ Make sure that you have `git` installed.
 Once the installation is complete, the following warning may appear:
 
     WARNING: The scripts gmx_MMPBSA and gmx_MMPBSA_gui are installed in 
-    '/home/debanjan/Amber/amber20/miniconda/bin' which is not on PATH.
+    '/home/user/path_to_install/amber20/miniconda/bin' which is not on PATH.
 This warning is because `pip` installs the executables (gmx_MMPBSA and gmx_MMPBSA_gui) in \*/amber20/miniconda/bin.
 
 You have two options to solve this:
