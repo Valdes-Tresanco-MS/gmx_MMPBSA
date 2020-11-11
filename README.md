@@ -58,7 +58,7 @@ You have two options to solve this:
 
 Add this folder (*/amber20/miniconda/bin) to PATH:
 
-    export PATH="/home/user/path_to_install/amber20/miniconda/bin:$PATH"
+    export PATH="/home/user/path_to_amber_install/amber20/miniconda/bin:$PATH"
 *This option is more permanent and is recommended if you don't want to activate and deactivate the 
 conda environment*
 
