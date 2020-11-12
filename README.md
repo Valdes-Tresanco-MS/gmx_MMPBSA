@@ -216,8 +216,8 @@ This comparison is based on the documentation of the different programs
 | Energetic Terms charts | Per-Frame | Average and/or Per-Frame <sup>3</sup>  | Average and Per-frame |
 | Energetic Terms charts representation | xmgrace/matplotlib/gnuplot | API and graphics library | gmx_MMPBSA_gui |
 | **Externals programs** | APBS (1.2.x, 1.3.x or 1.4.x) |  AmberTools20 | AmberTools20 |
-| **Parallel computation** | Depend of APBS version | :heavy_check_mark: | :heavy_check_mark: |
-| **Steps for** | | | |
+| **Parallel computation** | Depends on APBS version | :heavy_check_mark: | :heavy_check_mark: |
+| **Steps for:** | | | |
 | Calculation and Summary | Multiple | One | One |
 | Analysis| Multiple | Multiple | One |
 
