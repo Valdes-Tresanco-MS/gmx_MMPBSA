@@ -8,6 +8,28 @@ automate a series of calculations, and cannot trap all the types of errors that 
 answers to the questions that we consider most common here. If you find a bug or have any question, please consider 
 opening an [issue](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/issues).**
 
+# TOC
+* [Requirements](#requirements)
+* [Installing `gmx_MMPBSA`](#installing-gmx_mmpbsa)
+    * [Update](#update)
+    * [After Install](#after-install)
+* [Introduction](#introduction)
+    * [Literature](#literature)
+* [`gmx_MMPBSA` in a nutshell](#gmx_mmpbsa-in-a-nutshell)
+    * [Types of calculation you can do](#types-of-calculations-you-can-do)
+    * [`gmx_MMPBSA` vs g_mmpbsa vs MMPBSA.py](#gmx_mmpbsa-vs-g_mmpbsa-vs-mmpbsapy)
+    * [Examples](#examples)
+* [Calling `gmx_MMPBSA` from the command-line](#calling-gmx_mmpbsa-from-the-command-line)
+* [Running `gmx_MMPBSA`](#running-gmx_mmpbsa)
+    * [Serial version](#serial-version)
+    * [Parallel (MPI) version](#parallel-mpi-version)
+* [Input and Output](#input-and-output)
+    * [The input file](#the-input-file)
+        * [Sample input files](#sample-input-files)
+    * [The Output File](#the-output-file)
+    * [Temporary Files](#temporary-files)
+* [Advanced Options](#advanced-options)
+
 ## Requirements
 `gmx_MMPBSA` requires AmberTools20 to be installed in your machine and the shell environment correctly set up for Amber. 
 The AmberTools suite is free of charge and you can check [Amber Manual](https://ambermd.org/doc12/Amber20.pdf#section.2.1)
@@ -185,7 +207,7 @@ that is embedded into a membrane. Only use_sander=1 is supported.
 * [Entropy calculations with Interaction Entropy](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/test_files/Entropy_calculations/Interaction_Entropy)
 * [Stability calculations](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/test_files/Stability)
 
-### Calling `gmx_MMPBSA` from the command-line
+## Calling `gmx_MMPBSA` from the command-line
 `gmx_MMPBSA` is invoked through the command line as follows:
 ```
 usage: gmx_MMPBSA [-h] [-v] [--input-file-help] [-O] [-prefix <file prefix>] [-i FILE]
@@ -286,8 +308,8 @@ This program will calculate binding free energies using end-state free energy me
 of snapshots using a variety of implicit solvent models
 ```
 
-### Running `gmx_MMPBSA`
-#### Serial version
+## Running `gmx_MMPBSA`
+### Serial version
 This version is installed via pip as described above. AMBERHOME variable must be set, or it will quit with an error. An example 
 command-line call is shown below:
 
@@ -295,7 +317,7 @@ command-line call is shown below:
 
 You can found test files in [GitHub](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/test_files)
 
-#### Parallel (MPI) version
+### Parallel (MPI) version
 Unlike MMPBSA.py, `gmx_MMPBSA` will be installed as a separate package from the Amber installation. When installing Amber with mpi,
 a MMPBSA.py version called "MMPBSA.py.MPI" will be installed as well. Since we cannot detect if Amber was installed one way or
 another, we simply decided to adapt the `gmx_MMPBSA` executable to use an argument. That is, `gmx_MMPBSA` is a single script
@@ -319,6 +341,8 @@ One note: at a certain level, running RISM in parallel may actually hurt perform
 as an initial guess for the next frame, hastening convergence. Running in parallel loses this advantage. Also, due to 
 the overhead involved in which each thread is required to load every topology file when calculating energies, parallel 
 scaling will begin to fall off as the number of threads reaches the number of frames. 
+
+## Input and Output
 
 ### The input file
 As `gmx_MMPBSA` is based on [MMPBSA.py](https://pubs.acs.org/doi/10.1021/ct300418h), it uses an input file containing 
