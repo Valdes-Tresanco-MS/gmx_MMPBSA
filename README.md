@@ -17,7 +17,7 @@ opening an [issue](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/issues).**
     * [Literature](#literature)
 * [`gmx_MMPBSA` in a nutshell](#gmx_mmpbsa-in-a-nutshell)
     * [Types of calculation you can do](#types-of-calculations-you-can-do)
-    * [`gmx_MMPBSA` vs g_mmpbsa vs MMPBSA.py](#gmx_mmpbsa-vs-g_mmpbsa-vs-mmpbsapy)
+    * [Comparison of `gmx_MMPBSA` vs other programs](#comparison-of-gmx_MMPBSA-vs-other-programs)
     * [Examples](#examples)
 * [Calling `gmx_MMPBSA` from the command-line](#calling-gmx_mmpbsa-from-the-command-line)
 * [Running `gmx_MMPBSA`](#running-gmx_mmpbsa)
@@ -194,7 +194,7 @@ This functionality is performed with rism3d.snglpnt built with AmberTools.
 * **Membrane Protein MMPBSA**. Calculate the MMPBSA binding free energy for a ligand bound to a protein
 that is embedded into a membrane. Only use_sander=1 is supported.
 
-### `gmx_MMPBSA` vs g_mmpbsa vs MMPBSA.py
+### Comparison of `gmx_MMPBSA` vs other programs
 This comparison is based on the documentation of the different programs
 
 | Feature | [g_mmpbsa](https://github.com/RashmiKumari/g_mmpbsa) | [MMPBSA.py](https://ambermd.org/doc12/Amber20.pdf#MMPBSA.py) <sup>1</sup> | [gmx_MMPBSA](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/) |
