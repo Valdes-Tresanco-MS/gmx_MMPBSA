@@ -197,7 +197,7 @@ that is embedded into a membrane. Only use_sander=1 is supported.
 ### Comparison of `gmx_MMPBSA` vs other programs
 This comparison is based on the documentation of the different programs
 
-| Feature | [g_mmpbsa](https://github.com/RashmiKumari/g_mmpbsa) | [MMPBSA.py](https://ambermd.org/doc12/Amber20.pdf#MMPBSA.py) <sup>1</sup> | [gmx_MMPBSA](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/) |
+| Feature | [g_mmpbsa](https://github.com/RashmiKumari/g_mmpbsa) | [MMPBSA.py](https://ambermd.org/doc12/Amber20.pdf#chapter.34) <sup>1</sup> | [gmx_MMPBSA](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/) |
 |:---|:---:|:---:|:---:|
 | **Normal binding free energies**| PB | PB and GB  | PB and GB |
 | GB models | None | 1, 2, 3, 5, 7 and 8  | 1, 2, 3, 5, 7 and 8 |
