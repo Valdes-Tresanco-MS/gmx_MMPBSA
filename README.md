@@ -9,21 +9,22 @@ answers to the questions that we consider most common here. If you find a bug or
 opening an [issue](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/issues).**
 
 ## Requirements
-gmx_MMPBSA requires AmberTools20 to be installed in your machine and the shell environment correctly set up for Amber. 
+`gmx_MMPBSA` requires AmberTools20 to be installed in your machine and the shell environment correctly set up for Amber. 
 The AmberTools suite is free of charge and you can check [Amber Manual](https://ambermd.org/doc12/Amber20.pdf#section.2.1)
 for a detailed installation guide. Of note, you can have more than one AmberTools installed in your machine. In case 
 AmberTools20 is not the default Amber in your computer, just make sure to source AmberTools20 before 
-installing/updating/running gmx_MMPBSA.
-gmx_MMPBSA also requires Gromacs (series 4.x.x or 5.x.x or 20xx.x) to be installed in your computer and the shell 
-environment correctly set up for Gromacs. gmx_MMPBSA has been tested with Gromacs 4.6.7, 5.1.2 and 2018.3, although it
+installing/updating/running `gmx_MMPBSA`.
+`gmx_MMPBSA` also requires Gromacs (series 4.x.x or 5.x.x or 20xx.x) to be installed in your computer and the shell 
+environment correctly set up for Gromacs. `gmx_MMPBSA` has been tested with Gromacs 4.6.7, 5.1.2 and 2018.3, although it
 should run smoothly with any Gromacs present in the PATH and that is compatible with the files you are using.
 
-gmx_MMPBSA contains a module that allows for plotting the results. For this, it requires the installation of PyQt5.
+`gmx_MMPBSA` contains a module that allows for plotting the results (`gmx_MMPBSA_gui`). For this, it requires the
+ installation of PyQt5.
 
     amber.python -m pip install PyQt5
 
-## Installing gmx_MMPBSA
-You can install gmx_MMPBSA from the `stable` version on PYPI:
+## Installing `gmx_MMPBSA`
+You can install `gmx_MMPBSA` from the `stable` version on PYPI:
 
     amber.python -m pip install gmx_MMPBSA
 or the `development` version from GitHub:
@@ -34,7 +35,7 @@ Make sure that you have `git` installed. If not you can install it as follow:
     sudo apt install git
 
 ### Update
-If you already have installed a previous gmx_MMPBSA version, you can update it as follows:
+If you already have installed a previous `gmx_MMPBSA` version, you can update it as follows:
 
 `stable` version (recommended):
 
@@ -52,7 +53,7 @@ Once the installation is completed, the following warning may appear:
 
     WARNING: The scripts gmx_MMPBSA and gmx_MMPBSA_gui are installed in 
     '/home/user/path_to_amber_install/amber20/miniconda/bin' which is not on PATH.
-This warning is because `pip` installs the executables (gmx_MMPBSA and gmx_MMPBSA_gui) in \*/amber20/miniconda/bin.
+This warning is because `pip` installs the executables (`gmx_MMPBSA` and `gmx_MMPBSA_gui`) in \*/amber20/miniconda/bin.
 
 You have two options to solve this:
 
@@ -74,10 +75,10 @@ You can deactivate like this:
     
     conda deactivate
 
-After using one of the above options, you should be able to run gmx_MMPBSA and gmx_MMPBSA_gui through the terminal
+After using one of the above options, you should be able to run `gmx_MMPBSA` and `gmx_MMPBSA_gui` through the terminal
 
 
-If when running gmx_MMPBSA, you get an error like this:
+If when running `gmx_MMPBSA`, you get an error like this:
 
     ModuleNotFoundError: No module named 'parmed'
 
@@ -133,14 +134,14 @@ as well as some reviews:
 * [Wang et. al., 2018](https://www.frontiersin.org/articles/10.3389/fmolb.2017.00087/full)  
 * [Wang et. al., 2019](https://pubs.acs.org/doi/abs/10.1021/acs.chemrev.9b00055) 
 
-## gmx_MMPBSA in a nutshell
-gmx_MMPBSA brings in all the [MMPBSA.py](https://pubs.acs.org/doi/10.1021/ct300418h) functionalities to Gromacs users. 
+## `gmx_MMPBSA` in a nutshell
+`gmx_MMPBSA` brings in all the [MMPBSA.py](https://pubs.acs.org/doi/10.1021/ct300418h) functionalities to Gromacs users. 
 In addition, few other functionalities were implemented that eases a number of calculations (_e.g._ MM/PB(GB)SA 
 with different internal dielectric constant, interaction entropy calculation). A GUI application is also incorporated 
 that allows for visualizing the results and saving high-quality images.
 
 ### Types of calculations you can do
-There are many different options for running gmx_MMPBSA. Among the types of calculations you can do are:
+There are many different options for running `gmx_MMPBSA`. Among the types of calculations you can do are:
 * **Normal binding free energies**, with either PB or GB implicit solvent models. Each can be done with either
 1, 2, or 3 different trajectories, but the complex, receptor, and ligand topology files must all be defined. The
 complex trajectory must always be provided. Whichever trajectories of the receptor and/or ligand that are NOT
@@ -184,8 +185,8 @@ that is embedded into a membrane. Only use_sander=1 is supported.
 * [Entropy calculations with Interaction Entropy](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/test_files/Entropy_calculations/Interaction_Entropy)
 * [Stability calculations](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/test_files/Stability)
 
-### Calling gmx_MMPBSA from the command-line
-gmx_MMPBSA is invoked through the command line as follows:
+### Calling `gmx_MMPBSA` from the command-line
+`gmx_MMPBSA` is invoked through the command line as follows:
 ```
 usage: gmx_MMPBSA [-h] [-v] [--input-file-help] [-O] [-prefix <file prefix>] [-i FILE]
                   [-xvvfile XVVFILE] [-o FILE] [-do FILE] [-eo FILE] [-deo FILE] [-gui] [-s] 
@@ -285,7 +286,7 @@ This program will calculate binding free energies using end-state free energy me
 of snapshots using a variety of implicit solvent models
 ```
 
-### Running gmx_MMPBSA
+### Running `gmx_MMPBSA`
 #### Serial version
 This version is installed via pip as described above. AMBERHOME variable must be set, or it will quit with an error. An example 
 command-line call is shown below:
@@ -295,9 +296,9 @@ command-line call is shown below:
 You can found test files in [GitHub](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/test_files)
 
 #### Parallel (MPI) version
-Unlike MMPBSA.py, gmx_MMPBSA will be installed as a separate package from the Amber installation. When installing Amber with mpi,
+Unlike MMPBSA.py, `gmx_MMPBSA` will be installed as a separate package from the Amber installation. When installing Amber with mpi,
 a MMPBSA.py version called "MMPBSA.py.MPI" will be installed as well. Since we cannot detect if Amber was installed one way or
-another, we simply decided to adapt the gmx_MMPBSA executable to use an argument. That is, gmx_MMPBSA is a single script
+another, we simply decided to adapt the `gmx_MMPBSA` executable to use an argument. That is, `gmx_MMPBSA` is a single script
 that executes the serial version or the parallel version with mpi depending on whether the user defines the "mpi" or
 "MPI" argument. In principle, both the serial and parallel versions should work correctly when Amber was installed in parallel.
 
@@ -320,7 +321,7 @@ the overhead involved in which each thread is required to load every topology fi
 scaling will begin to fall off as the number of threads reaches the number of frames. 
 
 ### The input file
-As gmx_MMPBSA is based on [MMPBSA.py](https://pubs.acs.org/doi/10.1021/ct300418h), it uses an input file containing 
+As `gmx_MMPBSA` is based on [MMPBSA.py](https://pubs.acs.org/doi/10.1021/ct300418h), it uses an input file containing 
 all the specification for the MM/PB(GB)SA calculation. The input file is designed to be as syntactically similar to 
 other programs in Amber as possible. The input file has the same namelist structure as both sander and pmemd. The allowed 
 namelists are &general, &gb, &pb, &rism, &alanine_scanning, &nmode, and &decomp. The input variables recognized in each 
@@ -802,8 +803,8 @@ Finally, all warnings generated during the calculation that do not result in fat
 details but before any results.
 
 ### Temporary Files
-gmx_MMPBSA creates working files during the execution of the script beginning with the prefix `_GMXMMPBSA_`.
-If gmx_MMPBSA does not finish successfully, several of these files may be helpful in diagnosing the problem.
+`gmx_MMPBSA` creates working files during the execution of the script beginning with the prefix `_GMXMMPBSA_`.
+If `gmx_MMPBSA` does not finish successfully, several of these files may be helpful in diagnosing the problem.
 For that reason, every temporary file is described below. Note that not every temporary file is generated in every 
 simulation. At the end of each description, the lowest value of the original “keep_files” variable that will retain 
 this file will be shown in parentheses. Nevertheless, in the current version, all the files are retained for plotting 
@@ -970,7 +971,7 @@ with the existing mdin files (generated by the -make-mdins flag above), and add 
 
 `-make-mdins` and `-use-mdins` are intended to give added flexibility to user input. If the MM/PBSA input file does
 not expose a variable you require, you may use the -make-mdins flag to generate the MDIN files and then quit.
-Then, edit those MDIN files, changing the variables you need to, then running gmx_MMPBSA with -use-mdins to
+Then, edit those MDIN files, changing the variables you need to, then running `gmx_MMPBSA` with -use-mdins to
 use those modified files.
 
 `QM/MMGBSA` There are a lot of options for QM/MM calculations in sander, but not all of those options were
