@@ -194,6 +194,43 @@ This functionality is performed with rism3d.snglpnt built with AmberTools.
 * **Membrane Protein MMPBSA**. Calculate the MMPBSA binding free energy for a ligand bound to a protein
 that is embedded into a membrane. Only use_sander=1 is supported.
 
+### `gmx_MMPBSA` vs g_mmpbsa vs MMPBSA.py
+This comparison is based on the documentation of the different programs
+
+| Feature | [g_mmpbsa](https://github.com/RashmiKumari/g_mmpbsa) | [MMPBSA.py](https://ambermd.org/doc12/Amber20.pdf#MMPBSA.py) <sup>1</sup> | [gmx_MMPBSA](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/) |
+|:---|:---:|:---:|:---:|
+| **Normal binding free energies**| PB | PB and GB  | PB and GB |
+| GB models | None | 1, 2, 3, 5, 7 and 8  | 1, 2, 3, 5, 7 and 8 |
+| **Stability** |  | :heavy_check_mark: | :heavy_check_mark: |
+| **Alanine scanning** | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
+| **Entropy corrections** <sup>2</sup>|   | nmode and qh | nmode, qh, and IE |
+| **Decomposition schemes** | Per-Residues | Per-Residues and Per-Wise | Per-Residues and Per-Wise |
+| **QM/MMGBSA** |   | :heavy_check_mark: | :heavy_check_mark: |
+| **MM/3D-RISM** |   | :heavy_check_mark: | :heavy_check_mark: |
+| **Membrane Protein MMPBSA** |      | :heavy_check_mark: | :heavy_check_mark: |
+| **Gromacs Version** | 4.x and 5.x |  --- | All <sup>3</sup> |
+| **Approximations** | ST | ST and MT | ST and MT |
+| **API** |      | :heavy_check_mark: | :heavy_check_mark: |
+| **Graphical Analyzer** |    |  | :heavy_check_mark: |
+| Energy to PDB | :heavy_check_mark: |     | :heavy_check_mark: |
+| Energetic Terms charts | Per-Frame | Average and/or Per-Frame <sup>4</sup>  | Average and Per-frame |
+| Energetic Terms charts representation | xmgrace/matplotlib/gnuplot | API and graphics library | gmx_MMPBSA_gui |
+| **Externals programs** | APBS (1.2.x, 1.3.x or 1.4.x) |  AmberTools20 | AmberTools20 |
+| **Parallel computation** | Depend of APBS version | :heavy_check_mark: | :heavy_check_mark: |
+| **Steps** | Multiple | One | One |
+| Calculation and Summary | Multiple | One | One |
+| Analysis| Multiple | Multiple | One |
+
+<sup>1</sup> MMPBSA.py is an AMBER program.
+
+<sup>2</sup> nmode = Normals modes approximation, qh = Quasic-Harmony approximation and IE = Interaction Entropy
+ approximation
+
+<sup>3</sup> Includes Gromacs versions 4.x, 5.x and 20xx.x
+
+<sup>4</sup> The user can obtain each energetic term per frame or its average values using the API. This means that
+ user must be familiar with Python to handle the API, perform custom calculations or graph such data.
+
 ### Examples...
 * [Protein-DNA binding free energy calculations](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/test_files/Protein_DNA)
 * [Protein-ligand binding free energy calculations (Single Trajectory method)](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/test_files/Protein_ligand/ST) (based on this [tutorial](https://ambermd.org/tutorials/advanced/tutorial3/py_script/section1.php))
