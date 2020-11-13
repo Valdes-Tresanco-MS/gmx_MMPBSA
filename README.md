@@ -6,7 +6,7 @@ we will point out what is new or different. Neither of these should be considere
 should be familiar with Amber and MM/PB(GB)SA method before at-tempting these sorts of calculations. These scripts 
 automate a series of calculations, and cannot trap all the types of errors that might occur. You can review some of the 
 answers to the questions that we consider most common here. If you find a bug or have any question, please consider 
-opening an [issue](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/issues).**
+opening an [issue](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/issues) or post in our [Google group](https://groups.google.com/g/gmx_mmpbsa)** 
 
 # TOC
 * [Requirements](#requirements)
