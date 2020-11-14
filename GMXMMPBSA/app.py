@@ -35,36 +35,6 @@ except ImportError:
                       (amberhome, amberhome))
 
 from PyQt5.QtWidgets import QApplication
-from pathlib import Path
-try:
-    amberhome = Path(os.getenv('AMBERHOME'))
-    data_info = {'forcefield': {}}
-    current_file_path = Path(__file__).parent
-    with open(Path(main.__file__).parent.joinpath('data/info.dat')) as f:
-        for line in f.readlines():
-            if line.startswith('FF:'):
-                ff = line.split()[1]
-                folder = line.split()[2]
-                files = line.split()[3:]
-                if ff not in data_info['forcefield']:
-                    data_info['forcefield'][ff] = {folder: files}
-                else:
-                    data_info['forcefield'][ff][folder] = files
-    # amberhome = Path('/home/mario/programs/amber20')
-    # print(amberhome.joinpath('dat/leap/cmd/' + data_info['forcefield'][ff]['cmd'][0]))
-    for ff in data_info['forcefield']:
-        leap_dat = amberhome.joinpath('dat/leap/')
-        if not leap_dat.joinpath('cmd/' + data_info['forcefield'][ff]['cmd'][0]).exists():
-            shutil.copy(current_file_path.joinpath('data/' + data_info['forcefield'][ff]['cmd'][0]),
-                        leap_dat.joinpath('cmd'))
-            shutil.copy(current_file_path.joinpath('data/' + data_info['forcefield'][ff]['prep'][0]),
-                        leap_dat.joinpath('prep'))
-            shutil.copy(current_file_path.joinpath('data/' + data_info['forcefield'][ff]['parm'][0]),
-                        leap_dat.joinpath('parm'))
-            for f in data_info['forcefield'][ff]['lib']:
-                shutil.copy(current_file_path.joinpath('data/' + f), leap_dat.joinpath('lib'))
-except:
-    pass
 
 
 def gmxmmpbsa():
