@@ -31,7 +31,44 @@ List of functions and a brief description of their purpose
 # ##############################################################################
 
 import os
+import shutil
+from pathlib import Path
 
+def checkff(sel_ff):
+    print('Checking if supported force fields exists...')
+    amberhome = os.getenv('AMBERHOME')
+    if not amberhome:
+        print('Could not found Amber. Please make sure you have sourced %s/amber.sh (if you are using sh/ksh/'
+                          'bash/zsh) or %s/amber.csh (if you are using csh/tcsh)' %
+                          (amberhome, amberhome))
+        return
+    amberhome = Path(amberhome)
+    data_info = {'forcefield': {}}
+    current_file_path = Path(__file__).parent
+    with open(Path(__file__).parent.joinpath('data/info.dat')) as f:
+        for line in f.readlines():
+            if line.startswith('FF:'):
+                ff = line.split()[1]
+                folder = line.split()[2]
+                files = line.split()[3:]
+                if ff not in data_info['forcefield']:
+                    data_info['forcefield'][ff] = {folder: files}
+                else:
+                    data_info['forcefield'][ff][folder] = files
+    try:
+        leap_dat = amberhome.joinpath('dat/leap/')
+        if not leap_dat.joinpath('cmd/' + data_info['forcefield'][sel_ff]['cmd'][0]).exists():
+            shutil.copy(current_file_path.joinpath('data/' + data_info['forcefield'][sel_ff]['cmd'][0]),
+                        leap_dat.joinpath('cmd'))
+            shutil.copy(current_file_path.joinpath('data/' + data_info['forcefield'][sel_ff]['prep'][0]),
+                        leap_dat.joinpath('prep'))
+            shutil.copy(current_file_path.joinpath('data/' + data_info['forcefield'][sel_ff]['parm'][0]),
+                        leap_dat.joinpath('parm'))
+            for f in data_info['forcefield'][sel_ff]['lib']:
+                shutil.copy(current_file_path.joinpath('data/' + f), leap_dat.joinpath('lib'))
+            print(f'Coping {sel_ff} to Amber data... Done')
+    except IOError as e:
+        print(e)
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
