@@ -31,7 +31,7 @@ from math import sqrt
 
 protein_ff = {1:'oldff/leaprc.ff99', 2: 'oldff/leaprc.ff03', 3: 'oldff/leaprc.ff99SB', 4: 'oldff/leaprc.ffSBildn',
            5: 'leaprc.protein.ff14SB'}
-ligand_ff = {1: 'gaff', 2: 'gaff2'}
+ligand_ff = {1: 'leaprc.gaff', 2: 'leaprc.gaff2', 3: 'leaprc.GLYCAM_06j-1', 4: 'oldff/leaprc.GLYCAM_06h-1'}
 
 PBRadii = {1: 'bondi', 2: 'mbondi', 3: 'mbondi2', 4: 'mbondi3'}
 
@@ -464,7 +464,7 @@ class CheckMakeTop:
     def makeToptleap(self):
         with open(self.FILES.prefix + 'leap.in', 'w') as tif:
             tif.write('source {}\n'.format(protein_ff[self.INPUT['protein_forcefield']]))
-            tif.write('source leaprc.{}\n'.format(ligand_ff[self.INPUT['ligand_forcefield']]))
+            tif.write('source {}\n'.format(ligand_ff[self.INPUT['ligand_forcefield']]))
             tif.write('set default PBRadii {}\n'.format(PBRadii[self.INPUT['PBRadii']]))
             # check if ligand is not protein and always load
             if self.FILES.ligand_mol2:
@@ -491,7 +491,7 @@ class CheckMakeTop:
         if self.INPUT['alarun']:
             with open(self.FILES.prefix + 'mut_leap.in', 'w') as mtif:
                 mtif.write('source {}\n'.format(protein_ff[self.INPUT['protein_forcefield']]))
-                mtif.write('source leaprc.{}\n'.format(ligand_ff[self.INPUT['ligand_forcefield']]))
+                mtif.write('source {}\n'.format(ligand_ff[self.INPUT['ligand_forcefield']]))
                 mtif.write('set default PBRadii {}\n'.format(PBRadii[self.INPUT['PBRadii']]))
                 # check if ligand is not protein and always load
                 if self.FILES.ligand_mol2:

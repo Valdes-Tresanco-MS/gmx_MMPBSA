@@ -842,10 +842,10 @@ class MMPBSA_App(object):
             raise InputError('PBRadii must be 1, 2, 3 or 4!')
         if INPUT['protein_forcefield'] not in [1, 2, 3, 4, 5]:
             raise InputError('Protein force field must be 1, 2, 3 4 or 5!')
-        if INPUT['ligand_forcefield'] not in [1, 2]:
-            raise InputError('Ligand force field must be 1 or 2!')
+        if INPUT['ligand_forcefield'] not in [1, 2, 3, 4]:
+            raise InputError('Ligand force field must be 1, 2, 3 or 4!')
         if INPUT['solvated_trajectory'] not in [0, 1]:
-            raise InputError('Ligand force field must be 1 or 2!')
+            raise InputError('Ligand force field must be 0 or 1!')
         if not INPUT['use_sander'] in [0, 1]:
             raise InputError('USE_SANDER must be set to 0 or 1!')
         if not INPUT['ifqnt'] in [0, 1]:
