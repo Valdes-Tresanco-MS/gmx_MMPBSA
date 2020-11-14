@@ -25,15 +25,21 @@ import os
 import parmed
 import warnings
 from GMXMMPBSA.exceptions import *
-from GMXMMPBSA.findprogs import find_progs
+from GMXMMPBSA.utils import checkff
 import subprocess
 from math import sqrt
 
 protein_ff = {1:'oldff/leaprc.ff99', 2: 'oldff/leaprc.ff03', 3: 'oldff/leaprc.ff99SB', 4: 'oldff/leaprc.ffSBildn',
            5: 'leaprc.protein.ff14SB'}
-ligand_ff = {1: 'leaprc.gaff', 2: 'leaprc.gaff2', 3: 'leaprc.GLYCAM_06j-1', 4: 'oldff/leaprc.GLYCAM_06h-1'}
+ligand_ff = {1: 'leaprc.gaff', 2: 'leaprc.gaff2', 3: 'leaprc.GLYCAM_06j-1', 4: 'leaprc.GLYCAM_06h-1'}
 
 PBRadii = {1: 'bondi', 2: 'mbondi', 3: 'mbondi2', 4: 'mbondi3'}
+
+ions_para_files = {1: 'frcmod.ions234lm_126_tip3p', 2: 'frcmod.ions234lm_iod_tip4pew', 3: 'frcmod.ions234lm_iod_spce',
+                   4: 'frcmod.ions234lm_hfe_spce', 5: 'frcmod.ions234lm_126_tip4pew', 6: 'frcmod.ions234lm_126_spce',
+                   7: 'frcmod.ions234lm_1264_tip4pew', 8: 'frcmod.ions234lm_1264_tip3p',
+                   9: 'frcmod.ions234lm_1264_spce', 10: 'frcmod.ions234lm_iod_tip3p',
+                   11: 'frcmod.ions234lm_hfe_tip4pew', 12: 'frcmod.ions234lm_hfe_tip3p}'}
 
 def dist(coor1, coor2):
     return sqrt((coor2[0] - coor1[0]) ** 2 + (coor2[1] - coor1[1]) ** 2 + (coor2[2] - coor1[2]) ** 2)
@@ -462,9 +468,11 @@ class CheckMakeTop:
             cys.name = 'CYX'
 
     def makeToptleap(self):
+        checkff(self.INPUT['ligand_forcefield'])
         with open(self.FILES.prefix + 'leap.in', 'w') as tif:
-            tif.write('source {}\n'.format(protein_ff[self.INPUT['protein_forcefield']]))
-            tif.write('source {}\n'.format(ligand_ff[self.INPUT['ligand_forcefield']]))
+            tif.write('source {}\n'.format(self.INPUT['protein_forcefield']))
+            tif.write('source {}\n'.format(self.INPUT['ligand_forcefield']))
+            tif.write('loadamberparams {}\n'.format(ions_para_files[self.INPUT['ions_parameters']]))
             tif.write('set default PBRadii {}\n'.format(PBRadii[self.INPUT['PBRadii']]))
             # check if ligand is not protein and always load
             if self.FILES.ligand_mol2:
@@ -490,8 +498,9 @@ class CheckMakeTop:
 
         if self.INPUT['alarun']:
             with open(self.FILES.prefix + 'mut_leap.in', 'w') as mtif:
-                mtif.write('source {}\n'.format(protein_ff[self.INPUT['protein_forcefield']]))
-                mtif.write('source {}\n'.format(ligand_ff[self.INPUT['ligand_forcefield']]))
+                mtif.write('source {}\n'.format(self.INPUT['protein_forcefield']))
+                mtif.write('source {}\n'.format(self.INPUT['ligand_forcefield']))
+                mtif.write('loadamberparams {}\n'.format(ions_para_files[self.INPUT['ions_parameters']]))
                 mtif.write('set default PBRadii {}\n'.format(PBRadii[self.INPUT['PBRadii']]))
                 # check if ligand is not protein and always load
                 if self.FILES.ligand_mol2:
