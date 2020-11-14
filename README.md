@@ -467,22 +467,53 @@ However, this option is incompatible with alanine scanning. Default value is 0.
 + New input variable added
 ```
 `protein_forcefield` Define the force field used to build Amber topology for proteins. Make sure this force field is 
-the same as the one used in Gromacs (Default = 3)
-* 1: amber99
-* 2: amber03
-* 3: amber99SB
-* 4: amber99SB-ildn
-* 5: amber14SB
+the same as the one used in Gromacs (Default = "oldff/leaprc.ff99SB")
+Force fields tested:
+* oldff/leaprc.ff99
+* oldff/leaprc.ff03 
+* oldff/leaprc.ff99SB 
+* oldff/leaprc.ff99SBildn
+* leaprc.protein.ff14SB
 
 ```diff
 + New input variable added
 ```
 `ligand_forcefield` Define the force field used to build Amber topology for small molecules or glycams. Make sure this 
-force field is the same as the one used for Gromacs (Default = 1). Allowed values are:
-* 1: gaff
-* 2: gaff2
-* 3: GLYCAM_06j-1    (Compatible with amber12SB and later)
-* 4: GLYCAM_06h-1    (Compatible with amber99SB and earlier)
+force field is the same as the one used for Gromacs (Default = "leaprc.gaff"). 
+Force fields tested:
+* leaprc.gaff
+* leaprc.gaff2
+* leaprc.GLYCAM_06j-1    (Compatible with amber12SB and later)
+* leaprc.GLYCAM_06EPb    (Compatible with amber12SB and later)
+* leaprc.GLYCAM_06h-1    (Includes in gmx_MMPBSA package. If it is selected will be copied to Amber data. Compatible with amber99SB and earlier)
+
+```diff
++ New input variable added
+```
+`ions_parameters` Define ions parameters to build the Amber topology. (Default = 1)
+* 1 frcmod.ions234lm_126_tip3p
+* 2 frcmod.ions234lm_iod_tip4pew
+* 3 frcmod.ions234lm_iod_spce
+* 4 frcmod.ions234lm_hfe_spce
+* 5 frcmod.ions234lm_126_tip4pew
+* 6 frcmod.ions234lm_126_spce
+* 7 frcmod.ions234lm_1264_tip4pew
+* 8 frcmod.ions234lm_1264_tip3p
+* 9 frcmod.ions234lm_1264_spce
+* 10 frcmod.ions234lm_iod_tip3p
+* 11 frcmod.ions234lm_hfe_tip4pew
+* 12 frcmod.ions234lm_hfe_tip3p
+
+
+
+```diff
++ New input variable added
+```
+`reuse_files` Define whether the trajectories files will be reused when the program ends in error. Note that the 
+trajectories files may not be generated correctly due to internal errors or interruptions. Please use it with care. 
+(Default = 0) 
+* 0: Don't reuse. If there are temporary trajectory files, they will be deleted
+* 1: Reuse existing trajectory file
 
 ```diff
 + New input variable added
