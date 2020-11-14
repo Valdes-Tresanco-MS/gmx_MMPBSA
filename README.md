@@ -477,10 +477,13 @@ the same as the one used in Gromacs (Default = 3)
 ```diff
 + New input variable added
 ```
-`ligand_forcefield` Define the force field used to build Amber topology for small molecules. Make sure this force field
- is the same as the one used in Gromacs (Default = 1). Allowed values are:
+`ligand_forcefield` Define the force field used to build Amber topology for small molecules or Glycams. Make sure this 
+force field is the same as the one used in Gromacs or the Glycam force field selected is compatible with selected 
+protein force field (Default = 1). Allowed values are:
 * 1: gaff
 * 2: gaff2
+* 3: GLYCAM_06j-1    (Compatible with amber12SB and later)
+* 4: GLYCAM_06h-1    (Compatible with amber99SB and earlier)
 
 ```diff
 + New input variable added
