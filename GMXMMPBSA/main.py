@@ -838,12 +838,10 @@ class MMPBSA_App(object):
             raise InputError('Alanine scanning is incompatible with NETCDF != 0!')
         if INPUT['decomprun'] and INPUT['idecomp'] == 0:
             raise InputError('IDECOMP cannot be 0 for Decomposition analysis!')
+        if INPUT['ions_parameters'] not in range(1,13):
+            raise InputError('Ions parameters file name must be in %s!' % range(1,13))
         if INPUT['PBRadii'] not in [1, 2, 3, 4]:
             raise InputError('PBRadii must be 1, 2, 3 or 4!')
-        if INPUT['protein_forcefield'] not in [1, 2, 3, 4, 5]:
-            raise InputError('Protein force field must be 1, 2, 3 4 or 5!')
-        if INPUT['ligand_forcefield'] not in [1, 2, 3, 4]:
-            raise InputError('Ligand force field must be 1, 2, 3 or 4!')
         if INPUT['solvated_trajectory'] not in [0, 1]:
             raise InputError('Ligand force field must be 0 or 1!')
         if not INPUT['use_sander'] in [0, 1]:
