@@ -1,0 +1,5 @@
+[Forcefield]
+FF: GLYCAM_06h-1 parm GLYCAM_06h-1.dat
+FF: GLYCAM_06h-1 lib GLYCAM_amino_06h.lib GLYCAM_aminoct_06h.lib GLYCAM_aminont_06h.lib
+FF: GLYCAM_06h-1 prep GLYCAM_06h.prep
+FF: GLYCAM_06h-1 cmd leaprc.GLYCAM_06h-1

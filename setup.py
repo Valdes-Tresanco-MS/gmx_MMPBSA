@@ -25,6 +25,7 @@ setup(
     name='gmx_MMPBSA',
     version='1.0.0',
     packages=['GMXMMPBSA'],
+    package_data={"GMXMMPBSA": ["data/*"]},
     license='GPLv3',
     author='Mario S. Valdes-Trasanco and Mario E. Valdes-Tresanco ',
     author_email='mariosergiovaldes145@gmail.com',
