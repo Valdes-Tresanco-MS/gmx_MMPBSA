@@ -41,6 +41,11 @@ ions_para_files = {1: 'frcmod.ions234lm_126_tip3p', 2: 'frcmod.ions234lm_iod_tip
                    9: 'frcmod.ions234lm_1264_spce', 10: 'frcmod.ions234lm_iod_tip3p',
                    11: 'frcmod.ions234lm_hfe_tip4pew', 12: 'frcmod.ions234lm_hfe_tip3p}'}
 
+ions = ["AG" "AL", "Ag", "BA", "BR", "Be", "CA", "CD", "CE", "CL", "CO", "CR", "CS", "CU", "CU1", "Ce", "Cl-", "Cr",
+        "Dy", "EU", "EU3", "Er", "F", "FE", "FE2", "GD3", "H3O+", "HE+", "HG", "HZ+", "Hf", "IN", "IOD", "K", "K+",
+        "LA", "LI", "LU", "MG", "MN", "NA", "NH4", "NI", "Na+", "Nd", "PB", "PD", "PR", "PT", "Pu", "RB", "Ra", "SM",
+        "SR", "Sm", "Sn", "TB", "TL", "Th", "Tl", "Tm", "U4+", "V2+", "Y", "YB2", "ZN", "Zr"]
+
 def dist(coor1, coor2):
     return sqrt((coor2[0] - coor1[0]) ** 2 + (coor2[1] - coor1[1]) ** 2 + (coor2[2] - coor1[2]) ** 2)
 
@@ -58,6 +63,8 @@ class CheckMakeTop:
 
         self.ligand_tpr = None
         self.ligand_mol2 = None
+
+        self.struct_ions = False
 
         # create the * prmtop variables for compatibility with the original code
         self.complex_pmrtop = 'COM.prmtop'
@@ -300,6 +307,7 @@ class CheckMakeTop:
         # problematic with ILE switching from CD to CD1. parmed bug?
         self.receptor_str.strip('@/H')
         self.properATOMS(self.receptor_str)
+        self.check_ions(self.receptor_str)
         self.receptor_str.save(self.receptor_pdb_fixed, 'pdb', True)
 
         # fix ligand structure
@@ -311,6 +319,7 @@ class CheckMakeTop:
         self.fix_H_ATOMS(self.ligand_str)
         self.ligand_str.strip('@/H')
         self.properATOMS(self.ligand_str)
+        self.check_ions(self.ligand_str)
         self.ligand_str.save(self.ligand_pdb_fixed, 'pdb', True)
 
         if self.INPUT['alarun']:
@@ -352,6 +361,11 @@ class CheckMakeTop:
                 res_ndx += 1
             res_list.sort()
             self.INPUT['print_res'] = ','.join([str(x) for x in res_list])
+
+    def check_ions(self, structure):
+        for res in structure.residues:
+            if res.name in ions:
+                self.struct_ions = True
 
     def mutatexala(self, structure):
         idx = 0
@@ -472,7 +486,8 @@ class CheckMakeTop:
         with open(self.FILES.prefix + 'leap.in', 'w') as tif:
             tif.write('source {}\n'.format(self.INPUT['protein_forcefield']))
             tif.write('source {}\n'.format(self.INPUT['ligand_forcefield']))
-            tif.write('loadamberparams {}\n'.format(ions_para_files[self.INPUT['ions_parameters']]))
+            if self.struct_ions:
+                tif.write('loadamberparams {}\n'.format(ions_para_files[self.INPUT['ions_parameters']]))
             tif.write('set default PBRadii {}\n'.format(PBRadii[self.INPUT['PBRadii']]))
             # check if ligand is not protein and always load
             if self.FILES.ligand_mol2:
@@ -500,7 +515,8 @@ class CheckMakeTop:
             with open(self.FILES.prefix + 'mut_leap.in', 'w') as mtif:
                 mtif.write('source {}\n'.format(self.INPUT['protein_forcefield']))
                 mtif.write('source {}\n'.format(self.INPUT['ligand_forcefield']))
-                mtif.write('loadamberparams {}\n'.format(ions_para_files[self.INPUT['ions_parameters']]))
+                if self.struct_ions:
+                    mtif.write('loadamberparams {}\n'.format(ions_para_files[self.INPUT['ions_parameters']]))
                 mtif.write('set default PBRadii {}\n'.format(PBRadii[self.INPUT['PBRadii']]))
                 # check if ligand is not protein and always load
                 if self.FILES.ligand_mol2:
