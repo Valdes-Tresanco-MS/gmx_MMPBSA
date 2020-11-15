@@ -67,8 +67,8 @@ def checkff(sel_ff):
             for f in data_info['forcefield'][sel_ff]['lib']:
                 shutil.copy(current_file_path.joinpath('data/' + f), leap_dat.joinpath('lib'))
             print(f'Coping {sel_ff} to Amber data... Done')
-    except IOError as e:
-        print(e)
+    except:
+        pass
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
