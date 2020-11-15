@@ -494,14 +494,16 @@ input_file.addNamelist('general', 'general',
                            ['entropy_temp', float, 298.15, 'Temperature to calculate interaction entropy'],
                            ['full_traj', int, 0, 'Print a full traj. AND the thread trajectories.'],
                            ['interval', int, 1, 'Number of frames between adjacent frames analyzed.'],
+                           ['ions_parameters', int, 1, 'Define ions parameters to build the Amber topology.'],
                            ['keep_files', int, 1, 'How many files to keep after successful completion.'],
                            ['ligand_mask', str, None, 'Amber mask of ligand atoms in complex prmtop.'],
-                           ['ligand_forcefield', int, 1, 'Define the force field to build Amber topology for '
+                           ['ligand_forcefield', str, "leaprc.gaff", 'Define the force field to build Amber topology for '
                                                              'ligand (small molecule)'],
                            ['netcdf', int, 0, 'Use NetCDF intermediate trajectories.'],
                            ['PBRadii', int, 3, 'Define PBRadii to build amber topology from Gromacs files.'],
-                           ['protein_forcefield', int, 3, 'Define the force field to build Amber topology for '
-                                                             'protein'],
+                           ['protein_forcefield', str, "oldff/leaprc.ff99SB", 'Define the force field to build Amber '
+                                                                              'topology for protein'],
+
                            ['receptor_mask', str, None, 'Amber mask of receptor atoms in complex prmtop.'],
                            # ['search_path', int, 0, 'Look for intermediate programs in all of PATH'],
                            ['solvated_trajectory', int, 1, 'Define if it is necessary to build a clean trajectory'],
