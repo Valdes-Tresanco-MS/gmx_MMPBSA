@@ -778,7 +778,7 @@ be chosen; you just need to change the xvvfile specified on the command line (se
 Sample input file for GB and PB calculation
 &general
 startframe=5, endframe=100, interval=5,
-verbose=2, protein_forcefield=3, ligand_forcefield=1,
+verbose=2, protein_forcefield="oldff/leaprc.ff99SB", ligand_forcefield="leaprc.gaff",
 /
 &gb
 igb=5, saltcon=0.150,
@@ -790,7 +790,7 @@ istrng=0.15, fillratio=4.0
 Sample input file for Alanine scanning
 &general
 startframe=5, endframe=21, verbose=2, interval=1,
-protein_forcefield=3, PBRadii=4
+protein_forcefield="oldff/leaprc.ff99SB", PBRadii=4
 /
 &gb
 igb=8, saltcon=0.150, intdiel=10
@@ -808,7 +808,7 @@ Sample input file for entropy calculations
 startframe=5, endframe=21, verbose=2, interval=1,
 #entropy variable control whether to perform a quasi-harmonic entropy (QH) approximation or the 
 #Interaction Entropy (IE)(https://pubs.acs.org/doi/abs/10.1021/jacs.6b02682) approximation
-protein_forcefield=3, entropy=2, entropy_seg=25, entropy_temp=298
+protein_forcefield="oldff/leaprc.ff99SB", entropy=2, entropy_seg=25, entropy_temp=298
 /
 &gb
 igb=2, saltcon=0.150,

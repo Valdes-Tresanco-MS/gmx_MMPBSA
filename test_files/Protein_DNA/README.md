@@ -23,7 +23,7 @@ Sample input file for GB calculation
 #according to what is better for your system.
 &general
 startframe=5, endframe=21, verbose=2, interval=1,
-protein_forcefield=3, PBRadii=4
+protein_forcefield="oldff/leaprc.ff99SB", PBRadii=4
 /
 &gb
 igb=8, saltcon=0.150, intdiel=10

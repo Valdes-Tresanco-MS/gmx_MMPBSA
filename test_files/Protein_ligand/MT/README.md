@@ -25,7 +25,7 @@ Sample input file for GB calculation
 #according to what is better for your system.
 &general
 startframe=5, endframe=20, verbose=2, interval=1,
-protein_forcefield=3, ligand_forcefield=1
+protein_forcefield="oldff/leaprc.ff99SB", ligand_forcefield="leaprc.gaff"
 /
 &gb
 igb=5, saltcon=0.15,
