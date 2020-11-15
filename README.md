@@ -1,7 +1,7 @@
 # Documentation
 **Note: We do not intend to replace the original [MMPBSA.py](https://pubs.acs.org/doi/10.1021/ct300418h); instead, 
 we have implemented and improved some functionalities, and what is most important, made this valuable tool available 
-for Gromacs users. Most of the documentation below is found in the [Amber manual](https://ambermd.org/doc12/Amber20.pdf#chapter.34), 
+for GROMACS users. Most of the documentation below is found in the [Amber manual](https://ambermd.org/doc12/Amber20.pdf#chapter.34), 
 we will point out what is new or different. Neither of these should be considered as a “black-box”, and users 
 should be familiar with Amber and MM/PB(GB)SA method before at-tempting these sorts of calculations. These scripts 
 automate a series of calculations, and cannot trap all the types of errors that might occur. You can review some of the 
@@ -36,9 +36,9 @@ The AmberTools suite is free of charge and you can check [Amber Manual](https://
 for a detailed installation guide. Of note, you can have more than one AmberTools installed in your machine. In case 
 AmberTools20 is not the default Amber in your computer, just make sure to source AmberTools20 before 
 installing/updating/running `gmx_MMPBSA`.
-`gmx_MMPBSA` also requires Gromacs (series 4.x.x or 5.x.x or 20xx.x) to be installed in your computer and the shell 
-environment correctly set up for Gromacs. `gmx_MMPBSA` has been tested with Gromacs 4.6.7, 5.1.2 and 2018.3, although it
-should run smoothly with any Gromacs present in the PATH and that is compatible with the files you are using.
+`gmx_MMPBSA` also requires GROMACS (series 4.x.x or 5.x.x or 20xx.x) to be installed in your computer and the shell 
+environment correctly set up for GROMACS. `gmx_MMPBSA` has been tested with GROMACS 4.6.7, 5.1.2 and 2018.3, although it
+should run smoothly with any GROMACS present in the PATH and that is compatible with the files you are using.
 
 `gmx_MMPBSA` contains a module that allows for plotting the results (`gmx_MMPBSA_gui`). For this, it requires the
  installation of PyQt5.
@@ -157,7 +157,7 @@ as well as some reviews:
 * [Wang et. al., 2019](https://pubs.acs.org/doi/abs/10.1021/acs.chemrev.9b00055) 
 
 ## `gmx_MMPBSA` in a nutshell
-`gmx_MMPBSA` brings in all the [MMPBSA.py](https://pubs.acs.org/doi/10.1021/ct300418h) functionalities to Gromacs users. 
+`gmx_MMPBSA` brings in all the [MMPBSA.py](https://pubs.acs.org/doi/10.1021/ct300418h) functionalities to GROMACS users. 
 In addition, few other functionalities were implemented that eases a number of calculations (_e.g._ MM/PB(GB)SA 
 with different internal dielectric constant, interaction entropy calculation). A GUI application is also incorporated 
 that allows for visualizing the results and saving high-quality images.
@@ -208,7 +208,7 @@ This comparison is based on the documentation of the different programs
 | **QM/MMGBSA** |   | :heavy_check_mark: | :heavy_check_mark: |
 | **MM/3D-RISM** |   | :heavy_check_mark: | :heavy_check_mark: |
 | **Membrane Protein MMPBSA** |      | :heavy_check_mark: | :heavy_check_mark: |
-| **Gromacs Version** | 4.x and 5.x |  --- | 4.x, 5.x and 20xx.x |
+| **GROMACS Version** | 4.x and 5.x |  --- | 4.x, 5.x and 20xx.x |
 | **Approximations** | ST | ST and MT | ST and MT |
 | **API** |      | :heavy_check_mark: | :heavy_check_mark: |
 | **Graphical Analyzer** |    |  | :heavy_check_mark: |
@@ -252,9 +252,9 @@ usage: gmx_MMPBSA [-h] [-v] [--input-file-help] [-O] [-prefix <file prefix>] [-i
                   [-lm <Structure File>] [-ls <Structure File>] [-li <Index File>] [-lg index] 
                   [-lt [TRJ [TRJ ...]]] [-make-mdins] [-use-mdins] [-rewrite-output]
 
-gmx_MMPBSA is an effort to bring in Amber's MMPBSA.py functionalities and more to Gromacs users. This 
+gmx_MMPBSA is an effort to bring in Amber's MMPBSA.py functionalities and more to GROMACS users. This 
 program is based on Amber's MMPBSA.py and essentially works as such. gmx_MMPBSA minimizes 
-compatibility-related issues since it will process any Gromacs files compatible with the Gromacs 
+compatibility-related issues since it will process any GROMACS files compatible with the GROMACS 
 in the path.
 
 optional arguments:
@@ -318,7 +318,7 @@ Ligand:
   Ligand files and info that are needed to perform the calculation. If the ligand are not defined, 
    we generate it from that of the complex.
 
-  -lm <Structure File>  A *.mol2 file of the unbound ligand used to parametrize ligand for Gromacs.
+  -lm <Structure File>  A *.mol2 file of the unbound ligand used to parametrize ligand for GROMACS.
                          Must be defined if Protein-Ligand (small molecule) complex was define. 
                          Antechamber output *.mol2 is recommended (default: None)
   -ls <Structure File>  Structure file of the unbound ligand. If ligand is a small molecule, make 
@@ -385,7 +385,7 @@ all the specification for the MM/PB(GB)SA calculation. The input file is designe
 other programs in Amber as possible. The input file has the same namelist structure as both sander and pmemd. The allowed 
 namelists are &general, &gb, &pb, &rism, &alanine_scanning, &nmode, and &decomp. The input variables recognized in each 
 namelist are described below, but those in &general are typically variables that apply to all aspects of the calculation
-or parameters required for build amber topologies from Gromacs files.
+or parameters required for build amber topologies from GROMACS files.
 The &gb namelist is unique to Generalized Born calculations, &pb is unique to Poisson Boltzmann calculations, &rism is 
 unique to 3D-RISM calculations, &alanine_scanning is unique to alanine scanning calculations, &nmode is unique to the
 normal mode calculations used to approximate vibrational entropies, and &decomp is unique to the decomposition
@@ -467,44 +467,42 @@ However, this option is incompatible with alanine scanning. Default value is 0.
 + New input variable added
 ```
 `protein_forcefield` Define the force field used to build Amber topology for proteins. Make sure this force field is 
-the same as the one used in Gromacs (Default = "oldff/leaprc.ff99SB")
+the same as the one used in GROMACS (Default = "oldff/leaprc.ff99SB")
 Force fields tested:
-* oldff/leaprc.ff99
-* oldff/leaprc.ff03 
-* oldff/leaprc.ff99SB 
-* oldff/leaprc.ff99SBildn
-* leaprc.protein.ff14SB
+* "oldff/leaprc.ff99"
+* "oldff/leaprc.ff03" 
+* "oldff/leaprc.ff99SB" 
+* "oldff/leaprc.ff99SBildn"
+* "leaprc.protein.ff14SB"
 
 ```diff
 + New input variable added
 ```
 `ligand_forcefield` Define the force field used to build Amber topology for small molecules or glycams. Make sure this 
-force field is the same as the one used for Gromacs (Default = "leaprc.gaff"). 
+force field is the same as the one used for GROMACS (Default = "leaprc.gaff"). 
 Force fields tested:
-* leaprc.gaff
-* leaprc.gaff2
-* leaprc.GLYCAM_06j-1    (Compatible with amber12SB and later)
-* leaprc.GLYCAM_06EPb    (Compatible with amber12SB and later)
-* leaprc.GLYCAM_06h-1    (Includes in gmx_MMPBSA package. If it is selected will be copied to Amber data. Compatible with amber99SB and earlier)
+* "leaprc.gaff"
+* "leaprc.gaff2"
+* "leaprc.GLYCAM_06j-1"    (Compatible with amber12SB and later)
+* "leaprc.GLYCAM_06EPb"    (Compatible with amber12SB and later)
+* "leaprc.GLYCAM_06h-1"    (Included in gmx_MMPBSA package. If it is selected will be copied to $AMBERHOME/dat/leap. Compatible with amber99SB and earlier)
 
 ```diff
 + New input variable added
 ```
 `ions_parameters` Define ions parameters to build the Amber topology. (Default = 1)
-* 1 frcmod.ions234lm_126_tip3p
-* 2 frcmod.ions234lm_iod_tip4pew
-* 3 frcmod.ions234lm_iod_spce
-* 4 frcmod.ions234lm_hfe_spce
-* 5 frcmod.ions234lm_126_tip4pew
-* 6 frcmod.ions234lm_126_spce
-* 7 frcmod.ions234lm_1264_tip4pew
-* 8 frcmod.ions234lm_1264_tip3p
-* 9 frcmod.ions234lm_1264_spce
-* 10 frcmod.ions234lm_iod_tip3p
-* 11 frcmod.ions234lm_hfe_tip4pew
-* 12 frcmod.ions234lm_hfe_tip3p
-
-
+* 1 "frcmod.ions234lm_126_tip3p"
+* 2 "frcmod.ions234lm_iod_tip4pew"
+* 3 "frcmod.ions234lm_iod_spce"
+* 4 "frcmod.ions234lm_hfe_spce"
+* 5 "frcmod.ions234lm_126_tip4pew"
+* 6 "frcmod.ions234lm_126_spce"
+* 7 "frcmod.ions234lm_1264_tip4pew"
+* 8 "frcmod.ions234lm_1264_tip3p"
+* 9 "frcmod.ions234lm_1264_spce"
+* 10 "frcmod.ions234lm_iod_tip3p"
+* 11 "frcmod.ions234lm_hfe_tip4pew"
+* 12 "frcmod.ions234lm_hfe_tip3p"
 
 ```diff
 + New input variable added
@@ -523,7 +521,7 @@ trajectories files may not be generated correctly due to internal errors or inte
 * 1: Build clean trajectory
 
 ```diff
-- Input variable deleted. ALways must be defined to get gromacs
+- Input variable deleted. ALways must be defined to get GROMACS
 ```
 ~~-`search_path` Advanced option. By default, MMPBSA.py will only search for executables in $AMBERHOME/bin .
 To enable it to search for binaries in your full PATH if they can’t be found in $AMBERHOME/bin , set
@@ -650,7 +648,7 @@ the namelist must be included (blank if desired)
  in any capitalization (Default = receptor or REC)
 
 `mutant_res` Define the specific residue that is going to be mutated. Use the following format CHAIN:RESNUM (eg: 'A:350').
-Please, make sure that your selection is correct and based on Gromacs numbering in processed files.
+Please, make sure that your selection is correct and based on GROMACS numbering in processed files.
 
 **&nmode namelist variables**
 
@@ -902,7 +900,7 @@ simulation. At the end of each description, the lowest value of the original “
 this file will be shown in parentheses. Nevertheless, in the current version, all the files are retained for plotting 
 purposes.
 
-`make_top.log` This file contains the output coming from all the Gromacs programs.
+`make_top.log` This file contains the output coming from all the GROMACS programs.
 
 `leap.log` This file contains the output coming from tleap program.
 
