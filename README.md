@@ -497,18 +497,18 @@ Force fields tested:
 + New input variable added
 ```
 `ions_parameters` Define ions parameters to build the Amber topology. (Default = 1)
-* 1 "frcmod.ions234lm_126_tip3p"
-* 2 "frcmod.ions234lm_iod_tip4pew"
-* 3 "frcmod.ions234lm_iod_spce"
-* 4 "frcmod.ions234lm_hfe_spce"
-* 5 "frcmod.ions234lm_126_tip4pew"
-* 6 "frcmod.ions234lm_126_spce"
-* 7 "frcmod.ions234lm_1264_tip4pew"
-* 8 "frcmod.ions234lm_1264_tip3p"
-* 9 "frcmod.ions234lm_1264_spce"
-* 10 "frcmod.ions234lm_iod_tip3p"
-* 11 "frcmod.ions234lm_hfe_tip4pew"
-* 12 "frcmod.ions234lm_hfe_tip3p"
+* 1: frcmod.ions234lm_126_tip3p
+* 2: frcmod.ions234lm_iod_tip4pew
+* 3: frcmod.ions234lm_iod_spce
+* 4: frcmod.ions234lm_hfe_spce
+* 5: frcmod.ions234lm_126_tip4pew
+* 6: frcmod.ions234lm_126_spce
+* 7: frcmod.ions234lm_1264_tip4pew
+* 8: frcmod.ions234lm_1264_tip3p
+* 9: frcmod.ions234lm_1264_spce
+* 10: frcmod.ions234lm_iod_tip3p
+* 11: frcmod.ions234lm_hfe_tip4pew
+* 12: frcmod.ions234lm_hfe_tip3p
 
 ```diff
 + New input variable added
