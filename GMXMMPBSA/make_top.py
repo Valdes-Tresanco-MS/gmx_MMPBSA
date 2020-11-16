@@ -487,6 +487,7 @@ class CheckMakeTop:
             tif.write('source {}\n'.format(self.INPUT['protein_forcefield']))
             tif.write('source {}\n'.format(self.INPUT['ligand_forcefield']))
             if self.struct_ions:
+                tif.write('loadOff atomic_ions.lib\n')
                 tif.write('loadamberparams {}\n'.format(ions_para_files[self.INPUT['ions_parameters']]))
             tif.write('set default PBRadii {}\n'.format(PBRadii[self.INPUT['PBRadii']]))
             # check if ligand is not protein and always load
@@ -516,6 +517,7 @@ class CheckMakeTop:
                 mtif.write('source {}\n'.format(self.INPUT['protein_forcefield']))
                 mtif.write('source {}\n'.format(self.INPUT['ligand_forcefield']))
                 if self.struct_ions:
+                    tif.write('loadOff atomic_ions.lib\n')
                     mtif.write('loadamberparams {}\n'.format(ions_para_files[self.INPUT['ions_parameters']]))
                 mtif.write('set default PBRadii {}\n'.format(PBRadii[self.INPUT['PBRadii']]))
                 # check if ligand is not protein and always load
