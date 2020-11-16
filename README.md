@@ -202,18 +202,18 @@ This comparison is based on the documentation of the different programs
 | **Normal binding free energies**| PB | PB and GB  | PB and GB |
 | GB models | None | 1, 2, 3, 5, 7 and 8  | 1, 2, 3, 5, 7 and 8 |
 | **Stability** |  | :heavy_check_mark: | :heavy_check_mark: |
-| **Alanine scanning** | | :heavy_check_mark: | :heavy_check_mark: |
-| **Entropy corrections** <sup>2</sup>|   | nmode and qh | nmode, qh, and IE |
+| **Alanine scanning** | :heavy_check_mark: <sup>2</sup>| :heavy_check_mark: | :heavy_check_mark: |
+| **Entropy corrections** <sup>3</sup>|   | nmode and qh | nmode, qh, and IE |
 | **Decomposition schemes** | Per-Residues | Per-Residues and Per-Wise | Per-Residues and Per-Wise |
 | **QM/MMGBSA** |   | :heavy_check_mark: | :heavy_check_mark: |
 | **MM/3D-RISM** |   | :heavy_check_mark: | :heavy_check_mark: |
 | **Membrane Protein MMPBSA** |      | :heavy_check_mark: | :heavy_check_mark: |
-| **GROMACS Version** | 4.x and 5.x |  --- | 4.x, 5.x and 20xx.x |
+| **GROMACS Version** | 4.x, 5.x and 2016+ <sup>4</sup> |  --- | 4.x, 5.x and 20xx.x |
 | **Approximations** | ST | ST and MT | ST and MT |
 | **API** |      | :heavy_check_mark: | :heavy_check_mark: |
 | **Graphical Analyzer** |    |  | :heavy_check_mark: |
 | Energy to PDB | :heavy_check_mark: |     | :heavy_check_mark: |
-| Energetic Terms charts | Per-Frame | Average and/or Per-Frame <sup>3</sup>  | Average and Per-frame |
+| Energetic Terms charts | Per-Frame | Average and/or Per-Frame <sup>5</sup>  | Average and Per-frame |
 | Energetic Terms charts representation | xmgrace/matplotlib/gnuplot | API and graphics library | gmx_MMPBSA_gui |
 | **Externals programs** | APBS (1.2.x, 1.3.x or 1.4.x) |  AmberTools20 | AmberTools20 |
 | **Parallel computation** | Depends on APBS version | :heavy_check_mark: | :heavy_check_mark: |
@@ -223,10 +223,15 @@ This comparison is based on the documentation of the different programs
 
 <sup>1</sup> MMPBSA.py is included in AMBER package.
 
-<sup>2</sup> nmode = Normal modes approximation, qh = Quasic-Harmony approximation and IE = Interaction Entropy
+<sup>2</sup> Without documentation.
+
+<sup>3</sup> nmode = Normal modes approximation, qh = Quasic-Harmony approximation and IE = Interaction Entropy
 approximation
 
-<sup>3</sup> The user can obtain each energetic term per frame or its average values using the API. This means that
+<sup>4</sup> Gromacs 20xx.x is not officially supported. There is a Pull Request that offers a minimum of compatibility 
+with versions higher than 2016.x but with limitations 
+
+<sup>5</sup> The user can obtain each energetic term per frame or its average values using the API. This means that
  user must be familiar with Python to handle the API, perform custom calculations or graph such data.
 
 ### Examples...
