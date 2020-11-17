@@ -29,7 +29,8 @@ from GMXMMPBSA.utils import checkff
 import subprocess
 from math import sqrt
 
-protein_ff = {1:'oldff/leaprc.ff99', 2: 'oldff/leaprc.ff03', 3: 'oldff/leaprc.ff99SB', 4: 'oldff/leaprc.ffSBildn',
+# Fixme: not used. Remove???
+protein_ff = {1:'oldff/leaprc.ff99', 2: 'oldff/leaprc.ff03', 3: 'oldff/leaprc.ff99SB', 4: 'oldff/leaprc.ff99SBildn',
            5: 'leaprc.protein.ff14SB'}
 ligand_ff = {1: 'leaprc.gaff', 2: 'leaprc.gaff2', 3: 'leaprc.GLYCAM_06j-1', 4: 'leaprc.GLYCAM_06h-1'}
 
@@ -41,7 +42,7 @@ ions_para_files = {1: 'frcmod.ions234lm_126_tip3p', 2: 'frcmod.ions234lm_iod_tip
                    9: 'frcmod.ions234lm_1264_spce', 10: 'frcmod.ions234lm_iod_tip3p',
                    11: 'frcmod.ions234lm_hfe_tip4pew', 12: 'frcmod.ions234lm_hfe_tip3p}'}
 
-ions = ["AG" "AL", "Ag", "BA", "BR", "Be", "CA", "CD", "CE", "CL", "CO", "CR", "CS", "CU", "CU1", "Ce", "Cl-", "Cr",
+ions = ["AG", "AL", "Ag", "BA", "BR", "Be", "CA", "CD", "CE", "CL", "CO", "CR", "CS", "CU", "CU1", "Ce", "Cl-", "Cr",
         "Dy", "EU", "EU3", "Er", "F", "FE", "FE2", "GD3", "H3O+", "HE+", "HG", "HZ+", "Hf", "IN", "IOD", "K", "K+",
         "LA", "LI", "LU", "MG", "MN", "NA", "NH4", "NI", "Na+", "Nd", "PB", "PD", "PR", "PT", "Pu", "RB", "Ra", "SM",
         "SR", "Sm", "Sn", "TB", "TL", "Th", "Tl", "Tm", "U4+", "V2+", "Y", "YB2", "ZN", "Zr"]
@@ -64,7 +65,8 @@ class CheckMakeTop:
         self.ligand_tpr = None
         self.ligand_mol2 = None
 
-        self.struct_ions = False
+        self.rec_str_ions = False
+        self.lig_str_ions = False
 
         # create the * prmtop variables for compatibility with the original code
         self.complex_pmrtop = 'COM.prmtop'
@@ -81,6 +83,9 @@ class CheckMakeTop:
         self.complex_pdb_fixed = self.FILES.prefix + 'COM_FIXED.pdb'
         self.receptor_pdb_fixed = self.FILES.prefix + 'REC_FIXED.pdb'
         self.ligand_pdb_fixed = self.FILES.prefix + 'LIG_FIXED.pdb'
+
+        self.rec_ions_pdb = self.FILES.prefix + 'REC_IONS.pdb'
+        self.lig_ions_pdb = self.FILES.prefix + 'LIG_IONS.pdb'
 
         self.mutant_complex_pdb = self.FILES.prefix + 'MUT_COM.pdb'
         self.mutant_receptor_pdb = self.FILES.prefix + 'MUT_REC.pdb'
@@ -307,7 +312,19 @@ class CheckMakeTop:
         # problematic with ILE switching from CD to CD1. parmed bug?
         self.receptor_str.strip('@/H')
         self.properATOMS(self.receptor_str)
-        self.check_ions(self.receptor_str)
+
+        # check if rec contain ions (metals)
+        self.rec_ions = self.receptor_str[:, ions, :]
+        if self.rec_ions.atoms:
+            # fix atom number, avoid core dump in tleap
+            i = 1
+            for at in self.rec_ions.atoms:
+                at.number = i
+                i += 1
+            self.rec_ions.save(self.rec_ions_pdb, 'pdb', True, renumber=False)
+            # if exists any ions then strip them
+            self.receptor_str.strip(f':{",".join(ions)}')
+            self.rec_str_ions = True
         self.receptor_str.save(self.receptor_pdb_fixed, 'pdb', True)
 
         # fix ligand structure
@@ -319,7 +336,19 @@ class CheckMakeTop:
         self.fix_H_ATOMS(self.ligand_str)
         self.ligand_str.strip('@/H')
         self.properATOMS(self.ligand_str)
-        self.check_ions(self.ligand_str)
+
+        # check if rec contain ions (metals)
+        self.lig_ions = self.ligand_str[:, ions, :]
+        if self.lig_ions.atoms:
+            # fix atom number, avoid core dump in tleap
+            i = 1
+            for at in self.lig_ions.atoms:
+                at.number = i
+                i += 1
+            self.lig_ions.save(self.lig_ions_pdb, 'pdb', True, renumber=False)
+            # if exists any ions then strip them
+            self.ligand_str.strip(f':{",".join(ions)}')
+            self.lig_str_ions = True
         self.ligand_str.save(self.ligand_pdb_fixed, 'pdb', True)
 
         if self.INPUT['alarun']:
@@ -361,11 +390,6 @@ class CheckMakeTop:
                 res_ndx += 1
             res_list.sort()
             self.INPUT['print_res'] = ','.join([str(x) for x in res_list])
-
-    def check_ions(self, structure):
-        for res in structure.residues:
-            if res.name in ions:
-                self.struct_ions = True
 
     def mutatexala(self, structure):
         idx = 0
@@ -486,23 +510,43 @@ class CheckMakeTop:
         with open(self.FILES.prefix + 'leap.in', 'w') as tif:
             tif.write('source {}\n'.format(self.INPUT['protein_forcefield']))
             tif.write('source {}\n'.format(self.INPUT['ligand_forcefield']))
-            if self.struct_ions:
+            if self.rec_str_ions or self.lig_str_ions:
                 tif.write('loadOff atomic_ions.lib\n')
                 tif.write('loadamberparams {}\n'.format(ions_para_files[self.INPUT['ions_parameters']]))
             tif.write('set default PBRadii {}\n'.format(PBRadii[self.INPUT['PBRadii']]))
+
+            tif.write('REC = loadpdb {}\n'.format(self.receptor_pdb_fixed))
+            if self.rec_str_ions:
+                tif.write('R_IONS = loadpdb {}\n'.format(self.rec_ions_pdb))
+                tif.write('REC_IONS = combine { REC R_IONS}\n')
+                tif.write('saveamberparm REC_IONS {t} {p}REC.inpcrd\n'.format(t=self.receptor_pmrtop,
+                                                                            p=self.FILES.prefix))
+            else:
+                tif.write('saveamberparm REC {t} {p}REC.inpcrd\n'.format(t=self.receptor_pmrtop, p=self.FILES.prefix))
+
             # check if ligand is not protein and always load
             if self.FILES.ligand_mol2:
                 tif.write('LIG = loadmol2 {}\n'.format(self.FILES.ligand_mol2))
                 tif.write('check LIG\n')
                 tif.write('loadamberparams {}\n'.format(self.ligand_frcmod))
-
-            tif.write('REC = loadpdb {}\n'.format(self.receptor_pdb_fixed))
-            tif.write('saveamberparm REC {t} {p}REC.inpcrd\n'.format(t=self.receptor_pmrtop, p=self.FILES.prefix))
-            if not self.FILES.ligand_mol2:
+                tif.write('saveamberparm LIG {t} {p}LIG.inpcrd\n'.format(t=self.ligand_pmrtop, p=self.FILES.prefix))
+            else:
                 tif.write('LIG = loadpdb {}\n'.format(self.ligand_pdb_fixed))
-            tif.write('saveamberparm LIG {t} {p}LIG.inpcrd\n'.format(t=self.ligand_pmrtop, p=self.FILES.prefix))
+                if self.lig_str_ions:
+                    tif.write('L_IONS = loadpdb {}\n'.format(self.lig_ions_pdb))
+                    tif.write('LIG_IONS = combine { LIG L_IONS}\n')
+                    tif.write('saveamberparm LIG_IONS {t} {p}LIG.inpcrd\n'.format(t=self.ligand_pmrtop,
+                                                                                  p=self.FILES.prefix))
+                else:
+                    tif.write('saveamberparm LIG {t} {p}LIG.inpcrd\n'.format(t=self.ligand_pmrtop, p=self.FILES.prefix))
 
-            tif.write('complex = combine { REC LIG }\n')
+            com_string = 'complex = combine { REC LIG '
+            if self.rec_str_ions:
+                com_string += 'R_IONS '
+            if self.lig_str_ions:
+                com_string += 'L_IONS '
+            com_string += '}\n'
+            tif.write(com_string)
             tif.write('saveamberparm complex {t} {p}COM.inpcrd\n'.format(t=self.complex_pmrtop, p=self.FILES.prefix))
             tif.write('quit')
 
@@ -516,8 +560,8 @@ class CheckMakeTop:
             with open(self.FILES.prefix + 'mut_leap.in', 'w') as mtif:
                 mtif.write('source {}\n'.format(self.INPUT['protein_forcefield']))
                 mtif.write('source {}\n'.format(self.INPUT['ligand_forcefield']))
-                if self.struct_ions:
-                    tif.write('loadOff atomic_ions.lib\n')
+                if self.rec_str_ions or self.lig_str_ions:
+                    mtif.write('loadOff atomic_ions.lib\n')
                     mtif.write('loadamberparams {}\n'.format(ions_para_files[self.INPUT['ions_parameters']]))
                 mtif.write('set default PBRadii {}\n'.format(PBRadii[self.INPUT['PBRadii']]))
                 # check if ligand is not protein and always load
@@ -526,31 +570,65 @@ class CheckMakeTop:
                     self.mutant_ligand_pmrtop = None
                     mtif.write('check LIG\n')
                     mtif.write('loadamberparams {}\n'.format(self.ligand_frcmod))
-                    mtif.write('REC = loadpdb {}\n'.format(self.mutant_receptor_pdb_fixed))
-                    mtif.write('saveamberparm REC {t} {p}MUT_REC.inpcrd\n'.format(t=self.mutant_receptor_pmrtop,
-                                                                                  p=self.FILES.prefix))
                     mtif.write('saveamberparm LIG {t} {p}LIG.inpcrd\n'.format(t=self.ligand_pmrtop,
+                                                                              p=self.FILES.prefix))
+                    mtif.write('REC = loadpdb {}\n'.format(self.mutant_receptor_pdb_fixed))
+                    if self.rec_str_ions:
+                        mtif.write('R_IONS = loadpdb {}\n'.format(self.rec_ions_pdb))
+                        mtif.write('REC_IONS = combine { REC R_IONS}\n')
+                        mtif.write('saveamberparm REC_IONS {t} {p}MUT_REC.inpcrd\n'.format(
+                            t=self.mutant_receptor_pmrtop,
+                                                                                      p=self.FILES.prefix))
+                    else:
+                        mtif.write('saveamberparm REC {t} {p}MUT_REC.inpcrd\n'.format(t=self.mutant_receptor_pmrtop,
                                                                                   p=self.FILES.prefix))
+
                 else:
                     if self.INPUT['mutant'].lower() in ['rec', 'receptor']:
                         mtif.write('REC = loadpdb {}\n'.format(self.mutant_receptor_pdb_fixed))
                         self.mutant_ligand_pmrtop = None
-                        mtif.write('LIG = loadpdb {}\n'.format(self.ligand_pdb_fixed))
-                        mtif.write('saveamberparm REC {t} {p}MUT_REC.inpcrd\n'.format(t=self.mutant_receptor_pmrtop,
+                        if self.rec_str_ions:
+                            mtif.write('R_IONS = loadpdb {}\n'.format(self.rec_ions_pdb))
+                            mtif.write('REC_IONS = combine { REC R_IONS}\n')
+                            mtif.write('saveamberparm REC_IONS {t} {p}REC.inpcrd\n'.format(
+                                t=self.mutant_receptor_pmrtop,
                                                                                           p=self.FILES.prefix))
+                        else:
+                            mtif.write('saveamberparm REC {t} {p}MUT_REC.inpcrd\n'.format(t=self.mutant_receptor_pmrtop,
+                                                                                          p=self.FILES.prefix))
+                        mtif.write('LIG = loadpdb {}\n'.format(self.ligand_pdb_fixed))
                         mtif.write('saveamberparm LIG {t} {p}LIG.inpcrd\n'.format(t=self.ligand_pmrtop,
-                                                                                     p=self.FILES.prefix))
+                                                                                  p=self.FILES.prefix))
                     else:
                         mtif.write('LIG = loadpdb {}\n'.format(self.mutant_ligand_pdb_fixed))
                         self.mutant_receptor_pmrtop = None
-                        mtif.write('REC = loadpdb {}\n'.format(self.receptor_pdb_fixed))
-                        mtif.write('saveamberparm LIG {t} {p}MUT_LIG.inpcrd\n'.format(t=self.mutant_ligand_pmrtop,
+                        if self.lig_str_ions:
+                            mtif.write('L_IONS = loadpdb {}\n'.format(self.lig_ions_pdb))
+                            mtif.write('LIG_IONS = combine { LIG L_IONS}\n')
+                            mtif.write('saveamberparm LIG_IONS {t} {p}LIG.inpcrd\n'.format(t=self.mutant_ligand_pmrtop,
                                                                                           p=self.FILES.prefix))
-                        mtif.write('saveamberparm REC {t} {p}REC.inpcrd\n'.format(t=self.receptor_pmrtop,
-                                                                                     p=self.FILES.prefix))
-                mtif.write('mut_com = combine { REC LIG }\n')
-                mtif.write('saveamberparm mut_com {t} {p}MUT_COM.inpcrd\n'.format(t=self.mutant_complex_pmrtop,
+                        else:
+                            mtif.write('saveamberparm LIG {t} {p}MUT_LIG.inpcrd\n'.format(t=self.mutant_ligand_pmrtop,
+                                                                                          p=self.FILES.prefix))
+                        mtif.write('REC = loadpdb {}\n'.format(self.receptor_pdb_fixed))
+                        if self.rec_str_ions:
+                            mtif.write('R_IONS = loadpdb {}\n'.format(self.rec_ions_pdb))
+                            mtif.write('REC_IONS = combine { REC R_IONS}\n')
+                            mtif.write('saveamberparm REC_IONS {t} {p}REC.inpcrd\n'.format(t=self.receptor_pmrtop,
+                                                                                          p=self.FILES.prefix))
+                        else:
+                            mtif.write('saveamberparm REC {t} {p}REC.inpcrd\n'.format(t=self.receptor_pmrtop,
                                                                                   p=self.FILES.prefix))
+
+                    mut_com_string = 'mut_com = combine { REC LIG '
+                    if self.rec_str_ions:
+                        mut_com_string += 'R_IONS '
+                    if self.lig_str_ions:
+                        mut_com_string += 'L_IONS '
+                    mut_com_string += '}\n'
+                    mtif.write(mut_com_string)
+                    mtif.write('saveamberparm mut_com {t} {p}MUT_COM.inpcrd\n'.format(t=self.mutant_complex_pmrtop,
+                                                                                      p=self.FILES.prefix))
                 mtif.write('quit')
 
             p1 = subprocess.Popen([tleap, '-f', '{}'.format(self.FILES.prefix + 'mut_leap.in')], stdout=self.log,
@@ -559,5 +637,6 @@ class CheckMakeTop:
                 raise MMPBSA_Error('%s failed when querying %s' % (tleap, self.FILES.prefix + 'mut_leap.in'))
         else:
             self.mutant_complex_pmrtop = None
+
         return (self.complex_pmrtop, self.receptor_pmrtop, self.ligand_pmrtop, self.mutant_complex_pmrtop,
                 self.mutant_receptor_pmrtop, self.mutant_ligand_pmrtop)

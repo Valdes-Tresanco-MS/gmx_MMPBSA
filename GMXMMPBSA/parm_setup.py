@@ -122,7 +122,7 @@ class MMPBSA_System(object):
         """ This determines the receptor and ligand masks based on residue
           sequence. It will try placing the ligand inside the receptor to
           match the complex residue sequence, starting from the end.
-      """
+        """
         from parmed.amber import AmberMask
 
         # First, if a mask is provided, we can actually map it using that
@@ -130,7 +130,6 @@ class MMPBSA_System(object):
                 not self.stability):
             rmask = AmberMask(self.complex_prmtop, receptor_mask).Selection()
             lmask = AmberMask(self.complex_prmtop, ligand_mask).Selection()
-
             # Check that every atom is selected once and only once by comparing
             # the sums of the two mask selections
             if sum(rmask) + sum(lmask) != self.complex_prmtop.ptr('natom'):
