@@ -496,7 +496,7 @@ input_file.addNamelist('general', 'general',
                            ['gmx_path', str, '', 'Force to use this path to get Gromacs executable.'],
                            ['interval', int, 1, 'Number of frames between adjacent frames analyzed.'],
                            ['ions_parameters', int, 1, 'Define ions parameters to build the Amber topology.'],
-                           ['keep_files', int, 1, 'How many files to keep after successful completion.'],
+                           ['keep_files', int, 2, 'How many files to keep after successful completion.'],
                            ['ligand_mask', str, None, 'Amber mask of ligand atoms in complex prmtop.'],
                            ['ligand_forcefield', str, "leaprc.gaff", 'Define the force field to build Amber topology for '
                                                              'ligand (small molecule)'],

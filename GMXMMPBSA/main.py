@@ -127,11 +127,11 @@ class MMPBSA_App(object):
         # Set up some local refs for convenience
         FILES, INPUT, master = self.FILES, self.INPUT, self.master
 
-        # Now we're getting ready, remove existing intermediate files
-        if master and FILES.use_mdins:
-            self.remove(-1)
-        elif master and not FILES.rewrite_output:
-            self.remove(0)
+        # # Now we're getting ready, remove existing intermediate files
+        # if master and FILES.use_mdins:
+        #     self.remove(-1)
+        # elif master and not FILES.rewrite_output:
+        #     self.remove(0)
 
         # Create input files based on INPUT dict
         if master and not FILES.use_mdins:
@@ -558,6 +558,9 @@ class MMPBSA_App(object):
 
     def loadcheck_prmtops(self):
         """ Loads the topology files and checks their consistency """
+
+
+
         # Start setup timer and make sure we've already set up our input
         self.timer.add_timer('setup', 'Total setup time:')
         self.timer.start_timer('setup')
@@ -565,6 +568,12 @@ class MMPBSA_App(object):
             raise InternalError('MMPBSA_App not set up! Cannot check parms yet!')
         # create local aliases to avoid abundant selfs
         FILES, INPUT = self.FILES, self.INPUT
+        # Now we're getting ready, remove existing intermediate files
+        if self.master and FILES.use_mdins:
+            self.remove(-1)
+        elif self.master and not FILES.rewrite_output:
+            self.remove(0)
+
         # Now load the parms and check them
         self.stdout.write('Loading and checking parameter files for '
                           'compatibility...\n')
