@@ -21,9 +21,19 @@ from setuptools import setup
 with open("README.md", "r") as f:
     LONG_DESCRIPTION = f.read()
 
+def get_version(rel_path):
+    with open(rel_path) as vfile:
+        for line in vfile.readlines():
+            print(line)
+            if line.startswith('__version__'):
+                delim = '"' if '"' in line else "'"
+                return line.split(delim)[1]
+        else:
+            raise RuntimeError("Unable to find version string.")
+
 setup(
     name='gmx_MMPBSA',
-    version='1.1.0',
+    version=get_version("GMXMMPBSA/__init__.py"),
     packages=['GMXMMPBSA'],
     package_data={"GMXMMPBSA": ["data/*"]},
     license='GPLv3',
