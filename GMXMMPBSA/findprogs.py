@@ -53,11 +53,13 @@ def find_progs(INPUT):
     my_progs = {}
 
     search_path = True
+    force_path = INPUT['gmx_path']
+    print(force_path)
     gromacs5x = True
     gromacs4x = True
 
     for prog in list(used_progs.keys()):
-        my_progs[prog] = ExternProg(prog, used_progs[prog], search_path)
+        my_progs[prog] = ExternProg(prog, used_progs[prog], search_path, force_path)
         if used_progs[prog]:
             if not my_progs[prog].full_path:
                 if prog == 'gmx':
@@ -75,7 +77,7 @@ def find_progs(INPUT):
 
 #+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-def which(program, search_path = False):
+def which(program, search_path=False, force_path=None):
     """ Searches for a program in $AMBERHOME first, then PATH if we allow
         PATH searching.
     """
@@ -101,6 +103,11 @@ def which(program, search_path = False):
     if is_exe(os.path.join(amberhome, 'bin', program)):
         return os.path.join(amberhome, 'bin', program)
 
+    if force_path:
+        exe_file = os.path.join(force_path, program)
+        if is_exe(exe_file):
+            return exe_file  # if it's executable, return the file
+
     # If we can search the path, look through it
     if search_path:
         for path in os.environ["PATH"].split(os.pathsep):
@@ -114,7 +121,7 @@ def which(program, search_path = False):
 
 class ExternProg(object):
     """ An external program """
-    def __init__(self, prog_name, needed=False, search_path=False):
+    def __init__(self, prog_name, needed=False, search_path=False, force_path=None):
         # We need to initialize the program name that we're looking for, whether
         # or not it is necessary by default, and the conditions upon which we
         # must look for it. The full_path is the attribute that stores this
@@ -123,11 +130,12 @@ class ExternProg(object):
         self.prog_name = prog_name
         self.full_path = None
         self.search_path = search_path
+        self.force_path = force_path
         if needed: self.find()
 
     def find(self):
         """ Find the program """
-        self.full_path = which(self.prog_name, self.search_path)
+        self.full_path = which(self.prog_name, self.search_path, self.force_path)
 
     def __str__(self):
         if self.full_path:
