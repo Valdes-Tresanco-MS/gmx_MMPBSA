@@ -37,6 +37,8 @@ def find_progs(INPUT):
     """ Find the necessary programs based in the user INPUT """
     # List all of the used programs with the conditions that they are needed
     used_progs = { 'cpptraj' : True, 'gmx': True,
+                   # look for any available gromacs executable
+                   'gmx_mpi': True, 'gmx_d': True, 'gmx_mpi_d': True,
                    # look for gromacs 4.x
                    'make_ndx': True, 'trjconv': True, 'tleap': True, 'parmchk2': True,
                    'mmpbsa_py_energy' : ((INPUT['pbrun'] or INPUT['gbrun'])
@@ -56,6 +58,9 @@ def find_progs(INPUT):
     force_path = INPUT['gmx_path']
     print(force_path)
     gromacs5x = True
+    gromacs5x_d = True
+    gromacs5x_mpi = True
+    gromacs5x_mpi_d = True
     gromacs4x = True
 
     for prog in list(used_progs.keys()):
@@ -65,12 +70,21 @@ def find_progs(INPUT):
                 if prog == 'gmx':
                     gromacs5x = False
                     continue
+                if prog == 'gmx_d':
+                    gromacs5x_d = False
+                    continue
+                if prog == 'gmx_mpi':
+                    gromacs5x_mpi = False
+                    continue
+                if prog == 'gmx_mpi_d':
+                    gromacs5x_mpi_d = False
+                    continue
                 if prog in ['make_ndx', 'trjconv']:
                     gromacs4x = False
                     continue
                 raise MMPBSA_Error('Could not find necessary program [%s]' % prog)
             print('%s found! Using %s' % (prog, str(my_progs[prog])))
-    if not gromacs5x and not gromacs4x:
+    if not (gromacs5x or gromacs5x_d or gromacs5x_mpi or gromacs5x_mpi_d) and not gromacs4x:
         raise MMPBSA_Error('Could not find necessary Gromacs program')
 
     return my_progs
