@@ -440,7 +440,14 @@ the Interaction Entropy, _e.g._: `entropy_seg = 25` means that the last quartile
 ```
 `entropy_temp` Specify the temperature to calculate the entropy term `−TΔS` (Only if `entropy` = 2). Avoid 
 inconsistencies with defined internal temperature (298.15 K) when nmode is used (Default = 298.15)
-      
+
+```diff
++ New input variable added
+```
+`gmx_path` Define an additional path to search for Gromacs executables. This path takes precedence over the path 
+defined in the PATH variable. In these path the following executables will be searched: `gmx`, `gmx_mpi`, `gmx_d`, 
+`gmx_mpi_d` (Gromcas > 5.x.x), `make_ndx` and `trjconv` (Gromacs 4.x.x) 
+   
 `interval` The offset from which to choose frames from each trajectory file. For example, an interval of 2 will pull
 every 2nd frame beginning at startframe and ending less than or equal to endframe. (Default = 1)
 
