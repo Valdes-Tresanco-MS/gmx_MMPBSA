@@ -24,7 +24,6 @@ with open("README.md", "r") as f:
 def get_version(rel_path):
     with open(rel_path) as vfile:
         for line in vfile.readlines():
-            print(line)
             if line.startswith('__version__'):
                 delim = '"' if '"' in line else "'"
                 return line.split(delim)[1]
