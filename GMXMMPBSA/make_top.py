@@ -315,12 +315,21 @@ class CheckMakeTop:
 
         # check if rec contain ions (metals)
         self.rec_ions = self.receptor_str[:, ions, :]
+        self.rec_ions_after = False
         if self.rec_ions.atoms:
             # fix atom number, avoid core dump in tleap
             i = 1
             for at in self.rec_ions.atoms:
                 at.number = i
                 i += 1
+            # check ions location
+            count = 0
+            for res in self.receptor_str.residues:
+                if res.number != self.complex_str.residues[count].number:
+                    self.rec_ions_after = True
+                    break
+                count += 1
+
             self.rec_ions.save(self.rec_ions_pdb, 'pdb', True, renumber=False)
             # if exists any ions then strip them
             self.receptor_str.strip(f':{",".join(ions)}')
@@ -540,9 +549,13 @@ class CheckMakeTop:
                 else:
                     tif.write('saveamberparm LIG {t} {p}LIG.inpcrd\n'.format(t=self.ligand_pmrtop, p=self.FILES.prefix))
 
-            com_string = 'complex = combine { REC LIG '
-            if self.rec_str_ions:
+            com_string = 'complex = combine { REC '
+            if self.rec_str_ions and self.rec_ions_after:
+                com_string += 'LIG '
                 com_string += 'R_IONS '
+            elif self.rec_str_ions and not self.rec_ions_after:
+                com_string += 'R_IONS '
+                com_string += 'LIG '
             if self.lig_str_ions:
                 com_string += 'L_IONS '
             com_string += '}\n'
