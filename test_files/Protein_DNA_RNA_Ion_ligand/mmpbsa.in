@@ -1,0 +1,11 @@
+Sample input file for GB calculation
+#This input file is meant to show only that gmx_MMPBSA works. Althought, we tried to used the input files as recommended in the 
+#Amber manual, some parameters have been changed to perform more expensive calculations. Feel free to change the parameters 
+#according to what is better for your system.
+&general
+verbose=2, protein_forcefield="oldff/leaprc.ff99SBildn", ligand_forcefield="leaprc.gaff"
+PBRadii=4, ions_parameters=1
+/
+&gb
+igb=8, saltcon=0.150, intdiel=10
+/
