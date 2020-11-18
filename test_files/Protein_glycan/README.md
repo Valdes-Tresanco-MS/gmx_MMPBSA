@@ -6,7 +6,7 @@ is going to be performed
 * The MD Structure+mass(db) file (*.tpr, *.pdb, *.gro) 
 * An index file (*.ndx) -- *.ndx file containing the receptor and ligand in separated groups
 * Receptor and ligand group numbers in the index file
-* A trajectory file (*.xtc, *.pdb, *.gro, *.trr) -- final Gromacs MD trajectory, fitted and with no pbc.
+* A trajectory file (*.xtc, *.pdb, *.gro, *.trr) -- final GROMACS MD trajectory, fitted and with no pbc.
 
 _See a detailed list of all the flags in gmx_MMPBSA command line [here](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA#calling-gmx_mmpbsa-from-the-command-line)_
 
@@ -36,9 +36,9 @@ as well as several [examples](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA#s
 In this case, a single trajectory (ST) approximation is followed, which means the receptor and glycan structures and 
 trajectories will be obtained from that of the complex. To do so, a MD Structure+mass(db) file (`com.tpr`), an index file (`index.ndx`),
 a trajectory file (`com_traj.xtc`), and both the receptor and ligand group numbers in the index file (`1 26`) are needed.
-The `mmpbsa.in` input file will contain all the parameters needed for the MM/PB(GB)SA calculation. In this case, 
-12 frames are going to be used when performing the the MM/PB(GB)SA calculation with the igb5 (GB-OBC2) model and a 
-salt concentration = 0.15M.
+The `mmpbsa.in` input file will contain all the parameters needed for the MM/PB(GB)SA calculation. **In this case, there
+is no need to define a .mol2 for the glycan**. 12 frames are going to be used when performing the the MM/PB(GB)SA 
+calculation with the igb5 (GB-OBC2) model and a salt concentration = 0.15M.
 
 Of note, the recommended GLYCAM force fields are: * "leaprc.GLYCAM_06j-1" (Compatible with amber12SB and later), 
 "leaprc.GLYCAM_06EPb" (Compatible with amber12SB and later), and "leaprc.GLYCAM_06h-1" (Compatible with amber99SB and 

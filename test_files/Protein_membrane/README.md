@@ -6,8 +6,8 @@ is going to be performed
 * The MD Structure+mass(db) file (*.tpr, *.pdb, *.gro)
 * An index file (*.ndx) -- *.ndx file containing the receptor and ligand in separated groups
 * Receptor and ligand group numbers in the index file
-* A trajectory file (*.xtc, *.pdb, *.gro, *.trr) -- final Gromacs MD trajectory, fitted and with no pbc.
-* A *.mol2 file of the unbound ligand used to parametrize ligand for Gromacs.
+* A trajectory file (*.xtc, *.pdb, *.gro, *.trr) -- final GROMACS MD trajectory, fitted and with no pbc.
+* A *.mol2 file of the unbound ligand used to parametrize ligand for GROMACS.
 
 
 _See a detailed list of all the flags in gmx_MMPBSA command line [here](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA#calling-gmx_mmpbsa-from-the-command-line)_

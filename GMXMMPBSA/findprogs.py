@@ -85,7 +85,7 @@ def find_progs(INPUT):
                 raise MMPBSA_Error('Could not find necessary program [%s]' % prog)
             print('%s found! Using %s' % (prog, str(my_progs[prog])))
     if not (gromacs5x or gromacs5x_d or gromacs5x_mpi or gromacs5x_mpi_d) and not gromacs4x:
-        raise MMPBSA_Error('Could not find necessary Gromacs program')
+        raise MMPBSA_Error('Could not find necessary GROMACS program')
 
     return my_progs
 

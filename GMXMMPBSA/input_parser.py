@@ -493,7 +493,7 @@ input_file.addNamelist('general', 'general',
                            ['entropy_seg', int, 25, 'Trajectory segment to calculate interaction entropy'],
                            ['entropy_temp', float, 298.15, 'Temperature to calculate interaction entropy'],
                            ['full_traj', int, 0, 'Print a full traj. AND the thread trajectories.'],
-                           ['gmx_path', str, '', 'Force to use this path to get Gromacs executable.'],
+                           ['gmx_path', str, '', 'Force to use this path to get GROMACS executable.'],
                            ['interval', int, 1, 'Number of frames between adjacent frames analyzed.'],
                            ['ions_parameters', int, 1, 'Define ions parameters to build the Amber topology.'],
                            ['keep_files', int, 2, 'How many files to keep after successful completion.'],
@@ -501,7 +501,7 @@ input_file.addNamelist('general', 'general',
                            ['ligand_forcefield', str, "leaprc.gaff", 'Define the force field to build Amber topology for '
                                                              'ligand (small molecule)'],
                            ['netcdf', int, 0, 'Use NetCDF intermediate trajectories.'],
-                           ['PBRadii', int, 3, 'Define PBRadii to build amber topology from Gromacs files.'],
+                           ['PBRadii', int, 3, 'Define PBRadii to build amber topology from GROMACS files.'],
                            ['protein_forcefield', str, "oldff/leaprc.ff99SB", 'Define the force field to build Amber '
                                                                               'topology for protein'],
 

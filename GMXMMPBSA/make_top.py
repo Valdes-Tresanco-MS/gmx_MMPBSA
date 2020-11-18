@@ -1,5 +1,5 @@
 """
-Generate Amber topology files from Gromacs files
+Generate Amber topology files from GROMACS files
 """
 
 # ##############################################################################
@@ -104,7 +104,7 @@ class CheckMakeTop:
         :return:
         """
         gmx = self.external_progs['gmx'].full_path
-        # check if Gromacs 4.x exists
+        # check if GROMACS 4.x exists
         make_ndx = [self.external_progs['make_ndx'].full_path]
         trjconv = [self.external_progs['trjconv'].full_path]
         if gmx:
@@ -423,7 +423,7 @@ class CheckMakeTop:
 
     def fix_H_ATOMS(self, structure):
         """
-        Gromacs 4.x save the pdb without atom element column, so parmed does not recognize some H atoms. Parmed assigns
+        GROMACS 4.x save the pdb without atom element column, so parmed does not recognize some H atoms. Parmed assigns
         0 to the atomic number of these atoms. In order to correctly eliminate hydrogens, it is necessary to assign the
         atomic number.
         """

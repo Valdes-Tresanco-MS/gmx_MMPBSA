@@ -228,7 +228,7 @@ This comparison is based on the documentation of the different programs
 <sup>3</sup> nmode = Normal modes approximation, qh = Quasic-Harmony approximation and IE = Interaction Entropy
 approximation
 
-<sup>4</sup> Gromacs 20xx.x is not officially supported. There is a Pull Request that offers a minimum of compatibility 
+<sup>4</sup> GROMACS 20xx.x is not officially supported. There is a Pull Request that offers a minimum of compatibility 
 with versions higher than 2016.x but with limitations 
 
 <sup>5</sup> The user can obtain each energetic term per frame or its average values using the API. This means that
@@ -298,7 +298,7 @@ Complex:
     ligand info is not defined, we generate them from that of the complex.
 
   -cs <Structure File>  Structure file of the complex. If it is Protein-Ligand (small molecule)
-                         complex, make sure that you define -lm option. 
+                         complex, make sure that you define -lm option. See -lm description below
                          Allowed formats: *.tpr (recommended), *.pdb, *.gro (default: None)
   -ci <Index File>      Index file of the bound complex. (default: None)
   -cg index index       Groups of receptor and ligand in complex index file. (default: None)
@@ -324,9 +324,10 @@ Ligand:
   Ligand files and info that are needed to perform the calculation. If the ligand are not defined, 
    we generate it from that of the complex.
 
-  -lm <Structure File>  A *.mol2 file of the unbound ligand used to parametrize ligand for GROMACS.
-                         Must be defined if Protein-Ligand (small molecule) complex was define. 
-                         Antechamber output *.mol2 is recommended (default: None)
+  -lm <Structure File>  A *.mol2 file of the unbound ligand used to parametrize ligand for GROMACS
+                         using Anetchamber. Must be defined if Protein-Ligand (small molecule) 
+                         complex was define. No needed for Proteins, DNA, RNA, Ions and Glycans.
+                         Antechamber output *.mol2 is recommended. (default: None)
   -ls <Structure File>  Structure file of the unbound ligand. If ligand is a small molecule, make 
                          sure that you define above -lm option. Allowed formats: *.tpr (recommended),
                          *.pdb, *.gro (default: None)
@@ -444,9 +445,9 @@ inconsistencies with defined internal temperature (298.15 K) when nmode is used 
 ```diff
 + New input variable added
 ```
-`gmx_path` Define an additional path to search for Gromacs executables. This path takes precedence over the path 
+`gmx_path` Define an additional path to search for GROMACS executables. This path takes precedence over the path 
 defined in the PATH variable. In these path the following executables will be searched: `gmx`, `gmx_mpi`, `gmx_d`, 
-`gmx_mpi_d` (Gromcas > 5.x.x), `make_ndx` and `trjconv` (Gromacs 4.x.x) 
+`gmx_mpi_d` (Gromcas > 5.x.x), `make_ndx` and `trjconv` (GROMACS 4.x.x) 
    
 `interval` The offset from which to choose frames from each trajectory file. For example, an interval of 2 will pull
 every 2nd frame beginning at startframe and ending less than or equal to endframe. (Default = 1)

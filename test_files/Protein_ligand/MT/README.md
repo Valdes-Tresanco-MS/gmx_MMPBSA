@@ -6,9 +6,9 @@ is going to be performed
 * The MD Structure+mass(db) file (*.tpr, *.pdb, *.gro) for each one of the components (_i.e._ complex, receptor and ligand)
 * An index file (*.ndx) for each one of the components (_i.e._ complex, receptor and ligand)
 * Group numbers in the index files
-* Trajectory files (*.xtc, *.pdb, *.gro, *.trr) -- final Gromacs MD trajectory, fitted and with no pbc -- for each one 
+* Trajectory files (*.xtc, *.pdb, *.gro, *.trr) -- final GROMACS MD trajectory, fitted and with no pbc -- for each one 
 of the components (_i.e._ complex, receptor and ligand)
-* A *.mol2 file of the unbound ligand used to parametrize ligand for Gromacs. -- Antechamber output *.mol2 is recommended
+* A *.mol2 file of the unbound ligand used to parametrize ligand for GROMACS. -- Antechamber output *.mol2 is recommended
 
 _See a detailed list of all the flags in gmx_MMPBSA command line [here](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA#calling-gmx_mmpbsa-from-the-command-line)_
 

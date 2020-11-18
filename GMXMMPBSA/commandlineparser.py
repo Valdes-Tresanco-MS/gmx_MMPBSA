@@ -44,18 +44,18 @@ else:
     rism = None
 
 description = '''gmx_MMPBSA is an effort to implement the GB / PB and others calculations in 
-                Gromacs. This program is an adaptation of Amber's MMPBSA.py and essentially works as such. As 
+                GROMACS. This program is an adaptation of Amber's MMPBSA.py and essentially works as such. As 
                 gmx_MMPBSA adapts MMPBSA.py, since it has all the resources of this script and work with any 
-                Gromacs version.'''
+                GROMACS version.'''
 
-complex_group_des = '''Complex files and info that are needed to perform the calculation. If the receptor and / or the 
-                        ligand are not defined, we generate it from the complex.'''
+complex_group_des = '''Complex files and info that are needed to perform the calculation. If the receptor and / or the
+                        ligand info is not defined, we generate them from that of the complex.'''
 
-receptor_group_des = '''Receptor files and info that are needed to perform the calculation. If the receptor are not 
-                        defined, we generate it from the complex.'''
+receptor_group_des = '''Receptor files and info that are needed to perform the calculation. If the receptor info is not 
+                         defined, we generate it from that of the complex.'''
 
 ligand_group_des = '''Ligand files and info that are needed to perform the calculation. If the ligand are not defined, 
-                        we generate it from the complex.'''
+                       we generate it from that of the complex.'''
 # Set up the MM/PBSA parser here. It clutters up the MMPBSA_App to do it there
 
 # noinspection PyTypeChecker
@@ -94,50 +94,59 @@ group.add_argument('-deo', dest='dec_energies', metavar='FILE',
 group.add_argument('-gui', dest='gui', action='store_true', default=True,
                    help='Open charts application when all calculations finished')
 group.add_argument('-s', dest='stability', action='store_true', default=False,
-                   help='Perform stability calculation. Only the complex parameter are required. Only, if ligand is '
-                        'non-Protein (small molecule) type will required the ligand parameters. IN any other case '
-                        'receptor and ligand parameters will be ignored')
+                   help='''Perform stability calculation. Only the complex parameters are required. If
+                         ligand is non-Protein (small molecule) type, then ligand *.mol2 file is 
+                         required. In any other case receptor and ligand parameters will be ignored.
+                         See description bellow''')
 
 group = parser.add_argument_group('Complex', complex_group_des)
 group.add_argument('-cs', dest='complex_tpr', metavar='<Structure File>', default=None,
-                   help='Structure file of the bound complex. If it is Protein-Ligand (small molecule) complex, '
-                        'make sure that you define -lm option')
+                   help='''Structure file of the complex. If it is Protein-Ligand (small molecule)
+                         complex, make sure that you define -lm option. See -lm description below
+                         Allowed formats: *.tpr (recommended), *.pdb, *.gro''')
 group.add_argument('-ci', dest='complex_index', metavar='<Index File>', default=None,
                    help='Index file of the bound complex.')
 group.add_argument('-cg', dest='complex_groups', metavar='index', nargs=2, default=None,
                    help='Groups of receptor and ligand in complex index file. The notation is as follows: "-cg '
                         '<Receptor group> <Ligand group>", ie. -cg 1 13')
 group.add_argument('-ct', dest='complex_trajs', nargs='*', metavar='TRJ',
-                   help='''Input trajectories of the complex. Allowed formats: *.xtc (recommended), *.trr, *.pdb
-                  (specify as many as you'd like).''')
+                   help='''Input trajectories of the complex. Make sure the trajectory is fitted and
+                         pbc have been removed. Allowed formats: *.xtc (recommended), *.trr, *.pdb
+                         (specify as many as you'd like).''')
 
 group = parser.add_argument_group('Receptor', receptor_group_des)
 group.add_argument('-rs', dest='receptor_tpr', metavar='<Structure File>', default=None,
-                   help='''Structure file of the unbound receptor. If omitted and stability is False, the structure 
-                   from complex will be used and other options are not needed.''')
+                   help='''Structure file of the unbound receptor for multiple trajectory approach.
+                         Allowed formats: *.tpr (recommended), *.pdb, *.gro''')
 group.add_argument('-ri', dest='receptor_index', metavar='<Index File>', default=None,
                    help='Index file of the unbound receptor.')
 group.add_argument('-rg', dest='receptor_group', metavar='index', default=None,
-                   help='Group of receptor in receptor index file.')
+                   help='''Receptor group in receptor index file. Notation: "-lg <Receptor group>", 
+                         e.g. -rg 1''')
 group.add_argument('-rt', dest='receptor_trajs', nargs='*', metavar='TRJ',
-                   help='''Input trajectories of the unbound receptor for multiple trajectory approach. Allowed 
-                   formats: *.xtc (recommended), *.trr, *.pdb.''')
+                   help='''Input trajectories of the unbound receptor for multiple trajectory approach.
+                         Allowed formats: *.xtc (recommended), *.trr, *.pdb, *.gro (specify as many
+                         as you'd like).''')
 
 group = parser.add_argument_group('Ligand', ligand_group_des)
 group.add_argument('-lm', dest='ligand_mol2', metavar='<Structure File>', default=None,
-                   help='Structure file of the unbound ligand used to parametrize ligand for Gromacs. Most be '
-                        'defined if Protein-Ligand (small molecule) complex was define.')
+                   help='''A *.mol2 file of the unbound ligand used to parametrize ligand for GROMACS
+                         using Anetchamber. Must be defined if Protein-Ligand (small molecule) 
+                         complex was define. No needed for Proteins, DNA, RNA, Ions and Glycans.
+                         Antechamber output *.mol2 is recommended.''')
 group.add_argument('-ls', dest='ligand_tpr', metavar='<Structure File>', default=None,
-                   help='Structure file of the unbound ligand. If omitted, is protein-like and stability is False the '
-                        'structure from complex will be used and other options are not needed. If ligand is a small '
-                        'molecule, make sure that you definde above -lm option')
+                   help='''Structure file of the unbound ligand. If ligand is a small molecule, make 
+                         sure that you define above -lm option. Allowed formats: *.tpr (recommended),
+                         *.pdb, *.gro''')
 group.add_argument('-li', dest='ligand_index', metavar='<Index File>',
                    default=None, help='Index file of the unbound ligand. Only if tpr file was define in -ls.')
 group.add_argument('-lg', dest='ligand_group', metavar='index', default=None,
-                   help='Group of the ligand in ligand index file. Only if tpr file was define in -ls.')
+                   help='''Ligand group in ligand index file. Notation: "-lg <Ligand group>", 
+                         e.g. -lg 13''')
 group.add_argument('-lt', dest='ligand_trajs', nargs='*', metavar='TRJ',
-                   help='''Input trajectories of the unbound ligand for multiple trajectory approach. Allowed 
-                   formats: *.xtc (recommended), *.trr, *.pdb.''')
+                   help='''Input trajectories of the unbound ligand for multiple trajectory approach. 
+                         Allowed formats: *.xtc (recommended), *.trr, *.pdb, *.gro (specify as many
+                         as you'd like).''')
 
 group = parser.add_argument_group('Miscellaneous Actions')
 group.add_argument('-make-mdins', dest='make_mdins', default=False,

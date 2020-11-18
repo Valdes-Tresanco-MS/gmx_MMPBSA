@@ -67,7 +67,7 @@ class MMPBSA_System(object):
     """
     Sets up a system of a complex, receptor, and ligand.
 
-    Get amber topology file from Gromacs
+    Get amber topology file from GROMACS
 
     The prmtops get initialized to prmtop objects immediately, so they must exist.
     Use it as:
