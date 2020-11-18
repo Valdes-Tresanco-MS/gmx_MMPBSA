@@ -329,11 +329,11 @@ class CheckMakeTop:
                     self.rec_ions_after = True
                     break
                 count += 1
-
-            self.rec_ions.save(self.rec_ions_pdb, 'pdb', True, renumber=False)
-            # if exists any ions then strip them
-            self.receptor_str.strip(f':{",".join(ions)}')
-            self.rec_str_ions = True
+            if self.rec_ions_after:
+                self.rec_ions.save(self.rec_ions_pdb, 'pdb', True, renumber=False)
+                # if exists any ions then strip them
+                self.receptor_str.strip(f':{",".join(ions)}')
+                self.rec_str_ions = True
         self.receptor_str.save(self.receptor_pdb_fixed, 'pdb', True)
 
         # fix ligand structure
@@ -519,7 +519,7 @@ class CheckMakeTop:
         with open(self.FILES.prefix + 'leap.in', 'w') as tif:
             tif.write('source {}\n'.format(self.INPUT['protein_forcefield']))
             tif.write('source {}\n'.format(self.INPUT['ligand_forcefield']))
-            if self.rec_str_ions or self.lig_str_ions:
+            if self.rec_ions.atoms or self.lig_ions.atoms:
                 tif.write('loadOff atomic_ions.lib\n')
                 tif.write('loadamberparams {}\n'.format(ions_para_files[self.INPUT['ions_parameters']]))
             tif.write('set default PBRadii {}\n'.format(PBRadii[self.INPUT['PBRadii']]))
@@ -550,12 +550,12 @@ class CheckMakeTop:
                     tif.write('saveamberparm LIG {t} {p}LIG.inpcrd\n'.format(t=self.ligand_pmrtop, p=self.FILES.prefix))
 
             com_string = 'complex = combine { REC '
+            com_string += 'LIG '
             if self.rec_str_ions and self.rec_ions_after:
-                com_string += 'LIG '
                 com_string += 'R_IONS '
-            elif self.rec_str_ions and not self.rec_ions_after:
-                com_string += 'R_IONS '
-                com_string += 'LIG '
+            # elif self.rec_str_ions:
+                # com_string += 'R_IONS '
+                # com_string += 'LIG '
             if self.lig_str_ions:
                 com_string += 'L_IONS '
             com_string += '}\n'
