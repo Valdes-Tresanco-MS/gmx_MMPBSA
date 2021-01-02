@@ -1117,7 +1117,7 @@ from GMXMMPBSA import API as gmxMMPBSAapi
 data = gmxMMPBSAapi.load_gmxmmpbsa_info("_GMXMMPBSA_info")
 ```
 
-####Properties of `mmpbsa_data`
+#### Properties of `mmpbsa_data`
 
 The `mmpbsa_data` class is a nested dictionary structure (`mmpbsa_data` is actually derived from dict). The
 various attributes of `mmpbsa_data` are described below followed by the defined operators.
