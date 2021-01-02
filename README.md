@@ -1101,8 +1101,6 @@ of the mean for all of the generated data sets, but does not support custom anal
 _MMPBSA_info file, from which it will determine what kind of calculation you performed, then automatically
 parse the output files and load the data into arrays.
 
-
-
 It currently does NOT load decomposition data into available data structures. The topology files you used in the `gmx_MMPBSA` calculation must also be available in the location specified in the _GMXMMPBSA_info file.
 
 #### Using the API
@@ -1119,7 +1117,8 @@ from GMXMMPBSA import API as gmxMMPBSAapi
 data = gmxMMPBSAapi.load_gmxmmpbsa_info("_GMXMMPBSA_info")
 ```
 
-####Properties of mmpbsa_data
+####Properties of `mmpbsa_data`
+
 The `mmpbsa_data` class is a nested dictionary structure (`mmpbsa_data` is actually derived from dict). The
 various attributes of `mmpbsa_data` are described below followed by the defined operators.
 ##### Attributes
