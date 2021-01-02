@@ -165,7 +165,7 @@ class CheckMakeTop:
             l3 = subprocess.Popen([parmchk2, '-i', self.FILES.ligand_mol2, '-f', 'mol2', '-o', self.ligand_frcmod],
                                   stdout=self.log, stderr=self.log)
             if l3.wait():
-                raise MMPBSA_Error('%s failed when querying %s' % ('parmchk2', self.FILES.ligand_mol2))
+                raise MMPBSA_Error('%s failed when querying %s' % (parmchk2, self.FILES.ligand_mol2))
 
         # make a temp receptor pdb (even when stability) if decomp to get correct receptor residues from complex. This
         # avoid get multiples molecules from complex.split()
