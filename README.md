@@ -1101,16 +1101,7 @@ of the mean for all of the generated data sets, but does not support custom anal
 _MMPBSA_info file, from which it will determine what kind of calculation you performed, then automatically
 parse the output files and load the data into arrays.
 
-Table List and description of calc_key dict keys that may be present in instances of the mmpbsa_data class.
 
-| Dictionary Key (calc_key) | Calculation Type |
-|:---:|:---|
-| `gb`| Generalized Born Results |
-| `pb` | Poisson-Boltzmann Results |
-| `rism gf` | Gaussian Fluctuation 3D-RISM Results |
-| `rism std` | Standard 3D-RISM Results |
-| `nmode` | Normal Mode Analysis Results |
-| `qh` | Quasi-harmonic Approximation Results |
 
 It currently does NOT load decomposition data into available data structures. The topology files you used in the `gmx_MMPBSA` calculation must also be available in the location specified in the _GMXMMPBSA_info file.
 
@@ -1140,10 +1131,33 @@ mmpbsa_data_instance[calc_key][system_component][energy_term]
 ```
 
 In this example, `calc_key` is a `dict` key that is paired to another `dict` (`mmpbsa_data_instance` is the
-first-level `dict`, in this case). The keys of these second-level dict instances (`system_component`) pair
-to another `dict`.
+first-level `dict`, in this case) (Table 2). The keys of these second-level dict instances
+(`system_component`) pair to another `dict` (Table 3).
+
+**Table 2. List and description of `calc_key` dict keys that may be present in instances of the `mmpbsa_data`
+class.**
+
+| Dictionary Key (calc_key) | Calculation Type |
+|:---:|:---|
+| `gb`| Generalized Born Results |
+| `pb` | Poisson-Boltzmann Results |
+| `rism gf` | Gaussian Fluctuation 3D-RISM Results |
+| `rism std` | Standard 3D-RISM Results |
+| `nmode` | Normal Mode Analysis Results |
+| `qh` | Quasi-harmonic Approximation Results |
+
+**Table 3. List and description of system_component keys that may be present in instances of the mmpbsa_data
+class.**
+
+| Dictionary Key (system_component) | Description |
+|:---:|:---|
+| `complex` | Data sets for the complex. (Stability & Binding)|
+| `receptor` | Data sets for the receptor. (Binding only)|
+| `ligand` | Data sets for the ligand. (Binding only)|
+| `delta`| Data sets for the delta. (Binding only) |
+
 The keys of these inner-most (third-level) `dict` instances are paired with the data arrays for that energy
-term. The various dictionary keys are listed below for each level. If alanine scanning was performed, the
+term (Table 4). The various dictionary keys are listed below for each level. If alanine scanning was performed, the
 `mmpbsa_data_instance` also has a `"mutant"` attribute that contains the same dictionary structure as
 `mmpbsa_data` does for the normal system. If not, the mutant attribute is None. The only difference is
 that the data is accessed as follows:
@@ -1154,22 +1168,15 @@ Note, all keys are case-sensitive, and if a space appears in the key, it must be
 Also, if polar/non-polar decomposition is not performed for `3D-RISM`, then the `POLAR SOLV` and `APOLAR
 SOLV` keys are replaced with the single key `ERISM`
 
-List and description of system_component keys that may be present in instances of the mmpbsa_data
-class.
 
-| Dictionary Key (system_component) | Description |
-|:---:|:---|
-| `complex` | Data sets for the complex. (Stability & Binding)|
-| `receptor` | Data sets for the receptor. (Binding only)|
-| `ligand` | Data sets for the ligand. (Binding only)|
 
-List and description of energy_term keys that may be present in instances of the mmpbsa_data class.
-The allowed values of energy_term depend on the value of calc_key above in Table 34.1. The
-energy_term keys are listed for each calc_key enumerated above, accompanied by a description.
+**Table 4. List and description of energy_term keys that may be present in instances of the mmpbsa_data class.
+The allowed values of energy_term depend on the value of calc_key above in Table 2. The
+`energy_term` keys are listed for each `calc_key` enumerated above, accompanied by a description.
 The RISM keys are the same for both `rism gf` and `rism std` although the value of `POLAR
 SOLV` and `APOLAR SOLV` will differ depending on the method chosen. Those keys marked with *
 are specific to the CHARMM force field used through chamber. Those arrays are all 0 for normal
-Amber topology files.
+Amber topology files.**
 
 | Description | `gb` | `pb` | `RISM` |
 |:---|:---:|:---:|:---:|
@@ -1189,7 +1196,7 @@ Amber topology files.
 | Total gas phase free energy | `G gas` | `G gas` |  `G gas` |
 | Total energy | `TOTAL` | `TOTAL` |  `TOTAL` |
 
-Same as Table 34.3 for the entropy data.
+**Table 5. Same as Table 4 for the entropy data.**
 
 | Description | `nmode`| `qh`|
 |:---|:---:|:---:|
@@ -1262,7 +1269,7 @@ described above, where `decomp` is followed by the solvent model (`GB` or `PB`),
 (`complex`, `receptor`, or `ligand`) (additionally, we include `delta` key), followed by the decomposition
 components (total, backbone, or sidechain), followed by the residue number (and residue pair for pairwise 
 decomposition), finally followed by the contribution (`internal`, `van der Waals`, `electrostatics`, etc.)
-The available keys are shown in Figure 34.1 on page 776 (and each key is described afterwards).
+The available keys are shown in Figure 1 (and each key is described afterwards).
 
 **Decomp Key Descriptions**
 * `gb` All Generalized Born results
@@ -1285,7 +1292,7 @@ The available keys are shown in Figure 34.1 on page 776 (and each key is describ
 * `sas` Non-polar solvation free energy contributions
 * `tot` Total free energy contributions (sum of previous 5).
 
-Figure X: Tree of `dict` keys following the `decomp` key in a `mmpbsa_data` instance.
+Figure 1: Tree of `dict` keys following the `decomp` key in a `mmpbsa_data` instance.
 ![](./doc_files/decomp_dict_keys.png)
 
 
