@@ -1097,21 +1097,23 @@ only QM/MMGBSA is a valid option right now.
 ### Python API
 The aim of the MMPBSA.py API is to provide you with direct access to the raw data produced during a 
 MMPBSA.py calculation. By default, MMPBSA.py calculates an average, standard deviation, and standard error
-of the mean for all of the generated data sets, but does not support custom analyses. The API reads an
-_MMPBSA_info file, from which it will determine what kind of calculation you performed, then automatically
+of the mean for all the generated data sets, but it does not support custom analyses. The API reads an
+_MMPBSA_info file, from which it will determine what kind of calculation was performed, then automatically
 parse the output files and load the data into arrays.
 
-It currently does NOT load decomposition data into available data structures. The topology files you used in the `gmx_MMPBSA` calculation must also be available in the location specified in the _GMXMMPBSA_info file.
+It currently does NOT load decomposition data into available data structures. The topology files you used in 
+the `gmx_MMPBSA` calculation must also be available in the location specified in the _GMXMMPBSA_info file.
 
 #### Using the API
-We have derived a new API to reorganize the data so that it is arranged more hierarchically. This makes it
-easier to transform the data to the graphs in the `gmx_MMPBSA_gui`. **The original and the current API 
-only differ in the name of the callable function, the disposition of the data in Per-wise decomponsition
-and in the new 'delta' key. If you want to use the original, see the [Amber manual](https://ambermd.org/doc12/Amber20.pdf)**
+We have derived a new API to reorganize the data so that it is arranged more hierarchically. This makes
+easier to transform the data into graphs in the `gmx_MMPBSA_gui`. **The original and the current API 
+only differ in the name of the callable function, the disposition of the data in Per-wise decomposition analysis
+and in the new 'delta' key. If you want to use the original, see the [Amber manual](http://ambermd.org/doc12/Amber20.pdf#section.34.4)**
 
-The function `load_gmxmmpbsa_info` takes the name of an gmx_MMPBSA info file (typically _GMXMMPBSA_info)
-and returns a populated `mmpbsa_data` instance with all of the parsed data. An example code snippet that
+The function `load_gmxmmpbsa_info` takes the name of a gmx_MMPBSA info file (typically _GMXMMPBSA_info)
+and returns a populated `mmpbsa_data` instance with all the parsed data. An example code snippet that
 creates a `mmpbsa_data` instance from the information in _GMXMMPBSA_info is shown below.
+
 ```python
 from GMXMMPBSA import API as gmxMMPBSAapi
 data = gmxMMPBSAapi.load_gmxmmpbsa_info("_GMXMMPBSA_info")
@@ -1119,12 +1121,14 @@ data = gmxMMPBSAapi.load_gmxmmpbsa_info("_GMXMMPBSA_info")
 
 #### Properties of `mmpbsa_data`
 
-The `mmpbsa_data` class is a nested dictionary structure (`mmpbsa_data` is actually derived from dict). The
+The `mmpbsa_data` class is a nested dictionary structure (`mmpbsa_data` is actually derived from `dict`). The
 various attributes of `mmpbsa_data` are described below followed by the defined operators.
+
 ##### Attributes
-If the numpy package is installed and available, all data arrays will be numpy.ndarray instances. 
-Otherwise, all data arrays will be array.array instances with the ’d’ data type specifier (for a double
+If the numpy package is installed and available, all data arrays will be `numpy.ndarray` instances. 
+Otherwise, all data arrays will be `array.array` instances with the ’d’ data type specifier (for a double
 precision float). The data is organized in an `mmpbsa_data` instance in the following manner:
+
 ```python
 mmpbsa_data_instance[calc_key][system_component][energy_term]
 ```
@@ -1160,14 +1164,13 @@ term (Table 4). The various dictionary keys are listed below for each level. If 
 `mmpbsa_data_instance` also has a `"mutant"` attribute that contains the same dictionary structure as
 `mmpbsa_data` does for the normal system. If not, the mutant attribute is None. The only difference is
 that the data is accessed as follows:
+
 ```python
 mmpbsa_data_instance.mutant[calc_key][system_component][energy_term]
 ```
 Note, all keys are case-sensitive, and if a space appears in the key, it must be present in your program.
 Also, if polar/non-polar decomposition is not performed for `3D-RISM`, then the `POLAR SOLV` and `APOLAR
 SOLV` keys are replaced with the single key `ERISM`
-
-
 
 **Table 4. List and description of energy_term keys that may be present in instances of the mmpbsa_data class.
 The allowed values of energy_term depend on the value of calc_key above in Table 2. The
