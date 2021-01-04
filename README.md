@@ -1,3 +1,7 @@
+[![pypi](https://img.shields.io/pypi/v/gmx-MMPBSA)](https://pypi.org/project/gmx-MMPBSA/)
+[![support](https://img.shields.io/badge/support-JetBrains-brightgreen)](https://www.jetbrains.com/?from=gmx_MMPBSA)
+
+
 # Documentation
 **Note: We do not intend to replace the original [MMPBSA.py](https://pubs.acs.org/doi/10.1021/ct300418h); instead, 
 we have implemented and improved some functionalities, and what is most important, made this valuable tool available 
