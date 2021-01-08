@@ -1,5 +1,6 @@
 [![pypi](https://img.shields.io/pypi/v/gmx-MMPBSA)](https://pypi.org/project/gmx-MMPBSA/)
 [![support](https://img.shields.io/badge/support-JetBrains-brightgreen)](https://www.jetbrains.com/?from=gmx_MMPBSA)
+[![python](https://img.shields.io/badge/python-v3.x-blue)]()
 
 
 # Documentation
@@ -44,7 +45,7 @@ opening an [issue](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/issues) or p
     
 
 ## Requirements
-`gmx_MMPBSA` requires AmberTools20 to be installed in your machine and the shell environment correctly set up for Amber. 
+`gmx_MMPBSA` requires AmberTools20 to be installed in your machine with Python3 and the shell environment correctly set up for Amber. 
 The AmberTools suite is free of charge and you can check [Amber Manual](https://ambermd.org/doc12/Amber20.pdf#section.2.1)
 for a detailed installation guide. Of note, you can have more than one AmberTools installed in your machine. In case 
 AmberTools20 is not the default Amber in your computer, just make sure to source AmberTools20 before 
