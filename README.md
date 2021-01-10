@@ -260,7 +260,7 @@ with versions higher than 2016.x but with limitations
 * [Entropy calculations with normal modes](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/test_files/Entropy_calculations/nmode) (based on this [tutorial](https://ambermd.org/tutorials/advanced/tutorial3/py_script/section5.php))
 * [Entropy calculations with Interaction Entropy](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/test_files/Entropy_calculations/Interaction_Entropy)
 * [Stability calculations](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/test_files/Stability)
-* [Protein-glycan binding free energy calculations](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/glycam/test_files/Protein_glycan)
+* [Protein-glycan binding free energy calculations](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/test_files/Protein_glycan)
 
 ## Calling `gmx_MMPBSA` from the command-line
 `gmx_MMPBSA` is invoked through the command line as follows:
