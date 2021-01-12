@@ -335,7 +335,7 @@ class CheckMakeTop:
                 # if exists any ions then strip them
                 self.receptor_str.strip(f':{",".join(ions)}')
                 self.rec_str_ions = True
-        self.receptor_str.save(self.receptor_pdb_fixed, 'pdb', True)
+        self.receptor_str.save(self.receptor_pdb_fixed, 'pdb', True, renumber=False)
 
         # fix ligand structure
         self.ligand_str = parmed.gromacs.GromacsGroFile.parse(self.ligand_gro)
@@ -359,20 +359,20 @@ class CheckMakeTop:
             # if exists any ions then strip them
             self.ligand_str.strip(f':{",".join(ions)}')
             self.lig_str_ions = True
-        self.ligand_str.save(self.ligand_pdb_fixed, 'pdb', True)
+        self.ligand_str.save(self.ligand_pdb_fixed, 'pdb', True, renumber=False)
 
         if self.INPUT['alarun']:
             if self.INPUT['mutant'].lower() in ['rec', 'receptor']:
                 self.mutant_receptor_str = parmed.read_PDB(self.receptor_pdb_fixed)
                 # fix mutant receptor structure
                 self.mutatexala(self.mutant_receptor_str)
-                self.mutant_receptor_str.save(self.mutant_receptor_pdb_fixed, 'pdb', True)
+                self.mutant_receptor_str.save(self.mutant_receptor_pdb_fixed, 'pdb', True, renumber=False)
             else:
                 if self.FILES.ligand_mol2:
                     raise MMPBSA_Error('Mutation is only possible if the ligand is protein-like')
                 self.mutant_ligand_str = parmed.read_PDB(self.ligand_pdb_fixed)
                 self.mutatexala(self.mutant_ligand_str)
-                self.mutant_ligand_str.save(self.mutant_ligand_pdb_fixed, 'pdb', True)
+                self.mutant_ligand_str.save(self.mutant_ligand_pdb_fixed, 'pdb', True, renumber=False)
 
         # Get residue form receptor-ligand interface
         if self.print_residues:
