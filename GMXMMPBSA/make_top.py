@@ -437,7 +437,8 @@ class CheckMakeTop:
         """
         Rename oxygen in termini from GROMACS to AMBER name
         OC1 -> 'O  '
-        OC2 -> OXT
+        OC2 -> OXT -> set this res as terminal in parmed
+
         Rename CD in ILE from GROMACS to AMBER name
         CD   ILE -> CD1 ILE
         :return:
@@ -453,6 +454,7 @@ class CheckMakeTop:
                     atom.name = 'O  '
                 elif atom.name == 'OC2':
                     atom.name = 'OXT'
+                    residue.ter = True    # parmed terminal
 
     def properAspGluLys(self, structure):
         """
