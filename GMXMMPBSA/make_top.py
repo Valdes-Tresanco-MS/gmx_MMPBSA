@@ -77,9 +77,9 @@ class CheckMakeTop:
         self.mutant_receptor_pmrtop = 'MUT_REC.prmtop'
         self.mutant_ligand_pmrtop = 'MUT_LIG.prmtop'
 
-        self.complex_pdb = self.FILES.prefix + 'COM.pdb'
-        self.receptor_pdb = self.FILES.prefix + 'REC.pdb'
-        self.ligand_pdb = self.FILES.prefix + 'LIG.pdb'
+        self.complex_gro = self.FILES.prefix + 'COM.gro'
+        self.receptor_gro = self.FILES.prefix + 'REC.gro'
+        self.ligand_gro = self.FILES.prefix + 'LIG.gro'
         self.complex_pdb_fixed = self.FILES.prefix + 'COM_FIXED.pdb'
         self.receptor_pdb_fixed = self.FILES.prefix + 'REC_FIXED.pdb'
         self.ligand_pdb_fixed = self.FILES.prefix + 'LIG_FIXED.pdb'
@@ -87,9 +87,9 @@ class CheckMakeTop:
         self.rec_ions_pdb = self.FILES.prefix + 'REC_IONS.pdb'
         self.lig_ions_pdb = self.FILES.prefix + 'LIG_IONS.pdb'
 
-        self.mutant_complex_pdb = self.FILES.prefix + 'MUT_COM.pdb'
-        self.mutant_receptor_pdb = self.FILES.prefix + 'MUT_REC.pdb'
-        self.mutant_ligand_pdb = self.FILES.prefix + 'MUT_LIG.pdb'
+        self.mutant_complex_gro = self.FILES.prefix + 'MUT_COM.gro'
+        self.mutant_receptor_gro = self.FILES.prefix + 'MUT_REC.gro'
+        self.mutant_ligand_gro = self.FILES.prefix + 'MUT_LIG.gro'
         self.mutant_complex_pdb_fixed = self.FILES.prefix + 'MUT_COM_FIXED.pdb'
         self.mutant_receptor_pdb_fixed = self.FILES.prefix + 'MUT_REC_FIXED.pdb'
         self.mutant_ligand_pdb_fixed = self.FILES.prefix + 'MUT_LIG_FIXED.pdb'
@@ -118,7 +118,7 @@ class CheckMakeTop:
         rec_group, lig_group = self.FILES.complex_groups
         print('Normal Complex: Save group {}_{} in {} (gromacs index) file as {}'.format(rec_group, lig_group,
                                                                                            self.FILES.complex_index,
-                                                                                           self.complex_pdb))
+                                                                                           self.complex_gro))
         # merge both (rec and lig) groups into complex group, modify index and create a copy
         # 1-rename groups, 2-merge
         c1 = subprocess.Popen(['echo', 'name {r} GMXMMPBSA_REC\n name {l} GMXMMPBSA_LIG\n  {r} | {l}\n'
@@ -135,7 +135,7 @@ class CheckMakeTop:
         c3 = subprocess.Popen(['echo', 'GMXMMPBSA_REC_GMXMMPBSA_LIG'], stdout=subprocess.PIPE)
         # we get only first trajectory to extract a pdb file and make amber topology for complex
         c4 = subprocess.Popen(trjconv + ['-f', self.FILES.complex_trajs[0], '-s', self.FILES.complex_tpr,
-                               '-o', self.complex_pdb, '-n', self.FILES.complex_index, '-b', '0', '-e', '0'],
+                               '-o', self.complex_gro, '-n', self.FILES.complex_index, '-dump', '0'],
                               stdin=c3.stdout, stdout=self.log, stderr=self.log)
         if c4.wait():  # if it quits with return code != 0
             raise MMPBSA_Error('%s failed when querying %s' % (' '.join(trjconv), self.FILES.complex_tpr))
@@ -174,10 +174,10 @@ class CheckMakeTop:
             if self.FILES.stability:
                 self.use_temp = True
                 cp1 = subprocess.Popen(['echo', '{}'.format(rec_group)], stdout=subprocess.PIPE)
-                # we get only first trajectory to extract a pdb file for make amber topology
+                # we get only first trajectory to extract a pdb file to make amber topology
                 cp2 = subprocess.Popen(
                     trjconv + ['-f', self.FILES.complex_trajs[0], '-s', self.FILES.complex_tpr, '-o',
-                     'rec_temp.pdb', '-n', self.FILES.complex_index, '-b', '0', '-e', '0'],
+                     'rec_temp.gro', '-n', self.FILES.complex_index, '-dump', '0'],
                     stdin=cp1.stdout, stdout=self.log, stderr=self.log)
                 if cp2.wait():  # if it quits with return code != 0
                     raise MMPBSA_Error('%s failed when querying %s' % (' '.join(trjconv), self.FILES.complex_tpr))
@@ -199,11 +199,11 @@ class CheckMakeTop:
         if self.FILES.receptor_tpr:
             print('Normal receptor: Save group {} in {} (gromacs index) file as {}'.format(self.FILES.receptor_group,
                                                                           self.FILES.receptor_index,
-                                                                          self.receptor_pdb))
+                                                                          self.receptor_gro))
             p1 = subprocess.Popen(['echo', '{}'.format(self.FILES.receptor_group)], stdout=subprocess.PIPE)
             # we get only first trajectory to extract a pdb file for make amber topology
             cp2 = subprocess.Popen(trjconv + ['-f', self.FILES.receptor_trajs[0], '-s', self.FILES.receptor_tpr,
-                                    '-o', self.receptor_pdb, '-n', self.FILES.receptor_index, '-b', '0', '-e', '0'],
+                                    '-o', self.receptor_gro, '-n', self.FILES.receptor_index, '-dump', '0'],
                                    stdin=p1.stdout, stdout=self.log, stderr=self.log)
             if cp2.wait():  # if it quits with return code != 0
                 raise MMPBSA_Error('%s failed when querying %s' % (' '.join(trjconv), self.FILES.receptor_tpr))
@@ -228,12 +228,12 @@ class CheckMakeTop:
             # wt complex receptor
             print('Normal Complex: Save group {} in {} (gromacs index) file as {}'.format(rec_group,
                                                                                      self.FILES.complex_index,
-                                                                                   self.receptor_pdb))
+                                                                                   self.receptor_gro))
             cp1 = subprocess.Popen(['echo', '{}'.format(rec_group)], stdout=subprocess.PIPE)
             # we get only first trajectory to extract a pdb file for make amber topology
             cp2 = subprocess.Popen(
                 trjconv + ['-f', self.FILES.complex_trajs[0], '-s', self.FILES.complex_tpr, '-o',
-                 self.receptor_pdb, '-n', self.FILES.complex_index, '-b', '0', '-e', '0'],
+                 self.receptor_gro, '-n', self.FILES.complex_index, '-dump', '0'],
                 stdin=cp1.stdout, stdout=self.log, stderr=self.log)
             if cp2.wait():  # if it quits with return code != 0
                 raise MMPBSA_Error('%s failed when querying %s' % (' '.join(trjconv), self.FILES.complex_tpr))
@@ -245,8 +245,8 @@ class CheckMakeTop:
             l1 = subprocess.Popen(['echo', '{}'.format(self.FILES.ligand_group)], stdout=subprocess.PIPE)
             # we get only first trajectory for extract a pdb file for make amber topology
             l2 = subprocess.Popen(trjconv + ['-f', self.FILES.ligand_trajs[0], '-s',
-                                   self.FILES.ligand_tpr, '-o', self.ligand_pdb, '-n', self.FILES.ligand_index,
-                                   '-b', '0', '-e', '0'],
+                                   self.FILES.ligand_tpr, '-o', self.ligand_gro, '-n', self.FILES.ligand_index,
+                                   '-dump', '0'],
                                   stdin=l1.stdout, stdout=self.log, stderr=self.log)
             if l2.wait():  # if it quits with return code != 0
                 raise MMPBSA_Error('%s failed when querying %s' % (' '.join(trjconv), self.FILES.ligand_tpr))
@@ -271,11 +271,11 @@ class CheckMakeTop:
             # wt complex ligand
             print('Using ligand structure from complex to make amber topology')
             print('Save group {} in {} (gromacs index) file as {}'.format(lig_group, self.FILES.complex_index,
-                                                                          self.ligand_pdb))
+                                                                          self.ligand_gro))
             cl1 = subprocess.Popen(['echo', '{}'.format(lig_group)], stdout=subprocess.PIPE)
             # we get only  first trajectory to extract a pdb file for make amber topology
             cl2 = subprocess.Popen(trjconv + ['-f', self.FILES.complex_trajs[0], '-s', self.FILES.complex_tpr,
-                                    '-o', self.ligand_pdb, '-n', self.FILES.complex_index, '-b', '0', '-e', '0'],
+                                    '-o', self.ligand_gro, '-n', self.FILES.complex_index, '-dump', '0'],
                                    stdin=cl1.stdout, stdout=self.log, stderr=self.log)
             if cl2.wait():  # if it quits with return code != 0
                 raise MMPBSA_Error('%s failed when querying %s' % (' '.join(trjconv), self.FILES.complex_tpr))
