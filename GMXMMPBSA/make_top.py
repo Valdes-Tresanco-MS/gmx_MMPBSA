@@ -95,6 +95,7 @@ class CheckMakeTop:
         self.mutant_ligand_pdb_fixed = self.FILES.prefix + 'MUT_LIG_FIXED.pdb'
         # self.default_ff = 'leaprc.protein.ff14SB'
 
+        checkff()
         self.getPDBfromTpr()
         self.checkPDB()
 
@@ -515,7 +516,8 @@ class CheckMakeTop:
             cys.name = 'CYX'
 
     def makeToptleap(self):
-        checkff(self.INPUT['ligand_forcefield'])
+        # checkff(self.INPUT['ligand_forcefield'])
+
         with open(self.FILES.prefix + 'leap.in', 'w') as tif:
             tif.write('source {}\n'.format(self.INPUT['protein_forcefield']))
             tif.write('source {}\n'.format(self.INPUT['ligand_forcefield']))
