@@ -513,8 +513,12 @@ Force fields tested:
 * "leaprc.gaff2"
 * "leaprc.GLYCAM_06j-1"    (Compatible with amber12SB and later)
 * "leaprc.GLYCAM_06EPb"    (Compatible with amber12SB and later)
-* "leaprc.GLYCAM_06h-1"    (Included in gmx_MMPBSA package. If it is selected will be copied to $AMBERHOME/dat/leap. Compatible with amber99SB and earlier)
-
+* "gmxMMPBSA/leaprc.GLYCAM_06h-1"    <sup>1</sup>(Included in gmx_MMPBSA package. Compatible with 
+  amber99SB and earlier)
+* "gmxMMPBSA/leaprc.zaa99SB"    <sup>1</sup>Parameters for Zwitterionic amino acids. (Include in gmx_MMPBSA package. Compatible 
+  with amber 99SB)
+  
+<sup>1</sup> We create a new folder in each of Amber's parameter folders ($AMBERHOME/dat/leap/[cmd, prep, lib, parm]/gmxMMPBSA). In this way, we separate the native Amber environment from the gmx_MMPBSA data.
 ```diff
 + New input variable added
 ```
