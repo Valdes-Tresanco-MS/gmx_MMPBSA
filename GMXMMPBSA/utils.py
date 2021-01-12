@@ -33,43 +33,51 @@ List of functions and a brief description of their purpose
 import os
 import shutil
 from pathlib import Path
+import json
 
-def checkff(sel_ff):
-    print('Checking if supported force fields exists...')
+def checkff():
+    """
+
+    :param sel_ff: folder/leaprc
+    Examples:
+        gmxMMPBSA/leaprc.GLYCAM_06h-1
+        oldff/leaprc.ff99SB
+        leaprc.protein.ff14SB
+
+    :return:
+    """
     amberhome = os.getenv('AMBERHOME')
     if not amberhome:
         print('Could not found Amber. Please make sure you have sourced %s/amber.sh (if you are using sh/ksh/'
-                          'bash/zsh) or %s/amber.csh (if you are using csh/tcsh)' %
-                          (amberhome, amberhome))
+              'bash/zsh) or %s/amber.csh (if you are using csh/tcsh)' %
+              (amberhome, amberhome))
         return
     amberhome = Path(amberhome)
-    data_info = {'forcefield': {}}
-    current_file_path = Path(__file__).parent
-    with open(Path(__file__).parent.joinpath('data/info.dat')) as f:
-        for line in f.readlines():
-            if line.startswith('FF:'):
-                ff = line.split()[1]
-                folder = line.split()[2]
-                files = line.split()[3:]
-                if ff not in data_info['forcefield']:
-                    data_info['forcefield'][ff] = {folder: files}
-                else:
-                    data_info['forcefield'][ff][folder] = files
-    try:
-        leap_dat = amberhome.joinpath('dat/leap/')
-        if not leap_dat.joinpath('cmd/' + data_info['forcefield'][sel_ff]['cmd'][0]).exists():
-            shutil.copy(current_file_path.joinpath('data/' + data_info['forcefield'][sel_ff]['cmd'][0]),
-                        leap_dat.joinpath('cmd'))
-            shutil.copy(current_file_path.joinpath('data/' + data_info['forcefield'][sel_ff]['prep'][0]),
-                        leap_dat.joinpath('prep'))
-            shutil.copy(current_file_path.joinpath('data/' + data_info['forcefield'][sel_ff]['parm'][0]),
-                        leap_dat.joinpath('parm'))
-            for f in data_info['forcefield'][sel_ff]['lib']:
-                shutil.copy(current_file_path.joinpath('data/' + f), leap_dat.joinpath('lib'))
-            print(f'Coping {sel_ff} to Amber data... Done')
-    except:
-        pass
 
+    print('Checking if supported force fields exists in Amber data...')
+
+    data_path = Path(__file__).parent.joinpath('data')
+    info_file = data_path.joinpath('info.dat')
+    with info_file.open('r') as read_file:
+        data = json.load(read_file)
+
+    leap_dat = amberhome.joinpath('dat/leap/')
+
+    for ff in data['forcefield']:
+        for p in data['forcefield'][ff]:
+            gmxf = leap_dat.joinpath(p, 'gmxMMPBSA')
+            if not gmxf.exists():
+                gmxf.mkdir()
+            if type(data['forcefield'][ff][p]) == list:
+                for l in data['forcefield'][ff][p]:
+                    cf = data_path.joinpath(l)
+                    if cf.exists() and not gmxf.joinpath(l).exists():
+                        shutil.copy(cf, gmxf)
+            else:
+                cf = data_path.joinpath(data['forcefield'][ff][p])
+                if cf.exists() and not gmxf.joinpath(p).exists():
+                    shutil.copy(cf, gmxf)
+    print('Checking if supported force fields exists in Amber data... Done.')
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 def remove(flag, mpi_size=0, fnpre='_MMPBSA_'):
