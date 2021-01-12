@@ -292,7 +292,7 @@ class CheckMakeTop:
         5 - Save
         :return:
         """
-        self.complex_str = parmed.read_PDB(self.complex_pdb)  # can always be initialized
+        self.complex_str = parmed.gromacs.GromacsGroFile.parse(self.complex_gro)  # can always be initialized
         # fix complex structure and save
         # self.properHIS(self.complex_str)
         # self.properCYS(self.complex_str)
@@ -303,7 +303,7 @@ class CheckMakeTop:
         # self.complex_str.save(self.complex_pdb_fixed, 'pdb', True)
 
         # if not self.FILES.stability:
-        self.receptor_str = parmed.read_PDB(self.receptor_pdb)
+        self.receptor_str = parmed.gromacs.GromacsGroFile.parse(self.receptor_gro)
         # fix receptor structure
         self.properHIS(self.receptor_str)
         self.properCYS(self.receptor_str)
@@ -338,7 +338,7 @@ class CheckMakeTop:
         self.receptor_str.save(self.receptor_pdb_fixed, 'pdb', True)
 
         # fix ligand structure
-        self.ligand_str = parmed.read_PDB(self.ligand_pdb)
+        self.ligand_str = parmed.gromacs.GromacsGroFile.parse(self.ligand_gro)
         # fix ligand structure if is protein
         self.properHIS(self.ligand_str)
         self.properCYS(self.ligand_str)
