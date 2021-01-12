@@ -377,7 +377,7 @@ class CheckMakeTop:
         # Get residue form receptor-ligand interface
         if self.print_residues:
             if self.use_temp:
-                temp_str = parmed.read_PDB('rec_temp.pdb')
+                temp_str = parmed.gromacs.GromacsGroFile.parse('rec_temp.gro')
                 rec_resnum = len(temp_str.residues)
             else:
                 rec_resnum = len(self.receptor_str.residues)
