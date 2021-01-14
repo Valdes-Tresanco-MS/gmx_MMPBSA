@@ -31,7 +31,6 @@ import numpy as np
 from math import exp, log
 import logging
 logging.getLogger(__name__)
-print(__name__)
 # Import gmx_MMPBSA modules
 from GMXMMPBSA import utils
 from GMXMMPBSA.amber_outputs import (QHout, NMODEout, QMMMout, GBout, PBout,
@@ -44,7 +43,7 @@ from GMXMMPBSA.calculation import (CalculationList, EnergyCalculation,
                                    PrintCalc, LcpoCalc, MolsurfCalc)
 from GMXMMPBSA.commandlineparser import parser
 from GMXMMPBSA.createinput import create_inputs
-from GMXMMPBSA.exceptions import (MMPBSA_Error, InternalError, InputError, InputWarning, GMXMMPBSA_ERROR)
+from GMXMMPBSA.exceptions import (MMPBSA_Error, InternalError, InputError, GMXMMPBSA_ERROR)
 from GMXMMPBSA.fake_mpi import MPI as FakeMPI
 from GMXMMPBSA.findprogs import find_progs
 from GMXMMPBSA.infofile import InfoFile
@@ -124,7 +123,7 @@ class MMPBSA_App(object):
         # This work belongs to the 'setup' timer
         self.timer.start_timer('setup')
         if not hasattr(self, 'normal_system'):
-            raise InternalError('MMPBSA_App not set up and parms not checked!')
+            raise GMXMMPBSA_ERROR('MMPBSA_App not set up and parms not checked!', InternalError)
         # Set up some local refs for convenience
         FILES, INPUT, master = self.FILES, self.INPUT, self.master
 
@@ -198,7 +197,7 @@ class MMPBSA_App(object):
         """
 
         if not hasattr(self, 'external_progs'):
-            raise InternalError('external_progs not declared in run_mmpbsa!')
+            raise GMXMMPBSA_ERROR('external_progs not declared in run_mmpbsa!', InternalError)
 
         FILES, INPUT = self.FILES, self.INPUT
         if rank is None:
@@ -566,7 +565,7 @@ class MMPBSA_App(object):
         self.timer.add_timer('setup', 'Total setup time:')
         self.timer.start_timer('setup')
         if not hasattr(self, 'FILES') or not hasattr(self, 'INPUT'):
-            raise InternalError('MMPBSA_App not set up! Cannot check parms yet!')
+            raise GMXMMPBSA_ERROR('MMPBSA_App not set up! Cannot check parms yet!', InternalError)
         # create local aliases to avoid abundant selfs
         FILES, INPUT = self.FILES, self.INPUT
         # Now we're getting ready, remove existing intermediate files
@@ -599,7 +598,7 @@ class MMPBSA_App(object):
         self.mutant_system = None
         if INPUT['alarun']:
             if (FILES.mutant_receptor_prmtop is None and FILES.mutant_ligand_prmtop is None and not self.stability):
-                raise MMPBSA_Error('Alanine scanning requires either a mutated receptor or mutated ligand topology '
+                raise GMXMMPBSA_ERROR('Alanine scanning requires either a mutated receptor or mutated ligand topology '
                                    'file!')
             if FILES.mutant_receptor_prmtop is None:
                 FILES.mutant_receptor_prmtop = FILES.receptor_prmtop
@@ -608,15 +607,15 @@ class MMPBSA_App(object):
             self.mutant_system = MMPBSA_System(FILES.mutant_complex_prmtop, FILES.mutant_receptor_prmtop,
                                                FILES.mutant_ligand_prmtop)
             if self.using_chamber is not self.mutant_system.complex_prmtop.chamber:
-                raise MMPBSA_Error('CHAMBER prmtops must be used for both mutant '
+                raise GMXMMPBSA_ERROR('CHAMBER prmtops must be used for both mutant '
                                    'and normal prmtops or neither!')
         # If we have a chamber prmtop, force using sander
         if self.using_chamber:
             INPUT['use_sander'] = True
             if INPUT['rismrun']:
-                raise MMPBSA_Error('CHAMBER prmtops cannot be used with 3D-RISM')
+                raise GMXMMPBSA_ERROR('CHAMBER prmtops cannot be used with 3D-RISM')
             if INPUT['nmoderun']:
-                raise MMPBSA_Error('CHAMBER prmtops cannot be used with NMODE')
+                raise GMXMMPBSA_ERROR('CHAMBER prmtops cannot be used with NMODE')
             self.stdout.write('CHAMBER prmtops found. Forcing use of sander\n')
 
         # Print warnings if we are overwriting any masks and get default masks
@@ -645,7 +644,7 @@ class MMPBSA_App(object):
         self.timer.start_timer('output')
         if (not hasattr(self, 'input_file_text') or not hasattr(self, 'FILES') or
                 not hasattr(self, 'INPUT') or not hasattr(self, 'normal_system')):
-            raise InternalError('I am not prepared to write the final output file!')
+            raise GMXMMPBSA_ERROR('I am not prepared to write the final output file!', InternalError)
         # Only the master does this, so bail out if we are not master
         if not self.master:
             return
@@ -745,7 +744,7 @@ class MMPBSA_App(object):
         global _debug_printlevel
         if infile is None:
             if not hasattr(self, 'FILES'):
-                raise InternalError('FILES not present and no input file given!')
+                raise GMXMMPBSA_ERROR('FILES not present and no input file given!', InternalError)
             infile = self.FILES.input_file
         self.INPUT = self.input_file.Parse(infile)
         _debug_printlevel = self.INPUT['debug_printlevel']
@@ -903,12 +902,11 @@ class MMPBSA_App(object):
 
         if not INPUT['molsurf'] and (INPUT['msoffset'] != 0 or
                                      INPUT['probe'] != 1.4):
-            warnings.warn('offset and probe are molsurf-only options',
-                          InputWarning)
+            logging.warning('offset and probe are molsurf-only options')
 
         # User warning when intdiel > 10
         if self.INPUT['intdiel'] > 10:
-            warnings.warn('Intdiel should be less than 10, but it is {}'.format(self.INPUT['intdiel']), InputWarning)
+            logging.warning('Intdiel should be less than 10, but it is {}'.format(self.INPUT['intdiel']))
         # check mutant definition
         if not self.INPUT['mutant'].lower() in ['rec', 'receptor', 'lig', 'ligand']:
             GMXMMPBSA_ERROR('The mutant most be receptor (or rec) or ligand (or lig)', InputError)
