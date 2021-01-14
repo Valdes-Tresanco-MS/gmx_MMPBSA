@@ -137,7 +137,7 @@ class CheckMakeTop:
             raise GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(make_ndx), self.FILES.complex_index))
         self.FILES.complex_index = com_ndx
 
-        logging.info('Normal Complex: Saving group {}_{} in {} (gromacs index) file as '
+        logging.info('Normal Complex: Saving group {}_{} in {} file as '
                      '{}'.format(rec_group, lig_group, self.FILES.complex_index, self.complex_pdb))
         editconf_echo_args = ['echo', 'GMXMMPBSA_REC_GMXMMPBSA_LIG']
         c3 = subprocess.Popen(editconf_echo_args, stdout=subprocess.PIPE)
@@ -214,7 +214,7 @@ class CheckMakeTop:
         # wt receptor
         if self.FILES.receptor_tpr:
             logging.info('A receptor structure file was defined. Using MT approach...')
-            logging.info('Normal receptor: Saving group {} in {} (gromacs index) file as {}'.format(
+            logging.info('Normal receptor: Saving group {} in {} file as {}'.format(
                 self.FILES.receptor_group, self.FILES.receptor_index, self.receptor_pdb))
             editconf_echo_args = ['echo', '{}'.format(self.FILES.receptor_group)]
             p1 = subprocess.Popen(editconf_echo_args, stdout=subprocess.PIPE)
@@ -251,7 +251,7 @@ class CheckMakeTop:
             logging.info('No receptor structure file was defined. Using ST approach...')
             logging.info('Using receptor structure from complex to generate AMBER topology')
             # wt complex receptor
-            logging.info('Normal Complex: Saving group {} in {} (gromacs index) file as {}'.format(
+            logging.info('Normal Complex: Saving group {} in {} file as {}'.format(
                 rec_group, self.FILES.complex_index, self.receptor_pdb))
             editconf_echo_args = ['echo', '{}'.format(rec_group)]
             cp1 = subprocess.Popen(editconf_echo_args, stdout=subprocess.PIPE)
@@ -269,7 +269,7 @@ class CheckMakeTop:
         if self.FILES.ligand_tpr:  # ligand is protein
             # FIXME: if ligand is a zwitterionic aa fail
             logging.info('A ligand structure file was defined. Using MT approach...')
-            logging.info('Normal Ligand: Saving group {} in {} (gromacs index) file as {}'.format(
+            logging.info('Normal Ligand: Saving group {} in {} file as {}'.format(
                 self.FILES.ligand_group, self.FILES.ligand_index, self.ligand_pdb))
             # wt ligand
             editconf_echo_args = ['echo', '{}'.format(self.FILES.ligand_group)]
@@ -305,8 +305,7 @@ class CheckMakeTop:
             # wt complex ligand
             logging.info('No ligand structure file was defined. Using ST approach...')
             logging.info('Using ligand structure from complex to generate AMBER topology')
-            logging.info('Normal ligand: Saving group {} in {} (gromacs index) file as {}'.format(lig_group,
-                                                                                                  self.FILES.complex_index,
+            logging.info('Normal ligand: Saving group {} in {} file as {}'.format(lig_group, self.FILES.complex_index,
                                                                                                   self.ligand_pdb))
             editconf_echo_args = ['echo', '{}'.format(lig_group)]
             cl1 = subprocess.Popen(editconf_echo_args, stdout=subprocess.PIPE)

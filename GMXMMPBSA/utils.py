@@ -34,6 +34,7 @@ import os
 import shutil
 from pathlib import Path
 import json
+import logging
 
 def checkff():
     """
@@ -48,13 +49,13 @@ def checkff():
     """
     amberhome = os.getenv('AMBERHOME')
     if not amberhome:
-        print('Could not found Amber. Please make sure you have sourced %s/amber.sh (if you are using sh/ksh/'
+        logging.error('Could not found Amber. Please make sure you have sourced %s/amber.sh (if you are using sh/ksh/'
               'bash/zsh) or %s/amber.csh (if you are using csh/tcsh)' %
               (amberhome, amberhome))
         return
     amberhome = Path(amberhome)
 
-    print('Checking if supported force fields exists in Amber data...')
+    logging.info('Checking if supported force fields exists in Amber data...')
 
     data_path = Path(__file__).parent.joinpath('data')
     info_file = data_path.joinpath('info.dat')
@@ -77,7 +78,6 @@ def checkff():
                 cf = data_path.joinpath(data['forcefield'][ff][p])
                 if cf.exists() and not gmxf.joinpath(p).exists():
                     shutil.copy(cf, gmxf)
-    print('Checking if supported force fields exists in Amber data... Done.')
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 def remove(flag, mpi_size=0, fnpre='_GMXMMPBSA_'):

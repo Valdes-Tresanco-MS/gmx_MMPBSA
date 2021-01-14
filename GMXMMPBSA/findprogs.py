@@ -30,12 +30,13 @@ Classes: ExternProg: External program class
 # ##############################################################################
 
 from GMXMMPBSA.exceptions import MMPBSA_Error
-
+import logging
 #+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 def find_progs(INPUT):
     """ Find the necessary programs based in the user INPUT """
     # List all of the used programs with the conditions that they are needed
+    logging.info('Checking external programs...')
     used_progs = { 'cpptraj' : True, 'gmx': True,
                    # look for any available gromacs executable
                    'gmx_mpi': True, 'gmx_d': True, 'gmx_mpi_d': True,
@@ -56,7 +57,6 @@ def find_progs(INPUT):
 
     search_path = True
     force_path = INPUT['gmx_path']
-    print(force_path)
     gromacs5x = True
     gromacs5x_d = True
     gromacs5x_mpi = True
@@ -83,10 +83,10 @@ def find_progs(INPUT):
                     gromacs4x = False
                     continue
                 raise MMPBSA_Error('Could not find necessary program [%s]' % prog)
-            print('%s found! Using %s' % (prog, str(my_progs[prog])))
+            logging.info('%s found! Using %s' % (prog, str(my_progs[prog])))
     if not (gromacs5x or gromacs5x_d or gromacs5x_mpi or gromacs5x_mpi_d) and not gromacs4x:
         raise MMPBSA_Error('Could not find necessary GROMACS program')
-
+    logging.info('Checking external programs...Done.\n')
     return my_progs
 
 #+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+

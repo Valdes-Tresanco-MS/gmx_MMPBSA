@@ -576,8 +576,7 @@ class MMPBSA_App(object):
             self.remove(0)
 
         # Now load the parms and check them
-        self.stdout.write('Loading and checking parameter files for '
-                          'compatibility...\n')
+        logging.info('Loading and checking parameter files for compatibility...\n')
         # Find external programs IFF we are doing a calc
         if not FILES.make_mdins:
             external_progs = {}
@@ -588,9 +587,12 @@ class MMPBSA_App(object):
             self.external_progs = external_progs
 
         # Make amber topologies
+
+        logging.info('Building AMBER Topologies from GROMACS files...')
         maketop = CheckMakeTop(FILES, INPUT, self.external_progs)
         (FILES.complex_prmtop, FILES.receptor_prmtop, FILES.ligand_prmtop, FILES.mutant_complex_prmtop,
          FILES.mutant_receptor_prmtop, FILES.mutant_ligand_prmtop) = maketop.makeToptleap()
+        logging.info('Building AMBER Topologies from GROMACS files...Done.\n')
 
         self.normal_system = MMPBSA_System(FILES.complex_prmtop, FILES.receptor_prmtop, FILES.ligand_prmtop)
         self.using_chamber = self.normal_system.complex_prmtop.chamber
@@ -701,7 +703,7 @@ class MMPBSA_App(object):
 
         self.remove(self.INPUT['keep_files'])
 
-        self.stdout.write('\n\ngmx_MMPBSA Finished! Thank you for using. Please '
+        logging.info('\n\ngmx_MMPBSA Finished! Thank you for using. Please '
                           'cite us if you publish this work with this paper:\n   '
                           'Coming soon\n   '
                           ' and \n'
