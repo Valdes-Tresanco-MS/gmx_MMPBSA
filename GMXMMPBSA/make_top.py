@@ -338,6 +338,12 @@ class CheckMakeTop:
         #     remove_MODEL(self.complex_pdb)
         self.complex_str = parmed.read_PDB(self.complex_pdb)  # can always be initialized
         self.receptor_str = parmed.read_PDB(self.receptor_pdb)
+        self.ligand_str = parmed.read_PDB(self.ligand_pdb)
+        if self.FILES.reference_structure:
+            self.ref_str = parmed.read_PDB(self.FILES.reference_structure)
+
+        self.fix_chains_IDs(self.complex_str, self.receptor_str, self.ligand_str, self.ref_str)
+
         # fix receptor structure
         self.properHIS(self.receptor_str)
         self.properCYS(self.receptor_str)
@@ -456,7 +462,151 @@ class CheckMakeTop:
         else:
             raise MMPBSA_Error('Residue {}:{} not found'.format(chain, resnum))
 
-    def fix_H_ATOMS(self, structure):
+    def fix_chains_IDs(self, com_str, rec_str, lig_str, ref_str=None):
+        if ref_str:
+            if len(ref_str.residues) < len(rec_str.residues):
+                raise ('error')
+            chains = []
+            for res in ref_str.residues:
+                if res.chain not in chains:
+                    chains.append(res.chain)
+            c = 0
+            for res in com_str.residues:
+                print(c, len(ref_str.residues))
+                if c >= len(ref_str.residues):
+                    l = c - len(rec_str.residues)
+                    print(
+                        'Diferencias en el numero de residuos. Asigando identificador arbitrariamente al ligando en el '
+                        'complejo')
+                    res.chain = chains_letters[chains_letters.index(chains[-1]) + 1]
+                    lig_str.residues[l].chain = chains_letters[chains_letters.index(chains[-1]) + 1]
+                    print('COM:', res.number, res.name, res.chain, 'LIG:',
+                          lig_str.residues[c - len(rec_str.residues)].number,
+                          lig_str.residues[c - len(rec_str.residues)].name,
+                          lig_str.residues[c - len(rec_str.residues)].chain)
+                elif c < len(rec_str.residues):
+                    res.chain = ref_str.residues[c].chain
+                    rec_str.residues[c].chain = ref_str.residues[c].chain
+                    print('COM:', res.number, res.name, res.chain, 'REC:', rec_str.residues[c].number, rec_str.residues[
+                        c].name, rec_str.residues[c].chain)
+                else:
+                    res.chain = ref_str.residues[c].chain
+                    lig_str.residues[c - len(rec_str.residues)].chain = ref_str.residues[c].chain
+                    print('COM:', res.number, res.name, res.chain, 'LIG:',
+                          lig_str.residues[c - len(rec_str.residues)].number,
+                          lig_str.residues[c - len(rec_str.residues)].name,
+                          lig_str.residues[c - len(rec_str.residues)].chain)
+                c += 1
+        else:
+            assign = False
+            if self.INPUT['assign_chainID'] == 1:
+                assign = not com_str.residues[0].chain  # pretty simple
+                if assign:
+                    logging.info('Chains ID not found. Assigning chains IDs...')
+                else:
+                    logging.info('Chains ID found. Ignoring chains ID assignation...')
+            elif self.INPUT['assign_chainID'] == 2:
+                assign =True
+                if not com_str.residues[0].chain:
+                    logging.warning('Ya tiene cadena. Reasignando ID...')
+                else:
+                    logging.warning('Assigning chains ID...')
+            if assign:
+                chains_ids = []
+                chain_by_num = False
+                chain_by_ter = False
+                previous_res_number = 0
+                curr_chain_id = 'A'
+                has_nucl = 0
+                c = 0
+                for res in com_str.residues:
+                    if not res.chain:
+                        res.chain = curr_chain_id
+                        if c < len(rec_str.residues):
+                            rec_str.residues[c].chain = curr_chain_id
+                        else:
+                            lig_str.residues[c - len(rec_str.residues)].chain = curr_chain_id
+                        if curr_chain_id not in chains_ids:
+                            chains_ids.append(curr_chain_id)
+                    else:
+                        if res.chain != curr_chain_id:
+                            res.chain = curr_chain_id
+                            if c < len(rec_str.residues):
+                                rec_str.residues[c].chain = curr_chain_id
+                            else:
+                                lig_str.residues[c - len(rec_str.residues)].chain = curr_chain_id
+                        if res.chain not in chains_ids:
+                            chains_ids.append(res.chain)
+                    # ver si es el final de la cadena
+                    if res.number != previous_res_number + 1:
+                        if previous_res_number != 0:
+                            chain_by_num = True
+                    if chain_by_num and chain_by_ter:
+                        chain_by_num = False
+                        chain_by_ter = False
+                        curr_chain_id = chains_letters[chains_letters.index(chains_ids[-1]) + 1]
+                        res.chain = curr_chain_id
+                        if c < len(rec_str.residues):
+                            rec_str.residues[c].chain = curr_chain_id
+                        else:
+                            lig_str.residues[c - len(rec_str.residues)].chain = curr_chain_id
+                        if res.chain not in chains_ids:
+                            chains_ids.append(res.chain)
+                        print('Fin de la cadena por la numeracion y terminal')
+                    elif chain_by_ter:
+                        print('Posible fin de la cadena, la numeracion continua')  # warning
+                        chain_by_ter = False
+                    elif chain_by_num:
+                        print('Posible fin de la cadena por numeracion, pero sin terminal')  # warning
+                        chain_by_num = False
+                        curr_chain_id = chains_letters[chains_letters.index(chains_ids[-1]) + 1]
+                        res.chain = curr_chain_id
+                        if c < len(rec_str.residues):
+                            rec_str.residues[c].chain = curr_chain_id
+                        else:
+                            lig_str.residues[c - len(rec_str.residues)].chain = curr_chain_id
+                        if res.chain not in chains_ids:
+                            chains_ids.append(res.chain)
+                    for atm in res.atoms:
+                        if atm.name == 'OC2':  # only for protein
+                            res.ter = True
+                            chain_by_ter = True
+
+                    if parmed.residue.RNAResidue.has(res.name) or parmed.residue.DNAResidue.has(res.name):
+                        has_nucl += 1
+                    if has_nucl == 1:
+                        print('Esta estructura conteine nucleotidos. Recomendamos el uso de la estructura de referncia')
+
+                    previous_res_number = res.number
+                    if c < len(rec_str.residues):
+                        print('COM:', res.number, res.name, res.chain, 'REC:', rec_str.residues[c].number, rec_str.residues[
+                            c].name, rec_str.residues[c].chain)
+                    else:
+
+                        print('COM:', res.number, res.name, res.chain, 'LIG:',
+                              lig_str.residues[c - len(rec_str.residues)].number,
+                              lig_str.residues[c - len(rec_str.residues)].name,
+                              lig_str.residues[c - len(rec_str.residues)].chain)
+                    # print(res.number, res.name, res.chain, res.ter)
+                    c += 1
+
+    @staticmethod
+    def remove_MODEL(pdb_file):
+        try:
+            with open(pdb_file) as fo:
+                fo = fo.readlines()
+                for line in fo:
+                    if 'MODEL' in line or 'ENDMDL' in line:
+                        fo.remove(line)
+            with open(pdb_file, 'w') as fw:
+                for x in fo:
+                    fw.write(x)
+            return True
+        except IOError as e:
+            GMXMMPBSA_ERROR('', str(e))
+
+    @staticmethod
+    def fix_H_ATOMS(structure):
         """
         GROMACS 4.x save the pdb without atom element column, so parmed does not recognize some H atoms. Parmed assigns
         0 to the atomic number of these atoms. In order to correctly eliminate hydrogens, it is necessary to assign the
