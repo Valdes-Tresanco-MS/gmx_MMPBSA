@@ -28,12 +28,9 @@ from GMXMMPBSA.exceptions import *
 from GMXMMPBSA.utils import checkff
 import subprocess
 from math import sqrt
+import logging
 
 # Fixme: not used. Remove???
-protein_ff = {1:'oldff/leaprc.ff99', 2: 'oldff/leaprc.ff03', 3: 'oldff/leaprc.ff99SB', 4: 'oldff/leaprc.ff99SBildn',
-           5: 'leaprc.protein.ff14SB'}
-ligand_ff = {1: 'leaprc.gaff', 2: 'leaprc.gaff2', 3: 'leaprc.GLYCAM_06j-1', 4: 'leaprc.GLYCAM_06h-1'}
-
 PBRadii = {1: 'bondi', 2: 'mbondi', 3: 'mbondi2', 4: 'mbondi3'}
 
 ions_para_files = {1: 'frcmod.ions234lm_126_tip3p', 2: 'frcmod.ions234lm_iod_tip4pew', 3: 'frcmod.ions234lm_iod_spce',
@@ -55,8 +52,8 @@ class CheckMakeTop:
         self.FILES = FILES
         self.INPUT = INPUT
         self.external_progs = external_programs
-        self.log = open('make_top.log', 'a')
         self.use_temp = False
+        self.log = open('gmx_MMPBSA.log', 'a')
         self.print_residues = self.INPUT['print_res'].split()[0] == 'within'  # FIXME: this is pretty ugly
         self.within = 4
         if self.print_residues:
@@ -77,9 +74,12 @@ class CheckMakeTop:
         self.mutant_receptor_pmrtop = 'MUT_REC.prmtop'
         self.mutant_ligand_pmrtop = 'MUT_LIG.prmtop'
 
-        self.complex_gro = self.FILES.prefix + 'COM.gro'
-        self.receptor_gro = self.FILES.prefix + 'REC.gro'
-        self.ligand_gro = self.FILES.prefix + 'LIG.gro'
+        if self.INPUT['pdb2gmx_merge']:
+            suffix = 'gro'
+
+        self.complex_pdb = self.FILES.prefix + 'COM.pdb'
+        self.receptor_pdb = self.FILES.prefix + 'REC.pdb'
+        self.ligand_pdb = self.FILES.prefix + 'LIG.pdb'
         self.complex_pdb_fixed = self.FILES.prefix + 'COM_FIXED.pdb'
         self.receptor_pdb_fixed = self.FILES.prefix + 'REC_FIXED.pdb'
         self.ligand_pdb_fixed = self.FILES.prefix + 'LIG_FIXED.pdb'
@@ -87,9 +87,9 @@ class CheckMakeTop:
         self.rec_ions_pdb = self.FILES.prefix + 'REC_IONS.pdb'
         self.lig_ions_pdb = self.FILES.prefix + 'LIG_IONS.pdb'
 
-        self.mutant_complex_gro = self.FILES.prefix + 'MUT_COM.gro'
-        self.mutant_receptor_gro = self.FILES.prefix + 'MUT_REC.gro'
-        self.mutant_ligand_gro = self.FILES.prefix + 'MUT_LIG.gro'
+        self.mutant_complex_pdb = self.FILES.prefix + 'MUT_COM.pdb'
+        self.mutant_receptor_pdb = self.FILES.prefix + 'MUT_REC.pdb'
+        self.mutant_ligand_pdb = self.FILES.prefix + 'MUT_LIG.pdb'
         self.mutant_complex_pdb_fixed = self.FILES.prefix + 'MUT_COM_FIXED.pdb'
         self.mutant_receptor_pdb_fixed = self.FILES.prefix + 'MUT_REC_FIXED.pdb'
         self.mutant_ligand_pdb_fixed = self.FILES.prefix + 'MUT_LIG_FIXED.pdb'
@@ -108,48 +108,69 @@ class CheckMakeTop:
         # check if GROMACS 4.x exists
         make_ndx = [self.external_progs['make_ndx'].full_path]
         trjconv = [self.external_progs['trjconv'].full_path]
+        editconf = [self.external_progs['editconf'].full_path]
         if gmx:
             make_ndx = [gmx, 'make_ndx']
             trjconv = [gmx, 'trjconv']
+            editconf = [gmx, 'editconf']
 
 
         # wt complex
         # make index for extract pdb structure
         rec_group, lig_group = self.FILES.complex_groups
-        print('Normal Complex: Save group {}_{} in {} (gromacs index) file as {}'.format(rec_group, lig_group,
-                                                                                           self.FILES.complex_index,
-                                                                                           self.complex_gro))
+        logging.info('Making a new index...')
+
+
+
+        # print('Normal Complex: Save group {}_{} in {} (gromacs index) file as {}'.format(rec_group, lig_group,
+        #                                                                                    self.FILES.complex_index,
+        #                                                                                    self.complex_pdb))
+
         # merge both (rec and lig) groups into complex group, modify index and create a copy
         # 1-rename groups, 2-merge
-        c1 = subprocess.Popen(['echo', 'name {r} GMXMMPBSA_REC\n name {l} GMXMMPBSA_LIG\n  {r} | {l}\n'
-                                       ' q\n'.format(r=rec_group, l=lig_group)], stdout=subprocess.PIPE)
+
+        make_ndx_echo_args = ['echo', 'name {r} GMXMMPBSA_REC\n name {l} GMXMMPBSA_LIG\n  {r} | {l}\n'
+                                       ' q\n'.format(r=rec_group, l=lig_group)]
+        c1 = subprocess.Popen(make_ndx_echo_args, stdout=subprocess.PIPE)
         # FIXME: overwrite the user index file???
         com_ndx = self.FILES.prefix + 'COM_index.ndx'
-
-        c2 = subprocess.Popen(make_ndx + ['-n', self.FILES.complex_index, '-o', com_ndx],
-                              stdin=c1.stdout, stdout=self.log, stderr=self.log)
+        make_ndx_args = make_ndx + ['-n', self.FILES.complex_index, '-o', com_ndx]
+        if self.INPUT['debug_printlevel']:
+            logging.info('Running command: ' + (' '.join(make_ndx_echo_args).replace('\n', '\\n')) + ' | ' + ' '.join(
+                make_ndx_args))
+        c2 = subprocess.Popen(make_ndx_args, stdin=c1.stdout, stdout=self.log, stderr=self.log)
         if c2.wait():  # if it quits with return code != 0
             raise MMPBSA_Error('%s failed when querying %s' % (' '.join(make_ndx), self.FILES.receptor_tpr))
         self.FILES.complex_index = com_ndx
 
-        c3 = subprocess.Popen(['echo', 'GMXMMPBSA_REC_GMXMMPBSA_LIG'], stdout=subprocess.PIPE)
+        logging.info('Normal Complex: Saving group {}_{} in {} (gromacs index) file as '
+                    '{}'.format(rec_group, lig_group, self.FILES.complex_index, self.complex_pdb))
+        editconf_echo_args = ['echo', 'GMXMMPBSA_REC_GMXMMPBSA_LIG']
+        c3 = subprocess.Popen(editconf_echo_args, stdout=subprocess.PIPE)
         # we get only first trajectory to extract a pdb file and make amber topology for complex
-        c4 = subprocess.Popen(trjconv + ['-f', self.FILES.complex_trajs[0], '-s', self.FILES.complex_tpr,
-                               '-o', self.complex_gro, '-n', self.FILES.complex_index, '-dump', '0'],
-                              stdin=c3.stdout, stdout=self.log, stderr=self.log)
+        editconf_args = editconf + ['-f', self.FILES.complex_tpr, '-o', self.complex_pdb, '-n',
+                                    self.FILES.complex_index]
+        if self.INPUT['pdb2gmx_merge']:
+            editconf_args += ['-resnr', '1']
+        if self.INPUT['debug_printlevel']:
+            logging.info('Running command: ' + (' '.join(editconf_echo_args)) + ' | ' + ' '.join(editconf_args))
+        c4 = subprocess.Popen(editconf_args, stdin=c3.stdout, stdout=self.log, stderr=self.log)
         if c4.wait():  # if it quits with return code != 0
-            raise MMPBSA_Error('%s failed when querying %s' % (' '.join(trjconv), self.FILES.complex_tpr))
+            raise MMPBSA_Error('%s failed when querying %s' % (' '.join(editconf), self.FILES.complex_tpr))
 
         # clear trajectory
         if self.INPUT['solvated_trajectory']:
-            print('Clear normal complex trajectories...')
+            logging.info('Cleaning normal complex trajectories...')
             new_trajs = []
             for i in range(len(self.FILES.complex_trajs)):
-                c5 = subprocess.Popen(['echo', 'GMXMMPBSA_REC_GMXMMPBSA_LIG'], stdout=subprocess.PIPE)
+                trjconv_echo_args = ['echo', 'GMXMMPBSA_REC_GMXMMPBSA_LIG']
+                c5 = subprocess.Popen(trjconv_echo_args, stdout=subprocess.PIPE)
                 # we get only first trajectory to extract a pdb file and make amber topology for complex
-                c6 = subprocess.Popen(trjconv + ['-f', self.FILES.complex_trajs[0], '-s', self.FILES.complex_tpr,
-                                       '-o', 'COM_traj_{}.xtc'.format(i), '-n',
-                                       self.FILES.complex_index], # FIXME: start and end frames???
+                trjconv_args = trjconv + ['-f', self.FILES.complex_trajs[0], '-s', self.FILES.complex_tpr,
+                                       '-o', 'COM_traj_{}.xtc'.format(i), '-n', self.FILES.complex_index]
+                if self.INPUT['debug_printlevel']:
+                    logging.info('Running command: ' + (' '.join(trjconv_echo_args)) + ' | ' + ' '.join(trjconv_args))
+                c6 = subprocess.Popen(trjconv_args, # FIXME: start and end frames???
                                       stdin=c5.stdout, stdout=self.log, stderr=self.log)
                 if c6.wait():  # if it quits with return code != 0
                     raise MMPBSA_Error('%s failed when querying %s' % (' '.join(trjconv), self.FILES.complex_tpr))
@@ -159,12 +180,15 @@ class CheckMakeTop:
         # Put receptor and ligand (explicitly defined) to avoid overwrite them
         # check if ligand is not protein. In any case, non-protein ligand always most be processed
         if self.FILES.ligand_mol2:
+            logging.info(f'Generating ligand parameters from {self.FILES.ligand_mol2} file...')
             lig_name = os.path.splitext(os.path.split(self.FILES.ligand_mol2)[1])[0]
             self.ligand_frcmod = self.FILES.prefix + lig_name + '.frcmod'
             # run parmchk2
             parmchk2 = self.external_progs['parmchk2'].full_path
-            l3 = subprocess.Popen([parmchk2, '-i', self.FILES.ligand_mol2, '-f', 'mol2', '-o', self.ligand_frcmod],
-                                  stdout=self.log, stderr=self.log)
+            parmchk2_args = [parmchk2, '-i', self.FILES.ligand_mol2, '-f', 'mol2', '-o', self.ligand_frcmod]
+            if self.INPUT['debug_printlevel']:
+                logging.info('Running command: ' + ' '.join(parmchk2_args))
+            l3 = subprocess.Popen(parmchk2_args, stdout=self.log, stderr=self.log)
             if l3.wait():
                 raise MMPBSA_Error('%s failed when querying %s' % (parmchk2, self.FILES.ligand_mol2))
 
@@ -173,112 +197,144 @@ class CheckMakeTop:
         if self.INPUT['decomprun'] and self.print_residues:
             if self.FILES.stability:
                 self.use_temp = True
-                cp1 = subprocess.Popen(['echo', '{}'.format(rec_group)], stdout=subprocess.PIPE)
+                logging.warning('When decomp is defined, we generate a receptor file in order to extract interface '
+                            'residues')
+                rec_echo_args = ['echo', '{}'.format(rec_group)]
+                cp1 = subprocess.Popen(rec_echo_args, stdout=subprocess.PIPE)
                 # we get only first trajectory to extract a pdb file to make amber topology
-                cp2 = subprocess.Popen(
-                    trjconv + ['-f', self.FILES.complex_trajs[0], '-s', self.FILES.complex_tpr, '-o',
-                     'rec_temp.gro', '-n', self.FILES.complex_index, '-dump', '0'],
-                    stdin=cp1.stdout, stdout=self.log, stderr=self.log)
+                editconf_args = editconf + ['-f', self.FILES.complex_tpr, '-o', 'rec_temp.pdb', '-n',
+                                                 self.FILES.complex_index]
+                if self.INPUT['pdb2gmx_merge']:
+                    editconf_args += ['-resnr', '1']
+
+                if self.INPUT['debug_printlevel']:
+                    logging.info('Running command: ' + (' '.join(rec_echo_args)) + ' | ' + ' '.join(editconf_args))
+                cp2 = subprocess.Popen( editconf_args, stdin=cp1.stdout, stdout=self.log, stderr=self.log)
                 if cp2.wait():  # if it quits with return code != 0
-                    raise MMPBSA_Error('%s failed when querying %s' % (' '.join(trjconv), self.FILES.complex_tpr))
+                    raise MMPBSA_Error('%s failed when querying %s' % (' '.join(editconf), self.FILES.complex_tpr))
 
         # check if stability
         if self.FILES.stability:
             if (self.FILES.receptor_tpr or self.FILES.ligand_tpr):
-                warnings.warn(
-                    'When Stability calculation mode is selected, receptor and ligand files are not needed...',
-                    StabilityWarning)
+                logging.warning('When Stability calculation mode is selected, receptor and ligand files are not '
+                                 'needed...')
             if self.INPUT['alarun'] and (self.FILES.mutant_receptor_tpr or self.FILES.mutant_ligand_tpr):
-                warnings.warn(
-                    'When Stability calculation mode is selected, mutant receptor/mutant ligand file is not '
-                    'needed...',
-                    StabilityWarning)
+                logging.warning('When Stability calculation mode is selected, mutant receptor/mutant ligand files '
+                                'are not needed...')
 
 
         # wt receptor
         if self.FILES.receptor_tpr:
-            print('Normal receptor: Save group {} in {} (gromacs index) file as {}'.format(self.FILES.receptor_group,
-                                                                          self.FILES.receptor_index,
-                                                                          self.receptor_gro))
-            p1 = subprocess.Popen(['echo', '{}'.format(self.FILES.receptor_group)], stdout=subprocess.PIPE)
+            logging.info('A receptor structure file was defined. Using MT approach...')
+            logging.info('Normal receptor: Saving group {} in {} (gromacs index) file as {}'.format(
+                self.FILES.receptor_group, self.FILES.receptor_index, self.receptor_pdb))
+            editconf_echo_args = ['echo', '{}'.format(self.FILES.receptor_group)]
+            p1 = subprocess.Popen(editconf_echo_args, stdout=subprocess.PIPE)
             # we get only first trajectory to extract a pdb file for make amber topology
-            cp2 = subprocess.Popen(trjconv + ['-f', self.FILES.receptor_trajs[0], '-s', self.FILES.receptor_tpr,
-                                    '-o', self.receptor_gro, '-n', self.FILES.receptor_index, '-dump', '0'],
-                                   stdin=p1.stdout, stdout=self.log, stderr=self.log)
+            editconf_args = editconf + ['-f', self.FILES.receptor_tpr, '-o', self.receptor_pdb, '-n',
+                                       self.FILES.receptor_index]
+            if self.INPUT['pdb2gmx_merge']:
+                editconf_args += ['-resnr', '1']
+            if self.INPUT['debug_printlevel']:
+                logging.info('Running command: ' + (' '.join(editconf_echo_args)) + ' | ' + ' '.join(editconf_args))
+            cp2 = subprocess.Popen(editconf_args, stdin=p1.stdout, stdout=self.log, stderr=self.log)
             if cp2.wait():  # if it quits with return code != 0
-                raise MMPBSA_Error('%s failed when querying %s' % (' '.join(trjconv), self.FILES.receptor_tpr))
+                raise MMPBSA_Error('%s failed when querying %s' % (' '.join(editconf), self.FILES.receptor_tpr))
             # clear trajectory
             if self.INPUT['solvated_trajectory']:
-                print('Clear normal receptor trajectories...')
+                logging.info('Clear normal receptor trajectories...')
                 new_trajs = []
                 for i in range(len(self.FILES.receptor_trajs)):
-                    c5 = subprocess.Popen(['echo', '{}'.format(self.FILES.receptor_group)], stdout=subprocess.PIPE)
+                    trjconv_echo_args = ['echo', '{}'.format(self.FILES.receptor_group)]
+                    c5 = subprocess.Popen(trjconv_echo_args, stdout=subprocess.PIPE)
                     # we get only first trajectory to extract a pdb file and make amber topology for complex
-                    c6 = subprocess.Popen(
-                        trjconv + ['-f', self.FILES.receptor_trajs[0], '-s', self.FILES.receptor_tpr,
+                    trjconv_args = trjconv + ['-f', self.FILES.receptor_trajs[0], '-s', self.FILES.receptor_tpr,
                          '-o', 'REC_traj_{}.xtc'.format(i), '-n',
-                         self.FILES.receptor_index],  # FIXME: start and end frames???
-                        stdin=c5.stdout, stdout=self.log, stderr=self.log)
+                         self.FILES.receptor_index]
+                    if self.INPUT['debug_printlevel']:
+                        logging.info('Running command: ' + (' '.join(trjconv_echo_args)) + ' | ' + ' '.join(trjconv_args))
+                    c6 = subprocess.Popen(trjconv_args,  # FIXME: start and end frames???
+                                            stdin=c5.stdout, stdout=self.log, stderr=self.log)
                     if c6.wait():  # if it quits with return code != 0
                         raise MMPBSA_Error('%s failed when querying %s' % (' '.join(trjconv), self.FILES.receptor_tpr))
                     new_trajs.append('REC_traj_{}.xtc'.format(i))
                 self.FILES.receptor_trajs = new_trajs
         else:
-            print('Using receptor structure from complex to make amber topology')
+            logging.info('No receptor structure file was defined. Using ST approach...')
+            logging.info('Using receptor structure from complex to make AMBER topology')
             # wt complex receptor
-            print('Normal Complex: Save group {} in {} (gromacs index) file as {}'.format(rec_group,
-                                                                                     self.FILES.complex_index,
-                                                                                   self.receptor_gro))
-            cp1 = subprocess.Popen(['echo', '{}'.format(rec_group)], stdout=subprocess.PIPE)
+            logging.info('Normal Complex: Saving group {} in {} (gromacs index) file as {}'.format(
+                rec_group, self.FILES.complex_index, self.receptor_pdb))
+            editconf_echo_args = ['echo', '{}'.format(rec_group)]
+            cp1 = subprocess.Popen(editconf_echo_args, stdout=subprocess.PIPE)
             # we get only first trajectory to extract a pdb file for make amber topology
-            cp2 = subprocess.Popen(
-                trjconv + ['-f', self.FILES.complex_trajs[0], '-s', self.FILES.complex_tpr, '-o',
-                 self.receptor_gro, '-n', self.FILES.complex_index, '-dump', '0'],
-                stdin=cp1.stdout, stdout=self.log, stderr=self.log)
+            editconf_args = editconf + ['-f', self.FILES.complex_tpr, '-o', self.receptor_pdb, '-n',
+                                      self.FILES.complex_index]
+            if self.INPUT['pdb2gmx_merge']:
+                editconf_args += ['-resnr', '1']
+            if self.INPUT['debug_printlevel']:
+                logging.info('Running command: ' + (' '.join(editconf_echo_args)) + ' | ' + ' '.join(editconf_args))
+            cp2 = subprocess.Popen(editconf_args, stdin=cp1.stdout, stdout=self.log, stderr=self.log)
             if cp2.wait():  # if it quits with return code != 0
-                raise MMPBSA_Error('%s failed when querying %s' % (' '.join(trjconv), self.FILES.complex_tpr))
+                raise MMPBSA_Error('%s failed when querying %s' % (' '.join(editconf), self.FILES.complex_tpr))
 
         # ligand
         # # check consistence
         if self.FILES.ligand_tpr:  # ligand is protein
+            # FIXME: if ligand is a zwitterionic aa fail
+            logging.info('A ligand structure file was defined. Using MT approach...')
+            logging.info('Normal Ligand: Saving group {} in {} (gromacs index) file as {}'.format(
+                self.FILES.ligand_group, self.FILES.ligand_index, self.ligand_pdb))
             # wt ligand
-            l1 = subprocess.Popen(['echo', '{}'.format(self.FILES.ligand_group)], stdout=subprocess.PIPE)
+            editconf_echo_args = ['echo', '{}'.format(self.FILES.ligand_group)]
+            l1 = subprocess.Popen(editconf_echo_args, stdout=subprocess.PIPE)
             # we get only first trajectory for extract a pdb file for make amber topology
-            l2 = subprocess.Popen(trjconv + ['-f', self.FILES.ligand_trajs[0], '-s',
-                                   self.FILES.ligand_tpr, '-o', self.ligand_gro, '-n', self.FILES.ligand_index,
-                                   '-dump', '0'],
-                                  stdin=l1.stdout, stdout=self.log, stderr=self.log)
+            editconf_args = editconf + ['-f', self.FILES.ligand_tpr, '-o', self.ligand_pdb, '-n',
+                                       self.FILES.ligand_index]
+            if self.INPUT['pdb2gmx_merge']:
+                editconf_args += ['-resnr', '1']
+            if self.INPUT['debug_printlevel']:
+                logging.info('Running command: ' + (' '.join(editconf_echo_args)) + ' | ' + ' '.join(editconf_args))
+            l2 = subprocess.Popen(editconf_args, stdin=l1.stdout, stdout=self.log, stderr=self.log)
             if l2.wait():  # if it quits with return code != 0
-                raise MMPBSA_Error('%s failed when querying %s' % (' '.join(trjconv), self.FILES.ligand_tpr))
+                raise MMPBSA_Error('%s failed when querying %s' % (' '.join(editconf), self.FILES.ligand_tpr))
 
             # clear trajectory
             if self.INPUT['solvated_trajectory']:
-                print('Clear normal ligand trajectories...')
+                logging.info('Clear normal ligand trajectories...')
                 new_trajs = []
                 for i in range(len(self.FILES.ligand_trajs)):
-                    c5 = subprocess.Popen(['echo', '{}'.format(self.FILES.ligand_group)], stdout=subprocess.PIPE)
+                    trjconv_echo_args = ['echo', '{}'.format(self.FILES.ligand_group)]
+                    c5 = subprocess.Popen(trjconv_echo_args, stdout=subprocess.PIPE)
                     # we get only first trajectory to extract a pdb file and make amber topology for complex
-                    c6 = subprocess.Popen(
-                        trjconv + ['-f', self.FILES.ligand_trajs[0], '-s', self.FILES.ligand_tpr,
-                         '-o', 'LIG_traj_{}.xtc'.format(i), '-n', self.FILES.ligand_index],
-                        stdin=c5.stdout, stdout=self.log, stderr=self.log)
+                    trjconv_args = trjconv + ['-f', self.FILES.ligand_trajs[0], '-s', self.FILES.ligand_tpr,
+                         '-o', 'LIG_traj_{}.xtc'.format(i), '-n', self.FILES.ligand_index]
+                    if self.INPUT['debug_printlevel']:
+                        logging.info('Running command: ' + (' '.join(trjconv_echo_args)) + ' | ' + ' '.join(trjconv_args))
+                    c6 = subprocess.Popen(trjconv_args, stdin=c5.stdout, stdout=self.log, stderr=self.log)
                     if c6.wait():  # if it quits with return code != 0
-                        raise MMPBSA_Error(
-                            '%s failed when querying %s' % (' '.join(trjconv), self.FILES.ligand_tpr))
+                        raise MMPBSA_Error('%s failed when querying %s' % (' '.join(trjconv), self.FILES.ligand_tpr))
                     new_trajs.append('LIG_traj_{}.xtc'.format(i))
                 self.FILES.ligand_trajs = new_trajs
         else:
             # wt complex ligand
-            print('Using ligand structure from complex to make amber topology')
-            print('Save group {} in {} (gromacs index) file as {}'.format(lig_group, self.FILES.complex_index,
-                                                                          self.ligand_gro))
-            cl1 = subprocess.Popen(['echo', '{}'.format(lig_group)], stdout=subprocess.PIPE)
+            logging.info('No ligand structure file was defined. Using ST approach...')
+            logging.info('Using ligand structure from complex to make AMBER topology')
+            logging.info('Normal ligand: Saving group {} in {} (gromacs index) file as {}'.format(lig_group,
+                                                                                     self.FILES.complex_index,
+                                                                          self.ligand_pdb))
+            editconf_echo_args = ['echo', '{}'.format(lig_group)]
+            cl1 = subprocess.Popen(editconf_echo_args, stdout=subprocess.PIPE)
             # we get only  first trajectory to extract a pdb file for make amber topology
-            cl2 = subprocess.Popen(trjconv + ['-f', self.FILES.complex_trajs[0], '-s', self.FILES.complex_tpr,
-                                    '-o', self.ligand_gro, '-n', self.FILES.complex_index, '-dump', '0'],
-                                   stdin=cl1.stdout, stdout=self.log, stderr=self.log)
+            editconf_args = editconf + ['-f', self.FILES.complex_tpr, '-o', self.ligand_pdb, '-n',
+                                      self.FILES.complex_index]
+            if self.INPUT['pdb2gmx_merge']:
+                editconf_args += ['-resnr', '1']
+            if self.INPUT['debug_printlevel']:
+                logging.info('Running command: ' + (' '.join(editconf_echo_args)) + ' | ' + ' '.join(editconf_args))
+            cl2 = subprocess.Popen(editconf_args, stdin=cl1.stdout, stdout=self.log, stderr=self.log)
             if cl2.wait():  # if it quits with return code != 0
-                raise MMPBSA_Error('%s failed when querying %s' % (' '.join(trjconv), self.FILES.complex_tpr))
+                raise MMPBSA_Error('%s failed when querying %s' % (' '.join(editconf), self.FILES.complex_tpr))
 
     def checkPDB(self):
         """
@@ -292,7 +348,7 @@ class CheckMakeTop:
         5 - Save
         :return:
         """
-        self.complex_str = parmed.gromacs.GromacsGroFile.parse(self.complex_gro)  # can always be initialized
+        self.complex_str = parmed.read_PDB(self.complex_pdb)  # can always be initialized
         # fix complex structure and save
         # self.properHIS(self.complex_str)
         # self.properCYS(self.complex_str)
@@ -303,7 +359,7 @@ class CheckMakeTop:
         # self.complex_str.save(self.complex_pdb_fixed, 'pdb', True)
 
         # if not self.FILES.stability:
-        self.receptor_str = parmed.gromacs.GromacsGroFile.parse(self.receptor_gro)
+        self.receptor_str = parmed.read_PDB(self.receptor_pdb)
         # fix receptor structure
         self.properHIS(self.receptor_str)
         self.properCYS(self.receptor_str)
@@ -338,7 +394,7 @@ class CheckMakeTop:
         self.receptor_str.save(self.receptor_pdb_fixed, 'pdb', True, renumber=False)
 
         # fix ligand structure
-        self.ligand_str = parmed.gromacs.GromacsGroFile.parse(self.ligand_gro)
+        self.ligand_str = parmed.read_PDB(self.ligand_pdb)
         # fix ligand structure if is protein
         self.properHIS(self.ligand_str)
         self.properCYS(self.ligand_str)
