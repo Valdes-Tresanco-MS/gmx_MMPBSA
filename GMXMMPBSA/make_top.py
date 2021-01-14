@@ -377,8 +377,6 @@ class CheckMakeTop:
                 self.rec_str_ions = True
         self.receptor_str.save(self.receptor_pdb_fixed, 'pdb', True, renumber=False)
 
-        # fix ligand structure
-        self.ligand_str = parmed.read_PDB(self.ligand_pdb)
         # fix ligand structure if is protein
         self.properHIS(self.ligand_str)
         self.properCYS(self.ligand_str)
@@ -387,7 +385,7 @@ class CheckMakeTop:
         self.ligand_str.strip('@/H')
         self.properATOMS(self.ligand_str)
 
-        # check if rec contain ions (metals)
+        # check if lig contain ions (metals)
         self.lig_ions = self.ligand_str[:, ions, :]
         if self.lig_ions.atoms:
             # fix atom number, avoid core dump in tleap
@@ -402,12 +400,14 @@ class CheckMakeTop:
         self.ligand_str.save(self.ligand_pdb_fixed, 'pdb', True, renumber=False)
 
         if self.INPUT['alarun']:
+            logging.info('Building Mutant receptor...')
             if self.INPUT['mutant'].lower() in ['rec', 'receptor']:
                 self.mutant_receptor_str = parmed.read_PDB(self.receptor_pdb_fixed)
                 # fix mutant receptor structure
                 self.mutatexala(self.mutant_receptor_str)
                 self.mutant_receptor_str.save(self.mutant_receptor_pdb_fixed, 'pdb', True, renumber=False)
             else:
+                logging.info('Building Mutant ligand...')
                 if self.FILES.ligand_mol2:
                     raise MMPBSA_Error('Mutation is only possible if the ligand is protein-like')
                 self.mutant_ligand_str = parmed.read_PDB(self.ligand_pdb_fixed)
@@ -417,7 +417,7 @@ class CheckMakeTop:
         # Get residue form receptor-ligand interface
         if self.print_residues:
             if self.use_temp:
-                temp_str = parmed.gromacs.GromacsGroFile.parse('rec_temp.gro')
+                temp_str = parmed.read_PDB('rec_temp.pdb')
                 rec_resnum = len(temp_str.residues)
             else:
                 rec_resnum = len(self.receptor_str.residues)
