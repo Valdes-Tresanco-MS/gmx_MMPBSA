@@ -28,6 +28,7 @@ import subprocess
 from math import sqrt
 import logging
 import string
+
 chains_letters = list(string.ascii_uppercase)
 
 PBRadii = {1: 'bondi', 2: 'mbondi', 3: 'mbondi2', 4: 'mbondi3'}
@@ -42,6 +43,7 @@ ions = ["AG", "AL", "Ag", "BA", "BR", "Be", "CA", "CD", "CE", "CL", "CO", "CR", 
         "Dy", "EU", "EU3", "Er", "F", "FE", "FE2", "GD3", "H3O+", "HE+", "HG", "HZ+", "Hf", "IN", "IOD", "K", "K+",
         "LA", "LI", "LU", "MG", "MN", "NA", "NH4", "NI", "Na+", "Nd", "PB", "PD", "PR", "PT", "Pu", "RB", "Ra", "SM",
         "SR", "Sm", "Sn", "TB", "TL", "Th", "Tl", "Tm", "U4+", "V2+", "Y", "YB2", "ZN", "Zr"]
+
 
 def dist(coor1, coor2):
     return sqrt((coor2[0] - coor1[0]) ** 2 + (coor2[1] - coor1[1]) ** 2 + (coor2[2] - coor1[2]) ** 2)
@@ -136,7 +138,7 @@ class CheckMakeTop:
         self.FILES.complex_index = com_ndx
 
         logging.info('Normal Complex: Saving group {}_{} in {} (gromacs index) file as '
-                    '{}'.format(rec_group, lig_group, self.FILES.complex_index, self.complex_pdb))
+                     '{}'.format(rec_group, lig_group, self.FILES.complex_index, self.complex_pdb))
         editconf_echo_args = ['echo', 'GMXMMPBSA_REC_GMXMMPBSA_LIG']
         c3 = subprocess.Popen(editconf_echo_args, stdout=subprocess.PIPE)
         # we get only first trajectory to extract a pdb file and make amber topology for complex
@@ -157,10 +159,10 @@ class CheckMakeTop:
                 c5 = subprocess.Popen(trjconv_echo_args, stdout=subprocess.PIPE)
                 # we get only first trajectory to extract a pdb file and make amber topology for complex
                 trjconv_args = trjconv + ['-f', self.FILES.complex_trajs[0], '-s', self.FILES.complex_tpr,
-                                       '-o', 'COM_traj_{}.xtc'.format(i), '-n', self.FILES.complex_index]
+                                          '-o', 'COM_traj_{}.xtc'.format(i), '-n', self.FILES.complex_index]
                 if self.INPUT['debug_printlevel']:
                     logging.info('Running command: ' + (' '.join(trjconv_echo_args)) + ' | ' + ' '.join(trjconv_args))
-                c6 = subprocess.Popen(trjconv_args, # FIXME: start and end frames???
+                c6 = subprocess.Popen(trjconv_args,  # FIXME: start and end frames???
                                       stdin=c5.stdout, stdout=self.log, stderr=self.log)
                 if c6.wait():  # if it quits with return code != 0
                     raise GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(trjconv), self.FILES.complex_tpr))
@@ -188,15 +190,15 @@ class CheckMakeTop:
             if self.FILES.stability:
                 self.use_temp = True
                 logging.warning('When decomp is defined, we generate a receptor file in order to extract interface '
-                            'residues')
+                                'residues')
                 rec_echo_args = ['echo', '{}'.format(rec_group)]
                 cp1 = subprocess.Popen(rec_echo_args, stdout=subprocess.PIPE)
                 # we get only first trajectory to extract a pdb file to generate amber topology
                 editconf_args = editconf + ['-f', self.FILES.complex_tpr, '-o', 'rec_temp.pdb', '-n',
-                                                 self.FILES.complex_index]
+                                            self.FILES.complex_index]
                 if self.INPUT['debug_printlevel']:
                     logging.info('Running command: ' + (' '.join(rec_echo_args)) + ' | ' + ' '.join(editconf_args))
-                cp2 = subprocess.Popen( editconf_args, stdin=cp1.stdout, stdout=self.log, stderr=self.log)
+                cp2 = subprocess.Popen(editconf_args, stdin=cp1.stdout, stdout=self.log, stderr=self.log)
                 if cp2.wait():  # if it quits with return code != 0
                     raise GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(editconf), self.FILES.complex_tpr))
 
@@ -204,7 +206,7 @@ class CheckMakeTop:
         if self.FILES.stability:
             if (self.FILES.receptor_tpr or self.FILES.ligand_tpr):
                 logging.warning('When Stability calculation mode is selected, receptor and ligand files are not '
-                                 'needed...')
+                                'needed...')
             if self.INPUT['alarun'] and (self.FILES.mutant_receptor_tpr or self.FILES.mutant_ligand_tpr):
                 logging.warning('When Stability calculation mode is selected, mutant receptor/mutant ligand files '
                                 'are not needed...')
@@ -218,7 +220,7 @@ class CheckMakeTop:
             p1 = subprocess.Popen(editconf_echo_args, stdout=subprocess.PIPE)
             # we get only first trajectory to extract a pdb file for make amber topology
             editconf_args = editconf + ['-f', self.FILES.receptor_tpr, '-o', self.receptor_pdb, '-n',
-                                       self.FILES.receptor_index]
+                                        self.FILES.receptor_index]
             if self.INPUT['debug_printlevel']:
                 logging.info('Running command: ' + (' '.join(editconf_echo_args)) + ' | ' + ' '.join(editconf_args))
             cp2 = subprocess.Popen(editconf_args, stdin=p1.stdout, stdout=self.log, stderr=self.log)
@@ -233,15 +235,16 @@ class CheckMakeTop:
                     c5 = subprocess.Popen(trjconv_echo_args, stdout=subprocess.PIPE)
                     # we get only first trajectory to extract a pdb file and make amber topology for complex
                     trjconv_args = trjconv + ['-f', self.FILES.receptor_trajs[0], '-s', self.FILES.receptor_tpr,
-                         '-o', 'REC_traj_{}.xtc'.format(i), '-n',
-                         self.FILES.receptor_index]
+                                              '-o', 'REC_traj_{}.xtc'.format(i), '-n',
+                                              self.FILES.receptor_index]
                     if self.INPUT['debug_printlevel']:
                         logging.info('Running command: ' + (' '.join(trjconv_echo_args)) + ' | ' + ' '.join(
                             trjconv_args))
                     c6 = subprocess.Popen(trjconv_args,  # FIXME: start and end frames???
-                                            stdin=c5.stdout, stdout=self.log, stderr=self.log)
+                                          stdin=c5.stdout, stdout=self.log, stderr=self.log)
                     if c6.wait():  # if it quits with return code != 0
-                        raise GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(trjconv), self.FILES.receptor_tpr))
+                        raise GMXMMPBSA_ERROR(
+                            '%s failed when querying %s' % (' '.join(trjconv), self.FILES.receptor_tpr))
                     new_trajs.append('REC_traj_{}.xtc'.format(i))
                 self.FILES.receptor_trajs = new_trajs
         else:
@@ -254,7 +257,7 @@ class CheckMakeTop:
             cp1 = subprocess.Popen(editconf_echo_args, stdout=subprocess.PIPE)
             # we get only first trajectory to extract a pdb file for make amber topology
             editconf_args = editconf + ['-f', self.FILES.complex_tpr, '-o', self.receptor_pdb, '-n',
-                                      self.FILES.complex_index]
+                                        self.FILES.complex_index]
             if self.INPUT['debug_printlevel']:
                 logging.info('Running command: ' + (' '.join(editconf_echo_args)) + ' | ' + ' '.join(editconf_args))
             cp2 = subprocess.Popen(editconf_args, stdin=cp1.stdout, stdout=self.log, stderr=self.log)
@@ -273,7 +276,7 @@ class CheckMakeTop:
             l1 = subprocess.Popen(editconf_echo_args, stdout=subprocess.PIPE)
             # we get only first trajectory for extract a pdb file for make amber topology
             editconf_args = editconf + ['-f', self.FILES.ligand_tpr, '-o', self.ligand_pdb, '-n',
-                                       self.FILES.ligand_index]
+                                        self.FILES.ligand_index]
             if self.INPUT['debug_printlevel']:
                 logging.info('Running command: ' + (' '.join(editconf_echo_args)) + ' | ' + ' '.join(editconf_args))
             l2 = subprocess.Popen(editconf_args, stdin=l1.stdout, stdout=self.log, stderr=self.log)
@@ -289,9 +292,10 @@ class CheckMakeTop:
                     c5 = subprocess.Popen(trjconv_echo_args, stdout=subprocess.PIPE)
                     # we get only first trajectory to extract a pdb file and make amber topology for complex
                     trjconv_args = trjconv + ['-f', self.FILES.ligand_trajs[0], '-s', self.FILES.ligand_tpr,
-                         '-o', 'LIG_traj_{}.xtc'.format(i), '-n', self.FILES.ligand_index]
+                                              '-o', 'LIG_traj_{}.xtc'.format(i), '-n', self.FILES.ligand_index]
                     if self.INPUT['debug_printlevel']:
-                        logging.info('Running command: ' + (' '.join(trjconv_echo_args)) + ' | ' + ' '.join(trjconv_args))
+                        logging.info(
+                            'Running command: ' + (' '.join(trjconv_echo_args)) + ' | ' + ' '.join(trjconv_args))
                     c6 = subprocess.Popen(trjconv_args, stdin=c5.stdout, stdout=self.log, stderr=self.log)
                     if c6.wait():  # if it quits with return code != 0
                         raise GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(trjconv), self.FILES.ligand_tpr))
@@ -302,13 +306,13 @@ class CheckMakeTop:
             logging.info('No ligand structure file was defined. Using ST approach...')
             logging.info('Using ligand structure from complex to generate AMBER topology')
             logging.info('Normal ligand: Saving group {} in {} (gromacs index) file as {}'.format(lig_group,
-                                                                                     self.FILES.complex_index,
-                                                                          self.ligand_pdb))
+                                                                                                  self.FILES.complex_index,
+                                                                                                  self.ligand_pdb))
             editconf_echo_args = ['echo', '{}'.format(lig_group)]
             cl1 = subprocess.Popen(editconf_echo_args, stdout=subprocess.PIPE)
             # we get only  first trajectory to extract a pdb file for make amber topology
             editconf_args = editconf + ['-f', self.FILES.complex_tpr, '-o', self.ligand_pdb, '-n',
-                                      self.FILES.complex_index]
+                                        self.FILES.complex_index]
             if self.INPUT['debug_printlevel']:
                 logging.info('Running command: ' + (' '.join(editconf_echo_args)) + ' | ' + ' '.join(editconf_args))
             cl2 = subprocess.Popen(editconf_args, stdin=cl1.stdout, stdout=self.log, stderr=self.log)
@@ -494,7 +498,7 @@ class CheckMakeTop:
                 else:
                     logging.info('Chains ID found. Ignoring chains ID assignation...')
             elif self.INPUT['assign_chainID'] == 2:
-                assign =True
+                assign = True
                 if not com_str.residues[0].chain:
                     logging.warning('Already have chain ID. Re-assigning ID...')
                 else:
@@ -502,7 +506,7 @@ class CheckMakeTop:
             elif self.INPUT['assign_chainID'] == 0 and self.FILES.complex_tpr[-3] == 'gro':
                 assign = True
                 logging.warning('No reference structure was found and the gro format was used in the complex '
-                                    'structure. Assigning chains ID...')
+                                'structure. Assigning chains ID...')
 
             if assign:
                 chains_ids = []
@@ -618,7 +622,7 @@ class CheckMakeTop:
                     atom.name = 'O  '
                 elif atom.name == 'OC2':
                     atom.name = 'OXT'
-                    residue.ter = True    # parmed terminal
+                    residue.ter = True  # parmed terminal
 
     @staticmethod
     def properAspGluLys(structure):
@@ -699,7 +703,7 @@ class CheckMakeTop:
                 tif.write('R_IONS = loadpdb {}\n'.format(self.rec_ions_pdb))
                 tif.write('REC_IONS = combine { REC R_IONS}\n')
                 tif.write('saveamberparm REC_IONS {t} {p}REC.inpcrd\n'.format(t=self.receptor_pmrtop,
-                                                                            p=self.FILES.prefix))
+                                                                              p=self.FILES.prefix))
             else:
                 tif.write('saveamberparm REC {t} {p}REC.inpcrd\n'.format(t=self.receptor_pmrtop, p=self.FILES.prefix))
 
@@ -724,8 +728,8 @@ class CheckMakeTop:
             if self.rec_str_ions and self.rec_ions_after:
                 com_string += 'R_IONS '
             # elif self.rec_str_ions:
-                # com_string += 'R_IONS '
-                # com_string += 'LIG '
+            # com_string += 'R_IONS '
+            # com_string += 'LIG '
             if self.lig_str_ions:
                 com_string += 'L_IONS '
             com_string += '}\n'
@@ -765,7 +769,7 @@ class CheckMakeTop:
                             t=self.mutant_receptor_pmrtop, p=self.FILES.prefix))
                     else:
                         mtif.write('saveamberparm REC {t} {p}MUT_REC.inpcrd\n'.format(t=self.mutant_receptor_pmrtop,
-                                                                                  p=self.FILES.prefix))
+                                                                                      p=self.FILES.prefix))
                 else:
                     if self.INPUT['mutant'].lower() in ['rec', 'receptor']:
                         mtif.write('REC = loadpdb {}\n'.format(self.mutant_receptor_pdb_fixed))
@@ -788,7 +792,7 @@ class CheckMakeTop:
                             mtif.write('L_IONS = loadpdb {}\n'.format(self.lig_ions_pdb))
                             mtif.write('LIG_IONS = combine { LIG L_IONS}\n')
                             mtif.write('saveamberparm LIG_IONS {t} {p}LIG.inpcrd\n'.format(t=self.mutant_ligand_pmrtop,
-                                                                                          p=self.FILES.prefix))
+                                                                                           p=self.FILES.prefix))
                         else:
                             mtif.write('saveamberparm LIG {t} {p}MUT_LIG.inpcrd\n'.format(t=self.mutant_ligand_pmrtop,
                                                                                           p=self.FILES.prefix))
@@ -797,10 +801,10 @@ class CheckMakeTop:
                             mtif.write('R_IONS = loadpdb {}\n'.format(self.rec_ions_pdb))
                             mtif.write('REC_IONS = combine { REC R_IONS}\n')
                             mtif.write('saveamberparm REC_IONS {t} {p}REC.inpcrd\n'.format(t=self.receptor_pmrtop,
-                                                                                          p=self.FILES.prefix))
+                                                                                           p=self.FILES.prefix))
                         else:
                             mtif.write('saveamberparm REC {t} {p}REC.inpcrd\n'.format(t=self.receptor_pmrtop,
-                                                                                  p=self.FILES.prefix))
+                                                                                      p=self.FILES.prefix))
 
                     mut_com_string = 'mut_com = combine { REC LIG '
                     if self.rec_str_ions:
