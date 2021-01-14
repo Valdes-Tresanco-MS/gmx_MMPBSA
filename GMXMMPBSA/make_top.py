@@ -511,6 +511,11 @@ class CheckMakeTop:
                     logging.warning('Ya tiene cadena. Reasignando ID...')
                 else:
                     logging.warning('Assigning chains ID...')
+            elif self.INPUT['assign_chainID'] == 0 and self.FILES.complex_tpr[-3] == 'gro':
+                assign = True
+                logging.warning('No reference structure was found and the gro format was used in the complex '
+                                'structure. Assigning chains ID...')
+
             if assign:
                 chains_ids = []
                 chain_by_num = False
