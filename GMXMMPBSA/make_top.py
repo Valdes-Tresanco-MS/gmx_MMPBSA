@@ -638,6 +638,7 @@ class CheckMakeTop:
                 atoms = [atom.name for atom in residue.atoms]
                 if 'HE2' in atoms:
                     residue.name = 'GLH'
+
     @staticmethod
     def properHIS(structure):
         """
@@ -684,8 +685,7 @@ class CheckMakeTop:
             cys.name = 'CYX'
 
     def makeToptleap(self):
-        # checkff(self.INPUT['ligand_forcefield'])
-
+        logging.info('Building Tleap input files...')
         with open(self.FILES.prefix + 'leap.in', 'w') as tif:
             tif.write('source {}\n'.format(self.INPUT['protein_forcefield']))
             tif.write('source {}\n'.format(self.INPUT['ligand_forcefield']))
@@ -734,8 +734,10 @@ class CheckMakeTop:
             tif.write('quit')
 
         tleap = self.external_progs['tleap'].full_path
-        p = subprocess.Popen([tleap, '-f', '{}'.format(self.FILES.prefix + 'leap.in')], stdout=self.log,
-                             stderr=self.log)
+        tleap_args = [tleap, '-f', '{}'.format(self.FILES.prefix + 'leap.in')]
+        if self.INPUT['debug_printlevel']:
+            logging.info('Running command: ' + ' '.join(tleap_args))
+        p = subprocess.Popen(tleap_args, stdout=self.log, stderr=self.log)
         if p.wait():
             raise GMXMMPBSA_ERROR('%s failed when querying %s' % (tleap, self.FILES.prefix + 'leap.in'))
 
@@ -760,12 +762,10 @@ class CheckMakeTop:
                         mtif.write('R_IONS = loadpdb {}\n'.format(self.rec_ions_pdb))
                         mtif.write('REC_IONS = combine { REC R_IONS}\n')
                         mtif.write('saveamberparm REC_IONS {t} {p}MUT_REC.inpcrd\n'.format(
-                            t=self.mutant_receptor_pmrtop,
-                                                                                      p=self.FILES.prefix))
+                            t=self.mutant_receptor_pmrtop, p=self.FILES.prefix))
                     else:
                         mtif.write('saveamberparm REC {t} {p}MUT_REC.inpcrd\n'.format(t=self.mutant_receptor_pmrtop,
                                                                                   p=self.FILES.prefix))
-
                 else:
                     if self.INPUT['mutant'].lower() in ['rec', 'receptor']:
                         mtif.write('REC = loadpdb {}\n'.format(self.mutant_receptor_pdb_fixed))
@@ -774,8 +774,7 @@ class CheckMakeTop:
                             mtif.write('R_IONS = loadpdb {}\n'.format(self.rec_ions_pdb))
                             mtif.write('REC_IONS = combine { REC R_IONS}\n')
                             mtif.write('saveamberparm REC_IONS {t} {p}REC.inpcrd\n'.format(
-                                t=self.mutant_receptor_pmrtop,
-                                                                                          p=self.FILES.prefix))
+                                t=self.mutant_receptor_pmrtop, p=self.FILES.prefix))
                         else:
                             mtif.write('saveamberparm REC {t} {p}MUT_REC.inpcrd\n'.format(t=self.mutant_receptor_pmrtop,
                                                                                           p=self.FILES.prefix))
@@ -813,9 +812,10 @@ class CheckMakeTop:
                     mtif.write('saveamberparm mut_com {t} {p}MUT_COM.inpcrd\n'.format(t=self.mutant_complex_pmrtop,
                                                                                       p=self.FILES.prefix))
                 mtif.write('quit')
-
-            p1 = subprocess.Popen([tleap, '-f', '{}'.format(self.FILES.prefix + 'mut_leap.in')], stdout=self.log,
-                                 stderr=self.log)
+            tleap_args = [tleap, '-f', '{}'.format(self.FILES.prefix + 'mut_leap.in')]
+            if self.INPUT['debug_printlevel']:
+                logging.info('Running command: ' + ' '.join(tleap_args))
+            p1 = subprocess.Popen(tleap_args, stdout=self.log, stderr=self.log)
             if p1.wait():
                 raise GMXMMPBSA_ERROR('%s failed when querying %s' % (tleap, self.FILES.prefix + 'mut_leap.in'))
         else:
