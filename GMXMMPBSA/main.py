@@ -88,7 +88,7 @@ class MMPBSA_App(object):
         """
         global _rank, _stdout, _stderr, _mpi_size, _MPI
         _MPI = self.MPI = MPI
-        self.pre = '_MMPBSA_'
+        self.pre = '_GMXMMPBSA_'
         self.INPUT = {}
         if stdout is None:
             _stdout = self.stdout = _unbuf_stdout
