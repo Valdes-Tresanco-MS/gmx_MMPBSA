@@ -29,7 +29,7 @@ Classes: ExternProg: External program class
 #  for more details.                                                           #
 # ##############################################################################
 
-from GMXMMPBSA.exceptions import MMPBSA_Error
+from GMXMMPBSA.exceptions import GMXMMPBSA_ERROR
 import logging
 #+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
@@ -82,10 +82,10 @@ def find_progs(INPUT):
                 if prog in ['make_ndx', 'trjconv', 'editconf']:
                     gromacs4x = False
                     continue
-                raise MMPBSA_Error('Could not find necessary program [%s]' % prog)
+                raise GMXMMPBSA_ERROR('Could not find necessary program [%s]' % prog)
             logging.info('%s found! Using %s' % (prog, str(my_progs[prog])))
     if not (gromacs5x or gromacs5x_d or gromacs5x_mpi or gromacs5x_mpi_d) and not gromacs4x:
-        raise MMPBSA_Error('Could not find necessary GROMACS program')
+        raise GMXMMPBSA_ERROR('Could not find necessary GROMACS program')
     logging.info('Checking external programs...Done.\n')
     return my_progs
 
@@ -103,7 +103,7 @@ def which(program, search_path=False, force_path=None):
     def get_amberhome():
         ambhome = os.getenv('AMBERHOME')
         if ambhome == None:
-            raise MMPBSA_Error('AMBERHOME is not set!')
+            raise GMXMMPBSA_ERROR('AMBERHOME is not set!')
         return ambhome
 
     # Check to see that a path was provided in the program name
