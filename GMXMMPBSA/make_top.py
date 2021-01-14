@@ -617,7 +617,8 @@ class CheckMakeTop:
                 if 'H' in atom.name and atom.atomic_number == 0:
                     atom.atomic_number = 1
 
-    def properATOMS(self, structure):
+    @staticmethod
+    def properATOMS(structure):
         """
         Rename oxygen in termini from GROMACS to AMBER name
         OC1 -> 'O  '
@@ -640,7 +641,8 @@ class CheckMakeTop:
                     atom.name = 'OXT'
                     residue.ter = True    # parmed terminal
 
-    def properAspGluLys(self, structure):
+    @staticmethod
+    def properAspGluLys(structure):
         """
         Proper name for residues Asp, Glu and Lys
         """
@@ -657,8 +659,8 @@ class CheckMakeTop:
                 atoms = [atom.name for atom in residue.atoms]
                 if 'HE2' in atoms:
                     residue.name = 'GLH'
-
-    def properHIS(self, structure):
+    @staticmethod
+    def properHIS(structure):
         """
         Compatible amber name for Histidines from protonation state
         """
@@ -674,7 +676,8 @@ class CheckMakeTop:
                 elif 'HE2' in atoms:
                     residue.name = 'HIE'
 
-    def properCYS(self, structure):
+    @staticmethod
+    def properCYS(structure):
         """
         Rename the cys in disulfide bond
         :return:
