@@ -361,7 +361,7 @@ class GMX_MMPBSA_GUI(QMainWindow):
                     sc = MplCanvas(self, width=5, height=4, dpi=100)
                     sc.axes.set_title(item.datamean['name'])
                     data_len = len(item.datamean['xaxis'])
-
+                    print('xticks', [x for x in range(1, data_len + 1)])
                     sc.axes.set_xlim(0, data_len + 1)
                     sc.axes.set_xticks([x for x in range(1, data_len + 1)])
                     sc.axes.set_xticklabels(item.datamean['xaxis'])
@@ -446,6 +446,7 @@ class GMX_MMPBSA_GUI(QMainWindow):
                         itemd = CustomItem(['DELTA G Binding (QH)'])
                         itemd.setCheckState(2, Qt.Unchecked)
                         entropy = data['qh']['delta']['Total'][0]
+
                         itemd.datamean = {
                             'name': mut_pre + '{} Binding Energy (with Entropy (qh))'.format(level.upper()),
                             'xaxis': ['ΔH', '-TΔS', 'ΔG'], 'yaxis': 'Energy (kcal/mol)',
@@ -458,9 +459,10 @@ class GMX_MMPBSA_GUI(QMainWindow):
                         if len(data[level]['delta']['-TDS']) * self.app.INPUT['entropy_seg'] / 100 > 1:
                             s = ceil(len(data[level]['delta']['-TDS']) * (1 - self.app.INPUT['entropy_seg'] / 100))
                         ts = data[level]['delta']['-TDS'][s:].mean()
+                        print(['ΔH', '-TΔS', 'ΔG'], [dh, ts, dh + ts])
                         itemd.datamean = {
                             'name': mut_pre + '{} Total Energy (with Entropy)'.format(level.upper()),
-                            'xaxis': [['ΔH', '-TΔS', 'ΔG']], 'yaxis': 'Energy (kcal/mol)',
+                            'xaxis': ['ΔH', '-TΔS', 'ΔG'], 'yaxis': 'Energy (kcal/mol)',
                             'data': np.array([dh, ts, dh + ts])}
                         item.addChild(itemd)
                 # To export data in csv
