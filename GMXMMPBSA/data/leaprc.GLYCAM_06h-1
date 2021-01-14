@@ -36,19 +36,19 @@ addAtomTypes {
 #
 #       load the main paramter set
 #
-glycam_06 = loadamberparams GLYCAM_06h-1.dat
+glycam_06 = gmxMMPBSA/loadamberparams GLYCAM_06h-1.dat
 ##
 #
 #       load all prep files for polysaccharides
 #
-loadamberprep GLYCAM_06h.prep
+loadamberprep gmxMMPBSA/GLYCAM_06h.prep
 #
 #	load lib files
 #
 # for attaching glycans to proteins
-loadOff GLYCAM_amino_06h.lib
-loadOff GLYCAM_aminoct_06h.lib
-loadOff GLYCAM_aminont_06h.lib
+loadOff gmxMMPBSA/GLYCAM_amino_06h.lib
+loadOff gmxMMPBSA/GLYCAM_aminoct_06h.lib
+loadOff gmxMMPBSA/GLYCAM_aminont_06h.lib
 ## add residue maps for linking glycans to proteins
 ## Note! use of these requires sourcing the ff12SB leaprc and loading the amino 
 ##	libraries commented out in the load libs section 
