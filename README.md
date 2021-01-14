@@ -321,6 +321,11 @@ Complex:
   -ct [TRJ [TRJ ...]]   Input trajectories of the complex. Make sure the trajectory is fitted and
                          pbc have been removed. Allowed formats: *.xtc (recommended), *.trr, *.pdb
                          (specify as many as you'd like). (default: None)
+  -cr <PDB File>        Complex Reference Structure file. This option is optional but recommended 
+                         (Use the PDB file used to generate the topology in GROMACS). If not defined,
+                         the chains ID assignment (if the structure used in -cs does not have chain
+                         IDs) will be done automatically according to the structure (can generate
+                         inconsistencies). (default: None)
 
 Receptor:
   Receptor files and info that are needed to perform the calculation. If the receptor info is not 

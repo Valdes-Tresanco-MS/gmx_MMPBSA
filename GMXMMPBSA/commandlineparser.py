@@ -114,10 +114,11 @@ group.add_argument('-ct', dest='complex_trajs', nargs='*', metavar='TRJ',
                          pbc have been removed. Allowed formats: *.xtc (recommended), *.trr, *.pdb
                          (specify as many as you'd like).''')
 group.add_argument('-cr', dest='reference_structure', metavar='<PDB File>', default=None,
-                   help='''Reference Structure file of the complex. This option is optional but recommended (Use the 
-                   PDB file used to generate the topology in GROMACS). If not defined, the chains ID assignment (if 
-                   the structure used in -cs does not have chain IDs) will be done automatically based on the 
-                   structure (It can generate inconsistencies).''')
+                   help='''Complex Reference Structure file. This option is optional but recommended 
+                         (Use the PDB file used to generate the topology in GROMACS). If not defined,
+                         the chains ID assignment (if the structure used in -cs does not have chain
+                         IDs) will be done automatically according to the structure (can generate
+                         inconsistencies).''')
 
 group = parser.add_argument_group('Receptor', receptor_group_des)
 group.add_argument('-rs', dest='receptor_tpr', metavar='<Structure File>', default=None,
