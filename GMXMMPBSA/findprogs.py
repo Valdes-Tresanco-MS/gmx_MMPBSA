@@ -40,7 +40,7 @@ def find_progs(INPUT):
                    # look for any available gromacs executable
                    'gmx_mpi': True, 'gmx_d': True, 'gmx_mpi_d': True,
                    # look for gromacs 4.x
-                   'make_ndx': True, 'trjconv': True, 'tleap': True, 'parmchk2': True,
+                   'make_ndx': True, 'trjconv': True, 'editconf': True, 'tleap': True, 'parmchk2': True,
                    'mmpbsa_py_energy' : ((INPUT['pbrun'] or INPUT['gbrun'])
                                          and not (INPUT['use_sander'] or
                                                   INPUT['decomprun'])),
@@ -79,7 +79,7 @@ def find_progs(INPUT):
                 if prog == 'gmx_mpi_d':
                     gromacs5x_mpi_d = False
                     continue
-                if prog in ['make_ndx', 'trjconv']:
+                if prog in ['make_ndx', 'trjconv', 'editconf']:
                     gromacs4x = False
                     continue
                 raise MMPBSA_Error('Could not find necessary program [%s]' % prog)
