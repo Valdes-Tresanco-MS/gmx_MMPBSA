@@ -29,7 +29,9 @@ import sys
 import warnings
 import numpy as np
 from math import exp, log
-
+import logging
+logging.getLogger(__name__)
+print(__name__)
 # Import gmx_MMPBSA modules
 from GMXMMPBSA import utils
 from GMXMMPBSA.amber_outputs import (QHout, NMODEout, QMMMout, GBout, PBout,
@@ -42,8 +44,7 @@ from GMXMMPBSA.calculation import (CalculationList, EnergyCalculation,
                                    PrintCalc, LcpoCalc, MolsurfCalc)
 from GMXMMPBSA.commandlineparser import parser
 from GMXMMPBSA.createinput import create_inputs
-from GMXMMPBSA.exceptions import (MMPBSA_Error, InternalError, InputError,
-                                  InputWarning)
+from GMXMMPBSA.exceptions import (MMPBSA_Error, InternalError, InputError, InputWarning, GMXMMPBSA_ERROR)
 from GMXMMPBSA.fake_mpi import MPI as FakeMPI
 from GMXMMPBSA.findprogs import find_progs
 from GMXMMPBSA.infofile import InfoFile
