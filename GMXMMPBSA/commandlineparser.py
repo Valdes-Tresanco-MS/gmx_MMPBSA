@@ -113,6 +113,10 @@ group.add_argument('-ct', dest='complex_trajs', nargs='*', metavar='TRJ',
                    help='''Input trajectories of the complex. Make sure the trajectory is fitted and
                          pbc have been removed. Allowed formats: *.xtc (recommended), *.trr, *.pdb
                          (specify as many as you'd like).''')
+group.add_argument('-cr', dest='reference_structure', metavar='<Structure File>', default=None,
+                   help='''Reference Structure file of the complex. If it is Protein-Ligand (small molecule)
+                         complex, make sure that you define -lm option. See -lm description below
+                         Allowed formats: *.tpr (recommended), *.pdb, *.gro''')
 
 group = parser.add_argument_group('Receptor', receptor_group_des)
 group.add_argument('-rs', dest='receptor_tpr', metavar='<Structure File>', default=None,
