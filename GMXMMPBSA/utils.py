@@ -80,7 +80,7 @@ def checkff():
     print('Checking if supported force fields exists in Amber data... Done.')
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-def remove(flag, mpi_size=0, fnpre='_MMPBSA_'):
+def remove(flag, mpi_size=0, fnpre='_GMXMMPBSA_'):
     """ Removes temporary files. Allows for different levels of cleanliness """
 
     # A list of all input files that we keep for the flag -use-mdins
