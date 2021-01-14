@@ -30,7 +30,6 @@ import subprocess
 from math import sqrt
 import logging
 
-# Fixme: not used. Remove???
 PBRadii = {1: 'bondi', 2: 'mbondi', 3: 'mbondi2', 4: 'mbondi3'}
 
 ions_para_files = {1: 'frcmod.ions234lm_126_tip3p', 2: 'frcmod.ions234lm_iod_tip4pew', 3: 'frcmod.ions234lm_iod_spce',
@@ -46,6 +45,7 @@ ions = ["AG", "AL", "Ag", "BA", "BR", "Be", "CA", "CD", "CE", "CL", "CO", "CR", 
 
 def dist(coor1, coor2):
     return sqrt((coor2[0] - coor1[0]) ** 2 + (coor2[1] - coor1[1]) ** 2 + (coor2[2] - coor1[2]) ** 2)
+
 
 class CheckMakeTop:
     def __init__(self, FILES, INPUT, external_programs):
@@ -74,9 +74,6 @@ class CheckMakeTop:
         self.mutant_receptor_pmrtop = 'MUT_REC.prmtop'
         self.mutant_ligand_pmrtop = 'MUT_LIG.prmtop'
 
-        if self.INPUT['pdb2gmx_merge']:
-            suffix = 'gro'
-
         self.complex_pdb = self.FILES.prefix + 'COM.pdb'
         self.receptor_pdb = self.FILES.prefix + 'REC.pdb'
         self.ligand_pdb = self.FILES.prefix + 'LIG.pdb'
@@ -101,9 +98,10 @@ class CheckMakeTop:
 
     def getPDBfromTpr(self):
         """
-        Generate PDB file to make topology
+        Generate PDB file to generate topology
         :return:
         """
+        logging.info('Get PDB files from structures files...')
         gmx = self.external_progs['gmx'].full_path
         # check if GROMACS 4.x exists
         make_ndx = [self.external_progs['make_ndx'].full_path]
@@ -114,18 +112,11 @@ class CheckMakeTop:
             trjconv = [gmx, 'trjconv']
             editconf = [gmx, 'editconf']
 
-
         # wt complex
         # make index for extract pdb structure
         rec_group, lig_group = self.FILES.complex_groups
-        logging.info('Making a new index...')
 
-
-
-        # print('Normal Complex: Save group {}_{} in {} (gromacs index) file as {}'.format(rec_group, lig_group,
-        #                                                                                    self.FILES.complex_index,
-        #                                                                                    self.complex_pdb))
-
+        logging.info('Making gmx_MMPBSA index for complex...')
         # merge both (rec and lig) groups into complex group, modify index and create a copy
         # 1-rename groups, 2-merge
 
@@ -252,7 +243,8 @@ class CheckMakeTop:
                          '-o', 'REC_traj_{}.xtc'.format(i), '-n',
                          self.FILES.receptor_index]
                     if self.INPUT['debug_printlevel']:
-                        logging.info('Running command: ' + (' '.join(trjconv_echo_args)) + ' | ' + ' '.join(trjconv_args))
+                        logging.info('Running command: ' + (' '.join(trjconv_echo_args)) + ' | ' + ' '.join(
+                            trjconv_args))
                     c6 = subprocess.Popen(trjconv_args,  # FIXME: start and end frames???
                                             stdin=c5.stdout, stdout=self.log, stderr=self.log)
                     if c6.wait():  # if it quits with return code != 0
@@ -261,7 +253,7 @@ class CheckMakeTop:
                 self.FILES.receptor_trajs = new_trajs
         else:
             logging.info('No receptor structure file was defined. Using ST approach...')
-            logging.info('Using receptor structure from complex to make AMBER topology')
+            logging.info('Using receptor structure from complex to generate AMBER topology')
             # wt complex receptor
             logging.info('Normal Complex: Saving group {} in {} (gromacs index) file as {}'.format(
                 rec_group, self.FILES.complex_index, self.receptor_pdb))
@@ -319,7 +311,7 @@ class CheckMakeTop:
         else:
             # wt complex ligand
             logging.info('No ligand structure file was defined. Using ST approach...')
-            logging.info('Using ligand structure from complex to make AMBER topology')
+            logging.info('Using ligand structure from complex to generate AMBER topology')
             logging.info('Normal ligand: Saving group {} in {} (gromacs index) file as {}'.format(lig_group,
                                                                                      self.FILES.complex_index,
                                                                           self.ligand_pdb))
@@ -338,7 +330,7 @@ class CheckMakeTop:
 
     def checkPDB(self):
         """
-        Generate parmed structure object for complex, receptor and ligand if is protein-like
+        Generate parmed structure object for complex, receptor and ligand ( if it is protein-like)
 
         1 - Rename HIS
         2 - Rename CYS
