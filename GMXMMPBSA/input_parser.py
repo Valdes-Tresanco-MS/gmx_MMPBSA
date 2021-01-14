@@ -487,6 +487,7 @@ strip_mask = ':WAT,Cl*,CIO,Cs+,IB,K*,Li+,MG*,Na+,Rb+,CS,RB,NA,F,CL'
 
 input_file.addNamelist('general', 'general',
                        [
+                           ['assign_chainID', int, 0, 'Assign chains ID'],
                            ['debug_printlevel', int, 0, 'Increase debugging info printed'],
                            ['endframe', int, 9999999, 'Last frame to analyze'],
                            ['entropy', int, 0, 'Do quasi-harmonic or interaction entropy calculation'],
