@@ -20,15 +20,15 @@ Generate Amber topology files from GROMACS files
 #  for more details.                                                           #
 # ##############################################################################
 
-import re
 import os
 import parmed
-import warnings
 from GMXMMPBSA.exceptions import *
 from GMXMMPBSA.utils import checkff
 import subprocess
 from math import sqrt
 import logging
+import string
+chains_letters = list(string.ascii_uppercase)
 
 PBRadii = {1: 'bondi', 2: 'mbondi', 3: 'mbondi2', 4: 'mbondi3'}
 
@@ -58,6 +58,8 @@ class CheckMakeTop:
         self.within = 4
         if self.print_residues:
             self.within = float(self.INPUT['print_res'].split()[1])
+
+        self.ref_str = None
 
         self.ligand_tpr = None
         self.ligand_mol2 = None
@@ -119,9 +121,8 @@ class CheckMakeTop:
         logging.info('Making gmx_MMPBSA index for complex...')
         # merge both (rec and lig) groups into complex group, modify index and create a copy
         # 1-rename groups, 2-merge
-
-        make_ndx_echo_args = ['echo', 'name {r} GMXMMPBSA_REC\n name {l} GMXMMPBSA_LIG\n  {r} | {l}\n'
-                                       ' q\n'.format(r=rec_group, l=lig_group)]
+        make_ndx_echo_args = ['echo', 'name {r} GMXMMPBSA_REC\n name {l} GMXMMPBSA_LIG\n  {r} | {l}\n q\n'.format(
+            r=rec_group, l=lig_group)]
         c1 = subprocess.Popen(make_ndx_echo_args, stdout=subprocess.PIPE)
         # FIXME: overwrite the user index file???
         com_ndx = self.FILES.prefix + 'COM_index.ndx'
@@ -131,7 +132,7 @@ class CheckMakeTop:
                 make_ndx_args))
         c2 = subprocess.Popen(make_ndx_args, stdin=c1.stdout, stdout=self.log, stderr=self.log)
         if c2.wait():  # if it quits with return code != 0
-            raise MMPBSA_Error('%s failed when querying %s' % (' '.join(make_ndx), self.FILES.receptor_tpr))
+            raise MMPBSA_Error('%s failed when querying %s' % (' '.join(make_ndx), self.FILES.complex_index))
         self.FILES.complex_index = com_ndx
 
         logging.info('Normal Complex: Saving group {}_{} in {} (gromacs index) file as '
@@ -141,8 +142,6 @@ class CheckMakeTop:
         # we get only first trajectory to extract a pdb file and make amber topology for complex
         editconf_args = editconf + ['-f', self.FILES.complex_tpr, '-o', self.complex_pdb, '-n',
                                     self.FILES.complex_index]
-        if self.INPUT['pdb2gmx_merge']:
-            editconf_args += ['-resnr', '1']
         if self.INPUT['debug_printlevel']:
             logging.info('Running command: ' + (' '.join(editconf_echo_args)) + ' | ' + ' '.join(editconf_args))
         c4 = subprocess.Popen(editconf_args, stdin=c3.stdout, stdout=self.log, stderr=self.log)
@@ -192,12 +191,9 @@ class CheckMakeTop:
                             'residues')
                 rec_echo_args = ['echo', '{}'.format(rec_group)]
                 cp1 = subprocess.Popen(rec_echo_args, stdout=subprocess.PIPE)
-                # we get only first trajectory to extract a pdb file to make amber topology
+                # we get only first trajectory to extract a pdb file to generate amber topology
                 editconf_args = editconf + ['-f', self.FILES.complex_tpr, '-o', 'rec_temp.pdb', '-n',
                                                  self.FILES.complex_index]
-                if self.INPUT['pdb2gmx_merge']:
-                    editconf_args += ['-resnr', '1']
-
                 if self.INPUT['debug_printlevel']:
                     logging.info('Running command: ' + (' '.join(rec_echo_args)) + ' | ' + ' '.join(editconf_args))
                 cp2 = subprocess.Popen( editconf_args, stdin=cp1.stdout, stdout=self.log, stderr=self.log)
@@ -213,7 +209,6 @@ class CheckMakeTop:
                 logging.warning('When Stability calculation mode is selected, mutant receptor/mutant ligand files '
                                 'are not needed...')
 
-
         # wt receptor
         if self.FILES.receptor_tpr:
             logging.info('A receptor structure file was defined. Using MT approach...')
@@ -224,8 +219,6 @@ class CheckMakeTop:
             # we get only first trajectory to extract a pdb file for make amber topology
             editconf_args = editconf + ['-f', self.FILES.receptor_tpr, '-o', self.receptor_pdb, '-n',
                                        self.FILES.receptor_index]
-            if self.INPUT['pdb2gmx_merge']:
-                editconf_args += ['-resnr', '1']
             if self.INPUT['debug_printlevel']:
                 logging.info('Running command: ' + (' '.join(editconf_echo_args)) + ' | ' + ' '.join(editconf_args))
             cp2 = subprocess.Popen(editconf_args, stdin=p1.stdout, stdout=self.log, stderr=self.log)
@@ -262,8 +255,6 @@ class CheckMakeTop:
             # we get only first trajectory to extract a pdb file for make amber topology
             editconf_args = editconf + ['-f', self.FILES.complex_tpr, '-o', self.receptor_pdb, '-n',
                                       self.FILES.complex_index]
-            if self.INPUT['pdb2gmx_merge']:
-                editconf_args += ['-resnr', '1']
             if self.INPUT['debug_printlevel']:
                 logging.info('Running command: ' + (' '.join(editconf_echo_args)) + ' | ' + ' '.join(editconf_args))
             cp2 = subprocess.Popen(editconf_args, stdin=cp1.stdout, stdout=self.log, stderr=self.log)
@@ -283,8 +274,6 @@ class CheckMakeTop:
             # we get only first trajectory for extract a pdb file for make amber topology
             editconf_args = editconf + ['-f', self.FILES.ligand_tpr, '-o', self.ligand_pdb, '-n',
                                        self.FILES.ligand_index]
-            if self.INPUT['pdb2gmx_merge']:
-                editconf_args += ['-resnr', '1']
             if self.INPUT['debug_printlevel']:
                 logging.info('Running command: ' + (' '.join(editconf_echo_args)) + ' | ' + ' '.join(editconf_args))
             l2 = subprocess.Popen(editconf_args, stdin=l1.stdout, stdout=self.log, stderr=self.log)
@@ -320,8 +309,6 @@ class CheckMakeTop:
             # we get only  first trajectory to extract a pdb file for make amber topology
             editconf_args = editconf + ['-f', self.FILES.complex_tpr, '-o', self.ligand_pdb, '-n',
                                       self.FILES.complex_index]
-            if self.INPUT['pdb2gmx_merge']:
-                editconf_args += ['-resnr', '1']
             if self.INPUT['debug_printlevel']:
                 logging.info('Running command: ' + (' '.join(editconf_echo_args)) + ' | ' + ' '.join(editconf_args))
             cl2 = subprocess.Popen(editconf_args, stdin=cl1.stdout, stdout=self.log, stderr=self.log)
