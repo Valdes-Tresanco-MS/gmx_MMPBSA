@@ -19,7 +19,24 @@
 import sys
 from os.path import split
 import shutil
-import os
+from pathlib import Path
+import logging
+from PyQt5.QtWidgets import QApplication
+# logFormatter = logging.Formatter("%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s")
+# rootLogger = logging.getLogger(__name__)
+# logging.getLogger(__name__).addHandler(logging.StreamHandler(sys.stdout))
+logging.getLogger(__name__)
+log_file = Path('gmx_MMPBSA.log')
+if log_file.exists():
+    log_file.unlink()
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="[%(levelname)-7s] %(message)s",
+    handlers=[
+        logging.FileHandler("gmx_MMPBSA.log"),
+        logging.StreamHandler()])
+
 try:
     from GMXMMPBSA.exceptions import MMPBSA_Error, InputError, CommandlineError
     from GMXMMPBSA.infofile import InfoFile
@@ -29,15 +46,22 @@ try:
 except ImportError:
     import os
     amberhome = os.getenv('AMBERHOME') or '$AMBERHOME'
+    logging.error('Could not import Amber Python modules. Please make sure '
+                      'you have sourced %s/amber.sh (if you are using sh/ksh/'
+                      'bash/zsh) or %s/amber.csh (if you are using csh/tcsh)' %
+                      (amberhome, amberhome))
     raise ImportError('Could not import Amber Python modules. Please make sure '
                       'you have sourced %s/amber.sh (if you are using sh/ksh/'
                       'bash/zsh) or %s/amber.csh (if you are using csh/tcsh)' %
                       (amberhome, amberhome))
 
-from PyQt5.QtWidgets import QApplication
+
+
+
 
 
 def gmxmmpbsa():
+    logging.info('Started')
     # Adapted to run with MPI ?
     if len(sys.argv) > 1 and sys.argv[1] in ['MPI', 'mpi']:
         args = sys.argv
@@ -45,8 +69,7 @@ def gmxmmpbsa():
         try:
             from mpi4py import MPI
         except ImportError:
-            raise MMPBSA_Error('Could not import mpi4py package! Use serial version '
-                               'or install mpi4py.')
+            raise GMXMMPBSA_ERROR('Could not import mpi4py package! Use serial version or install mpi4py.')
     else:
         # If we're not running "gmx_MMPBSA MPI", bring MPI into the top-level namespace
         # (which will overwrite the MPI from mpi4py, which we *want* to do in serial)
@@ -122,5 +145,9 @@ def gmxmmpbsa_gui():
     sys.exit(app.exec())
 
 if __name__ == '__main__':
-    gmxmmpbsa()
-    # gmxmmpbsa_gui()
+
+
+    logging.info('Finished')
+
+    # gmxmmpbsa()
+    gmxmmpbsa_gui()

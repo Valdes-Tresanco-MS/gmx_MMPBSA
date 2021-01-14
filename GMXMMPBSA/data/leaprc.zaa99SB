@@ -1,0 +1,6 @@
+# ----- leaprc for loading zwitterionic amino acids parameters based on 99SB ff
+# Based on DOI 10.1007/s00894-014-2478-z
+#	load lib files
+#
+loadOff gmxMMPBSA/zaa99SB.off
+loadamberparams gmxMMPBSA/zaa99SB.frcmod

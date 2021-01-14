@@ -29,7 +29,8 @@ import sys
 import warnings
 import numpy as np
 from math import exp, log
-
+import logging
+logging.getLogger(__name__)
 # Import gmx_MMPBSA modules
 from GMXMMPBSA import utils
 from GMXMMPBSA.amber_outputs import (QHout, NMODEout, QMMMout, GBout, PBout,
@@ -42,8 +43,7 @@ from GMXMMPBSA.calculation import (CalculationList, EnergyCalculation,
                                    PrintCalc, LcpoCalc, MolsurfCalc)
 from GMXMMPBSA.commandlineparser import parser
 from GMXMMPBSA.createinput import create_inputs
-from GMXMMPBSA.exceptions import (MMPBSA_Error, InternalError, InputError,
-                                  InputWarning)
+from GMXMMPBSA.exceptions import (MMPBSA_Error, InternalError, InputError, GMXMMPBSA_ERROR)
 from GMXMMPBSA.fake_mpi import MPI as FakeMPI
 from GMXMMPBSA.findprogs import find_progs
 from GMXMMPBSA.infofile import InfoFile
@@ -87,7 +87,7 @@ class MMPBSA_App(object):
         """
         global _rank, _stdout, _stderr, _mpi_size, _MPI
         _MPI = self.MPI = MPI
-        self.pre = '_MMPBSA_'
+        self.pre = '_GMXMMPBSA_'
         self.INPUT = {}
         if stdout is None:
             _stdout = self.stdout = _unbuf_stdout
@@ -123,7 +123,7 @@ class MMPBSA_App(object):
         # This work belongs to the 'setup' timer
         self.timer.start_timer('setup')
         if not hasattr(self, 'normal_system'):
-            raise InternalError('MMPBSA_App not set up and parms not checked!')
+            raise GMXMMPBSA_ERROR('MMPBSA_App not set up and parms not checked!', InternalError)
         # Set up some local refs for convenience
         FILES, INPUT, master = self.FILES, self.INPUT, self.master
 
@@ -197,7 +197,7 @@ class MMPBSA_App(object):
         """
 
         if not hasattr(self, 'external_progs'):
-            raise InternalError('external_progs not declared in run_mmpbsa!')
+            raise GMXMMPBSA_ERROR('external_progs not declared in run_mmpbsa!', InternalError)
 
         FILES, INPUT = self.FILES, self.INPUT
         if rank is None:
@@ -565,7 +565,7 @@ class MMPBSA_App(object):
         self.timer.add_timer('setup', 'Total setup time:')
         self.timer.start_timer('setup')
         if not hasattr(self, 'FILES') or not hasattr(self, 'INPUT'):
-            raise InternalError('MMPBSA_App not set up! Cannot check parms yet!')
+            raise GMXMMPBSA_ERROR('MMPBSA_App not set up! Cannot check parms yet!', InternalError)
         # create local aliases to avoid abundant selfs
         FILES, INPUT = self.FILES, self.INPUT
         # Now we're getting ready, remove existing intermediate files
@@ -575,8 +575,7 @@ class MMPBSA_App(object):
             self.remove(0)
 
         # Now load the parms and check them
-        self.stdout.write('Loading and checking parameter files for '
-                          'compatibility...\n')
+        logging.info('Loading and checking parameter files for compatibility...\n')
         # Find external programs IFF we are doing a calc
         if not FILES.make_mdins:
             external_progs = {}
@@ -587,16 +586,19 @@ class MMPBSA_App(object):
             self.external_progs = external_progs
 
         # Make amber topologies
+
+        logging.info('Building AMBER Topologies from GROMACS files...')
         maketop = CheckMakeTop(FILES, INPUT, self.external_progs)
         (FILES.complex_prmtop, FILES.receptor_prmtop, FILES.ligand_prmtop, FILES.mutant_complex_prmtop,
          FILES.mutant_receptor_prmtop, FILES.mutant_ligand_prmtop) = maketop.makeToptleap()
+        logging.info('Building AMBER Topologies from GROMACS files...Done.\n')
 
         self.normal_system = MMPBSA_System(FILES.complex_prmtop, FILES.receptor_prmtop, FILES.ligand_prmtop)
         self.using_chamber = self.normal_system.complex_prmtop.chamber
         self.mutant_system = None
         if INPUT['alarun']:
             if (FILES.mutant_receptor_prmtop is None and FILES.mutant_ligand_prmtop is None and not self.stability):
-                raise MMPBSA_Error('Alanine scanning requires either a mutated receptor or mutated ligand topology '
+                raise GMXMMPBSA_ERROR('Alanine scanning requires either a mutated receptor or mutated ligand topology '
                                    'file!')
             if FILES.mutant_receptor_prmtop is None:
                 FILES.mutant_receptor_prmtop = FILES.receptor_prmtop
@@ -605,15 +607,15 @@ class MMPBSA_App(object):
             self.mutant_system = MMPBSA_System(FILES.mutant_complex_prmtop, FILES.mutant_receptor_prmtop,
                                                FILES.mutant_ligand_prmtop)
             if self.using_chamber is not self.mutant_system.complex_prmtop.chamber:
-                raise MMPBSA_Error('CHAMBER prmtops must be used for both mutant '
+                raise GMXMMPBSA_ERROR('CHAMBER prmtops must be used for both mutant '
                                    'and normal prmtops or neither!')
         # If we have a chamber prmtop, force using sander
         if self.using_chamber:
             INPUT['use_sander'] = True
             if INPUT['rismrun']:
-                raise MMPBSA_Error('CHAMBER prmtops cannot be used with 3D-RISM')
+                raise GMXMMPBSA_ERROR('CHAMBER prmtops cannot be used with 3D-RISM')
             if INPUT['nmoderun']:
-                raise MMPBSA_Error('CHAMBER prmtops cannot be used with NMODE')
+                raise GMXMMPBSA_ERROR('CHAMBER prmtops cannot be used with NMODE')
             self.stdout.write('CHAMBER prmtops found. Forcing use of sander\n')
 
         # Print warnings if we are overwriting any masks and get default masks
@@ -642,7 +644,7 @@ class MMPBSA_App(object):
         self.timer.start_timer('output')
         if (not hasattr(self, 'input_file_text') or not hasattr(self, 'FILES') or
                 not hasattr(self, 'INPUT') or not hasattr(self, 'normal_system')):
-            raise InternalError('I am not prepared to write the final output file!')
+            raise GMXMMPBSA_ERROR('I am not prepared to write the final output file!', InternalError)
         # Only the master does this, so bail out if we are not master
         if not self.master:
             return
@@ -700,7 +702,7 @@ class MMPBSA_App(object):
 
         self.remove(self.INPUT['keep_files'])
 
-        self.stdout.write('\n\ngmx_MMPBSA Finished! Thank you for using. Please '
+        logging.info('\n\ngmx_MMPBSA Finished! Thank you for using. Please '
                           'cite us if you publish this work with this paper:\n   '
                           'Coming soon\n   '
                           ' and \n'
@@ -742,7 +744,7 @@ class MMPBSA_App(object):
         global _debug_printlevel
         if infile is None:
             if not hasattr(self, 'FILES'):
-                raise InternalError('FILES not present and no input file given!')
+                raise GMXMMPBSA_ERROR('FILES not present and no input file given!', InternalError)
             infile = self.FILES.input_file
         self.INPUT = self.input_file.Parse(infile)
         _debug_printlevel = self.INPUT['debug_printlevel']
@@ -802,61 +804,62 @@ class MMPBSA_App(object):
             INPUT = self.INPUT
 
         if not INPUT['igb'] in [1, 2, 5, 7, 8]:
-            raise InputError('Invalid value for IGB (%s)! ' % INPUT['igb'] +
-                             'It must be 1, 2, 5, 7, or 8.')
+            GMXMMPBSA_ERROR('Invalid value for IGB (%s)! ' % INPUT['igb'] +
+                                 'It must be 1, 2, 5, 7, or 8.', InputError)
         if INPUT['saltcon'] < 0:
-            raise InputError('SALTCON must be non-negative!')
+            # logging.error('SALTCON must be non-negative!')
+            GMXMMPBSA_ERROR('SALTCON must be non-negative!', InputError)
         if INPUT['surften'] < 0:
-            raise InputError('SURFTEN must be non-negative!')
+            GMXMMPBSA_ERROR('SURFTEN must be non-negative!', InputError)
         if INPUT['indi'] < 0:
-            raise InputError('INDI must be non-negative!')
+            GMXMMPBSA_ERROR('INDI must be non-negative!', InputError)
         if INPUT['exdi'] < 0:
-            raise InputError('EXDI must be non-negative!')
+            GMXMMPBSA_ERROR('EXDI must be non-negative!', InputError)
         if INPUT['scale'] < 0:
-            raise InputError('SCALE must be non-negative!')
+            GMXMMPBSA_ERROR('SCALE must be non-negative!', InputError)
         if INPUT['linit'] < 0:
-            raise InputError('LINIT must be a positive integer!')
+            GMXMMPBSA_ERROR('LINIT must be a positive integer!', InputError)
         if not INPUT['prbrad'] in [1.4, 1.6]:
-            raise InputError('PRBRAD (%s) must be 1.4 and 1.6!' % INPUT['prbrad'])
+            GMXMMPBSA_ERROR('PRBRAD (%s) must be 1.4 and 1.6!' % INPUT['prbrad'], InputError)
         if INPUT['istrng'] < 0:
-            raise InputError('ISTRNG must be non-negative!')
+            GMXMMPBSA_ERROR('ISTRNG must be non-negative!', InputError)
         if not INPUT['inp'] in [0, 1, 2]:
-            raise InputError('INP/NPOPT (%s) must be 0, 1, or 2!' % INPUT['inp'])
+            GMXMMPBSA_ERROR('INP/NPOPT (%s) must be 0, 1, or 2!' % INPUT['inp'], InputError)
         if INPUT['cavity_surften'] < 0:
-            raise InputError('CAVITY_SURFTEN must be non-negative!')
+            GMXMMPBSA_ERROR('CAVITY_SURFTEN must be non-negative!', InputError)
         if INPUT['fillratio'] <= 0:
-            raise InputError('FILL_RATIO must be positive!')
+            GMXMMPBSA_ERROR('FILL_RATIO must be positive!', InputError)
         if not INPUT['radiopt'] in [0, 1]:
-            raise InputError('RADIOPT (%s) must be 0 or 1!' % INPUT['radiopt'])
+            GMXMMPBSA_ERROR('RADIOPT (%s) must be 0 or 1!' % INPUT['radiopt'], InputError)
         if INPUT['dielc'] <= 0:
-            raise InputError('DIELC must be positive!')
+            GMXMMPBSA_ERROR('DIELC must be positive!', InputError)
         if INPUT['maxcyc'] < 1:
-            raise InputError('MAXCYC must be a positive integer!')
+            GMXMMPBSA_ERROR('MAXCYC must be a positive integer!', InputError)
         if not INPUT['idecomp'] in [0, 1, 2, 3, 4]:
-            raise InputError('IDECOMP (%s) must be 1, 2, 3, or 4!' %
-                             INPUT['idecomp'])
+            GMXMMPBSA_ERROR('IDECOMP (%s) must be 1, 2, 3, or 4!' %
+                             INPUT['idecomp'], InputError)
         if INPUT['idecomp'] != 0 and INPUT['sander_apbs'] == 1:
-            raise InputError('IDECOMP cannot be used with sander.APBS!')
+            GMXMMPBSA_ERROR('IDECOMP cannot be used with sander.APBS!', InputError)
         if not INPUT['entropy'] in [0, 1, 2]:
-            raise InputError('ENTROPY (%s) must be 0, 1 or 2!' % INPUT['entropy'])
+            GMXMMPBSA_ERROR('ENTROPY (%s) must be 0, 1 or 2!' % INPUT['entropy'], InputError)
         if INPUT['entropy_seg'] not in range(1, 101):
-            raise InputError('Entropy Segment (%s) must be in 1-100!' % INPUT['entropy_seg'])
+            GMXMMPBSA_ERROR('Entropy Segment (%s) must be in 1-100!' % INPUT['entropy_seg'], InputError)
         if not INPUT['sander_apbs'] in [0, 1]:
-            raise InputError('SANDER_APBS must be 0 or 1!')
+            GMXMMPBSA_ERROR('SANDER_APBS must be 0 or 1!', InputError)
         if INPUT['alarun'] and INPUT['netcdf'] != '':
-            raise InputError('Alanine scanning is incompatible with NETCDF != 0!')
+            GMXMMPBSA_ERROR('Alanine scanning is incompatible with NETCDF != 0!', InputError)
         if INPUT['decomprun'] and INPUT['idecomp'] == 0:
-            raise InputError('IDECOMP cannot be 0 for Decomposition analysis!')
+            GMXMMPBSA_ERROR('IDECOMP cannot be 0 for Decomposition analysis!', InputError)
         if INPUT['ions_parameters'] not in range(1,13):
-            raise InputError('Ions parameters file name must be in %s!' % range(1,13))
+            GMXMMPBSA_ERROR('Ions parameters file name must be in %s!' % range(1,13), InputError)
         if INPUT['PBRadii'] not in [1, 2, 3, 4]:
-            raise InputError('PBRadii must be 1, 2, 3 or 4!')
+            GMXMMPBSA_ERROR('PBRadii must be 1, 2, 3 or 4!', InputError)
         if INPUT['solvated_trajectory'] not in [0, 1]:
-            raise InputError('Ligand force field must be 0 or 1!')
+            GMXMMPBSA_ERROR('Ligand force field must be 0 or 1!', InputError)
         if not INPUT['use_sander'] in [0, 1]:
-            raise InputError('USE_SANDER must be set to 0 or 1!')
+            GMXMMPBSA_ERROR('USE_SANDER must be set to 0 or 1!', InputError)
         if not INPUT['ifqnt'] in [0, 1]:
-            raise InputError('QMMM must be 0 or 1!')
+            GMXMMPBSA_ERROR('QMMM must be 0 or 1!', InputError)
         if INPUT['ifqnt'] == 1:
             if not INPUT['qm_theory'] in ['PM3', 'AM1', 'MNDO', 'PDDG-PM3', 'PM3PDDG',
                                           'PDDG-MNDO', 'PDDGMNDO', 'PM3-CARB1',
@@ -864,50 +867,49 @@ class MMPBSA_App(object):
                                           'PM3-ZnB', 'PM3-MAIS', 'PM6-D', 'PM6-DH+',
                                           'AM1-DH+', 'AM1-D*', 'PM3ZNB', 'MNDO/D',
                                           'MNDOD']:
-                raise InputError('Invalid QM_THEORY (%s)! ' % INPUT['qm_theory'] +
+                GMXMMPBSA_ERROR('Invalid QM_THEORY (%s)! ' % INPUT['qm_theory'] +
                                  'This variable must be set to allowable options.\n' +
-                                 '       See the Amber manual for allowable options.')
+                                 '       See the Amber manual for allowable options.', InputError)
             if INPUT['qm_residues'] == '':
-                raise InputError('QM_RESIDUES must be specified for IFQNT = 1!')
+                GMXMMPBSA_ERROR('QM_RESIDUES must be specified for IFQNT = 1!', InputError)
             if INPUT['decomprun']:
-                raise InputError('QM/MM and decomposition are incompatible!')
+                GMXMMPBSA_ERROR('QM/MM and decomposition are incompatible!', InputError)
             if (INPUT['qmcharge_lig'] + INPUT['qmcharge_rec'] !=
                     INPUT['qmcharge_com'] and not self.stability):
-                raise InputError('The total charge of the ligand and receptor ' +
-                                 'does not equal the charge of the complex!')
+                GMXMMPBSA_ERROR('The total charge of the ligand and receptor ' +
+                                 'does not equal the charge of the complex!', InputError)
         if INPUT['rismrun']:
             if INPUT['rism_verbose'] > 2 or INPUT['rism_verbose'] < 0:
-                raise InputError('RISM_VERBOSE must be 0, 1, or 2!')
+                GMXMMPBSA_ERROR('RISM_VERBOSE must be 0, 1, or 2!', InputError)
             if INPUT['buffer'] < 0 and INPUT['solvcut'] < 0:
-                raise InputError('If BUFFER < 0, SOLVCUT must be > 0!')
+                GMXMMPBSA_ERROR('If BUFFER < 0, SOLVCUT must be > 0!', InputError)
             if INPUT['tolerance'] < 0:
-                raise InputError('TOLERANCE must be positive!')
+                GMXMMPBSA_ERROR('TOLERANCE must be positive!', InputError)
             if INPUT['buffer'] < 0 and INPUT['ng'] == '':
-                raise InputError('You must specify NG if BUFFER < 0!')
+                GMXMMPBSA_ERROR('You must specify NG if BUFFER < 0!', InputError)
             if INPUT['closure'] == 'pse' and INPUT['closureorder'] < 1:
-                raise InputError('You must specify CLOSUREORDER if CLOSURE=pse!')
+                GMXMMPBSA_ERROR('You must specify CLOSUREORDER if CLOSURE=pse!', InputError)
             if not INPUT['polardecomp'] in [0, 1]:
-                raise InputError('POLARDECOMP must be either 0 or 1!')
+                GMXMMPBSA_ERROR('POLARDECOMP must be either 0 or 1!', InputError)
             if not INPUT['thermo'] in ['std', 'gf', 'both']:
-                raise InputError('THERMO must be "std", "gf", or "both"!')
+                GMXMMPBSA_ERROR('THERMO must be "std", "gf", or "both"!', InputError)
         if not (INPUT['gbrun'] or INPUT['pbrun'] or INPUT['rismrun'] or
                 INPUT['nmoderun'] or INPUT['entropy']):
-            raise InputError('You did not specify any type of calculation!')
+            GMXMMPBSA_ERROR('You did not specify any type of calculation!', InputError)
 
         if INPUT['decomprun'] and not (INPUT['gbrun'] or INPUT['pbrun']):
-            raise InputError('DECOMP must be run with either GB or PB!')
+            GMXMMPBSA_ERROR('DECOMP must be run with either GB or PB!', InputError)
 
         if not INPUT['molsurf'] and (INPUT['msoffset'] != 0 or
                                      INPUT['probe'] != 1.4):
-            warnings.warn('offset and probe are molsurf-only options',
-                          InputWarning)
+            logging.warning('offset and probe are molsurf-only options')
 
         # User warning when intdiel > 10
         if self.INPUT['intdiel'] > 10:
-            warnings.warn('Intdiel should be less than 10, but it is {}'.format(self.INPUT['intdiel']), InputWarning)
+            logging.warning('Intdiel should be less than 10, but it is {}'.format(self.INPUT['intdiel']))
         # check mutant definition
         if not self.INPUT['mutant'].lower() in ['rec', 'receptor', 'lig', 'ligand']:
-            raise InputError('The mutant most be receptor (or rec) or ligand (or lig)')
+            GMXMMPBSA_ERROR('The mutant most be receptor (or rec) or ligand (or lig)', InputError)
 
     def remove(self, flag):
         """ Removes temporary files """

@@ -250,6 +250,7 @@ with versions higher than 2016.x but with limitations
 
 ### Examples...
 * [Protein-DNA binding free energy calculations](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/test_files/Protein_DNA)
+* [Protein-DNA-RNA-Ion-Ligand binding free energy calculations](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/test_files/Protein_DNA_RNA_Ion_ligand)
 * [Protein-ligand binding free energy calculations (Single Trajectory method)](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/test_files/Protein_ligand/ST) (based on this [tutorial](https://ambermd.org/tutorials/advanced/tutorial3/py_script/section1.php))
 * [Protein-ligand binding free energy calculations (Multiple Trajectory method)](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/test_files/Protein_ligand/MT) (based on this [tutorial](https://ambermd.org/tutorials/advanced/tutorial3/py_script/section1.php))
 * [MMPBSA with membrane proteins](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/test_files/Protein_membrane)
@@ -320,6 +321,11 @@ Complex:
   -ct [TRJ [TRJ ...]]   Input trajectories of the complex. Make sure the trajectory is fitted and
                          pbc have been removed. Allowed formats: *.xtc (recommended), *.trr, *.pdb
                          (specify as many as you'd like). (default: None)
+  -cr <PDB File>        Complex Reference Structure file. This option is optional but recommended 
+                         (Use the PDB file used to generate the topology in GROMACS). If not defined,
+                         the chains ID assignment (if the structure used in -cs does not have chain
+                         IDs) will be done automatically according to the structure (can generate
+                         inconsistencies). (default: None)
 
 Receptor:
   Receptor files and info that are needed to perform the calculation. If the receptor info is not 
@@ -421,11 +427,24 @@ characters (in which case the whole variable name is required). For example, “
 However, “stare” and “sta” will match nothing.
 
 **&general namelist variables**
+```diff
++ New input variable added
+``` 
+`assign_chainID` Defines the chains ID assignment mode. _It is ignored when defining a reference structure 
+(recommended)_. If `assign_chainID = 1`, gmx_MMPBSA check if the structure has no chains ID and it is assigned 
+according to the structure<sup>1</sup>. If `assign_chainID = 2`, `gmx_MMPBSA` re-assign the chains ID, exist or not, 
+ according to the structure<sup>1</sup> (can generate inconsistencies). If a `*.gro` file was used for complex structure 
+(`-cs` flag) and not reference structure was provided, `gmx_MMPBSA` assume `assign_chainID = 1`. (Default = 0)
+
+_<sup>1</sup> The chain ID is assigned according to two criteria: **terminal amino acids** and **residue numbering**. If both criteria 
+or residue numbering changes are present, we assign a new chain ID. If there are terminal amino acids but the 
+numbering of the residue continues, we do not change the ID of the chain._
 
 `debug_printlevel` MMPBSA.py prints errors by raising exceptions, and not catching fatal errors. If debug_printlevel 
 is set to 0, then detailed tracebacks (effectively the call stack showing exactly where in the program the 
 error occurred) is suppressed, so only the error message is printed. If debug_printlevel is set to 1 or 
-higher, all tracebacks are printed, which aids in debugging of issues. Default: 0. (Advanced Option)
+higher, all tracebacks are printed, which aids in debugging of issues. *Now `gmx_MMPBSA` shows the command line used 
+to build AMBER topologies when `debug_printlevel > 1`*. Default: 0. (Advanced Option)
 
 `startframe` The frame from which to begin extracting snapshots from the full, concatenated trajectory comprised
 of every trajectory file placed on the command-line. This is always the first frame read. (Default = 1)  
@@ -462,7 +481,7 @@ inconsistencies with defined internal temperature (298.15 K) when nmode is used 
 `gmx_path` Define an additional path to search for GROMACS executables. This path takes precedence over the path 
 defined in the PATH variable. In these path the following executables will be searched: `gmx`, `gmx_mpi`, `gmx_d`, 
 `gmx_mpi_d` (Gromcas > 5.x.x), `make_ndx` and `trjconv` (GROMACS 4.x.x) 
-   
+
 `interval` The offset from which to choose frames from each trajectory file. For example, an interval of 2 will pull
 every 2nd frame beginning at startframe and ending less than or equal to endframe. (Default = 1)
 
@@ -513,8 +532,13 @@ Force fields tested:
 * "leaprc.gaff2"
 * "leaprc.GLYCAM_06j-1"    (Compatible with amber12SB and later)
 * "leaprc.GLYCAM_06EPb"    (Compatible with amber12SB and later)
-* "leaprc.GLYCAM_06h-1"    (Included in gmx_MMPBSA package. If it is selected will be copied to $AMBERHOME/dat/leap. Compatible with amber99SB and earlier)
-
+* "gmxMMPBSA/leaprc.GLYCAM_06h-1"    <sup>1</sup>(Included in gmx_MMPBSA package. Compatible with 
+  amber99SB and earlier)
+* "gmxMMPBSA/leaprc.zaa99SB"    <sup>1</sup>Parameters for Zwitterionic amino acids. (Included in gmx_MMPBSA package. Compatible 
+  with amber 99SB)
+  
+<sup>1</sup> We create a new folder (named _gmxMMPBSA_) in each one of the Amber's parameter folders ($AMBERHOME/dat/leap/[cmd, prep, lib, parm]/gmxMMPBSA).
+This way, we keep gmx_MMPBSA data separated from Amber's.
 ```diff
 + New input variable added
 ```
@@ -825,7 +849,7 @@ igb=8, saltcon=0.150, intdiel=10
 #make sure to change this parameter to 'ligand' is the mutation is going to be performed 
 #in the ligand
 mutant='receptor'
-mutant_res='B:65'
+mutant_res='B:12'
 /
 --------------------------------------------------------
 Sample input file for entropy calculations

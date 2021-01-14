@@ -19,6 +19,8 @@ This is a module that contains the exceptions thrown by gmx_MMPBSA
 #  or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License    #
 #  for more details.                                                           #
 # ##############################################################################
+import logging
+
 
 class MMPBSA_Error(Exception):
     """ Base gmx_MMPBSA error class """
@@ -160,3 +162,24 @@ class StabilityWarning(MMPBSA_Warning):
     When define stability calculation and protein or ligand
     """
     pass
+
+class GMXMMPBSA_ERROR():
+    def __init__(self, msg='gmx_MMPBSA error', exc=MMPBSA_Error):
+        logging.error(msg)
+        logging.info('Check the gmx_MMPBSA.log file to report the problem.')
+        raise exc(msg + ' Check the gmx_MMPBSA.log file to report the problem.')
+
+class GMXMMPBSA_WARNING():
+    def __init__(self, msg='gmx_MMPBSA warning', exc=MMPBSA_Warning):
+        self.msg = msg
+        self.exc = exc
+    def write(self, log):
+        print(log)
+        log.write('WARNING   ' + self.msg + '\n')
+
+class GMXMMPBSA_INFO():
+    def __init__(self, msg='gmx_MMPBSA info'):
+        self.msg = msg
+    def write(self, log):
+        print(log)
+        log.write('INFO      ' + self.msg + '\n')
