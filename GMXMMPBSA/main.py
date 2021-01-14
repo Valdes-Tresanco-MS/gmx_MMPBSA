@@ -802,61 +802,62 @@ class MMPBSA_App(object):
             INPUT = self.INPUT
 
         if not INPUT['igb'] in [1, 2, 5, 7, 8]:
-            raise InputError('Invalid value for IGB (%s)! ' % INPUT['igb'] +
-                             'It must be 1, 2, 5, 7, or 8.')
+            GMXMMPBSA_ERROR(self.FILES.log, 'Invalid value for IGB (%s)! ' % INPUT['igb'] +
+                                 'It must be 1, 2, 5, 7, or 8.', InputError)
         if INPUT['saltcon'] < 0:
-            raise InputError('SALTCON must be non-negative!')
+            # logging.error('SALTCON must be non-negative!')
+            GMXMMPBSA_ERROR(self.FILES.log, 'SALTCON must be non-negative!', InputError)
         if INPUT['surften'] < 0:
-            raise InputError('SURFTEN must be non-negative!')
+            GMXMMPBSA_ERROR(self.FILES.log, 'SURFTEN must be non-negative!', InputError)
         if INPUT['indi'] < 0:
-            raise InputError('INDI must be non-negative!')
+            GMXMMPBSA_ERROR(self.FILES.log, 'INDI must be non-negative!', InputError)
         if INPUT['exdi'] < 0:
-            raise InputError('EXDI must be non-negative!')
+            GMXMMPBSA_ERROR(self.FILES.log, 'EXDI must be non-negative!', InputError)
         if INPUT['scale'] < 0:
-            raise InputError('SCALE must be non-negative!')
+            GMXMMPBSA_ERROR(self.FILES.log, 'SCALE must be non-negative!', InputError)
         if INPUT['linit'] < 0:
-            raise InputError('LINIT must be a positive integer!')
+            GMXMMPBSA_ERROR(self.FILES.log, 'LINIT must be a positive integer!', InputError)
         if not INPUT['prbrad'] in [1.4, 1.6]:
-            raise InputError('PRBRAD (%s) must be 1.4 and 1.6!' % INPUT['prbrad'])
+            GMXMMPBSA_ERROR(self.FILES.log, 'PRBRAD (%s) must be 1.4 and 1.6!' % INPUT['prbrad'], InputError)
         if INPUT['istrng'] < 0:
-            raise InputError('ISTRNG must be non-negative!')
+            GMXMMPBSA_ERROR(self.FILES.log, 'ISTRNG must be non-negative!', InputError)
         if not INPUT['inp'] in [0, 1, 2]:
-            raise InputError('INP/NPOPT (%s) must be 0, 1, or 2!' % INPUT['inp'])
+            GMXMMPBSA_ERROR(self.FILES.log, 'INP/NPOPT (%s) must be 0, 1, or 2!' % INPUT['inp'], InputError)
         if INPUT['cavity_surften'] < 0:
-            raise InputError('CAVITY_SURFTEN must be non-negative!')
+            GMXMMPBSA_ERROR(self.FILES.log, 'CAVITY_SURFTEN must be non-negative!', InputError)
         if INPUT['fillratio'] <= 0:
-            raise InputError('FILL_RATIO must be positive!')
+            GMXMMPBSA_ERROR(self.FILES.log, 'FILL_RATIO must be positive!', InputError)
         if not INPUT['radiopt'] in [0, 1]:
-            raise InputError('RADIOPT (%s) must be 0 or 1!' % INPUT['radiopt'])
+            GMXMMPBSA_ERROR(self.FILES.log, 'RADIOPT (%s) must be 0 or 1!' % INPUT['radiopt'], InputError)
         if INPUT['dielc'] <= 0:
-            raise InputError('DIELC must be positive!')
+            GMXMMPBSA_ERROR(self.FILES.log, 'DIELC must be positive!', InputError)
         if INPUT['maxcyc'] < 1:
-            raise InputError('MAXCYC must be a positive integer!')
+            GMXMMPBSA_ERROR(self.FILES.log, 'MAXCYC must be a positive integer!', InputError)
         if not INPUT['idecomp'] in [0, 1, 2, 3, 4]:
-            raise InputError('IDECOMP (%s) must be 1, 2, 3, or 4!' %
-                             INPUT['idecomp'])
+            GMXMMPBSA_ERROR(self.FILES.log, 'IDECOMP (%s) must be 1, 2, 3, or 4!' %
+                             INPUT['idecomp'], InputError)
         if INPUT['idecomp'] != 0 and INPUT['sander_apbs'] == 1:
-            raise InputError('IDECOMP cannot be used with sander.APBS!')
+            GMXMMPBSA_ERROR(self.FILES.log, 'IDECOMP cannot be used with sander.APBS!', InputError)
         if not INPUT['entropy'] in [0, 1, 2]:
-            raise InputError('ENTROPY (%s) must be 0, 1 or 2!' % INPUT['entropy'])
+            GMXMMPBSA_ERROR(self.FILES.log, 'ENTROPY (%s) must be 0, 1 or 2!' % INPUT['entropy'], InputError)
         if INPUT['entropy_seg'] not in range(1, 101):
-            raise InputError('Entropy Segment (%s) must be in 1-100!' % INPUT['entropy_seg'])
+            GMXMMPBSA_ERROR(self.FILES.log, 'Entropy Segment (%s) must be in 1-100!' % INPUT['entropy_seg'], InputError)
         if not INPUT['sander_apbs'] in [0, 1]:
-            raise InputError('SANDER_APBS must be 0 or 1!')
+            GMXMMPBSA_ERROR(self.FILES.log, 'SANDER_APBS must be 0 or 1!', InputError)
         if INPUT['alarun'] and INPUT['netcdf'] != '':
-            raise InputError('Alanine scanning is incompatible with NETCDF != 0!')
+            GMXMMPBSA_ERROR(self.FILES.log, 'Alanine scanning is incompatible with NETCDF != 0!', InputError)
         if INPUT['decomprun'] and INPUT['idecomp'] == 0:
-            raise InputError('IDECOMP cannot be 0 for Decomposition analysis!')
+            GMXMMPBSA_ERROR(self.FILES.log, 'IDECOMP cannot be 0 for Decomposition analysis!', InputError)
         if INPUT['ions_parameters'] not in range(1,13):
-            raise InputError('Ions parameters file name must be in %s!' % range(1,13))
+            GMXMMPBSA_ERROR(self.FILES.log, 'Ions parameters file name must be in %s!' % range(1,13), InputError)
         if INPUT['PBRadii'] not in [1, 2, 3, 4]:
-            raise InputError('PBRadii must be 1, 2, 3 or 4!')
+            GMXMMPBSA_ERROR(self.FILES.log, 'PBRadii must be 1, 2, 3 or 4!', InputError)
         if INPUT['solvated_trajectory'] not in [0, 1]:
-            raise InputError('Ligand force field must be 0 or 1!')
+            GMXMMPBSA_ERROR(self.FILES.log, 'Ligand force field must be 0 or 1!', InputError)
         if not INPUT['use_sander'] in [0, 1]:
-            raise InputError('USE_SANDER must be set to 0 or 1!')
+            GMXMMPBSA_ERROR(self.FILES.log, 'USE_SANDER must be set to 0 or 1!', InputError)
         if not INPUT['ifqnt'] in [0, 1]:
-            raise InputError('QMMM must be 0 or 1!')
+            GMXMMPBSA_ERROR(self.FILES.log, 'QMMM must be 0 or 1!', InputError)
         if INPUT['ifqnt'] == 1:
             if not INPUT['qm_theory'] in ['PM3', 'AM1', 'MNDO', 'PDDG-PM3', 'PM3PDDG',
                                           'PDDG-MNDO', 'PDDGMNDO', 'PM3-CARB1',
@@ -864,38 +865,38 @@ class MMPBSA_App(object):
                                           'PM3-ZnB', 'PM3-MAIS', 'PM6-D', 'PM6-DH+',
                                           'AM1-DH+', 'AM1-D*', 'PM3ZNB', 'MNDO/D',
                                           'MNDOD']:
-                raise InputError('Invalid QM_THEORY (%s)! ' % INPUT['qm_theory'] +
+                GMXMMPBSA_ERROR(self.FILES.log, 'Invalid QM_THEORY (%s)! ' % INPUT['qm_theory'] +
                                  'This variable must be set to allowable options.\n' +
-                                 '       See the Amber manual for allowable options.')
+                                 '       See the Amber manual for allowable options.', InputError)
             if INPUT['qm_residues'] == '':
-                raise InputError('QM_RESIDUES must be specified for IFQNT = 1!')
+                GMXMMPBSA_ERROR(self.FILES.log, 'QM_RESIDUES must be specified for IFQNT = 1!', InputError)
             if INPUT['decomprun']:
-                raise InputError('QM/MM and decomposition are incompatible!')
+                GMXMMPBSA_ERROR(self.FILES.log, 'QM/MM and decomposition are incompatible!', InputError)
             if (INPUT['qmcharge_lig'] + INPUT['qmcharge_rec'] !=
                     INPUT['qmcharge_com'] and not self.stability):
-                raise InputError('The total charge of the ligand and receptor ' +
-                                 'does not equal the charge of the complex!')
+                GMXMMPBSA_ERROR(self.FILES.log, 'The total charge of the ligand and receptor ' +
+                                 'does not equal the charge of the complex!', InputError)
         if INPUT['rismrun']:
             if INPUT['rism_verbose'] > 2 or INPUT['rism_verbose'] < 0:
-                raise InputError('RISM_VERBOSE must be 0, 1, or 2!')
+                GMXMMPBSA_ERROR(self.FILES.log, 'RISM_VERBOSE must be 0, 1, or 2!', InputError)
             if INPUT['buffer'] < 0 and INPUT['solvcut'] < 0:
-                raise InputError('If BUFFER < 0, SOLVCUT must be > 0!')
+                GMXMMPBSA_ERROR(self.FILES.log, 'If BUFFER < 0, SOLVCUT must be > 0!', InputError)
             if INPUT['tolerance'] < 0:
-                raise InputError('TOLERANCE must be positive!')
+                GMXMMPBSA_ERROR(self.FILES.log, 'TOLERANCE must be positive!', InputError)
             if INPUT['buffer'] < 0 and INPUT['ng'] == '':
-                raise InputError('You must specify NG if BUFFER < 0!')
+                GMXMMPBSA_ERROR(self.FILES.log, 'You must specify NG if BUFFER < 0!', InputError)
             if INPUT['closure'] == 'pse' and INPUT['closureorder'] < 1:
-                raise InputError('You must specify CLOSUREORDER if CLOSURE=pse!')
+                GMXMMPBSA_ERROR(self.FILES.log, 'You must specify CLOSUREORDER if CLOSURE=pse!', InputError)
             if not INPUT['polardecomp'] in [0, 1]:
-                raise InputError('POLARDECOMP must be either 0 or 1!')
+                GMXMMPBSA_ERROR(self.FILES.log, 'POLARDECOMP must be either 0 or 1!', InputError)
             if not INPUT['thermo'] in ['std', 'gf', 'both']:
-                raise InputError('THERMO must be "std", "gf", or "both"!')
+                GMXMMPBSA_ERROR(self.FILES.log, 'THERMO must be "std", "gf", or "both"!', InputError)
         if not (INPUT['gbrun'] or INPUT['pbrun'] or INPUT['rismrun'] or
                 INPUT['nmoderun'] or INPUT['entropy']):
-            raise InputError('You did not specify any type of calculation!')
+            GMXMMPBSA_ERROR(self.FILES.log, 'You did not specify any type of calculation!', InputError)
 
         if INPUT['decomprun'] and not (INPUT['gbrun'] or INPUT['pbrun']):
-            raise InputError('DECOMP must be run with either GB or PB!')
+            GMXMMPBSA_ERROR(self.FILES.log, 'DECOMP must be run with either GB or PB!', InputError)
 
         if not INPUT['molsurf'] and (INPUT['msoffset'] != 0 or
                                      INPUT['probe'] != 1.4):
@@ -907,7 +908,7 @@ class MMPBSA_App(object):
             warnings.warn('Intdiel should be less than 10, but it is {}'.format(self.INPUT['intdiel']), InputWarning)
         # check mutant definition
         if not self.INPUT['mutant'].lower() in ['rec', 'receptor', 'lig', 'ligand']:
-            raise InputError('The mutant most be receptor (or rec) or ligand (or lig)')
+            GMXMMPBSA_ERROR(self.FILES.log, 'The mutant most be receptor (or rec) or ligand (or lig)', InputError)
 
     def remove(self, flag):
         """ Removes temporary files """
