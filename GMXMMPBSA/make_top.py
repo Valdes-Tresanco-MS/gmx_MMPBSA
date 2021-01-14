@@ -327,17 +327,16 @@ class CheckMakeTop:
         5 - Save
         :return:
         """
-        self.complex_str = parmed.read_PDB(self.complex_pdb)  # can always be initialized
-        # fix complex structure and save
-        # self.properHIS(self.complex_str)
-        # self.properCYS(self.complex_str)
-        # For some reason removing the hydrogens returns the hydrogen-bound atoms to their original names. This is
-        # problematic with ILE switching from CD to CD1. parmed bug?
-        # self.complex_str.strip('@/H')
-        # self.properATOMS(self.complex_str)
-        # self.complex_str.save(self.complex_pdb_fixed, 'pdb', True)
+        logging.info('Generating AMBER Compatible PDB Files...')
 
-        # if not self.FILES.stability:
+        self.remove_MODEL(self.complex_pdb)
+        self.remove_MODEL(self.receptor_pdb)
+        self.remove_MODEL(self.ligand_pdb)
+        # try:
+        #     self.complex_str = parmed.read_PDB(self.complex_pdb)  # can always be initialized
+        # except: # when structure file has no chains ids
+        #     remove_MODEL(self.complex_pdb)
+        self.complex_str = parmed.read_PDB(self.complex_pdb)  # can always be initialized
         self.receptor_str = parmed.read_PDB(self.receptor_pdb)
         # fix receptor structure
         self.properHIS(self.receptor_str)
