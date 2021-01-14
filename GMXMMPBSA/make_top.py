@@ -472,30 +472,18 @@ class CheckMakeTop:
                     chains.append(res.chain)
             c = 0
             for res in com_str.residues:
-                print(c, len(ref_str.residues))
                 if c >= len(ref_str.residues):
                     l = c - len(rec_str.residues)
-                    print(
-                        'Diferencias en el numero de residuos. Asigando identificador arbitrariamente al ligando en el '
-                        'complejo')
+                    logging.warning('Differences in the number of residues between the reference and complex '
+                                    'structure. Arbitrarily assigning chain ID to the ligand in the complex')
                     res.chain = chains_letters[chains_letters.index(chains[-1]) + 1]
                     lig_str.residues[l].chain = chains_letters[chains_letters.index(chains[-1]) + 1]
-                    print('COM:', res.number, res.name, res.chain, 'LIG:',
-                          lig_str.residues[c - len(rec_str.residues)].number,
-                          lig_str.residues[c - len(rec_str.residues)].name,
-                          lig_str.residues[c - len(rec_str.residues)].chain)
                 elif c < len(rec_str.residues):
                     res.chain = ref_str.residues[c].chain
                     rec_str.residues[c].chain = ref_str.residues[c].chain
-                    print('COM:', res.number, res.name, res.chain, 'REC:', rec_str.residues[c].number, rec_str.residues[
-                        c].name, rec_str.residues[c].chain)
                 else:
                     res.chain = ref_str.residues[c].chain
                     lig_str.residues[c - len(rec_str.residues)].chain = ref_str.residues[c].chain
-                    print('COM:', res.number, res.name, res.chain, 'LIG:',
-                          lig_str.residues[c - len(rec_str.residues)].number,
-                          lig_str.residues[c - len(rec_str.residues)].name,
-                          lig_str.residues[c - len(rec_str.residues)].chain)
                 c += 1
         else:
             assign = False
@@ -508,13 +496,13 @@ class CheckMakeTop:
             elif self.INPUT['assign_chainID'] == 2:
                 assign =True
                 if not com_str.residues[0].chain:
-                    logging.warning('Ya tiene cadena. Reasignando ID...')
+                    logging.warning('Already have chain ID. Re-assigning ID...')
                 else:
                     logging.warning('Assigning chains ID...')
             elif self.INPUT['assign_chainID'] == 0 and self.FILES.complex_tpr[-3] == 'gro':
                 assign = True
                 logging.warning('No reference structure was found and the gro format was used in the complex '
-                                'structure. Assigning chains ID...')
+                                    'structure. Assigning chains ID...')
 
             if assign:
                 chains_ids = []
@@ -542,7 +530,7 @@ class CheckMakeTop:
                                 lig_str.residues[c - len(rec_str.residues)].chain = curr_chain_id
                         if res.chain not in chains_ids:
                             chains_ids.append(res.chain)
-                    # ver si es el final de la cadena
+                    # see if it is the end of chain
                     if res.number != previous_res_number + 1:
                         if previous_res_number != 0:
                             chain_by_num = True
@@ -557,12 +545,9 @@ class CheckMakeTop:
                             lig_str.residues[c - len(rec_str.residues)].chain = curr_chain_id
                         if res.chain not in chains_ids:
                             chains_ids.append(res.chain)
-                        print('Fin de la cadena por la numeracion y terminal')
                     elif chain_by_ter:
-                        print('Posible fin de la cadena, la numeracion continua')  # warning
                         chain_by_ter = False
                     elif chain_by_num:
-                        print('Posible fin de la cadena por numeracion, pero sin terminal')  # warning
                         chain_by_num = False
                         curr_chain_id = chains_letters[chains_letters.index(chains_ids[-1]) + 1]
                         res.chain = curr_chain_id
@@ -576,23 +561,12 @@ class CheckMakeTop:
                         if atm.name == 'OC2':  # only for protein
                             res.ter = True
                             chain_by_ter = True
-
                     if parmed.residue.RNAResidue.has(res.name) or parmed.residue.DNAResidue.has(res.name):
                         has_nucl += 1
                     if has_nucl == 1:
-                        print('Esta estructura conteine nucleotidos. Recomendamos el uso de la estructura de referncia')
-
+                        logging.warning('This structure contains nucleotides. We recommend that you use the reference '
+                                        'structure')
                     previous_res_number = res.number
-                    if c < len(rec_str.residues):
-                        print('COM:', res.number, res.name, res.chain, 'REC:', rec_str.residues[c].number, rec_str.residues[
-                            c].name, rec_str.residues[c].chain)
-                    else:
-
-                        print('COM:', res.number, res.name, res.chain, 'LIG:',
-                              lig_str.residues[c - len(rec_str.residues)].number,
-                              lig_str.residues[c - len(rec_str.residues)].name,
-                              lig_str.residues[c - len(rec_str.residues)].chain)
-                    # print(res.number, res.name, res.chain, res.ter)
                     c += 1
 
     @staticmethod
