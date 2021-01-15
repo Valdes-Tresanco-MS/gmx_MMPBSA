@@ -27,7 +27,7 @@ __all__ = ['alamdcrd', 'amber_outputs', 'calculation', 'commandlineparser',
            'timer', 'utils', 'API', 'make_top']
 
 __author__ = "Mario S. Valdes Tresanco and Mario E. Valdes Tresanco"
-__version__ = "1.1.2"
+__version__ = "1.2.0"
 __license__ = "GPLv3"
 __mmpbsa_author__ = "Jason Swails, Dwight McGee, and Bill Miller III"
 __mmpbsa_version__ = "16.0"
