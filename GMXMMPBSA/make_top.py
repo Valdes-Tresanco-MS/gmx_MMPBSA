@@ -134,7 +134,7 @@ class CheckMakeTop:
                 make_ndx_args))
         c2 = subprocess.Popen(make_ndx_args, stdin=c1.stdout, stdout=self.log, stderr=self.log)
         if c2.wait():  # if it quits with return code != 0
-            raise GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(make_ndx), self.FILES.complex_index))
+            GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(make_ndx), self.FILES.complex_index))
         self.FILES.complex_index = com_ndx
 
         logging.info('Normal Complex: Saving group {}_{} in {} file as '
@@ -148,7 +148,7 @@ class CheckMakeTop:
             logging.info('Running command: ' + (' '.join(editconf_echo_args)) + ' | ' + ' '.join(editconf_args))
         c4 = subprocess.Popen(editconf_args, stdin=c3.stdout, stdout=self.log, stderr=self.log)
         if c4.wait():  # if it quits with return code != 0
-            raise GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(editconf), self.FILES.complex_tpr))
+            GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(editconf), self.FILES.complex_tpr))
 
         # clear trajectory
         if self.INPUT['solvated_trajectory']:
@@ -165,7 +165,7 @@ class CheckMakeTop:
                 c6 = subprocess.Popen(trjconv_args,  # FIXME: start and end frames???
                                       stdin=c5.stdout, stdout=self.log, stderr=self.log)
                 if c6.wait():  # if it quits with return code != 0
-                    raise GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(trjconv), self.FILES.complex_tpr))
+                    GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(trjconv), self.FILES.complex_tpr))
                 new_trajs.append('COM_traj_{}.xtc'.format(i))
             self.FILES.complex_trajs = new_trajs
 
@@ -182,7 +182,7 @@ class CheckMakeTop:
                 logging.info('Running command: ' + ' '.join(parmchk2_args))
             l3 = subprocess.Popen(parmchk2_args, stdout=self.log, stderr=self.log)
             if l3.wait():
-                raise GMXMMPBSA_ERROR('%s failed when querying %s' % (parmchk2, self.FILES.ligand_mol2))
+                GMXMMPBSA_ERROR('%s failed when querying %s' % (parmchk2, self.FILES.ligand_mol2))
 
         # make a temp receptor pdb (even when stability) if decomp to get correct receptor residues from complex. This
         # avoid get multiples molecules from complex.split()
@@ -200,7 +200,7 @@ class CheckMakeTop:
                     logging.info('Running command: ' + (' '.join(rec_echo_args)) + ' | ' + ' '.join(editconf_args))
                 cp2 = subprocess.Popen(editconf_args, stdin=cp1.stdout, stdout=self.log, stderr=self.log)
                 if cp2.wait():  # if it quits with return code != 0
-                    raise GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(editconf), self.FILES.complex_tpr))
+                    GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(editconf), self.FILES.complex_tpr))
 
         # check if stability
         if self.FILES.stability:
@@ -225,7 +225,7 @@ class CheckMakeTop:
                 logging.info('Running command: ' + (' '.join(editconf_echo_args)) + ' | ' + ' '.join(editconf_args))
             cp2 = subprocess.Popen(editconf_args, stdin=p1.stdout, stdout=self.log, stderr=self.log)
             if cp2.wait():  # if it quits with return code != 0
-                raise GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(editconf), self.FILES.receptor_tpr))
+                GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(editconf), self.FILES.receptor_tpr))
             # clear trajectory
             if self.INPUT['solvated_trajectory']:
                 logging.info('Clear normal receptor trajectories...')
@@ -243,7 +243,7 @@ class CheckMakeTop:
                     c6 = subprocess.Popen(trjconv_args,  # FIXME: start and end frames???
                                           stdin=c5.stdout, stdout=self.log, stderr=self.log)
                     if c6.wait():  # if it quits with return code != 0
-                        raise GMXMMPBSA_ERROR(
+                        GMXMMPBSA_ERROR(
                             '%s failed when querying %s' % (' '.join(trjconv), self.FILES.receptor_tpr))
                     new_trajs.append('REC_traj_{}.xtc'.format(i))
                 self.FILES.receptor_trajs = new_trajs
@@ -262,7 +262,7 @@ class CheckMakeTop:
                 logging.info('Running command: ' + (' '.join(editconf_echo_args)) + ' | ' + ' '.join(editconf_args))
             cp2 = subprocess.Popen(editconf_args, stdin=cp1.stdout, stdout=self.log, stderr=self.log)
             if cp2.wait():  # if it quits with return code != 0
-                raise GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(editconf), self.FILES.complex_tpr))
+                GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(editconf), self.FILES.complex_tpr))
 
         # ligand
         # # check consistence
@@ -281,7 +281,7 @@ class CheckMakeTop:
                 logging.info('Running command: ' + (' '.join(editconf_echo_args)) + ' | ' + ' '.join(editconf_args))
             l2 = subprocess.Popen(editconf_args, stdin=l1.stdout, stdout=self.log, stderr=self.log)
             if l2.wait():  # if it quits with return code != 0
-                raise GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(editconf), self.FILES.ligand_tpr))
+                GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(editconf), self.FILES.ligand_tpr))
 
             # clear trajectory
             if self.INPUT['solvated_trajectory']:
@@ -298,7 +298,7 @@ class CheckMakeTop:
                             'Running command: ' + (' '.join(trjconv_echo_args)) + ' | ' + ' '.join(trjconv_args))
                     c6 = subprocess.Popen(trjconv_args, stdin=c5.stdout, stdout=self.log, stderr=self.log)
                     if c6.wait():  # if it quits with return code != 0
-                        raise GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(trjconv), self.FILES.ligand_tpr))
+                        GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(trjconv), self.FILES.ligand_tpr))
                     new_trajs.append('LIG_traj_{}.xtc'.format(i))
                 self.FILES.ligand_trajs = new_trajs
         else:
@@ -316,7 +316,7 @@ class CheckMakeTop:
                 logging.info('Running command: ' + (' '.join(editconf_echo_args)) + ' | ' + ' '.join(editconf_args))
             cl2 = subprocess.Popen(editconf_args, stdin=cl1.stdout, stdout=self.log, stderr=self.log)
             if cl2.wait():  # if it quits with return code != 0
-                raise GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(editconf), self.FILES.complex_tpr))
+                GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(editconf), self.FILES.complex_tpr))
 
     def checkPDB(self):
         """
@@ -412,7 +412,7 @@ class CheckMakeTop:
             else:
                 logging.info('Building Mutant ligand...')
                 if self.FILES.ligand_mol2:
-                    raise GMXMMPBSA_ERROR('Mutation is only possible if the ligand is protein-like')
+                    GMXMMPBSA_ERROR('Mutation is only possible if the ligand is protein-like')
                 self.mutant_ligand_str = parmed.read_PDB(self.ligand_pdb_fixed)
                 self.mutatexala(self.mutant_ligand_str)
                 self.mutant_ligand_str.save(self.mutant_ligand_pdb_fixed, 'pdb', True, renumber=False)
@@ -448,11 +448,11 @@ class CheckMakeTop:
         idx = 0
         found = False
         if not self.INPUT['mutant_res']:
-            raise GMXMMPBSA_ERROR("No residue for mutation was defined")
+            GMXMMPBSA_ERROR("No residue for mutation was defined")
         chain, resnum = self.INPUT['mutant_res'].split(':')
 
         if not chain or not resnum:
-            raise GMXMMPBSA_ERROR("No residue was defined")
+            GMXMMPBSA_ERROR("No residue was defined")
         for res in structure.residues:
             if res.number == int(resnum) and res.chain == chain:
                 found = True
@@ -463,12 +463,12 @@ class CheckMakeTop:
             excluded_mask = ':{} &!@CB,C,CA,N,O'.format(idx + 1)
             structure.strip(excluded_mask)
         else:
-            raise GMXMMPBSA_ERROR('Residue {}:{} not found'.format(chain, resnum))
+            GMXMMPBSA_ERROR('Residue {}:{} not found'.format(chain, resnum))
 
     def fix_chains_IDs(self, com_str, rec_str, lig_str, ref_str=None):
         if ref_str:
             if len(ref_str.residues) < len(rec_str.residues):
-                raise ('error')
+                GMXMMPBSA_ERROR('The reference structure has fewer amino acids than the receptor.')
             chains = []
             for res in ref_str.residues:
                 if res.chain not in chains:
@@ -742,7 +742,7 @@ class CheckMakeTop:
             logging.info('Running command: ' + ' '.join(tleap_args))
         p = subprocess.Popen(tleap_args, stdout=self.log, stderr=self.log)
         if p.wait():
-            raise GMXMMPBSA_ERROR('%s failed when querying %s' % (tleap, self.FILES.prefix + 'leap.in'))
+            GMXMMPBSA_ERROR('%s failed when querying %s' % (tleap, self.FILES.prefix + 'leap.in'))
 
         if self.INPUT['alarun']:
             with open(self.FILES.prefix + 'mut_leap.in', 'w') as mtif:
@@ -820,7 +820,7 @@ class CheckMakeTop:
                 logging.info('Running command: ' + ' '.join(tleap_args))
             p1 = subprocess.Popen(tleap_args, stdout=self.log, stderr=self.log)
             if p1.wait():
-                raise GMXMMPBSA_ERROR('%s failed when querying %s' % (tleap, self.FILES.prefix + 'mut_leap.in'))
+                GMXMMPBSA_ERROR('%s failed when querying %s' % (tleap, self.FILES.prefix + 'mut_leap.in'))
         else:
             self.mutant_complex_pmrtop = None
 
