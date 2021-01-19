@@ -55,11 +55,22 @@ the GB calculation for both the wild-type and the mutant system. The results can
 "File" in the upper left corner and then "Export GB/PB energy (csv)".
 
 ## How to define properly which residue is going to be mutated?
+The generated PDB files must keep the original numbering, so selection based on residue number is reliable. However, the chain id can vary depending on several factors. If you use the reference structure (-cr flag), then you don't have to worry about any changes. The selection will be based on this structure.
 
-* Receptor FIXED pdb files will be always renumbered starting from 1. Chain labels will be kept as they appear in the 
-original pdb file. In case of error, please check `_GMXMMPBSA_REC_FIXED.pdb` file and find there the information
-(_i.e._ chain and number) for the residue are you interested in.
-* Ligand FIXED pdb files will be always renumbered starting from 1. Chain labels will be kept as they appear in the 
-original pdb file. In case of error, please check `_GMXMMPBSA_LIG_FIXED.pdb` file and find there the information
-(_i.e._ chain and number) for the residue are you interested in.
-* Only one mutation is allowed on a residue different than Pro, Gly and Ala.
+On the other hand, if this reference structure is omitted, then it will depend on:
+* The complex structure file format
+    
+    _The * .gro format does not contain information related to chains._
+
+* GROMACS version
+    
+    _We have seen that the GROMACS 20xx.x versions, trjconv omit the chain IDs._
+
+* Options used to generate the topology in GROMACS (referring to the -merge option)
+    
+    _If you use the -merge option then GROMACS will merge the chains into one._
+* The option assign_chainID
+    
+    _This option defines when chain IDs are assigned. For the first and second option it must be assign_chainID = 1 or 2. For the 3rd it must be assign_chainID = 2. See the description here._
+
+**Note:** In any of these cases, you must verify that the selection is correct. You can see the structure of the Complex (`_GMXMMPBSA_COM.pdb`), Receptor (`_GMXMMPBSA_REC_FIXED.pdb`), and ligand (`_GMXMMPBSA_LIG_FIXED.pdb`) respectively.
