@@ -982,120 +982,32 @@ class CheckMakeTop:
                     logging.warning('This structure contains nucleotides. We recommend that you use the reference '
                                     'structure')
 
-    @staticmethod
-    def remove_MODEL(pdb_file):
-        try:
-            with open(pdb_file) as fo:
-                fo = fo.readlines()
-                for line in fo:
-                    if 'MODEL' in line or 'ENDMDL' in line:
-                        fo.remove(line)
-            with open(pdb_file, 'w') as fw:
-                for x in fo:
-                    fw.write(x)
-            return True
-        except IOError as e:
-            GMXMMPBSA_ERROR('', str(e))
+    def molstr(self, data):
 
-    @staticmethod
-    def fix_H_ATOMS(structure):
-        """
-        GROMACS 4.x save the pdb without atom element column, so parmed does not recognize some H atoms. Parmed assigns
-        0 to the atomic number of these atoms. In order to correctly eliminate hydrogens, it is necessary to assign the
-        atomic number.
-        """
-        for residue in structure.residues:
-            for atom in residue.atoms:
-                if 'H' in atom.name and atom.atomic_number == 0:
-                    atom.atomic_number = 1
+        if type(data) == str:
+           # data is a pdb file
+            pdb_file = data
+            try:
+                with open(pdb_file) as fo:
+                    fo = fo.readlines()
+                    for line in fo:
+                        if 'MODEL' in line or 'ENDMDL' in line:
+                            fo.remove(line)
+                with open(pdb_file, 'w') as fw:
+                    for x in fo:
+                        fw.write(x)
+            except IOError as e:
+                GMXMMPBSA_ERROR('', str(e))
 
-    @staticmethod
-    def properATOMS(structure):
-        """
-        Rename oxygen in termini from GROMACS to AMBER name
-        OC1 -> 'O  '
-        OC2 -> OXT -> set this res as terminal in parmed
-
-        Rename CD in ILE from GROMACS to AMBER name
-        CD   ILE -> CD1 ILE
-        :return:
-        """
-        for residue in structure.residues:
-            if residue.name == 'ILE':
-                for atom in residue.atoms:
-                    if atom.name == 'CD':
-                        atom.name = 'CD1'
-
-            for atom in residue.atoms:
-                if atom.name == 'OC1':
-                    atom.name = 'O  '
-                elif atom.name == 'OC2':
-                    atom.name = 'OXT'
-                    residue.ter = True  # parmed terminal
-
-    @staticmethod
-    def properAspGluLys(structure):
-        """
-        Proper name for residues Asp, Glu and Lys
-        """
-        for residue in structure.residues:
-            if residue.name == 'LYS':
-                atoms = [atom.name for atom in residue.atoms]
-                if not 'HZ3' in atoms:
-                    residue.name = 'LYN'
-            elif residue.name == 'ASP':
-                atoms = [atom.name for atom in residue.atoms]
-                if 'HD2' in atoms:
-                    residue.name = 'ASH'
-            elif residue.name == 'GLU':
-                atoms = [atom.name for atom in residue.atoms]
-                if 'HE2' in atoms:
-                    residue.name = 'GLH'
-
-    @staticmethod
-    def properHIS(structure):
-        """
-        Compatible amber name for Histidines from protonation state
-        """
-        his = ['HIS', 'HIE', 'HID', 'HIP']
-
-        for residue in structure.residues:
-            if residue.name in his:
-                atoms = [atom.name for atom in residue.atoms if atom.atomic_number == 1]
-                if 'HD1' in atoms and 'HE2' in atoms:
-                    residue.name = 'HIP'
-                elif 'HD1' in atoms:
-                    residue.name = 'HID'
-                elif 'HE2' in atoms:
-                    residue.name = 'HIE'
-
-    @staticmethod
-    def properCYS(structure):
-        """
-        Rename the cys in disulfide bond
-        :return:
-        """
-        cys_name = ['CYS', 'CYX', 'CYM']
-        allcys = [residue for residue in structure.residues if residue.name in cys_name]
-        # print(llcys
-        xcys = []
-        for residue in allcys:
-            for atom in residue.atoms:
-                if 'SG' in atom.name:
-                    for bondedatm in atom.bond_partners:
-                        # exclude CB
-                        if bondedatm.residue == residue:
-                            continue
-                        else:
-                            # check if is bonded to cys residue
-                            # TODO: Check if bonded atom is SG. Is really necessary?
-                            if bondedatm.residue.name in cys_name:
-                                if residue not in xcys:
-                                    xcys.append(residue)
-                                if bondedatm.residue not in xcys:
-                                    xcys.append(bondedatm.residue)
-        for cys in xcys:
-            cys.name = 'CYX'
+            structure = parmed.read_PDB(pdb_file)
+        else:
+            # data is Structure, AmberParm, ChamberParm or GromacsTopologyFile. This make a copy
+            structure = data.__copy__()
+            c = 1
+            for at in structure.atoms:
+                at.number = c
+                c += 1
+        return structure
 
     def makeToptleap(self):
         logging.info('Building Tleap input files...')
