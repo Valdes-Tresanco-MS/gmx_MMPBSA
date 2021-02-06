@@ -30,7 +30,6 @@ import warnings
 import numpy as np
 from math import exp, log
 import logging
-logging.getLogger(__name__)
 # Import gmx_MMPBSA modules
 from GMXMMPBSA import utils
 from GMXMMPBSA.amber_outputs import (QHout, NMODEout, QMMMout, GBout, PBout,
@@ -152,7 +151,7 @@ class MMPBSA_App(object):
         if master:
             self.stdout.write('Preparing trajectories for simulation...\n')
             self.numframes, self.numframes_nmode = make_trajectories(INPUT, FILES, self.mpi_size,
-                                                                     self.external_progs['cpptraj'].full_path, self.pre)
+                                                                     self.external_progs['cpptraj'], self.pre)
 
         self.MPI.COMM_WORLD.Barrier()
 
@@ -164,7 +163,7 @@ class MMPBSA_App(object):
         if INPUT['alarun']:
             self.stdout.write('Mutating trajectories...\n')
         self.mut_str, mutant_residue = make_mutant_trajectories(INPUT, FILES,
-                                                                self.mpi_rank, self.external_progs['cpptraj'].full_path,
+                                                                self.mpi_rank, self.external_progs['cpptraj'],
                                                                 self.normal_system, self.mutant_system, self.pre)
 
         self.MPI.COMM_WORLD.Barrier()
@@ -251,19 +250,19 @@ class MMPBSA_App(object):
         for mutant and normal systems
         """
         # Set up a dictionary of external programs to use based one external progs
-        progs = {'gb': self.external_progs['mmpbsa_py_energy'].full_path,
-                 'sa': self.external_progs['cpptraj'].full_path,
-                 'pb': self.external_progs['mmpbsa_py_energy'].full_path,
-                 'rism': self.external_progs['rism3d.snglpnt'].full_path,
-                 'qh': self.external_progs['cpptraj'].full_path,
-                 'nmode': self.external_progs['mmpbsa_py_nabnmode'].full_path
+        progs = {'gb': self.external_progs['mmpbsa_py_energy'],
+                 'sa': self.external_progs['cpptraj'],
+                 'pb': self.external_progs['mmpbsa_py_energy'],
+                 'rism': self.external_progs['rism3d.snglpnt'],
+                 'qh': self.external_progs['cpptraj'],
+                 'nmode': self.external_progs['mmpbsa_py_nabnmode']
                  }
         if self.INPUT['use_sander'] or self.INPUT['decomprun']:
-            progs['gb'] = progs['pb'] = self.external_progs['sander'].full_path
+            progs['gb'] = progs['pb'] = self.external_progs['sander']
         if self.INPUT['sander_apbs']:
-            progs['pb'] = self.external_progs['sander.APBS'].full_path
+            progs['pb'] = self.external_progs['sander.APBS']
         if self.INPUT['ifqnt']:
-            progs['gb'] = self.external_progs['sander'].full_path
+            progs['gb'] = self.external_progs['sander']
 
         # NetCDF or ASCII intermediate trajectories?
         if self.INPUT['netcdf']:
@@ -809,7 +808,6 @@ class MMPBSA_App(object):
             GMXMMPBSA_ERROR('Invalid value for IGB (%s)! ' % INPUT['igb'] +
                                  'It must be 1, 2, 5, 7, or 8.', InputError)
         if INPUT['saltcon'] < 0:
-            # logging.error('SALTCON must be non-negative!')
             GMXMMPBSA_ERROR('SALTCON must be non-negative!', InputError)
         if INPUT['surften'] < 0:
             GMXMMPBSA_ERROR('SURFTEN must be non-negative!', InputError)
