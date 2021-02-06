@@ -97,11 +97,14 @@ ligand_group_des = '''Ligand files and info that are needed to perform the calcu
 # Set up the MM/PBSA parser here. It clutters up the MMPBSA_App to do it there
 
 # noinspection PyTypeChecker
-parser = ArgumentParser(epilog='''This program will calculate binding free energies using end-state free energy 
-                                    methods on an ensemble of snapshots using a variety of implicit solvent models''',
+parser = ArgumentParser(epilog=f'''This program will calculate binding free energies using end-state free energy 
+                                    methods on an ensemble of snapshots using a variety of implicit solvent 
+                                    models.\nBased on MMPBSA.py (version {__mmpbsa_version__}) and 
+                                    AmberTools{__ambertools_version__}''',
                         description=description, formatter_class=ArgumentDefaultsHelpFormatter)
 parser.add_argument('-v', '--version', action='version',
-                    version='''%%(prog)s %s based on MMPBSA version %s''' % (__version__, __mmpbsa_version__))
+                    version='''%%(prog)s %s based on MMPBSA version %s and AmberTools %s''' %
+                            (__version__, __mmpbsa_version__, __ambertools_version__))
 parser.add_argument('--input-file-help', dest='infilehelp', action='store_true',
                     help='Print all available options in the input file.',
                     default=False)
