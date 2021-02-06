@@ -153,7 +153,7 @@ class ExportDialog(QDialog):
     def getdata(self):
         ext_prog = find_progs(self.parent.app.INPUT)
         self.ntraj = Trajectory(self.parent.app.FILES.complex_prmtop, self.parent.app.FILES.complex_trajs,
-                                ext_prog['cpptraj'].full_path)
+                                ext_prog['cpptraj'])
         self.ntraj.Setup(1, 999999, 1)
         last = self.parent.app.INPUT['startframe'] + (self.ntraj.processed_frames - 1) * self.parent.app.INPUT[
             'interval']
