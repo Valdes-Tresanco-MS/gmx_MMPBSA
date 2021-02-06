@@ -30,7 +30,11 @@ import logging
 import string
 
 chains_letters = list(string.ascii_uppercase)
-
+his = ['HIS', 'HIE', 'HID', 'HIP']
+cys_name = ['CYS', 'CYX', 'CYM']
+lys = ['LYS', 'LYN']
+asp = ['ASP', 'ASH']
+glu = ['GLU', 'GLH']
 PBRadii = {1: 'bondi', 2: 'mbondi', 3: 'mbondi2', 4: 'mbondi3'}
 
 ions_para_files = {1: 'frcmod.ions234lm_126_tip3p', 2: 'frcmod.ions234lm_iod_tip4pew', 3: 'frcmod.ions234lm_iod_spce',
