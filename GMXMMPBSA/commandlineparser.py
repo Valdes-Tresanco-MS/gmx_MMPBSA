@@ -218,13 +218,13 @@ group.add_argument('--clean', dest='clean', action='store_true', default=False,
                    help='''Clean temporary files and quit.''')
 
 #### GUI parser
-guiparser = ArgumentParser(epilog='''This program is part of gmx_MMPBSA and will show a workspace with 
+anaparser = ArgumentParser(epilog='''This program is part of gmx_MMPBSA and will show a workspace with 
                             charts to analyze the results''',
                            description=description,
                            formatter_class=ArgumentDefaultsHelpFormatter)
-guiparser.add_argument('-v', '--version', action='version',
+anaparser.add_argument('-v', '--version', action='version',
                        version='%%(prog)s %s based on MMPBSA version %s' % (__version__, __mmpbsa_version__))
-group = guiparser.add_argument_group('Info file')
+group = anaparser.add_argument_group('Info file')
 group.add_argument('-p', '--path', dest='path', help='Path to gmx_MMPBSA info file', required=True,
                        default=None)
 
