@@ -56,7 +56,9 @@ from GMXMMPBSA.output_file import (write_stability_output,
 from GMXMMPBSA.parm_setup import MMPBSA_System
 from GMXMMPBSA.make_top import CheckMakeTop
 from GMXMMPBSA.timer import Timer
-from GMXMMPBSA.gui import run as GUI_run
+from GMXMMPBSA.analyzer import run as ANA_run
+
+logging.getLogger(__name__)
 
 # Global variables for the excepthook replacement at the bottom. Override these
 # in the MMPBSA_App constructor and input file reading
@@ -713,7 +715,7 @@ class MMPBSA_App(object):
 
         if self.FILES.gui and not self.FILES.stability:
             self.stdout.write('Opening GUI to analyze results...')
-            GUI_run(self.FILES.prefix + 'info')
+            ANA_run(self.FILES.prefix + 'info')
         else:
             sys.exit(0)
 
@@ -736,7 +738,7 @@ class MMPBSA_App(object):
             self.traj_protocol = 'MTP'  # multiple traj protocol
         else:
             self.traj_protocol = 'STP'  # single traj protocol
-        # change by explicity argument
+        # change by explicit argument
         self.stability = self.FILES.stability
 
     def read_input_file(self, infile=None):
