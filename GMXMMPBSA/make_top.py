@@ -874,26 +874,18 @@ class CheckMakeTop:
 
     def fix_chains_IDs(self, com_str, rec_str=None, lig_str=None, ref_str=None):
         if ref_str:
-            if len(ref_str.residues) < len(rec_str.residues):
-                GMXMMPBSA_ERROR('The reference structure has fewer amino acids than the receptor.')
-            chains = []
-            for res in ref_str.residues:
-                if res.chain not in chains:
-                    chains.append(res.chain)
+            if len(ref_str.residues) != len(com_str.residues):
+                GMXMMPBSA_ERROR('The number of amino acids in the reference structure is different from that of the '
+                                'complex...')
             c = 0
-            for res in com_str.residues:
-                if c >= len(ref_str.residues):
-                    l = c - len(rec_str.residues)
-                    logging.warning('Differences in the number of residues between the reference and complex '
-                                    'structure. Arbitrarily assigning chain ID to the ligand in the complex')
-                    res.chain = chains_letters[chains_letters.index(chains[-1]) + 1]
-                    lig_str.residues[l].chain = chains_letters[chains_letters.index(chains[-1]) + 1]
-                elif c < len(rec_str.residues):
-                    res.chain = ref_str.residues[c].chain
-                    rec_str.residues[c].chain = ref_str.residues[c].chain
+            for res in ref_str.residues:
+                res.chain = com_str.residues[c].chain
+                if c in self.resl['REC']:
+                    i = self.resl['REC'].index(c)
+                    rec_str.residues[i].chain = res.chain
                 else:
-                    res.chain = ref_str.residues[c].chain
-                    lig_str.residues[c - len(rec_str.residues)].chain = ref_str.residues[c].chain
+                    i = self.resl['LIG'].index(c)
+                    lig_str.residues[i].chain = res.chain
                 c += 1
         else:
             assign = False
@@ -911,7 +903,7 @@ class CheckMakeTop:
                     logging.warning('Assigning chains ID...')
             elif self.INPUT['assign_chainID'] == 0 and self.FILES.complex_tpr[-3] == 'gro':
                 assign = True
-                logging.warning('No reference structure was found and the gro format was used in the complex '
+                logging.warning('No reference structure was found and a gro file was used for the complex '
                                 'structure. Assigning chains ID...')
 
             if assign:
@@ -925,19 +917,24 @@ class CheckMakeTop:
                 for res in com_str.residues:
                     if not res.chain:
                         res.chain = curr_chain_id
-                        if c < len(rec_str.residues):
-                            rec_str.residues[c].chain = curr_chain_id
+
+                        if c in self.resl['REC']:
+                            i = self.resl['REC'].index(c)
+                            rec_str.residues[i].chain = res.chain
                         else:
-                            lig_str.residues[c - len(rec_str.residues)].chain = curr_chain_id
+                            i = self.resl['LIG'].index(c)
+                            lig_str.residues[i].chain = res.chain
                         if curr_chain_id not in chains_ids:
                             chains_ids.append(curr_chain_id)
                     else:
                         if res.chain != curr_chain_id:
                             res.chain = curr_chain_id
-                            if c < len(rec_str.residues):
-                                rec_str.residues[c].chain = curr_chain_id
+                            if c in self.resl['REC']:
+                                i = self.resl['REC'].index(c)
+                                rec_str.residues[i].chain = res.chain
                             else:
-                                lig_str.residues[c - len(rec_str.residues)].chain = curr_chain_id
+                                i = self.resl['LIG'].index(c)
+                                lig_str.residues[i].chain = res.chain
                         if res.chain not in chains_ids:
                             chains_ids.append(res.chain)
                     # see if it is the end of chain
@@ -949,10 +946,12 @@ class CheckMakeTop:
                         chain_by_ter = False
                         curr_chain_id = chains_letters[chains_letters.index(chains_ids[-1]) + 1]
                         res.chain = curr_chain_id
-                        if c < len(rec_str.residues):
-                            rec_str.residues[c].chain = curr_chain_id
+                        if c in self.resl['REC']:
+                            i = self.resl['REC'].index(c)
+                            rec_str.residues[i].chain = res.chain
                         else:
-                            lig_str.residues[c - len(rec_str.residues)].chain = curr_chain_id
+                            i = self.resl['LIG'].index(c)
+                            lig_str.residues[i].chain = res.chain
                         if res.chain not in chains_ids:
                             chains_ids.append(res.chain)
                     elif chain_by_ter:
@@ -961,23 +960,27 @@ class CheckMakeTop:
                         chain_by_num = False
                         curr_chain_id = chains_letters[chains_letters.index(chains_ids[-1]) + 1]
                         res.chain = curr_chain_id
-                        if c < len(rec_str.residues):
-                            rec_str.residues[c].chain = curr_chain_id
+
+                        if c in self.resl['REC']:
+                            i = self.resl['REC'].index(c)
+                            rec_str.residues[i].chain = res.chain
                         else:
-                            lig_str.residues[c - len(rec_str.residues)].chain = curr_chain_id
+                            i = self.resl['LIG'].index(c)
+                            lig_str.residues[i].chain = res.chain
                         if res.chain not in chains_ids:
                             chains_ids.append(res.chain)
                     for atm in res.atoms:
-                        if atm.name == 'OC2':  # only for protein
+                        if atm.name == 'OXT':  # only for protein
                             res.ter = True
                             chain_by_ter = True
                     if parmed.residue.RNAResidue.has(res.name) or parmed.residue.DNAResidue.has(res.name):
                         has_nucl += 1
-                    if has_nucl == 1:
-                        logging.warning('This structure contains nucleotides. We recommend that you use the reference '
-                                        'structure')
+
                     previous_res_number = res.number
                     c += 1
+                if has_nucl == 1:
+                    logging.warning('This structure contains nucleotides. We recommend that you use the reference '
+                                    'structure')
 
     @staticmethod
     def remove_MODEL(pdb_file):
