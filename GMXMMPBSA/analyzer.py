@@ -233,9 +233,9 @@ class ExportDialogCSV(QDialog):
         self.close()
 
 
-class GMX_MMPBSA_GUI(QMainWindow):
+class GMX_MMPBSA_ANA(QMainWindow):
     def __init__(self, info_file=None):
-        super(GMX_MMPBSA_GUI, self).__init__()
+        super(GMX_MMPBSA_ANA, self).__init__()
 
         self.data = None
         self.mutant_data = None
@@ -613,7 +613,7 @@ class GMX_MMPBSA_GUI(QMainWindow):
 def run(infofile):
     app = QApplication(sys.argv)
     app.setApplicationName('gmx_MMPBSA')
-    w = GMX_MMPBSA_GUI(infofile)
+    w = GMX_MMPBSA_ANA(infofile)
     w.show()
     sys.exit(app.exec())
 
@@ -622,6 +622,6 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
     app.setApplicationName('gmx_MMPBSA')
 
-    w = GMX_MMPBSA_GUI('/home/mario/Drive/scripts/gmx_MMPBSA/test/qh/_GMXMMPBSA_info')
+    w = GMX_MMPBSA_ANA('/home/mario/Drive/scripts/gmx_MMPBSA/test/qh/_GMXMMPBSA_info')
     w.show()
     sys.exit(app.exec())
