@@ -38,7 +38,7 @@ logging.basicConfig(
         logging.StreamHandler()])
 
 try:
-    from GMXMMPBSA.exceptions import MMPBSA_Error, InputError, CommandlineError
+    from GMXMMPBSA.exceptions import GMXMMPBSA_ERROR, InputError, CommandlineError
     from GMXMMPBSA.infofile import InfoFile
     from GMXMMPBSA import main
     from GMXMMPBSA.gui import GMX_MMPBSA_GUI
@@ -56,12 +56,8 @@ except ImportError:
                       (amberhome, amberhome))
 
 
-
-
-
-
 def gmxmmpbsa():
-    logging.info('Started')
+
     # Adapted to run with MPI ?
     if len(sys.argv) > 1 and sys.argv[1] in ['MPI', 'mpi']:
         args = sys.argv
@@ -69,13 +65,12 @@ def gmxmmpbsa():
         try:
             from mpi4py import MPI
         except ImportError:
-            raise GMXMMPBSA_ERROR('Could not import mpi4py package! Use serial version or install mpi4py.')
+            GMXMMPBSA_ERROR('Could not import mpi4py package! Use serial version or install mpi4py.')
     else:
         # If we're not running "gmx_MMPBSA MPI", bring MPI into the top-level namespace
         # (which will overwrite the MPI from mpi4py, which we *want* to do in serial)
         from GMXMMPBSA.fake_mpi import MPI
         args = sys.argv
-
     # Set up error/signal handlers
     main.setup_run()
 
