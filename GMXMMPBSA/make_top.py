@@ -292,14 +292,134 @@ class CheckMakeTop:
         self.resi, self.resl, self.orderl = self.res2map(self.complex_str, self.receptor_str, self.ligand_str)
         self.fix_chains_IDs(self.complex_str, self.receptor_str, self.ligand_str, self.ref_str)
 
-        1 - Rename HIS
-        2 - Rename CYS
-        3 - Delete H
-        4 - Rename oxygen in termini from GROMACS to AMBER name
-          - Rename CD in ILE from GROMACS to AMBER name
-        5 - Save
-        :return:
-        """
+    def gmxtop2prmtop(self):
+        logging.info('Building Normal Complex Amber Topology...')
+        com_top = parmed.gromacs.GromacsTopologyFile(self.complex_temp_top, xyz=self.complex_str_file)
+        # try:
+        if com_top.impropers or com_top.urey_bradleys or com_top.cmaps:
+            com_amb_prm = parmed.amber.ChamberParm.from_structure(com_top)
+            com_top_parm = 'chamber'
+        else:
+            com_amb_prm = parmed.amber.AmberParm.from_structure(com_top)
+            com_top_parm = 'amber'
+
+        # IMPORTANT: make_trajs ends in error if the box is defined
+        com_amb_prm.box = None
+        # except TypeError as err:
+        #     GMXMMPBSA_ERROR(str(err))
+
+        self.fixparm2amber(com_amb_prm)
+
+        logging.info('Writing Normal Complex Amber Topology...')
+        # change de PBRadii
+        action = ChRad(com_amb_prm, PBRadii[self.INPUT['PBRadii']])
+        com_amb_prm.write_parm(self.complex_pmrtop)
+
+        text_list = []
+        for r in self.resi['REC']:
+            if r[0] == r[1]:
+                text_list.append(f'{r[0]}')
+            else:
+                text_list.append(f'{r[0]}-{r[1]}')
+        rec_indexes_string = ','.join(text_list)
+
+        rec_hastop = True
+        if self.FILES.receptor_top:
+            logging.info('A Receptor topology file was defined. Using MT approach...')
+            logging.info('Building AMBER Receptor Topology from GROMACS Receptor Topology...')
+            rec_top = parmed.gromacs.GromacsTopologyFile(self.receptor_temp_top, xyz=self.receptor_str_file)
+            if rec_top.impropers or rec_top.urey_bradleys or rec_top.cmaps:
+                if com_top_parm == 'amber':
+                    GMXMMPBSA_ERROR('Inconsistent parameter format. The defined Complex is AMBER type while the '
+                                    'Receptor is CHAMBER type!')
+                rec_amb_prm = parmed.amber.ChamberParm.from_structure(rec_top)
+            else:
+                if com_top_parm == 'chamber':
+                    GMXMMPBSA_ERROR('Inconsistent parameter format. The defined Complex is CHAMBER type while the '
+                                    'Receptor is AMBER type!')
+                rec_amb_prm = parmed.amber.AmberParm.from_structure(rec_top)
+            self.fixparm2amber(rec_amb_prm)
+        else:
+            logging.info('No Receptor topology files was defined. Using ST approach...')
+            logging.info('Building AMBER Receptor Topology from Complex...')
+            # we make a copy for receptor topology
+            rec_amb_prm = self.molstr(com_amb_prm)
+            rec_amb_prm.strip(f'!:{rec_indexes_string}')
+            rec_hastop = False
+        # change de PBRadii
+        action = ChRad(rec_amb_prm, PBRadii[self.INPUT['PBRadii']])
+        rec_amb_prm.write_parm(self.receptor_pmrtop)
+
+        lig_hastop = True
+        if self.FILES.ligand_top:
+            logging.info('A Ligand Topology file was defined. Using MT approach...')
+            logging.info('Building AMBER Ligand Topology from GROMACS Ligand Topology...')
+            lig_top = parmed.gromacs.GromacsTopologyFile(self.ligand_temp_top, xyz=self.ligand_str_file)
+            if lig_top.impropers or lig_top.urey_bradleys or lig_top.cmaps:
+                if com_top_parm == 'amber':
+                    GMXMMPBSA_ERROR('Inconsistent parameter format. The defined Complex is AMBER type while the '
+                                    'Ligand is CHAMBER type!')
+                lig_amb_prm = parmed.amber.ChamberParm.from_structure(lig_top)
+            else:
+                if com_top_parm == 'chamber':
+                    GMXMMPBSA_ERROR('Inconsistent parameter format. The defined Complex is CHAMBER type while the '
+                                    'Ligand is AMBER type!')
+                lig_amb_prm = parmed.amber.AmberParm.from_structure(lig_top)
+            self.fixparm2amber(lig_amb_prm)
+        else:
+            logging.info('No Ligand Topology files was defined. Using ST approach...')
+            logging.info('Building AMBER Ligand Topology from Complex...')
+            # we make a copy for ligand topology
+            lig_amb_prm = self.molstr(com_amb_prm)
+            lig_amb_prm.strip(f':{rec_indexes_string}')
+            lig_hastop = False
+
+        # change de PBRadii
+        action = ChRad(lig_amb_prm, PBRadii[self.INPUT['PBRadii']])
+        lig_amb_prm.write_parm(self.ligand_pmrtop)
+
+        if self.INPUT['alarun']:
+            logging.info('Building Mutant Complex Topology...')
+            # get mutation index in complex
+            com_mut_index, part_mut, part_index, mut_label = self.getMutationIndex()
+            mut_com_amb_prm = self.makeMutTop(com_amb_prm, com_mut_index)
+            # change de PBRadii
+            action = ChRad(mut_com_amb_prm, PBRadii[self.INPUT['PBRadii']])
+            mut_com_amb_prm.write_parm(self.mutant_complex_pmrtop)
+
+            if part_mut == 'REC':
+                logging.info('Detecting mutation in Receptor. Building Mutant Receptor Topology...')
+                mut_com_amb_prm.strip(f'!:{rec_indexes_string}')
+                mdata = [self.mutant_receptor_pmrtop, 'REC']
+                self.mutant_ligand_pmrtop = None
+                if rec_hastop:
+                    mtop = self.makeMutTop(rec_amb_prm, part_index)
+                else:
+                    mtop = mut_com_amb_prm
+            else:
+                logging.info('Detecting mutation in Ligand. Building Mutant Ligand Topology...')
+                mut_com_amb_prm.strip(f':{rec_indexes_string}')
+                mdata = [self.mutant_ligand_pmrtop, 'LIG']
+                self.mutant_receptor_pmrtop = None
+                if lig_hastop:
+                    mtop = self.makeMutTop(lig_amb_prm, part_index)
+                else:
+                    mtop = mut_com_amb_prm
+
+            if self.INPUT['protein_forcefield'] == 'charmm':
+                mut_prot_amb_prm = parmed.amber.ChamberParm.from_structure(mtop)
+            else:
+                mut_prot_amb_prm = parmed.amber.AmberParm.from_structure(mtop)
+            # change de PBRadii
+            action = ChRad(mut_prot_amb_prm, PBRadii[self.INPUT['PBRadii']])
+            mut_prot_amb_prm.write_parm(mdata[0])
+        else:
+            self.mutant_complex_pmrtop = None
+
+        return (self.complex_pmrtop, self.receptor_pmrtop, self.ligand_pmrtop, self.mutant_complex_pmrtop,
+                self.mutant_receptor_pmrtop, self.mutant_ligand_pmrtop)
+
+
         logging.info('Generating AMBER Compatible PDB Files...')
 
         self.remove_MODEL(self.complex_pdb)
