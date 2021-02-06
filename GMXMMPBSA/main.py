@@ -599,7 +599,7 @@ class MMPBSA_App(object):
         self.mutant_system = None
         if INPUT['alarun']:
             if (FILES.mutant_receptor_prmtop is None and FILES.mutant_ligand_prmtop is None and not self.stability):
-                raise GMXMMPBSA_ERROR('Alanine scanning requires either a mutated receptor or mutated ligand topology '
+                GMXMMPBSA_ERROR('Alanine scanning requires either a mutated receptor or mutated ligand topology '
                                    'file!')
             if FILES.mutant_receptor_prmtop is None:
                 FILES.mutant_receptor_prmtop = FILES.receptor_prmtop
@@ -608,15 +608,15 @@ class MMPBSA_App(object):
             self.mutant_system = MMPBSA_System(FILES.mutant_complex_prmtop, FILES.mutant_receptor_prmtop,
                                                FILES.mutant_ligand_prmtop)
             if self.using_chamber is not self.mutant_system.complex_prmtop.chamber:
-                raise GMXMMPBSA_ERROR('CHAMBER prmtops must be used for both mutant '
+                GMXMMPBSA_ERROR('CHAMBER prmtops must be used for both mutant '
                                    'and normal prmtops or neither!')
         # If we have a chamber prmtop, force using sander
         if self.using_chamber:
             INPUT['use_sander'] = True
             if INPUT['rismrun']:
-                raise GMXMMPBSA_ERROR('CHAMBER prmtops cannot be used with 3D-RISM')
+                GMXMMPBSA_ERROR('CHAMBER prmtops cannot be used with 3D-RISM')
             if INPUT['nmoderun']:
-                raise GMXMMPBSA_ERROR('CHAMBER prmtops cannot be used with NMODE')
+                GMXMMPBSA_ERROR('CHAMBER prmtops cannot be used with NMODE')
             self.stdout.write('CHAMBER prmtops found. Forcing use of sander\n')
 
         # Print warnings if we are overwriting any masks and get default masks
