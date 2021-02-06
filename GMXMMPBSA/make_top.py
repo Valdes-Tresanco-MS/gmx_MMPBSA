@@ -681,20 +681,41 @@ class CheckMakeTop:
         if removeH:
             structure.strip('@/H')
 
+    def getMutationIndex(self):
+        label = ''
+        if not self.INPUT['mutant_res']:
+            GMXMMPBSA_ERROR("No residue for mutation was defined")
+        chain_, resnum_ = self.INPUT['mutant_res'].split(':')
+        chain = str(chain_).strip().upper()
+        resnum = int(str(resnum_).strip())
 
         if not chain or not resnum:
-            GMXMMPBSA_ERROR("No residue was defined")
-        for res in structure.residues:
+            GMXMMPBSA_ERROR("Wrong notation... You most define the residue to mutate as follow: CHAIN:RES_NUMBER")
+        idx = 0
+        for res in self.complex_str.residues:
             if res.number == int(resnum) and res.chain == chain:
-                found = True
+                try:
+                    parmed.residue.AminoAcidResidue.get(res.name, True)
+                except KeyError as e:
+                    GMXMMPBSA_ERROR('The mutation must be an amino acid residue ...')
+
+                label = f'{res.chain}:{res.name}:{res.number}'
                 break
             idx += 1
-        if found:
-            structure.residues[idx].name = 'ALA'
-            excluded_mask = ':{} &!@CB,C,CA,N,O'.format(idx + 1)
-            structure.strip(excluded_mask)
+
+        if idx in self.resl['REC']:
+            part_index = self.resl['REC'].index(idx)
+            part_mut = 'REC'
+        elif idx in self.resl['LIG']:
+            part_index = self.resl['LIG'].index(idx)
+            part_mut = 'LIG'
         else:
+            part_index = None
+            part_mut = None
             GMXMMPBSA_ERROR('Residue {}:{} not found'.format(chain, resnum))
+
+        return (idx, part_mut, part_index, label)
+
 
     def cleanup_trajs(self):
         # clear trajectory
