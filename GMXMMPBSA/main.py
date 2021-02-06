@@ -591,7 +591,7 @@ class MMPBSA_App(object):
         logging.info('Building AMBER Topologies from GROMACS files...')
         maketop = CheckMakeTop(FILES, INPUT, self.external_progs)
         (FILES.complex_prmtop, FILES.receptor_prmtop, FILES.ligand_prmtop, FILES.mutant_complex_prmtop,
-         FILES.mutant_receptor_prmtop, FILES.mutant_ligand_prmtop) = maketop.makeToptleap()
+         FILES.mutant_receptor_prmtop, FILES.mutant_ligand_prmtop) = maketop.buildTopology()
         logging.info('Building AMBER Topologies from GROMACS files...Done.\n')
 
         self.normal_system = MMPBSA_System(FILES.complex_prmtop, FILES.receptor_prmtop, FILES.ligand_prmtop)
