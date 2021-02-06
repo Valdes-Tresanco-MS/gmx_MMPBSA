@@ -508,7 +508,7 @@ input_file.addNamelist('general', 'general',
 
                            ['receptor_mask', str, None, 'Amber mask of receptor atoms in complex prmtop.'],
                            # ['search_path', str, '', 'Look for intermediate programs in all of PATH'],
-                           ['solvated_trajectory', int, 1, 'Define if it is necessary to build a clean trajectory'],
+                           ['solvated_trajectory', int, 1, 'Define if it is necessary to cleanup the trajectories'],
                            ['startframe', int, 1, 'First frame to analyze.'],
                            ['strip_mask', str, strip_mask, 'Amber mask to strip from solvated prmtop'],
                            ['use_sander', int, 0, 'Use sander to compute energies.'],
