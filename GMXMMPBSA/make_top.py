@@ -716,6 +716,101 @@ class CheckMakeTop:
 
         return (idx, part_mut, part_index, label)
 
+    def makeMutTop(self, wt_top, mut_index):
+        """
+
+        :param wt_top: Amber parm from GROMACS topology
+        :param mut_index: index of mutation in structure
+        :return: Mutant AmberParm
+        """
+        mut_top = self.molstr(wt_top)
+        mut_aa = self.INPUT['mutant']
+
+        bb_atoms = 'N,H,CA,HA,C,O,'
+        nterm_atoms = 'H1,H2,H3,'
+        cterm_atoms = 'OXT'
+        sc_cb_atom = 'CB,'
+        sc_ala_atoms = ('HB,' +  # VAL, ILE, THR
+                        'HB1,HB2,' +
+                        'CG1,CG2,OG1,' +  # VAL, ILE, THR
+                        'OG,' +  # SER
+                        'SG,' +  # CYS
+                        'CG,')
+
+        if mut_aa in ['GLY', 'G']:
+            # FIXME: allow terminal residues to mutate?
+            strip_mask = f':{mut_index + 1} &!@' + bb_atoms + sc_cb_atom + nterm_atoms + cterm_atoms
+        else:
+            # FIXME: allow terminal residues to mutate?
+            strip_mask = f':{mut_index + 1} &!@' + bb_atoms + sc_cb_atom + sc_ala_atoms + nterm_atoms + cterm_atoms
+        mut_top.strip(strip_mask)
+
+        h_atoms_prop = {}
+        for res in mut_top.residues:
+            if res.name == mut_aa:
+                for at in res.atoms:
+                    if mut_aa == 'GLY':
+                        if at.name in ['HA2']:
+                            h_atoms_prop['mass'] = at.mass
+                            h_atoms_prop['element'] = at.element
+                            h_atoms_prop['atomic_number'] = at.atomic_number
+                            h_atoms_prop['charge'] = at.charge
+                            h_atoms_prop['atom_type'] = at.atom_type
+                            h_atoms_prop['type'] = at.type
+                            break
+                    else:
+                        if at.name in ['HB2']:
+                            h_atoms_prop['mass'] = at.mass
+                            h_atoms_prop['element'] = at.element
+                            h_atoms_prop['atomic_number'] = at.atomic_number
+                            h_atoms_prop['charge'] = at.charge
+                            h_atoms_prop['atom_type'] = at.atom_type
+                            h_atoms_prop['type'] = at.type
+                            break
+                break
+
+        cb_atom = None
+        ca_atom = None
+        mut_top.residues[mut_index].name = mut_aa
+        ind = 0
+        for res in mut_top.residues:
+            if ind == mut_index:
+                for at in res.atoms:
+                    if mut_aa == 'GlY':
+                        if at.name == 'CA':
+                            ca_atom = at
+                        if at.name in ['CB']:
+                            at.name = 'HA2'
+                            ca_atom.xx, ca_atom.xy, ca_atom.xz, at.xx, at.xy, at.xz = _scaledistance(
+                                [ca_atom.xx, ca_atom.xy,
+                                 ca_atom.xz, at.xx, at.xy,
+                                 at.xz], 1.09)
+                            for ref_at in h_atoms_prop:
+                                setattr(at, ref_at, h_atoms_prop[ref_at])
+                        elif at.name in ['HA']:
+                            at.name = 'HA1'
+                            at.type = h_atoms_prop['type']
+                            at.atom_type = h_atoms_prop['atom_type']
+                    else:
+                        if at.name == 'CB':
+                            cb_atom = at
+                        if at.name in ['CG', 'OG', 'CG2', 'SG']:
+                            at.name = 'HB3'
+                            cb_atom.xx, cb_atom.xy, cb_atom.xz, at.xx, at.xy, at.xz = _scaledistance(
+                                [cb_atom.xx, cb_atom.xy,
+                                 cb_atom.xz, at.xx, at.xy,
+                                 at.xz], 1.09)
+                            for ref_at in h_atoms_prop:
+                                setattr(at, ref_at, h_atoms_prop[ref_at])
+                        elif at.name in ['HB']:
+                            at.name = 'HB1'
+                            at.type = h_atoms_prop['type']
+                            at.atom_type = h_atoms_prop['atom_type']
+                        elif at.name in ['HB1', 'HB2', 'HB3']:
+                            at.type = h_atoms_prop['type']
+                            at.atom_type = h_atoms_prop['atom_type']
+            ind += 1
+        return mut_top
 
     def cleanup_trajs(self):
         # clear trajectory
