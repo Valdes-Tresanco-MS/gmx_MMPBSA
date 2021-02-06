@@ -523,12 +523,38 @@ class CheckMakeTop:
             res_list.sort()
             self.INPUT['print_res'] = ','.join([str(x + 1) for x in res_list])
 
-    def mutatexala(self, structure):
-        idx = 0
-        found = False
-        if not self.INPUT['mutant_res']:
-            GMXMMPBSA_ERROR("No residue for mutation was defined")
-        chain, resnum = self.INPUT['mutant_res'].split(':')
+    def cleantop(self, top_file, temp_top_file):
+        """
+        Create a new top file without SOL and IONS
+        :param top_file: User-defined topology file
+        :param temp_top_file: temporary top file
+        :return: detected ff
+        """
+        top_file = Path(top_file)
+        molsect = False
+
+        temp_top = open(top_file.parent.joinpath(temp_top_file), 'w')
+        temp_top.write('; Modified by gmx_MMPBSA\n')
+
+        with open(top_file) as topf:
+            for line in topf:
+                if line.startswith('#include') and 'forcefield.itp' in line:
+                    if not ('charmm' in line.lower() or 'toppar' in line.lower() or 'amber' in line.lower()):
+                        GMXMMPBSA_ERROR(f'Unknown force field in GROMACS topology in line:\n {line}')
+                elif '[ molecules ]' in line:
+                    molsect = True
+                if molsect:
+                    # not copy ions and solvent
+                    sol_ion = [
+                        # standard gmx form
+                        'NA', 'CL', 'SOL',
+                        # charmm-GUI form ??
+                        'SOD', 'CLA', 'TIP3P', 'TIP4P', 'TIPS3P', 'TIP5P', 'SPC', 'SPC/E', 'SPCE', 'TIP3o', 'WAT']
+                    if line.split()[0].strip().upper() in sol_ion:
+                        break
+                temp_top.write(line)
+        temp_top.close()
+
 
         if not chain or not resnum:
             GMXMMPBSA_ERROR("No residue was defined")
