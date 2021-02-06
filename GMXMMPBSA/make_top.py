@@ -173,26 +173,7 @@ class CheckMakeTop:
             logging.info('Running command: ' + (' '.join(editconf_echo_args)) + ' | ' + ' '.join(editconf_args))
         c4 = subprocess.Popen(editconf_args, stdin=c3.stdout, stdout=self.log, stderr=self.log)
         if c4.wait():  # if it quits with return code != 0
-            GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(editconf), self.FILES.complex_tpr))
-
-        # clear trajectory
-        if self.INPUT['solvated_trajectory']:
-            logging.info('Cleaning normal complex trajectories...')
-            new_trajs = []
-            for i in range(len(self.FILES.complex_trajs)):
-                trjconv_echo_args = ['echo', 'GMXMMPBSA_REC_GMXMMPBSA_LIG']
-                c5 = subprocess.Popen(trjconv_echo_args, stdout=subprocess.PIPE)
-                # we get only first trajectory to extract a pdb file and make amber topology for complex
-                trjconv_args = trjconv + ['-f', self.FILES.complex_trajs[0], '-s', self.FILES.complex_tpr,
-                                          '-o', 'COM_traj_{}.xtc'.format(i), '-n', self.FILES.complex_index]
-                if self.INPUT['debug_printlevel']:
-                    logging.info('Running command: ' + (' '.join(trjconv_echo_args)) + ' | ' + ' '.join(trjconv_args))
-                c6 = subprocess.Popen(trjconv_args,  # FIXME: start and end frames???
-                                      stdin=c5.stdout, stdout=self.log, stderr=self.log)
-                if c6.wait():  # if it quits with return code != 0
-                    GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(trjconv), self.FILES.complex_tpr))
-                new_trajs.append('COM_traj_{}.xtc'.format(i))
-            self.FILES.complex_trajs = new_trajs
+            GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(self.editconf), self.FILES.complex_tpr))
 
         # Put receptor and ligand (explicitly defined) to avoid overwrite them
         # check if ligand is not protein. In any case, non-protein ligand always most be processed
@@ -250,28 +231,8 @@ class CheckMakeTop:
                 logging.info('Running command: ' + (' '.join(editconf_echo_args)) + ' | ' + ' '.join(editconf_args))
             cp2 = subprocess.Popen(editconf_args, stdin=p1.stdout, stdout=self.log, stderr=self.log)
             if cp2.wait():  # if it quits with return code != 0
-                GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(editconf), self.FILES.receptor_tpr))
-            # clear trajectory
-            if self.INPUT['solvated_trajectory']:
-                logging.info('Clear normal receptor trajectories...')
-                new_trajs = []
-                for i in range(len(self.FILES.receptor_trajs)):
-                    trjconv_echo_args = ['echo', '{}'.format(self.FILES.receptor_group)]
-                    c5 = subprocess.Popen(trjconv_echo_args, stdout=subprocess.PIPE)
-                    # we get only first trajectory to extract a pdb file and make amber topology for complex
-                    trjconv_args = trjconv + ['-f', self.FILES.receptor_trajs[0], '-s', self.FILES.receptor_tpr,
-                                              '-o', 'REC_traj_{}.xtc'.format(i), '-n',
-                                              self.FILES.receptor_index]
-                    if self.INPUT['debug_printlevel']:
-                        logging.info('Running command: ' + (' '.join(trjconv_echo_args)) + ' | ' + ' '.join(
-                            trjconv_args))
-                    c6 = subprocess.Popen(trjconv_args,  # FIXME: start and end frames???
-                                          stdin=c5.stdout, stdout=self.log, stderr=self.log)
-                    if c6.wait():  # if it quits with return code != 0
-                        GMXMMPBSA_ERROR(
-                            '%s failed when querying %s' % (' '.join(trjconv), self.FILES.receptor_tpr))
-                    new_trajs.append('REC_traj_{}.xtc'.format(i))
-                self.FILES.receptor_trajs = new_trajs
+                GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(self.editconf), self.FILES.receptor_tpr))
+
         else:
             logging.info('No receptor structure file was defined. Using ST approach...')
             logging.info('Using receptor structure from complex to generate AMBER topology')
@@ -306,26 +267,7 @@ class CheckMakeTop:
                 logging.info('Running command: ' + (' '.join(editconf_echo_args)) + ' | ' + ' '.join(editconf_args))
             l2 = subprocess.Popen(editconf_args, stdin=l1.stdout, stdout=self.log, stderr=self.log)
             if l2.wait():  # if it quits with return code != 0
-                GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(editconf), self.FILES.ligand_tpr))
-
-            # clear trajectory
-            if self.INPUT['solvated_trajectory']:
-                logging.info('Clear normal ligand trajectories...')
-                new_trajs = []
-                for i in range(len(self.FILES.ligand_trajs)):
-                    trjconv_echo_args = ['echo', '{}'.format(self.FILES.ligand_group)]
-                    c5 = subprocess.Popen(trjconv_echo_args, stdout=subprocess.PIPE)
-                    # we get only first trajectory to extract a pdb file and make amber topology for complex
-                    trjconv_args = trjconv + ['-f', self.FILES.ligand_trajs[0], '-s', self.FILES.ligand_tpr,
-                                              '-o', 'LIG_traj_{}.xtc'.format(i), '-n', self.FILES.ligand_index]
-                    if self.INPUT['debug_printlevel']:
-                        logging.info(
-                            'Running command: ' + (' '.join(trjconv_echo_args)) + ' | ' + ' '.join(trjconv_args))
-                    c6 = subprocess.Popen(trjconv_args, stdin=c5.stdout, stdout=self.log, stderr=self.log)
-                    if c6.wait():  # if it quits with return code != 0
-                        GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(trjconv), self.FILES.ligand_tpr))
-                    new_trajs.append('LIG_traj_{}.xtc'.format(i))
-                self.FILES.ligand_trajs = new_trajs
+                GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(self.editconf), self.FILES.ligand_tpr))
         else:
             # wt complex ligand
             logging.info('No ligand structure file was defined. Using ST approach...')
