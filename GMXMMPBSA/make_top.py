@@ -497,32 +497,31 @@ class CheckMakeTop:
                     self.mut_ligand_list[f'MLIG{c}'] = mut_lig_file
                     c += 1
 
+
+    def reswithin(self):
         # Get residue form receptor-ligand interface
         if self.print_residues:
-            if self.use_temp:
-                temp_str = parmed.read_PDB('rec_temp.pdb')
-                rec_resnum = len(temp_str.residues)
-            else:
-                rec_resnum = len(self.receptor_str.residues)
             res_list = []
-            res_ndx = 1
-            for rres in self.complex_str.residues[:rec_resnum]:  # iterate over receptor residues
-                lres_ndx = rec_resnum + 1
-                for lres in self.complex_str.residues[rec_resnum:]:  # iterate over ligand residues
-                    for rat in rres.atoms:
+            for i in self.resl['REC']:
+                if i in res_list:
+                    continue
+                for j in self.resl['LIG']:
+                    if j in res_list:
+                        continue
+                    for rat in self.complex_str.residues[i].atoms:
                         rat_coor = [rat.xx, rat.xy, rat.xz]
-                        for lat in lres.atoms:
+                        if i in res_list:
+                            break
+                        for lat in self.complex_str.residues[j].atoms:
                             lat_coor = [lat.xx, lat.xy, lat.xz]
                             if dist(rat_coor, lat_coor) <= self.within:
-                                if res_ndx not in res_list:
-                                    res_list.append(res_ndx)
-                                if lres_ndx not in res_list:
-                                    res_list.append(lres_ndx)
+                                if i not in res_list:
+                                    res_list.append(i)
+                                if j not in res_list:
+                                    res_list.append(j)
                                 break
-                    lres_ndx += 1
-                res_ndx += 1
             res_list.sort()
-            self.INPUT['print_res'] = ','.join([str(x) for x in res_list])
+            self.INPUT['print_res'] = ','.join([str(x + 1) for x in res_list])
 
     def mutatexala(self, structure):
         idx = 0
