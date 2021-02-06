@@ -41,8 +41,8 @@ try:
     from GMXMMPBSA.exceptions import GMXMMPBSA_ERROR, InputError, CommandlineError
     from GMXMMPBSA.infofile import InfoFile
     from GMXMMPBSA import main
-    from GMXMMPBSA.gui import GMX_MMPBSA_GUI
-    from GMXMMPBSA.commandlineparser import guiparser
+    from GMXMMPBSA.analyzer import GMX_MMPBSA_ANA
+    from GMXMMPBSA.commandlineparser import anaparser
 except ImportError:
     import os
     amberhome = os.getenv('AMBERHOME') or '$AMBERHOME'
@@ -83,6 +83,7 @@ def gmxmmpbsa():
     except CommandlineError as e:
         sys.stderr.write('%s: %s' % (type(e).__name__, e) + '\n')
         sys.exit(1)
+    logging.info('Started')
 
     # Perform our MMPBSA --clean now
     if app.FILES.clean:
@@ -123,10 +124,10 @@ def gmxmmpbsa():
 
 
 
-def gmxmmpbsa_gui():
+def gmxmmpbsa_ana():
     app = QApplication(sys.argv)
     try:
-        parser = guiparser.parse_args(sys.argv[1:])
+        parser = anaparser.parse_args(sys.argv[1:])
     except CommandlineError as e:
         sys.stderr.write('%s: %s' % (type(e).__name__, e) + '\n')
         sys.exit(1)
@@ -134,8 +135,8 @@ def gmxmmpbsa_gui():
     if not path.exists():
         print('Path not found')
         sys.exit(1)
-    app.setApplicationName('gmx_MMPBSA_gui')
-    w = GMX_MMPBSA_GUI(path.as_posix())
+    app.setApplicationName('gmx_MMPBSA Analyzer (gmx_MMPBSA_ana)')
+    w = GMX_MMPBSA_ANA(path.as_posix())
     w.show()
     sys.exit(app.exec())
 
@@ -145,4 +146,4 @@ if __name__ == '__main__':
     logging.info('Finished')
 
     # gmxmmpbsa()
-    gmxmmpbsa_gui()
+    gmxmmpbsa_ana()
