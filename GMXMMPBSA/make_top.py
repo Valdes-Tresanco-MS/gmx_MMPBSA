@@ -154,26 +154,26 @@ class CheckMakeTop:
         logging.info('Making gmx_MMPBSA index for complex...')
         # merge both (rec and lig) groups into complex group, modify index and create a copy
         # 1-rename groups, 2-merge
-        make_ndx_echo_args = ['echo', 'name {r} GMXMMPBSA_REC\n name {l} GMXMMPBSA_LIG\n  {r} | {l}\n q\n'.format(
-            r=rec_group, l=lig_group)]
+        make_ndx_echo_args = ['echo', 'name {r} GMXMMPBSA_REC\n name {l} GMXMMPBSA_LIG\n  {r} | '
+                                      '{l}\n q\n'.format(r=rec_group, l=lig_group)]
         c1 = subprocess.Popen(make_ndx_echo_args, stdout=subprocess.PIPE)
-        # FIXME: overwrite the user index file???
+
         com_ndx = self.FILES.prefix + 'COM_index.ndx'
-        make_ndx_args = make_ndx + ['-n', self.FILES.complex_index, '-o', com_ndx]
+        make_ndx_args = self.make_ndx + ['-n', self.FILES.complex_index, '-o', com_ndx]
         if self.INPUT['debug_printlevel']:
-            logging.info('Running command: ' + (' '.join(make_ndx_echo_args).replace('\n', '\\n')) + ' | ' + ' '.join(
-                make_ndx_args))
+            logging.info('Running command: ' + (' '.join(make_ndx_echo_args).replace('\n', '\\n')) + ' | ' +
+                         ' '.join(make_ndx_args))
         c2 = subprocess.Popen(make_ndx_args, stdin=c1.stdout, stdout=self.log, stderr=self.log)
         if c2.wait():  # if it quits with return code != 0
-            GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(make_ndx), self.FILES.complex_index))
+            GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(self.make_ndx), self.FILES.complex_index))
         self.FILES.complex_index = com_ndx
 
         logging.info('Normal Complex: Saving group {}_{} in {} file as '
-                     '{}'.format(rec_group, lig_group, self.FILES.complex_index, self.complex_pdb))
+                     '{}'.format(rec_group, lig_group, self.FILES.complex_index, self.complex_str_file))
         editconf_echo_args = ['echo', 'GMXMMPBSA_REC_GMXMMPBSA_LIG']
         c3 = subprocess.Popen(editconf_echo_args, stdout=subprocess.PIPE)
-        # we get only first trajectory to extract a pdb file and make amber topology for complex
-        editconf_args = editconf + ['-f', self.FILES.complex_tpr, '-o', self.complex_pdb, '-n',
+        # we extract a pdb from structure file to make amber topology
+        editconf_args = self.editconf + ['-f', self.FILES.complex_tpr, '-o', self.complex_str_file, '-n',
                                     self.FILES.complex_index]
         if self.INPUT['debug_printlevel']:
             logging.info('Running command: ' + (' '.join(editconf_echo_args)) + ' | ' + ' '.join(editconf_args))
@@ -207,7 +207,7 @@ class CheckMakeTop:
             lig_name = os.path.splitext(os.path.split(self.FILES.ligand_mol2)[1])[0]
             self.ligand_frcmod = self.FILES.prefix + lig_name + '.frcmod'
             # run parmchk2
-            parmchk2 = self.external_progs['parmchk2'].full_path
+            parmchk2 = self.external_progs['parmchk2']
             parmchk2_args = [parmchk2, '-i', self.FILES.ligand_mol2, '-f', 'mol2', '-o', self.ligand_frcmod]
             if self.INPUT['debug_printlevel']:
                 logging.info('Running command: ' + ' '.join(parmchk2_args))
@@ -224,14 +224,14 @@ class CheckMakeTop:
                                 'residues')
                 rec_echo_args = ['echo', '{}'.format(rec_group)]
                 cp1 = subprocess.Popen(rec_echo_args, stdout=subprocess.PIPE)
-                # we get only first trajectory to extract a pdb file to generate amber topology
-                editconf_args = editconf + ['-f', self.FILES.complex_tpr, '-o', 'rec_temp.pdb', '-n',
+                # we extract a pdb from structure file to make amber topology
+                editconf_args = self.editconf + ['-f', self.FILES.complex_tpr, '-o', 'rec_temp.pdb', '-n',
                                             self.FILES.complex_index]
                 if self.INPUT['debug_printlevel']:
                     logging.info('Running command: ' + (' '.join(rec_echo_args)) + ' | ' + ' '.join(editconf_args))
                 cp2 = subprocess.Popen(editconf_args, stdin=cp1.stdout, stdout=self.log, stderr=self.log)
                 if cp2.wait():  # if it quits with return code != 0
-                    GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(editconf), self.FILES.complex_tpr))
+                    GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(self.editconf), self.FILES.complex_tpr))
 
         # check if stability
         if self.FILES.stability:
@@ -246,11 +246,11 @@ class CheckMakeTop:
         if self.FILES.receptor_tpr:
             logging.info('A receptor structure file was defined. Using MT approach...')
             logging.info('Normal receptor: Saving group {} in {} file as {}'.format(
-                self.FILES.receptor_group, self.FILES.receptor_index, self.receptor_pdb))
+                self.FILES.receptor_group, self.FILES.receptor_index, self.receptor_str_file))
             editconf_echo_args = ['echo', '{}'.format(self.FILES.receptor_group)]
             p1 = subprocess.Popen(editconf_echo_args, stdout=subprocess.PIPE)
-            # we get only first trajectory to extract a pdb file for make amber topology
-            editconf_args = editconf + ['-f', self.FILES.receptor_tpr, '-o', self.receptor_pdb, '-n',
+            # we extract a pdb from structure file to make amber topology
+            editconf_args = self.editconf + ['-f', self.FILES.receptor_tpr, '-o', self.receptor_str_file, '-n',
                                         self.FILES.receptor_index]
             if self.INPUT['debug_printlevel']:
                 logging.info('Running command: ' + (' '.join(editconf_echo_args)) + ' | ' + ' '.join(editconf_args))
@@ -283,17 +283,17 @@ class CheckMakeTop:
             logging.info('Using receptor structure from complex to generate AMBER topology')
             # wt complex receptor
             logging.info('Normal Complex: Saving group {} in {} file as {}'.format(
-                rec_group, self.FILES.complex_index, self.receptor_pdb))
+                rec_group, self.FILES.complex_index, self.receptor_str_file))
             editconf_echo_args = ['echo', '{}'.format(rec_group)]
             cp1 = subprocess.Popen(editconf_echo_args, stdout=subprocess.PIPE)
-            # we get only first trajectory to extract a pdb file for make amber topology
-            editconf_args = editconf + ['-f', self.FILES.complex_tpr, '-o', self.receptor_pdb, '-n',
+            # we extract a pdb from structure file to make amber topology
+            editconf_args = self.editconf + ['-f', self.FILES.complex_tpr, '-o', self.receptor_str_file, '-n',
                                         self.FILES.complex_index]
             if self.INPUT['debug_printlevel']:
                 logging.info('Running command: ' + (' '.join(editconf_echo_args)) + ' | ' + ' '.join(editconf_args))
             cp2 = subprocess.Popen(editconf_args, stdin=cp1.stdout, stdout=self.log, stderr=self.log)
             if cp2.wait():  # if it quits with return code != 0
-                GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(editconf), self.FILES.complex_tpr))
+                GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(self.editconf), self.FILES.complex_tpr))
 
         # ligand
         # # check consistence
@@ -301,12 +301,12 @@ class CheckMakeTop:
             # FIXME: if ligand is a zwitterionic aa fail
             logging.info('A ligand structure file was defined. Using MT approach...')
             logging.info('Normal Ligand: Saving group {} in {} file as {}'.format(
-                self.FILES.ligand_group, self.FILES.ligand_index, self.ligand_pdb))
+                self.FILES.ligand_group, self.FILES.ligand_index, self.ligand_str_file))
             # wt ligand
             editconf_echo_args = ['echo', '{}'.format(self.FILES.ligand_group)]
             l1 = subprocess.Popen(editconf_echo_args, stdout=subprocess.PIPE)
-            # we get only first trajectory for extract a pdb file for make amber topology
-            editconf_args = editconf + ['-f', self.FILES.ligand_tpr, '-o', self.ligand_pdb, '-n',
+            # we extract a pdb from structure file to make amber topology
+            editconf_args = self.editconf + ['-f', self.FILES.ligand_tpr, '-o', self.ligand_str_file, '-n',
                                         self.FILES.ligand_index]
             if self.INPUT['debug_printlevel']:
                 logging.info('Running command: ' + (' '.join(editconf_echo_args)) + ' | ' + ' '.join(editconf_args))
@@ -337,11 +337,11 @@ class CheckMakeTop:
             logging.info('No ligand structure file was defined. Using ST approach...')
             logging.info('Using ligand structure from complex to generate AMBER topology')
             logging.info('Normal ligand: Saving group {} in {} file as {}'.format(lig_group, self.FILES.complex_index,
-                                                                                                  self.ligand_pdb))
+                                                                                                  self.ligand_str_file))
             editconf_echo_args = ['echo', '{}'.format(lig_group)]
             cl1 = subprocess.Popen(editconf_echo_args, stdout=subprocess.PIPE)
-            # we get only  first trajectory to extract a pdb file for make amber topology
-            editconf_args = editconf + ['-f', self.FILES.complex_tpr, '-o', self.ligand_pdb, '-n',
+            # we extract a pdb from structure file to make amber topology
+            editconf_args = self.editconf + ['-f', self.FILES.complex_tpr, '-o', self.ligand_str_file, '-n',
                                         self.FILES.complex_index]
             if self.INPUT['debug_printlevel']:
                 logging.info('Running command: ' + (' '.join(editconf_echo_args)) + ' | ' + ' '.join(editconf_args))
