@@ -65,6 +65,11 @@ class CheckMakeTop:
         if self.print_residues:
             self.within = float(self.INPUT['print_res'].split()[1])
 
+        # Define Gromacs executable
+        self.make_ndx = self.external_progs['make_ndx']
+        self.trjconv = self.external_progs['trjconv']
+        self.editconf = self.external_progs['editconf']
+
         self.ref_str = None
 
         self.ligand_tpr = None
