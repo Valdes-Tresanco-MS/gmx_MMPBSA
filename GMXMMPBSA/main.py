@@ -908,8 +908,14 @@ class MMPBSA_App(object):
         if self.INPUT['intdiel'] > 10:
             logging.warning('Intdiel should be less than 10, but it is {}'.format(self.INPUT['intdiel']))
         # check mutant definition
-        if not self.INPUT['mutant'].lower() in ['rec', 'receptor', 'lig', 'ligand']:
-            GMXMMPBSA_ERROR('The mutant most be receptor (or rec) or ligand (or lig)', InputError)
+        if not self.INPUT['mutant'].upper() in ['ALA', 'A', 'GLY', 'G']:
+            GMXMMPBSA_ERROR('The mutant most be ALA (or A) or GLY (or G)', InputError)
+
+        # check files
+        if self.FILES.complex_top:
+            self.INPUT['use_sander'] = 1
+
+
 
     def remove(self, flag):
         """ Removes temporary files """
