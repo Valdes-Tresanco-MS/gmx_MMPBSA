@@ -60,7 +60,7 @@ class CheckMakeTop:
         self.external_progs = external_programs
         self.use_temp = False
         self.log = open('gmx_MMPBSA.log', 'a')
-        self.print_residues = self.INPUT['print_res'].split()[0] == 'within'  # FIXME: this is pretty ugly
+        self.print_residues = 'within' in self.INPUT['print_res']  # FIXME: this is pretty ugly
         self.within = 4
         if self.print_residues:
             self.within = float(self.INPUT['print_res'].split()[1])
@@ -109,7 +109,28 @@ class CheckMakeTop:
         self.getPDBfromTpr()
         self.checkPDB()
 
-    def getPDBfromTpr(self):
+    def buildTopology(self):
+        """
+        :return: complex, receptor, ligand topologies and their mutants
+        """
+        self.gmx2pdb()
+        if self.FILES.complex_top:
+            logging.info('Cleaning GROMACS topologies...')
+            self.cleantop(self.FILES.complex_top, self.complex_temp_top)
+            if self.FILES.receptor_top:
+                self.cleantop(self.FILES.receptor_top, self.receptor_temp_top)
+            if self.FILES.ligand_top:
+                self.cleantop(self.FILES.ligand_top, self.ligand_temp_top)
+            tops = self.gmxtop2prmtop()
+        else:
+            self.pdb2prmtop()
+            tops = self.makeToptleap()
+
+        self.reswithin()
+        self.cleanup_trajs()
+        return tops
+
+    def gmx2pdb(self):
         """
         Generate PDB file to generate topology
         :return:
