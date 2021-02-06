@@ -37,20 +37,24 @@ def find_progs(INPUT):
     """ Find the necessary programs based in the user INPUT """
     # List all of the used programs with the conditions that they are needed
     logging.info('Checking external programs...')
-    used_progs = { 'cpptraj' : True, 'gmx': True,
-                   # look for any available gromacs executable
-                   'gmx_mpi': True, 'gmx_d': True, 'gmx_mpi_d': True,
-                   # look for gromacs 4.x
-                   'make_ndx': True, 'trjconv': True, 'editconf': True, 'tleap': True, 'parmchk2': True,
-                   'mmpbsa_py_energy' : ((INPUT['pbrun'] or INPUT['gbrun'])
-                                         and not (INPUT['use_sander'] or
-                                                  INPUT['decomprun'])),
-                   'sander' : (INPUT['decomprun'] or INPUT['use_sander'] or
-                               INPUT['ifqnt'] == 1),
+
+    used_progs = { 'cpptraj' : True,
+
+                   'tleap': True, 'parmchk2': True,
+                   'mmpbsa_py_energy' : ((INPUT['pbrun'] or INPUT['gbrun']) and not
+                                         (INPUT['use_sander'] or INPUT['decomprun'])),
+                   'sander' : (INPUT['decomprun'] or INPUT['use_sander'] or INPUT['ifqnt'] == 1),
                    'sander.APBS' : INPUT['sander_apbs'] == 1,
                    'mmpbsa_py_nabnmode' : INPUT['nmoderun'],
                    'rism3d.snglpnt' : INPUT['rismrun']
                    }
+    gro_exe = {
+        'gmx5': [
+            # look for any available gromacs executable
+            'gmx', 'gmx_mpi', 'gmx_d', 'gmx_mpi_d'],
+        'gmx4': [
+            # look for gromacs 4.x
+            'make_ndx', 'trjconv', 'editconf']}
 
     # The returned dictionary:
     my_progs = {}
@@ -84,8 +88,36 @@ def find_progs(INPUT):
                     continue
                 raise GMXMMPBSA_ERROR('Could not find necessary program [%s]' % prog)
             logging.info('%s found! Using %s' % (prog, str(my_progs[prog])))
-    if not (gromacs5x or gromacs5x_d or gromacs5x_mpi or gromacs5x_mpi_d) and not gromacs4x:
-        raise GMXMMPBSA_ERROR('Could not find necessary GROMACS program')
+
+    if force_path:
+        search_path = False
+    g5 = False
+    for v in gro_exe:
+        if v == 'gmx5':
+            for prog in gro_exe[v]:
+                exe = ExternProg(prog, True, search_path, force_path)
+                if exe.full_path:
+                    logging.info('Using GROMACS version > 5.x.x!')
+                    my_progs['make_ndx'] = [exe.full_path, 'make_ndx']
+                    my_progs['editconf'] = [exe.full_path, 'editconf']
+                    my_progs['trjconv'] = [exe.full_path, 'trjconv']
+                    g5 = True
+                    logging.info('%s found! Using %s' % (prog, exe.full_path))
+                    break
+            if g5:
+                break
+        else:
+            c = 0
+            logging.info('Using GROMACS version 4.x.x!')
+            for prog in gro_exe[v]:
+                exe = ExternProg(prog, True, search_path, force_path)
+                if exe.full_path:
+                    c += 1
+                    my_progs[prog] = [exe.full_path]
+                    logging.info('%s found! Using %s' % (prog, str(my_progs[prog])))
+
+    if 'make_ndx' not in my_progs or 'editconf' not in my_progs or 'trjconv' not in my_progs:
+        GMXMMPBSA_ERROR('Could not find necessary program [ GROMACS ]')
     logging.info('Checking external programs...Done.\n')
     return my_progs
 
