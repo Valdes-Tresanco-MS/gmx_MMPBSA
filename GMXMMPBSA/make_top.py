@@ -24,10 +24,13 @@ import os
 import parmed
 from GMXMMPBSA.exceptions import *
 from GMXMMPBSA.utils import checkff
+from GMXMMPBSA.alamdcrd import _scaledistance
 import subprocess
 from math import sqrt
+from pathlib import Path
 import logging
 import string
+from parmed.tools.changeradii import ChRad
 
 chains_letters = list(string.ascii_uppercase)
 his = ['HIS', 'HIE', 'HID', 'HIP']
