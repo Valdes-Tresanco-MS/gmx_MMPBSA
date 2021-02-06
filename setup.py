@@ -17,6 +17,7 @@
 # ##############################################################################
 
 from setuptools import setup
+import versioneer
 
 with open("README.md", "r") as f:
     LONG_DESCRIPTION = f.read()
@@ -32,7 +33,8 @@ def get_version(rel_path):
 
 setup(
     name='gmx_MMPBSA',
-    version=get_version("GMXMMPBSA/__init__.py"),
+    version=versioneer.get_version(),
+    cmdclass=versioneer.get_cmdclass(),
     packages=['GMXMMPBSA'],
     package_data={"GMXMMPBSA": ["data/*"]},
     license='GPLv3',
@@ -49,5 +51,5 @@ setup(
     entry_points={
         "console_scripts": [
             "gmx_MMPBSA=GMXMMPBSA.app:gmxmmpbsa",
-            "gmx_MMPBSA_gui=GMXMMPBSA.app:gmxmmpbsa_gui"]}
+            "gmx_MMPBSA_gui=GMXMMPBSA.app:gmxmmpbsa_ana"]}
 )
