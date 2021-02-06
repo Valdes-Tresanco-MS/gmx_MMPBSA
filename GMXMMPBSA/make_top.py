@@ -419,93 +419,83 @@ class CheckMakeTop:
         return (self.complex_pmrtop, self.receptor_pmrtop, self.ligand_pmrtop, self.mutant_complex_pmrtop,
                 self.mutant_receptor_pmrtop, self.mutant_ligand_pmrtop)
 
-
+    def pdb2prmtop(self):
+        """
+        Generate parmed structure object for complex, receptor and ligand ( if it is protein-like)
+        :return:
+        """
         logging.info('Generating AMBER Compatible PDB Files...')
 
-        self.remove_MODEL(self.complex_pdb)
-        self.remove_MODEL(self.receptor_pdb)
-        self.remove_MODEL(self.ligand_pdb)
-        # try:
-        #     self.complex_str = parmed.read_PDB(self.complex_pdb)  # can always be initialized
-        # except: # when structure file has no chains ids
-        #     remove_MODEL(self.complex_pdb)
-        self.complex_str = parmed.read_PDB(self.complex_pdb)  # can always be initialized
-        self.receptor_str = parmed.read_PDB(self.receptor_pdb)
-        self.ligand_str = parmed.read_PDB(self.ligand_pdb)
-        if self.FILES.reference_structure:
-            self.ref_str = parmed.read_PDB(self.FILES.reference_structure)
+        # fix receptor and structures
+        self.fixparm2amber(self.complex_str, removeH=True)
+        self.fixparm2amber(self.receptor_str, removeH=True)
+        self.fixparm2amber(self.ligand_str, removeH=True)
+        com_mut_index = part_mut = part_index = mut_label = None
+        if self.INPUT['alarun']:
+            com_mut_index, part_mut, part_index, mut_label = self.getMutationIndex()
 
-        self.fix_chains_IDs(self.complex_str, self.receptor_str, self.ligand_str, self.ref_str)
+        self.receptor_list = {}
+        start = 1
+        c = 1
+        for r in self.resi['REC']:
+            mask = f'!:{start}-{(r[1]- r[0]) + 1}'
+            rec = self.molstr(self.receptor_str)
+            rec.strip(mask)
+            rec_file = self.FILES.prefix + f'REC_F{c}.pdb'
+            rec.save(rec_file, 'pdb', True, renumber=False)
+            self.receptor_list[f'REC{c}'] = rec_file
+            c += 1
 
-        # fix receptor structure
-        self.properHIS(self.receptor_str)
-        self.properCYS(self.receptor_str)
-        self.properAspGluLys(self.receptor_str)
-        self.fix_H_ATOMS(self.receptor_str)
-        # For some reason removing the hydrogens returns the hydrogen-bound atoms to their original names. This is
-        # problematic with ILE switching from CD to CD1. parmed bug?
-        self.receptor_str.strip('@/H')
-        self.properATOMS(self.receptor_str)
+        self.ligand_list = {}
+        start = 1
+        c = 1
+        for r in self.resi['LIG']:
+            mask = f'!:{start}-{(r[1]- r[0]) + 1}'
+            lig = self.molstr(self.ligand_str)
+            lig.strip(mask)
+            # if part_mut == 'LIG' and r[0] < part_index < r[1]:
+            #     mut_lig = self.makeMutTop(lig, part_index)
+            #     lig_file = self.FILES.prefix + f'MUT_LIG_F{c}.pdb'
+            #     mut_lig.save(lig_file, 'pdb', True, renumber=False)
+            # else:
+            lig_file = self.FILES.prefix + f'LIG_F{c}.pdb'
+            lig.save(lig_file, 'pdb', True, renumber=False)
+            self.ligand_list[f'LIG{c}'] = lig_file
+            c += 1
 
-        # check if rec contain ions (metals)
-        self.rec_ions = self.receptor_str[:, ions, :]
-        self.rec_ions_after = False
-        if self.rec_ions.atoms:
-            # fix atom number, avoid core dump in tleap
-            i = 1
-            for at in self.rec_ions.atoms:
-                at.number = i
-                i += 1
-            # check ions location
-            count = 0
-            for res in self.receptor_str.residues:
-                if res.number != self.complex_str.residues[count].number:
-                    self.rec_ions_after = True
-                    break
-                count += 1
-            if self.rec_ions_after:
-                self.rec_ions.save(self.rec_ions_pdb, 'pdb', True, renumber=False)
-                # if exists any ions then strip them
-                self.receptor_str.strip(f':{",".join(ions)}')
-                self.rec_str_ions = True
-        self.receptor_str.save(self.receptor_pdb_fixed, 'pdb', True, renumber=False)
-
-        # fix ligand structure if is protein
-        self.properHIS(self.ligand_str)
-        self.properCYS(self.ligand_str)
-        self.properAspGluLys(self.ligand_str)
-        self.fix_H_ATOMS(self.ligand_str)
-        self.ligand_str.strip('@/H')
-        self.properATOMS(self.ligand_str)
-
-        # check if lig contain ions (metals)
-        self.lig_ions = self.ligand_str[:, ions, :]
-        if self.lig_ions.atoms:
-            # fix atom number, avoid core dump in tleap
-            i = 1
-            for at in self.lig_ions.atoms:
-                at.number = i
-                i += 1
-            self.lig_ions.save(self.lig_ions_pdb, 'pdb', True, renumber=False)
-            # if exists any ions then strip them
-            self.ligand_str.strip(f':{",".join(ions)}')
-            self.lig_str_ions = True
-        self.ligand_str.save(self.ligand_pdb_fixed, 'pdb', True, renumber=False)
+        self.mut_receptor_list = {}
+        self.mut_ligand_list = {}
 
         if self.INPUT['alarun']:
-            logging.info('Building Mutant receptor...')
-            if self.INPUT['mutant'].lower() in ['rec', 'receptor']:
-                self.mutant_receptor_str = parmed.read_PDB(self.receptor_pdb_fixed)
-                # fix mutant receptor structure
-                self.mutatexala(self.mutant_receptor_str)
-                self.mutant_receptor_str.save(self.mutant_receptor_pdb_fixed, 'pdb', True, renumber=False)
+            com_mut_index, part_mut, part_index, mut_label = self.getMutationIndex()
+            if part_mut == 'REC':
+                logging.info('Detecting mutation in Receptor. Building Mutant Receptor Structure...')
+                self.mutant_ligand_pmrtop = None
+                start = 0
+                c = 1
+                for r in self.resi['REC']:
+                    mask = f'!:{start}-{(r[1] - r[0]) + 1}'
+                    rec = self.molstr(self.receptor_str)
+                    mut_rec = self.makeMutTop(rec, part_index)
+                    mut_rec.strip(mask)
+                    mut_rec_file = self.FILES.prefix + f'MUT_REC_F{c}.pdb'
+                    mut_rec.save(mut_rec_file, 'pdb', True, renumber=False)
+                    self.mut_receptor_list[f'MREC{c}'] = mut_rec_file
+                    c += 1
             else:
-                logging.info('Building Mutant ligand...')
-                if self.FILES.ligand_mol2:
-                    GMXMMPBSA_ERROR('Mutation is only possible if the ligand is protein-like')
-                self.mutant_ligand_str = parmed.read_PDB(self.ligand_pdb_fixed)
-                self.mutatexala(self.mutant_ligand_str)
-                self.mutant_ligand_str.save(self.mutant_ligand_pdb_fixed, 'pdb', True, renumber=False)
+                logging.info('Detecting mutation in Ligand.Building Mutant Ligand Structure...')
+                self.mutant_receptor_pmrtop = None
+                start = 0
+                c = 1
+                for r in self.resi['LIG']:
+                    mask = f'!:{start}-{(r[1] - r[0]) + 1}'
+                    lig = self.molstr(self.ligand_str)
+                    mut_lig = self.makeMutTop(lig, part_index)
+                    mut_lig.strip(mask)
+                    mut_lig_file = self.FILES.prefix + f'MUT_LIG_F{c}.pdb'
+                    mut_lig.save(mut_lig_file, 'pdb', True, renumber=False)
+                    self.mut_ligand_list[f'MLIG{c}'] = mut_lig_file
+                    c += 1
 
         # Get residue form receptor-ligand interface
         if self.print_residues:
