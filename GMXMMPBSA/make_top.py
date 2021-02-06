@@ -106,8 +106,12 @@ class CheckMakeTop:
             self.ref_str = parmed.read_PDB(self.FILES.reference_structure)
 
         checkff()
-        self.getPDBfromTpr()
-        self.checkPDB()
+        self.checkFiles()
+
+    def checkFiles(self):
+        if (not self.FILES.complex_tpr or not self.FILES.complex_index or not self.FILES.complex_trajs or not
+        self.FILES.complex_groups):
+            GMXMMPBSA_ERROR('You must define the structure, topology and index files, as well as the groups!')
 
     def buildTopology(self):
         """
