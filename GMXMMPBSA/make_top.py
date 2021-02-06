@@ -555,6 +555,76 @@ class CheckMakeTop:
                 temp_top.write(line)
         temp_top.close()
 
+    @staticmethod
+    def res2map(com_str, rec_str, lig_str):
+        """
+        Obtains the indices of residues in the complex from the receptor and the ligand. This function allows indexing
+         of receptor and ligand residues even if they are mixed or discontinuous.
+        :param com_str: Complex structure
+        :param rec_str: Receptor structure
+        :param lig_str: Ligand structure
+        :return: a dictionary containing the ranges of the receptor and ligand indices
+        """
+        ref_map = {}
+        c_rec = 0
+        c_lig = 0
+        no_rec = True
+        lig = True
+        cpart = None
+        order_list = []
+        for i in range(len(com_str.residues)):
+            if no_rec and (com_str.residues[i].name == rec_str.residues[c_rec].name):
+                if not cpart or cpart != 'R':
+                    cpart = 'R'
+                    order_list.append('R')
+                ref_map[i] = 'R'
+                c_rec += 1
+                if c_rec == len(rec_str.residues):
+                    no_rec = False
+            else:
+                if lig and com_str.residues[i].name == lig_str.residues[c_lig].name:
+                    if not cpart or cpart != 'L':
+                        cpart = 'L'
+                        order_list.append('L')
+                    ref_map[i] = 'L'
+                    c_lig += 1
+                    if c_lig == len(lig_str.residues):
+                        lig = False
+
+        masks = {'REC': [], 'LIG': []}
+        res_list = {'REC': [], 'LIG': []}
+
+        # Separate each element to its corresponding partner
+        for i in ref_map:
+            if ref_map[i] == 'R':
+                res_list['REC'].append(i)
+            else:
+                res_list['LIG'].append(i)
+
+        rec_s = res_list['REC'][0]
+        rec_e = rec_s
+        for i in range(1, len(res_list['REC'])):
+            if res_list['REC'][i] - res_list['REC'][i - 1] == 1:
+                rec_e += 1
+            else:
+                masks['REC'].append([rec_s, rec_e])
+                rec_s = res_list['REC'][i]
+                rec_e = res_list['REC'][i]
+        masks['REC'].append([rec_s, rec_e])
+
+        lig_s = res_list['LIG'][0]
+        lig_e = lig_s
+        for i in range(1, len(res_list['LIG'])):
+            if res_list['LIG'][i] - res_list['LIG'][i - 1] == 1:
+                lig_e += 1
+            else:
+                masks['LIG'].append([lig_s, lig_e])
+                lig_s = res_list['LIG'][i]
+                lig_e = res_list['LIG'][i]
+        masks['LIG'].append([lig_s, lig_e])
+
+        return masks, res_list, order_list
+
 
         if not chain or not resnum:
             GMXMMPBSA_ERROR("No residue was defined")
