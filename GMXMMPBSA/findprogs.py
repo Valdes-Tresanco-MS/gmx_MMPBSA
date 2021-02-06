@@ -61,32 +61,12 @@ def find_progs(INPUT):
 
     search_path = True
     force_path = INPUT['gmx_path']
-    gromacs5x = True
-    gromacs5x_d = True
-    gromacs5x_mpi = True
-    gromacs5x_mpi_d = True
-    gromacs4x = True
 
     for prog in list(used_progs.keys()):
-        my_progs[prog] = ExternProg(prog, used_progs[prog], search_path, force_path)
+        my_progs[prog] = ExternProg(prog, used_progs[prog], search_path).full_path
         if used_progs[prog]:
-            if not my_progs[prog].full_path:
-                if prog == 'gmx':
-                    gromacs5x = False
-                    continue
-                if prog == 'gmx_d':
-                    gromacs5x_d = False
-                    continue
-                if prog == 'gmx_mpi':
-                    gromacs5x_mpi = False
-                    continue
-                if prog == 'gmx_mpi_d':
-                    gromacs5x_mpi_d = False
-                    continue
-                if prog in ['make_ndx', 'trjconv', 'editconf']:
-                    gromacs4x = False
-                    continue
-                raise GMXMMPBSA_ERROR('Could not find necessary program [%s]' % prog)
+            if not my_progs[prog]:
+                GMXMMPBSA_ERROR('Could not find necessary program [%s]' % prog)
             logging.info('%s found! Using %s' % (prog, str(my_progs[prog])))
 
     if force_path:
@@ -135,7 +115,7 @@ def which(program, search_path=False, force_path=None):
     def get_amberhome():
         ambhome = os.getenv('AMBERHOME')
         if ambhome == None:
-            raise GMXMMPBSA_ERROR('AMBERHOME is not set!')
+            GMXMMPBSA_ERROR('AMBERHOME is not set!')
         return ambhome
 
     # Check to see that a path was provided in the program name
