@@ -101,10 +101,9 @@ class CheckMakeTop:
         self.mutant_complex_pdb = self.FILES.prefix + 'MUT_COM.pdb'
         self.mutant_receptor_pdb = self.FILES.prefix + 'MUT_REC.pdb'
         self.mutant_ligand_pdb = self.FILES.prefix + 'MUT_LIG.pdb'
-        self.mutant_complex_pdb_fixed = self.FILES.prefix + 'MUT_COM_FIXED.pdb'
-        self.mutant_receptor_pdb_fixed = self.FILES.prefix + 'MUT_REC_FIXED.pdb'
-        self.mutant_ligand_pdb_fixed = self.FILES.prefix + 'MUT_LIG_FIXED.pdb'
-        # self.default_ff = 'leaprc.protein.ff14SB'
+
+        if self.FILES.reference_structure:
+            self.ref_str = parmed.read_PDB(self.FILES.reference_structure)
 
         checkff()
         self.getPDBfromTpr()
