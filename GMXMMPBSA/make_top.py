@@ -139,16 +139,7 @@ class CheckMakeTop:
         Generate PDB file to generate topology
         :return:
         """
-        logging.info('Get PDB files from structures files...')
-        gmx = self.external_progs['gmx'].full_path
-        # check if GROMACS 4.x exists
-        make_ndx = [self.external_progs['make_ndx'].full_path]
-        trjconv = [self.external_progs['trjconv'].full_path]
-        editconf = [self.external_progs['editconf'].full_path]
-        if gmx:
-            make_ndx = [gmx, 'make_ndx']
-            trjconv = [gmx, 'trjconv']
-            editconf = [gmx, 'editconf']
+        logging.info('Get PDB files from GROMACS structures files...')
 
         # wt complex
         # make index for extract pdb structure
