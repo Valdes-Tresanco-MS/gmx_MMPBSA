@@ -625,6 +625,62 @@ class CheckMakeTop:
 
         return masks, res_list, order_list
 
+    def fixparm2amber(self, structure, removeH=False):
+
+        for residue in structure.residues:
+            # change atoms name from GROMACS to AMBER
+            if residue.name == 'ILE':
+                for atom in residue.atoms:
+                    if atom.name == 'CD':
+                        atom.name = 'CD1'
+            for atom in residue.atoms:
+                if atom.name == 'OC1':
+                    atom.name = 'O'
+                elif atom.name == 'OC2':
+                    atom.name = 'OXT'
+                    residue.ter = True  # parmed terminal
+            # change residues name according to AMBER
+            if residue.name == 'LYS':
+                atoms = [atom.name for atom in residue.atoms]
+                if not 'HZ3' in atoms:
+                    residue.name = 'LYN'
+            elif residue.name == 'ASP':
+                atoms = [atom.name for atom in residue.atoms]
+                if 'HD2' in atoms:
+                    residue.name = 'ASH'
+            elif residue.name == 'GLU':
+                atoms = [atom.name for atom in residue.atoms]
+                if 'HE2' in atoms:
+                    residue.name = 'GLH'
+            elif residue.name in his:
+                atoms = [atom.name for atom in residue.atoms if atom.atomic_number == 1]
+                if 'HD1' in atoms and 'HE2' in atoms:
+                    residue.name = 'HIP'
+                elif 'HD1' in atoms:
+                    residue.name = 'HID'
+                elif 'HE2' in atoms:
+                    residue.name = 'HIE'
+            elif residue.name in cys_name:
+                if residue.name == 'CYX':
+                    continue
+                for atom in residue.atoms:
+                    if 'SG' in atom.name:
+                        for bondedatm in atom.bond_partners:
+                            if bondedatm.name == 'SG':
+                                residue.name = 'CYX'
+                                bondedatm.residue.name = 'CYX'
+                        break
+            # GROMACS 4.x save the pdb without atom element column, so parmed does not recognize some H atoms.
+            # Parmed assigns 0 to the atomic number of these atoms. In order to correctly eliminate hydrogens,
+            # it is necessary to assign the atomic number.
+            if len(self.make_ndx) == 2:
+                for atom in residue.atoms:
+                    if 'H' in atom.name and atom.atomic_number == 0:
+                        atom.atomic_number = 1
+            # Remove H atoms. Only when using the pdb files with tleap to build the topologies
+        if removeH:
+            structure.strip('@/H')
+
 
         if not chain or not resnum:
             GMXMMPBSA_ERROR("No residue was defined")
