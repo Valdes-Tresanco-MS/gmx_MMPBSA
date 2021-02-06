@@ -283,11 +283,14 @@ class CheckMakeTop:
                 logging.info('Running command: ' + (' '.join(editconf_echo_args)) + ' | ' + ' '.join(editconf_args))
             cl2 = subprocess.Popen(editconf_args, stdin=cl1.stdout, stdout=self.log, stderr=self.log)
             if cl2.wait():  # if it quits with return code != 0
-                GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(editconf), self.FILES.complex_tpr))
+                GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(self.editconf), self.FILES.complex_tpr))
 
-    def checkPDB(self):
-        """
-        Generate parmed structure object for complex, receptor and ligand ( if it is protein-like)
+        # initialize receptor and ligand structures. Needed to get residues map
+        self.complex_str = self.molstr(self.complex_str_file)
+        self.receptor_str = self.molstr(self.receptor_str_file)
+        self.ligand_str = self.molstr(self.ligand_str_file)
+        self.resi, self.resl, self.orderl = self.res2map(self.complex_str, self.receptor_str, self.ligand_str)
+        self.fix_chains_IDs(self.complex_str, self.receptor_str, self.ligand_str, self.ref_str)
 
         1 - Rename HIS
         2 - Rename CYS
