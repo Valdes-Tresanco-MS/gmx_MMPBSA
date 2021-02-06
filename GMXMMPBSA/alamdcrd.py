@@ -104,8 +104,8 @@ def _getnumatms(resname):
     if resname in ('ARG', 'TRP'):
         return 24
 
-    raise MutateError(('Unrecognized residue! Add %s to _getnumatms(resname) ' +
-                       'in alamdcrd.py and reinstall gmx_MMPBSA' % resname))
+    raise MutateError(('Unrecognized residue! Add %s to _getnumatms(resname) in alamdcrd.py and reinstall gmx_MMPBSA'
+                       % resname))
 
 #+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
@@ -202,11 +202,9 @@ class MutantMdcrd(object):
                 mutres = i + 1
 
         if diffs == 0:
-            raise MutateError('Your mutant prmtop (%s) has the same sequence '
-                              'as the original!' % self.new_prm.prm_name)
+            raise MutateError('Your mutant prmtop (%s) has the same sequence as the original!' % self.new_prm.prm_name)
         elif diffs > 1:
-            raise MutateError('Your mutant prmtop (%s) can only have one mutation!'
-                              % self.new_prm.prm_name)
+            raise MutateError('Your mutant prmtop (%s) can only have one mutation!' % self.new_prm.prm_name)
 
         return mutres
 
@@ -250,8 +248,7 @@ class MutantMdcrd(object):
             counter += 1
             # First line is always a comment
             if counter == 1:
-                new_mdcrd.write('%-80s' % (line.strip() +
-                                           ' and mutated by gmx_MMPBSA for alanine scanning'))
+                new_mdcrd.write('%-80s' % (line.strip() + ' and mutated by gmx_MMPBSA for alanine scanning'))
                 continue
 
             if location == 0 and coords_done <= max(resstart * 3 - 4, 0) and \
@@ -351,9 +348,8 @@ class MutantMdcrd(object):
             startindex = 0
             cterm = True
         else:
-            raise MutateError(('Mismatch in atom # in residue %s. (%d in ' +
-                               'alamdcrd.py and %d passed in)') % (resname,
-                                                                   _getnumatms(resname), len(coords)))
+            raise MutateError(('Mismatch in atom # in residue %s. (%d in alamdcrd.py and %d passed in)') %
+                              (resname, _getnumatms(resname), len(coords)))
 
         if resname in list_one:
             for i in range((7+startindex)*3):
