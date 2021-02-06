@@ -87,12 +87,13 @@ class CheckMakeTop:
         self.mutant_receptor_pmrtop = 'MUT_REC.prmtop'
         self.mutant_ligand_pmrtop = 'MUT_LIG.prmtop'
 
-        self.complex_pdb = self.FILES.prefix + 'COM.pdb'
-        self.receptor_pdb = self.FILES.prefix + 'REC.pdb'
-        self.ligand_pdb = self.FILES.prefix + 'LIG.pdb'
-        self.complex_pdb_fixed = self.FILES.prefix + 'COM_FIXED.pdb'
-        self.receptor_pdb_fixed = self.FILES.prefix + 'REC_FIXED.pdb'
-        self.ligand_pdb_fixed = self.FILES.prefix + 'LIG_FIXED.pdb'
+        self.complex_temp_top = self.FILES.prefix + 'COM.top'
+        self.receptor_temp_top = self.FILES.prefix + 'COM.top'
+        self.ligand_temp_top = self.FILES.prefix + 'COM.top'
+
+        self.complex_str_file = self.FILES.prefix + 'COM.pdb'
+        self.receptor_str_file = self.FILES.prefix + 'REC.pdb'
+        self.ligand_str_file = self.FILES.prefix + 'LIG.pdb'
 
         self.rec_ions_pdb = self.FILES.prefix + 'REC_IONS.pdb'
         self.lig_ions_pdb = self.FILES.prefix + 'LIG_IONS.pdb'
