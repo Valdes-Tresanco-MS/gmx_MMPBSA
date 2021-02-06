@@ -432,7 +432,67 @@ class CheckMakeTop:
         else:
             GMXMMPBSA_ERROR('Residue {}:{} not found'.format(chain, resnum))
 
-    def fix_chains_IDs(self, com_str, rec_str, lig_str, ref_str=None):
+    def cleanup_trajs(self):
+        # clear trajectory
+        if self.INPUT['solvated_trajectory']:
+            logging.info('Cleaning normal complex trajectories...')
+            new_trajs = []
+            for i in range(len(self.FILES.complex_trajs)):
+                trjconv_echo_args = ['echo', 'GMXMMPBSA_REC_GMXMMPBSA_LIG']
+                c5 = subprocess.Popen(trjconv_echo_args, stdout=subprocess.PIPE)
+                # we get only first trajectory to extract a pdb file and make amber topology for complex
+                trjconv_args = self.trjconv + ['-f', self.FILES.complex_trajs[0], '-s', self.FILES.complex_tpr,
+                                          '-o', 'COM_traj_{}.xtc'.format(i), '-n', self.FILES.complex_index]
+                if self.INPUT['debug_printlevel']:
+                    logging.info('Running command: ' + (' '.join(trjconv_echo_args)) + ' | ' + ' '.join(trjconv_args))
+                c6 = subprocess.Popen(trjconv_args,  # FIXME: start and end frames???
+                                      stdin=c5.stdout, stdout=self.log, stderr=self.log)
+                if c6.wait():  # if it quits with return code != 0
+                    GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(self.trjconv), self.FILES.complex_tpr))
+                new_trajs.append('COM_traj_{}.xtc'.format(i))
+            self.FILES.complex_trajs = new_trajs
+
+            # clear trajectory
+            if self.FILES.receptor_tpr:
+                logging.info('Cleaning normal receptor trajectories...')
+                new_trajs = []
+                for i in range(len(self.FILES.receptor_trajs)):
+                    trjconv_echo_args = ['echo', '{}'.format(self.FILES.receptor_group)]
+                    c5 = subprocess.Popen(trjconv_echo_args, stdout=subprocess.PIPE)
+                    # we get only first trajectory to extract a pdb file and make amber topology for complex
+                    trjconv_args = self.trjconv + ['-f', self.FILES.receptor_trajs[0], '-s', self.FILES.receptor_tpr,
+                                              '-o', 'REC_traj_{}.xtc'.format(i), '-n',
+                                              self.FILES.receptor_index]
+                    if self.INPUT['debug_printlevel']:
+                        logging.info('Running command: ' + (' '.join(trjconv_echo_args)) + ' | ' + ' '.join(
+                            trjconv_args))
+                    c6 = subprocess.Popen(trjconv_args,  # FIXME: start and end frames???
+                                          stdin=c5.stdout, stdout=self.log, stderr=self.log)
+                    if c6.wait():  # if it quits with return code != 0
+                        GMXMMPBSA_ERROR(
+                            '%s failed when querying %s' % (' '.join(self.trjconv), self.FILES.receptor_tpr))
+                    new_trajs.append('REC_traj_{}.xtc'.format(i))
+                self.FILES.receptor_trajs = new_trajs
+
+            if self.FILES.ligand_tpr:
+                logging.info('Cleanig normal ligand trajectories...')
+                new_trajs = []
+                for i in range(len(self.FILES.ligand_trajs)):
+                    trjconv_echo_args = ['echo', '{}'.format(self.FILES.ligand_group)]
+                    c5 = subprocess.Popen(trjconv_echo_args, stdout=subprocess.PIPE)
+                    # we get only first trajectory to extract a pdb file and make amber topology for complex
+                    trjconv_args = self.trjconv + ['-f', self.FILES.ligand_trajs[0], '-s', self.FILES.ligand_tpr,
+                                              '-o', 'LIG_traj_{}.xtc'.format(i), '-n', self.FILES.ligand_index]
+                    if self.INPUT['debug_printlevel']:
+                        logging.info(
+                            'Running command: ' + (' '.join(trjconv_echo_args)) + ' | ' + ' '.join(trjconv_args))
+                    c6 = subprocess.Popen(trjconv_args, stdin=c5.stdout, stdout=self.log, stderr=self.log)
+                    if c6.wait():  # if it quits with return code != 0
+                        GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(self.trjconv), self.FILES.ligand_tpr))
+                    new_trajs.append('LIG_traj_{}.xtc'.format(i))
+                self.FILES.ligand_trajs = new_trajs
+
+    def fix_chains_IDs(self, com_str, rec_str=None, lig_str=None, ref_str=None):
         if ref_str:
             if len(ref_str.residues) < len(rec_str.residues):
                 GMXMMPBSA_ERROR('The reference structure has fewer amino acids than the receptor.')
