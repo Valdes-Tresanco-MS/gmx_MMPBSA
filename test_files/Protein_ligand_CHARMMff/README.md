@@ -18,7 +18,7 @@ That being said, once you are in the folder containing all files, the command-li
 where the `mmpbsa.in` input file, is a text file containing the following lines:
 
 ```
-Sample input file for GB calculation
+Sample input file for PB calculation
 #This input file is mean to show only that gmx_MMPBSA works. Althought, we tried to used the input files as recommended in the 
 #Amber manual, some parameters have been changed to perform more expensive calculations. Feel free to change the parameters 
 #according to what is better for your system.
