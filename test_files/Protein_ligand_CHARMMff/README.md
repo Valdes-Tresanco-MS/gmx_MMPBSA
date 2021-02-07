@@ -36,8 +36,7 @@ as well as several [examples](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA#s
 In this case, a single trajectory (ST) approximation is followed, which means the receptor and ligand structures and 
 trajectories will be obtained from that of the complex. To do so, a MD Structure+mass(db) file (`com.tpr`), an index file (`index.ndx`),
 a trajectory file (`com_traj.xtc`), and both the receptor and ligand group numbers in the index file (`1 13`) are needed.
-A ligand .mol2 file is also needed for generating the ligand topology. The `mmpbsa.in` input file will contain all the 
-parameters needed for the MM/PB(GB)SA calculation.
+The `mmpbsa.in` input file will contain all the parameters needed for the MM/PB(GB)SA calculation.
 
 PB model is recommended when working with CHARMMff files. Please, check this [thread](http://archive.ambermd.org/201508/0382.html) 
 and proceed cautiously.
