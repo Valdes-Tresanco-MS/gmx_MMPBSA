@@ -57,7 +57,7 @@ that are going to be printed in the output file in two different ways:
 * print_res="within 4" -- print all the residues within 4A of the ligand
 * print_res="40,41,44,47,78,81,82,85,88,115,118,122,215,218,219,220,232,241" -- print those residues in the output file
 
-Once the calculation is done, the GUI app (gmx_MMPBSA_gui) will show up. In this app, you can visualize the results for 
+Once the calculation is done, the GUI app (gmx_MMPBSA_ana) will show up. In this app, you can visualize the results for 
 the GB calculation as well as the decomposition analysis. The results can be saved as *.csv file by clicking "File" in 
 the upper left corner and then "Export GB/PB energy (csv)". Besides, a *.pdb file with per-residue energies in the 
 b-factor column, can be saved by clicking "File" in the upper left corner and then "Energy to bfactor". This way, 

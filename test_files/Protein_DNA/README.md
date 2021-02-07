@@ -42,6 +42,6 @@ are going to be used when performing the the MM/PB(GB)SA calculation with the ig
 concentration = 0.15M. Of note, mbondi3 radii (`PBRadii=4`) will be used as recommended for GB-Neck2 solvation model. 
 Also a high dielectric constant `intdiel=10` will be used because of the high number of charged residues at the interface.
 
-Once the calculation is done, the GUI app (gmx_MMPBSA_gui) will show up. In this app, you can visualize the results for 
+Once the calculation is done, the GUI app (gmx_MMPBSA_ana) will show up. In this app, you can visualize the results for 
 the GB calculation. The results can be saved as *.csv file by clicking "File" in the upper left corner and then 
 "Export GB/PB energy (csv)".

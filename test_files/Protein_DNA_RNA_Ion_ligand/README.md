@@ -47,6 +47,6 @@ high number of charged residues at the interface.
 In this case, Li/Merz ion parameters (12-6 normal usage set) for Mg ions were used. Check 
 [Amber manual](https://ambermd.org/doc12/Amber20.pdf#section.3.6) for more info on ion parameters.
 
-Once the calculation is done, the GUI app (gmx_MMPBSA_gui) will show up. In this app, you can visualize the results for 
+Once the calculation is done, the GUI app (gmx_MMPBSA_ana) will show up. In this app, you can visualize the results for 
 the GB calculation. The results can be saved as *.csv file by clicking "File" in the upper left corner and then 
 "Export GB/PB energy (csv)".

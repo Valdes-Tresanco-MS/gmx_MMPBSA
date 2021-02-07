@@ -50,7 +50,7 @@ Also a high dielectric constant `intdiel=10` will be used because of the high nu
 Alanine scanning will be performed and residue 65 (according to FIXED receptor pdb file, see note below) located in 
 chain B will be mutated (of note, this is the residue number 12 in chain B in the original pdb file).
 
-Once the calculation is done, the GUI app (gmx_MMPBSA_gui) will show up. In this app, you can visualize the results for 
+Once the calculation is done, the GUI app (gmx_MMPBSA_ana) will show up. In this app, you can visualize the results for 
 the GB calculation for both the wild-type and the mutant system. The results can be saved as *.csv file by clicking 
 "File" in the upper left corner and then "Export GB/PB energy (csv)".
 

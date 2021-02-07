@@ -54,7 +54,7 @@ installing/updating/running `gmx_MMPBSA`.
 environment correctly set up for GROMACS. `gmx_MMPBSA` has been tested with GROMACS 4.6.7, 5.1.2 and 2018.3, although it
 should run smoothly with any GROMACS present in the PATH and that is compatible with the files you are using.
 
-`gmx_MMPBSA` contains a module that allows for plotting the results (`gmx_MMPBSA_gui`). For this, it requires the
+`gmx_MMPBSA` contains a module that allows for plotting the results (`gmx_MMPBSA_ana`). For this, it requires the
  installation of PyQt5.
 
     amber.python -m pip install PyQt5
@@ -87,9 +87,9 @@ Make sure that you have `git` installed.
 ### After Install
 Once the installation is completed, the following warning may appear:
 
-    WARNING: The scripts gmx_MMPBSA and gmx_MMPBSA_gui are installed in 
+    WARNING: The scripts gmx_MMPBSA and gmx_MMPBSA_ana are installed in 
     '/home/user/path_to_amber_install/amber20/miniconda/bin' which is not on PATH.
-This warning is because `pip` installs the executables (`gmx_MMPBSA` and `gmx_MMPBSA_gui`) in \*/amber20/miniconda/bin.
+This warning is because `pip` installs the executables (`gmx_MMPBSA` and `gmx_MMPBSA_ana`) in \*/amber20/miniconda/bin.
 
 You have two options to solve this:
 
@@ -111,7 +111,7 @@ You can deactivate like this:
     
     conda deactivate
 
-After using one of the above options, you should be able to run `gmx_MMPBSA` and `gmx_MMPBSA_gui` through the terminal
+After using one of the above options, you should be able to run `gmx_MMPBSA` and `gmx_MMPBSA_ana` through the terminal
 
 
 If when running `gmx_MMPBSA`, you get an error like this:
@@ -228,7 +228,7 @@ This comparison is based on the documentation of the different programs
 | **Graphical Analyzer** |    |  | :heavy_check_mark: |
 | Energy to PDB | :heavy_check_mark: |     | :heavy_check_mark: |
 | Energetic Terms charts | Per-Frame | Average and/or Per-Frame <sup>5</sup>  | Average and Per-frame |
-| Energetic Terms charts representation | xmgrace/matplotlib/gnuplot | API and graphics library | gmx_MMPBSA_gui |
+| Energetic Terms charts representation | xmgrace/matplotlib/gnuplot | API and graphics library | gmx_MMPBSA_ana |
 | **Externals programs** | APBS (1.2.x, 1.3.x or 1.4.x) |  AmberTools20 | AmberTools20 |
 | **Parallel computation** | Depends on APBS version | :heavy_check_mark: | :heavy_check_mark: |
 | **Steps for:** | | | |
@@ -1135,7 +1135,7 @@ the `gmx_MMPBSA` calculation must also be available in the location specified in
 
 #### Using the API
 We have derived a new API to reorganize the data so that it is arranged more hierarchically. This makes
-easier to transform the data into graphs in the `gmx_MMPBSA_gui`. **The original and the current API 
+easier to transform the data into graphs in the `gmx_MMPBSA_ana`. **The original and the current API 
 only differ in the name of the callable function, the disposition of the data in Per-wise decomposition analysis
 and in the new 'delta' key. If you want to use the original, see the [Amber manual](http://ambermd.org/doc12/Amber20.pdf#section.34.4)**
 

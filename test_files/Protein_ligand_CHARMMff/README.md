@@ -41,6 +41,6 @@ The `mmpbsa.in` input file will contain all the parameters needed for the MM/PB(
 PB model is recommended when working with CHARMMff files. Please, check this [thread](http://archive.ambermd.org/201508/0382.html) 
 and proceed cautiously.
 
-Once the calculation is done, the GUI app (gmx_MMPBSA_gui) will show up. In this app, you can visualize the results for 
+Once the calculation is done, the GUI app (gmx_MMPBSA_ana) will show up. In this app, you can visualize the results for 
 the GB calculation. The results can be saved as *.csv file by clicking "File" in the upper left corner and then 
 "Export GB/PB energy (csv)".

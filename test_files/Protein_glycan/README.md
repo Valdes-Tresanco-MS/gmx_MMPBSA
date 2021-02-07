@@ -45,6 +45,6 @@ Of note, the recommended GLYCAM force fields are: * "leaprc.GLYCAM_06j-1" (Compa
 earlier. It is included in gmx_MMPBSA package. If it is selected, it will be copied to $AMBERHOME/dat/leap.) Check 
 [Amber manual](https://ambermd.org/doc12/Amber20.pdf#section.3.3) for more info on GLYCAM force fields.
 
-Once the calculation is done, the GUI app (gmx_MMPBSA_gui) will show up. In this app, you can visualize the results for 
+Once the calculation is done, the GUI app (gmx_MMPBSA_ana) will show up. In this app, you can visualize the results for 
 the GB calculation. The results can be saved as *.csv file by clicking "File" in the upper left corner and then 
 "Export GB/PB energy (csv)".

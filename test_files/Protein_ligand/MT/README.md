@@ -46,6 +46,6 @@ needed. The `mmpbsa.in` input file will contain all the parameters needed for th
 16 frames `(endframe-startframe)/interval = (21-5)/1 = 16` are going to be used when performing the the MM/PB(GB)SA 
 calculation with the igb5 (GB-OBC2) model and a salt concentration = 0.15M.
 
-Once the calculation is done, the GUI app (gmx_MMPBSA_gui) will show up. In this app, you can visualize the results for 
+Once the calculation is done, the GUI app (gmx_MMPBSA_ana) will show up. In this app, you can visualize the results for 
 the GB calculation. The results can be saved as *.csv file by clicking "File" in the upper left corner and then 
 "Export GB/PB energy (csv)".
