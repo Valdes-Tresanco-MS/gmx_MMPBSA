@@ -433,15 +433,18 @@ class CheckMakeTop:
         self.fixparm2amber(self.complex_str, removeH=True)
         self.fixparm2amber(self.receptor_str, removeH=True)
         self.fixparm2amber(self.ligand_str, removeH=True)
-        com_mut_index = part_mut = part_index = mut_label = None
-        if self.INPUT['alarun']:
-            com_mut_index, part_mut, part_index, mut_label = self.getMutationIndex()
+        # com_mut_index = part_mut = part_index = mut_label = None
+        # if self.INPUT['alarun']:
+        #     com_mut_index, part_mut, part_index, mut_label = self.getMutationIndex()
 
         self.receptor_list = {}
         start = 1
         c = 1
+        print(self.resi['REC'])
         for r in self.resi['REC']:
-            mask = f'!:{start}-{(r[1]- r[0]) + 1}'
+            end = start + (r[1]- r[0])
+            mask = f'!:{start}-{end}'
+            start += end
             rec = self.molstr(self.receptor_str)
             rec.strip(mask)
             rec_file = self.FILES.prefix + f'REC_F{c}.pdb'
@@ -453,14 +456,11 @@ class CheckMakeTop:
         start = 1
         c = 1
         for r in self.resi['LIG']:
-            mask = f'!:{start}-{(r[1]- r[0]) + 1}'
+            end = start + (r[1] - r[0])
+            mask = f'!:{start}-{end}'
+            start += end
             lig = self.molstr(self.ligand_str)
             lig.strip(mask)
-            # if part_mut == 'LIG' and r[0] < part_index < r[1]:
-            #     mut_lig = self.makeMutTop(lig, part_index)
-            #     lig_file = self.FILES.prefix + f'MUT_LIG_F{c}.pdb'
-            #     mut_lig.save(lig_file, 'pdb', True, renumber=False)
-            # else:
             lig_file = self.FILES.prefix + f'LIG_F{c}.pdb'
             lig.save(lig_file, 'pdb', True, renumber=False)
             self.ligand_list[f'LIG{c}'] = lig_file
