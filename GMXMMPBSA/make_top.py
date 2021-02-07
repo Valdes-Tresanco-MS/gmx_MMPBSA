@@ -440,7 +440,6 @@ class CheckMakeTop:
         self.receptor_list = {}
         start = 1
         c = 1
-        print(self.resi['REC'])
         for r in self.resi['REC']:
             end = start + (r[1]- r[0])
             mask = f'!:{start}-{end}'
