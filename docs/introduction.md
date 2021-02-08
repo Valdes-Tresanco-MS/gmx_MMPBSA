@@ -18,7 +18,7 @@ according to the force field used in the MD simulation. The solvation free energ
 decomposed into a polar and non-polar contributions. The polar portion is calculated using the Poisson Boltzmann (PB) 
 equation, the Generalized Born method, or the Reference Interaction Site Model (RISM). The PB equation is solved 
 numerically by either the pbsa program included with AmberTools or by the Adaptive Poisson Boltzmann Solver (APBS) 
-program (for more information, see http://www.poissonboltzmann.org/apbs). The non-polar contribution is approximated by 
+program (for more information, see http://www.poissonboltzmann.org). The non-polar contribution is approximated by 
 the LCPO method implemented within sander or the molsurf method as implemented in cpptraj. The entropy calculations 
 can be done in either a HCT Generalized Born solvation model or in the gas phase using a mmpbsa_py_nabnmode 
 program written in the nab programming language, or via the quasi-harmonic approximation in ptraj as in the original 

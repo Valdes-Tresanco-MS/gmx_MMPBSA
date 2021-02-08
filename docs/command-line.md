@@ -151,7 +151,7 @@ An example command-line call is shown below:
 
     gmx_MMPBSA -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 1 13 -ct com_traj.xtc
 
-You can found test files in [GitHub][1]
+You can found test files on [GitHub][1]
 
 ### Parallel (MPI) version
 Unlike MMPBSA.py, `gmx_MMPBSA` will be installed as a separate package from the Amber installation. When installing
@@ -181,4 +181,4 @@ or
     energies, parallel scaling will begin to fall off as the number of threads reaches the number of frames. 
 
 
-  [1]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/test_files
+  [1]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/docs/examples
