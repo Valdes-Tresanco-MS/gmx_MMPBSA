@@ -24,11 +24,12 @@ in gmx_MMPBSA will be assigned as attributes to the returned class.
 #  for more details.                                                           #
 # ##############################################################################
 
-import os, sys
+import os
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 from pathlib import Path
 from GMXMMPBSA import __version__, __mmpbsa_version__, __ambertools_version__
 from GMXMMPBSA.exceptions import GMXMMPBSA_ERROR
+
 
 class OptionList(object):
     """
@@ -38,11 +39,11 @@ class OptionList(object):
     """
     pass
 
+
 if os.getenv('AMBERHOME'):
     rism = os.path.join(os.getenv('AMBERHOME'), 'dat', 'mmpbsa', 'spc.xvv')
 else:
     rism = None
-from pathlib import Path
 
 def check_arg(str_suffix, path=False):
     def decorator(f):
@@ -53,7 +54,9 @@ def check_arg(str_suffix, path=False):
             if not Path(result).suffix in str_suffix:
                 GMXMMPBSA_ERROR(f'{result} does not correspond to the required structure format {str_suffix}')
             return result
+
         return gmx_MMPBSA_file
+
     return decorator
 
 
@@ -61,21 +64,26 @@ def check_arg(str_suffix, path=False):
 def structure(arg):
     return arg
 
+
 @check_arg(['.pdb'], True)
 def pdb(arg):
     return arg
+
 
 @check_arg(['.xtc', '.trr', '.pdb'], True)
 def trajectory(arg):
     return arg
 
+
 @check_arg(['.top'], True)
 def topology(arg):
     return arg
 
+
 @check_arg(['.mol2'], True)
 def mol2(arg):
     return arg
+
 
 @check_arg(['.ndx'], True)
 def index(arg):
@@ -226,5 +234,4 @@ anaparser.add_argument('-v', '--version', action='version',
                        version='%%(prog)s %s based on MMPBSA version %s' % (__version__, __mmpbsa_version__))
 group = anaparser.add_argument_group('Info file')
 group.add_argument('-p', '--path', dest='path', help='Path to gmx_MMPBSA info file', required=True,
-                       default=None)
-
+                   default=None)

@@ -36,7 +36,7 @@ setup(
     version=versioneer.get_version(),
     cmdclass=versioneer.get_cmdclass(),
     packages=['GMXMMPBSA'],
-    package_data={"GMXMMPBSA": ["data/*"]},
+    package_data={"GMXMMPBSA": ["data/*", 'GMXMMPBSA.sh']},
     license='GPLv3',
     author='Mario S. Valdes-Trasanco and Mario E. Valdes-Tresanco ',
     author_email='mariosergiovaldes145@gmail.com',
