@@ -13,8 +13,8 @@ title: Changelog
   * New flag for topologies (`-cp`, `-rp` and `-lp`) added
 * Now `gmx_MMPBSA` supports discontinuous receptor and ligand.
 * Glycine scanning
-* Autocompletion script for both gmx_MMPBSA and gmx_MMPBSA_ana
-* Versioneer to control the semantic version. Now we can update the PYPI package for every update 
+* Autocompletion script for both `gmx_MMPBSA` and `gmx_MMPBSA_ana`
+* Versioneer to control the semantic version.
 * Argument type checker for the command-line 
 
 ### Fixes
@@ -26,7 +26,7 @@ title: Changelog
 ### Changes
 * Documentation theme. Now we use Material
 * Alanine scanning variable. Now `mutant` correspond to mutant amino acid (ALA and GLY)
-* The `gmx_MMPBSA_gui` was change by gmx_MMPBSA_ana 
+* The `gmx_MMPBSA_gui` was changed by `gmx_MMPBSA_ana` 
 * Improvement on the topologies construction process
 * Order in which the trajectories are cleaned. Now, the topology is built and finally, the trajectories are cleaned
 
