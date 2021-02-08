@@ -4,8 +4,7 @@ title: gmx_MMPBSA in a nutshell
 ---
 
 # `gmx_MMPBSA` in a nutshell
-`gmx_MMPBSA` brings in all the [MMPBSA.py][1] functionalities to GROMACS 
-users. 
+`gmx_MMPBSA` brings in all the [MMPBSA.py][1] functionalities to GROMACS users. 
 In addition, few other functionalities were implemented that eases a number of calculations (_e.g._ MM/PB(GB)SA 
 with different internal dielectric constant, interaction entropy calculation). A GUI application is also incorporated 
 that allows for visualizing the results and saving high-quality images.
