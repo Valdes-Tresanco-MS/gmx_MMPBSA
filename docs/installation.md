@@ -51,8 +51,10 @@ If you already have installed a previous `gmx_MMPBSA` version, you can update it
 
 Make sure that you have `git` installed.
 
-!!! info "**We will do our best to keep the PYPI package up to date.**"
-    We are implementing the versioneer module to keep the PYPI package updated 
+!!! warning "**We will do our best to keep the PYPI package up to date.**"
+    Every big leap in the implementation of some new functionality will be released in PyPI.
+    The development version is generally functional. So if you run into any issues, please consider updating from 
+    Github. If the problem persists, feel free to contact us
 
 ## After Install
 
