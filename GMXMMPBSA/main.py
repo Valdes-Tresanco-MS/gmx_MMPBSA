@@ -30,7 +30,6 @@ import warnings
 import numpy as np
 from math import exp, log
 import logging
-logging.getLogger(__name__)
 # Import gmx_MMPBSA modules
 from GMXMMPBSA import utils
 from GMXMMPBSA.amber_outputs import (QHout, NMODEout, QMMMout, GBout, PBout,
@@ -56,7 +55,9 @@ from GMXMMPBSA.output_file import (write_stability_output,
 from GMXMMPBSA.parm_setup import MMPBSA_System
 from GMXMMPBSA.make_top import CheckMakeTop
 from GMXMMPBSA.timer import Timer
-from GMXMMPBSA.gui import run as GUI_run
+from GMXMMPBSA.analyzer import run as ANA_run
+
+logging.getLogger(__name__)
 
 # Global variables for the excepthook replacement at the bottom. Override these
 # in the MMPBSA_App constructor and input file reading
@@ -150,7 +151,7 @@ class MMPBSA_App(object):
         if master:
             self.stdout.write('Preparing trajectories for simulation...\n')
             self.numframes, self.numframes_nmode = make_trajectories(INPUT, FILES, self.mpi_size,
-                                                                     self.external_progs['cpptraj'].full_path, self.pre)
+                                                                     self.external_progs['cpptraj'], self.pre)
 
         self.MPI.COMM_WORLD.Barrier()
 
@@ -162,7 +163,7 @@ class MMPBSA_App(object):
         if INPUT['alarun']:
             self.stdout.write('Mutating trajectories...\n')
         self.mut_str, mutant_residue = make_mutant_trajectories(INPUT, FILES,
-                                                                self.mpi_rank, self.external_progs['cpptraj'].full_path,
+                                                                self.mpi_rank, self.external_progs['cpptraj'],
                                                                 self.normal_system, self.mutant_system, self.pre)
 
         self.MPI.COMM_WORLD.Barrier()
@@ -249,19 +250,19 @@ class MMPBSA_App(object):
         for mutant and normal systems
         """
         # Set up a dictionary of external programs to use based one external progs
-        progs = {'gb': self.external_progs['mmpbsa_py_energy'].full_path,
-                 'sa': self.external_progs['cpptraj'].full_path,
-                 'pb': self.external_progs['mmpbsa_py_energy'].full_path,
-                 'rism': self.external_progs['rism3d.snglpnt'].full_path,
-                 'qh': self.external_progs['cpptraj'].full_path,
-                 'nmode': self.external_progs['mmpbsa_py_nabnmode'].full_path
+        progs = {'gb': self.external_progs['mmpbsa_py_energy'],
+                 'sa': self.external_progs['cpptraj'],
+                 'pb': self.external_progs['mmpbsa_py_energy'],
+                 'rism': self.external_progs['rism3d.snglpnt'],
+                 'qh': self.external_progs['cpptraj'],
+                 'nmode': self.external_progs['mmpbsa_py_nabnmode']
                  }
         if self.INPUT['use_sander'] or self.INPUT['decomprun']:
-            progs['gb'] = progs['pb'] = self.external_progs['sander'].full_path
+            progs['gb'] = progs['pb'] = self.external_progs['sander']
         if self.INPUT['sander_apbs']:
-            progs['pb'] = self.external_progs['sander.APBS'].full_path
+            progs['pb'] = self.external_progs['sander.APBS']
         if self.INPUT['ifqnt']:
-            progs['gb'] = self.external_progs['sander'].full_path
+            progs['gb'] = self.external_progs['sander']
 
         # NetCDF or ASCII intermediate trajectories?
         if self.INPUT['netcdf']:
@@ -590,7 +591,7 @@ class MMPBSA_App(object):
         logging.info('Building AMBER Topologies from GROMACS files...')
         maketop = CheckMakeTop(FILES, INPUT, self.external_progs)
         (FILES.complex_prmtop, FILES.receptor_prmtop, FILES.ligand_prmtop, FILES.mutant_complex_prmtop,
-         FILES.mutant_receptor_prmtop, FILES.mutant_ligand_prmtop) = maketop.makeToptleap()
+         FILES.mutant_receptor_prmtop, FILES.mutant_ligand_prmtop) = maketop.buildTopology()
         logging.info('Building AMBER Topologies from GROMACS files...Done.\n')
 
         self.normal_system = MMPBSA_System(FILES.complex_prmtop, FILES.receptor_prmtop, FILES.ligand_prmtop)
@@ -598,7 +599,7 @@ class MMPBSA_App(object):
         self.mutant_system = None
         if INPUT['alarun']:
             if (FILES.mutant_receptor_prmtop is None and FILES.mutant_ligand_prmtop is None and not self.stability):
-                raise GMXMMPBSA_ERROR('Alanine scanning requires either a mutated receptor or mutated ligand topology '
+                GMXMMPBSA_ERROR('Alanine scanning requires either a mutated receptor or mutated ligand topology '
                                    'file!')
             if FILES.mutant_receptor_prmtop is None:
                 FILES.mutant_receptor_prmtop = FILES.receptor_prmtop
@@ -607,15 +608,15 @@ class MMPBSA_App(object):
             self.mutant_system = MMPBSA_System(FILES.mutant_complex_prmtop, FILES.mutant_receptor_prmtop,
                                                FILES.mutant_ligand_prmtop)
             if self.using_chamber is not self.mutant_system.complex_prmtop.chamber:
-                raise GMXMMPBSA_ERROR('CHAMBER prmtops must be used for both mutant '
+                GMXMMPBSA_ERROR('CHAMBER prmtops must be used for both mutant '
                                    'and normal prmtops or neither!')
         # If we have a chamber prmtop, force using sander
         if self.using_chamber:
             INPUT['use_sander'] = True
             if INPUT['rismrun']:
-                raise GMXMMPBSA_ERROR('CHAMBER prmtops cannot be used with 3D-RISM')
+                GMXMMPBSA_ERROR('CHAMBER prmtops cannot be used with 3D-RISM')
             if INPUT['nmoderun']:
-                raise GMXMMPBSA_ERROR('CHAMBER prmtops cannot be used with NMODE')
+                GMXMMPBSA_ERROR('CHAMBER prmtops cannot be used with NMODE')
             self.stdout.write('CHAMBER prmtops found. Forcing use of sander\n')
 
         # Print warnings if we are overwriting any masks and get default masks
@@ -713,7 +714,7 @@ class MMPBSA_App(object):
 
         if self.FILES.gui and not self.FILES.stability:
             self.stdout.write('Opening GUI to analyze results...')
-            GUI_run(self.FILES.prefix + 'info')
+            ANA_run(self.FILES.prefix + 'info')
         else:
             sys.exit(0)
 
@@ -736,7 +737,7 @@ class MMPBSA_App(object):
             self.traj_protocol = 'MTP'  # multiple traj protocol
         else:
             self.traj_protocol = 'STP'  # single traj protocol
-        # change by explicity argument
+        # change by explicit argument
         self.stability = self.FILES.stability
 
     def read_input_file(self, infile=None):
@@ -807,7 +808,6 @@ class MMPBSA_App(object):
             GMXMMPBSA_ERROR('Invalid value for IGB (%s)! ' % INPUT['igb'] +
                                  'It must be 1, 2, 5, 7, or 8.', InputError)
         if INPUT['saltcon'] < 0:
-            # logging.error('SALTCON must be non-negative!')
             GMXMMPBSA_ERROR('SALTCON must be non-negative!', InputError)
         if INPUT['surften'] < 0:
             GMXMMPBSA_ERROR('SURFTEN must be non-negative!', InputError)
@@ -908,8 +908,14 @@ class MMPBSA_App(object):
         if self.INPUT['intdiel'] > 10:
             logging.warning('Intdiel should be less than 10, but it is {}'.format(self.INPUT['intdiel']))
         # check mutant definition
-        if not self.INPUT['mutant'].lower() in ['rec', 'receptor', 'lig', 'ligand']:
-            GMXMMPBSA_ERROR('The mutant most be receptor (or rec) or ligand (or lig)', InputError)
+        if not self.INPUT['mutant'].upper() in ['ALA', 'A', 'GLY', 'G']:
+            GMXMMPBSA_ERROR('The mutant most be ALA (or A) or GLY (or G)', InputError)
+
+        # check files
+        if self.FILES.complex_top:
+            self.INPUT['use_sander'] = 1
+
+
 
     def remove(self, flag):
         """ Removes temporary files """

@@ -1,0 +1,155 @@
+
+# Project information
+site_name: gmx_MMPBSA Documentation
+site_url: https://valdes-tresanco-ms.github.io/gmx_MMPBSA/
+site_author: Mario S. and Mario E. Valdes Tresanco
+site_description: >-
+  gmx_MMPBSA is a new tool aid to perform end-state free energy calculations based on AMBER's MMPBSA.py with GROMACS
+  files
+
+# Repository
+repo_name: gmx_MMPBSA
+repo_url: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA
+edit_uri: ""
+
+# Copyright
+copyright: Copyright &copy; 2020 - 2021 MS. and ME. Valdes Tresanco
+
+# Configuration
+theme:
+  name: material
+  custom_dir: docs/overrides
+
+  # 404 page
+  static_templates:
+    - 404.html
+
+  # Don't include MkDocs' JavaScript
+  include_search_page: false
+  search_index_only: true
+
+  # Default values, taken from mkdocs_theme.yml
+  language: en
+  features:
+    # - navigation.instant
+    - navigation.sections
+    - navigation.tabs
+  palette:
+    scheme: default
+    primary: black
+    accent: black
+  font:
+    text: Roboto
+    code: Roboto Mono
+  favicon: assets/favicon.png
+  icon:
+    logo: logo
+
+# Plugins
+plugins:
+  - search
+#  - redirects:
+#      redirect_maps:
+##        extensions/admonition.md: reference/admonitions.md
+##        extensions/codehilite.md: reference/code-blocks.md
+##        extensions/footnotes.md: reference/footnotes.md
+##        extensions/metadata.md: reference/meta-tags.md
+##        extensions/permalinks.md: setup/setting-up-navigation.md #permalink
+##        extensions/pymdown.md: reference/admonitions.md
+##        plugins/revision-date.md: setup/adding-a-git-repository.md #revision-date
+##        plugins/search.md: setup/setting-up-site-search.md
+##        releases/4.md: upgrading.md #upgrading-from-4x-to-5x
+##        releases/5.md: upgrading.md #upgrading-from-3x-to-4x
+##        releases/changelog.md: changelog.md
+##        setup/adding-social-links.md: setup/setting-up-the-footer.md
+##        sponsorship.md: insiders.md
+  - minify:
+      minify_html: true
+
+# Customization
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/Valdes-Tresanco-MS
+
+# Extensions
+markdown_extensions:
+  - admonition
+  - abbr
+  - attr_list
+  - def_list
+  - footnotes
+  - meta
+  - md_in_html
+  - toc:
+      permalink: true
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.caret
+  - pymdownx.critic
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:materialx.emoji.twemoji
+      emoji_generator: !!python/name:materialx.emoji.to_svg
+  - pymdownx.highlight
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.magiclink:
+      repo_url_shorthand: true
+      user: squidfunk
+      repo: mkdocs-material
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tilde
+
+# Page tree
+nav:
+  - Home: index.md
+  - Getting started:
+    - Overview: getting-started.md
+    - Introduction: introduction.md
+    - gmx_MMPBSA in a nutshell: summary.md
+    - gmx_MMPBSA vs other programs: versus.md
+    - Installation: installation.md
+    - Command-line: command-line.md
+  - Hands to work:
+#    - How gmx_MMPBSA works: howworks.md
+    - The input file: input_file.md
+    - Output Files: output.md
+    - Advanced Options: advanced.md
+    - Python API: api.md
+    - gmx_MMPBSA_ana: analyzer.md
+  - Examples:
+    - Analysis:
+      - 3D-RISM: examples/3D-RISM/README.md
+      - Alanine scanning: examples/Alanine_scanning/README.md
+      - Decomposition analysis: examples/Decomposition_analysis/README.md
+      - Protein-Ligand (MT): examples/Protein_ligand/MT/README.md
+      - Stability calculations: examples/Stability/README.md
+      - Entropy calculation:
+        - Interaction Entropy: examples/Entropy_calculations/Interaction_Entropy/README.md
+        - nmode Entropy: examples/Entropy_calculations/nmode/README.md
+    - Systems:
+      - Protein-protein: examples/Protein_protein/README.md
+      - Protein-Ligand (ST): examples/Protein_ligand/ST/README.md
+      - Protein-DNA: examples/Protein_DNA/README.md
+      - Metalloprotein-peptide: examples/Metalloprotein_peptide/README.md
+      - Protein-DNA-RNA-Ions-Ligand: examples/Protein_DNA_RNA_Ion_ligand/README.md
+      - Protein-glycan: examples/Protein_glycan/README.md
+      - Membrane proteins: examples/Protein_membrane/README.md
+    - Charmm Support:
+        - Charmm and MM(PB/GB)SA: charmm.md
+        - Protein-Ligand (ST): examples/Protein_ligand_CHARMMff/README.md
+  - Support:
+    - Information: information.md
+    - Changelog: changelog.md

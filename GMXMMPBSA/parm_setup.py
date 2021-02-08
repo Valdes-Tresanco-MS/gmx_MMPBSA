@@ -156,8 +156,7 @@ class MMPBSA_System(object):
             for i in range(self.complex_prmtop.ptr('nres')):
                 start_ptr = self.complex_prmtop.parm_data['RESIDUE_POINTER'][i] - 1
                 in_lig = lmask[start_ptr] == 1
-                new_res = Residue(i + 1, self.complex_prmtop.parm_data[
-                    'RESIDUE_LABEL'][i])
+                new_res = Residue(i + 1, self.complex_prmtop.parm_data['RESIDUE_LABEL'][i])
                 if in_lig:
                     new_res.ligand_number = lignum
                     if (self.complex_prmtop.parm_data['RESIDUE_LABEL'][i] !=
@@ -243,10 +242,9 @@ class MMPBSA_System(object):
 
             else:
                 # We've only reached here because we CAN'T find it
-                raise PrmtopError("Couldn't predict mask from topology files!\n" +
-                                  "Your ligand residues must be sequential in your complex.\n" +
-                                  "There are likely problems with your topology files if " +
-                                  "this is not the case.")
+                raise PrmtopError("Couldn't predict mask from topology files!\n Your ligand residues must be "
+                                  "sequential in your complex.\n There are likely problems with your topology files "
+                                  "if this is not the case.")
 
         # end if self.ligstart == -1
 

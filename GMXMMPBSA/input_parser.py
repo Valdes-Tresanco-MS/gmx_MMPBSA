@@ -508,7 +508,7 @@ input_file.addNamelist('general', 'general',
 
                            ['receptor_mask', str, None, 'Amber mask of receptor atoms in complex prmtop.'],
                            # ['search_path', str, '', 'Look for intermediate programs in all of PATH'],
-                           ['solvated_trajectory', int, 1, 'Define if it is necessary to build a clean trajectory'],
+                           ['solvated_trajectory', int, 1, 'Define if it is necessary to cleanup the trajectories'],
                            ['startframe', int, 1, 'First frame to analyze.'],
                            ['strip_mask', str, strip_mask, 'Amber mask to strip from solvated prmtop'],
                            ['use_sander', int, 0, 'Use sander to compute energies.'],
@@ -569,8 +569,8 @@ input_file.addNamelist('pb', 'pb',
 
 input_file.addNamelist('ala', 'alanine_scanning',
                        [['mutant_only', int, 0, 'Only compute mutant energies'],
-                        ['mutant', str, 'receptor', 'Define if mutation is made in Receptor or Ligand'],
-                        ['mutant_res', str, None, 'Which residue will be mutated by ALA']],
+                        ['mutant', str, 'ALA', 'Defines if Alanine or Glycine scanning will be performed'],
+                        ['mutant_res', str, None, 'Which residue will be mutated']],
                        trigger='alarun')
 
 input_file.addNamelist('nmode', 'nmode',
