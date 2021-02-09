@@ -7,7 +7,7 @@ title: Changelog
 ## Upcoming release
 ...
 
-## gmx_MMPBSA-v1.3.1
+## [gmx_MMPBSA-v1.3.1](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/releases/tag/v1.3.1)
 ### Additions
 * New variable (`overwrite_data`) to overwrite gmx_MMPBSA data. 
 * More informative message when sander fail. Useful for PB calculation
@@ -23,14 +23,7 @@ title: Changelog
 * Documentation banner
 
 
-## gmx_MMPBSA-v1.3.0
-
-!!! danger "Please consider the following directions"
-    Unfortunately, we have overlooked some items before releasing the current version of `gmx_MMPBSA`. [Consider 
-    upgrading to the development version as indicated in the documentation][1]. We are trying our best to correct all 
-    the issues to release a new stable version.
-    
-  [1]: installation.md#update
+## [gmx_MMPBSA-v1.3.0](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/releases/tag/v1.3.0)
 
 ### Additions
 * Documentation at Github pages
