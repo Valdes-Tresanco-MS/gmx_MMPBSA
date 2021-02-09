@@ -99,7 +99,9 @@ printed, which aids in debugging of issues. (Default = 0) (Advanced Option)
       * 1: Use temporary NetCDF trajectories
 
 `overwrite_data` (Default = 0)
-:   Defines whether the gmxMMPBSA data will be overwritten
+:   Defines whether the gmxMMPBSA data will be overwritten. `gmx_MMPBSA` detects if the gmxMMPBSA data files exist 
+    before copying them. This option allows the user to control the copy process and prevents the system from being 
+    overloaded by copying files unnecessarily.
 
     * 0: don't
     * 1: overwrite gxmMMPBSA data if exist
