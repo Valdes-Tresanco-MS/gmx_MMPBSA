@@ -329,8 +329,10 @@ printed, which aids in debugging of issues. (Default = 0) (Advanced Option)
     * 0: the prmtop, or 
     * 1: pre-computed values 
     
-    !!! tip
-        See Amber manual for more complete description.
+    !!! warning
+        * radiopt=0 is recommended which means using radii from the prmtop file for both the PB calculation and for 
+        the NP. Check this [thread](http://archive.ambermd.org/201303/0548.html) and See Amber manual for more 
+        complete description.
 
 `sander_apbs` (Default = 0)
 :   Option to use `APBS` for `PB` calculation instead of the built-in `PBSA` solver. This will work only through the

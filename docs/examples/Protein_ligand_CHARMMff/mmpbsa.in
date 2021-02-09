@@ -7,5 +7,7 @@ parameters according to what is better for your system.
 startframe=1, endframe=11, verbose=2,
 /
 &pb
-istrng=0.15, fillratio=4.0
+# radiopt=0 is recommended which means using radii from the prmtop file for both the PB calculation and for the NP
+# calculation
+istrng=0.15, fillratio=4.0, radiopt=0
 /
