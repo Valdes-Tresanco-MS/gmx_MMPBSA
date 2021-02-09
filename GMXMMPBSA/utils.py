@@ -36,9 +36,11 @@ from pathlib import Path
 import json
 import logging
 
-def checkff():
+
+def checkff(overwrite):
     """
 
+    :param overwrite:
     :param sel_ff: folder/leaprc
     Examples:
         gmxMMPBSA/leaprc.GLYCAM_06h-1
@@ -56,7 +58,7 @@ def checkff():
     amberhome = Path(amberhome)
 
     logging.info('Checking if supported force fields exists in Amber data...')
-
+    logging.info('The overwrite_data option is enabled. Overwriting the gmxMMPBSA data...')
     data_path = Path(__file__).parent.joinpath('data')
     info_file = data_path.joinpath('info.dat')
     with info_file.open('r') as read_file:
@@ -72,12 +74,18 @@ def checkff():
             if type(data['forcefield'][ff][p]) == list:
                 for l in data['forcefield'][ff][p]:
                     cf = data_path.joinpath(l)
-                    if cf.exists() and not gmxf.joinpath(l).exists():
+                    if overwrite:
                         shutil.copy(cf, gmxf)
+                    else:
+                        if cf.exists() and not gmxf.joinpath(l).exists():
+                            shutil.copy(cf, gmxf)
             else:
                 cf = data_path.joinpath(data['forcefield'][ff][p])
-                if cf.exists() and not gmxf.joinpath(p).exists():
+                if overwrite:
                     shutil.copy(cf, gmxf)
+                else:
+                    if cf.exists() and not gmxf.joinpath(p).exists():
+                        shutil.copy(cf, gmxf)
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 def remove(flag, mpi_size=0, fnpre='_GMXMMPBSA_'):

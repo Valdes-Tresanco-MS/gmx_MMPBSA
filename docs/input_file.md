@@ -98,6 +98,16 @@ printed, which aids in debugging of issues. (Default = 0) (Advanced Option)
       * 0: Do NOT use temporary NetCDF trajectories
       * 1: Use temporary NetCDF trajectories
 
+`overwrite_data` (Default = 0)
+:   Defines whether the gmxMMPBSA data will be overwritten
+
+    * 0: don't
+    * 1: overwrite gxmMMPBSA data if exist
+
+    !!! tip Keep in mind
+        We recommend activating this option with each new release because there may be changes and/or corrections in 
+        the gmxMMPBSA data files.
+
 `PBRadii` (Default = 3)
 :   PBRadii to build amber topology files:
 

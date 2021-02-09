@@ -108,7 +108,7 @@ class CheckMakeTop:
         if self.FILES.reference_structure:
             self.ref_str = parmed.read_PDB(self.FILES.reference_structure)
 
-        checkff()
+        checkff(self.INPUT['overwrite_data'])
         self.checkFiles()
 
     def checkFiles(self):
@@ -434,9 +434,6 @@ class CheckMakeTop:
         self.fixparm2amber(self.complex_str, removeH=True)
         self.fixparm2amber(self.receptor_str, removeH=True)
         self.fixparm2amber(self.ligand_str, removeH=True)
-        # com_mut_index = part_mut = part_index = mut_label = None
-        # if self.INPUT['alarun']:
-        #     com_mut_index, part_mut, part_index, mut_label = self.getMutationIndex()
 
         self.receptor_list = {}
         start = 1
@@ -499,7 +496,6 @@ class CheckMakeTop:
                     mut_lig.save(mut_lig_file, 'pdb', True, renumber=False)
                     self.mut_ligand_list[f'MLIG{c}'] = mut_lig_file
                     c += 1
-
 
     def reswithin(self):
         # Get residue form receptor-ligand interface
