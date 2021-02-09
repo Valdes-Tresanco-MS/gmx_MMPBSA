@@ -1032,6 +1032,8 @@ class CheckMakeTop:
                 if not self.FILES.stability:
                     tif.write('saveamberparm LIG1 {t} {p}LIG.inpcrd\n'.format(t=self.ligand_pmrtop,
                                                                               p=self.FILES.prefix))
+                else:
+                    self.ligand_pmrtop = None
                 for lig in self.ligand_list:
                     LIG.append(f'{lig}')
             else:
@@ -1043,6 +1045,8 @@ class CheckMakeTop:
                     tif.write(f'LIG_OUT = combine {{ {lig_out} }}\n')
                     tif.write('saveamberparm LIG_OUT {t} {p}LIG.inpcrd\n'.format(t=self.ligand_pmrtop,
                                                                                  p=self.FILES.prefix))
+                else:
+                    self.ligand_pmrtop = None
             COM = []
             l = 0
             r = 0
@@ -1059,7 +1063,8 @@ class CheckMakeTop:
             if not self.FILES.stability:
                 tif.write(f'REC_OUT = combine {{ { rec_out } }}\n')
                 tif.write('saveamberparm REC_OUT {t} {p}REC.inpcrd\n'.format(t=self.receptor_pmrtop, p=self.FILES.prefix))
-
+            else:
+                self.receptor_pmrtop = None
             com_out = ' '.join(COM)
             tif.write(f'COM_OUT = combine {{ {com_out} }}\n')
             tif.write('saveamberparm COM_OUT {t} {p}COM.inpcrd\n'.format(t=self.complex_pmrtop, p=self.FILES.prefix))
@@ -1093,12 +1098,17 @@ class CheckMakeTop:
                         mtif.write(f'MREC_OUT = combine {{ {mrec_out} }}\n')
                         mtif.write('saveamberparm MREC_OUT {t} {p}MUT_REC.inpcrd\n'.format(t=self.mutant_receptor_pmrtop,
                                                                                          p=self.FILES.prefix))
+                    else:
+                        self.mutant_receptor_pmrtop = None
                     # check if ligand is not protein and always load
                     if self.FILES.ligand_mol2:
                         mtif.write('LIG1 = loadmol2 {}\n'.format(self.FILES.ligand_mol2))
                         self.mutant_ligand_pmrtop = None
-                        mtif.write('check LIG1\n')
-                        mtif.write('loadamberparams {}\n'.format(self.ligand_frcmod))
+                        if not self.FILES.stability:
+                            mtif.write('check LIG1\n')
+                            mtif.write('loadamberparams {}\n'.format(self.ligand_frcmod))
+                        else:
+                            self.mutant_ligand_pmrtop = None
                     else:
                         for lig in self.ligand_list:
                             mtif.write(f'{lig} = loadpdb {self.ligand_list[lig]}\n')
@@ -1112,8 +1122,9 @@ class CheckMakeTop:
                     if not self.FILES.stability:
                         mtif.write(f'MLIG_OUT = combine {{ {mlig_out} }}\n')
                         mtif.write('saveamberparm MLIG_OUT {t} {p}MUT_LIG.inpcrd\n'.format(
-                                t=self.mutant_receptor_pmrtop, p=self.FILES.prefix))
-
+                                t=self.mutant_ligand_pmrtop, p=self.FILES.prefix))
+                    else:
+                        self.mutant_ligand_pmrtop = None
                     for rec in self.receptor_list:
                         mtif.write(f'{rec} = loadpdb {self.receptor_list[rec]}\n')
 
