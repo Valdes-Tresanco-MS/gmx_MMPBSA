@@ -4,8 +4,31 @@ title: Changelog
 ---
 
 # Changelog
+## Upcoming release
+### Additions
+* New variable (`overwrite_data`) to overwrite gmx_MMPBSA data. 
+* More informative message when sander fail. Useful for PB calculation
+
+### Fixes
+* Protein-ligand with charmm force field example
+* Stability calculation
+* gmx path error
+* leaprc.GLYCAM_06h-1 file
+* Protein-glycan example
+
+### Changes
+* Documentation banner
+
 
 ## v1.3.0
+
+!!! danger "Please consider the following directions"
+    Unfortunately, we have overlooked some items before releasing the current version of `gmx_MMPBSA`. [Consider 
+    upgrading to the development version as indicated in the documentation][1]. We are trying our best to correct all 
+    the issues to release a new stable version.
+    
+  [1]: installation.md#update
+
 ### Additions
 * Documentation at Github pages
 * Charmm force field support
