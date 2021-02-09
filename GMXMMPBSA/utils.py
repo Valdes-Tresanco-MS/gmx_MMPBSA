@@ -85,7 +85,7 @@ def checkff(overwrite):
                 if overwrite:
                     shutil.copy(cf, gmxf)
                 else:
-                    if cf.exists() and not gmxf.joinpath(p).exists():
+                    if not cf.exists():
                         shutil.copy(cf, gmxf)
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
