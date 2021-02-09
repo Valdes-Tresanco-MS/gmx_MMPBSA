@@ -144,25 +144,6 @@ class CheckMakeTop:
         """
 
         logging.info('Get PDB files from GROMACS structures files...')
-        if self.external_progs['gmx'].full_path:
-            gmx = self.external_progs['gmx'].full_path
-        elif self.external_progs['gmx_d'].full_path:
-            gmx = self.external_progs['gmx_d'].full_path
-        elif self.external_progs['gmx_mpi'].full_path:
-            gmx = self.external_progs['gmx_mpi'].full_path
-        elif self.external_progs['gmx_mpi_d'].full_path:
-            gmx = self.external_progs['gmx_mpi_d'].full_path
-        else:
-            gmx = None
-        # check if GROMACS 4.x exists
-        make_ndx = [self.external_progs['make_ndx'].full_path]
-        trjconv = [self.external_progs['trjconv'].full_path]
-        editconf = [self.external_progs['editconf'].full_path]
-        if gmx:
-            make_ndx = [gmx, 'make_ndx']
-            trjconv = [gmx, 'trjconv']
-            editconf = [gmx, 'editconf']
-
 
         # wt complex
         # make index for extract pdb structure
