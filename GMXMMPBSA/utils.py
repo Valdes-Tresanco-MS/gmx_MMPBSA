@@ -58,7 +58,8 @@ def checkff(overwrite):
     amberhome = Path(amberhome)
 
     logging.info('Checking if supported force fields exists in Amber data...')
-    logging.info('The overwrite_data option is enabled. Overwriting the gmxMMPBSA data...')
+    if overwrite:
+        logging.info('The overwrite_data option is enabled. Overwriting the gmxMMPBSA data...')
     data_path = Path(__file__).parent.joinpath('data')
     info_file = data_path.joinpath('info.dat')
     with info_file.open('r') as read_file:
