@@ -34,6 +34,7 @@ Classes:
 # ##############################################################################
 
 from GMXMMPBSA.exceptions import CalcError
+from GMXMMPBSA.exceptions import GMXMMPBSA_ERROR
 import os
 import sys
 
@@ -422,12 +423,16 @@ class PBEnergyCalculation(EnergyCalculation):
 
             out, err = process.communicate(b'')
             calc_failed = bool(process.wait())
-
+            out = out.decode('utf-8')
             if calc_failed:
                 error_list = [s.strip() for s in out.split('\n')
                               if errorre.match(s.strip())]
-                raise CalcError('%s failed with prmtop %s!\n\t' % (self.program,
-                                                                   self.prmtop) + '\n\t'.join(error_list) + '\n')
+
+                GMXMMPBSA_ERROR('%s failed with prmtop %s!\n\t' % (self.program, self.prmtop) +
+                                '\n\t'.join(error_list) + '\n' +
+                                'If you are using sander and PB calculation, check the *.mdout files to get the sander '
+                                'error and check this thread (http://archive.ambermd.org/201303/0548.html)\n',
+                                CalcError)
         finally:
             if own_handle: process_stderr.close()
 
