@@ -607,9 +607,6 @@ class MMPBSA_App(object):
                 FILES.mutant_ligand_prmtop = FILES.ligand_prmtop
             self.mutant_system = MMPBSA_System(FILES.mutant_complex_prmtop, FILES.mutant_receptor_prmtop,
                                                FILES.mutant_ligand_prmtop)
-            if self.using_chamber is not self.mutant_system.complex_prmtop.chamber:
-                GMXMMPBSA_ERROR('CHAMBER prmtops must be used for both mutant '
-                                   'and normal prmtops or neither!')
         # If we have a chamber prmtop, force using sander
         if self.using_chamber:
             INPUT['use_sander'] = True
