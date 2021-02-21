@@ -498,7 +498,7 @@ input_file.addNamelist('general', 'general',
                            ['interval', int, 1, 'Number of frames between adjacent frames analyzed.'],
                            ['ions_parameters', int, 1, 'Define ions parameters to build the Amber topology.'],
                            ['keep_files', int, 2, 'How many files to keep after successful completion.'],
-                           ['ligand_mask', str, None, 'Amber mask of ligand atoms in complex prmtop.'],
+                           # ['ligand_mask', str, None, 'Amber mask of ligand atoms in complex prmtop.'],
                            ['ligand_forcefield', str, "leaprc.gaff", 'Define the force field to build Amber topology for '
                                                              'ligand (small molecule)'],
                            ['netcdf', int, 0, 'Use NetCDF intermediate trajectories.'],
@@ -507,7 +507,7 @@ input_file.addNamelist('general', 'general',
                            ['protein_forcefield', str, "oldff/leaprc.ff99SB", 'Define the force field to build Amber '
                                                                               'topology for protein'],
 
-                           ['receptor_mask', str, None, 'Amber mask of receptor atoms in complex prmtop.'],
+                           # ['receptor_mask', str, None, 'Amber mask of receptor atoms in complex prmtop.'],
                            # ['search_path', str, '', 'Look for intermediate programs in all of PATH'],
                            ['solvated_trajectory', int, 1, 'Define if it is necessary to cleanup the trajectories'],
                            ['startframe', int, 1, 'First frame to analyze.'],
