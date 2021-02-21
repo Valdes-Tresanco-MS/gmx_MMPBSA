@@ -26,7 +26,7 @@ files are compatible, as well. Necessary for gmx_MMPBSA functioning.
 #  for more details.                                                           #
 # ##############################################################################
 
-from parmed.amber import LoadParm
+from parmed.amber import LoadParm, AmberMask
 from GMXMMPBSA.exceptions import PrmtopError, SelectionError
 
 
@@ -119,62 +119,12 @@ class MMPBSA_System(object):
     # -#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
 
     def Map(self, receptor_mask=None, ligand_mask=None):
-        """ This determines the receptor and ligand masks based on residue
-          sequence. It will try placing the ligand inside the receptor to
-          match the complex residue sequence, starting from the end.
         """
-        from parmed.amber import AmberMask
-
-        # First, if a mask is provided, we can actually map it using that
-        if (receptor_mask is not None and ligand_mask is not None and
-                not self.stability):
-            rmask = AmberMask(self.complex_prmtop, receptor_mask).Selection()
-            lmask = AmberMask(self.complex_prmtop, ligand_mask).Selection()
-            # Check that every atom is selected once and only once by comparing
-            # the sums of the two mask selections
-            if sum(rmask) + sum(lmask) != self.complex_prmtop.ptr('natom'):
-                raise PrmtopError("provided receptor/ligand masks don't select " +
-                                  "every atom in the complex topology!")
-            if sum(rmask) != self.receptor_prmtop.ptr('natom'):
-                raise PrmtopError('mismatch in receptor mask and receptor prmtop')
-            if sum(lmask) != self.ligand_prmtop.ptr('natom'):
-                raise PrmtopError('mismatch in ligand mask and ligand prmtop')
-
-            # Now check that the masks don't select an atom twice
-            for i in range(len(rmask)):
-                if rmask[i] == 1 and lmask[i] == 1:
-                    raise PrmtopError('Atom %d selected by both receptor and ' % i +
-                                      'ligand masks')
-                if lmask[i] == 0 and rmask[i] == 0:
-                    raise PrmtopError('Atom %d is not selected by either ' % i +
-                                      'receptor or ligand masks')
-
-            # Now that we've verified everything is OK (we could do more, but this
-            # should be good enough), let's actually create the res_list mapping
-            lignum = recnum = 1
-            self.res_list = []
-            for i in range(self.complex_prmtop.ptr('nres')):
-                start_ptr = self.complex_prmtop.parm_data['RESIDUE_POINTER'][i] - 1
-                in_lig = lmask[start_ptr] == 1
-                new_res = Residue(i + 1, self.complex_prmtop.parm_data['RESIDUE_LABEL'][i])
-                if in_lig:
-                    new_res.ligand_number = lignum
-                    if (self.complex_prmtop.parm_data['RESIDUE_LABEL'][i] !=
-                            self.ligand_prmtop.parm_data['RESIDUE_LABEL'][lignum - 1]):
-                        raise PrmtopError('Residue mismatch while mapping. ' +
-                                          'Incompatible topology files or bad mask definitions')
-                    lignum += 1
-                else:
-                    new_res.receptor_number = recnum
-                    if (self.complex_prmtop.parm_data['RESIDUE_LABEL'][i] !=
-                            self.receptor_prmtop.parm_data['RESIDUE_LABEL'][recnum - 1]):
-                        raise PrmtopError('Residue mismatch while mapping. ' +
-                                          'Incompatible topology files or bad mask definitions')
-                    recnum += 1
-                self.res_list.append(new_res)
-            # end for i in range(self.complex_prmtop.ptr('nres'))
-            self.mapped = True
-            return None  # done here
+        Gets the list of residues from the amber masks it receives
+        :param receptor_mask: receptor amber mask
+        :param ligand_mask: ligand amber mask
+        :return:
+        """
 
         # Begin find our own masks!
         if self.stability:
@@ -183,96 +133,56 @@ class MMPBSA_System(object):
                 [Residue(i + 1, self.complex_prmtop.parm_data['RESIDUE_LABEL'][i])
                  for i in range(self.complex_prmtop.ptr('nres'))]
             self.mapped = True
-            return None
+            return
 
-        complex_residues = self.complex_prmtop.parm_data['RESIDUE_LABEL']
-        receptor_residues = self.receptor_prmtop.parm_data['RESIDUE_LABEL']
-        ligand_residues = self.ligand_prmtop.parm_data['RESIDUE_LABEL']
+        rmask = AmberMask(self.complex_prmtop, receptor_mask).Selection()
+        lmask = AmberMask(self.complex_prmtop, ligand_mask).Selection()
+        # Check that every atom is selected once and only once by comparing
+        # the sums of the two mask selections
+        if sum(rmask) + sum(lmask) != self.complex_prmtop.ptr('natom'):
+            raise PrmtopError("provided receptor/ligand masks don't select " +
+                              "every atom in the complex topology!")
+        if sum(rmask) != self.receptor_prmtop.ptr('natom'):
+            raise PrmtopError('mismatch in receptor mask and receptor prmtop')
+        if sum(lmask) != self.ligand_prmtop.ptr('natom'):
+            raise PrmtopError('mismatch in ligand mask and ligand prmtop')
 
-        # The way this loop is going to work is it's going to insert the ligand
-        # in each location at the receptor, starting from the end and working to
-        # the beginning. At each location, we will compare the residue sequence
-        # of the receptor + ligand with the complex residue. If it matches, we've
-        # the start of the ligand. If it doesn't match, we move on to the next.
+        # Now check that the masks don't select an atom twice
+        for i in range(len(rmask)):
+            if rmask[i] == 1 and lmask[i] == 1:
+                raise PrmtopError('Atom %d selected by both receptor and ' % i +
+                                  'ligand masks')
+            if lmask[i] == 0 and rmask[i] == 0:
+                raise PrmtopError('Atom %d is not selected by either ' % i +
+                                  'receptor or ligand masks')
 
-        for i in range(len(receptor_residues)):
-            idx = len(receptor_residues) - i - 1
-            found_position = True
-
-            for j in range(len(complex_residues)):
-                com_res = complex_residues[j]
-                if j <= idx:
-                    rec_or_lig_res = receptor_residues[j]
-                elif j > idx and j - idx <= len(ligand_residues):
-                    rec_or_lig_res = ligand_residues[j - idx - 1]
-                else:
-                    rec_or_lig_res = receptor_residues[j - len(ligand_residues)]
-
-                if com_res != rec_or_lig_res:
-                    found_position = False
-                    break
-
-            # end for j...:
-            if found_position:
-                self.ligstart = idx + 2
-
-        # end for i...:
-
-        # Note that the above will NOT have tried to put the ligand first. Try to
-        # do that here if we haven't found the ligand starting location yet
-
-        if self.ligstart == -1:
-
-            found_position = True
-            for i in range(len(complex_residues)):
-                com_res = complex_residues[i]
-
-                if i < len(ligand_residues):
-                    rec_or_lig_res = ligand_residues[i]
-                else:  # in the receptor
-                    rec_or_lig_res = receptor_residues[i - len(ligand_residues)]
-
-                if com_res != rec_or_lig_res:
-                    found_position = False
-                    break
-            # end for i ...:
-
-            if found_position:
-                self.ligstart = 1
-
+        # Now that we've verified everything is OK (we could do more, but this
+        # should be good enough), let's actually create the res_list mapping
+        lignum = recnum = 1
+        self.res_list = []
+        for i in range(self.complex_prmtop.ptr('nres')):
+            start_ptr = self.complex_prmtop.parm_data['RESIDUE_POINTER'][i] - 1
+            in_lig = lmask[start_ptr] == 1
+            new_res = Residue(i + 1, self.complex_prmtop.parm_data['RESIDUE_LABEL'][i])
+            if in_lig:
+                new_res.ligand_number = lignum
+                if (self.complex_prmtop.parm_data['RESIDUE_LABEL'][i] !=
+                        self.ligand_prmtop.parm_data['RESIDUE_LABEL'][lignum - 1]):
+                    raise PrmtopError('Residue mismatch while mapping. ' +
+                                      'Incompatible topology files or bad mask definitions')
+                lignum += 1
             else:
-                # We've only reached here because we CAN'T find it
-                raise PrmtopError("Couldn't predict mask from topology files!\n Your ligand residues must be "
-                                  "sequential in your complex.\n There are likely problems with your topology files "
-                                  "if this is not the case.")
-
-        # end if self.ligstart == -1
-
-        # Now that we know where the ligand is, we can map out all of the atoms
-        # in both their complex and receptor or ligand locations.
-
-        self.res_list = []  # start with an empty list
-
-        for i in range(len(complex_residues)):
-            new_res = Residue(i + 1, complex_residues[i])
-
-            # Now set the number that residue is in the receptor or ligand. First
-            # we see if it's before the ligand. Then we see if it's in the ligand,
-            # then we see if it's after the ligand
-
-            if i < self.ligstart - 1:
-                new_res.receptor_number = i + 1
-            elif i >= self.ligstart - 1 and \
-                    i < self.ligstart + len(ligand_residues) - 1:
-                new_res.ligand_number = i + 2 - self.ligstart
-            else:
-                new_res.receptor_number = i + 1 - len(ligand_residues)
-
+                new_res.receptor_number = recnum
+                if (self.complex_prmtop.parm_data['RESIDUE_LABEL'][i] !=
+                        self.receptor_prmtop.parm_data['RESIDUE_LABEL'][recnum - 1]):
+                    raise PrmtopError('Residue mismatch while mapping. ' +
+                                      'Incompatible topology files or bad mask definitions')
+                recnum += 1
             self.res_list.append(new_res)
-
-        # End for i...:
+        # end for i in range(self.complex_prmtop.ptr('nres'))
 
         self.mapped = True
+        return  # done here
 
     # -#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
 
