@@ -554,6 +554,23 @@ class CheckMakeTop:
                 temp_top.write(line)
         temp_top.close()
 
+    def get_masks(self):
+        rt = []
+        for r in self.resi['REC']:
+            if r[0] == r[1]: # only as precaution
+                rt.append(f'{r[0]}')
+            else:
+                rt.append(f'{r[0]}-{r[1]}')
+        rec_mask = ':' + ','.join(rt)
+        lt = []
+        for l in self.resi['LIG']:
+            if l[0] == l[1]:
+                lt.append(f'{l[0]}')
+            else:
+                lt.append(f'{l[0]}-{l[1]}')
+        lig_mask = ':' + ','.join(lt)
+        return rec_mask, lig_mask
+
     def res2map(self):
         """
 
