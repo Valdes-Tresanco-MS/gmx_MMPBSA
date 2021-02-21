@@ -587,12 +587,12 @@ class MMPBSA_App(object):
             self.external_progs = external_progs
 
         # Make amber topologies
-
         logging.info('Building AMBER Topologies from GROMACS files...')
         maketop = CheckMakeTop(FILES, INPUT, self.external_progs)
         (FILES.complex_prmtop, FILES.receptor_prmtop, FILES.ligand_prmtop, FILES.mutant_complex_prmtop,
          FILES.mutant_receptor_prmtop, FILES.mutant_ligand_prmtop) = maketop.buildTopology()
         logging.info('Building AMBER Topologies from GROMACS files...Done.\n')
+        INPUT['receptor_mask'], INPUT['ligand_mask'] = maketop.get_masks()
 
         self.normal_system = MMPBSA_System(FILES.complex_prmtop, FILES.receptor_prmtop, FILES.ligand_prmtop)
         self.using_chamber = self.normal_system.complex_prmtop.chamber
@@ -607,9 +607,6 @@ class MMPBSA_App(object):
                 FILES.mutant_ligand_prmtop = FILES.ligand_prmtop
             self.mutant_system = MMPBSA_System(FILES.mutant_complex_prmtop, FILES.mutant_receptor_prmtop,
                                                FILES.mutant_ligand_prmtop)
-            if self.using_chamber is not self.mutant_system.complex_prmtop.chamber:
-                GMXMMPBSA_ERROR('CHAMBER prmtops must be used for both mutant '
-                                   'and normal prmtops or neither!')
         # If we have a chamber prmtop, force using sander
         if self.using_chamber:
             INPUT['use_sander'] = True
@@ -619,15 +616,6 @@ class MMPBSA_App(object):
                 GMXMMPBSA_ERROR('CHAMBER prmtops cannot be used with NMODE')
             self.stdout.write('CHAMBER prmtops found. Forcing use of sander\n')
 
-        # Print warnings if we are overwriting any masks and get default masks
-        if (INPUT['ligand_mask'] is None and INPUT['receptor_mask'] is not None):
-            warnings.warn('receptor_mask overwritten with default\n')
-            INPUT['receptor_mask'] = None
-        if (INPUT['receptor_mask'] is None and INPUT['ligand_mask'] is not None):
-            warnings.warn('ligand_mask overwritten with default\n')
-            INPUT['ligand_mask'] = None
-        # Map the gmx_MMPBSA systems with the input masks, and get the default ones if
-        # the masks were not input
         self.normal_system.Map(INPUT['receptor_mask'], INPUT['ligand_mask'])
         self.normal_system.CheckConsistency()
         if INPUT['alarun']:

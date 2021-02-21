@@ -4,8 +4,27 @@ title: Changelog
 ---
 
 # Changelog
-## Upcoming release
-...
+## Upcoming release (minor)
+This version is almost entirely focused on gmx_MMPBSA_ana
+### Additions
+- New set of graphics (heatmap)
+- Interactive visualization
+- Multiple systems to analyze in the same session
+- Calculations and plotting of the correlation between the systems
+
+### Fixes
+- Graphics improvements
+
+## Upcoming release (path)
+### Fixes
+* Error when ligand and/or receptor are discontinuous (Testing it)
+
+### Changes
+* `receptor_mask` and `ligand_mask` have been removed from input file variables. Now we extract the amber mask directly 
+  based on the GROMACS index file
+* The receptor and ligand mapping in the complex was improved. Now we use a method based on the GROMACS index file
+* The method Map of the system_MMPBSA class has been restructured. Now always processes amber masks
+
 
 ## [gmx_MMPBSA-v1.3.1](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/releases/tag/v1.3.1)
 ### Additions
