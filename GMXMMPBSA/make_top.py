@@ -499,7 +499,7 @@ class CheckMakeTop:
 
     def reswithin(self):
         # Get residue form receptor-ligand interface
-        if self.print_residues:
+        if self.print_residues and self.INPUT['decomprun']:
             res_list = []
             for i in self.resl['REC']:
                 if i in res_list:
@@ -507,11 +507,11 @@ class CheckMakeTop:
                 for j in self.resl['LIG']:
                     if j in res_list:
                         continue
-                    for rat in self.complex_str.residues[i].atoms:
+                    for rat in self.complex_str.residues[i - 1].atoms:
                         rat_coor = [rat.xx, rat.xy, rat.xz]
                         if i in res_list:
                             break
-                        for lat in self.complex_str.residues[j].atoms:
+                        for lat in self.complex_str.residues[j - 1].atoms:
                             lat_coor = [lat.xx, lat.xy, lat.xz]
                             if dist(rat_coor, lat_coor) <= self.within:
                                 if i not in res_list:
