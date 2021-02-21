@@ -891,7 +891,7 @@ class CheckMakeTop:
             c = 0
             for res in ref_str.residues:
                 res.chain = com_str.residues[c].chain
-                if c in self.resl['REC']:
+                if c + 1 in self.resl['REC']:
                     i = self.resl['REC'].index(c)
                     rec_str.residues[i].chain = res.chain
                 else:
@@ -929,7 +929,7 @@ class CheckMakeTop:
                     if not res.chain:
                         res.chain = curr_chain_id
 
-                        if c in self.resl['REC']:
+                        if c + 1 in self.resl['REC']:
                             i = self.resl['REC'].index(c)
                             rec_str.residues[i].chain = res.chain
                         else:
@@ -972,7 +972,7 @@ class CheckMakeTop:
                         curr_chain_id = chains_letters[chains_letters.index(chains_ids[-1]) + 1]
                         res.chain = curr_chain_id
 
-                        if c in self.resl['REC']:
+                        if c + 1 in self.resl['REC']:
                             i = self.resl['REC'].index(c)
                             rec_str.residues[i].chain = res.chain
                         else:
@@ -996,7 +996,7 @@ class CheckMakeTop:
     def molstr(self, data):
 
         if type(data) == str:
-           # data is a pdb file
+            # data is a pdb file
             pdb_file = data
             try:
                 with open(pdb_file) as fo:
