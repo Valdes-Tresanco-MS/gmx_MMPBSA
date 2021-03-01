@@ -32,14 +32,11 @@ from math import exp, log
 import logging
 # Import gmx_MMPBSA modules
 from GMXMMPBSA import utils
-from GMXMMPBSA.amber_outputs import (QHout, NMODEout, QMMMout, GBout, PBout,
-                                     PolarRISM_std_Out, RISM_std_Out,
-                                     PolarRISM_gf_Out, RISM_gf_Out,
-                                     SingleTrajBinding, MultiTrajBinding)
-from GMXMMPBSA.calculation import (CalculationList, EnergyCalculation,
-                                   PBEnergyCalculation, RISMCalculation,
-                                   NmodeCalc, QuasiHarmCalc, CopyCalc,
-                                   PrintCalc, LcpoCalc, MolsurfCalc)
+from GMXMMPBSA.amber_outputs import (QHout, NMODEout, QMMMout, GBout, PBout, PolarRISM_std_Out, RISM_std_Out,
+                                     PolarRISM_gf_Out, RISM_gf_Out, SingleTrajBinding, MultiTrajBinding, IEout)
+from GMXMMPBSA.calculation import (CalculationList, EnergyCalculation, PBEnergyCalculation, RISMCalculation,
+                                   NmodeCalc, QuasiHarmCalc, CopyCalc, PrintCalc, LcpoCalc, MolsurfCalc,
+                                   InteractionEntropyCalc)
 from GMXMMPBSA.commandlineparser import parser
 from GMXMMPBSA.createinput import create_inputs
 from GMXMMPBSA.exceptions import (MMPBSA_Error, InternalError, InputError, GMXMMPBSA_ERROR)
@@ -48,9 +45,7 @@ from GMXMMPBSA.findprogs import find_progs
 from GMXMMPBSA.infofile import InfoFile
 from GMXMMPBSA.input_parser import input_file as _input_file
 from GMXMMPBSA.make_trajs import make_trajectories, make_mutant_trajectories
-from GMXMMPBSA.output_file import (write_stability_output,
-                                   write_binding_output,
-                                   write_decomp_stability_output,
+from GMXMMPBSA.output_file import (write_stability_output, write_binding_output, write_decomp_stability_output,
                                    write_decomp_binding_output)
 from GMXMMPBSA.parm_setup import MMPBSA_System
 from GMXMMPBSA.make_top import CheckMakeTop
@@ -915,39 +910,6 @@ class MMPBSA_App(object):
         """ Throws up a barrier """
         self.MPI.COMM_WORLD.Barrier()
 
-    def calculate_interaction_entropy(self, key, mutant=False):
-        """
-        Calculate the interaction entropy described FIXME: article
-        :param key:
-        :return:
-        """
-        # gases constant in kcal/mol
-        k = 0.001987
-        if mutant:
-            calc_types = self.calc_types['mutant']
-        else:
-            calc_types = self.calc_types
-        energy_int = np.array([], dtype=np.float)
-        a_energy_int = np.array([], dtype=np.float)
-        d_energy_int = np.array([], dtype=np.float)
-        exp_energy_int = np.array([], dtype=np.float)
-        ts = np.array([], dtype=np.float)
-
-        ggas = calc_types[key]['delta'].data['DELTA G gas']
-
-        for eint in ggas:
-            energy_int = np.append(energy_int, eint)
-            aeint = energy_int.mean()
-            a_energy_int = np.append(a_energy_int, aeint)
-            deint = eint - aeint
-            d_energy_int = np.append(d_energy_int, deint)
-            eceint = exp(deint / (k * self.INPUT['entropy_temp']))
-            exp_energy_int = np.append(exp_energy_int, eceint)
-            aeceint = exp_energy_int.mean()
-            cts = k * self.INPUT['entropy_temp'] * log(aeceint)
-            ts = np.append(ts, cts)
-            calc_types[key]['delta'].data['-TDS'] = ts
-
     def parse_output_files(self):
         """
         This parses the output files and loads them into dicts for easy access
@@ -963,11 +925,9 @@ class MMPBSA_App(object):
         # Quasi-harmonic analysis is a special-case, so handle that separately
         if INPUT['entropy'] == 1:
             if not INPUT['mutant_only']:
-                self.calc_types['qh'] = QHout(self.pre + 'cpptraj_entropy.out',
-                                              INPUT['temp'])
+                self.calc_types['qh'] = QHout(self.pre + 'cpptraj_entropy.out', INPUT['temp'])
             if INPUT['alarun']:
-                self.calc_types['mutant']['qh'] = QHout(self.pre +
-                                                        'mutant_cpptraj_entropy.out', INPUT['temp'])
+                self.calc_types['mutant']['qh'] = QHout(self.pre + 'mutant_cpptraj_entropy.out', INPUT['temp'])
         # Set BindingClass based on whether it's a single or multiple trajectory
         # analysis
         if self.traj_protocol == 'STP':
@@ -1017,8 +977,11 @@ class MMPBSA_App(object):
                         self.calc_types[key]['ligand'],
                         self.INPUT['verbose'], self.using_chamber)
 
-                    if self.INPUT['entropy'] == 2:
-                        self.calculate_interaction_entropy(key)
+                    if self.INPUT['entropy'] == 2 and key != 'nmode':
+                        edata = self.calc_types[key]['delta'].data['DELTA G gas']
+                        ie = InteractionEntropyCalc(edata, key, self.INPUT, self.pre + 'iteraction_entropy.dat')
+                        self.calc_types['ie'] = IEout(ie.data, ie.value, ie.frames, ie.ie_frames, key)
+                        # self.calc_types[self.key]['delta'].data['DELTA G gas']
                 else:
                     self.calc_types[key]['complex'].fill_composite_terms()
             # Time for mutant
@@ -1038,8 +1001,10 @@ class MMPBSA_App(object):
                         self.calc_types['mutant'][key]['receptor'],
                         self.calc_types['mutant'][key]['ligand'],
                         self.INPUT['verbose'], self.using_chamber)
-                    if self.INPUT['entropy'] == 2:
-                        self.calculate_interaction_entropy(key, mutant=True)
+                    if self.INPUT['entropy'] == 2 and key != 'nmode':
+                        edata = self.calc_types['mutant'][key]['delta'].data['DELTA G gas']
+                        mie = InteractionEntropyCalc(edata, key, self.INPUT, self.pre + 'mutant_iteraction_entropy.dat')
+                        self.calc_types['mutant']['ie'] = IEout(mie.data, mie.value, mie.frames, mie.ie_frames, key)
                 else:
                     self.calc_types['mutant'][key]['complex'].fill_composite_terms()
 

@@ -98,13 +98,6 @@ class CheckMakeTop:
         self.receptor_str_file = self.FILES.prefix + 'REC.pdb'
         self.ligand_str_file = self.FILES.prefix + 'LIG.pdb'
 
-        self.rec_ions_pdb = self.FILES.prefix + 'REC_IONS.pdb'
-        self.lig_ions_pdb = self.FILES.prefix + 'LIG_IONS.pdb'
-
-        self.mutant_complex_pdb = self.FILES.prefix + 'MUT_COM.pdb'
-        self.mutant_receptor_pdb = self.FILES.prefix + 'MUT_REC.pdb'
-        self.mutant_ligand_pdb = self.FILES.prefix + 'MUT_LIG.pdb'
-
         if self.FILES.reference_structure:
             self.ref_str = parmed.read_PDB(self.FILES.reference_structure)
 
@@ -598,30 +591,31 @@ class CheckMakeTop:
         res_list = {'REC': [], 'LIG': []}
         com_ndx = ndx['GMXMMPBSA_REC_GMXMMPBSA_LIG']
         com_len = len(ndx['GMXMMPBSA_REC_GMXMMPBSA_LIG'])
-        dif = 0
+        resnum = 1
+        current_res = None
         for i in range(com_len):
-            if  i == 0:
-                dif = com_str.atoms[i].residue.number - 1  # AMBER mask must be start at 1
             # We check who owns the residue corresponding to this atom
             if com_ndx[i] in ndx['GMXMMPBSA_REC']:
                 current = 'R'
                 # save residue number in the rec list
-                resnum = com_str.atoms[i].residue.number - dif
-                if not resnum in res_list['REC']:
+                if com_str.atoms[i].residue.number != current_res and not resnum in res_list['REC']:
                     res_list['REC'].append(resnum)
+                    resnum += 1
+                    current_res = com_str.atoms[i].residue.number
             else:
                 current = 'L'
                 # save residue number in the lig list
-                resnum = com_str.atoms[i].residue.number - dif
-                if not resnum in res_list['LIG']:
+                if com_str.atoms[i].residue.number != current_res and not resnum in res_list['LIG']:
                     res_list['LIG'].append(resnum)
+                    resnum += 1
+                    current_res = com_str.atoms[i].residue.number
             # check for end
             if previous and current != previous:
-                end = com_str.atoms[i-1].residue.number - dif
+                end = resnum - 2
 
             # when i is the last index
             if i == com_len - 1:
-                end = com_str.atoms[i].residue.number - dif
+                end = resnum - 1
             if end:
                 if previous == 'R':
                     masks['REC'].append([start, end])

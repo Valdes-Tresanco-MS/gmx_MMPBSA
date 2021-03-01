@@ -35,39 +35,40 @@ bound state. On the other hand, in the so-called Multiple Trajectory (MT) approx
 of the species (_i.e._ complex, receptor, and ligand) are extracted from their own trajectory file. This 
 approximation, theoretically more rigorous though, leads to higher standard deviation of the binding free energies.  
 
-  [1]: https://pubs.acs.org/doi/10.1021/ct300418h
-  [2]: https://pubs.acs.org/doi/abs/10.1021/jacs.6b02682
 
 ## Literature
-Further information can be found in [Amber manual][1]:
+Further information can be found in [Amber manual][3]:
 
-* [MMPBSA.py][2]
-* [The Generalized Born/Surface Area Model][3]
-* [PBSA][4]
-* [Reference Interaction Site Model][5]
-* [Generalized Born (GB) for QM/MM calculations][6]
+* [MMPBSA.py][4]
+* [The Generalized Born/Surface Area Model][5]
+* [PBSA][6]
+* [Reference Interaction Site Model][7]
+* [Generalized Born (GB) for QM/MM calculations][8]
 
 and the foundational papers:
 
-* [Srinivasan J. et al., 1998][7] 
-* [Kollman P. A. et al., 2000][8] 
-* [Gohlke H., Case D. A. 2004][9] 
+* [Srinivasan J. et al., 1998][9] 
+* [Kollman P. A. et al., 2000][10] 
+* [Gohlke H., Case D. A. 2004][11] 
 
 as well as some reviews:
 
-* [Genheden S., Ryde U. 2015][10] 
-* [Wang et. al., 2018][11]  
-* [Wang et. al., 2019][12] 
+* [Genheden S., Ryde U. 2015][12] 
+* [Wang et. al., 2018][13]  
+* [Wang et. al., 2019][14] 
 
-  [1]: https://ambermd.org/doc12/Amber20.pdf
-  [2]: https://ambermd.org/doc12/Amber20.pdf#chapter.34
-  [3]: https://ambermd.org/doc12/Amber20.pdf#chapter.4
-  [4]: https://ambermd.org/doc12/Amber20.pdf#chapter.6
-  [5]: https://ambermd.org/doc12/Amber20.pdf#chapter.7
-  [6]: https://ambermd.org/doc12/Amber20.pdf#subsection.10.1.3
-  [7]: https://pubs.acs.org/doi/abs/10.1021/ja981844+
-  [8]: https://pubs.acs.org/doi/abs/10.1021/ar000033j
-  [9]: https://onlinelibrary.wiley.com/doi/abs/10.1002/jcc.10379
-  [10]: https://www.tandfonline.com/doi/full/10.1517/17460441.2015.1032936
-  [11]: https://www.frontiersin.org/articles/10.3389/fmolb.2017.00087/full
-  [12]: https://pubs.acs.org/doi/abs/10.1021/acs.chemrev.9b00055
+  [1]: https://pubs.acs.org/doi/10.1021/ct300418h
+  [2]: https://pubs.acs.org/doi/abs/10.1021/jacs.6b02682
+
+  [3]: https://ambermd.org/doc12/Amber20.pdf
+  [4]: https://ambermd.org/doc12/Amber20.pdf#chapter.34
+  [5]: https://ambermd.org/doc12/Amber20.pdf#chapter.4
+  [6]: https://ambermd.org/doc12/Amber20.pdf#chapter.6
+  [7]: https://ambermd.org/doc12/Amber20.pdf#chapter.7
+  [8]: https://ambermd.org/doc12/Amber20.pdf#subsection.10.1.3
+  [9]: https://pubs.acs.org/doi/abs/10.1021/ja981844+
+  [10]: https://pubs.acs.org/doi/abs/10.1021/ar000033j
+  [11]: https://onlinelibrary.wiley.com/doi/abs/10.1002/jcc.10379
+  [12]: https://www.tandfonline.com/doi/full/10.1517/17460441.2015.1032936
+  [13]: https://www.frontiersin.org/articles/10.3389/fmolb.2017.00087/full
+  [14]: https://pubs.acs.org/doi/abs/10.1021/acs.chemrev.9b00055
