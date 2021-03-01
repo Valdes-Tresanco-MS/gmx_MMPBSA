@@ -910,39 +910,6 @@ class MMPBSA_App(object):
         """ Throws up a barrier """
         self.MPI.COMM_WORLD.Barrier()
 
-    def calculate_interaction_entropy(self, key, mutant=False):
-        """
-        Calculate the interaction entropy described FIXME: article
-        :param key:
-        :return:
-        """
-        # gases constant in kcal/mol
-        k = 0.001987
-        if mutant:
-            calc_types = self.calc_types['mutant']
-        else:
-            calc_types = self.calc_types
-        energy_int = np.array([], dtype=np.float)
-        a_energy_int = np.array([], dtype=np.float)
-        d_energy_int = np.array([], dtype=np.float)
-        exp_energy_int = np.array([], dtype=np.float)
-        ts = np.array([], dtype=np.float)
-
-        ggas = calc_types[key]['delta'].data['DELTA G gas']
-
-        for eint in ggas:
-            energy_int = np.append(energy_int, eint)
-            aeint = energy_int.mean()
-            a_energy_int = np.append(a_energy_int, aeint)
-            deint = eint - aeint
-            d_energy_int = np.append(d_energy_int, deint)
-            eceint = exp(deint / (k * self.INPUT['entropy_temp']))
-            exp_energy_int = np.append(exp_energy_int, eceint)
-            aeceint = exp_energy_int.mean()
-            cts = k * self.INPUT['entropy_temp'] * log(aeceint)
-            ts = np.append(ts, cts)
-            calc_types[key]['delta'].data['-TDS'] = ts
-
     def parse_output_files(self):
         """
         This parses the output files and loads them into dicts for easy access
@@ -958,11 +925,9 @@ class MMPBSA_App(object):
         # Quasi-harmonic analysis is a special-case, so handle that separately
         if INPUT['entropy'] == 1:
             if not INPUT['mutant_only']:
-                self.calc_types['qh'] = QHout(self.pre + 'cpptraj_entropy.out',
-                                              INPUT['temp'])
+                self.calc_types['qh'] = QHout(self.pre + 'cpptraj_entropy.out', INPUT['temp'])
             if INPUT['alarun']:
-                self.calc_types['mutant']['qh'] = QHout(self.pre +
-                                                        'mutant_cpptraj_entropy.out', INPUT['temp'])
+                self.calc_types['mutant']['qh'] = QHout(self.pre + 'mutant_cpptraj_entropy.out', INPUT['temp'])
         # Set BindingClass based on whether it's a single or multiple trajectory
         # analysis
         if self.traj_protocol == 'STP':
