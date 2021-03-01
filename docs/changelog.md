@@ -4,26 +4,40 @@ title: Changelog
 ---
 
 # Changelog
-## Upcoming release (minor)
+## Upcoming release (minor v1.4.0)
 This version is almost entirely focused on gmx_MMPBSA_ana
 ### Additions
 - New set of graphics (heatmap)
-- Interactive visualization
+- Interactive visualization with PyMOL
 - Multiple systems to analyze in the same session
 - Calculations and plotting of the correlation between the systems
 
 ### Fixes
 - Graphics improvements
 
-## Upcoming release (path)
+### Changes
+- Residues notation: CHAIN:RESNAME:RESNUMBER instead of Amber residue index
+- IE in API
+- Color Palette
+
+## [gxm_MMPBSA v1.3.2 (01/03/2021)](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/releases/tag/v1.3.2) 
+### Additions
+* **Now, gmx_MMPBSA is in Zenodo 
+  [![DOI](https://zenodo.org/badge/295050575.svg)](https://zenodo.org/badge/latestdoi/295050575). You can refer to 
+  us in this way in what we publish the article**
+* Added Interaction Entropy to gmx_MMPBSA output file
+* Added a new class to save IE in a csv file
+* Added "Go to Top" button to documentation HTML.
 ### Fixes
 * Error when ligand and/or receptor are discontinuous (Testing it)
-
+* Error when ligand and/or receptor are discontinuous and numbered non-consecutively
+* Non-critical errors and inconsistencies in documentation
 ### Changes
-* `receptor_mask` and `ligand_mask` have been removed from input file variables. Now we extract the amber mask directly 
-  based on the GROMACS index file
+* `receptor_mask` and `ligand_mask` have been removed from input file variables. Now we extract the amber mask directly
+based on the GROMACS index file
 * The receptor and ligand mapping in the complex was improved. Now we use a method based on the GROMACS index file
-* The method Map of the system_MMPBSA class has been restructured. Now always processes amber masks
+* The method `Map` of the `system_MMPBSA` class has been restructured. Now always processes amber masks
+* Changing the IE calculation function to a class
 
 
 ## [gmx_MMPBSA-v1.3.1](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/releases/tag/v1.3.1)
