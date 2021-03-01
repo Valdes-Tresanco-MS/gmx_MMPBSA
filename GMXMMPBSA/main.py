@@ -32,14 +32,11 @@ from math import exp, log
 import logging
 # Import gmx_MMPBSA modules
 from GMXMMPBSA import utils
-from GMXMMPBSA.amber_outputs import (QHout, NMODEout, QMMMout, GBout, PBout,
-                                     PolarRISM_std_Out, RISM_std_Out,
-                                     PolarRISM_gf_Out, RISM_gf_Out,
-                                     SingleTrajBinding, MultiTrajBinding)
-from GMXMMPBSA.calculation import (CalculationList, EnergyCalculation,
-                                   PBEnergyCalculation, RISMCalculation,
-                                   NmodeCalc, QuasiHarmCalc, CopyCalc,
-                                   PrintCalc, LcpoCalc, MolsurfCalc)
+from GMXMMPBSA.amber_outputs import (QHout, NMODEout, QMMMout, GBout, PBout, PolarRISM_std_Out, RISM_std_Out,
+                                     PolarRISM_gf_Out, RISM_gf_Out, SingleTrajBinding, MultiTrajBinding, IEout)
+from GMXMMPBSA.calculation import (CalculationList, EnergyCalculation, PBEnergyCalculation, RISMCalculation,
+                                   NmodeCalc, QuasiHarmCalc, CopyCalc, PrintCalc, LcpoCalc, MolsurfCalc,
+                                   InteractionEntropyCalc)
 from GMXMMPBSA.commandlineparser import parser
 from GMXMMPBSA.createinput import create_inputs
 from GMXMMPBSA.exceptions import (MMPBSA_Error, InternalError, InputError, GMXMMPBSA_ERROR)
@@ -48,9 +45,7 @@ from GMXMMPBSA.findprogs import find_progs
 from GMXMMPBSA.infofile import InfoFile
 from GMXMMPBSA.input_parser import input_file as _input_file
 from GMXMMPBSA.make_trajs import make_trajectories, make_mutant_trajectories
-from GMXMMPBSA.output_file import (write_stability_output,
-                                   write_binding_output,
-                                   write_decomp_stability_output,
+from GMXMMPBSA.output_file import (write_stability_output, write_binding_output, write_decomp_stability_output,
                                    write_decomp_binding_output)
 from GMXMMPBSA.parm_setup import MMPBSA_System
 from GMXMMPBSA.make_top import CheckMakeTop
