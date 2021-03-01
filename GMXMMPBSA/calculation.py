@@ -37,6 +37,8 @@ from GMXMMPBSA.exceptions import CalcError
 from GMXMMPBSA.exceptions import GMXMMPBSA_ERROR
 import os
 import sys
+import numpy as np
+import math
 
 #+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
@@ -547,5 +549,60 @@ class PrintCalc(Calculation):
 
     def run(self, rank, stdout=sys.stdout, stderr=sys.stderr):
         if rank == 0: stdout.write(self.message + '\n')
+
+#+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+class InteractionEntropyCalc:
+    """
+    Class for Interaction Entropy calculation
+    :return {IE_key: data}
+    """
+    def __init__(self, ggas, key, INPUT, output):
+        self.ggas = ggas
+        self.key = key
+        self.INPUT = INPUT
+        self.output = output
+        self.data = {}
+
+        self._calculate()
+        self.save_output()
+
+    def _calculate(self):
+        # gases constant in kcal/mol
+        k = 0.001987
+        energy_int = np.array([], dtype=np.float)
+        a_energy_int = np.array([], dtype=np.float)
+        d_energy_int = np.array([], dtype=np.float)
+        exp_energy_int = np.array([], dtype=np.float)
+        ts = np.array([], dtype=np.float)
+
+        for eint in self.ggas:
+            energy_int = np.append(energy_int, eint)
+            aeint = energy_int.mean()
+            a_energy_int = np.append(a_energy_int, aeint)
+            deint = eint - aeint
+            d_energy_int = np.append(d_energy_int, deint)
+            eceint = math.exp(deint / (k * self.INPUT['entropy_temp']))
+            exp_energy_int = np.append(exp_energy_int, eceint)
+            aeceint = exp_energy_int.mean()
+            cts = k * self.INPUT['entropy_temp'] * math.log(aeceint)
+            ts = np.append(ts, cts)
+        self.IntEnt = ts
+        self.data['IE_' + self.key] = self.IntEnt
+        nframes = len(self.IntEnt)
+        self.ie_frames = math.ceil(nframes * (self.INPUT['entropy_seg'] / 100))
+        self.value = self.IntEnt[self.ie_frames:].mean()
+        self.frames = [x for x in range(self.INPUT['startframe'], self.INPUT['endframe'] + self.INPUT['interval'],
+                                       self.INPUT['interval'])]
+
+    def save_output(self):
+        with open(self.output, 'w') as out:
+            out.write(f'Calculation for last {self.ie_frames} frames:\n')
+            out.write(f'Interaction Entropy: {self.value}\n\n')
+            out.write(f'Interaction Entropy per-frame:\n')
+
+            out.write('Frame # | IE value\n')
+            for f, d in zip(self.frames, self.IntEnt):
+                out.write('{:d}  {:.2f}\n'.format(f,d))
 
 #+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
