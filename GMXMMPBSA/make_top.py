@@ -882,10 +882,10 @@ class CheckMakeTop:
             if len(ref_str.residues) != len(com_str.residues):
                 GMXMMPBSA_ERROR('The number of amino acids in the reference structure is different from that of the '
                                 'complex...')
-            c = 0
+            c = 1
             for res in ref_str.residues:
-                res.chain = com_str.residues[c].chain
-                if c + 1 in self.resl['REC']:
+                com_str.residues[c-1].chain = res.chain
+                if c in self.resl['REC']:
                     i = self.resl['REC'].index(c)
                     rec_str.residues[i].chain = res.chain
                 else:
