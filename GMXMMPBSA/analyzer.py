@@ -475,6 +475,19 @@ class GMX_MMPBSA_ANA(QMainWindow):
                     else:
                         self.pb_data = dat
 
+            elif level == 'ie':
+                for level1 in data[level]:
+                    print(level1)
+                    print(data[level][level1])
+                    item1 = CustomItem([str(level1).upper()])
+                    item1.setCheckState(1, Qt.Unchecked)
+                    end = len(data[level][level1]) * self.app.INPUT['interval'] + self.app.INPUT['startframe']
+                    self.frames = [x for x in range(self.app.INPUT['startframe'], end, self.app.INPUT['interval'])]
+                    item1.dataperframe = {
+                        'name': mut_pre + '{} {} Interaction Entropy'.format(level.upper(), level1.upper()),
+                        'xaxis': 'frames', 'yaxis': ' (kcal/mol)', 'frames': self.frames,
+                        'data': data[level][level1]}
+                    item.addChild(item1)
             elif level == 'decomp':
                 for level1 in data[level]:
                     item1 = CustomItem([str(level1).upper()])

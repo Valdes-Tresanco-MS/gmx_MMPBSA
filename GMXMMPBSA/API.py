@@ -68,6 +68,14 @@ class mmpbsa_data(dict):
                 continue
             self[key] = {}
             tmpdict = {}
+
+            if key == 'ie':
+                if not self.stability:
+                    for dkey in app.calc_types[key].data:
+                        tmpdict[dkey] = make_array(app.calc_types[key].data[dkey])
+                    self[key] = tmpdict
+                continue
+
             for dkey in app.calc_types[key]['complex'].data:
                 tmpdict[dkey] = make_array(app.calc_types[key]['complex'].data[dkey])
             self[key]['complex'] = tmpdict
@@ -92,6 +100,12 @@ class mmpbsa_data(dict):
                 if key == 'qh': continue
                 self.mutant[key] = {}
                 tmpdict = {}
+                if key == 'ie':
+                    if not self.stability:
+                        for dkey in app.calc_types[key].data:
+                            tmpdict[dkey] = make_array(app.calc_types[key].data[dkey])
+                        self.mutant[key] = tmpdict
+                    continue
                 for dkey in app.calc_types['mutant'][key]['complex'].data:
                     tmpdict[dkey] = make_array(
                         app.calc_types['mutant'][key]['complex'].data[dkey])
