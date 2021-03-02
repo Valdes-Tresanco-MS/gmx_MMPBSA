@@ -918,12 +918,12 @@ class CheckMakeTop:
                 previous_res_number = 0
                 curr_chain_id = 'A'
                 has_nucl = 0
-                c = 0
+                c = 1
                 for res in com_str.residues:
                     if not res.chain:
                         res.chain = curr_chain_id
 
-                        if c + 1 in self.resl['REC']:
+                        if c in self.resl['REC']:
                             i = self.resl['REC'].index(c)
                             rec_str.residues[i].chain = res.chain
                         else:
