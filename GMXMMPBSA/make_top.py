@@ -513,7 +513,7 @@ class CheckMakeTop:
                                     res_list.append(j)
                                 break
             res_list.sort()
-            self.INPUT['print_res'] = ','.join([str(x + 1) for x in res_list])
+            self.INPUT['print_res'] = ','.join([str(x) for x in res_list])
 
     def cleantop(self, top_file, temp_top_file):
         """
