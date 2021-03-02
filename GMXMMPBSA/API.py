@@ -27,31 +27,20 @@ from copy import deepcopy
 from GMXMMPBSA import infofile, main, amber_outputs
 from GMXMMPBSA.exceptions import SetupError, NoFileExists
 from GMXMMPBSA.fake_mpi import MPI
+from pathlib import Path
+import parmed
 import os
-import warnings
-# Try importing numpy to see if we have it available
-try:
-    import numpy as np
-    HAS_NUMPY = True
-except ImportError:
-    from array import array
-    HAS_NUMPY = False
+import numpy as np
 
-__all__ = ['load_mmpbsa_info']
+__all__ = ['load_gmxmmpbsa_info']
 
-# Abstract the array-making routines
-if HAS_NUMPY:
-    make_array = lambda x: np.fromiter(x, float)
-    make_array_len = lambda x: np.zeros(x, float)
-else:
-    make_array = lambda x: array('d', x)
-    make_array_len = lambda x: array('d', [0 for i in range(x)])
+make_array = lambda x: np.fromiter(x, float)
+make_array_len = lambda x: np.zeros(x, float)
 
 class mmpbsa_data(dict):
     """ Main class that holds all of the Free Energy data """
     def __init__(self, app):
         """ Load data from an info object """
-        global HAS_NUMPY
         if not isinstance(app, main.MMPBSA_App):
             raise TypeError('mmpbsa_data can only take an MMPBSA_App!')
         # Loop through all of the data
@@ -120,11 +109,7 @@ class mmpbsa_data(dict):
         Adding one to another extends every array. The way we do this depends on
         whether we're using numpy arrays or
         """
-        global HAS_NUMPY
-        if HAS_NUMPY:
-            return self._add_numpy(other)
-        else:
-            return self._add_nonumpy(other)
+        return self._add_numpy(other)
 
     def _add_numpy(self, other):
         """
@@ -175,47 +160,6 @@ class mmpbsa_data(dict):
                 if key in used_keys_mutant:
                     continue
                 self.mutant[key] = deepcopy(other.mutant[key])
-
-    def _add_nonumpy(self, other):
-        """ Adds up 2 array objects (just use 'extend' method) """
-        used_keys = []
-        for key in self:
-            used_keys.append(key)
-            for dkey in self[key]:
-                try:
-                    self[key]['complex'][dkey].extend(other[key]['complex'][dkey])
-                    self[key]['receptor'][dkey].extend(other[key]['receptor'][dkey])
-                    self[key]['ligand'][dkey].extend(other[key]['ligand'][dkey])
-                except KeyError:
-                    pass
-        for key in other:
-            if key in used_keys:
-                continue
-            # If we didn't have a particular calc type, copy that array in here
-            self[key] = deepcopy(other[key])
-        # Check mutant statuses. If the other has mutant and I don't, copy other
-        # If we both have mutant, combine.  If only I do, already done
-        if self.mutant and not other.mutant:
-            self.mutant = deepcopy(other.mutant)
-        elif self.mutant and other.mutant:
-            used_keys_mutant = []
-            for key in self.mutant:
-                used_keys_mutant.append(key)
-                for dkey in self.mutant[key]:
-                    try:
-                        self.mutant[key]['complex'].extend(
-                            other.mutant[key]['complex'])
-                        self.mutant[key]['receptor'].extend(
-                            other.mutant[key]['receptor'])
-                        self.mutant[key]['ligand'].extend(
-                            other.mutant[key]['ligand'])
-                    except KeyError:
-                        pass
-            for key in other.mutant:
-                if key in used_keys_mutant:
-                    continue
-                self.mutant[key] = deepcopy(other.mutant[key])
-
 
 def _combine_np_arrays(nparray1, nparray2):
     origsize = nparray1.shape[0]
@@ -467,12 +411,7 @@ def load_mmpbsa_info(fname):
        # Calculate the standard deviation of the alanine mutant receptor in PB
        print mydata.mutant['pb']['receptor']['TOTAL'].std()
     """
-    if not HAS_NUMPY:
-        warnings.warn('numpy was not found. Data will be packed in normal Python '
-                      'arrays. Install numpy for more efficient array handling.',
-                      NotImplemented)
-
-    if not os.path.exists(fname):
+    if not fname.exists():
         raise NoFileExists("cannot find %s!" % fname)
     app = main.MMPBSA_App(MPI)
     info = infofile.InfoFile(app)
@@ -606,10 +545,6 @@ def load_gmxmmpbsa_info(fname):
        # Calculate the standard deviation of the alanine mutant receptor in PB
        print mydata.mutant['pb']['receptor']['TOTAL'].std()
     """
-    if not HAS_NUMPY:
-        warnings.warn('numpy was not found. Data will be packed in normal Python '
-                      'arrays. Install numpy for more efficient array handling.',
-                      NotImplemented)
 
     if not os.path.exists(fname):
         raise NoFileExists("cannot find %s!" % fname)
