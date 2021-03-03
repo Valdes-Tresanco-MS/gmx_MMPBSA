@@ -557,9 +557,8 @@ class InteractionEntropyCalc:
     Class for Interaction Entropy calculation
     :return {IE_key: data}
     """
-    def __init__(self, ggas, key, INPUT, output):
+    def __init__(self, ggas, INPUT, output):
         self.ggas = ggas
-        self.key = key
         self.INPUT = INPUT
         self.output = output
         self.data = {}
@@ -587,11 +586,11 @@ class InteractionEntropyCalc:
             aeceint = exp_energy_int.mean()
             cts = k * self.INPUT['entropy_temp'] * math.log(aeceint)
             ts = np.append(ts, cts)
-        self.IntEnt = ts
-        self.data['IE_' + self.key] = self.IntEnt
-        nframes = len(self.IntEnt)
+        self.data = ts
+        # self.data['IE_' + self.key] = self.IntEnt
+        nframes = len(self.data)
         self.ie_frames = math.ceil(nframes * (self.INPUT['entropy_seg'] / 100))
-        self.value = self.IntEnt[self.ie_frames:].mean()
+        self.value = self.data[self.ie_frames:].mean()
         self.frames = [x for x in range(self.INPUT['startframe'], self.INPUT['endframe'] + self.INPUT['interval'],
                                        self.INPUT['interval'])]
 
@@ -602,7 +601,7 @@ class InteractionEntropyCalc:
             out.write(f'Interaction Entropy per-frame:\n')
 
             out.write('Frame # | IE value\n')
-            for f, d in zip(self.frames, self.IntEnt):
+            for f, d in zip(self.frames, self.data):
                 out.write('{:d}  {:.2f}\n'.format(f,d))
 
 #+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
