@@ -977,10 +977,10 @@ class MMPBSA_App(object):
                         self.calc_types[key]['ligand'],
                         self.INPUT['verbose'], self.using_chamber)
 
-                    if self.INPUT['entropy'] == 2 and key != 'nmode':
+                    if self.INPUT['entropy'] == 2 and key != 'nmode' and 'ie' not in self.calc_types:
                         edata = self.calc_types[key]['delta'].data['DELTA G gas']
-                        ie = InteractionEntropyCalc(edata, key, self.INPUT, self.pre + 'iteraction_entropy.dat')
-                        self.calc_types['ie'] = IEout(ie.data, ie.value, ie.frames, ie.ie_frames, key)
+                        ie = InteractionEntropyCalc(edata, self.INPUT, self.pre + 'iteraction_entropy.dat')
+                        self.calc_types['ie'] = IEout(ie.data, ie.value, ie.frames, ie.ie_frames)
                         # self.calc_types[self.key]['delta'].data['DELTA G gas']
                 else:
                     self.calc_types[key]['complex'].fill_composite_terms()
@@ -1001,10 +1001,10 @@ class MMPBSA_App(object):
                         self.calc_types['mutant'][key]['receptor'],
                         self.calc_types['mutant'][key]['ligand'],
                         self.INPUT['verbose'], self.using_chamber)
-                    if self.INPUT['entropy'] == 2 and key != 'nmode':
+                    if self.INPUT['entropy'] == 2 and key != 'nmode' and 'ie' not in self.calc_types['mutant']:
                         edata = self.calc_types['mutant'][key]['delta'].data['DELTA G gas']
-                        mie = InteractionEntropyCalc(edata, key, self.INPUT, self.pre + 'mutant_iteraction_entropy.dat')
-                        self.calc_types['mutant']['ie'] = IEout(mie.data, mie.value, mie.frames, mie.ie_frames, key)
+                        mie = InteractionEntropyCalc(edata, self.INPUT, self.pre + 'mutant_iteraction_entropy.dat')
+                        self.calc_types['mutant']['ie'] = IEout(mie.data, mie.value, mie.frames, mie.ie_frames)
                 else:
                     self.calc_types['mutant'][key]['complex'].fill_composite_terms()
 
