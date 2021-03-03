@@ -157,7 +157,7 @@ class MMPBSA_App(object):
 
         if INPUT['alarun']:
             self.stdout.write('Mutating trajectories...\n')
-        self.mut_str, mutant_residue = make_mutant_trajectories(INPUT, FILES,
+        _, mutant_residue = make_mutant_trajectories(INPUT, FILES,
                                                                 self.mpi_rank, self.external_progs['cpptraj'],
                                                                 self.normal_system, self.mutant_system, self.pre)
 
@@ -588,6 +588,7 @@ class MMPBSA_App(object):
          FILES.mutant_receptor_prmtop, FILES.mutant_ligand_prmtop) = maketop.buildTopology()
         logging.info('Building AMBER Topologies from GROMACS files...Done.\n')
         INPUT['receptor_mask'], INPUT['ligand_mask'] = maketop.get_masks()
+        self.mut_str = maketop.mut_label
 
         self.normal_system = MMPBSA_System(FILES.complex_prmtop, FILES.receptor_prmtop, FILES.ligand_prmtop)
         self.using_chamber = self.normal_system.complex_prmtop.chamber
