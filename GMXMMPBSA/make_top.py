@@ -68,6 +68,8 @@ class CheckMakeTop:
         if self.print_residues:
             self.within = float(self.INPUT['print_res'].split()[1])
 
+        self.mut_label = None
+
         # Define Gromacs executable
         self.make_ndx = self.external_progs['make_ndx']
         self.trjconv = self.external_progs['trjconv']
@@ -378,7 +380,7 @@ class CheckMakeTop:
         if self.INPUT['alarun']:
             logging.info('Building Mutant Complex Topology...')
             # get mutation index in complex
-            com_mut_index, part_mut, part_index, mut_label = self.getMutationIndex()
+            com_mut_index, part_mut, part_index, self.mut_label = self.getMutationIndex()
             mut_com_amb_prm = self.makeMutTop(com_amb_prm, com_mut_index)
             # change de PBRadii
             action = ChRad(mut_com_amb_prm, PBRadii[self.INPUT['PBRadii']])
@@ -460,7 +462,7 @@ class CheckMakeTop:
         self.mut_ligand_list = {}
 
         if self.INPUT['alarun']:
-            com_mut_index, part_mut, part_index, mut_label = self.getMutationIndex()
+            com_mut_index, part_mut, part_index, self.mut_label = self.getMutationIndex()
             if part_mut == 'REC':
                 logging.info('Detecting mutation in Receptor. Building Mutant Receptor Structure...')
                 self.mutant_ligand_pmrtop = None
@@ -688,36 +690,47 @@ class CheckMakeTop:
 
     def getMutationIndex(self):
         label = ''
+        icode_ = ''
         if not self.INPUT['mutant_res']:
             GMXMMPBSA_ERROR("No residue for mutation was defined")
-        chain_, resnum_ = self.INPUT['mutant_res'].split(':')
+        not_list = self.INPUT['mutant_res'].split(':')
+        if len(not_list) == 2:
+            chain_, resnum_ = not_list
+        elif len(not_list) == 3:
+            chain_, resnum_, icode_ = not_list
+        else:
+            GMXMMPBSA_ERROR("Wrong notation... You most define the residue to mutate as follow: CHAIN:RES_NUMBER or "
+                            "CHAIN:RES_NUMBER:INSERTION_CODE")
         chain = str(chain_).strip().upper()
         resnum = int(str(resnum_).strip())
+        icode = str(icode_).strip().upper()
 
         if not chain or not resnum:
-            GMXMMPBSA_ERROR("Wrong notation... You most define the residue to mutate as follow: CHAIN:RES_NUMBER")
+            GMXMMPBSA_ERROR("Wrong notation... You most define the residue to mutate as follow: CHAIN:RES_NUMBER or "
+                            "CHAIN:RES_NUMBER:INSERTION_CODE")
         idx = 0
         for res in self.complex_str.residues:
-            if res.number == int(resnum) and res.chain == chain:
+            if res.number == int(resnum) and res.chain == chain and res.insertion_code == icode:
                 try:
                     parmed.residue.AminoAcidResidue.get(res.name, True)
                 except KeyError as e:
                     GMXMMPBSA_ERROR('The mutation must be an amino acid residue ...')
-
-                label = f'{res.chain}:{res.name}:{res.number}'
+                label = f"{res.name}[{res.chain}:{res.number}]{self.INPUT['mutant']}"
+                if icode:
+                    label = f"{res.name}[{res.chain}:{res.number}:{res.insertion_code}]{self.INPUT['mutant']}"
                 break
             idx += 1
 
         if idx in self.resl['REC']:
-            part_index = self.resl['REC'].index(idx)
+            part_index = self.resl['REC'].index(idx + 1)
             part_mut = 'REC'
         elif idx in self.resl['LIG']:
-            part_index = self.resl['LIG'].index(idx)
+            part_index = self.resl['LIG'].index(idx + 1)
             part_mut = 'LIG'
         else:
             part_index = None
             part_mut = None
-            GMXMMPBSA_ERROR('Residue {}:{} not found'.format(chain, resnum))
+            GMXMMPBSA_ERROR(f'Residue {not_list} not found')
 
         return (idx, part_mut, part_index, label)
 
@@ -781,15 +794,15 @@ class CheckMakeTop:
         for res in mut_top.residues:
             if ind == mut_index:
                 for at in res.atoms:
-                    if mut_aa == 'GlY':
+                    if mut_aa == 'GLY':
                         if at.name == 'CA':
                             ca_atom = at
-                        if at.name in ['CB']:
+                        if at.name == 'CB':
                             at.name = 'HA2'
                             ca_atom.xx, ca_atom.xy, ca_atom.xz, at.xx, at.xy, at.xz = _scaledistance(
-                                [ca_atom.xx, ca_atom.xy,
-                                 ca_atom.xz, at.xx, at.xy,
-                                 at.xz], 1.09)
+                                                                                            [ca_atom.xx, ca_atom.xy,
+                                                                                             ca_atom.xz, at.xx, at.xy,
+                                                                                             at.xz], 1.09)
                             for ref_at in h_atoms_prop:
                                 setattr(at, ref_at, h_atoms_prop[ref_at])
                         elif at.name in ['HA']:
@@ -802,9 +815,9 @@ class CheckMakeTop:
                         if at.name in ['CG', 'OG', 'CG2', 'SG']:
                             at.name = 'HB3'
                             cb_atom.xx, cb_atom.xy, cb_atom.xz, at.xx, at.xy, at.xz = _scaledistance(
-                                [cb_atom.xx, cb_atom.xy,
-                                 cb_atom.xz, at.xx, at.xy,
-                                 at.xz], 1.09)
+                                                                                            [cb_atom.xx, cb_atom.xy,
+                                                                                             cb_atom.xz, at.xx, at.xy,
+                                                                                             at.xz], 1.09)
                             for ref_at in h_atoms_prop:
                                 setattr(at, ref_at, h_atoms_prop[ref_at])
                         elif at.name in ['HB']:
