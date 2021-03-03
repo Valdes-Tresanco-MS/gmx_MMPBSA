@@ -1000,6 +1000,10 @@ class CheckMakeTop:
                     logging.warning('This structure contains nucleotides. We recommend that you use the reference '
                                     'structure')
 
+        # Save fixed complex structure for analysis and set it in FILES to save in info file
+        com_str.save(self.FILES.prefix + 'COM_FIXED.pdb', 'pdb', True, renumber=False)
+        self.FILES.complex_fixed = self.FILES.prefix + 'COM_FIXED.pdb'
+
     def molstr(self, data):
 
         if type(data) == str:
