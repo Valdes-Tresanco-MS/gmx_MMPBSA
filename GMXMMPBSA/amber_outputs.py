@@ -375,16 +375,15 @@ class IEout(object):
     """
     Interaction Entropy output
     """
-    def __init__(self, edata, value, frames, ie_frames, key):
+    def __init__(self, edata, value, frames, ie_frames):
         self.data = edata
         self.value = value
         self.frames = frames
         self.ieframes = ie_frames
-        self.key = key
 
     def print_summary_csv(self, csvwriter):
         """ Output summary of quasi-harmonic results in CSV format """
-        csvwriter.writerow([f'Iteration Entropy calculation for {self.key.upper()} from last {self.ieframes} frames...'])
+        csvwriter.writerow([f'Iteration Entropy calculation from last {self.ieframes} frames...'])
         csvwriter.writerow(['Iteration Entropy:', '{:.2f}'.format(self.value)])
 
     def print_vectors(self, csvwriter):
@@ -392,12 +391,12 @@ class IEout(object):
             in spreadsheets
         """
         csvwriter.writerow(['Frame #', 'Interaction Entropy'])
-        for f, d in zip(self.frames, self.edata):
+        for f, d in zip(self.frames, self.data):
             csvwriter.writerow([f] + [d])
 
     def print_summary(self):
         """ Formatted summary of quasi-harmonic results """
-        ret_str =  (f'Iteration Entropy calculation for {self.key.upper()} from last {self.ieframes} frames...\n')
+        ret_str =  (f'Iteration Entropy calculation from last {self.ieframes} frames...\n')
         ret_str += 'Iteration Entropy: {:.2f}\n'.format(self.value)
         return ret_str
 
