@@ -495,15 +495,9 @@ class CheckMakeTop:
         if self.print_residues and self.INPUT['decomprun']:
             res_list = []
             for i in self.resl['REC']:
-                if i in res_list:
-                    continue
                 for j in self.resl['LIG']:
-                    if j in res_list:
-                        continue
                     for rat in self.complex_str.residues[i - 1].atoms:
                         rat_coor = [rat.xx, rat.xy, rat.xz]
-                        if i in res_list:
-                            break
                         for lat in self.complex_str.residues[j - 1].atoms:
                             lat_coor = [lat.xx, lat.xy, lat.xz]
                             if dist(rat_coor, lat_coor) <= self.within:
