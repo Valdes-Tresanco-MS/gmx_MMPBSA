@@ -481,8 +481,6 @@ class GMX_MMPBSA_ANA(QMainWindow):
                     print(data[level][level1])
                     item1 = CustomItem([str(level1).upper()])
                     item1.setCheckState(1, Qt.Unchecked)
-                    end = len(data[level][level1]) * self.app.INPUT['interval'] + self.app.INPUT['startframe']
-                    self.frames = [x for x in range(self.app.INPUT['startframe'], end, self.app.INPUT['interval'])]
                     item1.dataperframe = {
                         'name': mut_pre + '{} {} Interaction Entropy'.format(level.upper(), level1.upper()),
                         'xaxis': 'frames', 'yaxis': ' (kcal/mol)', 'frames': self.frames,
@@ -497,12 +495,12 @@ class GMX_MMPBSA_ANA(QMainWindow):
                         item1.addChild(item2)
                         item2.setCheckState(1, Qt.Unchecked)
                         item2.setCheckState(2, Qt.Unchecked)
-                        lvl2_data = np.zeros(int(self.app.numframes / self.app.INPUT['interval']))
+                        lvl2_data = np.zeros(int(self.app.numframes))
                         lvl2_meandata = []
                         for level3 in data[level][level1]['delta'][level2]:
                             item3 = CustomItem([str(level3).upper()])
                             item2.addChild(item3)
-                            lvl3_data = np.zeros(int(self.app.numframes / self.app.INPUT['interval']))
+                            lvl3_data = np.zeros(int(self.app.numframes))
                             lvl3_meandata = []
                             lvl4_data = []
                             lvl4_meandata = []
