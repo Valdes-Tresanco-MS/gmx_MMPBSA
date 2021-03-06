@@ -1120,7 +1120,7 @@ class CheckMakeTop:
                     LIG = []
                     for mlig in self.mut_ligand_list:
                         LIG.append(f'{mlig}')
-                        mtif.write(f'{mlig} = loadpdb {self.mut_ligand_list[lig]}\n')
+                        mtif.write(f'{mlig} = loadpdb {self.mut_ligand_list[mlig]}\n')
                     mlig_out = ' '.join(LIG)
 
                     if not self.FILES.stability:
