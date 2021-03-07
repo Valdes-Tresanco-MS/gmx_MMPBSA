@@ -22,6 +22,40 @@ from types import SimpleNamespace as Namespace
 import numpy as np
 import pandas as pd
 
+class CorrelationItem(QTreeWidgetItem):
+    def __init__(self, parent, stringlist, model=None, enthalpy=None, dgie=None, dgnmode=None, dgqh=None, col_box=None):
+        super(CorrelationItem, self).__init__(parent, stringlist)
+
+        self.model = model
+        self.enthalpy = enthalpy
+        self.dgie = dgie
+        self.dgnmode = dgnmode
+        self.dgqh = dgqh
+        self.chart_title = f'Linear Regression Using {stringlist[0].upper()} model'
+        self.chart_subtitle = ['Exp. Energy vs Enthalpy (ΔH)', 'Exp. Energy vs Pred. Energy (ΔH+IE)',
+                               'Exp. Energy vs Pred. Energy (ΔH+NMODE)', 'Exp. Energy vs Pred. Energy (ΔH+QH)']
+        self.item_name = stringlist[0]
+        if col_box:
+            for col in col_box:
+                self.setCheckState(col, Qt.Unchecked)
+
+        self.dh_sw = None
+        self.dgie_sw = None
+        self.dgnmode_sw = None
+        self.dgqh_sw = None
+
+    def getplotdata(self):
+        # correlation_data[sys_name] = {'ΔG': {
+        #     'gb': {'ie': 0, 'qh': 0, 'nmode': 0},
+        #     'pb': {'ie': 0, 'qh': 0, 'nmode': 0},
+        #     'rism std': {'ie': 0, 'qh': 0, 'nmode': 0},
+        #     'rism gf': {'ie': 0, 'qh': 0, 'nmode': 0}},
+        #     'ΔH': {'gb': 0, 'pb': 0, 'rism std': 0, 'rism gf': 0},
+        #     'Exp.Energy': ki2energy(topItem.exp_ki, topItem.app.INPUT['temperature'])}
+        for system in self.cdata:
+
+            pass
+
 class CustomItem(QTreeWidgetItem):
     def __init__(self, parent, stringlist, system=None, app=None, has_chart=True, cdata=None, level=0,
                  chart_title='Binding Free Energy', chart_subtitle='', col_box=()):
