@@ -288,22 +288,25 @@ def get_delta_decomp(app, decomp_calc_type, data):
                         tempdict[p][res][para] = d
             else:
                 if rec and res in rec[p]:
-                    for resp, resp1 in zip(com[p][res], rec[p][res]):
-                        tempdict[p][res][resp] = {}
-                        for para in com[p][res][resp]:
-                            d = com[p][res][resp][para] - rec[p][res][resp1][para]
-                            tempdict[p][res][resp][para] = d
                     for resp in com[p][res]:
-                        tempdict[p][res][resp] = com[p][res][resp]
+                        if resp in rec[p][res]:
+                            tempdict[p][res][resp] = {}
+                            for para in com[p][res][resp]:
+                                tempdict[p][res][resp][para] = com[p][res][resp][para] - rec[p][res][resp][para]
+                        else:
+                            tempdict[p][res][resp] = {}
+                            for para in com[p][res][resp]:
+                                tempdict[p][res][resp][para] = com[p][resp][res][para]
                 elif lig and res in lig[p]:
-                    for resp, resp1 in zip(list(com[p][res])[(len(com[p][res]) - len(lig[p][res])):],
-                                           lig[p][res]):
-                        tempdict[p][res][resp] = {}
-                        for para in com[p][res][resp]:
-                            d = com[p][res][resp][para] - lig[p][res][resp1][para]
-                            tempdict[p][res][resp][para] = d
                     for resp in com[p][res]:
-                        tempdict[p][res][resp] = com[p][res][resp]
+                        if resp in lig[p][res]:
+                            tempdict[p][res][resp] = {}
+                            for para in com[p][res][resp]:
+                                tempdict[p][res][resp][para] = com[p][res][resp][para] - lig[p][res][resp][para]
+                        else:
+                            tempdict[p][res][resp] = {}
+                            for para in com[p][res][resp]:
+                                tempdict[p][res][resp][para] = com[p][resp][res][para]
     return tempdict
 
 def load_mmpbsa_info(fname):
