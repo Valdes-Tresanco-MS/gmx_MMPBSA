@@ -41,7 +41,8 @@ try:
     from GMXMMPBSA.exceptions import GMXMMPBSA_ERROR, InputError, CommandlineError
     from GMXMMPBSA.infofile import InfoFile
     from GMXMMPBSA import main
-    from GMXMMPBSA.analyzer import GMX_MMPBSA_ANA
+    from GMXMMPBSA.analyzer.gui import GMX_MMPBSA_ANA
+    from GMXMMPBSA.analyzer.utils import get_files
     from GMXMMPBSA.commandlineparser import anaparser
 except ImportError:
     import os
@@ -131,12 +132,10 @@ def gmxmmpbsa_ana():
     except CommandlineError as e:
         sys.stderr.write('%s: %s' % (type(e).__name__, e) + '\n')
         sys.exit(1)
-    path = Path(parser.path).absolute()
-    if not path.exists():
-        print('Path not found')
-        sys.exit(1)
+    ifiles = get_files(parser)
     app.setApplicationName('gmx_MMPBSA Analyzer (gmx_MMPBSA_ana)')
-    w = GMX_MMPBSA_ANA(path.as_posix())
+    w = GMX_MMPBSA_ANA()
+    w.initialize(ifiles)
     w.show()
     sys.exit(app.exec())
 
