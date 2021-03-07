@@ -233,5 +233,7 @@ anaparser = ArgumentParser(epilog='''This program is part of gmx_MMPBSA and will
 anaparser.add_argument('-v', '--version', action='version',
                        version='%%(prog)s %s based on MMPBSA version %s' % (__version__, __mmpbsa_version__))
 group = anaparser.add_argument_group('Info file')
-group.add_argument('-p', '--path', dest='path', help='Path to gmx_MMPBSA info file', required=True,
-                   default=None)
+group.add_argument('-f', '--files', nargs='*', help='gmx_MMPBSA info files or container folder', type=Path,
+                   default='[.] This folder')
+group.add_argument('-r', '--recursive', help='Search recursively in this folder at depth = 1', action='store_true',
+                   default=False)
