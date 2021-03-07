@@ -477,8 +477,6 @@ class GMX_MMPBSA_ANA(QMainWindow):
 
             elif level == 'ie':
                 for level1 in data[level]:
-                    print(level1)
-                    print(data[level][level1])
                     item1 = CustomItem([str(level1).upper()])
                     item1.setCheckState(1, Qt.Unchecked)
                     item1.dataperframe = {

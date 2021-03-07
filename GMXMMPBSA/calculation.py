@@ -568,8 +568,8 @@ class InteractionEntropyCalc:
         self.save_output()
 
     def _calculate(self):
-        # gases constant in kcal/mol
-        k = 0.001987
+        # boltzmann constant
+        k = 0.001985875
         energy_int = np.array([], dtype=np.float)
         a_energy_int = np.array([], dtype=np.float)
         d_energy_int = np.array([], dtype=np.float)
