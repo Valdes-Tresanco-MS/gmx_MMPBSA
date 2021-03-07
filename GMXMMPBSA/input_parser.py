@@ -492,7 +492,6 @@ input_file.addNamelist('general', 'general',
                            ['endframe', int, 9999999, 'Last frame to analyze'],
                            ['entropy', int, 0, 'Do quasi-harmonic or interaction entropy calculation'],
                            ['entropy_seg', int, 25, 'Trajectory segment to calculate interaction entropy'],
-                           ['entropy_temp', float, 298.15, 'Temperature to calculate interaction entropy'],
                            ['exp_ki', float, 0, 'Experimental Ki in nM'],
                            ['full_traj', int, 0, 'Print a full traj. AND the thread trajectories.'],
                            ['gmx_path', str, '', 'Force to use this path to get GROMACS executable.'],
@@ -513,6 +512,9 @@ input_file.addNamelist('general', 'general',
                            ['solvated_trajectory', int, 1, 'Define if it is necessary to cleanup the trajectories'],
                            ['startframe', int, 1, 'First frame to analyze.'],
                            ['strip_mask', str, strip_mask, 'Amber mask to strip from solvated prmtop'],
+                           ['sys_name', str, '', 'System name'],
+                           ['temperature', float, 298.15, 'Temperature to calculate Binding Free Energy '
+                                                          'from Ki and interaction entropy'],
                            ['use_sander', int, 0, 'Use sander to compute energies.'],
                            ['verbose', int, 1, 'How many energy terms to print in the final output.']
                        ], trigger=None)
