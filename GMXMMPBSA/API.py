@@ -189,93 +189,25 @@ def _combine_np_arrays(nparray1, nparray2):
 
 class APIDecompOut(amber_outputs.DecompOut):
 
-    def __init__(self, basename, surften, num_files, verbose, nframes):
-        amber_outputs.DecompOut.__init__(self, basename, None, surften, False,
-                                         num_files, verbose)
-        self.array_data = {}
-        # Make a new dict for all printed tokens (TDC,SDC,BDC)
-        for key in self.allowed_tokens:
-            self.array_data[key] = {}
-            for i in range(nframes):
-                for j in range(self.num_terms):
-                    rnum, internal, vdw, eel, pol, sas, tot = self.get_next_term(key)
-                    try:
-                        self.array_data[key][rnum]['int'][i] = internal
-                        self.array_data[key][rnum]['vdw'][i] = vdw
-                        self.array_data[key][rnum]['eel'][i] = eel
-                        self.array_data[key][rnum]['pol'][i] = pol
-                        self.array_data[key][rnum]['sas'][i] = sas
-                        self.array_data[key][rnum]['tot'][i] = tot
-                    except KeyError:
-                        # This is the first frame, we don't have the rnum dict yet, so
-                        # make that dict here and create the arrays, then fill the
-                        # first term
-                        self.array_data[key][rnum] = {}
-                        for k in ('int', 'vdw', 'eel', 'pol', 'sas', 'tot'):
-                            self.array_data[key][rnum][k] = make_array_len(nframes)
-                        self.array_data[key][rnum]['int'][i] = internal
-                        self.array_data[key][rnum]['vdw'][i] = vdw
-                        self.array_data[key][rnum]['eel'][i] = eel
-                        self.array_data[key][rnum]['pol'][i] = pol
-                        self.array_data[key][rnum]['sas'][i] = sas
-                        self.array_data[key][rnum]['tot'][i] = tot
+    def __init__(self, basename, res_info, app): #surften, num_files, verbose, nframes, prmtop):
 
-class APIPairDecompOut(amber_outputs.PairDecompOut):
-
-    def __init__(self, basename, surften, num_files, verbose, nframes):
-        amber_outputs.DecompOut.__init__(self, basename, None, surften, False,
-                                         num_files, verbose)
-        self.array_data = {}
-        # Make a new dict for all printed tokens (TDC,SDC,BDC)
-        for key in self.allowed_tokens:
-            self.array_data[key] = {}
-
-        for i in range(nframes):
-            for key in self.allowed_tokens:
-                for j in range(self.num_terms):
-                    rnum, rnum2, internal, vdw, eel, pol, sas, tot = \
-                        self.get_next_term(key)
-                    dkey = '%d-%d' % (rnum, rnum2)
-                    try:
-                        self.array_data[key][dkey]['int'][i] = internal
-                        self.array_data[key][dkey]['vdw'][i] = vdw
-                        self.array_data[key][dkey]['eel'][i] = eel
-                        self.array_data[key][dkey]['pol'][i] = pol
-                        self.array_data[key][dkey]['sas'][i] = sas
-                        self.array_data[key][dkey]['tot'][i] = tot
-                    except KeyError:
-                        # This is the first frame, we don't have the rnum dict yet, so
-                        # make that dict here and create the arrays, then fill the
-                        # first term
-                        self.array_data[key][dkey] = {}
-                        for k in ('int', 'vdw', 'eel', 'pol', 'sas', 'tot'):
-                            self.array_data[key][dkey][k] = make_array_len(nframes)
-                        self.array_data[key][dkey]['int'][i] = internal
-                        self.array_data[key][dkey]['vdw'][i] = vdw
-                        self.array_data[key][dkey]['eel'][i] = eel
-                        self.array_data[key][dkey]['pol'][i] = pol
-                        self.array_data[key][dkey]['sas'][i] = sas
-                        self.array_data[key][dkey]['tot'][i] = tot
-
-class APIDecompOutGMX(amber_outputs.DecompOut):
-
-    def __init__(self, basename, surften, num_files, verbose, nframes, lig_num=None):
-        amber_outputs.DecompOut.__init__(self, basename, None, surften, False,
-                                         num_files, verbose)
+        surften = app.INPUT['surften']
+        num_files = app.mpi_size,
+        verbose = app.INPUT['dec_verbose']
+        nframes = app.numframes
+        prmtop = app.FILES.complex_prmtop
+        amber_outputs.DecompOut.__init__(self, basename, prmtop, surften, False, num_files, verbose)
         self.array_data = {}
         # Make a new dict for all printed tokens (TDC,SDC,BDC)
         for key in self.allowed_tokens:
             self.array_data[key] = {}
         for i in range(nframes):
             for key in self.allowed_tokens:
-                n = 0
                 for j in range(self.num_terms):
                     rnum, internal, vdw, eel, pol, sas, tot = self.get_next_term(key)
-                    if lig_num:
-                        if n == len(lig_num):
-                            n = 0
-                        rnum = lig_num[n]
-                        n += 1
+                    for c, res_name in enumerate(res_info):
+                        if c + 1 == rnum:
+                            rnum = res_name
                     if rnum not in self.array_data[key]:
                         self.array_data[key][rnum] = {}
                         for k in ('int', 'vdw', 'eel', 'pol', 'sas', 'tot'):
@@ -287,11 +219,17 @@ class APIDecompOutGMX(amber_outputs.DecompOut):
                     self.array_data[key][rnum]['sas'][i] = sas
                     self.array_data[key][rnum]['tot'][i] = tot
 
-class APIPairDecompOutGMX(amber_outputs.PairDecompOut):
+class APIPairDecompOut(amber_outputs.PairDecompOut):
 
-    def __init__(self, basename, surften, num_files, verbose, nframes, lig_num=None):
-        amber_outputs.DecompOut.__init__(self, basename, None, surften, False,
-                                         num_files, verbose)
+    def __init__(self, basename, res_info, app): #surften, num_files, verbose, nframes, prmtop):
+
+        surften = app.INPUT['surften']
+        num_files = app.mpi_size,
+        verbose = app.INPUT['dec_verbose']
+        nframes = app.numframes
+        prmtop = app.FILES.complex_prmtop
+
+        amber_outputs.DecompOut.__init__(self, basename, prmtop, surften, False, num_files, verbose)
         self.array_data = {}
         # Make a new dict for all printed tokens (TDC,SDC,BDC)
         for key in self.allowed_tokens:
@@ -299,17 +237,14 @@ class APIPairDecompOutGMX(amber_outputs.PairDecompOut):
 
         for i in range(nframes):
             for key in self.allowed_tokens:
-                m = 0
-                n = 0
                 for j in range(self.num_terms):
                     rnum, rnum2, internal, vdw, eel, pol, sas, tot = self.get_next_term(key)
-                    if lig_num: # rename lig residues like complex lig names
-                        if n == len(lig_num):
-                            m += 1
-                            n = 0
-                        rnum = lig_num[m]
-                        rnum2 = lig_num[n]
-                        n += 1
+                    for c, res_name in enumerate(res_info):
+                        if c + 1 == rnum:
+                            rnum = res_name
+                        if c + 1 == rnum2:
+                            rnum2 = res_name
+
                     if rnum not in self.array_data[key]:
                         self.array_data[key][rnum] = {}
                     if rnum2 not in self.array_data[key][rnum]:
@@ -570,6 +505,102 @@ def load_gmxmmpbsa_info(fname):
     # Since Decomp data is parsed in a memory-efficient manner (by not storing
     # all of the data in arrays, but rather by printing each data point as it's
     # parsed), we need to handle the decomp data separately here
+    # print(app.FILES.__dict__.items())
+    # complex_fixed = getattr(app.FILES, 'complex_fixed')
+    # Open Complex fixed structure to assign per-(residue/wise) residue name
+    try:
+        complex_str = parmed.read_PDB(app.FILES.complex_fixed)
+    except:
+        complex_str = parmed.read_PDB(app.FILES.prefix + 'COM.pdb')
+    # Get receptor and ligand masks
+    mut_index = None
+
+    rec = {}
+    mut_rec = {}
+    rmstr = app.INPUT['receptor_mask'].strip(':')
+    rml = rmstr.split(',')
+    for x in rml:
+        if len(x.split('-')) > 1:
+            start, end = x.split('-')
+            for i in range(int(start), int(end) + 1):
+                residue = complex_str.residues[i - 1]
+                icode = f'{residue.insertion_code}'
+                if icode:
+                    icode = ':' + icode
+                rec[i] = (f"{residue.chain}:{residue.name}:{residue.number}" + icode)
+                mut_rec[i] = (f"{residue.chain}:{residue.name}:{residue.number}:{residue.insertion_code}")
+                if app.INPUT['mutant_res'] == (f"{residue.chain}:{residue.number}" + icode):
+                    mut_rec[i] = (f"{residue.chain}:{app.INPUT['mutant']}:{residue.number}" + icode)
+                # # without icode
+                # elif app.INPUT['mutant_res'] == (f"{residue.chain}:{residue.number}"):
+                #     mut_rec[i] = (f"{residue.chain}:{app.INPUT['mutant']}:{residue.number}")
+        else:
+            i = int(x)
+            residue = complex_str.residues[i - 1]
+            icode = f'{residue.insertion_code}'
+            if icode:
+                icode = ':' + icode
+            rec[i] = (f"{residue.chain}:{residue.name}:{residue.number}" + icode)
+            mut_rec[i] = (f"{residue.chain}:{residue.name}:{residue.number}" + icode)
+            if app.INPUT['mutant_res'] == (f"{residue.chain}:{residue.number}" + icode):
+                mut_rec[i] = (f"{residue.chain}:{app.INPUT['mutant']}:{residue.number}" + icode)
+
+    lig = {}
+    mut_lig = {}
+    lmstr = app.INPUT['ligand_mask'].strip(':')
+    lml = lmstr.split(',')
+    for x in lml:
+        if len(x.split('-')) > 1:
+            start, end = x.split('-')
+            for i in range(int(start), int(end) + 1):
+                residue = complex_str.residues[i - 1]
+                icode = f'{residue.insertion_code}'
+                if icode:
+                    icode = ':' + icode
+                lig[i] = (f"{residue.chain}:{residue.name}:{residue.number}" + icode)
+                mut_lig[i] = (f"{residue.chain}:{residue.name}:{residue.number}" + icode)
+                if app.INPUT['mutant_res'] == (f"{residue.chain}:{residue.number}" + icode):
+                    mut_lig[i] = (f"{residue.chain}:{app.INPUT['mutant']}:{residue.number}" + icode)
+        else:
+            i = int(x)
+            residue = complex_str.residues[i - 1]
+            icode = f'{residue.insertion_code}'
+            if icode:
+                icode = ':' + icode
+            lig[i] = (f"{residue.chain}:{residue.name}:{residue.number}" + icode)
+            mut_lig[i] = (f"{residue.chain}:{residue.name}:{residue.number}" + icode)
+            if app.INPUT['mutant_res'] == (f"{residue.chain}:{residue.number}" + icode):
+                mut_lig[i] = (f"{residue.chain}:{app.INPUT['mutant']}:{residue.number}" + icode)
+
+    com = rec.copy()
+    com.update(lig)
+    com_res_info = []
+    for key, value in sorted(com.items()):
+        com_res_info.append(value)
+
+    rec_res_info = []
+    for key, value in rec.items():
+        rec_res_info.append(value)
+
+    lig_res_info = []
+    for key, value in lig.items():
+        lig_res_info.append(value)
+
+
+    mut_com_res_info = []
+    mut_com = mut_rec.copy()
+    mut_com.update(mut_lig)
+    for key, value in sorted(mut_com.items()):
+        mut_com_res_info.append(value)
+
+    mut_rec_res_info = []
+    for key, value in mut_rec.items():
+        mut_rec_res_info.append(value)
+
+    mut_lig_res_info = []
+    for key, value in mut_lig.items():
+        mut_lig_res_info.append(value)
+
     if not app.INPUT['alarun']:
         return_data.mutant = None
     lig_res = None
