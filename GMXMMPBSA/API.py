@@ -365,8 +365,9 @@ def load_gmxmmpbsa_info(fname: Path):
        print mydata.mutant['pb']['receptor']['TOTAL'].std()
     """
 
-    if not os.path.exists(fname):
+    if not fname.exists():
         raise NoFileExists("cannot find %s!" % fname)
+    os.chdir(fname.parent)
     app = main.MMPBSA_App(MPI)
     info = infofile.InfoFile(app)
     info.read_info(fname)
