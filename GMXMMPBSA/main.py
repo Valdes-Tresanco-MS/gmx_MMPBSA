@@ -50,7 +50,7 @@ from GMXMMPBSA.output_file import (write_stability_output, write_binding_output,
 from GMXMMPBSA.parm_setup import MMPBSA_System
 from GMXMMPBSA.make_top import CheckMakeTop
 from GMXMMPBSA.timer import Timer
-from GMXMMPBSA.analyzer import run as ANA_run
+from GMXMMPBSA.analyzer.gui import run as Analyzer
 
 logging.getLogger(__name__)
 
@@ -689,16 +689,16 @@ class MMPBSA_App(object):
 
         logging.info('\n\ngmx_MMPBSA Finished! Thank you for using. Please '
                           'cite us if you publish this work with this paper:\n   '
-                          'Coming soon\n   '
-                          ' and \n'
+                          'Coming soon\n\n'
+                          'Also consider citing MMPBSA.py\n'
                           'Miller III, B. R., McGee Jr., T. D., Swails, J. M. '
                           'Homeyer, N. Gohlke, H. and Roitberg, A. E.\n   '
                           'J. Chem. Theory Comput., 2012, 8 (9) pp 3314-3321\n')
         self.MPI.Finalize()
 
-        if self.FILES.gui and not self.FILES.stability:
+        if self.FILES.gui:
             self.stdout.write('Opening GUI to analyze results...')
-            ANA_run(self.FILES.prefix + 'info')
+            Analyzer(self.FILES.prefix + 'info')
         else:
             sys.exit(0)
 
