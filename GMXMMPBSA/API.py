@@ -328,7 +328,7 @@ def load_gmxmmpbsa_info(fname: Path):
 
     Data Layout:
     ------------
-       Solvent Model     |  Dictionary Key    |  Data Keys Available
+               Model     |  Dictionary Key    |  Data Keys Available
        -------------------------------------------------------------------
        Generalized Born  |  'gb'              |  EGB, ESURF, *
        Poisson-Boltzmann |  'pb'              |  EPB, EDISPER, ECAVITY, *
@@ -474,47 +474,35 @@ def load_gmxmmpbsa_info(fname: Path):
         mut_lig_res_info.append(value)
 
     if not app.INPUT['alarun']:
-        return_data.mutant = None
-    lig_res = None
+        return_data.mutant = {}
     if app.INPUT['decomprun']:
         # Simplify the decomp class instance creation
         if app.INPUT['idecomp'] in (1, 2):
-            DecompClass = lambda x, y, z=None: APIDecompOutGMX(x, y, app.mpi_size,
-                                                    app.INPUT['dec_verbose'], app.numframes, lig_num=z)
+            DecompClass = lambda x, part: APIDecompOut(x, part, app)
         else:
-            DecompClass = lambda x, y, z=None: APIPairDecompOutGMX(x, y, app.mpi_size,
-                                                        app.INPUT['dec_verbose'], app.numframes, lig_num=z)
+            DecompClass = lambda x, part: APIPairDecompOut(x, part, app)
 
         if not app.INPUT['mutant_only']:
             # Do normal GB
             if app.INPUT['gbrun']:
                 return_data['decomp'] = {'gb' : {}}
                 return_data['decomp']['gb']['complex'] = DecompClass(app.FILES.prefix + 'complex_gb.mdout',
-                                                                     app.INPUT['surften']).array_data
-                com_res = []
-                for k in return_data['decomp']['gb']['complex']['TDC']:
-                    if k not in com_res:
-                        com_res.append(k)
+                                                                     com_res_info).array_data
 
                 if not app.stability:
                     return_data['decomp']['gb']['receptor'] = DecompClass(app.FILES.prefix + 'receptor_gb.mdout',
-                                                                          app.INPUT['surften']).array_data
-                    rec_res = []
-                    for k in return_data['decomp']['gb']['receptor']['TDC']:
-                        if k not in rec_res:
-                            rec_res.append(k)
-                    lig_res = com_res[len(rec_res):]
+                                                                          rec_res_info).array_data
                     return_data['decomp']['gb']['ligand'] = DecompClass(app.FILES.prefix + 'ligand_gb.mdout',
-                                                                        app.INPUT['surften'], lig_res).array_data
+                                                                        lig_res_info).array_data
                     return_data['decomp']['gb']['delta'] = get_delta_decomp(app, 'gb', return_data['decomp'])
             # Do normal PB
             if app.INPUT['pbrun']:
                 return_data['decomp'] = {'pb' : {}}
                 return_data['decomp']['pb']['complex'] = DecompClass(app.FILES.prefix + 'complex_pb.mdout',
-                                                                     app.INPUT['surften']).array_data
+                                                                     com_res_info).array_data
                 if not app.stability:
                     return_data['decomp']['pb']['receptor'] = DecompClass(app.FILES.prefix + 'receptor_pb.mdout',
-                                                                          app.INPUT['surften']).array_data
+                                                                          rec_res_info).array_data
                     return_data['decomp']['pb']['ligand'] = DecompClass(app.FILES.prefix + 'ligand_pb.mdout',
                                                                         app.INPUT['surften'], lig_res).array_data
                     return_data['decomp']['pb']['delta'] = get_delta_decomp(app, 'pb', return_data['decomp'])
@@ -522,31 +510,25 @@ def load_gmxmmpbsa_info(fname: Path):
             # Do mutant GB
             if app.INPUT['gbrun']:
                 return_data.mutant['decomp'] = {'gb' : {}}
-                return_data.mutant['decomp']['gb']['complex'] = DecompClass(app.FILES.prefix +
-                                                                             'mutant_complex_gb.mdout',
-                                                                            app.INPUT['surften']).array_data
+                return_data.mutant['decomp']['gb']['complex'] = DecompClass(
+                    app.FILES.prefix + 'mutant_complex_gb.mdout', mut_com_res_info).array_data
                 if not app.stability:
-                    return_data.mutant['decomp']['gb']['receptor'] = DecompClass(app.FILES.prefix +
-                                                                                  'mutant_receptor_gb.mdout',
-                                                                                 app.INPUT['surften']).array_data
-                    return_data.mutant['decomp']['gb']['ligand'] = DecompClass(app.FILES.prefix +
-                                                                                'mutant_ligand_gb.mdout',
-                                                                               app.INPUT['surften'], lig_res).array_data
+                    return_data.mutant['decomp']['gb']['receptor'] = DecompClass(
+                        app.FILES.prefix + 'mutant_receptor_gb.mdout', mut_rec_res_info).array_data
+                    return_data.mutant['decomp']['gb']['ligand'] = DecompClass(
+                        app.FILES.prefix + 'mutant_ligand_gb.mdout', mut_lig_res_info).array_data
                     return_data.mutant['decomp']['gb']['delta'] = get_delta_decomp(app, 'gb',
                                                                                    return_data.mutant['decomp'])
             # Do mutant PB
             if app.INPUT['pbrun']:
                 return_data.mutant['decomp'] = {'pb' : {}}
-                return_data.mutant['decomp']['pb']['complex'] = DecompClass(app.FILES.prefix +
-                                                                             'mutant_complex_pb.mdout',
-                                                                            app.INPUT['surften']).array_data
+                return_data.mutant['decomp']['pb']['complex'] = DecompClass(
+                    app.FILES.prefix + 'mutant_complex_pb.mdout', mut_com_res_info).array_data
                 if not app.stability:
-                    return_data.mutant['decomp']['pb']['receptor'] = DecompClass(app.FILES.prefix +
-                                                                                  'mutant_receptor_pb.mdout',
-                                                                                 app.INPUT['surften']).array_data
-                    return_data.mutant['decomp']['pb']['ligand'] = DecompClass(app.FILES.prefix +
-                                                                                'mutant_ligand_pb.mdout',
-                                                                               app.INPUT['surften'], lig_res).array_data
+                    return_data.mutant['decomp']['pb']['receptor'] = DecompClass(
+                        app.FILES.prefix + 'mutant_receptor_pb.mdout', mut_rec_res_info).array_data
+                    return_data.mutant['decomp']['pb']['ligand'] = DecompClass(
+                        app.FILES.prefix + 'mutant_ligand_pb.mdout', mut_lig_res_info).array_data
                     return_data.mutant['decomp']['pb']['delta'] = get_delta_decomp(app, 'pb',
                                                                                    return_data.mutant['decomp'])
         else:
