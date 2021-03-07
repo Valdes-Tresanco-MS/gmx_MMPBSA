@@ -40,6 +40,7 @@ make_array_len = lambda x: np.zeros(x, float)
 class mmpbsa_data(dict):
     """ Main class that holds all of the Free Energy data """
     def __init__(self, app):
+        super(mmpbsa_data, self).__init__()
         """ Load data from an info object """
         if not isinstance(app, main.MMPBSA_App):
             raise TypeError('mmpbsa_data can only take an MMPBSA_App!')
@@ -57,6 +58,12 @@ class mmpbsa_data(dict):
                 continue
             self[key] = {}
             tmpdict = {}
+            if key == 'ie':
+                if not self.stability:
+                    self[key] = {'data': app.calc_types[key].data, 'value': app.calc_types[key].value,
+                                 'frame': [app.calc_types[key].frames[-app.calc_types[key].ieframes],
+                                           app.calc_types[key].frames[-1]]}
+                continue
             for dkey in app.calc_types[key]['complex'].data:
                 tmpdict[dkey] = make_array(app.calc_types[key]['complex'].data[dkey])
             self[key]['complex'] = tmpdict
@@ -81,6 +88,12 @@ class mmpbsa_data(dict):
                 if key == 'qh': continue
                 self.mutant[key] = {}
                 tmpdict = {}
+
+                if key == 'ie':
+                    if not self.stability:
+                        self.mutant[key] = {'data': app.calc_types[key].data, 'value': app.calc_types[key].value}
+                    continue
+
                 for dkey in app.calc_types['mutant'][key]['complex'].data:
                     tmpdict[dkey] = make_array(
                         app.calc_types['mutant'][key]['complex'].data[dkey])
