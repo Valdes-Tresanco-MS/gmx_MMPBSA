@@ -504,7 +504,7 @@ def load_gmxmmpbsa_info(fname: Path):
                     return_data['decomp']['pb']['receptor'] = DecompClass(app.FILES.prefix + 'receptor_pb.mdout',
                                                                           rec_res_info).array_data
                     return_data['decomp']['pb']['ligand'] = DecompClass(app.FILES.prefix + 'ligand_pb.mdout',
-                                                                        app.INPUT['surften'], lig_res).array_data
+                                                                        lig_res_info).array_data
                     return_data['decomp']['pb']['delta'] = get_delta_decomp(app, 'pb', return_data['decomp'])
         if app.INPUT['alarun']:
             # Do mutant GB
