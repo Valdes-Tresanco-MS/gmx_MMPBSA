@@ -49,10 +49,10 @@ amber topology from GROMACS topologies. Based on the above, the files required i
 
 **Table 1:** Required input files for every force field 
 
-| Force field | Structure | Index | Trajectory | Topology | Reference Structure | Small Molecule Mol2 |
-|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| AMBER | tpr, gro, pdb | ndx | xtc, trr, pdb | Optional | Optional | Only if not top |
-| CHARMM | tpr, gro, pdb | ndx | xtc, trr, pdb | Always | Optional | No|
+| Force field |   Structure   | Index |  Trajectory   | Topology | Reference Structure | Small Molecule Mol2 |
+|:-----------:|:-------------:|:-----:|:-------------:|:--------:|:-------------------:|:-------------------:|
+|    AMBER    | tpr, gro, pdb |  ndx  | xtc, trr, pdb | Optional |      Optional       |   Only if not top   |
+|   CHARMM    | tpr, gro, pdb |  ndx  | xtc, trr, pdb |  Always  |      Optional       |         No          |
 
 ## Topology preparation
 

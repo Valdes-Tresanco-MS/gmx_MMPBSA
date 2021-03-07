@@ -55,23 +55,23 @@ first-level `dict`, in this case) (Table 2). The keys of these second-level dict
 Table 2. List and description of `calc_key` dict keys that may be present in instances of the `mmpbsa_data`
 class.
 
-| Dictionary Key (calc_key) | Calculation Type |
-|:---:|:---|
-| `gb`| Generalized Born Results |
-| `pb` | Poisson-Boltzmann Results |
-| `rism gf` | Gaussian Fluctuation 3D-RISM Results |
-| `rism std` | Standard 3D-RISM Results |
-| `nmode` | Normal Mode Analysis Results |
-| `qh` | Quasi-harmonic Approximation Results |
+| Dictionary Key (calc_key) | Calculation Type                     |
+|:-------------------------:|:-------------------------------------|
+|           `gb`            | Generalized Born Results             |
+|           `pb`            | Poisson-Boltzmann Results            |
+|         `rism gf`         | Gaussian Fluctuation 3D-RISM Results |
+|        `rism std`         | Standard 3D-RISM Results             |
+|          `nmode`          | Normal Mode Analysis Results         |
+|           `qh`            | Quasi-harmonic Approximation Results |
 
 Table 3. List and description of system_component keys that may be present in instances of the mmpbsa_data class.
 
-| Dictionary Key (system_component) | Description |
-|:---:|:---|
-| `complex` | Data sets for the complex. (Stability & Binding)|
-| `receptor` | Data sets for the receptor. (Binding only)|
-| `ligand` | Data sets for the ligand. (Binding only)|
-| `delta`| Data sets for the delta. (Binding only) |
+| Dictionary Key (system_component) | Description                                      |
+|:---------------------------------:|:-------------------------------------------------|
+|             `complex`             | Data sets for the complex. (Stability & Binding) |
+|            `receptor`             | Data sets for the receptor. (Binding only)       |
+|             `ligand`              | Data sets for the ligand. (Binding only)         |
+|              `delta`              | Data sets for the delta. (Binding only)          |
 
 The keys of these inner-most (third-level) `dict` instances are paired with the data arrays for that energy term (Table
 4). The various dictionary keys are listed below for each level. If alanine scanning was performed, the
@@ -95,28 +95,28 @@ and `rism std` although the value of `POLAR SOLV` and `APOLAR SOLV` will differ 
 Those keys marked with * are specific to the CHARMM force field used through chamber. Those arrays are all 0 for 
 normal Amber topology files.
 
-| Description | `gb` | `pb` | `RISM` |
-|:---|:---:|:---:|:---:|
-| Bond energy | `BOND` | `BOND` |  `BOND` |
-| Angle energy | `ANGLE` | `ANGLE` |  `ANGLE` |
-| Dihedral Energy | `DIHED` | `DIHED` |  `DIHED` |
-| Urey-Bradley* | `UB` | `UB` |  — |
-| Improper Dihedrals* | `IMP` | `IMP` |  — |
-| Correction Map* | `CMAP` | `CMAP` |  — |
-| 1-4 van der Waals energy | `1-4 VDW` | `1-4 VDW` |  `1-4 VDW` |
-| 1-4 Electrostatic energy | `1-4 EEL` | `1-4 EEL` |  `1-4 EEL` |
-| van der Waals energy | `VDWAALS` | `VDWAALS` |  `VDWAALS` |
-| Electrostatic energy | `EEL` | `EEL` |  `EEL` |
-| Polar solvation energy | `EGB` | `EPB` |  `POLAR SOLV` |
-| Non-polar solvation energy | `ESURF` | `ENPOLAR` |  `APOLAR SOLV` |
-| Total solvation free energy | `G solv` | `G solv` |  `G solv` |
-| Total gas phase free energy | `G gas` | `G gas` |  `G gas` |
-| Total energy | `TOTAL` | `TOTAL` |  `TOTAL` |
+| Description                 |   `gb`    |   `pb`    |    `RISM`     |
+|:----------------------------|:---------:|:---------:|:-------------:|
+| Bond energy                 |  `BOND`   |  `BOND`   |    `BOND`     |
+| Angle energy                |  `ANGLE`  |  `ANGLE`  |    `ANGLE`    |
+| Dihedral Energy             |  `DIHED`  |  `DIHED`  |    `DIHED`    |
+| Urey-Bradley*               |   `UB`    |   `UB`    |       —       |
+| Improper Dihedrals*         |   `IMP`   |   `IMP`   |       —       |
+| Correction Map*             |  `CMAP`   |  `CMAP`   |       —       |
+| 1-4 van der Waals energy    | `1-4 VDW` | `1-4 VDW` |   `1-4 VDW`   |
+| 1-4 Electrostatic energy    | `1-4 EEL` | `1-4 EEL` |   `1-4 EEL`   |
+| van der Waals energy        | `VDWAALS` | `VDWAALS` |   `VDWAALS`   |
+| Electrostatic energy        |   `EEL`   |   `EEL`   |     `EEL`     |
+| Polar solvation energy      |   `EGB`   |   `EPB`   | `POLAR SOLV`  |
+| Non-polar solvation energy  |  `ESURF`  | `ENPOLAR` | `APOLAR SOLV` |
+| Total solvation free energy | `G solv`  | `G solv`  |   `G solv`    |
+| Total gas phase free energy |  `G gas`  |  `G gas`  |    `G gas`    |
+| Total energy                |  `TOTAL`  |  `TOTAL`  |    `TOTAL`    |
 
 Table 5. Same as Table 4 for the entropy data.
 
-| Description | `nmode`| `qh`|
-|:---|:---:|:---:|
+| Description           |     `nmode`     |      `qh`       |
+|:----------------------|:---------------:|:---------------:|
 | Translational entropy | `Translational` | `Translational` |
 | Rotational entropy | `Rotational` | `Rotational` |
 | Vibrational entropy | `Vibrational` | `Vibrational` |
