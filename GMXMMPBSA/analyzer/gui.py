@@ -524,17 +524,14 @@ class GMX_MMPBSA_ANA(QMainWindow):
              }
 
         df = make_corr_DF(f)
+        # df = make_corr_DF(self.corr_data) # FIXME:
         # get df for each model
         models = ['gb', 'pb', 'rism std', 'rism gf']
         columns = ['ΔH', 'ΔH+IE', 'ΔH+NMODE', 'ΔH+QH']
         hide_col = []
         c = 1
-        print(df)
         for x in columns:
-            # print(x)
-            # print(df[x])
             if df[x].isnull().all():
-                print(x)
                 hide_col.append(c)
             c += 1
 
@@ -556,7 +553,6 @@ class GMX_MMPBSA_ANA(QMainWindow):
                                        dgie=model_data[1], dgnmode=model_data[2], dgqh=model_data[3], col_box=m_col_box)
 
         for x in hide_col:
-            print('hide', x)
             self.correlation_treeWidget.hideColumn(x)
 
     def process_data(self, systems, rqueue: Queue, options):
@@ -577,7 +573,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
             self.makeTree(systems[i], result, app, options)
         qpd.setValue(maximum)
 
-        # if not options['correlation']:
+        # if not options['correlation']: # FIXME:
         #     self.correlation_DockWidget.hide()
         self.make_correlation()
 
@@ -617,13 +613,11 @@ class GMX_MMPBSA_ANA(QMainWindow):
 
         self.parts = options['components'] + ['delta']
         sys_name = topItem.sysname
-        print(topItem.exp_ki)
-        print(sys_name)
         correlation_data[sys_name] = {'ΔG': {
-                                            'gb': {'ie': np.nan, 'nmode': np.nan, 'qh': np.nan, 'ΔH': np.nan},
-                                            'pb': {'ie': np.nan, 'nmode': np.nan, 'qh': np.nan, 'ΔH': np.nan},
-                                            'rism std': {'ie': np.nan, 'nmode': np.nan, 'qh': np.nan, 'ΔH': np.nan},
-                                            'rism gf': {'ie': np.nan, 'nmode': np.nan, 'qh': np.nan, 'ΔH': np.nan}},
+                                            'gb': {'ΔH': np.nan, 'ie': np.nan, 'nmode': np.nan, 'qh': np.nan},
+                                            'pb': {'ΔH': np.nan, 'ie': np.nan, 'nmode': np.nan, 'qh': np.nan},
+                                            'rism std': {'ΔH': np.nan, 'ie': np.nan, 'nmode': np.nan, 'qh': np.nan},
+                                            'rism gf': {'ΔH': np.nan, 'ie': np.nan, 'nmode': np.nan, 'qh': np.nan}},
                                       'Exp.Energy': ki2energy(topItem.exp_ki, topItem.app.INPUT['temperature'])}
         dh = {}
 
@@ -669,11 +663,9 @@ class GMX_MMPBSA_ANA(QMainWindow):
                                        chart_subtitle=f"{mut_pre}{sys_name} | {level.upper()}",
                                        col_box=[2])
                     ent = data[level]['Total']
-
-
                 itemd = CustomItem(topItem, ['ΔG Binding'], has_chart=False)
                 for model in correlation_data[sys_name]['ΔG']:
-                    if not correlation_data[sys_name]['ΔG'][model]['ΔH']:
+                    if np.isnan(correlation_data[sys_name]['ΔG'][model]['ΔH']):
                         continue
                     itemd1 = CustomItem(itemd, [str(model).upper()], has_chart=False)
                     itemd2 = CustomItem(itemd1, [f'ΔG Binding ({str(level).upper()})'],
@@ -774,5 +766,3 @@ class GMX_MMPBSA_ANA(QMainWindow):
                                                                                   f"{str(level5).upper()} | "
                                                                                   f"{str(level6).upper()}",
                                                                    col_box=[1])
-
-        print(self.corr_data)
