@@ -306,7 +306,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
                 if s:
                     s.show()
                 else:
-                    sub = Charts(item=item, col=col, chart_type=[Charts.LINE, Charts.ROLLING])
+                    sub = Charts(item=item, col=col, options={'chart_type':[Charts.LINE, Charts.ROLLING]})
                     sub.make_chart()
                     self.mdi.addSubWindow(sub)
                     sub.show()
@@ -321,7 +321,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
                 if s:  # check if any subwindow has been store
                     s.show()
                 else:
-                    sub = Charts(item=item, col=col, chart_type=[Charts.BAR])
+                    sub = Charts(item=item, col=col, options={'chart_type':[Charts.BAR]})
                     sub.make_chart()
                     self.mdi.addSubWindow(sub)
                     sub.show()
@@ -336,7 +336,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
                 if s:  # check if any subwindow has been store
                     s.show()
                 else:
-                    sub = Charts(item=item, col=col, chart_type=[Charts.HEATMAP])
+                    sub = Charts(item=item, col=col, options={'chart_type':[Charts.HEATMAP]})
                     sub.make_chart()
                     self.mdi.addSubWindow(sub)
                     sub.show()
@@ -405,7 +405,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
                 if s:
                     s.show()
                 else:
-                    sub = Charts(item=item, col=col, chart_type=[Charts.SCATTER])
+                    sub = Charts(item=item, col=col, options={'chart_type':[Charts.SCATTER]})
                     sub.make_chart()
                     self.mdi.addSubWindow(sub)
                     sub.show()
@@ -420,7 +420,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
                 if s:  # check if any subwindow has been store
                     s.show()
                 else:
-                    sub = Charts(item=item, col=col, chart_type=[Charts.SCATTER])
+                    sub = Charts(item=item, col=col, options={'chart_type':[Charts.SCATTER]})
                     sub.make_chart()
                     self.mdi.addSubWindow(sub)
                     sub.show()
@@ -435,7 +435,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
                 if s:  # check if any subwindow has been store
                     s.show()
                 else:
-                    sub = Charts(item=item, col=col, chart_type=[Charts.SCATTER])
+                    sub = Charts(item=item, col=col, options={'chart_type':[Charts.SCATTER]})
                     sub.make_chart()
                     self.mdi.addSubWindow(sub)
                     sub.show()
@@ -450,7 +450,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
                 if s:  # check if any subwindow has been store
                     s.show()
                 else:
-                    sub = Charts(item=item, col=col, chart_type=[Charts.SCATTER])
+                    sub = Charts(item=item, col=col, options={'chart_type':[Charts.SCATTER]})
                     sub.make_chart()
                     self.mdi.addSubWindow(sub)
                     sub.show()
