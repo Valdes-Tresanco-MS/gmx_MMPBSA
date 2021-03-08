@@ -180,6 +180,17 @@ class Charts(QMdiSubWindow):
             self.mpl_canvas.axes.set_ylabel('Pred. Energy (kcal/mol)')
             chart_subtitle = self.item.chart_subtitle[self.col - 1]
 
+            # Set limits symmetric
+            xlim = list(self.mpl_canvas.axes.get_xlim())
+            ylim = list(self.mpl_canvas.axes.get_ylim())
+            xlim = [xlim[0] - abs(xlim[0]*0.015), xlim[1] + abs(xlim[1]*0.03)]
+            ylim = [ylim[0] - abs(ylim[0]*0.015), ylim[1] + abs(ylim[1]*0.03)]
+            self.mpl_canvas.axes.set_xlim(xlim)
+            self.mpl_canvas.axes.set_ylim(ylim)
+
+            # diagonal line slope = 1
+            # self.mpl_canvas.axes.axline((xlim[0], ylim[0]), (xlim[1], ylim[1]), ls='--', linewidth=0.8, color='black')
+
             self.mpl_canvas.axes.set_title(self.item.chart_title + '\n' + chart_subtitle)
             self.mpl_canvas.draw()
             self.mpl_canvas.figure.tight_layout()
