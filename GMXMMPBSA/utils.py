@@ -35,6 +35,63 @@ import shutil
 from pathlib import Path
 import json
 import logging
+from string import ascii_letters
+from GMXMMPBSA.exceptions import GMXMMPBSA_ERROR, GMXMMPBSA_WARNING
+from math import sqrt
+
+def get_dist(coor1, coor2):
+    return sqrt((coor2[0] - coor1[0]) ** 2 + (coor2[1] - coor1[1]) ** 2 + (coor2[2] - coor1[2]) ** 2)
+
+
+def selector(selection:str):
+    string_list = selection.split()
+    dist = None
+    exclude = None
+    res_selections = []
+    if selection.startswith('within'):
+        try:
+            dist = float(string_list[1])
+        except:
+            GMXMMPBSA_ERROR(f'Invalid dist, we expected a float value but we get "{string_list[1]}"')
+        if len(string_list) == 4:
+            if string_list[2] != 'not':
+                GMXMMPBSA_ERROR(f'We expected "not" but we get {string_list[2]} instead')
+            if str(string_list[3]).lower() not in ['receptor', 'ligand', 'rec', 'lig']:
+                GMXMMPBSA_ERROR(f'We expected one of this values: "receptor", "rec", "ligand" or "lig" but we get'
+                      f' {(string_list[3]).lower()} instead')
+            exclude = 'REC' if str(string_list[3]).lower() in ['receptor', 'rec'] else 'LIG'
+    else:
+        # try to process residue selection
+        for s in string_list:
+            n = s.split('/')
+            if len(n) != 2 or n[0] not in ascii_letters:
+                GMXMMPBSA_ERROR(f'We expected something like this: A/2-10,35,41 but we get {s} instead')
+            chain = n[0]
+            resl = n[1].split(',')
+            for r in resl:
+                rr = r.split('-')
+                if len(rr) == 1:
+                    ci = rr[0].split(':')
+                    ri = [chain, int(ci[0]), ''] if len(ci) == 1 else [chain, int(ci[0]), ci[1]]
+                    if ri in res_selections:
+                        GMXMMPBSA_WARNING('Found duplicated residue in selection: CHAIN:{} RES_NUM:{} ICODE: '
+                                          '{}'.format(*ri))
+                        continue
+                    res_selections.append(ri)
+                else:
+                    try:
+                        start = int(rr[0])
+                        end = int(rr[1]) + 1
+                    except:
+                        GMXMMPBSA_ERROR(f'When residues range is defined, start and end most be integer but we get'
+                                        f' {rr[0]} and {rr[1]}')
+                    for cr in range(start, end):
+                        if [chain, cr, ''] in res_selections:
+                            GMXMMPBSA_WARNING('Found duplicated residue in selection: CHAIN:{} RES_NUM:{} ICODE: '
+                                              '{}'.format(chain, cr, ''))
+                            continue
+                        res_selections.append([chain, cr, ''])
+    return dist, exclude, res_selections
 
 
 def checkff(overwrite):
