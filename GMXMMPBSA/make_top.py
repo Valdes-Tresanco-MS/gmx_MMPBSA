@@ -23,10 +23,9 @@ Generate Amber topology files from GROMACS files
 import os
 import parmed
 from GMXMMPBSA.exceptions import *
-from GMXMMPBSA.utils import checkff
+from GMXMMPBSA.utils import checkff, selector, get_dist
 from GMXMMPBSA.alamdcrd import _scaledistance
 import subprocess
-from math import sqrt
 from pathlib import Path
 import logging
 import string
@@ -51,9 +50,6 @@ ions = ["AG", "AL", "Ag", "BA", "BR", "Be", "CA", "CD", "CE", "CL", "CO", "CR", 
         "LA", "LI", "LU", "MG", "MN", "NA", "NH4", "NI", "Na+", "Nd", "PB", "PD", "PR", "PT", "Pu", "RB", "Ra", "SM",
         "SR", "Sm", "Sn", "TB", "TL", "Th", "Tl", "Tm", "U4+", "V2+", "Y", "YB2", "ZN", "Zr"]
 
-
-def dist(coor1, coor2):
-    return sqrt((coor2[0] - coor1[0]) ** 2 + (coor2[1] - coor1[1]) ** 2 + (coor2[2] - coor1[2]) ** 2)
 
 
 class CheckMakeTop:
