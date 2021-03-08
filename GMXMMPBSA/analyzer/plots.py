@@ -99,7 +99,7 @@ class Charts(QMdiSubWindow):
     SBAR = 5
     HEATMAP = 6
     SCATTER = 7
-    def __init__(self, *args, item, col, chart_type):
+    def __init__(self, *args, item, col, options:dict=None):
         super(Charts, self).__init__(*args)
         self.setMinimumSize(400, 400)
 
@@ -125,7 +125,7 @@ class Charts(QMdiSubWindow):
         self.setWidget(self.mainwidgetmdi)
         self.item = item
         self.col = col
-        self.g_type = chart_type
+        self.options = options
 
     def closeEvent(self, closeEvent: QCloseEvent) -> None:
         self.item.setCheckState(self.col, Qt.Unchecked)
@@ -136,7 +136,7 @@ class Charts(QMdiSubWindow):
         :param graph_type: 1: line plot, 2: bar plot, 3: heatmap plot
         :return:
         """
-        if Charts.SCATTER in self.g_type:
+        if Charts.SCATTER in self.options['chart_type']:
             if self.reg_plot:
                 self.reg_plot.cla()
                 self.reg_plot.clear()
@@ -170,7 +170,7 @@ class Charts(QMdiSubWindow):
         else:
             self.data = self.item.gmxMMPBSA_current_data
             title = ''
-            if Charts.LINE in self.g_type:
+            if Charts.LINE in self.options['chart_type']:
                 self.item.lp_subw = self
                 # self.mpl_canvas.axes.cla()
                 if self.line_plot:
@@ -192,14 +192,14 @@ class Charts(QMdiSubWindow):
                 else:
                     self.mpl_canvas.axes.set_ylabel('Energy (kcal/mol)')
 
-            if Charts.ROLLING in self.g_type:
+            if Charts.ROLLING in self.options['chart_type']:
                 if 'IE' not in self.item.item_name:
                     self.data.line_plot_dat['movav'] = self.data.line_plot_dat['Energy'].rolling(50).mean()
                     self.movav_plot = sns.lineplot(data=self.data.line_plot_dat, x='frames', color='red', linewidth=0.8,
                                                     y='movav', label='Mov. Av.', ax=self.mpl_canvas.axes)
 
                 # self.setWindowTitle(title)
-            if Charts.BAR in self.g_type:
+            if Charts.BAR in self.options['chart_type']:
                 self.item.bp_subw = self
                 if self.bar_plot:
                     self.bar_plot.cla()
@@ -213,11 +213,11 @@ class Charts(QMdiSubWindow):
                 self.mpl_canvas.axes.set_ylabel('Energy (kcal/mol)')
                 title = self.item.chart_title + '(Av.)'
 
-            if Charts.SBAR in self.g_type:
+            if Charts.SBAR in self.options['chart_type']:
                 # TODO: stacked bars
                 pass
 
-            if Charts.HEATMAP in self.g_type:
+            if Charts.HEATMAP in self.options['chart_type']:
                 self.item.hmp_subw = self
                 if self.heatmap_plot:
                     self.mpl_canvas.axes.collections[-1].colorbar.remove()
