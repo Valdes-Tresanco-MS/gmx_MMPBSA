@@ -59,10 +59,6 @@ class CheckMakeTop:
         self.external_progs = external_programs
         self.use_temp = False
         self.log = open('gmx_MMPBSA.log', 'a')
-        self.print_residues = 'within' in self.INPUT['print_res']  # FIXME: this is pretty ugly
-        self.within = 4
-        if self.print_residues:
-            self.within = float(self.INPUT['print_res'].split()[1])
 
         self.mut_label = None
 
@@ -187,7 +183,7 @@ class CheckMakeTop:
 
         # make a temp receptor pdb (even when stability) if decomp to get correct receptor residues from complex. This
         # avoid get multiples molecules from complex.split()
-        if self.INPUT['decomprun'] and self.print_residues:
+        if self.INPUT['decomprun']:
             if self.FILES.stability:
                 self.use_temp = True
                 logging.warning('When decomp is defined, we generate a receptor file in order to extract interface '
@@ -490,28 +486,42 @@ class CheckMakeTop:
 
     def reswithin(self):
         # Get residue form receptor-ligand interface
-        if self.print_residues and self.INPUT['decomprun']:
-            res_list = []
-            for i in self.resl['REC']:
-                if i in res_list:
-                    continue
-                for j in self.resl['LIG']:
-                    if j in res_list:
-                        continue
-                    for rat in self.complex_str.residues[i - 1].atoms:
-                        rat_coor = [rat.xx, rat.xy, rat.xz]
-                        if i in res_list:
-                            break
-                        for lat in self.complex_str.residues[j - 1].atoms:
-                            lat_coor = [lat.xx, lat.xy, lat.xz]
-                            if dist(rat_coor, lat_coor) <= self.within:
-                                if i not in res_list:
-                                    res_list.append(i)
-                                if j not in res_list:
-                                    res_list.append(j)
-                                break
-            res_list.sort()
-            self.INPUT['print_res'] = ','.join([str(x + 1) for x in res_list])
+        if self.INPUT['decomprun']:
+            if self.INPUT['print_res'] == 'all':
+                return
+            else:
+                dist, exclude, res_selection = selector(self.INPUT['print_res'])
+                res_list = []
+
+                if dist:
+                    for i in self.resl['REC']:
+                        for j in self.resl['LIG']:
+                            for rat in self.complex_str.residues[i - 1].atoms:
+                                rat_coor = [rat.xx, rat.xy, rat.xz]
+                                for lat in self.complex_str.residues[j - 1].atoms:
+                                    lat_coor = [lat.xx, lat.xy, lat.xz]
+                                    if get_dist(rat_coor, lat_coor) <= dist:
+                                        if i not in res_list and exclude != 'REC':
+                                            res_list.append(i)
+                                        if j not in res_list and exclude != 'LIG':
+                                            res_list.append(j)
+                                        break
+                elif res_selection:
+                    for i in self.resl['REC']:
+                        rres = self.complex_str.residues[i - 1]
+                        if [rres.chain, rres.number, rres.insertion_code] in res_selection:
+                            res_list.append(i)
+                            res_selection.remove([rres.chain, rres.number, rres.insertion_code])
+                    for j in self.resl['LIG']:
+                        lres = self.complex_str.residues[j - 1]
+                        if [lres.chain, lres.number, lres.insertion_code] in res_selection:
+                            res_list.append(j)
+                            res_selection.remove([lres.chain, lres.number, lres.insertion_code])
+                res_list.sort()
+                self.INPUT['print_res'] = ','.join([str(x) for x in res_list])
+                if res_selection:
+                    for res in res_selection:
+                        GMXMMPBSA_WARNING("We couldn't find this residue CHAIN:{} RES_NUM:{} ICODE: {}".format(*res))
 
     def cleantop(self, top_file, temp_top_file):
         """
