@@ -20,6 +20,7 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
 import matplotlib.backend_bases
 from matplotlib.backends import qt_compat
+import matplotlib.patches as mpatches
 from matplotlib.figure import Figure
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
@@ -143,19 +144,36 @@ class Charts(QMdiSubWindow):
             if self.col == 1:
                 self.item.dh_sw = self
                 self.data = self.item.enthalpy
-                self.reg_plot = sns.regplot(data=self.data, x='Exp.Energy', y='ΔH', ax=self.mpl_canvas.axes)
+                self.reg_plot = sns.regplot(data=self.data, x='Exp.Energy', y='ΔH', ax=self.mpl_canvas.axes,
+                                            color='black', scatter_kws={'s':10}, line_kws={'lw':1})
+                # get correlation coefficients
+                pearson = self.data.corr()['Exp.Energy']['ΔH']
+                spearman = self.data.corr(method='spearman')['Exp.Energy']['ΔH']
             elif self.col == 2:
                 self.item.dgie_sw = self
                 self.data = self.item.dgie
-                self.reg_plot = sns.regplot(data=self.data, x='Exp.Energy', y='ΔH+IE', ax=self.mpl_canvas.axes)
+                self.reg_plot = sns.regplot(data=self.data, x='Exp.Energy', y='ΔH+IE', ax=self.mpl_canvas.axes,
+                                            color='black', scatter_kws={'s':10}, line_kws={'lw':1})
+                # get correlation coefficients
+                pearson = self.data.corr()['Exp.Energy']['ΔH+IE']
+                spearman = self.data.corr(method='spearman')['Exp.Energy']['ΔH+IE']
             elif self.col == 3:
                 self.item.dgnmode_sw = self
                 self.data = self.item.dgnmode
-                self.reg_plot = sns.regplot(data=self.data, x='Exp.Energy', y='ΔH+NMODE', ax=self.mpl_canvas.axes)
+                self.reg_plot = sns.regplot(data=self.data, x='Exp.Energy', y='ΔH+NMODE', ax=self.mpl_canvas.axes,
+                                            color='black', scatter_kws={'s':10}, line_kws={'lw':1})
+                # get correlation coefficients
+                pearson = self.data.corr()['Exp.Energy']['ΔH+NMODE']
+                spearman = self.data.corr(method='spearman')['Exp.Energy']['ΔH+NMODE']
             else:
                 self.item.dgqh_sw = self
                 self.data = self.item.dgqh
-                self.reg_plot = sns.regplot(data=self.data, x='Exp.Energy', y='ΔH+QH', ax=self.mpl_canvas.axes)
+                self.reg_plot = sns.regplot(data=self.data, x='Exp.Energy', y='ΔH+QH', ax=self.mpl_canvas.axes,
+                                            color='black', scatter_kws={'s':10}, line_kws={'lw':1})
+                # get correlation coefficients
+                pearson = self.data.corr()['Exp.Energy']['ΔH+QH']
+                spearman = self.data.corr(method='spearman')['Exp.Energy']['ΔH+QH']
+
 
 
             self.mpl_canvas.axes.set_xlabel('Exp. Energy (kcal/mol)')
