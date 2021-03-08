@@ -567,11 +567,10 @@ class InteractionEntropyCalc:
         self.save_output()
 
     def _calculate(self):
-        # gases constant in kcal/mol
-        R = 0.001987
+        # boltzmann constant
+        k = 0.001985875
         energy_int = np.array([], dtype=np.float)
         a_energy_int = np.array([], dtype=np.float)
-        d_energy_int = np.array([], dtype=np.float)
         exp_energy_int = np.array([], dtype=np.float)
         ts = np.array([], dtype=np.float)
         for eint in self.ggas:
@@ -579,14 +578,12 @@ class InteractionEntropyCalc:
             aeint = energy_int.mean()
             a_energy_int = np.append(a_energy_int, aeint)
             deint = eint - aeint
-            d_energy_int = np.append(d_energy_int, deint)
-            eceint = math.exp(deint / (R * self.INPUT['temperature']))
+            eceint = math.exp(deint / (k * self.INPUT['temperature']))
             exp_energy_int = np.append(exp_energy_int, eceint)
             aeceint = exp_energy_int.mean()
-            cts = R * self.INPUT['temperature'] * math.log(aeceint)
+            cts = k * self.INPUT['temperature'] * math.log(aeceint)
             ts = np.append(ts, cts)
         self.data = ts
-        # self.data['IE_' + self.key] = self.IntEnt
         nframes = len(self.data)
         self.ie_frames = math.ceil(nframes * (self.INPUT['entropy_seg'] / 100))
         self.value = self.data[self.ie_frames:].mean()
