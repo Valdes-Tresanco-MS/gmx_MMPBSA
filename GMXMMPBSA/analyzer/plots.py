@@ -192,6 +192,19 @@ class Charts(QMdiSubWindow):
             # self.mpl_canvas.axes.axline((xlim[0], ylim[0]), (xlim[1], ylim[1]), ls='--', linewidth=0.8, color='black')
 
             self.mpl_canvas.axes.set_title(self.item.chart_title + '\n' + chart_subtitle)
+
+            pearson_leg = mpatches.Patch(color='white', label=f'Pearson = {pearson:.2f}')
+            spearman_leg = mpatches.Patch(color='gray', label=f'Spearman = {spearman:.2f}')
+            leg = self.mpl_canvas.axes.legend(handles=[pearson_leg, spearman_leg],
+                                              handlelength=0, handletextpad=0,
+                                              fancybox=True,
+                                              prop={'weight':'bold', 'size': 10},
+                                              frameon=True
+                                              )
+            # hide markers
+            for item in leg.legendHandles:
+                item.set_visible(False)
+
             self.mpl_canvas.draw()
             self.mpl_canvas.figure.tight_layout()
             self.mpl_canvas.draw()
