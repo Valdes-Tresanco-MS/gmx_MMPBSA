@@ -53,9 +53,14 @@ class InitDialog(QDialog):
         self.delta_btn.setChecked(True)
         self.delta_btn.setEnabled(False)
         self.com_btn = QCheckBox('complex')
+        self.com_btn.clicked.connect(self.show_warn)
         self.rec_btn = QCheckBox('receptor')
+        self.rec_btn.clicked.connect(self.show_warn)
         self.lig_btn = QCheckBox('ligand')
-        self.warn_label = QLabel('This can generate a huge amount of graphics which can crash the application.')
+        self.lig_btn.clicked.connect(self.show_warn)
+        self.warn_label = QLabel('Warning: This can generate a huge amount of graphics which can crash the '
+                                 'application!')
+        self.warn_label.hide()
 
         self.comp_group = QGroupBox('Computation of Components Charts')
         self.comp_group_layout = QGridLayout(self.comp_group)
@@ -63,7 +68,7 @@ class InitDialog(QDialog):
         self.comp_group_layout.addWidget(self.com_btn, 0, 1)
         self.comp_group_layout.addWidget(self.rec_btn, 0, 2)
         self.comp_group_layout.addWidget(self.lig_btn, 0, 3)
-        self.comp_group_layout.addWidget(self.warn_label, 1, 0, 1, 3)
+        self.comp_group_layout.addWidget(self.warn_label, 1, 0, 1, 4)
 
         self.sys_group = QGroupBox('Systems options')
         self.sys_group_layout = QVBoxLayout(self.sys_group)
@@ -112,9 +117,11 @@ class InitDialog(QDialog):
         self.content_layout.addWidget(self.statusbar)
         self.content_layout.addLayout(self.btn_layout)
 
-        self.worker = worker()
-        self.worker.job_finished.connect(self.fin)
-        self.worker.finished.connect(self.res)
+    def show_warn(self):
+        if self.com_btn.isChecked() or self.rec_btn.isChecked() or self.lig_btn.isChecked():
+            self.warn_label.show()
+        else:
+            self.warn_label.hide()
 
     def update_item_info(self, item: QTreeWidgetItem, col):
         path = item.info[1]
