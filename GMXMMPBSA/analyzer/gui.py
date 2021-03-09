@@ -579,8 +579,9 @@ class GMX_MMPBSA_ANA(QMainWindow):
             mut_pre = 'Mut. '
             correlation_data = self.corr_data['mutant']
 
-
-        self.parts = options['components'] + ['delta']
+        parts = options['components'] + ['delta']
+        if topItem.app.FILES.stability:
+            parts.append('complex')
         sys_name = topItem.sysname
         correlation_data[sys_name] = {'ΔG': {
                                             'gb': {'ΔH': np.nan, 'ie': np.nan, 'nmode': np.nan, 'qh': np.nan},
