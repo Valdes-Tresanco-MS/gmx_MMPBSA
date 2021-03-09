@@ -45,27 +45,15 @@ def run(infofile):
 class GMX_MMPBSA_ANA(QMainWindow):
     def __init__(self):
         super(GMX_MMPBSA_ANA, self).__init__()
-
-        self.data = None
-        self.mutant_data = None
-        self.app = None
-        # self.worker = worker()
-        self.gb_data = None
-        self.mut_gb_data = None
-        self.pb_data = None
-        self.mut_pb_data = None
-        self.decomp = {}
         self.corr_data = {'mutant': {}}
 
-        self.system_list = {}
-
-        self.pymol_p = QProcess()  # Keep a reference to the QProcess (e.g. on self) while it's running.
-        # self.pymol_p.readyReadStandardOutput.connect(self.handle_stdout)
-        # self.pymol_p.readyReadStandardError.connect(self.handle_stderr)
-        # self.pymol_p.stateChanged.connect(self.handle_state)
-        # self.pymol_p.finished.connect(self.process_finished)  # Clean up once complete.
-
-        self.as_frames = []
+        # five PyMOL instances for the reckless
+        self.pymol_p1 = QProcess()
+        self.pymol_p2 = QProcess()
+        self.pymol_p3 = QProcess()
+        self.pymol_p4 = QProcess()
+        self.pymol_p5 = QProcess()
+        self.pymol_p_list = [self.pymol_p1, self.pymol_p2, self.pymol_p3, self.pymol_p4, self.pymol_p5]
 
         self.mdi = QMdiArea(self)
         self.mdi.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
@@ -89,7 +77,6 @@ class GMX_MMPBSA_ANA(QMainWindow):
         self.correlation_DockWidget = QDockWidget('Correlations', self)
         self.addDockWidget(Qt.RightDockWidgetArea, self.correlation_DockWidget)
 
-
         self.treeWidget = QTreeWidget(self)
         self.treeWidget.setContextMenuPolicy(Qt.CustomContextMenu)
         self.treeWidget.customContextMenuRequested.connect(self.data_context_menu)
@@ -103,14 +90,12 @@ class GMX_MMPBSA_ANA(QMainWindow):
         sys_label.setToolTip(4, 'Interactive view per-residue or per-wise calculation results')
         self.treeWidget.setHeaderItem(sys_label)
         self.treeWidget.setColumnHidden(4, True)
-
         header = self.treeWidget.header()
         header.setSectionResizeMode(QHeaderView.ResizeToContents)
 
         self.correlation_treeWidget = QTreeWidget(self)
         self.correlation_treeWidget.setContextMenuPolicy(Qt.CustomContextMenu)
         self.correlation_treeWidget.customContextMenuRequested.connect(self.corr_context_menu)
-
         self.correlation_DockWidget.setWidget(self.correlation_treeWidget)
         model_label = QTreeWidgetItem(['MODEL', 'ΔH', 'ΔH+IE', 'ΔH+NMODE', 'ΔH+QH'])
         model_label.setToolTip(0, 'Selected Model')
@@ -193,6 +178,14 @@ class GMX_MMPBSA_ANA(QMainWindow):
         # self.exportcsv = ExportDialogCSV(self)
         self.init_dialog = InitDialog(self)
 
+    def get_pymol_instance(self):
+        available = None
+        for inst in self.pymol_p_list:
+            if inst.state() ==  QProcess.NotRunning:
+                available = inst
+                break
+        return available
+
     def data_context_menu(self, point):
 
         index = self.treeWidget.indexAt(point)
@@ -244,7 +237,6 @@ class GMX_MMPBSA_ANA(QMainWindow):
         if not index.isValid():
             return
         item = self.correlation_treeWidget.itemAt(point)
-        name = item.text(0)  # The text of the node.
         cont_menu = QMenu(self.correlation_treeWidget)
         save_csv = cont_menu.addAction("Save CSV")
         action = cont_menu.exec_(self.correlation_treeWidget.mapToGlobal(point))
@@ -254,7 +246,6 @@ class GMX_MMPBSA_ANA(QMainWindow):
             options |= QFileDialog.DontUseNativeDialog
             fileName, _ = QFileDialog.getSaveFileName(self, "Save CSV file", "regression_data.csv", "CSV (*.csv)",
                                                       options=options)
-
             if fileName:
                 item.model.to_csv(fileName, index=False)
 
@@ -345,23 +336,47 @@ class GMX_MMPBSA_ANA(QMainWindow):
                     self.mdi.activatePreviousSubWindow()
                     s.close()
         elif col == 4:
+            pymol_p = item.pymol_process
+            pymol_path = [os.path.join(path, 'pymol') for path in os.environ["PATH"].split(os.pathsep)
+                          if os.path.exists(os.path.join(path, 'pymol')) and
+                          os.access(os.path.join(path, 'pymol'), os.X_OK)]
+            if not pymol_path:
+                m = QMessageBox.critical(self, 'PyMOL not found!', 'PyMOL not found!. Make sure PyMOL is in the '
+                                                                   'PATH.', QMessageBox.Ok)
+                item.setCheckState(4, Qt.Unchecked)
+                return
+            else:
+                pymol = pymol_path[0]
+            com_pdb = item.syspath.parent.joinpath(item.app.FILES.complex_fixed)
+            if not com_pdb.exists():
+                logging.warning(f'{com_pdb} not not exits. The modified PDB file can be inconsistent. Please, '
+                                f'consider use the latest version of gmx_MMPBSA')
+                com_pdb = item.syspath.parent.joinpath(item.app.FILES.prefix + 'COM.pdb')
+            bfactor_pml = item.syspath.parent.joinpath('bfactor.pml')
+            output_path = com_pdb.parent.joinpath(f'{item.sysname}_energy2bfactor.pdb')
             if item.checkState(col) == Qt.Checked:
-
-                if self.pymol_p.state() == QProcess.Running:
+                item.setSelected(True)
+                available_instance = self.get_pymol_instance()
+                if not available_instance:
                     m = QMessageBox.critical(self, 'Error trying to open multiple instances of PyMOL',
-                                             'Only one instance of PyMOL is allowed and one is already running. If you '
-                                             'want to view this, please close the previous one.', QMessageBox.Ok)
+                                             'Only 5 instance of PyMOL is allowed and 5 are already running. '
+                                             'If you want to view this, please close the some one.',
+                                             QMessageBox.Ok)
+                    item.setCheckState(4, Qt.Unchecked)
+                    return
 
+                if not pymol_p or pymol_p.state() == QProcess.Running:
+                    pymol_p =  available_instance # Keep a reference to the QProcess (e.g. on self) while it's running.
+                    item.pymol_process = pymol_p # store pymol instance until we finish the process
                 qpd = QProgressDialog('Generate modified pdb and open it in PyMOL', 'Abort', 0, 2, self)
                 qpd.setWindowModality(Qt.WindowModal)
                 qpd.setMinimumDuration(1500)
-                pymol = None
+
                 for i in range(2):
                     qpd.setValue(i)
                     if qpd.wasCanceled():
                         break
                     if i == 0:
-                        com_pdb = item.syspath.parent.joinpath(item.app.FILES.complex_fixed)
                         com_pdb_str = parmed.read_PDB(com_pdb.as_posix())
                         res_dict = item.gmxMMPBSA_current_data.bar_plot_dat.mean().to_dict()
                         for res in com_pdb_str.residues:
@@ -372,28 +387,15 @@ class GMX_MMPBSA_ANA(QMainWindow):
                                 res_energy = 0.00
                             for at in res.atoms:
                                 at.bfactor = res_energy
-                        output_path = com_pdb.parent.joinpath(f'{item.sysname}_energy2bfactor.pdb')
                         com_pdb_str.save(output_path.as_posix(), 'pdb', True, renumber=False)
-                    else:
-                        pymol_path = [os.path.join(path, 'pymol') for path in os.environ["PATH"].split(os.pathsep)
-                                                                      if os.path.exists(os.path.join(path, 'pymol')) and
-                                                                      os.access(os.path.join(path, 'pymol'), os.X_OK)]
-
-                        bfactor_pml = com_pdb.parent.joinpath('bfactor.pml')
                         energy2pdb_pml(res_dict, bfactor_pml, output_path)
-                        # pymol_path = []
-                        if not pymol_path:
-                            qpd.setLabelText('PyMOL not found. Make sure PyMOL is in the PATH.')
-                            item.setCheckState(4, Qt.Unchecked)
-                        else:
-                            pymol = pymol_path[0]
-                if pymol:
-                    qpd.setValue(2)
-                    self.pymol_p.start(pymol, [bfactor_pml.as_posix()])
-                    self.pymol_p.finished.connect(lambda : item.setCheckState(4, Qt.Unchecked))
+                qpd.setValue(2)
+                pymol_p.start(pymol, [bfactor_pml.as_posix()])
+                pymol_p.finished.connect(lambda : item.setCheckState(4, Qt.Unchecked))
             else:
-                if self.pymol_p.state() == QProcess.Running:
-                    self.pymol_p.terminate()
+                if pymol_p and pymol_p.state() == QProcess.Running:
+                    pymol_p.terminate()
+                    item.pymol_process = None
 
     def showcorr(self, item: CorrelationItem, col):
         self.treeWidget.clearSelection()
