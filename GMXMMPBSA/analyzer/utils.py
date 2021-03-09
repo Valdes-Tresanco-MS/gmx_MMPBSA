@@ -100,7 +100,7 @@ def energy2pdb_pml(residue_list, pml_path: Path, pdb_path: Path):
 def ki2energy(ki, temp):
     # deltaG (inhibition) = R * T * ln ( Ki )
     if not ki:
-        return 0.0
+        return np.nan
     return R * temp * math.log(ki * 1e-9)
 
 
