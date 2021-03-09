@@ -85,12 +85,12 @@ local p c
 COMPREPLY=() c=${COMP_WORDS[COMP_CWORD]} p=${COMP_WORDS[COMP_CWORD-1]}
 if (( $COMP_CWORD <= 1 )) || [[ $c == -* ]];
   then
-    COMPREPLY=( $(compgen  -W ' -h -v --version --help -p --path' -- $c));
+    COMPREPLY=( $(compgen  -W ' -h -v --version --help -f --file -r --recursive' -- $c));
     return 0;
 fi
 case "$p" in
--p)       COMPREPLY=( $(compgen -S ' ' -X '!*@(_info|)' -f -- $c ; compgen -S '/' -d $c));;
---path)   COMPREPLY=( $(compgen -S ' ' -X '!*@(_info|)' -f -- $c ; compgen -S '/' -d $c));;
+-f)       COMPREPLY=( $(compgen -S ' ' -X '!*@(_info|)' -f -- $c ; compgen -S '/' -d $c));;
+--files)   COMPREPLY=( $(compgen -S ' ' -X '!*@(_info|)' -f -- $c ; compgen -S '/' -d $c));;
 esac }
 complete -F _gmxmmpbsa_ana_compl gmx_MMPBSA_ana
 
