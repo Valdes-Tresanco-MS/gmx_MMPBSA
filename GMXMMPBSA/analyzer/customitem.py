@@ -65,6 +65,7 @@ class CustomItem(QTreeWidgetItem):
             self.syspath = parent.syspath
             self.exp_ki = parent.exp_ki
             self.sysname = parent.sysname
+            self.temp = parent.temp
             self.app = parent.app
             self.frames = parent.frames
             self.start = parent.start
@@ -75,6 +76,7 @@ class CustomItem(QTreeWidgetItem):
             self.syspath = system[1]
             self.exp_ki = system[2]
             self.sysname = system[0]
+            self.temp = system[3]
             self.app = app
             self.interval = app.INPUT['interval']
             self.start = app.INPUT['startframe']
@@ -93,6 +95,7 @@ class CustomItem(QTreeWidgetItem):
         self.lp_subw = None
         self.bp_subw = None
         self.hmp_subw = None
+        self.pymol_process = None
 
         if col_box:
             for col in col_box:
