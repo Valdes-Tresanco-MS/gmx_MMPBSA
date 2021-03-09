@@ -23,32 +23,7 @@ from PyQt5.QtCore import Qt, QThread, pyqtSignal, pyqtSlot
 from queue import Queue, Empty
 from GMXMMPBSA.API import load_gmxmmpbsa_info
 from pathlib import Path
-
-class worker(QThread):
-    job_finished = pyqtSignal()
-    def __init__(self):
-        super(worker, self).__init__()
-        # self.parent = parent
-    def define_dat(self, function, queue: Queue, result_q: Queue):
-        self.fn = function
-        self.queue = queue
-        self.result_queue = result_q
-        self.running = True
-
-    def run(self):
-        while self.running:
-            if self.queue.qsize() == 0:
-                return
-            items = self.queue.get()
-            try:
-                results = self.fn(items)
-                if len(results) == 1:
-                    self.result_queue.put(results)
-                else:
-                    self.result_queue.put([x for x in results])
-            finally:
-                self.queue.task_done()
-                self.job_finished.emit()
+from GMXMMPBSA.analyzer.utils import worker
 
 class InitDialog(QDialog):
     def __init__(self,parent=None):
