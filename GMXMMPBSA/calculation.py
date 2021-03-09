@@ -34,7 +34,7 @@ Classes:
 # ##############################################################################
 
 from GMXMMPBSA.exceptions import CalcError
-from GMXMMPBSA.exceptions import GMXMMPBSA_ERROR
+from GMXMMPBSA.exceptions import GMXMMPBSA_ERROR, GMXMMPBSA_WARNING
 import os
 import sys
 import numpy as np
@@ -569,6 +569,12 @@ class InteractionEntropyCalc:
     def _calculate(self):
         # boltzmann constant
         k = 0.001985875
+        if 'temperature' in self.INPUT:
+            temp = self.INPUT['temperature']
+        if 'entropy_temp' in self.INPUT:
+            temp = self.INPUT['entropy_temp']
+            GMXMMPBSA_WARNING('entropy_temp variable is deprecated and will be remove in next versions!. Please, '
+                              'use temperature variable instead')
         energy_int = np.array([], dtype=np.float)
         a_energy_int = np.array([], dtype=np.float)
         exp_energy_int = np.array([], dtype=np.float)
@@ -578,10 +584,10 @@ class InteractionEntropyCalc:
             aeint = energy_int.mean()
             a_energy_int = np.append(a_energy_int, aeint)
             deint = eint - aeint
-            eceint = math.exp(deint / (k * self.INPUT['temperature']))
+            eceint = math.exp(deint / (k * temp))
             exp_energy_int = np.append(exp_energy_int, eceint)
             aeceint = exp_energy_int.mean()
-            cts = k * self.INPUT['temperature'] * math.log(aeceint)
+            cts = k * temp * math.log(aeceint)
             ts = np.append(ts, cts)
         self.data = ts
         nframes = len(self.data)

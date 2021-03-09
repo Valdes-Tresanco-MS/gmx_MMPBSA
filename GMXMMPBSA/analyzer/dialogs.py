@@ -152,7 +152,6 @@ class InitDialog(QDialog):
 
         c = 1
         for fname in files_list:
-            # fname = files_list[x]
             basename = None
             exp_ki = None
             with open(fname) as fi:
@@ -161,6 +160,15 @@ class InitDialog(QDialog):
                         basename = str(line.split()[2]).strip('"\'')
                     if line.startswith("INPUT['exp_ki']"):
                         exp_ki = line.split()[2]
+                    if line.startswith("INPUT['temperature']"):
+                        temp = line.split()[2]
+                    if line.startswith("INPUT['entropy_temp']"):
+                        print('Warning: entropy_temp variable is deprecated and will be remove in next versions!. '
+                              'Please, '
+                              'use temperature variable instead')
+                        self.statusbar.showMessage('Warning: entropy_temp variable is deprecated and will be remove in '
+                                                   'next versions!. Please, use temperature variable instead', 50000)
+                        temp = line.split()[2]
             if not basename:
                 basename = f'System_{c}'
 
