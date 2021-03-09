@@ -32,12 +32,12 @@ from GMXMMPBSA.analyzer.utils import energy2pdb_pml, ki2energy, make_corr_DF
 import parmed
 import numpy as np
 
-def run(infofiles):
-    info = Path(infofiles)
+def run(infofile):
+    info = Path(infofile)
     app = QApplication(sys.argv)
     app.setApplicationName('GMX-MMPBSA Analyzer Tool')
     w = GMX_MMPBSA_ANA()
-    w.initialize(info)
+    w.initialize([info])
     w.show()
     sys.exit(app.exec())
 
