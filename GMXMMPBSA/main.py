@@ -589,6 +589,7 @@ class MMPBSA_App(object):
         logging.info('Building AMBER Topologies from GROMACS files...Done.\n')
         INPUT['receptor_mask'], INPUT['ligand_mask'] = maketop.get_masks()
         self.mut_str = maketop.mut_label
+        self.FILES.complex_fixed = self.FILES.prefix + 'COM_FIXED.pdb'
 
         self.normal_system = MMPBSA_System(FILES.complex_prmtop, FILES.receptor_prmtop, FILES.ligand_prmtop)
         self.using_chamber = self.normal_system.complex_prmtop.chamber
@@ -687,13 +688,10 @@ class MMPBSA_App(object):
 
         self.remove(self.INPUT['keep_files'])
 
-        logging.info('\n\ngmx_MMPBSA Finished! Thank you for using. Please '
-                          'cite us if you publish this work with this paper:\n   '
-                          'Coming soon\n\n'
-                          'Also consider citing MMPBSA.py\n'
-                          'Miller III, B. R., McGee Jr., T. D., Swails, J. M. '
-                          'Homeyer, N. Gohlke, H. and Roitberg, A. E.\n   '
-                          'J. Chem. Theory Comput., 2012, 8 (9) pp 3314-3321\n')
+        logging.info('\n\ngmx_MMPBSA Finished! Thank you for using. Please cite us if you publish this work with this '
+                     'paper:\n    Coming soon\n\nAlso consider citing MMPBSA.py\n    Miller III, B. R., McGee Jr., '
+                     'T. D., Swails, J. M. Homeyer, N. Gohlke, H. and Roitberg, A. E.\n    J. Chem. Theory Comput., '
+                     '2012, 8 (9) pp 3314-3321\n')
         self.MPI.Finalize()
 
         if self.FILES.gui:
