@@ -91,7 +91,9 @@ class mmpbsa_data(dict):
 
                 if key == 'ie':
                     if not self.stability:
-                        self.mutant[key] = {'data': app.calc_types[key].data, 'value': app.calc_types[key].value}
+                        self.mutant[key] = {'data': app.calc_types[key].data, 'value': app.calc_types[key].value,
+                                            'frame': [app.calc_types[key].frames[-app.calc_types[key].ieframes],
+                                                      app.calc_types[key].frames[-1]]                                            }
                     continue
 
                 for dkey in app.calc_types['mutant'][key]['complex'].data:
@@ -377,8 +379,6 @@ def load_gmxmmpbsa_info(fname: Path):
     # Since Decomp data is parsed in a memory-efficient manner (by not storing
     # all of the data in arrays, but rather by printing each data point as it's
     # parsed), we need to handle the decomp data separately here
-    # print(app.FILES.__dict__.items())
-    # complex_fixed = getattr(app.FILES, 'complex_fixed')
     # Open Complex fixed structure to assign per-(residue/wise) residue name
     try:
         complex_str = parmed.read_PDB(app.FILES.complex_fixed)
