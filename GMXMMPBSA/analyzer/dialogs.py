@@ -122,6 +122,10 @@ class InitDialog(QDialog):
         self.content_layout.addWidget(self.statusbar)
         self.content_layout.addLayout(self.btn_layout)
 
+        self.worker = worker()
+        self.worker.job_finished.connect(self.jobfinished)
+        self.worker.finished.connect(self.alljobs_finished)
+
     def show_warn(self):
         if self.com_btn.isChecked() or self.rec_btn.isChecked() or self.lig_btn.isChecked():
             self.warn_label.show()
@@ -171,7 +175,6 @@ class InitDialog(QDialog):
                         temp = line.split()[2]
             if not basename:
                 basename = f'System_{c}'
-
             if not exp_ki:
                 exp_ki = 0.0
             item = QTreeWidgetItem([f'{fname.parent.name}', '', f'{basename}', f'{exp_ki}', f'{temp}',
@@ -203,30 +206,16 @@ class InitDialog(QDialog):
                 queue.put(item.info[1])
                 self.systems_list.append(item.info)
             it += 1
-
-        # for basename, fname, exp_ki in files_list:
-        #     print(fname)
-        #     queue.put(fname)
-
         self.worker.define_dat(load_gmxmmpbsa_info, queue, self.result_queue)
         self.worker.start()
 
-    def fin(self):
-        # print(re)
-        print('termino')
+    def jobfinished(self):
         self.curr_progress += 1
         self.pb.setValue(self.curr_progress)
-        # if self.pb.value() == self.pb.maximum():
-        #     self.close()
 
-    def res(self):
-        # print(re)
-        # self.parent.make_graph()
-        print('fin')
+    def alljobs_finished(self):
         self.worker.deleteLater()
-        print('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@')
         self.parent.process_data(self.systems_list, self.result_queue, self.options)
-        # self.close()
 
 
 class ExportDialog(QDialog):
