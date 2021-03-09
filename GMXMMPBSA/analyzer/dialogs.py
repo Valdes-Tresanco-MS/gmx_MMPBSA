@@ -82,7 +82,7 @@ class InitDialog(QDialog):
         self.chart_group_layout = QHBoxLayout(self.chart_group)
         self.chart_group_layout.addWidget(self.hide_tb_btn)
 
-        self.header_item = QTreeWidgetItem(['Container', 'Name', 'Select', 'Exp. Ki (nM)'])
+        self.header_item = QTreeWidgetItem(['Folder name','Select', 'Name', 'Exp.Ki (nM)', 'Temperature', 'Path'])
         self.header_item.setToolTip(0, 'Container')
         self.header_item.setToolTip(1, 'Name')
         self.header_item.setTextAlignment(0, Qt.AlignCenter)
@@ -136,8 +136,8 @@ class InitDialog(QDialog):
 
     def get_files_info(self, info_files):
         self.nfiles = len(info_files)
-        self.f_item = QTreeWidgetItem([f'All', 'All'])
-        self.f_item.setCheckState(2, Qt.Checked)
+        self.f_item = QTreeWidgetItem([f'All'])
+        self.f_item.setCheckState(1, Qt.Checked)
         self.f_item.info = None
         self.f_item.setFlags(self.f_item.flags() | Qt.ItemIsAutoTristate)
         self.result_tree.addTopLevelItem(self.f_item)
@@ -162,19 +162,18 @@ class InitDialog(QDialog):
                 basename = f'System_{c}'
 
             if not exp_ki:
-                exp_ki = 0
-            item = QTreeWidgetItem([f'{fname}', f'{basename}','', f'{exp_ki}'])
-            item.info = [basename, Path(fname), float(exp_ki)]
-            item.setCheckState(2, Qt.Checked)
+                exp_ki = 0.0
+            item = QTreeWidgetItem([f'{fname.parent.name}', '', f'{basename}', f'{exp_ki}', f'{temp}',
+                                    f'{fname.parent.absolute()}'])
+            item.info = [basename, Path(fname), float(exp_ki), float(temp)]
+            item.setCheckState(1, Qt.Checked)
             item.setFlags(item.flags() |  Qt.ItemIsEditable)
+            item.setTextAlignment(2, Qt.AlignCenter)
+            item.setTextAlignment(3, Qt.AlignRight)
+            item.setTextAlignment(4, Qt.AlignCenter)
             self.f_item.addChild(item)
             c += 1
         self.f_item.setExpanded(True)
-
-        it = QTreeWidgetItemIterator(self.f_item)
-        while it.value():
-            print(it.value().text(0), it.value().checkState(2) == Qt.Checked)
-            it += 1
 
     def get_data(self):
 
