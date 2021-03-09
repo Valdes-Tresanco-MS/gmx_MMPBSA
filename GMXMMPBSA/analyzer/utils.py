@@ -20,8 +20,39 @@ import math
 from pathlib import Path
 import logging
 import pandas as pd
+import numpy as np
+from queue import Queue
+from PyQt5.QtCore import *
+
 
 R = 0.001987
+
+
+class worker(QThread):
+    job_finished = pyqtSignal()
+    def __init__(self):
+        super(worker, self).__init__()
+        # self.parent = parent
+    def define_dat(self, function, queue: Queue, result_q: Queue):
+        self.fn = function
+        self.queue = queue
+        self.result_queue = result_q
+        self.running = True
+
+    def run(self):
+        while self.running:
+            if self.queue.qsize() == 0:
+                return
+            items = self.queue.get()
+            try:
+                results = self.fn(items)
+                if len(results) == 1:
+                    self.result_queue.put(results)
+                else:
+                    self.result_queue.put([x for x in results])
+            finally:
+                self.queue.task_done()
+                self.job_finished.emit()
 
 
 def energy2pdb_pml(residue_list, pml_path: Path, pdb_path: Path):
