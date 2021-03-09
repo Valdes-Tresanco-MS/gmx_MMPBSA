@@ -568,7 +568,6 @@ class GMX_MMPBSA_ANA(QMainWindow):
             self.mutantitem = CustomItem(self.sys_item, ['Mutant'], has_chart=False)
             self.makeItems(data.mutant, self.mutantitem, options, True)
             self.mutantitem.setExpanded(True)
-
         self.sys_item.setExpanded(True)
 
     def makeItems(self, data, topItem, options, mutant=False):
@@ -588,19 +587,16 @@ class GMX_MMPBSA_ANA(QMainWindow):
                                             'pb': {'ΔH': np.nan, 'ie': np.nan, 'nmode': np.nan, 'qh': np.nan},
                                             'rism std': {'ΔH': np.nan, 'ie': np.nan, 'nmode': np.nan, 'qh': np.nan},
                                             'rism gf': {'ΔH': np.nan, 'ie': np.nan, 'nmode': np.nan, 'qh': np.nan}},
-                                      'Exp.Energy': ki2energy(topItem.exp_ki, topItem.app.INPUT['temperature'])}
-        dh = {}
-
+                                      'Exp.Energy': ki2energy(topItem.exp_ki, topItem.temp)}
         for level in data:
-            dg = 0
             # omit decomp data
-            if  level == 'decomp' and not options['decomposition']:
+            if level == 'decomp' and not options['decomposition']:
                 continue
             item = CustomItem(topItem, [level.upper()], has_chart=False)
             if level in ['gb', 'pb', 'rism gf', 'rism std']:
                 for level1 in data[level]:
                     # LEVEL-1 [complex, receptor, ligand] + delta
-                    if level1 in self.parts: # only show graphs for selected parts
+                    if level1 in parts: # only show graphs for selected parts
                         item1 = CustomItem(item, [str(level1).upper()], cdata=data[level][level1], level=1,
                                            chart_title=f"Binding Free Energy",
                                            chart_subtitle=f"{mut_pre}{sys_name} | {level.upper()} | {level1.upper()}",
@@ -608,7 +604,6 @@ class GMX_MMPBSA_ANA(QMainWindow):
                         for level2 in data[level][level1]:
                             # LEVEL-2 [GB, PB or 3D-RISM components]
                             if level1 == 'delta' and level2 == 'DELTA TOTAL':
-                                dh[level] = data[level][level1][level2].mean()
                                 correlation_data[sys_name]['ΔG'][level]['ΔH'] = data[level][level1][level2].mean()
                             if options['remove_empty'] and not np.count_nonzero(data[level][level1][level2]):
                                 continue
@@ -618,7 +613,6 @@ class GMX_MMPBSA_ANA(QMainWindow):
                                                                   f"{level1.upper()} | {level2.upper()}",
                                                col_box=[1])
             elif level in ['nmode', 'qh', 'ie']:
-                ent = 0
                 # This is an exception, only for aesthetic
                 if level == 'ie':
                     item1 = CustomItem(item, [str(level).upper()], cdata=data[level]['data'],
@@ -652,7 +646,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
                     item1 = CustomItem(item, [str(level1).upper()], has_chart=False)
                     for level2 in data[level][level1]:
                         # LEVEL-2 [complex, receptor, ligand, delta]
-                        if level2 in self.parts:
+                        if level2 in parts:
                             item2 = CustomItem(item1, [str(level2).upper()], has_chart=False)
                             for level3 in data[level][level1][level2]:
                                 #  LEVEL-3 [TDC, SDC, BDC]
