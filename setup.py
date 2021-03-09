@@ -16,7 +16,7 @@
 #  for more details.                                                           #
 # ##############################################################################
 
-from setuptools import setup
+from setuptools import setup, find_packages
 import versioneer
 
 with open("README.md", "r") as f:
@@ -35,7 +35,7 @@ setup(
     name='gmx_MMPBSA',
     version=versioneer.get_version(),
     cmdclass=versioneer.get_cmdclass(),
-    packages=['GMXMMPBSA'],
+    packages=find_packages(),
     package_data={"GMXMMPBSA": ["data/*", 'GMXMMPBSA.sh']},
     license='GPLv3',
     author='Mario S. Valdes-Trasanco and Mario E. Valdes-Tresanco ',
