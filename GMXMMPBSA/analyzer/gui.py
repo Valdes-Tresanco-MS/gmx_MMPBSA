@@ -218,6 +218,11 @@ class GMX_MMPBSA_ANA(QMainWindow):
                 item.chart_subtitle.replace(' | ', '_') + '_heatmap.csv'), index=True)
         elif save_pdb and action == save_pdb:
             com_pdb = item.syspath.parent.joinpath(item.app.FILES.complex_fixed)
+            if not com_pdb.exists():
+                logging.warning(f'{com_pdb} not not exits. The modified PDB file can be inconsistent. Please, '
+                                f'consider use the latest version of gmx_MMPBSA')
+                com_pdb = item.syspath.parent.joinpath(item.app.FILES.prefix + 'COM.pdb')
+
             com_pdb_str = parmed.read_PDB(com_pdb.as_posix())
             res_dict = item.gmxMMPBSA_current_data.bar_plot_dat.mean().to_dict()
             for res in com_pdb_str.residues:
