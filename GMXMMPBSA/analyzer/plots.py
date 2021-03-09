@@ -123,6 +123,9 @@ class Charts(QMdiSubWindow):
         self.reg_plot = None
         # self.main_w_layout.addWidget(self.mpl_toolbar)
         self.mainwidgetmdi.addToolBar(Qt.BottomToolBarArea, self.mpl_toolbar)
+        if 'hide_toolbar' in options and options['hide_toolbar']:
+            self.mpl_toolbar.setVisible(False)
+            self.fbtn.setChecked(False)
         self.setWidget(self.mainwidgetmdi)
         self.item = item
         self.col = col

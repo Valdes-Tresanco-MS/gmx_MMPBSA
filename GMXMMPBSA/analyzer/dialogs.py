@@ -197,12 +197,11 @@ class InitDialog(QDialog):
         self.systems_list = []
         self.options = {'correlation': self.corr_btn.isChecked(), 'decomposition': self.show_decomp_btn.isChecked(),
                    'components': [x.text() for x in [self.com_btn, self.rec_btn, self.lig_btn] if x.isChecked()],
-                        'remove_empty': self.remove_empty_btn.isChecked()}
-        print('options', self.options)
+                        'remove_empty': self.remove_empty_btn.isChecked(), 'hide_toolbar': self.hide_tb_btn.isChecked()}
         it = QTreeWidgetItemIterator(self.f_item)
         while it.value():
             item = it.value()
-            if item.checkState(2) == Qt.Checked and item.info:
+            if item.checkState(1) == Qt.Checked and item.info:
                 queue.put(item.info[1])
                 self.systems_list.append(item.info)
             it += 1
