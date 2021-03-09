@@ -520,7 +520,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
             self.correlation_treeWidget.hideColumn(x)
 
     def process_data(self, systems, rqueue: Queue, options):
-        print('systems', systems)
+        self.data_options = options
         self.init_dialog.close()
         maximum = rqueue.qsize()
         qpd = QProgressDialog('Creating systems tree', 'Abort', 0, maximum, self)
@@ -532,8 +532,6 @@ class GMX_MMPBSA_ANA(QMainWindow):
             if qpd.wasCanceled():
                 break
             result, app = rqueue.get()
-            if app.FILES.stability:
-                options['components'].append('complex')
             self.makeTree(systems[i], result, app, options)
         qpd.setValue(maximum)
 
@@ -554,7 +552,8 @@ class GMX_MMPBSA_ANA(QMainWindow):
     def makeTree(self, system, data, app, options):
 
         sys_name = system[0]
-
+        if app.FILES.stability:
+            sys_name += ' (Stability)'
         idecomp = app.INPUT['idecomp']
         # set visible the pymol checkbox
         if idecomp:
