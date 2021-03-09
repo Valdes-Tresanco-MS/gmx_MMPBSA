@@ -473,72 +473,23 @@ class GMX_MMPBSA_ANA(QMainWindow):
                     self.mdi.activatePreviousSubWindow()
                     s.close()
 
-    def get_items(self):
-        queue = Queue()
-        it = QTreeWidgetItemIterator(self.treeWidget)
-        while it.value():
-            item = it.value()
-            if isinstance(item, CustomItem) and item.has_chart:
-                queue.put(item)
-            print('11111111')
-            it += 1
-        return queue
-
     def make_correlation(self):
-        f = {'mutant': {},
-             'Pro-Lig': {
-                 'ΔG': {
-                     'gb': {'ΔH': -15, 'ie': -12, 'nmode': np.nan, 'qh': np.nan},
-                     'pb': {'ΔH': np.nan, 'ie': np.nan, 'nmode': np.nan, 'qh': np.nan},
-                     'rism std': {'ΔH': np.nan, 'ie': np.nan, 'nmode': np.nan, 'qh': np.nan},
-                     'rism gf': {'ΔH': np.nan, 'ie': np.nan, 'nmode': np.nan, 'qh': np.nan}},
-                 'Exp.Energy': -16.4},
-             'System_2': {
-                 'ΔG': {
-                     'gb': {'ΔH': -9.1, 'ie': -9, 'nmode': np.nan, 'qh': np.nan},
-                     'pb': {'ΔH': np.nan, 'ie': np.nan, 'nmode': np.nan, 'qh': np.nan},
-                     'rism std': {'ΔH': np.nan, 'ie': np.nan, 'nmode': np.nan, 'qh': np.nan},
-                     'rism gf': {'ΔH': np.nan, 'ie': np.nan, 'nmode': np.nan, 'qh': np.nan}},
-                 'Exp.Energy': -8.7},
-             'System_3': {
-                 'ΔG': {
-                     'gb': {'ΔH': -11.3, 'ie': -9, 'nmode': np.nan, 'qh': np.nan},
-                     'pb': {'ΔH': np.nan, 'ie': np.nan, 'nmode': np.nan, 'qh': np.nan},
-                     'rism std': {'ΔH': np.nan, 'ie': np.nan, 'nmode': np.nan, 'qh': np.nan},
-                     'rism gf': {'ΔH': np.nan, 'ie': np.nan, 'nmode': np.nan, 'qh': np.nan}},
-                 'Exp.Energy': -12.3},
-             'System_4': {
-                 'ΔG': {
-                     'gb': {'ΔH': -7.5, 'ie': -9, 'nmode': np.nan, 'qh': np.nan},
-                     'pb': {'ΔH': np.nan, 'ie': np.nan, 'nmode': np.nan, 'qh': np.nan},
-                     'rism std': {'ΔH': np.nan, 'ie': np.nan, 'nmode': np.nan, 'qh': np.nan},
-                     'rism gf': {'ΔH': np.nan, 'ie': np.nan, 'nmode': np.nan, 'qh': np.nan}},
-                 'Exp.Energy': -5.9},
-             'System_5': {
-                 'ΔG': {
-                     'gb': {'ΔH': -12.01, 'ie': -9, 'nmode': np.nan, 'qh': np.nan},
-                     'pb': {'ΔH': np.nan, 'ie': np.nan, 'nmode': np.nan, 'qh': np.nan},
-                     'rism std': {'ΔH': np.nan, 'ie': np.nan, 'nmode': np.nan, 'qh': np.nan},
-                     'rism gf': {'ΔH': np.nan, 'ie': np.nan, 'nmode': np.nan, 'qh': np.nan}},
-                 'Exp.Energy': -11.0161454298328},
-             'System_6': {
-                 'ΔG': {
-                     'gb': {'ΔH': -10.4, 'ie': -9, 'nmode': np.nan, 'qh': np.nan},
-                     'pb': {'ΔH': np.nan, 'ie': np.nan, 'nmode': np.nan, 'qh': np.nan},
-                     'rism std': {'ΔH': np.nan, 'ie': np.nan, 'nmode': np.nan, 'qh': np.nan},
-                     'rism gf': {'ΔH': np.nan, 'ie': np.nan, 'nmode': np.nan, 'qh': np.nan}},
-                 'Exp.Energy': -11.0161454298328},
-             'System_7': {
-                 'ΔG': {
-                     'gb': {'ΔH': 10.85, 'ie': np.nan, 'nmode': np.nan, 'qh': np.nan},
-                     'pb': {'ΔH': np.nan, 'ie': np.nan, 'nmode': np.nan, 'qh': np.nan},
-                     'rism std': {'ΔH': np.nan, 'ie': np.nan, 'nmode': np.nan, 'qh': np.nan},
-                     'rism gf': {'ΔH': np.nan, 'ie': np.nan, 'nmode': np.nan, 'qh': np.nan}},
-                 'Exp.Energy': -11.0161454298328}
-             }
+        sys_with_ki = 0
+        for x in self.corr_data:
+            if x == 'mutant':
+                continue
+            if np.isnan(self.corr_data[x]['Exp.Energy']):
+                continue
+            sys_with_ki += 1
+        if sys_with_ki < 4:
+            m = QMessageBox.critical(self, 'Unable to calculate correlation',
+                                     'Three or more systems are needed to calculate the correlation.',
+                                     QMessageBox.Ok)
+            self.correlation_DockWidget.setEnabled(False)
+            self.correlation_DockWidget.hide()
+            return
 
-        df = make_corr_DF(f)
-        # df = make_corr_DF(self.corr_data) # FIXME:
+        df = make_corr_DF(self.corr_data) # FIXME:
         # get df for each model
         models = ['gb', 'pb', 'rism std', 'rism gf']
         columns = ['ΔH', 'ΔH+IE', 'ΔH+NMODE', 'ΔH+QH']
@@ -565,7 +516,6 @@ class GMX_MMPBSA_ANA(QMainWindow):
             if m_col_box:
                 item = CorrelationItem(self.correlation_treeWidget, [m.upper()], model=model_df, enthalpy=model_data[0],
                                        dgie=model_data[1], dgnmode=model_data[2], dgqh=model_data[3], col_box=m_col_box)
-
         for x in hide_col:
             self.correlation_treeWidget.hideColumn(x)
 
@@ -587,9 +537,15 @@ class GMX_MMPBSA_ANA(QMainWindow):
             self.makeTree(systems[i], result, app, options)
         qpd.setValue(maximum)
 
-        # if not options['correlation']: # FIXME:
-        #     self.correlation_DockWidget.hide()
-        self.make_correlation()
+        if not options['correlation']: # FIXME:
+            self.correlation_DockWidget.setEnabled(False)
+            self.correlation_DockWidget.hide()
+        else:
+            if len(systems) < 4:
+                m = QMessageBox.critical(self, 'Unable to calculate correlation',
+                                         'Three or more systems are needed to calculate the correlation.',
+                                         QMessageBox.Ok)
+            self.make_correlation()
 
         # some late signal/slot connections
         self.treeWidget.itemChanged.connect(self.showdata)
