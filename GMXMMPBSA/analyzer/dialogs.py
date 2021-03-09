@@ -18,7 +18,7 @@
 
 from PyQt5.QtWidgets import (QDialog, QSpinBox, QLabel, QLineEdit, QPushButton, QHBoxLayout, QVBoxLayout, QCheckBox,
                              QGroupBox, QButtonGroup, QGridLayout, QTreeWidget, QTreeWidgetItem,
-                             QTreeWidgetItemIterator, QHeaderView, QProgressBar)
+                             QTreeWidgetItemIterator, QHeaderView, QProgressBar, QStatusBar)
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, pyqtSlot
 from queue import Queue, Empty
 from GMXMMPBSA.API import load_gmxmmpbsa_info
@@ -100,6 +100,8 @@ class InitDialog(QDialog):
         self.btn_layout.addWidget(self.cancel_btn, alignment=Qt.AlignRight)
         self.btn_layout.addWidget(self.accept_btn, alignment=Qt.AlignRight)
 
+        self.statusbar = QStatusBar(self)
+
         self.content_layout = QVBoxLayout(self)
         self.content_layout.addWidget(self.processing_label)
         self.content_layout.addWidget(self.result_label)
@@ -107,6 +109,7 @@ class InitDialog(QDialog):
         self.content_layout.addWidget(self.sys_group)
         self.content_layout.addWidget(self.chart_group)
         self.content_layout.addWidget(self.result_tree)
+        self.content_layout.addWidget(self.statusbar)
         self.content_layout.addLayout(self.btn_layout)
 
         self.worker = worker()
