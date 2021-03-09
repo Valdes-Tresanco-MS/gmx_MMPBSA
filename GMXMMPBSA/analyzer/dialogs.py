@@ -129,10 +129,13 @@ class InitDialog(QDialog):
             self.warn_label.hide()
 
     def update_item_info(self, item: QTreeWidgetItem, col):
+        if item.text(0) == 'All':
+            return
         path = item.info[1]
-        basename = item.text(1)
+        basename = item.text(2)
         exp_ki = float(item.text(3))
-        item.info = [basename, path, exp_ki]
+        temp = float(item.text(4))
+        item.info = [basename, path, exp_ki, temp]
 
     def get_files_info(self, info_files):
         self.nfiles = len(info_files)
