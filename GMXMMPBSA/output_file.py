@@ -934,11 +934,10 @@ class OutputFile(object):
 
     def print_file_info(self, FILES, INPUT):
         """ Prints the summary information to a file """
-        import GMXMMPBSA
+        from GMXMMPBSA import __version__, __mmpbsa_version__
         stability = not FILES.receptor_prmtop
 
-        self.writeline('|gmx_MMPBSA Version=%s based on MMPBSA.py v.%s' % (GMXMMPBSA.__version__,
-                                                                              GMXMMPBSA.__mmpbsa_version__))
+        self.writeline('|gmx_MMPBSA Version=%s based on MMPBSA.py v.%s' % (__version__, __mmpbsa_version__))
 
         # if FILES.solvated_prmtop:
         #    self.writeline('|Solvated complex topology file:  %s' %
