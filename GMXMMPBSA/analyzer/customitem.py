@@ -31,7 +31,7 @@ class CorrelationItem(QTreeWidgetItem):
         self.dgie = dgie
         self.dgnmode = dgnmode
         self.dgqh = dgqh
-        self.chart_title = f'Linear Regression Using {stringlist[0].upper()} model'
+        self.chart_title = f'Correlation Using {stringlist[0].upper()} model'
         self.chart_subtitle = ['Exp. Energy vs Enthalpy (ΔH)', 'Exp. Energy vs Pred. Energy (ΔH+IE)',
                                'Exp. Energy vs Pred. Energy (ΔH+NMODE)', 'Exp. Energy vs Pred. Energy (ΔH+QH)']
         self.item_name = stringlist[0]

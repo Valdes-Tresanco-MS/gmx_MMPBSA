@@ -99,10 +99,10 @@ class GMX_MMPBSA_ANA(QMainWindow):
         self.correlation_DockWidget.setWidget(self.correlation_treeWidget)
         model_label = QTreeWidgetItem(['MODEL', 'ΔH', 'ΔH+IE', 'ΔH+NMODE', 'ΔH+QH'])
         model_label.setToolTip(0, 'Selected Model')
-        model_label.setToolTip(1, 'Regression plot for ΔG = ΔH+IE')
-        model_label.setToolTip(2, 'Regression plot for ΔG = ΔH+NMODE')
-        model_label.setToolTip(3, 'Regression plot for ΔG = ΔH+QH')
-        model_label.setToolTip(4, 'Regression plot for ΔH only')
+        model_label.setToolTip(1, 'Correlation plot for ΔG = ΔH+IE')
+        model_label.setToolTip(2, 'Correlation plot for ΔG = ΔH+NMODE')
+        model_label.setToolTip(3, 'Correlation plot for ΔG = ΔH+QH')
+        model_label.setToolTip(4, 'Correlation plot for ΔH only')
         self.correlation_treeWidget.setHeaderItem(model_label)
         cheader = self.correlation_treeWidget.header()
         cheader.setSectionResizeMode(QHeaderView.ResizeToContents)
@@ -249,7 +249,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
         if action == save_csv:
             options = QFileDialog.Options()
             options |= QFileDialog.DontUseNativeDialog
-            fileName, _ = QFileDialog.getSaveFileName(self, "Save CSV file", "regression_data.csv", "CSV (*.csv)",
+            fileName, _ = QFileDialog.getSaveFileName(self, "Save CSV file", "correlation_data.csv", "CSV (*.csv)",
                                                       options=options)
             if fileName:
                 item.model.to_csv(fileName, index=False)

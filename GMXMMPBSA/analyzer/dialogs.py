@@ -167,9 +167,6 @@ class InitDialog(QDialog):
                     if line.startswith("INPUT['temperature']"):
                         temp = line.split()[2]
                     if line.startswith("INPUT['entropy_temp']"):
-                        print('Warning: entropy_temp variable is deprecated and will be remove in next versions!. '
-                              'Please, '
-                              'use temperature variable instead')
                         self.statusbar.showMessage('Warning: entropy_temp variable is deprecated and will be remove in '
                                                    'next versions!. Please, use temperature variable instead', 50000)
                         temp = line.split()[2]
