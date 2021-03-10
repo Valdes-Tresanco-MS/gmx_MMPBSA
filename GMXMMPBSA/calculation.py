@@ -592,7 +592,7 @@ class InteractionEntropyCalc:
         self.data = ts
         nframes = len(self.data)
         self.ie_frames = math.ceil(nframes * (self.INPUT['entropy_seg'] / 100))
-        self.value = self.data[self.ie_frames:].mean()
+        self.value = self.data[-self.ie_frames:].mean()
         self.frames = [x for x in range(self.INPUT['startframe'],
                                         self.INPUT['startframe'] + nframes,
                                         self.INPUT['interval'])]
