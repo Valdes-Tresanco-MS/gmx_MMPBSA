@@ -40,6 +40,8 @@ class InfoFile(object):
 
     EDIT_WITH_CARE_VARS = ['entropy']
 
+    DEPRECATED_VARS = ['entropy_temp']
+
     def __init__(self, app):
         """ Instantiate me """
         self.app = app
@@ -64,9 +66,14 @@ class InfoFile(object):
         for var in InfoFile.EDIT_WITH_CARE_VARS:
             outfile.write("INPUT['%s'] = %s\n" % (var, self.write_var(self.app.INPUT[var])))
 
+        outfile.write('#\n# These variables are deprecated and will be remove in next versions\n')
+        for var in InfoFile.DEPRECATED_VARS:
+            outfile.write("INPUT['%s'] = %s\n" % (var, self.write_var(self.app.INPUT[var])))
+
         outfile.write('#\n# MODIFY NOTHING BELOW HERE, OR GET WHAT YOU DESERVE\n')
         for var in list(self.app.INPUT.keys()):
-            if var in InfoFile.EDITABLE_INFO_VARS or var in InfoFile.EDIT_WITH_CARE_VARS:
+            if (var in InfoFile.EDITABLE_INFO_VARS or var in InfoFile.EDIT_WITH_CARE_VARS or
+                var in InfoFile.DEPRECATED_VARS):
                 continue
             outfile.write("INPUT['%s'] = %s\n" % (var, self.write_var(self.app.INPUT[var])))
 
