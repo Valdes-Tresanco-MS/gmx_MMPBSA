@@ -613,7 +613,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
                             # LEVEL-2 [GB, PB or 3D-RISM components]
                             if level1 == 'delta' and level2 == 'DELTA TOTAL':
                                 correlation_data[sys_name]['ΔG'][level]['ΔH'] = data[level][level1][level2].mean()
-                            if options['remove_empty'] and not np.count_nonzero(data[level][level1][level2]):
+                            if options['remove_empty_charts'] and not np.count_nonzero(data[level][level1][level2]):
                                 continue
                             item2 = CustomItem(item1, [str(level2).upper()], cdata=data[level][level1][level2],
                                                    level=0, chart_title=f"Binding Free Energy",

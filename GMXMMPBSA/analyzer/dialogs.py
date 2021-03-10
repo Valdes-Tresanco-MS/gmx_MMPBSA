@@ -41,13 +41,15 @@ class InitDialog(QDialog):
         self.corr_btn.setChecked(False)
         self.show_decomp_btn = QCheckBox('Show decomposition data')
         self.show_decomp_btn.setChecked(True)
-        self.remove_empty_btn = QCheckBox('Remove empty terms')
-        # self.remove_empty_btn.setChecked(True)
+        self.remove_empty_charts_btn = QCheckBox('Remove empty charts')
+        self.remove_empty_terms_btn = QCheckBox('Remove empty terms')
+        # self.remove_empty_terms_btn.setChecked(True)
 
         self.check_l = QHBoxLayout()
         self.check_l.addWidget(self.corr_btn)
         self.check_l.addWidget(self.show_decomp_btn)
-        self.check_l.addWidget(self.remove_empty_btn)
+        self.check_l.addWidget(self.remove_empty_charts_btn)
+        self.check_l.addWidget(self.remove_empty_terms_btn)
 
         self.delta_btn = QCheckBox('delta')
         self.delta_btn.setChecked(True)
@@ -194,7 +196,9 @@ class InitDialog(QDialog):
         self.systems_list = []
         self.options = {'correlation': self.corr_btn.isChecked(), 'decomposition': self.show_decomp_btn.isChecked(),
                    'components': [x.text() for x in [self.com_btn, self.rec_btn, self.lig_btn] if x.isChecked()],
-                        'remove_empty': self.remove_empty_btn.isChecked(), 'hide_toolbar': self.hide_tb_btn.isChecked()}
+                        'remove_empty_charts': self.remove_empty_charts_btn.isChecked(),
+                        'remove_empty_terms':self.remove_empty_terms_btn.isChecked() ,'hide_toolbar':
+                            self.hide_tb_btn.isChecked()}
         it = QTreeWidgetItemIterator(self.f_item)
         while it.value():
             item = it.value()
