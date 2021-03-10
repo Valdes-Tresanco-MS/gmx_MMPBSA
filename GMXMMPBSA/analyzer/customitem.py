@@ -58,7 +58,7 @@ class CorrelationItem(QTreeWidgetItem):
 
 class CustomItem(QTreeWidgetItem):
     def __init__(self, parent, stringlist, system=None, app=None, has_chart=True, cdata=None, level=0,
-                 chart_title='Binding Free Energy', chart_subtitle='', col_box=()):
+                 chart_title='Binding Free Energy', chart_subtitle='', col_box=(), remove_empty_terms=False):
         super(CustomItem, self).__init__(parent, stringlist)
 
         if isinstance(parent, CustomItem):
@@ -72,6 +72,7 @@ class CustomItem(QTreeWidgetItem):
             self.end = parent.end
             self.interval = parent.interval
             self.idecomp = parent.idecomp
+            self.remove_empty_terms = parent.remove_empty_terms
         else:
             self.syspath = system[1]
             self.exp_ki = system[2]
@@ -83,7 +84,7 @@ class CustomItem(QTreeWidgetItem):
             self.frames = np.array([(f * self.interval) + self.start for f in range(self.app.numframes)])
             self.end = app.INPUT['endframe']
             self.idecomp = app.INPUT['idecomp']
-
+            self.remove_empty_terms = remove_empty_terms
         self.cdata = cdata
         self.level = level
         self.chart_title = chart_title
@@ -130,7 +131,9 @@ class CustomItem(QTreeWidgetItem):
                 if type(d) not in [list, np.ndarray] :
                     dat[p] = [d]
                 else:
-                    dat[p] = d
+                    if self.remove_empty_terms:
+                        if np.count_nonzero(d):
+                            dat[p] = d
             return_data.bar_plot_dat = pd.DataFrame(data=dat)
 
         elif self.level == 2:
