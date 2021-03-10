@@ -217,10 +217,11 @@ class GMX_MMPBSA_ANA(QMainWindow):
             item.gmxMMPBSA_current_data.heatmap_plot_dat.to_csv(item.syspath.parent.joinpath(
                 item.chart_subtitle.replace(' | ', '_') + '_heatmap.csv'), index=True)
         elif save_pdb and action == save_pdb:
-            com_pdb = item.syspath.parent.joinpath(item.app.FILES.complex_fixed)
-            if not com_pdb.exists():
-                logging.warning(f'{com_pdb} not not exits. The modified PDB file can be inconsistent. Please, '
-                                f'consider use the latest version of gmx_MMPBSA')
+            if hasattr(item.app.FILES, 'complex_fixed'):
+                com_pdb = item.syspath.parent.joinpath(item.app.FILES.complex_fixed)
+            else:
+                logging.warning(f'{item.app.FILES.prefix + "FIXED_COM.pdb"} not not exits. The modified PDB file can '
+                                f'be inconsistent. Please, consider use the latest version of gmx_MMPBSA')
                 com_pdb = item.syspath.parent.joinpath(item.app.FILES.prefix + 'COM.pdb')
 
             com_pdb_str = parmed.read_PDB(com_pdb.as_posix())
@@ -355,7 +356,13 @@ class GMX_MMPBSA_ANA(QMainWindow):
                 return
             else:
                 pymol = pymol_path[0]
-            com_pdb = item.syspath.parent.joinpath(item.app.FILES.complex_fixed)
+
+            if hasattr(item.app.FILES, 'complex_fixed'):
+                com_pdb = item.syspath.parent.joinpath(item.app.FILES.complex_fixed)
+            else:
+                logging.warning(f'{item.app.FILES.prefix + "FIXED_COM.pdb"} not not exits. The modified PDB file can '
+                                f'be inconsistent. Please, consider use the latest version of gmx_MMPBSA')
+                com_pdb = item.syspath.parent.joinpath(item.app.FILES.prefix + 'COM.pdb')
             if not com_pdb.exists():
                 logging.warning(f'{com_pdb} not not exits. The modified PDB file can be inconsistent. Please, '
                                 f'consider use the latest version of gmx_MMPBSA')
