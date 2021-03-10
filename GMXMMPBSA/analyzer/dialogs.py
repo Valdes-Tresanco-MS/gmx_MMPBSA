@@ -42,7 +42,9 @@ class InitDialog(QDialog):
         self.show_decomp_btn = QCheckBox('Show decomposition data')
         self.show_decomp_btn.setChecked(True)
         self.remove_empty_charts_btn = QCheckBox('Remove empty charts')
+        self.remove_empty_charts_btn.clicked.connect(self.show_warn)
         self.remove_empty_terms_btn = QCheckBox('Remove empty terms')
+        self.remove_empty_terms_btn.clicked.connect(self.show_warn)
         # self.remove_empty_terms_btn.setChecked(True)
 
         self.check_l = QHBoxLayout()
@@ -50,6 +52,13 @@ class InitDialog(QDialog):
         self.check_l.addWidget(self.show_decomp_btn)
         self.check_l.addWidget(self.remove_empty_charts_btn)
         self.check_l.addWidget(self.remove_empty_terms_btn)
+        self.warn_label_empty = QLabel('Warning: these options will hide the charts and empty terms respectively. '
+                                       'This does not change your results at all, it only changes the representation '
+                                       'of the data.')
+        self.warn_label_empty.setStyleSheet("border:3px solid orange")
+        self.warn_label_empty.setWordWrap(True)
+        self.warn_label_empty.hide()
+
 
         self.delta_btn = QCheckBox('delta')
         self.delta_btn.setChecked(True)
@@ -60,9 +69,11 @@ class InitDialog(QDialog):
         self.rec_btn.clicked.connect(self.show_warn)
         self.lig_btn = QCheckBox('ligand')
         self.lig_btn.clicked.connect(self.show_warn)
-        self.warn_label = QLabel('Warning: This can generate a huge amount of graphics which can crash the '
-                                 'application!')
-        self.warn_label.hide()
+        self.warn_label_big = QLabel('Warning: This can generate a huge amount of graphics which can crash the '
+                                     'application!. So far, we have not registered this issue, but be cautious')
+        self.warn_label_big.setStyleSheet("border:3px solid orange")
+        self.warn_label_big.setWordWrap(True)
+        self.warn_label_big.hide()
 
         self.comp_group = QGroupBox('Computation of Components Charts')
         self.comp_group_layout = QGridLayout(self.comp_group)
@@ -70,11 +81,12 @@ class InitDialog(QDialog):
         self.comp_group_layout.addWidget(self.com_btn, 0, 1)
         self.comp_group_layout.addWidget(self.rec_btn, 0, 2)
         self.comp_group_layout.addWidget(self.lig_btn, 0, 3)
-        self.comp_group_layout.addWidget(self.warn_label, 1, 0, 1, 4)
+        self.comp_group_layout.addWidget(self.warn_label_big, 1, 0, 1, 4)
 
         self.sys_group = QGroupBox('Systems options')
         self.sys_group_layout = QVBoxLayout(self.sys_group)
         self.sys_group_layout.addLayout(self.check_l)
+        self.sys_group_layout.addWidget(self.warn_label_empty)
         self.sys_group_layout.addWidget(self.comp_group)
 
         self.hide_tb_btn = QCheckBox('Hide ToolBar')
@@ -130,9 +142,14 @@ class InitDialog(QDialog):
 
     def show_warn(self):
         if self.com_btn.isChecked() or self.rec_btn.isChecked() or self.lig_btn.isChecked():
-            self.warn_label.show()
+            self.warn_label_big.show()
         else:
-            self.warn_label.hide()
+            self.warn_label_big.hide()
+
+        if self.remove_empty_terms_btn.isChecked() or self.remove_empty_charts_btn.isChecked():
+            self.warn_label_empty.show()
+        else:
+            self.warn_label_empty.hide()
 
     def update_item_info(self, item: QTreeWidgetItem, col):
         if item.text(0) == 'All':
