@@ -45,7 +45,7 @@ arrays will be `array.array` instances with the ’d’ data type specifier (for
 organized in an `mmpbsa_data` instance in the following manner:
 
 ```python
-mmpbsa_data_instance[calc_key][system_component][energy_term]
+mmpbsa_data_instance['calc_key']['system_component']['energy_term']
 ```
 
 In this example, `calc_key` is a `dict` key that is paired to another `dict` (`mmpbsa_data_instance` is the
@@ -80,7 +80,7 @@ The keys of these inner-most (third-level) `dict` instances are paired with the 
 accessed as follows:
 
 ```python
-mmpbsa_data_instance.mutant[calc_key][system_component][energy_term]
+mmpbsa_data_instance.mutant['calc_key']['system_component']['energy_term']
 ```
 
 !!! warning
