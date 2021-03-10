@@ -311,7 +311,7 @@ def get_delta_decomp(app, decomp_calc_type, data):
                                 tempdict[p][res][resp][para] = com[p][resp][res][para]
     return tempdict
 
-def load_gmxmmpbsa_info(fname: Path):
+def load_gmxmmpbsa_info(fname):
     """
     Loads up an gmx_MMPBSA info file and returns a mmpbsa_data instance with all
     of the data available in numpy arrays if numpy is available. The returned
@@ -366,6 +366,8 @@ def load_gmxmmpbsa_info(fname: Path):
        # Calculate the standard deviation of the alanine mutant receptor in PB
        print mydata.mutant['pb']['receptor']['TOTAL'].std()
     """
+    if not isinstance(fname, Path):
+        fname = Path(fname)
 
     if not fname.exists():
         raise NoFileExists("cannot find %s!" % fname)
