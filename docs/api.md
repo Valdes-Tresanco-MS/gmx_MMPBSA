@@ -61,6 +61,7 @@ class.
 |           `pb`            | Poisson-Boltzmann Results            |
 |         `rism gf`         | Gaussian Fluctuation 3D-RISM Results |
 |        `rism std`         | Standard 3D-RISM Results             |
+|           `ie`            | Interaction Entropy Results          |
 |          `nmode`          | Normal Mode Analysis Results         |
 |           `qh`            | Quasi-harmonic Approximation Results |
 
@@ -113,14 +114,22 @@ normal Amber topology files.
 | Total gas phase free energy |  `G gas`  |  `G gas`  |    `G gas`    |
 | Total energy                |  `TOTAL`  |  `TOTAL`  |    `TOTAL`    |
 
-Table 5. Same as Table 4 for the entropy data.
+Table 5. Same as Table 4 for the entropy (nmode and qh) data.
 
 | Description           |     `nmode`     |      `qh`       |
 |:----------------------|:---------------:|:---------------:|
 | Translational entropy | `Translational` | `Translational` |
-| Rotational entropy | `Rotational` | `Rotational` |
-| Vibrational entropy | `Vibrational` | `Vibrational` |
-| Total entropy | `Total` | `Total` |
+| Rotational entropy    |  `Rotational`   |  `Rotational`   |
+| Vibrational entropy   |  `Vibrational`  |  `Vibrational`  |
+| Total entropy         |     `Total`     |     `Total`     |
+
+Table 6. Same as Table 5 for the Interaction Entropy data.
+
+| Description                                  |  `IE`   |
+|:---------------------------------------------|:-------:|
+| Data per-frame                               | `data`  |
+| Mean of the selected interval                | `value` |
+| Star and End frames of the selected interval | `frames` |
 
 ### Defined operators
 
