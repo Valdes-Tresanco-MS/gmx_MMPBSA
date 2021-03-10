@@ -566,7 +566,8 @@ class GMX_MMPBSA_ANA(QMainWindow):
         if idecomp:
             self.treeWidget.setColumnHidden(4, False)
         # make system item
-        self.sys_item = CustomItem(self.treeWidget, [sys_name], system, app, False)
+        self.sys_item = CustomItem(self.treeWidget, [sys_name], system, app, False,
+                                   remove_empty_terms=options['remove_empty_terms'])
         self.normalitem = CustomItem(self.sys_item, ['Normal'], has_chart=False)
         self.makeItems(data, self.normalitem, options)
         self.normalitem.setExpanded(True)
