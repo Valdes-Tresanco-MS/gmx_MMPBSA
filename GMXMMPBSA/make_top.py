@@ -904,11 +904,10 @@ class CheckMakeTop:
                     logging.warning('Already have chain ID. Re-assigning ID...')
                 else:
                     logging.warning('Assigning chains ID...')
-            elif self.INPUT['assign_chainID'] == 0 and self.FILES.complex_tpr[-3] == 'gro':
+            elif self.INPUT['assign_chainID'] == 0 and self.FILES.complex_tpr[-3:] == 'gro':
                 assign = True
                 logging.warning('No reference structure was found and a gro file was used for the complex '
                                 'structure. Assigning chains ID...')
-
             if assign:
                 chains_ids = []
                 chain_by_num = False
