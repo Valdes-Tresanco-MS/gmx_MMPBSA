@@ -134,6 +134,8 @@ class CustomItem(QTreeWidgetItem):
                     if self.remove_empty_terms:
                         if np.count_nonzero(d):
                             dat[p] = d
+                    else:
+                        dat[p] = d
             return_data.bar_plot_dat = pd.DataFrame(data=dat)
 
         elif self.level == 2:
@@ -143,7 +145,11 @@ class CustomItem(QTreeWidgetItem):
                 data['Residues'].append(p)
                 for p1, d1 in d.items():
                     if 'tot' in str(p1).lower():
-                        bar[p] = d1[start:end:interval]
+                        if self.remove_empty_terms:
+                            if np.count_nonzero(d1[start:end:interval]):
+                                bar[p] = d1[start:end:interval]
+                        else:
+                            bar[p] = d1[start:end:interval]
                         data['Energy'].append(d1[start:end:interval])
 
             bar_plot_data = pd.DataFrame(data=bar)
@@ -164,7 +170,11 @@ class CustomItem(QTreeWidgetItem):
                     for p2, d2 in d1.items():
                         if 'tot' in str(p2).lower():
                             res_t.append(d2[start:end:interval])
-                bar[p] = np.sum(res_t, axis=0)
+                if self.remove_empty_terms:
+                    if np.count_nonzero(np.sum(res_t, axis=0)):
+                        bar[p] = np.sum(res_t, axis=0)
+                else:
+                    bar[p] = np.sum(res_t, axis=0)
                 data['Energy'].append(np.sum(res_t, axis=0))
             bar_plot_data = pd.DataFrame(data=bar)
             line_plot_data = pd.DataFrame(data={'frames': self.frames[start:end:interval],
