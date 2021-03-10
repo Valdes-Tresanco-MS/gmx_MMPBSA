@@ -571,7 +571,7 @@ class InteractionEntropyCalc:
         k = 0.001985875
         if 'temperature' in self.INPUT:
             temp = self.INPUT['temperature']
-        if 'entropy_temp' in self.INPUT:
+        elif 'entropy_temp' in self.INPUT:
             temp = self.INPUT['entropy_temp']
             GMXMMPBSA_WARNING('entropy_temp variable is deprecated and will be remove in next versions!. Please, '
                               'use temperature variable instead')
