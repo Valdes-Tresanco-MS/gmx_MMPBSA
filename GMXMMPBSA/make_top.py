@@ -181,6 +181,12 @@ class CheckMakeTop:
             if l3.wait():
                 GMXMMPBSA_ERROR('%s failed when querying %s' % (parmchk2, self.FILES.ligand_mol2))
 
+        # check if the ligand force field is gaff or gaff2 and get if the ligand mol2 was defined
+        if self.INPUT['ligand_forcefield'] in ["leaprc.gaff", "leaprc.gaff2"]:
+            if not self.FILES.complex_top and not self.FILES.ligand_mol2:
+                GMXMMPBSA_WARNING('You must define the ligand mol2 file (-lm) if ligand_forcefield is "leaprc.gaff" or '
+                                  '"leaprc.gaff2". If the ligand is protein type ignore this warning')
+
         # make a temp receptor pdb (even when stability) if decomp to get correct receptor residues from complex. This
         # avoid get multiples molecules from complex.split()
         if self.INPUT['decomprun']:
