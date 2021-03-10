@@ -61,7 +61,7 @@ class mmpbsa_data(dict):
             if key == 'ie':
                 if not self.stability:
                     self[key] = {'data': app.calc_types[key].data, 'value': app.calc_types[key].value,
-                                 'frame': [app.calc_types[key].frames[-app.calc_types[key].ieframes],
+                                 'frames': [app.calc_types[key].frames[-app.calc_types[key].ieframes],
                                            app.calc_types[key].frames[-1]]}
                 continue
             for dkey in app.calc_types[key]['complex'].data:
@@ -92,7 +92,7 @@ class mmpbsa_data(dict):
                 if key == 'ie':
                     if not self.stability:
                         self.mutant[key] = {'data': app.calc_types[key].data, 'value': app.calc_types[key].value,
-                                            'frame': [app.calc_types[key].frames[-app.calc_types[key].ieframes],
+                                            'frames': [app.calc_types[key].frames[-app.calc_types[key].ieframes],
                                                       app.calc_types[key].frames[-1]]                                            }
                     continue
 

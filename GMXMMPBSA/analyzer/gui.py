@@ -627,7 +627,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
                                        chart_subtitle=f"{mut_pre}{sys_name} | {level.upper()}",
                                        col_box=[1])
                     ent = data[level]['value']
-                    item1.ie = [data[level]['frame'], data[level]['value']]
+                    item1.ie = [data[level]['frames'], data[level]['value']]
                 else:
                     item1 = CustomItem(item, [str(level).upper()], cdata=data[level],
                                        level=1, chart_title=f"Entropy {str(level).upper()} approximation",
