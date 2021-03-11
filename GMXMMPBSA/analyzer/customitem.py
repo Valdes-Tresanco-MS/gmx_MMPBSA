@@ -132,8 +132,8 @@ class CustomItem(QTreeWidgetItem):
                     dat[p] = [d]
                 else:
                     if self.remove_empty_terms:
-                        if np.count_nonzero(d):
-                            dat[p] = d
+                        if abs(d[start:end:interval].mean()) > 0.1:
+                            dat[p] = d[start:end:interval]
                     else:
                         dat[p] = d
             return_data.bar_plot_dat = pd.DataFrame(data=dat)
@@ -146,7 +146,7 @@ class CustomItem(QTreeWidgetItem):
                 for p1, d1 in d.items():
                     if 'tot' in str(p1).lower():
                         if self.remove_empty_terms:
-                            if np.count_nonzero(d1[start:end:interval]):
+                            if abs(d1[start:end:interval].mean()) > 0.1:
                                 bar[p] = d1[start:end:interval]
                         else:
                             bar[p] = d1[start:end:interval]
@@ -171,7 +171,7 @@ class CustomItem(QTreeWidgetItem):
                         if 'tot' in str(p2).lower():
                             res_t.append(d2[start:end:interval])
                 if self.remove_empty_terms:
-                    if np.count_nonzero(np.sum(res_t, axis=0)):
+                    if abs(np.sum(res_t, axis=0).mean()) > 0.1:
                         bar[p] = np.sum(res_t, axis=0)
                 else:
                     bar[p] = np.sum(res_t, axis=0)
