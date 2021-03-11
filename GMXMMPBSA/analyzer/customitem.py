@@ -81,7 +81,9 @@ class CustomItem(QTreeWidgetItem):
             self.app = app
             self.interval = app.INPUT['interval']
             self.start = app.INPUT['startframe']
-            self.frames = np.array([(f * self.interval) + self.start for f in range(self.app.numframes)])
+            self.frames = np.array([x for x in range(self.start, self.start +
+                                                     self.app.numframes * self.interval,
+                                                     self.interval)])
             self.end = app.INPUT['endframe']
             self.idecomp = app.INPUT['idecomp']
             self.remove_empty_terms = remove_empty_terms
