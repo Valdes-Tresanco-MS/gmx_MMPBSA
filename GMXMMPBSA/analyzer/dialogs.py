@@ -42,23 +42,22 @@ class InitDialog(QDialog):
         self.show_decomp_btn = QCheckBox('Show decomposition data')
         self.show_decomp_btn.setChecked(True)
         self.remove_empty_charts_btn = QCheckBox('Remove empty charts')
+        self.remove_empty_charts_btn.setChecked(True)
         self.remove_empty_charts_btn.clicked.connect(self.show_warn)
         self.remove_empty_terms_btn = QCheckBox('Remove empty terms')
+        self.remove_empty_terms_btn.setChecked(True)
         self.remove_empty_terms_btn.clicked.connect(self.show_warn)
-        # self.remove_empty_terms_btn.setChecked(True)
 
         self.check_l = QHBoxLayout()
         self.check_l.addWidget(self.corr_btn)
         self.check_l.addWidget(self.show_decomp_btn)
         self.check_l.addWidget(self.remove_empty_charts_btn)
         self.check_l.addWidget(self.remove_empty_terms_btn)
-        self.warn_label_empty = QLabel('Warning: these options will hide the charts and empty terms respectively. '
-                                       'This does not change your results at all, it only changes the representation '
-                                       'of the data.')
-        self.warn_label_empty.setStyleSheet("border:3px solid orange")
+        self.warn_label_empty = QLabel('Note: Remove empty charts and terms options will hide the charts and empty '
+                                       'terms respectively. This does not change your results at all, it only changes '
+                                       'the representation of the data.')
+        self.warn_label_empty.setStyleSheet("border:3px solid green")
         self.warn_label_empty.setWordWrap(True)
-        self.warn_label_empty.hide()
-
 
         self.delta_btn = QCheckBox('delta')
         self.delta_btn.setChecked(True)
@@ -171,7 +170,6 @@ class InitDialog(QDialog):
         self.processing_label.setText(f'Processing {self.nfiles} files...')
 
         files_list = info_files
-        self.pb.setRange(0, self.nfiles)
 
         c = 1
         for fname in files_list:
