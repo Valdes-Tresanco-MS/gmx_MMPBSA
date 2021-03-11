@@ -18,7 +18,7 @@
 
 import math
 from pathlib import Path
-from GMXMMPBSA.exceptions import GMXMMPBSA_ERROR
+from GMXMMPBSA.exceptions import GMXMMPBSA_ERROR, GMXMMPBSA_WARNING
 import logging
 import pandas as pd
 import numpy as np
@@ -133,7 +133,7 @@ def get_files(parser_args):
         parser_args.files = [Path('.')]
     for cf in parser_args.files:
         if not cf.exists():
-            logging.warning(f'{cf} not found')
+            GMXMMPBSA_WARNING(f'{cf} not found')
             continue
         if cf.is_dir():
             if parser_args.recursive:
