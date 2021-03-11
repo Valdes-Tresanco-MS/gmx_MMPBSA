@@ -73,29 +73,40 @@ def energy2pdb_pml(residue_list, pml_path: Path, pdb_path: Path):
 
         minimum = 999
         maximum = -999
-        selections = []
+        select = {}
         for res, energy in residue_list.items():
+            icode = ''
             if res.count(':') == 3:
                 chain, name, number, icode = res.split(':')
             else:
                 chain, name, number = res.split(':')
-            sele = f'(chain {chain} and resi {number})'
-            selections.append(sele)
-            bf.write(f'show sticks, {sele}\n')
+
+            if chain not in select:
+                select[chain] = []
+            select[chain].append(f'{number}{icode}')
             if energy < minimum:
                 minimum = math.floor(energy)
             if energy > maximum:
                 maximum = math.ceil(energy)
+
+        chain_sele = []
+        for chain in select:
+            text = f"(chain {chain} and resi {'+'.join(select[chain])})"
+            chain_sele.append(text)
+        select_text = ' or '.join(chain_sele)
+
         if abs(minimum) > abs(maximum):
             maximum = abs(minimum)
         else:
             minimum = -abs(maximum)
+
+        bf.write(f'show sticks, {select_text}\n')
         bf.write(f'remove (h. and (e. c extend 1))\n')
         bf.write(f'spectrum b, gmxc1 gmxc2 gmxc3 gmxc4 gmxc5, minimum={minimum}, maximum={maximum}\n')
         bf.write(f'ramp_new colorbar, none, [{minimum}, 0, {maximum}], [gmxc1, gmxc2, gmxc3, gmxc4, gmxc5]\n')
-        bf.write(f'center {" or ".join(selections)}\n')
-        bf.write(f'orient {" or ".join(selections)}\n')
-        bf.write(f'zoom {" or ".join(selections)}, 15\n')
+        bf.write(f'center {select_text}\n')
+        bf.write(f'orient {select_text}\n')
+        bf.write(f'zoom {select_text}, 15\n')
 
 
 def ki2energy(ki, temp):
