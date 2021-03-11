@@ -18,7 +18,7 @@
 
 from PyQt5.QtWidgets import (QDialog, QSpinBox, QLabel, QLineEdit, QPushButton, QHBoxLayout, QVBoxLayout, QCheckBox,
                              QGroupBox, QButtonGroup, QGridLayout, QTreeWidget, QTreeWidgetItem,
-                             QTreeWidgetItemIterator, QHeaderView, QProgressBar, QStatusBar)
+                             QTreeWidgetItemIterator, QHeaderView, QProgressBar, QStatusBar, QMessageBox)
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, pyqtSlot
 from queue import Queue, Empty
 from GMXMMPBSA.API import load_gmxmmpbsa_info
@@ -216,6 +216,18 @@ class InitDialog(QDialog):
                         'remove_empty_charts': self.remove_empty_charts_btn.isChecked(),
                         'remove_empty_terms':self.remove_empty_terms_btn.isChecked() ,'hide_toolbar':
                             self.hide_tb_btn.isChecked()}
+        it = QTreeWidgetItemIterator(self.f_item)
+        while it.value():
+            item = it.value()
+            if item.checkState(1) == Qt.Checked and item.info:
+                self.systems_list.append(item.info)
+            it += 1
+        self.pb.setRange(0, len(self.systems_list))
+        if not len(self.systems_list):
+            m = QMessageBox.critical(self, 'Error processing systems', 'You must select at least one system.',
+                                     QMessageBox.Ok)
+            return
+
         it = QTreeWidgetItemIterator(self.f_item)
         while it.value():
             item = it.value()
