@@ -94,9 +94,9 @@ class GMX_MMPBSA_ANA(QMainWindow):
         header.setSectionResizeMode(QHeaderView.ResizeToContents)
 
         self.correlation_treeWidget = QTreeWidget(self)
+        self.correlation_treeWidget.itemClicked.connect(self.update_table)
         self.correlation_treeWidget.setContextMenuPolicy(Qt.CustomContextMenu)
         self.correlation_treeWidget.customContextMenuRequested.connect(self.corr_context_menu)
-        self.correlation_DockWidget.setWidget(self.correlation_treeWidget)
         model_label = QTreeWidgetItem(['MODEL', 'ΔH', 'ΔH+IE', 'ΔH+NMODE', 'ΔH+QH'])
         model_label.setToolTip(0, 'Selected Model')
         model_label.setToolTip(1, 'Correlation plot for ΔG = ΔH+IE')
@@ -106,6 +106,18 @@ class GMX_MMPBSA_ANA(QMainWindow):
         self.correlation_treeWidget.setHeaderItem(model_label)
         cheader = self.correlation_treeWidget.header()
         cheader.setSectionResizeMode(QHeaderView.ResizeToContents)
+
+        self.data_table_widget = QTableWidget(0, 3)
+        self.data_table_widget.setHorizontalHeaderLabels(['System', 'Exp.ΔG'])
+        self.data_table_energy_col = QTableWidgetItem('None')
+        self.data_table_widget.setHorizontalHeaderItem(2, self.data_table_energy_col)
+        self.data_table_widget.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
+        self.data_table_widget.horizontalHeader().setStretchLastSection(True)
+
+        self.corr_container_widget = QSplitter(Qt.Vertical)
+        self.corr_container_widget.addWidget(self.correlation_treeWidget)
+        self.corr_container_widget.addWidget(self.data_table_widget)
+        self.correlation_DockWidget.setWidget(self.corr_container_widget)
 
 
         # self.optionWidget = QWidget(self)
@@ -266,7 +278,6 @@ class GMX_MMPBSA_ANA(QMainWindow):
         sub = self.mdi.activeSubWindow()
         sub.item.reset_data()
         sub.make_chart()
-
 
     def frames_start_sb_update(self, value):
         if value > self.frames_end_sb.value():
@@ -480,13 +491,40 @@ class GMX_MMPBSA_ANA(QMainWindow):
                     self.mdi.activatePreviousSubWindow()
                     s.close()
 
+    def update_table(self, item: CorrelationItem, col):
+
+        if col == 1:
+            data = item.enthalpy
+        elif col == 2:
+            data = item.dgie
+        elif col == 3:
+            data = item.dgnmode
+        elif col == 4:
+            data = item.dgqh
+        else:
+            return
+        col_label = self.correlation_treeWidget.headerItem().text(col)
+        self.data_table_energy_col.setText(f"{item.text(0)}({col_label})")
+
+        row = 0
+        for v in data[col_label]:
+            titem = QTableWidgetItem(f'{v:.2f}')
+            self.data_table_widget.setItem(row, 2, titem)
+            row += 1
+
     def make_correlation(self):
+
+        self.data_table_widget.setRowCount(len(self.corr_data) - 1)
         sys_with_ki = 0
         for x in self.corr_data:
             if x == 'mutant':
                 continue
             if np.isnan(self.corr_data[x]['Exp.Energy']):
                 continue
+            item_s = QTableWidgetItem(x)
+            self.data_table_widget.setItem(sys_with_ki, 0, item_s)
+            item_e = QTableWidgetItem(f"{self.corr_data[x]['Exp.Energy']:.2f}")
+            self.data_table_widget.setItem(sys_with_ki, 1, item_e)
             sys_with_ki += 1
         if sys_with_ki < 4:
             m = QMessageBox.critical(self, 'Unable to calculate correlation',
@@ -546,10 +584,6 @@ class GMX_MMPBSA_ANA(QMainWindow):
             self.correlation_DockWidget.setEnabled(False)
             self.correlation_DockWidget.hide()
         else:
-            if len(systems) < 4:
-                m = QMessageBox.critical(self, 'Unable to calculate correlation',
-                                         'Three or more systems are needed to calculate the correlation.',
-                                         QMessageBox.Ok)
             self.make_correlation()
 
         # some late signal/slot connections
