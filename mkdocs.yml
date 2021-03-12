@@ -150,6 +150,6 @@ nav:
     - Charmm Support:
         - Charmm and MM(PB/GB)SA: charmm.md
         - Protein-Ligand (ST): examples/Protein_ligand_CHARMMff/README.md
-  - Support:
+  - Info:
     - Information: information.md
     - Changelog: changelog.md
