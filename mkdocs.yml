@@ -155,3 +155,4 @@ nav:
     - Support: support.md
   - Changelog:
     - Changelog: changelog.md
+    - Compatibility: compatibility.md
