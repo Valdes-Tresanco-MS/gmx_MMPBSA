@@ -41,9 +41,10 @@ try:
     from GMXMMPBSA.exceptions import GMXMMPBSA_ERROR, InputError, CommandlineError
     from GMXMMPBSA.infofile import InfoFile
     from GMXMMPBSA import main
+    from GMXMMPBSA.tester import run_test
     from GMXMMPBSA.analyzer.gui import GMX_MMPBSA_ANA
     from GMXMMPBSA.analyzer.utils import get_files
-    from GMXMMPBSA.commandlineparser import anaparser
+    from GMXMMPBSA.commandlineparser import anaparser, testparser
 except ImportError:
     import os
     amberhome = os.getenv('AMBERHOME') or '$AMBERHOME'
@@ -138,6 +139,15 @@ def gmxmmpbsa_ana():
     w.initialize(ifiles)
     w.show()
     sys.exit(app.exec())
+
+
+def gmxmmpbsa_test():
+    try:
+        parser = testparser.parse_args(sys.argv[1:])
+    except CommandlineError as e:
+        GMXMMPBSA_ERROR('%s: %s' % (type(e).__name__, e))
+        sys.exit(1)
+    run_test(parser)
 
 if __name__ == '__main__':
 

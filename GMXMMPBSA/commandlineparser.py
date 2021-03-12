@@ -25,7 +25,7 @@ in gmx_MMPBSA will be assigned as attributes to the returned class.
 # ##############################################################################
 
 import os
-from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
+from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter, RawDescriptionHelpFormatter, RawTextHelpFormatter
 from pathlib import Path
 from GMXMMPBSA import __version__, __mmpbsa_version__, __ambertools_version__
 from GMXMMPBSA.exceptions import GMXMMPBSA_ERROR
@@ -237,3 +237,46 @@ group.add_argument('-f', '--files', nargs='*', help='gmx_MMPBSA info files or co
                    default='[.] This folder')
 group.add_argument('-r', '--recursive', help='Search recursively in this folder at depth = 1', action='store_true',
                    default=False)
+
+# tester parser
+testparser = ArgumentParser(epilog='''This program is part of gmx_MMPBSA and will allow you to run the different
+                                    examples easily.''',
+                           description=description,
+                           formatter_class=RawTextHelpFormatter)
+testparser.add_argument('-v', '--version', action='version',
+                       version='%%(prog)s %s based on MMPBSA version %s' % (__version__, __mmpbsa_version__))
+group = testparser.add_argument_group('Test options')
+group.add_argument('-t', '--test', choices=['all', 'minimal', '3drism','ala_scan', 'decomp',
+                                            'prot_lig_mt', 'stability', 'ie', 'nmode', 'prot_prot', 'prot_lig_st',
+                                            'prot_dna', 'metalloprot_pep', 'prot_dna_rna_ions_lig', 'prot_glycan',
+                                            'memb_prot', 'prot_lig_charmm'], default='minimal',
+                   help='''\
+The level at which you want to take the test.
+* all - make all examples.
+* minimal - does a minimal test with a set of systems and analyzes that show 
+    that gmx_MMPBSA runs correctly. Only exclude 3drism and nmode because they
+    can take a long time and prot_lig_mt because it is quite similar to 
+    prot_lig_st
+[Systems]:
+* prot_lig_st             Protein-Ligand (Single trajectory approximation)
+* prot_prot               Protein-Protein
+* prot_dna                Protein-DNA
+* memb_prot               Protein-Membrane
+* prot_glycan             Protein-Glycan
+* metalloprot_pep         Metalloprotein-Peptide
+* prot_dna_rna_ions_lig   Protein-DNA-RNA-IONs-Ligand
+* prot_lig_charmm         Protein-Ligand (CHARMM force field)
+[Analysis]:
+* ala_scan                Alanine Scanning
+* stability               Stability calculation
+* decomp                  Decomposition Analysis
+* prot_lig_mt             Protein-Ligand (Multiple trajectory approximation)
+* ie                      Interaction Entropy approximation
+* nmode                   Entropy calculation using Normal Mode approximation 
+* 3drism                  Calculations using 3D-RISM approximation
+''')
+group.add_argument('-f', '--folder', help='Defines the folder to store all data', type=Path, default='[.] This folder')
+group.add_argument('-ng', '--nogui', help='Open the gmx_MMPBSA_ana at the end', action='store_true', default=False)
+group.add_argument('-n', '--num_processors', help='Defines the number of processor cores you want to use since '
+                                                  'gmx_MMPBSA in this test uses a single processor', type=int,
+                   default=1)
