@@ -30,7 +30,6 @@ from pathlib import Path
 from GMXMMPBSA import __version__, __mmpbsa_version__, __ambertools_version__
 from GMXMMPBSA.exceptions import GMXMMPBSA_ERROR
 
-
 class OptionList(object):
     """
     Just a container to hold the command-line options. Necessary when reading in
@@ -44,6 +43,7 @@ if os.getenv('AMBERHOME'):
     rism = os.path.join(os.getenv('AMBERHOME'), 'dat', 'mmpbsa', 'spc.xvv')
 else:
     rism = None
+
 
 def check_arg(str_suffix, path=False):
     def decorator(f):
@@ -141,7 +141,7 @@ group.add_argument('-deo', dest='dec_energies', metavar='FILE',
                   in [.csv]. This file is only written when specified on the
                   command-line.''')
 group.add_argument('-nogui', dest='gui', action='store_false', default=True,
-                   help='Open charts application (gmx_MMPBSA_ana) when all calculations finished')
+                   help='No open gmx_MMPBSA_ana after all calculations finished')
 group.add_argument('-s', '--stability', dest='stability', action='store_true', default=False,
                    help='''Perform stability calculation. Only the complex parameters are required. If
                          ligand is non-Protein (small molecule) type, then ligand *.mol2 file is 
@@ -225,7 +225,7 @@ group.add_argument('-rewrite-output', dest='rewrite_output', default=False,
 group.add_argument('--clean', dest='clean', action='store_true', default=False,
                    help='''Clean temporary files and quit.''')
 
-#### GUI parser
+# GUI parser
 anaparser = ArgumentParser(epilog='''This program is part of gmx_MMPBSA and will show a workspace with 
                             charts to analyze the results''',
                            description=description,
