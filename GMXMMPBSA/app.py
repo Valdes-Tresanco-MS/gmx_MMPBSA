@@ -78,14 +78,13 @@ def gmxmmpbsa():
 
     # Instantiate the main MMPBSA_App
     app = main.MMPBSA_App(MPI)
-
+    logging.info('Starting')
     # Read the command-line arguments
     try:
         app.get_cl_args(args[1:])
     except CommandlineError as e:
         sys.stderr.write('%s: %s' % (type(e).__name__, e) + '\n')
         sys.exit(1)
-    logging.info('Started')
 
     # Perform our MMPBSA --clean now
     if app.FILES.clean:
