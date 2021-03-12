@@ -28,13 +28,16 @@ from GMXMMPBSA.exceptions import GMXMMPBSA_ERROR
 def worker(input, output):
     for args in iter(input.get, 'STOP'):
         system, sys_name, fargs = args
-        logging.info(f'Running {system[1]} example...')
+        logging.info(f'Running {system[1]} test...')
+
         result = run_process(system, sys_name, fargs)
         output.put(result)
 
+def calculatestar(args):
+    return run_process(*args)
 
 def run_process(system, sys_name, args):
-    logging.info(f'Running {system[1]} test...')
+    logging.info(f"{system[1]:60}{'RUNNING':>10}")
     os.chdir(system[0])
     system_log = open(sys_name + '.log', 'a')
     g_p = subprocess.Popen(args, stdout=system_log, stderr=system_log)
@@ -65,14 +68,14 @@ def run_test(parser):
         GMXMMPBSA_ERROR(f'{parser.folder} not exists or is inaccessible. Please define a new folder and try again...')
 
     gmx_mmpbsa_test_folder = parser.folder.joinpath('gmx_MMPBSA_test')
-    # gmx_mmpbsa_test_folder = Path()
-    if gmx_mmpbsa_test_folder.exists():
-        shutil.rmtree(gmx_mmpbsa_test_folder)
-    logging.info(f'Cloning gmx_MMPBSA repository in {gmx_mmpbsa_test_folder}')
-    git_p = subprocess.Popen(['git', 'clone', 'https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA',
-                              gmx_mmpbsa_test_folder.as_posix()])
-    if git_p.wait():  # if it quits with return code != 0
-        GMXMMPBSA_ERROR('git failed when try to clone the gmx_MMPBSA repository')
+    # # gmx_mmpbsa_test_folder = Path()
+    # if gmx_mmpbsa_test_folder.exists():
+    #     shutil.rmtree(gmx_mmpbsa_test_folder)
+    # logging.info(f'Cloning gmx_MMPBSA repository in {gmx_mmpbsa_test_folder}')
+    # git_p = subprocess.Popen(['git', 'clone', 'https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA',
+    #                           gmx_mmpbsa_test_folder.as_posix()])
+    # if git_p.wait():  # if it quits with return code != 0
+    #     GMXMMPBSA_ERROR('git failed when try to clone the gmx_MMPBSA repository')
 
     logging.info(f'Cloning gmx_MMPBSA repository...Done.')
 
@@ -102,8 +105,6 @@ def run_test(parser):
     minimal = ['prot_lig_st', 'prot_prot', 'prot_dna', 'memb_prot', 'prot_glycan', 'metalloprot_pep',
                'prot_dna_rna_ions_lig', 'prot_lig_charmm', 'ala_scan', 'stability', 'decomp', 'ie']
 
-    print(parser.test)
-
     if parser.test == 'all':
         key_list = all.copy()
     elif parser.test == 'minimal':
@@ -114,7 +115,6 @@ def run_test(parser):
     # Create queues
     task_queue = Queue()
     done_queue = Queue()
-
     TASKS = []
     for x in key_list:
         with open(test[x][0].joinpath('README.md')) as readme:
@@ -122,31 +122,36 @@ def run_test(parser):
                 if 'gmx_MMPBSA -O -i mmpbsa.in' in line:
                     command = line.strip('\n').split() + ['-nogui']
                     task_queue.put((test[x], x, command))
+                    TASKS.append((test[x], x, command))
 
-    result_list = []
     if parser.num_processors > multiprocessing.cpu_count():
         logging.warning(f'Using all processors')
         parser.num_processors = multiprocessing.cpu_count()
 
-    if len(key_list) > parser.num_processors:
+    if len(key_list) < parser.num_processors:
         jobs = len(key_list)
     else:
         jobs = parser.num_processors
 
-    for i in range(jobs):
-        multiprocessing.Process(target=worker, args=(task_queue, done_queue)).start()
+    result_list = []
 
-    for i in range(len(key_list)):
-        sys_name, result = done_queue.get()
-        if result:
-            logging.info(f"{test[sys_name][1]} test end successful.")
-            result_list.append(test[sys_name][0])
-        else:
-            logging.error(f"{test[sys_name][1]} test end in error. Please, check the test log\n           "
-                          f"({test[sys_name][0].joinpath(f'{sys_name}')}.log)")
+    logging.info(f"{'Example':^60}{'STATE':>10}")
+    print(80*'-')
+    with multiprocessing.Pool(jobs) as pool:
+        imap_unordered_it = pool.imap_unordered(calculatestar, TASKS)
+
+        for x in imap_unordered_it:
+            sys_name, result = x
+            if result:
+                logging.info(f"{test[sys_name][1]:60}{'DONE':>10}")
+                result_list.append(test[sys_name][0])
+            else:
+                logging.error(f"{test[sys_name][1]:60}{'ERROR':>10}\n"
+                              f"           Please, check the test log\n"
+                              f"           ({test[sys_name][0].joinpath(f'{sys_name}')}.log)")
+
 
     if not parser.nogui:
-
         g_p = subprocess.Popen(['python', 'run_ana.py','-f'] + result_list, stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE)
         if g_p.wait():
