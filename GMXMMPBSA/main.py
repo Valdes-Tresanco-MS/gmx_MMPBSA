@@ -50,7 +50,6 @@ from GMXMMPBSA.output_file import (write_stability_output, write_binding_output,
 from GMXMMPBSA.parm_setup import MMPBSA_System
 from GMXMMPBSA.make_top import CheckMakeTop
 from GMXMMPBSA.timer import Timer
-from GMXMMPBSA.analyzer.gui import run as Analyzer
 
 logging.getLogger(__name__)
 
@@ -695,8 +694,16 @@ class MMPBSA_App(object):
         self.MPI.Finalize()
 
         if self.FILES.gui:
-            self.stdout.write('Opening GUI to analyze results...')
-            Analyzer(self.FILES.prefix + 'info')
+            import subprocess
+            self.stdout.write('Opening gmx_MMPBSA_ana to analyze results...\n')
+            g = subprocess.Popen(['python', '/home/mario/Drive/scripts/gmx_MMPBSA/run_ana.py', '-f',
+                                  self.FILES.prefix + 'info'])
+            if g.wait():
+                print(80*'-')
+                # self.stdout.write('Unable to open gmx_MMPBSA_ana to analyze results...')
+                sys.exit(1)
+            #
+            # Analyzer(self.FILES.prefix + 'info')
         else:
             sys.exit(0)
 

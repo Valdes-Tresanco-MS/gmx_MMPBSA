@@ -21,7 +21,7 @@ from os.path import split
 import shutil
 from pathlib import Path
 import logging
-from PyQt5.QtWidgets import QApplication
+
 # logFormatter = logging.Formatter("%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s")
 # rootLogger = logging.getLogger(__name__)
 # logging.getLogger(__name__).addHandler(logging.StreamHandler(sys.stdout))
@@ -42,8 +42,7 @@ try:
     from GMXMMPBSA.infofile import InfoFile
     from GMXMMPBSA import main
     from GMXMMPBSA.tester import run_test
-    from GMXMMPBSA.analyzer.gui import GMX_MMPBSA_ANA
-    from GMXMMPBSA.analyzer.utils import get_files
+
     from GMXMMPBSA.commandlineparser import anaparser, testparser
 except ImportError:
     import os
@@ -126,6 +125,13 @@ def gmxmmpbsa():
 
 
 def gmxmmpbsa_ana():
+    try:
+        from PyQt5.QtWidgets import QApplication
+        from GMXMMPBSA.analyzer.gui import GMX_MMPBSA_ANA
+        from GMXMMPBSA.analyzer.utils import get_files
+    except ImportError as e:
+        GMXMMPBSA_ERROR('Could not import PyQt5. gmx_MMPBSA_ana will be disabled until you install it')
+
     app = QApplication(sys.argv)
     try:
         parser = anaparser.parse_args(sys.argv[1:])

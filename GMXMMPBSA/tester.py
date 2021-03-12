@@ -146,8 +146,9 @@ def run_test(parser):
     if not parser.nogui:
         print(80 * '-')
         logging.info('Opening gmx_MMPBSA_ana...')
-        g_p = subprocess.Popen(['python', 'run_ana.py','-f'] + result_list, stdout=subprocess.PIPE,
+        g_p = subprocess.Popen(['python', '/home/mario/Drive/scripts/gmx_MMPBSA/run_ana.py','-f'] + result_list, stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE)
         if g_p.wait():
-            GMXMMPBSA_ERROR(f"gmx_MMPBSA_ana failed to start correctly. The error is shown below: "
-                            f"{[line for line in g_p.stderr.read() if 'error' in line]}")
+            error = g_p.stderr.read().decode("utf-8")
+            import sys
+            sys.stderr.write(error)
