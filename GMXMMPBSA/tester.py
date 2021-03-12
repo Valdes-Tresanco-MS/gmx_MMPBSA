@@ -115,7 +115,7 @@ def run_test(parser):
         with open(test[x][0].joinpath('README.md')) as readme:
             for line in readme:
                 if 'gmx_MMPBSA -O -i mmpbsa.in' in line:
-                    command = line.strip('\n').split() + ['-nogui']
+                    command = line.strip('\n').split() + ['-nogui', '-cs']
                     TASKS.append((test[x], x, command))
 
     result_list = []
@@ -124,7 +124,7 @@ def run_test(parser):
         results = [pool.apply_async(run_process, t) for t in TASKS]
         for r in results:
             sys_name, result = r.get()
-            result_list.append([sys_name, result])
+            result_list.append(test[sys_name])
             if result:
                 logging.info(f"{test[sys_name][1]} test end successful.")
             else:
