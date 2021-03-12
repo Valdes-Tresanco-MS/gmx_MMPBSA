@@ -21,7 +21,7 @@ from PyQt5.QtWidgets import (QDialog, QSpinBox, QLabel, QLineEdit, QPushButton, 
                              QTreeWidgetItemIterator, QHeaderView, QProgressBar, QStatusBar, QMessageBox)
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, pyqtSlot
 from queue import Queue, Empty
-from GMXMMPBSA.API import load_gmxmmpbsa_info
+from GMXMMPBSA import API
 from pathlib import Path
 from GMXMMPBSA.analyzer.utils import worker
 
@@ -233,7 +233,7 @@ class InitDialog(QDialog):
                 queue.put(item.info[1])
                 self.systems_list.append(item.info)
             it += 1
-        self.worker.define_dat(load_gmxmmpbsa_info, queue, self.result_queue)
+        self.worker.define_dat(API.load_gmxmmpbsa_info, queue, self.result_queue)
         self.worker.start()
 
     def jobfinished(self):
