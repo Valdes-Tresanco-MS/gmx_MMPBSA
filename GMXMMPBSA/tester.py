@@ -124,15 +124,18 @@ def run_test(parser):
         results = [pool.apply_async(run_process, t) for t in TASKS]
         for r in results:
             sys_name, result = r.get()
-            result_list.append(test[sys_name])
+
             if result:
                 logging.info(f"{test[sys_name][1]} test end successful.")
+                result_list.append(test[sys_name][0])
             else:
                 logging.error(f"{test[sys_name][1]} test end in error. Please, check the test log\n           "
                               f"({test[sys_name][0].joinpath(f'{sys_name}')}.log)")
 
     if not parser.nogui:
-        g_p = subprocess.Popen(['gmx_MMPBSA', '-f'] + result_list, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+        g_p = subprocess.Popen(['python', 'run_ana.py','-f'] + result_list, stdout=subprocess.PIPE,
+                               stderr=subprocess.PIPE)
         if g_p.wait():
             GMXMMPBSA_ERROR(f"gmx_MMPBSA_ana failed to start correctly. The error is shown below: "
                             f"{[line for line in g_p.stderr.read() if 'error' in line]}")
