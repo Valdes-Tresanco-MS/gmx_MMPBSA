@@ -711,6 +711,10 @@ class MMPBSA_App(object):
             self.FILES = self.clparser.parse_args(args)
         else:
             self.FILES = object()
+        # save args in gmx_MMPBSA.log
+        with open('gmx_MMPBSA.log', 'a') as log:
+            log.write('[INFO   ] Command-line\n'
+                      '    gmx_MMPBSA '+ ' '.join(args) + '\n')
         # Broadcast the FILES
         self.FILES = self.MPI.COMM_WORLD.bcast(self.FILES)
         # Hand over the file prefix to the App instance
@@ -732,6 +736,9 @@ class MMPBSA_App(object):
         self.INPUT = self.input_file.Parse(infile)
         _debug_printlevel = self.INPUT['debug_printlevel']
         self.input_file_text = str(self.input_file)
+        with open('gmx_MMPBSA.log', 'a') as log:
+            log.write('[INFO   ] Input file\n')
+            log.write(self.input_file_text)
 
     def process_input(self):
         """
