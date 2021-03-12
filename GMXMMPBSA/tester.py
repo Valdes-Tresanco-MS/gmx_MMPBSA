@@ -21,6 +21,7 @@ import logging
 import subprocess
 import shutil
 import multiprocessing
+from queue import Queue
 from GMXMMPBSA.exceptions import GMXMMPBSA_ERROR
 
 
@@ -29,7 +30,7 @@ def worker(input, output):
         system, sys_name, fargs = args
         logging.info(f'Running {system[1]} example...')
         result = run_process(system, sys_name, fargs)
-        output.put((sys_name, result))
+        output.put(result)
 
 
 def run_process(system, sys_name, args):
@@ -110,27 +111,39 @@ def run_test(parser):
     else:
         key_list = [parser.test]
 
+    # Create queues
+    task_queue = Queue()
+    done_queue = Queue()
+
     TASKS = []
     for x in key_list:
         with open(test[x][0].joinpath('README.md')) as readme:
             for line in readme:
                 if 'gmx_MMPBSA -O -i mmpbsa.in' in line:
                     command = line.strip('\n').split() + ['-nogui']
-                    TASKS.append((test[x], x, command))
+                    task_queue.put((test[x], x, command))
 
     result_list = []
+    if parser.num_processors > multiprocessing.cpu_count():
+        logging.warning(f'Using all processors')
+        parser.num_processors = multiprocessing.cpu_count()
 
-    with multiprocessing.Pool(parser.num_processors) as pool:
-        results = [pool.apply_async(run_process, t) for t in TASKS]
-        for r in results:
-            sys_name, result = r.get()
+    if len(key_list) > parser.num_processors:
+        jobs = len(key_list)
+    else:
+        jobs = parser.num_processors
 
-            if result:
-                logging.info(f"{test[sys_name][1]} test end successful.")
-                result_list.append(test[sys_name][0])
-            else:
-                logging.error(f"{test[sys_name][1]} test end in error. Please, check the test log\n           "
-                              f"({test[sys_name][0].joinpath(f'{sys_name}')}.log)")
+    for i in range(jobs):
+        multiprocessing.Process(target=worker, args=(task_queue, done_queue)).start()
+
+    for i in range(len(key_list)):
+        sys_name, result = done_queue.get()
+        if result:
+            logging.info(f"{test[sys_name][1]} test end successful.")
+            result_list.append(test[sys_name][0])
+        else:
+            logging.error(f"{test[sys_name][1]} test end in error. Please, check the test log\n           "
+                          f"({test[sys_name][0].joinpath(f'{sys_name}')}.log)")
 
     if not parser.nogui:
 
