@@ -152,4 +152,6 @@ nav:
         - Protein-Ligand (ST): examples/Protein_ligand_CHARMMff/README.md
   - Info:
     - Information: information.md
+    - Support: support.md
+  - Changelog:
     - Changelog: changelog.md
