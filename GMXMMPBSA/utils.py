@@ -108,7 +108,7 @@ def checkff(overwrite):
     """
     amberhome = os.getenv('AMBERHOME')
     if not amberhome:
-        logging.error('Could not found Amber. Please make sure you have sourced %s/amber.sh (if you are using sh/ksh/'
+        GMXMMPBSA_ERROR('Could not found Amber. Please make sure you have sourced %s/amber.sh (if you are using sh/ksh/'
               'bash/zsh) or %s/amber.csh (if you are using csh/tcsh)' %
               (amberhome, amberhome))
         return

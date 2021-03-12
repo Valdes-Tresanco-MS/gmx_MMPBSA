@@ -48,7 +48,7 @@ try:
 except ImportError:
     import os
     amberhome = os.getenv('AMBERHOME') or '$AMBERHOME'
-    logging.error('Could not import Amber Python modules. Please make sure '
+    GMXMMPBSA_ERROR('Could not import Amber Python modules. Please make sure '
                       'you have sourced %s/amber.sh (if you are using sh/ksh/'
                       'bash/zsh) or %s/amber.csh (if you are using csh/tcsh)' %
                       (amberhome, amberhome))
@@ -131,7 +131,7 @@ def gmxmmpbsa_ana():
     try:
         parser = anaparser.parse_args(sys.argv[1:])
     except CommandlineError as e:
-        sys.stderr.write('%s: %s' % (type(e).__name__, e) + '\n')
+        GMXMMPBSA_ERROR('%s: %s' % (type(e).__name__, e))
         sys.exit(1)
     ifiles = get_files(parser)
     app.setApplicationName('gmx_MMPBSA Analyzer (gmx_MMPBSA_ana)')
