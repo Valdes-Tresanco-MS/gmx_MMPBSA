@@ -276,7 +276,8 @@ The level at which you want to take the test.
 * 3drism                  Calculations using 3D-RISM approximation
 ''')
 group.add_argument('-f', '--folder', help='Defines the folder to store all data', type=Path, default='[.] This folder')
-group.add_argument('-ng', '--nogui', help='Open the gmx_MMPBSA_ana at the end', action='store_true', default=False)
-group.add_argument('-n', '--num_processors', help='Defines the number of processor cores you want to use since '
-                                                  'gmx_MMPBSA in this test uses a single processor', type=int,
-                   default=1)
+group.add_argument('-ng', '--nogui', help='No open gmx_MMPBSA_ana after all calculations finished',
+                   action='store_true',  default=False)
+group.add_argument('-n', '--num_processors', type=int, default=1,
+                   help='Defines the number of processor cores you want to use since gmx_MMPBSA in this test uses a '
+                        'single processor')
