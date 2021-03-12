@@ -25,14 +25,6 @@ from queue import Queue
 from GMXMMPBSA.exceptions import GMXMMPBSA_ERROR
 
 
-def worker(input, output):
-    for args in iter(input.get, 'STOP'):
-        system, sys_name, fargs = args
-        logging.info(f'Running {system[1]} test...')
-
-        result = run_process(system, sys_name, fargs)
-        output.put(result)
-
 def calculatestar(args):
     return run_process(*args)
 
@@ -152,6 +144,8 @@ def run_test(parser):
                               f"           ({test[sys_name][0].joinpath(f'{sys_name}')}.log)")
             c += 1
     if not parser.nogui:
+        print(80 * '-')
+        logging.info('Opening gmx_MMPBSA_ana...')
         g_p = subprocess.Popen(['python', 'run_ana.py','-f'] + result_list, stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE)
         if g_p.wait():
