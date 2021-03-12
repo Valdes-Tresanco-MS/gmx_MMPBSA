@@ -284,17 +284,6 @@ class ExportDialog(QDialog):
 
         self.getdata()
 
-    def getdata(self):
-        ext_prog = find_progs(self.parent.app.INPUT)
-        self.ntraj = Trajectory(self.parent.app.FILES.complex_prmtop, self.parent.app.FILES.complex_trajs,
-                                ext_prog['cpptraj'])
-        self.ntraj.Setup(1, 999999, 1)
-        last = self.parent.app.INPUT['startframe'] + (self.ntraj.processed_frames - 1) * self.parent.app.INPUT[
-            'interval']
-        self.current_frame_s.setRange(self.parent.app.INPUT['startframe'], last)
-        self.current_frame_s.setSingleStep(self.parent.app.INPUT['interval'])
-        self.current_frame_s.setValue(self.parent.app.INPUT['startframe'])
-
     @pyqtSlot()
     def save(self):
         self.ntraj.Outtraj('_temp_.pdb', frames=str(self.current_frame_s.value()),
