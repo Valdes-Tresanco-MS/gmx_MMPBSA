@@ -115,7 +115,7 @@ def run_test(parser):
         with open(test[x][0].joinpath('README.md')) as readme:
             for line in readme:
                 if 'gmx_MMPBSA -O -i mmpbsa.in' in line:
-                    command = line.strip('\n').split() + ['-nogui', '-cs']
+                    command = line.strip('\n').split() + ['-nogui']
                     TASKS.append((test[x], x, command))
 
     result_list = []
