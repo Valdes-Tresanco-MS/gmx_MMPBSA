@@ -137,20 +137,20 @@ def run_test(parser):
 
     logging.info(f"{'Example':^60}{'STATE':>10}")
     print(80*'-')
+    c = 1
     with multiprocessing.Pool(jobs) as pool:
         imap_unordered_it = pool.imap_unordered(calculatestar, TASKS)
 
         for x in imap_unordered_it:
             sys_name, result = x
             if result:
-                logging.info(f"{test[sys_name][1]:60}{'DONE':>10}")
+                logging.info(f"{test[sys_name][1]:55}[{c:2}/{len(key_list):2}]{'DONE':>8}")
                 result_list.append(test[sys_name][0])
             else:
-                logging.error(f"{test[sys_name][1]:60}{'ERROR':>10}\n"
+                logging.error(f"{test[sys_name][1]:55}[{c:2}/{len(key_list):2}]{'ERROR':>8}\n"
                               f"           Please, check the test log\n"
                               f"           ({test[sys_name][0].joinpath(f'{sys_name}')}.log)")
-
-
+            c += 1
     if not parser.nogui:
         g_p = subprocess.Popen(['python', 'run_ana.py','-f'] + result_list, stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE)
