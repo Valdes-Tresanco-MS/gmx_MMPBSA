@@ -94,5 +94,21 @@ case "$p" in
 esac }
 complete -F _gmxmmpbsa_ana_compl gmx_MMPBSA_ana
 
-
-
+shopt -s extglob
+_gmxmmpbsa_test_compl() {
+local p c
+COMPREPLY=() c=${COMP_WORDS[COMP_CWORD]} p=${COMP_WORDS[COMP_CWORD-1]}
+if (( $COMP_CWORD <= 1 )) || [[ $c == -* ]];
+  then
+    COMPREPLY=( $(compgen  -W ' -h -v --version --help -f --folder -t --test -n --num_processors' -- $c));
+    return 0;
+fi
+case "$p" in
+-t)       COMPREPLY=( $(compgen -S ' ' -W $'all\nminimal\nprot_lig_st\nprot_prot\nprot_dna\nmemb_prot\nprot_glycan
+            \nmetalloprot_pep\nprot_dna_rna_ions_lig\nprot_lig_charmm\nala_scan\nstability\ndecomp\nprot_lig_mt\nie
+            \nnmode\n3drism' --  $c));;
+--test)   COMPREPLY=( $(compgen -S ' ' -W $'all\nminimal\nprot_lig_st\nprot_prot\nprot_dna\nmemb_prot\nprot_glycan
+            \nmetalloprot_pep\nprot_dna_rna_ions_lig\nprot_lig_charmm\nala_scan\nstability\ndecomp\nprot_lig_mt\nie
+            \nnmode\n3drism' --  $c));;
+esac }
+complete -F _gmxmmpbsa_test_compl gmx_MMPBSA_test
