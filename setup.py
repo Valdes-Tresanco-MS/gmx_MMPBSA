@@ -18,18 +18,13 @@
 
 from setuptools import setup, find_packages
 import versioneer
+import sys
 
 with open("README.md", "r") as f:
     LONG_DESCRIPTION = f.read()
 
-def get_version(rel_path):
-    with open(rel_path) as vfile:
-        for line in vfile.readlines():
-            if line.startswith('__version__'):
-                delim = '"' if '"' in line else "'"
-                return line.split(delim)[1]
-        else:
-            raise RuntimeError("Unable to find version string.")
+if sys.version_info[:2] <= (3, 8):
+        raise RuntimeError("seaborn requires python >= 3.8.")
 
 setup(
     name='gmx_MMPBSA',
@@ -48,8 +43,10 @@ setup(
     long_description=LONG_DESCRIPTION,
     long_description_content_type='text/markdown',
     keywords=['gmx_MMPBSA', 'MMPBSA', 'MMGBSA', 'GROMACS', 'AmberTools'],
+    install_requires=['pandas>=1.2.2','seaborn>=0.11.1',],
     entry_points={
         "console_scripts": [
             "gmx_MMPBSA=GMXMMPBSA.app:gmxmmpbsa",
-            "gmx_MMPBSA_ana=GMXMMPBSA.app:gmxmmpbsa_ana"]}
+            "gmx_MMPBSA_ana=GMXMMPBSA.app:gmxmmpbsa_ana",
+            "gmx_MMPBSA_test=GMXMMPBSA.app:gmxmmpbsa_test"]}
 )
