@@ -42,7 +42,6 @@ try:
     from GMXMMPBSA.infofile import InfoFile
     from GMXMMPBSA import main
     from GMXMMPBSA.tester import run_test
-
     from GMXMMPBSA.commandlineparser import anaparser, testparser
 except ImportError:
     import os
