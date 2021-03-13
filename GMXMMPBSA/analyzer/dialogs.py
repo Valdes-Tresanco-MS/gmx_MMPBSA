@@ -170,7 +170,7 @@ class InitDialog(QDialog):
         self.processing_label.setText(f'Processing {self.nfiles} files...')
 
         files_list = info_files
-
+        names = []
         c = 1
         for fname in files_list:
             basename = None
@@ -179,6 +179,10 @@ class InitDialog(QDialog):
                 for line in fi:
                     if line.startswith("INPUT['sys_name']"):
                         basename = str(line.split()[2]).strip('"\'')
+                        if basename in names:
+                            while basename in names:
+                                basename = f"{basename}-{names.count(basename) + 1}"
+                            names.append(basename)
                     if line.startswith("INPUT['exp_ki']"):
                         exp_ki = line.split()[2]
                     if line.startswith("INPUT['temperature']"):
@@ -188,7 +192,7 @@ class InitDialog(QDialog):
                                                    'next versions!. Please, use temperature variable instead', 50000)
                         temp = line.split()[2]
             if not basename:
-                basename = f'System_{c}'
+                basename = f'System-{c}'
             if not exp_ki:
                 exp_ki = 0.0
             item = QTreeWidgetItem([f'{fname.parent.name}', '', f'{basename}', f'{exp_ki}', f'{temp}',
