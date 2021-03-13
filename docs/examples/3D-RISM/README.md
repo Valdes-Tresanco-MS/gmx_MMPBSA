@@ -18,7 +18,7 @@ In its simplest version, `gmx_MMPBSA` requires:
 | A topology file (not included) | :octicons-x-circle-fill-16:{ .req_opt .scale_icon_medium }    |           `top`         | GROMACS topology file (The `* .itp` files defined in the topology must be in the same folder |
 | A Reference Structure file     | :octicons-x-circle-fill-16:{ .req_optrec .scale_icon_medium } |           `top`         | Complex reference structure file with correct assignment of chain ID and residue numbers |
               
-:octicons-x-circle-fill-16:{ .req } -> Must be defined always -- :octicons-x-circle-fill-16:{ .req_optrec } -> 
+:octicons-x-circle-fill-16:{ .req } -> Must be defined -- :octicons-x-circle-fill-16:{ .req_optrec } -> 
 Optional, but recommended -- :octicons-x-circle-fill-16:{ .req_opt } -> Optional
 
 _See a detailed list of all the flags in gmx_MMPBSA command line [here][1]_

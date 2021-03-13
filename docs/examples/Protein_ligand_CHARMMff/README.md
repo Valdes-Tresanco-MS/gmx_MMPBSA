@@ -22,7 +22,7 @@ In this case, `gmx_MMPBSA` requires:
 | A topology file                | :octicons-x-circle-fill-16:{ .req .scale_icon_medium } |           `top`            | take into account that *.itp files belonging to the topology file should be also present in the folder       |
 | A Reference Structure file     | :octicons-x-circle-fill-16:{ .req_optrec .scale_icon_medium } |           `top`            | take into account that *.itp files belonging to the topology file should be also present in the folder       |
               
-:octicons-x-circle-fill-16:{ .req } -> Must be defined always -- :octicons-x-circle-fill-16:{ .req_optrec } -> 
+:octicons-x-circle-fill-16:{ .req } -> Must be defined -- :octicons-x-circle-fill-16:{ .req_optrec } -> 
 Optional, but recommended -- :octicons-x-circle-fill-16:{ .req_opt } -> Optional
 
 _See a detailed list of all the flags in gmx_MMPBSA command line [here][2]_
