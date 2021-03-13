@@ -60,14 +60,13 @@ def run_test(parser):
         GMXMMPBSA_ERROR(f'{parser.folder} not exists or is inaccessible. Please define a new folder and try again...')
 
     gmx_mmpbsa_test_folder = parser.folder.joinpath('gmx_MMPBSA_test')
-    # # gmx_mmpbsa_test_folder = Path()
-    # if gmx_mmpbsa_test_folder.exists():
-    #     shutil.rmtree(gmx_mmpbsa_test_folder)
-    # logging.info(f'Cloning gmx_MMPBSA repository in {gmx_mmpbsa_test_folder}')
-    # git_p = subprocess.Popen(['git', 'clone', 'https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA',
-    #                           gmx_mmpbsa_test_folder.as_posix()])
-    # if git_p.wait():  # if it quits with return code != 0
-    #     GMXMMPBSA_ERROR('git failed when try to clone the gmx_MMPBSA repository')
+    if gmx_mmpbsa_test_folder.exists():
+        shutil.rmtree(gmx_mmpbsa_test_folder)
+    logging.info(f'Cloning gmx_MMPBSA repository in {gmx_mmpbsa_test_folder}')
+    git_p = subprocess.Popen(['git', 'clone', 'https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA',
+                              gmx_mmpbsa_test_folder.as_posix()])
+    if git_p.wait():  # if it quits with return code != 0
+        GMXMMPBSA_ERROR('git failed when try to clone the gmx_MMPBSA repository')
 
     logging.info(f'Cloning gmx_MMPBSA repository...Done.')
 
@@ -104,16 +103,13 @@ def run_test(parser):
     else:
         key_list = [parser.test]
 
-    # Create queues
-    task_queue = Queue()
-    done_queue = Queue()
+    # Create tasks
     TASKS = []
     for x in key_list:
         with open(test[x][0].joinpath('README.md')) as readme:
             for line in readme:
                 if 'gmx_MMPBSA -O -i mmpbsa.in' in line:
                     command = line.strip('\n').split() + ['-nogui']
-                    task_queue.put((test[x], x, command))
                     TASKS.append((test[x], x, command))
 
     if parser.num_processors > multiprocessing.cpu_count():
@@ -132,7 +128,6 @@ def run_test(parser):
     c = 1
     with multiprocessing.Pool(jobs) as pool:
         imap_unordered_it = pool.imap_unordered(calculatestar, TASKS)
-
         for x in imap_unordered_it:
             sys_name, result = x
             if result:
@@ -146,7 +141,7 @@ def run_test(parser):
     if not parser.nogui:
         print(80 * '-')
         logging.info('Opening gmx_MMPBSA_ana...')
-        g_p = subprocess.Popen(['python', '/home/mario/Drive/scripts/gmx_MMPBSA/run_ana.py','-f'] + result_list, stdout=subprocess.PIPE,
+        g_p = subprocess.Popen(['python', 'gmx_MMPBSA_ana','-f'] + result_list, stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE)
         if g_p.wait():
             error = g_p.stderr.read().decode("utf-8")
