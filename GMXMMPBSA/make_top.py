@@ -726,7 +726,8 @@ class CheckMakeTop:
                 try:
                     parmed.residue.AminoAcidResidue.get(res.name, True)
                 except KeyError as e:
-                    GMXMMPBSA_ERROR('The mutation must be an amino acid residue ...')
+                    GMXMMPBSA_ERROR(f'You attempt to mutate {res.chain}:{res.name}. The mutation must be an amino acid '
+                                    f'residue...')
                 label = f"{res.name}[{res.chain}:{res.number}]{self.INPUT['mutant']}"
                 if icode:
                     label = f"{res.name}[{res.chain}:{res.number}:{res.insertion_code}]{self.INPUT['mutant']}"
