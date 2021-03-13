@@ -51,7 +51,7 @@ is suppressed, so only the error message is printed. If `debug_printlevel` is se
 printed, which aids in debugging of issues. (Default = 0) (Advanced Option)
 
     _Changed in v1.2.0: Now `gmx_MMPBSA` shows the command-line used to build AMBER topologies when 
-    `debug_printlevel = 1 or higher_
+    `debug_printlevel = 1` or higher_
 
 `startframe` (Default = 1)
 :   The frame from which to begin extracting snapshots from the full, concatenated trajectory comprised of
@@ -84,11 +84,11 @@ printed, which aids in debugging of issues. (Default = 0) (Advanced Option)
      (`(endframe-startframe)/interval`) will be used to calculate the average Interaction Entropy. (Only
       if `entropy = 2`)
 
-`entropy_temp` (Default = 298.15)
-:    ~~Specify the temperature to calculate the entropy term `−TΔS` (Only if `entropy` = 2). Avoid inconsistencies 
-      with defined internal temperature (298.15 K) when `nmode` is used.~~
-
-    _Deprecate in v1.4.0: It will be removed in next version. Use `temperature` instead_
+???+ warning "Deprecated in v1.4.0: It will be removed in next version. Use `temperature` instead"
+    
+    `entropy_temp` (Default = 298.15)
+    :    ~~Specify the temperature to calculate the entropy term `−TΔS` (Only if `entropy` = 2). Avoid inconsistencies 
+          with defined internal temperature (298.15 K) when `nmode` is used.~~
 
 `exp_ki` (Default = 0.0)
 :   Specify the experimental Ki in nM for correlations analysis. If not define or exp_ki = 0 then this system will be 
@@ -410,10 +410,8 @@ Avoid inconsistencies with defined internal temperature (298.15 K) when `nmode` 
         performed, the namelist must be included (blank if desired)
 
 `mutant` (Default = "ALA") 
-:   Defines the residue by which it is going to mutate.
-    
-    !!! note
-        Allowed values are: "ALA" or "A" for Alanine scanning and "GLY" or "G" for Glycine scanning.
+:   Defines the residue by which it is going to mutate. Allowed values are: `"ALA"` or `"A"` for Alanine scanning and 
+    `"GLY"` or `"G"` for Glycine scanning.
 
     _Changed in v1.3.0: Change mol (receptor or ligand) by mutant aminoacid (ALA or GLY)_
 
@@ -422,6 +420,7 @@ Avoid inconsistencies with defined internal temperature (298.15 K) when `nmode` 
 CHAIN:RESNUM:INSERTION_CODE if exists (eg: "A:27:B"). 
 
     !!! important
+        * Only one residue for mutation is supported!
         * We recommend using the reference structure (-cr) to ensure the perfect match between the selected residue in 
         the defined structure or topology 
         * This option allow `gmx_MMPBSA` to do the mutation. This way the user does not have to provide the mutant 
