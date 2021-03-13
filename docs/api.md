@@ -13,18 +13,23 @@ data into arrays.
 
 !!! warning
     The topology files you used in the `gmx_MMPBSA` calculation must also be available in the location specified in the 
-    _GMXMMPBSA_info file.
+    _`GMXMMPBSA_info` file.
 
 ## Using the API
 
 We have derived a new API to reorganize the data so that it is arranged more hierarchically. This makes easier to
 transform the data into graphs in the `gmx_MMPBSA_ana`. **The original and the current API only differ in the name of
-the callable function, the disposition of the data in Per-wise decomposition analysis and in the new 'delta' key. If you
-want to use the original, see the [Amber manual](http://ambermd.org/doc12/Amber20.pdf#section.34.4)**
+the callable function, the disposition of the data in Per-wise decomposition analysis and in the new 'delta' key.
 
-The function `load_gmxmmpbsa_info` takes the name of a `gmx_MMPBSA` info file (typically _GMXMMPBSA_info)
+The function `load_gmxmmpbsa_info` takes the name of a `gmx_MMPBSA` info file (typically `_GMXMMPBSA_info`)
 and returns a populated `mmpbsa_data` instance with all the parsed data. An example code snippet that creates
-a `mmpbsa_data` instance from the information in _GMXMMPBSA_info is shown below.
+a `mmpbsa_data` instance from the information in _`GMXMMPBSA_info` is shown below.
+
+!!! important
+    Unlike MMPBSA.py, `load_gmxmmpbsa_info` does not need to be located in the folder that contains the 
+    `_GMXMMPBSA_info` file.
+
+    _New in v1.4.0_
 
 ```python
 from GMXMMPBSA import API as gmxMMPBSAapi
@@ -125,10 +130,10 @@ Table 5. Same as Table 4 for the entropy (nmode and qh) data.
 
 Table 6. Same as Table 5 for the Interaction Entropy data.
 
-| Description                                  |  `IE`   |
-|:---------------------------------------------|:-------:|
-| Data per-frame                               | `data`  |
-| Mean of the selected interval                | `value` |
+| Description                                  |   `IE`   |
+|:---------------------------------------------|:--------:|
+| Data per-frame                               |  `data`  |
+| Mean of the selected interval                |  `value` |
 | Star and End frames of the selected interval | `frames` |
 
 ### Defined operators
