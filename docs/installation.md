@@ -6,19 +6,37 @@ title: Installation
 
 ## Requirements
 
-`gmx_MMPBSA` requires AmberTools20 to be installed in your machine with Python3 and the shell environment correctly set
-up for Amber. The AmberTools suite is free of charge and you can check [Amber Manual][1] for a detailed installation 
-guide. Of note, you can have more than one AmberTools installed in your machine. In case AmberTools20 is not the 
-default Amber in your computer, just make sure to source AmberTools20 before installing/updating/running `gmx_MMPBSA`.
-`gmx_MMPBSA` also requires GROMACS (series 4.x.x or 5.x.x or 20xx.x) to be installed in your computer and the shell
-environment correctly set up for GROMACS. `gmx_MMPBSA` has been tested with GROMACS 4.6.7, 5.1.2, 2018.3, and 2020.4, 
-although it should run smoothly with any GROMACS present in the PATH and that is compatible with the files you are 
-using.
+`gmx_MMPBSA` requires **AmberTools20** to be installed in your machine with **Python3**, and the shell environment 
+correctly set up for Amber. The AmberTools suite is free of charge, and you can check [Amber Manual][1] for a 
+detailed installation guide. Of note, you can have more than one AmberTools installed in your machine. In case 
+AmberTools20 is not the default Amber in your computer, just make sure to source AmberTools20 before 
+installing/updating/running `gmx_MMPBSA`. `gmx_MMPBSA` also requires GROMACS (series 4.x.x or 5.x.x or 20xx.x) to be 
+installed in your computer, and the shell environment correctly set up for GROMACS. `gmx_MMPBSA` has been tested 
+with GROMACS 4.6.7, 5.1.2, 2018.3, and 2020.4, although it should run smoothly with any GROMACS present in the PATH 
+and that is compatible with the files you are using.
 
-`gmx_MMPBSA` contains a module that allows for plotting the results (`gmx_MMPBSA_ana`). For this, it requires the
-installation of PyQt5.
+### Dependencies
+| Dependency      |     gmx_MMPBSA                             |   gmx_MMPBSA_ana   |  gmx_MMPBSA_test   |
+|:----------------|:------------------------------------------:|:------------------:|:------------------:|
+| Python3         | :heavy_check_mark:                         | :heavy_check_mark: | :heavy_check_mark: |
+| AmberTools20    | :heavy_check_mark:                         | :heavy_check_mark: | :heavy_check_mark: |
+| PyQt5           |                                            | :heavy_check_mark: |                    |
+| Matplotlib [^1] |                                            | :heavy_check_mark: |                    |
+| Pandas [^1]     |                                            | :heavy_check_mark: |                    |
+| Seaborn [^1]    |                                            | :heavy_check_mark: |                    |
+| Git             |  Only if you update gmx_MMPBSA from Github |                    | :heavy_check_mark: |
+
+  [^1]: It is installed automatically, so the user does not have to worry about installing it
+
+As we describe in the [`gmx_MMPBSA` a technical view][1] section, `gmx_MMPBSA` has `gmx_MMPBSA_ana` which requires 
+PyQt5. The PyQt5 module is not installed automatically because `gmx_MMPBSA` can be installed in HPC where 
+`gmx_MMPBSA_ana` is not required or cannot be opened. You can install PyQt5 as follows:
 
     amber.python -m pip install PyQt5
+
+!!! warning
+    * Note that if you don't install PyQt5 you won't be able to open gmx_MMPBSA
+    * **Valid for versions > 1.4.0**
 
 ## Installation
 
@@ -30,9 +48,11 @@ or the `development` version from GitHub:
 
     amber.python -m pip install git+https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA
 
-Make sure that you have `git` installed. If not you can install it as follows:
-
+!!! warning
+    Make sure that you have `git` installed. If not you can install it as follows:
+    ```
     sudo apt install git
+    ```
 
 ## Update
 
@@ -49,12 +69,11 @@ If you already have installed a previous `gmx_MMPBSA` version, you can update it
 
     amber.python -m pip intall git+https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA --upgrade 
 
-Make sure that you have `git` installed.
-
-!!! warning "**We will do our best to keep the PYPI package up to date.**"
-    Every big leap in the implementation of some new functionality will be released in PyPI.
-    The development version is generally functional. So if you run into any issues, please consider updating from 
-    Github. If the problem persists, feel free to contact us
+!!! warning
+    Make sure that you have `git` installed. If not you can install it as follows:
+    ```
+    sudo apt install git
+    ```
 
 ## After Install
 
@@ -63,30 +82,31 @@ Once the installation is completed, the following warning may appear:
     WARNING: The scripts gmx_MMPBSA and gmx_MMPBSA_ana are installed in 
     '/home/user/path_to_amber_install/amber20/miniconda/bin' which is not on PATH.
 
-This warning is because `pip` installs the executables (`gmx_MMPBSA` and `gmx_MMPBSA_ana`) in \*/amber20/miniconda/bin.
+This warning is because `pip` installs the executables (`gmx_MMPBSA`, `gmx_MMPBSA_ana` and `gmx_MMPBSA_test`) in 
+`installation_path/amber20/miniconda/bin`.
 
 You have two options to solve this:
 
-Add this folder (*/amber20/miniconda/bin) to PATH:
+* Add this folder (*/amber20/miniconda/bin) to PATH:
 
-    export PATH="/home/user/path_to_amber_install/amber20/miniconda/bin:$PATH"
+        export PATH="/path_to_amber_install/amber20/miniconda/bin:$PATH"
+    
+    !!! tip
+        * This option is more permanent and is recommended if you don't want to activate and deactivate the conda 
+        environment
+        * Make sure to update **path_to_amber_install** in the PATH variable
 
-*This option is more permanent and is recommended if you don't want to activate and deactivate the conda environment*
+* Initializing the environment of conda amber:
 
-!!! tip
-    Make sure to update **user** and **path_to_amber_install** in the PATH variable
+        amber.conda init bash
 
-or
+    You can deactivate like this:
+    
+        conda deactivate
 
-initializing the environment of conda amber:
-
-    amber.conda init bash
-
-You can deactivate like this:
-
-    conda deactivate
-
-After using one of the above options, you should be able to run `gmx_MMPBSA` and `gmx_MMPBSA_ana` through the terminal
+!!! note
+    After using one of the above options, you should be able to run `gmx_MMPBSA`, `gmx_MMPBSA_ana` and `gmx_MMPBSA_test` 
+    through the terminal
 
 If when running `gmx_MMPBSA`, you get an error like this:
 
@@ -98,38 +118,44 @@ please see the following [issue][2] to see the solution
   [2]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/issues/2
 
 
-### Autocompletion script
-Since gmx_MMPBSA has many flags, we believe that this autocompletion can significantly improve productivity, be
+## Autocompletion script
+Since `gmx_MMPBSA` has many flags, we believe that this autocompletion can significantly improve productivity, be
 more user-friendly and reduce the number of unforced errors. That is why we created this script, which manages the
-autocompletion of the gmx_MMPBSA and gmx_MMPBSA_ana.
+autocompletion of the `gmx_MMPBSA`, `gmx_MMPBSA_ana` and `gmx_MMPBSA_test`.
 
 
 **Installation:**
 Enter the following command in the terminal:
     
-    source /path_to_installed_gmx_MMPBSA/GMXMMPBSA.sh
-
-If you followed the gmx_MMPBSA installation instructions, this path should be as follows:
- 
-    /path/to/ambertools/lib/python3.8/site-packages/GMXMMPBSA/GMXMMPBSA.sh
-
-If you want it to be activated automatically, add that command to your .bashrc
-
-!!! warning
-    This script requires that `gmx_MMPBSA` and `gmx_MMPBSA_ana` be accessible in PATH
+    source /path/to/ambertools/lib/python3.x/site-packages/GMXMMPBSA/GMXMMPBSA.sh
 
 !!! tip
-    If the command-line above end in error, please make sure the file has executed permissions.
-    On Ubuntu, Debian, Linux Mint or related:
-      GUI:
-        Right-click on the file > Properties> Permissions> mark the checkbox "Allow to execute the file as a program"
-      or
-      Terminal:
-        chmod 755 /path_to_installed_gmx_MMPBSA/GMXMMPBSA.sh
-    Once the file has execution permissions, enter the following command in the terminal:
+    If you want it to be activated automatically, add that command to your .bashrc
 
-**Functioning:**
-All you have to do is enter the name of the program in the terminal and press the tab key twice:
+!!! warning
+    * This script requires that `gmx_MMPBSA`, `gmx_MMPBSA_ana` and `gmx_MMPBSA_test` be accessible in PATH
+    * If the command-line above end in error, please make sure the file has executed permissions. 
+        
+        On Ubuntu, Debian, Linux Mint or related:
+        
+        * GUI:
+
+            * `Right-click on GMXMMPBSA.sh file` >
+
+            * `Properties` > 
+
+            * `Permissions` > 
+
+            * `Mark the checkbox "Allow to execute the file as a program"`
+        
+        * Terminal:
+            
+                chmod 755 /path/to/ambertools/lib/python3.x/site-packages/GMXMMPBSA/GMXMMPBSA.sh
+    
+        
+**Once you make the source of GMXMMPBSA.sh you can check its operation as follows**
+
+_All you have to do is enter the name of the program in the terminal and press the tab key twice:_
     
     gmx_MMPBSA <tab> <tab>
 
