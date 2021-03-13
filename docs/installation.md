@@ -124,7 +124,7 @@ more user-friendly and reduce the number of unforced errors. That is why we crea
 autocompletion of the `gmx_MMPBSA`, `gmx_MMPBSA_ana` and `gmx_MMPBSA_test`.
 
 
-**Installation:**
+**Execution:**
 Enter the following command in the terminal:
     
     source /path/to/ambertools/lib/python3.x/site-packages/GMXMMPBSA/GMXMMPBSA.sh
@@ -153,9 +153,12 @@ Enter the following command in the terminal:
                 chmod 755 /path/to/ambertools/lib/python3.x/site-packages/GMXMMPBSA/GMXMMPBSA.sh
     
         
-**Once you make the source of GMXMMPBSA.sh you can check its operation as follows**
+**Once you make the source of GMXMMPBSA.sh you can check its operation as follows:**
 
 _All you have to do is enter the name of the program in the terminal and press the tab key twice:_
     
     gmx_MMPBSA <tab> <tab>
 
+## Testing the operation of gmx_MMPBSA
+After preparing everything to run `gmx_MMPBSA`, it only remains to check its correct operation. To know how to do it, 
+consult the documentation of [`gmx_MMPBSA_test`](command-line.md#running-gmx_mmpbsa_test)
