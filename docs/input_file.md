@@ -33,7 +33,7 @@ characters (in which case the whole variable name is required). For example, "st
 `assign_chainID` (Default = 0) 
 :   Defines the chains ID assignment mode. _It is ignored when defining a reference structure
 (recommended)_. If `assign_chainID = 1`, gmx_MMPBSA check if the structure has no chains ID and it is assigned according
-to the structure[^1]. If `assign_chainID = 2`, `gmx_MMPBSA` re-assign the chains ID, exist or not, according to the
+to the structure[^1]. If `assign_chainID = 2`, `gmx_MMPBSA` assign the chains ID, exist or not, according to the
 structure[^1] (can generate inconsistencies). If a `*.gro` file was used for complex structure
 (`-cs` flag) and not reference structure was provided, `gmx_MMPBSA` assume `assign_chainID = 1`. 
 
