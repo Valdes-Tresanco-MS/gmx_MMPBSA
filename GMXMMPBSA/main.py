@@ -699,11 +699,7 @@ class MMPBSA_App(object):
             g = subprocess.Popen(['python', '/home/mario/Drive/scripts/gmx_MMPBSA/run_ana.py', '-f',
                                   self.FILES.prefix + 'info'])
             if g.wait():
-                print(80*'-')
-                # self.stdout.write('Unable to open gmx_MMPBSA_ana to analyze results...')
                 sys.exit(1)
-            #
-            # Analyzer(self.FILES.prefix + 'info')
         else:
             sys.exit(0)
 
