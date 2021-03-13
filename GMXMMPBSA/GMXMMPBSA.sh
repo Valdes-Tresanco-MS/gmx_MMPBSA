@@ -107,8 +107,5 @@ case "$p" in
 -t)       COMPREPLY=( $(compgen -S ' ' -W $'all\nminimal\nprot_lig_st\nprot_prot\nprot_dna\nmemb_prot\nprot_glycan
             \nmetalloprot_pep\nprot_dna_rna_ions_lig\nprot_lig_charmm\nala_scan\nstability\ndecomp\nprot_lig_mt\nie
             \nnmode\n3drism' --  $c));;
---test)   COMPREPLY=( $(compgen -S ' ' -W $'all\nminimal\nprot_lig_st\nprot_prot\nprot_dna\nmemb_prot\nprot_glycan
-            \nmetalloprot_pep\nprot_dna_rna_ions_lig\nprot_lig_charmm\nala_scan\nstability\ndecomp\nprot_lig_mt\nie
-            \nnmode\n3drism' --  $c));;
 esac }
 complete -F _gmxmmpbsa_test_compl gmx_MMPBSA_test
