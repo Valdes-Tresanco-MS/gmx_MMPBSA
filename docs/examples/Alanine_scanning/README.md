@@ -9,16 +9,20 @@ title: Alanine scanning
 
 In this case, `gmx_MMPBSA` requires:
 
-* An input parameters file (*.in) -- input file containing all the specifications regarding the type of calculation that
-is going to be performed
-* The MD Structure+mass(db) file (*.tpr, *.pdb) -- make sure chain labels are included
-* An index file (*.ndx) -- *.ndx file containing the receptor and ligand in separated groups
-* Receptor and ligand group numbers in the index file
-* A trajectory file (*.xtc, *.pdb, *.gro, *.trr) -- final GROMACS MD trajectory, fitted and with no pbc.
+| Input File required            | Required |           Type             | Description |
+|:-------------------------------|:--------:|:--------------------------:|:-------------------------------------------------------------------------------------------------------------|
+| Input parameters file          | :octicons-x-circle-fill-16:{ .req .scale_icon_medium } |           `in`          | Input file containing all the specifications regarding the type of calculation that is going to be performed |
+| The MD Structure+mass(db) file | :octicons-x-circle-fill-16:{ .req .scale_icon_medium } |    `tpr` `pdb` `gro`    | Structure file containing the system coordinates |
+| An index file                  | :octicons-x-circle-fill-16:{ .req .scale_icon_medium } |          `ndx`    | file containing the receptor and ligand in separated groups |
+| Receptor and ligand group      | :octicons-x-circle-fill-16:{ .req .scale_icon_medium } |        `integers`       | Receptor and ligand group numbers in the index file |
+| A trajectory file              | :octicons-x-circle-fill-16:{ .req .scale_icon_medium } | `xtc` `pdb` `gro` `trr` | Final GROMACS MD trajectory, fitted and with no pbc. |
+| A topology file (not included) | :octicons-x-circle-fill-16:{ .req_opt .scale_icon_medium }    |           `top`         | GROMACS topology file (The `* .itp` files defined in the topology must be in the same folder |
+| A Reference Structure file     | :octicons-x-circle-fill-16:{ .req_optrec .scale_icon_medium } |           `top`         | Complex reference structure file with correct assignment of chain ID and residue numbers |
+              
+:octicons-x-circle-fill-16:{ .req } -> Must be defined always -- :octicons-x-circle-fill-16:{ .req_optrec } -> 
+Optional, but recommended -- :octicons-x-circle-fill-16:{ .req_opt } -> Optional
 
 _See a detailed list of all the flags in gmx_MMPBSA command line [here][1]_
-
-  [1]: ../../command-line.md#calling-gmx_mmpbsa-from-the-command-line
 
 ## Command-line
 That being said, once you are in the folder containing all files, the command-line will be as follows:
@@ -50,10 +54,7 @@ mutant_res='B:12'
 /
 ```
 
-_See a detailed list of all the options in `gmx_MMPBSA` input file [here][1] as well as several [examples][2]_
-
-  [1]: ../../input_file.md#the-input-file
-  [2]: ../../input_file.md#sample-input-files
+_See a detailed list of all the options in `gmx_MMPBSA` input file [here][2] as well as several [examples][3]_
 
 ## Considerations
 In this case, a single trajectory (ST) approximation is followed, which means the receptor and ligand (in this case, 
@@ -70,6 +71,10 @@ Once the calculation is done, the GUI app (`gmx_MMPBSA_ana`) will show up. In th
 the GB calculation for both the wild-type and the mutant system. The results can be saved as *.csv file by clicking 
 "File" in the upper left corner and then "Export GB/PB energy (csv)".
 
+!!! note
+    Once the calculation is done, you can analyze the results in `gmx_MMPBSA_ana` (if you didn't define `-nogui`). 
+    Please see the [gmx_MMPBSA_ana][4] section for more information
+
 ### How to define properly which residue is going to be mutated?
 The generated PDB files must keep the original numbering, so selection based on residue number is reliable. However, 
 the chain id can vary depending on several factors. If you use the reference structure (`-cr` flag), then you don't 
@@ -79,20 +84,24 @@ On the other hand, if this reference structure is omitted, then it will depend o
 
 * The complex structure file format
     
-    _The * .gro format does not contain information related to chains._
+    _The `*.gro` format does not contain information related to chains._
 
 * GROMACS version
     
-    _We have seen that the GROMACS 20xx.x versions, trjconv omit the chain IDs._
+    _We have seen that the GROMACS `20xx.x` versions, `trjconv` can omit the chain IDs._
 
-* Options used to generate the topology in GROMACS (referring to the `-merge` option)
-    
-    _If you use the `-merge` option then GROMACS will merge the chains into one._
 * The option assign_chainID
     
-    _This option defines when chain IDs are assigned. For the first and second option it must be assign_chainID = 1 
-    or 2. For the 3rd it must be assign_chainID = 2. See the description here._
+    _This option defines when chain IDs are assigned. Please see this variable in 
+    [`&general` namelist variables section][5]_
 
 !!! tip
-    In any of these cases, you must verify that the selection is correct. You can see the structure of the Complex 
-    (`_GMXMMPBSA_COM.pdb`), Receptor (`_GMXMMPBSA_REC_FIXED.pdb`), and ligand (`_GMXMMPBSA_LIG_FIXED.pdb`) respectively.
+    In any of these cases, you must verify that the selection is correct. You can see the structure of the fixed 
+    Complex structure (`_GMXMMPBSA_FIXED_COM.pdb`), Receptor (`_GMXMMPBSA_REC_Fx.pdb`), and ligand 
+    (`_GMXMMPBSA_LIG_Fy.pdb`) respectively. x and y represent the fragment for discontinuous molecules
+
+  [1]: ../../command-line.md#gmx_mmpbsa-command-line
+  [2]: ../../input_file.md#the-input-file
+  [3]: ../../input_file.md#sample-input-files
+  [4]: ../../analyzer.md#gmx_mmpbsa_ana  
+  [5]: ../../input_file.md#general-namelist-variables
