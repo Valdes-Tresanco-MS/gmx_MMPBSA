@@ -700,7 +700,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
                                     item_level = 3
                                 col_box = [1, 2, 3]
                                 # only make a checkbox for TDC
-                                if level3 == 'TDC':
+                                if level3 == 'TDC' and level2 == 'delta':
                                     col_box.append(4)
                                 item3 = CustomItem(item2, [str(level3).upper()],
                                                    cdata=data[level][level1][level2][level3],

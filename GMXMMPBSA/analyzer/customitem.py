@@ -164,11 +164,14 @@ class CustomItem(QTreeWidgetItem):
                                     heatmap_plot_dat=heatmap_plot_data)
         elif self.level == 3:
             bar = {}
-            data = {'frames': self.frames[start:end:interval], 'Residues': [], 'Energy': []}
+            data = {'frames': self.frames[start:end:interval], 'Residues': [], 'Energy': [], 'Per-pair Energy': []}
+            per_pair_data = {'Residues': [], 'Pair': [], 'Energy': []}
             for p, d in self.cdata.items():
                 data['Residues'].append(p)
                 res_t = []
                 for p1, d1 in d.items():
+                    per_pair_data['Residues'].append(p)
+                    per_pair_data['Pair'].append(p1)
                     for p2, d2 in d1.items():
                         if 'tot' in str(p2).lower():
                             res_t.append(d2[start:end:interval])
@@ -177,7 +180,10 @@ class CustomItem(QTreeWidgetItem):
                         bar[p] = np.sum(res_t, axis=0)
                 else:
                     bar[p] = np.sum(res_t, axis=0)
-                data['Energy'].append(np.sum(res_t, axis=0))
+                res_t_np = np.array(res_t)
+                data['Energy'].append(res_t_np.sum(axis=0))
+                data['Per-pair Energy'].append(res_t_np.mean(axis=1))
+
             bar_plot_data = pd.DataFrame(data=bar)
             line_plot_data = pd.DataFrame(data={'frames': self.frames[start:end:interval],
                                                 'Energy': np.array(data['Energy']).sum(axis=0)})

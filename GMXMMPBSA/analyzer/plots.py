@@ -270,11 +270,37 @@ class Charts(QMdiSubWindow):
                     self.heatmap_plot.clear()
                 self.heatmap_plot = sns.heatmap(self.data.heatmap_plot_dat, ax=self.mpl_canvas.axes, center=0,
                                                 yticklabels=self.data.heatmap_plot_dat.index.tolist(),
+                                                xticklabels=self.data.heatmap_plot_dat.columns.tolist(),
                                                 cmap='seismic', cbar_kws={'label': 'Energy (kcal/mol)'})
-                for label in self.heatmap_plot.axes.get_yticklabels():
-                    label.set_rotation(0)
-                    label.set_horizontalalignment('right')
+                self.heatmap_plot.set_yticklabels(self.heatmap_plot.get_yticklabels(), rotation=0)
+                self.heatmap_plot.set_xticklabels(self.heatmap_plot.get_xticklabels(), rotation=45)
+
                 title = self.item.chart_title + '(P.f)' # Fixme: no frames from correlation
+            #
+            # if Charts.RELPLOT in self.options['chart_type']:
+            #     self.item.hmp_subw = self
+            #     # Draw each cell as a scatter point with varying size and color
+            #     self.relplot = sns.relplot(
+            #         data=self.data.heatmap_plot_dat,
+            #         x="Residues", y="Pair", hue="Energy", size="Energy",
+            #         palette="seismic",
+            #         hue_norm=(-100, 100),
+            #         edgecolor=".7",
+            #         height=10,
+            #         sizes=(50, 200),
+            #         size_norm=(0, 1),
+            #     )
+            #
+            #     # Tweak the figure to finalize
+            #     self.relplot.set(xlabel="", ylabel="", aspect="equal")
+            #     self.relplot.despine(left=True, bottom=True)
+            #     self.relplot.ax.margins(.02)
+            #     for label in self.relplot.ax.get_xticklabels():
+            #         label.set_rotation(90)
+            #     for artist in self.relplot.legend.legendHandles:
+            #         artist.set_edgecolor(".7")
+            #
+            #     self.mpl_canvas.figure = self.relplot.fig
 
             if self.item.item_name != 'IE':
                 self.mpl_canvas.axes.invert_yaxis()
