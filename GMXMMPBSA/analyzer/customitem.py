@@ -174,6 +174,7 @@ class CustomItem(QTreeWidgetItem):
                     per_pair_data['Pair'].append(p1)
                     for p2, d2 in d1.items():
                         if 'tot' in str(p2).lower():
+                            per_pair_data['Energy'].append(d2[start:end:interval].mean())
                             res_t.append(d2[start:end:interval])
                 if self.remove_empty_terms:
                     if abs(np.sum(res_t, axis=0).mean()) > 0.1:
@@ -188,7 +189,7 @@ class CustomItem(QTreeWidgetItem):
             line_plot_data = pd.DataFrame(data={'frames': self.frames[start:end:interval],
                                                 'Energy': np.array(data['Energy']).sum(axis=0)})
 
-            heatmap_plot_data = pd.DataFrame(data=data['Energy'], index=data['Residues'], columns=data['frames'])
+            heatmap_plot_data = pd.DataFrame(data=data['Per-pair Energy'], index=data['Residues'], columns=data['Residues'])
 
             return_data = Namespace(line_plot_dat=line_plot_data, bar_plot_dat=bar_plot_data,
                                     heatmap_plot_dat=heatmap_plot_data)
