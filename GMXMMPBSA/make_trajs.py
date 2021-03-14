@@ -290,7 +290,7 @@ def make_trajectories(INPUT, FILES, size, cpptraj, pre):
 
     # end if INPUT['nmoderun']
 
-    return num_frames_total, num_frames_nmode
+    return int(num_frames_total), int(num_frames_nmode)
 
 
 # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
