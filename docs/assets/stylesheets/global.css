@@ -18,10 +18,10 @@
 
 @keyframes heart {
   0%, 40%, 80%, 100% {
-    transform: scale(1.25);
+    transform: scale(1.5);
   }
   20%, 60% {
-    transform: scale(1.35);
+    transform: scale(1.65);
   }
 }
 .heart {
@@ -32,7 +32,24 @@
     padding-left: 10px;
     padding-right: 10px;
 }
-.medium {
-    color: #1DA1F2;
+.req {
+    /*background-color: rgba(255, 23, 68, .1);*/
+    border-color: #ff1744;
+    color:  #ff1744;
+}
+.req_optrec {
+    color: #00bfa5;
+}
+.req_opt {
+    color: #448aff;
+}
 
+.scale_icon_small {
+    transform: scale(0.75);
+}
+.scale_icon_big {
+    transform: scale(2.0);
+}
+.scale_icon_medium {
+    transform: scale(1.5);
 }
