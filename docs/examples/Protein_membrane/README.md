@@ -7,6 +7,7 @@ title: Protein-Membrane
 ## Requirements
 
 In this case, `gmx_MMPBSA` requires:
+
 | Input File required            | Required |           Type             | Description |
 |:-------------------------------|:--------:|:--------------------------:|:-------------------------------------------------------------------------------------------------------------|
 | Input parameters file          | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |           `in`          | Input file containing all the specifications regarding the type of calculation that is going to be performed |
