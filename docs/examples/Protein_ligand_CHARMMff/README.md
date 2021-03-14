@@ -15,15 +15,15 @@ In this case, `gmx_MMPBSA` requires:
 
 | Input File required            | Required |           Type             | Description |
 |:-------------------------------|:--------:|:--------------------------:|:-------------------------------------------------------------------------------------------------------------|
-| Input parameters file          | :octicons-x-circle-fill-16:{ .req .scale_icon_medium } |           `in`             | input file containing all the specifications regarding the type of calculation that is going to be performed |
-| The MD Structure+mass(db) file | :octicons-x-circle-fill-16:{ .req .scale_icon_medium } |    `tpr` `pdb` `gro`     | Structure file containing the system coordinates|
-| Receptor and ligand group      | :octicons-x-circle-fill-16:{ .req .scale_icon_medium } |        `integers`          | Receptor and ligand group numbers in the index file |
-| A trajectory file              | :octicons-x-circle-fill-16:{ .req .scale_icon_medium } | `xtc` `pdb` `gro` `trr` | final GROMACS MD trajectory, fitted and with no pbc.|
-| A topology file                | :octicons-x-circle-fill-16:{ .req .scale_icon_medium } |           `top`            | take into account that *.itp files belonging to the topology file should be also present in the folder       |
-| A Reference Structure file     | :octicons-x-circle-fill-16:{ .req_optrec .scale_icon_medium } |           `top`            | take into account that *.itp files belonging to the topology file should be also present in the folder       |
+| Input parameters file          | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |           `in`             | input file containing all the specifications regarding the type of calculation that is going to be performed |
+| The MD Structure+mass(db) file | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |    `tpr` `pdb` `gro`     | Structure file containing the system coordinates|
+| Receptor and ligand group      | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |        `integers`          | Receptor and ligand group numbers in the index file |
+| A trajectory file              | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } | `xtc` `pdb` `gro` `trr` | final GROMACS MD trajectory, fitted and with no pbc.|
+| A topology file                | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |           `top`            | take into account that *.itp files belonging to the topology file should be also present in the folder       |
+| A Reference Structure file     | :octicons-check-circle-fill-16:{ .req_optrec .scale_icon_medium } |           `top`            | take into account that *.itp files belonging to the topology file should be also present in the folder       |
               
-:octicons-x-circle-fill-16:{ .req } -> Must be defined -- :octicons-x-circle-fill-16:{ .req_optrec } -> 
-Optional, but recommended -- :octicons-x-circle-fill-16:{ .req_opt } -> Optional
+:octicons-check-circle-fill-16:{ .req } -> Must be defined -- :octicons-check-circle-fill-16:{ .req_optrec } -> 
+Optional, but recommended -- :octicons-check-circle-fill-16:{ .req_opt } -> Optional
 
 _See a detailed list of all the flags in gmx_MMPBSA command line [here][2]_
 
