@@ -23,7 +23,7 @@ statistics printing.
 
 import io
 from GMXMMPBSA.amber_outputs import EnergyVector
-from GMXMMPBSA.exceptions import LengthError
+from GMXMMPBSA.exceptions import LengthError, GMXMMPBSA_WARNING
 from GMXMMPBSA import utils
 from math import sqrt, ceil
 from os import linesep as ls
@@ -80,8 +80,14 @@ def write_stability_output(app):
     final_output.add_comment('All units are reported in kcal/mole.')
     if INPUT['nmoderun'] or INPUT['entropy']:
         if INPUT['entropy'] == 2:
+            if 'temperature' in INPUT:
+                temp = INPUT['temperature']
+            else:
+                GMXMMPBSA_WARNING('entropy_temp variable is deprecated and will be remove in next versions!. Please, '
+                                  'use temperature variable instead')
+                temp = INPUT['entropy_temp']
             final_output.add_comment('All entropy results have units kcal/mol ' +
-                                 '(Temperature is %.2f K).' % INPUT['entropy_temp'])
+                                 '(Temperature is %.2f K).' % temp)
         else:
             final_output.add_comment('All entropy results have units kcal/mol ' +
                                      '(Temperature is %.2f K).' % INPUT['temp'])
@@ -308,8 +314,14 @@ def write_binding_output(app):
     final_output.add_comment('All units are reported in kcal/mole.')
     if INPUT['nmoderun'] or INPUT['entropy']:
         if INPUT['entropy'] == 2:
+            if 'temperature' in INPUT:
+                temp = INPUT['temperature']
+            else:
+                GMXMMPBSA_WARNING('entropy_temp variable is deprecated and will be remove in next versions!. Please, '
+                                  'use temperature variable instead')
+                temp = INPUT['entropy_temp']
             final_output.add_comment('All entropy results have units kcal/mol ' +
-                                     '(Temperature is %.2f K).' % INPUT['entropy_temp'])
+                                     '(Temperature is %.2f K).' % temp)
         else:
             final_output.add_comment('All entropy results have units kcal/mol ' +
                                      '(Temperature is %.2f K).' % INPUT['temp'])
@@ -934,11 +946,10 @@ class OutputFile(object):
 
     def print_file_info(self, FILES, INPUT):
         """ Prints the summary information to a file """
-        import GMXMMPBSA
+        from GMXMMPBSA import __version__, __mmpbsa_version__
         stability = not FILES.receptor_prmtop
 
-        self.writeline('|gmx_MMPBSA Version=%s based on MMPBSA.py v.%s' % (GMXMMPBSA.__version__,
-                                                                              GMXMMPBSA.__mmpbsa_version__))
+        self.writeline('|gmx_MMPBSA Version=%s based on MMPBSA.py v.%s' % (__version__, __mmpbsa_version__))
 
         # if FILES.solvated_prmtop:
         #    self.writeline('|Solvated complex topology file:  %s' %

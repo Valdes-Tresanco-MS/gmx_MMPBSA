@@ -8,17 +8,24 @@ title: Protein-ligand (ST)
 
 In this case, `gmx_MMPBSA` requires:
 
-* An input parameters file (*.in) -- input file containing all the specifications regarding the type of calculation that
-is going to be performed
-* The MD Structure+mass(db) file (*.tpr, *.pdb, *.gro) 
-* An index file (*.ndx) -- *.ndx file containing the receptor and ligand in separated groups
-* Receptor and ligand group numbers in the index file
-* A trajectory file (*.xtc, *.pdb, *.gro, *.trr) -- final GROMACS MD trajectory, fitted and with no pbc.
-* A *.mol2 file of the unbound ligand used to parametrize ligand for GROMACS. -- Antechamber output *.mol2 is recommended
+| Input File required            | Required |           Type             | Description |
+|:-------------------------------|:--------:|:--------------------------:|:-------------------------------------------------------------------------------------------------------------|
+| Input parameters file          | :octicons-x-circle-fill-16:{ .req .scale_icon_medium } |           `in`          | Input file containing all the specifications regarding the type of calculation that is going to be performed |
+| The MD Structure+mass(db) file | :octicons-x-circle-fill-16:{ .req .scale_icon_medium } |    `tpr` `pdb` `gro`    | Structure file containing the system coordinates |
+| An index file                  | :octicons-x-circle-fill-16:{ .req .scale_icon_medium } |          `ndx`    | File containing the receptor and ligand in separated groups |
+| Receptor and ligand group      | :octicons-x-circle-fill-16:{ .req .scale_icon_medium } |        `integers`       | Group numbers in the index files |
+| A trajectory file              | :octicons-x-circle-fill-16:{ .req .scale_icon_medium } | `xtc` `pdb` `gro` `trr` | Final GROMACS MD trajectory, fitted and with no pbc. |
+| Ligand parameters file         | :octicons-x-circle-fill-16:{ .req .scale_icon_medium } |          `mol2`         | The Antechamber output  `mol2` file of ligand parametrization|
+| A topology file (not included) | :octicons-x-circle-fill-16:{ .req_opt .scale_icon_medium }    |           `top`         | GROMACS topology file (The `* .itp` files defined in the topology must be in the same folder |
+| A Reference Structure file     | :octicons-x-circle-fill-16:{ .req_optrec .scale_icon_medium } |           `top`         | Complex reference structure file with correct assignment of chain ID and residue numbers |
+              
+:octicons-x-circle-fill-16:{ .req } -> Must be defined -- :octicons-x-circle-fill-16:{ .req_optrec } -> 
+Optional, but recommended -- :octicons-x-circle-fill-16:{ .req_opt } -> Optional
 
+!!! tip "Remember"
+    When a topology file is defined, the ligand mol2 file is not needed. The ligand mol2 file only required when  
+    `gmx_MMPBSA` build the amber topology from a structure  
 _See a detailed list of all the flags in gmx_MMPBSA command line [here][1]_
-
-  [1]: ../../../command-line.md#calling-gmx_mmpbsa-from-the-command-line
 
 ## Command-line
 That being said, once you are in the folder containing all files, the command-line will be as follows:
@@ -45,10 +52,9 @@ igb=5, saltcon=0.150,
 /
 ```
 
-_See a detailed list of all the options in `gmx_MMPBSA` input file [here][1] as well as several [examples][2]_
+_See a detailed list of all the options in `gmx_MMPBSA` input file [here][2] as well as several [examples][3]_
 
-  [1]: ../../../input_file.md#the-input-file
-  [2]: ../../../input_file.md#sample-input-files
+ 
 
 ## Considerations
 In this case, a single trajectory (ST) approximation is followed, which means the receptor and ligand structures and 
@@ -58,7 +64,11 @@ A ligand .mol2 file is also needed for generating the ligand topology. The `mmpb
 parameters needed for the MM/PB(GB)SA calculation. In this case, 16 frames `(endframe-startframe)/interval = (21-5)/1 = 16`
 are going to be used when performing the the MM/PB(GB)SA calculation with the igb5 (GB-OBC2) model and a 
 salt concentration = 0.15M.
-
-Once the calculation is done, the GUI app (`gmx_MMPBSA_ana`) will show up. In this app, you can visualize the results for 
-the GB calculation. The results can be saved as *.csv file by clicking "File" in the upper left corner and then 
-"Export GB/PB energy (csv)".
+!!! note
+    Once the calculation is done, you can analyze the results in `gmx_MMPBSA_ana` (if you didn't define `-nogui`). 
+    Please see the [gmx_MMPBSA_ana][5] section for more information
+  
+  [1]: ../../../command-line.md#gmx_mmpbsa-command-line
+  [2]: ../../../input_file.md#the-input-file
+  [3]: ../../../input_file.md#sample-input-files
+  [5]: ../../../analyzer.md#gmx_mmpbsa_ana

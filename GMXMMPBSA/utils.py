@@ -35,6 +35,63 @@ import shutil
 from pathlib import Path
 import json
 import logging
+from string import ascii_letters
+from GMXMMPBSA.exceptions import GMXMMPBSA_ERROR, GMXMMPBSA_WARNING
+from math import sqrt
+
+def get_dist(coor1, coor2):
+    return sqrt((coor2[0] - coor1[0]) ** 2 + (coor2[1] - coor1[1]) ** 2 + (coor2[2] - coor1[2]) ** 2)
+
+
+def selector(selection:str):
+    string_list = selection.split()
+    dist = None
+    exclude = None
+    res_selections = []
+    if selection.startswith('within'):
+        try:
+            dist = float(string_list[1])
+        except:
+            GMXMMPBSA_ERROR(f'Invalid dist, we expected a float value but we get "{string_list[1]}"')
+        if len(string_list) == 4:
+            if string_list[2] != 'not':
+                GMXMMPBSA_ERROR(f'We expected "not" but we get {string_list[2]} instead')
+            if str(string_list[3]).lower() not in ['receptor', 'ligand', 'rec', 'lig']:
+                GMXMMPBSA_ERROR(f'We expected one of this values: "receptor", "rec", "ligand" or "lig" but we get'
+                      f' {(string_list[3]).lower()} instead')
+            exclude = 'REC' if str(string_list[3]).lower() in ['receptor', 'rec'] else 'LIG'
+    else:
+        # try to process residue selection
+        for s in string_list:
+            n = s.split('/')
+            if len(n) != 2 or n[0] not in ascii_letters:
+                GMXMMPBSA_ERROR(f'We expected something like this: A/2-10,35,41 but we get {s} instead')
+            chain = n[0]
+            resl = n[1].split(',')
+            for r in resl:
+                rr = r.split('-')
+                if len(rr) == 1:
+                    ci = rr[0].split(':')
+                    ri = [chain, int(ci[0]), ''] if len(ci) == 1 else [chain, int(ci[0]), ci[1]]
+                    if ri in res_selections:
+                        GMXMMPBSA_WARNING('Found duplicated residue in selection: CHAIN:{} RES_NUM:{} ICODE: '
+                                          '{}'.format(*ri))
+                        continue
+                    res_selections.append(ri)
+                else:
+                    try:
+                        start = int(rr[0])
+                        end = int(rr[1]) + 1
+                    except:
+                        GMXMMPBSA_ERROR(f'When residues range is defined, start and end most be integer but we get'
+                                        f' {rr[0]} and {rr[1]}')
+                    for cr in range(start, end):
+                        if [chain, cr, ''] in res_selections:
+                            GMXMMPBSA_WARNING('Found duplicated residue in selection: CHAIN:{} RES_NUM:{} ICODE: '
+                                              '{}'.format(chain, cr, ''))
+                            continue
+                        res_selections.append([chain, cr, ''])
+    return dist, exclude, res_selections
 
 
 def checkff(overwrite):
@@ -51,7 +108,7 @@ def checkff(overwrite):
     """
     amberhome = os.getenv('AMBERHOME')
     if not amberhome:
-        logging.error('Could not found Amber. Please make sure you have sourced %s/amber.sh (if you are using sh/ksh/'
+        GMXMMPBSA_ERROR('Could not found Amber. Please make sure you have sourced %s/amber.sh (if you are using sh/ksh/'
               'bash/zsh) or %s/amber.csh (if you are using csh/tcsh)' %
               (amberhome, amberhome))
         return
@@ -210,57 +267,3 @@ class Unbuffered(object):
         return getattr(self._handle, attr)
 
 
-class PDB:
-    def __init__(self):
-
-        self.allAtoms = []
-        self.info = []
-        self.element = None
-
-    def parse(self, filename):
-        ofile = open(filename).readlines()
-        model = 0
-        for line in ofile:
-            if 'MODEL' in line:
-                model += 1
-                if model > 1:
-                    raise ValueError('Only one Model is allowed')
-            elif 'ATOM' in line[0:6] or 'HETATM' in line[0:6]:
-                atm = {}
-                atm['id'] = line[0:6].strip()
-                atm["number"] = int(line[6:11].strip())
-                atm["name"] = line[12:16].strip()
-                atm["alternate_location"] = line[16].strip()
-                atm["resname"] = line[17:21].strip()
-                atm["chain"] = line[21].strip()
-                atm["resnum"] = int(line[22:26].strip())
-                atm["i_code"] = line[26].strip()
-                atm["x"] = float(line[30:38].strip())
-                atm["y"] = float(line[38:46].strip())
-                atm["z"] = float(line[46:54].strip())
-                atm["occupancy"] = float(line[54:60].strip())
-                atm["b_factor"] = float(line[60:66].strip())
-                atm['segment_id'] = line[72:76].strip()
-                atm["element"] = line[76:78]
-                atm["charge"] = line[78:80]
-                self.allAtoms.append(atm)
-            elif 'TER' in line[0:6]:
-                atm = {}
-                atm['id'] = 'TER'
-                self.allAtoms.append(atm)
-            elif 'ENDML' in line[0:6]:
-                continue
-            else:
-                self.info.append(line)
-
-    def getOutLine(self, atm, ter=False):
-        # Create the PDB line.
-        if ter:
-            atomrec = '%-6s\n' % (atm['id'])
-        else:
-            atomrec = '%-6s%5d %-4s%1s%-3s %1s%4d%1s   %8.3f%8.3f%8.3f%6.2f%6.2f      %-4s%2s%-2s\n' % (
-                atm['id'], atm["number"], atm["name"], atm["alternate_location"], atm["resname"], atm["chain"],
-                atm["resnum"], atm["i_code"], atm["x"], atm["y"], atm["z"], atm["occupancy"], atm["b_factor"],
-                atm['segment_id'], atm["element"], atm["charge"]
-            )
-        return atomrec

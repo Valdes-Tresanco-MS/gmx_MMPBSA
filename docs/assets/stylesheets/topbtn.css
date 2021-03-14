@@ -1,0 +1,56 @@
+/*
+ *                          GPLv3 LICENSE INFO
+ *
+ * Copyright (C) 2020  Mario S. Valdes-Tresanco and Mario E. Valdes-Tresanco
+ * Copyright (C) 2014  Jason Swails, Bill Miller III, and Dwight McGee
+ *
+ *  Project: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA
+ *
+ *  This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 3 as published
+ * by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * for more details.
+ */
+
+#topbtn{
+	color:black;
+	padding-top:1.8em;
+	border-color:black;
+	text-decoration:none;
+	transition:all .3s ease-out;
+    display: none;
+    position: fixed;
+    bottom: 25px;
+    right: 25px;
+    z-index: 99;
+    border: none;
+    outline: none;
+    background-color: transparent;
+    cursor: pointer;
+    border-radius: 4px;
+}
+#topbtn:before{
+	content:'⇡';
+	font-size:1.2em;
+	position:absolute;
+	top:0;
+	left:50%;
+	margin-left:-.7em;
+	border:solid .13em black;
+	border-radius:5em;
+	width:1.4em;
+	height:1.6em;
+	line-height:1.3em;
+	transition:transform .5s ease-in;
+}
+#topbtn:hover{
+	color:pink;
+	border-color:pink;
+}
+#topbtn:hover:before{
+	transform: rotate(360deg);
+}

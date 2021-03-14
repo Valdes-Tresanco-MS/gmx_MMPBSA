@@ -25,11 +25,10 @@ in gmx_MMPBSA will be assigned as attributes to the returned class.
 # ##############################################################################
 
 import os
-from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
+from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter, RawDescriptionHelpFormatter, RawTextHelpFormatter
 from pathlib import Path
 from GMXMMPBSA import __version__, __mmpbsa_version__, __ambertools_version__
 from GMXMMPBSA.exceptions import GMXMMPBSA_ERROR
-
 
 class OptionList(object):
     """
@@ -44,6 +43,7 @@ if os.getenv('AMBERHOME'):
     rism = os.path.join(os.getenv('AMBERHOME'), 'dat', 'mmpbsa', 'spc.xvv')
 else:
     rism = None
+
 
 def check_arg(str_suffix, path=False):
     def decorator(f):
@@ -90,26 +90,29 @@ def index(arg):
     return arg
 
 
-description = '''gmx_MMPBSA is an effort to implement the GB/PB and others calculations in GROMACS. This program is 
-                 an adaptation of Amber's MMPBSA.py and essentially works as such. As gmx_MMPBSA adapts MMPBSA.py, 
-                 since it has all the resources of this script and work with any GROMACS version.'''
+description = ("gmx_MMPBSA is a new tool aid to perform end-state free energy calculations based on AMBER's MMPBSA.py "
+               "with GROMACS files. This program is an adaptation of Amber's MMPBSA.py and essentially works as such. "
+               "As gmx_MMPBSA adapts MMPBSA.py, since it has all the resources of this script and work with any "
+               "GROMACS version. This program will calculate binding free energies using end-state free energy "
+               "methods on an ensemble of snapshots using a variety of implicit solvent models.")
 
-complex_group_des = '''Complex files and info that are needed to perform the calculation. If the receptor and / or the
-                        ligand info is not defined, we generate them from that of the complex.'''
+complex_group_des = ("Complex files and info that are needed to perform the calculation. If the receptor and/or the "
+                     "ligand info is not defined, we generate them from that of the complex.")
 
-receptor_group_des = '''Receptor files and info that are needed to perform the calculation. If the receptor info is not 
-                         defined, we generate it from that of the complex.'''
+receptor_group_des = ("Receptor files and info that are needed to perform the calculation. If the receptor info is "
+                      "not defined, we generate it from that of the complex.")
 
 ligand_group_des = '''Ligand files and info that are needed to perform the calculation. If the ligand are not defined, 
                        we generate it from that of the complex.'''
 # Set up the MM/PBSA parser here. It clutters up the MMPBSA_App to do it there
 
 # noinspection PyTypeChecker
-parser = ArgumentParser(epilog=f'''This program will calculate binding free energies using end-state free energy 
-                                    methods on an ensemble of snapshots using a variety of implicit solvent 
-                                    models.\nBased on MMPBSA.py (version {__mmpbsa_version__}) and 
+parser = ArgumentParser(epilog=f'''gmx_MMPBSA is an effort to implement the GB/PB and others calculations in GROMACS.
+                                    \nBased on MMPBSA.py (version {__mmpbsa_version__}) and 
                                     AmberTools{__ambertools_version__}''',
-                        description=description, formatter_class=ArgumentDefaultsHelpFormatter)
+                        description=(description + '''This is the core of gmx_MMPBSA and it will do all the 
+                                    calculations'''),
+                        formatter_class=ArgumentDefaultsHelpFormatter)
 parser.add_argument('-v', '--version', action='version',
                     version='''%%(prog)s %s based on MMPBSA version %s and AmberTools %s''' %
                             (__version__, __mmpbsa_version__, __ambertools_version__))
@@ -141,7 +144,7 @@ group.add_argument('-deo', dest='dec_energies', metavar='FILE',
                   in [.csv]. This file is only written when specified on the
                   command-line.''')
 group.add_argument('-nogui', dest='gui', action='store_false', default=True,
-                   help='Open charts application (gmx_MMPBSA_ana) when all calculations finished')
+                   help='No open gmx_MMPBSA_ana after all calculations finished')
 group.add_argument('-s', '--stability', dest='stability', action='store_true', default=False,
                    help='''Perform stability calculation. Only the complex parameters are required. If
                          ligand is non-Protein (small molecule) type, then ligand *.mol2 file is 
@@ -150,26 +153,28 @@ group.add_argument('-s', '--stability', dest='stability', action='store_true', d
 
 group = parser.add_argument_group('Complex', complex_group_des)
 group.add_argument('-cs', dest='complex_tpr', metavar='<Structure File>', default=None, type=structure,
-                   help='''Structure file of the complex. If it is Protein-Ligand (small molecule)
-                         complex, make sure that you define -lm option. See -lm description below
-                         Allowed formats: *.tpr (recommended), *.pdb, *.gro''')
+                   help='''Structure file of the complex. If it is Protein-Ligand 
+                         (small molecule) complex and -cp is not defined, make 
+                         sure that you define -lm option. See -lm description 
+                         below. Allowed formats: *.tpr (recommended), *.pdb, 
+                         *.gro''')
 group.add_argument('-ci', dest='complex_index', metavar='<Index File>', default=None, type=index,
                    help='Index file of the bound complex.')
 group.add_argument('-cg', dest='complex_groups', metavar='index', nargs=2, default=None, type=int,
                    help='Groups of receptor and ligand in complex index file. The notation is as follows: "-cg '
                         '<Receptor group> <Ligand group>", ie. -cg 1 13')
 group.add_argument('-ct', dest='complex_trajs', nargs='*', metavar='TRJ', type=trajectory,
-                   help='''Input trajectories of the complex. Make sure the trajectory is fitted and
+                   help='''Complex trajectories. Make sure the trajectory is fitted and
                          pbc have been removed. Allowed formats: *.xtc (recommended), *.trr, *.pdb
                          (specify as many as you'd like).''')
 group.add_argument('-cp', dest='complex_top', metavar='<Topology>', default=None, type=topology,
-                   help='''Topology file of the complex.''')
+                   help='''The complex Topology file. When it is defined -lm option is not needed''')
 group.add_argument('-cr', dest='reference_structure', metavar='<PDB File>', default=None, type=pdb,
                    help='''Complex Reference Structure file. This option is optional but recommended 
                          (Use the PDB file used to generate the topology in GROMACS). If not defined,
                          the chains ID assignment (if the structure used in -cs does not have chain
                          IDs) will be done automatically according to the structure (can generate
-                         inconsistencies).''')
+                         wrong mapping).''')
 
 group = parser.add_argument_group('Receptor', receptor_group_des)
 group.add_argument('-rs', dest='receptor_tpr', metavar='<Structure File>', default=None, type=structure,
@@ -189,14 +194,14 @@ group.add_argument('-rp', dest='receptor_top', metavar='<Topology>', default=Non
 
 group = parser.add_argument_group('Ligand', ligand_group_des)
 group.add_argument('-lm', dest='ligand_mol2', metavar='<Structure File>', default=None, type=mol2,
-                   help='''A *.mol2 file of the unbound ligand used to parametrize ligand for GROMACS
-                         using Anetchamber. Must be defined if Protein-Ligand (small molecule) 
-                         complex was define. No needed for Proteins, DNA, RNA, Ions and Glycans.
-                         Antechamber output *.mol2 is recommended.''')
+                   help='''A *.mol2 file of the unbound ligand used to parametrize
+                         ligand for GROMACS using Antechamber. Must be defined
+                         if Protein-Ligand (small molecule) complex was define and -cp or -lp option are not defined.
+                         No needed for Proteins, DNA, RNA, Ions, Glycans or any ligand parametrized in the Amber 
+                         force fields. Must be the Antechamber output *.mol2.''')
 group.add_argument('-ls', dest='ligand_tpr', metavar='<Structure File>', default=None, type=structure,
-                   help='''Structure file of the unbound ligand. If ligand is a small molecule, make 
-                         sure that you define above -lm option. Allowed formats: *.tpr (recommended),
-                         *.pdb, *.gro''')
+                   help='''Structure file of the unbound ligand. If ligand is a small molecule and -lp is not defined,
+                   make sure that you define above -lm option. Allowed formats: *.tpr (recommended), *.pdb, *.gro''')
 group.add_argument('-li', dest='ligand_index', metavar='<Index File>', type=index,
                    default=None, help='Index file of the unbound ligand. Only if tpr file was define in -ls.')
 group.add_argument('-lg', dest='ligand_group', metavar='index', default=None, type=int,
@@ -225,13 +230,64 @@ group.add_argument('-rewrite-output', dest='rewrite_output', default=False,
 group.add_argument('--clean', dest='clean', action='store_true', default=False,
                    help='''Clean temporary files and quit.''')
 
-#### GUI parser
-anaparser = ArgumentParser(epilog='''This program is part of gmx_MMPBSA and will show a workspace with 
-                            charts to analyze the results''',
+# GUI parser
+description = 'This program is part of gmx_MMPBSA and will show a workspace to analyze the gmx_MMPBSA results'
+anaparser = ArgumentParser(epilog=f'gmx_MMPBSA is an effort to implement the GB/PB and others calculations in '
+                                  f'GROMACS. \nBased on MMPBSA.py (version {__mmpbsa_version__}) and '
+                                  f'AmberTools{__ambertools_version__}',
                            description=description,
                            formatter_class=ArgumentDefaultsHelpFormatter)
 anaparser.add_argument('-v', '--version', action='version',
                        version='%%(prog)s %s based on MMPBSA version %s' % (__version__, __mmpbsa_version__))
 group = anaparser.add_argument_group('Info file')
-group.add_argument('-p', '--path', dest='path', help='Path to gmx_MMPBSA info file', required=True,
-                   default=None)
+group.add_argument('-f', '--files', nargs='*', help='gmx_MMPBSA info files or container folder or list of them',
+                   type=Path, default='[.] Current working dir')
+group.add_argument('-r', '--recursive', help='Search recursively in this folder at depth = 1', action='store_true',
+                   default=False)
+
+# tester parser
+description = ('This program is part of gmx_MMPBSA and will allow you to run the different gmx_MMPBSA calculations '
+              'examples easily.')
+testparser = ArgumentParser(epilog=f'gmx_MMPBSA is an effort to implement the GB/PB and others calculations in '
+                                  f'GROMACS. \nBased on MMPBSA.py (version {__mmpbsa_version__}) and '
+                                  f'AmberTools{__ambertools_version__}',
+                           description=description,
+                           formatter_class=RawTextHelpFormatter)
+testparser.add_argument('-v', '--version', action='version',
+                       version='%%(prog)s %s based on MMPBSA version %s' % (__version__, __mmpbsa_version__))
+group = testparser.add_argument_group('Test options')
+group.add_argument('-t', dest='test', choices=['all', 'minimal', '3drism','ala_scan', 'decomp',
+                                            'prot_lig_mt', 'stability', 'ie', 'nmode', 'prot_prot', 'prot_lig_st',
+                                            'prot_dna', 'metalloprot_pep', 'prot_dna_rna_ions_lig', 'prot_glycan',
+                                            'memb_prot', 'prot_lig_charmm'], default='minimal',
+                   help='''\
+The level at which you want to take the test.
+* all - make all examples.
+* minimal - does a minimal test with a set of systems and analyzes that show 
+    that gmx_MMPBSA runs correctly. Only exclude 3drism and nmode because they
+    can take a long time and prot_lig_mt because it is quite similar to 
+    prot_lig_st
+[Systems]:
+* prot_lig_st             Protein-Ligand (Single trajectory approximation)
+* prot_prot               Protein-Protein
+* prot_dna                Protein-DNA
+* memb_prot               Protein-Membrane
+* prot_glycan             Protein-Glycan
+* metalloprot_pep         Metalloprotein-Peptide
+* prot_dna_rna_ions_lig   Protein-DNA-RNA-IONs-Ligand
+* prot_lig_charmm         Protein-Ligand (CHARMM force field)
+[Analysis]:
+* ala_scan                Alanine Scanning
+* stability               Stability calculation
+* decomp                  Decomposition Analysis
+* prot_lig_mt             Protein-Ligand (Multiple trajectory approximation)
+* ie                      Interaction Entropy approximation
+* nmode                   Entropy calculation using Normal Mode approximation 
+* 3drism                  Calculations using 3D-RISM approximation
+''')
+group.add_argument('-f', '--folder', help='Defines the folder to store all data', type=Path, default='[.] This folder')
+group.add_argument('-ng', '--nogui', help='No open gmx_MMPBSA_ana after all calculations finished',
+                   action='store_true',  default=False)
+group.add_argument('-n', '--num_processors', type=int, default=1,
+                   help='Defines the number of processor cores you want to use since gmx_MMPBSA in this test uses a '
+                        'single processor')

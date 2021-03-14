@@ -34,7 +34,7 @@ Classes:
 # ##############################################################################
 
 from GMXMMPBSA.exceptions import CalcError
-from GMXMMPBSA.exceptions import GMXMMPBSA_ERROR
+from GMXMMPBSA.exceptions import GMXMMPBSA_ERROR, GMXMMPBSA_WARNING
 import os
 import sys
 import numpy as np
@@ -557,10 +557,9 @@ class InteractionEntropyCalc:
     Class for Interaction Entropy calculation
     :return {IE_key: data}
     """
-    def __init__(self, ggas, key, INPUT, output):
+    def __init__(self, ggas, app, output):
         self.ggas = ggas
-        self.key = key
-        self.INPUT = INPUT
+        self.app = app
         self.output = output
         self.data = {}
 
@@ -570,30 +569,32 @@ class InteractionEntropyCalc:
     def _calculate(self):
         # boltzmann constant
         k = 0.001985875
+        if 'temperature' in self.app.INPUT:
+            temp = self.app.INPUT['temperature']
+        elif 'entropy_temp' in self.app.INPUT:
+            temp = self.app.INPUT['entropy_temp']
+            GMXMMPBSA_WARNING('entropy_temp variable is deprecated and will be remove in next versions!. Please, '
+                              'use temperature variable instead')
         energy_int = np.array([], dtype=np.float)
         a_energy_int = np.array([], dtype=np.float)
-        d_energy_int = np.array([], dtype=np.float)
         exp_energy_int = np.array([], dtype=np.float)
         ts = np.array([], dtype=np.float)
-
         for eint in self.ggas:
             energy_int = np.append(energy_int, eint)
             aeint = energy_int.mean()
             a_energy_int = np.append(a_energy_int, aeint)
             deint = eint - aeint
-            d_energy_int = np.append(d_energy_int, deint)
-            eceint = math.exp(deint / (k * self.INPUT['entropy_temp']))
+            eceint = math.exp(deint / (k * temp))
             exp_energy_int = np.append(exp_energy_int, eceint)
             aeceint = exp_energy_int.mean()
-            cts = k * self.INPUT['entropy_temp'] * math.log(aeceint)
+            cts = k * temp * math.log(aeceint)
             ts = np.append(ts, cts)
-        self.IntEnt = ts
-        self.data['IE_' + self.key] = self.IntEnt
-        nframes = len(self.IntEnt)
-        self.ie_frames = math.ceil(nframes * (self.INPUT['entropy_seg'] / 100))
-        self.value = self.IntEnt[self.ie_frames:].mean()
-        self.frames = [x for x in range(self.INPUT['startframe'], self.INPUT['endframe'] + self.INPUT['interval'],
-                                       self.INPUT['interval'])]
+        self.data = ts
+        self.ie_frames = math.ceil(self.app.numframes * (self.app.INPUT['entropy_seg'] / 100))
+        self.value = self.data[-self.ie_frames:].mean()
+        self.frames = [x for x in range(self.app.INPUT['startframe'],
+                                        self.app.INPUT['startframe'] + self.app.numframes * self.app.INPUT['interval'],
+                                        self.app.INPUT['interval'])]
 
     def save_output(self):
         with open(self.output, 'w') as out:
@@ -602,7 +603,7 @@ class InteractionEntropyCalc:
             out.write(f'Interaction Entropy per-frame:\n')
 
             out.write('Frame # | IE value\n')
-            for f, d in zip(self.frames, self.IntEnt):
+            for f, d in zip(self.frames, self.data):
                 out.write('{:d}  {:.2f}\n'.format(f,d))
 
 #+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+

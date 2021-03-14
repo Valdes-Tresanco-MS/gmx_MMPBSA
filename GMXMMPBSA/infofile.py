@@ -36,7 +36,11 @@ class InfoFile(object):
 
     # Make a list about which INPUT variables are editable
     EDITABLE_INFO_VARS = ['debug_printlevel', 'verbose',
-                          'csv_format', 'dec_verbose']
+                          'csv_format', 'dec_verbose', 'temperature', 'exp_ki', 'sys_name', 'entropy_seg']
+
+    EDIT_WITH_CARE_VARS = ['entropy']
+
+    DEPRECATED_VARS = ['entropy_temp']
 
     def __init__(self, app):
         """ Instantiate me """
@@ -53,16 +57,25 @@ class InfoFile(object):
 
         # Start with INPUT (and the editable vars). Allow this to recognize INFO
         # files from the last version of gmx_MMPBSA
-        outfile.write('# You can alter the variables below to change what info '
-                      'is printed out\n')
+        outfile.write('# You can alter the variables below\n')
         for var in InfoFile.EDITABLE_INFO_VARS:
-            outfile.write("INPUT['%s'] = %s\n" % (var,
-                                                  self.write_var(self.app.INPUT[var])))
+            outfile.write("INPUT['%s'] = %s\n" % (var, self.write_var(self.app.INPUT[var])))
+
+        outfile.write('#\n# You can alter the variables below with care\n')
+        outfile.write('# WARNING!: entropy variable only can be changed from 0 to entropy=2\n')
+        for var in InfoFile.EDIT_WITH_CARE_VARS:
+            outfile.write("INPUT['%s'] = %s\n" % (var, self.write_var(self.app.INPUT[var])))
+
+        outfile.write('#\n# These variables are deprecated and will be remove in next versions\n')
+        for var in InfoFile.DEPRECATED_VARS:
+            outfile.write("INPUT['%s'] = %s\n" % (var, self.write_var(self.app.INPUT[var])))
+
         outfile.write('#\n# MODIFY NOTHING BELOW HERE, OR GET WHAT YOU DESERVE\n')
         for var in list(self.app.INPUT.keys()):
-            if var in InfoFile.EDITABLE_INFO_VARS: continue
-            outfile.write("INPUT['%s'] = %s\n" % (var,
-                                                  self.write_var(self.app.INPUT[var])))
+            if (var in InfoFile.EDITABLE_INFO_VARS or var in InfoFile.EDIT_WITH_CARE_VARS or
+                var in InfoFile.DEPRECATED_VARS):
+                continue
+            outfile.write("INPUT['%s'] = %s\n" % (var, self.write_var(self.app.INPUT[var])))
 
         # Now print out the FILES
         for var in dir(self.app.FILES):

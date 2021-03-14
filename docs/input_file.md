@@ -30,24 +30,28 @@ characters (in which case the whole variable name is required). For example, "st
 
 ### **`&general` namelist variables**
 
-`assign_chainID` Defines the chains ID assignment mode. _It is ignored when defining a reference structure
+`assign_chainID` (Default = 0) 
+:   Defines the chains ID assignment mode. _It is ignored when defining a reference structure
 (recommended)_. If `assign_chainID = 1`, gmx_MMPBSA check if the structure has no chains ID and it is assigned according
-to the structure[^1]. If `assign_chainID = 2`, `gmx_MMPBSA` re-assign the chains ID, exist or not, according to the
+to the structure[^1]. If `assign_chainID = 2`, `gmx_MMPBSA` assign the chains ID, exist or not, according to the
 structure[^1] (can generate inconsistencies). If a `*.gro` file was used for complex structure
-(`-cs` flag) and not reference structure was provided, `gmx_MMPBSA` assume `assign_chainID = 1`. (Default = 0)
+(`-cs` flag) and not reference structure was provided, `gmx_MMPBSA` assume `assign_chainID = 1`. 
+
+    _New in v1.2.0_
 
   [^1]: _The chain ID is assigned according to two criteria: **terminal amino acids** and **residue numbering**. If
         both criteria or residue numbering changes are present, we assign a new chain ID. If there are terminal 
         amino acids but the numbering of the residue continues, we do not change the ID of the chain._
 
 
-`debug_printlevel` MMPBSA.py prints errors by raising exceptions, and not catching fatal errors. If debug_printlevel is
+`debug_printlevel`
+:   gmx_MMPBSA prints errors by raising exceptions, and not catching fatal errors. If `debug_printlevel` is
 set to 0, then detailed tracebacks (effectively the call stack showing exactly where in the program the error occurred)
-is suppressed, so only the error message is printed. If debug_printlevel is set to 1 or higher, all tracebacks are
+is suppressed, so only the error message is printed. If `debug_printlevel` is set to 1 or higher, all tracebacks are
 printed, which aids in debugging of issues. (Default = 0) (Advanced Option)
 
-!!! tip
-    _Now `gmx_MMPBSA` shows the command-line used to build AMBER topologies when `debug_printlevel = 1 or higher`._ 
+    _Changed in v1.2.0: Now `gmx_MMPBSA` shows the command-line used to build AMBER topologies when 
+    `debug_printlevel = 1` or higher_
 
 `startframe` (Default = 1)
 :   The frame from which to begin extracting snapshots from the full, concatenated trajectory comprised of
@@ -65,11 +69,14 @@ printed, which aids in debugging of issues. (Default = 0) (Advanced Option)
      * 1: perform QH
      * 2: perform IE
 
-  [3]: https://pubs.acs.org/doi/abs/10.1021/jacs.6b02682
+    !!! tip "Keep in mind"
+        The Interaction Entropy method is dependent on the number of frames and the simulated time. Additionally, 
+        the results may vary depending on the system flexibility or if constraints were used or not in the MD 
+        simulation. Please, consult the [paper][3]
 
-!!! tip "Improvement" 
-    _Included Interaction entropy aproximation._
- 
+    _Changed in v1.0.0: Include Interaction Entropy approximation_    
+
+  [3]: https://pubs.acs.org/doi/abs/10.1021/jacs.6b02682
 
 `entropy_seg` (Default = 25)
 :    Specify the representative segment (in %), starting from the `endframe`, for the calculation of the
@@ -77,15 +84,25 @@ printed, which aids in debugging of issues. (Default = 0) (Advanced Option)
      (`(endframe-startframe)/interval`) will be used to calculate the average Interaction Entropy. (Only
       if `entropy = 2`)
 
-`entropy_temp` (Default = 298.15)
-:    Specify the temperature to calculate the entropy term `−TΔS` (Only if `entropy` = 2). Avoid inconsistencies 
-      with defined internal temperature (298.15 K) when nmode is used.
+???+ warning "Deprecated in v1.4.0: It will be removed in next version. Use `temperature` instead"
+    
+    `entropy_temp` (Default = 298.15)
+    :    ~~Specify the temperature to calculate the entropy term `−TΔS` (Only if `entropy` = 2). Avoid inconsistencies 
+          with defined internal temperature (298.15 K) when `nmode` is used.~~
+
+`exp_ki` (Default = 0.0)
+:   Specify the experimental Ki in nM for correlations analysis. If not define or exp_ki = 0 then this system will be 
+omitted in the correlation analysis
+
+    _New in v1.4.0_
 
 `gmx_path` 
 :     Define an additional path to search for GROMACS executables. This path takes precedence over the path defined
       in the PATH variable. In these path the following executables will be searched: `gmx`, `gmx_mpi`, `gmx_d`,
-      `gmx_mpi_d` (Gromcas > 5.x.x), `make_ndx`, `editconf` and `trjconv` (GROMACS 4.x.x)
+      `gmx_mpi_d` (GROMACS > 5.x.x), `make_ndx`, `editconf` and `trjconv` (GROMACS 4.x.x)
 
+    _New in v1.1.1_
+    
 `interval` (Default = 1)
 :     The offset from which to choose frames from each trajectory file. For example, an interval of 2 will pull
       every 2nd frame beginning at startframe and ending less than or equal to endframe. 
@@ -109,6 +126,8 @@ printed, which aids in debugging of issues. (Default = 0) (Advanced Option)
     !!! tip Keep in mind
         We recommend activating this option with each new release because there may be changes and/or corrections in 
         the gmxMMPBSA data files.
+    
+    _New in v1.3.1_
 
 `PBRadii` (Default = 3)
 :   PBRadii to build amber topology files:
@@ -129,7 +148,8 @@ printed, which aids in debugging of issues. (Default = 0) (Advanced Option)
     * "leaprc.protein.ff14SB"
 
     !!! important "Keep in mind"
-        * You don't need to define it when you use a topology. Please refer to the section "How gmx_MMPBSA works"
+        * You don't need to define it when you use a topology. Please refer to the section 
+          ["How gmx_MMPBSA works"](howworks.md#how-gmx_mmpbsa-works)
         * _This notation format is the one used in tleap._
 
 
@@ -147,7 +167,7 @@ printed, which aids in debugging of issues. (Default = 0) (Advanced Option)
   
     !!! important "Keep in mind"
         * You don't need to define it when you use a topology or the ligand is protein-like type. Please refer to the 
-        section "How gmx_MMPBSA works"
+        section ["How gmx_MMPBSA works"](howworks.md#how-gmx_mmpbsa-works)
         * _This notation format is the one used in tleap._
 
         `*` We create a new folder (named _gmxMMPBSA_) in each one of the Amber's parameter folders 
@@ -172,19 +192,20 @@ printed, which aids in debugging of issues. (Default = 0) (Advanced Option)
     * 12: frcmod.ions234lm_hfe_tip3p
 
     !!! important "Keep in mind"
-        * You don't need to define it when you use a topology. Please refer to the section "How gmx_MMPBSA works"    
-        * This notation is simpler since these parameter files are generally the same for all systems        
+        * You don't need to define it when you use a topology. Please refer to the section 
+          ["How gmx_MMPBSA works"](howworks.md#how-gmx_mmpbsa-works)   
+        * This notation is simpler since these parameter files are generally the same for all systems
 
+`sys_name` (Default = None) (Optional)
+:   Define the System Name. This is useful when trying to analyze several systems at the same time or to calculate 
+the correlation between the predicted and the experimental energies. If the name is not defined, one will be 
+assigned when loading it in gmx_MMPBSA_ana according to the order in which it is done.
 
-`reuse_files` (Default = 0)
-:   Define whether the trajectories files will be reused when the program ends in error. 
+    !!! tip 
+        The definition of the system name is entirely optional, however it can provide greater clarity during 
+        the results analysi. All files associated with this system will be saved using its name.
 
-    * 0: Don't reuse. If there are temporary trajectory files, they will be deleted
-    * 1: Reuse existing trajectory file
-
-    !!! danger
-        Note that the trajectories files may not be generated correctly due to internal errors or interruptions. 
-        Please use it with care.
+    _New in v1.4.0_   
 
 `solvated_trajectory` (Default = 1)
 :   Define if it is necessary to build a clean trajectory with no water and ions
@@ -192,9 +213,19 @@ printed, which aids in debugging of issues. (Default = 0) (Advanced Option)
     * 0: Don’t
     * 1: Build clean trajectory
 
+    _New in v1.3.0_
+
+`temperature` (Default = 298.15)  
+: Specify the temperature to calculate experimental ΔG from Ki and the Interaction Entropy (Only if `entropy` = 2). 
+Avoid inconsistencies with defined internal temperature (298.15 K) when `nmode` or `qh` are used.  
+
+    !!! warning "Keep in mind"
+        Note that the `nmode` as `qh` model to calculate the entropy term are parameterized and will only work at 298.15 K
+   
+    _New in v1.4.0: Replace `entropy_temp`_   
 
 `use_sander` (Default = 0)
-:   use sander for energy calculations, even when `mmpbsa_py_energy` will suffice 
+:   use sander for energy calculations, even when `mmpbsa_py_energy` will suffice
     
     * 0: Use `mmpbsa_py_energy` when possible
     * 1: Always use sander
@@ -213,7 +244,7 @@ printed, which aids in debugging of issues. (Default = 0) (Advanced Option)
 ### **`&gb` namelist variables**
 
 `ifqnt` (Default = 0)
-:   Specifies whether a part of the system is treated with quantum mechanics. 
+:   Specifies whether a part of the system is treated with quantum mechanics.
     
     * 1: Use QM/MM
     * 0: Potential function is strictly classical 
@@ -228,7 +259,7 @@ printed, which aids in debugging of issues. (Default = 0) (Advanced Option)
         All models are now available with both `mmpbsa_py_energy` and `sander`
 
 `qm_residues`
-:   Comma- or semicolon-delimited list of complex residues to treat with quantum mechanics. All whitespace is 
+:   Comma- or semicolon-delimited list of complex residues to treat with quantum mechanics. All whitespace is
     ignored. All residues treated with quantum mechanics in the complex must be treated with quantum mechanics in the
     receptor or ligand to obtain meaningful results.
 
@@ -236,14 +267,14 @@ printed, which aids in debugging of issues. (Default = 0) (Advanced Option)
 :   Define Internal dielectric constant without use external *.mdin file
 
 `qm_theory` 
-:   Which semi-empirical Hamiltonian should be used for the quantum calculation. See its description in the QM/MM 
+:   Which semi-empirical Hamiltonian should be used for the quantum calculation. See its description in the QM/MM
     section of the manual for options.
 
     !!! danger
          No default, this must be specified.
 
 `qmcharge_com` (Default = 0)
-:   The charge of the quantum section for the complex. 
+:   The charge of the quantum section for the complex.
 
 `qmcharge_lig` (Default = 0)
 :   The charge of the quantum section of the ligand.
@@ -252,10 +283,10 @@ printed, which aids in debugging of issues. (Default = 0) (Advanced Option)
 :   The charge of the quantum section for the receptor.
 
 `qmcut` (Default = 9999.0)
-:   The cutoff for the qm/mm charge interactions. 
+:   The cutoff for the qm/mm charge interactions.
 
 `saltcon` (Default = 0.0)
-:   Salt concentration in Molarity. 
+:   Salt concentration in Molarity.
 
 `surfoff` (Default 0.0)
 :   Offset to correct (by addition) the value of the non-polar contribution to the solvation free energy term
@@ -264,7 +295,7 @@ printed, which aids in debugging of issues. (Default = 0) (Advanced Option)
 :   Surface tension value. Units in kcal/mol/Å^2^
 
 `molsurf` (Default 0)
-:   Define the algorithm to calculate the surface area for the nonpolar solvation termWhen 
+:   Define the algorithm to calculate the surface area for the nonpolar solvation termWhen
     
     * 0: LCPO (Linear Combination of Pairwise Overlaps)
     * 1: molsurf algorithm
@@ -296,7 +327,7 @@ printed, which aids in debugging of issues. (Default = 0) (Advanced Option)
       molecular solvent-accessible-surface area (SASA) or the molecular volume enclosed by SASA.
 
 `cavity_offset` (Default = -0.5692)
-:   Offset value used to correct non-polar free energy contribution. 
+:   Offset value used to correct non-polar free energy contribution.
 
     !!! note
         This is not used for `APBS`.
@@ -314,25 +345,25 @@ printed, which aids in debugging of issues. (Default = 0) (Advanced Option)
 :   The ratio between the longest dimension of the rectangular finite-difference grid and that of the solute.
 
 `scale` (Default = 2.0)
-:   Resolution of the Poisson Boltzmann grid. It is equal to the reciprocal of the grid spacing. 
+:   Resolution of the Poisson Boltzmann grid. It is equal to the reciprocal of the grid spacing.
 
 `istrng` (Default = 0.0)
 :   Ionic strength in Molarity. It is converted to mM for `PBSA` and kept as M for `APBS`.
 
 `linit` (Default = 1000) 
-:   Maximum number of iterations of the linear Poisson Boltzmann equation to try 
+:   Maximum number of iterations of the linear Poisson Boltzmann equation to try
 
 `prbrad` (Default = 1.4)
-:   Solvent probe radius in Angstroms. Allowed values are 1.4 and 1.6 
+:   Solvent probe radius in Angstroms. Allowed values are 1.4 and 1.6
 
 `radiopt` (Default = 1)
-:   The option to set up atomic radii according to: 
+:   The option to set up atomic radii according to:
 
     * 0: the prmtop, or 
     * 1: pre-computed values 
     
     !!! warning
-        * radiopt=0 is recommended which means using radii from the prmtop file for both the PB calculation and for 
+        `radiopt=0` is recommended which means using radii from the prmtop file for both the PB calculation and for 
         the NP. Check this [thread](http://archive.ambermd.org/201303/0548.html) and See Amber manual for more 
         complete description.
 
@@ -379,19 +410,23 @@ printed, which aids in debugging of issues. (Default = 0) (Advanced Option)
         performed, the namelist must be included (blank if desired)
 
 `mutant` (Default = "ALA") 
-:   Defines the residue by which it is going to mutate.
-    
-    !!! note
-        Allowed values are: "ALA" or "A" for Alanine scanning and "GLY" or "G" for Glycine scanning.
+:   Defines the residue by which it is going to mutate. Allowed values are: `"ALA"` or `"A"` for Alanine scanning and 
+    `"GLY"` or `"G"` for Glycine scanning.
+
+    _Changed in v1.3.0: Change mol (receptor or ligand) by mutant aminoacid (ALA or GLY)_
 
 `mutant_res`
-:   Define the specific residue that is going to be mutated. Use the following format CHAIN:RESNUM (eg: 'A: 350'). 
+:   Define the specific residue that is going to be mutated. Use the following format CHAIN:RESNUM (eg: 'A:350') or 
+CHAIN:RESNUM:INSERTION_CODE if exists (eg: "A:27:B"). 
 
     !!! important
+        * Only one residue for mutation is supported!
         * We recommend using the reference structure (-cr) to ensure the perfect match between the selected residue in 
         the defined structure or topology 
         * This option allow `gmx_MMPBSA` to do the mutation. This way the user does not have to provide the mutant 
         topology
+    
+    _Changed in v1.4.0: Allow mutation in antibodies since it support insertion code notation_
 
 ### **`&nmode` namelist variables**
 
@@ -448,7 +483,6 @@ spreadsheets.
         If the values 0 or 2 are chosen, only the Total contributions are required, so only those will be printed to the
         mdout files to cut down on the size of the mdout files and the time required to parse them.
 
-
 `idecomp`
 :   Energy decomposition scheme to use:
     
@@ -459,30 +493,77 @@ spreadsheets.
 
     !!! warning
         * No default. This must be specified!.
-        * This functionality requires sander.
-
 
 `print_res` (Default = "within 6")
-:   Select residues from the complex to print. This variable also accepts a sequence of individual residues and/or 
-    ranges. The different fields must be either comma- or semicolon-delimited. For example: print_res = "within 6", 
-    where _within_ corresponds to the keyword and _6_ to the maximum distance criterion in Angstroms necessary to 
-    select the residues from both the receptor and the ligand; or print_res = "1,3-10, 15, 100", or 
-    print_res = "1; 3-10; 15; 100". Both of these will print residues 1, 3 through 10, 15, and 100 from the complex 
-    topology file and the corresponding residues in either the ligand and/or receptor topology files.
+:   Select residues from the complex to print. The default selection should be sufficient in most cases, however we 
+have added several additional notations
+    
+    === "By Distance"
+        Notation: [ `within` `distance` ]
+        :   `within` corresponds to the keyword and `distance` to the maximum distance criterion in 
+            Angstroms necessary to select the residues from both the receptor and the ligand
 
-    ???+ warning
-        Using idecomp=3 or 4 (pairwise) with a very large number of printed residues and a large number of frames 
-        can quickly create very, very large temporary mdout files. Large print selections also demand a large amount 
-        of memory to parse the mdout files and write decomposition output file (~500 MB for just 250 residues, since 
-        that’s 62500 pairs!) It is not unusual for the output file to take a significant amount of time to print if 
-        you have a lot of data. This is most applicable to pairwise decomp, since the amount of data scales as O(N 2 ).
+        !!! example
+            `print_res="within 6"` Will print all residues within 6 Angstroms between receptor and 
+            ligand including both.
 
-    ???+ check
-        Based on the above, we decided to add a new option that limits the selection of the residues that will be 
-        printed by default. The new option (within 6) considerably reduces the number of residues to be printed 
-        reducing the computational cost. Additionally, it selects the interaction interface residues (according to 
-        the selected value) automatically, without the user needing to define them explicitly.
+    === "By distance with exclusion"
+        Notation: [ `within` `distance` `not` (`receptor` or `ligand`) ]
+        :   `within` corresponds to the keyword and `distance` to the maximum distance criterion in 
+            Angstroms necessary to select the residues from both the receptor and the ligand omitting the selected 
+            component ones
+        
+        !!! example
+            `print_res="within 6 not lig"` Will print all residues within 6 Angstroms between receptor and 
+            ligand omitting the ligand ones. 
 
+    === "Amino acid selection"
+        Notation: [ `CHAIN`/(`RESNUM` or `RESNUM-RESNUM`) ]
+        :   Print residues indivual or ranges. This notation also supports insertion codes, in which case you must 
+            define them individually
+
+        !!! example
+            `print_res="A/1,3-10,15,100"` This will print Chain A residues 1, 3 through 10, 15, and 100 from the 
+            complex topology file and the corresponding residues in either the ligand and/or receptor topology files.
+
+            Suppost that we can have the following sequence: A:LUE:5, A:GLY:6:A, A:THR:6:B, A:SER:6:C A:ASP:6D, A:ILE:7
+            
+            === "Supported notation"
+                
+                **Ranges selection**
+                :   `print_res="A/5-7` Will print all mentioned residues because all residues with insertion code are 
+                    contained in the range
+                
+                **Individual selection**
+                :   `print_res="A/5,6:B,6:C,7` Will print all mentioned residues except the residues A:6:A and A:6D
+                
+                **Multiple chain selection**
+                :   `print_res="A/5-10,100 B/34,56` Will print residues 3 through 10, 100 from chain A and residues 
+                    34 and 56 from Chain B mentioned residues except the residues A:6:A.
+
+            === "Wrong notation"
+                `print_res="A/5-6B,6D-7` Will end in error and since a range is unlikely to be selected in this way, we 
+                not support it.
+
+    === "All"
+
+        Notation: `all`
+        :   will print all residues
+
+        !!! danger
+            Using idecomp=3 or 4 (pairwise) with a very large number of printed residues and a large number of frames 
+            can quickly create very, very large temporary mdout files. Large print selections also demand a large amount 
+            of memory to parse the mdout files and write decomposition output file (~500 MB for just 250 residues, since 
+            that’s 62500 pairs!) It is not unusual for the output file to take a significant amount of time to print if 
+            you have a lot of data. This is most applicable to pairwise decomp, since the amount of data scales as  
+            O(N^2^).
+ 
+    !!! important
+        We recommend using the reference structure (-cr) to ensure the perfect match between the selected residue in 
+        the defined structure or topology 
+        
+    
+    _Changed in v1.4.0: Improve residue selection_
 
 ### **`&rism` namelist variables**
 
@@ -563,7 +644,7 @@ spreadsheets.
 ## Sample input files
 
 !!! tip
-    You can refer to the [examples](../Examples/) to understand the input file in a practical way.
+    You can refer to the [examples](examples/3D-RISM/README.md) to understand the input file in a practical way.
 
 ### GB and PB
 
@@ -616,7 +697,7 @@ startframe=5, endframe=21, verbose=2, interval=1,
 # approximation or the Interaction Entropy (IE)
 # (https://pubs.acs.org/doi/abs/10.1021/jacs.6b02682) approximation
 protein_forcefield="oldff/leaprc.ff99SB", entropy=2, entropy_seg=25,
-entropy_temp=298
+temperature=298
 /
 
 &gb

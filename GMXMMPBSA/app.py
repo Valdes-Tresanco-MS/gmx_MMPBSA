@@ -21,7 +21,7 @@ from os.path import split
 import shutil
 from pathlib import Path
 import logging
-from PyQt5.QtWidgets import QApplication
+
 # logFormatter = logging.Formatter("%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s")
 # rootLogger = logging.getLogger(__name__)
 # logging.getLogger(__name__).addHandler(logging.StreamHandler(sys.stdout))
@@ -41,12 +41,12 @@ try:
     from GMXMMPBSA.exceptions import GMXMMPBSA_ERROR, InputError, CommandlineError
     from GMXMMPBSA.infofile import InfoFile
     from GMXMMPBSA import main
-    from GMXMMPBSA.analyzer import GMX_MMPBSA_ANA
-    from GMXMMPBSA.commandlineparser import anaparser
+    from GMXMMPBSA.tester import run_test
+    from GMXMMPBSA.commandlineparser import anaparser, testparser
 except ImportError:
     import os
     amberhome = os.getenv('AMBERHOME') or '$AMBERHOME'
-    logging.error('Could not import Amber Python modules. Please make sure '
+    GMXMMPBSA_ERROR('Could not import Amber Python modules. Please make sure '
                       'you have sourced %s/amber.sh (if you are using sh/ksh/'
                       'bash/zsh) or %s/amber.csh (if you are using csh/tcsh)' %
                       (amberhome, amberhome))
@@ -76,14 +76,13 @@ def gmxmmpbsa():
 
     # Instantiate the main MMPBSA_App
     app = main.MMPBSA_App(MPI)
-
+    logging.info('Starting')
     # Read the command-line arguments
     try:
         app.get_cl_args(args[1:])
     except CommandlineError as e:
         sys.stderr.write('%s: %s' % (type(e).__name__, e) + '\n')
         sys.exit(1)
-    logging.info('Started')
 
     # Perform our MMPBSA --clean now
     if app.FILES.clean:
@@ -125,20 +124,34 @@ def gmxmmpbsa():
 
 
 def gmxmmpbsa_ana():
+    try:
+        from PyQt5.QtWidgets import QApplication
+        from GMXMMPBSA.analyzer.gui import GMX_MMPBSA_ANA
+        from GMXMMPBSA.analyzer.utils import get_files
+    except ImportError as e:
+        GMXMMPBSA_ERROR('Could not import PyQt5. gmx_MMPBSA_ana will be disabled until you install it')
+
     app = QApplication(sys.argv)
     try:
         parser = anaparser.parse_args(sys.argv[1:])
     except CommandlineError as e:
-        sys.stderr.write('%s: %s' % (type(e).__name__, e) + '\n')
+        GMXMMPBSA_ERROR('%s: %s' % (type(e).__name__, e))
         sys.exit(1)
-    path = Path(parser.path).absolute()
-    if not path.exists():
-        print('Path not found')
-        sys.exit(1)
+    ifiles = get_files(parser)
     app.setApplicationName('gmx_MMPBSA Analyzer (gmx_MMPBSA_ana)')
-    w = GMX_MMPBSA_ANA(path.as_posix())
+    w = GMX_MMPBSA_ANA()
+    w.initialize(ifiles)
     w.show()
     sys.exit(app.exec())
+
+
+def gmxmmpbsa_test():
+    try:
+        parser = testparser.parse_args(sys.argv[1:])
+    except CommandlineError as e:
+        GMXMMPBSA_ERROR('%s: %s' % (type(e).__name__, e))
+        sys.exit(1)
+    run_test(parser)
 
 if __name__ == '__main__':
 

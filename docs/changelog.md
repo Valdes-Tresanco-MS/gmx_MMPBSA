@@ -4,21 +4,71 @@ title: Changelog
 ---
 
 # Changelog
-## Upcoming release (minor v1.4.0)
-This version is almost entirely focused on gmx_MMPBSA_ana
+## [gxm_MMPBSA v1.4.0 (xx/03/2021)](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/releases/tag/v1.4.0)
+This release focuses almost entirely on `gmx_MMPBSA_ana` with minor issues fixed in `gmx_MMPBSA`
 ### Additions
-- New set of graphics (heatmap)
-- Interactive visualization with PyMOL
-- Multiple systems to analyze in the same session
-- Calculations and plotting of the correlation between the systems
+- New start window to select options  
+    - Option to make correlation (Pearson and Spearman coefficients)
+    - Option to hide decomposition data
+    - Option to not compute charts with non-significant values during all the trajectory
+    - Option to not include empty (non-significant values) term in bar charts
+    - Selection of the components to display in addition to delta (complex, receptor, and ligand)
+    - Toggle the chart toolbar for a cleaner visualization.
+    - An informative table with selected systems data
+        - Option to exclude any system
+        - Option to change:
+            - The system name
+            - The experimental Ki for correlation
+            - The temperature to calculate the Experimental Energy and the Interaction Entropy
+- Multiple systems to analyze in the same session  
+- Correlation dock
+    - Multiple models at the same time
+    - Graphs and correlation data for each calculated energy term (ΔH, ΔH+IE, ΔH+NMODE and ΔH+QH)  
+    - Table with the experimental energy of the systems, and the data of the selected model
+- New arguments flags for gmx_MMPBSA_ana (See the [gmx_MMPBSA_ana documentation]())
+    - replace `-p` by `-f`
+    - `-f` accept a folder, single info file o a list of them
+    - New flag `-r`. This flag allows to load all system inside a selected folder
+- New graphical options
+    - New set of graphics (heatmap)
+    - Interactive visualization with PyMOL(5 instances).
+    - Regression plot for correlation 
+- Plot features
+    - Added Standard deviation to bar plots  
+    - Added rolling average to line plots
+    - Added indicators for the interval and value in IE chart
+- Multiprocessing application for test (gmx_MMPBSA_test)  
 
 ### Fixes
-- Graphics improvements
+- Now `gmx_MMPBSA_ana` shows stability results as expected
+- Some errors in the documentation
 
 ### Changes
-- Residues notation: CHAIN:RESNAME:RESNUMBER instead of Amber residue index
+- Converted analyzer.py into a sub-module for more flexibility, organization and portability
+- Residues notation for mutation: CHAIN:RESNAME:RESNUMBER:ICODE instead of Amber residue index
+- Improve the selection method in decomposition calculation
+- Replaced `entropy_temp` (deprecated) by `temperature`. See    
 - IE in API
 - Color Palette
+- Use seaborn and matplotlib for charts
+- Use pandas Dataframe and numpy to store data
+- Changed the data structure to implement the management of the range of frames in future versions
+- Improved data export: now any item can be exported as CSV file
+- Improved the documentation
+    - Improve examples documentation
+    - Added changelog button at home
+    - Separated changelog in a new header
+    - Added tags to mark the history of changes of variables and functionalities
+  
+
+## [gxm_MMPBSA v1.3.3 (09/03/2021)](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/releases/tag/v1.3.3)
+### Fixes
+* fixed Boltzmann constant for IE
+* fix mutation in ligand
+* fixed analyzer error when interval > 1
+* fixed residue selection within
+* fixed ChainID assignation when reference structure is defined
+* fixed the selection to print when decomposition
 
 ## [gxm_MMPBSA v1.3.2 (01/03/2021)](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/releases/tag/v1.3.2) 
 ### Additions
@@ -33,8 +83,8 @@ This version is almost entirely focused on gmx_MMPBSA_ana
 * Error when ligand and/or receptor are discontinuous and numbered non-consecutively
 * Non-critical errors and inconsistencies in documentation
 ### Changes
-* `receptor_mask` and `ligand_mask` have been removed from input file variables. Now we extract the amber mask directly
-based on the GROMACS index file
+* `receptor_mask` and `ligand_mask` have been removed from input file variables. Now we extract the amber mask directly 
+  based on the GROMACS index file
 * The receptor and ligand mapping in the complex was improved. Now we use a method based on the GROMACS index file
 * The method `Map` of the `system_MMPBSA` class has been restructured. Now always processes amber masks
 * Changing the IE calculation function to a class
@@ -54,7 +104,6 @@ based on the GROMACS index file
 
 ### Changes
 * Documentation banner
-
 
 ## [gmx_MMPBSA-v1.3.0](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/releases/tag/v1.3.0)
 
@@ -85,8 +134,8 @@ based on the GROMACS index file
 ## [gmx_MMPBSA v1.2.0](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/releases/tag/v1.2.0)
 ### Additions
 
-* New ligand force field (Zwitterionic aminoacids)
-* A new flag (-cr) added for defining a reference structure (guarantee a better consintency in generated PDB files)
+* New ligand force field (Zwitterionic amino acids)
+* A new flag (-cr) added for defining a reference structure (guarantee a better consistency in generated PDB files)
 * API documentation
 
 ### Fixes
@@ -94,9 +143,9 @@ based on the GROMACS index file
 * Best handling of structure files
 
 ### Changes
-gmx editconf is used to generate PDB files instead of gmx trjconv (#14)
-gmx_MMPBSA data is copied in AMBER as an independent folder
-*gro files can be used as a MD Structure+mass(db) file
+`gmx` `editconf` is used to generate PDB files instead of `gmx` `trjconv` (#14)
+`gmx_MMPBSA` data is copied in AMBER as an independent folder
+*.gro files can be used as a MD Structure+mass(db) file
 Updated tutorial list in README (Protein_DNA_RNA_Ion_ligand BFE calculations)
 
 ## [gmx_MMPBSA v1.1.1](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/releases/tag/v1.1.1)

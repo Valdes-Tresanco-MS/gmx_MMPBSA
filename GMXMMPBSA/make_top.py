@@ -23,10 +23,9 @@ Generate Amber topology files from GROMACS files
 import os
 import parmed
 from GMXMMPBSA.exceptions import *
-from GMXMMPBSA.utils import checkff
+from GMXMMPBSA.utils import checkff, selector, get_dist
 from GMXMMPBSA.alamdcrd import _scaledistance
 import subprocess
-from math import sqrt
 from pathlib import Path
 import logging
 import string
@@ -52,9 +51,6 @@ ions = ["AG", "AL", "Ag", "BA", "BR", "Be", "CA", "CD", "CE", "CL", "CO", "CR", 
         "SR", "Sm", "Sn", "TB", "TL", "Th", "Tl", "Tm", "U4+", "V2+", "Y", "YB2", "ZN", "Zr"]
 
 
-def dist(coor1, coor2):
-    return sqrt((coor2[0] - coor1[0]) ** 2 + (coor2[1] - coor1[1]) ** 2 + (coor2[2] - coor1[2]) ** 2)
-
 
 class CheckMakeTop:
     def __init__(self, FILES, INPUT, external_programs):
@@ -63,10 +59,8 @@ class CheckMakeTop:
         self.external_progs = external_programs
         self.use_temp = False
         self.log = open('gmx_MMPBSA.log', 'a')
-        self.print_residues = 'within' in self.INPUT['print_res']  # FIXME: this is pretty ugly
-        self.within = 4
-        if self.print_residues:
-            self.within = float(self.INPUT['print_res'].split()[1])
+
+        self.mut_label = None
 
         # Define Gromacs executable
         self.make_ndx = self.external_progs['make_ndx']
@@ -187,9 +181,15 @@ class CheckMakeTop:
             if l3.wait():
                 GMXMMPBSA_ERROR('%s failed when querying %s' % (parmchk2, self.FILES.ligand_mol2))
 
+        # check if the ligand force field is gaff or gaff2 and get if the ligand mol2 was defined
+        if self.INPUT['ligand_forcefield'] in ["leaprc.gaff", "leaprc.gaff2"]:
+            if not self.FILES.complex_top and not self.FILES.ligand_mol2:
+                GMXMMPBSA_WARNING('You must define the ligand mol2 file (-lm) if ligand_forcefield is "leaprc.gaff" or '
+                                  '"leaprc.gaff2". If the ligand is protein type ignore this warning')
+
         # make a temp receptor pdb (even when stability) if decomp to get correct receptor residues from complex. This
         # avoid get multiples molecules from complex.split()
-        if self.INPUT['decomprun'] and self.print_residues:
+        if self.INPUT['decomprun']:
             if self.FILES.stability:
                 self.use_temp = True
                 logging.warning('When decomp is defined, we generate a receptor file in order to extract interface '
@@ -378,7 +378,7 @@ class CheckMakeTop:
         if self.INPUT['alarun']:
             logging.info('Building Mutant Complex Topology...')
             # get mutation index in complex
-            com_mut_index, part_mut, part_index, mut_label = self.getMutationIndex()
+            com_mut_index, part_mut, part_index, self.mut_label = self.getMutationIndex()
             mut_com_amb_prm = self.makeMutTop(com_amb_prm, com_mut_index)
             # change de PBRadii
             action = ChRad(mut_com_amb_prm, PBRadii[self.INPUT['PBRadii']])
@@ -460,7 +460,7 @@ class CheckMakeTop:
         self.mut_ligand_list = {}
 
         if self.INPUT['alarun']:
-            com_mut_index, part_mut, part_index, mut_label = self.getMutationIndex()
+            com_mut_index, part_mut, part_index, self.mut_label = self.getMutationIndex()
             if part_mut == 'REC':
                 logging.info('Detecting mutation in Receptor. Building Mutant Receptor Structure...')
                 self.mutant_ligand_pmrtop = None
@@ -492,22 +492,42 @@ class CheckMakeTop:
 
     def reswithin(self):
         # Get residue form receptor-ligand interface
-        if self.print_residues and self.INPUT['decomprun']:
-            res_list = []
-            for i in self.resl['REC']:
-                for j in self.resl['LIG']:
-                    for rat in self.complex_str.residues[i - 1].atoms:
-                        rat_coor = [rat.xx, rat.xy, rat.xz]
-                        for lat in self.complex_str.residues[j - 1].atoms:
-                            lat_coor = [lat.xx, lat.xy, lat.xz]
-                            if dist(rat_coor, lat_coor) <= self.within:
-                                if i not in res_list:
-                                    res_list.append(i)
-                                if j not in res_list:
-                                    res_list.append(j)
-                                break
-            res_list.sort()
-            self.INPUT['print_res'] = ','.join([str(x) for x in res_list])
+        if self.INPUT['decomprun']:
+            if self.INPUT['print_res'] == 'all':
+                return
+            else:
+                dist, exclude, res_selection = selector(self.INPUT['print_res'])
+                res_list = []
+
+                if dist:
+                    for i in self.resl['REC']:
+                        for j in self.resl['LIG']:
+                            for rat in self.complex_str.residues[i - 1].atoms:
+                                rat_coor = [rat.xx, rat.xy, rat.xz]
+                                for lat in self.complex_str.residues[j - 1].atoms:
+                                    lat_coor = [lat.xx, lat.xy, lat.xz]
+                                    if get_dist(rat_coor, lat_coor) <= dist:
+                                        if i not in res_list and exclude != 'REC':
+                                            res_list.append(i)
+                                        if j not in res_list and exclude != 'LIG':
+                                            res_list.append(j)
+                                        break
+                elif res_selection:
+                    for i in self.resl['REC']:
+                        rres = self.complex_str.residues[i - 1]
+                        if [rres.chain, rres.number, rres.insertion_code] in res_selection:
+                            res_list.append(i)
+                            res_selection.remove([rres.chain, rres.number, rres.insertion_code])
+                    for j in self.resl['LIG']:
+                        lres = self.complex_str.residues[j - 1]
+                        if [lres.chain, lres.number, lres.insertion_code] in res_selection:
+                            res_list.append(j)
+                            res_selection.remove([lres.chain, lres.number, lres.insertion_code])
+                res_list.sort()
+                self.INPUT['print_res'] = ','.join([str(x) for x in res_list])
+                if res_selection:
+                    for res in res_selection:
+                        GMXMMPBSA_WARNING("We couldn't find this residue CHAIN:{} RES_NUM:{} ICODE: {}".format(*res))
 
     def cleantop(self, top_file, temp_top_file):
         """
@@ -682,23 +702,35 @@ class CheckMakeTop:
 
     def getMutationIndex(self):
         label = ''
+        icode_ = ''
         if not self.INPUT['mutant_res']:
             GMXMMPBSA_ERROR("No residue for mutation was defined")
-        chain_, resnum_ = self.INPUT['mutant_res'].split(':')
+        not_list = self.INPUT['mutant_res'].split(':')
+        if len(not_list) == 2:
+            chain_, resnum_ = not_list
+        elif len(not_list) == 3:
+            chain_, resnum_, icode_ = not_list
+        else:
+            GMXMMPBSA_ERROR("Wrong notation... You most define the residue to mutate as follow: CHAIN:RES_NUMBER or "
+                            "CHAIN:RES_NUMBER:INSERTION_CODE")
         chain = str(chain_).strip().upper()
         resnum = int(str(resnum_).strip())
+        icode = str(icode_).strip().upper()
 
         if not chain or not resnum:
-            GMXMMPBSA_ERROR("Wrong notation... You most define the residue to mutate as follow: CHAIN:RES_NUMBER")
+            GMXMMPBSA_ERROR("Wrong notation... You most define the residue to mutate as follow: CHAIN:RES_NUMBER or "
+                            "CHAIN:RES_NUMBER:INSERTION_CODE")
         idx = 1
         for res in self.complex_str.residues:
-            if res.number == int(resnum) and res.chain == chain:
+            if res.number == int(resnum) and res.chain == chain and res.insertion_code == icode:
                 try:
                     parmed.residue.AminoAcidResidue.get(res.name, True)
                 except KeyError as e:
-                    GMXMMPBSA_ERROR('The mutation must be an amino acid residue ...')
-
-                label = f'{res.chain}:{res.name}:{res.number}'
+                    GMXMMPBSA_ERROR(f'You attempt to mutate {res.chain}:{res.name}. The mutation must be an amino acid '
+                                    f'residue...')
+                label = f"{res.name}[{res.chain}:{res.number}]{self.INPUT['mutant']}"
+                if icode:
+                    label = f"{res.name}[{res.chain}:{res.number}:{res.insertion_code}]{self.INPUT['mutant']}"
                 break
             idx += 1
 
@@ -711,7 +743,10 @@ class CheckMakeTop:
         else:
             part_index = None
             part_mut = None
-            GMXMMPBSA_ERROR('Residue {}:{} not found'.format(chain, resnum))
+            if icode:
+                GMXMMPBSA_ERROR(f'Residue {chain}:{resnum}:{icode} not found')
+            else:
+                GMXMMPBSA_ERROR(f'Residue {chain}:{resnum} not found')
 
         return (idx, part_mut, part_index, label)
 
@@ -777,7 +812,6 @@ class CheckMakeTop:
         ca_atom = None
         mut_top.residues[mut_index].name = mut_aa
         ind = 0
-
         for at in mut_top.residues[mut_index].atoms:
             if mut_aa == 'GlY':
                 if at.name == 'CA':
@@ -908,6 +942,7 @@ class CheckMakeTop:
                 assign = True
                 logging.warning('No reference structure was found and a gro file was used for the complex '
                                 'structure. Assigning chains ID...')
+
             if assign:
                 chains_ids = []
                 chain_by_num = False
@@ -983,6 +1018,9 @@ class CheckMakeTop:
                 if has_nucl == 1:
                     logging.warning('This structure contains nucleotides. We recommend that you use the reference '
                                     'structure')
+
+        # Save fixed complex structure for analysis and set it in FILES to save in info file
+        com_str.save(self.FILES.prefix + 'COM_FIXED.pdb', 'pdb', True, renumber=False)
 
     def molstr(self, data):
 

@@ -50,7 +50,6 @@ from GMXMMPBSA.output_file import (write_stability_output, write_binding_output,
 from GMXMMPBSA.parm_setup import MMPBSA_System
 from GMXMMPBSA.make_top import CheckMakeTop
 from GMXMMPBSA.timer import Timer
-from GMXMMPBSA.analyzer import run as ANA_run
 
 logging.getLogger(__name__)
 
@@ -157,7 +156,7 @@ class MMPBSA_App(object):
 
         if INPUT['alarun']:
             self.stdout.write('Mutating trajectories...\n')
-        self.mut_str, mutant_residue = make_mutant_trajectories(INPUT, FILES,
+        _, mutant_residue = make_mutant_trajectories(INPUT, FILES,
                                                                 self.mpi_rank, self.external_progs['cpptraj'],
                                                                 self.normal_system, self.mutant_system, self.pre)
 
@@ -588,6 +587,8 @@ class MMPBSA_App(object):
          FILES.mutant_receptor_prmtop, FILES.mutant_ligand_prmtop) = maketop.buildTopology()
         logging.info('Building AMBER Topologies from GROMACS files...Done.\n')
         INPUT['receptor_mask'], INPUT['ligand_mask'] = maketop.get_masks()
+        self.mut_str = maketop.mut_label
+        self.FILES.complex_fixed = self.FILES.prefix + 'COM_FIXED.pdb'
 
         self.normal_system = MMPBSA_System(FILES.complex_prmtop, FILES.receptor_prmtop, FILES.ligand_prmtop)
         self.using_chamber = self.normal_system.complex_prmtop.chamber
@@ -686,18 +687,19 @@ class MMPBSA_App(object):
 
         self.remove(self.INPUT['keep_files'])
 
-        logging.info('\n\ngmx_MMPBSA Finished! Thank you for using. Please '
-                          'cite us if you publish this work with this paper:\n   '
-                          'Coming soon\n   '
-                          ' and \n'
-                          'Miller III, B. R., McGee Jr., T. D., Swails, J. M. '
-                          'Homeyer, N. Gohlke, H. and Roitberg, A. E.\n   '
-                          'J. Chem. Theory Comput., 2012, 8 (9) pp 3314-3321\n')
+        logging.info('\n\ngmx_MMPBSA Finished! Thank you for using. Please cite us if you publish this work with this '
+                     'paper:\n    Coming soon\n\nAlso consider citing MMPBSA.py\n    Miller III, B. R., McGee Jr., '
+                     'T. D., Swails, J. M. Homeyer, N. Gohlke, H. and Roitberg, A. E.\n    J. Chem. Theory Comput., '
+                     '2012, 8 (9) pp 3314-3321\n')
         self.MPI.Finalize()
 
-        if self.FILES.gui and not self.FILES.stability:
-            self.stdout.write('Opening GUI to analyze results...')
-            ANA_run(self.FILES.prefix + 'info')
+        if self.FILES.gui:
+            import subprocess
+            self.stdout.write('Opening gmx_MMPBSA_ana to analyze results...\n')
+            g = subprocess.Popen(['python', '/home/mario/Drive/scripts/gmx_MMPBSA/run_ana.py', '-f',
+                                  self.FILES.prefix + 'info'])
+            if g.wait():
+                sys.exit(1)
         else:
             sys.exit(0)
 
@@ -712,6 +714,10 @@ class MMPBSA_App(object):
             self.FILES = self.clparser.parse_args(args)
         else:
             self.FILES = object()
+        # save args in gmx_MMPBSA.log
+        with open('gmx_MMPBSA.log', 'a') as log:
+            log.write('[INFO   ] Command-line\n'
+                      '    gmx_MMPBSA '+ ' '.join(args) + '\n')
         # Broadcast the FILES
         self.FILES = self.MPI.COMM_WORLD.bcast(self.FILES)
         # Hand over the file prefix to the App instance
@@ -733,6 +739,9 @@ class MMPBSA_App(object):
         self.INPUT = self.input_file.Parse(infile)
         _debug_printlevel = self.INPUT['debug_printlevel']
         self.input_file_text = str(self.input_file)
+        with open('gmx_MMPBSA.log', 'a') as log:
+            log.write('[INFO   ] Input file\n')
+            log.write(self.input_file_text)
 
     def process_input(self):
         """
@@ -977,10 +986,10 @@ class MMPBSA_App(object):
                         self.calc_types[key]['ligand'],
                         self.INPUT['verbose'], self.using_chamber)
 
-                    if self.INPUT['entropy'] == 2 and key != 'nmode':
+                    if self.INPUT['entropy'] == 2 and key != 'nmode' and 'ie' not in self.calc_types:
                         edata = self.calc_types[key]['delta'].data['DELTA G gas']
-                        ie = InteractionEntropyCalc(edata, key, self.INPUT, self.pre + 'iteraction_entropy.dat')
-                        self.calc_types['ie'] = IEout(ie.data, ie.value, ie.frames, ie.ie_frames, key)
+                        ie = InteractionEntropyCalc(edata, self, self.pre + 'iteraction_entropy.dat')
+                        self.calc_types['ie'] = IEout(ie.data, ie.value, ie.frames, ie.ie_frames)
                         # self.calc_types[self.key]['delta'].data['DELTA G gas']
                 else:
                     self.calc_types[key]['complex'].fill_composite_terms()
@@ -1001,10 +1010,10 @@ class MMPBSA_App(object):
                         self.calc_types['mutant'][key]['receptor'],
                         self.calc_types['mutant'][key]['ligand'],
                         self.INPUT['verbose'], self.using_chamber)
-                    if self.INPUT['entropy'] == 2 and key != 'nmode':
+                    if self.INPUT['entropy'] == 2 and key != 'nmode' and 'ie' not in self.calc_types['mutant']:
                         edata = self.calc_types['mutant'][key]['delta'].data['DELTA G gas']
-                        mie = InteractionEntropyCalc(edata, key, self.INPUT, self.pre + 'mutant_iteraction_entropy.dat')
-                        self.calc_types['mutant']['ie'] = IEout(mie.data, mie.value, mie.frames, mie.ie_frames, key)
+                        mie = InteractionEntropyCalc(edata, self, self.pre + 'mutant_iteraction_entropy.dat')
+                        self.calc_types['mutant']['ie'] = IEout(mie.data, mie.value, mie.frames, mie.ie_frames)
                 else:
                     self.calc_types['mutant'][key]['complex'].fill_composite_terms()
 

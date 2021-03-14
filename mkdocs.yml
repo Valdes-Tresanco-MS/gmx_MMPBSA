@@ -98,8 +98,8 @@ markdown_extensions:
   - pymdownx.keys
   - pymdownx.magiclink:
       repo_url_shorthand: true
-      user: squidfunk
-      repo: mkdocs-material
+      user: Valdes-Tresanco-MS
+      repo: gmx_MMPBSA
   - pymdownx.mark
   - pymdownx.smartsymbols
   - pymdownx.superfences:
@@ -130,6 +130,7 @@ nav:
     - Python API: api.md
     - gmx_MMPBSA_ana: analyzer.md
   - Examples:
+    - Examples: examples/README.md
     - Analysis:
       - 3D-RISM: examples/3D-RISM/README.md
       - Alanine scanning: examples/Alanine_scanning/README.md
@@ -148,8 +149,10 @@ nav:
       - Protein-glycan: examples/Protein_glycan/README.md
       - Membrane proteins: examples/Protein_membrane/README.md
     - Charmm Support:
-        - Charmm and MM(PB/GB)SA: charmm.md
         - Protein-Ligand (ST): examples/Protein_ligand_CHARMMff/README.md
-  - Support:
+  - Info:
     - Information: information.md
+    - Support: support.md
+  - Changelog:
     - Changelog: changelog.md
+    - Compatibility: compatibility.md

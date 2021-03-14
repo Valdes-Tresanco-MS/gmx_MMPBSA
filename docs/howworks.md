@@ -35,8 +35,6 @@ alanine or glycine scanning or the interaction residues during decomposition ana
 the binding free energies and/or entropies are estimated using the selected models. Finally, in the last step `Analysis`,
 the results can be analyzed by using the graphical user interface `gmx_MMPBSA_ana`.
 
-  
-
 ![Placeholder](assets/images/workflow.svg)
 **Figure 1:** gmx_MMPBSA general workflow
 
@@ -49,10 +47,10 @@ field is used, AMBER's topologies are generated from GROMACS topologies exclusiv
 
 **Table 1:** Required input files for every force field 
 
-| Force field | Structure | Index | Trajectory | Topology | Reference Structure | Small Molecule Mol2 |
-|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| AMBER | tpr, gro, pdb | ndx | xtc, trr, pdb | Optional | Optional | Only if not top |
-| CHARMM | tpr, gro, pdb | ndx | xtc, trr, pdb | Always | Optional | No|
+| Force field |   Structure   | Index |  Trajectory   | Topology | Reference Structure | Small Molecule Mol2 |
+|:-----------:|:-------------:|:-----:|:-------------:|:--------:|:-------------------:|:-------------------:|
+|    AMBER    | tpr, gro, pdb |  ndx  | xtc, trr, pdb | Optional |      Optional       |   Only if not top   |
+|   CHARMM    | tpr, gro, pdb |  ndx  | xtc, trr, pdb |  Always  |      Optional       |         No          |
 
 ## Topology preparation
 
@@ -111,9 +109,6 @@ In this section, we will go in deatil about each file and what they are used for
 **The following figure shows the process to generate AMBER topologies depending on the force field.** 
 
 ![Placeholder](assets/images/topgeneration.svg)
-**Figure 2:** Topology generation workflow for Single Trajectory Approximation 
-
-## Analysis with `gmx_MMPBSA` analyzer tool (`gmx_MMPBSA_ana`)
-gmx_MMPBSA_ana is very intuitive and easy to use. We will expand this section soon
+**Figure 2:** Topology generation workflow for Single Trajectory Approximation
 
 [1]: https://pubs.acs.org/doi/10.1021/ct300418h

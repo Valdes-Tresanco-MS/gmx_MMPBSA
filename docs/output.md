@@ -11,13 +11,13 @@ The header of the output file will contain information about the calculation. It
 well as the names of all files that were used in the calculation (topology files and coordinate file(s)). If the masks
 were not specified, it prints its best guess so that you can verify its accuracy, along with the residue name of the
 ligand (if it is only a single residue). The energy and entropy contributions are broken up into their components as
-they are in sander and nmode or ptraj. The contributions are further broken into G gas and G solv . The polar and
-non-polar contributions are EGB (or EPB) and ESURF (or ECAVITY / ENPOLAR), respectively for GB (or PB) calculations. By
-default, bonded terms are not printed for any one-trajectory simulation. They are computed and their dif- ferences
+they are in sander and `nmode` or `ptraj`. The contributions are further broken into `G gas` and `G solv`. The polar and
+non-polar contributions are `EGB` (or `EPB`) and `ESURF` (or `ECAVITY` / `ENPOLAR`), respectively for `GB` (or `PB`) calculations. By
+default, bonded terms are not printed for any one-trajectory simulation. They are computed, and their differences
 calculated, however. They are not shown (nor included in the total) unless specifically asked for because they should
 cancel completely. A single trajectory does not produce any differences between bond lengths, angles, or dihedrals
 between the complex and receptor/ligand structures. Thus, when subtracted they cancel completely. This includes the
-BOND, ANGLE, DIHED, and 1-4 interactions. If inconsistencies are found, these values are displayed and inconsistency
+`BOND`, `ANGLE`, `DIHED`, and `1-4 interactions`. If inconsistencies are found, these values are displayed and inconsistency
 warnings are printed. When this occurs the results are generally useless. Of course this does not hold for the multiple
 trajectory protocol, and so all energy components are printed in this case. Finally, all warnings generated during the
 calculation that do not result in fatal errors are printed after calculation details but before any results.
