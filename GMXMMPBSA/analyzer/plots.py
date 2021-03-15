@@ -22,6 +22,7 @@ import matplotlib.backend_bases
 from matplotlib.backends import qt_compat
 import matplotlib.patches as mpatches
 from matplotlib.figure import Figure
+from matplotlib.widgets import Cursor
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
@@ -312,6 +313,7 @@ class Charts(QMdiSubWindow):
 
 
             self.mpl_canvas.axes.set_title(title + '\n' + self.item.chart_subtitle)
+            self.cursor = Cursor(self.mpl_canvas.axes, useblit=True, color='black', linewidth=0.5, ls='--')
             self.mpl_canvas.draw()
             self.mpl_canvas.figure.tight_layout()
             self.mpl_canvas.draw()
