@@ -279,14 +279,9 @@ class Charts(QMdiSubWindow):
                 else:
                     self.heatmap_plot = sns.heatmap(self.data.heatmap_plot_dat, ax=self.mpl_canvas.axes, center=0,
                                                 yticklabels=self.data.heatmap_plot_dat.index.tolist(),
-                                                # xticklabels=self.data.heatmap_plot_dat.columns.tolist(),
                                                 cmap='seismic', cbar_kws={'label': 'Energy (kcal/mol)'})
                     title = self.item.chart_title + '(P.f)'  # Fixme: no frames from correlation
-                self.heatmap_plot.set_yticklabels(self.heatmap_plot.get_yticklabels(), rotation=0)
 
-                self.heatmap_plot.set_xticklabels(self.heatmap_plot.get_xticklabels(), rotation=45)
-
-            #
             # if Charts.RELPLOT in self.options['chart_type']:
             #     self.item.hmp_subw = self
             #     # Draw each cell as a scatter point with varying size and color

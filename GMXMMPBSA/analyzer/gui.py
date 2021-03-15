@@ -614,7 +614,6 @@ class GMX_MMPBSA_ANA(QMainWindow):
                 break
             it += 1
         qpd.setValue(self.items_counter['charts'])
-        print(i, self.items_counter['charts'])
 
         if i != self.items_counter['charts']:
             self.close()
