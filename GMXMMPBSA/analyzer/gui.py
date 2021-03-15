@@ -47,13 +47,15 @@ class GMX_MMPBSA_ANA(QMainWindow):
         super(GMX_MMPBSA_ANA, self).__init__()
         self.corr_data = {'mutant': {}}
 
-        # five PyMOL instances for the reckless
+        # five PyMOL instances for reckless
         self.pymol_p1 = QProcess()
         self.pymol_p2 = QProcess()
         self.pymol_p3 = QProcess()
         self.pymol_p4 = QProcess()
         self.pymol_p5 = QProcess()
         self.pymol_p_list = [self.pymol_p1, self.pymol_p2, self.pymol_p3, self.pymol_p4, self.pymol_p5]
+
+        self.items_counter = {'charts': 0, 'pymol': [], 'bars': 0, 'line': 0, 'heatmap': 0}
 
         self.mdi = QMdiArea(self)
         self.mdi.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
@@ -570,7 +572,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
         maximum = rqueue.qsize()
         qpd = QProgressDialog('Creating systems tree', 'Abort', 0, maximum, self)
         qpd.setWindowModality(Qt.WindowModal)
-        qpd.setMinimumDuration(1500)
+        qpd.setMinimumDuration(1000)
 
         for i in range(maximum):
             qpd.setValue(i)
@@ -578,7 +580,25 @@ class GMX_MMPBSA_ANA(QMainWindow):
                 break
             result, app = rqueue.get()
             self.makeTree(systems[i], result, app, options)
-        qpd.setValue(maximum)
+        qpd.setLabelText('Processing items data')
+        qpd.setMaximum(self.items_counter['charts'])
+        i = 0
+        it = QTreeWidgetItemIterator(self.treeWidget)
+        while it.value():
+            item = it.value()
+            print(item)
+            if item.has_chart:
+                qpd.setValue(i)
+                item.get_data()
+                i += 1
+            if qpd.wasCanceled():
+                break
+            it += 1
+        qpd.setValue(self.items_counter['charts'])
+        print(i, self.items_counter['charts'])
+
+        if i != self.items_counter['charts']:
+            self.close()
 
         if not options['correlation']: # FIXME:
             self.correlation_DockWidget.setEnabled(False)
@@ -643,6 +663,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
                                            chart_title=f"Binding Free Energy",
                                            chart_subtitle=f"{mut_pre}{sys_name} | {level.upper()} | {level1.upper()}",
                                            col_box=[2])
+                        self.items_counter['charts'] += 1
                         for level2 in data[level][level1]:
                             # LEVEL-2 [GB, PB or 3D-RISM components]
                             if level1 == 'delta' and level2 == 'DELTA TOTAL':
@@ -654,6 +675,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
                                                    chart_subtitle=f"{mut_pre}{sys_name} | {level.upper()} | "
                                                                   f"{level1.upper()} | {level2.upper()}",
                                                col_box=[1])
+                            self.items_counter['charts'] += 1
             elif level in ['nmode', 'qh', 'ie']:
                 # This is an exception, only for aesthetic
                 if level == 'ie':
@@ -669,6 +691,8 @@ class GMX_MMPBSA_ANA(QMainWindow):
                                        chart_subtitle=f"{mut_pre}{sys_name} | {level.upper()}",
                                        col_box=[2])
                     ent = data[level]['Total']
+                self.items_counter['charts'] += 1
+
                 itemd = CustomItem(topItem, ['ΔG Binding'], has_chart=False)
                 for model in correlation_data[sys_name]['ΔG']:
                     if np.isnan(correlation_data[sys_name]['ΔG'][model]['ΔH']):
@@ -680,6 +704,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
                                         level=1, chart_title=f"ΔG Binding",
                                         chart_subtitle=f"{mut_pre}{sys_name} | {str(model).upper()} | {level.upper()}",
                                         col_box=[2])
+                    self.items_counter['charts'] += 1
                     correlation_data[sys_name]['ΔG'][model][level] = correlation_data[sys_name]['ΔG'][model]['ΔH'] + ent
 
             elif level == 'decomp':
@@ -709,6 +734,9 @@ class GMX_MMPBSA_ANA(QMainWindow):
                                                                   f"{level1.upper()} | {level2.upper()} | "
                                                                   f"{level3.upper()}",
                                                    col_box=col_box)
+                                self.items_counter['charts'] += 1
+                                if 4 in col_box:
+                                    self.items_counter['pymol'].append(item3)
                                 for level4 in data[level][level1][level2][level3]:
                                     # LEVEL-4 Selected residues
                                     col_box = [2]
@@ -727,6 +755,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
                                                                       f"{str(level1).upper()} | {str(level2).upper()} | "
                                                                       f"{str(level3).upper()} | {str(level4).upper()}",
                                                        col_box=col_box)
+                                    self.items_counter['charts'] += 1
 
                                     for level5 in data[level][level1][level2][level3][level4]:
                                         # LEVEL-5 AA energetic terms if per-residue or per-wise residues
@@ -744,6 +773,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
                                                                               f"{str(level4).upper()} | "
                                                                               f"{str(level5).upper()}",
                                                                col_box=[1])
+                                            self.items_counter['charts'] += 1
                                         else:
                                             item5 = CustomItem(item4, [str(level5).upper()],
                                                                cdata=data[level][level1][level2][level3][level4][level5],
@@ -757,6 +787,8 @@ class GMX_MMPBSA_ANA(QMainWindow):
                                                                               f"{str(level4).upper()} | "
                                                                               f"{str(level5).upper()}",
                                                                col_box=[2])
+                                            self.items_counter['charts'] += 1
+
                                             for level6 in data[level][level1][level2][level3][level4][level5]:
                                                 item6 = CustomItem(item5, [str(level6).upper()],
                                                                    cdata=data[level][level1][level2][level3][level4][
@@ -772,3 +804,5 @@ class GMX_MMPBSA_ANA(QMainWindow):
                                                                                   f"{str(level5).upper()} | "
                                                                                   f"{str(level6).upper()}",
                                                                    col_box=[1])
+                                                self.items_counter['charts'] += 1
+

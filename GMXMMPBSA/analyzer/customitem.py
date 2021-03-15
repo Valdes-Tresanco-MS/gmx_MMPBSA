@@ -103,9 +103,10 @@ class CustomItem(QTreeWidgetItem):
         if col_box:
             for col in col_box:
                 self.setCheckState(col, Qt.Unchecked)
-        if self.has_chart:
-            self.gmxMMPBSA_data = self.getplotdata()
-            self.gmxMMPBSA_current_data = copy.deepcopy(self.gmxMMPBSA_data)
+
+    def get_data(self):
+        self.gmxMMPBSA_data = self.getplotdata()
+        self.gmxMMPBSA_current_data = copy.deepcopy(self.gmxMMPBSA_data)
 
     def reset(self):
         self.gmxMMPBSA_current_data = copy.deepcopy(self.gmxMMPBSA_data)
