@@ -31,6 +31,7 @@ from pathlib import Path
 import parmed
 import os
 import numpy as np
+from types import SimpleNamespace
 
 __all__ = ['load_gmxmmpbsa_info']
 
@@ -533,5 +534,7 @@ def load_gmxmmpbsa_info(fname):
         else:
             return_data.mutant = None
 
-    return return_data, app
+    app_namespace = SimpleNamespace(FILES=app.FILES, INPUT=app.INPUT, numframes=app.numframes)
+
+    return return_data, app_namespace
 
