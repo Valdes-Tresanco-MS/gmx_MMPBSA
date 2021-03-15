@@ -18,6 +18,7 @@ copyright: Copyright &copy; 2020 - 2021 MS. and ME. Valdes Tresanco
 # Configuration
 theme:
   name: material
+  logo: assets/logo_white_border.svg
   custom_dir: docs/overrides
 
   # 404 page
@@ -41,7 +42,7 @@ theme:
   font:
     text: Roboto
     code: Roboto Mono
-  favicon: assets/favicon.png
+  favicon: assets/logo.svg
   icon:
     logo: logo
 
