@@ -31,13 +31,16 @@ This release focuses almost entirely on `gmx_MMPBSA_ana` with minor issues fixed
     - `-f` accept a folder, single info file o a list of them
     - New flag `-r`. This flag allows to load all system inside a selected folder
 - New graphical options
-    - New set of graphics (heatmap)
+    - A new set of graphics (heatmap)
+        - Per-frame when analyzing Per-residue and pair in Per-wise
+        - Relation matrix for Per-Wise
     - Interactive visualization with PyMOL(5 instances).
     - Regression plot for correlation 
 - Plot features
     - Added Standard deviation to bar plots  
     - Added rolling average to line plots
     - Added indicators for the interval and value in IE chart
+    - Added crosshair cursor for better analysis on charts
 - Multiprocessing application for test (gmx_MMPBSA_test)  
 
 ### Fixes
