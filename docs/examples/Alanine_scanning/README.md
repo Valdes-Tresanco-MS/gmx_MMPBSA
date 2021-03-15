@@ -64,12 +64,8 @@ the receptor and ligand group numbers in the index file (`1 12`) are needed. The
 all the parameters needed for the MM/PB(GB)SA calculation. In this case, 16 frames 
 `(endframe-startframe)/interval = (21-5)/1 = 16` are going to be used when performing the the MM/PB(GB)SA 
 calculation with the igb8 (GB-Neck2) model and a salt concentration = 0.15M. Of note, mbondi3 radii (`PBRadii=4`) 
-will be used as recommended for GB-Neck2 solvation model. Also a high dielectric constant `intdiel=10` will be used 
+will be used as recommended for GB-Neck2 solvation model. Also, a high dielectric constant `intdiel=10` will be used 
 because of the high number of charged residues at the interface.
-
-Once the calculation is done, the GUI app (`gmx_MMPBSA_ana`) will show up. In this app, you can visualize the results for 
-the GB calculation for both the wild-type and the mutant system. The results can be saved as *.csv file by clicking 
-"File" in the upper left corner and then "Export GB/PB energy (csv)".
 
 !!! note
     Once the calculation is done, you can analyze the results in `gmx_MMPBSA_ana` (if you didn't define `-nogui`). 
@@ -88,7 +84,7 @@ On the other hand, if this reference structure is omitted, then it will depend o
 
 * GROMACS version
     
-    _We have seen that the GROMACS `20xx.x` versions, `trjconv` can omit the chain IDs._
+    _We have noticed that in GROMACS `20xx.x` versions, `trjconv` can omit the chain IDs._
 
 * The option assign_chainID
     

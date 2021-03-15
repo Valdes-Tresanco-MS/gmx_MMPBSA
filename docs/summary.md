@@ -44,11 +44,13 @@ that is embedded into a membrane.
 ## `gmx_MMPBSA` a technical view
 `gmx_MMPBSA` is a python module that contains 3 applications: 
 
-* `gmx_MMPBSA` is the fundamental core and carries out the [calculations][3] mentioned above
-* `gmx_MMPBSA_ana` is the analysis tool
-* `gmx_MMPBSA_test` is a simple tool that allows you to run one or more of the available examples easily and efficiently.
+* `gmx_MMPBSA` is the fundamental application and carries out the [calculations][3] mentioned above
+* `gmx_MMPBSA_ana` provides an intuitive way to analyze the data and save high-quality pictures
+* `gmx_MMPBSA_test` is a tool designed to test if the installation was successful by running one or more available 
+  [examples][4] in gmx_MMPBSA.
 
 
   [1]: https://pubs.acs.org/doi/10.1021/ct300418h
   [2]: advanced.md#advanced-options
   [3]: #types-of-calculations-you-can-do
+  [4]: examples/README.md

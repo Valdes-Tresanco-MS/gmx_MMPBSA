@@ -28,12 +28,12 @@ This comparison is based on the documentation of the different programs
 | **Analyzer Tool**                     |                              |                              |                         [^4]                              |    :heavy_check_mark:     |
 | * Multiple systems at same time       |                              |                              |                                                       |    :heavy_check_mark:     |
 | * Correlation between systems         |      :heavy_check_mark:      |                              |                                                       |    :heavy_check_mark:     |
-| * Energy to PDB                       |      :heavy_check_mark:      |                              |                                                       |    :heavy_check_mark:     |
+| * Per-residue energies to PDB         |      :heavy_check_mark:      |                              |                                                       |    :heavy_check_mark:     |
 | * Interactive visualization           |                              |                              |                                                       |    :heavy_check_mark:     |
-|   ** _PDB_                            |                              |                              |                                                       |           PyMOL           |
+|   ** _3D Molecular Visualization_     |                              |                              |                                                       |           PyMOL           |
 |   ** _Charts_                         |        static image          |                              |                                                       |    :heavy_check_mark:     |
 | * Energetic Terms charts              |       internal tools         |                              |               API and graphics library [^5]           |      gmx_MMPBSA_ana       |
-| * Export to CSV file                  |                              |                              |                  :heavy_check_mark:                   |    :heavy_check_mark:     |
+| * Export data to CSV file             |                              |                              |                  :heavy_check_mark:                   |    :heavy_check_mark:     |
 |   ** _Energy Summary_                 |                              |                              |                  :heavy_check_mark:                   |    :heavy_check_mark:     |
 |   ** _Individual Energetic Terms_     |                              |                              |                                                       |    :heavy_check_mark:     |
 
@@ -53,13 +53,13 @@ This comparison is based on the documentation of the different programs
   [^2]: Without documentation.
   [^3]: nmode = Normal modes approximation, qh = Quasic-Harmony approximation and IE = Interaction Entropy
 approximation
-  [^4]: We plan that gmx_MMPBSA will have compatibility with the results of MMPBSA.py
-  [^5]: Currently there is a repository ([AmberUtils][5]) quite robust for the analysis of the results obtained.
-  [^6]: GROMACS 20xx.x is not officially supported. There is a Pull Request that offers a minimum of compatibility 
-with versions higher than 2016.x but with limitations
-  [^7]: It is not clear if it supports the GROMACS versions 20xx, but we assume that it does because 
+  [^4]: We plan to extend gmx_MMPBSA compatibility to MMPBSA.py's results
+  [^5]: Currently there is a repository ([AmberUtils][5]) for analysing the results.
+  [^6]: GROMACS 20xx.x is not officially supported. There is a Pull Request that offers a minimum compatibility 
+with versions higher than 2016.x one, but still with limitations
+  [^7]: It is not clear whether it does support GROMACS versions 20xx.x or not, but we assume that it does since 
 it is script-based.
-  [^8]: It is not clear if it supports the APBS versions 3.x.x , but we assume that it does because it is 
+  [^8]: It is not clear whether it does support APBS versions 3.x.x , but we assume that it does since it is 
 script-based.
   
 

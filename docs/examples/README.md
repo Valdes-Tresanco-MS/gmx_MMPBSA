@@ -5,9 +5,11 @@ title: Examples
 
 
 
-This is the examples list. Here you can find a representation of almost all the types of calculations that you can 
-perform with `gmx_MMPBSA`. Although each example focuses on specific cases, you can use `gmx_MMPBSA` on systems that 
-combine a number of characteristics (i.e. metalloprotein-ligand complex, Protein-DNA-ligand, etc.) 
+Here you can find a representation of almost all the types of calculations that you can perform with `gmx_MMPBSA`. 
+Although each example focuses on specific cases, you can use `gmx_MMPBSA` on systems that combine a number of 
+characteristics (i.e. metalloprotein-ligand complex, Protein-DNA-ligand, etc.). Several types of calculations (e.g. GB/
+Alanine scanning/Per-residue decomposition; PB/Interaction Entropy/Per-wise decomposition) can be also performed in 
+the same run for a specific system.
 
 
 ## Analysis

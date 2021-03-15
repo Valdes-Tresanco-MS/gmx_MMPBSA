@@ -91,7 +91,7 @@ printed, which aids in debugging of issues. (Default = 0) (Advanced Option)
           with defined internal temperature (298.15 K) when `nmode` is used.~~
 
 `exp_ki` (Default = 0.0)
-:   Specify the experimental Ki in nM for correlations analysis. If not define or exp_ki = 0 then this system will be 
+:   Specify the experimental Ki in nM for correlations analysis. If not defined or exp_ki = 0 then this system will be 
 omitted in the correlation analysis
 
     _New in v1.4.0_
@@ -197,13 +197,13 @@ omitted in the correlation analysis
         * This notation is simpler since these parameter files are generally the same for all systems
 
 `sys_name` (Default = None) (Optional)
-:   Define the System Name. This is useful when trying to analyze several systems at the same time or to calculate 
+:   Define the System Name. This is useful when trying to analyze several systems at the same time or calculating 
 the correlation between the predicted and the experimental energies. If the name is not defined, one will be 
-assigned when loading it in gmx_MMPBSA_ana according to the order in which it is done.
+assigned when loading it in gmx_MMPBSA_ana according to the order in this is done.
 
     !!! tip 
-        The definition of the system name is entirely optional, however it can provide greater clarity during 
-        the results analysi. All files associated with this system will be saved using its name.
+        The definition of the system name is entirely optional, however it can provide a better clarity during 
+        the results analysis. All files associated with this system will be saved using its name.
 
     _New in v1.4.0_   
 
@@ -271,7 +271,7 @@ Avoid inconsistencies with defined internal temperature (298.15 K) when `nmode` 
     section of the manual for options.
 
     !!! danger
-         No default, this must be specified.
+         No default, this must be specified if QM/MM calculations are going to be performed.
 
 `qmcharge_com` (Default = 0)
 :   The charge of the quantum section for the complex.
@@ -417,7 +417,7 @@ Avoid inconsistencies with defined internal temperature (298.15 K) when `nmode` 
 
 `mutant_res`
 :   Define the specific residue that is going to be mutated. Use the following format CHAIN:RESNUM (eg: 'A:350') or 
-CHAIN:RESNUM:INSERTION_CODE if exists (eg: "A:27:B"). 
+CHAIN:RESNUM:INSERTION_CODE if applicable (eg: "A:27:B"). 
 
     !!! important
         * Only one residue for mutation is supported!
@@ -519,14 +519,14 @@ have added several additional notations
 
     === "Amino acid selection"
         Notation: [ `CHAIN`/(`RESNUM` or `RESNUM-RESNUM`) ]
-        :   Print residues indivual or ranges. This notation also supports insertion codes, in which case you must 
+        :   Print residues individual or ranges. This notation also supports insertion codes, in which case you must 
             define them individually
 
         !!! example
             `print_res="A/1,3-10,15,100"` This will print Chain A residues 1, 3 through 10, 15, and 100 from the 
             complex topology file and the corresponding residues in either the ligand and/or receptor topology files.
 
-            Suppost that we can have the following sequence: A:LUE:5, A:GLY:6:A, A:THR:6:B, A:SER:6:C A:ASP:6D, A:ILE:7
+            Suppost that we can have the following sequence: A:LEU:5, A:GLY:6:A, A:THR:6:B, A:SER:6:C A:ASP:6D, A:ILE:7
             
             === "Supported notation"
                 
@@ -535,20 +535,20 @@ have added several additional notations
                     contained in the range
                 
                 **Individual selection**
-                :   `print_res="A/5,6:B,6:C,7` Will print all mentioned residues except the residues A:6:A and A:6D
+                :   `print_res="A/5,6:B,6:C,7` Will print all mentioned residues except the residues A:6:A and A:6:D
                 
                 **Multiple chain selection**
                 :   `print_res="A/5-10,100 B/34,56` Will print residues 3 through 10, 100 from chain A and residues 
-                    34 and 56 from Chain B mentioned residues except the residues A:6:A.
+                    34 and 56 from Chain B.
 
             === "Wrong notation"
-                `print_res="A/5-6B,6D-7` Will end in error and since a range is unlikely to be selected in this way, we 
-                not support it.
+                `print_res="A/5-6B,6D-7` Will end in error.
 
     === "All"
 
         Notation: `all`
-        :   will print all residues
+        :   will print all residues. This option is often not recommended since most residues contribution is zero and 
+            it is just going to be a waste of time and computational resources.
 
         !!! danger
             Using idecomp=3 or 4 (pairwise) with a very large number of printed residues and a large number of frames 

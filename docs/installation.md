@@ -28,23 +28,24 @@ and that is compatible with the files you are using.
 
   [^1]: It is installed automatically, so the user does not have to worry about installing it
 
-As we describe in the [`gmx_MMPBSA` a technical view][1] section, `gmx_MMPBSA` has `gmx_MMPBSA_ana` which requires 
-PyQt5. The PyQt5 module is not installed automatically because `gmx_MMPBSA` can be installed in HPC where 
-`gmx_MMPBSA_ana` is not required or cannot be opened. You can install PyQt5 as follows:
+`gmx_MMPBSA_ana` requires PyQt5 which is not installed automatically when `gmx_MMPBSA` is installed in HPC. That way, 
+`gmx_MMPBSA_ana` cannot be opened in HPC. 
+
+You can install PyQt5 as follows:
 
     amber.python -m pip install PyQt5
 
 !!! warning
-    * Note that if you don't install PyQt5 you won't be able to open gmx_MMPBSA
+    * Note that if you don't install PyQt5 you won't be able to open gmx_MMPBSA_ana
     * **Valid for versions > 1.4.0**
 
 ## Installation
 
-You can install `gmx_MMPBSA` from the `stable` version on PYPI:
+You can install `gmx_MMPBSA` from the `stable` version on [PYPI][3]:
 
     amber.python -m pip install gmx_MMPBSA
 
-or the `development` version from GitHub:
+or the `development` version from [GitHub][4]:
 
     amber.python -m pip install git+https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA
 
@@ -116,6 +117,8 @@ please see the following [issue][2] to see the solution
 
   [1]: https://ambermd.org/doc12/Amber20.pdf#section.2.1
   [2]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/issues/2
+  [3]: https://pypi.org/project/gmx-MMPBSA
+  [4]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA
 
 
 ## Autocompletion script

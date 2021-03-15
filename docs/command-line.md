@@ -418,35 +418,35 @@ Based on MMPBSA.py (version 16.0) and AmberTools20
 ```
 
 ### Running gmx_MMPBSA_test
-gmx_MMPBSA_test is designed to run a set of samples (all or minimal) or a specific sample efficiently. 
+gmx_MMPBSA_test is designed to run a set of samples (all or minimal) or a specific example efficiently. 
 Additionally, gmx_MMPBSA_test can run in parallel, decreasing the execution time gmx_MMPBSA_test will download the 
-most recent version of the repository in the specified folder and will do the calculations in said folder structure
+most recent version of the repository in the specified folder and will perform the calculations
 
 === "all"
     
         gmx_MMPBSA_test -f /home/user/Documents -t all -n 10
     
-    This command-line will be:
+    Through this command-line, gmxMMPBSA_test will:
     
     * Download gmx_MMPBSA repository content in `/home/user/Documents`
-    * Doing `all` set of examples 
-    * Performed 10 examples execution at sime time
+    * Do `all` set of examples
+    * Perform the calculation on 10 examples at the sime time (1 processor per example)
     
 === "minimal"
     
-        gmx_MMPBSA_test -f /home/user/Documents -n 10  [-t minimal is the default]
+        gmx_MMPBSA_test -f /home/user/Documents -n 10 [-t minimal is the default]
     
-    This command-line will be:
+    Through this command-line, gmxMMPBSA_test will:
     
     * Download gmx_MMPBSA repository content in `/home/user/Documents`
-    * Doing `minimal` set of examples 
-    * Performed 10 examples execution at sime time
+    * Do `minimal` set of examples
+    * Perform the calculation on 10 examples at the sime time (1 processor per example)
 
 === "specific"
     
         gmx_MMPBSA_test -f /home/user/Documents -t prot_lig_st
     
-    This command-line will be:
+    Through this command-line, gmxMMPBSA_test will:
     
     * Download gmx_MMPBSA repository content in `/home/user/Documents`
-    * Doing `prot_lig_st`[Protein-Ligand (Single Trajectory approach)] example 
+    * Do `prot_lig_st`[Protein-Ligand (Single Trajectory approach)] example
