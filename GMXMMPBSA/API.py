@@ -402,12 +402,9 @@ def load_gmxmmpbsa_info(fname):
                 if icode:
                     icode = ':' + icode
                 rec[i] = (f"{residue.chain}:{residue.name}:{residue.number}" + icode)
-                mut_rec[i] = (f"{residue.chain}:{residue.name}:{residue.number}:{residue.insertion_code}")
+                mut_rec[i] = (f"{residue.chain}:{residue.name}:{residue.number}" + icode)
                 if app.INPUT['mutant_res'] == (f"{residue.chain}:{residue.number}" + icode):
                     mut_rec[i] = (f"{residue.chain}:{app.INPUT['mutant']}:{residue.number}" + icode)
-                # # without icode
-                # elif app.INPUT['mutant_res'] == (f"{residue.chain}:{residue.number}"):
-                #     mut_rec[i] = (f"{residue.chain}:{app.INPUT['mutant']}:{residue.number}")
         else:
             i = int(x)
             residue = complex_str.residues[i - 1]
