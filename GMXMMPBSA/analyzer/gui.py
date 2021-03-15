@@ -600,13 +600,12 @@ class GMX_MMPBSA_ANA(QMainWindow):
                 break
             result, app = rqueue.get()
             self.makeTree(systems[i], result, app, options)
-        qpd.setLabelText('Processing items data')
+        qpd.setLabelText(f"Processing data of {self.items_counter['charts']} items")
         qpd.setMaximum(self.items_counter['charts'])
         i = 0
         it = QTreeWidgetItemIterator(self.treeWidget)
         while it.value():
             item = it.value()
-            print(item)
             if item.has_chart:
                 qpd.setValue(i)
                 item.get_data()
