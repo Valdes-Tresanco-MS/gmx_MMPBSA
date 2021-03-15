@@ -8,7 +8,7 @@ title: Getting started
 [![python](https://img.shields.io/badge/python-v3.x-blue)]()
 [![DOI](https://zenodo.org/badge/295050575.svg)](https://zenodo.org/badge/latestdoi/295050575)
 
-[<img src="../assets/logo.png" height="120" width="240" align="right"/>]()
+[<img src="../assets/logo.svg" height="120" width="240" align="right"/>]()
 
 # Getting started
 gmx_MMPBSA is a new tool aid to perform end-state free energy calculations based on AMBER's MMPBSA.py with GROMACS 
