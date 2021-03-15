@@ -268,14 +268,24 @@ class Charts(QMdiSubWindow):
                     self.mpl_canvas.axes.collections[-1].colorbar.remove()
                     self.heatmap_plot.cla()
                     self.heatmap_plot.clear()
-                self.heatmap_plot = sns.heatmap(self.data.heatmap_plot_dat, ax=self.mpl_canvas.axes, center=0,
+
+                xticklabels = self.data.heatmap_plot_dat.columns.tolist()
+                if type(xticklabels[0]) == str:
+                    self.heatmap_plot = sns.heatmap(self.data.heatmap_plot_dat, ax=self.mpl_canvas.axes, center=0,
                                                 yticklabels=self.data.heatmap_plot_dat.index.tolist(),
                                                 xticklabels=self.data.heatmap_plot_dat.columns.tolist(),
                                                 cmap='seismic', cbar_kws={'label': 'Energy (kcal/mol)'})
+                    title = self.item.chart_title.replace('[Per-residue]', '[Per-wise]')
+                else:
+                    self.heatmap_plot = sns.heatmap(self.data.heatmap_plot_dat, ax=self.mpl_canvas.axes, center=0,
+                                                yticklabels=self.data.heatmap_plot_dat.index.tolist(),
+                                                # xticklabels=self.data.heatmap_plot_dat.columns.tolist(),
+                                                cmap='seismic', cbar_kws={'label': 'Energy (kcal/mol)'})
+                    title = self.item.chart_title + '(P.f)'  # Fixme: no frames from correlation
                 self.heatmap_plot.set_yticklabels(self.heatmap_plot.get_yticklabels(), rotation=0)
+
                 self.heatmap_plot.set_xticklabels(self.heatmap_plot.get_xticklabels(), rotation=45)
 
-                title = self.item.chart_title + '(P.f)' # Fixme: no frames from correlation
             #
             # if Charts.RELPLOT in self.options['chart_type']:
             #     self.item.hmp_subw = self
