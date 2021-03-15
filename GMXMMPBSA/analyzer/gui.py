@@ -192,6 +192,26 @@ class GMX_MMPBSA_ANA(QMainWindow):
         # self.exportcsv = ExportDialogCSV(self)
         self.init_dialog = InitDialog(self)
 
+    def closeEvent(self, a0: QCloseEvent) -> None:
+        reply = QMessageBox.question(self, 'Message', "Are you sure to quit?", QMessageBox.Yes, QMessageBox.No)
+        if reply == QMessageBox.Yes:
+            pymol_items = [p for p in self.pymol_p_list if p.state() == QProcess.Running]
+            if pymol_items:
+                qpd = QProgressDialog('Closing PyMOL instances', 'Abort', 0, len(pymol_items), self)
+                qpd.setWindowModality(Qt.WindowModal)
+                qpd.setMinimumDuration(1000)
+                i = 0
+                for p in range(len(self.pymol_p_list)):
+                    if self.pymol_p_list[p].state() == QProcess.Running:
+                        qpd.setValue(i)
+                        self.pymol_p_list[p].kill()
+                        self.pymol_p_list[p].waitForFinished()
+                    i += 1
+                qpd.setValue(len(self.pymol_p_list))
+            a0.accept()
+        else:
+            a0.ignore()
+
     def get_pymol_instance(self):
         available = None
         for inst in self.pymol_p_list:
