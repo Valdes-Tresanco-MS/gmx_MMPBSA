@@ -20,6 +20,7 @@ This release focuses almost entirely on `gmx_MMPBSA_ana` with minor issues fixed
             - The system name
             - The experimental Ki for correlation
             - The temperature to calculate the Experimental Energy and the Interaction Entropy
+    - Data reader with progress bar and multiprocessing
 - Multiple systems to analyze in the same session  
 - Correlation dock
     - Multiple models at the same time
