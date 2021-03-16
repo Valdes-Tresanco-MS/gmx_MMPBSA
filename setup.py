@@ -23,8 +23,8 @@ import sys
 with open("README.md", "r") as f:
     LONG_DESCRIPTION = f.read()
 
-if sys.version_info[:2] <= (3, 8):
-        raise RuntimeError("seaborn requires python >= 3.8.")
+if sys.version_info[:2] < (3, 8):
+    raise RuntimeError("seaborn requires python >= 3.8.")
 
 setup(
     name='gmx_MMPBSA',
