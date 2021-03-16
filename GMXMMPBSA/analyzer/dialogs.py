@@ -38,13 +38,19 @@ class InitDialog(QDialog):
         self.result_label = QLabel(f'...')
 
         self.corr_btn = QCheckBox('Calculate correlation between systems')
+        self.corr_btn.setToolTip('Make correlation between systems. Only works if you define more than 3 systems')
         self.corr_btn.setChecked(False)
         self.show_decomp_btn = QCheckBox('Show decomposition data')
+        self.show_decomp_btn.setToolTip('Defines whether the decomposition graphs will be available during the '
+                                        'session. Useful when defining a system for correlation analysis.')
         self.show_decomp_btn.setChecked(True)
         self.remove_empty_charts_btn = QCheckBox('Remove empty charts')
+        self.remove_empty_charts_btn.setToolTip('Does not show charts in which all trajectory is zero')
         self.remove_empty_charts_btn.setChecked(True)
         self.remove_empty_charts_btn.clicked.connect(self.show_warn)
+
         self.remove_empty_terms_btn = QCheckBox('Remove empty terms')
+        self.remove_empty_terms_btn.setToolTip('Does not show null terms in graphics')
         self.remove_empty_terms_btn.setChecked(True)
         self.remove_empty_terms_btn.clicked.connect(self.show_warn)
 
