@@ -10,10 +10,10 @@ This release focuses almost entirely on `gmx_MMPBSA_ana` with minor issues fixed
 - New start window to select options  
     - Option to make correlation (Pearson and Spearman coefficients)
     - Option to hide decomposition data
-    - Option to not compute charts with non-significant values during all the trajectory
-    - Option to not include empty (non-significant values) term in bar charts
-    - Selection of the components to display in addition to delta (complex, receptor, and ligand)
-    - Toggle the chart toolbar for a cleaner visualization.
+    - Option to not compute charts with a non-significant contribution
+    - Option to not include terms with a non-significant contribution in bar charts
+    - Selection of the components to display in addition to Delta (i.e. complex, receptor, and ligand)
+    - Toggle the chart toolbar for a cleaner visualization
     - An informative table with selected systems data
         - Option to exclude any system
         - Option to change:
@@ -28,35 +28,35 @@ This release focuses almost entirely on `gmx_MMPBSA_ana` with minor issues fixed
     - Table with the experimental energy of the systems, and the data of the selected model
 - New arguments flags for gmx_MMPBSA_ana (See the [gmx_MMPBSA_ana documentation]())
     - replace `-p` by `-f`
-    - `-f` accept a folder, single info file o a list of them
-    - New flag `-r`. This flag allows to load all system inside a selected folder
+    - `-f` accept a folder, single info file or a list of them
+    - New flag `-r`. This flag allows to load all the systems inside a selected folder
 - New graphical options
     - A new set of graphics (heatmap)
         - Per-frame when analyzing Per-residue and pair in Per-wise
-        - Relation matrix for Per-Wise
-    - Interactive visualization with PyMOL(5 instances).
-    - Regression plot for correlation 
+        - Relation matrix for Per-wise
+    - Interactive visualization of PDB files with per-residue energies with PyMOL (up to 5 instances).
+    - Regression plot for correlation
 - Plot features
     - Added Standard deviation to bar plots  
     - Added rolling average to line plots
-    - Added indicators for the interval and value in IE chart
+    - Added indicators for the selected interval and average value in IE chart
     - Added crosshair cursor for better analysis on charts
-- Multiprocessing application for test (gmx_MMPBSA_test)  
+- Multiprocessing application for testing (gmx_MMPBSA_test)  
 
 ### Fixes
 - Now `gmx_MMPBSA_ana` shows stability results as expected
-- Some errors in the documentation
+- Errors in the documentation
 
 ### Changes
 - Converted analyzer.py into a sub-module for more flexibility, organization and portability
 - Residues notation for mutation: CHAIN:RESNAME:RESNUMBER:ICODE instead of Amber residue index
 - Improve the selection method in decomposition calculation
-- Replaced `entropy_temp` (deprecated) by `temperature`. See    
+- Replaced variable `entropy_temp` (deprecated) by `temperature`
 - IE in API
-- Color Palette
+- Color Palette used in graphs
 - Use seaborn and matplotlib for charts
-- Use pandas Dataframe and numpy to store data
-- Changed the data structure to implement the management of the range of frames in future versions
+- Use Pandas Dataframe and numpy to store data
+- Changed the data structure to implement dynamic selection of frames in future versions
 - Improved data export: now any item can be exported as CSV file
 - Improved the documentation
     - Improve examples documentation

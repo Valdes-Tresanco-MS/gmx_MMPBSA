@@ -66,7 +66,7 @@ We have ensured backwards compatibility with gmx_MMPBSA, however there are some 
     
     
         !!! warning
-            `complex_file` is an internal variable that cannot be defined in the input file. This variable stores the PDB
+            `complex_fixed` is an internal variable that cannot be defined in the input file. This variable stores the PDB
             file name of the fixed complex. This structure corresponds to the complex with the proper chain identifiers and 
             amino acid numbers. If it does not exist, a warning will be displayed, and the complex structure extracted 
             from the structure file defined with the -cs option will be used.
