@@ -57,9 +57,6 @@ or the `development` version from [GitHub][4]:
 
 ## Update
 
-!!! warning
-    This section will be modified in the future. 
-
 If you already have installed a previous `gmx_MMPBSA` version, you can update it as follows:
 
 `stable` version (recommended):
@@ -68,7 +65,7 @@ If you already have installed a previous `gmx_MMPBSA` version, you can update it
 
 `development` version from GitHub:
 
-    amber.python -m pip intall git+https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA --upgrade 
+    amber.python -m pip install git+https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA --upgrade 
 
 !!! warning
     Make sure that you have `git` installed. If not you can install it as follows:
