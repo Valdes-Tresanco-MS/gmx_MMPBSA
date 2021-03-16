@@ -10,141 +10,104 @@ Upgrade to the latest version with:
 
 Inspect the currently installed version with:
 
-    amber.python -m pip show gmx_MMPBSA
-
-or
-
-    gmx_MMPBSA -v    
+    amber.python -m pip show gmx_MMPBSA  or  gmx_MMPBSA -v    
 
 
 ## Upgrading from 1.3.x to 1.4.x
-
+The differences between both versions are small, you can see them below
 ### What's new?
+* Three new variables in input file
+    - `temperature`
+    - `sys_name`
+    - `exp_ki`
+* New internal variable
+    - `complex_fixed`
+* The `entropy_temp` variable is now deprecated
+* The `print_res` variable was modified
+
+!!! tip
+    Check the changes in [`&general namelist variables`](input_file.md#general-namelist-variables) section
 
 ### Changes
+We have ensured backwards compatibility with gmx_MMPBSA, however there are some changes you can make
 
-??? example "`temperature` instead `entropy_temp`"
-    sdfsdfsdf
 
-??? example "`sys_name`"
-    sdfsdfsdf
+=== "Old results"
 
-??? example "`temperature` instead `entropy_temp`"
-    sdfsdfsdf
-
-??? example "`temperature` instead `entropy_temp`"
-    sdfsdfsdf
+    Since the calculations are done, we only have two options.
     
-
-=== "v1.4.x"
-
-    Temperature to calculate Experimental Energy from Ki and Iteraction Entropy 
-        
-                
-
-    * Sed sagittis eleifend rutrum
-    * Donec vitae suscipit est
-    * Nulla tempor lobortis orci
-
-=== "v1.3.x"
-
-    1. Sed sagittis eleifend rutrum
-    2. Donec vitae suscipit est
-    3. Nulla tempor lobortis orci
-
-
-### Changes to `_GMXMMPBA_info` file
-
-:octicons-archive-24: Deprecated: 5.5 · :octicons-trash-24: Removed: 6.0
-
-
-
-`temperature` variable
-:   Temperature to calculate Experimental Energy from Ki and Interaction Entropy
+    ^^Define the variables in `gmx_MMPBSA_ana`^^
+    :  As we described above, these variables can be defined or modified in the `gmx_MMPBSA_ana` start dialog (See the 
+    [`gmx_MMPBSA_ana` documentation](analyzer.md))
     
-    === "v1.4.x"
-        _Temperature to calculate Experimental Energy from Ki and Iteraction Entropy_
+    ^^Modify the `*info` file (usually `_GMXMMPBSA_info`)^^
+    :  Added the new variables as we describe below. _We have modified the description in the `_GMXMMPBSA_info` file a 
+    bit to aid editing._
         
-        `INPUT['temperature']` = 298.15
+        !!! example "Add variables to `_GMXMMPBSA_info` file"
+            
+            \# You can alter the variables below
+            
+            INPUT['debug_printlevel'] = 0
+        
+            INPUT['verbose'] = 2
+        
+            INPUT['csv_format'] = 1
+        
+            INPUT['dec_verbose'] = 0
+            
+            {++INPUT['temperature'] = 298.15++}
+            
+            {++INPUT['exp_ki'] = 0.0++}
+            
+            {++INPUT['sys_name'] = 'My System'++}
+            
+            INPUT['entropy_seg'] = 25
     
-    === "v1.3.x"
-        _Temperature to calculate Iteraction Entropy_
-        
-        `INPUT['entropy_temp']` = 298.15
-
-### Additions to `_GMXMMPBA_info` file
-
-`sys_name` variable
-:   Define the System name. Useful when analyze multiple systems.
-
     
-
-`exp_ki` variable
-:   Specify experimental Ki in nM. Required to do correlation analysis.
-
-    !!! tip
-        This variable is optional since it can be defined in the start dialog for each system
-
-### Changes to `mmpbsa.in` input file
-**`sys_name`**  :material-new-box:{: .medium .heart } New: 1.4.x
-:   Define the System name. Useful when analyze multiple systems.
-
-    !!! warning
-        If not defined, `gmx_MMPBSA_ana` will assign one according to the order in which it was loaded.
-        
-    !!! danger
-        Currently, `gmx_MMPBSA_ana` cannot deal with duplicate names. Take this into account to avoid unforced errors
-
-
-`print_res` variable   
-:   Select residues from the complex to print.
-
-    === "v1.4.x"
-        This variable accepts three notations.
-
-        !!! example inline end
-            `print_res="within 6"` Will print all residues within 6 Angstroms between receptor and ligand
-    
-        **Distance criterion** 
-        :   (`within` `distance`) --> `within` corresponds to the keyword and `6` to the maximum distance criterion in 
-            Angstroms necessary to select the residues from both the receptor and the ligand;
-        
-        !!! example inline end
-            `print_res="within 6 not lig"` Will print all residues within 6 Angstroms between receptor and 
-            ligand omitting the ligand ones.
-        
-        **distance criterion with exclusion** 
-        :   (`within` `distance` `not` (`receptor` or `ligand`)) --> here we print out all residues within 6 
-            Angstroms between receptor and ligand omitting the selected component ones
-
-        !!! example inline end
-            `print_res="A/1,3-10,15,100"` This will print Chain A residues 1, 3 through 10, 15, and 100 from the 
-            complex topology file and the corresponding residues in either the ligand and/or receptor topology files.
-
-        **Individual residues or ranges**
-        :   (`CHAIN`/`RESNUM1`,`RESNUM2`-`RESNUM10`,`RESNUM11`:`ICODE`) --> Select residues indivual or ranges. This 
-            notation also supports insertion codes, in which case you must define them individually
-        
         !!! warning
-            If an amino acid with an insertion code is found in a defined range, it will end in error
-
-
-    === "v1.3.x"
-        This variable also accepts a sequence of individual residues and/or ranges. The different fields must be 
-        either comma- or semicolon-delimited. For example: print_res = "within 6", where within corresponds to the 
-        keyword and 6 to the maximum distance criterion in Angstroms necessary to select the residues from both the
-        receptor and the ligand; or print_res = "1,3-10,15,100", or print_res = "1;3-10;15;100". Both of these will 
-        print residues 1, 3 through 10, 15, and 100 from the complex topology file and the corresponding residues in 
-        either the ligand and/or receptor topology files.
-
-        !!! warning inline end "Don't work" 
-            _These numbers correspond to the residue number according to Amber that works with the renumbered 
-            residues starting at 1_        
+            `complex_file` is an internal variable that cannot be defined in the input file. This variable stores the PDB
+            file name of the fixed complex. This structure corresponds to the complex with the proper chain identifiers and 
+            amino acid numbers. If it does not exist, a warning will be displayed, and the complex structure extracted 
+            from the structure file defined with the -cs option will be used.
+            
+            Note that this can lead to inconsistencies, for example: if the file defined in the -cs option is in GRO 
+            format, it will not have the string IDs.
+    
+            You can generate a structure for this variable as follows:
+    
+            * generate a copy of the `_GMXMMPBSA_COM.pdb` file
+            * Open it with your preferred editor (we recommend one with column editing capabilities, such as Kate, Geany,
+                or Sublime Text)
+            * Check the chains ID, if they do not exist add them
+            * Do not change the numbering of amino acids
+            * Save the document as `_GMXMMPBSA_COM_FIXED.pdb`
+            * In the `_GMXMMPBSA_info` file add the following line
+    
+                    FILES.complex_fixed = '_GMXMMPBSA_COM_FIXED.pdb'
         
-        Allowed values:
-
-        * `print_res`="within 6"
-        * `print_res`="1,3-10,15,100" or
-        * `print_res` = "1;3-10;15;100"
-
+            * save the document
+    
+        !!! tip "Removing `entropy_temp` variable"
+            After defining the `temperature` variable, you can remove the `entropy_temp` variable. This avoids getting 
+            the related warning.
+    
+=== "New calculation"
+    
+    As we describe in the [`&general namelist variables`](input_file.md#general-namelist-variables) section in the input 
+    file, these three variables are optional since they can be defined or modified in the `gmx_MMPBSA_ana` start dialog. 
+    However, modifying a set of systems can be cumbersome. **We recommend defining them in the input file**
+    
+    ???+ example
         
+        ```
+        &general
+        sys_name="Protein-Ligand",
+        temperature=310
+        exp_ki=10
+        /
+        ```     
+    
+    !!! note
+        `exp_ki` Only needed when performing correlation analysis
+
