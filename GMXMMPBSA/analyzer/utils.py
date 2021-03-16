@@ -139,11 +139,20 @@ def get_files(parser_args):
             GMXMMPBSA_WARNING(f'{cf} not found')
             continue
         if cf.is_dir():
+            recursive_files = []
             if parser_args.recursive:
-                info_files.extend(cf.glob('*/*_info'))
+                recursive_files.extend(cf.glob('*/*_info'))
             else:
-                info_files.extend(cf.glob('*_info'))
+                recursive_files.extend(cf.glob('*_info'))
+            for rf in recursive_files:
+                if rf in info_files:
+                    GMXMMPBSA_WARNING(f'{rf} is duplicated and will be ignored')
+                    continue
+                info_files.append(rf)
         else:
+            if cf in info_files:
+                GMXMMPBSA_WARNING(f'{cf} is duplicated and will be ignored')
+                continue
             info_files.append(cf)
     if not len(info_files):
         GMXMMPBSA_ERROR('No info files found!')
