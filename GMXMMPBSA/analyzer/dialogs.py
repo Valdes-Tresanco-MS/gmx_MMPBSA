@@ -115,7 +115,7 @@ class InitDialog(QDialog):
         self.result_tree.header().setSectionResizeMode(QHeaderView.ResizeToContents)
         self.result_tree.itemChanged.connect(self.update_item_info)
         self.pb = QProgressBar()
-        self.pb.setRange(0, 0)
+        # self.pb.setRange(0, 0)
         # self.save_btn.clicked.connect(self.save)
 
         self.jobs_label = QLabel('Jobs:')
