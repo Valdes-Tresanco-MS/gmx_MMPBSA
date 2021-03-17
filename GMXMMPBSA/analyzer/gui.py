@@ -678,7 +678,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
                     # LEVEL-1 [complex, receptor, ligand] + delta
                     if level1 in parts: # only show graphs for selected parts
                         item1 = CustomItem(item, [str(level1).upper()], cdata=data[level][level1], level=1,
-                                           chart_title=f"Binding Free Energy",
+                                           chart_title=f"Energetic Components",
                                            chart_subtitle=f"{mut_pre}{sys_name} | {level.upper()} | {level1.upper()}",
                                            col_box=[2])
                         self.items_counter['charts'] += 1
@@ -689,7 +689,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
                             if options['remove_empty_charts'] and abs(data[level][level1][level2].mean()) < 0.1:
                                 continue
                             item2 = CustomItem(item1, [str(level2).upper()], cdata=data[level][level1][level2],
-                                                   level=0, chart_title=f"Binding Free Energy",
+                                                   level=0, chart_title=f"Energetic Components",
                                                    chart_subtitle=f"{mut_pre}{sys_name} | {level.upper()} | "
                                                                   f"{level1.upper()} | {level2.upper()}",
                                                col_box=[1])
@@ -747,7 +747,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
                                     col_box.append(4)
                                 item3 = CustomItem(item2, [str(level3).upper()],
                                                    cdata=data[level][level1][level2][level3],
-                                                   level=item_level, chart_title=f"Binding Free Energy [Per-residue]",
+                                                   level=item_level, chart_title=f"Energetic Components [Per-residue]",
                                                    chart_subtitle=f"{mut_pre}{sys_name} | {level.upper()} | "
                                                                   f"{level1.upper()} | {level2.upper()} | "
                                                                   f"{level3.upper()}",
@@ -768,7 +768,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
                                     item4 = CustomItem(item3, [str(level4).upper()],
                                                        cdata=data[level][level1][level2][level3][level4],
                                                        level=item_level,
-                                                       chart_title=f"Binding Free Energy [Per-residue]",
+                                                       chart_title=f"Energetic Components [Per-residue]",
                                                        chart_subtitle=f"{mut_pre}{sys_name} | {str(level).upper()} | "
                                                                       f"{str(level1).upper()} | {str(level2).upper()} | "
                                                                       f"{str(level3).upper()} | {str(level4).upper()}",
@@ -782,7 +782,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
                                                                cdata=data[level][level1][level2][level3][level4][
                                                                    level5],
                                                                level=0,
-                                                               chart_title=f"Binding Free Energy [Per-wise]",
+                                                               chart_title=f"Energetic Components [Per-wise]",
                                                                chart_subtitle=f"{mut_pre}{sys_name} | "
                                                                               f"{str(level).upper()} | "
                                                                               f"{str(level1).upper()} | "
@@ -796,7 +796,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
                                             item5 = CustomItem(item4, [str(level5).upper()],
                                                                cdata=data[level][level1][level2][level3][level4][level5],
                                                                level=1,
-                                                               chart_title=f"Binding Free Energy [Per-wise]",
+                                                               chart_title=f"Energetic Components [Per-wise]",
                                                                chart_subtitle=f"{mut_pre}{sys_name} | "
                                                                               f"{str(level).upper()} | "
                                                                               f"{str(level1).upper()} | "
@@ -812,7 +812,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
                                                                    cdata=data[level][level1][level2][level3][level4][
                                                                            level5][level6],
                                                                    level=0,
-                                                                   chart_title=f"Binding Free Energy [Per-wise]",
+                                                                   chart_title=f"Energetic Components [Per-wise]",
                                                                    chart_subtitle=f"{mut_pre}{sys_name} | "
                                                                                   f"{str(level).upper()} | "
                                                                                   f"{str(level1).upper()} | "
