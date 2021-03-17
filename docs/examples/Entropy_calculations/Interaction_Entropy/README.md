@@ -45,7 +45,7 @@ protein_forcefield="oldff/leaprc.ff99SB",
 #entropy variable control whether to perform a quasi-harmonic entropy (QH)
 # approximation or the Interaction Entropy approximation
 # (https://pubs.acs.org/doi/abs/10.1021/jacs.6b02682) 
-entropy=2, entropy_seg=25, entropy_temp=298
+entropy=2, entropy_seg=25, temperature=298
 /
 
 &gb
