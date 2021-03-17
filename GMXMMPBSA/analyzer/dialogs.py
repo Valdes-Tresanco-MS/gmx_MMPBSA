@@ -23,7 +23,9 @@ from PyQt5.QtCore import Qt, QThread, pyqtSignal, pyqtSlot
 from queue import Queue, Empty
 from GMXMMPBSA import API
 from pathlib import Path
-from GMXMMPBSA.analyzer.utils import worker
+from GMXMMPBSA.analyzer.utils import worker, ncpu
+
+
 
 class InitDialog(QDialog):
     def __init__(self,parent=None):
@@ -35,7 +37,6 @@ class InitDialog(QDialog):
         self.data = []
 
         self.processing_label = QLabel()
-        self.result_label = QLabel(f'...')
 
         self.corr_btn = QCheckBox('Calculate correlation between systems')
         self.corr_btn.setToolTip('Make correlation between systems. Only works if you define more than 3 systems')
@@ -117,6 +118,15 @@ class InitDialog(QDialog):
         self.pb.setRange(0, 0)
         # self.save_btn.clicked.connect(self.save)
 
+        self.jobs_label = QLabel('Jobs:')
+        self.jobs_label.setToolTip('Defines how many cores of your processor will be used simultaneously to process '
+                                   'the selected systems')
+        self.jobs_spin = QSpinBox(self)
+        self.jobs_spin.setToolTip('Defines how many cores of your processor will be used simultaneously to process '
+                                  'the selected systems')
+        self.jobs_spin.setRange(1, ncpu-1)
+        self.jobs_spin.setValue(ncpu-1)
+
         self.accept_btn = QPushButton('Accept')
         self.accept_btn.clicked.connect(self.get_data)
 
@@ -124,17 +134,18 @@ class InitDialog(QDialog):
         self.cancel_btn.clicked.connect(self.parent.close)
 
         self.btn_layout = QHBoxLayout()
-        self.btn_layout.addWidget(self.pb, 5)
+        self.btn_layout.addWidget(self.pb, 10)
         self.btn_layout.addStretch(1)
-        self.btn_layout.addWidget(self.cancel_btn, alignment=Qt.AlignRight)
-        self.btn_layout.addWidget(self.accept_btn, alignment=Qt.AlignRight)
+        self.btn_layout.addWidget(self.jobs_label, 1)
+        self.btn_layout.addWidget(self.jobs_spin, 1)
+        self.btn_layout.addStretch(1)
+        self.btn_layout.addWidget(self.cancel_btn, 2, alignment=Qt.AlignRight)
+        self.btn_layout.addWidget(self.accept_btn, 2, alignment=Qt.AlignRight)
 
         self.statusbar = QStatusBar(self)
 
         self.content_layout = QVBoxLayout(self)
         self.content_layout.addWidget(self.processing_label)
-        self.content_layout.addWidget(self.result_label)
-        # self.content_layout.addLayout(self.check_l)
         self.content_layout.addWidget(self.sys_group)
         self.content_layout.addWidget(self.chart_group)
         self.content_layout.addWidget(self.result_tree)
@@ -144,6 +155,7 @@ class InitDialog(QDialog):
         self.worker = worker()
         self.worker.job_finished.connect(self.jobfinished)
         self.worker.finished.connect(self.alljobs_finished)
+
 
     def show_warn(self):
         if self.com_btn.isChecked() or self.rec_btn.isChecked() or self.lig_btn.isChecked():
@@ -173,7 +185,7 @@ class InitDialog(QDialog):
         self.f_item.setFlags(self.f_item.flags() | Qt.ItemIsAutoTristate)
         self.result_tree.addTopLevelItem(self.f_item)
 
-        self.processing_label.setText(f'Processing {self.nfiles} files...')
+        self.processing_label.setText(f'Processing {self.nfiles} systems...')
 
         files_list = info_files
         names = []
@@ -243,7 +255,7 @@ class InitDialog(QDialog):
                 queue.put(item.info[1])
                 self.systems_list.append(item.info)
             it += 1
-        self.worker.define_dat(API.load_gmxmmpbsa_info, queue, self.result_queue)
+        self.worker.define_dat(API.load_gmxmmpbsa_info, queue, self.result_queue, self.jobs_spin.value())
         self.worker.start()
 
     def jobfinished(self):

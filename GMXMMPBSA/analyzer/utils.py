@@ -28,6 +28,8 @@ import multiprocessing
 
 R = 0.001987
 
+ncpu = multiprocessing.cpu_count()
+
 def calculatestar(args):
     return run_process(*args)
 
@@ -40,20 +42,19 @@ class worker(QThread):
     def __init__(self):
         super(worker, self).__init__()
 
-    def define_dat(self, function, queue: Queue, result_q: Queue):
+    def define_dat(self, function, queue: Queue, result_q: Queue, jobs: int = 1):
         self.fn = function
         self.queue = queue
         self.result_queue = result_q
-        self.running = True
+        self.jobs = jobs
 
     def run(self):
-        jobs = 1
         size = self.queue.qsize()
         TASKS = []
         for x in range(size):
             TASKS.append([self.fn, self.queue.get_nowait()])
 
-        with multiprocessing.Pool(jobs) as pool:
+        with multiprocessing.Pool(self.jobs) as pool:
             imap_unordered_it = pool.imap_unordered(calculatestar, TASKS)
             for result in imap_unordered_it:
                 self.job_finished.emit()
@@ -145,9 +146,9 @@ def get_files(parser_args):
             else:
                 recursive_files.extend(cf.glob('*_info'))
             for rf in recursive_files:
-                if rf in info_files:
-                    GMXMMPBSA_WARNING(f'{rf} is duplicated and will be ignored')
-                    continue
+                # if rf in info_files:
+                #     GMXMMPBSA_WARNING(f'{rf} is duplicated and will be ignored')
+                #     continue
                 info_files.append(rf)
         else:
             if cf in info_files:
