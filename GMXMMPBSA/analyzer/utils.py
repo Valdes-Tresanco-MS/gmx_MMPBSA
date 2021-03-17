@@ -54,6 +54,8 @@ class worker(QThread):
         for x in range(size):
             TASKS.append([self.fn, self.queue.get_nowait()])
 
+        if self.jobs > len(TASKS):
+            self.jobs = len(TASKS)
         with multiprocessing.Pool(self.jobs) as pool:
             imap_unordered_it = pool.imap_unordered(calculatestar, TASKS)
             for result in imap_unordered_it:
