@@ -82,7 +82,7 @@ def find_progs(INPUT, mpi_size=0):
                     my_progs['editconf'] = [exe.full_path, 'editconf']
                     my_progs['trjconv'] = [exe.full_path, 'trjconv']
                     g5 = True
-                    if prog in ['gmx_mpi', 'gmx_mpi_d'] and mpi_size:
+                    if prog in ['gmx_mpi', 'gmx_mpi_d'] and mpi_size > 1:
                         GMXMMPBSA_ERROR('gmx_mpi and gmx_mpi_d are not supported when running gmx_MMPBSA in parallel '
                                         'due to incompatibility between the mpi libraries used to compile GROMACS and '
                                         'mpi4py respectively. You can still use gmx_mpi or gmx_mpi_d to run gmx_MMPBSA '
