@@ -51,7 +51,6 @@ from GMXMMPBSA.parm_setup import MMPBSA_System
 from GMXMMPBSA.make_top import CheckMakeTop
 from GMXMMPBSA.timer import Timer
 
-logging.getLogger(__name__)
 
 # Global variables for the excepthook replacement at the bottom. Override these
 # in the MMPBSA_App constructor and input file reading
@@ -100,6 +99,8 @@ class MMPBSA_App(object):
         _mpi_size = self.mpi_size = self.MPI.COMM_WORLD.Get_size()
         if not self.master:
             self.stdout = open(os.devnull, 'w')
+        if self.master:
+            logging.info('Starting')
 
         # Set up timers
         timers = [Timer() for i in range(self.mpi_size)]
@@ -551,11 +552,41 @@ class MMPBSA_App(object):
                               self.INPUT['ligand_mask'], self.pre)
             self.calc_list.append(c, '', timer_key='qh')
 
+
+    def make_prmtops(self):
+        # Now we're getting ready, remove existing intermediate files
+        if self.master and self.FILES.use_mdins:
+            self.remove(-1)
+        elif self.master and not self.FILES.rewrite_output:
+            self.remove(0)
+
+        # Find external programs IFF we are doing a calc
+        if not self.FILES.make_mdins:
+            external_progs = {}
+            if self.master:
+                external_progs = find_progs(self.INPUT, self.mpi_size)
+            external_progs = self.MPI.COMM_WORLD.bcast(external_progs, root=0)
+            # Make external_progs an instance attribute
+            self.external_progs = external_progs
+        if self.master:
+            # Make amber topologies
+            logging.info('Building AMBER Topologies from GROMACS files...')
+            maketop = CheckMakeTop(self.FILES, self.INPUT, self.external_progs)
+            (self.FILES.complex_prmtop, self.FILES.receptor_prmtop, self.FILES.ligand_prmtop,
+             self.FILES.mutant_complex_prmtop,
+             self.FILES.mutant_receptor_prmtop, self.FILES.mutant_ligand_prmtop) = maketop.buildTopology()
+            logging.info('Building AMBER Topologies from GROMACS files...Done.\n')
+            self.INPUT['receptor_mask'], self.INPUT['ligand_mask'] = maketop.get_masks()
+            self.mut_str = maketop.mut_label
+            self.FILES.complex_fixed = self.FILES.prefix + 'COM_FIXED.pdb'
+
+        self.FILES = self.MPI.COMM_WORLD.bcast(self.FILES, root=0)
+        self.INPUT = self.MPI.COMM_WORLD.bcast(self.INPUT, root=0)
+
+        self.sync_mpi()
+
     def loadcheck_prmtops(self):
         """ Loads the topology files and checks their consistency """
-
-
-
         # Start setup timer and make sure we've already set up our input
         self.timer.add_timer('setup', 'Total setup time:')
         self.timer.start_timer('setup')
@@ -563,33 +594,9 @@ class MMPBSA_App(object):
             raise GMXMMPBSA_ERROR('MMPBSA_App not set up! Cannot check parms yet!', InternalError)
         # create local aliases to avoid abundant selfs
         FILES, INPUT = self.FILES, self.INPUT
-        # Now we're getting ready, remove existing intermediate files
-        if self.master and FILES.use_mdins:
-            self.remove(-1)
-        elif self.master and not FILES.rewrite_output:
-            self.remove(0)
-
-        # Now load the parms and check them
-        logging.info('Loading and checking parameter files for compatibility...\n')
-        # Find external programs IFF we are doing a calc
-        if not FILES.make_mdins:
-            external_progs = {}
-            if self.master:
-                external_progs = find_progs(self.INPUT)
-            external_progs = self.MPI.COMM_WORLD.bcast(external_progs, root=0)
-            # Make external_progs an instance attribute
-            self.external_progs = external_progs
-
-        # Make amber topologies
-        logging.info('Building AMBER Topologies from GROMACS files...')
-        maketop = CheckMakeTop(FILES, INPUT, self.external_progs)
-        (FILES.complex_prmtop, FILES.receptor_prmtop, FILES.ligand_prmtop, FILES.mutant_complex_prmtop,
-         FILES.mutant_receptor_prmtop, FILES.mutant_ligand_prmtop) = maketop.buildTopology()
-        logging.info('Building AMBER Topologies from GROMACS files...Done.\n')
-        INPUT['receptor_mask'], INPUT['ligand_mask'] = maketop.get_masks()
-        self.mut_str = maketop.mut_label
-        self.FILES.complex_fixed = self.FILES.prefix + 'COM_FIXED.pdb'
-
+        if self.master:
+            # Now load the parms and check them
+            logging.info('Loading and checking parameter files for compatibility...\n')
         self.normal_system = MMPBSA_System(FILES.complex_prmtop, FILES.receptor_prmtop, FILES.ligand_prmtop)
         self.using_chamber = self.normal_system.complex_prmtop.chamber
         self.mutant_system = None
@@ -693,15 +700,17 @@ class MMPBSA_App(object):
                      '2012, 8 (9) pp 3314-3321\n')
         self.MPI.Finalize()
 
+        end = 0
         if self.FILES.gui:
             import subprocess
-            self.stdout.write('Opening gmx_MMPBSA_ana to analyze results...\n')
-            g = subprocess.Popen(['python', '/home/mario/Drive/scripts/gmx_MMPBSA/run_ana.py', '-f',
-                                  self.FILES.prefix + 'info'])
+            logging.info('Opening gmx_MMPBSA_ana to analyze results...\n')
+            g = subprocess.Popen(['gmx_MMPBSA_ana', '-f', self.FILES.prefix + 'info'])
             if g.wait():
-                sys.exit(1)
-        else:
-            sys.exit(0)
+                end = 1
+        if end:
+            logging.error('Unable to start gmx_MMPBSA_ana...')
+        logging.info('Finalized...')
+        sys.exit(end)
 
     def get_cl_args(self, args=None):
         """
@@ -712,12 +721,12 @@ class MMPBSA_App(object):
             args = sys.argv
         if self.master:
             self.FILES = self.clparser.parse_args(args)
+            # save args in gmx_MMPBSA.log
+            with open('gmx_MMPBSA.log', 'a') as log:
+                log.write('[INFO   ] Command-line\n'
+                          '    gmx_MMPBSA ' + ' '.join(args) + '\n')
         else:
             self.FILES = object()
-        # save args in gmx_MMPBSA.log
-        with open('gmx_MMPBSA.log', 'a') as log:
-            log.write('[INFO   ] Command-line\n'
-                      '    gmx_MMPBSA '+ ' '.join(args) + '\n')
         # Broadcast the FILES
         self.FILES = self.MPI.COMM_WORLD.bcast(self.FILES)
         # Hand over the file prefix to the App instance
@@ -734,14 +743,15 @@ class MMPBSA_App(object):
         global _debug_printlevel
         if infile is None:
             if not hasattr(self, 'FILES'):
-                raise GMXMMPBSA_ERROR('FILES not present and no input file given!', InternalError)
+                GMXMMPBSA_ERROR('FILES not present and no input file given!', InternalError)
             infile = self.FILES.input_file
         self.INPUT = self.input_file.Parse(infile)
         _debug_printlevel = self.INPUT['debug_printlevel']
         self.input_file_text = str(self.input_file)
-        with open('gmx_MMPBSA.log', 'a') as log:
-            log.write('[INFO   ] Input file\n')
-            log.write(self.input_file_text)
+        if self.master:
+            with open('gmx_MMPBSA.log', 'a') as log:
+                log.write('[INFO   ] Input file\n')
+                log.write(self.input_file_text)
 
     def process_input(self):
         """

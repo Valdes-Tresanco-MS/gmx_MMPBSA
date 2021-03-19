@@ -22,20 +22,6 @@ import shutil
 from pathlib import Path
 import logging
 
-# logFormatter = logging.Formatter("%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s")
-# rootLogger = logging.getLogger(__name__)
-# logging.getLogger(__name__).addHandler(logging.StreamHandler(sys.stdout))
-logging.getLogger(__name__)
-log_file = Path('gmx_MMPBSA.log')
-if log_file.exists():
-    log_file.unlink()
-
-logging.basicConfig(
-    level=logging.INFO,
-    format="[%(levelname)-7s] %(message)s",
-    handlers=[
-        logging.FileHandler("gmx_MMPBSA.log"),
-        logging.StreamHandler()])
 
 try:
     from GMXMMPBSA.exceptions import GMXMMPBSA_ERROR, InputError, CommandlineError
@@ -46,10 +32,6 @@ try:
 except ImportError:
     import os
     amberhome = os.getenv('AMBERHOME') or '$AMBERHOME'
-    GMXMMPBSA_ERROR('Could not import Amber Python modules. Please make sure '
-                      'you have sourced %s/amber.sh (if you are using sh/ksh/'
-                      'bash/zsh) or %s/amber.csh (if you are using csh/tcsh)' %
-                      (amberhome, amberhome))
     raise ImportError('Could not import Amber Python modules. Please make sure '
                       'you have sourced %s/amber.sh (if you are using sh/ksh/'
                       'bash/zsh) or %s/amber.csh (if you are using csh/tcsh)' %
@@ -57,7 +39,12 @@ except ImportError:
 
 
 def gmxmmpbsa():
-
+    logging.basicConfig(
+        level=logging.INFO,
+        format="[%(levelname)-7s] %(message)s",
+        handlers=[
+            logging.FileHandler("gmx_MMPBSA.log", 'w'),
+            logging.StreamHandler()])
     # Adapted to run with MPI ?
     if len(sys.argv) > 1 and sys.argv[1] in ['MPI', 'mpi']:
         args = sys.argv
@@ -76,7 +63,7 @@ def gmxmmpbsa():
 
     # Instantiate the main MMPBSA_App
     app = main.MMPBSA_App(MPI)
-    logging.info('Starting')
+
     # Read the command-line arguments
     try:
         app.get_cl_args(args[1:])
@@ -107,6 +94,7 @@ def gmxmmpbsa():
             sys.exit(1)
         app.process_input()
         app.check_for_bad_input()
+        app.make_prmtops()
         app.loadcheck_prmtops()
         app.file_setup()
         app.run_mmpbsa()
@@ -114,13 +102,13 @@ def gmxmmpbsa():
     else:
         info = InfoFile(app)
         info.read_info()
+        app.make_prmtops()
         app.loadcheck_prmtops()
 
     # Now we parse the output, print, and finish
     app.parse_output_files()
     app.write_final_outputs()
     app.finalize()
-
 
 
 def gmxmmpbsa_ana():
@@ -146,6 +134,12 @@ def gmxmmpbsa_ana():
 
 
 def gmxmmpbsa_test():
+    logging.basicConfig(
+        level=logging.INFO,
+        format="[%(levelname)-7s] %(message)s",
+        handlers=[
+            logging.FileHandler("gmx_MMPBSA_test.log", 'w'),
+            logging.StreamHandler()])
     try:
         parser = testparser.parse_args(sys.argv[1:])
     except CommandlineError as e:
