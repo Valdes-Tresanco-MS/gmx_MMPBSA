@@ -39,15 +39,11 @@ except ImportError:
 
 
 def gmxmmpbsa():
-    logging.getLogger('gmx_MMPBSA')
-    log_file = Path('gmx_MMPBSA.log')
-    if log_file.exists():
-        log_file.unlink()
     logging.basicConfig(
         level=logging.INFO,
         format="[%(levelname)-7s] %(message)s",
         handlers=[
-            logging.FileHandler("gmx_MMPBSA.log"),
+            logging.FileHandler("gmx_MMPBSA.log", 'w'),
             logging.StreamHandler()])
     # Adapted to run with MPI ?
     if len(sys.argv) > 1 and sys.argv[1] in ['MPI', 'mpi']:
@@ -138,16 +134,11 @@ def gmxmmpbsa_ana():
 
 
 def gmxmmpbsa_test():
-    logging.getLogger('gmx_MMPBSA_test')
-    log_file = Path('gmx_MMPBSA_test.log')
-    print(log_file)
-    if log_file.exists():
-        log_file.unlink()
     logging.basicConfig(
         level=logging.INFO,
         format="[%(levelname)-7s] %(message)s",
         handlers=[
-            logging.FileHandler("gmx_MMPBSA_test.log"),
+            logging.FileHandler("gmx_MMPBSA_test.log", 'w'),
             logging.StreamHandler()])
     try:
         parser = testparser.parse_args(sys.argv[1:])
