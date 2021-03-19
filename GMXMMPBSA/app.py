@@ -46,10 +46,6 @@ try:
 except ImportError:
     import os
     amberhome = os.getenv('AMBERHOME') or '$AMBERHOME'
-    GMXMMPBSA_ERROR('Could not import Amber Python modules. Please make sure '
-                      'you have sourced %s/amber.sh (if you are using sh/ksh/'
-                      'bash/zsh) or %s/amber.csh (if you are using csh/tcsh)' %
-                      (amberhome, amberhome))
     raise ImportError('Could not import Amber Python modules. Please make sure '
                       'you have sourced %s/amber.sh (if you are using sh/ksh/'
                       'bash/zsh) or %s/amber.csh (if you are using csh/tcsh)' %
@@ -57,7 +53,16 @@ except ImportError:
 
 
 def gmxmmpbsa():
-
+    logging.getLogger('gmx_MMPBSA')
+    log_file = Path('gmx_MMPBSA.log')
+    if log_file.exists():
+        log_file.unlink()
+    logging.basicConfig(
+        level=logging.INFO,
+        format="[%(levelname)-7s] %(message)s",
+        handlers=[
+            logging.FileHandler("gmx_MMPBSA.log"),
+            logging.StreamHandler()])
     # Adapted to run with MPI ?
     if len(sys.argv) > 1 and sys.argv[1] in ['MPI', 'mpi']:
         args = sys.argv
@@ -76,7 +81,7 @@ def gmxmmpbsa():
 
     # Instantiate the main MMPBSA_App
     app = main.MMPBSA_App(MPI)
-    logging.info('Starting')
+
     # Read the command-line arguments
     try:
         app.get_cl_args(args[1:])
@@ -122,7 +127,6 @@ def gmxmmpbsa():
     app.finalize()
 
 
-
 def gmxmmpbsa_ana():
     try:
         from PyQt5.QtWidgets import QApplication
@@ -146,6 +150,17 @@ def gmxmmpbsa_ana():
 
 
 def gmxmmpbsa_test():
+    logging.getLogger('gmx_MMPBSA_test')
+    log_file = Path('gmx_MMPBSA_test.log')
+    print(log_file)
+    if log_file.exists():
+        log_file.unlink()
+    logging.basicConfig(
+        level=logging.INFO,
+        format="[%(levelname)-7s] %(message)s",
+        handlers=[
+            logging.FileHandler("gmx_MMPBSA_test.log"),
+            logging.StreamHandler()])
     try:
         parser = testparser.parse_args(sys.argv[1:])
     except CommandlineError as e:
