@@ -19,7 +19,6 @@
 import math
 from pathlib import Path
 from GMXMMPBSA.exceptions import GMXMMPBSA_ERROR, GMXMMPBSA_WARNING
-import logging
 import pandas as pd
 import numpy as np
 from queue import Queue
