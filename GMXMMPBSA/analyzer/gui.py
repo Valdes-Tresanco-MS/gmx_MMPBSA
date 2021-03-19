@@ -254,8 +254,8 @@ class GMX_MMPBSA_ANA(QMainWindow):
             if hasattr(item.app.FILES, 'complex_fixed'):
                 com_pdb = item.syspath.parent.joinpath(item.app.FILES.complex_fixed)
             else:
-                logging.warning(f'{item.app.FILES.prefix + "FIXED_COM.pdb"} not exits. The modified PDB file can '
-                                f'be inconsistent. Please, consider use the latest version of gmx_MMPBSA')
+                self.statusbar.showMessage(f'{item.app.FILES.prefix + "FIXED_COM.pdb"} not exits. The modified PDB file can '
+                                f'be inconsistent. Please, consider use the latest version of gmx_MMPBSA', 20000)
                 com_pdb = item.syspath.parent.joinpath(item.app.FILES.prefix + 'COM.pdb')
 
             com_pdb_str = parmed.read_PDB(com_pdb.as_posix())
@@ -393,12 +393,8 @@ class GMX_MMPBSA_ANA(QMainWindow):
             if hasattr(item.app.FILES, 'complex_fixed'):
                 com_pdb = item.syspath.parent.joinpath(item.app.FILES.complex_fixed)
             else:
-                logging.warning(f'{item.app.FILES.prefix + "FIXED_COM.pdb"} not exits. The modified PDB file can '
+                self.statusbar.showMessage(f'{item.app.FILES.prefix + "FIXED_COM.pdb"} not exits. The modified PDB file can '
                                 f'be inconsistent. Please, consider use the latest version of gmx_MMPBSA')
-                com_pdb = item.syspath.parent.joinpath(item.app.FILES.prefix + 'COM.pdb')
-            if not com_pdb.exists():
-                logging.warning(f'{com_pdb} not exits. The modified PDB file can be inconsistent. Please, '
-                                f'consider use the latest version of gmx_MMPBSA')
                 com_pdb = item.syspath.parent.joinpath(item.app.FILES.prefix + 'COM.pdb')
             bfactor_pml = item.syspath.parent.joinpath('bfactor.pml')
             output_path = com_pdb.parent.joinpath(f'{item.sysname}_energy2bfactor.pdb')
