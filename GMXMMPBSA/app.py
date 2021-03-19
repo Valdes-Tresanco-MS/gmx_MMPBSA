@@ -98,6 +98,7 @@ def gmxmmpbsa():
             sys.exit(1)
         app.process_input()
         app.check_for_bad_input()
+        app.make_prmtops()
         app.loadcheck_prmtops()
         app.file_setup()
         app.run_mmpbsa()
@@ -105,6 +106,7 @@ def gmxmmpbsa():
     else:
         info = InfoFile(app)
         info.read_info()
+        app.make_prmtops()
         app.loadcheck_prmtops()
 
     # Now we parse the output, print, and finish
