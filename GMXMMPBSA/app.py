@@ -22,20 +22,6 @@ import shutil
 from pathlib import Path
 import logging
 
-# logFormatter = logging.Formatter("%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s")
-# rootLogger = logging.getLogger(__name__)
-# logging.getLogger(__name__).addHandler(logging.StreamHandler(sys.stdout))
-logging.getLogger(__name__)
-log_file = Path('gmx_MMPBSA.log')
-if log_file.exists():
-    log_file.unlink()
-
-logging.basicConfig(
-    level=logging.INFO,
-    format="[%(levelname)-7s] %(message)s",
-    handlers=[
-        logging.FileHandler("gmx_MMPBSA.log"),
-        logging.StreamHandler()])
 
 try:
     from GMXMMPBSA.exceptions import GMXMMPBSA_ERROR, InputError, CommandlineError
