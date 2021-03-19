@@ -18,7 +18,6 @@
 
 import sys
 import os
-import logging
 
 from queue import Queue, Empty
 from pathlib import Path
