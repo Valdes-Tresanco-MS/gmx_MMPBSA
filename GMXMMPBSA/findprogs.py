@@ -33,7 +33,7 @@ from GMXMMPBSA.exceptions import GMXMMPBSA_ERROR
 import logging
 #+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-def find_progs(INPUT):
+def find_progs(INPUT, mpi_size=0):
     """ Find the necessary programs based in the user INPUT """
     # List all of the used programs with the conditions that they are needed
     logging.info('Checking external programs...')
@@ -82,6 +82,11 @@ def find_progs(INPUT):
                     my_progs['editconf'] = [exe.full_path, 'editconf']
                     my_progs['trjconv'] = [exe.full_path, 'trjconv']
                     g5 = True
+                    if prog in ['gmx_mpi', 'gmx_mpi_d'] and mpi_size:
+                        GMXMMPBSA_ERROR('gmx_mpi and gmx_mpi_d are not supported when running gmx_MMPBSA in parallel '
+                                        'due to incompatibility between the mpi libraries used to compile GROMACS and '
+                                        'mpi4py respectively. You can still use gmx_mpi or gmx_mpi_d to run gmx_MMPBSA '
+                                        'serial. For parallel calculations use gmx instead')
                     logging.info('%s found! Using %s' % (prog, exe.full_path))
                     break
             if g5:
