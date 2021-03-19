@@ -51,7 +51,6 @@ from GMXMMPBSA.parm_setup import MMPBSA_System
 from GMXMMPBSA.make_top import CheckMakeTop
 from GMXMMPBSA.timer import Timer
 
-logging.getLogger(__name__)
 
 # Global variables for the excepthook replacement at the bottom. Override these
 # in the MMPBSA_App constructor and input file reading
@@ -725,15 +724,18 @@ class MMPBSA_App(object):
                      '2012, 8 (9) pp 3314-3321\n')
         self.MPI.Finalize()
 
+        end = 0
         if self.FILES.gui:
+            print(self.mpi_size, 'mpi_size')
             import subprocess
-            self.stdout.write('Opening gmx_MMPBSA_ana to analyze results...\n')
-            g = subprocess.Popen(['python', '/home/mario/Drive/scripts/gmx_MMPBSA/run_ana.py', '-f',
-                                  self.FILES.prefix + 'info'])
+            logging.info('Opening gmx_MMPBSA_ana to analyze results...\n')
+            g = subprocess.Popen(['gmx_MMPBSA_ana', '-f', self.FILES.prefix + 'info'])
             if g.wait():
-                sys.exit(1)
-        else:
-            sys.exit(0)
+                end = 1
+        if end:
+            logging.error('Unable to start gmx_MMPBSA_ana...')
+        logging.info('Finalized...')
+        sys.exit(end)
 
     def get_cl_args(self, args=None):
         """
@@ -744,12 +746,12 @@ class MMPBSA_App(object):
             args = sys.argv
         if self.master:
             self.FILES = self.clparser.parse_args(args)
+            # save args in gmx_MMPBSA.log
+            with open('gmx_MMPBSA.log', 'a') as log:
+                log.write('[INFO   ] Command-line\n'
+                          '    gmx_MMPBSA ' + ' '.join(args) + '\n')
         else:
             self.FILES = object()
-        # save args in gmx_MMPBSA.log
-        with open('gmx_MMPBSA.log', 'a') as log:
-            log.write('[INFO   ] Command-line\n'
-                      '    gmx_MMPBSA '+ ' '.join(args) + '\n')
         # Broadcast the FILES
         self.FILES = self.MPI.COMM_WORLD.bcast(self.FILES)
         # Hand over the file prefix to the App instance
@@ -766,14 +768,15 @@ class MMPBSA_App(object):
         global _debug_printlevel
         if infile is None:
             if not hasattr(self, 'FILES'):
-                raise GMXMMPBSA_ERROR('FILES not present and no input file given!', InternalError)
+                GMXMMPBSA_ERROR('FILES not present and no input file given!', InternalError)
             infile = self.FILES.input_file
         self.INPUT = self.input_file.Parse(infile)
         _debug_printlevel = self.INPUT['debug_printlevel']
         self.input_file_text = str(self.input_file)
-        with open('gmx_MMPBSA.log', 'a') as log:
-            log.write('[INFO   ] Input file\n')
-            log.write(self.input_file_text)
+        if self.master:
+            with open('gmx_MMPBSA.log', 'a') as log:
+                log.write('[INFO   ] Input file\n')
+                log.write(self.input_file_text)
 
     def process_input(self):
         """
