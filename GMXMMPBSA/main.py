@@ -100,6 +100,8 @@ class MMPBSA_App(object):
         _mpi_size = self.mpi_size = self.MPI.COMM_WORLD.Get_size()
         if not self.master:
             self.stdout = open(os.devnull, 'w')
+        if self.master:
+            logging.info('Starting')
 
         # Set up timers
         timers = [Timer() for i in range(self.mpi_size)]
