@@ -553,8 +553,6 @@ class MMPBSA_App(object):
                               self.INPUT['ligand_mask'], self.pre)
             self.calc_list.append(c, '', timer_key='qh')
 
-    def loadcheck_prmtops(self):
-        """ Loads the topology files and checks their consistency """
 
     def make_prmtops(self):
         # Now we're getting ready, remove existing intermediate files
