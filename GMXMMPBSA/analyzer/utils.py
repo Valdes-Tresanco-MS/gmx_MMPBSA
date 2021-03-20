@@ -143,13 +143,13 @@ def get_files(parser_args):
         if cf.is_dir():
             recursive_files = []
             if parser_args.recursive:
-                recursive_files.extend(cf.glob('*/*_info'))
+                recursive_files.extend(cf.absolute().glob('*/*_info'))
             else:
-                recursive_files.extend(cf.glob('*_info'))
+                recursive_files.extend(cf.absolute().glob('*_info'))
             for rf in recursive_files:
-                # if rf in info_files:
-                #     GMXMMPBSA_WARNING(f'{rf} is duplicated and will be ignored')
-                #     continue
+                if rf in info_files:
+                    GMXMMPBSA_WARNING(f'{rf} is duplicated and will be ignored')
+                    continue
                 info_files.append(rf)
         else:
             if cf in info_files:
