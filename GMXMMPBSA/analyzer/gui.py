@@ -581,7 +581,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
         for x in hide_col:
             self.correlation_treeWidget.hideColumn(x)
 
-    def process_data(self, systems, rqueue: Queue, options):
+    def process_data(self, rqueue: Queue, options):
         self.data_options = options
         self.init_dialog.close()
         maximum = rqueue.qsize()
@@ -593,8 +593,9 @@ class GMX_MMPBSA_ANA(QMainWindow):
             qpd.setValue(i)
             if qpd.wasCanceled():
                 break
-            result, app = rqueue.get()
-            self.makeTree(systems[i], result, app, options)
+            system, api_data = rqueue.get()
+            result, app = api_data
+            self.makeTree(system, result, app, options)
         qpd.setLabelText(f"Processing data of {self.items_counter['charts']} items")
         qpd.setMaximum(self.items_counter['charts'])
         i = 0

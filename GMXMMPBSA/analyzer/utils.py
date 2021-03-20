@@ -33,8 +33,9 @@ def calculatestar(args):
     return run_process(*args)
 
 def run_process(func, args):
-    results = func(args)
-    return results
+    basename, path, exp_ki, temp = args
+    results = func(path)
+    return (args, results)
 
 class worker(QThread):
     job_finished = pyqtSignal()

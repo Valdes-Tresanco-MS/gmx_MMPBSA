@@ -252,8 +252,7 @@ class InitDialog(QDialog):
         while it.value():
             item = it.value()
             if item.checkState(1) == Qt.Checked and item.info:
-                queue.put(item.info[1])
-                self.systems_list.append(item.info)
+                queue.put(item.info)
             it += 1
         self.worker.define_dat(API.load_gmxmmpbsa_info, queue, self.result_queue, self.jobs_spin.value())
         self.worker.start()
@@ -264,7 +263,7 @@ class InitDialog(QDialog):
 
     def alljobs_finished(self):
         self.worker.deleteLater()
-        self.parent.process_data(self.systems_list, self.result_queue, self.options)
+        self.parent.process_data(self.result_queue, self.options)
 
 
 class ExportDialog(QDialog):
