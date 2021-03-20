@@ -39,7 +39,6 @@ def run_process(system, sys_name, args):
 
 
 def run_test(parser):
-    log = open('gmx_MMPBSA.log', 'a')
     # get the git path
     git_path = [os.path.join(path, 'git') for path in os.environ["PATH"].split(os.pathsep)
                 if os.path.exists(os.path.join(path, 'git')) and
@@ -141,7 +140,7 @@ def run_test(parser):
     if not parser.nogui:
         print(80 * '-')
         logging.info('Opening gmx_MMPBSA_ana...')
-        g_p = subprocess.Popen(['python', 'gmx_MMPBSA_ana','-f'] + result_list, stdout=subprocess.PIPE,
+        g_p = subprocess.Popen(['gmx_MMPBSA_ana', '-f'] + result_list, stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE)
         if g_p.wait():
             error = g_p.stderr.read().decode("utf-8")
