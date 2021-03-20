@@ -686,29 +686,35 @@ class GMX_MMPBSA_ANA(QMainWindow):
 
         for level in models_keys:
             item = CustomItem(topItem, [level.upper()], has_chart=False)
-            if level in ['gb', 'pb', 'rism gf', 'rism std']:
-                for level1 in data[level]:
-                    # LEVEL-1 [complex, receptor, ligand] + delta
-                    if level1 in parts: # only show graphs for selected parts
-                        item1 = CustomItem(item, [str(level1).upper()], cdata=data[level][level1], level=1,
-                                           chart_title=f"Energetic Components",
-                                           chart_subtitle=f"{mut_pre}{sys_name} | {level.upper()} | {level1.upper()}",
-                                           col_box=[2])
+            for level1 in data[level]:
+                # LEVEL-1 [complex, receptor, ligand] + delta
+                if level1 in parts: # only show graphs for selected parts
+                    item1 = CustomItem(item, [str(level1).upper()], cdata=data[level][level1], level=1,
+                                       chart_title=f"Energetic Components",
+                                       chart_subtitle=f"{mut_pre}{sys_name} | {level.upper()} | {level1.upper()}",
+                                       col_box=[2])
+                    self.items_counter['charts'] += 1
+                    for level2 in data[level][level1]:
+                        # LEVEL-2 [GB, PB or 3D-RISM components]
+                        if level1 == 'delta' and level2 == 'DELTA TOTAL':
+                            print(sys_name, data[level][level1][level2])
+                            correlation_data[sys_name]['ΔG'][level]['ΔH'] = data[level][level1][level2].mean()
+                        if (level2 != 'DELTA TOTAL' and options['remove_empty_charts'] and
+                                abs(data[level][level1][level2].mean()) < 0.1):
+                            continue
+                        item2 = CustomItem(item1, [str(level2).upper()], cdata=data[level][level1][level2],
+                                               level=0, chart_title=f"Energetic Components",
+                                               chart_subtitle=f"{mut_pre}{sys_name} | {level.upper()} | "
+                                                              f"{level1.upper()} | {level2.upper()}",
+                                           col_box=[1])
                         self.items_counter['charts'] += 1
-                        for level2 in data[level][level1]:
-                            # LEVEL-2 [GB, PB or 3D-RISM components]
-                            if level1 == 'delta' and level2 == 'DELTA TOTAL':
-                                correlation_data[sys_name]['ΔG'][level]['ΔH'] = data[level][level1][level2].mean()
-                            if options['remove_empty_charts'] and abs(data[level][level1][level2].mean()) < 0.1:
-                                continue
-                            item2 = CustomItem(item1, [str(level2).upper()], cdata=data[level][level1][level2],
-                                                   level=0, chart_title=f"Energetic Components",
-                                                   chart_subtitle=f"{mut_pre}{sys_name} | {level.upper()} | "
-                                                                  f"{level1.upper()} | {level2.upper()}",
-                                               col_box=[1])
-                            self.items_counter['charts'] += 1
-            elif level in ['nmode', 'qh', 'ie']:
-                # This is an exception, only for aesthetic
+
+        # check if any entropy approach
+        if entropy_keys:
+            item = CustomItem(topItem, ['Entropy'], has_chart=False)
+            itemd = CustomItem(topItem, ['ΔG Binding'], has_chart=False)
+
+            for level in entropy_keys:
                 if level == 'ie':
                     item1 = CustomItem(item, [str(level).upper()], cdata=data[level]['data'],
                                        level=0, chart_title=f"Interaction Entropy",
