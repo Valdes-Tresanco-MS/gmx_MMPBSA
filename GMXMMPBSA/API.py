@@ -195,10 +195,12 @@ class APIDecompOut(amber_outputs.DecompOut):
     def __init__(self, basename, res_info, app): #surften, num_files, verbose, nframes, prmtop):
 
         surften = app.INPUT['surften']
-        num_files = app.mpi_size,
+        num_files = app.mpi_size
         verbose = app.INPUT['dec_verbose']
         nframes = app.numframes
         prmtop = app.FILES.complex_prmtop
+
+        print(num_files, 'num_files')
         amber_outputs.DecompOut.__init__(self, basename, prmtop, surften, False, num_files, verbose)
         self.array_data = {}
         # Make a new dict for all printed tokens (TDC,SDC,BDC)
@@ -227,7 +229,7 @@ class APIPairDecompOut(amber_outputs.PairDecompOut):
     def __init__(self, basename, res_info, app): #surften, num_files, verbose, nframes, prmtop):
 
         surften = app.INPUT['surften']
-        num_files = app.mpi_size,
+        num_files = app.mpi_size
         verbose = app.INPUT['dec_verbose']
         nframes = app.numframes
         prmtop = app.FILES.complex_prmtop
