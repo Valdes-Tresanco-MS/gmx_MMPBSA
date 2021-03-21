@@ -543,7 +543,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
             item_e = QTableWidgetItem(f"{self.corr_data[x]['Exp.Energy']:.2f}")
             self.data_table_widget.setItem(sys_with_ki, 1, item_e)
             sys_with_ki += 1
-        if sys_with_ki < 4:
+        if sys_with_ki < 3:
             m = QMessageBox.critical(self, 'Unable to calculate correlation',
                                      'Three or more systems are needed to calculate the correlation.',
                                      QMessageBox.Ok)
