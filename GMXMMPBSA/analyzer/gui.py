@@ -697,7 +697,6 @@ class GMX_MMPBSA_ANA(QMainWindow):
                     for level2 in data[level][level1]:
                         # LEVEL-2 [GB, PB or 3D-RISM components]
                         if level1 == 'delta' and level2 == 'DELTA TOTAL':
-                            print(sys_name, data[level][level1][level2])
                             correlation_data[sys_name]['ΔG'][level]['ΔH'] = data[level][level1][level2].mean()
                         if (level2 != 'DELTA TOTAL' and options['remove_empty_charts'] and
                                 abs(data[level][level1][level2].mean()) < 0.1):
