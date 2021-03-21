@@ -232,11 +232,11 @@ class GMX_MMPBSA_ANA(QMainWindow):
         save_heatmap_csv = None
         save_pdb = None
         if 1 in item.col_box:
-            save_line_csv = self.cont_menu.addAction("Save CSV (Line)")
+            save_line_csv = self.cont_menu.addAction(f"Save {item.text(0)} CSV (Line)")
         if 2 in item.col_box:
-            save_bar_csv = self.cont_menu.addAction("Save CSV (Bar)")
+            save_bar_csv = self.cont_menu.addAction(f"Save {item.text(0)} CSV (Bar)")
         if 3 in item.col_box:
-            save_heatmap_csv = self.cont_menu.addAction("Save CSV (Heatmap)")
+            save_heatmap_csv = self.cont_menu.addAction(f"Save {item.text(0)} CSV (Heatmap)")
         if 4 in item.col_box:
             save_pdb = self.cont_menu.addAction("Save PDB")
         action = self.cont_menu.exec_(self.treeWidget.mapToGlobal(point))
@@ -277,7 +277,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
             return
         item = self.correlation_treeWidget.itemAt(point)
         cont_menu = QMenu(self.correlation_treeWidget)
-        save_csv = cont_menu.addAction("Save CSV")
+        save_csv = cont_menu.addAction(f"Save {item.text(0)} model CSV")
         action = cont_menu.exec_(self.correlation_treeWidget.mapToGlobal(point))
 
         if action == save_csv:
