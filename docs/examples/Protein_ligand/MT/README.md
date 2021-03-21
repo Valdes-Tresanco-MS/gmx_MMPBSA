@@ -4,6 +4,10 @@ title: Protein-ligand (MT)
 ---
 
 # Protein-ligand binding free energy calculations (Multiple Trajectory method)
+
+!!! danger
+    The ligand mol2 file must be the Antechamber output.
+
 ## Requirements
 
 In this case, `gmx_MMPBSA` requires:

@@ -4,6 +4,10 @@ title: Protein-Membrane
 ---
 
 # MMPBSA with membrane proteins
+
+!!! danger
+    The ligand mol2 file must be the Antechamber output.
+
 ## Requirements
 
 In this case, `gmx_MMPBSA` requires:
