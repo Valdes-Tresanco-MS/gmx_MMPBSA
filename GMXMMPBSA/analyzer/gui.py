@@ -283,7 +283,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
         if action == save_csv:
             options = QFileDialog.Options()
             options |= QFileDialog.DontUseNativeDialog
-            fileName, _ = QFileDialog.getSaveFileName(self, "Save CSV file", "correlation_data.csv", "CSV (*.csv)",
+            fileName, _ = QFileDialog.getSaveFileName(self, "Save CSV file", f"correlation_{item.text(0)}_model.csv", "CSV (*.csv)",
                                                       options=options)
             if fileName:
                 item.model.to_csv(fileName, index=False)
