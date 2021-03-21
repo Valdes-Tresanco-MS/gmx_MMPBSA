@@ -200,7 +200,6 @@ class APIDecompOut(amber_outputs.DecompOut):
         nframes = app.numframes
         prmtop = app.FILES.complex_prmtop
 
-        print(num_files, 'num_files')
         amber_outputs.DecompOut.__init__(self, basename, prmtop, surften, False, num_files, verbose)
         self.array_data = {}
         # Make a new dict for all printed tokens (TDC,SDC,BDC)

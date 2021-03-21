@@ -742,7 +742,6 @@ class GMX_MMPBSA_ANA(QMainWindow):
                     self.items_counter['charts'] += 1
                     correlation_data[sys_name]['ΔG'][model][level] = correlation_data[sys_name]['ΔG'][model]['ΔH'] + ent
 
-        print(sys_name, correlation_data[sys_name])
         for level in decomp_keys:
             # omit decomp data
             if not options['decomposition']:
