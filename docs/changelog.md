@@ -4,7 +4,7 @@ title: Changelog
 ---
 
 # Changelog
-## [gxm_MMPBSA v1.4.0 (xx/03/2021)](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/releases/tag/v1.4.0)
+## [gxm_MMPBSA v1.4.0 (22/03/2021)](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/releases/tag/v1.4.0)
 This release focuses almost entirely on `gmx_MMPBSA_ana` with minor issues fixed in `gmx_MMPBSA`
 ### Additions
 - New start window to select options  
