@@ -109,21 +109,33 @@ contribution
 
 ### Binding Free Energy calculation (GB + IE) 
 
-### Correlation
-done
+<div class="embed-container">
+    <iframe src="https://www.youtube.com/embed/k1aLlBhnkxo" frameborder="0" allowfullscreen></iframe>
+</div>
+
+### Correlation analysis
+
+<div class="embed-container">
+    <iframe src="https://www.youtube.com/embed/0xiphzA1O0w" frameborder="0" allowfullscreen></iframe>
+</div>
+
 ### Alanine scanning
-done
+
+<div class="embed-container">
+    <iframe src="https://www.youtube.com/embed/_r13tcmY038" frameborder="0" allowfullscreen></iframe>
+</div>
 
 ### Per-residue decomposition
-done
 
+<div class="embed-container">
+    <iframe src="https://www.youtube.com/embed/Ww7juWeWQQ8" frameborder="0" allowfullscreen></iframe>
+</div>
 
 ### Functionalities
-done
 
-
-
-
+<div class="embed-container">
+    <iframe src="https://www.youtube.com/embed/PgDnG8UgRWw" frameborder="0" allowfullscreen></iframe>
+</div>
 
 ## `gmx_MMPBSA_ana` under pressure
 
