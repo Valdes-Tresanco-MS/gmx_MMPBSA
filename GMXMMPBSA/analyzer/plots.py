@@ -77,7 +77,7 @@ class NavigationToolbar(NavigationToolbar2QT):
                 matplotlib.rcParams['savefig.directory'] = (
                     os.path.dirname(fname))
             try:
-                self.canvas.figure.savefig(fname, dpi=600)
+                self.canvas.figure.savefig(fname, dpi=300)
             except Exception as e:
                 QMessageBox.critical(
                     self, "Error saving file", str(e),
@@ -223,7 +223,7 @@ class Charts(QMdiSubWindow):
                     self.line_plot.cla()
                     self.line_plot.clear()
 
-                label = 'ΔG'
+                label = 'ΔH'
                 if 'IE' in self.item.item_name:
                     label = '-TΔS'
 

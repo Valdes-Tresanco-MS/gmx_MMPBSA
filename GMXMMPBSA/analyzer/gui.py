@@ -746,6 +746,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
             # omit decomp data
             if not options['decomposition']:
                 continue
+            item = CustomItem(topItem, [str(level).upper()], has_chart=False)
             for level1 in data[level]:
                 # LEVEL-1 [GB or PB]
                 item1 = CustomItem(item, [str(level1).upper()], has_chart=False)
