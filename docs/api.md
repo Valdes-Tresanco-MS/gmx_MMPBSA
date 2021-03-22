@@ -229,5 +229,12 @@ described afterwards).
 * `tot` Total free energy contributions (sum of previous 5).
 
 
-![](assets/images/decomp_dict_keys.png)
-**Figure 1:** Tree of `dict` keys following the `decomp` key in a `mmpbsa_data` instance.
+<figure markdown="1">
+[![decomp][1]][1]
+  <figcaption markdown="1">
+  **Figure 1**. Tree of `dict` keys following the `decomp` key in a `mmpbsa_data` instance.
+  </figcaption>
+</figure>
+
+[1]: assets/images/decomp_dict_keys.png
+

@@ -35,8 +35,19 @@ alanine or glycine scanning or the interaction residues during decomposition ana
 the binding free energies and/or entropies are estimated using the selected models. Finally, in the last step `Analysis`,
 the results can be analyzed by using the graphical user interface `gmx_MMPBSA_ana`.
 
-![Placeholder](assets/images/workflow.svg)
-**Figure 1:** gmx_MMPBSA general workflow
+
+<figure markdown="1">
+[![overview][2]][2]
+  <figcaption markdown="1">
+  **Figure 1**. `gmx_MMPBSA` general workflow
+  </figcaption>
+</figure>
+
+[2]: assets/images/workflow.svg
+
+[comment]: <> (![Placeholder]&#40;assets/images/workflow.svg&#41;)
+
+[comment]: <> (**Figure 1:** gmx_MMPBSA general workflow)
 
 ## Required input files
 
@@ -105,10 +116,17 @@ In this section, we will go in deatil about each file and what they are used for
 - {++The PBRadii is assigned++}
 - Topologies are {++converted with `parmed`++} or generated with `tleap`
 
+[1]: https://pubs.acs.org/doi/10.1021/ct300418h
 
 **The following figure shows the process to generate AMBER topologies depending on the force field.** 
 
-![Placeholder](assets/images/topgeneration.svg)
-**Figure 2:** Topology generation workflow for Single Trajectory Approximation
 
-[1]: https://pubs.acs.org/doi/10.1021/ct300418h
+
+<figure markdown="1">
+[![overview][3]][3]
+  <figcaption markdown="1">
+  **Figure 1**. Topology generation workflow for Single Trajectory Approximation
+  </figcaption>
+</figure>
+
+[3]: assets/images/topgeneration.svg
