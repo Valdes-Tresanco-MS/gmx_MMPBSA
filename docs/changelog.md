@@ -26,26 +26,28 @@ This release focuses almost entirely on `gmx_MMPBSA_ana` with minor issues fixed
     - Multiple models at the same time
     - Graphs and correlation data for each calculated energy term (ΔH, ΔH+IE, ΔH+NMODE and ΔH+QH)  
     - Table with the experimental energy of the systems, and the data of the selected model
-- New arguments flags for gmx_MMPBSA_ana (See the [gmx_MMPBSA_ana documentation]())
-    - replace `-p` by `-f`
+- New arguments flags for gmx_MMPBSA_ana (See the [gmx_MMPBSA_ana documentation](https://valdes-tresanco-ms.github.io/gmx_MMPBSA/analyzer/))
+    - replaced `-p` by `-f`
     - `-f` accept a folder, single info file or a list of them
     - New flag `-r`. This flag allows to load all the systems inside a selected folder
 - New graphical options
     - A new set of graphics (heatmap)
         - Per-frame when analyzing Per-residue and pair in Per-wise
         - Relation matrix for Per-wise
-    - Interactive visualization of PDB files with per-residue energies with PyMOL (up to 5 instances).
+    - Interactive visualization of PDB files with per-residue energies with `PyMOL` (up to 5 instances).
     - Regression plot for correlation
 - Plot features
     - Added Standard deviation to bar plots  
     - Added rolling average to line plots
     - Added indicators for the selected interval and average value in IE chart
     - Added crosshair cursor for better analysis on charts
-- Multiprocessing application for testing (gmx_MMPBSA_test)  
+- Multiprocessing application for testing (`gmx_MMPBSA_test`) 
+- Embed Youtube videos for `gmx_MMPBSA_ana`
 
 ### Fixes
 - Now `gmx_MMPBSA_ana` shows stability results as expected
 - Errors in the documentation
+- MPI
 
 ### Changes
 - Converted analyzer.py into a sub-module for more flexibility, organization and portability
