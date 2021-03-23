@@ -84,7 +84,7 @@ It could also represent the relationship between components.This is explicit for
 represents the contribution of each residue with its respective pairs.
 
 !!! tip
-The relational heatmap graph is the best representation in the per-wise analysis.
+    The relational heatmap graph is the best representation in the per-wise analysis.
 
 <figure markdown="1">
 [![heatmapplot][7]][7]
@@ -148,12 +148,12 @@ contribution
 
 In this experiment, we replicated our examples folder 9 times (differs from the one available on Github) giving us a 
 total of 99 systems. As you can see in the video, gmx_MMPBSA_ana manages to deal well with the incredible amount of ~1.6 
-million items that in turn contain between 1 and 3 graphics, for a total of ~1.8 million graphics. This feat is 
+million items. Every item contains between 1 and 3 graphics, for a total of ~1.8 million graphics loaded. This feat is 
 accomplished in ~11 minutes. Most of this time is consumed processing the data associated with each graph. At the 
 moment, gmx_MMPBSA_ana processes this data serially, since parallelizing this process would be a bit difficult. In 
-any case, for the usual processes, this will take a maximum of 25-30 seconds, depending on your hardware. Not only 
-is the amount of graphics incredible, so is the amount of resources it consumes. Each item has associated the data 
-of each of its graphs, which is stored in memory. In this experiment, RAM consumption reached up to 14GB.
+any case, for the usual processes, this will take a maximum of 25-30 seconds, depending on your hardware. Each item has 
+associated the data of each of its graphs, which is stored in memory. In this experiment, RAM consumption reached up 
+to 14GB.
 
 !!! danger
     Be aware that if you run out of available RAM, your OS could crash, freeze, or slow down.
