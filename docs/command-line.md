@@ -150,6 +150,50 @@ Based on MMPBSA.py (version 16.0) and AmberTools20
 ```
 
 ### Running gmx_MMPBSA
+
+!!! tip
+    * Since version 1.4.0 we have fixed the `gmx_MMPBSA` inconsistencies when using `MPI`.
+    * **We currently recommend the use of MPI since the computation time decreases considerably.**
+
+=== "Parallel (MPI) version"
+     `gmx_MMPBSA` as `MMPBSA.py` uses the `MPI` only to perform the calculations during the dynamics, the rest of 
+     the process (Generation/conversion of Amber topologies, mutation, division of the trajectories, etc) occurs in 
+     a single thread (See **Figure 1** for better reference). This means that it is not necessary to install any program 
+     (AmberTools or GROMACS) with `MPI`, which can be used in any circumstance, and that the time required to process the 
+     data prior to the calculation depends on the system and will be the same for both versions (`Serial` and `MPI`). 
+
+
+    !!! note
+        Note that `gmx_MMPBSA` processes, converts, or builds topologies from GROMACS files, so it takes slightly 
+        longer than `MMPBSA.py` at the same stage of the process. However, this is not really significant.
+
+    `gmx_MMPBSA` executes the serial version or the parallel version with MPI depending 
+    on whether the user defines the "mpi" or "MPI" argument. 
+
+    ???+ tip "Remember" 
+        Make sure that you install the OpenMPI library
+        
+            sudo apt install openmpi-bin libopenmpi-dev openssh-client
+        
+                    
+
+
+    A usage example is shown below:
+
+    === "MPI"
+    
+            mpirun -np 2 gmx_MMPBSA MPI -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 1 13 -ct com_traj.xtc
+    
+    === "mpi"
+    
+            mpirun -np 2 gmx_MMPBSA mpi -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 1 13 -ct com_traj.xtc
+    
+    !!! note
+        At a certain level, running RISM in parallel may actually hurt performance, since previous solutions are used 
+        as an initial guess for the next frame, hastening convergence. Running in parallel loses this advantage. Also, 
+        due to the overhead involved in which each thread is required to load every topology file when calculating 
+        energies, parallel scaling will begin to fall off as the number of threads reaches the number of frames. 
+
 === "Serial version"
     This version is installed via pip as described above. `AMBERHOME` variable must be set, or it will quit with an error. 
     An example command-line call is shown below:
@@ -158,35 +202,25 @@ Based on MMPBSA.py (version 16.0) and AmberTools20
     
     You can found test files on [GitHub][1]
 
-=== "Parallel (MPI) version"
-    Unlike MMPBSA.py, `gmx_MMPBSA` will be installed as a separate package from the Amber installation. When installing
-    Amber with mpi, a MMPBSA.py version called "MMPBSA.py.MPI" will be installed as well. Since we cannot detect if 
-    Amber was installed one way or another, we simply decided to adapt the `gmx_MMPBSA` executable to use an argument. 
-    That is, `gmx_MMPBSA` is a single script that executes the serial version or the parallel version with mpi depending 
-    on whether the user defines the "mpi" or "MPI" argument. In principle, both the serial and parallel versions should 
-    work correctly when Amber was installed in parallel.
-    
-    The parallel version, like MMPBSA.py.MPI requires the mpi4py module. If you did the parallel installation of Amber, it 
-    should be installed. In any case, it could be installed in the following way:
-    
-        amber.python -m pip install mpi4py
-        
-    A usage example is shown below:
-    
-        mpirun -np 2 gmx_MMPBSA MPI -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 1 13 -ct com_traj.xtc
-    
-    or
-    
-        mpirun -np 2 gmx_MMPBSA mpi -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 1 13 -ct com_traj.xtc
-    
-    !!! note
-        At a certain level, running RISM in parallel may actually hurt performance, since previous solutions are used 
-        as an initial guess for the next frame, hastening convergence. Running in parallel loses this advantage. Also, 
-        due to the overhead involved in which each thread is required to load every topology file when calculating 
-        energies, parallel scaling will begin to fall off as the number of threads reaches the number of frames. 
-
 
   [1]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/docs/examples
+
+
+<figure markdown="1">
+[![overview][2]][2]
+  <figcaption markdown="1">
+  **Figure 1**. **`MPI` benchmark description from <a href="https://pubs.acs.org/doi/10.1021/ct300418h">`MMPBSA.py` paper</a>.**
+  `MMPBSA.py` scaling comparison for `MM-PBSA` and `MM-GBSA` calculations on 200 frames of a 5910-atom complex. Times 
+  shown are the times required for the calculation to finish. Note that `MM-GBSA` calculations are ∼5 times faster 
+  than `MM-PBSA` calculations. All calculations were performed on NICS Keeneland (2 Intel Westmere 6-core CPUs per 
+  node, QDR infiniband interconnect)
+  </figcaption>
+</figure>
+
+[2]: assets/images/mmpbsa_py_mpi.png
+[2]: assets/images/mmpbsa_py_mpi.png
+
+
 
 ## `gmx_MMPBSA_ana` command-line
 ```
