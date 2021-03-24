@@ -16,69 +16,93 @@ with GROMACS 4.6.7, 5.1.2, 2018.3, and 2020.4, although it should run smoothly w
 and that is compatible with the files you are using.
 
 ### Dependencies
-| Dependency      |     gmx_MMPBSA                             |   gmx_MMPBSA_ana   |  gmx_MMPBSA_test   |
-|:----------------|:------------------------------------------:|:------------------:|:------------------:|
-| Python3         | :heavy_check_mark:                         | :heavy_check_mark: | :heavy_check_mark: |
-| AmberTools20    | :heavy_check_mark:                         | :heavy_check_mark: | :heavy_check_mark: |
-| PyQt5           |                                            | :heavy_check_mark: |                    |
-| Matplotlib [^1] |                                            | :heavy_check_mark: |                    |
-| Pandas [^1]     |                                            | :heavy_check_mark: |                    |
-| Seaborn [^1]    |                                            | :heavy_check_mark: |                    |
-| Git             |  Only if you update gmx_MMPBSA from Github |                    | :heavy_check_mark: |
+| Dependency      |     gmx_MMPBSA                                                    |   gmx_MMPBSA_ana   |  gmx_MMPBSA_test   |
+|:----------------|:-----------------------------------------------------------------:|:------------------:|:------------------:|
+| Python3         | :octicons-check-circle-fill-16:{ .req .scale_icon_medium }        | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |
+| AmberTools20    | :octicons-check-circle-fill-16:{ .req .scale_icon_medium }        | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |
+| PyQt5           |                                            | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |                    |
+| Matplotlib      |                                            | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |                    |
+| Pandas          |                                            | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |                    |
+| Seaborn         |                                            | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |                    |
+| mpi4py          | :octicons-check-circle-fill-16:{ .req_optrec .scale_icon_medium } |                    |                    |
+| openmpi-bin     | :octicons-check-circle-fill-16:{ .req_optrec .scale_icon_medium } |                    |                    |
+| libopenmpi-dev  | :octicons-check-circle-fill-16:{ .req_optrec .scale_icon_medium } |                    |                    |
+| openssh-client  | :octicons-check-circle-fill-16:{ .req_optrec .scale_icon_medium } |                    |                    |
+| Git             | :octicons-check-circle-fill-16:{ .req_opt .scale_icon_medium } |                    | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |
 
-  [^1]: It is installed automatically, so the user does not have to worry about installing it
 
-`gmx_MMPBSA_ana` requires PyQt5 which is not installed automatically when `gmx_MMPBSA` is installed in HPC. That way, 
-`gmx_MMPBSA_ana` cannot be opened in HPC. 
+:octicons-check-circle-fill-16:{ .req } -> Required -- :octicons-check-circle-fill-16:{ .req_optrec } -> 
+Optional, but recommended -- :octicons-check-circle-fill-16:{ .req_opt } -> Optional
 
-You can install PyQt5 as follows:
+!!! info "Install Dependencies"
+    
+    === "PyQt5"
+        `gmx_MMPBSA_ana` requires PyQt5 which is not installed automatically. That way, `gmx_MMPBSA_ana` cannot be 
+        opened in HPC. 
 
-    amber.python -m pip install PyQt5
+            amber.python -m pip install PyQt5
 
-!!! warning
-    * Note that if you don't install PyQt5 you won't be able to open gmx_MMPBSA_ana
-    * **Valid for versions > 1.4.0**
+        !!! warning
+            * Note that if you don't install PyQt5 you won't be able to open `gmx_MMPBSA_ana`
+            * **Valid for versions > 1.4.0**
+
+    === "Other Python Packages"
+        `matplotlib`, `pandas`, (`mpi4py`) and `seaborn` are installed automatically, so the user does not have to 
+        worry about installing them
+
+    === "MPI"
+        Make sure that you install the OpenMPI library
+        
+            sudo apt install openmpi-bin libopenmpi-dev openssh-client
+        
+        !!! note ""
+            `mpi4py` is installed with `gmx_MMPBSA`
+
+
 
 ## Installation
 
-You can install `gmx_MMPBSA` from the `stable` version on [PYPI][3]:
+=== "`stable`"
+    You can install `gmx_MMPBSA` from the `stable` version on [PYPI][3]:
 
-    amber.python -m pip install gmx_MMPBSA
+        amber.python -m pip install gmx_MMPBSA
 
-or the `development` version from [GitHub][4]:
-
-    amber.python -m pip install git+https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA
-
-!!! warning
-    Make sure that you have `git` installed. If not you can install it as follows:
-    ```
-    sudo apt install git
-    ```
+=== "`development`"
+    or the `development` version from [GitHub][4]:
+    
+        amber.python -m pip install git+https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA
+    
+    !!! warning
+        Make sure that you have `git` installed. If not you can install it as follows:
+    
+            sudo apt install git
 
 ## Update
 
 If you already have installed a previous `gmx_MMPBSA` version, you can update it as follows:
 
-`stable` version (recommended):
+=== "`stable`"
+    `stable` version (recommended):
+    
+        amber.python -m pip install gmx_MMPBSA --upgrade
 
-    amber.python -m pip install gmx_MMPBSA --upgrade
+=== "`development`"
+    `development` version from GitHub:
+    
+        amber.python -m pip install git+https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA --upgrade 
+    
+    !!! warning
+        Make sure that you have `git` installed. If not you can install it as follows:
 
-`development` version from GitHub:
-
-    amber.python -m pip install git+https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA --upgrade 
-
-!!! warning
-    Make sure that you have `git` installed. If not you can install it as follows:
-    ```
-    sudo apt install git
-    ```
+            sudo apt install git
 
 ## After Install
 
 Once the installation is completed, the following warning may appear:
 
-    WARNING: The scripts gmx_MMPBSA and gmx_MMPBSA_ana are installed in 
-    '/home/user/path_to_amber_install/amber20/miniconda/bin' which is not on PATH.
+    WARNING: The scripts gmx_MMPBSA, gmx_MMPBSA_ana and gmx_MMPBSA_test 
+    are installed in '/home/user/path_to_amber_install/amber20/miniconda/bin'
+    which is not on PATH.
 
 This warning is because `pip` installs the executables (`gmx_MMPBSA`, `gmx_MMPBSA_ana` and `gmx_MMPBSA_test`) in 
 `installation_path/amber20/miniconda/bin`.
