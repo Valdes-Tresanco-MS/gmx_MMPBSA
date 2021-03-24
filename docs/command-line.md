@@ -162,7 +162,6 @@ Based on MMPBSA.py (version 16.0) and AmberTools20
      (AmberTools or GROMACS) with `MPI`, which can be used in any circumstance, and the time required to process the 
      data prior to the calculation depends on the system and will be the same for both versions (`Serial` and `MPI`). 
 
-
     !!! note
         Note that `gmx_MMPBSA` processes, converts, or builds topologies from GROMACS files, so it takes slightly 
         longer than `MMPBSA.py` at the same stage of the process. However, this is not really significant.
@@ -174,9 +173,6 @@ Based on MMPBSA.py (version 16.0) and AmberTools20
         Make sure that you install the OpenMPI library
         
             sudo apt install openmpi-bin libopenmpi-dev openssh-client
-        
-                    
-
 
     A usage example is shown below:
 
@@ -202,9 +198,7 @@ Based on MMPBSA.py (version 16.0) and AmberTools20
     
     You can found test files on [GitHub][1]
 
-
   [1]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/docs/examples
-
 
 <figure markdown="1">
 [![overview][2]][2]
@@ -219,8 +213,6 @@ Based on MMPBSA.py (version 16.0) and AmberTools20
 
 [2]: assets/images/mmpbsa_py_mpi.png
 [2]: assets/images/mmpbsa_py_mpi.png
-
-
 
 ## `gmx_MMPBSA_ana` command-line
 ```
@@ -321,7 +313,6 @@ must be the following structure:
              └── _GMXMMPBSA_info
     ```
 
-
 !!! examples
         
     === "One file"
@@ -335,7 +326,6 @@ must be the following structure:
         * other location  :material-new-box:{: .medium .heart } Version: 1.4.0
 
                 gmx_MMPBSA_ana -f /path/to/_GMXMMPBSA_info
-
 
     === "One folder" 
         :material-new-box:{: .medium .heart } Version: 1.4.0
@@ -352,7 +342,6 @@ must be the following structure:
 
         !!! warning "Remember"
             This folder must contain a valid `_GMXMMPBSA_info` file
-
     
     === "Files + Folders"
         :material-new-box:{: .medium .heart } Version: 1.4.0
