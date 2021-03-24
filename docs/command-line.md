@@ -159,7 +159,7 @@ Based on MMPBSA.py (version 16.0) and AmberTools20
      `gmx_MMPBSA` as `MMPBSA.py` uses the `MPI` only to perform the calculations during the dynamics, the rest of 
      the process (Generation/conversion of Amber topologies, mutation, division of the trajectories, etc) occurs in 
      a single thread (See **Figure 1** for better reference). This means that it is not necessary to install any program 
-     (AmberTools or GROMACS) with `MPI`, which can be used in any circumstance, and that the time required to process the 
+     (AmberTools or GROMACS) with `MPI`, which can be used in any circumstance, and the time required to process the 
      data prior to the calculation depends on the system and will be the same for both versions (`Serial` and `MPI`). 
 
 
