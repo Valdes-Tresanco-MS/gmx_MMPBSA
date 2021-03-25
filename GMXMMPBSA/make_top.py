@@ -608,6 +608,7 @@ class CheckMakeTop:
         com_len = len(ndx['GMXMMPBSA_REC_GMXMMPBSA_LIG'])
         resnum = 1
         current_res = None
+        current_icode = ''
         for i in range(com_len):
             # We check who owns the residue corresponding to this atom
             if com_ndx[i] in ndx['GMXMMPBSA_REC']:
@@ -617,6 +618,12 @@ class CheckMakeTop:
                     res_list['REC'].append(resnum)
                     resnum += 1
                     current_res = com_str.atoms[i].residue.number
+                    current_icode = com_str.atoms[i].residue.insertion_code
+                # get residues with icode
+                if com_str.atoms[i].residue.insertion_code != current_icode:
+                    res_list['REC'].append(resnum)
+                    resnum += 1
+                    current_icode = com_str.atoms[i].residue.insertion_code
             else:
                 current = 'L'
                 # save residue number in the lig list
@@ -624,6 +631,11 @@ class CheckMakeTop:
                     res_list['LIG'].append(resnum)
                     resnum += 1
                     current_res = com_str.atoms[i].residue.number
+                # get residues with icode
+                if com_str.atoms[i].residue.insertion_code != current_icode:
+                    res_list['LIG'].append(resnum)
+                    resnum += 1
+                    current_icode = com_str.atoms[i].residue.insertion_code
             # check for end
             if previous and current != previous:
                 end = resnum - 2
