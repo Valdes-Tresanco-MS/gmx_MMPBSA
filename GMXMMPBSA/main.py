@@ -119,7 +119,7 @@ class MMPBSA_App(object):
         # This work belongs to the 'setup' timer
         self.timer.start_timer('setup')
         if not hasattr(self, 'normal_system'):
-            raise GMXMMPBSA_ERROR('MMPBSA_App not set up and parms not checked!', InternalError)
+            GMXMMPBSA_ERROR('MMPBSA_App not set up and parms not checked!', InternalError)
         # Set up some local refs for convenience
         FILES, INPUT, master = self.FILES, self.INPUT, self.master
 
@@ -193,7 +193,7 @@ class MMPBSA_App(object):
         """
 
         if not hasattr(self, 'external_progs'):
-            raise GMXMMPBSA_ERROR('external_progs not declared in run_mmpbsa!', InternalError)
+            GMXMMPBSA_ERROR('external_progs not declared in run_mmpbsa!', InternalError)
 
         FILES, INPUT = self.FILES, self.INPUT
         if rank is None:
@@ -554,6 +554,8 @@ class MMPBSA_App(object):
 
 
     def make_prmtops(self):
+        self.timer.add_timer('setup_gmx', 'Total GROMACS setup time:')
+        self.timer.start_timer('setup_gmx')
         # Now we're getting ready, remove existing intermediate files
         if self.master and self.FILES.use_mdins:
             self.remove(-1)
@@ -582,13 +584,13 @@ class MMPBSA_App(object):
 
         self.FILES = self.MPI.COMM_WORLD.bcast(self.FILES, root=0)
         self.INPUT = self.MPI.COMM_WORLD.bcast(self.INPUT, root=0)
-
         self.sync_mpi()
+        self.timer.stop_timer('setup_gmx')
 
     def loadcheck_prmtops(self):
         """ Loads the topology files and checks their consistency """
         # Start setup timer and make sure we've already set up our input
-        self.timer.add_timer('setup', 'Total setup time:')
+        self.timer.add_timer('setup', 'Total AMBER setup time:')
         self.timer.start_timer('setup')
         if not hasattr(self, 'FILES') or not hasattr(self, 'INPUT'):
             raise GMXMMPBSA_ERROR('MMPBSA_App not set up! Cannot check parms yet!', InternalError)
@@ -664,6 +666,7 @@ class MMPBSA_App(object):
             self.MPI.Finalize()
             sys.exit(0)
         self.stdout.write('\nTiming:\n')
+        self.timer.print_('setup_gmx', self.stdout)
         self.timer.print_('setup', self.stdout)
 
         if not self.FILES.rewrite_output:
