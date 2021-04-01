@@ -5,6 +5,11 @@ title: Alanine scanning
 
 
 # Protein-DNA binding free energy calculations. Alanine scanning
+
+!!! info
+    This example can be found in the [docs/examples/Alanine_scanning][6] directory in the repository folder
+
+
 ## Requirements
 
 In this case, `gmx_MMPBSA` requires:
@@ -27,7 +32,17 @@ _See a detailed list of all the flags in gmx_MMPBSA command line [here][1]_
 ## Command-line
 That being said, once you are in the folder containing all files, the command-line will be as follows:
 
-    gmx_MMPBSA -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 1 12 -ct com_traj.xtc
+=== "gmx_MMPBSA_test"
+
+        gmx_MMPBSA_test -t ala_scan
+
+=== "Serial"
+
+        gmx_MMPBSA -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 1 12 -ct com_traj.xtc
+
+=== "With MPI"
+
+        mpirun -np 2 gmx_MMPBSA MPI -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 1 12 -ct com_traj.xtc
 
 where the `mmpbsa.in` input file, is a text file containing the following lines:
 
@@ -101,3 +116,5 @@ On the other hand, if this reference structure is omitted, then it will depend o
   [3]: ../../input_file.md#sample-input-files
   [4]: ../../analyzer.md#gmx_mmpbsa_ana  
   [5]: ../../input_file.md#general-namelist-variables
+  [6]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/docs/examples/Alanine_scanning
+  [7]: ../../command-line.md#gmx_mmpbsa_test-command-line

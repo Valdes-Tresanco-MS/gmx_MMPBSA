@@ -84,6 +84,8 @@ printed, which aids in debugging of issues. (Default = 0) (Advanced Option)
      (`(endframe-startframe)/interval`) will be used to calculate the average Interaction Entropy. (Only
       if `entropy = 2`)
 
+    _New in v1.0.0_
+
 ???+ warning "Deprecated in v1.4.0: It will be removed in next version. Use `temperature` instead"
     
     `entropy_temp` (Default = 298.15)

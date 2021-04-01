@@ -4,6 +4,10 @@ title: Metalloprotein-peptide
 ---
 
 # Metalloprotein-peptide binding free energy calculations
+
+!!! info
+    This example can be found in the [docs/examples/Metalloprotein_peptide][6] directory in the repository folder
+
 ## Requirements
 In its simplest version, `gmx_MMPBSA` requires:
 
@@ -25,7 +29,17 @@ _See a detailed list of all the flags in gmx_MMPBSA command line [here][1]_
 ## Command-line
 That being said, once you are in the folder containing all files, the command-line will be as follows:
 
-    gmx_MMPBSA -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 20 21 -ct com_traj.pdb
+=== "gmx_MMPBSA_test"
+
+        gmx_MMPBSA_test -t metalloprot_pep
+
+=== "Serial"
+
+        gmx_MMPBSA -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 20 21 -ct com_traj.pdb
+
+=== "With MPI"
+
+        mpirun -np 2 gmx_MMPBSA MPI -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 20 21 -ct com_traj.pdb
 
 where the `mmpbsa.in` input file, is a text file containing the following lines:
 
@@ -70,4 +84,6 @@ info on ion parameters.
   [3]: ../../input_file.md#sample-input-files
   [4]: https://ambermd.org/doc12/Amber20.pdf#section.3.6
   [5]: ../../analyzer.md#gmx_mmpbsa_ana
+  [6]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/docs/examples/Metalloprotein_peptide
+  [7]: ../../command-line.md#gmx_mmpbsa_test-command-line
   

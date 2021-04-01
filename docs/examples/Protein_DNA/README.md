@@ -4,6 +4,10 @@ title: Protein-DNA
 ---
 
 # Protein-DNA binding free energy calculations
+
+!!! info
+    This example can be found in the [docs/examples/Protein_DNA][6] directory in the repository folder
+
 ## Requirements
 
 In this case, `gmx_MMPBSA` requires:
@@ -25,7 +29,17 @@ _See a detailed list of all the flags in gmx_MMPBSA command line [here][1]_
 ## Command-line
 That being said, once you are in the folder containing all files, the command-line will be as follows:
 
-    gmx_MMPBSA -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 1 12 -ct com_traj.xtc
+=== "gmx_MMPBSA_test"
+
+        gmx_MMPBSA_test -t prot_dna
+
+=== "Serial"
+
+        gmx_MMPBSA -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 1 12 -ct com_traj.xtc
+
+=== "With MPI"
+
+        mpirun -np 2 gmx_MMPBSA MPI -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 1 12 -ct com_traj.xtc
 
 where the `mmpbsa.in` input file, is a text file containing the following lines:
 
@@ -67,3 +81,5 @@ because of the high number of charged residues at the interface.
   [2]: ../../input_file.md#the-input-file
   [3]: ../../input_file.md#sample-input-files
   [4]: ../../analyzer.md#gmx_mmpbsa_ana
+  [6]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/docs/examples/Protein_DNA
+  [7]: ../../command-line.md#gmx_mmpbsa_test-command-line

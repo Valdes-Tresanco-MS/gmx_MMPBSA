@@ -5,10 +5,14 @@ title: Protein-DNA_RNA_ION-Ligand
 
 # Protein-DNA_RNA_ION-Ligand binding free energy calculations
 
-!!! danger
-    The ligand mol2 file must be the Antechamber output.
+!!! info
+    This example can be found in the [docs/examples/Protein_DNA_RNA_Ion_ligand][6] directory in the repository folder
+
+
 
 ## Requirements
+!!! danger
+    The ligand mol2 file must be the Antechamber output.
 
 In this case, `gmx_MMPBSA` requires:
 
@@ -31,7 +35,17 @@ _See a detailed list of all the flags in gmx_MMPBSA command line [here][1]_
 ## Command-line
 That being said, once you are in the folder containing all files, the command-line will be as follows:
 
-    gmx_MMPBSA -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 33 14 -ct com_traj.xtc -lm ligand.mol2
+=== "gmx_MMPBSA_test"
+
+        gmx_MMPBSA_test -t prot_dna_rna_ions_lig
+
+=== "Serial"
+
+        gmx_MMPBSA -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 33 14 -ct com_traj.xtc -lm ligand.mol2
+
+=== "With MPI"
+
+        mpirun -np 2 gmx_MMPBSA MPI -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 33 14 -ct com_traj.xtc -lm ligand.mol2
 
 where the `mmpbsa.in` input file, is a text file containing the following lines:
 
@@ -77,3 +91,5 @@ In this case, Li/Merz ion parameters (12-6 normal usage set) for Mg ions were us
   [2]: ../../input_file.md#the-input-file
   [3]: ../../input_file.md#sample-input-files
   [4]: ../../analyzer.md#gmx_mmpbsa_ana
+  [6]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/docs/examples/Protein_DNA_RNA_Ion_ligand
+  [7]: ../../command-line.md#gmx_mmpbsa_test-command-line

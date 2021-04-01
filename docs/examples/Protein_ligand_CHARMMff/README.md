@@ -3,12 +3,16 @@ template: main.html
 title: Protein-ligand (Charmm)
 ---
 
-!!! danger "Charmm and MM(PB/GB)SA"
+!!! danger "CHARMM and MM(PB/GB)SA"
     PB model is recommended when working with CHARMMff files. Nevertheless, the combination of PB/GB models and 
     Charmm force field hasn't been tested extensively. Please, check this [thread][1] for more information and 
     proceed with caution.
 
 # Protein-ligand binding free energy calculations (Single Trajectory method) with CHARMMff files
+
+!!! info
+    This example can be found in the [docs/examples/Protein_ligand_CHARMMff][6] directory in the repository folder
+
 ## Requirements
 
 In this case, `gmx_MMPBSA` requires:
@@ -30,7 +34,17 @@ _See a detailed list of all the flags in gmx_MMPBSA command line [here][2]_
 ## Command-line
 That being said, once you are in the folder containing all files, the command-line will be as follows:
 
-    gmx_MMPBSA -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 1 13 -ct com_traj.xtc -cp topol.top
+=== "gmx_MMPBSA_test"
+
+        gmx_MMPBSA_test -t 3drism
+
+=== "Serial"
+
+        gmx_MMPBSA -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 1 13 -ct com_traj.xtc -cp topol.top
+
+=== "With MPI"
+
+        mpirun -np 2 gmx_MMPBSA MPI -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 1 13 -ct com_traj.xtc -cp topol.top
 
 where the `mmpbsa.in` input file, is a text file containing the following lines:
 
@@ -76,4 +90,5 @@ field.
   [3]: ../../input_file.md#the-input-file
   [4]: ../../input_file.md#sample-input-files
   [5]: ../../analyzer.md#gmx_mmpbsa_ana
-  
+  [6]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/docs/examples/Protein_ligand_CHARMMff
+  [7]: ../../command-line.md#gmx_mmpbsa_test-command-line

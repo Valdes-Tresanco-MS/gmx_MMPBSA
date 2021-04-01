@@ -5,10 +5,13 @@ title: Protein-ligand (MT)
 
 # Protein-ligand binding free energy calculations (Multiple Trajectory method)
 
-!!! danger
-    The ligand mol2 file must be the Antechamber output.
+!!! info
+    This example can be found in the [docs/examples/Protein_ligand/MT][6] directory in the repository folder
 
 ## Requirements
+
+!!! danger
+    The ligand mol2 file must be the Antechamber output.
 
 In this case, `gmx_MMPBSA` requires:
 
@@ -34,10 +37,21 @@ _See a detailed list of all the flags in gmx_MMPBSA command line [here][1]_
 
 ## Command-line
 That being said, once you are in the folder containing all files, the command-line will be as follows:
+=== "gmx_MMPBSA_test"
+
+        gmx_MMPBSA_test -t prot_lig_mt
+
+=== "Serial"
 
     gmx_MMPBSA -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 1 13 -ct com_traj.xtc \
                -rs rec.pdb -ri rec_index.ndx -rg 1 -rt rec_traj.pdb -lm ligand.mol2 \
                -ls lig.pdb -li lig_index.ndx -lg 2 -lt lig_traj.pdb
+
+=== "With MPI"
+
+        mpirun -np 2 gmx_MMPBSA MPI -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 1 13\
+               -ct com_traj.xtc -rs rec.pdb -ri rec_index.ndx -rg 1 -rt rec_traj.pdb \
+               -lm ligand.mol2 -ls lig.pdb -li lig_index.ndx -lg 2 -lt lig_traj.pdb
 
 where the `mmpbsa.in` input file, is a text file containing the following lines:
 
@@ -81,3 +95,5 @@ calculation with the igb5 (GB-OBC2) model and a salt concentration = 0.15M.
   [2]: ../../../input_file.md#the-input-file
   [3]: ../../../input_file.md#sample-input-files
   [4]: ../../../analyzer.md#gmx_mmpbsa_ana
+  [6]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/docs/examples/Protein_ligand/MT
+  [7]: ../../command-line.md#gmx_mmpbsa_test-command-line

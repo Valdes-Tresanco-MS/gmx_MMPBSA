@@ -5,10 +5,15 @@ title: Decomposition
 
 # Decomposition analysis
 
+!!! info
+    This example can be found in the [docs/examples/Decomposition_analysis][6] directory in the repository folder
+
+
+## Requirements
+
 !!! danger
     The ligand mol2 file must be the Antechamber output.
 
-## Requirements
 In this case, `gmx_MMPBSA` requires:
 
 | Input File required            | Required |           Type             | Description |
@@ -33,7 +38,17 @@ _See a detailed list of all the flags in gmx_MMPBSA command line [here][1]_
 
 That being said, once you are in the folder containing all files, the command-line will be as follows:
 
-    gmx_MMPBSA -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 1 13 -ct com_traj.xtc -lm ligand.mol2
+=== "gmx_MMPBSA_test"
+
+        gmx_MMPBSA_test -t decomp
+
+=== "Serial"
+
+        gmx_MMPBSA -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 1 13 -ct com_traj.xtc -lm ligand.mol2
+
+=== "With MPI"
+
+        mpirun -np 2 gmx_MMPBSA MPI -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 1 13 -ct com_traj.xtc -lm ligand.mol2
 
 where the `mmpbsa.in` input file, is a text file containing the following lines:
 
@@ -87,3 +102,5 @@ performed and residues within 4Å in both receptor and ligand will be printed in
   [3]: ../../input_file.md#sample-input-files
   [4]: ../../input_file.md#decomp-namelist-variables
   [5]: ../../analyzer.md#gmx_mmpbsa_ana
+  [6]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/docs/examples/Decompostion_analysis
+  [7]: ../../command-line.md#gmx_mmpbsa_test-command-line
