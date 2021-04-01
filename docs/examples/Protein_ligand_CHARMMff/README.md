@@ -6,7 +6,7 @@ title: Protein-ligand (Charmm)
 !!! danger "Charmm and MM(PB/GB)SA"
     PB model is recommended when working with CHARMMff files. Nevertheless, the combination of PB/GB models and 
     Charmm force field hasn't been tested extensively. Please, check this [thread][1] for more information and 
-    proceed cautiously. 
+    proceed with caution.
 
 # Protein-ligand binding free energy calculations (Single Trajectory method) with CHARMMff files
 ## Requirements
@@ -38,7 +38,7 @@ where the `mmpbsa.in` input file, is a text file containing the following lines:
 Sample input file for PB calculation
 This input file is mean to show only that gmx_MMPBSA works. Althought,
 we tried to used the input files as recommended in the Amber manual,
-some parameters have been changed to perform more expensive calculations.
+some parameters have been changed to perform more expensive calculations in a reasonable amount of time.
 Feel free to change the parameters according to what is better for your
 system.
 
@@ -63,7 +63,9 @@ _See a detailed list of all the options in `gmx_MMPBSA` input file [here][3] as 
 In this case, a single trajectory (ST) approximation is followed, which means the receptor and ligand structures and 
 trajectories will be obtained from that of the complex. To do so, a MD Structure+mass(db) file (`com.tpr`), an index file (`index.ndx`),
 a trajectory file (`com_traj.xtc`), and both the receptor and ligand group numbers in the index file (`1 13`) are needed.
-The `mmpbsa.in` input file will contain all the parameters needed for the MM/PB(GB)SA calculation.
+The `mmpbsa.in` input file will contain all the parameters needed for the MM/PB(GB)SA calculation. A topology file is
+also needed (mandatory) in this case to generate the topology files in amber format with all the terms for CHARMM force 
+field.
 !!! note
     Once the calculation is done, you can analyze the results in `gmx_MMPBSA_ana` (if you didn't define `-nogui`). 
     Please see the [gmx_MMPBSA_ana][5] section for more information
