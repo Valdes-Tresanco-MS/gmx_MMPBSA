@@ -184,6 +184,12 @@ Based on MMPBSA.py (version 16.0) and AmberTools20
     
             mpirun -np 2 gmx_MMPBSA mpi -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 1 13 -ct com_traj.xtc
     
+    !!! danger
+        Unfortunately, when `gmx_MMPBSA` is run with `MPI`, GROMACS's `gmx_mpi` is incompatible. This is probably 
+        because of `gmx_mpi` conflicts with mpirun. In any case, this is not a problem since `gmx` works correctly 
+        and `gmx_mpi` only parallels `mdrun`, the rest of the GROMACS tools work in a single thread. See this 
+        [issue](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/issues/26) to see the output.
+
     !!! note
         At a certain level, running RISM in parallel may actually hurt performance, since previous solutions are used 
         as an initial guess for the next frame, hastening convergence. Running in parallel loses this advantage. Also, 
