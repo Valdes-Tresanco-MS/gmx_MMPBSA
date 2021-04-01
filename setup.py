@@ -38,8 +38,8 @@ setup(
     maintainer='Mario S. Valdes-Trasanco',
     maintainer_email='mariosergiovaldes145@gmail.com',
     url='https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA',
-    description='gmx_MMPBSA is a new tool aid to perform end-state free energy'
-                'calculations with GROMACS files.',
+    description="gmx_MMPBSA is a new tool based on AMBER's MMPBSA.py aiming to perform end-state free energy  "
+                "calculations with GROMACS files",
     long_description=LONG_DESCRIPTION,
     long_description_content_type='text/markdown',
     keywords=['gmx_MMPBSA', 'MMPBSA', 'MMGBSA', 'GROMACS', 'AmberTools'],

@@ -22,10 +22,10 @@ usage: gmx_MMPBSA [-h] [-v] [--input-file-help] [-O] [-prefix <file prefix>]
                   [-lp <Topology>] [-make-mdins] [-use-mdins] [-rewrite-output]
                   [--clean]
 
-gmx_MMPBSA is a new tool aid to perform end-state free energy calculations based
-on AMBER's MMPBSA.py with GROMACS files. This program is an adaptation of Amber's
-MMPBSA.py and essentially works as such. As gmx_MMPBSA adapts MMPBSA.py, since it
-has all the resources of this script and work with any GROMACS version.
+gmx_MMPBSA is a new tool based on AMBER's MMPBSA.py aiming to perform end-state 
+free energy calculations with GROMACS files. This program is an adaptation of 
+Amber's MMPBSA.py and essentially works as such. As gmx_MMPBSA adapts MMPBSA.py, 
+since it has all the resources of this script and work with any GROMACS version.
 
 optional arguments:
   -h, --help            show this help message and exit

@@ -4,6 +4,7 @@
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4626383.svg)](https://doi.org/10.5281/zenodo.4626383)
 
 # Welcome to gmx_MMPBSA!
-gmx_MMPBSA is a new tool aid to perform end-state free energy calculations based on AMBER's MMPBSA.py with GROMACS files.
+gmx_MMPBSA is a new tool based on AMBER's MMPBSA.py aiming to perform end-state free energy calculations with GROMACS 
+files.
 
 **Please see the documentation [here](https://valdes-tresanco-ms.github.io/gmx_MMPBSA/)**

@@ -11,7 +11,7 @@ title: Getting started
 [<img src="../assets/logo.svg" height="120" width="240" align="right"/>]()
 
 # Getting started
-gmx_MMPBSA is a new tool aid to perform end-state free energy calculations based on AMBER's MMPBSA.py with GROMACS 
+gmx_MMPBSA is a new tool based on AMBER's MMPBSA.py aiming to perform end-state free energy calculations with GROMACS 
 files.
 
 Most of the documentation below is found in the [Amber manual][1], we will point out what is new or different. 

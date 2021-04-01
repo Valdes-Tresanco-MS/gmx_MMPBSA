@@ -5,7 +5,7 @@ title: How gmx_MMPBSA works
 
 # How gmx_MMPBSA works
 
-gmx_MMPBSA is a new tool aid to perform end-state free energy calculations based on AMBER's MMPBSA.py with GROMACS 
+gmx_MMPBSA is a new tool based on AMBER's MMPBSA.py aiming to perform end-state free energy calculations with GROMACS 
 files.
 
 **But, what does that mean?**
