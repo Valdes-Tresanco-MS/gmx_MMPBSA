@@ -38,12 +38,12 @@ That being said, once you are in the folder containing all files, the command-li
 where the `mmpbsa.in` input file, is a text file containing the following lines:
 
 ``` linenums="1"
-Sample input file with decomposition analysis
-This input file is mean to show only that gmx_MMPBSA works. Althought,
+Sample input file for decomposition analysis
+This input file is meant to show only that gmx_MMPBSA works. Althought,
 we tried to used the input files as recommended in the Amber manual,
-some parameters have been changed to perform more expensive calculations in a reasonable amount of time.
-Feel free to change the parameters according to what is better for your
-system.
+some parameters have been changed to perform more expensive calculations
+in a reasonable amount of time. Feel free to change the parameters 
+according to what is better for your system.
 
 &general
 startframe=5, endframe=21, interval=1,

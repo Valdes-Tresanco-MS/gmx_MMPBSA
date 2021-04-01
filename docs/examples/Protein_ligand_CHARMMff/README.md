@@ -36,11 +36,11 @@ where the `mmpbsa.in` input file, is a text file containing the following lines:
 
 ``` linenums="1"
 Sample input file for PB calculation
-This input file is mean to show only that gmx_MMPBSA works. Althought,
+This input file is meant to show only that gmx_MMPBSA works. Althought,
 we tried to used the input files as recommended in the Amber manual,
-some parameters have been changed to perform more expensive calculations in a reasonable amount of time.
-Feel free to change the parameters according to what is better for your
-system.
+some parameters have been changed to perform more expensive calculations
+in a reasonable amount of time. Feel free to change the parameters 
+according to what is better for your system.
 
 &general
 startframe=1, endframe=11, verbose=2,
