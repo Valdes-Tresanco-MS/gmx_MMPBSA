@@ -1,5 +1,5 @@
 Sample input file for Alanine scanning
-#This input file is meant to show only that gmx_MMPBSA works. Althought, we tried to used the input files as recommended in the 
+#This input file is meant to show only that gmx_MMPBSA works. Although, we tried to use the input files as recommended in the
 #Amber manual, some parameters have been changed to perform more expensive calculations in a reasonable amount of time. Feel free to change the parameters
 #according to what is better for your system.
 &general
