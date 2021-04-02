@@ -68,6 +68,7 @@ class CustomItem(QTreeWidgetItem):
             self.temp = parent.temp
             self.app = parent.app
             self.frames = parent.frames
+            self.nmode_frames = parent.nmode_frames
             self.start = parent.start
             self.end = parent.end
             self.interval = parent.interval
@@ -84,6 +85,9 @@ class CustomItem(QTreeWidgetItem):
             self.frames = np.array([x for x in range(self.start, self.start +
                                                      self.app.numframes * self.interval,
                                                      self.interval)])
+            self.nmode_frames = np.array([x for x in range(app.INPUT['nmstartframe'], app.INPUT['nmstartframe'] +
+                                                     self.app.numframes_nmode * app.INPUT['nminterval'],
+                                                     app.INPUT['nminterval'])])
             self.end = app.INPUT['endframe']
             self.idecomp = app.INPUT['idecomp']
             self.remove_empty_terms = remove_empty_terms
