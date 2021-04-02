@@ -131,10 +131,12 @@ class CustomItem(QTreeWidgetItem):
         if self.level == 0:
             return_data.line_plot_dat = pd.DataFrame(data={'frames': self.frames[start:end:interval],
                                                       'Energy': self.cdata[start:end:interval]})
+        elif self.level == 0.1:
+            return_data.line_plot_dat = pd.DataFrame(data={'frames': self.nmode_frames,
+                                                      'Entropy': self.cdata})
         elif self.level == 1:
             dat = {}
             for p, d in self.cdata.items():
-                # FIXME: ignore empty or 0 array ???
                 if type(d) not in [list, np.ndarray] :
                     dat[p] = [d]
                 else:
@@ -143,6 +145,12 @@ class CustomItem(QTreeWidgetItem):
                             dat[p] = d[start:end:interval]
                     else:
                         dat[p] = d
+            return_data.bar_plot_dat = pd.DataFrame(data=dat)
+
+        elif self.level == 1.1:
+            dat = {}
+            for p, d in self.cdata.items():
+                dat[p] = d
             return_data.bar_plot_dat = pd.DataFrame(data=dat)
 
         elif self.level == 2:
@@ -167,6 +175,20 @@ class CustomItem(QTreeWidgetItem):
 
             return_data = Namespace(line_plot_dat=line_plot_data, bar_plot_dat=bar_plot_data,
                                     heatmap_plot_dat=heatmap_plot_data)
+        elif self.level == 2.1:
+            bar = {}
+            data = {'frames': self.nmode_frames, 'Component': [], 'Energy': []}
+            for p, d in self.cdata.items():
+                data['Component'].append(p)
+                bar[p] = d[start:end:interval]
+                data['Energy'].append(d[start:end:interval])
+
+            bar_plot_data = pd.DataFrame(data=bar)
+            line_plot_data = pd.DataFrame(data={'frames': self.frames[start:end:interval],
+                                                'Energy': np.array(data['Energy'])})
+            return_data.line_plot_dat = line_plot_data
+            return_data.bar_plot_dat=bar_plot_data
+
         elif self.level == 3:
             bar = {}
             data = {'frames': self.frames[start:end:interval], 'Residues': [], 'Energy': [], 'Per-pair Energy': []}
