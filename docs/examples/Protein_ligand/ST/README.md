@@ -40,7 +40,7 @@ That being said, once you are in the folder containing all files, the command-li
 
 === "gmx_MMPBSA_test"
 
-        gmx_MMPBSA_test -t prot_lig_charmm
+        gmx_MMPBSA_test -t prot_lig_st
 
 === "Serial"
 
