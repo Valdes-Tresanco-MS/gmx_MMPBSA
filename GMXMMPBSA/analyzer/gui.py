@@ -697,7 +697,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
                     for level2 in data[level][level1]:
                         # LEVEL-2 [GB, PB or 3D-RISM components]
                         if level1 == 'delta' and level2 == 'DELTA TOTAL':
-                            correlation_data[sys_name]['ΔG'][level]['ΔH'] = data[level][level1][level2].mean()
+                            correlation_data[sys_name]['ΔG'][level]['ΔH'] = data[level][level1][level2]
                         if (level2 != 'DELTA TOTAL' and options['remove_empty_charts'] and
                                 abs(data[level][level1][level2].mean()) < 0.1):
                             continue
@@ -716,31 +716,58 @@ class GMX_MMPBSA_ANA(QMainWindow):
             for level in entropy_keys:
                 if level == 'ie':
                     item1 = CustomItem(item, [str(level).upper()], cdata=data[level]['data'],
-                                       level=0, chart_title=f"Interaction Entropy",
+                                       level=0, chart_title=f"Interaction Entropy (-TΔS)",
                                        chart_subtitle=f"{mut_pre}{sys_name} | {level.upper()}",
                                        col_box=[1])
-                    ent = data[level]['value']
+                    ent = data[level]['data'][data[level]['frames'][0]:]
                     item1.ie = [data[level]['frames'], data[level]['value']]
                 else:
-                    item1 = CustomItem(item, [str(level).upper()], cdata=data[level],
-                                       level=1, chart_title=f"Entropy {str(level).upper()} approximation",
-                                       chart_subtitle=f"{mut_pre}{sys_name} | {level.upper()}",
-                                       col_box=[2])
-                    ent = data[level]['Total']
+                    iteme = CustomItem(item, [str(level).upper()], has_chart=False)
+                    for level1 in data[level]:
+                        # LEVEL-1 [complex, receptor, ligand] + delta
+                        if level1 in parts:  # only show graphs for selected parts
+                            ent_dict = {datum: data[level][level1][datum] * -1 for datum in data[level][level1]}
+                            item1 = CustomItem(iteme, [str(level1).upper()], cdata=ent_dict,
+                                               level=1, chart_title=f"Entropy {str(level).upper()} approximation ("
+                                                                    f"-TΔS)",
+                                               chart_subtitle=f"{mut_pre}{sys_name} | {level.upper()} | "
+                                                              f"{level1.upper()}",
+                                               col_box=[2])
+                            # for level2 in data[level][level1]:
+                            #     item2 = CustomItem(item1, [f"{str(level).upper()} {str(level2).upper()}"],
+                            #                        cdata=data[level][level1][level2],
+                            #                        level=0.1, chart_title=f"{str(level).upper()} Entropy",
+                            #                        chart_subtitle=f"{mut_pre}{sys_name} | {level.upper()} | "
+                            #                                       f"{level1.upper()} | {level2.upper()}",
+                            #                        col_box=[1])
+
+                    ent = data[level]['delta']['Total'] * -1 # Since nmode and qh calculate the TΔS term
                 self.items_counter['charts'] += 1
 
                 for model in correlation_data[sys_name]['ΔG']:
-                    if np.isnan(correlation_data[sys_name]['ΔG'][model]['ΔH']):
+                    if correlation_data[sys_name]['ΔG'][model]['ΔH'] is np.nan:
                         continue
                     itemd1 = CustomItem(itemd, [str(model).upper()], has_chart=False)
+
+                    if len(correlation_data[sys_name]['ΔG'][model]['ΔH']) != len(ent):
+                        dg = correlation_data[sys_name]['ΔG'][model]['ΔH'] + ent.mean()
+                        if len(correlation_data[sys_name]['ΔG'][model]['ΔH']) > len(ent):
+                            for t in range(abs(len(correlation_data[sys_name]['ΔG'][model]['ΔH']) - len(ent))):
+                                ent = np.append(ent, np.nan)
+                        else:
+                            dh = correlation_data[sys_name]['ΔG'][model]['ΔH']
+                            for t in range(abs(len(correlation_data[sys_name]['ΔG'][model]['ΔH']) - len(ent))):
+                                dh = np.append(dh, np.nan)
+                    else:
+                        dg = correlation_data[sys_name]['ΔG'][model]['ΔH'] + ent
                     itemd2 = CustomItem(itemd1, [f'ΔG Binding ({str(level).upper()})'],
                                         cdata={'ΔH': correlation_data[sys_name]['ΔG'][model]['ΔH'], '-TΔS': ent,
-                                               'ΔG': correlation_data[sys_name]['ΔG'][model]['ΔH'] + ent},
-                                        level=1, chart_title=f"ΔG Binding",
+                                               'ΔG': dg},
+                                        level=1.1, chart_title=f"ΔG Binding",
                                         chart_subtitle=f"{mut_pre}{sys_name} | {str(model).upper()} | {level.upper()}",
                                         col_box=[2])
                     self.items_counter['charts'] += 1
-                    correlation_data[sys_name]['ΔG'][model][level] = correlation_data[sys_name]['ΔG'][model]['ΔH'] + ent
+                    correlation_data[sys_name]['ΔG'][model][level] = dg
 
         for level in decomp_keys:
             # omit decomp data
