@@ -721,6 +721,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
                                        col_box=[1])
                     ent = data[level]['data'][data[level]['frames'][0]:]
                     item1.ie = [data[level]['frames'], data[level]['value']]
+                    self.items_counter['charts'] += 1
                 else:
                     iteme = CustomItem(item, [str(level).upper()], has_chart=False)
                     for level1 in data[level]:
@@ -740,9 +741,9 @@ class GMX_MMPBSA_ANA(QMainWindow):
                             #                        chart_subtitle=f"{mut_pre}{sys_name} | {level.upper()} | "
                             #                                       f"{level1.upper()} | {level2.upper()}",
                             #                        col_box=[1])
-
+                            self.items_counter['charts'] += 1
                     ent = data[level]['delta']['Total'] * -1 # Since nmode and qh calculate the TΔS term
-                self.items_counter['charts'] += 1
+
 
                 for model in correlation_data[sys_name]['ΔG']:
                     if correlation_data[sys_name]['ΔG'][model]['ΔH'] is np.nan:
