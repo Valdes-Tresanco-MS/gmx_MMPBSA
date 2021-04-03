@@ -71,15 +71,15 @@ printed, which aids in debugging of issues. (Default = 0) (Advanced Option)
 
     !!! tip "Keep in mind"
         The Interaction Entropy method is dependent on the number of frames and the simulated time. Additionally, 
-        the results may vary depending on the system flexibility or if constraints were used or not in the MD 
-        simulation. Please, consult the [paper][3]
+        the results may vary depending on the system flexibility or whether constraints were used or not in the MD 
+        simulation. Please, consult this [paper][3] for further details
 
     _Changed in v1.0.0: Include Interaction Entropy approximation_    
 
   [3]: https://pubs.acs.org/doi/abs/10.1021/jacs.6b02682
 
 `entropy_seg` (Default = 25)
-:    Specify the representative segment (in %), starting from the `endframe`, for the calculation of the
+:    Representative segment (in %), starting from the `endframe`, for the calculation of the
      Interaction Entropy, _e.g._: `entropy_seg = 25` means that the last quartile of the total number of frames
      (`(endframe-startframe)/interval`) will be used to calculate the average Interaction Entropy. (Only
       if `entropy = 2`)
@@ -118,7 +118,7 @@ omitted in the correlation analysis
       * 1: Use temporary NetCDF trajectories
 
 `overwrite_data` (Default = 0)
-:   Defines whether the gmxMMPBSA data will be overwritten. `gmx_MMPBSA` detects if the gmxMMPBSA data files exist 
+:   Defines whether the gmx_MMPBSA data will be overwritten. `gmx_MMPBSA` detects if the gmxMMPBSA data files exist 
     before copying them. This option allows the user to control the copy process and prevents the system from being 
     overloaded by copying files unnecessarily.
 
