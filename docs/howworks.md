@@ -38,7 +38,7 @@ the results can be analyzed by using the graphical user interface `gmx_MMPBSA_an
 
 <figure markdown="1">
 [![overview][2]][2]
-  <figcaption markdown="1">
+  <figcaption markdown="1" style="margin-top:0;">
   **Figure 1**. `gmx_MMPBSA` general workflow
   </figcaption>
 </figure>
@@ -124,7 +124,7 @@ In this section, we will go in deatil about each file and what they are used for
 
 <figure markdown="1">
 [![overview][3]][3]
-  <figcaption markdown="1">
+  <figcaption markdown="1" style="margin-top:0;">
   **Figure 1**. Topology generation workflow for Single Trajectory Approximation
   </figcaption>
 </figure>

@@ -128,7 +128,8 @@ def make_corr_DF(corr_data: dict) -> pd.DataFrame:
         if x == 'mutant':
             continue
         for m in corr_data[x]['ΔG']:
-            curr = [x] + [corr_data[x]['ΔG'][m][d] for d in corr_data[x]['ΔG'][m]] + [m, corr_data[x]['Exp.Energy']]
+            curr = [x] + [np.nanmean(corr_data[x]['ΔG'][m][d]) if type(corr_data[x]['ΔG'][m][d]) == np.ndarray
+                                     else np.nan for d in corr_data[x]['ΔG'][m] ] + [m, corr_data[x]['Exp.Energy']]
             data.append(curr)
     df = pd.DataFrame(data=data, columns=['System', 'ΔH', 'ΔH+IE', 'ΔH+NMODE', 'ΔH+QH', 'MODEL', 'Exp.Energy'])
     return df

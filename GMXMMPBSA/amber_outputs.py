@@ -449,7 +449,7 @@ class QHout(object):
                                                                      self.rec[2], self.rec[3], self.rec[0])
             ret_str += 'Ligand:    %13.4f %15.4f %16.4f %15.4f\n' % (self.lig[1],
                                                                      self.lig[2], self.lig[3], self.lig[0])
-            ret_str += '\nDELTA S:   %13.4f %15.4f %16.4f %15.4f\n' % (
+            ret_str += '\nDELTA S (TΔS):   %13.4f %15.4f %16.4f %15.4f\n' % (
                 self.com[1] - self.rec[1] - self.lig[1],
                 self.com[2] - self.rec[2] - self.lig[2],
                 self.com[3] - self.rec[3] - self.lig[3],
@@ -1096,7 +1096,7 @@ class BindingStatistics(object):
             if not self.chamber and key in ['UB', 'IMP', 'CMAP']: continue
             # Catch special case of NMODEout classes
             if isinstance(self.com, NMODEout) and key == 'Total':
-                printkey = '\nDELTA S total='
+                printkey = '\nDELTA S total (TΔS) ='
             else:
                 printkey = key
             # Now print out the stats
@@ -1163,7 +1163,7 @@ class BindingStatistics(object):
             if not self.chamber and key in ['UB', 'IMP', 'CMAP']: continue
             # Catch special case of NMODEout classes
             if isinstance(self.com, NMODEout) and key == 'Total':
-                printkey = '\nDELTA S total='
+                printkey = '\nDELTA S total (TΔS) ='
             else:
                 printkey = key
             # Now print out the stats

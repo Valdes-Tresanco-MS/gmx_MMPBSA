@@ -35,14 +35,25 @@ theme:
     # - navigation.instant
     - navigation.sections
     - navigation.tabs
+    - navigation.top
+
   palette:
-    scheme: default
-    primary: black
-    accent: black
+    - scheme: default
+      primary: black
+      accent: black
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to dark mode
+    - scheme: slate
+      primary: black
+      accent: black
+      toggle:
+        icon: material/weather-night
+        name: Switch to light mode
   font:
     text: Roboto
     code: Roboto Mono
-  favicon: assets/favicon.png
+  favicon: assets/logo.svg
   icon:
     logo: logo
 

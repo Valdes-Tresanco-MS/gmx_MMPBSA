@@ -535,7 +535,8 @@ def load_gmxmmpbsa_info(fname):
         else:
             return_data.mutant = None
 
-    app_namespace = SimpleNamespace(FILES=app.FILES, INPUT=app.INPUT, numframes=app.numframes)
+    app_namespace = SimpleNamespace(FILES=app.FILES, INPUT=app.INPUT, numframes=app.numframes,
+                                    numframes_nmode=app.numframes_nmode)
 
     return return_data, app_namespace
 

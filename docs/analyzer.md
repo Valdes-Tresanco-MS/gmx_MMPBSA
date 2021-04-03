@@ -11,11 +11,10 @@ access to different graphics according to the analysis (**Figure 1**). The tool 
 large number of charts, even more than you can review ([Check this section to learn about the potential of 
 `gmx_MMPBSA_ana`](#gmx_mmpbsa_ana-under-pressure)).
 
-
 <figure markdown="1">
 [![overview][2]][2]
-  <figcaption markdown="1">
-  **Figure 1**. `gmx_MMPBSA_ana` graphical overview
+  <figcaption markdown="1" style="margin-top:0;">
+**Figure 1.** `gmx_MMPBSA_ana` graphical overview
   </figcaption>
 </figure>
 
@@ -52,7 +51,7 @@ the sum of all the per-residue energy contributions.
 <figure markdown="1">
 [![lineplot][3]][3]
 [![lineplot2][4]][4]
-  <figcaption markdown="1">
+  <figcaption markdown="1" style="margin-top:0;">
   **Figure 2**. Line plot examples. **Up:** ΔH representation, **Down:** Interaction Entropy representation
   </figcaption>
 </figure>
@@ -69,7 +68,7 @@ line that represents the standard deviation, while the bars representing a speci
 <figure markdown="1">
 [![barplot][5]][5]
 [![barplot2][6]][6]
-  <figcaption markdown="1">
+  <figcaption markdown="1" style="margin-top:0;">
   **Figure 3**. Bar plot examples. **Up:** Per-residue contribution, **Down:** ΔG Binding
   </figcaption>
 </figure>
@@ -89,7 +88,7 @@ represents the contribution of each residue with its respective pairs.
 <figure markdown="1">
 [![heatmapplot][7]][7]
 [![heatmapplot2][8]][8]
-  <figcaption markdown="1">
+  <figcaption markdown="1" style="margin-top:0;">
   **Figure 4**. Heatmap plot examples. **Up:** Per-residue contribution per-frame, **Down:** Inter Residue-pair 
 contribution
   </figcaption>

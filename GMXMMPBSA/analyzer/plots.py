@@ -226,8 +226,12 @@ class Charts(QMdiSubWindow):
                 label = 'ΔH'
                 if 'IE' in self.item.item_name:
                     label = '-TΔS'
-
-                self.line_plot = sns.lineplot(data=self.data.line_plot_dat, x='frames', color='black', linewidth=0.7,
+                if 'NMODE' in self.item.item_name or 'QH' in self.item.item_name:
+                    self.line_plot = sns.lineplot(data=self.data.line_plot_dat, x='frames', color='black',
+                                                  linewidth=0.7,
+                                                  y='Entropy', label=label, ax=self.mpl_canvas.axes)
+                else:
+                    self.line_plot = sns.lineplot(data=self.data.line_plot_dat, x='frames', color='black', linewidth=0.7,
                              y='Energy', label=label, ax=self.mpl_canvas.axes)
                 title = self.item.chart_title + '(P.f)'
                 if 'IE' in self.item.item_name:
@@ -239,7 +243,8 @@ class Charts(QMdiSubWindow):
                     self.mpl_canvas.axes.set_ylabel('Energy (kcal/mol)')
 
             if Charts.ROLLING in self.options['chart_type']:
-                if 'IE' not in self.item.item_name:
+                if ('IE' not in self.item.item_name and 'NMODE' not in self.item.item_name and 'QH' not in
+                        self.item.item_name):
                     self.data.line_plot_dat['movav'] = self.data.line_plot_dat['Energy'].rolling(50).mean()
                     self.movav_plot = sns.lineplot(data=self.data.line_plot_dat, x='frames', color='red', linewidth=0.8,
                                                     y='movav', label='Mov. Av.', ax=self.mpl_canvas.axes)
