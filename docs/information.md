@@ -10,7 +10,7 @@ title: Information
 At the moment we only have Zenodo [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4569307.svg)](https://doi.org/10.5281/zenodo.4569307)
 
 !!! note "Cite as"
-    Mario S. Valdés Tresanco, Mario E. Valdes-Tresanco, Pedro A. Valiente, & Ernesto Moreno Frías. (2021, March 1).  
+    Mario S. Valdés Tresanco, Mario E. Valdes-Tresanco, Pedro A. Valiente, & Ernesto Moreno Frías. (2021, March 22).  
     gmx_MMPBSA (Version v1.4.0). Zenodo. http://doi.org/10.5281/zenodo.4569307
 
 **Very soon we will have the article available**
