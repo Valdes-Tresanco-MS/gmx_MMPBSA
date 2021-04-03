@@ -754,12 +754,12 @@ class GMX_MMPBSA_ANA(QMainWindow):
                         if len(correlation_data[sys_name]['ΔG'][model]['ΔH']) > len(ent):
                             for t in range(abs(len(correlation_data[sys_name]['ΔG'][model]['ΔH']) - len(ent))):
                                 ent = np.append(ent, np.nan)
-                        else:
-                            dh = correlation_data[sys_name]['ΔG'][model]['ΔH']
-                            for t in range(abs(len(correlation_data[sys_name]['ΔG'][model]['ΔH']) - len(ent))):
-                                dh = np.append(dh, np.nan)
+                        # else:
+                        #     dh = correlation_data[sys_name]['ΔG'][model]['ΔH']
+                        #     for t in range(abs(len(correlation_data[sys_name]['ΔG'][model]['ΔH']) - len(ent))):
+                        #         dh = np.append(dh, np.nan)
                     else:
-                        dg = correlation_data[sys_name]['ΔG'][model]['ΔH'] + ent
+                        dg = correlation_data[sys_name]['ΔG'][model]['ΔH'] + np.nanmean(ent)
                     itemd2 = CustomItem(itemd1, [f'ΔG Binding ({str(level).upper()})'],
                                         cdata={'ΔH': correlation_data[sys_name]['ΔG'][model]['ΔH'], '-TΔS': ent,
                                                'ΔG': dg},
