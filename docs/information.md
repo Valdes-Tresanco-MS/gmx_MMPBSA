@@ -7,7 +7,7 @@ title: Information
 
 ## Citing us
 
-At the moment we only have Zenodo [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4626383.svg)](https://doi.org/10.5281/zenodo.4569307)
+At the moment we only have Zenodo [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4569307.svg)](https://doi.org/10.5281/zenodo.4569307)
 
 !!! note "Cite as"
     Mario S. Valdés Tresanco, Mario E. Valdes-Tresanco, Pedro A. Valiente, & Ernesto Moreno Frías. (2021, March 1).  
