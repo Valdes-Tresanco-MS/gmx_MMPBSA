@@ -208,7 +208,7 @@ Based on MMPBSA.py (version 16.0) and AmberTools20
 
 <figure markdown="1">
 [![overview][2]][2]
-  <figcaption markdown="1">
+  <figcaption markdown="1" style="margin-top:0;">
   **Figure 1**. **`MPI` benchmark description from <a href="https://pubs.acs.org/doi/10.1021/ct300418h">`MMPBSA.py` paper</a>.**
   `MMPBSA.py` scaling comparison for `MM-PBSA` and `MM-GBSA` calculations on 200 frames of a 5910-atom complex. Times 
   shown are the times required for the calculation to finish. Note that `MM-GBSA` calculations are ∼5 times faster 

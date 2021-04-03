@@ -231,7 +231,7 @@ described afterwards).
 
 <figure markdown="1">
 [![decomp][1]][1]
-  <figcaption markdown="1">
+  <figcaption markdown="1" style="margin-top:0;">
   **Figure 1**. Tree of `dict` keys following the `decomp` key in a `mmpbsa_data` instance.
   </figcaption>
 </figure>
