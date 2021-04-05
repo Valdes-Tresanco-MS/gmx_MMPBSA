@@ -661,7 +661,7 @@ class CheckMakeTop:
                 else:
                     v = e
                 temp.append([v, m])
-
+        temp.sort(key=lambda x: x[0])
         for c in temp:
             order_list.append(c[1])
 
