@@ -499,7 +499,8 @@ input_file.addNamelist('general', 'general',
                            ['interval', int, 1, 'Number of frames between adjacent frames analyzed.'],
                            ['ions_parameters', int, 1, 'Define ions parameters to build the Amber topology.'],
                            ['keep_files', int, 2, 'How many files to keep after successful completion.'],
-                           # ['ligand_mask', str, None, 'Amber mask of ligand atoms in complex prmtop.'],
+                           ['forcefields', str, 'oldff/leaprc.ff99SB,leaprc.gaff', 'Define the force field to build '
+                                                                                    'Amber topology'],
                            ['ligand_forcefield', str, "leaprc.gaff", 'Define the force field to build Amber topology for '
                                                              'ligand (small molecule)'],
                            ['netcdf', int, 0, 'Use NetCDF intermediate trajectories.'],

@@ -39,7 +39,7 @@ from GMXMMPBSA.calculation import (CalculationList, EnergyCalculation, PBEnergyC
                                    InteractionEntropyCalc)
 from GMXMMPBSA.commandlineparser import parser
 from GMXMMPBSA.createinput import create_inputs
-from GMXMMPBSA.exceptions import (MMPBSA_Error, InternalError, InputError, GMXMMPBSA_ERROR)
+from GMXMMPBSA.exceptions import (MMPBSA_Error, InternalError, InputError, GMXMMPBSA_ERROR, GMXMMPBSA_WARNING)
 from GMXMMPBSA.fake_mpi import MPI as FakeMPI
 from GMXMMPBSA.findprogs import find_progs
 from GMXMMPBSA.infofile import InfoFile
@@ -920,11 +920,13 @@ class MMPBSA_App(object):
         if not self.INPUT['mutant'].upper() in ['ALA', 'A', 'GLY', 'G']:
             GMXMMPBSA_ERROR('The mutant most be ALA (or A) or GLY (or G)', InputError)
 
+        # check force fields
+        if self.INPUT['protein_forcefield'] or self.INPUT['ligand_forcefield']:
+            GMXMMPBSA_WARNING('protein_forcefield and ligand_forcefield variables are deprecate since version 1.4.1 '
+                              'and will be remove in the next version. Please, use forcefield instead.')
         # check files
         if self.FILES.complex_top:
             self.INPUT['use_sander'] = 1
-
-
 
     def remove(self, flag):
         """ Removes temporary files """

@@ -284,6 +284,20 @@ class CheckMakeTop:
         self.check4water()
         self.resi, self.resl, self.orderl, self.indexes = self.res2map()
         self.fix_chains_IDs(self.complex_str, self.receptor_str, self.ligand_str, self.ref_str)
+        self.forcefields = self.check_ff_definition()
+
+    def check_ff_definition(self):
+        # first we check if forcefields was defined
+        prot_lig_ff = [self.INPUT['protein_forcefield'], self.INPUT['ligand_forcefield']]
+
+        if self.INPUT['forcefields'].split(',') != prot_lig_ff:
+            if self.INPUT['forcefields'].split(',') != ['oldff/leaprc.ff99SB', 'leaprc.gaff']:
+                forcefields = self.INPUT['forcefields'].split(',')
+            else:
+                forcefields = self.INPUT['protein_forcefield'], self.INPUT['ligand_forcefield']
+        else:
+            forcefields = self.INPUT['protein_forcefield'], self.INPUT['ligand_forcefield']
+        return forcefields
 
     def check4water(self):
         counter = 0
@@ -410,7 +424,7 @@ class CheckMakeTop:
                 else:
                     mtop = mut_com_amb_prm
 
-            if self.INPUT['protein_forcefield'] == 'charmm':
+            if com_top_parm == 'charmm':
                 mut_prot_amb_prm = parmed.amber.ChamberParm.from_structure(mtop)
             else:
                 mut_prot_amb_prm = parmed.amber.AmberParm.from_structure(mtop)
@@ -1085,8 +1099,8 @@ class CheckMakeTop:
     def makeToptleap(self):
         logging.info('Building tleap input files...')
         with open(self.FILES.prefix + 'leap.in', 'w') as tif:
-            tif.write('source {}\n'.format(self.INPUT['protein_forcefield']))
-            tif.write('source {}\n'.format(self.INPUT['ligand_forcefield']))
+            for ff in self.forcefields:
+                tif.write(f'source {ff}\n')
             tif.write('loadOff atomic_ions.lib\n')
             tif.write('loadamberparams {}\n'.format(ions_para_files[self.INPUT['ions_parameters']]))
             tif.write('set default PBRadii {}\n'.format(PBRadii[self.INPUT['PBRadii']]))
@@ -1154,8 +1168,8 @@ class CheckMakeTop:
 
         if self.INPUT['alarun']:
             with open(self.FILES.prefix + 'mut_leap.in', 'w') as mtif:
-                mtif.write('source {}\n'.format(self.INPUT['protein_forcefield']))
-                mtif.write('source {}\n'.format(self.INPUT['ligand_forcefield']))
+                for ff in self.forcefields:
+                    mtif.write(f'source {ff}\n')
                 mtif.write('loadOff atomic_ions.lib\n')
                 mtif.write('loadamberparams {}\n'.format(ions_para_files[self.INPUT['ions_parameters']]))
                 mtif.write('set default PBRadii {}\n'.format(PBRadii[self.INPUT['PBRadii']]))
