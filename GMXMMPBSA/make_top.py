@@ -426,9 +426,12 @@ class CheckMakeTop:
         self.fixparm2amber(self.ligand_str, removeH=True)
 
         self.receptor_list = {}
+        start = 1
         c = 1
-        for r in self.resi['REC']:
-            mask = f'!:{r}'
+        for r in self.resi['REC']['num']:
+            end = start + (r[1]- r[0])
+            mask = f'!:{start}-{end}'
+            start += end
             rec = self.molstr(self.receptor_str)
             rec.strip(mask)
             rec_file = self.FILES.prefix + f'REC_F{c}.pdb'
@@ -439,15 +442,16 @@ class CheckMakeTop:
         self.ligand_list = {}
         start = 1
         c = 1
-        for r in self.resi['LIG']['string']:
-            mask = f'!:{r}'
+        for r in self.resi['LIG']['num']:
+            end = start + (r[1] - r[0])
+            mask = f'!:{start}-{end}'
+            start += end
             lig = self.molstr(self.ligand_str)
             lig.strip(mask)
             lig_file = self.FILES.prefix + f'LIG_F{c}.pdb'
             lig.save(lig_file, 'pdb', True, renumber=False)
             self.ligand_list[f'LIG{c}'] = lig_file
             c += 1
-
         self.mut_receptor_list = {}
         self.mut_ligand_list = {}
 
@@ -458,8 +462,8 @@ class CheckMakeTop:
                 self.mutant_ligand_pmrtop = None
                 start = 0
                 c = 1
-                for r in self.resi['REC']:
-                    mask = f'!:{r}'
+                for r in self.resi['REC']['num']:
+                    mask = f'!:{start}-{(r[1] - r[0]) + 1}'
                     rec = self.molstr(self.receptor_str)
                     mut_rec = self.makeMutTop(rec, part_index, True)
                     mut_rec.strip(mask)
@@ -470,9 +474,10 @@ class CheckMakeTop:
             else:
                 logging.info('Detecting mutation in Ligand.Building Mutant Ligand Structure...')
                 self.mutant_receptor_pmrtop = None
+                start = 0
                 c = 1
-                for r in self.resi['LIG']['string']:
-                    mask = f'!:{r}'
+                for r in self.resi['LIG']['num']:
+                    mask = f'!:{start}-{(r[1] - r[0]) + 1}'
                     lig = self.molstr(self.ligand_str)
                     mut_lig = self.makeMutTop(lig, part_index, True)
                     mut_lig.strip(mask)
@@ -698,6 +703,18 @@ class CheckMakeTop:
 
         masks['REC'] = list2range(res_list['REC'])
         masks['LIG'] = list2range(res_list['LIG'])
+
+        temp = []
+        for m in masks:
+            for e in masks[m]['num']:
+                if isinstance(e, list):
+                    v = e[0]
+                else:
+                    v = e
+                temp.append([v, m])
+
+        for c in temp:
+            order_list.append(c[1])
 
         return masks, res_list, order_list, [ndx['GMXMMPBSA_REC'], ndx['GMXMMPBSA_LIG']]
 
@@ -1150,7 +1167,7 @@ class CheckMakeTop:
             r = 0
             i = 0
             for e in self.orderl:
-                if e == 'R':
+                if e in ['R', 'REC']:
                     COM.append(REC[r])
                     r += 1
                 else:
