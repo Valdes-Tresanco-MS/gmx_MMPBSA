@@ -581,6 +581,7 @@ class MMPBSA_App(object):
             self.INPUT['receptor_mask'], self.INPUT['ligand_mask'] = maketop.get_masks()
             self.mut_str = maketop.mut_label
             self.FILES.complex_fixed = self.FILES.prefix + 'COM_FIXED.pdb'
+            maketop.get_qm_residues() # get qm_residues in Amber format
 
         self.FILES = self.MPI.COMM_WORLD.bcast(self.FILES, root=0)
         self.INPUT = self.MPI.COMM_WORLD.bcast(self.INPUT, root=0)

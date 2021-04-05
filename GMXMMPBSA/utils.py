@@ -39,9 +39,78 @@ from string import ascii_letters
 from GMXMMPBSA.exceptions import GMXMMPBSA_ERROR, GMXMMPBSA_WARNING
 from math import sqrt
 
+
+class Residue(int):
+    """
+    Residue class
+    """
+    def __init__(self, index, number, chain, mol, name, icode=''):
+        int.__init__(index)
+        self.index = index
+        self.number = number
+        self.chain = chain
+        self.mol = mol
+        self.name = name
+        self.icode = icode
+
+    def __new__(cls, index, number, chain, mol, name, icode=''):
+        i = int.__new__(cls, index)
+        i.index = index
+        i.number = number
+        i.chain = chain
+        i.mol = mol
+        i.name = name
+        i.icode = icode
+        return i
+
+    def __repr__(self):
+        text = f"{type(self).__name__}(index: {self.index}, {self.chain}:{self.name}:{self.number}"
+        if self.icode:
+            text += f":{self.icode}"
+        text += ')'
+        return text
+
+    def __str__(self):
+        return f"{self.index}"
+
+    def issame(self, other):
+        pass
+
 def get_dist(coor1, coor2):
     return sqrt((coor2[0] - coor1[0]) ** 2 + (coor2[1] - coor1[1]) ** 2 + (coor2[2] - coor1[2]) ** 2)
 
+def list2range(input_list):
+    """
+    Convert a list in list of ranges
+    :return: list of ranges, string format of the list of ranges
+    """
+
+    def _add(temp):
+        if len(temp) == 1:
+            ranges_str.append(f"{temp[0]}")
+            ranges.append([temp[0], temp[0]])
+        else:
+            ranges_str.append(f"{str(temp[0])}-{str(temp[-1])}")
+            ranges.append([temp[0], temp[-1]])
+
+    ranges = []
+    ranges_str = []
+    if not input_list:
+        return ''
+    temp = []
+    previous = None
+    for x in input_list:
+        if not previous:
+            temp.append(x)
+        elif x == previous + 1:
+            temp.append(x)
+        else:
+            _add(temp)
+            temp = [x]
+        if x == input_list[-1]:
+            _add(temp)
+        previous = x
+    return {'num': ranges, 'string': ranges_str}
 
 def selector(selection:str):
     string_list = selection.split()

@@ -23,7 +23,7 @@ Generate Amber topology files from GROMACS files
 import os
 import parmed
 from GMXMMPBSA.exceptions import *
-from GMXMMPBSA.utils import checkff, selector, get_dist
+from GMXMMPBSA.utils import checkff, selector, get_dist, list2range, Residue
 from GMXMMPBSA.alamdcrd import _scaledistance
 import subprocess
 from pathlib import Path
@@ -109,12 +109,6 @@ class CheckMakeTop:
         """
         self.gmx2pdb()
         if self.FILES.complex_top:
-            logging.info('Cleaning GROMACS topologies...')
-            self.cleantop(self.FILES.complex_top, self.complex_temp_top)
-            if self.FILES.receptor_top:
-                self.cleantop(self.FILES.receptor_top, self.receptor_temp_top)
-            if self.FILES.ligand_top:
-                self.cleantop(self.FILES.ligand_top, self.ligand_temp_top)
             tops = self.gmxtop2prmtop()
         else:
             self.pdb2prmtop()
@@ -287,12 +281,14 @@ class CheckMakeTop:
         self.complex_str = self.molstr(self.complex_str_file)
         self.receptor_str = self.molstr(self.receptor_str_file)
         self.ligand_str = self.molstr(self.ligand_str_file)
-        self.resi, self.resl, self.orderl = self.res2map()
+        self.resi, self.resl, self.orderl, self.indexes = self.res2map()
         self.fix_chains_IDs(self.complex_str, self.receptor_str, self.ligand_str, self.ref_str)
 
     def gmxtop2prmtop(self):
         logging.info('Building Normal Complex Amber Topology...')
-        com_top = parmed.gromacs.GromacsTopologyFile(self.complex_temp_top, xyz=self.complex_str_file)
+        com_top = self.cleantop(self.FILES.complex_top, self.indexes[0] + self.indexes[1])
+        # parmed.gromacs.GromacsTopologyFile(self.complex_temp_top,xyz=self.complex_str_file)
+        com_top.coordinates = self.complex_str.coordinates
         # try:
         if com_top.impropers or com_top.urey_bradleys or com_top.cmaps:
             com_amb_prm = parmed.amber.ChamberParm.from_structure(com_top)
@@ -313,19 +309,16 @@ class CheckMakeTop:
         action = ChRad(com_amb_prm, PBRadii[self.INPUT['PBRadii']])
         com_amb_prm.write_parm(self.complex_pmrtop)
 
-        text_list = []
-        for r in self.resi['REC']:
-            if r[0] == r[1]:
-                text_list.append(f'{r[0]}')
-            else:
-                text_list.append(f'{r[0]}-{r[1]}')
-        rec_indexes_string = ','.join(text_list)
+        rec_indexes_string = ','.join(self.resi['REC']['string'])
 
         rec_hastop = True
         if self.FILES.receptor_top:
             logging.info('A Receptor topology file was defined. Using MT approach...')
             logging.info('Building AMBER Receptor Topology from GROMACS Receptor Topology...')
-            rec_top = parmed.gromacs.GromacsTopologyFile(self.receptor_temp_top, xyz=self.receptor_str_file)
+            rec_top = self.cleantop(self.FILES.receptor_top, self.indexes[0])
+            # parmed.gromacs.GromacsTopologyFile(self.complex_temp_top,xyz=self.complex_str_file)
+            rec_top.coordinates = self.receptor_str.coordinates
+            # rec_top = parmed.gromacs.GromacsTopologyFile(self.receptor_temp_top, xyz=self.receptor_str_file)
             if rec_top.impropers or rec_top.urey_bradleys or rec_top.cmaps:
                 if com_top_parm == 'amber':
                     GMXMMPBSA_ERROR('Inconsistent parameter format. The defined Complex is AMBER type while the '
@@ -352,7 +345,10 @@ class CheckMakeTop:
         if self.FILES.ligand_top:
             logging.info('A Ligand Topology file was defined. Using MT approach...')
             logging.info('Building AMBER Ligand Topology from GROMACS Ligand Topology...')
-            lig_top = parmed.gromacs.GromacsTopologyFile(self.ligand_temp_top, xyz=self.ligand_str_file)
+            lig_top = self.cleantop(self.FILES.ligand_top, self.indexes[1])
+            # parmed.gromacs.GromacsTopologyFile(self.complex_temp_top,xyz=self.complex_str_file)
+            lig_top.coordinates = self.ligand_str.coordinates
+            # lig_top = parmed.gromacs.GromacsTopologyFile(self.ligand_temp_top, xyz=self.ligand_str_file)
             if lig_top.impropers or lig_top.urey_bradleys or lig_top.cmaps:
                 if com_top_parm == 'amber':
                     GMXMMPBSA_ERROR('Inconsistent parameter format. The defined Complex is AMBER type while the '
@@ -432,7 +428,7 @@ class CheckMakeTop:
         self.receptor_list = {}
         start = 1
         c = 1
-        for r in self.resi['REC']:
+        for r in self.resi['REC']['num']:
             end = start + (r[1]- r[0])
             mask = f'!:{start}-{end}'
             start += end
@@ -446,7 +442,7 @@ class CheckMakeTop:
         self.ligand_list = {}
         start = 1
         c = 1
-        for r in self.resi['LIG']:
+        for r in self.resi['LIG']['num']:
             end = start + (r[1] - r[0])
             mask = f'!:{start}-{end}'
             start += end
@@ -456,7 +452,6 @@ class CheckMakeTop:
             lig.save(lig_file, 'pdb', True, renumber=False)
             self.ligand_list[f'LIG{c}'] = lig_file
             c += 1
-
         self.mut_receptor_list = {}
         self.mut_ligand_list = {}
 
@@ -467,7 +462,7 @@ class CheckMakeTop:
                 self.mutant_ligand_pmrtop = None
                 start = 0
                 c = 1
-                for r in self.resi['REC']:
+                for r in self.resi['REC']['num']:
                     mask = f'!:{start}-{(r[1] - r[0]) + 1}'
                     rec = self.molstr(self.receptor_str)
                     mut_rec = self.makeMutTop(rec, part_index, True)
@@ -481,7 +476,7 @@ class CheckMakeTop:
                 self.mutant_receptor_pmrtop = None
                 start = 0
                 c = 1
-                for r in self.resi['LIG']:
+                for r in self.resi['LIG']['num']:
                     mask = f'!:{start}-{(r[1] - r[0]) + 1}'
                     lig = self.molstr(self.ligand_str)
                     mut_lig = self.makeMutTop(lig, part_index, True)
@@ -530,18 +525,20 @@ class CheckMakeTop:
                     for res in res_selection:
                         GMXMMPBSA_WARNING("We couldn't find this residue CHAIN:{} RES_NUM:{} ICODE: {}".format(*res))
 
-    def cleantop(self, top_file, temp_top_file):
+    @staticmethod
+    def cleantop(top_file, ndx):
         """
-        Create a new top file without SOL and IONS
+        Create a new top file with selected groups and without SOL and IONS
         :param top_file: User-defined topology file
-        :param temp_top_file: temporary top file
-        :return: detected ff
+        :param ndx: atoms index
+        :return: new and clean top instance
         """
         top_file = Path(top_file)
         molsect = False
 
-        temp_top = open(top_file.parent.joinpath(temp_top_file), 'w')
-        temp_top.write('; Modified by gmx_MMPBSA\n')
+        ttp_file = top_file.parent.joinpath('_temp_top.top')
+        temp_top = ttp_file.open(mode='w')
+        # temp_top.write('; Modified by gmx_MMPBSA\n')
 
         with open(top_file) as topf:
             for line in topf:
@@ -562,22 +559,47 @@ class CheckMakeTop:
                 temp_top.write(line)
         temp_top.close()
 
+        # read the temp topology with parmed
+        rtemp_top = parmed.gromacs.GromacsTopologyFile(ttp_file.as_posix())
+        # get the residues in the top from the com_ndx
+        res_list = []
+        for i in ndx:
+            if rtemp_top.atoms[i-1].residue.number + 1 not in res_list:
+                res_list.append(rtemp_top.atoms[i-1].residue.number + 1)
+
+        ranges = list2range(res_list)
+        rtemp_top.strip(f"!:{','.join(ranges['string'])}")
+        ttp_file.unlink()
+        return rtemp_top
+
     def get_masks(self):
-        rt = []
-        for r in self.resi['REC']:
-            if r[0] == r[1]: # only as precaution
-                rt.append(f'{r[0]}')
-            else:
-                rt.append(f'{r[0]}-{r[1]}')
-        rec_mask = ':' + ','.join(rt)
-        lt = []
-        for l in self.resi['LIG']:
-            if l[0] == l[1]:
-                lt.append(f'{l[0]}')
-            else:
-                lt.append(f'{l[0]}-{l[1]}')
-        lig_mask = ':' + ','.join(lt)
+        rec_mask = ':' + ','.join(self.resi['REC']['string'])
+        lig_mask = ':' + ','.join(self.resi['LIG']['string'])
         return rec_mask, lig_mask
+
+    def get_qm_residues(self):
+        """
+        Convert string selection format to amber index list
+        """
+        dist, exclude, res_selection = selector(self.INPUT['qm_residues'])
+        res_list = []
+        for i in self.resl['REC']:
+            rres = self.complex_str.residues[i - 1]
+            if [rres.chain, rres.number, rres.insertion_code] in res_selection:
+                res_list.append(i)
+                res_selection.remove([rres.chain, rres.number, rres.insertion_code])
+        for j in self.resl['LIG']:
+            lres = self.complex_str.residues[j - 1]
+            if [lres.chain, lres.number, lres.insertion_code] in res_selection:
+                res_list.append(j)
+                res_selection.remove([lres.chain, lres.number, lres.insertion_code])
+
+        res_list.sort()
+        self.INPUT['qm_residues'] = ','.join([str(x) for x in res_list])
+        if res_selection:
+            for res in res_selection:
+                GMXMMPBSA_WARNING("qm_residues: We couldn't find this residue CHAIN:{} RES_NUM:{} ICODE: "
+                                  "{}".format(*res))
 
     def res2map(self):
         """
@@ -585,7 +607,7 @@ class CheckMakeTop:
         :param com_str:
         :return:
         """
-         # read the index file
+        # read the index file
         ndx = {}
         with open(self.FILES.complex_index) as indexf:
             header = None
@@ -596,66 +618,50 @@ class CheckMakeTop:
                 else:
                     ndx[header].extend(map(int, line.split()))
         com_str = self.complex_str
-
-        start = 1
-        end = None
         order_list = []
-        previous = None
 
         masks = {'REC': [], 'LIG': []}
         res_list = {'REC': [], 'LIG': []}
         com_ndx = ndx['GMXMMPBSA_REC_GMXMMPBSA_LIG']
         com_len = len(ndx['GMXMMPBSA_REC_GMXMMPBSA_LIG'])
-        resnum = 1
-        current_res = None
-        current_icode = ''
+        resindex = 1
+        proc_res = None
         for i in range(com_len):
+            res = [com_str.atoms[i].residue.number, com_str.atoms[i].residue.insertion_code]
             # We check who owns the residue corresponding to this atom
             if com_ndx[i] in ndx['GMXMMPBSA_REC']:
-                current = 'R'
                 # save residue number in the rec list
-                if com_str.atoms[i].residue.number != current_res and not resnum in res_list['REC']:
-                    res_list['REC'].append(resnum)
-                    resnum += 1
-                    current_res = com_str.atoms[i].residue.number
-                    current_icode = com_str.atoms[i].residue.insertion_code
-                # get residues with icode
-                if com_str.atoms[i].residue.insertion_code != current_icode:
-                    res_list['REC'].append(resnum)
-                    resnum += 1
-                    current_icode = com_str.atoms[i].residue.insertion_code
+                if res != proc_res and resindex not in res_list['REC']:
+                    res_list['REC'].append(Residue(resindex, com_str.atoms[i].residue.number,
+                                                   com_str.atoms[i].residue.chain, 'REC', com_str.atoms[i].residue.name,
+                                                   com_str.atoms[i].residue.insertion_code))
+                    resindex += 1
+                    proc_res = res
             else:
-                current = 'L'
                 # save residue number in the lig list
-                if com_str.atoms[i].residue.number != current_res and not resnum in res_list['LIG']:
-                    res_list['LIG'].append(resnum)
-                    resnum += 1
-                    current_res = com_str.atoms[i].residue.number
-                # get residues with icode
-                if com_str.atoms[i].residue.insertion_code != current_icode:
-                    res_list['LIG'].append(resnum)
-                    resnum += 1
-                    current_icode = com_str.atoms[i].residue.insertion_code
-            # check for end
-            if previous and current != previous:
-                end = resnum - 2
+                if res != proc_res and resindex not in res_list['LIG']:
+                    res_list['LIG'].append(Residue(resindex, com_str.atoms[i].residue.number,
+                                                   com_str.atoms[i].residue.chain, 'LIG', com_str.atoms[i].residue.name,
+                                                   com_str.atoms[i].residue.insertion_code))
+                    resindex += 1
+                    proc_res = res
 
-            # when i is the last index
-            if i == com_len - 1:
-                end = resnum - 1
-            if end:
-                if previous == 'R':
-                    masks['REC'].append([start, end])
+        masks['REC'] = list2range(res_list['REC'])
+        masks['LIG'] = list2range(res_list['LIG'])
+
+        temp = []
+        for m in masks:
+            for e in masks[m]['num']:
+                if isinstance(e, list):
+                    v = e[0]
                 else:
-                    masks['LIG'].append([start, end])
-                # add current range identifier
-                order_list.append(previous)
-                # set the new start and reset end
-                start = end + 1
-                end = None
-            # we change previous to current once it is processed
-            previous = current
-        return masks, res_list, order_list
+                    v = e
+                temp.append([v, m])
+
+        for c in temp:
+            order_list.append(c[1])
+
+        return masks, res_list, order_list, [ndx['GMXMMPBSA_REC'], ndx['GMXMMPBSA_LIG']]
 
     def fixparm2amber(self, structure, removeH=False):
 
@@ -1106,7 +1112,7 @@ class CheckMakeTop:
             r = 0
             i = 0
             for e in self.orderl:
-                if e == 'R':
+                if e in ['R', 'REC']:
                     COM.append(REC[r])
                     r += 1
                 else:
