@@ -84,11 +84,19 @@ def list2range(input_list):
     Convert a list in list of ranges
     :return: list of ranges, string format of the list of ranges
     """
+
+    def _add(temp):
+        if len(temp) == 1:
+            ranges_str.append(f"{temp[0]}")
+            ranges.append([temp[0], temp[0]])
+        else:
+            ranges_str.append(f"{str(temp[0])}-{str(temp[-1])}")
+            ranges.append([temp[0], temp[-1]])
+
     ranges = []
     ranges_str = []
     if not input_list:
         return ''
-    start_new = False
     temp = []
     previous = None
     for x in input_list:
@@ -97,18 +105,10 @@ def list2range(input_list):
         elif x == previous + 1:
             temp.append(x)
         else:
-            start_new = True
-
-        if x == input_list[-1] or start_new:
-            if len(temp) == 1:
-                ranges_str.append(f"{temp[0]}")
-                ranges.append(temp[0])
-            else:
-                ranges_str.append(f"{str(temp[0])}-{str(temp[-1])}")
-                ranges.append([temp[0], temp[-1]])
-            if start_new:
-                temp = [x]
-                start_new = False
+            _add(temp)
+            temp = [x]
+        if x == input_list[-1]:
+            _add(temp)
         previous = x
     return {'num': ranges, 'string': ranges_str}
 
