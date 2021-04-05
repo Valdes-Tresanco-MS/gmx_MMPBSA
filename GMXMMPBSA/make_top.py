@@ -520,18 +520,20 @@ class CheckMakeTop:
                     for res in res_selection:
                         GMXMMPBSA_WARNING("We couldn't find this residue CHAIN:{} RES_NUM:{} ICODE: {}".format(*res))
 
-    def cleantop(self, top_file, temp_top_file):
+    @staticmethod
+    def cleantop(top_file, ndx):
         """
-        Create a new top file without SOL and IONS
+        Create a new top file with selected groups and without SOL and IONS
         :param top_file: User-defined topology file
-        :param temp_top_file: temporary top file
-        :return: detected ff
+        :param ndx: atoms index
+        :return: new and clean top instance
         """
         top_file = Path(top_file)
         molsect = False
 
-        temp_top = open(top_file.parent.joinpath(temp_top_file), 'w')
-        temp_top.write('; Modified by gmx_MMPBSA\n')
+        ttp_file = top_file.parent.joinpath('_temp_top.top')
+        temp_top = ttp_file.open(mode='w')
+        # temp_top.write('; Modified by gmx_MMPBSA\n')
 
         with open(top_file) as topf:
             for line in topf:
@@ -551,6 +553,19 @@ class CheckMakeTop:
                         break
                 temp_top.write(line)
         temp_top.close()
+
+        # read the temp topology with parmed
+        rtemp_top = parmed.gromacs.GromacsTopologyFile(ttp_file.as_posix())
+        # get the residues in the top from the com_ndx
+        res_list = []
+        for i in ndx:
+            if rtemp_top.atoms[i-1].residue.number + 1 not in res_list:
+                res_list.append(rtemp_top.atoms[i-1].residue.number + 1)
+
+        ranges = list2range(res_list)
+        rtemp_top.strip(f"!:{','.join(ranges['string'])}")
+        ttp_file.unlink()
+        return rtemp_top
 
     def get_masks(self):
         rt = []
