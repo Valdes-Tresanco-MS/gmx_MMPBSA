@@ -39,6 +39,43 @@ from string import ascii_letters
 from GMXMMPBSA.exceptions import GMXMMPBSA_ERROR, GMXMMPBSA_WARNING
 from math import sqrt
 
+
+class Residue(int):
+    """
+    Residue class
+    """
+    def __init__(self, index, number, chain, mol, name, icode=''):
+        int.__init__(index)
+        self.index = index
+        self.number = number
+        self.chain = chain
+        self.mol = mol
+        self.name = name
+        self.icode = icode
+
+    def __new__(cls, index, number, chain, mol, name, icode=''):
+        i = int.__new__(cls, index)
+        i.index = index
+        i.number = number
+        i.chain = chain
+        i.mol = mol
+        i.name = name
+        i.icode = icode
+        return i
+
+    def __repr__(self):
+        text = f"{type(self).__name__}(index: {self.index}, {self.chain}:{self.name}:{self.number}"
+        if self.icode:
+            text += f":{self.icode}"
+        text += ')'
+        return text
+
+    def __str__(self):
+        return f"{self.index}"
+
+    def issame(self, other):
+        pass
+
 def get_dist(coor1, coor2):
     return sqrt((coor2[0] - coor1[0]) ** 2 + (coor2[1] - coor1[1]) ** 2 + (coor2[2] - coor1[2]) ** 2)
 
