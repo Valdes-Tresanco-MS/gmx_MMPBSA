@@ -460,10 +460,12 @@ class CheckMakeTop:
             if part_mut == 'REC':
                 logging.info('Detecting mutation in Receptor. Building Mutant Receptor Structure...')
                 self.mutant_ligand_pmrtop = None
-                start = 0
+                start = 1
                 c = 1
                 for r in self.resi['REC']['num']:
-                    mask = f'!:{start}-{(r[1] - r[0]) + 1}'
+                    end = start + (r[1] - r[0])
+                    mask = f'!:{start}-{end}'
+                    start += end
                     rec = self.molstr(self.receptor_str)
                     mut_rec = self.makeMutTop(rec, part_index, True)
                     mut_rec.strip(mask)
@@ -474,10 +476,12 @@ class CheckMakeTop:
             else:
                 logging.info('Detecting mutation in Ligand.Building Mutant Ligand Structure...')
                 self.mutant_receptor_pmrtop = None
-                start = 0
+                start = 1
                 c = 1
                 for r in self.resi['LIG']['num']:
-                    mask = f'!:{start}-{(r[1] - r[0]) + 1}'
+                    end = start + (r[1] - r[0])
+                    mask = f'!:{start}-{end}'
+                    start += end
                     lig = self.molstr(self.ligand_str)
                     mut_lig = self.makeMutTop(lig, part_index, True)
                     mut_lig.strip(mask)
@@ -1189,9 +1193,11 @@ class CheckMakeTop:
                         mtif.write(f'{rec} = loadpdb {self.receptor_list[rec]}\n')
 
                 MCOM = []
-                l = r = i = 0
+                l = 0
+                r = 0
+                i = 0
                 for e in self.orderl:
-                    if e == 'R':
+                    if e in ['R', 'REC']:
                         MCOM.append(REC[r])
                         r += 1
                     else:
