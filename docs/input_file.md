@@ -261,9 +261,39 @@ Avoid inconsistencies with defined internal temperature (298.15 K) when `nmode` 
         All models are now available with both `mmpbsa_py_energy` and `sander`
 
 `qm_residues`
-:   Comma- or semicolon-delimited list of complex residues to treat with quantum mechanics. All whitespace is
-    ignored. All residues treated with quantum mechanics in the complex must be treated with quantum mechanics in the
-    receptor or ligand to obtain meaningful results.
+:   Complex residues to treat with quantum mechanics. All residues treated with quantum mechanics in the complex 
+    must be treated with quantum mechanics in the receptor or ligand to obtain meaningful results. This notation is 
+    the same used for `print_res` variable 
+
+    Notation: [ `CHAIN`/(`RESNUM` or `RESNUM-RESNUM`) ]
+    :    Treat with quantum mechanics residues individual or ranges. This notation also supports insertion codes, in 
+    which case you must define them individually
+
+    !!! example
+        `qm_residues="A/1,3-10,15,100"` This treat with quantum mechanic Chain A residues 1, 3 through 10, 15, and 
+        100 from the complex topology file and the corresponding residues in either the ligand and/or receptor 
+        topology files.
+
+        Suppost that we can have the following sequence: A:LEU:5, A:GLY:6:A, A:THR:6:B, A:SER:6:C A:ASP:6D, A:ILE:7
+        
+        === "Right notation"
+            
+            **Ranges selection**
+            :   `qm_residues="A/5-7` Will treat with quantum mechanic all mentioned residues because all residues with 
+            insertion code are contained in the range
+            
+            **Individual selection**
+            :   `qm_residues="A/5,6:B,6:C,7` Will treat with quantum mechanic all mentioned residues except the 
+            residues A:6:A and A:6:D
+            
+            **Multiple chain selection**
+            :   `qm_residues="A/5-10,100 B/34,56` Will treat with quantum mechanic residues 3 through 10, 100 from 
+            chain A and residues 34 and 56 from Chain B.
+
+        === "Wrong notation"
+            `qm_residues="A/5-6B,6D-7` Will end in error.
+
+
 
 `intdiel` (Default = 1.0)
 :   Define Internal dielectric constant without use external *.mdin file
@@ -748,7 +778,7 @@ startframe=5, endframe=100, interval=5,
 
 &gb
 igb=5, saltcon=0.100, ifqnt=1, qmcharge_com=0,
-qm_residues="100-105, 200", qm_theory="PM3"
+qm_residues="B/240-251", qm_theory="PM3"
 /
 ```
 
