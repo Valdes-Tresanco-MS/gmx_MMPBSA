@@ -79,6 +79,38 @@ class Residue(int):
 def get_dist(coor1, coor2):
     return sqrt((coor2[0] - coor1[0]) ** 2 + (coor2[1] - coor1[1]) ** 2 + (coor2[2] - coor1[2]) ** 2)
 
+def list2range(input_list):
+    """
+    Convert a list in list of ranges
+    :return: list of ranges, string format of the list of ranges
+    """
+    ranges = []
+    ranges_str = []
+    if not input_list:
+        return ''
+    start_new = False
+    temp = []
+    previous = None
+    for x in input_list:
+        if not previous:
+            temp.append(x)
+        elif x == previous + 1:
+            temp.append(x)
+        else:
+            start_new = True
+
+        if x == input_list[-1] or start_new:
+            if len(temp) == 1:
+                ranges_str.append(f"{temp[0]}")
+                ranges.append(temp[0])
+            else:
+                ranges_str.append(f"{str(temp[0])}-{str(temp[-1])}")
+                ranges.append([temp[0], temp[-1]])
+            if start_new:
+                temp = [x]
+                start_new = False
+        previous = x
+    return {'num': ranges, 'string': ranges_str}
 
 def selector(selection:str):
     string_list = selection.split()
