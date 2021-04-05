@@ -577,84 +577,29 @@ class CheckMakeTop:
         lig_mask = ':' + ','.join(self.resi['LIG']['string'])
         return rec_mask, lig_mask
 
-    # def res2map(self):
-    #     """
-    #
-    #     :param com_str:
-    #     :return:
-    #     """
-    #      # read the index file
-    #     ndx = {}
-    #     with open(self.FILES.complex_index) as indexf:
-    #         header = None
-    #         for line in indexf:
-    #             if line.startswith('['):
-    #                 header = line.strip('\n[] ')
-    #                 ndx[header] = []
-    #             else:
-    #                 ndx[header].extend(map(int, line.split()))
-    #     com_str = self.complex_str
-    #
-    #     start = 1
-    #     end = None
-    #     order_list = []
-    #     previous = None
-    #
-    #     masks = {'REC': [], 'LIG': []}
-    #     res_list = {'REC': [], 'LIG': []}
-    #     com_ndx = ndx['GMXMMPBSA_REC_GMXMMPBSA_LIG']
-    #     com_len = len(ndx['GMXMMPBSA_REC_GMXMMPBSA_LIG'])
-    #     resnum = 1
-    #     current_res = None
-    #     current_icode = ''
-    #     temp = []
-    #     for i in range(com_len):
-    #         # We check who owns the residue corresponding to this atom
-    #         if com_ndx[i] in ndx['GMXMMPBSA_REC']:
-    #             current = 'R'
-    #             # save residue number in the rec list
-    #             if com_str.atoms[i].residue.number != current_res and not resnum in res_list['REC']:
-    #                 res_list['REC'].append(resnum)
-    #                 resnum += 1
-    #                 current_res = com_str.atoms[i].residue.number
-    #                 current_icode = com_str.atoms[i].residue.insertion_code
-    #             # get residues with icode
-    #             if com_str.atoms[i].residue.insertion_code != current_icode:
-    #                 res_list['REC'].append(resnum)
-    #                 resnum += 1
-    #                 current_icode = com_str.atoms[i].residue.insertion_code
-    #         else:
-    #             current = 'L'
-    #             # save residue number in the lig list
-    #             if com_str.atoms[i].residue.number != current_res and not resnum in res_list['LIG']:
-    #                 res_list['LIG'].append(resnum)
-    #                 resnum += 1
-    #                 current_res = com_str.atoms[i].residue.number
-    #             # get residues with icode
-    #             if com_str.atoms[i].residue.insertion_code != current_icode:
-    #                 res_list['LIG'].append(resnum)
-    #                 resnum += 1
-    #                 current_icode = com_str.atoms[i].residue.insertion_code
-    #         # check for end
-    #         if previous and current != previous:
-    #             end = resnum - 2
-    #
-    #         # when i is the last index
-    #         if i == com_len - 1:
-    #             end = resnum - 1
-    #         if end:
-    #             if previous == 'R':
-    #                 masks['REC'].append([start, end])
-    #             else:
-    #                 masks['LIG'].append([start, end])
-    #             # add current range identifier
-    #             order_list.append(previous)
-    #             # set the new start and reset end
-    #             start = end + 1
-    #             end = None
-    #         # we change previous to current once it is processed
-    #         previous = current
-    #     return masks, res_list, order_list, com_ndx
+    def get_qm_residues(self):
+        """
+        Convert string selection format to amber index list
+        """
+        dist, exclude, res_selection = selector(self.INPUT['qm_residues'])
+        res_list = []
+        for i in self.resl['REC']:
+            rres = self.complex_str.residues[i - 1]
+            if [rres.chain, rres.number, rres.insertion_code] in res_selection:
+                res_list.append(i)
+                res_selection.remove([rres.chain, rres.number, rres.insertion_code])
+        for j in self.resl['LIG']:
+            lres = self.complex_str.residues[j - 1]
+            if [lres.chain, lres.number, lres.insertion_code] in res_selection:
+                res_list.append(j)
+                res_selection.remove([lres.chain, lres.number, lres.insertion_code])
+
+        res_list.sort()
+        self.INPUT['qm_residues'] = ','.join([str(x) for x in res_list])
+        if res_selection:
+            for res in res_selection:
+                GMXMMPBSA_WARNING("qm_residues: We couldn't find this residue CHAIN:{} RES_NUM:{} ICODE: "
+                                  "{}".format(*res))
 
     def res2map(self):
         """
