@@ -281,8 +281,18 @@ class CheckMakeTop:
         self.complex_str = self.molstr(self.complex_str_file)
         self.receptor_str = self.molstr(self.receptor_str_file)
         self.ligand_str = self.molstr(self.ligand_str_file)
+        self.check4water()
         self.resi, self.resl, self.orderl, self.indexes = self.res2map()
         self.fix_chains_IDs(self.complex_str, self.receptor_str, self.ligand_str, self.ref_str)
+
+    def check4water(self):
+        counter = 0
+        for res in self.complex_str:
+            if res.name in ['SOD', 'CLA', 'TIP3P', 'TIP4P', 'TIPS3P', 'TIP5P', 'SPC', 'SPC/E', 'SPCE', 'TIP3o', 'WAT']:
+                counter += 1
+        if counter:
+            GMXMMPBSA_ERROR(f'gmx_MMPBSA does not support water molecules in any structure, but we found {counter} '
+                            f'molecules in the complex.')
 
     def gmxtop2prmtop(self):
         logging.info('Building Normal Complex Amber Topology...')
