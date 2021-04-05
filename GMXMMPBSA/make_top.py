@@ -309,13 +309,7 @@ class CheckMakeTop:
         action = ChRad(com_amb_prm, PBRadii[self.INPUT['PBRadii']])
         com_amb_prm.write_parm(self.complex_pmrtop)
 
-        text_list = []
-        for r in self.resi['REC']:
-            if r[0] == r[1]:
-                text_list.append(f'{r[0]}')
-            else:
-                text_list.append(f'{r[0]}-{r[1]}')
-        rec_indexes_string = ','.join(text_list)
+        rec_indexes_string = ','.join(self.resi['REC']['string'])
 
         rec_hastop = True
         if self.FILES.receptor_top:
@@ -432,12 +426,9 @@ class CheckMakeTop:
         self.fixparm2amber(self.ligand_str, removeH=True)
 
         self.receptor_list = {}
-        start = 1
         c = 1
         for r in self.resi['REC']:
-            end = start + (r[1]- r[0])
-            mask = f'!:{start}-{end}'
-            start += end
+            mask = f'!:{r}'
             rec = self.molstr(self.receptor_str)
             rec.strip(mask)
             rec_file = self.FILES.prefix + f'REC_F{c}.pdb'
@@ -448,10 +439,8 @@ class CheckMakeTop:
         self.ligand_list = {}
         start = 1
         c = 1
-        for r in self.resi['LIG']:
-            end = start + (r[1] - r[0])
-            mask = f'!:{start}-{end}'
-            start += end
+        for r in self.resi['LIG']['string']:
+            mask = f'!:{r}'
             lig = self.molstr(self.ligand_str)
             lig.strip(mask)
             lig_file = self.FILES.prefix + f'LIG_F{c}.pdb'
@@ -470,7 +459,7 @@ class CheckMakeTop:
                 start = 0
                 c = 1
                 for r in self.resi['REC']:
-                    mask = f'!:{start}-{(r[1] - r[0]) + 1}'
+                    mask = f'!:{r}'
                     rec = self.molstr(self.receptor_str)
                     mut_rec = self.makeMutTop(rec, part_index, True)
                     mut_rec.strip(mask)
@@ -481,10 +470,9 @@ class CheckMakeTop:
             else:
                 logging.info('Detecting mutation in Ligand.Building Mutant Ligand Structure...')
                 self.mutant_receptor_pmrtop = None
-                start = 0
                 c = 1
-                for r in self.resi['LIG']:
-                    mask = f'!:{start}-{(r[1] - r[0]) + 1}'
+                for r in self.resi['LIG']['string']:
+                    mask = f'!:{r}'
                     lig = self.molstr(self.ligand_str)
                     mut_lig = self.makeMutTop(lig, part_index, True)
                     mut_lig.strip(mask)
@@ -581,13 +569,92 @@ class CheckMakeTop:
         lig_mask = ':' + ','.join(lt)
         return rec_mask, lig_mask
 
+    # def res2map(self):
+    #     """
+    #
+    #     :param com_str:
+    #     :return:
+    #     """
+    #      # read the index file
+    #     ndx = {}
+    #     with open(self.FILES.complex_index) as indexf:
+    #         header = None
+    #         for line in indexf:
+    #             if line.startswith('['):
+    #                 header = line.strip('\n[] ')
+    #                 ndx[header] = []
+    #             else:
+    #                 ndx[header].extend(map(int, line.split()))
+    #     com_str = self.complex_str
+    #
+    #     start = 1
+    #     end = None
+    #     order_list = []
+    #     previous = None
+    #
+    #     masks = {'REC': [], 'LIG': []}
+    #     res_list = {'REC': [], 'LIG': []}
+    #     com_ndx = ndx['GMXMMPBSA_REC_GMXMMPBSA_LIG']
+    #     com_len = len(ndx['GMXMMPBSA_REC_GMXMMPBSA_LIG'])
+    #     resnum = 1
+    #     current_res = None
+    #     current_icode = ''
+    #     temp = []
+    #     for i in range(com_len):
+    #         # We check who owns the residue corresponding to this atom
+    #         if com_ndx[i] in ndx['GMXMMPBSA_REC']:
+    #             current = 'R'
+    #             # save residue number in the rec list
+    #             if com_str.atoms[i].residue.number != current_res and not resnum in res_list['REC']:
+    #                 res_list['REC'].append(resnum)
+    #                 resnum += 1
+    #                 current_res = com_str.atoms[i].residue.number
+    #                 current_icode = com_str.atoms[i].residue.insertion_code
+    #             # get residues with icode
+    #             if com_str.atoms[i].residue.insertion_code != current_icode:
+    #                 res_list['REC'].append(resnum)
+    #                 resnum += 1
+    #                 current_icode = com_str.atoms[i].residue.insertion_code
+    #         else:
+    #             current = 'L'
+    #             # save residue number in the lig list
+    #             if com_str.atoms[i].residue.number != current_res and not resnum in res_list['LIG']:
+    #                 res_list['LIG'].append(resnum)
+    #                 resnum += 1
+    #                 current_res = com_str.atoms[i].residue.number
+    #             # get residues with icode
+    #             if com_str.atoms[i].residue.insertion_code != current_icode:
+    #                 res_list['LIG'].append(resnum)
+    #                 resnum += 1
+    #                 current_icode = com_str.atoms[i].residue.insertion_code
+    #         # check for end
+    #         if previous and current != previous:
+    #             end = resnum - 2
+    #
+    #         # when i is the last index
+    #         if i == com_len - 1:
+    #             end = resnum - 1
+    #         if end:
+    #             if previous == 'R':
+    #                 masks['REC'].append([start, end])
+    #             else:
+    #                 masks['LIG'].append([start, end])
+    #             # add current range identifier
+    #             order_list.append(previous)
+    #             # set the new start and reset end
+    #             start = end + 1
+    #             end = None
+    #         # we change previous to current once it is processed
+    #         previous = current
+    #     return masks, res_list, order_list, com_ndx
+
     def res2map(self):
         """
 
         :param com_str:
         :return:
         """
-         # read the index file
+        # read the index file
         ndx = {}
         with open(self.FILES.complex_index) as indexf:
             header = None
@@ -598,66 +665,38 @@ class CheckMakeTop:
                 else:
                     ndx[header].extend(map(int, line.split()))
         com_str = self.complex_str
-
-        start = 1
-        end = None
         order_list = []
-        previous = None
 
         masks = {'REC': [], 'LIG': []}
         res_list = {'REC': [], 'LIG': []}
         com_ndx = ndx['GMXMMPBSA_REC_GMXMMPBSA_LIG']
         com_len = len(ndx['GMXMMPBSA_REC_GMXMMPBSA_LIG'])
-        resnum = 1
-        current_res = None
-        current_icode = ''
+        resindex = 1
+        proc_res = None
         for i in range(com_len):
+            res = [com_str.atoms[i].residue.number, com_str.atoms[i].residue.insertion_code]
             # We check who owns the residue corresponding to this atom
             if com_ndx[i] in ndx['GMXMMPBSA_REC']:
-                current = 'R'
                 # save residue number in the rec list
-                if com_str.atoms[i].residue.number != current_res and not resnum in res_list['REC']:
-                    res_list['REC'].append(resnum)
-                    resnum += 1
-                    current_res = com_str.atoms[i].residue.number
-                    current_icode = com_str.atoms[i].residue.insertion_code
-                # get residues with icode
-                if com_str.atoms[i].residue.insertion_code != current_icode:
-                    res_list['REC'].append(resnum)
-                    resnum += 1
-                    current_icode = com_str.atoms[i].residue.insertion_code
+                if res != proc_res and resindex not in res_list['REC']:
+                    res_list['REC'].append(Residue(resindex, com_str.atoms[i].residue.number,
+                                                   com_str.atoms[i].residue.chain, 'REC', com_str.atoms[i].residue.name,
+                                                   com_str.atoms[i].residue.insertion_code))
+                    resindex += 1
+                    proc_res = res
             else:
-                current = 'L'
                 # save residue number in the lig list
-                if com_str.atoms[i].residue.number != current_res and not resnum in res_list['LIG']:
-                    res_list['LIG'].append(resnum)
-                    resnum += 1
-                    current_res = com_str.atoms[i].residue.number
-                # get residues with icode
-                if com_str.atoms[i].residue.insertion_code != current_icode:
-                    res_list['LIG'].append(resnum)
-                    resnum += 1
-                    current_icode = com_str.atoms[i].residue.insertion_code
-            # check for end
-            if previous and current != previous:
-                end = resnum - 2
+                if res != proc_res and resindex not in res_list['LIG']:
+                    res_list['LIG'].append(Residue(resindex, com_str.atoms[i].residue.number,
+                                                   com_str.atoms[i].residue.chain, 'LIG', com_str.atoms[i].residue.name,
+                                                   com_str.atoms[i].residue.insertion_code))
+                    resindex += 1
+                    proc_res = res
 
-            # when i is the last index
-            if i == com_len - 1:
-                end = resnum - 1
-            if end:
-                if previous == 'R':
-                    masks['REC'].append([start, end])
-                else:
-                    masks['LIG'].append([start, end])
-                # add current range identifier
-                order_list.append(previous)
-                # set the new start and reset end
-                start = end + 1
-                end = None
-            # we change previous to current once it is processed
-            previous = current
-        return masks, res_list, order_list
+        masks['REC'] = list2range(res_list['REC'])
+        masks['LIG'] = list2range(res_list['LIG'])
+
+        return masks, res_list, order_list, [ndx['GMXMMPBSA_REC'], ndx['GMXMMPBSA_LIG']]
 
     def fixparm2amber(self, structure, removeH=False):
 
