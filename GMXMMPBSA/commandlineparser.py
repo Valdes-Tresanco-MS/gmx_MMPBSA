@@ -285,7 +285,7 @@ The level at which you want to take the test.
 * nmode                   Entropy calculation using Normal Mode approximation 
 * 3drism                  Calculations using 3D-RISM approximation
 ''')
-group.add_argument('-f', '--folder', help='Defines the folder to store all data', type=Path, default='[.] This folder')
+group.add_argument('-f', '--folder', help='Defines the folder to store all data', type=Path, default='.')
 group.add_argument('-ng', '--nogui', help='No open gmx_MMPBSA_ana after all calculations finished',
                    action='store_true',  default=False)
 group.add_argument('-n', '--num_processors', type=int, default=1,
