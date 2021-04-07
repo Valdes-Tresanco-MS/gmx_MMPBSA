@@ -922,7 +922,8 @@ class MMPBSA_App(object):
 
         # check force fields
         if self.INPUT['protein_forcefield'] or self.INPUT['ligand_forcefield']:
-            GMXMMPBSA_WARNING('protein_forcefield and ligand_forcefield variables are deprecate since version 1.4.1 '
+            if self.master:
+                GMXMMPBSA_WARNING('protein_forcefield and ligand_forcefield variables are deprecate since version 1.4.1 '
                               'and will be remove in the next version. Please, use forcefield instead.')
         # check files
         if self.FILES.complex_top:
