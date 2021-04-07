@@ -94,6 +94,6 @@ calculation with the igb5 (GB-OBC2) model and a salt concentration = 0.15M.
   [1]: ../../../command-line.md#gmx_mmpbsa-command-line
   [2]: ../../../input_file.md#the-input-file
   [3]: ../../../input_file.md#sample-input-files
-  [4]: ../../../analyzer.md#gmx_mmpbsa_ana
+  [4]: ../../../analyzer.md#gmx_mmpbsa_ana-the-analyzer-tool
   [6]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/docs/examples/Protein_ligand/MT
-  [7]: ../../command-line.md#gmx_mmpbsa_test-command-line
+  [7]: ../../../command-line.md#gmx_mmpbsa_test-command-line

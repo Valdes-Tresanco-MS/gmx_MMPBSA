@@ -83,7 +83,7 @@ info on ion parameters.
   [2]: ../../input_file.md#the-input-file
   [3]: ../../input_file.md#sample-input-files
   [4]: https://ambermd.org/doc12/Amber20.pdf#section.3.6
-  [5]: ../../analyzer.md#gmx_mmpbsa_ana
+  [5]: ../../analyzer.md#gmx_mmpbsa_ana-the-analyzer-tool
   [6]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/docs/examples/Metalloprotein_peptide
   [7]: ../../command-line.md#gmx_mmpbsa_test-command-line
   

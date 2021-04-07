@@ -101,6 +101,6 @@ performed and residues within 4Å in both receptor and ligand will be printed in
   [2]: ../../input_file.md#the-input-file
   [3]: ../../input_file.md#sample-input-files
   [4]: ../../input_file.md#decomp-namelist-variables
-  [5]: ../../analyzer.md#gmx_mmpbsa_ana
+  [5]: ../../analyzer.md#gmx_mmpbsa_ana-the-analyzer-tool
   [6]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/docs/examples/Decompostion_analysis
   [7]: ../../command-line.md#gmx_mmpbsa_test-command-line

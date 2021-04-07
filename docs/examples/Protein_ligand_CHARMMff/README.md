@@ -89,6 +89,6 @@ field.
   [2]: ../../command-line.md#gmx_mmpbsa-command-line
   [3]: ../../input_file.md#the-input-file
   [4]: ../../input_file.md#sample-input-files
-  [5]: ../../analyzer.md#gmx_mmpbsa_ana
+  [5]: ../../analyzer.md#gmx_mmpbsa_ana-the-analyzer-tool
   [6]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/docs/examples/Protein_ligand_CHARMMff
   [7]: ../../command-line.md#gmx_mmpbsa_test-command-line

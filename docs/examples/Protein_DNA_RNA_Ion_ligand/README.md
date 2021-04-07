@@ -90,6 +90,6 @@ In this case, Li/Merz ion parameters (12-6 normal usage set) for Mg ions were us
   [1]: ../../command-line.md#gmx_mmpbsa-command-line
   [2]: ../../input_file.md#the-input-file
   [3]: ../../input_file.md#sample-input-files
-  [4]: ../../analyzer.md#gmx_mmpbsa_ana
+  [4]: ../../analyzer.md#gmx_mmpbsa_ana-the-analyzer-tool
   [6]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/docs/examples/Protein_DNA_RNA_Ion_ligand
   [7]: ../../command-line.md#gmx_mmpbsa_test-command-line
