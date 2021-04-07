@@ -99,6 +99,9 @@ def list2range(input_list):
         return ''
     temp = []
     previous = None
+
+    input_list.sort()
+
     for x in input_list:
         if not previous:
             temp.append(x)
