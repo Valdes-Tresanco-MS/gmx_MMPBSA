@@ -4,6 +4,38 @@ title: Changelog
 ---
 
 # Changelog
+## [gxm_MMPBSA v1.4.1 (05/04/2021)](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/releases/tag/v1.4.1) [Incoming]
+### Additions
+- Added a new class `Residue` to handle residues selection in Gromacs format with Amber index
+- Verification of water molecules in user defined groups 
+- Gromacs timer
+
+### Fixes
+- Gromacs topology conversion
+- `qm_residues` notation
+- Default path in `gmx_MMPBSA_test`
+- The Entropy representation in `gmx_MMPBSA_ana`
+- Bug when the structure has insertion code
+- Improved ΔG Binding plot representation
+
+### Changes
+- Now `forcefields` variable unified `protein_forcefield` and `ligand_forcefield`
+- `protein_forcefield` and `ligand_forcefield` pass to deprecate state. They will be removed in the next version.
+- Improved documentation
+  - Examples
+  - Command-line
+    - MPI
+    - Examples
+  - Links and references
+  - Updated to material 7.1.0
+    - Dark mode
+    - Material "Back to Top" button
+    - Grammatical corrections
+  - Installation section
+  - Figures caption
+  
+- The Ambiguous name for Entropy term
+
 ## [gxm_MMPBSA v1.4.0 (22/03/2021)](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/releases/tag/v1.4.0)
 This release focuses almost entirely on `gmx_MMPBSA_ana` with minor issues fixed in `gmx_MMPBSA`
 ### Additions

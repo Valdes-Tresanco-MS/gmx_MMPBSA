@@ -15,22 +15,30 @@ Inspect the currently installed version with:
 
 ## Upgrading from 1.3.x to 1.4.x
 The differences between both versions are small, you can see them below
-### What's new?
-* Three new variables in input file
-    - `temperature`
-    - `sys_name`
-    - `exp_ki`
-* New internal variable
-    - `complex_fixed`
-* The `entropy_temp` variable is now deprecated
-* The `print_res` variable was modified
+### Variables
+* New variables in input file
+    - `forcefields` (_Since v1.4.1_)
+    - `temperature` (_Since v1.4.0_)
+    - `sys_name` (_Since v1.4.0_)
+    - `exp_ki` (_Since v1.4.0_)
+* Internal variables (the user only interact with it in the info file)
+    - `complex_fixed` (_Since v1.4.0_)
+* Modified variables
+    - `print_res` (_Since v1.4.0_)
+* Deprecated variables
+    - `entropy_temp` (_Since v1.4.0 and will be removed in v1.5.0_)
+    - `protein_forcefield` (_Since v1.4.1 and will be removed in v1.5.0_)
+    - `ligand_forcefield` (_Since v1.4.1 and will be removed in v1.5.0_)
 
 !!! tip
     Check the changes in [`&general namelist variables`](input_file.md#general-namelist-variables) section
 
-### Changes
-We have ensured backwards compatibility with gmx_MMPBSA, however there are some changes you can make
+### Command-line
+* `gmx_MMPBSA_ana` changes the `-p` option by `-f` with more flexibility. Please check the [gmx_MMPBSA_ana 
+  command-line](command-line.md#gmx_mmpbsa_ana-command-line). (_Changedin v1.4.0_)
 
+### Results and info file
+We have ensured backwards compatibility with gmx_MMPBSA, however there are some changes you can make
 
 === "Old results"
 

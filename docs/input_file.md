@@ -139,35 +139,27 @@ omitted in the correlation analysis
     * 3: mbondi2, recommended when igb = 2 or 5
     * 4: mbondi3, recommended when igb = 8
 
-`protein_forcefield` (Default = "oldff/leaprc.ff99SB")
-:   Define the force field used to build Amber topology for proteins. Make sure this force field is the same as the 
-    one used in GROMACS. Force fields tested:
+`forcefields` (Default = "oldff/leaprc.ff99SB,leaprc.gaff")
+:   Comma-separated list of force fields used to build Amber topologies. This variable is more flexible than the 
+existing ones (`protein_forcefield` and `ligand_forcefield`). The goal of this variable is to provide convenient 
+support for complex systems like this: [5O8F](https://www.rcsb.org/3d-view/5o8f). Supports all force fields tested 
+in `protein_forcefield` and `ligand_forcefield` variables:
+    
+    !!! inline end important "Keep in mind"
+        * You don't need to define it when you use a topology. Please refer to the section 
+          ["How gmx_MMPBSA works"](howworks.md#how-gmx_mmpbsa-works)
+        * _This notation format is the one used in tleap._
+
+    Protein and Nucleic Acids
 
     * "oldff/leaprc.ff99"
     * "oldff/leaprc.ff03"
     * "oldff/leaprc.ff99SB"
     * "oldff/leaprc.ff99SBildn"
     * "leaprc.protein.ff14SB"
-
-    !!! important "Keep in mind"
-        * You don't need to define it when you use a topology. Please refer to the section 
-          ["How gmx_MMPBSA works"](howworks.md#how-gmx_mmpbsa-works)
-        * _This notation format is the one used in tleap._
-
-
-`ligand_forcefield` (Default = "leaprc.gaff")
-:   Define the force field used to build Amber topology for small molecules or glycams. Make sure this force field 
-    is the same as the one used for GROMACS . Force fields tested:
-
-    * "leaprc.gaff"
-    * "leaprc.gaff2"
-    * "leaprc.GLYCAM_06j-1"    (Compatible with amber12SB and later)
-    * "leaprc.GLYCAM_06EPb"    (Compatible with amber12SB and later)
-    * "gmxMMPBSA/leaprc.GLYCAM_06h-1"    `*`(Included in gmx_MMPBSA package. Compatible with amber99SB and earlier)
-    * "gmxMMPBSA/leaprc.zaa99SB"    `*`Parameters for Zwitterionic amino acids. (Included in gmx_MMPBSA package. 
-                                       Compatible with amber 99SB)
-  
-    !!! important "Keep in mind"
+    
+    
+    !!! inline end important "Keep in mind"
         * You don't need to define it when you use a topology or the ligand is protein-like type. Please refer to the 
         section ["How gmx_MMPBSA works"](howworks.md#how-gmx_mmpbsa-works)
         * _This notation format is the one used in tleap._
@@ -175,6 +167,63 @@ omitted in the correlation analysis
         `*` We create a new folder (named _gmxMMPBSA_) in each one of the Amber's parameter folders 
             ($AMBERHOME/dat/leap/[cmd, prep, lib, parm]/gmxMMPBSA). This way, we keep `gmx_MMPBSA` data separated from 
             Amber's.
+
+    Organic molecules, Glycan and Zwetterionic amino acids
+
+    * "leaprc.gaff"
+    * "leaprc.gaff2"
+    * "leaprc.GLYCAM_06j-1"    (_Compatible with amber12SB and later_)
+    * "leaprc.GLYCAM_06EPb"    (_Compatible with amber12SB and later_)
+    * "gmxMMPBSA/leaprc.GLYCAM_06h-1"    `*`(_Compatible with amber99SB and earlier_)
+    * "gmxMMPBSA/leaprc.zaa99SB"    `*`(_Parameters for Zwitterionic amino acids. Compatible with amber 99SB_)
+  
+    !!! warning
+        Be careful defining this variable since you can define two forces fields with a similar purpose which can 
+        generate inconsistencies.    
+
+    _New in v1.4.1_
+
+
+???+ warning "Deprecated since v1.4.1: It will be removed in v1.5.0. Use `forcefields` instead"
+   
+    `protein_forcefield` (Default = "oldff/leaprc.ff99SB")
+    :   Define the force field used to build Amber topology for proteins. Make sure this force field is the same as the 
+        one used in GROMACS. Force fields tested:
+    
+        * "oldff/leaprc.ff99"
+        * "oldff/leaprc.ff03"
+        * "oldff/leaprc.ff99SB"
+        * "oldff/leaprc.ff99SBildn"
+        * "leaprc.protein.ff14SB"
+    
+        !!! important "Keep in mind"
+            * You don't need to define it when you use a topology. Please refer to the section 
+              ["How gmx_MMPBSA works"](howworks.md#how-gmx_mmpbsa-works)
+            * _This notation format is the one used in tleap._
+    
+    
+???+ warning "Deprecated since v1.4.1: It will be removed in v1.5.0. Use `forcefields` instead"
+    
+    `ligand_forcefield` (Default = "leaprc.gaff")
+    :   Define the force field used to build Amber topology for small molecules or glycams. Make sure this force field 
+        is the same as the one used for GROMACS . Force fields tested:
+    
+        * "leaprc.gaff"
+        * "leaprc.gaff2"
+        * "leaprc.GLYCAM_06j-1"    (Compatible with amber12SB and later)
+        * "leaprc.GLYCAM_06EPb"    (Compatible with amber12SB and later)
+        * "gmxMMPBSA/leaprc.GLYCAM_06h-1"    `*`(Included in gmx_MMPBSA package. Compatible with amber99SB and earlier)
+        * "gmxMMPBSA/leaprc.zaa99SB"    `*`Parameters for Zwitterionic amino acids. (Included in gmx_MMPBSA package. 
+                                           Compatible with amber 99SB)
+      
+        !!! important "Keep in mind"
+            * You don't need to define it when you use a topology or the ligand is protein-like type. Please refer to the 
+            section ["How gmx_MMPBSA works"](howworks.md#how-gmx_mmpbsa-works)
+            * _This notation format is the one used in tleap._
+    
+            `*` We create a new folder (named _gmxMMPBSA_) in each one of the Amber's parameter folders 
+                ($AMBERHOME/dat/leap/[cmd, prep, lib, parm]/gmxMMPBSA). This way, we keep `gmx_MMPBSA` data separated from 
+                Amber's.
 
 
 `ions_parameters` (Default = 1)
