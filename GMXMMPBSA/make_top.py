@@ -144,7 +144,7 @@ class CheckMakeTop:
                          ' '.join(make_ndx_args))
         c2 = subprocess.Popen(make_ndx_args, stdin=subprocess.PIPE, stdout=self.log, stderr=self.log)
         c2.communicate(f"name {rec_group} GMXMMPBSA_REC\n name {lig_group} GMXMMPBSA_LIG\n  {rec_group} | {lig_group}\n "
-                       f"q\n")
+                       f"q\n".encode())
         if c2.wait():  # if it quits with return code != 0
             GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(self.make_ndx), self.FILES.complex_index))
         self.FILES.complex_index = com_ndx
