@@ -4,7 +4,7 @@ title: Changelog
 ---
 
 # Changelog
-## [gxm_MMPBSA v1.4.1 (05/04/2021)](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/releases/tag/v1.4.1) [Incoming]
+## [gxm_MMPBSA v1.4.1 (08/04/2021)](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/releases/tag/v1.4.1)
 ### Additions
 - Added a new class `Residue` to handle residues selection in Gromacs format with Amber index
 - Verification of water molecules in user defined groups 
@@ -33,8 +33,7 @@ title: Changelog
     - Grammatical corrections
   - Installation section
   - Figures caption
-  
-- The Ambiguous name for Entropy term
+- The Ambiguous name for Entropy term in output files
 
 ## [gxm_MMPBSA v1.4.0 (22/03/2021)](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/releases/tag/v1.4.0)
 This release focuses almost entirely on `gmx_MMPBSA_ana` with minor issues fixed in `gmx_MMPBSA`
