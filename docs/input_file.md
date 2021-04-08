@@ -142,8 +142,8 @@ omitted in the correlation analysis
 `forcefields` (Default = "oldff/leaprc.ff99SB,leaprc.gaff")
 :   Comma-separated list of force fields used to build Amber topologies. This variable is more flexible than the 
 existing ones (`protein_forcefield` and `ligand_forcefield`). The goal of this variable is to provide convenient 
-support for complex systems like this: [5O8F](https://www.rcsb.org/3d-view/5o8f). Supports all force fields tested 
-in `protein_forcefield` and `ligand_forcefield` variables:
+support for complex systems like this one: [5O8F](https://www.rcsb.org/3d-view/5o8f). It supports all force fields 
+tested in `protein_forcefield` and `ligand_forcefield` variables:
     
     !!! inline end important "Keep in mind"
         * You don't need to define it when you use a topology. Please refer to the section 
@@ -168,7 +168,7 @@ in `protein_forcefield` and `ligand_forcefield` variables:
             ($AMBERHOME/dat/leap/[cmd, prep, lib, parm]/gmxMMPBSA). This way, we keep `gmx_MMPBSA` data separated from 
             Amber's.
 
-    Organic molecules, Glycan and Zwetterionic amino acids
+    Organic molecules, Glycan and Zwitterionic amino acids
 
     * "leaprc.gaff"
     * "leaprc.gaff2"
