@@ -1,9 +1,9 @@
 ---
 template: main.html
-title: Protein-DNA_RNA_ION-Ligand
+title: Complex receptors
 ---
 
-# Protein-DNA_RNA_ION-Ligand binding free energy calculations
+# Binding free energy calculations with complex receptors
 
 !!! info
     This example can be found in the [docs/examples/Comp_receptor][6] directory in the repository folder
@@ -32,10 +32,6 @@ _See a detailed list of all the flags in gmx_MMPBSA command line [here][1]_
 
 ## Command-line
 That being said, once you are in the folder containing all files, the command-line will be as follows:
-
-=== "gmx_MMPBSA_test"
-
-        gmx_MMPBSA_test -t prot_dna_rna_ions_lig
 
 === "Serial"
 
@@ -69,13 +65,14 @@ _See a detailed list of all the options in `gmx_MMPBSA` input file [here][2] as 
 
 ## Considerations
 In this case, a single trajectory (ST) approximation is followed, which means the receptor (Protein+DNA+RNA+Ions) and 
-ligand amber format topologies and trajectories will be obtained from that of the complex. To 
-do so, a MD Structure+mass(db) file (`com.tpr`), an index file (`index.ndx`), a trajectory file (`com_traj.xtc`), and
+ligand amber format topologies and trajectories will be obtained from that of the complex. Of note, a new variable 
+"forcefields" has been added which eases the work with compound receptors with more than one type of molecule.
+To do so, a MD Structure+mass(db) file (`com.tpr`), an index file (`index.ndx`), a trajectory file (`com_traj.xtc`), and
 both the receptor and ligand group numbers in the index file (`33 14`) are needed. A ligand .mol2 file is also needed 
 for generating the ligand topology.The `mmpbsa.in` input file will contain all  the parameters needed for the 
 MM/PB(GB)SA calculation. In this case, 11 frames are going to be used when performing the the MM/PB(GB)SA calculation 
 with the igb8 (GB-Neck2) model and a salt concentration = 0.15M. Of note, mbondi3 radii (`PBRadii=4`) will be used as 
-recommended for GB-Neck2 solvation model. Also a high dielectric constant `intdiel=10` will be used because of the 
+recommended for GB-Neck2 solvation model. Also, a high dielectric constant `intdiel=10` will be used because of the 
 high number of charged residues at the interface.
 
 In this case, Li/Merz ion parameters (12-6 normal usage set) for Mg ions were used. Check 
@@ -88,5 +85,5 @@ In this case, Li/Merz ion parameters (12-6 normal usage set) for Mg ions were us
   [2]: ../../input_file.md#the-input-file
   [3]: ../../input_file.md#sample-input-files
   [4]: ../../analyzer.md#gmx_mmpbsa_ana
-  [6]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/docs/examples/Protein_DNA_RNA_Ion_ligand
+  [6]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/docs/examples/Comp_receptor
   [7]: ../../command-line.md#gmx_mmpbsa_test-command-line
