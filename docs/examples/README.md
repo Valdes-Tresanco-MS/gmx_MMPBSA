@@ -29,8 +29,10 @@ the same run for a specific system.
 * [Protein-DNA binding free energy calculations](Protein_DNA/README.md)[^1][^2]
 * [Metalloprotein-peptide binding free energy calculations](Metalloprotein_peptide/README.md)[^1][^2]
 * [Protein-DNA-RNA-Ions-Ligand binding free energy calculations](Protein_DNA_RNA_Ion_ligand/README.md)[^1][^2]
+* [Binding free energy calculations with complex receptors](Comp_receptor/README.md)
 * [Protein-glycan binding free energy calculations](Protein_glycan/README.md)[^1][^2]
 * [MMPBSA with membrane proteins](Protein_membrane/README.md)[^1][^2]
+* [MMPBSA with Protein-ligand complex embedded in membrane](Protein_membrane_CHARMMff/README.md)[^1]
 
 
  [^1]: Can be run individually in `gmx_MMPBSA_test` and it is part of the `all` set defined with `-t` in 
