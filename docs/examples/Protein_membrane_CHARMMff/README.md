@@ -77,7 +77,7 @@ _See a detailed list of all the options in `gmx_MMPBSA` input file [here][3] as 
 
 ## Considerations
 This is a protein-protein complex system that contains several glycosilation sites and ligands bound. All of that, is 
-embedded in POPC:CHOL (4:1) membrane. As you will see, gmx_MMPBSA is able to handle successfully such a complex system.
+embedded in POPC:CHOL a (4:1) membrane. As you will see, gmx_MMPBSA is able to handle successfully such a complex system.
 Of note, just a relevant part of the entire system has been considered for binding free calculations, since the 
 inclusion of the rest will increase the computation time without improving the results. You can check the file 
 _GMXMMPBSA_COM_FIXED.pdb during the calculation to see how the complex looks like. In this case, a single trajectory 
