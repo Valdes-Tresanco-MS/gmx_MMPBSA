@@ -79,6 +79,8 @@ def run_test(parser):
         'metalloprot_pep': [examples.joinpath('Metalloprotein_peptide'), 'Metalloprotein-Peptide'],
         'prot_dna_rna_ions_lig': [examples.joinpath('Protein_DNA_RNA_Ion_ligand'), 'Protein-DNA-RNA-IONs-Ligand'],
         'prot_lig_charmm': [examples.joinpath('Protein_ligand_CHARMMff'), 'Protein-Ligand (CHARMM force field)'],
+        'memb_charmm': [examples.joinpath('Protein_membrane_CHARMMff'), 'Protein-ligand complex in membrane with '
+                                                                      'CHARMMff'],
         'ala_scan': [examples.joinpath('Alanine_scanning'), 'Alanine Scanning'],
         'stability': [examples.joinpath('Stability'), 'Stability calculation'],
         'decomp': [examples.joinpath('Decomposition_analysis'), 'Decomposition Analysis'],
@@ -90,8 +92,8 @@ def run_test(parser):
         '3drism': [examples.joinpath('3D-RISM'), 'Calculations using 3D-RISM approximation']
     }
     all = ['prot_lig_st', 'prot_prot', 'prot_dna', 'memb_prot', 'prot_glycan', 'metalloprot_pep',
-           'prot_dna_rna_ions_lig', 'prot_lig_charmm', 'ala_scan', 'stability', 'decomp', 'prot_lig_mt', 'ie',
-           'nmode', '3drism']
+           'prot_dna_rna_ions_lig', 'prot_lig_charmm', 'memb_charmm', 'ala_scan', 'stability', 'decomp',
+           'prot_lig_mt', 'ie', 'nmode', '3drism']
     minimal = ['prot_lig_st', 'prot_prot', 'prot_dna', 'memb_prot', 'prot_glycan', 'metalloprot_pep',
                'prot_dna_rna_ions_lig', 'prot_lig_charmm', 'ala_scan', 'stability', 'decomp', 'ie']
 
@@ -108,7 +110,7 @@ def run_test(parser):
         with open(test[x][0].joinpath('README.md')) as readme:
             for line in readme:
                 if 'gmx_MMPBSA -O -i mmpbsa.in' in line:
-                    command = line.strip('\n').split() + ['-nogui']
+                    command = [gmx_mmpbsa_path] + line.strip('\n').split()[1:] + ['-nogui']
                     TASKS.append((test[x], x, command))
 
     if parser.num_processors > multiprocessing.cpu_count():
@@ -140,7 +142,7 @@ def run_test(parser):
     if not parser.nogui:
         print(80 * '-')
         logging.info('Opening gmx_MMPBSA_ana...')
-        g_p = subprocess.Popen(['gmx_MMPBSA_ana', '-f'] + result_list, stdout=subprocess.PIPE,
+        g_p = subprocess.Popen([gmx_mmpbsa_ana_path, '-f'] + result_list, stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE)
         if g_p.wait():
             error = g_p.stderr.read().decode("utf-8")

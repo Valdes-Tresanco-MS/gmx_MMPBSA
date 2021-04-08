@@ -6,9 +6,7 @@ title: Protein-DNA_RNA_ION-Ligand
 # Protein-DNA_RNA_ION-Ligand binding free energy calculations
 
 !!! info
-    This example can be found in the [docs/examples/Protein_DNA_RNA_Ion_ligand][6] directory in the repository folder
-
-
+    This example can be found in the [docs/examples/Comp_receptor][6] directory in the repository folder
 
 ## Requirements
 !!! danger
@@ -51,17 +49,16 @@ where the `mmpbsa.in` input file, is a text file containing the following lines:
 
 ``` linenums="1"
 Sample input file for GB calculation
-This input file is meant to show only that gmx_MMPBSA works. Althought,
-we tried to used the input files as recommended in the Amber manual,
+This input file is meant to show only that gmx_MMPBSA works. Although, 
+we tried to use the input files as recommended in the Amber manual, 
 some parameters have been changed to perform more expensive calculations
 in a reasonable amount of time. Feel free to change the parameters 
 according to what is better for your system.
 
 &general
-verbose=2, protein_forcefield="oldff/leaprc.ff99SBildn",
-ligand_forcefield="leaprc.gaff", PBRadii=4, ions_parameters=1
+verbose=2, forcefields="oldff/leaprc.ff99SBildn",leaprc.gaff"
+PBRadii=4, ions_parameters=1
 /
-
 &gb
 igb=8, saltcon=0.150, intdiel=10
 /

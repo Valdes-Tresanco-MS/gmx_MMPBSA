@@ -8,7 +8,9 @@ title: Protein-DNA_RNA_ION-Ligand
 !!! info
     This example can be found in the [docs/examples/Protein_DNA_RNA_Ion_ligand][6] directory in the repository folder
 
-
+!!! danger
+    This example was updated to show the usage of `forcefields` variable by [Complex receptor][8] example. Keep in 
+    mind that this example will be removed in the version 1.5.0. 
 
 ## Requirements
 !!! danger
@@ -93,3 +95,4 @@ In this case, Li/Merz ion parameters (12-6 normal usage set) for Mg ions were us
   [4]: ../../analyzer.md#gmx_mmpbsa_ana-the-analyzer-tool
   [6]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/docs/examples/Protein_DNA_RNA_Ion_ligand
   [7]: ../../command-line.md#gmx_mmpbsa_test-command-line
+  [8]: ../Comp_receptor/README.md
