@@ -6,9 +6,9 @@ title: Changelog
 # Changelog
 ## [gxm_MMPBSA v1.4.1 (08/04/2021)](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/releases/tag/v1.4.1)
 ### Additions
-- Added a new class `Residue` to handle residues selection in Gromacs format with Amber index
-- Verification of water molecules in user defined groups 
-- Gromacs timer
+- New class `Residue` added to handle residues selection in Gromacs format with Amber index
+- Verification of the presence of water molecules in receptor and ligand groups 
+- Gromacs timer added
 
 ### Fixes
 - Gromacs topology conversion
@@ -19,8 +19,8 @@ title: Changelog
 - Improved ΔG Binding plot representation
 
 ### Changes
-- Now `forcefields` variable unified `protein_forcefield` and `ligand_forcefield`
-- `protein_forcefield` and `ligand_forcefield` pass to deprecate state. They will be removed in the next version.
+- Now `forcefields` variable unifies `protein_forcefield` and `ligand_forcefield`. These variables `protein_forcefield`
+  and `ligand_forcefield` are deprecated and will be removed in the next version (v1.5.0).
 - Improved documentation
   - Examples
   - Command-line
