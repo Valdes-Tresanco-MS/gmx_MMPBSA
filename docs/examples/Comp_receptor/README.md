@@ -33,10 +33,6 @@ _See a detailed list of all the flags in gmx_MMPBSA command line [here][1]_
 ## Command-line
 That being said, once you are in the folder containing all files, the command-line will be as follows:
 
-=== "gmx_MMPBSA_test"
-
-        gmx_MMPBSA_test -t prot_dna_rna_ions_lig
-
 === "Serial"
 
         gmx_MMPBSA -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 33 14 -ct com_traj.xtc -lm ligand.mol2
