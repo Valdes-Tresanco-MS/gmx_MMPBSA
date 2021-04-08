@@ -133,16 +133,18 @@ class CheckMakeTop:
         logging.info('Making gmx_MMPBSA index for complex...')
         # merge both (rec and lig) groups into complex group, modify index and create a copy
         # 1-rename groups, 2-merge
-        make_ndx_echo_args = ['echo', '-e', 'name {r} GMXMMPBSA_REC\n name {l} GMXMMPBSA_LIG\n  {r} | '
-                                      '{l}\n q\n'.format(r=rec_group, l=lig_group)]
-        c1 = subprocess.Popen(make_ndx_echo_args, stdout=subprocess.PIPE)
+        # make_ndx_echo_args = ['echo', '-e', 'name {r} GMXMMPBSA_REC\n name {l} GMXMMPBSA_LIG\n  {r} | '
+        #                               '{l}\n q\n'.format(r=rec_group, l=lig_group)]
+        # c1 = subprocess.Popen(make_ndx_echo_args, stdout=subprocess.PIPE)
 
         com_ndx = self.FILES.prefix + 'COM_index.ndx'
         make_ndx_args = self.make_ndx + ['-n', self.FILES.complex_index, '-o', com_ndx]
         if self.INPUT['debug_printlevel']:
             logging.info('Running command: ' + (' '.join(make_ndx_echo_args).replace('\n', '\\n')) + ' | ' +
                          ' '.join(make_ndx_args))
-        c2 = subprocess.Popen(make_ndx_args, stdin=c1.stdout, stdout=self.log, stderr=self.log)
+        c2 = subprocess.Popen(make_ndx_args, stdin=subprocess.PIPE, stdout=self.log, stderr=self.log)
+        c2.communicate(f"name {rec_group} GMXMMPBSA_REC\n name {lig_group} GMXMMPBSA_LIG\n  {rec_group} | {lig_group}\n "
+                       f"q\n")
         if c2.wait():  # if it quits with return code != 0
             GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(self.make_ndx), self.FILES.complex_index))
         self.FILES.complex_index = com_ndx

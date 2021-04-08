@@ -259,7 +259,7 @@ group = testparser.add_argument_group('Test options')
 group.add_argument('-t', dest='test', choices=['all', 'minimal', '3drism','ala_scan', 'decomp',
                                             'prot_lig_mt', 'stability', 'ie', 'nmode', 'prot_prot', 'prot_lig_st',
                                             'prot_dna', 'metalloprot_pep', 'prot_dna_rna_ions_lig', 'prot_glycan',
-                                            'memb_prot', 'prot_lig_charmm'], default='minimal',
+                                            'memb_prot', 'prot_lig_charmm', 'memb_charmm'], default='minimal',
                    help='''\
 The level at which you want to take the test.
 * all - make all examples.
@@ -276,6 +276,7 @@ The level at which you want to take the test.
 * metalloprot_pep         Metalloprotein-Peptide
 * prot_dna_rna_ions_lig   Protein-DNA-RNA-IONs-Ligand
 * prot_lig_charmm         Protein-Ligand (CHARMM force field)
+* memb_charmm             Protein-ligand complex in membrane with CHARMMff 
 [Analysis]:
 * ala_scan                Alanine Scanning
 * stability               Stability calculation

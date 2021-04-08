@@ -8,8 +8,6 @@ title: Protein-DNA_RNA_ION-Ligand
 !!! info
     This example can be found in the [docs/examples/Comp_receptor][6] directory in the repository folder
 
-
-
 ## Requirements
 !!! danger
     The ligand mol2 file must be the Antechamber output.
@@ -35,6 +33,10 @@ _See a detailed list of all the flags in gmx_MMPBSA command line [here][1]_
 ## Command-line
 That being said, once you are in the folder containing all files, the command-line will be as follows:
 
+=== "gmx_MMPBSA_test"
+
+        gmx_MMPBSA_test -t prot_dna_rna_ions_lig
+
 === "Serial"
 
         gmx_MMPBSA -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 33 14 -ct com_traj.xtc -lm ligand.mol2
@@ -47,8 +49,8 @@ where the `mmpbsa.in` input file, is a text file containing the following lines:
 
 ``` linenums="1"
 Sample input file for GB calculation
-This input file is meant to show only that gmx_MMPBSA works. Althought,
-we tried to used the input files as recommended in the Amber manual,
+This input file is meant to show only that gmx_MMPBSA works. Although, 
+we tried to use the input files as recommended in the Amber manual, 
 some parameters have been changed to perform more expensive calculations
 in a reasonable amount of time. Feel free to change the parameters 
 according to what is better for your system.
