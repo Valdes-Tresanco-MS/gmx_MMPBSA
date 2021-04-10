@@ -6,6 +6,7 @@ in a reasonable amount of time. Feel free to change the parameters
 according to what is better for your system.
 
 &general
+sys_name="Prot-Memb-CHARMM",
 interval=1,
 debug_printlevel=2, use_sander=1,
 /
