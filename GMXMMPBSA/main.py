@@ -920,6 +920,10 @@ class MMPBSA_App(object):
         if not self.INPUT['mutant'].upper() in ['ALA', 'A', 'GLY', 'G']:
             GMXMMPBSA_ERROR('The mutant most be ALA (or A) or GLY (or G)', InputError)
 
+        # fixed the error when try to open gmx_MMPBSA_ana in the issue
+        # https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/issues/33
+        if self.INPUT['startframe'] < 1:
+            GMXMMPBSA_WARNING('The startframe variable must be >= 1')
         # check force fields
         if self.INPUT['protein_forcefield'] or self.INPUT['ligand_forcefield']:
             if self.master:
