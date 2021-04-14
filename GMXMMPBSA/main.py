@@ -923,7 +923,7 @@ class MMPBSA_App(object):
         # fixed the error when try to open gmx_MMPBSA_ana in the issue
         # https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/issues/33
         if self.INPUT['startframe'] < 1:
-            GMXMMPBSA_WARNING('The startframe variable must be >= 1')
+            GMXMMPBSA_ERROR('The startframe variable must be >= 1')
         # check force fields
         if self.INPUT['protein_forcefield'] or self.INPUT['ligand_forcefield']:
             if self.master:
