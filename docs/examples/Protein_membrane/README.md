@@ -73,8 +73,6 @@ maxarcdot=15000
 
 _See a detailed list of all the options in `gmx_MMPBSA` input file [here][2] as well as several [examples][3]_
 
-  
-
 ## Considerations
 In this case, a single trajectory (ST) approximation is followed, which means the receptor and ligand structures and
 trajectories will be obtained from that of the complex. To do so, a MD Structure+mass(db) file (`com.pdb`), an index file (`index.ndx`),

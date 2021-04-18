@@ -74,7 +74,6 @@ maxarcdot=15000
 
 _See a detailed list of all the options in `gmx_MMPBSA` input file [here][3] as well as several [examples][4]_
 
-
 ## Considerations
 This is a protein-protein complex system that contains several glycosilation sites and ligands bound. All of that, is 
 embedded in POPC:CHOL a (4:1) membrane. As you will see, gmx_MMPBSA is able to handle successfully such a complex system.
