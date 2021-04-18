@@ -3,6 +3,7 @@ Sample input file for MMPBSA with membrane proteins
 #Amber manual, some parameters have been changed to perform more expensive calculations in a reasonable amount of time. Feel free to change the parameters
 #according to what is better for your system.
 &general
+sys_name="Prot-Memb",
 startframe=1, endframe=4, interval=1,
 debug_printlevel=2, use_sander=1,
 /

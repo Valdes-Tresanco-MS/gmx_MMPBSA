@@ -3,6 +3,7 @@ Sample input file for GB calculation
 #Amber manual, some parameters have been changed to perform more expensive calculations in a reasonable amount of time. Feel free to change the parameters
 #according to what is better for your system.
 &general
+sys_name="Prot-DNA-RNA-ION-Lig",
 verbose=2, protein_forcefield="oldff/leaprc.ff99SBildn", ligand_forcefield="leaprc.gaff"
 PBRadii=4, ions_parameters=1
 /

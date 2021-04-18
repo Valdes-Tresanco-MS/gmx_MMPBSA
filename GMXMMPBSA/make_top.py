@@ -133,7 +133,7 @@ class CheckMakeTop:
         logging.info('Making gmx_MMPBSA index for complex...')
         # merge both (rec and lig) groups into complex group, modify index and create a copy
         # 1-rename groups, 2-merge
-        make_ndx_echo_args = ['echo', '-e', 'name {r} GMXMMPBSA_REC\n name {l} GMXMMPBSA_LIG\n  {r} | '
+        make_ndx_echo_args = ['echo', 'name {r} GMXMMPBSA_REC\n name {l} GMXMMPBSA_LIG\n  {r} | '
                                       '{l}\n q\n'.format(r=rec_group, l=lig_group)]
         c1 = subprocess.Popen(make_ndx_echo_args, stdout=subprocess.PIPE)
 
@@ -149,7 +149,7 @@ class CheckMakeTop:
 
         logging.info('Normal Complex: Saving group {}_{} in {} file as '
                      '{}'.format(rec_group, lig_group, self.FILES.complex_index, self.complex_str_file))
-        editconf_echo_args = ['echo', '-e', 'GMXMMPBSA_REC_GMXMMPBSA_LIG']
+        editconf_echo_args = ['echo', 'GMXMMPBSA_REC_GMXMMPBSA_LIG']
         c3 = subprocess.Popen(editconf_echo_args, stdout=subprocess.PIPE)
         # we extract a pdb from structure file to make amber topology
         editconf_args = self.editconf + ['-f', self.FILES.complex_tpr, '-o', self.complex_str_file, '-n',
@@ -189,7 +189,7 @@ class CheckMakeTop:
                 self.use_temp = True
                 logging.warning('When decomp is defined, we generate a receptor file in order to extract interface '
                                 'residues')
-                rec_echo_args = ['echo', '-e', '{}'.format(rec_group)]
+                rec_echo_args = ['echo', '{}'.format(rec_group)]
                 cp1 = subprocess.Popen(rec_echo_args, stdout=subprocess.PIPE)
                 # we extract a pdb from structure file to make amber topology
                 editconf_args = self.editconf + ['-f', self.FILES.complex_tpr, '-o', 'rec_temp.pdb', '-n',
@@ -214,7 +214,7 @@ class CheckMakeTop:
             logging.info('A receptor structure file was defined. Using MT approach...')
             logging.info('Normal receptor: Saving group {} in {} file as {}'.format(
                 self.FILES.receptor_group, self.FILES.receptor_index, self.receptor_str_file))
-            editconf_echo_args = ['echo', '-e', '{}'.format(self.FILES.receptor_group)]
+            editconf_echo_args = ['echo', '{}'.format(self.FILES.receptor_group)]
             p1 = subprocess.Popen(editconf_echo_args, stdout=subprocess.PIPE)
             # we extract a pdb from structure file to make amber topology
             editconf_args = self.editconf + ['-f', self.FILES.receptor_tpr, '-o', self.receptor_str_file, '-n',
@@ -231,7 +231,7 @@ class CheckMakeTop:
             # wt complex receptor
             logging.info('Normal Complex: Saving group {} in {} file as {}'.format(
                 rec_group, self.FILES.complex_index, self.receptor_str_file))
-            editconf_echo_args = ['echo', '-e', '{}'.format(rec_group)]
+            editconf_echo_args = ['echo', '{}'.format(rec_group)]
             cp1 = subprocess.Popen(editconf_echo_args, stdout=subprocess.PIPE)
             # we extract a pdb from structure file to make amber topology
             editconf_args = self.editconf + ['-f', self.FILES.complex_tpr, '-o', self.receptor_str_file, '-n',
@@ -250,7 +250,7 @@ class CheckMakeTop:
             logging.info('Normal Ligand: Saving group {} in {} file as {}'.format(
                 self.FILES.ligand_group, self.FILES.ligand_index, self.ligand_str_file))
             # wt ligand
-            editconf_echo_args = ['echo', '-e', '{}'.format(self.FILES.ligand_group)]
+            editconf_echo_args = ['echo', '{}'.format(self.FILES.ligand_group)]
             l1 = subprocess.Popen(editconf_echo_args, stdout=subprocess.PIPE)
             # we extract a pdb from structure file to make amber topology
             editconf_args = self.editconf + ['-f', self.FILES.ligand_tpr, '-o', self.ligand_str_file, '-n',
@@ -266,7 +266,7 @@ class CheckMakeTop:
             logging.info('Using ligand structure from complex to generate AMBER topology')
             logging.info('Normal ligand: Saving group {} in {} file as {}'.format(lig_group, self.FILES.complex_index,
                                                                                                   self.ligand_str_file))
-            editconf_echo_args = ['echo', '-e', '{}'.format(lig_group)]
+            editconf_echo_args = ['echo', '{}'.format(lig_group)]
             cl1 = subprocess.Popen(editconf_echo_args, stdout=subprocess.PIPE)
             # we extract a pdb from structure file to make amber topology
             editconf_args = self.editconf + ['-f', self.FILES.complex_tpr, '-o', self.ligand_str_file, '-n',
@@ -903,7 +903,7 @@ class CheckMakeTop:
             logging.info('Cleaning normal complex trajectories...')
             new_trajs = []
             for i in range(len(self.FILES.complex_trajs)):
-                trjconv_echo_args = ['echo', '-e', 'GMXMMPBSA_REC_GMXMMPBSA_LIG']
+                trjconv_echo_args = ['echo', 'GMXMMPBSA_REC_GMXMMPBSA_LIG']
                 c5 = subprocess.Popen(trjconv_echo_args, stdout=subprocess.PIPE)
                 # we get only first trajectory to extract a pdb file and make amber topology for complex
                 trjconv_args = self.trjconv + ['-f', self.FILES.complex_trajs[0], '-s', self.FILES.complex_tpr,
@@ -922,7 +922,7 @@ class CheckMakeTop:
                 logging.info('Cleaning normal receptor trajectories...')
                 new_trajs = []
                 for i in range(len(self.FILES.receptor_trajs)):
-                    trjconv_echo_args = ['echo', '-e', '{}'.format(self.FILES.receptor_group)]
+                    trjconv_echo_args = ['echo', '{}'.format(self.FILES.receptor_group)]
                     c5 = subprocess.Popen(trjconv_echo_args, stdout=subprocess.PIPE)
                     # we get only first trajectory to extract a pdb file and make amber topology for complex
                     trjconv_args = self.trjconv + ['-f', self.FILES.receptor_trajs[0], '-s', self.FILES.receptor_tpr,
@@ -943,7 +943,7 @@ class CheckMakeTop:
                 logging.info('Cleanig normal ligand trajectories...')
                 new_trajs = []
                 for i in range(len(self.FILES.ligand_trajs)):
-                    trjconv_echo_args = ['echo', '-e', '{}'.format(self.FILES.ligand_group)]
+                    trjconv_echo_args = ['echo', '{}'.format(self.FILES.ligand_group)]
                     c5 = subprocess.Popen(trjconv_echo_args, stdout=subprocess.PIPE)
                     # we get only first trajectory to extract a pdb file and make amber topology for complex
                     trjconv_args = self.trjconv + ['-f', self.FILES.ligand_trajs[0], '-s', self.FILES.ligand_tpr,
