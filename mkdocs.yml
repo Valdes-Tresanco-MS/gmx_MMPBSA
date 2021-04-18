@@ -164,6 +164,7 @@ nav:
     - Charmm Support:
         - Protein-Ligand (ST): examples/Protein_ligand_CHARMMff/README.md
         - Protein-ligand complex embedded in membrane: examples/Protein_membrane_CHARMMff/README.md
+        - Mycalamide A Bound to the Large Ribosomal Subunit: examples/Ribosomal50S_Mycalamide_A/README.md
   - Info:
     - Information: information.md
     - Support: support.md
