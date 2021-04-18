@@ -5,7 +5,7 @@ title: Protein-ligand (Charmm)
 
 !!! danger "CHARMM and MM(PB/GB)SA"
     PB model is recommended when working with CHARMMff files. Nevertheless, the combination of PB/GB models and 
-    Charmm force field hasn't been tested extensively. Please, check this [thread][1] for more information and 
+    CHARMM force field hasn't been tested extensively. Please, check this [thread][1] for more information and 
     proceed with caution.
 
 # Protein-ligand binding free energy calculations (Single Trajectory method) with CHARMMff files
