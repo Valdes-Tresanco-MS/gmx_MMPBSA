@@ -158,6 +158,7 @@ nav:
       - Protein-DNA: examples/Protein_DNA/README.md
       - Metalloprotein-peptide: examples/Metalloprotein_peptide/README.md
       - Protein-DNA-RNA-Ions-Ligand: examples/Protein_DNA_RNA_Ion_ligand/README.md
+      - Binding free energy calculations with complex receptors: examples/Comp_receptor/README.md
       - Protein-glycan: examples/Protein_glycan/README.md
       - Membrane proteins: examples/Protein_membrane/README.md
     - Charmm Support:
