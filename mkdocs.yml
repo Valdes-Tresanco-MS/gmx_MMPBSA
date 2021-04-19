@@ -166,7 +166,7 @@ nav:
           - Main protease: examples/COVID-19_related_proteins/Main_protease_7l5d/README.md
           - Papain-like protease: examples/COVID-19_related_proteins/Papain-like_protease_7koj/README.md
           - S1-ACE2 complex: examples/COVID-19_related_proteins/S1-ACE2_complex_7dmu/README.md
-          - S1 RBD with antibody: COVID-19_related_proteins/S1_RBD_with_antibody_6zlr/README.md
+          - S1 RBD with antibody: examples/COVID-19_related_proteins/S1_RBD_with_antibody_6zlr/README.md
     - Charmm Support:
         - Protein-Ligand (ST): examples/Protein_ligand_CHARMMff/README.md
         - Protein-ligand complex embedded in membrane: examples/Protein_membrane_CHARMMff/README.md
