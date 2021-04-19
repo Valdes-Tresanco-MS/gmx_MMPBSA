@@ -14,6 +14,10 @@ question, please consider opening an [issue][2] or post in our [Google group][3]
 ## Jetbrains
 This project is possible thanks to the Open Source license of the [JetBrains][4] programs. 
 
+## Acknowledgment
+
+
+
   [1]: https://doi.org/10.1021/ct300418h
   [2]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/issues
   [3]: https://groups.google.com/g/gmx_mmpbsa
