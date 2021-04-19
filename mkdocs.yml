@@ -161,7 +161,8 @@ nav:
       - Binding free energy calculations with complex receptors: examples/Comp_receptor/README.md
       - Protein-glycan: examples/Protein_glycan/README.md
       - Membrane proteins: examples/Protein_membrane/README.md
-      - COVID-19 realted proteins:
+      - COVID-19 related proteins:
+          - Info: examples/COVID-19_related_proteins/README.md
           - Main protease: examples/COVID-19_related_proteins/Main_protease_7l5d/README.md
           - Papain-like protease: examples/COVID-19_related_proteins/Papain-like_protease_7koj/README.md
           - S1-ACE2 complex: examples/COVID-19_related_proteins/S1-ACE2_complex_7dmu/README.md
