@@ -32,6 +32,11 @@ the same run for a specific system.
 * [Binding free energy calculations with complex receptors](Comp_receptor/README.md)
 * [Protein-glycan binding free energy calculations](Protein_glycan/README.md)[^1][^2]
 * [MMPBSA with membrane proteins](Protein_membrane/README.md)[^1][^2]
+* COVID-19 related proteins
+    * [Main protease](COVID-19_related_proteins/Main_protease_7l5d/README.md)
+    * [Papain-like protease](COVID-19_related_proteins/Papain-like_protease_7koj/README.md)
+    * [S1-ACE2 complex](COVID-19_related_proteins/S1-ACE2_complex_7dmu/README.md)
+    * [S1 RBD with antibody](COVID-19_related_proteins/S1_RBD_with_antibody_6zlr/README.md)
 
 ## CHARMMff support
 * [Protein-Ligand (ST)](Protein_ligand_CHARMMff/README.md)[^1][^2]
