@@ -12,37 +12,37 @@ This comparison is based on the documentation of the different programs
 |:--------------------------------------|:----------------------------:|:----------------------------:|:-----------------------------------------------------:|:-------------------------:|
 | **Normal binding free energies**      |              PB              |              PB              |                       PB and GB                       |         PB and GB         |
 | * GB models                           |                              |                              |                  1, 2, 3, 5, 7 and 8                  |    1, 2, 3, 5, 7 and 8    |
-| **Stability**                         |                              |                              |                  :heavy_check_mark:                   |    :heavy_check_mark:     |
-| **Alanine scanning**                  |   :heavy_check_mark: [^2]    |      :heavy_check_mark:      |                  :heavy_check_mark:                   |    :heavy_check_mark:     |
+| **Stability**                         |                              |                              |                  :material-check-bold:{.scale_icon_medium}                   |    :material-check-bold:{.scale_icon_medium}     |
+| **Alanine scanning**                  |   :material-check-bold:{.scale_icon_medium} [^2]    |      :material-check-bold:{.scale_icon_medium}      |                  :material-check-bold:{.scale_icon_medium}                   |    :material-check-bold:{.scale_icon_medium}     |
 | **Entropy corrections** [^3]          |                              |                              |                     nmode and qh                      |     nmode, qh, and IE     |
 | **Decomposition schemes**             |         Per-Residues         |                              |               Per-Residues and Per-Wise               | Per-Residues and Per-Wise |
-| **QM/MMGBSA**                         |                              |                              |                  :heavy_check_mark:                   |    :heavy_check_mark:     |
-| **MM/3D-RISM**                        |                              |                              |                  :heavy_check_mark:                   |    :heavy_check_mark:     |
-| **Membrane Protein MMPBSA**           |                              |                              |                  :heavy_check_mark:                   |    :heavy_check_mark:     |
+| **QM/MMGBSA**                         |                              |                              |                  :material-check-bold:{.scale_icon_medium}                   |    :material-check-bold:{.scale_icon_medium}     |
+| **MM/3D-RISM**                        |                              |                              |                  :material-check-bold:{.scale_icon_medium}                   |    :material-check-bold:{.scale_icon_medium}     |
+| **Membrane Protein MMPBSA**           |                              |                              |                  :material-check-bold:{.scale_icon_medium}                   |    :material-check-bold:{.scale_icon_medium}     |
 | **Approximations**                    |              ST              |              ST              |                       ST and MT                       |         ST and MT         |
 
 ## Analysis features
 | Feature                               |        [g_mmpbsa][1]         |       [GMXPBSA 2.1][2]       |                     MMPBSA.py[^1]                     |      [gmx_MMPBSA][3]      |
 |:--------------------------------------|:----------------------------:|:----------------------------:|:-----------------------------------------------------:|:-------------------------:|
-| **API**                               |                              |                              |                  :heavy_check_mark:                   |    :heavy_check_mark:     |
-| **Analyzer Tool**                     |                              |                              |                         [^4]                              |    :heavy_check_mark:     |
-| * Multiple systems at same time       |                              |                              |                                                       |    :heavy_check_mark:     |
-| * Correlation between systems         |      :heavy_check_mark:      |                              |                                                       |    :heavy_check_mark:     |
-| * Per-residue energies to PDB         |      :heavy_check_mark:      |                              |                                                       |    :heavy_check_mark:     |
-| * Interactive visualization           |                              |                              |                                                       |    :heavy_check_mark:     |
+| **API**                               |                              |                              |                  :material-check-bold:{.scale_icon_medium}                   |    :material-check-bold:{.scale_icon_medium}     |
+| **Analyzer Tool**                     |                              |                              |                         [^4]                              |    :material-check-bold:{.scale_icon_medium}     |
+| * Multiple systems at same time       |                              |                              |                                                       |    :material-check-bold:{.scale_icon_medium}     |
+| * Correlation between systems         |      :material-check-bold:{.scale_icon_medium}      |                              |                                                       |    :material-check-bold:{.scale_icon_medium}     |
+| * Per-residue energies to PDB         |      :material-check-bold:{.scale_icon_medium}      |                              |                                                       |    :material-check-bold:{.scale_icon_medium}     |
+| * Interactive visualization           |                              |                              |                                                       |    :material-check-bold:{.scale_icon_medium}     |
 |   ** _3D Molecular Visualization_     |                              |                              |                                                       |           PyMOL           |
-|   ** _Charts_                         |        static image          |                              |                                                       |    :heavy_check_mark:     |
+|   ** _Charts_                         |        static image          |                              |                                                       |    :material-check-bold:{.scale_icon_medium}     |
 | * Energetic Terms charts              |       internal tools         |                              |               API and graphics library [^5]           |      gmx_MMPBSA_ana       |
-| * Export data to CSV file             |                              |                              |                  :heavy_check_mark:                   |    :heavy_check_mark:     |
-|   ** _Energy Summary_                 |                              |                              |                  :heavy_check_mark:                   |    :heavy_check_mark:     |
-|   ** _Individual Energetic Terms_     |                              |                              |                                                       |    :heavy_check_mark:     |
+| * Export data to CSV file             |                              |                              |                  :material-check-bold:{.scale_icon_medium}                   |    :material-check-bold:{.scale_icon_medium}     |
+|   ** _Energy Summary_                 |                              |                              |                  :material-check-bold:{.scale_icon_medium}                   |    :material-check-bold:{.scale_icon_medium}     |
+|   ** _Individual Energetic Terms_     |                              |                              |                                                       |    :material-check-bold:{.scale_icon_medium}     |
 
 ## Technical features
 | Feature                               |        [g_mmpbsa][1]         |       [GMXPBSA 2.1][2]       |                     MMPBSA.py[^1]                     |      [gmx_MMPBSA][3]      |
 |:--------------------------------------|:----------------------------:|:----------------------------:|:-----------------------------------------------------:|:-------------------------:|
 | **GROMACS Version**                   |   4.x, 5.x and 2016+ [^6]    |   4.x, 5.x and 20xx.x [^7]   |                          ---                          |    4.x, 5.x and 20xx.x    |
 | **Externals programs**                | APBS (1.2.x, 1.3.x or 1.4.x) |      APBS (1.x.x) [^8]       |                     AmberTools20                      |       AmberTools20        |
-| **Parallel computation**              |   Depends on APBS version    |      :heavy_check_mark:      |                  :heavy_check_mark:                   |    :heavy_check_mark:     |
+| **Parallel computation**              |   Depends on APBS version    |      :material-check-bold:{.scale_icon_medium}      |                  :material-check-bold:{.scale_icon_medium}                   |    :material-check-bold:{.scale_icon_medium}     |
 | **Steps for:**                        |                              |                              |                                                       |                           |
 | * Calculation and Summary             |           Multiple           |           Multiple           |                          One                          |            One            |
 | * Analysis                            |           Multiple           |           Multiple           |                       Multiple                        |            One            |
