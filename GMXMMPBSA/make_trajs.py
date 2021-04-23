@@ -86,7 +86,7 @@ def make_trajectories(INPUT, FILES, size, cpptraj, pre):
         if i < extras: frame_count[i] += 1
 
     # Dump our complex trajectories
-    if INPUT['full_traj'] or INPUT['entropy'] == 1:
+    if INPUT['full_traj'] or INPUT['qh_entropy']:
         traj.Outtraj(pre + 'complex.%s' % trj_suffix, filetype=INPUT['netcdf'])
     traj.Outtraj(pre + 'complex.pdb', frames='1', filetype='pdb')
     traj.Outtraj(pre + 'dummycomplex.inpcrd', frames='1', filetype='restart')
@@ -104,7 +104,7 @@ def make_trajectories(INPUT, FILES, size, cpptraj, pre):
 
     if not stability and not FILES.receptor_trajs:
         traj.Strip(INPUT['ligand_mask'])
-        if INPUT['full_traj'] or INPUT['entropy'] == 1:
+        if INPUT['full_traj'] or INPUT['qh_entropy']:
             traj.Outtraj(pre + 'receptor.%s' % trj_suffix, filetype=INPUT['netcdf'])
         traj.Outtraj(pre + 'receptor.pdb', frames='1', filetype='pdb')
         traj.Outtraj(pre + 'dummyreceptor.inpcrd', frames='1', filetype='restart')
@@ -119,7 +119,7 @@ def make_trajectories(INPUT, FILES, size, cpptraj, pre):
 
     if not stability and not FILES.ligand_trajs:
         traj.Strip(INPUT['receptor_mask'])
-        if INPUT['full_traj'] or INPUT['entropy'] == 1:
+        if INPUT['full_traj'] or INPUT['qh_entropy']:
             traj.Outtraj(pre + 'ligand.%s' % trj_suffix, filetype=INPUT['netcdf'])
         traj.Outtraj(pre + 'ligand.pdb', frames='1', filetype='pdb')
         traj.Outtraj(pre + 'dummyligand.inpcrd', frames='1', filetype='restart')
@@ -149,7 +149,7 @@ def make_trajectories(INPUT, FILES, size, cpptraj, pre):
                              FILES.receptor_trajs, cpptraj)
         rectraj.Setup(INPUT['startframe'], INPUT['endframe'], INPUT['interval'])
         rectraj.rms('!(%s)' % INPUT['strip_mask'])
-        if INPUT['full_traj'] or INPUT['entropy'] == 1:
+        if INPUT['full_traj'] or INPUT['qh_entropy']:
             rectraj.Outtraj(pre + 'receptor.%s' % trj_suffix,
                             filetype=INPUT['netcdf'])
         rectraj.Outtraj(pre + 'receptor.pdb', frames='1', filetype='pdb')
@@ -406,7 +406,7 @@ def make_mutant_trajectories(INPUT, FILES, rank, cpptraj,
                             pre + 'mutant_ligand_nm.%s.%d' % (trj_suffix, rank))
 
     # If we're doing a quasi-harmonic approximation we need the full com traj
-    if (INPUT['full_traj'] or INPUT['entropy'] == 1) and master:
+    if (INPUT['full_traj'] or INPUT['qh_entropy']) and master:
         com_mut = MutantMdcrd(pre + 'complex.%s' % trj_suffix,
                               norm_sys.complex_prmtop, mut_sys.complex_prmtop)
         com_mut.MutateTraj(pre + 'mutant_complex.%s' % trj_suffix)

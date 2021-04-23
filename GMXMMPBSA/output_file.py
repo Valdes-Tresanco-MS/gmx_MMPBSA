@@ -78,26 +78,17 @@ def write_stability_output(app):
         final_output.add_comment('')
 
     final_output.add_comment('All units are reported in kcal/mole.')
-    if INPUT['nmoderun'] or INPUT['entropy']:
-        if INPUT['entropy'] == 2:
-            if 'temperature' in INPUT:
-                temp = INPUT['temperature']
-            else:
-                GMXMMPBSA_WARNING('entropy_temp variable is deprecated and will be remove in next versions!. Please, '
-                                  'use temperature variable instead')
-                temp = INPUT['entropy_temp']
-            final_output.add_comment('All entropy results have units kcal/mol ' +
-                                 '(Temperature is %.2f K).' % temp)
-        else:
-            final_output.add_comment('All entropy results have units kcal/mol ' +
-                                     '(Temperature is %.2f K).' % INPUT['temp'])
+    if INPUT['nmoderun'] or INPUT['qh_entropy'] or INPUT['interaction_entropy']:
+        final_output.add_comment('All entropy results have units kcal/mol')
+        final_output.add_comment('(Temperature for NMODE and QH is %.2f K)\n' % INPUT['temp'])
+        final_output.add_comment('(Temperature for IE is %.2f K)\n' % INPUT['temperature'])
     if INPUT['ifqnt']:
         final_output.add_comment(('QM/MM: Residues %s are treated with the ' +
                                   'Quantum Hamiltonian %s') % (INPUT['qm_residues'], INPUT['qm_theory']))
     final_output.separate()
 
     # Start with entropies
-    if INPUT['entropy'] == 1:
+    if INPUT['qh_entropy']:
         if not INPUT['mutant_only']:
             qhnorm = app.calc_types['qh']
             final_output.writeline('ENTROPY RESULTS (QUASI-HARMONIC ' +
@@ -175,7 +166,7 @@ def write_stability_output(app):
                 energyvectors.writerow([])
 
             # Combine with the entropy(ies)
-            if INPUT['entropy'] == 1:
+            if INPUT['qh_entropy']:
                 final_output.add_section('Using Quasi-harmonic Entropy ' +
                                          'Approximation: FREE ENERGY (G) = %9.4f\n' %
                                          (com_norm.data['TOTAL'].avg() - qhnorm.total_avg()))
@@ -204,10 +195,10 @@ def write_stability_output(app):
                 energyvectors.writerow([])
 
             # Combine with the entropy(ies)
-            if INPUT['entropy'] == 1:
-                final_output.add_section('Using Quasi-harmonic Entropy ' +
-                                         'Approximation: DELTA G binding = %9.4f\n' %
-                                         (com_mut.data['TOTAL'].avg() - qhmutant.total_avg()))
+            if INPUT['qh_entropy']:
+                final_output.add_section('Using Quasi-harmonic Entropy Approximation:\n'
+                                         'DELTA G binding = %9.4f\n' % (com_mut.data['TOTAL'].avg() -
+                                                                        qhmutant.total_avg()))
             if INPUT['nmoderun']:
                 if len(com_mut.data['TOTAL']) != len(nm_mut.data['Total']):
                     davg = (com_mut.data['TOTAL'].avg() -
@@ -226,12 +217,12 @@ def write_stability_output(app):
             diff_array = com_norm.data['TOTAL'] - com_mut.data['TOTAL']
             davg = diff_array.avg()
             dstdev = diff_array.stdev()
-            final_output.write(('\nRESULT OF ALANINE SCANNING: (%s) DELTA ' +
-                                'G = %9.4f  +/- %9.4f\n') % (mut_str, davg, dstdev))
-            if INPUT['entropy'] == 1:
-                final_output.write(('\n   (quasi-harmonic entropy) (%s) DELTA ' +
-                                    'G = %9.4f\n') % (mut_str,
-                                                      davg + qhnorm.total_avg() - qhmutant.total_avg()))
+            final_output.write(('\nRESULT OF ALANINE SCANNING:\n'
+                                '(%s) DELTA G = %9.4f  +/- %9.4f\n') % (mut_str, davg, dstdev))
+            if INPUT['qh_entropy']:
+                final_output.write(('\n   (quasi-harmonic entropy)\n'
+                                    '(%s) DELTA G = %9.4f\n') % (mut_str, davg + qhnorm.total_avg() -
+                                                                 qhmutant.total_avg()))
             if INPUT['nmoderun']:
                 if len(nm_diff_array) == len(diff_array):
                     total_diffs = diff_array - nm_diff_array
@@ -312,26 +303,17 @@ def write_binding_output(app):
         final_output.add_comment('')
 
     final_output.add_comment('All units are reported in kcal/mole.')
-    if INPUT['nmoderun'] or INPUT['entropy']:
-        if INPUT['entropy'] == 2:
-            if 'temperature' in INPUT:
-                temp = INPUT['temperature']
-            else:
-                GMXMMPBSA_WARNING('entropy_temp variable is deprecated and will be remove in next versions!. Please, '
-                                  'use temperature variable instead')
-                temp = INPUT['entropy_temp']
-            final_output.add_comment('All entropy results have units kcal/mol ' +
-                                     '(Temperature is %.2f K).' % temp)
-        else:
-            final_output.add_comment('All entropy results have units kcal/mol ' +
-                                     '(Temperature is %.2f K).' % INPUT['temp'])
+    if INPUT['nmoderun'] or INPUT['qh_entropy'] or INPUT['interaction_entropy']:
+        final_output.add_comment('All entropy results have units kcal/mol\n' +
+                                 '(Temperature for NMODE and QH is %.2f K)\n' % INPUT['temp'] +
+                                 '(Temperature for IE is %.2f K)\n' % INPUT['temperature'])
     if INPUT['ifqnt']:
         final_output.add_comment(('QM/MM: Residues %s are treated with the ' +
                                   'Quantum Hamiltonian %s') % (INPUT['qm_residues'], INPUT['qm_theory']))
     final_output.separate()
 
     # First do the entropies
-    if INPUT['entropy'] == 1:
+    if INPUT['qh_entropy']:
         if not INPUT['mutant_only']:
             qhnorm = app.calc_types['qh']
             final_output.writeline('ENTROPY RESULTS (QUASI-HARMONIC APPROXIMATION) CALCULATED WITH PTRAJ:')
@@ -414,10 +396,10 @@ def write_binding_output(app):
                 energyvectors.writerow([])
 
             # Combine with the entropy(ies)
-            if INPUT['entropy'] == 1:
+            if INPUT['qh_entropy']:
                 if isinstance(sys_norm.data['DELTA TOTAL'], EnergyVector):
-                    final_output.add_section('Using Quasi-harmonic Entropy ' +
-                                             'Approximation: DELTA G binding = %9.4f\n' %
+                    final_output.add_section('Using Quasi-harmonic Entropy Approximation:\n'
+                                             'DELTA G binding = %9.4f\n' %
                                              (sys_norm.data['DELTA TOTAL'].avg() - qhnorm.total_avg()))
                 else:
                     final_output.add_section('Using Quasi-harmonic Entropy ' +
@@ -448,7 +430,7 @@ def write_binding_output(app):
                 energyvectors.writerow([])
 
             # Combine with the entropy(ies)
-            if INPUT['entropy'] == 1:
+            if INPUT['qh_entropy']:
                 if isinstance(sys_mut.data['DELTA TOTAL'], EnergyVector):
                     final_output.add_section('Using Quasi-harmonic Entropy ' +
                                              'Approximation: DELTA G binding = %9.4f\n' %

@@ -179,7 +179,7 @@ class MMPBSA_App(object):
             self.timer.add_timer('rism', 'Total 3D-RISM calculation time:')
         if INPUT['nmoderun']:
             self.timer.add_timer('nmode', 'Total normal mode calculation time:')
-        if INPUT['entropy'] == 1:
+        if INPUT['qh_entropy']:
             self.timer.add_timer('qh', 'Total quasi-harmonic calculation time:')
 
         self.sync_mpi()
@@ -536,7 +536,7 @@ class MMPBSA_App(object):
         # end if self.INPUT['nmoderun']
 
         # Only master does entropy calculations
-        if self.INPUT['entropy'] == 1:
+        if self.INPUT['qh_entropy']:
             self.calc_list.append(
                 PrintCalc('\nBeginning quasi-harmonic calculations with %s' %
                           progs['qh']), timer_key='qh')
@@ -685,7 +685,7 @@ class MMPBSA_App(object):
             if self.INPUT['nmoderun']:
                 self.timer.print_('nmode', self.stdout)
 
-            if self.INPUT['entropy'] == 1:
+            if self.INPUT['qh_entropy']:
                 self.timer.print_('qh', self.stdout)
 
             self.stdout.write('\n')
@@ -900,7 +900,7 @@ class MMPBSA_App(object):
             if not INPUT['thermo'] in ['std', 'gf', 'both']:
                 GMXMMPBSA_ERROR('THERMO must be "std", "gf", or "both"!', InputError)
         if not (INPUT['gbrun'] or INPUT['pbrun'] or INPUT['rismrun'] or
-                INPUT['nmoderun'] or INPUT['entropy']):
+                INPUT['nmoderun'] or INPUT['qh_entropy']):
             GMXMMPBSA_ERROR('You did not specify any type of calculation!', InputError)
 
         if INPUT['decomprun'] and not (INPUT['gbrun'] or INPUT['pbrun']):
@@ -954,7 +954,7 @@ class MMPBSA_App(object):
         if INPUT['alarun']:
             self.calc_types['mutant'] = {}
         # Quasi-harmonic analysis is a special-case, so handle that separately
-        if INPUT['entropy'] == 1:
+        if INPUT['qh_entropy']:
             if not INPUT['mutant_only']:
                 self.calc_types['qh'] = QHout(self.pre + 'cpptraj_entropy.out', INPUT['temp'])
             if INPUT['alarun']:
