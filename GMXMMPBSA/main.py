@@ -819,10 +819,9 @@ class MMPBSA_App(object):
                     'and will be remove in the next version. Please, use forcefield instead.')
         if self.INPUT['entropy']:
             if self.master:
-                GMXMMPBSA_WARNING(
-                'entropy variable is deprecate since version 1.4.2 and will be remove in v1.5.0. Please, '
-                'use qh_entropy for Quasi-Harmonic approximation and i_entropy for Interaction entropy '
-                'approximation instead.')
+                GMXMMPBSA_WARNING('entropy variable is deprecate since version 1.4.2 and will be remove in v1.5.0. '
+                                  'Please, use qh_entropy for Quasi-Harmonic approximation and i_entropy for '
+                                  'Interaction entropy approximation instead.')
             if self.INPUT['entropy'] == 1:
                 self.INPUT['qh_entropy'] = 1
             elif self.INPUT['entropy'] == 2:
@@ -831,7 +830,7 @@ class MMPBSA_App(object):
         if self.INPUT['entropy_seg']:
             if self.master:
                 GMXMMPBSA_WARNING('entropy_seg variable is deprecate since version 1.4.2 and will be remove in v1.5.0. '
-                              'Please, use ie_segment instead.')
+                                  'Please, use ie_segment instead.')
             self.INPUT['ie_segment'] = self.INPUT['entropy_seg']
 
         if self.INPUT['entropy_temp'] != 298.15:
