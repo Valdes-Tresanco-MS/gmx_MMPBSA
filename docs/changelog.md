@@ -4,6 +4,28 @@ title: Changelog
 ---
 
 # Changelog
+## Upcoming release
+### Additions
+- Added Covid-19 and other complex systems as examples in the documentation
+- Added Q&A section to the documentation
+
+### Fixes
+- Fixed error when `starframe` = 0 (#33)
+- Fixed pipe command-line for Gromacs execution in macOS
+- Improved and fixed the documentation
+- Improved output file information related to ΔG binding
+- Improved calculation with different entropy approximations simultaneously
+
+### Changes
+- Changed `protein_forcefields` and `ligand_forcefield` by `forcefields` variable in all examples
+- Now MPI/mpi argument is not needed when run with `mpirun`. _Both definitions coexist for 
+  compatibility purposes only. The previous definition will be removed in the next version (v1.5.0)_
+- Now QH and IE can be calculated at the same time
+- `entropy` variable was separated in  `qh_entropy` and `interaction_entropy`. _The `entropy` variable is deprecated 
+  and will be removed in the next version (v1.5.0)._
+- `entropy_seg` was replaced by `ie_segment`. _The `entropy_seg` variable is deprecated and will be removed in the 
+  next version (v1.5.0)._
+
 ## [gxm_MMPBSA v1.4.1 (08/04/2021)](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/releases/tag/v1.4.1)
 ### Additions
 - New class `Residue` added to handle residues selection in Gromacs format with Amber index

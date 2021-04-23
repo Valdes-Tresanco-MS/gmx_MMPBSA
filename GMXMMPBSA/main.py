@@ -26,9 +26,6 @@
 import os
 import signal
 import sys
-import warnings
-import numpy as np
-from math import exp, log
 import logging
 # Import gmx_MMPBSA modules
 from GMXMMPBSA import utils
@@ -40,7 +37,6 @@ from GMXMMPBSA.calculation import (CalculationList, EnergyCalculation, PBEnergyC
 from GMXMMPBSA.commandlineparser import parser
 from GMXMMPBSA.createinput import create_inputs
 from GMXMMPBSA.exceptions import (MMPBSA_Error, InternalError, InputError, GMXMMPBSA_ERROR, GMXMMPBSA_WARNING)
-from GMXMMPBSA.fake_mpi import MPI as FakeMPI
 from GMXMMPBSA.findprogs import find_progs
 from GMXMMPBSA.infofile import InfoFile
 from GMXMMPBSA.input_parser import input_file as _input_file
@@ -50,6 +46,7 @@ from GMXMMPBSA.output_file import (write_stability_output, write_binding_output,
 from GMXMMPBSA.parm_setup import MMPBSA_System
 from GMXMMPBSA.make_top import CheckMakeTop
 from GMXMMPBSA.timer import Timer
+from mpi4py import MPI
 
 
 # Global variables for the excepthook replacement at the bottom. Override these
@@ -61,7 +58,7 @@ _stderr = sys.stderr
 _debug_printlevel = 2
 _mpi_size = 1
 _rank = 0
-_MPI = FakeMPI()
+_MPI = MPI
 
 
 # Main class
@@ -182,7 +179,7 @@ class MMPBSA_App(object):
             self.timer.add_timer('rism', 'Total 3D-RISM calculation time:')
         if INPUT['nmoderun']:
             self.timer.add_timer('nmode', 'Total normal mode calculation time:')
-        if INPUT['entropy'] == 1:
+        if INPUT['qh_entropy']:
             self.timer.add_timer('qh', 'Total quasi-harmonic calculation time:')
 
         self.sync_mpi()
@@ -539,7 +536,7 @@ class MMPBSA_App(object):
         # end if self.INPUT['nmoderun']
 
         # Only master does entropy calculations
-        if self.INPUT['entropy'] == 1:
+        if self.INPUT['qh_entropy']:
             self.calc_list.append(
                 PrintCalc('\nBeginning quasi-harmonic calculations with %s' %
                           progs['qh']), timer_key='qh')
@@ -688,7 +685,7 @@ class MMPBSA_App(object):
             if self.INPUT['nmoderun']:
                 self.timer.print_('nmode', self.stdout)
 
-            if self.INPUT['entropy'] == 1:
+            if self.INPUT['qh_entropy']:
                 self.timer.print_('qh', self.stdout)
 
             self.stdout.write('\n')
@@ -813,9 +810,38 @@ class MMPBSA_App(object):
         if INPUT is None:
             INPUT = self.INPUT
 
+        # Check deprecated variables
+        # check force fields
+        if self.INPUT['protein_forcefield'] or self.INPUT['ligand_forcefield']:
+            if self.master:
+                GMXMMPBSA_WARNING(
+                    'protein_forcefield and ligand_forcefield variables are deprecate since version 1.4.1 '
+                    'and will be remove in the next version. Please, use forcefield instead.')
+        if self.INPUT['entropy']:
+            if self.master:
+                GMXMMPBSA_WARNING('entropy variable is deprecate since version 1.4.2 and will be remove in v1.5.0. '
+                                  'Please, use qh_entropy for Quasi-Harmonic approximation and i_entropy for '
+                                  'Interaction entropy approximation instead.')
+            if self.INPUT['entropy'] == 1:
+                self.INPUT['qh_entropy'] = 1
+            elif self.INPUT['entropy'] == 2:
+                self.INPUT['interaction_entropy'] = 1
+
+        if self.INPUT['entropy_seg']:
+            if self.master:
+                GMXMMPBSA_WARNING('entropy_seg variable is deprecate since version 1.4.2 and will be remove in v1.5.0. '
+                                  'Please, use ie_segment instead.')
+            self.INPUT['ie_segment'] = self.INPUT['entropy_seg']
+
+        if self.INPUT['entropy_temp'] != 298.15:
+            if self.INPUT['temperature'] == 298.15:
+                self.INPUT['temperature'] = self.INPUT['entropy_temp']
+            if self.master:
+                GMXMMPBSA_WARNING('entropy_temp variable is deprecated and will be remove in next versions!. Please, '
+                              'use temperature variable instead')
+
         if not INPUT['igb'] in [1, 2, 5, 7, 8]:
-            GMXMMPBSA_ERROR('Invalid value for IGB (%s)! ' % INPUT['igb'] +
-                                 'It must be 1, 2, 5, 7, or 8.', InputError)
+            GMXMMPBSA_ERROR('Invalid value for IGB (%s)! ' % INPUT['igb'] + 'It must be 1, 2, 5, 7, or 8.', InputError)
         if INPUT['saltcon'] < 0:
             GMXMMPBSA_ERROR('SALTCON must be non-negative!', InputError)
         if INPUT['surften'] < 0:
@@ -877,8 +903,8 @@ class MMPBSA_App(object):
                                           'AM1-DH+', 'AM1-D*', 'PM3ZNB', 'MNDO/D',
                                           'MNDOD']:
                 GMXMMPBSA_ERROR('Invalid QM_THEORY (%s)! ' % INPUT['qm_theory'] +
-                                 'This variable must be set to allowable options.\n' +
-                                 '       See the Amber manual for allowable options.', InputError)
+                                'This variable must be set to allowable options.\n' +
+                                '       See the Amber manual for allowable options.', InputError)
             if INPUT['qm_residues'] == '':
                 GMXMMPBSA_ERROR('QM_RESIDUES must be specified for IFQNT = 1!', InputError)
             if INPUT['decomprun']:
@@ -903,19 +929,20 @@ class MMPBSA_App(object):
             if not INPUT['thermo'] in ['std', 'gf', 'both']:
                 GMXMMPBSA_ERROR('THERMO must be "std", "gf", or "both"!', InputError)
         if not (INPUT['gbrun'] or INPUT['pbrun'] or INPUT['rismrun'] or
-                INPUT['nmoderun'] or INPUT['entropy']):
+                INPUT['nmoderun'] or INPUT['qh_entropy']):
             GMXMMPBSA_ERROR('You did not specify any type of calculation!', InputError)
 
         if INPUT['decomprun'] and not (INPUT['gbrun'] or INPUT['pbrun']):
             GMXMMPBSA_ERROR('DECOMP must be run with either GB or PB!', InputError)
 
-        if not INPUT['molsurf'] and (INPUT['msoffset'] != 0 or
-                                     INPUT['probe'] != 1.4):
-            logging.warning('offset and probe are molsurf-only options')
+        if not INPUT['molsurf'] and (INPUT['msoffset'] != 0 or INPUT['probe'] != 1.4):
+            if self.master:
+                logging.warning('offset and probe are molsurf-only options')
 
         # User warning when intdiel > 10
         if self.INPUT['intdiel'] > 10:
-            logging.warning('Intdiel should be less than 10, but it is {}'.format(self.INPUT['intdiel']))
+            if self.master:
+                logging.warning('Intdiel should be less than 10, but it is {}'.format(self.INPUT['intdiel']))
         # check mutant definition
         if not self.INPUT['mutant'].upper() in ['ALA', 'A', 'GLY', 'G']:
             GMXMMPBSA_ERROR('The mutant most be ALA (or A) or GLY (or G)', InputError)
@@ -924,11 +951,7 @@ class MMPBSA_App(object):
         # https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/issues/33
         if self.INPUT['startframe'] < 1:
             GMXMMPBSA_ERROR('The startframe variable must be >= 1')
-        # check force fields
-        if self.INPUT['protein_forcefield'] or self.INPUT['ligand_forcefield']:
-            if self.master:
-                GMXMMPBSA_WARNING('protein_forcefield and ligand_forcefield variables are deprecate since version 1.4.1 '
-                              'and will be remove in the next version. Please, use forcefield instead.')
+
         # check files
         if self.FILES.complex_top:
             self.INPUT['use_sander'] = 1
@@ -956,7 +979,7 @@ class MMPBSA_App(object):
         if INPUT['alarun']:
             self.calc_types['mutant'] = {}
         # Quasi-harmonic analysis is a special-case, so handle that separately
-        if INPUT['entropy'] == 1:
+        if INPUT['qh_entropy']:
             if not INPUT['mutant_only']:
                 self.calc_types['qh'] = QHout(self.pre + 'cpptraj_entropy.out', INPUT['temp'])
             if INPUT['alarun']:
@@ -1010,10 +1033,10 @@ class MMPBSA_App(object):
                         self.calc_types[key]['ligand'],
                         self.INPUT['verbose'], self.using_chamber)
 
-                    if self.INPUT['entropy'] == 2 and key != 'nmode' and 'ie' not in self.calc_types:
+                    if self.INPUT['interaction_entropy'] and key not in ['nmode', 'qh'] and 'ie' not in self.calc_types:
                         edata = self.calc_types[key]['delta'].data['DELTA G gas']
                         ie = InteractionEntropyCalc(edata, self, self.pre + 'iteraction_entropy.dat')
-                        self.calc_types['ie'] = IEout(ie.data, ie.value, ie.frames, ie.ie_frames)
+                        self.calc_types['ie'] = IEout(ie.data, ie.iedata, ie.frames, ie.ieframes)
                         # self.calc_types[self.key]['delta'].data['DELTA G gas']
                 else:
                     self.calc_types[key]['complex'].fill_composite_terms()
@@ -1034,10 +1057,11 @@ class MMPBSA_App(object):
                         self.calc_types['mutant'][key]['receptor'],
                         self.calc_types['mutant'][key]['ligand'],
                         self.INPUT['verbose'], self.using_chamber)
-                    if self.INPUT['entropy'] == 2 and key != 'nmode' and 'ie' not in self.calc_types['mutant']:
+                    if (self.INPUT['interaction_entropy'] and key not in ['nmode', 'qh'] and
+                            'ie' not in self.calc_types['mutant']):
                         edata = self.calc_types['mutant'][key]['delta'].data['DELTA G gas']
                         mie = InteractionEntropyCalc(edata, self, self.pre + 'mutant_iteraction_entropy.dat')
-                        self.calc_types['mutant']['ie'] = IEout(mie.data, mie.value, mie.frames, mie.ie_frames)
+                        self.calc_types['mutant']['ie'] = IEout(mie.data, mie.iedata, mie.frames, mie.ieframes)
                 else:
                     self.calc_types['mutant'][key]['complex'].fill_composite_terms()
 

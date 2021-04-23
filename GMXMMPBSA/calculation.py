@@ -569,12 +569,8 @@ class InteractionEntropyCalc:
     def _calculate(self):
         # boltzmann constant
         k = 0.001985875
-        if 'temperature' in self.app.INPUT:
-            temp = self.app.INPUT['temperature']
-        elif 'entropy_temp' in self.app.INPUT:
-            temp = self.app.INPUT['entropy_temp']
-            GMXMMPBSA_WARNING('entropy_temp variable is deprecated and will be remove in next versions!. Please, '
-                              'use temperature variable instead')
+        temp = self.app.INPUT['temperature']
+
         energy_int = np.array([], dtype=np.float)
         a_energy_int = np.array([], dtype=np.float)
         exp_energy_int = np.array([], dtype=np.float)
@@ -590,16 +586,16 @@ class InteractionEntropyCalc:
             cts = k * temp * math.log(aeceint)
             ts = np.append(ts, cts)
         self.data = ts
-        self.ie_frames = math.ceil(self.app.numframes * (self.app.INPUT['entropy_seg'] / 100))
-        self.value = self.data[-self.ie_frames:].mean()
+        self.ieframes = math.ceil(self.app.numframes * (self.app.INPUT['entropy_seg'] / 100))
+        self.iedata = self.data[-self.ieframes:]
         self.frames = [x for x in range(self.app.INPUT['startframe'],
                                         self.app.INPUT['startframe'] + self.app.numframes * self.app.INPUT['interval'],
                                         self.app.INPUT['interval'])]
 
     def save_output(self):
         with open(self.output, 'w') as out:
-            out.write(f'Calculation for last {self.ie_frames} frames:\n')
-            out.write(f'Interaction Entropy (-TΔS): {self.value}\n\n')
+            out.write(f'Calculation for last {self.ieframes} frames:\n')
+            out.write(f'Interaction Entropy (-TΔS): {self.iedata.mean():.4f} +/- {self.iedata.std():.4f}\n\n')
             out.write(f'Interaction Entropy per-frame:\n')
 
             out.write('Frame # | IE value\n')
