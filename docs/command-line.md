@@ -166,8 +166,6 @@ Based on MMPBSA.py (version 16.0) and AmberTools20
         Note that `gmx_MMPBSA` processes, converts, or builds topologies from GROMACS files, so it takes slightly 
         longer than `MMPBSA.py` at the same stage of the process. However, this is not really significant.
 
-    `gmx_MMPBSA` executes the serial version or the parallel version with MPI depending 
-    on whether the user defines the "mpi" or "MPI" argument. 
 
     ???+ tip "Remember" 
         Make sure that you install the OpenMPI library
@@ -202,6 +200,14 @@ Based on MMPBSA.py (version 16.0) and AmberTools20
         because of `gmx_mpi` conflicts with mpirun. In any case, this is not a problem since `gmx` works correctly 
         and `gmx_mpi` only parallels `mdrun`, the rest of the GROMACS tools work in a single thread. See this 
         [issue](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/issues/26) to see the output.
+
+    !!! warning
+        The nmode calculations require a considerable amount of RAM. Consider that the total amount of RAM will be:
+
+        RAM~total~ = RAM~1_frame~ * NUM of Threads
+        
+        If it consumes all the RAM of the system it can cause crashes, instability or system shutdown!
+        
 
     !!! note
         At a certain level, running RISM in parallel may actually hurt performance, since previous solutions are used 
