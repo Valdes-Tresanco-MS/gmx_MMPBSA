@@ -26,7 +26,7 @@ the full power of Python's extensions, if they want (e.g., numpy, scipy, etc.)
 from copy import deepcopy
 from GMXMMPBSA import infofile, main, amber_outputs
 from GMXMMPBSA.exceptions import SetupError, NoFileExists
-from GMXMMPBSA.fake_mpi import MPI
+from mpi4py import MPI
 from pathlib import Path
 import parmed
 import os

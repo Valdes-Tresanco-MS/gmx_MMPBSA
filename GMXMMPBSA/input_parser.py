@@ -500,7 +500,7 @@ input_file.addNamelist('general', 'general',
                            ['ions_parameters', int, 1, 'Define ions parameters to build the Amber topology.'],
                            ['keep_files', int, 2, 'How many files to keep after successful completion.'],
                            ['forcefields', str, 'oldff/leaprc.ff99SB,leaprc.gaff', 'Define the force field to build '
-                                                                                    'Amber topology'],
+                                                                                   'the Amber topology'],
                            ['ligand_forcefield', str, "leaprc.gaff", 'Define the force field to build Amber topology for '
                                                              'ligand (small molecule)'],
                            ['netcdf', int, 0, 'Use NetCDF intermediate trajectories.'],

@@ -26,9 +26,6 @@
 import os
 import signal
 import sys
-import warnings
-import numpy as np
-from math import exp, log
 import logging
 # Import gmx_MMPBSA modules
 from GMXMMPBSA import utils
@@ -40,7 +37,6 @@ from GMXMMPBSA.calculation import (CalculationList, EnergyCalculation, PBEnergyC
 from GMXMMPBSA.commandlineparser import parser
 from GMXMMPBSA.createinput import create_inputs
 from GMXMMPBSA.exceptions import (MMPBSA_Error, InternalError, InputError, GMXMMPBSA_ERROR, GMXMMPBSA_WARNING)
-from GMXMMPBSA.fake_mpi import MPI as FakeMPI
 from GMXMMPBSA.findprogs import find_progs
 from GMXMMPBSA.infofile import InfoFile
 from GMXMMPBSA.input_parser import input_file as _input_file
@@ -50,6 +46,7 @@ from GMXMMPBSA.output_file import (write_stability_output, write_binding_output,
 from GMXMMPBSA.parm_setup import MMPBSA_System
 from GMXMMPBSA.make_top import CheckMakeTop
 from GMXMMPBSA.timer import Timer
+from mpi4py import MPI
 
 
 # Global variables for the excepthook replacement at the bottom. Override these
@@ -61,7 +58,7 @@ _stderr = sys.stderr
 _debug_printlevel = 2
 _mpi_size = 1
 _rank = 0
-_MPI = FakeMPI()
+_MPI = MPI
 
 
 # Main class
@@ -909,13 +906,14 @@ class MMPBSA_App(object):
         if INPUT['decomprun'] and not (INPUT['gbrun'] or INPUT['pbrun']):
             GMXMMPBSA_ERROR('DECOMP must be run with either GB or PB!', InputError)
 
-        if not INPUT['molsurf'] and (INPUT['msoffset'] != 0 or
-                                     INPUT['probe'] != 1.4):
-            logging.warning('offset and probe are molsurf-only options')
+        if not INPUT['molsurf'] and (INPUT['msoffset'] != 0 or INPUT['probe'] != 1.4):
+            if self.master:
+                logging.warning('offset and probe are molsurf-only options')
 
         # User warning when intdiel > 10
         if self.INPUT['intdiel'] > 10:
-            logging.warning('Intdiel should be less than 10, but it is {}'.format(self.INPUT['intdiel']))
+            if self.master:
+                logging.warning('Intdiel should be less than 10, but it is {}'.format(self.INPUT['intdiel']))
         # check mutant definition
         if not self.INPUT['mutant'].upper() in ['ALA', 'A', 'GLY', 'G']:
             GMXMMPBSA_ERROR('The mutant most be ALA (or A) or GLY (or G)', InputError)
