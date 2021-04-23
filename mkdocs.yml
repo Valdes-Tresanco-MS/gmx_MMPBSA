@@ -36,6 +36,7 @@ theme:
     - navigation.sections
     - navigation.tabs
     - navigation.top
+    - header.autohide
 
   palette:
     - scheme: default
@@ -174,11 +175,9 @@ nav:
         - Mycalamide A Bound to the Large Ribosomal Subunit: examples/Ribosomal50S_Mycalamide_A/README.md
   - Q&A:
     - Q&A: Q&A/README.md
-#    - Installation:
-#    - Inconsistent Energy:
-#    - GUI:
-#    - Unsupported Parameters:
-#    -
+    - Installation: Q&A/installation.md
+    - OS issues: Q&A/OS_issues.md
+    - Calculations: Q&A/calculations.md
 
   - Changelog:
     - Changelog: changelog.md
