@@ -54,16 +54,16 @@ class mmpbsa_data(dict):
         self.stability = app.stability
         # Now load the data
         for key in app.calc_types:
-            if key == 'mutant' or key =='qh':
+            if key == 'mutant' or key == 'qh':
                 has_mutant = True
                 continue
             self[key] = {}
             tmpdict = {}
             if key == 'ie':
                 if not self.stability:
-                    self[key] = {'data': app.calc_types[key].data, 'value': app.calc_types[key].value,
-                                 'frames': [app.calc_types[key].frames[-app.calc_types[key].ieframes],
-                                           app.calc_types[key].frames[-1]]}
+                    self[key] = {'data': app.calc_types[key].data['data'], 'value': app.calc_types[key].data[
+                        'iedata'].avg(), 'frames': [app.calc_types[key].data['frames'][-app.calc_types[
+                        key].data['ieframes']], app.calc_types[key].data['frames'][-1]]}
                 continue
             for dkey in app.calc_types[key]['complex'].data:
                 tmpdict[dkey] = make_array(app.calc_types[key]['complex'].data[dkey])
@@ -92,9 +92,10 @@ class mmpbsa_data(dict):
 
                 if key == 'ie':
                     if not self.stability:
-                        self.mutant[key] = {'data': app.calc_types[key].data, 'value': app.calc_types[key].value,
-                                            'frames': [app.calc_types[key].frames[-app.calc_types[key].ieframes],
-                                                      app.calc_types[key].frames[-1]]                                            }
+                        self.mutant[key] = {'data': app.calc_types[key].data['data'],
+                                            'value': app.calc_types[key].data['iedata'].avg(),
+                                            'frames': [app.calc_types[key].data['frames'][-app.calc_types[key].data[
+                                                'ieframes']], app.calc_types[key].data['frames'][-1]]}
                     continue
 
                 for dkey in app.calc_types['mutant'][key]['complex'].data:
