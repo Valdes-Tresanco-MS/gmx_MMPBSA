@@ -176,13 +176,26 @@ Based on MMPBSA.py (version 16.0) and AmberTools20
 
     A usage example is shown below:
 
-    === "MPI"
+    === "Local"
     
-            mpirun -np 2 gmx_MMPBSA MPI -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 1 13 -ct com_traj.xtc
+            mpirun -np 2 gmx_MMPBSA -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 1 13 -ct com_traj.xtc
     
-    === "mpi"
+    === "HPC"
     
-            mpirun -np 2 gmx_MMPBSA mpi -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 1 13 -ct com_traj.xtc
+            #!/bin/sh
+            #PBS -N nmode
+            #PBS -o nmode.out
+            #PBS -e nmode.err
+            #PBS -m abe
+            #PBS -M email@domain.edu
+            #PBS -q brute
+            #PBS -l nodes=1:surg:ppn=3
+            #PBS -l pmem=1450mb or > 5gb for nmode calculation
+            
+            cd $PBS_O_WORKDIR
+            
+            mpirun -np 3 gmx_MMPBSA -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 1 13 -ct com_traj.xtc > progress.log
+
     
     !!! danger
         Unfortunately, when `gmx_MMPBSA` is run with `MPI`, GROMACS's `gmx_mpi` is incompatible. This is probably 
