@@ -17,28 +17,70 @@ Inspect the currently installed version with:
 The differences between both versions are small, you can see them below
 ### Variables
 * New variables in input file
-    - `forcefields` (_Since v1.4.1_)
-    - `temperature` (_Since v1.4.0_)
-    - `sys_name` (_Since v1.4.0_)
-    - `exp_ki` (_Since v1.4.0_)
+    - `qh_entropy` replace `entropy = 1` 
+      
+        ( :material-new-box:{: .heart } _Since v1.4.2_)
+      
+    - `interaction_entrpy` replace `entropy = 2`
+        
+        ( :material-new-box:{: .heart } _Since v1.4.2_)
+      
+    - `ie_segment` replace `entropy_seg`  
+    
+        ( :material-new-box:{: .heart } _Since v1.4.2_)
+      
+    - `forcefields` replace `protein_forcefield` and `ligand_forcefield`
+        
+        ( :material-new-box:{: .heart } _Since v1.4.1_)
+      
+    - `temperature` replace `entropy_temp`
+        
+        ( :material-new-box:{: .heart } _Since v1.4.1_)
+      
+    - `sys_name`
+        
+        ( :material-new-box:{: .heart } _Since v1.4.0_)
+      
+    - `exp_ki` 
+        
+        ( :material-new-box:{: .heart } _Since v1.4.0_)
+      
 * Internal variables (the user only interact with it in the info file)
     - `complex_fixed` (_Since v1.4.0_)
 * Modified variables
     - `print_res` (_Since v1.4.0_)
 * Deprecated variables
-    - `entropy_temp` (_Since v1.4.0 and will be removed in v1.5.0_)
-    - `protein_forcefield` (_Since v1.4.1 and will be removed in v1.5.0_)
-    - `ligand_forcefield` (_Since v1.4.1 and will be removed in v1.5.0_)
+    - `entropy` use `qh_entropy` or `interaction_entropy` instead
+        
+        ( :octicons-archive-24: _Deprecated: v1.4.2_ · :octicons-trash-24: _Removed: v1.5.0_ )
+    
+    - `entropy_seg` use `ie_segment` instead
+      
+        ( :octicons-archive-24: _Deprecated: v1.4.2_ · :octicons-trash-24: _Removed: v1.5.0_ )
+    
+    - `entropy_temp` use `temperature` instaed
+      
+        ( :octicons-archive-24: _Deprecated: v1.4.1_ · :octicons-trash-24: _Removed: v1.5.0_ )
+      
+    - `protein_forcefield` use `forcefields` instead
+      
+        ( :octicons-archive-24: _Deprecated: v1.4.1_ · :octicons-trash-24: _Removed: v1.5.0_ )
+      
+    - `ligand_forcefield` use `forcefields` instead
+      
+        ( :octicons-archive-24: _Deprecated: v1.4.1_ · :octicons-trash-24: _Removed: v1.5.0_ )
 
 !!! tip
     Check the changes in [`&general namelist variables`](input_file.md#general-namelist-variables) section
 
 ### Command-line
 * `gmx_MMPBSA_ana` changes the `-p` option by `-f` with more flexibility. Please check the [gmx_MMPBSA_ana 
-  command-line](command-line.md#gmx_mmpbsa_ana-command-line). (_Changedin v1.4.0_)
+  command-line](command-line.md#gmx_mmpbsa_ana-command-line). (_Changed in v1.4.0_)
+* Now MPI/mpi argument is not needed when gmx_MMPBSA run with `mpirun`. Please check the 
+  [gmx_MMPBSA command-line](command-line.md#running-gmx_mmpbsa)
 
 ### Results and info file
-We have ensured backwards compatibility with gmx_MMPBSA, however there are some changes you can make
+We have ensured backwards compatibility with `gmx_MMPBSA`, however there are some changes you can make
 
 === "Old results"
 
