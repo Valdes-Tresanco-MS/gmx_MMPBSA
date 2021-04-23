@@ -842,8 +842,7 @@ class MMPBSA_App(object):
                               'use temperature variable instead')
 
         if not INPUT['igb'] in [1, 2, 5, 7, 8]:
-            GMXMMPBSA_ERROR('Invalid value for IGB (%s)! ' % INPUT['igb'] +
-                                 'It must be 1, 2, 5, 7, or 8.', InputError)
+            GMXMMPBSA_ERROR('Invalid value for IGB (%s)! ' % INPUT['igb'] + 'It must be 1, 2, 5, 7, or 8.', InputError)
         if INPUT['saltcon'] < 0:
             GMXMMPBSA_ERROR('SALTCON must be non-negative!', InputError)
         if INPUT['surften'] < 0:
@@ -905,8 +904,8 @@ class MMPBSA_App(object):
                                           'AM1-DH+', 'AM1-D*', 'PM3ZNB', 'MNDO/D',
                                           'MNDOD']:
                 GMXMMPBSA_ERROR('Invalid QM_THEORY (%s)! ' % INPUT['qm_theory'] +
-                                 'This variable must be set to allowable options.\n' +
-                                 '       See the Amber manual for allowable options.', InputError)
+                                'This variable must be set to allowable options.\n' +
+                                '       See the Amber manual for allowable options.', InputError)
             if INPUT['qm_residues'] == '':
                 GMXMMPBSA_ERROR('QM_RESIDUES must be specified for IFQNT = 1!', InputError)
             if INPUT['decomprun']:
@@ -953,11 +952,7 @@ class MMPBSA_App(object):
         # https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/issues/33
         if self.INPUT['startframe'] < 1:
             GMXMMPBSA_ERROR('The startframe variable must be >= 1')
-        # check force fields
-        if self.INPUT['protein_forcefield'] or self.INPUT['ligand_forcefield']:
-            if self.master:
-                GMXMMPBSA_WARNING('protein_forcefield and ligand_forcefield variables are deprecate since version 1.4.1 '
-                              'and will be remove in the next version. Please, use forcefield instead.')
+
         # check files
         if self.FILES.complex_top:
             self.INPUT['use_sander'] = 1
