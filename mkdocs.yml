@@ -33,10 +33,12 @@ theme:
   language: en
   features:
     # - navigation.instant
+    - navigation.expand
     - navigation.sections
     - navigation.tabs
     - navigation.top
     - header.autohide
+    - toc.integrate
 
   palette:
     - scheme: default
