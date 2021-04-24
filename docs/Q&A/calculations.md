@@ -31,6 +31,15 @@ Here we describe a series of frequent issues related to calculations and their p
                 **Generate the structure from tpr file**
                     
                     gmx editconf -f md.tpr -o md.pdb
+
+                <figure markdown="1">
+                [![overview][1]][1]
+                  <figcaption markdown="1" style="margin-top:0;">
+                **Figure 1.** Vizualization of two different input structures files. Left: "Broken" structure; Right: Centered structure 
+                  </figcaption>
+                </figure>
+                
+                  [1]:../assets/images/q_a/inconsistent_str.png
     
             ??? tip "Make sure you have fitted the trajectory"
 
