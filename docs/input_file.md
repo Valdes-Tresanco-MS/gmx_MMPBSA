@@ -61,30 +61,62 @@ printed, which aids in debugging of issues. (Default = 0) (Advanced Option)
 :   The frame from which to stop extracting snapshots from the full, concatenated trajectory comprised of every
     trajectory file supplied on the command-line. 
 
-`entropy` (default = 0) 
-:    It specifies whether to perform a quasi-harmonic entropy (QH) approximation with ptraj or the
-     [Interaction Entropy (IE)][3] approximation. The allowed values are:
+`qh_entropy` (default = 0) 
+:    It specifies whether to perform a quasi-harmonic entropy (QH) approximation with `ptraj` or not.
      
      * 0: Don’t
      * 1: perform QH
-     * 2: perform IE
+
+    _New in v1.4.2: Equivalent to (Deprecate) `entropy = 1`_
+
+???+ warning "Deprecated in v1.4.2: It will be removed in next version (v1.5.0). Use `qh_entropy` or `interaction_entropy` instead"
+
+    `entropy` (default = 0) 
+    :    ~~It specifies whether to perform a quasi-harmonic entropy (QH) approximation with ptraj or the
+         [Interaction Entropy (IE)][3] approximation. The allowed values are:~~
+         
+         * ~~0: Don’t~~
+         * ~~1: perform QH~~
+         * ~~2: perform IE~~
+
+        _Deprecated since v1.4.2: Divided in `qh_entropy` and `interaction_entropy`_
+    
+        _Changed in v1.0.0: Include Interaction Entropy approximation_    
+
+`interaction_entropy` (default = 0) 
+:    It specifies whether to perform the [Interaction Entropy (IE)][3] approximation.
+     
+     * 0: Don’t
+     * 1: perform IE
 
     !!! tip "Keep in mind"
         The Interaction Entropy method is dependent on the number of frames and the simulated time. Additionally, 
         the results may vary depending on the system flexibility or whether constraints were used or not in the MD 
         simulation. Please, consult this [paper][3] for further details
 
-    _Changed in v1.0.0: Include Interaction Entropy approximation_    
+    _New in v1.4.2: Equivalent to (Deprecate) `entropy = 2`_
 
   [3]: https://pubs.acs.org/doi/abs/10.1021/jacs.6b02682
 
-`entropy_seg` (Default = 25)
-:    Representative segment (in %), starting from the `endframe`, for the calculation of the
-     Interaction Entropy, _e.g._: `entropy_seg = 25` means that the last quartile of the total number of frames
-     (`(endframe-startframe)/interval`) will be used to calculate the average Interaction Entropy. (Only
-      if `entropy = 2`)
 
-    _New in v1.0.0_
+`ie_segment` (Default = 25)
+:    Representative segment (in %), starting from the last frame, for the calculation of the
+     Interaction Entropy, _e.g._: `ie_segment = 25` means that the last quartile of the total number of frames
+     (`(endframe-startframe)/interval`) will be used to calculate the average Interaction Entropy.
+
+    _New in v1.4.2_
+
+???+ warning "Deprecated in v1.4.2: It will be removed in next version (v1.5.0). Use `ie_segment` instead"
+
+    `entropy_seg` (Default = 25)
+    :    ~~Representative segment (in %), starting from the `endframe`, for the calculation of the
+         Interaction Entropy, _e.g._: `entropy_seg = 25` means that the last quartile of the total number of frames
+         (`(endframe-startframe)/interval`) will be used to calculate the average Interaction Entropy. (Only
+          if `entropy = 2`)~~
+    
+        _Deprecated since v1.4.2: Replaced by `ie_segment`_
+        
+        _New in v1.0.0_
 
 ???+ warning "Deprecated in v1.4.0: It will be removed in next version. Use `temperature` instead"
     
