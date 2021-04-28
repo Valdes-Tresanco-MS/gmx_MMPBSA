@@ -826,6 +826,9 @@ class MMPBSA_App(object):
                 self.INPUT['qh_entropy'] = 1
             elif self.INPUT['entropy'] == 2:
                 self.INPUT['interaction_entropy'] = 1
+        else:
+            self.INPUT['qh_entropy'] = 0
+            self.INPUT['interaction_entropy'] = 0
 
         if self.INPUT['entropy_seg']:
             if self.master:
@@ -834,7 +837,11 @@ class MMPBSA_App(object):
             self.INPUT['ie_segment'] = self.INPUT['entropy_seg']
 
         if self.INPUT['entropy_temp'] != 298.15:
-            if self.INPUT['temperature'] == 298.15:
+            try:
+                # for compatibility with v1.3.x
+                if self.INPUT['temperature'] == 298.15:
+                    self.INPUT['temperature'] = self.INPUT['entropy_temp']
+            except:
                 self.INPUT['temperature'] = self.INPUT['entropy_temp']
             if self.master:
                 GMXMMPBSA_WARNING('entropy_temp variable is deprecated and will be remove in next versions!. Please, '
