@@ -31,6 +31,15 @@ Here we describe a series of frequent issues related to calculations and their p
                 **Generate the structure from tpr file**
                     
                     gmx editconf -f md.tpr -o md.pdb
+
+                <figure markdown="1">
+                [![overview][1]][1]
+                  <figcaption markdown="1" style="margin-top:0;">
+                **Figure 1.** Vizualization of two different input structures files. Left: "Broken" structure; Right: Centered structure 
+                  </figcaption>
+                </figure>
+                
+                  [1]:../assets/images/q_a/inconsistent_str.png
     
             ??? tip "Make sure you have fitted the trajectory"
 
@@ -74,7 +83,7 @@ Here we describe a series of frequent issues related to calculations and their p
                 
                   [2]:../assets/images/q_a/traj_comp.gif
         
-        2. You are trying to calculate the energetic contribution of a too-large group. Technically, the energy 
+        2. You are trying to calculate the energetic contribution of a very large group. Technically, the energy 
         value should not exceed 7 digits, so if you get a value higher than this, this error will occur. Although 
         `gmx_MMPBSA` can handle very large systems as described in example [Ribosomal50S_Mycalamide_A][9], it cannot 
         determine certain energetic terms. This is a limitation of Sander when writing the output file.
@@ -82,7 +91,8 @@ Here we describe a series of frequent issues related to calculations and their p
             !!! note
             The error could be solved by recompiling Sander with some modifications in the output function. 
             However, this is not recommended since the error can be large. Another possible solution could be modifying 
-            the parameters of the calculation (solvent model, internal dielectric constant).
+            the parameters of the calculation (solvent model, internal dielectric constant) or just performing the 
+            calculation for a part of the system (sub-system).
 
 ??? example "NMODE calculation finish in error"
     The only error reported is probably related to RAM saturation. NMODE calculations require a considerable amount 
