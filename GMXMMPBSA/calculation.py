@@ -586,7 +586,7 @@ class InteractionEntropyCalc:
             cts = k * temp * math.log(aeceint)
             ts = np.append(ts, cts)
         self.data = ts
-        self.ieframes = math.ceil(self.app.numframes * (self.app.INPUT['entropy_seg'] / 100))
+        self.ieframes = math.ceil(self.app.numframes * (self.app.INPUT['ie_segment'] / 100))
         self.iedata = self.data[-self.ieframes:]
         self.frames = [x for x in range(self.app.INPUT['startframe'],
                                         self.app.INPUT['startframe'] + self.app.numframes * self.app.INPUT['interval'],

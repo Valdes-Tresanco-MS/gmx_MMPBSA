@@ -275,7 +275,7 @@ def write_binding_output(app):
                                  app.numframes_nmode)
     if INPUT['interaction_entropy']:
         final_output.add_comment('Interaction Entropy calculations performed using last %s frames.' %
-                                 ceil(app.numframes * (INPUT['entropy_seg']/100)))
+                                 ceil(app.numframes * (INPUT['ie_segment']/100)))
 
 
     if INPUT['pbrun']:
