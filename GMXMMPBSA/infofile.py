@@ -36,11 +36,12 @@ class InfoFile(object):
 
     # Make a list about which INPUT variables are editable
     EDITABLE_INFO_VARS = ['debug_printlevel', 'verbose',
-                          'csv_format', 'dec_verbose', 'temperature', 'exp_ki', 'sys_name', 'entropy_seg']
+                          'csv_format', 'dec_verbose', 'temperature', 'exp_ki', 'sys_name', 'ie_segment',
+                          'interaction_entropy']
 
-    EDIT_WITH_CARE_VARS = ['entropy']
+    EDIT_WITH_CARE_VARS = ['']
 
-    DEPRECATED_VARS = ['entropy_temp']
+    DEPRECATED_VARS = ['entropy_temp', 'entropy_seg', 'entropy', 'protein_forcefield', 'ligand_forcefield']
 
     def __init__(self, app):
         """ Instantiate me """
@@ -62,9 +63,9 @@ class InfoFile(object):
             outfile.write("INPUT['%s'] = %s\n" % (var, self.write_var(self.app.INPUT[var])))
 
         outfile.write('#\n# You can alter the variables below with care\n')
-        outfile.write('# WARNING!: entropy variable only can be changed from 0 to entropy=2\n')
         for var in InfoFile.EDIT_WITH_CARE_VARS:
-            outfile.write("INPUT['%s'] = %s\n" % (var, self.write_var(self.app.INPUT[var])))
+            if var:
+                outfile.write("INPUT['%s'] = %s\n" % (var, self.write_var(self.app.INPUT[var])))
 
         outfile.write('#\n# These variables are deprecated and will be remove in next versions\n')
         for var in InfoFile.DEPRECATED_VARS:
