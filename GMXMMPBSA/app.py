@@ -48,10 +48,11 @@ def gmxmmpbsa():
     if len(sys.argv) > 1 and sys.argv[1] in ['MPI', 'mpi']:
         args = sys.argv
         args.pop(1)  # remove mpi arg before passed it to app
-
-        GMXMMPBSA_WARNING('The MPI/mpi argument is not required since v1.4.2. Please, execute like: \n'
-                          'mpirun -np 8 gmx_MMPBSA -O -i mm...\n'
-                          'Backward compatibility will be removed in version 1.5.0')
+        mpi_rank = MPI.COMM_WORLD.Get_rank()
+        if mpi_rank == 0:
+            GMXMMPBSA_WARNING('The MPI/mpi argument is not required since v1.4.2. Please, execute like: \n'
+                              'mpirun -np 8 gmx_MMPBSA -O -i mm...\n'
+                              'Backward compatibility will be removed in version 1.5.0')
         # try:
         # except ImportError:
         #     GMXMMPBSA_ERROR('Could not import mpi4py package! Use serial version or install mpi4py.')
