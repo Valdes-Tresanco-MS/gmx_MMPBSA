@@ -203,6 +203,8 @@ class InitDialog(QDialog):
                             names.append(basename)
                     if line.startswith("INPUT['exp_ki']"):
                         exp_ki = line.split()[2]
+                    if line.startswith("INPUT['entropy_temp']"):
+                        temp = line.split()[2]
                     if line.startswith("INPUT['temperature']"):
                         temp = line.split()[2]
             if not basename:
