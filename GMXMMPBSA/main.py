@@ -47,7 +47,6 @@ from GMXMMPBSA.output_file import (write_stability_output, write_binding_output,
 from GMXMMPBSA.parm_setup import MMPBSA_System
 from GMXMMPBSA.make_top import CheckMakeTop
 from GMXMMPBSA.timer import Timer
-from mpi4py import MPI
 
 
 # Global variables for the excepthook replacement at the bottom. Override these
