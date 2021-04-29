@@ -442,7 +442,7 @@ def write_binding_output(app):
                                          'DELTA G binding =    %9.4f +/- %7.4f\n' % (davg, dstdev))
 
         if INPUT['alarun'] and not INPUT['mutant_only']:
-            davg, dstdev = sys_norm.diff(sys_mut, 'DELTA TOTAL', 'DELTA TOTAL')
+            davg, dstdev = sys_mut.diff(sys_norm, 'DELTA TOTAL', 'DELTA TOTAL')
             final_output.write(('\nRESULT OF ALANINE SCANNING:\n'
                                 '(%s) DELTA DELTA G binding = %9.4f  +/- %9.4f\n') % (mut_str, davg, dstdev))
             if INPUT['qh_entropy']:
@@ -451,7 +451,6 @@ def write_binding_output(app):
                                                                                qhmutant.total_avg()))
             if INPUT['interaction_entropy']:
                 davg1, dstdev1 = ienorm.diff(iemutant, 'iedata', 'iedata')
-                print(davg, davg1, davg + davg1)
                 final_output.write(('\n   (interaction entropy)\n'
                                     '(%s) DELTA DELTA G binding = %9.4f +/- %9.4f\n') % (mut_str, davg + davg1,
                                                                                     sqrt(dstdev ** 2 + dstdev1 ** 2)))
