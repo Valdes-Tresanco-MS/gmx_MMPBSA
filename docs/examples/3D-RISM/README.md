@@ -39,7 +39,7 @@ That being said, once you are in the folder containing all files, the command-li
 
 === "With MPI"
 
-        mpirun -np 2 gmx_MMPBSA -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 19 20 -ct com_traj.xtc
+        mpirun -np 2 gmx_MMPBSA MPI -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 19 20 -ct com_traj.xtc
 
 where the `mmpbsa.in` input file, is a text file containing the following lines:
 

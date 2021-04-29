@@ -76,8 +76,6 @@ The differences between both versions are small, you can see them below
 ### Command-line
 * `gmx_MMPBSA_ana` changes the `-p` option by `-f` with more flexibility. Please check the [gmx_MMPBSA_ana 
   command-line](command-line.md#gmx_mmpbsa_ana-command-line). (_Changed in v1.4.0_)
-* Now MPI/mpi argument is not needed when gmx_MMPBSA run with `mpirun`. Please check the 
-  [gmx_MMPBSA command-line](command-line.md#running-gmx_mmpbsa)
 
 ### Results and info file
 We have ensured backwards compatibility with `gmx_MMPBSA`, however there are some changes you can make

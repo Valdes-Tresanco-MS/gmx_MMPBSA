@@ -21,8 +21,6 @@ title: Changelog
 
 ### Changes
 - Changed `protein_forcefields` and `ligand_forcefield` by `forcefields` variable in all examples
-- Now MPI/mpi argument is not needed when run with `mpirun`. _Both definitions coexist for 
-  compatibility purposes only. The previous definition will be removed in the next version (v1.5.0)_
 - Now QH and IE can be calculated at the same time
 - `entropy` variable was separated in  `qh_entropy` and `interaction_entropy`. _The `entropy` variable is deprecated 
   and will be removed in the next version (v1.5.0)._

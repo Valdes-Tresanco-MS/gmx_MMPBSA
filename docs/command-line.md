@@ -176,7 +176,7 @@ Based on MMPBSA.py (version 16.0) and AmberTools20
 
     === "Local"
     
-            mpirun -np 2 gmx_MMPBSA -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 1 13 -ct com_traj.xtc
+            mpirun -np 2 gmx_MMPBSA MPI -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 1 13 -ct com_traj.xtc
     
     === "HPC"
     
@@ -192,7 +192,7 @@ Based on MMPBSA.py (version 16.0) and AmberTools20
             
             cd $PBS_O_WORKDIR
             
-            mpirun -np 3 gmx_MMPBSA -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 1 13 -ct com_traj.xtc > progress.log
+            mpirun -np 3 gmx_MMPBSA MPI -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 1 13 -ct com_traj.xtc > progress.log
 
     
     !!! danger

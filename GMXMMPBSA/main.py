@@ -826,9 +826,6 @@ class MMPBSA_App(object):
                 self.INPUT['qh_entropy'] = 1
             elif self.INPUT['entropy'] == 2:
                 self.INPUT['interaction_entropy'] = 1
-        else:
-            self.INPUT['qh_entropy'] = 0
-            self.INPUT['interaction_entropy'] = 0
 
         if self.INPUT['entropy_seg']:
             if self.master:
