@@ -39,6 +39,7 @@ from GMXMMPBSA.createinput import create_inputs
 from GMXMMPBSA.exceptions import (MMPBSA_Error, InternalError, InputError, GMXMMPBSA_ERROR, GMXMMPBSA_WARNING)
 from GMXMMPBSA.findprogs import find_progs
 from GMXMMPBSA.infofile import InfoFile
+from GMXMMPBSA.fake_mpi import MPI as FakeMPI
 from GMXMMPBSA.input_parser import input_file as _input_file
 from GMXMMPBSA.make_trajs import make_trajectories, make_mutant_trajectories
 from GMXMMPBSA.output_file import (write_stability_output, write_binding_output, write_decomp_stability_output,
@@ -58,7 +59,7 @@ _stderr = sys.stderr
 _debug_printlevel = 2
 _mpi_size = 1
 _rank = 0
-_MPI = MPI
+_MPI = FakeMPI()
 
 
 # Main class
