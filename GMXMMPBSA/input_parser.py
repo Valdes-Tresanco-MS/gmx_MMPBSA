@@ -579,7 +579,13 @@ input_file.addNamelist('pb', 'pb',
 input_file.addNamelist('ala', 'alanine_scanning',
                        [['mutant_only', int, 0, 'Only compute mutant energies'],
                         ['mutant', str, 'ALA', 'Defines if Alanine or Glycine scanning will be performed'],
-                        ['mutant_res', str, None, 'Which residue will be mutated']],
+                        ['mutant_res', str, None, 'Which residue will be mutated'],
+                        ['cas_intdiel', int, 0, 'Change the intdiel value based on which aa is mutated'],
+                        ['intdiel_nonpolar', int, 1, 'intdiel for nonpolar residues'],
+                        ['intdiel_polar', int, 3, 'intdiel for polar residues'],
+                        ['intdiel_positive', int, 5, 'intdiel for positive charged residues'],
+                        ['intdiel_negative', int, 5, 'intdiel for negative charged residues']
+                        ],
                        trigger='alarun')
 
 input_file.addNamelist('nmode', 'nmode',
