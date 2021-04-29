@@ -582,8 +582,10 @@ class CheckMakeTop:
                         'NA', 'CL', 'SOL',
                         # charmm-GUI form ??
                         'SOD', 'CLA', 'TIP3P', 'TIP4P', 'TIPS3P', 'TIP5P', 'SPC', 'SPC/E', 'SPCE', 'TIP3o', 'WAT']
+                    if not line.split():
+                        continue
                     if line.split()[0].strip().upper() in sol_ion:
-                        break
+                        continue
                 temp_top.write(line)
         temp_top.close()
 
