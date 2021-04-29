@@ -8,10 +8,13 @@ title: Changelog
 ### Additions
 - Added Covid-19 and other complex systems as examples in the documentation
 - Added Q&A section to the documentation
+- Implemented an adaptive intdiel for Alanine scanning (Check the [input file](input_file.md) section) 
 
 ### Fixes
-- Fixed error when `starframe` = 0 (#33)
-- Fixed pipe command-line for Gromacs execution in macOS
+- Fixed bug when `starframe` = 0 (#33)
+- Fixed bug when blank lines exist in [molecule] section in topology file
+- Fixed pipe command-line for Gromacs execution in macOS 
+- Fixed compatibility issues with v1.3.x
 - Improved and fixed the documentation
 - Improved output file information related to ΔG binding
 - Improved calculation with different entropy approximations simultaneously

@@ -61,7 +61,7 @@ printed, which aids in debugging of issues. (Default = 0) (Advanced Option)
 :   The frame from which to stop extracting snapshots from the full, concatenated trajectory comprised of every
     trajectory file supplied on the command-line. 
 
-`qh_entropy` (default = 0) 
+`qh_entropy` (Default = 0) 
 :    It specifies whether to perform a quasi-harmonic entropy (QH) approximation with `ptraj` or not.
      
      * 0: Don’t
@@ -528,7 +528,7 @@ Avoid inconsistencies with defined internal temperature (298.15 K) when `nmode` 
 
     _Changed in v1.3.0: Change mol (receptor or ligand) by mutant aminoacid (ALA or GLY)_
 
-`mutant_res`
+`mutant_res` (Default = None. Most be defined)
 :   Define the specific residue that is going to be mutated. Use the following format CHAIN:RESNUM (eg: 'A:350') or 
 CHAIN:RESNUM:INSERTION_CODE if applicable (eg: "A:27:B"). 
 
@@ -540,6 +540,40 @@ CHAIN:RESNUM:INSERTION_CODE if applicable (eg: "A:27:B").
         topology
     
     _Changed in v1.4.0: Allow mutation in antibodies since it support insertion code notation_
+
+`cas_intdiel` (Default = 0)
+:   Defines if the dielectric constant (`intdiel`) will be modified depending on the nature of the residue to be 
+mutated. 
+    
+    * 0: Don’t
+    * 1: Adaptative intdiel assignation
+
+    !!! important
+        * Only work with the GB calculation
+        * It is ignored when `intdiel` has been explicitly defined, that is, it is ignored if `intdiel != 1.0` (default 
+        value)
+    
+    _New in v1.4.2_
+
+`intdiel_nonpolar` (Default = 1)
+:   Define the `intdiel` value for nonpolar residues
+    
+    _New in v1.4.2_
+
+`intdiel_polar` (Default = 3)
+:   Define the `intdiel` value for polar residues
+    
+    _New in v1.4.2_
+
+`intdiel_positive` (Default = 5)
+:   Define the `intdiel` value for positive charged residues
+    
+    _New in v1.4.2_
+
+`intdiel_negative` (Default = 5)
+:   Define the `intdiel` value for negative charged residues
+    
+    _New in v1.4.2_
 
 ### **`&nmode` namelist variables**
 
