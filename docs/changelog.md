@@ -8,7 +8,7 @@ title: Changelog
 ### Additions
 - Added Covid-19 and other complex systems as examples in the documentation
 - Added Q&A section to the documentation
-- Implemented an adaptive intdiel for Alanine scanning (Check the [input file](input_file.md) section) 
+- Implemented an adaptive `intdiel`(GB)/`indi`(PB) for Alanine scanning (Check the [input file](input_file.md#alanine_scanning-namelist-variables) section) 
 
 ### Fixes
 - Fixed bug when `starframe` = 0 (#33)

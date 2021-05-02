@@ -39,8 +39,8 @@ asp = ['ASP', 'ASH']
 glu = ['GLU', 'GLH']
 positive_aa = ['LYS', 'ARG', 'HIP']
 negative_aa = ['GLU', 'ASP']
-nonpolar_aa = ['PHE', 'TRP', 'VAL', 'ILE', 'LEU', 'MET', 'PRO', 'CYX', 'ALA', 'GLY', 'PRO']
-polar_aa = ['TYR', 'SER', 'THR', 'CYM', 'CYS', 'HIE', 'HID', 'GLN', 'ASH', 'GLH', 'LYN']
+nonpolar_aa = ['PHE', 'TRP', 'VAL', 'ILE', 'LEU', 'MET', 'PRO', 'CYX', 'ALA', 'GLY']
+polar_aa = ['TYR', 'SER', 'THR', 'CYM', 'CYS', 'HIE', 'HID', 'GLN', 'ASN', 'ASH', 'GLH', 'LYN']
 
 PBRadii = {1: 'bondi', 2: 'mbondi', 3: 'mbondi2', 4: 'mbondi3'}
 
@@ -405,7 +405,6 @@ class CheckMakeTop:
             logging.info('Building Mutant Complex Topology...')
             # get mutation index in complex
             com_mut_index, part_mut, part_index, self.mut_label = self.getMutationIndex()
-            self.change_intdiel_cas(com_amb_prm.residues[com_mut_index].name)
             mut_com_amb_prm = self.makeMutTop(com_amb_prm, com_mut_index)
             # change de PBRadii
             action = ChRad(mut_com_amb_prm, PBRadii[self.INPUT['PBRadii']])
@@ -869,31 +868,59 @@ class CheckMakeTop:
         logging.info(f"Mutating {mut_top.residues[mut_index].name} by {mut_aa}")
 
         # change intdiel if cas_intdiel was define
-        if self.INPUT['cas_intdiel'] and self.INPUT['gbrun']:
-            if self.INPUT['intdiel'] != 1.0:
-                GMXMMPBSA_WARNING('Both cas_intdiel and intdiel were defined. The dielectric constants associated '
-                                  'with cas_intdiel will be ignored and intdiel will be used instead')
-            else:
-                if mut_top.residues[mut_index].name in polar_aa:
-                    self.INPUT['intdiel'] = self.INPUT['intdiel_polar']
-                    logging.info(f"Setting intdiel = intdiel_polar = {self.INPUT['intdiel_polar']} for Alanine "
-                                 f"scanning")
-                elif mut_top.residues[mut_index].name in nonpolar_aa:
-                    self.INPUT['intdiel'] = self.INPUT['intdiel_nonpolar']
-                    logging.info(f"Setting intdiel = intdiel_nonpolar = {self.INPUT['intdiel_nonpolar']} for "
-                                 f"Alanine scanning")
-                elif mut_top.residues[mut_index].name in positive_aa:
-                    self.INPUT['intdiel'] = self.INPUT['intdiel_positive']
-                    logging.info(f"Setting intdiel = intdiel_positive = {self.INPUT['intdiel_positive']} for "
-                                 f"Alanine scanning")
-                elif mut_top.residues[mut_index].name in negative_aa:
-                    self.INPUT['intdiel'] = self.INPUT['intdiel_negative']
-                    logging.info(f"Setting intdiel = intdiel_negative = {self.INPUT['intdiel_negative']} for "
-                                 f"Alanine scanning")
+        if self.INPUT['cas_intdiel']:
+            if self.INPUT['gbrun']:
+                if self.INPUT['intdiel'] != 1.0:
+                    GMXMMPBSA_WARNING('Both cas_intdiel and intdiel were defined. The dielectric constants associated '
+                                      'with cas_intdiel will be ignored and intdiel will be used instead')
                 else:
-                    GMXMMPBSA_WARNING(f"Unclassified mutant residue {mut_top.residues[mut_index].name}. The defined "
-                                      f"intdiel will be used")
-
+                    if mut_top.residues[mut_index].name in polar_aa:
+                        self.INPUT['intdiel'] = self.INPUT['intdiel_polar']
+                        self.INPUT['indi'] = self.INPUT['intdiel_polar']
+                        logging.info(f"Setting intdiel = indi = intdiel_polar = {self.INPUT['intdiel_polar']} for "
+                                     f"Alanine scanning")
+                    elif mut_top.residues[mut_index].name in nonpolar_aa:
+                        self.INPUT['intdiel'] = self.INPUT['intdiel_nonpolar']
+                        self.INPUT['indi'] = self.INPUT['intdiel_nonpolar']
+                        logging.info(f"Setting intdiel = indi = intdiel_nonpolar = {self.INPUT['intdiel_nonpolar']} "
+                                     f"for Alanine scanning")
+                    elif mut_top.residues[mut_index].name in positive_aa:
+                        self.INPUT['intdiel'] = self.INPUT['intdiel_positive']
+                        self.INPUT['indi'] = self.INPUT['intdiel_positive']
+                        logging.info(f"Setting intdiel = indi = intdiel_positive = {self.INPUT['intdiel_positive']} "
+                                     f"for Alanine scanning")
+                    elif mut_top.residues[mut_index].name in negative_aa:
+                        self.INPUT['intdiel'] = self.INPUT['intdiel_negative']
+                        self.INPUT['indi'] = self.INPUT['intdiel_negative']
+                        logging.info(f"Setting intdiel = indi = intdiel_negative = {self.INPUT['intdiel_negative']} "
+                                     f"for Alanine scanning")
+                    else:
+                        GMXMMPBSA_WARNING(f"Unclassified mutant residue {mut_top.residues[mut_index].name}. The "
+                                          f"default intdiel will be used")
+            if self.INPUT['pbrun']:
+                if self.INPUT['indi'] != 1.0:
+                    GMXMMPBSA_WARNING('Both cas_intdiel and indi were defined. The dielectric constants associated '
+                                      'with cas_intdiel will be ignored and indi will be used instead')
+                else:
+                    if mut_top.residues[mut_index].name in polar_aa:
+                        self.INPUT['indi'] = self.INPUT['intdiel_polar']
+                        logging.info(f"Setting indi = intdiel_polar = {self.INPUT['intdiel_polar']} for Alanine "
+                                     f"scanning")
+                    elif mut_top.residues[mut_index].name in nonpolar_aa:
+                        self.INPUT['indi'] = self.INPUT['intdiel_nonpolar']
+                        logging.info(f"Setting indi = intdiel_nonpolar = {self.INPUT['intdiel_nonpolar']} for "
+                                     f"Alanine scanning")
+                    elif mut_top.residues[mut_index].name in positive_aa:
+                        self.INPUT['indi'] = self.INPUT['intdiel_positive']
+                        logging.info(f"Setting intdiel = indi = intdiel_positive = {self.INPUT['intdiel_positive']} "
+                                     f"for Alanine scanning")
+                    elif mut_top.residues[mut_index].name in negative_aa:
+                        self.INPUT['indi'] = self.INPUT['intdiel_negative']
+                        logging.info(f"Setting indi = intdiel_negative = {self.INPUT['intdiel_negative']} for "
+                                     f"Alanine scanning")
+                    else:
+                        GMXMMPBSA_WARNING(f"Unclassified mutant residue {mut_top.residues[mut_index].name}. The "
+                                          f"default indi will be used")
         mut_top.residues[mut_index].name = mut_aa
         ind = 0
         for at in mut_top.residues[mut_index].atoms:
