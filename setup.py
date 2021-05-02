@@ -33,7 +33,7 @@ setup(
     packages=find_packages(),
     package_data={"GMXMMPBSA": ["data/*", 'GMXMMPBSA.sh']},
     license='GPLv3',
-    author='Mario S. Valdes-Trasanco and Mario E. Valdes-Tresanco ',
+    author='Mario S. Valdes-Tresanco and Mario E. Valdes-Tresanco ',
     author_email='mariosergiovaldes145@gmail.com',
     maintainer='Mario S. Valdes-Trasanco',
     maintainer_email='mariosergiovaldes145@gmail.com',
