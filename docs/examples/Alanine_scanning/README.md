@@ -55,17 +55,15 @@ in a reasonable amount of time. Feel free to change the parameters
 according to what is better for your system.
 
 &general
-startframe=5, endframe=21, verbose=2, interval=1,
-protein_forcefield="oldff/leaprc.ff99SB", PBRadii=4
+sys_name="Alanine_Scanning",
+startframe=5, endframe=21, verbose=2,
+forcefields="oldff/leaprc.ff99SB", PBRadii=4,
 /
-
 &gb
-igb=8, saltcon=0.150, intdiel=10
+igb=8, saltcon=0.150, 
 /
-
 &alanine_scanning
-mutant='ALA'
-mutant_res='B:12'
+mutant='ALA', mutant_res='B:13', cas_intdiel=1
 /
 ```
 
@@ -79,8 +77,9 @@ the receptor and ligand group numbers in the index file (`1 12`) are needed. The
 all the parameters needed for the MM/PB(GB)SA calculation. In this case, 16 frames 
 `(endframe-startframe)/interval = (21-5)/1 = 16` are going to be used when performing the the MM/PB(GB)SA 
 calculation with the igb8 (GB-Neck2) model and a salt concentration = 0.15M. Of note, mbondi3 radii (`PBRadii=4`) 
-will be used as recommended for GB-Neck2 solvation model. Also, a high dielectric constant `intdiel=10` will be used 
-because of the high number of charged residues at the interface.
+will be used as recommended for GB-Neck2 solvation model. Also, The dielectric constant (`intdiel`) will be modified 
+depending on the nature of the residue to be mutated as `cas_intdiel=1`. In this case, the residue `B:13` is an Arginine
+which means `intdiel = 5` will be used.
 
 !!! note
     Once the calculation is done, you can analyze the results in `gmx_MMPBSA_ana` (if you didn't define `-nogui`). 

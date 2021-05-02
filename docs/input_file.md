@@ -305,7 +305,7 @@ Avoid inconsistencies with defined internal temperature (298.15 K) when `nmode` 
     !!! warning "Keep in mind"
         Note that the `nmode` as `qh` model to calculate the entropy term are parameterized and will only work at 298.15 K
    
-    _New in v1.4.0: Replace `entropy_temp`_   
+    _New in v1.4.0: Replace `entropy_temp`_
 
 `use_sander` (Default = 0)
 :   use sander for energy calculations, even when `mmpbsa_py_energy` will suffice
