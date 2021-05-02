@@ -4,14 +4,14 @@ title: Changelog
 ---
 
 # Changelog
-## Upcoming release
+## [gxm_MMPBSA v1.4.2 (01/05/2021)](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/releases/tag/v1.4.2)
 ### Additions
 - Added Covid-19 and other complex systems as examples in the documentation
 - Added Q&A section to the documentation
 - Implemented an adaptive `intdiel`(GB)/`indi`(PB) for Alanine scanning (Check the [input file](input_file.md#alanine_scanning-namelist-variables) section) 
 
 ### Fixes
-- Fixed bug when `starframe` = 0 (#33)
+- Fixed bug when `startframe = 0` (#33)
 - Fixed bug when blank lines exist in [molecule] section in topology file
 - Fixed pipe command-line for Gromacs execution in macOS 
 - Fixed compatibility issues with v1.3.x
@@ -22,7 +22,7 @@ title: Changelog
 ### Changes
 - Changed `protein_forcefields` and `ligand_forcefield` by `forcefields` variable in all examples
 - Now QH and IE can be calculated at the same time
-- `entropy` variable was separated in  `qh_entropy` and `interaction_entropy`. _The `entropy` variable is deprecated 
+- `entropy` variable was separated in `qh_entropy` and `interaction_entropy`. _The `entropy` variable is deprecated 
   and will be removed in the next version (v1.5.0)._
 - `entropy_seg` was replaced by `ie_segment`. _The `entropy_seg` variable is deprecated and will be removed in the 
   next version (v1.5.0)._

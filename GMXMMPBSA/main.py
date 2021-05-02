@@ -957,6 +957,8 @@ class MMPBSA_App(object):
         # https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/issues/33
         if self.INPUT['startframe'] < 1:
             GMXMMPBSA_ERROR('The startframe variable must be >= 1')
+        if self.INPUT['nmstartframe'] < 1:
+            GMXMMPBSA_ERROR('The nmstartframe variable must be >= 1')
 
         # check files
         if self.FILES.complex_top:
