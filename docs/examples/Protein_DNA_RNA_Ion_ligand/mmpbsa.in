@@ -4,7 +4,7 @@ Sample input file for GB calculation
 #according to what is better for your system.
 &general
 sys_name="Prot-DNA-RNA-ION-Lig",
-verbose=2, forcefileds="oldff/leaprc.ff99SBildn,leaprc.gaff"
+verbose=2, forcefields="oldff/leaprc.ff99SBildn,leaprc.gaff"
 PBRadii=4, ions_parameters=1
 /
 &gb
