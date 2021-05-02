@@ -542,36 +542,38 @@ CHAIN:RESNUM:INSERTION_CODE if applicable (eg: "A:27:B").
     _Changed in v1.4.0: Allow mutation in antibodies since it support insertion code notation_
 
 `cas_intdiel` (Default = 0)
-:   Defines if the dielectric constant (`intdiel`) will be modified depending on the nature of the residue to be 
-mutated. 
+:   The dielectric constant (`intdiel`) will be modified depending on the nature of the residue to be mutated. 
     
     * 0: Don’t
-    * 1: Adaptative intdiel assignation
+    * 1: Adaptative `intdiel` assignation
 
     !!! important
         * Only work with the GB calculation
         * It is ignored when `intdiel` has been explicitly defined, that is, it is ignored if `intdiel != 1.0` (default 
         value)
+        * Dielectric constant values has been assigned according to [Yan et al., 2017][9]
+
+  [9]: https://pubs.acs.org/doi/10.1021/acs.jcim.6b00734
     
     _New in v1.4.2_
 
 `intdiel_nonpolar` (Default = 1)
-:   Define the `intdiel` value for nonpolar residues
+:   Define the `intdiel` value for nonpolar residues ('PHE', 'TRP', 'VAL', 'ILE', 'LEU', 'MET', 'PRO', 'CYX', 'ALA', 'GLY', 'PRO')
     
     _New in v1.4.2_
 
 `intdiel_polar` (Default = 3)
-:   Define the `intdiel` value for polar residues
+:   Define the `intdiel` value for polar residues ('TYR', 'SER', 'THR', 'CYM', 'CYS', 'HIE', 'HID', 'ASN', 'GLN', 'ASH', 'GLH', 'LYN')
     
     _New in v1.4.2_
 
 `intdiel_positive` (Default = 5)
-:   Define the `intdiel` value for positive charged residues
+:   Define the `intdiel` value for positive charged residues ('LYS', 'ARG', 'HIP')
     
     _New in v1.4.2_
 
 `intdiel_negative` (Default = 5)
-:   Define the `intdiel` value for negative charged residues
+:   Define the `intdiel` value for negative charged residues ('GLU', 'ASP')
     
     _New in v1.4.2_
 
