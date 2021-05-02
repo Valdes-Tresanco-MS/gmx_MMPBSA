@@ -942,6 +942,8 @@ class MMPBSA_App(object):
         if not INPUT['molsurf'] and (INPUT['msoffset'] != 0 or INPUT['probe'] != 1.4):
             if self.master:
                 logging.warning('offset and probe are molsurf-only options')
+        if not INPUT['cas_intdiel'] in [0, 1]:
+            GMXMMPBSA_ERROR('cas_intdiel must be set to 0 or 1!', InputError)
 
         # User warning when intdiel > 10
         if self.INPUT['intdiel'] > 10:
@@ -958,6 +960,8 @@ class MMPBSA_App(object):
 
         # check files
         if self.FILES.complex_top:
+            self.INPUT['use_sander'] = 1
+        if self.INPUT['cas_intdiel']:
             self.INPUT['use_sander'] = 1
 
     def remove(self, flag):
