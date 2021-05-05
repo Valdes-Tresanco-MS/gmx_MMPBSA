@@ -97,6 +97,9 @@ performed and residues within 4Å in both receptor and ligand will be printed in
     Once the calculation is done, you can analyze the results in `gmx_MMPBSA_ana` (if you didn't define `-nogui`). 
     Please see the [gmx_MMPBSA_ana][5] section for more information
 
+### Alternatives for per-residue energy contribution visualization
+You can also use [VMD][8] and [Chimera][9] to view the modified pdb file with the per-residue energy contributions
+
   [1]: ../../command-line.md#gmx_mmpbsa-command-line
   [2]: ../../input_file.md#the-input-file
   [3]: ../../input_file.md#sample-input-files
@@ -104,3 +107,5 @@ performed and residues within 4Å in both receptor and ligand will be printed in
   [5]: ../../analyzer.md#gmx_mmpbsa_ana-the-analyzer-tool
   [6]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/docs/examples/Decompostion_analysis
   [7]: ../../command-line.md#gmx_mmpbsa_test-command-line
+  [8]: https://www.youtube.com/watch?v=PeboM8KE5SA
+  [9]: https://www.youtube.com/watch?v=jKA4fuYuKps
