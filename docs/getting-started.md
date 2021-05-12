@@ -20,7 +20,7 @@ files.
 At the moment we only have Zenodo [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4569307.svg)](https://doi.org/10.5281/zenodo.4569307)
 
 !!! note "Cite as"
-    Mario S. Valdés Tresanco, Mario E. Valdes-Tresanco, Pedro A. Valiente, & Ernesto Moreno Frías.  
+    Mario S. Valdés Tresanco, Mario E. Valdes-Tresanco, Pedro A. Valiente, & Ernesto Moreno Frías.
     gmx_MMPBSA (Version v1.4.2). Zenodo. http://doi.org/10.5281/zenodo.4569307
 
 **We will have the article available soon**
