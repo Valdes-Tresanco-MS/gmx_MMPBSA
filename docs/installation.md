@@ -6,7 +6,7 @@ title: Installation
 
 ## Requirements
 
-`gmx_MMPBSA` requires **AmberTools20** to be installed in your machine with **Python3**, and the shell environment 
+`gmx_MMPBSA` requires **AmberTools20**[^1] to be installed in your machine with **Python3**, and the shell environment 
 correctly set up for Amber. The AmberTools suite is free of charge, and you can check [Amber Manual][1] for a 
 detailed installation guide. Of note, you can have more than one AmberTools installed in your machine. In case 
 AmberTools20 is not the default Amber in your computer, just make sure to source AmberTools20 before 
@@ -14,6 +14,8 @@ installing/updating/running `gmx_MMPBSA`. `gmx_MMPBSA` also requires GROMACS (se
 installed in your computer, and the shell environment correctly set up for GROMACS. `gmx_MMPBSA` has been tested 
 with GROMACS 4.6.7, 5.1.2, 2018.3, and 2020.4, although it should run smoothly with any GROMACS present in the PATH 
 and that is compatible with the files you are using.
+
+[^1]: gmx_MMPBSA is also compatible with AmberTools21
 
 ### Dependencies
 | Dependency      |     gmx_MMPBSA                                                    |   gmx_MMPBSA_ana   |  gmx_MMPBSA_test   |

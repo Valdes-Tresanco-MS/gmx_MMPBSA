@@ -50,18 +50,18 @@ This comparison is based on the documentation of the different programs
 
 
 
-  [^1]: [MMPBSA.py][4] is included in AMBER package.
-  [^2]: Without documentation.
+  [^1]: [MMPBSA.py][4] is included in AMBER package
+  [^2]: Without documentation
   [^3]: nmode = Normal modes approximation, qh = Quasic-Harmony approximation and IE = Interaction Entropy
 approximation
   [^4]: We plan to extend gmx_MMPBSA compatibility to MMPBSA.py's results
-  [^5]: Currently there is a repository ([AmberUtils][5]) for analysing the results.
+  [^5]: Currently there is a repository ([AmberUtils][5]) for analysing the results
   [^6]: GROMACS 20xx.x is not officially supported. There is a Pull Request that offers a minimum compatibility 
 with versions higher than 2016.x one, but still with limitations
   [^7]: It is not clear whether it does support GROMACS versions 20xx.x or not, but we assume that it does since 
-it is script-based.
+it is script-based
   [^8]: It is not clear whether it does support APBS versions 3.x.x
-  [^9]: gmx_MMPBSA is compatible with AmberTools20, AmberTools21 or newer
+  [^9]: gmx_MMPBSA is compatible with AmberTools20 or AmberTools21
   
 
   [1]: https://github.com/RashmiKumari/g_mmpbsa
