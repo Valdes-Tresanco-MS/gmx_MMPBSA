@@ -33,7 +33,7 @@ This comparison is based on the documentation of the different programs
 |   ** _3D Molecular Visualization_     |                              |                              |                                                       |           PyMOL           |
 |   ** _Interactive Charts_             |        static image          |                              |                                                       |    :material-check-bold:{.scale_icon_medium}     |
 | * Plotting tool                       |       internal tools         |                              |               API and graphics library [^5]           |      gmx_MMPBSA_ana       |
-| * Energetic Terms charts              | ΔGpolar, ΔGnonpolar, ΔEMM and ΔGbind |                      |                                                       |       All       |
+| * Energetic Terms charts              | ΔG~polar~, ΔG~nonpolar~, ΔE~MM~ and ΔG~bind~ |                      |                                                       |       All       |
 | * Export data to CSV file             |                              |                              |                  :material-check-bold:{.scale_icon_medium}                   |    :material-check-bold:{.scale_icon_medium}     |
 |   ** _Energy Summary_                 |                              |                              |                  :material-check-bold:{.scale_icon_medium}                   |    :material-check-bold:{.scale_icon_medium}     |
 |   ** _Individual Energetic Terms_     |                              |                              |                                                       |    :material-check-bold:{.scale_icon_medium}     |
@@ -60,8 +60,7 @@ approximation
 with versions higher than 2016.x one, but still with limitations
   [^7]: It is not clear whether it does support GROMACS versions 20xx.x or not, but we assume that it does since 
 it is script-based.
-  [^8]: It is not clear whether it does support APBS versions 3.x.x , but we assume that it does since it is 
-script-based.
+  [^8]: It is not clear whether it does support APBS versions 3.x.x
   
 
   [1]: https://github.com/RashmiKumari/g_mmpbsa
