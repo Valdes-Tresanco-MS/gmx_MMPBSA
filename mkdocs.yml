@@ -63,6 +63,9 @@ theme:
 # Plugins
 plugins:
   - search
+  - git-revision-date-localized:
+      type: datetime
+      enable_creation_date: true
 #  - redirects:
 #      redirect_maps:
 ##        extensions/admonition.md: reference/admonitions.md
@@ -184,3 +187,8 @@ nav:
     - Changelog: changelog.md
     - Compatibility: compatibility.md
   - Private Policy: private_policy.md
+
+google_analytics:
+  - !!python/object/apply:os.getenv ["GOOGLE_ANALYTICS_KEY"]
+  - auto
+

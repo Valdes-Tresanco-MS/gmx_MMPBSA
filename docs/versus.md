@@ -33,7 +33,7 @@ This comparison is based on the documentation of the different programs
 |   ** _3D Molecular Visualization_     |                              |                              |                                                       |           PyMOL           |
 |   ** _Interactive Charts_             |        static image          |                              |                                                       |    :material-check-bold:{.scale_icon_medium}     |
 | * Plotting tool                       |       internal tools         |                              |               API and graphics library [^5]           |      gmx_MMPBSA_ana       |
-| * Energetic Terms charts              | ΔGpolar, ΔGnonpolar, ΔEMM and ΔGbind |                      |                                                       |       All       |
+| * Energetic Terms charts              | ΔG~polar~, ΔG~nonpolar~, ΔE~MM~ and ΔG~bind~ |                      |                                                       |       All       |
 | * Export data to CSV file             |                              |                              |                  :material-check-bold:{.scale_icon_medium}                   |    :material-check-bold:{.scale_icon_medium}     |
 |   ** _Energy Summary_                 |                              |                              |                  :material-check-bold:{.scale_icon_medium}                   |    :material-check-bold:{.scale_icon_medium}     |
 |   ** _Individual Energetic Terms_     |                              |                              |                                                       |    :material-check-bold:{.scale_icon_medium}     |
@@ -42,7 +42,7 @@ This comparison is based on the documentation of the different programs
 | Feature                               |        [g_mmpbsa][1]         |       [GMXPBSA 2.1][2]       |                     MMPBSA.py [^1]                     |      [gmx_MMPBSA][3]      |
 |:--------------------------------------|:----------------------------:|:----------------------------:|:-----------------------------------------------------:|:-------------------------:|
 | **GROMACS Version**                   |   4.x, 5.x and 2016+ [^6]    |   4.x, 5.x and 20xx.x [^7]   |                          ---                          |    4.x, 5.x and 20xx.x    |
-| **Externals programs**                | APBS (1.2.x, 1.3.x or 1.4.x) |      APBS (1.x.x) [^8]       |                     AmberTools20                      |       AmberTools20 [^9]        |
+| **Externals programs**                | APBS (1.2.x, 1.3.x or 1.4.x) |      APBS (1.x.x) [^8]       |                     AmberTools20/21                      |       AmberTools20/21 [^9]        |
 | **Parallel computation**              |   Depends on APBS            |  Locally using APBS or in HPC divided in jobs  |                  :material-check-bold:{.scale_icon_medium}                   |    :material-check-bold:{.scale_icon_medium}     |
 | **Steps for:**                        |                              |                              |                                                       |                           |
 | * Calculation and Summary             |           Multiple           |           Multiple           |                          One                          |            One            |
@@ -60,9 +60,8 @@ approximation
 with versions higher than 2016.x one, but still with limitations
   [^7]: It is not clear whether it does support GROMACS versions 20xx.x or not, but we assume that it does since 
 it is script-based.
-  [^8]: It is not clear whether it does support APBS versions 3.x.x , but we assume that it does since it is 
-script-based.
-  [^9]: gmx_MMPBSA is also compatible with AmberTools21
+  [^8]: It is not clear whether it does support APBS versions 3.x.x
+  [^9]: gmx_MMPBSA is compatible with AmberTools20, AmberTools21 or newer
   
 
   [1]: https://github.com/RashmiKumari/g_mmpbsa

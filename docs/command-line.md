@@ -156,11 +156,12 @@ Based on MMPBSA.py (version 16.0) and AmberTools20
     * **We currently recommend the use of MPI since the computation time decreases considerably.**
 
 === "Parallel (MPI) version"
-     `gmx_MMPBSA` as `MMPBSA.py` uses the `MPI` only to perform the calculations during the dynamics, the rest of 
-     the process (Generation/conversion of Amber topologies, mutation, division of the trajectories, etc) occurs in 
-     a single thread (See **Figure 1** for better reference). This means that it is not necessary to install any program 
-     (AmberTools or GROMACS) with `MPI`, which can be used in any circumstance, and the time required to process the 
-     data prior to the calculation depends on the system and will be the same for both versions (`Serial` and `MPI`). 
+    `gmx_MMPBSA` as `MMPBSA.py` uses the `MPI` only to perform the calculations during the dynamics, the rest of 
+    the process (Generation/conversion of Amber topologies, mutation, division of the trajectories, etc) occurs in 
+    a single thread (See **Figure 1[^1]** for better reference). This means that it is not necessary to install any 
+    program (AmberTools or GROMACS) with `MPI`, which can be used in any circumstance, and the time required to 
+    process the data prior to the calculation depends on the system and will be the same for both versions (`Serial` 
+    and `MPI`). 
 
     !!! note
         Note that `gmx_MMPBSA` processes, converts, or builds topologies from GROMACS files, so it takes slightly 
@@ -232,11 +233,10 @@ Based on MMPBSA.py (version 16.0) and AmberTools20
   `MMPBSA.py` scaling comparison for `MM-PBSA` and `MM-GBSA` calculations on 200 frames of a 5910-atom complex. Times 
   shown are the times required for the calculation to finish. Note that `MM-GBSA` calculations are ∼5 times faster 
   than `MM-PBSA` calculations. All calculations were performed on NICS Keeneland (2 Intel Westmere 6-core CPUs per 
-  node, QDR infiniband interconnect)
+  node, QDR infiniband interconnect) 
   </figcaption>
 </figure>
 
-[2]: assets/images/mmpbsa_py_mpi.png
 [2]: assets/images/mmpbsa_py_mpi.png
 
 ## `gmx_MMPBSA_ana` command-line
@@ -498,3 +498,5 @@ most recent version of the repository in the specified folder and will perform t
     
     * Download gmx_MMPBSA repository content in `/home/user/Documents`
     * Do `prot_lig_st`[Protein-Ligand (Single Trajectory approach)] example
+
+[^1]: Taken from the MMPBSA.py paper
