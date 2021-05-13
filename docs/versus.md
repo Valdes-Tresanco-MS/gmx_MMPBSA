@@ -8,7 +8,7 @@ This comparison is based on the documentation of the different programs
 
 
 ## Calculation features
-| Feature                               |        [g_mmpbsa][1]         |       [GMXPBSA 2.1][2]       |                     MMPBSA.py[^1]                     |      [gmx_MMPBSA][3]      |
+| Feature                               |        [g_mmpbsa][1]         |       [GMXPBSA 2.1][2]       |                     MMPBSA.py [^1]                     |      [gmx_MMPBSA][3]      |
 |:--------------------------------------|:----------------------------:|:----------------------------:|:-----------------------------------------------------:|:-------------------------:|
 | **Normal binding free energies**      |              PB              |              PB              |                       PB and GB                       |         PB and GB         |
 | * GB models                           |                              |                              |                  1, 2, 5, 7 and 8                  |    1, 2, 5, 7 and 8    |
@@ -22,7 +22,7 @@ This comparison is based on the documentation of the different programs
 | **Approximations**                    |              ST              |          ST and MT           |                       ST and MT                       |         ST and MT         |
 
 ## Analysis features
-| Feature                               |        [g_mmpbsa][1]         |       [GMXPBSA 2.1][2]       |                     MMPBSA.py[^1]                     |      [gmx_MMPBSA][3]      |
+| Feature                               |        [g_mmpbsa][1]         |       [GMXPBSA 2.1][2]       |                     MMPBSA.py [^1]                     |      [gmx_MMPBSA][3]      |
 |:--------------------------------------|:----------------------------:|:----------------------------:|:-----------------------------------------------------:|:-------------------------:|
 | **API**                               |                              |                              |                  :material-check-bold:{.scale_icon_medium}                   |    :material-check-bold:{.scale_icon_medium}     |
 | **Analyzer Tool**                     |                              |                              |                         [^4]                              |    :material-check-bold:{.scale_icon_medium}     |
@@ -39,10 +39,10 @@ This comparison is based on the documentation of the different programs
 |   ** _Individual Energetic Terms_     |                              |                              |                                                       |    :material-check-bold:{.scale_icon_medium}     |
 
 ## Technical features
-| Feature                               |        [g_mmpbsa][1]         |       [GMXPBSA 2.1][2]       |                     MMPBSA.py[^1]                     |      [gmx_MMPBSA][3]      |
+| Feature                               |        [g_mmpbsa][1]         |       [GMXPBSA 2.1][2]       |                     MMPBSA.py [^1]                     |      [gmx_MMPBSA][3]      |
 |:--------------------------------------|:----------------------------:|:----------------------------:|:-----------------------------------------------------:|:-------------------------:|
 | **GROMACS Version**                   |   4.x, 5.x and 2016+ [^6]    |   4.x, 5.x and 20xx.x [^7]   |                          ---                          |    4.x, 5.x and 20xx.x    |
-| **Externals programs**                | APBS (1.2.x, 1.3.x or 1.4.x) |      APBS (1.x.x) [^8]       |                     AmberTools20                      |       AmberTools20        |
+| **Externals programs**                | APBS (1.2.x, 1.3.x or 1.4.x) |      APBS (1.x.x) [^8]       |                     AmberTools20/21                      |       AmberTools20/21 [^9]        |
 | **Parallel computation**              |   Depends on APBS            |  Locally using APBS or in HPC divided in jobs  |                  :material-check-bold:{.scale_icon_medium}                   |    :material-check-bold:{.scale_icon_medium}     |
 | **Steps for:**                        |                              |                              |                                                       |                           |
 | * Calculation and Summary             |           Multiple           |           Multiple           |                          One                          |            One            |
@@ -61,6 +61,7 @@ with versions higher than 2016.x one, but still with limitations
   [^7]: It is not clear whether it does support GROMACS versions 20xx.x or not, but we assume that it does since 
 it is script-based.
   [^8]: It is not clear whether it does support APBS versions 3.x.x
+  [^9]: gmx_MMPBSA is compatible with AmberTools20, AmberTools21 or newer
   
 
   [1]: https://github.com/RashmiKumari/g_mmpbsa
