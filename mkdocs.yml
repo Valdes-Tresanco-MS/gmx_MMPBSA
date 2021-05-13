@@ -63,6 +63,9 @@ theme:
 # Plugins
 plugins:
   - search
+  - git-revision-date-localized:
+      type: datetime
+      enable_creation_date: true
 #  - redirects:
 #      redirect_maps:
 ##        extensions/admonition.md: reference/admonitions.md
