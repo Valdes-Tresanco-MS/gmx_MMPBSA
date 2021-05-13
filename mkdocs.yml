@@ -180,7 +180,7 @@ nav:
     - Installation: Q&A/installation.md
     - OS issues: Q&A/OS_issues.md
     - Calculations: Q&A/calculations.md
-
   - Changelog:
     - Changelog: changelog.md
     - Compatibility: compatibility.md
+  - Private Policy: private_policy.md
