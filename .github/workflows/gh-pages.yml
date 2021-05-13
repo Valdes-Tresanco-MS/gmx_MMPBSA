@@ -23,10 +23,7 @@ jobs:
 
       - name: Install Python dependencies
         run: |
-          pip install mkdocs-material
-          pip install \
-            mkdocs-minify-plugin>=0.3 \
-            mkdocs-redirects>=1.0
+          pip install -r requirements.txt
       - name: Deploy documentation
         env:
           GOOGLE_ANALYTICS_KEY: ${{ secrets.GOOGLE_ANALYTICS_KEY }}
