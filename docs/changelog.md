@@ -28,12 +28,14 @@ title: Changelog
   next version (v1.5.0)._
 
 ## [gxm_MMPBSA v1.4.1 (08/04/2021)](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/releases/tag/v1.4.1)
-### Additions
+**Additions**
+
 - New class `Residue` added to handle residues selection in Gromacs format with Amber index
 - Verification of the presence of water molecules in receptor and ligand groups 
 - Gromacs timer added
 
-### Fixes
+**Fixes**
+
 - Gromacs topology conversion
 - `qm_residues` notation
 - Default path in `gmx_MMPBSA_test`
@@ -41,7 +43,8 @@ title: Changelog
 - Bug when the structure has insertion code
 - Improved ΔG Binding plot representation
 
-### Changes
+**Changes**
+
 - Now `forcefields` variable unifies `protein_forcefield` and `ligand_forcefield`. These variables `protein_forcefield`
   and `ligand_forcefield` are deprecated and will be removed in the next version (v1.5.0).
 - Improved documentation
@@ -60,7 +63,9 @@ title: Changelog
 
 ## [gxm_MMPBSA v1.4.0 (22/03/2021)](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/releases/tag/v1.4.0)
 This release focuses almost entirely on `gmx_MMPBSA_ana` with minor issues fixed in `gmx_MMPBSA`
-### Additions
+
+**Additions**
+
 - New start window to select options  
     - Option to make correlation (Pearson and Spearman coefficients)
     - Option to hide decomposition data
@@ -98,12 +103,14 @@ This release focuses almost entirely on `gmx_MMPBSA_ana` with minor issues fixed
 - Multiprocessing application for testing (`gmx_MMPBSA_test`) 
 - Embed Youtube videos for `gmx_MMPBSA_ana`
 
-### Fixes
+**Fixes**
+
 - Now `gmx_MMPBSA_ana` shows stability results as expected
 - Errors in the documentation
 - MPI
 
-### Changes
+**Changes**
+
 - Converted analyzer.py into a sub-module for more flexibility, organization and portability
 - Residues notation for mutation: CHAIN:RESNAME:RESNUMBER:ICODE instead of Amber residue index
 - Improve the selection method in decomposition calculation
@@ -122,7 +129,8 @@ This release focuses almost entirely on `gmx_MMPBSA_ana` with minor issues fixed
   
 
 ## [gxm_MMPBSA v1.3.3 (09/03/2021)](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/releases/tag/v1.3.3)
-### Fixes
+**Fixes**
+
 * fixed Boltzmann constant for IE
 * fix mutation in ligand
 * fixed analyzer error when interval > 1
@@ -131,18 +139,23 @@ This release focuses almost entirely on `gmx_MMPBSA_ana` with minor issues fixed
 * fixed the selection to print when decomposition
 
 ## [gxm_MMPBSA v1.3.2 (01/03/2021)](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/releases/tag/v1.3.2) 
-### Additions
+**Additions**
+
 * **Now, gmx_MMPBSA is in Zenodo 
   [![DOI](https://zenodo.org/badge/295050575.svg)](https://zenodo.org/badge/latestdoi/295050575). You can refer to 
   us in this way in what we publish the article**
 * Added Interaction Entropy to gmx_MMPBSA output file
 * Added a new class to save IE in a csv file
 * Added "Go to Top" button to documentation HTML.
-### Fixes
+
+**Fixes**
+  
 * Error when ligand and/or receptor are discontinuous (Testing it)
 * Error when ligand and/or receptor are discontinuous and numbered non-consecutively
 * Non-critical errors and inconsistencies in documentation
-### Changes
+
+**Changes**
+  
 * `receptor_mask` and `ligand_mask` have been removed from input file variables. Now we extract the amber mask directly 
   based on the GROMACS index file
 * The receptor and ligand mapping in the complex was improved. Now we use a method based on the GROMACS index file
@@ -151,23 +164,27 @@ This release focuses almost entirely on `gmx_MMPBSA_ana` with minor issues fixed
 
 
 ## [gmx_MMPBSA-v1.3.1](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/releases/tag/v1.3.1)
-### Additions
+**Additions**
+
 * New variable (`overwrite_data`) to overwrite gmx_MMPBSA data. 
 * More informative message when sander fail. Useful for PB calculation
 
-### Fixes
+**Fixes**
+
 * Protein-ligand with charmm force field example
 * Stability calculation
 * gmx path error
 * leaprc.GLYCAM_06h-1 file
 * Protein-glycan example
 
-### Changes
+**Changes**
+
 * Documentation banner
 
 ## [gmx_MMPBSA-v1.3.0](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/releases/tag/v1.3.0)
 
-### Additions
+**Additions**
+
 * Documentation at Github pages
 * Charmm force field support
 * Amber topology generation from GROMACS topology. Work for Charmm and Amber force fields
@@ -178,13 +195,15 @@ This release focuses almost entirely on `gmx_MMPBSA_ana` with minor issues fixed
 * Versioneer to control the semantic version.
 * Argument type checker for the command-line 
 
-### Fixes
+**Fixes**
+
 * Alanine scanning tutorial 
 * GROMACS executable path 
 * The `-gui` option has been changed by `-nogui` and fixed when it is defined 
 * Improvement on documentation
 
-### Changes
+**Changes**
+
 * Documentation theme. Now we use Material
 * Alanine scanning variable. Now `mutant` correspond to mutant amino acid (ALA and GLY)
 * The `gmx_MMPBSA_gui` was changed by `gmx_MMPBSA_ana` 
@@ -192,43 +211,51 @@ This release focuses almost entirely on `gmx_MMPBSA_ana` with minor issues fixed
 * Order in which the trajectories are cleaned. Now, the topology is built and finally, the trajectories are cleaned
 
 ## [gmx_MMPBSA v1.2.0](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/releases/tag/v1.2.0)
-### Additions
+**Additions**
 
 * New ligand force field (Zwitterionic amino acids)
 * A new flag (-cr) added for defining a reference structure (guarantee a better consistency in generated PDB files)
 * API documentation
 
-### Fixes
+**Fixes**
+
 * More comprehensive output log file
 * Best handling of structure files
 
-### Changes
+**Changes**
+
 `gmx` `editconf` is used to generate PDB files instead of `gmx` `trjconv` (#14)
 `gmx_MMPBSA` data is copied in AMBER as an independent folder
 *.gro files can be used as a MD Structure+mass(db) file
 Updated tutorial list in README (Protein_DNA_RNA_Ion_ligand BFE calculations)
 
 ## [gmx_MMPBSA v1.1.1](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/releases/tag/v1.1.1)
-### Additions
+**Additions**
+
 * New tutorial added (see Protein_DNA_RNA_Ion_ligand tutorial)
  
-### Fixes
+**Fixes**
+
 * Support various metallo-complexes formats
 
-### Changes
+**Changes**
+
 * Keep all the temporary files in the folder for debugging purposes
 
 ## [gxm_MMPBSA v.1.1.0](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/releases/tag/v.1.1.0)
-### Additions
+**Additions**
+
 * Now supports carbohydrates as ligand. See this tutorial 
 * Now supports metalloprotein-ligand complexes. See this tutorial.
 * We have added data folder to gmx_MMPBSA module. This folder contains the GLYCAM_06h-1 force field files 
   (Compatible with amber99sb and early, see at http://glycam.org) which is not in AmberTools.
 
-### Fixes
+**Fixes**
+
 * Minor bugs
 
-### Changes
+**Changes**
+
 * We changed the notation of the force fields, now the user can define any force field (We have only tested Amber and 
 GLYCAM force fields) available in AmberTools. Charmm is not yet supported. See this section
 
