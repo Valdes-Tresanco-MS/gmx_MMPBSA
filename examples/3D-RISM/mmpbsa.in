@@ -1,0 +1,11 @@
+Sample input file for MM/3D-RISM
+#This input file is meant to show only that gmx_MMPBSA works. Although, we tried to use the input files as recommended in the
+#Amber manual, some parameters have been changed to perform more expensive calculations in a reasonable amount of time. Feel free to change the parameters
+#according to what is better for your system.
+&general
+sys_name="3D-RISM",
+startframe=5, endframe=21,
+/
+&rism
+polardecomp=0, thermo="gf"
+/

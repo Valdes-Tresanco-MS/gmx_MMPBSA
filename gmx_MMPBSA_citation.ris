@@ -1,0 +1,18 @@
+TY  - COMP
+T1  - gmx_MMPBSA: a new tool aid to perform end-state free energy calculations with GROMACS files
+A1  - Valdes-Tresanco, M.S.
+A1  - Valdes-Tresanco, M.E.
+A1  - Valiente, P.A.
+A1  - Moreno, E.
+Y1  - 2021///
+KW  - MM/PBSA
+KW  - MM/GBSA
+KW  - GROMACS
+KW  - AmberTools
+KW  - MMPBSA.py
+KW  - Free energy calculations
+PB  - Zenodo
+DO  - 10.5281/zenodo.4569307
+UR  - https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA
+N2  - gmx_MMPBSA is a program written in Python aiming to perform end-state free energy calculations with GROMACS files.
+ER  - 
