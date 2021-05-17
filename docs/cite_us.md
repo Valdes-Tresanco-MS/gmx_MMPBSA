@@ -20,6 +20,8 @@ Please also consider citing MMPBSA.py's paper:
 Swails, Nadine Homeyer, Holger Gohlke, and Adrian E. Roitberg. _Journal of Chemical Theory and Computation_, 2012 8 
 (9), 3314-3321. [**DOI:** 10.1021/ct300418h][1]
 
+[1]: https://pubs.acs.org/doi/10.1021/ct300418h
+
 ## Authors
 
 * Mario Sergio Valdés Tresanco, PhD Student. _University of Medellin, Colombia_
