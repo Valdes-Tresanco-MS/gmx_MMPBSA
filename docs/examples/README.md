@@ -29,7 +29,7 @@ the same run for a specific system.
 * [Protein-DNA binding free energy calculations](Protein_DNA/README.md)[^1][^2]
 * [Metalloprotein-peptide binding free energy calculations](Metalloprotein_peptide/README.md)[^1][^2]
 * [Protein-DNA-RNA-Ions-Ligand binding free energy calculations](Protein_DNA_RNA_Ion_ligand/README.md)[^1][^2]
-* [Binding free energy calculations with complex receptors](Comp_receptor/README.md)
+* [Binding free energy calculations in multicomponent systems](Comp_receptor/README.md)
 * [Protein-glycan binding free energy calculations](Protein_glycan/README.md)[^1][^2]
 * [MMPBSA with membrane proteins](Protein_membrane/README.md)[^1][^2]
 * COVID-19 related proteins
