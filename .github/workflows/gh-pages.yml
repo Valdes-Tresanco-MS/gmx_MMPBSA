@@ -15,6 +15,10 @@ jobs:
 
       - name: Checkout repository
         uses: actions/checkout@v2
+        with:
+           # Number of commits to fetch. 0 indicates all history. For mkdocs-git-revision-date-localized-plugin
+           # Default: 1
+           fetch-depth: 0
 
       - name: Set up Python runtime
         uses: actions/setup-python@v1
