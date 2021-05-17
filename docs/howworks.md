@@ -58,18 +58,18 @@ field is used, AMBER's topologies are generated from GROMACS topologies exclusiv
 
 **Table 1:** Required input files for every force field 
 
-| Force field |   Structure   | Index |  Trajectory   | Topology | Reference Structure | Small Molecule Mol2 |
-|:-----------:|:-------------:|:-----:|:-------------:|:--------:|:-------------------:|:-------------------:|
-|    AMBER    | tpr, gro, pdb |  ndx  | xtc, trr, pdb | Optional |      Optional       |   Only if not top   |
-|   CHARMM    | tpr, gro, pdb |  ndx  | xtc, trr, pdb |  Always  |      Optional       |         No          |
+| Force field |   Structure   | Index |  Trajectory        | Topology | Reference Structure | Small Molecule Mol2 |
+|:-----------:|:-------------:|:-----:|:------------------:|:--------:|:-------------------:|:-------------------:|
+|    AMBER    | tpr, gro, pdb |  ndx  | xtc, trr, pdb, gro | Optional |      Optional       |   Only if not top   |
+|   CHARMM    | tpr, gro, pdb |  ndx  | xtc, trr, pdb, gro |  Always  |      Optional       |         No          |
 
 ## Topology preparation
 
-In this section, we will go in deatil about each file and what they are used for.
+In this section, we will go in detail about each file and what they are used for.
 
 **GROMACS files**
 
-`MD Structure+mass(db) (tpr, gro, pdb):`
+`MD Structure+mass(db) (tpr, pdb, gro):`
 :   This file is used to generate the structure in pdb format of the complex with `editconf`. We recommend using the 
     *.tpr (production *.tpr) format.
 
@@ -77,7 +77,7 @@ In this section, we will go in deatil about each file and what they are used for
 :   This the file that contains the index of each element contained in the *.tpr file, organized as groups. This file 
     is required for the definition of the groups corresponding to the receptor and the ligand.
 
-`Trajectory (xtc, trr, pdb)`
+`Trajectory (xtc, trr, pdb, gro)`
 :   Trajectory files.
 
 `Topology (top)`

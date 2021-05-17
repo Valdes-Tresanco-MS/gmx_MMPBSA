@@ -51,8 +51,8 @@ In the current version, gmx_MMPBSA support a number of different systems includi
 * [gmx_MMPBSA](summary.md) is the fundamental application and carries out the calculations mentioned above
 * [gmx_MMPBSA_ana](analyzer.md) provides an intuitive way to analyze the data from gmx_MMPBSA calculations and save 
   high-quality pictures
-* [gmx_MMPBSA_test](command-line.md) is a tool designed to test if the installation was successful by running one or 
-  more available [examples](examples/README.md) in gmx_MMPBSA.
+* [gmx_MMPBSA_test](command-line.md#running-gmx_mmpbsa_test) is a tool designed to test if the installation was 
+  successful by running one or more available [examples](examples/README.md) in gmx_MMPBSA.
   
 !!! note
     gmx_MMPBSA can run in parallel and requires just few things in order to perform any kind of calculation. That is:
@@ -64,6 +64,9 @@ In the current version, gmx_MMPBSA support a number of different systems includi
     * In certain occasions, defining a topology file (`top`) may be required.
 
     Once the calculation is done, you can analyze the results in [gmx_MMPBSA_ana](analyzer.md)
+
+    You can check [How gmx_MMPBSA works page](howworks.md) to get more details. Also check our [example page](examples/README.md)
+    to see how gmx_MMPBSA works with a real example
 
 The following video shows how a typical binding free energy calculation with GB model and Interaction entropy method 
 is done in gmx_MMPBSA
