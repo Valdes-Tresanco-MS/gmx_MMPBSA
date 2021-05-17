@@ -3,7 +3,7 @@ template: main.html
 title: Complex receptors
 ---
 
-# Binding free energy calculations with complex receptors
+# Binding free energy calculations in multicomponent systems
 
 !!! info
     This example can be found in the [docs/examples/Comp_receptor][6] directory in the repository folder
