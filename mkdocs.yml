@@ -134,8 +134,7 @@ markdown_extensions:
 nav:
   - Home: index.md
   - Getting started:
-    - Overview: getting-started.md
-    - Support: support.md
+    - Getting started: getting-started.md
     - Introduction: introduction.md
     - gmx_MMPBSA in a nutshell: summary.md
     - gmx_MMPBSA vs other programs: versus.md
@@ -179,7 +178,7 @@ nav:
         - Protein-ligand complex embedded in membrane: examples/Protein_membrane_CHARMMff/README.md
         - Mycalamide A Bound to the Large Ribosomal Subunit: examples/Ribosomal50S_Mycalamide_A/README.md
   - Q&A:
-    - Q&A: Q&A/README.md
+    - Support: Q&A/README.md
     - Installation: Q&A/installation.md
     - OS issues: Q&A/OS_issues.md
     - Calculations: Q&A/calculations.md
@@ -187,6 +186,7 @@ nav:
     - Changelog: changelog.md
     - Compatibility: compatibility.md
   - Private Policy: private_policy.md
+  - Cite us: cite_us.md
 
 google_analytics:
   - !!python/object/apply:os.getenv ["GOOGLE_ANALYTICS_KEY"]

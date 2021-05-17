@@ -13,41 +13,77 @@ title: Getting started
 # Getting started
 
 gmx_MMPBSA is a new tool based on AMBER's MMPBSA.py aiming to perform end-state free energy calculations with GROMACS 
-files. It works with all GROMACS versions along with AmberTools20 or 21.
+files. **_It works with all GROMACS versions along with AmberTools20 or 21 and brings improvements in compatibility, 
+versatility, analyses, and parallelization compared to existing programs (see [here](versus.md) for a detailed comparison])_**
 
-## Citing us
+There are many options for running `gmx_MMPBSA`. Among the types of calculations you can do are:
 
-At the moment we only have Zenodo [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4569307.svg)](https://doi.org/10.5281/zenodo.4569307)
+* Normal binding free energies
+* Stability
+* Alanine scanning
+* Entropy corrections
+* Decomposition schemes
+* QM/MMGBSA
 
-!!! note "Cite as"
-    Mario S. Valdés Tresanco, Mario E. Valdes-Tresanco, Pedro A. Valiente, & Ernesto Moreno Frías.
-    gmx_MMPBSA (Version v1.4.2). Zenodo. http://doi.org/10.5281/zenodo.4569307
+!!! note
+    You can check [`gmx_MMPBSA` in a nutshell page](summary.md) for a more detailed overview of the types of calculations 
+    supported in gmx_MMPBSA. Also check our [example page](examples/README.md) to see a detailed list of all the 
+    examples available
 
-**We will have the article available soon**
+In the current version, gmx_MMPBSA support a number of different systems including but not limited to:
 
-Please also consider citing MMPBSA.py's paper:
+* Protein-protein
+* Protein-ligand
+* Protein-DNA
+* Metalloprotein-peptide
+* Protein-glycan
+* Membrane proteins
+* Multicomponent systems (_e.g._, Protein-DNA-RNA-Ions-Ligand)
 
-**MMPBSA.py: An Efficient Program for End-State Free Energy Calculations**. Bill R. Miller, T. Dwight McGee, Jason M.
-Swails, Nadine Homeyer, Holger Gohlke, and Adrian E. Roitberg. _Journal of Chemical Theory and Computation_, 2012 8 
-(9), 3314-3321. [**DOI:** 10.1021/ct300418h][1]
+!!! note
+    In the current version, gmx_MMPBSA supports Amber and CHARMM force fields. That means any system built with 
+    [pdb2gmx](https://manual.gromacs.org/documentation/current/onlinehelp/gmx-pdb2gmx.html) in GROMACS using 
+    Amber/CHARMM force field or [CHARMM-GUI](https://www.charmm-gui.org/) is supported in gmx_MMPBSA 😀
+  
+## `gmx_MMPBSA` a quick overview
+`gmx_MMPBSA` is a python module that contains 3 applications: 
 
-## Authors
+* [gmx_MMPBSA](summary.md) is the fundamental application and carries out the calculations mentioned above
+* [gmx_MMPBSA_ana](analyzer.md) provides an intuitive way to analyze the data from gmx_MMPBSA calculations and save 
+  high-quality pictures
+* [gmx_MMPBSA_test](command-line.md) is a tool designed to test if the installation was successful by running one or 
+  more available [examples](examples/README.md) in gmx_MMPBSA.
+  
+!!! note
+    gmx_MMPBSA can run in parallel and requires just few things in order to perform any kind of calculation. That is:
 
-* Mario Sergio Valdés Tresanco, PhD Student. _University of Medellin, Colombia_
-* Mario Ernesto Valdés Tresanco, PhD Student. _University of Calgary, Canada._
-* Pedro Alberto Valiente, PhD. _University of Toronto, Canada_
-* Ernesto Moreno Frías, PhD. _University of Medellin, Colombia_
+    * an input parameters file (`in`, contains all the specifications regarding the type of calculation that is going to be performed)
+    * a MD Structure+mass(db) file (`tpr`, `pdb`, `gro`), an index file (`ndx`)
+    * receptor and ligand group (group numbers in the index files)
+    * a trajectory file (`xtc`, `pdb`, `gro`, `trr`)
+    * In certain occasions, defining a topology file (`top`) may be required.
 
-## About the gmx_MMPBSA implementation
-Most of the documentation below is found in the [Amber manual][2], we will point out what is new or different. 
-Neither of these should be considered as a “black-box”, and users should be familiar with Amber and MM/PB(GB)SA 
-method before at-tempting these sorts of calculations. These scripts automate a series of calculations, and cannot 
-trap all the types of errors that might occur. 
+    Once the calculation is done, you can analyze the results in [gmx_MMPBSA_ana](analyzer.md)
 
-!!! important
-    We do not intend to replace the original [MMPBSA.py][3]; instead, we have implemented and improved some 
-    functionalities, and what is most important, made this valuable tool available for GROMACS users. 
+The following video shows how a typical binding free energy calculation with GB model and Interaction entropy method 
+is done in gmx_MMPBSA
 
-  [1]: https://doi.org/10.1021/ct300418h
-  [2]: https://ambermd.org/doc12/Amber20.pdf#chapter.34
-  [3]: https://pubs.acs.org/doi/10.1021/ct300418h
+<div class="embed-container">
+    <iframe src="https://www.youtube.com/embed/k1aLlBhnkxo" frameborder="0" allowfullscreen></iframe>
+</div>
+
+
+!!! Ready
+    Ready to use gmx_MMPBSA 😀? Check the [installation page](installation.md) 
+
+!!! Citation
+    Please, visit [Cite us page](cite_us.md) to see all the details. Visit [Pypi Stats](https://pypistats.org/packages/gmx-mmpbsa)
+    to see how gmx_MMPBSA is doing
+
+
+[<img src="../assets/images/jetbrains-variant-4.png" height="100" width="178" align="right" />][4]
+
+## Acknowledgments
+This project is possible thanks to the Open Source license of the [JetBrains][4] programs. 
+
+  [4]: https://www.jetbrains.com/?from=gmx_MMPBSA
