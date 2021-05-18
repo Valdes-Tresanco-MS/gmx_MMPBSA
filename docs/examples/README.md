@@ -42,6 +42,7 @@ the same run for a specific system.
 * [Protein-Ligand (ST)](Protein_ligand_CHARMMff/README.md)[^1][^2]
 * [Protein-ligand complex embedded in membrane](Protein_membrane_CHARMMff/README.md)[^1]
 * [Mycalamide A Bound to the Large Ribosomal Subunit](Ribosomal50S_Mycalamide_A/README.md)
+* [Protein-ligand with LPH atoms (ST)](Protein_ligand_LPH_atoms_CHARMMff/README.md)
 
 
 
