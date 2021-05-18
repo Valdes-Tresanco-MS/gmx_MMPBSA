@@ -17,11 +17,15 @@ title: Protein-ligand LPH (Charmm)
 
     LPH is a positively charged virtual particle attached to halogen atoms. This strategy aims to get a better 
     representation of the halogen bond which is a highly directional, non-covalent interaction between a halogen atom 
-    and another electronegative atom (See [here][8] for more info)
+    and another electronegative atom (See [here][8] for more info). Unfortunately, including these particles in the 
+    topology will cause gmx_MMPBSA to end in an error. However, there is a way to generate the files without these 
+    particles and get gmx_MMPBSA up and running.
 
-    Unfortunately, including these particles in the topology will cause gmx_MMPBSA to end in an error. However, there 
-    is a way to generate the files without these particles and get gmx_MMPBSA up and running. That being said, take 
-    the results with a grain of salt and always proceed cautiously knowing the limitations of the method.
+    
+!!! danger "Keep in mind"
+
+    As the LPH particle is not considered during the calculations in gmx_MMPBSA, take the results with a grain of 
+    salt, especially when working with systems where the halogen bond is determinant for the binding.
 
 
 ## Requirements
@@ -47,62 +51,90 @@ without the LPH particles, it's necessary to run a few commands. Bear with me!
 
 Let's generate the index file first:
 
+!!! important
+    The main idea here is to generate a receptor group, a 
+    ligand group without the LPH particles and a complex group containing both the receptor and the ligand without 
+    the LPH particles. In general, index files generated with GROMACS directly will contain more detailed information 
+    (_i.e._, receptor and ligand separated)
+
 ```
-gmx make_ndx -n index.ndx -f com.tpr -o index_mod.ndx
+gmx make_ndx -f com.tpr -o index_mod_gromacs.ndx
 
-0 SOLU                :  5612 atoms
-1 SOLV                : 64871 atoms
-2 SYSTEM              : 70483 atoms
+  0 System              : 70483 atoms
+  1 Protein             :  5580 atoms
+  2 Protein-H           :  2817 atoms
+  3 C-alpha             :   334 atoms
+  4 Backbone            :  1002 atoms
+  5 MainChain           :  1335 atoms
+  6 MainChain+Cb        :  1654 atoms
+  7 MainChain+H         :  1654 atoms
+  8 SideChain           :  3926 atoms
+  9 SideChain-H         :  1482 atoms
+ 10 Prot-Masses         :  5580 atoms
+ 11 non-Protein         : 64903 atoms
+ 12 Other               : 64903 atoms
+ 13 3G5                 :    32 atoms
+ 14 CLA                 :    62 atoms
+ 15 SOD                 :    63 atoms
+ 16 TIP3                : 64746 atoms
 
-Splitting SOLU (group 0) by residues
->splitres 0
-
-Splitting the ligand (group 337) by atoms
->splitat 337
+Splitting the ligand (group 13) by atoms
+>splitat 13
 
 Grouping both LPH particles
->368|369
-
-Generating receptor excluding the ligand from SOLU
->0&!337
-
-Naming receptor as rec
->name 371 rec
+>47|48
 
 Excluding both LPH particles from the ligand
->337&!370
+>13&!49
 
 Naming ligand as lig
->name 372 lig
+>name 50 lig
 
 Grouping rec and lig
->371|372
+>1|50
 
 Cleaning
->del 3-370
+>del 17-49
+
+save and quit
+>q
 
 This is how it should look like at the end
 
-0 SOLU                :  5612 atoms
-1 SOLV                : 64871 atoms
-2 SYSTEM              : 70483 atoms
-3 rec                 :  5580 atoms
-4 lig                 :    30 atoms
-5 rec_lig             :  5610 atoms
+  0 System              : 70483 atoms
+  1 Protein             :  5580 atoms
+  2 Protein-H           :  2817 atoms
+  3 C-alpha             :   334 atoms
+  4 Backbone            :  1002 atoms
+  5 MainChain           :  1335 atoms
+  6 MainChain+Cb        :  1654 atoms
+  7 MainChain+H         :  1654 atoms
+  8 SideChain           :  3926 atoms
+  9 SideChain-H         :  1482 atoms
+ 10 Prot-Masses         :  5580 atoms
+ 11 non-Protein         : 64903 atoms
+ 12 Other               : 64903 atoms
+ 13 3G5                 :    32 atoms
+ 14 CLA                 :    62 atoms
+ 15 SOD                 :    63 atoms
+ 16 TIP3                : 64746 atoms
+ 17 lig                 :    30 atoms
+ 18 Protein_lig         :  5610 atoms
 ```
 
-Note that the number of atoms in the generated complex is 5610 because it doesn't include the LPH particles.
+!!! note
+    Note that the number of atoms in the generated complex is 5610 because it doesn't include the LPH particles.
 
 Let's generate the MD Structure+mass(db) file:
 
-`echo 5 | gmx trjconv -s com.tpr -f traj_fit.xtc -dump 0 -o str_noLP.pdb -n index_mod.ndx`
+    echo 18 | gmx trjconv -s com.tpr -f traj_fit.xtc -dump 0 -o str_noLP.pdb -n index_mod_gromacs.ndx
 
 Open `str_noLP.pdb` in your favorite visualizer and see it doesn't contain the LPH particles. Now, let's generate 
 the trajectory with no LPH particles:
 
-`echo 5 | gmx trjconv -s com.tpr -f traj_fit.xtc -o com_traj.xtc -n index_mod.ndx`
+    echo 18 | gmx trjconv -s com.tpr -f traj_fit.xtc -o com_traj.xtc -n index_mod_gromacs.ndx
 
-Finally, let's edit te topology file. Go inside the toppar folder and open the `HETA.itp` file. As you will see, we
+Finally, let's edit the topology file. Go inside the toppar folder and open the `HETA.itp` file. As you will see, we
 deleted all the information related with LPH particles (atom numbers 31, and 32 respectively). In this case, we
 deleted the information for LPH particles in `atoms` (lines 47, 48) and `pairs` (lines 124, 132, 150, 153, 154, 157, 
 158, 159). Besides, delete the whole `[ virtual_sites3 ]` (lines 296-299) and `[ exclusions ]` (lines 301-318) 
@@ -114,11 +146,11 @@ That being said, once you are in the folder containing all files, the command-li
 
 === "Serial"
 
-        gmx_MMPBSA -O -i mmpbsa.in -cs str_noLP.pdb -ci index_mod.ndx -cg 3 4 -ct com_traj.xtc -cp topol.top
+        gmx_MMPBSA -O -i mmpbsa.in -cs str_noLP.pdb -ci index_mod_gromacs.ndx -cg 1 17 -ct com_traj.xtc -cp topol.top
 
 === "With MPI"
 
-        mpirun -np 2 gmx_MMPBSA MPI -O -i mmpbsa.in -cs str_noLP.pdb -ci index_mod.ndx -cg 3 4 -ct com_traj.xtc -cp topol.top
+        mpirun -np 2 gmx_MMPBSA MPI -O -i mmpbsa.in -cs str_noLP.pdb -ci index_mod_gromacs.ndx -cg 1 17 -ct com_traj.xtc -cp topol.top
 
 where the `mmpbsa.in` input file, is a text file containing the following lines:
 
