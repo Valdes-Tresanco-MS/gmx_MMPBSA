@@ -697,7 +697,7 @@ class MMPBSA_App(object):
 
         logging.info('\n\nThank you for using gmx_MMPBSA. Please cite us if you publish this work with this '
                      'reference:\n    Mario S. Valdés Tresanco, Mario E. Valdes-Tresanco, Pedro A. Valiente, & '
-                     'Ernesto Moreno Frías (2021, March 22)\n    gmx_MMPBSA (Version v1.4.0). '
+                     'Ernesto Moreno Frías \n    gmx_MMPBSA (Version v1.4.2). '
                      'Zenodo. http://doi.org/10.5281/zenodo.4569307'
                      '\n\nAlso consider citing MMPBSA.py\n    Miller III, B. R., McGee Jr., '
                      'T. D., Swails, J. M. Homeyer, N. Gohlke, H. and Roitberg, A. E.\n    J. Chem. Theory Comput., '
