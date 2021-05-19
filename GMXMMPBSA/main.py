@@ -984,6 +984,26 @@ class MMPBSA_App(object):
         if not self.master:
             return
         self.calc_types = {}
+
+        # compatibility issues with the new and deprecated variables
+        if self.INPUT['entropy']:
+            if self.INPUT['entropy'] == 1:
+                self.INPUT['qh_entropy'] = 1
+            elif self.INPUT['entropy'] == 2:
+                self.INPUT['interaction_entropy'] = 1
+        if 'qh_entropy' not in self.INPUT:
+            self.INPUT['qh_entropy'] = 0
+        if 'interaction_entropy' not in self.INPUT:
+                self.INPUT['interaction_entropy'] = 0
+        if self.INPUT['entropy_seg']:
+            self.INPUT['ie_segment'] = self.INPUT['entropy_seg']
+        if self.INPUT['entropy_temp'] != 298.15:
+            try:
+                # for compatibility with v1.3.x
+                if self.INPUT['temperature'] == 298.15:
+                    self.INPUT['temperature'] = self.INPUT['entropy_temp']
+            except:
+                self.INPUT['temperature'] = self.INPUT['entropy_temp']
         INPUT, FILES = self.INPUT, self.FILES
         # Mutant will also be a dict
         if INPUT['alarun']:

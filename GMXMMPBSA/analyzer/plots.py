@@ -28,6 +28,7 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 import seaborn as sns
 import matplotlib.pyplot as plt
+from scipy import stats
 import math
 plt.style.use('seaborn')
 plt.rcParams["figure.autolayout"] = True
@@ -151,34 +152,32 @@ class Charts(QMdiSubWindow):
                 self.reg_plot = sns.regplot(data=self.data, x='Exp.Energy', y='ΔH', ax=self.mpl_canvas.axes,
                                             color='black', scatter_kws={'s':10}, line_kws={'lw':1})
                 # get correlation coefficients
-                pearson = self.data.corr()['Exp.Energy']['ΔH']
-                spearman = self.data.corr(method='spearman')['Exp.Energy']['ΔH']
+                pearson, ppvalue = stats.pearsonr(self.data['Exp.Energy'], self.data['ΔH'])
+                spearman, spvalue = stats.spearmanr(self.data['Exp.Energy'], self.data['ΔH'])
             elif self.col == 2:
                 self.item.dgie_sw = self
                 self.data = self.item.dgie
                 self.reg_plot = sns.regplot(data=self.data, x='Exp.Energy', y='ΔH+IE', ax=self.mpl_canvas.axes,
                                             color='black', scatter_kws={'s':10}, line_kws={'lw':1})
                 # get correlation coefficients
-                pearson = self.data.corr()['Exp.Energy']['ΔH+IE']
-                spearman = self.data.corr(method='spearman')['Exp.Energy']['ΔH+IE']
+                pearson, ppvalue = stats.pearsonr(self.data['Exp.Energy'], self.data['ΔH+IE'])
+                spearman, spvalue = stats.spearmanr(self.data['Exp.Energy'], self.data['ΔH+IE'])
             elif self.col == 3:
                 self.item.dgnmode_sw = self
                 self.data = self.item.dgnmode
                 self.reg_plot = sns.regplot(data=self.data, x='Exp.Energy', y='ΔH+NMODE', ax=self.mpl_canvas.axes,
                                             color='black', scatter_kws={'s':10}, line_kws={'lw':1})
                 # get correlation coefficients
-                pearson = self.data.corr()['Exp.Energy']['ΔH+NMODE']
-                spearman = self.data.corr(method='spearman')['Exp.Energy']['ΔH+NMODE']
+                pearson, ppvalue = stats.pearsonr(self.data['Exp.Energy'], self.data['ΔH+NMODE'])
+                spearman, spvalue = stats.spearmanr(self.data['Exp.Energy'], self.data['ΔH+NMODE'])
             else:
                 self.item.dgqh_sw = self
                 self.data = self.item.dgqh
                 self.reg_plot = sns.regplot(data=self.data, x='Exp.Energy', y='ΔH+QH', ax=self.mpl_canvas.axes,
                                             color='black', scatter_kws={'s':10}, line_kws={'lw':1})
                 # get correlation coefficients
-                pearson = self.data.corr()['Exp.Energy']['ΔH+QH']
-                spearman = self.data.corr(method='spearman')['Exp.Energy']['ΔH+QH']
-
-
+                pearson, ppvalue = stats.pearsonr(self.data['Exp.Energy'], self.data['ΔH+QH'])
+                spearman, spvalue = stats.spearmanr(self.data['Exp.Energy'], self.data['ΔH+QH'])
 
             self.mpl_canvas.axes.set_xlabel('Exp. Energy (kcal/mol)')
             self.mpl_canvas.axes.set_ylabel('Pred. Energy (kcal/mol)')
@@ -197,12 +196,12 @@ class Charts(QMdiSubWindow):
 
             self.mpl_canvas.axes.set_title(self.item.chart_title + '\n' + chart_subtitle)
 
-            pearson_leg = mpatches.Patch(color='white', label=f'Pearson = {pearson:.2f}')
-            spearman_leg = mpatches.Patch(color='gray', label=f'Spearman = {spearman:.2f}')
+            pearson_leg = mpatches.Patch(color='white', label=f'Pearson  = {pearson:.2f}  p-value = {ppvalue:.5f}')
+            spearman_leg = mpatches.Patch(color='gray', label=f'Spearman = {spearman:.2f}  p-value = {spvalue:.5f}')
             leg = self.mpl_canvas.axes.legend(handles=[pearson_leg, spearman_leg],
                                               handlelength=0, handletextpad=0,
                                               fancybox=True,
-                                              prop={'weight':'bold', 'size': 10},
+                                              prop={'weight':'bold', 'size': 10, 'family': 'monospace'},
                                               frameon=True
                                               )
             # hide markers
