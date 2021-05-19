@@ -58,7 +58,8 @@ In the current version, gmx_MMPBSA support a number of different systems includi
     gmx_MMPBSA can run in parallel and requires just few things in order to perform any kind of calculation. That is:
 
     * an input parameters file (`in`, contains all the specifications regarding the type of calculation that is going to be performed)
-    * a MD Structure+mass(db) file (`tpr`, `pdb`, `gro`), an index file (`ndx`)
+    * a MD Structure+mass(db) file (`tpr`, `pdb`, `gro`)
+    * an index file (`ndx`)
     * receptor and ligand group (group numbers in the index files)
     * a trajectory file (`xtc`, `pdb`, `gro`, `trr`)
     * In certain occasions, defining a topology file (`top`) may be required.
