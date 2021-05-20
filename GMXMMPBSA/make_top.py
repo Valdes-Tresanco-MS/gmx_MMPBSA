@@ -295,9 +295,9 @@ class CheckMakeTop:
         # first we check if forcefields was defined
         prot_lig_ff = [self.INPUT['protein_forcefield'], self.INPUT['ligand_forcefield']]
 
-        if self.INPUT['forcefields'].split(',') != prot_lig_ff:
-            if self.INPUT['forcefields'].split(',') != ['oldff/leaprc.ff99SB', 'leaprc.gaff']:
-                forcefields = self.INPUT['forcefields'].split(',')
+        if [ x.strip() for x in self.INPUT['forcefields'].split(',')] != prot_lig_ff:
+            if [ x.strip() for x in self.INPUT['forcefields'].split(',')] != ['oldff/leaprc.ff99SB', 'leaprc.gaff']:
+                forcefields = [ x.strip() for x in self.INPUT['forcefields'].split(',')]
             else:
                 forcefields = self.INPUT['protein_forcefield'], self.INPUT['ligand_forcefield']
         else:
