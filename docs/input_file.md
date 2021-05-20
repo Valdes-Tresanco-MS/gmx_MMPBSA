@@ -149,19 +149,23 @@ omitted in the correlation analysis
       * 0: Do NOT use temporary NetCDF trajectories
       * 1: Use temporary NetCDF trajectories
 
-`overwrite_data` (Default = 0)
-:   Defines whether the gmx_MMPBSA data will be overwritten. `gmx_MMPBSA` detects if the gmxMMPBSA data files exist 
-    before copying them. This option allows the user to control the copy process and prevents the system from being 
-    overloaded by copying files unnecessarily.
-
-    * 0: don't
-    * 1: overwrite gxmMMPBSA data if exist
-
-    !!! tip Keep in mind
-        We recommend activating this option with each new release because there may be changes and/or corrections in 
-        the gmxMMPBSA data files.
+??? danger "`overwrite_data` Removed" 
+    `overwrite_data` (Default = 0)
+    :   Defines whether the gmx_MMPBSA data will be overwritten. `gmx_MMPBSA` detects if the gmxMMPBSA data files exist 
+        before copying them. This option allows the user to control the copy process and prevents the system from being 
+        overloaded by copying files unnecessarily.
     
-    _New in v1.3.1_
+        * 0: don't
+        * 1: overwrite gxmMMPBSA data if exist
+    
+        !!! tip Keep in mind
+            We recommend activating this option with each new release because there may be changes and/or corrections in 
+            the gmxMMPBSA data files.
+        
+        _Removed in v1.4.3_
+
+        _New in v1.3.1_
+        
 
 `PBRadii` (Default = 3)
 :   PBRadii to build amber topology files:
@@ -196,8 +200,7 @@ tested in `protein_forcefield` and `ligand_forcefield` variables:
         section ["How gmx_MMPBSA works"](howworks.md#how-gmx_mmpbsa-works)
         * _This notation format is the one used in tleap._
 
-        `*` We create a new folder (named _gmxMMPBSA_) in each one of the Amber's parameter folders 
-            ($AMBERHOME/dat/leap/[cmd, prep, lib, parm]/gmxMMPBSA). This way, we keep `gmx_MMPBSA` data separated from 
+        `*` We added the gmxMMPBSA data to the tleap path. This way, we keep `gmx_MMPBSA` data separated from 
             Amber's.
 
     Organic molecules, Glycan and Zwitterionic amino acids
@@ -214,6 +217,8 @@ tested in `protein_forcefield` and `ligand_forcefield` variables:
         generate inconsistencies.    
 
     _New in v1.4.1_
+
+    _Modiefied in v1.4.3. Internal change_
 
 
 ???+ warning "Deprecated since v1.4.1: It will be removed in v1.5.0. Use `forcefields` instead"
