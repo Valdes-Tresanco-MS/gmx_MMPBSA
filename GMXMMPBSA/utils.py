@@ -166,7 +166,7 @@ def selector(selection:str):
     return dist, exclude, res_selections
 
 
-def checkff(overwrite):
+def checkff():
     """
 
     :param overwrite:
@@ -186,36 +186,17 @@ def checkff(overwrite):
         return
     amberhome = Path(amberhome)
 
-    logging.info('Checking if supported force fields exists in Amber data...')
-    if overwrite:
-        logging.info('The overwrite_data option is enabled. Overwriting the gmxMMPBSA data...')
-    data_path = Path(__file__).parent.joinpath('data')
-    info_file = data_path.joinpath('info.dat')
-    with info_file.open('r') as read_file:
-        data = json.load(read_file)
-
+    logging.info('Checking gmxMMPBSA data folder exists in Amber data...')
     leap_dat = amberhome.joinpath('dat/leap/')
 
-    for ff in data['forcefield']:
-        for p in data['forcefield'][ff]:
-            gmxf = leap_dat.joinpath(p, 'gmxMMPBSA')
-            if not gmxf.exists():
-                gmxf.mkdir()
-            if type(data['forcefield'][ff][p]) == list:
-                for l in data['forcefield'][ff][p]:
-                    cf = data_path.joinpath(l)
-                    if overwrite:
-                        shutil.copy(cf, gmxf)
-                    else:
-                        if cf.exists() and not gmxf.joinpath(l).exists():
-                            shutil.copy(cf, gmxf)
-            else:
-                cf = data_path.joinpath(data['forcefield'][ff][p])
-                if overwrite:
-                    shutil.copy(cf, gmxf)
-                else:
-                    if not cf.exists():
-                        shutil.copy(cf, gmxf)
+    if list(leap_dat.glob('*/gmxMMPBSA')):
+        print([x for x in leap_dat.glob('*/gmxMMPBSA')])
+        logging.warning('Trying to remove */gmxMMPBSA from the Amber/dat. This action will be removed in v1.5.0')
+        for folder in leap_dat.glob('*/gmxMMPBSA'):
+            try:
+                shutil.rmtree(folder)
+            except:
+                logging.error('Failed to delete the folder gmxMMPBSA from the Amber/dat')
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 def remove(flag, mpi_size=0, fnpre='_GMXMMPBSA_'):

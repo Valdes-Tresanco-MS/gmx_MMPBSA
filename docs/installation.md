@@ -26,6 +26,7 @@ and that is compatible with the files you are using.
 | Matplotlib      |                                            | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |                    |
 | Pandas          |                                            | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |                    |
 | Seaborn         |                                            | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |                    |
+| Scipy        |                                            | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |                    |
 | mpi4py          | :octicons-check-circle-fill-16:{ .req_optrec .scale_icon_medium } |                    |                    |
 | openmpi-bin     | :octicons-check-circle-fill-16:{ .req_optrec .scale_icon_medium } |                    |                    |
 | libopenmpi-dev  | :octicons-check-circle-fill-16:{ .req_optrec .scale_icon_medium } |                    |                    |

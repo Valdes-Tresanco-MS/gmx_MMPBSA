@@ -100,7 +100,7 @@ class CheckMakeTop:
         if self.FILES.reference_structure:
             self.ref_str = parmed.read_PDB(self.FILES.reference_structure)
 
-        checkff(self.INPUT['overwrite_data'])
+        checkff()
         self.checkFiles()
 
     def checkFiles(self):
@@ -1221,9 +1221,10 @@ class CheckMakeTop:
             tif.write(f'COM_OUT = combine {{ {com_out} }}\n')
             tif.write('saveamberparm COM_OUT {t} {p}COM.inpcrd\n'.format(t=self.complex_pmrtop, p=self.FILES.prefix))
             tif.write('quit')
-
+        # changed in v1.4.3. We source the gmxMMPBSA ff directly from the data folder instead of copy to the Amber/dat
+        data_path = Path(__file__).parent.joinpath('data')
         tleap = self.external_progs['tleap']
-        tleap_args = [tleap, '-f', '{}'.format(self.FILES.prefix + 'leap.in')]
+        tleap_args = [tleap, '-f', '{}'.format(self.FILES.prefix + 'leap.in'), '-I', data_path ]
         if self.INPUT['debug_printlevel']:
             logging.info('Running command: ' + ' '.join(tleap_args))
         p = subprocess.Popen(tleap_args, stdout=self.log, stderr=self.log)
@@ -1298,7 +1299,7 @@ class CheckMakeTop:
                                                                                p=self.FILES.prefix))
                 mtif.write('quit')
 
-            tleap_args = [tleap, '-f', '{}'.format(self.FILES.prefix + 'mut_leap.in')]
+            tleap_args = [tleap, '-f', '{}'.format(self.FILES.prefix + 'mut_leap.in'), '-I', data_path ]
             if self.INPUT['debug_printlevel']:
                 logging.info('Running command: ' + ' '.join(tleap_args))
             p1 = subprocess.Popen(tleap_args, stdout=self.log, stderr=self.log)
