@@ -9,8 +9,8 @@ title: Protein-DNA_RNA_ION-Ligand
     This example can be found in the [docs/examples/Protein_DNA_RNA_Ion_ligand][6] directory in the repository folder
 
 !!! danger
-    This system was also used to show the usage of `forcefields` variable in [Binding free energy calculations with 
-    complex receptors][8] example. Keep in mind that this example will be removed in version 1.5.0.
+    This system was also used to show the usage of `forcefields` variable in [Binding free energy calculations in multicomponent systems][8]
+    example. Keep in mind that this example will be removed in version 1.5.0.
 
 ## Requirements
 !!! danger
