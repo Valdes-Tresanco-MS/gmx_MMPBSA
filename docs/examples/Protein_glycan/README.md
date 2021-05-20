@@ -53,11 +53,10 @@ in a reasonable amount of time. Feel free to change the parameters
 according to what is better for your system.
 
 &general
+sys_name="Protein-glycan",
 startframe=5, endframe=20, verbose=2,
-protein_forcefield="oldff/leaprc.ff99SB",
-ligand_forcefield="gmxMMPBSA/leaprc.GLYCAM_06h-1"
+forcefields="oldff/leaprc.ff99SB,gmxMMPBSA/leaprc.GLYCAM_06h-1"
 /
-
 &gb
 igb=5, saltcon=0.150,
 /
