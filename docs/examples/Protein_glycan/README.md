@@ -55,7 +55,7 @@ according to what is better for your system.
 &general
 startframe=5, endframe=20, verbose=2,
 protein_forcefield="oldff/leaprc.ff99SB",
-ligand_forcefield="leaprc.GLYCAM_06h-1"
+ligand_forcefield="gmxMMPBSA/leaprc.GLYCAM_06h-1"
 /
 
 &gb
