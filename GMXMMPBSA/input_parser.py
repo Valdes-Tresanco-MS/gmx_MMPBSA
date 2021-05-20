@@ -507,6 +507,7 @@ input_file.addNamelist('general', 'general',
                            ['ligand_forcefield', str, "leaprc.gaff", 'Define the force field to build Amber topology for '
                                                              'ligand (small molecule)'],
                            ['netcdf', int, 0, 'Use NetCDF intermediate trajectories.'],
+                           ['overwrite_data', int, 0, 'Defines whether the gmxMMPBSA data will be overwritten'],
                            ['PBRadii', int, 3, 'Define PBRadii to build amber topology from GROMACS files.'],
                            ['protein_forcefield', str, "oldff/leaprc.ff99SB", 'Define the force field to build Amber '
                                                                               'topology for protein'],
