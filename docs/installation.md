@@ -27,17 +27,25 @@ and that is compatible with the files you are using.
 | Pandas          |                                            | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |                    |
 | Seaborn         |                                            | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |                    |
 | Scipy        |                                            | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |                    |
-| mpi4py          | :octicons-check-circle-fill-16:{ .req_optrec .scale_icon_medium } |                    |                    |
-| openmpi-bin     | :octicons-check-circle-fill-16:{ .req_optrec .scale_icon_medium } |                    |                    |
-| libopenmpi-dev  | :octicons-check-circle-fill-16:{ .req_optrec .scale_icon_medium } |                    |                    |
-| openssh-client  | :octicons-check-circle-fill-16:{ .req_optrec .scale_icon_medium } |                    |                    |
+| mpi4py          | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |                    |                    |
+| openmpi-bin     | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |                    |                    |
+| libopenmpi-dev  | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |                    |                    |
+| openssh-client  | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |                    |                    |
 | Git             | :octicons-check-circle-fill-16:{ .req_opt .scale_icon_medium } |                    | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |
 
 
 :octicons-check-circle-fill-16:{ .req } -> Required -- :octicons-check-circle-fill-16:{ .req_optrec } -> 
 Optional, but recommended -- :octicons-check-circle-fill-16:{ .req_opt } -> Optional
 
-!!! info "Install Dependencies"
+!!! danger "Install Dependencies"
+    
+    === "MPI"
+        Make sure that you install the OpenMPI library
+        
+            sudo apt install openmpi-bin libopenmpi-dev openssh-client
+        
+        !!! note ""
+            `mpi4py` is installed with `gmx_MMPBSA`
     
     === "PyQt5"
         `gmx_MMPBSA_ana` requires PyQt5 which is not installed automatically. That way, `gmx_MMPBSA_ana` cannot be 
@@ -50,16 +58,10 @@ Optional, but recommended -- :octicons-check-circle-fill-16:{ .req_opt } -> Opti
             * **Valid for versions > 1.4.0**
 
     === "Other Python Packages"
-        `matplotlib`, `pandas`, (`mpi4py`) and `seaborn` are installed automatically, so the user does not have to 
-        worry about installing them
+        `matplotlib`, `pandas`, (`mpi4py`), `seaborn` and `scipy` are installed automatically, so the user does not 
+        have to worry about installing them
 
-    === "MPI"
-        Make sure that you install the OpenMPI library
-        
-            sudo apt install openmpi-bin libopenmpi-dev openssh-client
-        
-        !!! note ""
-            `mpi4py` is installed with `gmx_MMPBSA`
+    
 
 
 
