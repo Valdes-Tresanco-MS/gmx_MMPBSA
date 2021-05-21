@@ -35,7 +35,7 @@ setup(
     license='GPLv3',
     author='Mario S. Valdes-Tresanco and Mario E. Valdes-Tresanco ',
     author_email='mariosergiovaldes145@gmail.com',
-    maintainer='Mario S. Valdes-Trasanco',
+    maintainer='Mario S. Valdes-Tresanco',
     maintainer_email='mariosergiovaldes145@gmail.com',
     url='https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA',
     description="gmx_MMPBSA is a new tool based on AMBER's MMPBSA.py aiming to perform end-state free energy  "
@@ -43,7 +43,7 @@ setup(
     long_description=LONG_DESCRIPTION,
     long_description_content_type='text/markdown',
     keywords=['gmx_MMPBSA', 'MMPBSA', 'MMGBSA', 'GROMACS', 'AmberTools'],
-    install_requires=['pandas>=1.2.2','seaborn>=0.11.1', 'mpi4py>=3.0.3', 'scipy>=1.6.1'],
+    install_requires=['pandas>=1.2.2', 'seaborn>=0.11.1', 'mpi4py>=3.0.3', 'scipy>=1.6.1'],
     entry_points={
         "console_scripts": [
             "gmx_MMPBSA=GMXMMPBSA.app:gmxmmpbsa",
