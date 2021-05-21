@@ -1224,7 +1224,7 @@ class CheckMakeTop:
         # changed in v1.4.3. We source the gmxMMPBSA ff directly from the data folder instead of copy to the Amber/dat
         data_path = Path(__file__).parent.joinpath('data')
         tleap = self.external_progs['tleap']
-        tleap_args = [tleap, '-f', '{}'.format(self.FILES.prefix + 'leap.in'), '-I', data_path ]
+        tleap_args = [tleap, '-f', '{}'.format(self.FILES.prefix + 'leap.in'), '-I', data_path.as_posix()]
         if self.INPUT['debug_printlevel']:
             logging.info('Running command: ' + ' '.join(tleap_args))
         p = subprocess.Popen(tleap_args, stdout=self.log, stderr=self.log)
@@ -1299,7 +1299,7 @@ class CheckMakeTop:
                                                                                p=self.FILES.prefix))
                 mtif.write('quit')
 
-            tleap_args = [tleap, '-f', '{}'.format(self.FILES.prefix + 'mut_leap.in'), '-I', data_path ]
+            tleap_args = [tleap, '-f', '{}'.format(self.FILES.prefix + 'mut_leap.in'), '-I', data_path.as_posix() ]
             if self.INPUT['debug_printlevel']:
                 logging.info('Running command: ' + ' '.join(tleap_args))
             p1 = subprocess.Popen(tleap_args, stdout=self.log, stderr=self.log)
