@@ -6,22 +6,20 @@ title: Installation
 
 ## Requirements
 
-`gmx_MMPBSA` requires **AmberTools20**[^1] to be installed in your machine with **Python3**, and the shell environment 
-correctly set up for Amber. The AmberTools suite is free of charge, and you can check [Amber Manual][1] for a 
-detailed installation guide. Of note, you can have more than one AmberTools installed in your machine. In case 
-AmberTools20 is not the default Amber in your computer, just make sure to source AmberTools20 before 
+`gmx_MMPBSA` requires **AmberTools20 or 21** to be installed in your machine with **Python3**, and the shell 
+environment correctly set up for Amber. **The AmberTools suite is free of charge**. You can check [Amber web page][1] 
+for a detailed installation guide. Of note, you can have more than one AmberTools installed in your machine. In case 
+AmberTools20/21 is not the default Amber in your computer, just make sure to source AmberTools20/21 before 
 installing/updating/running `gmx_MMPBSA`. `gmx_MMPBSA` also requires GROMACS (series 4.x.x or 5.x.x or 20xx.x) to be 
 installed in your computer, and the shell environment correctly set up for GROMACS. `gmx_MMPBSA` has been tested 
 with GROMACS 4.6.7, 5.1.2, 2018.3, and 2020.4, although it should run smoothly with any GROMACS present in the PATH 
 and that is compatible with the files you are using.
 
-[^1]: gmx_MMPBSA is also compatible with AmberTools21
-
 ### Dependencies
 | Dependency      |     gmx_MMPBSA                                                    |   gmx_MMPBSA_ana   |  gmx_MMPBSA_test   |
 |:----------------|:-----------------------------------------------------------------:|:------------------:|:------------------:|
 | Python3         | :octicons-check-circle-fill-16:{ .req .scale_icon_medium }        | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |
-| AmberTools20    | :octicons-check-circle-fill-16:{ .req .scale_icon_medium }        | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |
+| AmberTools20/21 | :octicons-check-circle-fill-16:{ .req .scale_icon_medium }        | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |
 | PyQt5           |                                            | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |                    |
 | Matplotlib      |                                            | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |                    |
 | Pandas          |                                            | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |                    |
@@ -101,7 +99,7 @@ If you already have installed a previous `gmx_MMPBSA` version, you can update it
 
             sudo apt install git
 
-## After Install
+## Troubleshooting after installation
 
 Once the installation is completed, the following warning may appear:
 
@@ -141,7 +139,7 @@ If when running `gmx_MMPBSA`, you get an error like this:
 
 please see the following [issue][2] to see the solution
 
-  [1]: https://ambermd.org/doc12/Amber20.pdf#section.2.1
+  [1]: https://ambermd.org/GetAmber.php#ambertools
   [2]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/issues/2
   [3]: https://pypi.org/project/gmx-MMPBSA
   [4]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA
