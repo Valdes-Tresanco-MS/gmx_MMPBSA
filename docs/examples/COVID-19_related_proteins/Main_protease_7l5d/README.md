@@ -11,7 +11,9 @@ title: SARS-CoV-2 Main Protease in complex with demethylated analog of masitinib
 # SARS-CoV-2 Main Protease in complex with demethylated analog of masitinib binding free energy calculations (Single Trajectory method) with CHARMMff files
 
 !!! info
-    This example can be found in the [docs/examples/COVID-19_related_proteins/Main_protease_7l5d][6] directory in the repository folder
+    This example can be found in the [docs/examples/COVID-19_related_proteins/Main_protease_7l5d][6] directory in the repository folder. If you didn't 
+    use gmx_MMPBSA_test before, use [downgit](https://downgit.github.io/#/home) to download the specific folder from 
+    gmx_MMPBSA Github repository
 
 ## Requirements
 

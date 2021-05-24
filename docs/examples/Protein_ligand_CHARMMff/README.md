@@ -11,7 +11,9 @@ title: Protein-ligand (Charmm)
 # Protein-ligand binding free energy calculations (Single Trajectory method) with CHARMMff files
 
 !!! info
-    This example can be found in the [docs/examples/Protein_ligand_CHARMMff][6] directory in the repository folder
+    This example can be found in the [docs/examples/Protein_ligand_CHARMMff][6] directory in the repository folder. If you didn't 
+    use gmx_MMPBSA_test before, use [downgit](https://downgit.github.io/#/home) to download the specific folder from 
+    gmx_MMPBSA Github repository
 
 ## Requirements
 
