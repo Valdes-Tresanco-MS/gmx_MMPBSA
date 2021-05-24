@@ -331,20 +331,49 @@ Avoid inconsistencies with defined internal temperature (298.15 K) when `nmode` 
 
 ### **`&gb` namelist variables**
 
-`ifqnt` (Default = 0)
-:   Specifies whether a part of the system is treated with quantum mechanics.
-    
-    * 1: Use QM/MM
-    * 0: Potential function is strictly classical 
-
-    !!! note
-        This functionality requires `sander`
+`intdiel` (Default = 1.0)
+:   Define Internal dielectric constant without use external *.mdin file
 
 `igb` (Default = 5)
 :   Generalized Born method to use (seeSection 4).  Allowed values are 1, 2, 5, 7 and 8
 
     !!! note
         All models are now available with both `mmpbsa_py_energy` and `sander`
+
+`saltcon` (Default = 0.0)
+:   Salt concentration in Molarity.
+
+`surfoff` (Default 0.0)
+:   Offset to correct (by addition) the value of the non-polar contribution to the solvation free energy term
+
+`surften` (Default = 0.0072)
+:   Surface tension value. Units in kcal/mol/Å^2^
+
+`molsurf` (Default 0)
+:   Define the algorithm to calculate the surface area for the nonpolar solvation termWhen
+    
+    * 0: LCPO (Linear Combination of Pairwise Overlaps)
+    * 1: molsurf algorithm
+
+`probe` (Default = 1.4)
+:   Radius of the probe molecule (supposed to be the size of a solvent molecule), in Angstroms, to use when
+    determining the molecular surface. 
+    
+    !!! note
+        only applicable when `molsurf` is set to 1
+
+`msoffset` (Default = 0) 
+:   Offset to apply to the individual atomic radii in the system when calculating the `molsurf` surface. See the
+    description of the `molsurf` action command in [cpptraj][4].
+
+`ifqnt` (Default = 0)
+:   Specifies whether a part of the system is treated with quantum mechanics.
+    
+    * 0: Potential function is strictly classical
+    * 1: Use QM/MM
+
+    !!! note
+        This functionality requires `sander`
 
 `qm_residues`
 :   Complex residues to treat with quantum mechanics. All residues treated with quantum mechanics in the complex 
@@ -379,14 +408,11 @@ Avoid inconsistencies with defined internal temperature (298.15 K) when `nmode` 
         === "Wrong notation"
             `qm_residues="A/5-6B,6D-7` Will end in error.
 
-
-
-`intdiel` (Default = 1.0)
-:   Define Internal dielectric constant without use external *.mdin file
-
 `qm_theory` 
-:   Which semi-empirical Hamiltonian should be used for the quantum calculation. See its description in the QM/MM
-    section of the manual for options.
+:   Which semi-empirical Hamiltonian should be used for the quantum calculation. Options are AM1, RM1, MNDO, PM3-PDDG, 
+    MNDO-PDDG, PM3-CARB1, MNDO/d (same as MNDOD), AM1/d (same as AM1D), PM6, DFTB2 (same as DFTB), and DFTB3. The 
+    dispersion correction can be switched on for AM1 and PM6 by choosing AM1-D* and PM6-D, respectively. The 
+    dispersion and hydrogen bond correction will be applied for AM1-DH+ and PM6-DH+.
 
     !!! danger
          No default, this must be specified if QM/MM calculations are going to be performed.
@@ -402,32 +428,6 @@ Avoid inconsistencies with defined internal temperature (298.15 K) when `nmode` 
 
 `qmcut` (Default = 9999.0)
 :   The cutoff for the qm/mm charge interactions.
-
-`saltcon` (Default = 0.0)
-:   Salt concentration in Molarity.
-
-`surfoff` (Default 0.0)
-:   Offset to correct (by addition) the value of the non-polar contribution to the solvation free energy term
-
-`surften` (Default = 0.0072)
-:   Surface tension value. Units in kcal/mol/Å^2^
-
-`molsurf` (Default 0)
-:   Define the algorithm to calculate the surface area for the nonpolar solvation termWhen
-    
-    * 0: LCPO (Linear Combination of Pairwise Overlaps)
-    * 1: molsurf algorithm
-
-`probe` (Default = 1.4)
-:   Radius of the probe molecule (supposed to be the size of a solvent molecule), in Angstroms, to use when
-    determining the molecular surface. 
-    
-    !!! note
-        only applicable when `molsurf` is set to 1
-
-`msoffset` (Default = 0) 
-:   Offset to apply to the individual atomic radii in the system when calculating the `molsurf` surface. See the
-    description of the `molsurf` action command in [cpptraj][4]. 
     
   [4]: https://ambermd.org/doc12/Amber20.pdf#chapter.32
 

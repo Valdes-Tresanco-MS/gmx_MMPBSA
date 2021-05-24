@@ -150,14 +150,15 @@ nav:
   - Examples:
     - Examples: examples/README.md
     - Analysis:
-      - 3D-RISM: examples/3D-RISM/README.md
-      - Alanine scanning: examples/Alanine_scanning/README.md
-      - Decomposition analysis: examples/Decomposition_analysis/README.md
       - Protein-Ligand (MT): examples/Protein_ligand/MT/README.md
       - Stability calculations: examples/Stability/README.md
+      - Alanine scanning: examples/Alanine_scanning/README.md
+      - Decomposition analysis: examples/Decomposition_analysis/README.md
       - Entropy calculation:
         - Interaction Entropy: examples/Entropy_calculations/Interaction_Entropy/README.md
         - nmode Entropy: examples/Entropy_calculations/nmode/README.md
+      - MM/3D-RISM: examples/3D-RISM/README.md
+      - QM/MMGBSA: examples/QM_MMGBSA/README.md
     - Systems:
       - Protein-protein: examples/Protein_protein/README.md
       - Protein-Ligand (ST): examples/Protein_ligand/ST/README.md

@@ -1,0 +1,54 @@
+;
+;	File 'complex.top' was generated
+;	By user: mario (1000)
+;	On host: mario-comp
+;	At date: Mon May 24 08:31:07 2021
+;
+;	This is a standalone topology file
+;
+;	Created by:
+;	                    :-) GROMACS - gmx pdb2gmx, 2018.3 (-:
+;	
+;	Executable:   /media/mario/92bb1dc0-1f5c-4566-bfea-709a64de54f8/mario/Programs/Installation/gromacs-2018.3/bin/gmx
+;	Data prefix:  /media/mario/92bb1dc0-1f5c-4566-bfea-709a64de54f8/mario/Programs/Installation/gromacs-2018.3
+;	Working dir:  /home/mario/PycharmProjects/gmx_MMPBSA/test_files/QM_MMGBSA
+;	Command line:
+;	  gmx pdb2gmx -f protein.pdb -o complex.pdb -p complex.top -i protein_posre.itp -water tip3p -ignh -ss -his
+;	Force field was read from the standard GROMACS share directory.
+;
+
+; Include forcefield parameters
+#include "amber14sb_parmbsc1.ff/forcefield.itp"
+#include "MFU.itp"
+
+; Include chain topologies
+#include "complex_Protein_chain_A.itp"
+#include "complex_Protein_chain_B.itp"
+#include "complex_Protein_chain_C.itp"
+
+; Include water topology
+#include "amber14sb_parmbsc1.ff/tip3p.itp"
+
+#ifdef POSRES_WATER
+; Position restraint for each water oxygen
+[ position_restraints ]
+;  i funct       fcx        fcy        fcz
+   1    1       1000       1000       1000
+#endif
+
+; Include topology for ions
+#include "amber14sb_parmbsc1.ff/ions.itp"
+
+[ system ]
+; Name
+Protein in water
+
+[ molecules ]
+; Compound        #mols
+Protein_chain_A     1
+Protein_chain_B     1
+Protein_chain_C     1
+MFU                 1
+SOL         11026
+NA               35
+CL               35

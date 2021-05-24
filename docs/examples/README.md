@@ -13,15 +13,15 @@ the same run for a specific system.
 
 
 ## Analysis
-
-* [MM/3D-RISM](3D-RISM/README.md)[^1]
-* [Alanine scanning](Alanine_scanning/README.md)[^1][^2]
-* [Decomposition analysis](Decomposition_analysis/README.md)[^1][^2]
 * [Multiple Trajectory method (Protein-Ligand)](Protein_ligand/MT/README.md)[^1]
 * [Stability calculations](Stability/README.md)[^1][^2]
+* [Alanine scanning](Alanine_scanning/README.md)[^1][^2]
+* [Decomposition analysis](Decomposition_analysis/README.md)[^1][^2]
 * Entropy
     * [Interaction Entropy calculations](Entropy_calculations/Interaction_Entropy/README.md)[^1][^2]
     * [nmode Entropy calculations](Entropy_calculations/nmode/README.md)[^1]
+* [MM/3D-RISM](3D-RISM/README.md)[^1]    
+* [QM/MMGBSA calculations](QM_MMGBSA/README.md)
 
 ## Systems
 * [Protein-protein binding free energy calculations](Protein_protein/README.md)[^1][^2]
