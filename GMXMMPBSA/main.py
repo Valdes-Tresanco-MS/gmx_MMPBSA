@@ -726,9 +726,9 @@ class MMPBSA_App(object):
         if self.master:
             self.FILES = self.clparser.parse_args(args)
             # save args in gmx_MMPBSA.log
-            with open('gmx_MMPBSA.log', 'a') as log:
-                log.write('[INFO   ] Command-line\n'
-                          '    gmx_MMPBSA ' + ' '.join(args) + '\n')
+            logging.info('Command-line\n'
+                         '  gmx_MMPBSA ' + ' '.join(args) + '\n')
+
         else:
             self.FILES = object()
         # Broadcast the FILES
