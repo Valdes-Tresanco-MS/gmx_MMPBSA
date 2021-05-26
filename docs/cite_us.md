@@ -9,7 +9,7 @@ At the moment we only have Zenodo [![DOI](https://zenodo.org/badge/DOI/10.5281/z
 
 !!! note "Cite as"
     Mario S. Valdés Tresanco, Mario E. Valdes-Tresanco, Pedro A. Valiente, & Ernesto Moreno Frías.
-    **gmx_MMPBSA (Version v1.4.2)**. Zenodo. http://doi.org/10.5281/zenodo.4569307. Download | [*.bib](gmx_MMPBSA_citation.bib)
+    **gmx_MMPBSA (Version v1.4.3)**. Zenodo. http://doi.org/10.5281/zenodo.4569307. Download | [*.bib](gmx_MMPBSA_citation.bib)
     | [*.ris](gmx_MMPBSA_citation.ris) | [*.xml](gmx_MMPBSA_citation.xml) |
 
 **We will have the article available soon**
