@@ -2,8 +2,24 @@
 template: main.html
 title: Changelog
 ---
-
 # Changelog
+## [gxm_MMPBSA v1.4.3 (26/05/2021)](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/releases/tag/v1.4.3)
+### Additions
+- Added two new tutorials [Protein_ligand_LPH_atoms_CHARMMff](https://valdes-tresanco-ms.github.io/gmx_MMPBSA/examples/Protein_ligand_LPH_atoms_CHARMMff/) and [QM/MMGBSA calculations](https://valdes-tresanco-ms.github.io/gmx_MMPBSA/examples/QM_MMGBSA/)
+- Now the program reports the `p-value` associated with the correlation coefficient when performing the correlation analysis
+- Google Analytics is used as a third-party tracking service to improve documentation. Check our [Private Policy](https://valdes-tresanco-ms.github.io/gmx_MMPBSA/private_policy/) for more details
+
+### Fixes
+- Minor fixes in the documentation
+- Improved parsing of `forcefields` variable
+- Fixed bug when `gmx_MMPBSA_ana` runs without arguments
+- Fixed compatibility with older files (`< v1.4.0`)
+- Fixed error when `debug_printlevel > 1` in tleap command
+
+### Changes
+- Now the command line used is added to the log file 
+- The `gmx_MMPBSA data` folder is exported directly rather than copied in the `$AMBERHOME` data folder. 
+
 ## [gxm_MMPBSA v1.4.2 (01/05/2021)](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/releases/tag/v1.4.2)
 ### Additions
 - Added Covid-19 and other complex systems as examples in the documentation
@@ -23,9 +39,9 @@ title: Changelog
 - Changed `protein_forcefields` and `ligand_forcefield` by `forcefields` variable in all examples
 - Now QH and IE can be calculated at the same time
 - `entropy` variable was separated in `qh_entropy` and `interaction_entropy`. _The `entropy` variable is deprecated 
-  and will be removed in the next version (v1.5.0)._
+  and will be removed in the next major version (v1.5.0)._
 - `entropy_seg` was replaced by `ie_segment`. _The `entropy_seg` variable is deprecated and will be removed in the 
-  next version (v1.5.0)._
+  next major version (v1.5.0)._
 
 ## [gxm_MMPBSA v1.4.1 (08/04/2021)](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/releases/tag/v1.4.1)
 **Additions**
@@ -46,7 +62,7 @@ title: Changelog
 **Changes**
 
 - Now `forcefields` variable unifies `protein_forcefield` and `ligand_forcefield`. These variables `protein_forcefield`
-  and `ligand_forcefield` are deprecated and will be removed in the next version (v1.5.0).
+  and `ligand_forcefield` are deprecated and will be removed in the next major version (v1.5.0).
 - Improved documentation
   - Examples
   - Command-line
