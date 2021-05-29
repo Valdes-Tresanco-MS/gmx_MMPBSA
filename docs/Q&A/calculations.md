@@ -12,15 +12,14 @@ Here we describe a series of frequent issues related to calculations and their p
 
 
 
-??? example "Inconsistent energy"
-    **I get this error: `ValueError: could not convert string to float: '*************'`**
+??? example "ValueError: could not convert string to float: '*************'"
     : This error has two possible causes:
         
         1. The structure defined in `-cs`, `-ps`, or `-ls` options is inconsistent, or the trajectory
         has not been fitted (remove PBC) properly. This is the most common error. Many times it is because the 
         system under study is longer than some edges of the box.
         
-            **Possible solutions:**
+            #### **Possible solutions:**
             
             ??? tip "Check for structure consistency"
                 
@@ -90,7 +89,7 @@ Here we describe a series of frequent issues related to calculations and their p
         `gmx_MMPBSA` can handle very large systems as described in example [Ribosomal50S_Mycalamide_A][9], it cannot 
         determine certain energetic terms. This is a limitation of Sander when writing the output file.
            
-            **Possible solutions:**
+            #### **Possible solutions:**
     
             : The error could be solved by recompiling Sander with some modifications in the output function. 
             However, this is not recommended since the error can be large. Another possible solution could be modifying 
@@ -98,7 +97,7 @@ Here we describe a series of frequent issues related to calculations and their p
             calculation for a part of the system (sub-system).
 
     
-    **I get high values for the solvation energy when using PB model**
+??? example "I get high values for the solvation energy when using PB model"    
 
     : When using PB model, [inp=2][10] is used as default to calculate total non-polar solvation free energy, that 
     is, the total non-polar solvation free energy will be modeled as two terms: the cavity term and the dispersion 
@@ -107,7 +106,7 @@ Here we describe a series of frequent issues related to calculations and their p
     linearly proportional to the molecular solvent-accessible-surface area (SASA) or the molecular volume enclosed 
     by SASA.
 
-        **Possible solutions:**
+        #### **Possible solutions:**
     
         :  You may want to try inp=1 and avoid the EDISPER contribution. This way, the total non-polar solvation 
         free energy will be modeled as a single term linearly proportional to the solvent-accessible surface area. Just 

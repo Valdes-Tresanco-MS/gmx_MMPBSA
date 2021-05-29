@@ -8,12 +8,14 @@ Here we describe a series of more frequent reported problems related mainly to c
 supported OS and their possible solutions.
 
 ??? example "gmx_MMPBSA fail in macOS < BigSur"
-    
+
+    #### **Solution:**    
     We have only tested gmx_MMPBSA on macOS BigSur and it works fine. Since a problem related to a version lower 
     than BigSur was reported, we assume that it is not compatible. Please check this [thread][1]
 
 ??? example "gmx_MMPBSA_ana fails in non-native Linux distribution (_i.e._, Windows Subsystem for Linux (WSL), Debian, Centos or HPC)"
 
+    #### **Solution:**
     **I am using Windows Subsystem for Linux (WSL)**
     : The WSL has no graphics drivers, thus it is impossible to run native Linux graphics applications. Therefore, 
     there is currently no way to run gmx_MMPBSA_ana in such an environment.
@@ -36,7 +38,8 @@ supported OS and their possible solutions.
     : If you get the following or similar error:
 
             qt.qpa.plugin: Could not load the Qt platform plugin "xcb" in "" even though it was found.
-    
+        
+        #### **Solution:**    
         A possible solution may be to reinstall these libraries
             
             sudo apt install --reinstall libxcb-xinerama0
