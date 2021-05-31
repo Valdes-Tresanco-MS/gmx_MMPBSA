@@ -12,7 +12,7 @@ Here we describe a series of frequent issues related to calculations and their p
 
 
 
-??? example "ValueError: could not convert string to float: '*************'"
+???+ example "ValueError: could not convert string to float: '*************'"
     : This error has two possible causes:
         
         1. The structure defined in `-cs`, `-ps`, or `-ls` options is inconsistent, or the trajectory
@@ -97,7 +97,7 @@ Here we describe a series of frequent issues related to calculations and their p
             calculation for a part of the system (sub-system).
 
     
-??? example "I get high values for the solvation energy when using PB model"    
+???+ example "I get high values for the solvation energy when using PB model"    
 
     : When using PB model, [inp=2][10] is used as default to calculate total non-polar solvation free energy, that 
     is, the total non-polar solvation free energy will be modeled as two terms: the cavity term and the dispersion 
@@ -126,7 +126,7 @@ Here we describe a series of frequent issues related to calculations and their p
     two terms, _i.e._, the cavity term and the dispersion term. Sometimes there are imbalances in the 
     cancellation of error between the two components and this can produce unrealistic non-polar energy values.
 
-??? example "NMODE calculation finish in error"
+???+ example "NMODE calculation finish in error"
     The only error reported is probably related to RAM saturation. NMODE calculations require a considerable amount 
     of RAM depending on the number of atoms in your system. The amount of total RAM consumed during the calculation 
     will be: `RAM for 1 frame * number of threads`    

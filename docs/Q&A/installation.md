@@ -7,14 +7,14 @@ title: Q&A - Installation
 Here we describe a series of more frequent reported problems related mainly to the installation process and their 
 possible solutions.
 
-??? example "I don't find `amber.python` executable"
+???+ example "I don't find `amber.python` executable"
 
     #### **Solution:**
     
     1. Make sure that you have installed `Ambertools20` and sourced the `amber.sh(zch)` file
     2. If you installed `Ambertools20` from conda, use that python executable
 
-??? example "I get an error related to MPI when I try to install gmx_MMPBSA"
+???+ example "I get an error related to MPI when I try to install gmx_MMPBSA"
     If you get an error like this:    
 
         error: Cannot compile MPI programs. Check your configuration!!!
@@ -29,7 +29,7 @@ possible solutions.
 
         sudo apt install --reinstall openmpi-bin libopenmpi-dev openssh-client
 
-??? example "I don't find the gmx_MMPBSA executable"
+???+ example "I don't find the gmx_MMPBSA executable"
     
     #### **Solution:**
 
@@ -37,7 +37,7 @@ possible solutions.
     2. Check if the miniconda bin folder are in the PATH ([See here][2])
     3. Check if the gmx_MMPBSA application has permission to run as a program
     
-??? example "When I run gmx_MMPBSA I get this error `ModuleNotFoundError: No module named 'parmed'`"
+???+ example "When I run gmx_MMPBSA I get this error `ModuleNotFoundError: No module named 'parmed'`"
 
     #### **Solution:**
 

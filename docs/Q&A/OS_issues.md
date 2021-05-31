@@ -7,13 +7,13 @@ title: Q&A - OS issues
 Here we describe a series of more frequent reported problems related mainly to compatibility issues and 
 supported OS and their possible solutions.
 
-??? example "gmx_MMPBSA fail in macOS < BigSur"
+???+ example "gmx_MMPBSA fail in macOS < BigSur"
 
     #### **Solution:**    
     We have only tested gmx_MMPBSA on macOS BigSur and it works fine. Since a problem related to a version lower 
     than BigSur was reported, we assume that it is not compatible. Please check this [thread][1]
 
-??? example "gmx_MMPBSA_ana fails in non-native Linux distribution (_i.e._, Windows Subsystem for Linux (WSL), Debian, Centos or HPC)"
+???+ example "gmx_MMPBSA_ana fails in non-native Linux distribution (_i.e._, Windows Subsystem for Linux (WSL), Debian, Centos or HPC)"
 
     #### **Solution:**
     **I am using Windows Subsystem for Linux (WSL)**
@@ -32,7 +32,7 @@ supported OS and their possible solutions.
     being executed at the end of the calculations. Therefore, just add `-nogui` at the end of the command line and it
     should be good to go.
     
-??? example "Error with `qt.qpa.plugin`"
+???+ example "Error with `qt.qpa.plugin`"
 
     **I get an error related to Qt plugins**
     : If you get the following or similar error:
