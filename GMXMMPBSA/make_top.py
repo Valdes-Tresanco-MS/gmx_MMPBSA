@@ -56,7 +56,6 @@ ions = ["AG", "AL", "Ag", "BA", "BR", "Be", "CA", "CD", "CE", "CL", "CO", "CR", 
         "SR", "Sm", "Sn", "TB", "TL", "Th", "Tl", "Tm", "U4+", "V2+", "Y", "YB2", "ZN", "Zr"]
 
 
-
 class CheckMakeTop:
     def __init__(self, FILES, INPUT, external_programs):
         self.FILES = FILES
@@ -158,7 +157,7 @@ class CheckMakeTop:
         c3 = subprocess.Popen(editconf_echo_args, stdout=subprocess.PIPE)
         # we extract a pdb from structure file to make amber topology
         editconf_args = self.editconf + ['-f', self.FILES.complex_tpr, '-o', self.complex_str_file, '-n',
-                                    self.FILES.complex_index]
+                                         self.FILES.complex_index]
         if self.INPUT['debug_printlevel']:
             logging.info('Running command: ' + (' '.join(editconf_echo_args)) + ' | ' + ' '.join(editconf_args))
         c4 = subprocess.Popen(editconf_args, stdin=c3.stdout, stdout=self.log, stderr=self.log)
@@ -198,7 +197,7 @@ class CheckMakeTop:
                 cp1 = subprocess.Popen(rec_echo_args, stdout=subprocess.PIPE)
                 # we extract a pdb from structure file to make amber topology
                 editconf_args = self.editconf + ['-f', self.FILES.complex_tpr, '-o', 'rec_temp.pdb', '-n',
-                                            self.FILES.complex_index]
+                                                 self.FILES.complex_index]
                 if self.INPUT['debug_printlevel']:
                     logging.info('Running command: ' + (' '.join(rec_echo_args)) + ' | ' + ' '.join(editconf_args))
                 cp2 = subprocess.Popen(editconf_args, stdin=cp1.stdout, stdout=self.log, stderr=self.log)
@@ -223,7 +222,7 @@ class CheckMakeTop:
             p1 = subprocess.Popen(editconf_echo_args, stdout=subprocess.PIPE)
             # we extract a pdb from structure file to make amber topology
             editconf_args = self.editconf + ['-f', self.FILES.receptor_tpr, '-o', self.receptor_str_file, '-n',
-                                        self.FILES.receptor_index]
+                                             self.FILES.receptor_index]
             if self.INPUT['debug_printlevel']:
                 logging.info('Running command: ' + (' '.join(editconf_echo_args)) + ' | ' + ' '.join(editconf_args))
             cp2 = subprocess.Popen(editconf_args, stdin=p1.stdout, stdout=self.log, stderr=self.log)
@@ -240,7 +239,7 @@ class CheckMakeTop:
             cp1 = subprocess.Popen(editconf_echo_args, stdout=subprocess.PIPE)
             # we extract a pdb from structure file to make amber topology
             editconf_args = self.editconf + ['-f', self.FILES.complex_tpr, '-o', self.receptor_str_file, '-n',
-                                        self.FILES.complex_index]
+                                             self.FILES.complex_index]
             if self.INPUT['debug_printlevel']:
                 logging.info('Running command: ' + (' '.join(editconf_echo_args)) + ' | ' + ' '.join(editconf_args))
             cp2 = subprocess.Popen(editconf_args, stdin=cp1.stdout, stdout=self.log, stderr=self.log)
@@ -259,7 +258,7 @@ class CheckMakeTop:
             l1 = subprocess.Popen(editconf_echo_args, stdout=subprocess.PIPE)
             # we extract a pdb from structure file to make amber topology
             editconf_args = self.editconf + ['-f', self.FILES.ligand_tpr, '-o', self.ligand_str_file, '-n',
-                                        self.FILES.ligand_index]
+                                             self.FILES.ligand_index]
             if self.INPUT['debug_printlevel']:
                 logging.info('Running command: ' + (' '.join(editconf_echo_args)) + ' | ' + ' '.join(editconf_args))
             l2 = subprocess.Popen(editconf_args, stdin=l1.stdout, stdout=self.log, stderr=self.log)
@@ -270,12 +269,12 @@ class CheckMakeTop:
             logging.info('No ligand structure file was defined. Using ST approach...')
             logging.info('Using ligand structure from complex to generate AMBER topology')
             logging.info('Normal ligand: Saving group {} in {} file as {}'.format(lig_group, self.FILES.complex_index,
-                                                                                                  self.ligand_str_file))
+                                                                                  self.ligand_str_file))
             editconf_echo_args = ['echo', '{}'.format(lig_group)]
             cl1 = subprocess.Popen(editconf_echo_args, stdout=subprocess.PIPE)
             # we extract a pdb from structure file to make amber topology
             editconf_args = self.editconf + ['-f', self.FILES.complex_tpr, '-o', self.ligand_str_file, '-n',
-                                        self.FILES.complex_index]
+                                             self.FILES.complex_index]
             if self.INPUT['debug_printlevel']:
                 logging.info('Running command: ' + (' '.join(editconf_echo_args)) + ' | ' + ' '.join(editconf_args))
             cl2 = subprocess.Popen(editconf_args, stdin=cl1.stdout, stdout=self.log, stderr=self.log)
@@ -295,9 +294,9 @@ class CheckMakeTop:
         # first we check if forcefields was defined
         prot_lig_ff = [self.INPUT['protein_forcefield'], self.INPUT['ligand_forcefield']]
 
-        if [ x.strip() for x in self.INPUT['forcefields'].split(',')] != prot_lig_ff:
-            if [ x.strip() for x in self.INPUT['forcefields'].split(',')] != ['oldff/leaprc.ff99SB', 'leaprc.gaff']:
-                forcefields = [ x.strip() for x in self.INPUT['forcefields'].split(',')]
+        if [x.strip() for x in self.INPUT['forcefields'].split(',')] != prot_lig_ff:
+            if [x.strip() for x in self.INPUT['forcefields'].split(',')] != ['oldff/leaprc.ff99SB', 'leaprc.gaff']:
+                forcefields = [x.strip() for x in self.INPUT['forcefields'].split(',')]
             else:
                 forcefields = self.INPUT['protein_forcefield'], self.INPUT['ligand_forcefield']
         else:
@@ -458,7 +457,7 @@ class CheckMakeTop:
         start = 1
         c = 1
         for r in self.resi['REC']['num']:
-            end = start + (r[1]- r[0])
+            end = start + (r[1] - r[0])
             mask = f'!:{start}-{end}'
             start += end
             rec = self.molstr(self.receptor_str)
@@ -599,8 +598,8 @@ class CheckMakeTop:
         # get the residues in the top from the com_ndx
         res_list = []
         for i in ndx:
-            if rtemp_top.atoms[i-1].residue.number + 1 not in res_list:
-                res_list.append(rtemp_top.atoms[i-1].residue.number + 1)
+            if rtemp_top.atoms[i - 1].residue.number + 1 not in res_list:
+                res_list.append(rtemp_top.atoms[i - 1].residue.number + 1)
 
         ranges = list2range(res_list)
         rtemp_top.strip(f"!:{','.join(ranges['string'])}")
@@ -716,16 +715,20 @@ class CheckMakeTop:
             # change residues name according to AMBER
             if residue.name == 'LYS':
                 atoms = [atom.name for atom in residue.atoms]
-                if not 'HZ3' in atoms:
+                if 'HZ3' not in atoms:
                     residue.name = 'LYN'
             elif residue.name == 'ASP':
                 atoms = [atom.name for atom in residue.atoms]
                 if 'HD2' in atoms:
                     residue.name = 'ASH'
+            elif residue.name == 'ASPH':
+                residue.name = 'ASH'
             elif residue.name == 'GLU':
                 atoms = [atom.name for atom in residue.atoms]
                 if 'HE2' in atoms:
                     residue.name = 'GLH'
+            elif residue.name == 'GLUH':
+                residue.name = 'GLH'
             elif residue.name in his:
                 atoms = [atom.name for atom in residue.atoms if atom.atomic_number == 1]
                 if 'HD1' in atoms and 'HE2' in atoms:
@@ -970,7 +973,7 @@ class CheckMakeTop:
                 c5 = subprocess.Popen(trjconv_echo_args, stdout=subprocess.PIPE)
                 # we get only first trajectory to extract a pdb file and make amber topology for complex
                 trjconv_args = self.trjconv + ['-f', self.FILES.complex_trajs[0], '-s', self.FILES.complex_tpr,
-                                          '-o', 'COM_traj_{}.xtc'.format(i), '-n', self.FILES.complex_index]
+                                               '-o', 'COM_traj_{}.xtc'.format(i), '-n', self.FILES.complex_index]
                 if self.INPUT['debug_printlevel']:
                     logging.info('Running command: ' + (' '.join(trjconv_echo_args)) + ' | ' + ' '.join(trjconv_args))
                 c6 = subprocess.Popen(trjconv_args,  # FIXME: start and end frames???
@@ -989,8 +992,8 @@ class CheckMakeTop:
                     c5 = subprocess.Popen(trjconv_echo_args, stdout=subprocess.PIPE)
                     # we get only first trajectory to extract a pdb file and make amber topology for complex
                     trjconv_args = self.trjconv + ['-f', self.FILES.receptor_trajs[0], '-s', self.FILES.receptor_tpr,
-                                              '-o', 'REC_traj_{}.xtc'.format(i), '-n',
-                                              self.FILES.receptor_index]
+                                                   '-o', 'REC_traj_{}.xtc'.format(i), '-n',
+                                                   self.FILES.receptor_index]
                     if self.INPUT['debug_printlevel']:
                         logging.info('Running command: ' + (' '.join(trjconv_echo_args)) + ' | ' + ' '.join(
                             trjconv_args))
@@ -1010,7 +1013,7 @@ class CheckMakeTop:
                     c5 = subprocess.Popen(trjconv_echo_args, stdout=subprocess.PIPE)
                     # we get only first trajectory to extract a pdb file and make amber topology for complex
                     trjconv_args = self.trjconv + ['-f', self.FILES.ligand_trajs[0], '-s', self.FILES.ligand_tpr,
-                                              '-o', 'LIG_traj_{}.xtc'.format(i), '-n', self.FILES.ligand_index]
+                                                   '-o', 'LIG_traj_{}.xtc'.format(i), '-n', self.FILES.ligand_index]
                     if self.INPUT['debug_printlevel']:
                         logging.info(
                             'Running command: ' + (' '.join(trjconv_echo_args)) + ' | ' + ' '.join(trjconv_args))
@@ -1027,7 +1030,7 @@ class CheckMakeTop:
                                 'complex...')
             c = 1
             for res in ref_str.residues:
-                com_str.residues[c-1].chain = res.chain
+                com_str.residues[c - 1].chain = res.chain
                 if c in self.resl['REC']:
                     i = self.resl['REC'].index(c)
                     rec_str.residues[i].chain = res.chain
@@ -1213,8 +1216,9 @@ class CheckMakeTop:
                 i += 1
 
             if not self.FILES.stability:
-                tif.write(f'REC_OUT = combine {{ { rec_out } }}\n')
-                tif.write('saveamberparm REC_OUT {t} {p}REC.inpcrd\n'.format(t=self.receptor_pmrtop, p=self.FILES.prefix))
+                tif.write(f'REC_OUT = combine {{ {rec_out} }}\n')
+                tif.write(
+                    'saveamberparm REC_OUT {t} {p}REC.inpcrd\n'.format(t=self.receptor_pmrtop, p=self.FILES.prefix))
             else:
                 self.receptor_pmrtop = None
             com_out = ' '.join(COM)
@@ -1239,7 +1243,6 @@ class CheckMakeTop:
                 mtif.write('loadamberparams {}\n'.format(ions_para_files[self.INPUT['ions_parameters']]))
                 mtif.write('set default PBRadii {}\n'.format(PBRadii[self.INPUT['PBRadii']]))
 
-
                 if self.mutant_receptor_pmrtop:
                     REC = []
                     for mrec in self.mut_receptor_list:
@@ -1249,8 +1252,9 @@ class CheckMakeTop:
 
                     if not self.FILES.stability:
                         mtif.write(f'MREC_OUT = combine {{ {mrec_out} }}\n')
-                        mtif.write('saveamberparm MREC_OUT {t} {p}MUT_REC.inpcrd\n'.format(t=self.mutant_receptor_pmrtop,
-                                                                                         p=self.FILES.prefix))
+                        mtif.write(
+                            'saveamberparm MREC_OUT {t} {p}MUT_REC.inpcrd\n'.format(t=self.mutant_receptor_pmrtop,
+                                                                                    p=self.FILES.prefix))
                     else:
                         self.mutant_receptor_pmrtop = None
                     # check if ligand is not protein and always load
@@ -1275,7 +1279,7 @@ class CheckMakeTop:
                     if not self.FILES.stability:
                         mtif.write(f'MLIG_OUT = combine {{ {mlig_out} }}\n')
                         mtif.write('saveamberparm MLIG_OUT {t} {p}MUT_LIG.inpcrd\n'.format(
-                                t=self.mutant_ligand_pmrtop, p=self.FILES.prefix))
+                            t=self.mutant_ligand_pmrtop, p=self.FILES.prefix))
                     else:
                         self.mutant_ligand_pmrtop = None
                     for rec in self.receptor_list:
@@ -1296,10 +1300,10 @@ class CheckMakeTop:
                 mcom_out = ' '.join(MCOM)
                 mtif.write(f'MCOM_OUT = combine {{ {mcom_out} }}\n')
                 mtif.write('saveamberparm MCOM_OUT {t} {p}MUT_COM.inpcrd\n'.format(t=self.mutant_complex_pmrtop,
-                                                                               p=self.FILES.prefix))
+                                                                                   p=self.FILES.prefix))
                 mtif.write('quit')
 
-            tleap_args = [tleap, '-f', '{}'.format(self.FILES.prefix + 'mut_leap.in'), '-I', data_path.as_posix() ]
+            tleap_args = [tleap, '-f', '{}'.format(self.FILES.prefix + 'mut_leap.in'), '-I', data_path.as_posix()]
             if self.INPUT['debug_printlevel']:
                 logging.info('Running command: ' + ' '.join(tleap_args))
             p1 = subprocess.Popen(tleap_args, stdout=self.log, stderr=self.log)
