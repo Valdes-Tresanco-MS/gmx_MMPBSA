@@ -717,17 +717,19 @@ class CheckMakeTop:
                 atoms = [atom.name for atom in residue.atoms]
                 if 'HZ3' not in atoms:
                     residue.name = 'LYN'
+            elif residue.name == 'LYSH':
+                residue.name = 'LYN'
             elif residue.name == 'ASP':
                 atoms = [atom.name for atom in residue.atoms]
                 if 'HD2' in atoms:
                     residue.name = 'ASH'
-            elif residue.name == 'ASPH':
+            elif residue.name in ['ASPH', 'ASPP']:
                 residue.name = 'ASH'
             elif residue.name == 'GLU':
                 atoms = [atom.name for atom in residue.atoms]
                 if 'HE2' in atoms:
                     residue.name = 'GLH'
-            elif residue.name == 'GLUH':
+            elif residue.name in ['GLUH', 'GLUP']:
                 residue.name = 'GLH'
             elif residue.name in his:
                 atoms = [atom.name for atom in residue.atoms if atom.atomic_number == 1]
@@ -754,7 +756,7 @@ class CheckMakeTop:
                 for atom in residue.atoms:
                     if 'H' in atom.name and atom.atomic_number == 0:
                         atom.atomic_number = 1
-            # Remove H atoms. Only when using the pdb files with tleap to build the topologies
+                # Remove H atoms. Only when using the pdb files with tleap to build the topologies
         if removeH:
             structure.strip('@/H')
 
