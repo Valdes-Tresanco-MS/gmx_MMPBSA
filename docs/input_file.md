@@ -409,9 +409,9 @@ Avoid inconsistencies with defined internal temperature (298.15 K) when `nmode` 
             `qm_residues="A/5-6B,6D-7` Will end in error.
 
 `qm_theory` 
-:   Which semi-empirical Hamiltonian should be used for the quantum calculation. Options are AM1, RM1, MNDO, PM3-PDDG, 
-    MNDO-PDDG, PM3-CARB1, MNDO/d (same as MNDOD), AM1/d (same as AM1D), PM6, DFTB2 (same as DFTB), and DFTB3. The 
-    dispersion correction can be switched on for AM1 and PM6 by choosing AM1-D* and PM6-D, respectively. The 
+:   Which semi-empirical Hamiltonian should be used for the quantum calculation. Options are PM3, AM1, MNDO, PDDG-PM3, 
+    PM3PDDG, PDDG-MNDO, PDDGMNDO, PM3-CARB1, PM3CARB1, DFTB, SCC-DFTB, RM1, PM6, PM3-ZnB, PM3-MAIS, PM3ZNB, MNDO/D, 
+    MNDOD. The dispersion correction can be switched on for AM1 and PM6 by choosing AM1-D* and PM6-D, respectively. The 
     dispersion and hydrogen bond correction will be applied for AM1-DH+ and PM6-DH+.
 
     !!! danger

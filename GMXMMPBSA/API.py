@@ -368,7 +368,7 @@ def load_gmxmmpbsa_info(fname):
                                mydata['gb']['complex']['TOTAL'])
 
        # Calculate the standard deviation of the alanine mutant receptor in PB
-       print mydata.mutant['pb']['receptor']['TOTAL'].std()
+       print(mydata.mutant['pb']['receptor']['TOTAL'].std())
     """
     if not isinstance(fname, Path):
         fname = Path(fname)
