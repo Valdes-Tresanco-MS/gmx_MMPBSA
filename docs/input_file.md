@@ -689,10 +689,6 @@ have added several additional notations
                 
                 **Individual selection**
                 :   `print_res="A/5,6:B,6:C,7 B/25` Will print all mentioned residues except the residues A:6:A and A:6:D
-                
-                **Multiple chain selection**
-                :   `print_res="A/5-10,100 B/25` Will print residues 3 through 10, 100 from chain A and residue 
-                    25 from Chain B.
 
             === "Wrong notation"
                 `print_res="A/5-6B,6D-7` Will end in error.
