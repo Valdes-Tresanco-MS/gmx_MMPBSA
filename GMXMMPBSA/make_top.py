@@ -524,7 +524,7 @@ class CheckMakeTop:
             if self.INPUT['print_res'] == 'all':
                 return
             else:
-                dist, exclude, res_selection = selector(self.INPUT['print_res'])
+                dist, res_selection = selector(self.INPUT['print_res'])
                 res_list = []
 
                 if dist:
@@ -535,9 +535,9 @@ class CheckMakeTop:
                                 for lat in self.complex_str.residues[j - 1].atoms:
                                     lat_coor = [lat.xx, lat.xy, lat.xz]
                                     if get_dist(rat_coor, lat_coor) <= dist:
-                                        if i not in res_list and exclude != 'REC':
+                                        if i not in res_list:
                                             res_list.append(i)
-                                        if j not in res_list and exclude != 'LIG':
+                                        if j not in res_list:
                                             res_list.append(j)
                                         break
                 elif res_selection:
@@ -615,7 +615,7 @@ class CheckMakeTop:
         """
         Convert string selection format to amber index list
         """
-        dist, exclude, res_selection = selector(self.INPUT['qm_residues'])
+        dist, res_selection = selector(self.INPUT['qm_residues'])
         res_list = []
         for i in self.resl['REC']:
             rres = self.complex_str.residues[i - 1]

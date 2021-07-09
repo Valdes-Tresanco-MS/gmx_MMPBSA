@@ -118,20 +118,20 @@ def list2range(input_list):
 def selector(selection:str):
     string_list = selection.split()
     dist = None
-    exclude = None
+    # exclude = None
     res_selections = []
     if selection.startswith('within'):
         try:
             dist = float(string_list[1])
         except:
             GMXMMPBSA_ERROR(f'Invalid dist, we expected a float value but we get "{string_list[1]}"')
-        if len(string_list) == 4:
-            if string_list[2] != 'not':
-                GMXMMPBSA_ERROR(f'We expected "not" but we get {string_list[2]} instead')
-            if str(string_list[3]).lower() not in ['receptor', 'ligand', 'rec', 'lig']:
-                GMXMMPBSA_ERROR(f'We expected one of this values: "receptor", "rec", "ligand" or "lig" but we get'
-                      f' {(string_list[3]).lower()} instead')
-            exclude = 'REC' if str(string_list[3]).lower() in ['receptor', 'rec'] else 'LIG'
+        # if len(string_list) == 4:
+        #     if string_list[2] != 'not':
+        #         GMXMMPBSA_ERROR(f'We expected "not" but we get {string_list[2]} instead')
+        #     if str(string_list[3]).lower() not in ['receptor', 'ligand', 'rec', 'lig']:
+        #         GMXMMPBSA_ERROR(f'We expected one of this values: "receptor", "rec", "ligand" or "lig" but we get'
+        #               f' {(string_list[3]).lower()} instead')
+        #     exclude = 'REC' if str(string_list[3]).lower() in ['receptor', 'rec'] else 'LIG'
     else:
         # try to process residue selection
         for s in string_list:
@@ -163,7 +163,7 @@ def selector(selection:str):
                                               '{}'.format(chain, cr, ''))
                             continue
                         res_selections.append([chain, cr, ''])
-    return dist, exclude, res_selections
+    return dist, res_selections
 
 
 def checkff():

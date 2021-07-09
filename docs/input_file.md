@@ -664,39 +664,35 @@ have added several additional notations
             `print_res="within 6"` Will print all residues within 6 Angstroms between receptor and 
             ligand including both.
 
-    === "By distance with exclusion"
-        Notation: [ `within` `distance` `not` (`receptor` or `ligand`) ]
-        :   `within` corresponds to the keyword and `distance` to the maximum distance criterion in 
-            Angstroms necessary to select the residues from both the receptor and the ligand omitting the selected 
-            component ones
-        
-        !!! example
-            `print_res="within 6 not lig"` Will print all residues within 6 Angstroms between receptor and 
-            ligand omitting the ligand ones. 
-
     === "Amino acid selection"
         Notation: [ `CHAIN`/(`RESNUM` or `RESNUM-RESNUM`) ]
         :   Print residues individual or ranges. This notation also supports insertion codes, in which case you must 
             define them individually
 
         !!! example
-            `print_res="A/1,3-10,15,100"` This will print Chain A residues 1, 3 through 10, 15, and 100 from the 
-            complex topology file and the corresponding residues in either the ligand and/or receptor topology files.
+            `print_res="A/1,3-10,15,100 B/25"` This will print Chain A residues 1, 3 through 10, 15, and 100 along with 
+            chain B residue 25 from the complex topology file and the corresponding residues in either the ligand and/or 
+            receptor topology files.
 
-            Suppost that we can have the following sequence: A:LEU:5, A:GLY:6:A, A:THR:6:B, A:SER:6:C A:ASP:6D, A:ILE:7
+            !!! danger
+                make sure to include at least one residue from both the receptor and ligand in the `print_res` mask of the 
+                `&decomp` section. Check http://archive.ambermd.org/201308/0075.html
+
+            Suppost that we can have the following sequence where chain A is the receptor and B is the ligand: 
+            A:LEU:5, A:GLY:6:A, A:THR:6:B, A:SER:6:C A:ASP:6D, A:ILE:7 , B:25
             
             === "Supported notation"
                 
                 **Ranges selection**
-                :   `print_res="A/5-7` Will print all mentioned residues because all residues with insertion code are 
+                :   `print_res="A/5-7 B/25` Will print all mentioned residues because all residues with insertion code are 
                     contained in the range
                 
                 **Individual selection**
-                :   `print_res="A/5,6:B,6:C,7` Will print all mentioned residues except the residues A:6:A and A:6:D
+                :   `print_res="A/5,6:B,6:C,7 B/25` Will print all mentioned residues except the residues A:6:A and A:6:D
                 
                 **Multiple chain selection**
-                :   `print_res="A/5-10,100 B/34,56` Will print residues 3 through 10, 100 from chain A and residues 
-                    34 and 56 from Chain B.
+                :   `print_res="A/5-10,100 B/25` Will print residues 3 through 10, 100 from chain A and residue 
+                    25 from Chain B.
 
             === "Wrong notation"
                 `print_res="A/5-6B,6D-7` Will end in error.
