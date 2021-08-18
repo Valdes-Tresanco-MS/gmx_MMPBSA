@@ -719,7 +719,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
                                        level=0, chart_title=f"Interaction Entropy (-TΔS)",
                                        chart_subtitle=f"{mut_pre}{sys_name} | {level.upper()}",
                                        col_box=[1])
-                    ieframes = data[level]['frames'][1] - data[level]['frames'][0]
+                    ieframes = int((data[level]['frames'][1] - data[level]['frames'][0])/item.interval) + 1
                     ent = data[level]['data'][-ieframes:]
                     item1.ie = [data[level]['frames'], data[level]['value']]
                     self.items_counter['charts'] += 1
