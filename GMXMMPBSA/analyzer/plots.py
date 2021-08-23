@@ -23,6 +23,7 @@ from matplotlib.backends import qt_compat
 import matplotlib.patches as mpatches
 from matplotlib.figure import Figure
 from matplotlib.widgets import Cursor
+import matplotlib.ticker as mticker
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
@@ -232,6 +233,9 @@ class Charts(QMdiSubWindow):
                 else:
                     self.line_plot = sns.lineplot(data=self.data.line_plot_dat, x='frames', color='black', linewidth=0.7,
                              y='Energy', label=label, ax=self.mpl_canvas.axes)
+
+                self.line_plot.xaxis.set_major_locator(mticker.MaxNLocator(nbins=10))
+
                 title = self.item.chart_title + '(P.f)'
                 if 'IE' in self.item.item_name:
                     self.mpl_canvas.axes.set_ylabel('Interaction Entropy (kcal/mol)')
@@ -244,7 +248,8 @@ class Charts(QMdiSubWindow):
             if Charts.ROLLING in self.options['chart_type']:
                 if ('IE' not in self.item.item_name and 'NMODE' not in self.item.item_name and 'QH' not in
                         self.item.item_name):
-                    self.data.line_plot_dat['movav'] = self.data.line_plot_dat['Energy'].rolling(50).mean()
+                    self.data.line_plot_dat['movav'] = self.data.line_plot_dat['Energy'].rolling(
+                        int(0.1 * len(self.data.line_plot_dat['frames']))).mean()
                     self.movav_plot = sns.lineplot(data=self.data.line_plot_dat, x='frames', color='red', linewidth=0.8,
                                                     y='movav', label='Mov. Av.', ax=self.mpl_canvas.axes)
 
