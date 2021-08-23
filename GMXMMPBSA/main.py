@@ -956,9 +956,15 @@ class MMPBSA_App(object):
         # fixed the error when try to open gmx_MMPBSA_ana in the issue
         # https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/issues/33
         if self.INPUT['startframe'] < 1:
-            GMXMMPBSA_ERROR('The startframe variable must be >= 1')
+            # GMXMMPBSA_ERROR('The startframe variable must be >= 1')
+            if self.master:
+                logging.warning(
+                    f"The startframe variable must be >= 1. Changing startframe from {self.INPUT['startframe']} to 1")
+                self.INPUT['startframe'] = 1
         if self.INPUT['nmstartframe'] < 1:
-            GMXMMPBSA_ERROR('The nmstartframe variable must be >= 1')
+            logging.warning(
+                f"The nmstartframe variable must be >= 1. Changing nmstartframe from {self.INPUT['nmstartframe']} to 1")
+            self.INPUT['nmstartframe'] = 1
 
         # check files
         if self.FILES.complex_top:
