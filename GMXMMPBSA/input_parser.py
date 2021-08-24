@@ -367,7 +367,7 @@ class InputFile(object):
             # Catch some errors
             if innml and line.strip().startswith('&'):
                 raise InputError('Invalid input. Terminate each namelist prior ' +
-                                 'to starting another one.')
+                                 'to starting another one')
 
             # End of a namelist
             elif innml and line.strip() in ['/', '&end']:
@@ -497,96 +497,114 @@ input_file.addNamelist('general', 'general',
                            ['ie_segment', int, 25, 'Trajectory segment to calculate interaction entropy'],
                            ['entropy_temp', float, 298.15, '(Deprecate) Define the temperature for IE calculation'],
                            ['exp_ki', float, 0, 'Experimental Ki in nM'],
-                           ['full_traj', int, 0, 'Print a full traj. AND the thread trajectories.'],
-                           ['gmx_path', str, '', 'Force to use this path to get GROMACS executable.'],
-                           ['interval', int, 1, 'Number of frames between adjacent frames analyzed.'],
-                           ['ions_parameters', int, 1, 'Define ions parameters to build the Amber topology.'],
-                           ['keep_files', int, 2, 'How many files to keep after successful completion.'],
+                           ['full_traj', int, 0, 'Print a full traj. AND the thread trajectories'],
+                           ['gmx_path', str, '', 'Force to use this path to get GROMACS executable'],
+                           ['interval', int, 1, 'Number of frames between adjacent frames analyzed'],
+                           ['ions_parameters', int, 1, 'Define ions parameters to build the Amber topology'],
+                           ['keep_files', int, 2, 'How many files to keep after successful completion'],
                            ['forcefields', str, 'oldff/leaprc.ff99SB,leaprc.gaff', 'Define the force field to build '
                                                                                    'the Amber topology'],
                            ['ligand_forcefield', str, "leaprc.gaff", 'Define the force field to build Amber topology for '
                                                              'ligand (small molecule)'],
-                           ['netcdf', int, 0, 'Use NetCDF intermediate trajectories.'],
+                           ['netcdf', int, 0, 'Use NetCDF intermediate trajectories'],
                            ['overwrite_data', int, 0, 'Defines whether the gmxMMPBSA data will be overwritten'],
-                           ['PBRadii', int, 3, 'Define PBRadii to build amber topology from GROMACS files.'],
+                           ['PBRadii', int, 3, 'Define PBRadii to build amber topology from GROMACS files'],
                            ['protein_forcefield', str, "oldff/leaprc.ff99SB", 'Define the force field to build Amber '
                                                                               'topology for protein'],
 
-                           # ['receptor_mask', str, None, 'Amber mask of receptor atoms in complex prmtop.'],
+                           # ['receptor_mask', str, None, 'Amber mask of receptor atoms in complex prmtop'],
                            # ['search_path', str, '', 'Look for intermediate programs in all of PATH'],
                            ['solvated_trajectory', int, 1, 'Define if it is necessary to cleanup the trajectories'],
-                           ['startframe', int, 1, 'First frame to analyze.'],
+                           ['startframe', int, 1, 'First frame to analyze'],
                            ['strip_mask', str, strip_mask, 'Amber mask to strip from solvated prmtop'],
                            ['sys_name', str, '', 'System name'],
                            ['temperature', float, 298.15, 'Temperature to calculate Binding Free Energy '
                                                           'from Ki and interaction entropy'],
-                           ['use_sander', int, 0, 'Use sander to compute energies.'],
-                           ['verbose', int, 1, 'How many energy terms to print in the final output.']
+                           ['use_sander', int, 0, 'Use sander to compute energies'],
+                           ['verbose', int, 1, 'How many energy terms to print in the final output']
                        ], trigger=None)
 
 input_file.addNamelist('gb', 'gb',
                        [
-                           ['ifqnt', int, 0, 'Use QM on part of the system'],
                            ['igb', int, 5, 'GB model to use'],
+                           ['extdiel', float, 78.3, 'External dielectric constant for sander'],
+                           ['saltcon', float, 0, 'Salt concentration (M)'],
+                           ['surften', float, 0.0072, 'Surface tension'],
+                           ['rgbmax', float, 999.0, 'Distance cutoff in Angstroms to use when computing effective '
+                                                    'GB radii'],
                            ['intdiel', float, 1.0, 'Internal dielectric constant for sander'],
-                           ['qm_theory', str, '', 'Semi-empirical QM theory to use.'],
+                           ['ifqnt', int, 0, 'Use QM on part of the system'],
+                           ['qm_theory', str, '', 'Semi-empirical QM theory to use'],
                            ['qm_residues', str, '', 'Residues to treat with QM'],
                            ['qmcharge_com', int, 0, 'Charge of QM region in complex'],
                            ['qmcharge_lig', int, 0, 'Charge of QM region in ligand'],
                            ['qmcharge_rec', int, 0, 'Charge of QM region in receptor'],
                            ['qmcut', float, 9999, 'Cutoff in the QM region'],
-                           ['saltcon', float, 0, 'Salt concentration (M)'],
                            ['surfoff', float, 0.0, 'Surface tension offset'],
-                           ['surften', float, 0.0072, 'Surface tension'],
                            ['molsurf', int, 0, 'Use Connelly surface (\'molsurf\' program)'],
-                           ['msoffset', float, 0.0, 'Offset for molsurf calculation.'],
-                           ['probe', float, 1.4, 'Solvent probe radius for surface area calc.']
+                           ['msoffset', float, 0.0, 'Offset for molsurf calculation'],
+                           ['probe', float, 1.4, 'Solvent probe radius for surface area calc']
                        ], trigger='gbrun')
 
 input_file.addNamelist('pb', 'pb',
                        [
-                           ['cavity_offset', float, -0.5692, 'Offset for nonpolar solvation calc.'],
-                           ['cavity_surften', float, 0.0378, 'Surface tension'],
+                           ['inp', int, 2, 'Nonpolar solvation method'],
+                           ['smoothopt', int, 1, 'Instructs PB how to set up dielectric values for finite-difference '
+                                                 'grid edges that are located across the solute/solvent dielectric '
+                                                 'boundary'],
+                           ['radiopt', int, 1, 'Use optimized radii?'],
+                           ['npbopt', int, 0, 'Use NonLinear PB solver?'],
+                           ['solvopt', int, 1, 'Select iterative solver'],
+                           ['linit', int, 1000, 'Number of SCF iterations'],
+                           ['nfocus', int, 2, 'Electrostatic focusing calculation'],
+                           ['fscale', int, 8, 'Set the ratio between the coarse and fine grid spacings in an '
+                                              'electrostatic focussing calculation'],
+                           ['indi', float, 1, 'Internal dielectric constant'],
                            ['exdi', float, 80, 'External dielectric constant'],
+                           ['istrng', float, 0.0, 'Ionic strength (M)'],
+                           ['prbrad', float, 1.4, 'Probe radius'],
+                           ['iprob', float, 2.0, 'Mobile ion probe radius (Angstroms) for ion accessible surface used '
+                                                 'to define the Stern layer'],
+                           ['accept', float, 0.001, 'Sets the iteration convergence criterion (relative to the initial '
+                                                    'residue)'],
+                           ['fillratio', float, 4, 'See "fillratio" in AmberTools/PBSA manual'],
+                           ['scale', float, 2.0, '1/scale = grid spacing for the finite difference solver '
+                                                 '(default = 1/2 Å)'],
+                           ['bcopt', int, 5, 'Boundary condition option'],
+                           ['eneopt', int, 2, 'Compute electrostatic energy and forces'],
+                           ['cutnb', float, 0.0, 'Cutoff for nonbonded interations'],
+                           ['sprob', float, 0.557, 'Solvent probe radius for solvent accessible surface area (SASA) '
+                                                   'used to compute the dispersion term'],
+                           ['cavity_surften', float, 0.0378, 'Surface tension'],
+                           ['cavity_offset', float, -0.5692, 'Offset for nonpolar solvation calc'],
                            ['emem', float, 1.0, 'Membrane dielectric constant'],
                            ['memopt', int, 0, 'Use PB optimation for membrane'],
                            ['memoptzero', int, 0, 'Used in PB optimization for ligand'],
                            ['sasopt', int, 0, 'Molecular surface in PB implict model'],
-                           ['solvopt', int, 2, 'Select iterative solver'],
                            ['mthick', float, 40.0, 'Membrane thickness'],
                            ['mctrdz', float, 0.0, 'Distance to offset membrane in Z direction'],
                            ['maxarcdot', int, 1500, 'Number of dots used to store arc dots per atom '],
                            ['poretype', int, 1, 'Use exclusion region for channel proteins'],
                            ['npbverb', int, 0, 'Option to turn on verbose mode'],
-                           ['nfocus', int, 2, 'Electrostatic focusing calculation'],
-                           ['bcopt', int, 5, 'Boundary condition option'],
-                           ['eneopt', int, 2, 'Compute electrostatic energy and forces'],
                            ['frcopt', int, 0, 'Output for computing electrostatic forces'],
                            ['cutfd', float, 5.0, 'Cutoff for finite-difference interactions'],
-                           ['cutnb', float, 0.0, 'Cutoff for nonbonded interations'],
                            ['ipb', int, 2, 'Dielectric model for PB'],
-                           ['fillratio', float, 4, 'See "fillratio" in AmberTools/PBSA manual.'],
-                           ['indi', float, 1, 'Internal dielectric constant'],
-                           ['inp', int, 2, 'Nonpolar solvation method'],
-                           ['istrng', float, 0, 'Ionic strength (M)'],
-                           ['linit', int, 1000, 'Number of SCF iterations'],
-                           ['prbrad', float, 1.4, 'Probe radius'],
-                           ['radiopt', int, 1, 'Use optimized radii?'],
                            ['sander_apbs', int, 0, 'Use sander.APBS?'],
-                           ['scale', float, 2, 'Distance between grid points (Angstroms)']
+                           ['maxsph', int, 400, 'Approximate number of dots to represent the maximum atomic solvent '
+                                                'accessible surface']
                        ], trigger='pbrun')
 
 input_file.addNamelist('ala', 'alanine_scanning',
-                       [['mutant_only', int, 0, 'Only compute mutant energies'],
-                        ['mutant', str, 'ALA', 'Defines if Alanine or Glycine scanning will be performed'],
-                        ['mutant_res', str, None, 'Which residue will be mutated'],
-                        ['cas_intdiel', int, 0, 'Change the intdiel value based on which aa is mutated'],
-                        ['intdiel_nonpolar', int, 1, 'intdiel for nonpolar residues'],
-                        ['intdiel_polar', int, 3, 'intdiel for polar residues'],
-                        ['intdiel_positive', int, 5, 'intdiel for positive charged residues'],
-                        ['intdiel_negative', int, 5, 'intdiel for negative charged residues']
-                        ],
-                       trigger='alarun')
+                       [
+                           ['mutant_only', int, 0, 'Only compute mutant energies'],
+                           ['mutant', str, 'ALA', 'Defines if Alanine or Glycine scanning will be performed'],
+                           ['mutant_res', str, None, 'Which residue will be mutated'],
+                           ['cas_intdiel', int, 0, 'Change the intdiel value based on which aa is mutated'],
+                           ['intdiel_nonpolar', int, 1, 'intdiel for nonpolar residues'],
+                           ['intdiel_polar', int, 3, 'intdiel for polar residues'],
+                           ['intdiel_positive', int, 5, 'intdiel for positive charged residues'],
+                           ['intdiel_negative', int, 5, 'intdiel for negative charged residues']
+                       ], trigger='alarun')
 
 input_file.addNamelist('nmode', 'nmode',
                        [
