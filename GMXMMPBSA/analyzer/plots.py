@@ -248,10 +248,11 @@ class Charts(QMdiSubWindow):
             if Charts.ROLLING in self.options['chart_type']:
                 if ('IE' not in self.item.item_name and 'NMODE' not in self.item.item_name and 'QH' not in
                         self.item.item_name):
-                    self.data.line_plot_dat['movav'] = self.data.line_plot_dat['Energy'].rolling(
-                        int(0.1 * len(self.data.line_plot_dat['frames']))).mean()
-                    self.movav_plot = sns.lineplot(data=self.data.line_plot_dat, x='frames', color='red', linewidth=0.8,
-                                                    y='movav', label='Mov. Av.', ax=self.mpl_canvas.axes)
+                    if len(self.data.line_plot_dat['Energy']) > 50:
+                        self.data.line_plot_dat['movav'] = self.data.line_plot_dat['Energy'].rolling(
+                            int(0.1 * len(self.data.line_plot_dat['frames']))).mean()
+                        self.movav_plot = sns.lineplot(data=self.data.line_plot_dat, x='frames', color='red', linewidth=0.8,
+                                                        y='movav', label='Mov. Av.', ax=self.mpl_canvas.axes)
 
                 # self.setWindowTitle(title)
             if Charts.BAR in self.options['chart_type']:
@@ -259,8 +260,7 @@ class Charts(QMdiSubWindow):
                 if self.bar_plot:
                     self.bar_plot.cla()
                     self.bar_plot.clear()
-                self.bar_plot  = sns.barplot(data=self.data.bar_plot_dat, ci="sd", errwidth=1,
-                                             ax=self.mpl_canvas.axes)
+                self.bar_plot = sns.barplot(data=self.data.bar_plot_dat, ci="sd", errwidth=1, ax=self.mpl_canvas.axes)
                 for label in self.mpl_canvas.axes.get_xticklabels():
                     label.set_rotation(40)
                     label.set_horizontalalignment('right')
@@ -280,15 +280,17 @@ class Charts(QMdiSubWindow):
                     self.heatmap_plot.clear()
 
                 xticklabels = self.data.heatmap_plot_dat.columns.tolist()
+                window = int(len(xticklabels) / 10)
                 if type(xticklabels[0]) == str:
                     self.heatmap_plot = sns.heatmap(self.data.heatmap_plot_dat, ax=self.mpl_canvas.axes, center=0,
                                                 yticklabels=self.data.heatmap_plot_dat.index.tolist(),
-                                                xticklabels=self.data.heatmap_plot_dat.columns.tolist(),
+                                                xticklabels=window,
                                                 cmap='seismic', cbar_kws={'label': 'Energy (kcal/mol)'})
                     title = self.item.chart_title.replace('[Per-residue]', '[Per-wise]')
                 else:
                     self.heatmap_plot = sns.heatmap(self.data.heatmap_plot_dat, ax=self.mpl_canvas.axes, center=0,
                                                 yticklabels=self.data.heatmap_plot_dat.index.tolist(),
+                                                xticklabels=window,
                                                 cmap='seismic', cbar_kws={'label': 'Energy (kcal/mol)'})
                     title = self.item.chart_title + '(P.f)'  # Fixme: no frames from correlation
 
