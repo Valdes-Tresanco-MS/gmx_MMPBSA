@@ -265,13 +265,15 @@ class PBNabInput(NabInput):
                    'cutnb': 0, 'sprob': 0.557,
                    'cavity_surften': 0.0378, 'cavity_offset': -0.5692}
 
-    name_map = {'inp': 'inp', 'smoothopt': 'smoothopt', 'radiopt': 'radiopt', 'npbopt': 'npbopt',
-                'solvopt': 'solvopt', 'maxitn': 'linit', 'nfocus': 'nfocus', 'fscale': 'fscale',
-                'epsin': 'indi', 'epsout': 'exdi', 'istrng': 'istrng',
-                'dprob': 'prbrad', 'iprob': 'iprob', 'accept': 'accept', 'fillratio': 'fillratio', 'space': 'scale',
-                'bcopt': 'bcopt', 'eneopt': 'eneopt', 'cutnb': 'cutnb', 'sprob': 'sprob',
-                'cavity_surften': 'cavity_surften',
-                'cavity_offset': 'cavity_offset'}
+    name_map = {'inp': 'inp', 'smoothopt': 'smoothopt', 'radiopt': 'radiopt',
+                'npbopt': 'npbopt', 'solvopt': 'solvopt', 'maxitn': 'linit',
+                'nfocus': 'nfocus',
+                'fscale': 'fscale', 'epsin': 'indi', 'epsout': 'exdi',
+                'istrng': 'istrng', 'dprob': 'prbrad', 'iprob': 'iprob',
+                'accept': 'accept', 'fillratio': 'fillratio', 'space': 'scale',
+                'bcopt': 'bcopt', 'eneopt': 'eneopt',
+                'cutnb': 'cutnb', 'sprob': 'sprob',
+                'cavity_surften': 'cavity_surften', 'cavity_offset': 'cavity_offset'}
     calculation_type = 'PB'
 
     def __init__(self, INPUT):
@@ -326,24 +328,30 @@ class SanderGBInput(SanderInput):
                    'igb': 5, 'saltcon': 0.0, 'intdiel': 1.0,
                    'gbsa': 0, 'extdiel': 80.0, 'surften': 0.0072,
                    'ioutfm': 0, 'idecomp': 0, 'offset': -999999.0,
-                   'dec_verbose': 0, 'ifqnt': 0, 'qmmask': '',
+                   'dec_verbose': 0, 'ifqnt': 0,
+                   'qmmask': '',
                    'qm_theory': '', 'qmcharge': 0, 'qmgb': 2,
                    'qmcut': 999.0}
 
     parent_namelist = {'ntb': 'cntrl', 'cut': 'cntrl', 'nsnb': 'cntrl',
                        'imin': 'cntrl', 'maxcyc': 'cntrl', 'ncyc': 'cntrl',
                        'igb': 'cntrl', 'saltcon': 'cntrl', 'intdiel': 'cntrl',
-                       'extdiel': 'cntrl', 'gbsa': 'cntrl', 'surften': 'cntrl',
-                       'offset': 'cntrl', 'idecomp': 'cntrl', 'ioutfm': 'cntrl',
-                       'dec_verbose': 'cntrl', 'ifqnt': 'cntrl', 'qmmask': 'qmmm',
+                       'gbsa': 'cntrl', 'extdiel': 'cntrl', 'surften': 'cntrl',
+                       'ioutfm': 'cntrl', 'idecomp': 'cntrl', 'offset': 'cntrl',
+                       'dec_verbose': 'cntrl', 'ifqnt': 'cntrl',
+                       'qmmask': 'qmmm',
                        'qm_theory': 'qmmm', 'qmcharge': 'qmmm', 'qmgb': 'qmmm',
                        'qmcut': 'qmmm'}
 
-    name_map = {'igb': 'igb', 'saltcon': 'saltcon', 'intdiel': 'intdiel',
-                'extdiel': 'extdiel', 'gbsa': 'gbsa', 'surften': 'surften',
-                'idecomp': 'idecomp', 'ioutfm': 'netcdf', 'qmmask': 'qmmask',
-                'qm_theory': 'qm_theory', 'ifqnt': 'ifqnt', 'qmcharge': 'qmcharge',
-                'qmcut': 'qmcut', 'dec_verbose': 'dec_verbose'}
+    name_map = {'ntb': 'ntb', 'cut': 'cut', 'nsnb': 'nsnb',
+                'imin': 'imin', 'maxcyc': 'maxcyc', 'ncyc': 'ncyc',
+                'igb': 'igb', 'saltcon': 'saltcon', 'intdiel': 'intdiel',
+                'gbsa': 'gbsa', 'extdiel': 'extdiel', 'surften': 'surften',
+                'ioutfm': 'netcdf', 'idecomp': 'idecomp', 'offset': 'offset',
+                'dec_verbose': 'dec_verbose', 'ifqnt': 'ifqnt',
+                'qmmask': 'qmmask',
+                'qm_theory': 'qm_theory', 'qmcharge': 'qmcharge', 'qmgb': 'qmgb',
+                'qmcut': 'qmcut'}
 
 
 # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -351,29 +359,68 @@ class SanderGBInput(SanderInput):
 class SanderPBSADECOMPInput(SanderInput):
     """ PB sander input file """
     input_items = {'ntb': 0, 'cut': 999.0, 'nsnb': 99999,
-                   'imin': 5, 'maxcyc': 1, 'igb': 10,
-                   'ipb': 2, 'inp': 2, 'idecomp': 0,
+                   'imin': 5, 'maxcyc': 1,
+                   'ipb': 2, 'inp': 2,
+                   'ioutfm': 0, 'idecomp': 0, 'dec_verbose': 0,
+                   'ntx': 1,
                    'epsin': 1.0, 'epsout': 80.0,
                    'istrng': 0.0, 'radiopt': 0, 'sprob': 0.557, 'dprob': 1.4,
                    'space': 0.5, 'maxitn': 1000, 'cavity_surften': 0.0378,
                    'cavity_offset': -0.5692, 'fillratio': 4.0,
-                   'ioutfm': 0, 'dec_verbose': 0}
+                   'epsmem': 1.0, 'membraneopt': 0, 'sasopt': 0,
+                   'mthick': 40, 'maxarcdot': 1500, 'solvopt': 2, 'nfocus': 2, 'bcopt': 5,
+                   'eneopt': 2, 'frcopt': 0, 'cutfd': 5.0, 'cutnb': 0.0,
+                   'mctrdz': 0.0, 'poretype': 1, 'npbverb': 0,
+                   'npbopt': 0,
+                   'pbtemp': 300, 'iprob': 2.0, 'arcres': 0.25,
+                   'mprob': 2.70, 'accept': 0.001, 'nbuffer': 0, 'npbgrid': 1,
+                   'scalec': 0, 'nsnba': 1,
+                   'phiout': 0, 'phiform': 0,
+                   'decompopt': 2, 'use_rmin': 1, 'vprob': 1.300,
+                   'rhow_effect': 1.129, 'use_sav': 1, 'maxsph': 400}
 
-    name_map = {'inp': 'inp', 'idecomp': 'idecomp', 'epsin': 'indi',
-                'epsout': 'exdi', 'istrng': 'istrng', 'radiopt': 'radiopt',
-                'dprob': 'prbrad', 'space': 'scale', 'maxitn': 'linit',
-                'cavity_surften': 'cavity_surften',
+    name_map = {'ntb': 'ntb', 'cut': 'cut', 'nsnb': 'nsnb',
+                'imin': 'imin', 'maxcyc': 'maxcyc',
+                'ipb': 'ipb', 'inp': 'inp',
+                'ioutfm': 'netcdf', 'idecomp': 'idecomp', 'dec_verbose': 'dec_verbose',
+                'ntx': 'ntx',
+                'epsin': 'indi', 'epsout': 'exdi',
+                'istrng': 'istrng', 'radiopt': 'radiopt', 'sprob': 'sprob', 'dprob': 'prbrad',
+                'space': 'scale', 'maxitn': 'linit', 'cavity_surften': 'cavity_surften',
                 'cavity_offset': 'cavity_offset', 'fillratio': 'fillratio',
-                'ioutfm': 'netcdf', 'dec_verbose': 'dec_verbose'}
+                'epsmem': 'emem', 'membraneopt': 'memopt', 'sasopt': 'sasopt',
+                'mthick': 'mthick', 'maxarcdot': 'maxarcdot', 'solvopt': 'solvopt', 'nfocus': 'nfocus',
+                'bcopt': 'bcopt',
+                'eneopt': 'eneopt', 'frcopt': 'frcopt', 'cutfd': 'cutfd', 'cutnb': 'cutnb',
+                'mctrdz': 'mctrdz', 'poretype': 'poretype', 'npbverb': 'npbverb',
+                'npbopt': 'npbopt',
+                'pbtemp': 'pbtemp', 'iprob': 'iprob', 'arcres': 'arcres',
+                'mprob': 'mprob', 'accept': 'accept', 'nbuffer': 'nbuffer', 'npbgrid': 'npbgrid',
+                'scalec': 'scalec', 'nsnba': 'nsnba',
+                'phiout': 'phiout', 'phiform': 'phiform',
+                'decompopt': 'decompopt', 'use_rmin': 'use_rmin', 'vprob': 'vprob',
+                'rhow_effect': 'rhow_effect', 'use_sav': 'use_sav', 'maxsph': 'maxsph'}
 
     parent_namelist = {'ntb': 'cntrl', 'cut': 'cntrl', 'nsnb': 'cntrl',
-                       'imin': 'cntrl', 'maxcyc': 'cntrl', 'igb': 'cntrl',
-                       'ipb': 'cntrl', 'inp': 'cntrl', 'idecomp': 'cntrl',
+                       'imin': 'cntrl', 'maxcyc': 'cntrl',
+                       'ipb': 'cntrl', 'inp': 'cntrl',
+                       'ioutfm': 'cntrl', 'idecomp': 'cntrl', 'dec_verbose': 'cntrl',
+                       'ntx': 'cntrl',
                        'epsin': 'pb', 'epsout': 'pb',
                        'istrng': 'pb', 'radiopt': 'pb', 'sprob': 'pb', 'dprob': 'pb',
-                       'space': 'pb', 'maxitn': 'pb', 'cavity_offset': 'pb',
-                       'cavity_surften': 'pb', 'fillratio': 'pb',
-                       'ioutfm': 'cntrl', 'dec_verbose': 'cntrl'}
+                       'space': 'pb', 'maxitn': 'pb', 'cavity_surften': 'pb',
+                       'cavity_offset': 'pb', 'fillratio': 'pb',
+                       'epsmem': 'pb', 'membraneopt': 'pb', 'sasopt': 'pb',
+                       'mthick': 'pb', 'maxarcdot': 'pb', 'solvopt': 'pb', 'nfocus': 'pb', 'bcopt': 'pb',
+                       'eneopt': 'pb', 'frcopt': 'pb', 'cutfd': 'pb', 'cutnb': 'pb',
+                       'mctrdz': 'pb', 'poretype': 'pb', 'npbverb': 'pb',
+                       'npbopt': 'pb',
+                       'pbtemp': 'pb', 'iprob': 'pb', 'arcres': 'pb',
+                       'mprob': 'pb', 'accept': 'pb', 'nbuffer': 'pb', 'npbgrid': 'pb',
+                       'scalec': 'pb', 'nsnba': 'pb',
+                       'phiout': 'pb', 'phiform': 'pb',
+                       'decompopt': 'pb', 'use_rmin': 'pb', 'vprob': 'pb',
+                       'rhow_effect': 'pb', 'use_sav': 'pb', 'maxsph': 'pb'}
 
     def __init__(self, INPUT):
         # We need to change istrng to mM (from M).
@@ -386,9 +433,9 @@ class SanderPBSADECOMPInput(SanderInput):
 class SanderPBSAInput(SanderInput):
     """ PB sander input file """
     input_items = {'ntb': 0, 'cut': 999.0, 'nsnb': 99999,
-                   'imin': 5, 'maxcyc': 1, 'igb': 10,
-                   'ipb': 2, 'inp': 2, 'idecomp': 0,
-                   'ioutfm': 0, 'dec_verbose': 0,
+                   'imin': 5, 'maxcyc': 1,
+                   'ipb': 2, 'inp': 2,
+                   'ioutfm': 0,
                    'ntx': 1,
                    'epsin': 1.0, 'epsout': 80.0,
                    'istrng': 0.0, 'radiopt': 0, 'sprob': 0.557, 'dprob': 1.4,
@@ -399,13 +446,20 @@ class SanderPBSAInput(SanderInput):
                    'eneopt': 2, 'frcopt': 0, 'cutfd': 5.0, 'cutnb': 0.0,
                    'mctrdz': 0.0, 'poretype': 1, 'npbverb': 0,
                    'npbopt': 0,
-                   'maxsph': 400}
+                   'pbtemp': 300, 'iprob': 2.0, 'arcres': 0.25,
+                   'mprob': 2.70, 'accept': 0.001, 'nbuffer': 0, 'npbgrid': 1,
+                   'scalec': 0, 'nsnba': 1,
+                   'phiout': 0, 'phiform': 0,
+                   'decompopt': 2, 'use_rmin': 1, 'vprob': 1.300,
+                   'rhow_effect': 1.129, 'use_sav': 1, 'maxsph': 400}
 
-    name_map = {'ipb': 'ipb', 'inp': 'inp', 'idecomp': 'idecomp',
-                'ioutfm': 'netcdf', 'dec_verbose': 'dec_verbose',
+    name_map = {'ntb': 'ntb', 'cut': 'cut', 'nsnb': 'nsnb',
+                'imin': 'imin', 'maxcyc': 'maxcyc',
+                'ipb': 'ipb', 'inp': 'inp',
+                'ioutfm': 'netcdf',
                 'ntx': 'ntx',
                 'epsin': 'indi', 'epsout': 'exdi',
-                'istrng': 'istrng', 'radiopt': 'radiopt', 'dprob': 'prbrad',
+                'istrng': 'istrng', 'radiopt': 'radiopt', 'sprob': 'sprob', 'dprob': 'prbrad',
                 'space': 'scale', 'maxitn': 'linit', 'cavity_surften': 'cavity_surften',
                 'cavity_offset': 'cavity_offset', 'fillratio': 'fillratio',
                 'epsmem': 'emem', 'membraneopt': 'memopt', 'sasopt': 'sasopt',
@@ -413,12 +467,17 @@ class SanderPBSAInput(SanderInput):
                 'eneopt': 'eneopt', 'frcopt': 'frcopt', 'cutfd': 'cutfd', 'cutnb': 'cutnb',
                 'mctrdz': 'mctrdz', 'poretype': 'poretype', 'npbverb': 'npbverb',
                 'npbopt': 'npbopt',
-                'maxsph': 'maxsph'}
+                'pbtemp': 'pbtemp', 'iprob': 'iprob', 'arcres': 'arcres',
+                'mprob': 'mprob', 'accept': 'accept', 'nbuffer': 'nbuffer', 'npbgrid': 'npbgrid',
+                'scalec': 'scalec', 'nsnba': 'nsnba',
+                'phiout': 'phiout', 'phiform': 'phiform',
+                'decompopt': 'decompopt', 'use_rmin': 'use_rmin', 'vprob': 'vprob',
+                'rhow_effect': 'rhow_effect', 'use_sav': 'use_sav', 'maxsph': 'maxsph'}
 
     parent_namelist = {'ntb': 'cntrl', 'cut': 'cntrl', 'nsnb': 'cntrl',
-                       'imin': 'cntrl', 'maxcyc': 'cntrl', 'igb': 'cntrl',
-                       'ipb': 'cntrl', 'inp': 'cntrl', 'idecomp': 'cntrl',
-                       'ioutfm': 'cntrl', 'dec_verbose': 'cntrl',
+                       'imin': 'cntrl', 'maxcyc': 'cntrl',
+                       'ipb': 'cntrl', 'inp': 'cntrl',
+                       'ioutfm': 'cntrl',
                        'ntx': 'cntrl',
                        'epsin': 'pb', 'epsout': 'pb',
                        'istrng': 'pb', 'radiopt': 'pb', 'sprob': 'pb', 'dprob': 'pb',
@@ -429,7 +488,12 @@ class SanderPBSAInput(SanderInput):
                        'eneopt': 'pb', 'frcopt': 'pb', 'cutfd': 'pb', 'cutnb': 'pb',
                        'mctrdz': 'pb', 'poretype': 'pb', 'npbverb': 'pb',
                        'npbopt': 'pb',
-                       'maxsph': 'pb'}
+                       'pbtemp': 'pb', 'iprob': 'pb', 'arcres': 'pb',
+                       'mprob': 'pb', 'accept': 'pb', 'nbuffer': 'pb', 'npbgrid': 'pb',
+                       'scalec': 'pb', 'nsnba': 'pb',
+                       'phiout': 'pb', 'phiform': 'pb',
+                       'decompopt': 'pb', 'use_rmin': 'pb', 'vprob': 'pb',
+                       'rhow_effect': 'pb', 'use_sav': 'pb', 'maxsph': 'pb'}
 
     def __init__(self, INPUT):
         # We need to change istrng to mM (from M).
@@ -442,41 +506,68 @@ class SanderPBSAInput(SanderInput):
 class SanderPBSA2Input(SanderInput):
     """ PB sander input file """
     input_items = {'ntb': 0, 'cut': 999.0, 'nsnb': 99999,
-                   'imin': 5, 'maxcyc': 1, 'igb': 10,
-                   'ipb': 2, 'inp': 2, 'idecomp': 0,
+                   'imin': 5, 'maxcyc': 1,
+                   'ipb': 2, 'inp': 2,
+                   'ioutfm': 0,
+                   'ntx': 1,
                    'epsin': 1.0, 'epsout': 80.0,
                    'istrng': 0.0, 'radiopt': 0, 'sprob': 0.557, 'dprob': 1.4,
                    'space': 0.5, 'maxitn': 1000, 'cavity_surften': 0.0378,
                    'cavity_offset': -0.5692, 'fillratio': 4.0,
-                   'ioutfm': 0, 'dec_verbose': 0,
-                   'ntx': 1, 'epsmem': 1.0, 'membraneopt': 0, 'sasopt': 0,
+                   'epsmem': 1.0, 'membraneopt': 0, 'sasopt': 0,
                    'mthick': 40, 'maxarcdot': 1500, 'solvopt': 2, 'nfocus': 2, 'bcopt': 5,
                    'eneopt': 2, 'frcopt': 0, 'cutfd': 5.0, 'cutnb': 0.0,
-                   'mctrdz': 0.0, 'poretype': 1, 'npbverb': 0}
-    name_map = {'inp': 'inp', 'idecomp': 'idecomp', 'epsin': 'indi',
-                'epsout': 'exdi', 'istrng': 'istrng', 'radiopt': 'radiopt',
-                'dprob': 'prbrad', 'space': 'scale', 'maxitn': 'linit',
-                'cavity_surften': 'cavity_surften',
+                   'mctrdz': 0.0, 'poretype': 1, 'npbverb': 0,
+                   'npbopt': 0,
+                   'pbtemp': 300, 'iprob': 2.0, 'arcres': 0.25,
+                   'mprob': 2.70, 'accept': 0.001, 'nbuffer': 0, 'npbgrid': 1,
+                   'scalec': 0, 'nsnba': 1,
+                   'phiout': 0, 'phiform': 0,
+                   'decompopt': 2, 'use_rmin': 1, 'vprob': 1.300,
+                   'rhow_effect': 1.129, 'use_sav': 1, 'maxsph': 400}
+
+    name_map = {'ntb': 'ntb', 'cut': 'cut', 'nsnb': 'nsnb',
+                'imin': 'imin', 'maxcyc': 'maxcyc',
+                'ipb': 'ipb', 'inp': 'inp',
+                'ioutfm': 'netcdf',
+                'ntx': 'ntx',
+                'epsin': 'indi', 'epsout': 'exdi',
+                'istrng': 'istrng', 'radiopt': 'radiopt', 'sprob': 'sprob', 'dprob': 'prbrad',
+                'space': 'scale', 'maxitn': 'linit', 'cavity_surften': 'cavity_surften',
                 'cavity_offset': 'cavity_offset', 'fillratio': 'fillratio',
-                'ioutfm': 'netcdf', 'dec_verbose': 'dec_verbose',
-                'ipb': 'ipb', 'epsmem': 'emem', 'membraneopt': 'memoptzero',
-                'sasopt': 'sasopt', 'mthick': 'mthick', 'maxarcdot': 'maxarcdot', 'solvopt': 'solvopt',
-                'nfocus': 'nfocus', 'bcopt': 'bcopt', 'eneopt': 'eneopt',
-                'frcopt': 'frcopt', 'cutfd': 'cutfd', 'cutnb': 'cutnb',
-                'mctrdz': 'mctrdz', 'poretype': 'poretype', 'npbverb': 'npbverb'}
+                'epsmem': 'emem', 'membraneopt': 'memopt', 'sasopt': 'sasopt',
+                'mthick': 'mthick', 'maxarcdot': 'maxarcdot', 'solvopt': 'solvopt', 'nfocus': 'nfocus',
+                'bcopt': 'bcopt',
+                'eneopt': 'eneopt', 'frcopt': 'frcopt', 'cutfd': 'cutfd', 'cutnb': 'cutnb',
+                'mctrdz': 'mctrdz', 'poretype': 'poretype', 'npbverb': 'npbverb',
+                'npbopt': 'npbopt',
+                'pbtemp': 'pbtemp', 'iprob': 'iprob', 'arcres': 'arcres',
+                'mprob': 'mprob', 'accept': 'accept', 'nbuffer': 'nbuffer', 'npbgrid': 'npbgrid',
+                'scalec': 'scalec', 'nsnba': 'nsnba',
+                'phiout': 'phiout', 'phiform': 'phiform',
+                'decompopt': 'decompopt', 'use_rmin': 'use_rmin', 'vprob': 'vprob',
+                'rhow_effect': 'rhow_effect', 'use_sav': 'use_sav', 'maxsph': 'maxsph'}
+
     parent_namelist = {'ntb': 'cntrl', 'cut': 'cntrl', 'nsnb': 'cntrl',
-                       'imin': 'cntrl', 'maxcyc': 'cntrl', 'igb': 'cntrl',
-                       'ipb': 'cntrl', 'inp': 'cntrl', 'idecomp': 'cntrl',
+                       'imin': 'cntrl', 'maxcyc': 'cntrl',
+                       'ipb': 'cntrl', 'inp': 'cntrl',
+                       'ioutfm': 'cntrl',
+                       'ntx': 'cntrl',
                        'epsin': 'pb', 'epsout': 'pb',
                        'istrng': 'pb', 'radiopt': 'pb', 'sprob': 'pb', 'dprob': 'pb',
-                       'space': 'pb', 'maxitn': 'pb', 'cavity_offset': 'pb',
-                       'cavity_surften': 'pb', 'fillratio': 'pb',
-                       'ioutfm': 'cntrl', 'dec_verbose': 'cntrl',
-                       'ntx': 'cntrl', 'epsmem': 'pb', 'membraneopt': 'pb',
-                       'sasopt': 'pb', 'mthick': 'pb', 'maxarcdot': 'pb', 'solvopt': 'pb',
-                       'nfocus': 'pb', 'bcopt': 'pb', 'eneopt': 'pb', 'frcopt': 'pb',
-                       'cutfd': 'pb', 'cutnb': 'pb', 'mctrdz': 'pb',
-                       'poretype': 'pb', 'npbverb': 'pb'}
+                       'space': 'pb', 'maxitn': 'pb', 'cavity_surften': 'pb',
+                       'cavity_offset': 'pb', 'fillratio': 'pb',
+                       'epsmem': 'pb', 'membraneopt': 'pb', 'sasopt': 'pb',
+                       'mthick': 'pb', 'maxarcdot': 'pb', 'solvopt': 'pb', 'nfocus': 'pb', 'bcopt': 'pb',
+                       'eneopt': 'pb', 'frcopt': 'pb', 'cutfd': 'pb', 'cutnb': 'pb',
+                       'mctrdz': 'pb', 'poretype': 'pb', 'npbverb': 'pb',
+                       'npbopt': 'pb',
+                       'pbtemp': 'pb', 'iprob': 'pb', 'arcres': 'pb',
+                       'mprob': 'pb', 'accept': 'pb', 'nbuffer': 'pb', 'npbgrid': 'pb',
+                       'scalec': 'pb', 'nsnba': 'pb',
+                       'phiout': 'pb', 'phiform': 'pb',
+                       'decompopt': 'pb', 'use_rmin': 'pb', 'vprob': 'pb',
+                       'rhow_effect': 'pb', 'use_sav': 'pb', 'maxsph': 'pb'}
 
     def __init__(self, INPUT):
         # We need to change istrng to mM (from M).
@@ -497,10 +588,12 @@ class SanderAPBSInput(SanderInput):
                    'ionc': '0.0,0.0', 'ionrr': '2.0,2.0', 'radiopt': 0,
                    'calcforce': 0, 'calcnpenergy': 1, 'grid': '0.5,0.5,0.5',
                    'gamma': 0.00542, 'ioutfm': 0}
+
     name_map = {'inp': 'inp', 'idecomp': 'idecomp', 'pdie': 'indi',
                 'sdie': 'exdi', 'ionc': 'istrng', 'radiopt': 'radiopt',
                 'srad': 'prbrad', 'grid': 'scale', 'gamma': 'cavity_surften',
                 'ioutfm': 'netcdf'}
+
     parent_namelist = {'ntb': 'cntrl', 'cut': 'cntrl', 'nsnb': 'cntrl',
                        'imin': 'cntrl', 'maxcyc': 'cntrl', 'igb': 'cntrl',
                        'ipb': 'cntrl', 'inp': 'cntrl', 'idecomp': 'cntrl',

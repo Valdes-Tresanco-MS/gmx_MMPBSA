@@ -504,8 +504,9 @@ input_file.addNamelist('general', 'general',
                            ['keep_files', int, 2, 'How many files to keep after successful completion'],
                            ['forcefields', str, 'oldff/leaprc.ff99SB,leaprc.gaff', 'Define the force field to build '
                                                                                    'the Amber topology'],
-                           ['ligand_forcefield', str, "leaprc.gaff", 'Define the force field to build Amber topology for '
-                                                             'ligand (small molecule)'],
+                           ['ligand_forcefield', str, "leaprc.gaff",
+                            'Define the force field to build Amber topology for '
+                            'ligand (small molecule)'],
                            ['netcdf', int, 0, 'Use NetCDF intermediate trajectories'],
                            ['overwrite_data', int, 0, 'Defines whether the gmxMMPBSA data will be overwritten'],
                            ['PBRadii', int, 3, 'Define PBRadii to build amber topology from GROMACS files'],
@@ -548,6 +549,17 @@ input_file.addNamelist('gb', 'gb',
 
 input_file.addNamelist('pb', 'pb',
                        [
+                           ['ntb', int, 0, 'Apply PBC conditions?'],
+                           ['cut', float, 999.0, 'Nonbonded cutoff in Angstroms'],
+                           ['nsnb', int, 99999, 'Determines the frequency of nonbonded list updates when igb=0 and '
+                                                'nbflag=0'],
+                           ['imin', int, 5, 'Decide whether to perform MD, Minimization, or Trajectory '
+                                            'Post-Processing'],
+                           ['maxcyc', int, 1, 'The maximum number of cycles of minimization'],
+                           ['ioutfm', int, 0, 'The format of coordinate and velocity trajectory files (mdcrd, mdvel '
+                                              'and inptraj).'],
+                           ['ntx', int, 1, 'Option to read the initial coordinates, velocities and box size from the '
+                                           'inpcrd file'],
                            ['inp', int, 2, 'Nonpolar solvation method'],
                            ['smoothopt', int, 1, 'Instructs PB how to set up dielectric values for finite-difference '
                                                  'grid edges that are located across the solute/solvent dielectric '
@@ -590,6 +602,25 @@ input_file.addNamelist('pb', 'pb',
                            ['cutfd', float, 5.0, 'Cutoff for finite-difference interactions'],
                            ['ipb', int, 2, 'Dielectric model for PB'],
                            ['sander_apbs', int, 0, 'Use sander.APBS?'],
+                           ['pbtemp', float, 300, 'Temperature (in K) used for the PB equation'],
+                           ['arcres', float, 0.25, 'The resolution (Å) to compute solvent accessible arcs'],
+                           ['mprob', float, 2.70, 'Membrane probe radius in Å'],
+                           ['nbuffer', float, 0, 'Sets how far away (in grid units) the boundary of the finite '
+                                                 'difference grid is away from the solute surface'],
+                           ['npbgrid', int, 1, 'Sets how often the finite-difference grid is regenerated'],
+                           ['scalec', int, 0, 'Option to compute reaction field energy and forces'],
+                           ['nsnba', int, 1, 'Sets how often atom-based pairlist is generated'],
+                           ['phiout', int, 0, 'output spatial distribution of electrostatic potential '
+                                              'for visualization?'],
+                           ['phiform', int, 0, 'Controls the format of the electrostatic potential file'],
+                           ['decompopt', int, 2, 'Option to select different decomposition schemes when INP = 2'],
+                           ['use_rmin', int, 1, 'The option to set up van der Waals radii'],
+                           ['vprob', float, 1.300, 'Solvent probe radius for molecular volume (the volume enclosed by '
+                                                   'SASA) used to compute nonpolar cavity solvation free energy'],
+                           ['rhow_effect', float, 1.129, 'Effective water density used in the non-polar dispersion '
+                                                         'term calculation'],
+                           ['use_sav', int, 1, 'The option to use molecular volume (the volume enclosed by SASA) or '
+                                               'to use molecular surface (SASA) for cavity term calculation'],
                            ['maxsph', int, 400, 'Approximate number of dots to represent the maximum atomic solvent '
                                                 'accessible surface']
                        ], trigger='pbrun')
