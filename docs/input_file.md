@@ -434,18 +434,18 @@ Avoid inconsistencies with defined internal temperature (298.15 K) when `nmode` 
 ### **`&pb` namelist variables**
 
 !!! note
-    PB calculations can be performed with either mmpbsa_py_energy or sander. mmpbsa_py_energy works with a lower number 
-    of variables compared to sander.
+    PB calculations can be performed with either **_mmpbsa_py_energy_** or **_sander_**. **_mmpbsa_py_energy_** works 
+    with a lower number of variables compared to **_sander_**.
 
-    mmpbsa_py_energy variables: `inp`, `smoothopt`, `radiopt`, `npbopt`, `solvopt`, 
+    **_mmpbsa_py_energy_** variables: `inp`, `smoothopt`, `radiopt`, `npbopt`, `solvopt`, 
     `maxitn`, `nfocus`, `fscale`, `epsin`, `epsout`, `istrng`, `dprob`, `iprob`, `accept`, `fillratio`, `space`, 
     `bcopt`, `eneopt`, `cutnb`, `sprob`, `cavity_surften`, `cavity_offset`
 
-    Nevertheless, mmpbsa_py_energy will suffice for most routine applications of PB. 
+    Nevertheless, **_mmpbsa_py_energy_** will suffice for most routine applications of PB. 
 
-    On the other hand, sander offers access to all [pbsa][5] functionalities.
+    On the other hand, **_sander_** offers access to all [pbsa][5] functionalities.
 
-    sander variables: `ntb`, `cut`, `nsnb`, `imin`, `maxcyc`, `ipb`, `inp`, `ioutfm`, `ntx`, `epsin`, `epsout`,
+    **_sander_** variables: `ntb`, `cut`, `nsnb`, `imin`, `maxcyc`, `ipb`, `inp`, `ioutfm`, `ntx`, `epsin`, `epsout`,
     `istrng`, `radiopt`, `sprob`, `dprob`, `space`, `maxitn`, `cavity_surften`, `cavity_offset`, `fillratio`,
     `epsmem`, `membraneopt`, `sasopt`, `mthick`, `maxarcdot`, `solvopt`, `nfocus`, `bcopt`, `eneopt`, `frcopt`, 
     `cutfd`, `cutnb`, `mctrdz`, `poretype`, `npbverb`, `npbopt`, `pbtemp`0, `iprob`, `arcres`, `mprob`, `accept`, 
