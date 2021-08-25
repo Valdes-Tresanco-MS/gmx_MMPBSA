@@ -434,14 +434,13 @@ Avoid inconsistencies with defined internal temperature (298.15 K) when `nmode` 
 ### **`&pb` namelist variables**
 
 !!! note
-    PB calculations can be performed with either **_mmpbsa_py_energy_** or **_sander_**. **_mmpbsa_py_energy_** works 
-    with a lower number of variables compared to **_sander_**.
+    PB calculations can be performed either with **_mmpbsa_py_energy_** or **_sander_**. Of note, **_mmpbsa_py_energy_**
+    works with a lower number of variables compared to **_sander_**. Nevertheless, **_mmpbsa_py_energy_** will suffice 
+    for most routine applications of PB. 
 
     **_mmpbsa_py_energy_** variables: `inp`, `smoothopt`, `radiopt`, `npbopt`, `solvopt`, 
     `maxitn`, `nfocus`, `fscale`, `epsin`, `epsout`, `istrng`, `dprob`, `iprob`, `accept`, `fillratio`, `space`, 
     `bcopt`, `eneopt`, `cutnb`, `sprob`, `cavity_surften`, `cavity_offset`
-
-    Nevertheless, **_mmpbsa_py_energy_** will suffice for most routine applications of PB. 
 
     On the other hand, **_sander_** offers access to all [pbsa][5] functionalities.
 
@@ -452,9 +451,10 @@ Avoid inconsistencies with defined internal temperature (298.15 K) when `nmode` 
     `nbuffer`, `npbgrid`, `scalec`, `nsnba`, `phiout`, `phiform`, `decompopt`, `use_rmin`, `vprob`, `rhow_effect`, 
     `use_sav`, `maxsph`
 
-    Hereafter, a selected group of variables is presented, which should suffice most PB calculations. A more thorough 
-    description of these and other options can be found [here][5]. Please also note that the default options have 
-    changed over time. For a detailed discussion of all related options on the quality of the MM/PB(GB)SA calculations, 
+    Hereafter, a selected group of variables is presented, which should suffice for most PB calculations.  The default 
+    values for these parameters are appropriate for most calculations on solvated molecular systems. Also note that 
+    the default options may have changed over time. A more thorough description of all the options can be found 
+    [here][5]. For a detailed discussion of all related options on the quality of the MM/PB(GB)SA calculations, 
     please check this [publication][6].
 
 `npbopt` (Default = 0) 
@@ -464,10 +464,11 @@ Avoid inconsistencies with defined internal temperature (298.15 K) when `nmode` 
     * 1: Nonlinear PB equation is solved
 
     !!! note
-        The nonlinear PB equation is recommended for highly charged systems. It is supported in both mmpbsa_py_energy 
-        and sander. Parameters such as `eneopt` or `cutnb` should be adjusted accordingly when using the nonlinear PB 
-        equation. Check the following threads on how to proceed with [mmbsa_py_energy](http://archive.ambermd.org/201203/0191.html)
-        or [sander](http://archive.ambermd.org/201610/0114.html) when using the nonlinear PB equation. Last but not 
+        While the linear PB equation will suffice for most calculations, the nonlinear PB equation is recommended 
+        for highly charged systems. It is supported in both **_mmpbsa_py_energy_** and **_sander_**. Parameters such 
+        as `eneopt` or `cutnb` should be adjusted accordingly when using the nonlinear PB equation. Check the following 
+        threads on how to proceed in [mmbsa_py_energy](http://archive.ambermd.org/201203/0191.html) or 
+        [sander](http://archive.ambermd.org/201610/0114.html) when using the nonlinear PB equation. Last but not 
         least, take into account that using nonlinear PB equation can significantly increase the calculation time 
         required for PB calculation.
 
