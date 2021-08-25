@@ -433,6 +433,44 @@ Avoid inconsistencies with defined internal temperature (298.15 K) when `nmode` 
 
 ### **`&pb` namelist variables**
 
+!!! note
+    PB calculations can be performed with either mmpbsa_py_energy or sander. mmpbsa_py_energy works with a lower number 
+    of variables compared to sander.
+
+    mmpbsa_py_energy variables: `inp`, `smoothopt`, `radiopt`, `npbopt`, `solvopt`, 
+    `maxitn`, `nfocus`, `fscale`, `epsin`, `epsout`, `istrng`, `dprob`, `iprob`, `accept`, `fillratio`, `space`, 
+    `bcopt`, `eneopt`, `cutnb`, `sprob`, `cavity_surften`, `cavity_offset`
+
+    Nevertheless, mmpbsa_py_energy will suffice for most routine applications of PB. 
+
+    On the other hand, sander offers access to all [pbsa][5] functionalities.
+
+    sander variables: `ntb`, `cut`, `nsnb`, `imin`, `maxcyc`, `ipb`, `inp`, `ioutfm`, `ntx`, `epsin`, `epsout`,
+    `istrng`, `radiopt`, `sprob`, `dprob`, `space`, `maxitn`, `cavity_surften`, `cavity_offset`, `fillratio`,
+    `epsmem`, `membraneopt`, `sasopt`, `mthick`, `maxarcdot`, `solvopt`, `nfocus`, `bcopt`, `eneopt`, `frcopt`, 
+    `cutfd`, `cutnb`, `mctrdz`, `poretype`, `npbverb`, `npbopt`, `pbtemp`0, `iprob`, `arcres`, `mprob`, `accept`, 
+    `nbuffer`, `npbgrid`, `scalec`, `nsnba`, `phiout`, `phiform`, `decompopt`, `use_rmin`, `vprob`, `rhow_effect`, 
+    `use_sav`, `maxsph`
+
+    Hereafter, a selected group of variables is presented, which should suffice most PB calculations. A more thorough 
+    description of these and other options can be found [here][5]. Please also note that the default options have 
+    changed over time. For a detailed discussion of all related options on the quality of the MM/PB(GB)SA calculations, 
+    please check this [publication][6].
+
+`npbopt` (Default = 0) 
+:   Option to select the linear, or the full nonlinear PB equation.
+
+    * 0: Linear PB equation is solved
+    * 1: Nonlinear PB equation is solved
+
+    !!! note
+        The nonlinear PB equation is recommended for highly charged systems. It is supported in both mmpbsa_py_energy 
+        and sander. Parameters such as `eneopt` or `cutnb` should be adjusted accordingly when using the nonlinear PB 
+        equation. Check the following threads on how to proceed with [mmbsa_py_energy](http://archive.ambermd.org/201203/0191.html)
+        or [sander](http://archive.ambermd.org/201610/0114.html) when using the nonlinear PB equation. Last but not 
+        least, take into account that using nonlinear PB equation can significantly increase the calculation time 
+        required for PB calculation.
+
 `inp` (Default = 2) 
 :   Option to select different methods to compute non-polar solvation free energy.
 
@@ -448,7 +486,7 @@ Avoid inconsistencies with defined internal temperature (298.15 K) when `nmode` 
 :   Offset value used to correct non-polar free energy contribution.
 
     !!! note
-        This is not used for `APBS`.
+        This is not used for `APBS`
 
 `cavity_surften` (Default = 0.0378  [ kcal/mol Å^2^ ] )
 :   Surface tension. Unit conversion to kJ done automatically for `APBS`.
@@ -506,11 +544,6 @@ Avoid inconsistencies with defined internal temperature (298.15 K) when `nmode` 
 
 `poretype` (Default=1)
 :   Turn on the automatic membrane channel/pore finding method.
-
-!!! note
-    A more thorough description of these and other options can be found [here][5]. Please also note that the default 
-    options have changed over time. For a detailed discussion of all related options on the quality of the 
-    MM/PB(GB)SA calculations, please check this [publication][6].
 
   [5]: https://ambermd.org/doc12/Amber20.pdf#chapter.6
   [6]: https://onlinelibrary.wiley.com/doi/10.1002/jcc.24467
