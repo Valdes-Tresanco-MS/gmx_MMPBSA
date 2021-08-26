@@ -438,18 +438,18 @@ Avoid inconsistencies with defined internal temperature (298.15 K) when `nmode` 
     works with a lower number of variables compared to **_sander_**. Nevertheless, **_mmpbsa_py_energy_** will suffice 
     for most routine applications of PB. 
 
-    **_mmpbsa_py_energy_** variables: `inp`, `smoothopt`, `radiopt`, `npbopt`, `solvopt`, 
-    `maxitn`, `nfocus`, `fscale`, `epsin`, `epsout`, `istrng`, `dprob`, `iprob`, `accept`, `fillratio`, `space`, 
-    `bcopt`, `eneopt`, `cutnb`, `sprob`, `cavity_surften`, `cavity_offset`
+    **_mmpbsa_py_energy_** variables: `inp`, `smoothopt`, `radiopt`, `npbopt`, `solvopt`, `maxitn (linit)`, `nfocus`, 
+    `fscale`, `epsin (indi)`, `epsout (exdi)`, `istrng`, `dprob (prbrad)`, `iprob`, `accept`, `fillratio`, 
+    `space (1/scale)`, `bcopt`, `eneopt`, `cutnb`, `sprob`, `cavity_surften`, `cavity_offset`
 
     On the other hand, **_sander_** offers access to all [pbsa][5] functionalities.
 
-    **_sander_** variables: `ntb`, `cut`, `nsnb`, `imin`, `maxcyc`, `ipb`, `inp`, `ioutfm`, `ntx`, `epsin`, `epsout`,
-    `istrng`, `radiopt`, `sprob`, `dprob`, `space`, `maxitn`, `cavity_surften`, `cavity_offset`, `fillratio`,
-    `epsmem`, `membraneopt`, `sasopt`, `mthick`, `maxarcdot`, `solvopt`, `nfocus`, `bcopt`, `eneopt`, `frcopt`, 
-    `cutfd`, `cutnb`, `mctrdz`, `poretype`, `npbverb`, `npbopt`, `pbtemp0`, `iprob`, `arcres`, `mprob`, `accept`, 
-    `nbuffer`, `npbgrid`, `scalec`, `nsnba`, `phiout`, `phiform`, `decompopt`, `use_rmin`, `vprob`, `rhow_effect`, 
-    `use_sav`, `maxsph`
+    **_sander_** variables: `ntb`, `cut`, `nsnb`, `imin`, `maxcyc`, `ipb`, `inp`, `ioutfm`, `ntx`, `epsin (indi)`, 
+    `epsout (exdi)`, `istrng`, `radiopt`, `sprob`, `dprob (prbrad)`, `space (1/scale)`, `maxitn (linit)`, 
+    `cavity_surften`, `cavity_offset`, `fillratio`, `epsmem (emen)`, `membraneopt (memopt)`, `sasopt`, `mthick`, 
+    `maxarcdot`, `solvopt`, `nfocus`, `bcopt`, `eneopt`, `frcopt`, `cutfd`, `cutnb`, `mctrdz`, `poretype`, `npbverb`, 
+    `npbopt`, `pbtemp0`, `iprob`, `arcres`, `mprob`, `accept`, `nbuffer`, `npbgrid`, `scalec`, `nsnba`, `phiout`, 
+    `phiform`, `decompopt`, `use_rmin`, `vprob`, `rhow_effect`, `use_sav`, `maxsph`
 
     Hereafter, a selected group of variables is presented, which should suffice for most PB calculations.  The default 
     values for these parameters are appropriate for most calculations on solvated molecular systems. Also note that 
@@ -493,25 +493,26 @@ Avoid inconsistencies with defined internal temperature (298.15 K) when `nmode` 
 :   Surface tension. Unit conversion to kJ done automatically for `APBS`.
 
 `exdi` (Default = 80.0)
-:   External dielectric constant.
+:   External dielectric constant. This corresponds to `epsout` in [pbsa][5].
 
 `indi` (Default = 1.0)
-:   Internal dielectric constant.
+:   Internal dielectric constant. This corresponds to `epsin` in [pbsa][5].
 
 `fillratio` (Default = 4.0)
 :   The ratio between the longest dimension of the rectangular finite-difference grid and that of the solute.
 
 `scale` (Default = 2.0)
-:   Resolution of the Poisson Boltzmann grid. It is equal to the reciprocal of the grid spacing.
+:   Resolution of the Poisson Boltzmann grid. It is equal to the reciprocal of the grid spacing (`space` in [pbsa][5]). 
 
 `istrng` (Default = 0.0)
 :   Ionic strength in Molarity. It is converted to mM for `PBSA` and kept as M for `APBS`.
 
 `linit` (Default = 1000) 
-:   Maximum number of iterations of the linear Poisson Boltzmann equation to try
+:   Maximum number of iterations of the linear Poisson Boltzmann equation to try. This corresponds to `maxitn` 
+    in [pbsa][5].
 
 `prbrad` (Default = 1.4)
-:   Solvent probe radius in Angstroms. Allowed values are 1.4 and 1.6
+:   Solvent probe radius in Angstroms. Allowed values are 1.4 and 1.6. This corresponds to `dprob` in [pbsa][5].
 
 `radiopt` (Default = 1)
 :   The option to set up atomic radii according to:
@@ -532,10 +533,10 @@ Avoid inconsistencies with defined internal temperature (298.15 K) when `nmode` 
     * 1: Use `sander.APBS` 
 
 `memopt` (Default = 0)
-:   Turn on membrane protein support.
+:   Turn on membrane protein support. This corresponds to `membraneopt` in [pbsa][5].
 
 `emem` (Default = 1.0)
-:   Membrane dielectric constant.
+:   Membrane dielectric constant. This corresponds to `epsmem` in [pbsa][5].
 
 `mthick` (Default = 40.0)
 :   Membrane thickness.
