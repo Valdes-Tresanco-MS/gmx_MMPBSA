@@ -763,7 +763,7 @@ have added several additional notations
 
     `closureorder= 1`, `asympcorr= 1`, `buffer= 14.0`, `solvcut= None (If -1 or no value is specified then the 
     buffer distance is used)`, 
-    `grdspc= 0.5,0.5,0.5`, `ng= 0,0,0`, `solvbox= 0.0,0.0,0.0`, `tolerance= 0.00001 (1.0e-5)`, `mdiis_del= 0.7`, 
+    `grdspc= 0.5,0.5,0.5`, `ng= -1,-1,-1`, `solvbox= -1,-1,-1`, `tolerance= 0.00001 (1.0e-5)`, `mdiis_del= 0.7`, 
     `mdiis_restart= 10.0`, `mdiis_nvec= 5`, `maxstep= 10000`, `npropagate= 5`, `centering= 1`, `polarDecomp= 0`, 
     `entropicDecomp= 0`, `gf= 0`, `pc+= 0`, `uccoeff= 0.0,0.0,0.0,0.0`, `rism_verbose= 0`, `treeDCF= 1`, `treeTCF= 1`, 
     `treeCoulomb= 0`, `treeDCFOrder= 2`, `treeTCFOrder= 2`, `treeCoulombOrder= 2`, `treeDCFN0= 500`, `treeTCFN0= 500`, 
@@ -791,20 +791,19 @@ have added several additional notations
 `grdspc`(Default = 0.5 Å)
 :   Grid spacing of the solvation box. Specify this with buffer above. Mutually exclusive with `ng` and `solvbox`.
 
-
 `ng` 
 :   Number of grid points to use in the x, y, and z directions. Used only if buffer < 0. Mutually exclusive with `buffer`
     and `grdspc` above, and paired with `solvbox` below. 
 
     !!! warning 
-        No default, this must be set if buffer < 0. Define like "ng=1000,1000,1000"
+        No default, this must be set if buffer < 0. Define like `ng=1000,1000,1000`
 
 `solvbox`
 :   Length of the solvation box in the x, y, and z dimensions. Used only if buffer < 0. Mutually exclusive with
     `buffer` and `grdspc` above, and paired with `ng` above. 
 
     !!! warning 
-        No default, this must be set if buffer < 0. Define like solvbox=20,20,20
+        No default, this must be set if buffer < 0. Define like `solvbox=20,20,20`
 
 `polardecomp` (Default = 0)
 :   Decompose the solvation free energy into polar and non-polar contributions. Note that this will increase 
@@ -818,7 +817,8 @@ have added several additional notations
 
     * 0: just print the final result
     * 1: additionally prints the total number of iterations for each solution
-    * 2: additionally prints the residual for each iteration and details of the MDIIS solver
+    * 2: additionally prints the residual for each iteration and details of the MDIIS solver (useful for debugging 
+    and convergence analyses)
 
 `solvcut`  (Default = buffer )
 :   Cutoff used for solute-solvent interactions. The default is the value of buffer. Therefore, if you set `buffer` < 
@@ -878,8 +878,7 @@ igb=8, saltcon=0.150, intdiel=10
 /
 
 &alanine_scanning
-mutant='ALA'
-mutant_res='B:12'
+mutant='ALA', mutant_res='B:12'
 /
 ```
 
@@ -891,7 +890,7 @@ Sample input file for entropy calculations
 &general
 startframe=5, endframe=21, verbose=2, interval=1,
 # `entropy` variable control whether to perform a quasi-harmonic entropy (QH)
-# approximation or the Interaction Entropy (IE)
+# or the Interaction Entropy (IE)
 # (https://pubs.acs.org/doi/abs/10.1021/jacs.6b02682) approximation
 protein_forcefield="oldff/leaprc.ff99SB", entropy=2, entropy_seg=25,
 temperature=298
@@ -914,7 +913,8 @@ uncomment the next 4 lines for normal mode calculations
 Sample input file with decomposition analysis
 Make sure to include at least one residue from both the receptor
 and ligand in the print_res mask of the &decomp section.
-http://archive.ambermd.org/201308/0075.html
+http://archive.ambermd.org/201308/0075.html. This is automally
+guaranteed if use "within" keyword.
 
 &general
 startframe=5, endframe=21, interval=1,
@@ -950,7 +950,7 @@ qm_residues="B/240-251", qm_theory="PM3"
 ### MM/3D-RISM
 
 ```
-Sample input file for MM/3D-RISM
+Sample input file for 3D-RISM
 
 &general
 startframe=20, endframe=100, interval=5,
