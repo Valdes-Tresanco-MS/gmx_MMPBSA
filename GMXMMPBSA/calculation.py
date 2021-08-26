@@ -40,7 +40,8 @@ import sys
 import numpy as np
 import math
 
-#+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+# +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 class CalculationList(list):
     """ This contains the list of all calculations that need to be run """
@@ -87,14 +88,15 @@ class CalculationList(list):
         finally:
             if own_handle: f.close()
 
-#+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+# +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 class Calculation(object):
     """ Base calculation class. All other calculation classes should be inherited
         from this class.
     """
 
-    #-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
+    # -#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
 
     def __init__(self, prog, prmtop, incrd, inptraj, input_file, output):
         self.prmtop = str(prmtop)
@@ -104,7 +106,7 @@ class Calculation(object):
         self.output = output
         self.program = prog
 
-        self.calc_setup = False # This means that the setup has run successfully
+        self.calc_setup = False  # This means that the setup has run successfully
 
         self.command_args = [self.program]
 
@@ -161,7 +163,7 @@ class Calculation(object):
             if own_handleo: process_stdout.close()
             if own_handlee: process_stdout.close()
 
-    #-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
+    # -#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
 
     def setup(self):
         """ Sets up the Calculation. Finds the program and adds that to the
@@ -169,12 +171,14 @@ class Calculation(object):
             method first, but then do anything else that is necessary for that
             calculation.
         """
-        self.calc_setup= True
+        self.calc_setup = True
 
-#+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+# +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 class EnergyCalculation(Calculation):
     """ Uses mmpbsa_py_energy to evaluate energies """
+
     def __init__(self, prog, prmtop, incrd, inptraj, input_file, output, restrt):
         Calculation.__init__(self, prog, prmtop, incrd, inptraj,
                              input_file, output)
@@ -186,12 +190,12 @@ class EnergyCalculation(Calculation):
         for the MPI version (since one is *always* written and you don't want 2
         threads fighting to write the same dumb file)
         """
-        self.command_args.append('-O')                    # overwrite flag
-        self.command_args.extend(('-i', self.input_file)) # input file flag
-        self.command_args.extend(('-p', self.prmtop))     # prmtop flag
-        self.command_args.extend(('-c', self.incrd))      # input coordinate flag
-        self.command_args.extend(('-y', self.inptraj))    # input trajectory flag
-        self.command_args.extend(('-o', self.output))     # output file flag
+        self.command_args.append('-O')  # overwrite flag
+        self.command_args.extend(('-i', self.input_file))  # input file flag
+        self.command_args.extend(('-p', self.prmtop))  # prmtop flag
+        self.command_args.extend(('-c', self.incrd))  # input coordinate flag
+        self.command_args.extend(('-y', self.inptraj))  # input trajectory flag
+        self.command_args.extend(('-o', self.output))  # output file flag
         if self.restrt is not None:
             self.command_args.extend(('-r', self.restrt))  # restart file flag
 
@@ -202,12 +206,13 @@ class EnergyCalculation(Calculation):
 
         self.calc_setup = True
 
-#+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+# +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 class RISMCalculation(Calculation):
     """ This class handles RISM calculations """
 
-    #-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
+    # -#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
 
     def __init__(self, prog, prmtop, incrd, inptraj, xvvfile, output, INPUT):
         """ Sets up a RISM calculation. It's not as similar to the base class as
@@ -217,20 +222,45 @@ class RISMCalculation(Calculation):
         Calculation.__init__(self, prog, prmtop, incrd, inptraj, None, output)
 
         # Set up instance variables
-        self.xvvfile      = xvvfile
-        self.closure      = INPUT['closure']
-        self.polardecomp  = INPUT['polardecomp']
-        self.ng           = INPUT['ng'].replace(' ','') # get rid of spaces
-        self.solvbox      = INPUT['solvbox']
-        self.buffer       = INPUT['buffer']
-        self.grdspc       = str(INPUT['grdspc']).replace(' ','')
-        self.solvcut      = INPUT['solvcut']
-        self.tolerance    = INPUT['tolerance']
-        self.verbose      = INPUT['rism_verbose']
-        self.solvbox      = INPUT['solvbox']
-        self.gf           = INPUT['rismrun_gf']
+        self.xvvfile = xvvfile
+        self.closure = INPUT['closure']
+        self.polardecomp = INPUT['polardecomp']
+        self.ng = INPUT['ng'].replace(' ', '')  # get rid of spaces
+        self.solvbox = INPUT['solvbox']
+        self.buffer = INPUT['buffer']
+        self.grdspc = str(INPUT['grdspc']).replace(' ', '')
+        self.solvcut = INPUT['solvcut']
+        self.tolerance = INPUT['tolerance']
+        self.verbose = INPUT['rism_verbose']
+        self.solvbox = INPUT['solvbox']
+        self.gf = INPUT['rismrun_gf']
 
-    #-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
+        self.asympCorr = INPUT['asympCorr']
+        self.mdiis_del = INPUT['mdiis_del']
+        self.mdiis_restart = INPUT['mdiis_restart']
+        self.mdiis_nvec = INPUT['mdiis_nvec']
+        self.maxstep = INPUT['maxstep']
+        self.npropagate = INPUT['npropagate']
+        self.centering = INPUT['centering']
+        self.entropicDecomp = INPUT['entropicDecomp']
+        self.pc_plus = INPUT['pc+']
+        self.uccoeff = INPUT['uccoeff'].replace(' ', '')  # get rid of spaces
+        self.treeDCF = INPUT['treeDCF']
+        self.treeTCF = INPUT['treeTCF']
+        self.treeCoulomb = INPUT['treeCoulomb']
+        self.treeDCFOrder = INPUT['treeDCFOrder']
+        self.treeTCFOrder = INPUT['treeTCFOrder']
+        self.treeCoulombOrder = INPUT['treeCoulombOrder']
+        self.treeDCFN0 = INPUT['treeDCFN0']
+        self.treeTCFN0 = INPUT['treeTCFN0']
+        self.treeCoulombN0 = INPUT['treeCoulombN0']
+        self.treeDCFMAC = INPUT['treeDCFMAC']
+        self.treeTCFMAC = INPUT['treeTCFMAC']
+        self.treeCoulombMAC = INPUT['treeCoulombMAC']
+        self.asympKSpaceTolerance = INPUT['asympKSpaceTolerance']
+        self.ljTolerance = INPUT['ljTolerance']
+
+    # -#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
 
     def setup(self):
         """ Sets up the RISM calculation. All it has to do is fill in the
@@ -254,16 +284,16 @@ class RISMCalculation(Calculation):
             polardecompflag = False
 
         Calculation.setup(self)
-        self.command_args.extend( ('--xvv', self.xvvfile,
-                                   '--closure', self.closure,
-                                   '--buffer', self.buffer,
-                                   '--grdspc', self.grdspc,
-                                   '--solvcut', self.solvcut,
-                                   '--tolerance', self.tolerance,
-                                   '--verbose', self.verbose,
-                                   '--prmtop', self.prmtop,
-                                   '--pdb', self.incrd,
-                                   '--traj', self.inptraj))
+        self.command_args.extend(('--xvv', self.xvvfile,
+                                  '--closure', self.closure,
+                                  '--buffer', self.buffer,
+                                  '--grdspc', self.grdspc,
+                                  '--solvcut', self.solvcut,
+                                  '--tolerance', self.tolerance,
+                                  '--verbose', self.verbose,
+                                  '--prmtop', self.prmtop,
+                                  '--pdb', self.incrd,
+                                  '--traj', self.inptraj))
         if ngflag:
             self.command_args.extend(('--ng', self.ng))
         if solvboxflag:
@@ -275,19 +305,39 @@ class RISMCalculation(Calculation):
         if not os.path.exists(self.xvvfile):
             raise IOError('XVVFILE (%s) does not exist!' % self.xvvfile)
 
+        # additional variables
+        var_names = [self.mdiis_del, self.mdiis_restart, self.mdiis_nvec, self.maxstep, self.npropagate,
+                     self.centering, self.entropicDecomp, self.pc_plus, self.uccoeff, self.treeDCF, self.treeTCF,
+                     self.treeCoulomb, self.treeDCFOrder, self.treeTCFOrder, self.treeCoulombOrder, self.treeDCFN0,
+                     self.treeTCFN0, self.treeCoulombN0, self.treeDCFMAC, self.treeTCFMAC, self.treeCoulombMAC,
+                     self.asympKSpaceTolerance, self.ljTolerance]
+
+        var_input_names = ['mdiis_del', 'mdiis_restart', 'mdiis_nvec', 'maxstep', 'npropagate',
+                           'centering', 'entropicDecomp', 'pc+', 'uccoeff', 'treeDCF', 'treeTCF', 'treeCoulomb',
+                           'treeDCFOrder', 'treeTCFOrder', 'treeCoulombOrder', 'treeDCFN0', 'treeTCFN0',
+                           'treeCoulombN0', 'treeDCFMAC', 'treeTCFMAC', 'treeCoulombMAC', 'asympKSpaceTolerance',
+                           'ljTolerance']
+
+        for i in zip(var_names, var_input_names):
+            if i[1] not in ['treeDCF', 'treeTCF', 'treeCoulomb', 'entropicDecomp', 'pc+']:
+                self.command_args.extend((f'--{i[1]}', str(i[0])))
+            else:
+                self.command_args.extend([f'--{i[1]}'])
+
         self.calc_setup = True
 
-    #-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
+    # -#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
 
     def run(self, rank, *args, **kwargs):
         Calculation.run(self, rank, stdout=self.output % rank)
 
-#+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+# +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 class NmodeCalc(Calculation):
     """ Calculates entropy contribution by normal mode approximation """
 
-    #-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
+    # -#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
 
     def __init__(self, prog, prmtop, incrd, inptraj, output, INPUT):
         """ Initializes the nmode calculation. Need to set the options string """
@@ -308,7 +358,7 @@ class NmodeCalc(Calculation):
         self.drms = INPUT['drms']
         self.maxcyc = INPUT['maxcyc']
 
-    #-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
+    # -#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
 
     def setup(self):
         """ Sets up the simulation """
@@ -317,12 +367,13 @@ class NmodeCalc(Calculation):
                                   self.option_string, self.inptraj))
         self.calc_setup = True
 
-    #-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
+    # -#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
 
     def run(self, rank, *args, **kwargs):
         Calculation.run(self, rank, stdout=self.output % rank)
 
-#+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+# +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 class QuasiHarmCalc(Calculation):
     """ Quasi-harmonic entropy calculation class """
@@ -335,9 +386,9 @@ class QuasiHarmCalc(Calculation):
         self.stability = not bool(receptor_mask) and not bool(ligand_mask)
         self.receptor_mask, self.ligand_mask = receptor_mask, ligand_mask
         self.calc_setup = False
-        self.fnpre = fnpre # file name prefix
+        self.fnpre = fnpre  # file name prefix
 
-    #-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
+    # -#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
 
     def setup(self):
         """ Sets up a Quasi-harmonic calculation """
@@ -353,9 +404,9 @@ class QuasiHarmCalc(Calculation):
 
         # First thing we need is the average PDB as a reference
         ptraj_str = 'trajin %s\naverage %savgcomplex.pdb pdb chainid " "\ngo' % (self.inptraj,
-                                                                     prefix)
+                                                                                 prefix)
 
-        outfile = open(self.fnpre + 'create_average.out','w')
+        outfile = open(self.fnpre + 'create_average.out', 'w')
 
         process = Popen([self.program, self.prmtop], stdin=PIPE, stdout=outfile)
         out, err = process.communicate(ptraj_str.encode())
@@ -371,18 +422,20 @@ class QuasiHarmCalc(Calculation):
 
         self.calc_setup = True
 
-    #-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
+    # -#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
 
     def run(self, rank, *args, **kwargs):
         Calculation.run(self, rank, stdout=self.output)
 
-#+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+# +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 class PBEnergyCalculation(EnergyCalculation):
     """
     Specially handle the PB calculations to extract warnings and errors PBSA
     prints to stdout and redirect them to the user
     """
+
     def run(self, rank, stdout=sys.stdout, stderr=sys.stderr):
         """
         Runs the program. All command-line arguments must be set before calling
@@ -433,12 +486,13 @@ class PBEnergyCalculation(EnergyCalculation):
                 GMXMMPBSA_ERROR('%s failed with prmtop %s!\n\t' % (self.program, self.prmtop) +
                                 '\n\t'.join(error_list) + '\n' +
                                 'If you are using sander and PB calculation, check the *.mdout files to get the sander '
-                                'error and check this thread (http://archive.ambermd.org/201303/0548.html)\n',
+                                'error\n',
                                 CalcError)
         finally:
             if own_handle: process_stderr.close()
 
-#+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+# +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 class SurfCalc(Calculation):
     """
@@ -481,7 +535,8 @@ class SurfCalc(Calculation):
             raise CalcError('%s failed with prmtop %s!' % (self.program,
                                                            self.prmtop))
 
-#+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+# +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 class LcpoCalc(SurfCalc):
     """
@@ -495,7 +550,8 @@ class LcpoCalc(SurfCalc):
         output = self.output % rank
         return "trajin %s\nsolvent none\nsurf :* out %s\n" % (inptraj, output)
 
-#+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+# +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 class MolsurfCalc(SurfCalc):
     """ Uses molsurf to calculate the surface area """
@@ -511,13 +567,15 @@ class MolsurfCalc(SurfCalc):
         return "trajin %s\nmolsurf :* out %s probe %s offset %s" % (inptraj,
                                                                     output, self.probe, self.offset)
 
-#+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+# +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 class CopyCalc(Calculation):
     """
     This is for mutant files that are unchanged from 'normal' files (i.e., when
     the mutation is in the receptor, the ligand outputs are copied)
     """
+
     def __init__(self, orig_name, final_name):
         self.orig_name = orig_name
         self.final_name = final_name
@@ -537,26 +595,30 @@ class CopyCalc(Calculation):
 
         copy(orig_name, final_name)
 
-#+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+# +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 class PrintCalc(Calculation):
     """
     This is just a way to insert a printed message to the screen during the
     calculation list execution
     """
+
     def __init__(self, message):
         self.message = message
 
     def run(self, rank, stdout=sys.stdout, stderr=sys.stderr):
         if rank == 0: stdout.write(self.message + '\n')
 
-#+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+# +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 class InteractionEntropyCalc:
     """
     Class for Interaction Entropy calculation
     :return {IE_key: data}
     """
+
     def __init__(self, ggas, app, output):
         self.ggas = ggas
         self.app = app
@@ -567,7 +629,7 @@ class InteractionEntropyCalc:
         self.save_output()
 
     def _calculate(self):
-        # boltzmann constant
+        # boltzmann constant in kcal/(mol⋅K)
         k = 0.001985875
         temp = self.app.INPUT['temperature']
 
@@ -600,6 +662,6 @@ class InteractionEntropyCalc:
 
             out.write('Frame # | IE value\n')
             for f, d in zip(self.frames, self.data):
-                out.write('{:d}  {:.2f}\n'.format(f,d))
+                out.write('{:d}  {:.2f}\n'.format(f, d))
 
-#+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+# +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+

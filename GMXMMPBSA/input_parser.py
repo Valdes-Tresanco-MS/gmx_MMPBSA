@@ -659,15 +659,63 @@ input_file.addNamelist('decomp', 'decomposition',
 
 input_file.addNamelist('rism', 'rism',
                        [
-                           ['buffer', float, 14, 'Distance between solute and edge of grid'],
                            ['closure', str, 'kh', 'Closure equation to use'],
-                           ['closureorder', int, 1, 'Order of closure if PSE'],
+                           ['buffer', float, 14, 'Distance between solute and edge of grid'],
                            ['grdspc', float, 0.5, 'Grid spacing'],
+                           ['solvcut', float, None, 'Cutoff of the box'],
+                           ['tolerance', float, 1.0e-5, 'Convergence tolerance'],
+                           ['closureorder', int, 1, 'Order of closure if PSE'],
                            ['ng', str, '-1,-1,-1', 'Number of grid points'],
+                           ['solvbox', str, '-1,-1,-1', 'Box limits'],
                            ['polardecomp', int, 0, 'Break solv. energy into polar and nonpolar terms'],
                            ['rism_verbose', int, 0, 'Control how much 3D-RISM info to print'],
-                           ['solvbox', str, '-1,-1,-1', 'Box limits'],
-                           ['solvcut', float, None, 'Cutoff of the box'],
                            ['thermo', str, 'std', 'Type of thermodynamic analysis to do'],
-                           ['tolerance', float, 1.0e-5, 'Convergence tolerance']
+
+                           ['asympCorr', int, 1, 'Turn off long range asymptotic corrections for thermodynamic '
+                                                 'output only'],
+                           ['mdiis_del', float, 0.7, 'MDIIS step size'],
+                           ['mdiis_restart', float, 10.0, 'If the current residual is mdiis_restart times larger than '
+                                                          'the smallest residual in memory, then the MDIIS procedure '
+                                                          'is restarted using the lowest residual solution stored in '
+                                                          'memory'],
+                           ['mdiis_nvec', int, 5, 'Number of previous iterations MDIIS uses to predict a new solution'],
+                           ['maxstep', int, 10000, 'Maximum number of iterative steps per solution'],
+                           ['npropagate', int, 5, 'Number of previous solutions to use in predicting a new solution'],
+                           ['centering', int, 1, 'Select how solute is centered in the solvent box'],
+                           ['entropicDecomp', int, 0, 'Decomposes solvation free energy into energy and entropy '
+                                                      'components'],
+                           ['pc+', int, 0, 'Compute the PC+/3D-RISM excess chemical potential functional'],
+                           ['uccoeff', str, '0.0,0.0,0.0,0.0', 'Compute the UC excess chemical potential functional '
+                                                               'with the provided coefficients'],
+                           ['treeDCF', int, 1, 'Use direct sum or the treecode approximation to calculate the direct '
+                                               'correlation function long-range asymptotic correction'],
+                           ['treeTCF', int, 1, 'Use direct sum or the treecode approximation to calculate the total '
+                                               'correlation function long-range asymptotic correction'],
+                           ['treeCoulomb', int, 0, 'Use direct sum or the treecode approximation to calculate the '
+                                                   'Coulomb potential energy'],
+                           ['treeDCFOrder', int, 2, 'Treecode Taylor series order for the direct correlation function '
+                                                    'long-range asymptotic correction'],
+                           ['treeTCFOrder', int, 2, 'Treecode Taylor series order for the total correlation function '
+                                                    'long-range asymptotic correction'],
+                           ['treeCoulombOrder', int, 2, 'Treecode Taylor series order for the Coulomb potential energy'],
+                           ['treeDCFN0', int, 500, 'Maximum number of grid points contained within the treecode leaf '
+                                                   'clusters for the direct correlation function long-range asymptotic '
+                                                   'correction'],
+                           ['treeTCFN0', int, 500, 'Maximum number of grid points contained within the treecode leaf '
+                                                   'clusters for the total correlation function long-range asymptotic '
+                                                   'correction'],
+                           ['treeCoulombN0', int, 500, 'Maximum number of grid points contained within the treecode '
+                                                       'leaf clusters for the Coulomb potential energy'],
+                           ['treeDCFMAC', float, 0.1, 'Treecode multipole acceptance criterion for the direct '
+                                                      'correlation function long-range asymptotic correction'],
+                           ['treeTCFMAC', float, 0.1, 'Treecode multipole acceptance criterion for the total '
+                                                      'correlation function long-range asymptotic correction'],
+                           ['treeCoulombMAC', float, 0.1, 'Treecode multipole acceptance criterion for the Coulomb '
+                                                          'potential energy'],
+                           ['asympKSpaceTolerance', float, -1.0, 'Determines the reciprocal space long range '
+                                                                 'asymptotics cutoff distance based on the desired '
+                                                                 'accuracy of the calculation'],
+                           ['ljTolerance', float, -1.0, 'Determines the Lennard-Jones cutoff distance based on the '
+                                                        'desired accuracy of the calculation']
+
                        ], trigger='rismrun')
