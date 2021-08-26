@@ -225,7 +225,7 @@ class RISMCalculation(Calculation):
         self.xvvfile = xvvfile
         self.closure = INPUT['closure']
         self.polardecomp = INPUT['polardecomp']
-        self.ng = INPUT['ng'].replace(' ', '')  # get rid of spaces
+        self.ng = str(INPUT['ng']).replace(' ', '')  # get rid of spaces
         self.solvbox = INPUT['solvbox']
         self.buffer = INPUT['buffer']
         self.grdspc = str(INPUT['grdspc']).replace(' ', '')
@@ -244,7 +244,7 @@ class RISMCalculation(Calculation):
         self.centering = INPUT['centering']
         self.entropicDecomp = INPUT['entropicDecomp']
         self.pc_plus = INPUT['pc+']
-        self.uccoeff = INPUT['uccoeff'].replace(' ', '')  # get rid of spaces
+        self.uccoeff = str(INPUT['uccoeff']).replace(' ', '')  # get rid of spaces
         self.treeDCF = INPUT['treeDCF']
         self.treeTCF = INPUT['treeTCF']
         self.treeCoulomb = INPUT['treeCoulomb']

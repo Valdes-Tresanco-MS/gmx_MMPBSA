@@ -447,7 +447,7 @@ Avoid inconsistencies with defined internal temperature (298.15 K) when `nmode` 
     **_sander_** variables: `ntb`, `cut`, `nsnb`, `imin`, `maxcyc`, `ipb`, `inp`, `ioutfm`, `ntx`, `epsin`, `epsout`,
     `istrng`, `radiopt`, `sprob`, `dprob`, `space`, `maxitn`, `cavity_surften`, `cavity_offset`, `fillratio`,
     `epsmem`, `membraneopt`, `sasopt`, `mthick`, `maxarcdot`, `solvopt`, `nfocus`, `bcopt`, `eneopt`, `frcopt`, 
-    `cutfd`, `cutnb`, `mctrdz`, `poretype`, `npbverb`, `npbopt`, `pbtemp`0, `iprob`, `arcres`, `mprob`, `accept`, 
+    `cutfd`, `cutnb`, `mctrdz`, `poretype`, `npbverb`, `npbopt`, `pbtemp0`, `iprob`, `arcres`, `mprob`, `accept`, 
     `nbuffer`, `npbgrid`, `scalec`, `nsnba`, `phiout`, `phiform`, `decompopt`, `use_rmin`, `vprob`, `rhow_effect`, 
     `use_sav`, `maxsph`
 
@@ -752,10 +752,25 @@ have added several additional notations
 
 ???+ warning
     `3D-RISM` calculations are performed with the `rism3d.snglpnt` program built with AmberTools, written by Tyler 
-    Luchko. It is the most expensive, yet most statistical mechanically rigorous solvation model available in 
-    `MMPBSA.py`. See [Chapter 7][7] for a more thorough description of options and theory. 
-    A list of references can be found there, too. One advantage of `3D-RISM` is that an arbitrary solvent can be chosen; 
-    you just need to change the `xvvfile` specified on the command line (see [34.3.2][8]).
+    Luchko. It is the most expensive, yet most statistical mechanically rigorous solvation model. See [RISM chapter][7] 
+    for a thorough description of options and theory. A list of references can be found there, too.
+    
+    We have included more variables in 3D-RISM calculations than the ones available in the MMPBSA.py original code. That 
+    way, users can be more in control and tackle various issues (e.g., convergence problems).
+
+    **3D-RISM variables and their default values:** 
+
+    `closureorder= 1`, `asympcorr= 1`, `buffer= 14.0`, `solvcut= None (If -1 or no value is specified then the 
+    buffer distance is used)`, 
+    `grdspc= 0.5,0.5,0.5`, `ng= 0,0,0`, `solvbox= 0.0,0.0,0.0`, `tolerance= 0.00001 (1.0e-5)`, `mdiis_del= 0.7`, 
+    `mdiis_restart= 10.0`, `mdiis_nvec= 5`, `maxstep= 10000`, `npropagate= 5`, `centering= 1`, `polarDecomp= 0`, 
+    `entropicDecomp= 0`, `gf= 0`, `pc+= 0`, `uccoeff= 0.0,0.0,0.0,0.0`, `rism_verbose= 0`, `treeDCF= 1`, `treeTCF= 1`, 
+    `treeCoulomb= 0`, `treeDCFOrder= 2`, `treeTCFOrder= 2`, `treeCoulombOrder= 2`, `treeDCFN0= 500`, `treeTCFN0= 500`, 
+    `treeCoulombN0= 500`, `treeDCFMAC= 0.1`, `treeTCFMAC= 0.1`, `treeCoulombMAC= 0.1`, `asympKSpaceTolerance= -1.0`, 
+    `ljTolerance= -1.0`
+
+    One advantage of `3D-RISM` is that an arbitrary solvent can be chosen; you just need to change the `xvvfile` 
+    specified on the command line (see [34.3.2][8]).
 
   [7]: https://ambermd.org/doc12/Amber20.pdf#chapter.7
   [8]: https://ambermd.org/doc12/Amber20.pdf#subsection.34.3.2
@@ -783,6 +798,13 @@ have added several additional notations
     !!! warning 
         No default, this must be set if buffer < 0. Define like "ng=1000,1000,1000"
 
+`solvbox`
+:   Length of the solvation box in the x, y, and z dimensions. Used only if buffer < 0. Mutually exclusive with
+    `buffer` and `grdspc` above, and paired with `ng` above. 
+
+    !!! warning 
+        No default, this must be set if buffer < 0. Define like solvbox=20,20,20
+
 `polardecomp` (Default = 0)
 :   Decompose the solvation free energy into polar and non-polar contributions. Note that this will increase 
     computation time by roughly 80%. 
@@ -797,14 +819,6 @@ have added several additional notations
     * 1: additionally prints the total number of iterations for each solution
     * 2: additionally prints the residual for each iteration and details of the MDIIS solver
 
-
-`solvbox`
-:   Length of the solvation box in the x, y, and z dimensions. Used only if buffer < 0. Mutually exclusive with
-    `buffer` and `grdspc` above, and paired with `ng` above. 
-
-    !!! warining 
-        No default, this must be set if buffer < 0. Define like "solvbox=20,20,20"
-
 `solvcut`  (Default = buffer )
 :   Cutoff used for solute-solvent interactions. The default is the value of buffer. Therefore, if you set `buffer` < 
     0 and specify `ng` and `solvbox` instead, you must set `solvcut` to a nonzero value, or the program will quit in 
@@ -813,16 +827,15 @@ have added several additional notations
 `thermo` (Default = "std")
 :   Which thermodynamic equation you want to use to calculate solvation properties. Options are "std", "gf", or 
     "both" (case-INsensitive). "std" uses the standard closure relation, "gf" uses the Gaussian Fluctuation 
-    approximation,and "both" will print out separate sections for both. . 
+    approximation, and "both" will print out separate sections for both.
     
     !!! note
         Note that all data are printed out for each RISM simulation, so no choice is any more computationally demanding 
-        than another. Also, you can change this option and use the -rewrite-output flag to obtain a different 
-        printout after-the-fact.
+        than another.
 
 `tolerance` (Default = 1e-5)
 :   Upper bound of the precision requirement used to determine convergence of the self-consistent solution. This has 
-    a strong effect on the cost of 3D-RISM calculations. 
+    a strong effect on the cost of 3D-RISM calculations (smaller value for tolerance -> more computation).
 
 ## Sample input files
 
