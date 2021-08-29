@@ -37,7 +37,7 @@ class Variable(object):
         """ Initializes the variable type. Sets the default value as well as
           specifying how many characters are required by the parser to trigger
           recognition
-      """
+        """
         # Catch illegalities
         if not dat_type in (int, str, float):
             raise InputError('Variable has unknown data type %s' %
@@ -298,8 +298,7 @@ class InputFile(object):
 
         for var in variable_list:
 
-            if not (isinstance(var, list) or isinstance(var, tuple)) \
-                    or len(var) != 4:
+            if not isinstance(var, (list, tuple)) or len(var) != 4:
                 raise InputError('variables in variable_list must be lists of ' +
                                  'length 4. [varname, datatype, default, description]')
 
@@ -367,7 +366,7 @@ class InputFile(object):
             # Catch some errors
             if innml and line.strip().startswith('&'):
                 raise InputError('Invalid input. Terminate each namelist prior ' +
-                                 'to starting another one')
+                                 'to starting another one.')
 
             # End of a namelist
             elif innml and line.strip() in ['/', '&end']:
@@ -448,8 +447,7 @@ class InputFile(object):
                             break
 
                     if not found:
-                        raise InputError('Unknown variable %s in &%s' % (var[0],
-                                                                         declared_namelists[i]))
+                        raise InputError('Unknown variable %s in &%s' % (var[0], declared_namelists[i]))
 
         # Now it's time to fill the INPUT dictionary
 
@@ -590,8 +588,8 @@ input_file.addNamelist('pb', 'pb',
                            ['cavity_surften', float, 0.0378, 'Surface tension'],
                            ['cavity_offset', float, -0.5692, 'Offset for nonpolar solvation calc'],
                            ['emem', float, 1.0, 'Membrane dielectric constant'],
-                           ['memopt', int, 0, 'Use PB optimation for membrane'],
-                           ['memoptzero', int, 0, 'Used in PB optimization for ligand'],
+                           ['memopt', int, 0, 'Use PB optimization for membrane'],
+                           # ['memoptzero', int, 0, 'Used in PB optimization for ligand'],
                            ['sasopt', int, 0, 'Molecular surface in PB implict model'],
                            ['mthick', float, 40.0, 'Membrane thickness'],
                            ['mctrdz', float, 0.0, 'Distance to offset membrane in Z direction'],
