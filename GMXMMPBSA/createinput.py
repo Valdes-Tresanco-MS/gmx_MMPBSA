@@ -339,7 +339,12 @@ class SanderGBInput(SanderInput):
                        'qmcut': 'qmmm'}
 
     name_map = {'ntb': 'ntb', 'cut': 'cut', 'nsnb': 'nsnb',
-                'imin': 'imin', 'maxcyc': 'maxcyc', 'ncyc': 'ncyc',
+                'imin': 'imin',
+                # FIXME: INPUT is a dictionary, so the keys (variables in the input list) cannot be redundant. This
+                #  means that the same variable cannot be defined for each type of calculation. This, in particular,
+                #  is the first one we see, we need to review other variants.
+                # 'maxcyc': 'maxcyc',
+                'ncyc': 'ncyc',
                 'igb': 'igb', 'saltcon': 'saltcon', 'intdiel': 'intdiel',
                 'gbsa': 'gbsa', 'extdiel': 'extdiel', 'surften': 'surften',
                 'ioutfm': 'netcdf', 'idecomp': 'idecomp', 'offset': 'offset',
