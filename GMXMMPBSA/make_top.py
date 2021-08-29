@@ -1247,32 +1247,47 @@ class CheckMakeTop:
                     for rec in self.receptor_list:
                         mtif.write(f'{rec} = loadpdb {self.receptor_list[rec]}\n')
 
-                MCOM = []
-                l = 0
-                r = 0
-                i = 0
-                for e in self.orderl:
-                    if e in ['R', 'REC']:
-                        MCOM.append(REC[r])
-                        r += 1
-                    else:
-                        MCOM.append(LIG[l])
-                        l += 1
-                    i += 1
+                MCOM = self._set_com_order(REC, LIG)
                 mcom_out = ' '.join(MCOM)
                 mtif.write(f'MCOM_OUT = combine {{ {mcom_out} }}\n')
                 mtif.write('saveamberparm MCOM_OUT {t} {p}MUT_COM.inpcrd\n'.format(t=self.mutant_complex_pmrtop,
                                                                                    p=self.FILES.prefix))
                 mtif.write('quit')
 
-            tleap_args = [tleap, '-f', '{}'.format(self.FILES.prefix + 'mut_leap.in'), '-I', data_path.as_posix()]
-            if self.INPUT['debug_printlevel']:
-                logging.info('Running command: ' + ' '.join(tleap_args))
-            p1 = subprocess.Popen(tleap_args, stdout=self.log, stderr=self.log)
-            if p1.wait():
-                GMXMMPBSA_ERROR('%s failed when querying %s' % (tleap, self.FILES.prefix + 'mut_leap.in'))
+            self._run_tleap(tleap, 'mut_leap.in', data_path)
+
         else:
             self.mutant_complex_pmrtop = None
 
         return (self.complex_pmrtop, self.receptor_pmrtop, self.ligand_pmrtop, self.mutant_complex_pmrtop,
                 self.mutant_receptor_pmrtop, self.mutant_ligand_pmrtop)
+
+    def _run_tleap(self, tleap, arg1, data_path):
+        tleap_args = [
+            tleap,
+            '-f',
+            '{}'.format(self.FILES.prefix + arg1),
+            '-I',
+            data_path.as_posix(),
+        ]
+
+        if self.INPUT['debug_printlevel']:
+            logging.info('Running command: ' + ' '.join(tleap_args))
+        p1 = subprocess.Popen(tleap_args, stdout=self.log, stderr=self.log)
+        if p1.wait():
+            GMXMMPBSA_ERROR(
+                '%s failed when querying %s' % (tleap, self.FILES.prefix + arg1)
+            )
+
+    def _set_com_order(self, REC, LIG):
+        result = []
+        l = 0
+        r = 0
+        for i, e in enumerate(self.orderl):
+            if e in ['R', 'REC']:
+                result.append(REC[r])
+                r += 1
+            else:
+                result.append(LIG[l])
+                l += 1
+        return result
