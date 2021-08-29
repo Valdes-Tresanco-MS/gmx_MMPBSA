@@ -347,8 +347,6 @@ class CheckMakeTop:
 
         # IMPORTANT: make_trajs ends in error if the box is defined
         com_amb_prm.box = None
-        # except TypeError as err:
-        #     GMXMMPBSA_ERROR(str(err))
 
         self.fixparm2amber(com_amb_prm)
 
@@ -364,9 +362,7 @@ class CheckMakeTop:
             logging.info('A Receptor topology file was defined. Using MT approach...')
             logging.info('Building AMBER Receptor Topology from GROMACS Receptor Topology...')
             rec_top = self.cleantop(self.FILES.receptor_top, self.indexes[0])
-            # parmed.gromacs.GromacsTopologyFile(self.complex_temp_top,xyz=self.complex_str_file)
             rec_top.coordinates = self.receptor_str.coordinates
-            # rec_top = parmed.gromacs.GromacsTopologyFile(self.receptor_temp_top, xyz=self.receptor_str_file)
             if rec_top.impropers or rec_top.urey_bradleys or rec_top.cmaps:
                 if com_top_parm == 'amber':
                     GMXMMPBSA_ERROR('Inconsistent parameter format. The defined Complex is AMBER type while the '
@@ -394,9 +390,7 @@ class CheckMakeTop:
             logging.info('A Ligand Topology file was defined. Using MT approach...')
             logging.info('Building AMBER Ligand Topology from GROMACS Ligand Topology...')
             lig_top = self.cleantop(self.FILES.ligand_top, self.indexes[1])
-            # parmed.gromacs.GromacsTopologyFile(self.complex_temp_top,xyz=self.complex_str_file)
             lig_top.coordinates = self.ligand_str.coordinates
-            # lig_top = parmed.gromacs.GromacsTopologyFile(self.ligand_temp_top, xyz=self.ligand_str_file)
             if lig_top.impropers or lig_top.urey_bradleys or lig_top.cmaps:
                 if com_top_parm == 'amber':
                     GMXMMPBSA_ERROR('Inconsistent parameter format. The defined Complex is AMBER type while the '
@@ -614,29 +608,42 @@ class CheckMakeTop:
         lig_mask = ':' + ','.join(self.resi['LIG']['string'])
         return rec_mask, lig_mask
 
-    def get_qm_residues(self):
+    def get_selected_residues(self, select):
         """
         Convert string selection format to amber index list
         """
-        dist, res_selection = selector(self.INPUT['qm_residues'])
-        res_list = []
-        for i in self.resl['REC']:
-            rres = self.complex_str.residues[i - 1]
-            if [rres.chain, rres.number, rres.insertion_code] in res_selection:
-                res_list.append(i)
-                res_selection.remove([rres.chain, rres.number, rres.insertion_code])
-        for j in self.resl['LIG']:
-            lres = self.complex_str.residues[j - 1]
-            if [lres.chain, lres.number, lres.insertion_code] in res_selection:
-                res_list.append(j)
-                res_selection.remove([lres.chain, lres.number, lres.insertion_code])
-
-        res_list.sort()
-        self.INPUT['qm_residues'] = ','.join([str(x) for x in res_list])
+        dist, res_selection = selector(select)
+        sele_res = []
+        if dist:
+            for i in self.resl['REC']:
+                for j in self.resl['LIG']:
+                    for rat in self.complex_str.residues[i - 1].atoms:
+                        rat_coor = [rat.xx, rat.xy, rat.xz]
+                        for lat in self.complex_str.residues[j - 1].atoms:
+                            lat_coor = [lat.xx, lat.xy, lat.xz]
+                            if get_dist(rat_coor, lat_coor) <= dist:
+                                if i not in sele_res:
+                                    sele_res.append(i)
+                                if j not in sele_res:
+                                    sele_res.append(j)
+                                break
+        elif res_selection:
+            for i in self.resl['REC']:
+                rres = self.complex_str.residues[i - 1]
+                if [rres.chain, rres.number, rres.insertion_code] in res_selection:
+                    sele_res.append(i)
+                    res_selection.remove([rres.chain, rres.number, rres.insertion_code])
+            for j in self.resl['LIG']:
+                lres = self.complex_str.residues[j - 1]
+                if [lres.chain, lres.number, lres.insertion_code] in res_selection:
+                    sele_res.append(j)
+                    res_selection.remove([lres.chain, lres.number, lres.insertion_code])
+        sele_res.sort()
         if res_selection:
             for res in res_selection:
-                GMXMMPBSA_WARNING("qm_residues: We couldn't find this residue CHAIN:{} RES_NUM:{} ICODE: "
+                GMXMMPBSA_WARNING("We couldn't find this residue CHAIN:{} RES_NUM:{} ICODE: "
                                   "{}".format(*res))
+        return sele_res
 
     def res2map(self):
         """
@@ -675,9 +682,8 @@ class CheckMakeTop:
                                                    com_str.atoms[i].residue.insertion_code))
                     resindex += 1
                     proc_res = res
-            else:
-                # save residue number in the lig list
-                if res != proc_res and resindex not in res_list['LIG']:
+            # save residue number in the lig list
+            elif res != proc_res and resindex not in res_list['LIG']:
                     res_list['LIG'].append(Residue(resindex, com_str.atoms[i].residue.number,
                                                    com_str.atoms[i].residue.chain, 'LIG', com_str.atoms[i].residue.name,
                                                    com_str.atoms[i].residue.insertion_code))
@@ -688,16 +694,12 @@ class CheckMakeTop:
         masks['LIG'] = list2range(res_list['LIG'])
 
         temp = []
-        for m in masks:
-            for e in masks[m]['num']:
-                if isinstance(e, list):
-                    v = e[0]
-                else:
-                    v = e
+        for m, value in masks.items():
+            for e in value['num']:
+                v = e[0] if isinstance(e, list) else e
                 temp.append([v, m])
         temp.sort(key=lambda x: x[0])
-        for c in temp:
-            order_list.append(c[1])
+        order_list = [c[1] for c in temp]
 
         return masks, res_list, order_list, [ndx['GMXMMPBSA_REC'], ndx['GMXMMPBSA_LIG']]
 
@@ -705,10 +707,6 @@ class CheckMakeTop:
 
         for residue in structure.residues:
             # change atoms name from GROMACS to AMBER
-            if residue.name == 'ILE':
-                for atom in residue.atoms:
-                    if atom.name == 'CD':
-                        atom.name = 'CD1'
             for atom in residue.atoms:
                 if atom.name == 'OC1':
                     atom.name = 'O'
@@ -716,24 +714,23 @@ class CheckMakeTop:
                     atom.name = 'OXT'
                     residue.ter = True  # parmed terminal
             # change residues name according to AMBER
-            if residue.name == 'LYS':
+            if residue.name == 'ILE':
+                for atom in residue.atoms:
+                    if atom.name == 'CD':
+                        atom.name = 'CD1'
+                        break
+            elif residue.name == 'LYS':
                 atoms = [atom.name for atom in residue.atoms]
                 if 'HZ3' not in atoms:
                     residue.name = 'LYN'
-            elif residue.name == 'LYSH':
-                residue.name = 'LYN'
             elif residue.name == 'ASP':
                 atoms = [atom.name for atom in residue.atoms]
                 if 'HD2' in atoms:
                     residue.name = 'ASH'
-            elif residue.name in ['ASPH', 'ASPP']:
-                residue.name = 'ASH'
             elif residue.name == 'GLU':
                 atoms = [atom.name for atom in residue.atoms]
                 if 'HE2' in atoms:
                     residue.name = 'GLH'
-            elif residue.name in ['GLUH', 'GLUP']:
-                residue.name = 'GLH'
             elif residue.name in his:
                 atoms = [atom.name for atom in residue.atoms if atom.atomic_number == 1]
                 if 'HD1' in atoms and 'HE2' in atoms:
@@ -759,59 +756,43 @@ class CheckMakeTop:
                 for atom in residue.atoms:
                     if 'H' in atom.name and atom.atomic_number == 0:
                         atom.atomic_number = 1
-                # Remove H atoms. Only when using the pdb files with tleap to build the topologies
+            # Remove H atoms. Only when using the pdb files with tleap to build the topologies
         if removeH:
             structure.strip('@/H')
 
-    def getMutationIndex(self):
-        label = ''
-        icode_ = ''
+    def getMutationInfo(self):
         if not self.INPUT['mutant_res']:
             GMXMMPBSA_ERROR("No residue for mutation was defined")
-        not_list = self.INPUT['mutant_res'].split(':')
-        if len(not_list) == 2:
-            chain_, resnum_ = not_list
-        elif len(not_list) == 3:
-            chain_, resnum_, icode_ = not_list
-        else:
-            GMXMMPBSA_ERROR("Wrong notation... You most define the residue to mutate as follow: CHAIN:RES_NUMBER or "
-                            "CHAIN:RES_NUMBER:INSERTION_CODE")
-        chain = str(chain_).strip().upper()
-        resnum = int(str(resnum_).strip())
-        icode = str(icode_).strip().upper()
+        # dict = { resind: [chain, resnum, icode]
+        sele_res_dict = self.get_selected_residues(self.INPUT['mutant_res'])
+        if not len(sele_res_dict) == 1:
+            GMXMMPBSA_ERROR('Only ONE mutant residue is allowed.')
+        r = sele_res_dict[0]
+        res = self.complex_str.residues[r - 1]
+        icode = ':' + res.insertion_code if res.insertion_code else ''
+        if not parmed.residue.AminoAcidResidue.has(res.name):
+            GMXMMPBSA_WARNING(f"Selecting residue {res.chain}:{res.name}:{res.number}{icode} can't be mutated and "
+                              f"will be ignored...")
+        label = f"{res.name}[{res.chain}:{res.number}]{self.INPUT['mutant']}"
+        if icode:
+            label = f"{res.name}[{res.chain}:{res.number}:{res.insertion_code}]{self.INPUT['mutant']}"
 
-        if not chain or not resnum:
-            GMXMMPBSA_ERROR("Wrong notation... You most define the residue to mutate as follow: CHAIN:RES_NUMBER or "
-                            "CHAIN:RES_NUMBER:INSERTION_CODE")
-        idx = 1
-        for res in self.complex_str.residues:
-            if res.number == int(resnum) and res.chain == chain and res.insertion_code == icode:
-                try:
-                    parmed.residue.AminoAcidResidue.get(res.name, True)
-                except KeyError as e:
-                    GMXMMPBSA_ERROR(f'You attempt to mutate {res.chain}:{res.name}. The mutation must be an amino acid '
-                                    f'residue...')
-                label = f"{res.name}[{res.chain}:{res.number}]{self.INPUT['mutant']}"
-                if icode:
-                    label = f"{res.name}[{res.chain}:{res.number}:{res.insertion_code}]{self.INPUT['mutant']}"
-                break
-            idx += 1
-
-        if idx in self.resl['REC']:
-            part_index = self.resl['REC'].index(idx)
+        if r in self.resl['REC']:
+            part_index = self.resl['REC'].index(r)
             part_mut = 'REC'
-        elif idx in self.resl['LIG']:
-            part_index = self.resl['LIG'].index(idx)
+        elif r in self.resl['LIG']:
+            part_index = self.resl['LIG'].index(r)
             part_mut = 'LIG'
         else:
             part_index = None
             part_mut = None
             if icode:
-                GMXMMPBSA_ERROR(f'Residue {chain}:{resnum}:{icode} not found')
+                GMXMMPBSA_ERROR(f'Residue {res.chain}:{res.number}:{res.insertion_code} not found')
             else:
-                GMXMMPBSA_ERROR(f'Residue {chain}:{resnum} not found')
+                GMXMMPBSA_ERROR(f'Residue {res.chain}:{res.number} not found')
 
-        return (idx, part_mut, part_index, label)
+        # return r - 1 since r is the complex mutant index from amber selection format. Needed for top mutation only
+        return r - 1, part_mut, part_index, label
 
     def makeMutTop(self, wt_top, mut_index, pdb=False):
         """
