@@ -118,7 +118,11 @@ class CheckMakeTop:
             self.pdb2prmtop()
             tops = self.makeToptleap()
 
-        self.reswithin()
+        if self.INPUT['decomprun']:
+            self.INPUT['print_res'] = ','.join(str(x) for x in self.get_selected_residues(self.INPUT['print_res']))
+        if self.INPUT['qm_residues']:
+            self.INPUT['qm_residues'] = ','.join(str(x) for x in self.get_selected_residues(self.INPUT['qm_residues']))
+
         self.cleanup_trajs()
         return tops
 
@@ -180,29 +184,31 @@ class CheckMakeTop:
                 GMXMMPBSA_ERROR('%s failed when querying %s' % (parmchk2, self.FILES.ligand_mol2))
 
         # check if the ligand force field is gaff or gaff2 and get if the ligand mol2 was defined
-        if self.INPUT['ligand_forcefield'] in ["leaprc.gaff", "leaprc.gaff2"]:
-            if not self.FILES.complex_top and not self.FILES.ligand_mol2:
-                GMXMMPBSA_WARNING('You must define the ligand mol2 file (-lm) if ligand_forcefield is "leaprc.gaff" or '
-                                  '"leaprc.gaff2". If the ligand is parametrized in Amber force fields ignore this '
-                                  'warning')
+        if (
+            self.INPUT['ligand_forcefield'] in ["leaprc.gaff", "leaprc.gaff2"]
+            and not self.FILES.complex_top
+            and not self.FILES.ligand_mol2
+        ):
+            GMXMMPBSA_WARNING('You must define the ligand mol2 file (-lm) if ligand_forcefield is "leaprc.gaff" or '
+                              '"leaprc.gaff2". If the ligand is parametrized in Amber force fields ignore this '
+                              'warning')
 
         # make a temp receptor pdb (even when stability) if decomp to get correct receptor residues from complex. This
         # avoid get multiples molecules from complex.split()
-        if self.INPUT['decomprun']:
-            if self.FILES.stability:
-                self.use_temp = True
-                logging.warning('When decomp is defined, we generate a receptor file in order to extract interface '
-                                'residues')
-                rec_echo_args = ['echo', '{}'.format(rec_group)]
-                cp1 = subprocess.Popen(rec_echo_args, stdout=subprocess.PIPE)
-                # we extract a pdb from structure file to make amber topology
-                editconf_args = self.editconf + ['-f', self.FILES.complex_tpr, '-o', 'rec_temp.pdb', '-n',
-                                                 self.FILES.complex_index]
-                if self.INPUT['debug_printlevel']:
-                    logging.info('Running command: ' + (' '.join(rec_echo_args)) + ' | ' + ' '.join(editconf_args))
-                cp2 = subprocess.Popen(editconf_args, stdin=cp1.stdout, stdout=self.log, stderr=self.log)
-                if cp2.wait():  # if it quits with return code != 0
-                    GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(self.editconf), self.FILES.complex_tpr))
+        if self.INPUT['decomprun'] and self.FILES.stability:
+            self.use_temp = True
+            logging.warning('When decomp is defined, we generate a receptor file in order to extract interface '
+                            'residues')
+            rec_echo_args = ['echo', '{}'.format(rec_group)]
+            cp1 = subprocess.Popen(rec_echo_args, stdout=subprocess.PIPE)
+            # we extract a pdb from structure file to make amber topology
+            editconf_args = self.editconf + ['-f', self.FILES.complex_tpr, '-o', 'rec_temp.pdb', '-n',
+                                        self.FILES.complex_index]
+            if self.INPUT['debug_printlevel']:
+                logging.info('Running command: ' + (' '.join(rec_echo_args)) + ' | ' + ' '.join(editconf_args))
+            cp2 = subprocess.Popen(editconf_args, stdin=cp1.stdout, stdout=self.log, stderr=self.log)
+            if cp2.wait():  # if it quits with return code != 0
+                GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(self.editconf), self.FILES.complex_tpr))
 
         # check if stability
         if self.FILES.stability:
@@ -293,10 +299,10 @@ class CheckMakeTop:
     def check_ff_definition(self):
         # first we check if forcefields was defined
         prot_lig_ff = [self.INPUT['protein_forcefield'], self.INPUT['ligand_forcefield']]
-
-        if [x.strip() for x in self.INPUT['forcefields'].split(',')] != prot_lig_ff:
-            if [x.strip() for x in self.INPUT['forcefields'].split(',')] != ['oldff/leaprc.ff99SB', 'leaprc.gaff']:
-                forcefields = [x.strip() for x in self.INPUT['forcefields'].split(',')]
+        ff = [ x.strip() for x in self.INPUT['forcefields'].split(',')]
+        if ff != prot_lig_ff:
+            if ff != ['oldff/leaprc.ff99SB', 'leaprc.gaff']:
+                forcefields = ff
             else:
                 forcefields = self.INPUT['protein_forcefield'], self.INPUT['ligand_forcefield']
         else:
@@ -304,10 +310,24 @@ class CheckMakeTop:
         return forcefields
 
     def check4water(self):
-        counter = 0
-        for res in self.complex_str:
-            if res.name in ['SOD', 'CLA', 'TIP3P', 'TIP4P', 'TIPS3P', 'TIP5P', 'SPC', 'SPC/E', 'SPCE', 'TIP3o', 'WAT']:
-                counter += 1
+        counter = sum(
+            res.name
+            in [
+                'SOD',
+                'CLA',
+                'TIP3P',
+                'TIP4P',
+                'TIPS3P',
+                'TIP5P',
+                'SPC',
+                'SPC/E',
+                'SPCE',
+                'TIP3o',
+                'WAT',
+            ]
+            for res in self.complex_str
+        )
+
         if counter:
             GMXMMPBSA_ERROR(f'gmx_MMPBSA does not support water molecules in any structure, but we found {counter} '
                             f'molecules in the complex.')
@@ -403,7 +423,7 @@ class CheckMakeTop:
         if self.INPUT['alarun']:
             logging.info('Building Mutant Complex Topology...')
             # get mutation index in complex
-            com_mut_index, part_mut, part_index, self.mut_label = self.getMutationIndex()
+            com_mut_index, part_mut, part_index, self.mut_label = self.getMutationInfo()
             mut_com_amb_prm = self.makeMutTop(com_amb_prm, com_mut_index)
             # change de PBRadii
             action = ChRad(mut_com_amb_prm, PBRadii[self.INPUT['PBRadii']])
@@ -411,21 +431,21 @@ class CheckMakeTop:
 
             if part_mut == 'REC':
                 logging.info('Detecting mutation in Receptor. Building Mutant Receptor Topology...')
-                mut_com_amb_prm.strip(f'!:{rec_indexes_string}')
-                mdata = [self.mutant_receptor_pmrtop, 'REC']
+                out_prmtop = self.mutant_receptor_pmrtop
                 self.mutant_ligand_pmrtop = None
                 if rec_hastop:
                     mtop = self.makeMutTop(rec_amb_prm, part_index)
                 else:
+                    mut_com_amb_prm.strip(f'!:{rec_indexes_string}')
                     mtop = mut_com_amb_prm
             else:
                 logging.info('Detecting mutation in Ligand. Building Mutant Ligand Topology...')
-                mut_com_amb_prm.strip(f':{rec_indexes_string}')
-                mdata = [self.mutant_ligand_pmrtop, 'LIG']
+                out_prmtop = self.mutant_ligand_pmrtop
                 self.mutant_receptor_pmrtop = None
                 if lig_hastop:
                     mtop = self.makeMutTop(lig_amb_prm, part_index)
                 else:
+                    mut_com_amb_prm.strip(f':{rec_indexes_string}')
                     mtop = mut_com_amb_prm
 
             if com_top_parm == 'charmm':
@@ -434,12 +454,24 @@ class CheckMakeTop:
                 mut_prot_amb_prm = parmed.amber.AmberParm.from_structure(mtop)
             # change de PBRadii
             action = ChRad(mut_prot_amb_prm, PBRadii[self.INPUT['PBRadii']])
-            mut_prot_amb_prm.write_parm(mdata[0])
+            mut_prot_amb_prm.write_parm(out_prmtop)
         else:
             self.mutant_complex_pmrtop = None
 
         return (self.complex_pmrtop, self.receptor_pmrtop, self.ligand_pmrtop, self.mutant_complex_pmrtop,
                 self.mutant_receptor_pmrtop, self.mutant_ligand_pmrtop)
+
+    def _split_str(self, start, r, c, basename, struct, mut_index=0):
+        end = start + (r[1] - r[0])
+        mask = f'!:{start}-{end}'
+        # start += end
+        str_ = self.molstr(struct)
+        if mut_index:
+            str_ = self.makeMutTop(str_, mut_index, True)
+        str_.strip(mask)
+        str_file = self.FILES.prefix + f'{basename}_F{c}.pdb'
+        str_.save(str_file, 'pdb', True, renumber=False)
+        return end, str_file
 
     def pdb2prmtop(self):
         """
@@ -455,68 +487,39 @@ class CheckMakeTop:
 
         self.receptor_list = {}
         start = 1
-        c = 1
-        for r in self.resi['REC']['num']:
-            end = start + (r[1] - r[0])
-            mask = f'!:{start}-{end}'
+        for c, r in enumerate(self.resi['REC']['num'], start=1):
+            end, sfile = self._split_str(start, r, c, 'REC', self.receptor_str)
+            self.receptor_list[f'REC{c}'] = sfile
             start += end
-            rec = self.molstr(self.receptor_str)
-            rec.strip(mask)
-            rec_file = self.FILES.prefix + f'REC_F{c}.pdb'
-            rec.save(rec_file, 'pdb', True, renumber=False)
-            self.receptor_list[f'REC{c}'] = rec_file
-            c += 1
 
         self.ligand_list = {}
         start = 1
-        c = 1
-        for r in self.resi['LIG']['num']:
-            end = start + (r[1] - r[0])
-            mask = f'!:{start}-{end}'
+        for c, r in enumerate(self.resi['LIG']['num'], start=1):
+            end, sfile = self._split_str(start, r, c, 'LIG', self.ligand_str)
+            self.ligand_list[f'LIG{c}'] = sfile
             start += end
-            lig = self.molstr(self.ligand_str)
-            lig.strip(mask)
-            lig_file = self.FILES.prefix + f'LIG_F{c}.pdb'
-            lig.save(lig_file, 'pdb', True, renumber=False)
-            self.ligand_list[f'LIG{c}'] = lig_file
-            c += 1
+
         self.mut_receptor_list = {}
         self.mut_ligand_list = {}
-
         if self.INPUT['alarun']:
-            com_mut_index, part_mut, part_index, self.mut_label = self.getMutationIndex()
+            com_mut_index, part_mut, part_index, self.mut_label = self.getMutationInfo()
+            print(com_mut_index, type(com_mut_index), part_mut, part_index, self.mut_label, '########')
             if part_mut == 'REC':
                 logging.info('Detecting mutation in Receptor. Building Mutant Receptor Structure...')
                 self.mutant_ligand_pmrtop = None
                 start = 1
-                c = 1
-                for r in self.resi['REC']['num']:
-                    end = start + (r[1] - r[0])
-                    mask = f'!:{start}-{end}'
+                for c, r in enumerate(self.resi['REC']['num']):
+                    end, sfile = self._split_str(start, r, c, f'MUT_REC', self.receptor_str, part_index)
+                    self.mut_receptor_list[f'MREC{c}'] = sfile
                     start += end
-                    rec = self.molstr(self.receptor_str)
-                    mut_rec = self.makeMutTop(rec, part_index, True)
-                    mut_rec.strip(mask)
-                    mut_rec_file = self.FILES.prefix + f'MUT_REC_F{c}.pdb'
-                    mut_rec.save(mut_rec_file, 'pdb', True, renumber=False)
-                    self.mut_receptor_list[f'MREC{c}'] = mut_rec_file
-                    c += 1
             else:
                 logging.info('Detecting mutation in Ligand.Building Mutant Ligand Structure...')
                 self.mutant_receptor_pmrtop = None
                 start = 1
-                c = 1
-                for r in self.resi['LIG']['num']:
-                    end = start + (r[1] - r[0])
-                    mask = f'!:{start}-{end}'
+                for c, r in enumerate(self.resi['LIG']['num']):
+                    end, sfile = self._split_str(start, r, c, f'MUT_LIG', self.ligand_str, part_index)
+                    self.mut_ligand_list[f'MLIG{c}'] =  sfile
                     start += end
-                    lig = self.molstr(self.ligand_str)
-                    mut_lig = self.makeMutTop(lig, part_index, True)
-                    mut_lig.strip(mask)
-                    mut_lig_file = self.FILES.prefix + f'MUT_LIG_F{c}.pdb'
-                    mut_lig.save(mut_lig_file, 'pdb', True, renumber=False)
-                    self.mut_ligand_list[f'MLIG{c}'] = mut_lig_file
-                    c += 1
 
     def reswithin(self):
         # Get residue form receptor-ligand interface
