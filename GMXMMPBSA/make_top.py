@@ -1145,15 +1145,18 @@ class CheckMakeTop:
                 at.number = c
         return structure
 
+    def _write_ff(self, ofile):
+        for ff in self.forcefields:
+            ofile.write(f'source {ff}\n')
+        ofile.write('loadOff atomic_ions.lib\n')
+        ofile.write('loadamberparams {}\n'.format(ions_para_files[self.INPUT['ions_parameters']]))
+        ofile.write('set default PBRadii {}\n'.format(PBRadii[self.INPUT['PBRadii']]))
+
+
     def makeToptleap(self):
         logging.info('Building tleap input files...')
         with open(self.FILES.prefix + 'leap.in', 'w') as tif:
-            for ff in self.forcefields:
-                tif.write(f'source {ff}\n')
-            tif.write('loadOff atomic_ions.lib\n')
-            tif.write('loadamberparams {}\n'.format(ions_para_files[self.INPUT['ions_parameters']]))
-            tif.write('set default PBRadii {}\n'.format(PBRadii[self.INPUT['PBRadii']]))
-
+            self._write_ff(tif)
             REC = []
             LIG = []
             for rec in self.receptor_list:
@@ -1164,13 +1167,13 @@ class CheckMakeTop:
             # check if ligand is not protein and always load
             if self.FILES.ligand_mol2:
                 tif.write('LIG1 = loadmol2 {}\n'.format(self.FILES.ligand_mol2))
-                tif.write('check LIG1\n')
                 tif.write('loadamberparams {}\n'.format(self.ligand_frcmod))
-                if not self.FILES.stability:
-                    tif.write('saveamberparm LIG1 {t} {p}LIG.inpcrd\n'.format(t=self.ligand_pmrtop,
-                                                                              p=self.FILES.prefix))
-                else:
+                tif.write('check LIG1\n')
+
+                if self.FILES.stability:
                     self.ligand_pmrtop = None
+                else:
+                    tif.write(f'saveamberparm LIG1 {self.ligand_pmrtop} {self.FILES.prefix}LIG.inpcrd\n')
                 for lig in self.ligand_list:
                     LIG.append(f'{lig}')
             else:
@@ -1178,31 +1181,17 @@ class CheckMakeTop:
                     LIG.append(f'{lig}')
                     tif.write(f'{lig} = loadpdb {self.ligand_list[lig]}\n')
                 lig_out = ' '.join(LIG)
-                if not self.FILES.stability:
-                    tif.write(f'LIG_OUT = combine {{ {lig_out} }}\n')
-                    tif.write('saveamberparm LIG_OUT {t} {p}LIG.inpcrd\n'.format(t=self.ligand_pmrtop,
-                                                                                 p=self.FILES.prefix))
-                else:
+                if self.FILES.stability:
                     self.ligand_pmrtop = None
-            COM = []
-            l = 0
-            r = 0
-            i = 0
-            for e in self.orderl:
-                if e in ['R', 'REC']:
-                    COM.append(REC[r])
-                    r += 1
                 else:
-                    COM.append(LIG[l])
-                    l += 1
-                i += 1
-
-            if not self.FILES.stability:
-                tif.write(f'REC_OUT = combine {{ {rec_out} }}\n')
-                tif.write(
-                    'saveamberparm REC_OUT {t} {p}REC.inpcrd\n'.format(t=self.receptor_pmrtop, p=self.FILES.prefix))
-            else:
+                    tif.write(f'LIG_OUT = combine {{ {lig_out} }}\n')
+                    tif.write(f'saveamberparm LIG_OUT {self.ligand_pmrtop} {self.FILES.prefix}LIG.inpcrd\n')
+            COM = self._set_com_order(REC, LIG)
+            if self.FILES.stability:
                 self.receptor_pmrtop = None
+            else:
+                tif.write(f'REC_OUT = combine {{ { rec_out } }}\n')
+                tif.write(f'saveamberparm REC_OUT {self.receptor_pmrtop} {self.FILES.prefix}REC.inpcrd\n')
             com_out = ' '.join(COM)
             tif.write(f'COM_OUT = combine {{ {com_out} }}\n')
             tif.write('saveamberparm COM_OUT {t} {p}COM.inpcrd\n'.format(t=self.complex_pmrtop, p=self.FILES.prefix))
@@ -1210,20 +1199,11 @@ class CheckMakeTop:
         # changed in v1.4.3. We source the gmxMMPBSA ff directly from the data folder instead of copy to the Amber/dat
         data_path = Path(__file__).parent.joinpath('data')
         tleap = self.external_progs['tleap']
-        tleap_args = [tleap, '-f', '{}'.format(self.FILES.prefix + 'leap.in'), '-I', data_path.as_posix()]
-        if self.INPUT['debug_printlevel']:
-            logging.info('Running command: ' + ' '.join(tleap_args))
-        p = subprocess.Popen(tleap_args, stdout=self.log, stderr=self.log)
-        if p.wait():
-            GMXMMPBSA_ERROR('%s failed when querying %s' % (tleap, self.FILES.prefix + 'leap.in'))
+        self._run_tleap(tleap, 'leap.in', data_path)
 
         if self.INPUT['alarun']:
             with open(self.FILES.prefix + 'mut_leap.in', 'w') as mtif:
-                for ff in self.forcefields:
-                    mtif.write(f'source {ff}\n')
-                mtif.write('loadOff atomic_ions.lib\n')
-                mtif.write('loadamberparams {}\n'.format(ions_para_files[self.INPUT['ions_parameters']]))
-                mtif.write('set default PBRadii {}\n'.format(PBRadii[self.INPUT['PBRadii']]))
+                self._write_ff(mtif)
 
                 if self.mutant_receptor_pmrtop:
                     REC = []
