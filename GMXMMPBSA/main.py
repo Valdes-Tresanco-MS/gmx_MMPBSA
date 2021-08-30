@@ -805,34 +805,6 @@ class MMPBSA_App(object):
             return
         # Check deprecated variables
         # check force fields
-        if self.INPUT['protein_forcefield'] or self.INPUT['ligand_forcefield']:
-            GMXMMPBSA_WARNING('protein_forcefield and ligand_forcefield variables are deprecate since version 1.4.1 '
-                              'and will be remove in the next version. Please, use forcefield instead.')
-        if self.INPUT['entropy']:
-            GMXMMPBSA_WARNING('entropy variable is deprecate since version 1.4.2 and will be remove in v1.5.0. '
-                              'Please, use qh_entropy for Quasi-Harmonic approximation and i_entropy for '
-                              'Interaction entropy approximation instead.')
-            if self.INPUT['entropy'] == 1:
-                self.INPUT['qh_entropy'] = 1
-            elif self.INPUT['entropy'] == 2:
-                self.INPUT['interaction_entropy'] = 1
-
-        if self.INPUT['entropy_seg']:
-            GMXMMPBSA_WARNING('entropy_seg variable is deprecate since version 1.4.2 and will be remove in v1.5.0. '
-                              'Please, use ie_segment instead.')
-            self.INPUT['ie_segment'] = self.INPUT['entropy_seg']
-
-        if self.INPUT['entropy_temp'] != 298.15:
-            try:
-                # for compatibility with v1.3.x
-                if self.INPUT['temperature'] == 298.15:
-                    self.INPUT['temperature'] = self.INPUT['entropy_temp']
-            except:
-                self.INPUT['temperature'] = self.INPUT['entropy_temp']
-
-            GMXMMPBSA_WARNING('entropy_temp variable is deprecated and will be remove in next versions!. Please, '
-                              'use temperature variable instead')
-
         if not INPUT['igb'] in [1, 2, 5, 7, 8]:
             GMXMMPBSA_ERROR('Invalid value for IGB (%s)! ' % INPUT['igb'] + 'It must be 1, 2, 5, 7, or 8.', InputError)
         if INPUT['saltcon'] < 0:
@@ -977,26 +949,6 @@ class MMPBSA_App(object):
         if not self.master:
             return
         self.calc_types = {}
-
-        # compatibility issues with the new and deprecated variables
-        if self.INPUT['entropy']:
-            if self.INPUT['entropy'] == 1:
-                self.INPUT['qh_entropy'] = 1
-            elif self.INPUT['entropy'] == 2:
-                self.INPUT['interaction_entropy'] = 1
-        if 'qh_entropy' not in self.INPUT:
-            self.INPUT['qh_entropy'] = 0
-        if 'interaction_entropy' not in self.INPUT:
-            self.INPUT['interaction_entropy'] = 0
-        if self.INPUT['entropy_seg']:
-            self.INPUT['ie_segment'] = self.INPUT['entropy_seg']
-        if self.INPUT['entropy_temp'] != 298.15:
-            try:
-                # for compatibility with v1.3.x
-                if self.INPUT['temperature'] == 298.15:
-                    self.INPUT['temperature'] = self.INPUT['entropy_temp']
-            except:
-                self.INPUT['temperature'] = self.INPUT['entropy_temp']
         INPUT, FILES = self.INPUT, self.FILES
         # Mutant will also be a dict
         if INPUT['alarun']:

@@ -189,11 +189,10 @@ class CheckMakeTop:
 
         # check if the ligand force field is gaff or gaff2 and get if the ligand mol2 was defined
         if (
-            self.INPUT['ligand_forcefield'] in ["leaprc.gaff", "leaprc.gaff2"]
-            and not self.FILES.complex_top
-            and not self.FILES.ligand_mol2
+            "leaprc.gaff" in self.INPUT['forcefields'] or "leaprc.gaff2" in self.INPUT['forcefields']
+                and not self.FILES.complex_top and not self.FILES.ligand_mol2
         ):
-            GMXMMPBSA_WARNING('You must define the ligand mol2 file (-lm) if ligand_forcefield is "leaprc.gaff" or '
+            GMXMMPBSA_WARNING('You must define the ligand mol2 file (-lm) if the ligand forcefield is "leaprc.gaff" or '
                               '"leaprc.gaff2". If the ligand is parametrized in Amber force fields ignore this '
                               'warning')
 
@@ -298,20 +297,6 @@ class CheckMakeTop:
         self.check4water()
         self.resi, self.resl, self.orderl, self.indexes = self.res2map()
         self.fix_chains_IDs(self.complex_str, self.receptor_str, self.ligand_str, self.ref_str)
-        self.forcefields = self.check_ff_definition()
-
-    def check_ff_definition(self):
-        # first we check if forcefields was defined
-        prot_lig_ff = [self.INPUT['protein_forcefield'], self.INPUT['ligand_forcefield']]
-        ff = [ x.strip() for x in self.INPUT['forcefields'].split(',')]
-        if ff != prot_lig_ff:
-            if ff != ['oldff/leaprc.ff99SB', 'leaprc.gaff']:
-                forcefields = ff
-            else:
-                forcefields = self.INPUT['protein_forcefield'], self.INPUT['ligand_forcefield']
-        else:
-            forcefields = self.INPUT['protein_forcefield'], self.INPUT['ligand_forcefield']
-        return forcefields
 
     def check4water(self):
         counter = sum(
@@ -1150,7 +1135,7 @@ class CheckMakeTop:
         return structure
 
     def _write_ff(self, ofile):
-        for ff in self.forcefields:
+        for ff in self.INPUT['forcefields']:
             ofile.write(f'source {ff}\n')
         ofile.write('loadOff atomic_ions.lib\n')
         ofile.write('loadamberparams {}\n'.format(ions_para_files[self.INPUT['ions_parameters']]))
