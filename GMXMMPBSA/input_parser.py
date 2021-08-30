@@ -23,7 +23,7 @@ ensure proper functioning.
 # ##############################################################################
 
 from GMXMMPBSA.exceptions import InputError, InternalError
-
+import re
 
 # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
@@ -39,9 +39,8 @@ class Variable(object):
           recognition
         """
         # Catch illegalities
-        if not dat_type in (int, str, float):
-            raise InputError('Variable has unknown data type %s' %
-                             dat_type.__name__)
+        if not dat_type in (int, str, float, list):
+            raise InputError('Variable has unknown data type %s' % dat_type.__name__)
 
         # You can't match more characters than you have characters!
         chars_to_match = min(chars_to_match, len(varname))
@@ -109,6 +108,8 @@ class Variable(object):
         """ Sets the value of the variable """
         if self.datatype is str:
             self.value = value.replace('"', '').replace("'", '')
+        elif self.datatype is list:
+            self.value = [x.strip() for x in re.split("(?<!\d)[,;](?!\d)", value.replace('"', '').replace("'", ''))]
         else:
             self.value = self.datatype(value)
 
