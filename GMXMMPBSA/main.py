@@ -855,7 +855,7 @@ class MMPBSA_App(object):
         if INPUT['PBRadii'] not in [1, 2, 3, 4]:
             GMXMMPBSA_ERROR('PBRadii must be 1, 2, 3 or 4!', InputError)
         if INPUT['solvated_trajectory'] not in [0, 1]:
-            GMXMMPBSA_ERROR('Ligand force field must be 0 or 1!', InputError)
+            GMXMMPBSA_ERROR('SOLVATED_TRAJECTORY must be 0 or 1!', InputError)
         if not INPUT['use_sander'] in [0, 1]:
             GMXMMPBSA_ERROR('USE_SANDER must be set to 0 or 1!', InputError)
         if not INPUT['ifqnt'] in [0, 1]:
@@ -926,9 +926,7 @@ class MMPBSA_App(object):
             self.INPUT['nmstartframe'] = 1
 
         # check files
-        if self.FILES.complex_top:
-            self.INPUT['use_sander'] = 1
-        if self.INPUT['cas_intdiel']:
+        if self.FILES.complex_top or self.INPUT['cas_intdiel']:
             self.INPUT['use_sander'] = 1
 
     def remove(self, flag):
