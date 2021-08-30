@@ -177,7 +177,7 @@ class CheckMakeTop:
             # run parmchk2
             parmchk2 = self.external_progs['parmchk2']
             lig_ff = '1'
-            if "leaprc.gaff2" in self.INPUT['forcefields']:
+            if "gaff2" in self.INPUT['forcefields']:
                 lig_ff = '2'
             parmchk2_args = [parmchk2, '-i', self.FILES.ligand_mol2, '-f', 'mol2', '-o', self.ligand_frcmod, '-s',
                              lig_ff]
@@ -188,13 +188,12 @@ class CheckMakeTop:
                 GMXMMPBSA_ERROR('%s failed when querying %s' % (parmchk2, self.FILES.ligand_mol2))
 
         # check if the ligand force field is gaff or gaff2 and get if the ligand mol2 was defined
-        if (
-            "leaprc.gaff" in self.INPUT['forcefields'] or "leaprc.gaff2" in self.INPUT['forcefields']
-                and not self.FILES.complex_top and not self.FILES.ligand_mol2
-        ):
-            GMXMMPBSA_WARNING('You must define the ligand mol2 file (-lm) if the ligand forcefield is "leaprc.gaff" or '
-                              '"leaprc.gaff2". If the ligand is parametrized in Amber force fields ignore this '
-                              'warning')
+        else:
+            if ("leaprc.gaff" in self.INPUT['forcefields'] or "leaprc.gaff2" in self.INPUT['forcefields'] and not
+            self.FILES.complex_top):
+                GMXMMPBSA_WARNING('You must define the ligand mol2 file (-lm) if the ligand forcefield is '
+                                  '"leaprc.gaff" or "leaprc.gaff2". If the ligand is parametrized in Amber force '
+                                  'fields ignore this warning')
 
         # make a temp receptor pdb (even when stability) if decomp to get correct receptor residues from complex. This
         # avoid get multiples molecules from complex.split()
