@@ -50,6 +50,8 @@ class Variable(object):
         if default is not None:
             if self.datatype is str:
                 self.value = default.replace("'", '').replace('"', '')
+            elif self.datatype is list:
+                self.value = [x.strip() for x in re.split("(?<!\d)[,;](?!\d)", default.replace('"', '').replace("'", ''))]
             else:
                 self.value = self.datatype(default)
         else:
@@ -501,7 +503,7 @@ input_file.addNamelist('general', 'general',
                            ['interval', int, 1, 'Number of frames between adjacent frames analyzed'],
                            ['ions_parameters', int, 1, 'Define ions parameters to build the Amber topology'],
                            ['keep_files', int, 2, 'How many files to keep after successful completion'],
-                           ['forcefields', str, 'oldff/leaprc.ff99SB, leaprc.gaff', 'Define the force field to build '
+                           ['forcefields', list, 'oldff/leaprc.ff99SB, leaprc.gaff', 'Define the force field to build '
                                                                                    'the Amber topology'],
                            ['netcdf', int, 0, 'Use NetCDF intermediate trajectories'],
                            ['overwrite_data', int, 0, 'Defines whether the gmxMMPBSA data will be overwritten'],
