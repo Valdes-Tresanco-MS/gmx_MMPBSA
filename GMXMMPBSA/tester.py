@@ -58,7 +58,7 @@ def run_test(parser):
     if not parser.folder.exists():
         GMXMMPBSA_ERROR(f'{parser.folder} not exists or is inaccessible. Please define a new folder and try again...')
 
-    gmx_mmpbsa_test_folder = parser.folder.joinpath('gmx_MMPBSA_test')
+    gmx_mmpbsa_test_folder = parser.folder.joinpath('gmx_MMPBSA_test').absolute()
     if gmx_mmpbsa_test_folder.exists():
         shutil.rmtree(gmx_mmpbsa_test_folder)
     logging.info(f'Cloning gmx_MMPBSA repository in {gmx_mmpbsa_test_folder}')
