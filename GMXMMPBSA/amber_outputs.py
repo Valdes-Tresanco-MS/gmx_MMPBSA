@@ -293,62 +293,44 @@ class IEout(object):
     """
     Interaction Entropy output
     """
-    def __init__(self, data, iedata, frames, ieframes):
-        _iedata = EnergyVector(iedata)
-        self.data = {'data': data, 'frames': frames, 'ieframes': ieframes, 'iedata': _iedata}
-
-    def avg(self):
-        return self.data['iedata'].avg()
-
-    def stdev(self):
-        return self.data['iedata'].avg()
+    def __init__(self):
+        self.data = {}
 
     def print_summary_csv(self, csvwriter):
         """ Output summary of quasi-harmonic results in CSV format """
         csvwriter.writerow([f"Iteration Entropy calculation from last {self.data['ieframes']} frames..."])
         csvwriter.writerow(['Iteration Entropy:', '{:.2f}'.format(self.avg())])
 
-    def diff(self, other, key1, key2):
-        """
-        Takes the difference between 2 keys of 2 different BindingStatistics
-        classes and returns the average and standard deviation of that diff.
-        """
-        if len(self.data[key1]) != len(other.data[key2]):
-            return (self.data[key1].avg() - other.data[key2].avg(),
-                    sqrt(self.data[key1].stdev()**2 + other.data[key2].stdev()**2))
-        mydiff = self.data[key1] - other.data[key2]
-        return mydiff.avg(), mydiff.stdev()
-
-    def sum(self, other, key1, key2):
+    def sum(self, other, model, key1, key2):
         """
         Takes the sum between 2 keys of 2 different BindingStatistics
         classes and returns the average and standard deviation of that diff.
         """
-        if len(self.data[key1]) != len(other.data[key2]):
-            return (self.data[key1].avg() + other.data[key2].avg(),
-                    sqrt(self.data[key1].stdev()**2 + other.data[key2].stdev()**2))
-        mydiff = self.data[key1] + other.data[key2]
+        if len(self.data[model][key1]) != len(other.data[key2]):
+            return (self.data[model][key1].avg() + other.data[key2].avg(),
+                    sqrt(self.data[model][key1].stdev()**2 + other.data[key2].stdev()**2))
+        mydiff = self.data[model][key1] + other.data[key2]
         return mydiff.avg(), mydiff.stdev()
 
-
-    def print_vectors(self, csvwriter):
-        """ Prints the energy vectors to a CSV file for easy viewing
-            in spreadsheets
-        """
-        csvwriter.writerow(['Frame #', 'Interaction Entropy'])
-        for f, d in zip(self.data['frames'], self.data['data']):
-            csvwriter.writerow([f] + [d])
-
+    # def print_vectors(self, csvwriter):
+    #     """ Prints the energy vectors to a CSV file for easy viewing
+    #         in spreadsheets
+    #     """
+    #     csvwriter.writerow(['Frame #', 'Interaction Entropy'])
+    #     for f, d in zip(self.data['frames'], self.data['data']):
+    #         csvwriter.writerow([f] + [d])
+    #
     def print_summary(self):
-        """ Formatted summary of quasi-harmonic results """
-        ret_str = f"Iteration Entropy calculation from last {self.data['ieframes']} frames...\n"
-        ret_str += 'Iteration Entropy: {:.2f}\n'.format(self.avg())
+        """ Formatted summary of Interaction Entropy results """
 
-        ret_str = 'Entropy Term                Average              Std. Dev.   Std. Err. of Mean\n'
+        ret_str = 'Model                σIE            Average       Std. Dev.   Std. Err. of Mean\n'
         ret_str += '-------------------------------------------------------------------------------\n'
-        stdev = self.data['iedata'].stdev()
-        ret_str += '%-14s %20.4f %21.4f %19.4f\n' % ('IE', self.data['iedata'].avg(), stdev,
-                                                     stdev/sqrt(len(self.data['iedata'])))
+        for model in self.data:
+            self.data[model]['iedata'] = EnergyVector(self.data[model]['iedata'])
+            stdev = self.data[model]['iedata'].stdev()
+            ret_str += '%-14s %10.3f %16.3f %15.3f %19.3f\n' % (model, self.data[model]['sigma'],
+                                                                self.data[model]['iedata'].avg(), stdev,
+                                                     stdev/sqrt(len(self.data[model]['iedata'])))
         return ret_str
 
 #-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-

@@ -987,9 +987,8 @@ class MMPBSA_App(object):
                 continue
             # Non-mutant
             if not INPUT['mutant_only']:
-                self.calc_types[key] = {'complex': outclass[i](self.pre +
-                                                               basename[i] % 'complex', self.INPUT, self.mpi_size,
-                                                               self.using_chamber)}
+                self.calc_types[key] = {'complex': outclass[i](self.pre + basename[i] % 'complex', self.INPUT,
+                                                               self.mpi_size, self.using_chamber)}
                 if not self.stability:
                     self.calc_types[key]['receptor'] = outclass[i](self.pre +
                                                                    basename[i] % 'receptor', self.INPUT, self.mpi_size,
@@ -1012,20 +1011,20 @@ class MMPBSA_App(object):
                     self.calc_types[key]['complex'].fill_composite_terms()
             # Time for mutant
             if INPUT['alarun']:
-                self.calc_types['mutant'][key] = {'complex':
+                self.calc_types.mutant[key] = {'complex':
                                                       outclass[i](self.pre + 'mutant_' + basename[i] % 'complex',
                                                                   self.INPUT, self.mpi_size, self.using_chamber)}
                 if not self.stability:
-                    self.calc_types['mutant'][key]['receptor'] = outclass[i](
+                    self.calc_types.mutant[key]['receptor'] = outclass[i](
                         self.pre + 'mutant_' + basename[i] % 'receptor',
                         self.INPUT, self.mpi_size, self.using_chamber)
-                    self.calc_types['mutant'][key]['ligand'] = outclass[i](
+                    self.calc_types.mutant[key]['ligand'] = outclass[i](
                         self.pre + 'mutant_' + basename[i] % 'ligand',
                         self.INPUT, self.mpi_size, self.using_chamber)
-                    self.calc_types['mutant'][key]['delta'] = BindClass(
-                        self.calc_types['mutant'][key]['complex'],
-                        self.calc_types['mutant'][key]['receptor'],
-                        self.calc_types['mutant'][key]['ligand'],
+                    self.calc_types.mutant[key]['delta'] = BindClass(
+                        self.calc_types.mutant[key]['complex'],
+                        self.calc_types.mutant[key]['receptor'],
+                        self.calc_types.mutant[key]['ligand'],
                         self.INPUT['verbose'], self.using_chamber)
                     if (self.INPUT['interaction_entropy'] and key not in ['nmode', 'qh'] and
                             'ie' not in self.calc_types['mutant']):
