@@ -291,7 +291,7 @@ class CheckMakeTop:
 
         # check for IE variable
         if self.FILES.receptor_tpr or self.FILES.ligand_tpr:
-            if self.INPUT['interaction_entropy']: # or self.INPUT['c2_entropy']:
+            if self.INPUT['interaction_entropy'] or self.INPUT['c2_entropy']:
                 GMXMMPBSA_WARNING("The IE or C2 entropy method don't support the MTP approach...")
                 self.INPUT['interaction_entropy'] = self.INPUT['c2_entropy'] = 0
 
