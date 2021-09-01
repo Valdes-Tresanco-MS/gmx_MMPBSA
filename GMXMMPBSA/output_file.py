@@ -95,7 +95,7 @@ def write_stability_output(app):
                                    'APPROXIMATION) CALCULATED WITH PTRAJ:')
             final_output.add_section(qhnorm.print_summary())
         if INPUT['alarun']:
-            qhmutant = app.calc_types['mutant']['qh']
+            qhmutant = app.calc_types.mutant['qh']
             final_output.writeline(mut_str + ' MUTANT')
             final_output.writeline('ENTROPY RESULTS (QUASI-' +
                                    'HARMONIC APPROXIMATION) CALCULATED WITH PTRAJ:')
@@ -120,7 +120,7 @@ def write_stability_output(app):
                 energyvectors.writerow([])
 
         if INPUT['alarun']:
-            nm_mut = app.calc_types['mutant']['nmode']['complex']
+            nm_mut = app.calc_types.mutant['nmode']['complex']
             final_output.write(mut_str + ' MUTANT\nENTROPY RESULTS (HARMONIC ' +
                                'APPROXIMATION) CALCULATED WITH NMODE:\n')
             final_output.add_section('Complex:\n' + nm_mut.print_summary())
@@ -184,7 +184,7 @@ def write_stability_output(app):
                                          'tion: FREE ENERGY (G) =    %9.4f +/- %7.4f\n' % (davg, dstdev))
 
         if INPUT['alarun']:
-            com_mut = app.calc_types['mutant'][key]['complex']
+            com_mut = app.calc_types.mutant[key]['complex']
             final_output.write('%s MUTANT:%s' % (mut_str, headers[i]))
             final_output.add_section('Complex:\n' + com_mut.print_summary())
             # Dump energy vectors to a CSV
@@ -316,7 +316,7 @@ def write_binding_output(app):
             final_output.writeline('ENTROPY RESULTS (QUASI-HARMONIC APPROXIMATION) CALCULATED WITH PTRAJ:')
             final_output.add_section(qhnorm.print_summary())
         if INPUT['alarun']:
-            qhmutant = app.calc_types['mutant']['qh']
+            qhmutant = app.calc_types.mutant['qh']
             final_output.writeline(mut_str + ' MUTANT')
             final_output.writeline('ENTROPY RESULTS (QUASI-HARMONIC APPROXIMATION) CALCULATED WITH PTRAJ:')
             final_output.add_section(qhmutant.print_summary())
@@ -331,7 +331,7 @@ def write_binding_output(app):
             final_output.writeline('ENTROPY RESULTS (INTERACTION ENTROPY):')
             final_output.add_section(ienorm.print_summary())
         if INPUT['alarun']:
-            iemutant = app.calc_types['mutant']['ie']
+            iemutant = app.calc_types.mutant['ie']
             final_output.writeline(mut_str + ' MUTANT')
             final_output.writeline('ENTROPY RESULTS (INTERACTION ENTROPY):')
             final_output.add_section(iemutant.print_summary())
@@ -355,7 +355,7 @@ def write_binding_output(app):
                 energyvectors.writerow([])
 
         if INPUT['alarun']:
-            nm_sys_mut = app.calc_types['mutant']['nmode']['delta']
+            nm_sys_mut = app.calc_types.mutant['nmode']['delta']
             final_output.write(mut_str + ' MUTANT\nENTROPY RESULTS (HARMONIC ' +
                                'APPROXIMATION) CALCULATED WITH NMODE:\n')
             final_output.add_section(nm_sys_mut.print_summary())
@@ -412,7 +412,7 @@ def write_binding_output(app):
                                          'DELTA G binding = %9.4f +/- %7.4f\n' % (davg, dstdev))
 
         if INPUT['alarun']:
-            sys_mut = app.calc_types['mutant'][key]['delta']
+            sys_mut = app.calc_types.mutant[key]['delta']
             final_output.write('%s MUTANT:%s' % (mut_str, headers[i]))
             final_output.add_section(sys_mut.print_summary())
             # Dump energy vectors to a CSV
