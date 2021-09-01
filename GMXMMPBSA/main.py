@@ -840,10 +840,6 @@ class MMPBSA_App(object):
                              INPUT['idecomp'], InputError)
         if INPUT['idecomp'] != 0 and INPUT['sander_apbs'] == 1:
             GMXMMPBSA_ERROR('IDECOMP cannot be used with sander.APBS!', InputError)
-        if not INPUT['entropy'] in [0, 1, 2]:
-            GMXMMPBSA_ERROR('ENTROPY (%s) must be 0, 1 or 2!' % INPUT['entropy'], InputError)
-        if INPUT['entropy_seg'] not in range(1, 101):
-            GMXMMPBSA_ERROR('Entropy Segment (%s) must be in 1-100!' % INPUT['entropy_seg'], InputError)
         if not INPUT['sander_apbs'] in [0, 1]:
             GMXMMPBSA_ERROR('SANDER_APBS must be 0 or 1!', InputError)
         if INPUT['alarun'] and INPUT['netcdf'] != '':
