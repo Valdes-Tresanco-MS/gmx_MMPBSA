@@ -336,9 +336,11 @@ def write_binding_output(app):
             final_output.writeline('ENTROPY RESULTS (INTERACTION ENTROPY):')
             final_output.add_section(iemutant.print_summary())
         if INPUT['alarun'] and not INPUT['mutant_only']:
-            davg, dstdev = ienorm.diff(iemutant, 'iedata', 'iedata')
-            final_output.add_section(('\nRESULT OF ALANINE SCANNING:\n'
-                                      '(%s) DELTA DELTA S binding = %9.4f +/- %9.4f\n') % (mut_str, davg, dstdev))
+            text = '\nRESULT OF ALANINE SCANNING (%s):\n' % mut_str
+            for model in ienorm.data:
+                d = ienorm.data[model]['iedata'] - iemutant.data[model]['iedata']
+                text += 'DELTA DELTA S binding (%s) = %9.4f +/- %9.4f\n' % (model.upper(), d.avg(), d.stdev())
+            final_output.add_section(text)
 
 
     # Now print out the normal mode results
@@ -403,9 +405,9 @@ def write_binding_output(app):
                                              'DELTA G binding = %9.4f\n' %
                                              (sys_norm.data['DELTA TOTAL'][0] - qhnorm.total_avg()))
             if INPUT['interaction_entropy']:
-                davg, dstdev = ienorm.sum(sys_norm, 'iedata', 'DELTA TOTAL')
+                d, s = ienorm.sum(sys_norm, key, 'iedata', 'DELTA TOTAL')
                 final_output.add_section(f"Using Interaction Entropy Approximation:\n"
-                                         f"DELTA G binding = {davg:9.4f} +/- {dstdev:7.4f}\n")
+                                         f"DELTA G binding = {d:9.4f} +/- {s:7.4f}\n")
             if INPUT['nmoderun']:
                 davg, dstdev = sys_norm.diff(nm_sys_norm, 'DELTA TOTAL', 'Total')
                 final_output.add_section('Using Normal Mode Entropy Approximation:\n'
@@ -432,10 +434,9 @@ def write_binding_output(app):
                                              'DELTA G binding = %9.4f\n' %
                                              (qhmutant.total_avg() - sys_mut.data['DELTA TOTAL'][0]))
             if INPUT['interaction_entropy']:
-                # if isinstance(sys_mut.data['DELTA TOTAL'], EnergyVector):
-                davg, dstdev = iemutant.sum(sys_mut, 'iedata', 'DELTA TOTAL')
+                d, s = iemutant.sum(sys_mut, key, 'iedata', 'DELTA TOTAL')
                 final_output.add_section(f"Using Interaction Entropy Approximation:\n"
-                                         f"DELTA G binding = {davg:9.4f} +/- {dstdev:7.4f}\n")
+                                         f"DELTA G binding = {d:9.4f} +/- {s:7.4f}\n")
             if INPUT['nmoderun']:
                 davg, dstdev = sys_mut.diff(nm_sys_mut, 'DELTA TOTAL', 'Total')
                 final_output.add_section('Using Normal Mode Entropy Approximation:\n'
@@ -443,21 +444,21 @@ def write_binding_output(app):
 
         if INPUT['alarun'] and not INPUT['mutant_only']:
             davg, dstdev = sys_mut.diff(sys_norm, 'DELTA TOTAL', 'DELTA TOTAL')
-            final_output.write(('\nRESULT OF ALANINE SCANNING:\n'
-                                '(%s) DELTA DELTA G binding = %9.4f  +/- %9.4f\n') % (mut_str, davg, dstdev))
+            final_output.write(('\nRESULT OF ALANINE SCANNING (%s):\n' 
+                                'DELTA DELTA G binding = %9.4f  +/- %9.4f\n') % (mut_str, davg, dstdev))
             if INPUT['qh_entropy']:
                 final_output.write(('\n   (quasi-harmonic entropy)\n'
-                                    '(%s) DELTA DELTA G binding = %9.4f\n') % (mut_str, davg + qhmutant.total_avg() -
+                                    'DELTA DELTA G binding = %9.4f\n') % (davg + qhmutant.total_avg() -
                                                                                qhnorm.total_avg()))
             if INPUT['interaction_entropy']:
-                davg1, dstdev1 = iemutant.diff(ienorm, 'iedata', 'iedata')
+                d = iemutant.data[key]['iedata'] - ienorm.data[key]['iedata']
                 final_output.write(('\n   (interaction entropy)\n'
-                                    '(%s) DELTA DELTA G binding = %9.4f +/- %9.4f\n') % (mut_str, davg1 + davg,
-                                                                                    sqrt(dstdev ** 2 + dstdev1 ** 2)))
+                                    'DELTA DELTA G binding = %9.4f +/- %9.4f\n') % (davg + d.avg(),
+                                                                                    sqrt(dstdev ** 2 + d.stdev() ** 2)))
             if INPUT['nmoderun']:
                 davg1, dstdev1 = nm_sys_mut.diff(nm_sys_norm, 'Total', 'Total')
                 final_output.write(('\n   (normal mode entropy)\n'
-                                    '(%s) DELTA DELTA G binding = %9.4f +/- %9.4f\n') % (mut_str, davg1 - davg,
+                                    'DELTA DELTA G binding = %9.4f +/- %9.4f\n') % (davg1 - davg,
                                                                               sqrt(dstdev ** 2 + dstdev1 ** 2)))
             final_output.separate()
 
