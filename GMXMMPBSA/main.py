@@ -946,17 +946,17 @@ class MMPBSA_App(object):
         # Only the master does this
         if not self.master:
             return
-        self.calc_types = {}
+        self.calc_types = type('calc_types', (dict,), {})()
         INPUT, FILES = self.INPUT, self.FILES
         # Mutant will also be a dict
         if INPUT['alarun']:
-            self.calc_types['mutant'] = {}
+            self.calc_types.mutant = {}
         # Quasi-harmonic analysis is a special-case, so handle that separately
         if INPUT['qh_entropy']:
             if not INPUT['mutant_only']:
                 self.calc_types['qh'] = QHout(self.pre + 'cpptraj_entropy.out', INPUT['temp'])
             if INPUT['alarun']:
-                self.calc_types['mutant']['qh'] = QHout(self.pre + 'mutant_cpptraj_entropy.out', INPUT['temp'])
+                self.calc_types.mutant['qh'] = QHout(self.pre + 'mutant_cpptraj_entropy.out', INPUT['temp'])
         # Set BindingClass based on whether it's a single or multiple trajectory
         # analysis
         if self.traj_protocol == 'STP':
