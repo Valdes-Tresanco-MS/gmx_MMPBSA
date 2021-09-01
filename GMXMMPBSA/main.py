@@ -1044,7 +1044,7 @@ class MMPBSA_App(object):
                                                                   'frames': mie.frames,
                                                            'ieframes': mie.ieframes, 'sigma': mie.ie_std}
                 else:
-                    self.calc_types['mutant'][key]['complex'].fill_composite_terms()
+                    self.calc_types.mutant[key]['complex'].fill_composite_terms()
 
 
 # Local methods
