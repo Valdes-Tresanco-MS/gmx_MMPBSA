@@ -623,7 +623,7 @@ class InteractionEntropyCalc:
         self.ggas = ggas
         self.app = app
         self.output = output
-        self.data = {}
+        self.data = []
 
         self._calculate()
         self.save_output()
@@ -664,5 +664,36 @@ class InteractionEntropyCalc:
             out.write('Frame # | IE value\n')
             for f, d in zip(self.frames, self.data):
                 out.write('{:d}  {:.2f}\n'.format(f, d))
+
+# +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+class C2EntropyCalc:
+    """
+    Class for Interaction Entropy calculation
+    :return {IE_key: data}
+    """
+
+    def __init__(self, ggas, app, output):
+        self.ggas = ggas
+        self.app = app
+        self.output = output
+
+        self._calculate()
+        self.save_output()
+
+    def _calculate(self):
+        # gas constant in kcal/(mol⋅K)
+        R = 0.001987
+        temp = self.app.INPUT['temperature']
+        self.c2frames = math.ceil(self.app.numframes * (self.app.INPUT['c2_segment'] / 100))
+        self.c2_std = self.ggas[-self.c2frames:].std()
+        self.c2data = (self.c2_std ** 2) / (2 * temp * R)
+        print(self.c2frames, self.ggas, self.ggas[-self.c2frames], self.c2_std, self.c2data)
+
+    def save_output(self):
+        with open(self.output, 'w') as out:
+            out.write(f'Calculation for last {self.c2frames} frames:\n')
+            out.write(f'C2 Entropy (-TΔS): {self.c2data:.4f}\n\n')
+
 
 # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+

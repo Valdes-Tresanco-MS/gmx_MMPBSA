@@ -30,10 +30,10 @@ import logging
 # Import gmx_MMPBSA modules
 from GMXMMPBSA import utils
 from GMXMMPBSA.amber_outputs import (QHout, NMODEout, QMMMout, GBout, PBout, PolarRISM_std_Out, RISM_std_Out,
-                                     PolarRISM_gf_Out, RISM_gf_Out, SingleTrajBinding, MultiTrajBinding, IEout)
+                                     PolarRISM_gf_Out, RISM_gf_Out, SingleTrajBinding, MultiTrajBinding, IEout, C2out)
 from GMXMMPBSA.calculation import (CalculationList, EnergyCalculation, PBEnergyCalculation, RISMCalculation,
                                    NmodeCalc, QuasiHarmCalc, CopyCalc, PrintCalc, LcpoCalc, MolsurfCalc,
-                                   InteractionEntropyCalc)
+                                   InteractionEntropyCalc, C2EntropyCalc)
 from GMXMMPBSA.commandlineparser import parser
 from GMXMMPBSA.createinput import create_inputs
 from GMXMMPBSA.exceptions import (MMPBSA_Error, InternalError, InputError, GMXMMPBSA_ERROR, GMXMMPBSA_WARNING)
@@ -987,6 +987,13 @@ class MMPBSA_App(object):
                 self.calc_types['ie'] = IEout()
             if INPUT['alarun']:
                 self.calc_types.mutant['ie'] = IEout()
+        if self.INPUT['c2_entropy']:
+            if not INPUT['mutant_only']:
+                self.calc_types['c2'] = C2out()
+            if INPUT['alarun']:
+                self.calc_types.mutant['c2'] = C2out()
+
+
         # FIXME: Inlude the C2 entropy
 
         for i, key in enumerate(outkey):
@@ -1016,6 +1023,10 @@ class MMPBSA_App(object):
                                                         self.pre + f"{key.replace(' ', '_')}_iteraction_entropy.dat")
                             self.calc_types['ie'].data[key] = {'data': ie.data, 'iedata': ie.iedata, 'frames': ie.frames,
                                                                'ieframes': ie.ieframes, 'sigma': ie.ie_std}
+                        if 'c2' in self.calc_types:
+                            edata = self.calc_types[key]['delta'].data['DELTA G gas']
+                            c2 = C2EntropyCalc(edata, self, self.pre + f"{key.replace(' ', '_')}_c2_entropy.dat")
+                            self.calc_types['c2'].data[key] = {'c2data': c2.c2data, 'sigma': c2.c2_std}
                             # self.calc_types[self.key]['delta'].data['DELTA G gas']
                 else:
                     self.calc_types[key]['complex'].fill_composite_terms()
@@ -1037,12 +1048,18 @@ class MMPBSA_App(object):
                         self.calc_types.mutant[key]['ligand'],
                         self.INPUT['verbose'], self.using_chamber)
                     if key in ['gb', 'pb', 'rism std', 'rism gf']:
-                        edata = self.calc_types.mutant[key]['delta'].data['DELTA G gas']
-                        mie = InteractionEntropyCalc(edata, self, self.pre + 'mutant_' +
-                                                     f"{key.replace(' ', '_')}_iteraction_entropy.dat")
-                        self.calc_types.mutant['ie'].data[key] = {'data': mie.data, 'iedata': mie.iedata,
-                                                                  'frames': mie.frames,
-                                                           'ieframes': mie.ieframes, 'sigma': mie.ie_std}
+                        if 'ie' in self.calc_types.mutant:
+                            edata = self.calc_types.mutant[key]['delta'].data['DELTA G gas']
+                            mie = InteractionEntropyCalc(edata, self, self.pre + 'mutant_' +
+                                                         f"{key.replace(' ', '_')}_iteraction_entropy.dat")
+                            self.calc_types.mutant['ie'].data[key] = {'data': mie.data, 'iedata': mie.iedata,
+                                                                      'frames': mie.frames,
+                                                               'ieframes': mie.ieframes, 'sigma': mie.ie_std}
+                        if 'c2' in self.calc_types.mutant:
+                            edata = self.calc_types.mutant[key]['delta'].data['DELTA G gas']
+                            c2 = C2EntropyCalc(edata, self, self.pre + 'mutant_' +
+                                               f"{key.replace(' ', '_')}_c2_entropy.dat")
+                            self.calc_types.mutant['c2'].data[key] = {'c2data': c2.c2data, 'sigma': c2.c2_std}
                 else:
                     self.calc_types.mutant[key]['complex'].fill_composite_terms()
 

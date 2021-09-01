@@ -334,6 +334,43 @@ class IEout(object):
         return ret_str
 
 #-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+class C2out(object):
+    """
+    Interaction Entropy output
+    """
+    def __init__(self):
+        self.data = {}
+
+    def print_summary_csv(self, csvwriter):
+        """ Output summary of quasi-harmonic results in CSV format """
+        csvwriter.writerow([f"C2 Entropy calculation from last {self.data['ieframes']} frames..."])
+        csvwriter.writerow(['C2 Entropy:', '{:.2f}'.format(self.avg())])
+
+    def sum(self, other, model, key1, key2):
+        """
+        Takes the sum between 2 keys of 2 different BindingStatistics
+        classes and returns the average and standard deviation of that diff.
+        """
+        return self.data[model][key1] + other.data[key2].avg(), other.data[key2].stdev()
+
+    # def print_vectors(self, csvwriter):
+    #     """ Prints the energy vectors to a CSV file for easy viewing
+    #         in spreadsheets
+    #     """
+    #     csvwriter.writerow(['Frame #', 'Interaction Entropy'])
+    #     for f, d in zip(self.data['frames'], self.data['data']):
+    #         csvwriter.writerow([f] + [d])
+    #
+    def print_summary(self):
+        """ Formatted summary of Interaction Entropy results """
+
+        ret_str = 'Model                σC2            Value       \n'
+        ret_str += '-------------------------------------------------------------------------------\n'
+        for model in self.data:
+            ret_str += '%-14s %10.3f %16.3f\n' % (model, self.data[model]['sigma'], self.data[model]['c2data'])
+        return ret_str
+
+#-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 
 class QHout(object):
     """ Quasi-harmonic output file class. QH output files are strange so we won't
