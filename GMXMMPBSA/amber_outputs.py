@@ -25,8 +25,8 @@ All data is stored in a special class derived from the list.
 # ##############################################################################
 
 from math import sqrt
-from GMXMMPBSA.exceptions import (OutputError, LengthError, DecompError,
-                                  InternalError)
+from GMXMMPBSA.exceptions import (OutputError, LengthError, DecompError, InternalError)
+import numpy as np
 import sys
 
 idecompString = ['idecomp = 0: No decomposition analysis',
@@ -43,164 +43,80 @@ def _std_dev(sum_squares, running_sum, num):
 
 #-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 
-class EnergyVector(list):
-    """ list-derived class for holding energies that defines add and subtract
-        methods to add and subtract different vectors term by term
-    """
+class EnergyVector(np.ndarray):
+    def __new__(cls, values=None):
+        # Input array is an already formed ndarray instance
+        # We first cast to be our class type
+        if isinstance(values, int):
+            obj = np.zeros((values,)).view(cls)
+        elif isinstance(values, (list, tuple, np.ndarray)):
+            obj = np.array(values).view(cls)
+        else:
+            obj = np.array([]).view(cls)
+        # Finally, we must return the newly created object:
+        return obj
 
-    #==================================================
+    def __array_finalize__(self, obj):
+        # see InfoArray.__array_finalize__ for comments
+        if obj is None: return
+        self.info = getattr(obj, 'info', None)
+
+    def append(self, values):
+        return EnergyVector(np.append(self, values))
+
+    def avg(self):
+        return np.average(self)
+
+    def stdev(self):
+        return np.std(self)
 
     def __add__(self, other):
-        # If other is a scalar, do scalar addition
-        if isinstance(other, float) or isinstance(other, int):
-            return EnergyVector([x + other for x in self])
-        # Otherwise, vector addition
-        if len(self) != len(other):
-            raise LengthError('length mismatch in energy vectors')
-        return EnergyVector([self[i] + other[i] for i in range(len(self))])
-
-    #==================================================
+        return EnergyVector(np.add(self, other))
 
     def __sub__(self, other):
-        # If other is a scalar, do scalar subtraction
-        if isinstance(other, float) or isinstance(other, int):
-            return EnergyVector([x - other for x in self])
-        # Otherwise, vector subtraction
-        if len(self) != len(other):
-            raise LengthError('length mismatch in energy vectors')
-        return EnergyVector([self[i] - other[i] for i in range(len(self))])
-
-    #==================================================
+        return EnergyVector(np.subtract(self, other))
 
     def __mul__(self, scalar):
-        """
-        Return a copy of the vector whose every element is multiplied by the
-        scalar
-        """
-        if not isinstance(scalar, float) and not isinstance(scalar, int):
-            raise TypeError('Cannot multiply a vector by a non-numeric scalar')
-        return EnergyVector([x * scalar for x in self])
-
-    #==================================================
+        return EnergyVector(np.multiply(self, scalar))
 
     def __imul__(self, scalar):
-        """ In-place multiplication -- no allocation of another EnergyVector """
-        if not isinstance(scalar, float) and not isinstance(scalar, int):
-            raise TypeError('Cannot multiply a vector by a non-numeric scalar')
         for i, x in enumerate(self):
             self[i] = x * scalar
 
-    #==================================================
-
     def __iadd__(self, other):
-        """ In-place addition -- no allocation of another EnergyVector """
-        # Scalar addition?
-        if isinstance(other, int) or isinstance(other, float):
-            for i in range(len(self)):
+        if isinstance(other, (int, float)):
+            for i, _ in enumerate(self):
                 self[i] += other
             return
-        # Otherwise, vector addition
-        if len(self) != len(other):
-            raise LengthError('length mismatch in energy vectors')
-        for i in range(len(self)):
+        for i, _ in enumerate(self):
             self[i] += other[i]
 
-    #==================================================
-
     def __isub__(self, other):
-        """ In-place subtraction -- no allocation of another EnergyVector """
-        # Scalar subtraction?
-        if isinstance(other, int) or isinstance(other, float):
-            for i in range(len(self)):
+        if isinstance(other, (int, float)):
+            for i, _ in enumerate(self):
                 self[i] -= other
             return
-        # Otherwise, vector subtraction
-        if len(self) != len(other):
-            raise LengthError('length mismatch in energy vectors')
-        for i in range(len(self)):
+        for i, _ in enumerate(self):
             self[i] -= other[i]
 
-    #==================================================
+    def __eq__(self, other):
+        return np.all(np.equal(self, other))
 
     def __lt__(self, other):
-        """
-        This allows us to compare a list term-by-term, or we can compare every
-        term to a single integer or floating point number
-        """
-        try:
-            for val in self:
-                if val > float(other): return False
-            return True
-        except TypeError:
-            if len(self) != len(other):
-                return self.avg() < other.avg()
-            for i, s in enumerate(self):
-                if s > other[i]: return False
-            return True
-
-        raise InternalError('Should not be here!')
-
-    #==================================================
-
-    def __eq__(self, other):
-        """
-        This allows a term-by-term comparison or compare every term to a single
-        integer/float.
-        """
-        try:
-            for val in self:
-                if val != float(other): return False
-            return True
-        except TypeError:
-            if len(self) != len(other):
-                return self.avg() == other.avg()
-            else:
-                for i, s in enumerate(self):
-                    if s != other[i]: return False
-                return True
-
-        raise InternalError('Should not be here!')
-
-    #==================================================
+        return np.all(np.less(self, other))
 
     def __le__(self, other):
-        return self.__lt__(other) or self.__eq__(other)
-
-    #==================================================
+        return np.all(np.less_equal(self, other))
 
     def __gt__(self, other):
-        """
-        Opposite of __lt__
-        """
-        return not self.__lt__(other) and not self.__eq__(other)
-
-    #==================================================
+        return np.all(np.greater(self, other))
 
     def __ge__(self, other):
-        return not self.__lt__(other)
-
-    #==================================================
-
-    def avg(self):
-        return (sum(self) / len(self))
-
-    #==================================================
-
-    def stdev(self):
-        rsum2 = 0
-        for num in self:
-            rsum2 += num * num
-        rsum2 /= len(self)
-        avg = self.avg()
-        return sqrt(abs(rsum2 - avg * avg))
-
-    #==================================================
+        return np.all(np.greater_equal(self, other))
 
     def abs_gt(self, val):
         """ If any element's absolute value is greater than a # """
-        for myval in self:
-            if abs(myval) > val: return True
-        return False
+        return np.any(np.greater(self, val))
 
 #-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 
@@ -361,11 +277,13 @@ class AmberOutput(object):
         """
 
         for key in self.composite_keys:
-            self.data[key]=EnergyVector([0 for i in range(len(self.data['EEL']))])
+            self.data[key]=EnergyVector(len(self.data['EEL']))
 
         for key in self.data_keys:
-            if self.print_levels[key] > self.verbose: continue
-            if not self.chamber and key in ['UB', 'IMP', 'CMAP']: continue
+            if self.print_levels[key] > self.verbose:
+                continue
+            if not self.chamber and key in ['UB', 'IMP', 'CMAP']:
+                continue
             for component in self.data_key_owner[key]:
                 self.data[component] = self.data[key] + self.data[component]
 
@@ -502,9 +420,9 @@ class QHout(object):
         """ Parses the output files and fills the data arrays """
         output = open(self.filename, 'r')
         rawline = output.readline()
-        self.com = EnergyVector([0,0,0,0])
-        self.rec = EnergyVector([0,0,0,0])
-        self.lig = EnergyVector([0,0,0,0])
+        self.com = EnergyVector(4)
+        self.rec = EnergyVector(4)
+        self.lig = EnergyVector(4)
         comdone = False # if we've done the complex yet (filled in self.com)
         recdone = False # if we've done the receptor yet (filled in self.rec)
 
@@ -648,13 +566,13 @@ class NMODEout(object):
                 sys.stderr.write('Not all frames minimized within tolerance')
 
             if rawline[0:6] == 'Total:':
-                self.data['Total'].append(float(rawline.split()[3]) *
+                self.data['Total'] = self.data['Total'].append(float(rawline.split()[3]) *
                                           self.temp / 1000)
-                self.data['Translational'].append(
+                self.data['Translational'] = self.data['Translational'].append(
                     float(outfile.readline().split()[3]) * self.temp / 1000)
-                self.data['Rotational'].append(
+                self.data['Rotational'] = self.data['Rotational'].append(
                     float(outfile.readline().split()[3]) * self.temp / 1000)
-                self.data['Vibrational'].append(
+                self.data['Vibrational'] = self.data['Vibrational'].append(
                     float(outfile.readline().split()[3]) * self.temp / 1000)
 
             rawline = outfile.readline()
@@ -705,27 +623,27 @@ class GBout(AmberOutput):
 
             if rawline[0:5] == ' BOND':
                 words = rawline.split()
-                self.data['BOND'].append(float(words[2]))
-                self.data['ANGLE'].append(float(words[5]))
-                self.data['DIHED'].append(float(words[8]))
+                self.data['BOND'] = self.data['BOND'].append(float(words[2]))
+                self.data['ANGLE'] = self.data['ANGLE'].append(float(words[5]))
+                self.data['DIHED'] = self.data['DIHED'].append(float(words[8]))
                 words = outfile.readline().split()
 
                 if self.chamber:
-                    self.data['UB'].append(float(words[2]))
-                    self.data['IMP'].append(float(words[5]))
-                    self.data['CMAP'].append(float(words[8]))
+                    self.data['UB'] = self.data['UB'].append(float(words[2]))
+                    self.data['IMP'] = self.data['IMP'].append(float(words[5]))
+                    self.data['CMAP'] = self.data['CMAP'].append(float(words[8]))
                     words = outfile.readline().split()
                 else:
-                    self.data['UB'].append(0.0)
-                    self.data['IMP'].append(0.0)
-                    self.data['CMAP'].append(0.0)
+                    self.data['UB'] = self.data['UB'].append(0.0)
+                    self.data['IMP'] = self.data['IMP'].append(0.0)
+                    self.data['CMAP'] = self.data['CMAP'].append(0.0)
 
-                self.data['VDWAALS'].append(float(words[2]))
-                self.data['EEL'].append(float(words[5]))
-                self.data['EGB'].append(float(words[8]))
+                self.data['VDWAALS'] = self.data['VDWAALS'].append(float(words[2]))
+                self.data['EEL'] = self.data['EEL'].append(float(words[5]))
+                self.data['EGB'] = self.data['EGB'].append(float(words[8]))
                 words = outfile.readline().split()
-                self.data['1-4 VDW'].append(float(words[3]))
-                self.data['1-4 EEL'].append(float(words[7]))
+                self.data['1-4 VDW'] = self.data['1-4 VDW'].append(float(words[3]))
+                self.data['1-4 EEL'] = self.data['1-4 EEL'].append(float(words[7]))
             # end if rawline[0:5] == 'BOND'
 
             rawline = outfile.readline()
@@ -739,7 +657,7 @@ class GBout(AmberOutput):
         fname = '%s.%d' % (self.basename, fileno)
         fname = fname.replace('gb.mdout','gb_surf.dat')
         surf_data = _get_cpptraj_surf(fname)
-        self.data['ESURF'].extend((surf_data * self.surften) + self.surfoff)
+        self.data['ESURF'] = self.data['ESURF'].append((surf_data * self.surften) + self.surfoff)
 
 #-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 
@@ -781,31 +699,33 @@ class PBout(AmberOutput):
 
             if rawline[0:5] == ' BOND':
                 words = rawline.split()
-                self.data['BOND'].append(float(words[2]))
-                self.data['ANGLE'].append(float(words[5]))
-                self.data['DIHED'].append(float(words[8]))
+                self.data['BOND'] = self.data['BOND'].append(float(words[2]))
+                self.data['ANGLE'] = self.data['ANGLE'].append(float(words[5]))
+                self.data['DIHED'] = self.data['DIHED'].append(float(words[8]))
                 words = outfile.readline().split()
 
                 if self.chamber:
-                    self.data['UB'].append(float(words[2]))
-                    self.data['IMP'].append(float(words[5]))
-                    self.data['CMAP'].append(float(words[8]))
+                    self.data['UB'] = self.data['UB'].append(float(words[2]))
+                    self.data['IMP'] = self.data['IMP'].append(float(words[5]))
+                    self.data['CMAP'] = self.data['CMAP'].append(float(words[8]))
                     words = outfile.readline().split()
                 else:
-                    self.data['UB'].append(0.0)
-                    self.data['IMP'].append(0.0)
-                    self.data['CMAP'].append(0.0)
+                    self.data['UB'] = self.data['UB'].append(0.0)
+                    self.data['IMP'] = self.data['IMP'].append(0.0)
+                    self.data['CMAP'] = self.data['CMAP'].append(0.0)
 
-                self.data['VDWAALS'].append(float(words[2]))
-                self.data['EEL'].append(float(words[5]))
-                self.data['EPB'].append(float(words[8]))
+                self.data['VDWAALS'] = self.data['VDWAALS'].append(float(words[2]))
+                self.data['EEL'] = self.data['EEL'].append(float(words[5]))
+                self.data['EPB'] = self.data['EPB'].append(float(words[8]))
                 words = outfile.readline().split()
-                self.data['1-4 VDW'].append(float(words[3]))
-                self.data['1-4 EEL'].append(float(words[7]))
+                self.data['1-4 VDW'] = self.data['1-4 VDW'].append(float(words[3]))
+                self.data['1-4 EEL'] = self.data['1-4 EEL'].append(float(words[7]))
                 words = outfile.readline().split()
-                self.data['ENPOLAR'].append(float(words[2]))
-                if not self.apbs: self.data['EDISPER'].append(float(words[5]))
-                else: self.data['EDISPER'].append(0.0)
+                self.data['ENPOLAR'] = self.data['ENPOLAR'].append(float(words[2]))
+                if not self.apbs:
+                    self.data['EDISPER'] = self.data['EDISPER'].append(float(words[5]))
+                else:
+                    self.data['EDISPER'] = self.data['EDISPER'].append(0.0)
             # end if rawline == ' BOND'
 
             rawline = outfile.readline()
@@ -854,20 +774,20 @@ class RISMout(AmberOutput):
             if re.match(r'(solute_epot|solutePotentialEnergy)',
                         rawline):
                 words = rawline.split()
-                self.data['VDWAALS'].append(float(words[2]))
-                self.data['EEL'].append(float(words[3]))
-                self.data['BOND'].append(float(words[4]))
-                self.data['ANGLE'].append(float(words[5]))
-                self.data['DIHED'].append(float(words[6]))
-                self.data['1-4 VDW'].append(float(words[7]))
-                self.data['1-4 EEL'].append(float(words[8]))
+                self.data['VDWAALS'] = self.data['VDWAALS'].append(float(words[2]))
+                self.data['EEL'] = self.data['EEL'].append(float(words[3]))
+                self.data['BOND'] = self.data['BOND'].append(float(words[4]))
+                self.data['ANGLE'] = self.data['ANGLE'].append(float(words[5]))
+                self.data['DIHED'] = self.data['DIHED'].append(float(words[6]))
+                self.data['1-4 VDW'] = self.data['1-4 VDW'].append(float(words[7]))
+                self.data['1-4 EEL'] = self.data['1-4 EEL'].append(float(words[8]))
 
             elif self.solvtype == 0 and re.match(
                     r'(rism_exchem|rism_excessChemicalPotential)\s',rawline):
-                self.data['ERISM'].append(float(rawline.split()[1]))
+                self.data['ERISM'] = self.data['ERISM'].append(float(rawline.split()[1]))
             elif self.solvtype == 1 and re.match(
                     r'(rism_exchGF|rism_excessChemicalPotentialGF)\s',rawline):
-                self.data['ERISM'].append(float(rawline.split()[1]))
+                self.data['ERISM'] = self.data['ERISM'].append(float(rawline.split()[1]))
 
             rawline = outfile.readline()
 
@@ -924,26 +844,26 @@ class PolarRISMout(RISMout):
             if re.match(r'(solute_epot|solutePotentialEnergy)',
                         rawline):
                 words = rawline.split()
-                self.data['VDWAALS'].append(float(words[2]))
-                self.data['EEL'].append(float(words[3]))
-                self.data['BOND'].append(float(words[4]))
-                self.data['ANGLE'].append(float(words[5]))
-                self.data['DIHED'].append(float(words[6]))
-                self.data['1-4 VDW'].append(float(words[8]))
-                self.data['1-4 EEL'].append(float(words[8]))
+                self.data['VDWAALS'] = self.data['VDWAALS'].append(float(words[2]))
+                self.data['EEL'] = self.data['EEL'].append(float(words[3]))
+                self.data['BOND'] = self.data['BOND'].append(float(words[4]))
+                self.data['ANGLE'] = self.data['ANGLE'].append(float(words[5]))
+                self.data['DIHED'] = self.data['DIHED'].append(float(words[6]))
+                self.data['1-4 VDW'] = self.data['1-4 VDW'].append(float(words[8]))
+                self.data['1-4 EEL'] = self.data['1-4 EEL'].append(float(words[8]))
 
             elif self.solvtype == 0 and re.match(
                     r'(rism_polar|rism_polarExcessChemicalPotential)\s',rawline):
-                self.data['POLAR SOLV'].append(float(rawline.split()[1]))
+                self.data['POLAR SOLV'] = self.data['POLAR SOLV'].append(float(rawline.split()[1]))
             elif self.solvtype == 0 and re.match(
                     r'(rism_apolar|rism_apolarExcessChemicalPotential)\s',rawline):
-                self.data['APOLAR SOLV'].append(float(rawline.split()[1]))
+                self.data['APOLAR SOLV'] = self.data['APOLAR SOLV'].append(float(rawline.split()[1]))
             elif self.solvtype == 1 and re.match(
                     r'(rism_polGF|rism_polarExcessChemicalPotentialGF)\s',rawline):
-                self.data['POLAR SOLV'].append(float(rawline.split()[1]))
+                self.data['POLAR SOLV'] = self.data['POLAR SOLV'].append(float(rawline.split()[1]))
             elif self.solvtype == 1 and re.match(
                     r'(rism_apolGF|rism_apolarExcessChemicalPotentialGF)\s',rawline):
-                self.data['APOLAR SOLV'].append(float(rawline.split()[1]))
+                self.data['APOLAR SOLV'] = self.data['APOLAR SOLV'].append(float(rawline.split()[1]))
 
             rawline = outfile.readline()
 
@@ -997,27 +917,27 @@ class QMMMout(GBout):
 
             if rawline[0:5] == ' BOND':
                 words = rawline.split()
-                self.data['BOND'].append(float(words[2]))
-                self.data['ANGLE'].append(float(words[5]))
-                self.data['DIHED'].append(float(words[8]))
+                self.data['BOND'] = self.data['BOND'].append(float(words[2]))
+                self.data['ANGLE'] = self.data['ANGLE'].append(float(words[5]))
+                self.data['DIHED'] = self.data['DIHED'].append(float(words[8]))
                 words = outfile.readline().split()
 
                 if self.chamber:
-                    self.data['UB'].append(float(words[2]))
-                    self.data['IMP'].append(float(words[5]))
-                    self.data['CMAP'].append(float(words[8]))
+                    self.data['UB'] = self.data['UB'].append(float(words[2]))
+                    self.data['IMP'] = self.data['IMP'].append(float(words[5]))
+                    self.data['CMAP'] = self.data['CMAP'].append(float(words[8]))
                     words = outfile.readline().split()
                 else:
-                    self.data['UB'].append(0.0)
-                    self.data['IMP'].append(0.0)
-                    self.data['CMAP'].append(0.0)
+                    self.data['UB'] = self.data['UB'].append(0.0)
+                    self.data['IMP'] = self.data['IMP'].append(0.0)
+                    self.data['CMAP'] = self.data['CMAP'].append(0.0)
 
-                self.data['VDWAALS'].append(float(words[2]))
-                self.data['EEL'].append(float(words[5]))
-                self.data['EGB'].append(float(words[8]))
+                self.data['VDWAALS'] = self.data['VDWAALS'].append(float(words[2]))
+                self.data['EEL'] = self.data['EEL'].append(float(words[5]))
+                self.data['EGB'] = self.data['EGB'].append(float(words[8]))
                 words = outfile.readline().split()
-                self.data['1-4 VDW'].append(float(words[3]))
-                self.data['1-4 EEL'].append(float(words[7]))
+                self.data['1-4 VDW'] = self.data['1-4 VDW'].append(float(words[3]))
+                self.data['1-4 EEL'] = self.data['1-4 EEL'].append(float(words[7]))
                 words = outfile.readline().split()
                 # This is where ESCF will be. Since ESCF can differ based on which
                 # qmtheory was chosen, we just check to see if it's != ESURF:
@@ -1025,11 +945,11 @@ class QMMMout(GBout):
                     # It's possible that there is no space between ***ESCF and the =.
                     # If not, the ESCF variable will be the second, not the 3rd word
                     if words[0].endswith('='):
-                        self.data['ESCF'].append(float(words[1]))
+                        self.data['ESCF'] = self.data['ESCF'].append(float(words[1]))
                     else:
-                        self.data['ESCF'].append(float(words[2]))
+                        self.data['ESCF'] = self.data['ESCF'].append(float(words[2]))
                 else:
-                    self.data['ESCF'].append(0.0)
+                    self.data['ESCF'] = self.data['ESCF'].append(0.0)
 
             rawline = outfile.readline()
 
@@ -1513,36 +1433,12 @@ class DecompOut(object):
             raise OutputError('DecompOut: Not a decomp output file')
         self.data = {}
         for token in self.allowed_tokens:
-            self.data[token] = {'int': [EnergyVector(), EnergyVector()],
-                                'vdw': [EnergyVector(), EnergyVector()],
-                                'eel': [EnergyVector(), EnergyVector()],
-                                'pol': [EnergyVector(), EnergyVector()],
-                                'sas': [EnergyVector(), EnergyVector()],
-                                'tot': [EnergyVector(), EnergyVector()] }
-            self.data[token]['int'][0] = EnergyVector(
-                [0 for i in range(self.num_terms)])
-            self.data[token]['int'][1] = EnergyVector(
-                [0 for i in range(self.num_terms)])
-            self.data[token]['vdw'][0] = EnergyVector(
-                [0 for i in range(self.num_terms)])
-            self.data[token]['vdw'][1] = EnergyVector(
-                [0 for i in range(self.num_terms)])
-            self.data[token]['eel'][0] = EnergyVector(
-                [0 for i in range(self.num_terms)])
-            self.data[token]['eel'][1] = EnergyVector(
-                [0 for i in range(self.num_terms)])
-            self.data[token]['pol'][0] = EnergyVector(
-                [0 for i in range(self.num_terms)])
-            self.data[token]['pol'][1] = EnergyVector(
-                [0 for i in range(self.num_terms)])
-            self.data[token]['sas'][0] = EnergyVector(
-                [0 for i in range(self.num_terms)])
-            self.data[token]['sas'][1] = EnergyVector(
-                [0 for i in range(self.num_terms)])
-            self.data[token]['tot'][0] = EnergyVector(
-                [0 for i in range(self.num_terms)])
-            self.data[token]['tot'][1] = EnergyVector(
-                [0 for i in range(self.num_terms)])
+            self.data[token] = {'int': [EnergyVector(self.num_terms), EnergyVector(self.num_terms)],
+                                'vdw': [EnergyVector(self.num_terms), EnergyVector(self.num_terms)],
+                                'eel': [EnergyVector(self.num_terms), EnergyVector(self.num_terms)],
+                                'pol': [EnergyVector(self.num_terms), EnergyVector(self.num_terms)],
+                                'sas': [EnergyVector(self.num_terms), EnergyVector(self.num_terms)],
+                                'tot': [EnergyVector(self.num_terms), EnergyVector(self.num_terms)] }
             self.resnums               = [[0 for i in range(self.num_terms)],
                                           [0 for i in range(self.num_terms)]]
         self.decfile = open(basename + '.0', 'r')
@@ -1934,66 +1830,18 @@ class DecompBinding(object):
         self.data = {}
         self.data_stats = {}
         for token in self.allowed_tokens:
-            self.data[token] = {'int': [EnergyVector(), EnergyVector()],
-                                'vdw': [EnergyVector(), EnergyVector()],
-                                'eel': [EnergyVector(), EnergyVector()],
-                                'pol': [EnergyVector(), EnergyVector()],
-                                'sas': [EnergyVector(), EnergyVector()],
-                                'tot': [EnergyVector(), EnergyVector()] }
-            self.data_stats[token] = {'int': [EnergyVector(), EnergyVector()],
-                                      'vdw': [EnergyVector(), EnergyVector()],
-                                      'eel': [EnergyVector(), EnergyVector()],
-                                      'pol': [EnergyVector(), EnergyVector()],
-                                      'sas': [EnergyVector(), EnergyVector()],
-                                      'tot': [EnergyVector(), EnergyVector()] }
-            self.data[token]['int'][0] = EnergyVector(
-                [0 for i in range(self.num_terms)])
-            self.data[token]['int'][1] = EnergyVector(
-                [0 for i in range(self.num_terms)])
-            self.data[token]['vdw'][0] = EnergyVector(
-                [0 for i in range(self.num_terms)])
-            self.data[token]['vdw'][1] = EnergyVector(
-                [0 for i in range(self.num_terms)])
-            self.data[token]['eel'][0] = EnergyVector(
-                [0 for i in range(self.num_terms)])
-            self.data[token]['eel'][1] = EnergyVector(
-                [0 for i in range(self.num_terms)])
-            self.data[token]['pol'][0] = EnergyVector(
-                [0 for i in range(self.num_terms)])
-            self.data[token]['pol'][1] = EnergyVector(
-                [0 for i in range(self.num_terms)])
-            self.data[token]['sas'][0] = EnergyVector(
-                [0 for i in range(self.num_terms)])
-            self.data[token]['sas'][1] = EnergyVector(
-                [0 for i in range(self.num_terms)])
-            self.data[token]['tot'][0] = EnergyVector(
-                [0 for i in range(self.num_terms)])
-            self.data[token]['tot'][1] = EnergyVector(
-                [0 for i in range(self.num_terms)])
-            self.data_stats[token]['int'][0] = EnergyVector(
-                [0 for i in range(self.num_terms)])
-            self.data_stats[token]['int'][1] = EnergyVector(
-                [0 for i in range(self.num_terms)])
-            self.data_stats[token]['vdw'][0] = EnergyVector(
-                [0 for i in range(self.num_terms)])
-            self.data_stats[token]['vdw'][1] = EnergyVector(
-                [0 for i in range(self.num_terms)])
-            self.data_stats[token]['eel'][0] = EnergyVector(
-                [0 for i in range(self.num_terms)])
-            self.data_stats[token]['eel'][1] = EnergyVector(
-                [0 for i in range(self.num_terms)])
-            self.data_stats[token]['pol'][0] = EnergyVector(
-                [0 for i in range(self.num_terms)])
-            self.data_stats[token]['pol'][1] = EnergyVector(
-                [0 for i in range(self.num_terms)])
-            self.data_stats[token]['sas'][0] = EnergyVector(
-                [0 for i in range(self.num_terms)])
-            self.data_stats[token]['sas'][1] = EnergyVector(
-                [0 for i in range(self.num_terms)])
-            self.data_stats[token]['tot'][0] = EnergyVector(
-                [0 for i in range(self.num_terms)])
-            self.data_stats[token]['tot'][1] = EnergyVector(
-                [0 for i in range(self.num_terms)])
+            self.data[token] = {'int': [EnergyVector(self.num_terms), EnergyVector(self.num_terms)],
+                                'vdw': [EnergyVector(self.num_terms), EnergyVector(self.num_terms)],
+                                'eel': [EnergyVector(self.num_terms), EnergyVector(self.num_terms)],
+                                'pol': [EnergyVector(self.num_terms), EnergyVector(self.num_terms)],
+                                'sas': [EnergyVector(self.num_terms), EnergyVector(self.num_terms)],
+                                'tot': [EnergyVector(self.num_terms), EnergyVector(self.num_terms)] }
+            self.data_stats[token] = {'int': [EnergyVector(self.num_terms), EnergyVector(self.num_terms)],
+                                      'vdw': [EnergyVector(self.num_terms), EnergyVector(self.num_terms)],
+                                      'eel': [EnergyVector(self.num_terms), EnergyVector(self.num_terms)],
+                                      'pol': [EnergyVector(self.num_terms), EnergyVector(self.num_terms)],
+                                      'sas': [EnergyVector(self.num_terms), EnergyVector(self.num_terms)],
+                                      'tot': [EnergyVector(self.num_terms), EnergyVector(self.num_terms)] }
             self.resnums               = [[0 for i in range(self.num_terms)],
                                           [0 for i in range(self.num_terms)]]
 
@@ -2665,6 +2513,6 @@ def _get_cpptraj_surf(fname):
     for line in f:
         if line.startswith('#'):
             continue
-        vec.append(float(line.split()[1]))
+        vec = vec.append(float(line.split()[1]))
 
     return vec

@@ -154,9 +154,8 @@ class MMPBSA_App(object):
 
         if INPUT['alarun']:
             self.stdout.write('Mutating trajectories...\n')
-        _, mutant_residue = make_mutant_trajectories(INPUT, FILES,
-                                                                self.mpi_rank, self.external_progs['cpptraj'],
-                                                                self.normal_system, self.mutant_system, self.pre)
+        _, mutant_residue = make_mutant_trajectories(INPUT, FILES, self.mpi_rank, self.external_progs['cpptraj'],
+                                                     self.normal_system, self.mutant_system, self.pre)
 
         self.MPI.COMM_WORLD.Barrier()
 
@@ -210,10 +209,9 @@ class MMPBSA_App(object):
 
         self.sync_mpi()
 
-        if master: self.timer.stop_timer('calc')
-
-        # Write out the info file now
         if master:
+            self.timer.stop_timer('calc')
+            # Write out the info file now
             info = InfoFile(self)
             info.write_info(self.pre + 'info')
 
@@ -232,8 +230,7 @@ class MMPBSA_App(object):
             self._load_calc_list(self.pre, False, self.normal_system)
         if self.INPUT['alarun']:
             self.calc_list.append(
-                PrintCalc('\nRunning calculations on mutant system...'),
-                timer_key=None)
+                PrintCalc('\nRunning calculations on mutant system...'), timer_key=None)
             self._load_calc_list(self.pre + 'mutant_', True, self.mutant_system)
 
     def _load_calc_list(self, prefix, mutant, parm_system):
@@ -257,10 +254,7 @@ class MMPBSA_App(object):
             progs['gb'] = self.external_progs['sander']
 
         # NetCDF or ASCII intermediate trajectories?
-        if self.INPUT['netcdf']:
-            trj_sfx = 'nc'
-        else:
-            trj_sfx = 'mdcrd'
+        trj_sfx = 'nc' if self.INPUT['netcdf'] else 'mdcrd'
 
         # Determine if we just copy the receptor files. This only happens if we
         # are doing mutant calculations, we're not only doing the mutant, and the
@@ -301,8 +295,7 @@ class MMPBSA_App(object):
             except TypeError:
                 mdin = mdin_template
 
-            self.calc_list.append(PrintCalc('\nBeginning GB calculations with %s' %
-                                            progs['gb']), timer_key='gb')
+            self.calc_list.append(PrintCalc(f"\nBeginning GB calculations with {progs['gb']}"), timer_key='gb')
 
             c = EnergyCalculation(progs['gb'], parm_system.complex_prmtop,
                                   incrd % 'complex',
@@ -397,8 +390,8 @@ class MMPBSA_App(object):
             except TypeError:
                 mdin = mdin_template
 
-            self.calc_list.append(PrintCalc('\nBeginning PB calculations with %s' %
-                                            progs['pb']), timer_key='pb')
+            self.calc_list.append(PrintCalc(f"\nBeginning PB calculations with {progs['pb']}"),
+                                  timer_key='pb')
 
             c = PBEnergyCalculation(progs['pb'], parm_system.complex_prmtop,
                                     incrd % 'complex',
@@ -578,8 +571,6 @@ class MMPBSA_App(object):
             self.INPUT['receptor_mask'], self.INPUT['ligand_mask'] = maketop.get_masks()
             self.mut_str = maketop.mut_label
             self.FILES.complex_fixed = self.FILES.prefix + 'COM_FIXED.pdb'
-            maketop.get_qm_residues() # get qm_residues in Amber format
-
         self.FILES = self.MPI.COMM_WORLD.bcast(self.FILES, root=0)
         self.INPUT = self.MPI.COMM_WORLD.bcast(self.INPUT, root=0)
         self.sync_mpi()
@@ -591,7 +582,7 @@ class MMPBSA_App(object):
         self.timer.add_timer('setup', 'Total AMBER setup time:')
         self.timer.start_timer('setup')
         if not hasattr(self, 'FILES') or not hasattr(self, 'INPUT'):
-            raise GMXMMPBSA_ERROR('MMPBSA_App not set up! Cannot check parms yet!', InternalError)
+            GMXMMPBSA_ERROR('MMPBSA_App not set up! Cannot check parms yet!', InternalError)
         # create local aliases to avoid abundant selfs
         FILES, INPUT = self.FILES, self.INPUT
         if self.master:
@@ -636,7 +627,7 @@ class MMPBSA_App(object):
         self.timer.start_timer('output')
         if (not hasattr(self, 'input_file_text') or not hasattr(self, 'FILES') or
                 not hasattr(self, 'INPUT') or not hasattr(self, 'normal_system')):
-            raise GMXMMPBSA_ERROR('I am not prepared to write the final output file!', InternalError)
+            GMXMMPBSA_ERROR('I am not prepared to write the final output file!', InternalError)
         # Only the master does this, so bail out if we are not master
         if not self.master:
             return
@@ -668,28 +659,7 @@ class MMPBSA_App(object):
         self.timer.print_('setup', self.stdout)
 
         if not self.FILES.rewrite_output:
-            self.timer.print_('cpptraj', self.stdout)
-
-            if self.INPUT['alarun']:
-                self.timer.print_('muttraj', self.stdout)
-
-            self.timer.print_('calc', self.stdout)
-            self.stdout.write('\n')
-
-            if self.INPUT['gbrun']:
-                self.timer.print_('gb', self.stdout)
-
-            if self.INPUT['pbrun']:
-                self.timer.print_('pb', self.stdout)
-
-            if self.INPUT['nmoderun']:
-                self.timer.print_('nmode', self.stdout)
-
-            if self.INPUT['qh_entropy']:
-                self.timer.print_('qh', self.stdout)
-
-            self.stdout.write('\n')
-
+            self._finalize_timers()
         self.timer.print_('output', self.stdout)
         self.timer.print_('global', self.stdout)
 
@@ -716,6 +686,29 @@ class MMPBSA_App(object):
         logging.info('Finalized...')
         sys.exit(end)
 
+    def _finalize_timers(self):
+        self.timer.print_('cpptraj', self.stdout)
+
+        if self.INPUT['alarun']:
+            self.timer.print_('muttraj', self.stdout)
+
+        self.timer.print_('calc', self.stdout)
+        self.stdout.write('\n')
+
+        if self.INPUT['gbrun']:
+            self.timer.print_('gb', self.stdout)
+
+        if self.INPUT['pbrun']:
+            self.timer.print_('pb', self.stdout)
+
+        if self.INPUT['nmoderun']:
+            self.timer.print_('nmode', self.stdout)
+
+        if self.INPUT['qh_entropy']:
+            self.timer.print_('qh', self.stdout)
+
+        self.stdout.write('\n')
+
     def get_cl_args(self, args=None):
         """
         Gets the command-line arguments to load the INPUT array. Also determines
@@ -728,7 +721,6 @@ class MMPBSA_App(object):
             # save args in gmx_MMPBSA.log
             logging.info('Command-line\n'
                          '  gmx_MMPBSA ' + ' '.join(args) + '\n')
-
         else:
             self.FILES = object()
         # Broadcast the FILES
@@ -809,41 +801,10 @@ class MMPBSA_App(object):
         """ Checks for bad user input """
         if INPUT is None:
             INPUT = self.INPUT
-
+        if not self.master:
+            return
         # Check deprecated variables
         # check force fields
-        if self.INPUT['protein_forcefield'] or self.INPUT['ligand_forcefield']:
-            if self.master:
-                GMXMMPBSA_WARNING(
-                    'protein_forcefield and ligand_forcefield variables are deprecate since version 1.4.1 '
-                    'and will be remove in the next version. Please, use forcefield instead.')
-        if self.INPUT['entropy']:
-            if self.master:
-                GMXMMPBSA_WARNING('entropy variable is deprecate since version 1.4.2 and will be remove in v1.5.0. '
-                                  'Please, use qh_entropy for Quasi-Harmonic approximation and i_entropy for '
-                                  'Interaction entropy approximation instead.')
-            if self.INPUT['entropy'] == 1:
-                self.INPUT['qh_entropy'] = 1
-            elif self.INPUT['entropy'] == 2:
-                self.INPUT['interaction_entropy'] = 1
-
-        if self.INPUT['entropy_seg']:
-            if self.master:
-                GMXMMPBSA_WARNING('entropy_seg variable is deprecate since version 1.4.2 and will be remove in v1.5.0. '
-                                  'Please, use ie_segment instead.')
-            self.INPUT['ie_segment'] = self.INPUT['entropy_seg']
-
-        if self.INPUT['entropy_temp'] != 298.15:
-            try:
-                # for compatibility with v1.3.x
-                if self.INPUT['temperature'] == 298.15:
-                    self.INPUT['temperature'] = self.INPUT['entropy_temp']
-            except:
-                self.INPUT['temperature'] = self.INPUT['entropy_temp']
-            if self.master:
-                GMXMMPBSA_WARNING('entropy_temp variable is deprecated and will be remove in next versions!. Please, '
-                              'use temperature variable instead')
-
         if not INPUT['igb'] in [1, 2, 5, 7, 8]:
             GMXMMPBSA_ERROR('Invalid value for IGB (%s)! ' % INPUT['igb'] + 'It must be 1, 2, 5, 7, or 8.', InputError)
         if INPUT['saltcon'] < 0:
@@ -894,7 +855,7 @@ class MMPBSA_App(object):
         if INPUT['PBRadii'] not in [1, 2, 3, 4]:
             GMXMMPBSA_ERROR('PBRadii must be 1, 2, 3 or 4!', InputError)
         if INPUT['solvated_trajectory'] not in [0, 1]:
-            GMXMMPBSA_ERROR('Ligand force field must be 0 or 1!', InputError)
+            GMXMMPBSA_ERROR('SOLVATED_TRAJECTORY must be 0 or 1!', InputError)
         if not INPUT['use_sander'] in [0, 1]:
             GMXMMPBSA_ERROR('USE_SANDER must be set to 0 or 1!', InputError)
         if not INPUT['ifqnt'] in [0, 1]:
@@ -947,8 +908,7 @@ class MMPBSA_App(object):
 
         # User warning when intdiel > 10
         if self.INPUT['intdiel'] > 10:
-            if self.master:
-                logging.warning('Intdiel should be less than 10, but it is {}'.format(self.INPUT['intdiel']))
+            GMXMMPBSA_WARNING(f"Intdiel is great than 10...")
         # check mutant definition
         if not self.INPUT['mutant'].upper() in ['ALA', 'A', 'GLY', 'G']:
             GMXMMPBSA_ERROR('The mutant most be ALA (or A) or GLY (or G)', InputError)
@@ -957,19 +917,16 @@ class MMPBSA_App(object):
         # https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/issues/33
         if self.INPUT['startframe'] < 1:
             # GMXMMPBSA_ERROR('The startframe variable must be >= 1')
-            if self.master:
-                logging.warning(
-                    f"The startframe variable must be >= 1. Changing startframe from {self.INPUT['startframe']} to 1")
-                self.INPUT['startframe'] = 1
+            GMXMMPBSA_WARNING(f"The startframe variable must be >= 1. Changing startframe from"
+                              f" {self.INPUT['startframe']} to 1")
+            self.INPUT['startframe'] = 1
         if self.INPUT['nmstartframe'] < 1:
-            logging.warning(
-                f"The nmstartframe variable must be >= 1. Changing nmstartframe from {self.INPUT['nmstartframe']} to 1")
+            GMXMMPBSA_WARNING(f"The nmstartframe variable must be >= 1. Changing nmstartframe from"
+                              f" {self.INPUT['nmstartframe']} to 1")
             self.INPUT['nmstartframe'] = 1
 
         # check files
-        if self.FILES.complex_top:
-            self.INPUT['use_sander'] = 1
-        if self.INPUT['cas_intdiel']:
+        if self.FILES.complex_top or self.INPUT['cas_intdiel']:
             self.INPUT['use_sander'] = 1
 
     def remove(self, flag):
@@ -990,26 +947,6 @@ class MMPBSA_App(object):
         if not self.master:
             return
         self.calc_types = {}
-
-        # compatibility issues with the new and deprecated variables
-        if self.INPUT['entropy']:
-            if self.INPUT['entropy'] == 1:
-                self.INPUT['qh_entropy'] = 1
-            elif self.INPUT['entropy'] == 2:
-                self.INPUT['interaction_entropy'] = 1
-        if 'qh_entropy' not in self.INPUT:
-            self.INPUT['qh_entropy'] = 0
-        if 'interaction_entropy' not in self.INPUT:
-                self.INPUT['interaction_entropy'] = 0
-        if self.INPUT['entropy_seg']:
-            self.INPUT['ie_segment'] = self.INPUT['entropy_seg']
-        if self.INPUT['entropy_temp'] != 298.15:
-            try:
-                # for compatibility with v1.3.x
-                if self.INPUT['temperature'] == 298.15:
-                    self.INPUT['temperature'] = self.INPUT['entropy_temp']
-            except:
-                self.INPUT['temperature'] = self.INPUT['entropy_temp']
         INPUT, FILES = self.INPUT, self.FILES
         # Mutant will also be a dict
         if INPUT['alarun']:
@@ -1027,10 +964,7 @@ class MMPBSA_App(object):
         else:
             BindClass = MultiTrajBinding
         # Determine if our GB is QM/MM or not
-        if INPUT['ifqnt']:
-            GBClass = QMMMout
-        else:
-            GBClass = GBout
+        GBClass = QMMMout if INPUT['ifqnt'] else GBout
         # Determine which kind of RISM output class we are based on std/gf and
         # polardecomp
         if INPUT['polardecomp']:

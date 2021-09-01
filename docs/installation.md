@@ -70,6 +70,17 @@ Optional, but recommended -- :octicons-check-circle-fill-16:{ .req_opt } -> Opti
 
         amber.python -m pip install gmx_MMPBSA
 
+    !!! danger
+        The latest version of miniconda/anaconda seems to have a problem with `pip`. This is because, when `conda` is 
+        updated, the latest version of `setuptools` (v.57.x) is installed, which is incompatible with `pip` (21.2.4), so 
+        the latter was removed. If you find that `amber.pip`, `amber.python -m pip` or `python -m pip` (with conda 
+        environment active) don't work, you must install it from `conda` as follows:
+
+            conda install pip 
+        or 
+
+            amber.conda install pip
+
 === "`development`"
     or the `development` version from [GitHub][4]:
     

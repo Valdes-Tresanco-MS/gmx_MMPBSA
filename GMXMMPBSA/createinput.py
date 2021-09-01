@@ -173,16 +173,14 @@ def create_inputs(INPUT, prmtop_system, pre):
     # end if decomprun
 
     if INPUT['qh_entropy']:  # quasi-harmonic approximation input file
-        trj_suffix = 'mdcrd'
-        if INPUT['netcdf']: trj_suffix = 'nc'
+        trj_suffix = 'nc' if INPUT['netcdf'] else 'mdcrd'
         com_mask, rec_mask, lig_mask = prmtop_system.Mask('all', True)
         if not INPUT['mutant_only']:
-            qh_in = QuasiHarmonicInput(com_mask, rec_mask, lig_mask,
-                                       stability=stability, prefix=pre, trj_suffix=trj_suffix)
+            qh_in = QuasiHarmonicInput(com_mask, rec_mask, lig_mask, stability=stability, prefix=pre,
+                                       trj_suffix=trj_suffix)
             qh_in.write_input(pre + 'cpptrajentropy.in')
         if INPUT['alarun']:
-            qh_in = QuasiHarmonicInput(com_mask, rec_mask, lig_mask,
-                                       stability=stability, prefix=pre + 'mutant_',
+            qh_in = QuasiHarmonicInput(com_mask, rec_mask, lig_mask, stability=stability, prefix=pre + 'mutant_',
                                        trj_suffix=trj_suffix)
             qh_in.write_input(pre + 'mutant_cpptrajentropy.in')
 
@@ -307,11 +305,9 @@ class SanderInput(object):
             if key == 'ioutfm':
                 continue
             try:
-                self.mdin.change(self.parent_namelist[key], key,
-                                 INPUT[self.name_map[key]])
+                self.mdin.change(self.parent_namelist[key], key, INPUT[self.name_map[key]])
             except KeyError:
-                self.mdin.change(self.parent_namelist[key], key,
-                                 self.input_items[key])
+                self.mdin.change(self.parent_namelist[key], key, self.input_items[key])
         self.mdin.change('cntrl', 'ioutfm', int(bool(INPUT['netcdf'])))
 
     def write_input(self, filename):
@@ -328,8 +324,7 @@ class SanderGBInput(SanderInput):
                    'igb': 5, 'saltcon': 0.0, 'intdiel': 1.0,
                    'gbsa': 0, 'extdiel': 80.0, 'surften': 0.0072,
                    'ioutfm': 0, 'idecomp': 0, 'offset': -999999.0,
-                   'dec_verbose': 0, 'ifqnt': 0,
-                   'qmmask': '',
+                   'dec_verbose': 0, 'ifqnt': 0, 'qmmask': '',
                    'qm_theory': '', 'qmcharge': 0, 'qmgb': 2,
                    'qmcut': 999.0}
 
@@ -344,7 +339,12 @@ class SanderGBInput(SanderInput):
                        'qmcut': 'qmmm'}
 
     name_map = {'ntb': 'ntb', 'cut': 'cut', 'nsnb': 'nsnb',
-                'imin': 'imin', 'maxcyc': 'maxcyc', 'ncyc': 'ncyc',
+                'imin': 'imin',
+                # FIXME: INPUT is a dictionary, so the keys (variables in the input list) cannot be redundant. This
+                #  means that the same variable cannot be defined for each type of calculation. This, in particular,
+                #  is the first one we see, we need to review other variants.
+                # 'maxcyc': 'maxcyc',
+                'ncyc': 'ncyc',
                 'igb': 'igb', 'saltcon': 'saltcon', 'intdiel': 'intdiel',
                 'gbsa': 'gbsa', 'extdiel': 'extdiel', 'surften': 'surften',
                 'ioutfm': 'netcdf', 'idecomp': 'idecomp', 'offset': 'offset',

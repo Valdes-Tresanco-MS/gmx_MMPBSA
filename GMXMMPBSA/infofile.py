@@ -41,7 +41,7 @@ class InfoFile(object):
 
     EDIT_WITH_CARE_VARS = ['']
 
-    DEPRECATED_VARS = ['entropy_temp', 'entropy_seg', 'entropy', 'protein_forcefield', 'ligand_forcefield']
+    DEPRECATED_VARS = []
 
     def __init__(self, app):
         """ Instantiate me """
