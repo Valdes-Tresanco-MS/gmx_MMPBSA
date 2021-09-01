@@ -217,9 +217,9 @@ class CheckMakeTop:
             if (self.FILES.receptor_tpr or self.FILES.ligand_tpr):
                 logging.warning('When Stability calculation mode is selected, receptor and ligand files are not '
                                 'needed...')
-            if self.INPUT['alarun'] and (self.FILES.mutant_receptor_tpr or self.FILES.mutant_ligand_tpr):
-                logging.warning('When Stability calculation mode is selected, mutant receptor/mutant ligand files '
-                                'are not needed...')
+            # if self.INPUT['alarun'] and (self.FILES.mutant_receptor_tpr or self.FILES.mutant_ligand_tpr):
+            #     logging.warning('When Stability calculation mode is selected, mutant receptor/mutant ligand files '
+            #                     'are not needed...')
 
         # wt receptor
         if self.FILES.receptor_tpr:
@@ -288,6 +288,12 @@ class CheckMakeTop:
             cl2 = subprocess.Popen(editconf_args, stdin=cl1.stdout, stdout=self.log, stderr=self.log)
             if cl2.wait():  # if it quits with return code != 0
                 GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(self.editconf), self.FILES.complex_tpr))
+
+        # check for IE variable
+        if self.FILES.receptor_tpr or self.FILES.ligand_tpr:
+            if self.INPUT['interaction_entropy']: # or self.INPUT['c2_entropy']:
+                GMXMMPBSA_WARNING("The IE or C2 entropy method don't support the MTP approach...")
+                self.INPUT['interaction_entropy'] = self.INPUT['c2_entropy'] = 0
 
         # initialize receptor and ligand structures. Needed to get residues map
         self.complex_str = self.molstr(self.complex_str_file)
