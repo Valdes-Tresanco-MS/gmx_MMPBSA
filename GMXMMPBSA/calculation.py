@@ -647,6 +647,7 @@ class InteractionEntropyCalc:
             aeceint = exp_energy_int.mean()
             cts = k * temp * math.log(aeceint)
             ts = np.append(ts, cts)
+        self.ie_std = energy_int.std()
         self.data = ts
         self.ieframes = math.ceil(self.app.numframes * (self.app.INPUT['ie_segment'] / 100))
         self.iedata = self.data[-self.ieframes:]
