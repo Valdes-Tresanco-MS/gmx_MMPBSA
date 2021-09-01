@@ -78,10 +78,10 @@ def write_stability_output(app):
         final_output.add_comment('')
 
     final_output.add_comment('All units are reported in kcal/mole.')
-    if INPUT['nmoderun'] or INPUT['qh_entropy'] or INPUT['interaction_entropy']:
+    if INPUT['nmoderun'] or INPUT['qh_entropy'] or INPUT['interaction_entropy' or INPUT['c2_entropy']]:
         final_output.add_comment('All entropy results have units kcal/mol')
         final_output.add_comment('(Temperature for NMODE and QH is %.2f K)\n' % INPUT['temp'])
-        final_output.add_comment('(Temperature for IE is %.2f K)\n' % INPUT['temperature'])
+        final_output.add_comment('(Temperature for IE and C2 entropy is %.2f K)\n' % INPUT['temperature'])
     if INPUT['ifqnt']:
         final_output.add_comment(('QM/MM: Residues %s are treated with the ' +
                                   'Quantum Hamiltonian %s') % (INPUT['qm_residues'], INPUT['qm_theory']))
@@ -95,7 +95,7 @@ def write_stability_output(app):
                                    'APPROXIMATION) CALCULATED WITH PTRAJ:')
             final_output.add_section(qhnorm.print_summary())
         if INPUT['alarun']:
-            qhmutant = app.calc_types['mutant']['qh']
+            qhmutant = app.calc_types.mutant['qh']
             final_output.writeline(mut_str + ' MUTANT')
             final_output.writeline('ENTROPY RESULTS (QUASI-' +
                                    'HARMONIC APPROXIMATION) CALCULATED WITH PTRAJ:')
@@ -120,7 +120,7 @@ def write_stability_output(app):
                 energyvectors.writerow([])
 
         if INPUT['alarun']:
-            nm_mut = app.calc_types['mutant']['nmode']['complex']
+            nm_mut = app.calc_types.mutant['nmode']['complex']
             final_output.write(mut_str + ' MUTANT\nENTROPY RESULTS (HARMONIC ' +
                                'APPROXIMATION) CALCULATED WITH NMODE:\n')
             final_output.add_section('Complex:\n' + nm_mut.print_summary())
@@ -184,7 +184,7 @@ def write_stability_output(app):
                                          'tion: FREE ENERGY (G) =    %9.4f +/- %7.4f\n' % (davg, dstdev))
 
         if INPUT['alarun']:
-            com_mut = app.calc_types['mutant'][key]['complex']
+            com_mut = app.calc_types.mutant[key]['complex']
             final_output.write('%s MUTANT:%s' % (mut_str, headers[i]))
             final_output.add_section('Complex:\n' + com_mut.print_summary())
             # Dump energy vectors to a CSV
@@ -276,6 +276,9 @@ def write_binding_output(app):
     if INPUT['interaction_entropy']:
         final_output.add_comment('Interaction Entropy calculations performed using last %s frames.' %
                                  ceil(app.numframes * (INPUT['ie_segment']/100)))
+    if INPUT['c2_entropy']:
+        final_output.add_comment('C2 Entropy calculations performed using last %s frames.' %
+                                 ceil(app.numframes * (INPUT['c2_segment']/100)))
 
 
     if INPUT['pbrun']:
@@ -300,7 +303,7 @@ def write_binding_output(app):
         final_output.add_comment('')
 
     final_output.add_comment('All units are reported in kcal/mole.')
-    if INPUT['nmoderun'] or INPUT['qh_entropy'] or INPUT['interaction_entropy']:
+    if INPUT['nmoderun'] or INPUT['qh_entropy'] or INPUT['interaction_entropy' or INPUT['c2_entropy']]:
         final_output.add_comment('All entropy results have units kcal/mol\n' +
                                  '(Temperature for NMODE and QH is %.2f K)\n' % INPUT['temp'] +
                                  '(Temperature for IE is %.2f K)\n' % INPUT['temperature'])
@@ -316,7 +319,7 @@ def write_binding_output(app):
             final_output.writeline('ENTROPY RESULTS (QUASI-HARMONIC APPROXIMATION) CALCULATED WITH PTRAJ:')
             final_output.add_section(qhnorm.print_summary())
         if INPUT['alarun']:
-            qhmutant = app.calc_types['mutant']['qh']
+            qhmutant = app.calc_types.mutant['qh']
             final_output.writeline(mut_str + ' MUTANT')
             final_output.writeline('ENTROPY RESULTS (QUASI-HARMONIC APPROXIMATION) CALCULATED WITH PTRAJ:')
             final_output.add_section(qhmutant.print_summary())
@@ -331,14 +334,33 @@ def write_binding_output(app):
             final_output.writeline('ENTROPY RESULTS (INTERACTION ENTROPY):')
             final_output.add_section(ienorm.print_summary())
         if INPUT['alarun']:
-            iemutant = app.calc_types['mutant']['ie']
+            iemutant = app.calc_types.mutant['ie']
             final_output.writeline(mut_str + ' MUTANT')
             final_output.writeline('ENTROPY RESULTS (INTERACTION ENTROPY):')
             final_output.add_section(iemutant.print_summary())
         if INPUT['alarun'] and not INPUT['mutant_only']:
-            davg, dstdev = ienorm.diff(iemutant, 'iedata', 'iedata')
-            final_output.add_section(('\nRESULT OF ALANINE SCANNING:\n'
-                                      '(%s) DELTA DELTA S binding = %9.4f +/- %9.4f\n') % (mut_str, davg, dstdev))
+            text = '\nRESULT OF ALANINE SCANNING (%s):\n' % mut_str
+            for model in ienorm.data:
+                d = iemutant.data[model]['iedata'] - ienorm.data[model]['iedata']
+                text += 'DELTA DELTA S binding (%s) = %9.4f +/- %9.4f\n' % (model.upper(), d.avg(), d.stdev())
+            final_output.add_section(text)
+
+    if INPUT['c2_entropy']:
+        if not INPUT['mutant_only']:
+            c2norm = app.calc_types['c2']
+            final_output.writeline('ENTROPY RESULTS (C2 ENTROPY):')
+            final_output.add_section(c2norm.print_summary())
+        if INPUT['alarun']:
+            c2mutant = app.calc_types.mutant['c2']
+            final_output.writeline(mut_str + ' MUTANT')
+            final_output.writeline('ENTROPY RESULTS (C2 ENTROPY):')
+            final_output.add_section(c2mutant.print_summary())
+        if INPUT['alarun'] and not INPUT['mutant_only']:
+            text = '\nRESULT OF ALANINE SCANNING (%s):\n' % mut_str
+            for model in c2norm.data:
+                d = c2mutant.data[model]['c2data'] - c2norm.data[model]['c2data']
+                text += 'DELTA DELTA S binding (%s) = %9.4f\n' % (model.upper(), d)
+            final_output.add_section(text)
 
 
     # Now print out the normal mode results
@@ -355,7 +377,7 @@ def write_binding_output(app):
                 energyvectors.writerow([])
 
         if INPUT['alarun']:
-            nm_sys_mut = app.calc_types['mutant']['nmode']['delta']
+            nm_sys_mut = app.calc_types.mutant['nmode']['delta']
             final_output.write(mut_str + ' MUTANT\nENTROPY RESULTS (HARMONIC ' +
                                'APPROXIMATION) CALCULATED WITH NMODE:\n')
             final_output.add_section(nm_sys_mut.print_summary())
@@ -403,16 +425,20 @@ def write_binding_output(app):
                                              'DELTA G binding = %9.4f\n' %
                                              (sys_norm.data['DELTA TOTAL'][0] - qhnorm.total_avg()))
             if INPUT['interaction_entropy']:
-                davg, dstdev = ienorm.sum(sys_norm, 'iedata', 'DELTA TOTAL')
+                d, s = ienorm.sum(sys_norm, key, 'iedata', 'DELTA TOTAL')
                 final_output.add_section(f"Using Interaction Entropy Approximation:\n"
-                                         f"DELTA G binding = {davg:9.4f} +/- {dstdev:7.4f}\n")
+                                         f"DELTA G binding = {d:9.4f} +/- {s:7.4f}\n")
+            if INPUT['c2_entropy']:
+                d, s = c2norm.sum(sys_norm, key, 'c2data', 'DELTA TOTAL')
+                final_output.add_section(f"Using C2 Entropy Approximation:\n"
+                                         f"DELTA G binding = {d:9.4f} +/- {s:7.4f}\n")
             if INPUT['nmoderun']:
                 davg, dstdev = sys_norm.diff(nm_sys_norm, 'DELTA TOTAL', 'Total')
                 final_output.add_section('Using Normal Mode Entropy Approximation:\n'
                                          'DELTA G binding = %9.4f +/- %7.4f\n' % (davg, dstdev))
 
         if INPUT['alarun']:
-            sys_mut = app.calc_types['mutant'][key]['delta']
+            sys_mut = app.calc_types.mutant[key]['delta']
             final_output.write('%s MUTANT:%s' % (mut_str, headers[i]))
             final_output.add_section(sys_mut.print_summary())
             # Dump energy vectors to a CSV
@@ -432,10 +458,13 @@ def write_binding_output(app):
                                              'DELTA G binding = %9.4f\n' %
                                              (qhmutant.total_avg() - sys_mut.data['DELTA TOTAL'][0]))
             if INPUT['interaction_entropy']:
-                # if isinstance(sys_mut.data['DELTA TOTAL'], EnergyVector):
-                davg, dstdev = iemutant.sum(sys_mut, 'iedata', 'DELTA TOTAL')
+                d, s = iemutant.sum(sys_mut, key, 'iedata', 'DELTA TOTAL')
                 final_output.add_section(f"Using Interaction Entropy Approximation:\n"
-                                         f"DELTA G binding = {davg:9.4f} +/- {dstdev:7.4f}\n")
+                                         f"DELTA G binding = {d:9.4f} +/- {s:7.4f}\n")
+            if INPUT['c2_entropy']:
+                d, s = c2mutant.sum(sys_mut, key, 'c2data', 'DELTA TOTAL')
+                final_output.add_section(f"Using C2 Entropy Approximation:\n"
+                                         f"DELTA G binding = {d:9.4f} +/- {s:7.4f}\n")
             if INPUT['nmoderun']:
                 davg, dstdev = sys_mut.diff(nm_sys_mut, 'DELTA TOTAL', 'Total')
                 final_output.add_section('Using Normal Mode Entropy Approximation:\n'
@@ -443,21 +472,25 @@ def write_binding_output(app):
 
         if INPUT['alarun'] and not INPUT['mutant_only']:
             davg, dstdev = sys_mut.diff(sys_norm, 'DELTA TOTAL', 'DELTA TOTAL')
-            final_output.write(('\nRESULT OF ALANINE SCANNING:\n'
-                                '(%s) DELTA DELTA G binding = %9.4f  +/- %9.4f\n') % (mut_str, davg, dstdev))
+            final_output.write(('\nRESULT OF ALANINE SCANNING (%s):\n' 
+                                'DELTA DELTA G binding = %9.4f  +/- %9.4f\n') % (mut_str, davg, dstdev))
             if INPUT['qh_entropy']:
                 final_output.write(('\n   (quasi-harmonic entropy)\n'
-                                    '(%s) DELTA DELTA G binding = %9.4f\n') % (mut_str, davg + qhmutant.total_avg() -
+                                    'DELTA DELTA G binding = %9.4f\n') % (davg + qhmutant.total_avg() -
                                                                                qhnorm.total_avg()))
             if INPUT['interaction_entropy']:
-                davg1, dstdev1 = iemutant.diff(ienorm, 'iedata', 'iedata')
+                d = iemutant.data[key]['iedata'] - ienorm.data[key]['iedata']
                 final_output.write(('\n   (interaction entropy)\n'
-                                    '(%s) DELTA DELTA G binding = %9.4f +/- %9.4f\n') % (mut_str, davg1 + davg,
-                                                                                    sqrt(dstdev ** 2 + dstdev1 ** 2)))
+                                    'DELTA DELTA G binding = %9.4f +/- %9.4f\n') % (davg + d.avg(),
+                                                                                    sqrt(dstdev ** 2 + d.stdev() ** 2)))
+            if INPUT['c2_entropy']:
+                d = c2mutant.data[key]['c2data'] - c2norm.data[key]['c2data']
+                final_output.write(('\n   (C2 entropy)\n'
+                                    'DELTA DELTA G binding = %9.4f +/- %9.4f\n') % (davg + d, dstdev))
             if INPUT['nmoderun']:
                 davg1, dstdev1 = nm_sys_mut.diff(nm_sys_norm, 'Total', 'Total')
                 final_output.write(('\n   (normal mode entropy)\n'
-                                    '(%s) DELTA DELTA G binding = %9.4f +/- %9.4f\n') % (mut_str, davg1 - davg,
+                                    'DELTA DELTA G binding = %9.4f +/- %9.4f\n') % (davg1 - davg,
                                                                               sqrt(dstdev ** 2 + dstdev1 ** 2)))
             final_output.separate()
 

@@ -30,10 +30,10 @@ import logging
 # Import gmx_MMPBSA modules
 from GMXMMPBSA import utils
 from GMXMMPBSA.amber_outputs import (QHout, NMODEout, QMMMout, GBout, PBout, PolarRISM_std_Out, RISM_std_Out,
-                                     PolarRISM_gf_Out, RISM_gf_Out, SingleTrajBinding, MultiTrajBinding, IEout)
+                                     PolarRISM_gf_Out, RISM_gf_Out, SingleTrajBinding, MultiTrajBinding, IEout, C2out)
 from GMXMMPBSA.calculation import (CalculationList, EnergyCalculation, PBEnergyCalculation, RISMCalculation,
                                    NmodeCalc, QuasiHarmCalc, CopyCalc, PrintCalc, LcpoCalc, MolsurfCalc,
-                                   InteractionEntropyCalc)
+                                   InteractionEntropyCalc, C2EntropyCalc)
 from GMXMMPBSA.commandlineparser import parser
 from GMXMMPBSA.createinput import create_inputs
 from GMXMMPBSA.exceptions import (MMPBSA_Error, InternalError, InputError, GMXMMPBSA_ERROR, GMXMMPBSA_WARNING)
@@ -840,10 +840,6 @@ class MMPBSA_App(object):
                              INPUT['idecomp'], InputError)
         if INPUT['idecomp'] != 0 and INPUT['sander_apbs'] == 1:
             GMXMMPBSA_ERROR('IDECOMP cannot be used with sander.APBS!', InputError)
-        if not INPUT['entropy'] in [0, 1, 2]:
-            GMXMMPBSA_ERROR('ENTROPY (%s) must be 0, 1 or 2!' % INPUT['entropy'], InputError)
-        if INPUT['entropy_seg'] not in range(1, 101):
-            GMXMMPBSA_ERROR('Entropy Segment (%s) must be in 1-100!' % INPUT['entropy_seg'], InputError)
         if not INPUT['sander_apbs'] in [0, 1]:
             GMXMMPBSA_ERROR('SANDER_APBS must be 0 or 1!', InputError)
         if INPUT['alarun'] and INPUT['netcdf'] != '':
@@ -946,17 +942,17 @@ class MMPBSA_App(object):
         # Only the master does this
         if not self.master:
             return
-        self.calc_types = {}
+        self.calc_types = type('calc_types', (dict,), {})()
         INPUT, FILES = self.INPUT, self.FILES
         # Mutant will also be a dict
         if INPUT['alarun']:
-            self.calc_types['mutant'] = {}
+            self.calc_types.mutant = {}
         # Quasi-harmonic analysis is a special-case, so handle that separately
         if INPUT['qh_entropy']:
             if not INPUT['mutant_only']:
                 self.calc_types['qh'] = QHout(self.pre + 'cpptraj_entropy.out', INPUT['temp'])
             if INPUT['alarun']:
-                self.calc_types['mutant']['qh'] = QHout(self.pre + 'mutant_cpptraj_entropy.out', INPUT['temp'])
+                self.calc_types.mutant['qh'] = QHout(self.pre + 'mutant_cpptraj_entropy.out', INPUT['temp'])
         # Set BindingClass based on whether it's a single or multiple trajectory
         # analysis
         if self.traj_protocol == 'STP':
@@ -980,16 +976,29 @@ class MMPBSA_App(object):
         triggers = ('nmoderun', 'gbrun', 'pbrun', 'rismrun_std', 'rismrun_gf')
         outclass = (NMODEout, GBClass, PBout, RISM_Std, RISM_GF)
         outkey = ('nmode', 'gb', 'pb', 'rism std', 'rism gf')
-        basename = ('%s_nm.out', '%s_gb.mdout', '%s_pb.mdout', '%s_rism.mdout',
-                    '%s_rism.mdout')
+        basename = ('%s_nm.out', '%s_gb.mdout', '%s_pb.mdout', '%s_rism.mdout', '%s_rism.mdout')
+
+        if self.INPUT['interaction_entropy']:
+            if not INPUT['mutant_only']:
+                self.calc_types['ie'] = IEout()
+            if INPUT['alarun']:
+                self.calc_types.mutant['ie'] = IEout()
+        if self.INPUT['c2_entropy']:
+            if not INPUT['mutant_only']:
+                self.calc_types['c2'] = C2out()
+            if INPUT['alarun']:
+                self.calc_types.mutant['c2'] = C2out()
+
+
+        # FIXME: Inlude the C2 entropy
+
         for i, key in enumerate(outkey):
             if not INPUT[triggers[i]]:
                 continue
             # Non-mutant
             if not INPUT['mutant_only']:
-                self.calc_types[key] = {'complex': outclass[i](self.pre +
-                                                               basename[i] % 'complex', self.INPUT, self.mpi_size,
-                                                               self.using_chamber)}
+                self.calc_types[key] = {'complex': outclass[i](self.pre + basename[i] % 'complex', self.INPUT,
+                                                               self.mpi_size, self.using_chamber)}
                 if not self.stability:
                     self.calc_types[key]['receptor'] = outclass[i](self.pre +
                                                                    basename[i] % 'receptor', self.INPUT, self.mpi_size,
@@ -1003,37 +1012,52 @@ class MMPBSA_App(object):
                         self.calc_types[key]['ligand'],
                         self.INPUT['verbose'], self.using_chamber)
 
-                    if self.INPUT['interaction_entropy'] and key not in ['nmode', 'qh'] and 'ie' not in self.calc_types:
-                        edata = self.calc_types[key]['delta'].data['DELTA G gas']
-                        ie = InteractionEntropyCalc(edata, self, self.pre + 'iteraction_entropy.dat')
-                        self.calc_types['ie'] = IEout(ie.data, ie.iedata, ie.frames, ie.ieframes)
-                        # self.calc_types[self.key]['delta'].data['DELTA G gas']
+                    if key in ['gb', 'pb', 'rism std', 'rism gf']:
+                        if 'ie' in self.calc_types:
+                            edata = self.calc_types[key]['delta'].data['DELTA G gas']
+                            ie = InteractionEntropyCalc(edata, self,
+                                                        self.pre + f"{key.replace(' ', '_')}_iteraction_entropy.dat")
+                            self.calc_types['ie'].data[key] = {'data': ie.data, 'iedata': ie.iedata, 'frames': ie.frames,
+                                                               'ieframes': ie.ieframes, 'sigma': ie.ie_std}
+                        if 'c2' in self.calc_types:
+                            edata = self.calc_types[key]['delta'].data['DELTA G gas']
+                            c2 = C2EntropyCalc(edata, self, self.pre + f"{key.replace(' ', '_')}_c2_entropy.dat")
+                            self.calc_types['c2'].data[key] = {'c2data': c2.c2data, 'sigma': c2.c2_std}
+                            # self.calc_types[self.key]['delta'].data['DELTA G gas']
                 else:
                     self.calc_types[key]['complex'].fill_composite_terms()
             # Time for mutant
             if INPUT['alarun']:
-                self.calc_types['mutant'][key] = {'complex':
+                self.calc_types.mutant[key] = {'complex':
                                                       outclass[i](self.pre + 'mutant_' + basename[i] % 'complex',
                                                                   self.INPUT, self.mpi_size, self.using_chamber)}
                 if not self.stability:
-                    self.calc_types['mutant'][key]['receptor'] = outclass[i](
+                    self.calc_types.mutant[key]['receptor'] = outclass[i](
                         self.pre + 'mutant_' + basename[i] % 'receptor',
                         self.INPUT, self.mpi_size, self.using_chamber)
-                    self.calc_types['mutant'][key]['ligand'] = outclass[i](
+                    self.calc_types.mutant[key]['ligand'] = outclass[i](
                         self.pre + 'mutant_' + basename[i] % 'ligand',
                         self.INPUT, self.mpi_size, self.using_chamber)
-                    self.calc_types['mutant'][key]['delta'] = BindClass(
-                        self.calc_types['mutant'][key]['complex'],
-                        self.calc_types['mutant'][key]['receptor'],
-                        self.calc_types['mutant'][key]['ligand'],
+                    self.calc_types.mutant[key]['delta'] = BindClass(
+                        self.calc_types.mutant[key]['complex'],
+                        self.calc_types.mutant[key]['receptor'],
+                        self.calc_types.mutant[key]['ligand'],
                         self.INPUT['verbose'], self.using_chamber)
-                    if (self.INPUT['interaction_entropy'] and key not in ['nmode', 'qh'] and
-                            'ie' not in self.calc_types['mutant']):
-                        edata = self.calc_types['mutant'][key]['delta'].data['DELTA G gas']
-                        mie = InteractionEntropyCalc(edata, self, self.pre + 'mutant_iteraction_entropy.dat')
-                        self.calc_types['mutant']['ie'] = IEout(mie.data, mie.iedata, mie.frames, mie.ieframes)
+                    if key in ['gb', 'pb', 'rism std', 'rism gf']:
+                        if 'ie' in self.calc_types.mutant:
+                            edata = self.calc_types.mutant[key]['delta'].data['DELTA G gas']
+                            mie = InteractionEntropyCalc(edata, self, self.pre + 'mutant_' +
+                                                         f"{key.replace(' ', '_')}_iteraction_entropy.dat")
+                            self.calc_types.mutant['ie'].data[key] = {'data': mie.data, 'iedata': mie.iedata,
+                                                                      'frames': mie.frames,
+                                                               'ieframes': mie.ieframes, 'sigma': mie.ie_std}
+                        if 'c2' in self.calc_types.mutant:
+                            edata = self.calc_types.mutant[key]['delta'].data['DELTA G gas']
+                            c2 = C2EntropyCalc(edata, self, self.pre + 'mutant_' +
+                                               f"{key.replace(' ', '_')}_c2_entropy.dat")
+                            self.calc_types.mutant['c2'].data[key] = {'c2data': c2.c2data, 'sigma': c2.c2_std}
                 else:
-                    self.calc_types['mutant'][key]['complex'].fill_composite_terms()
+                    self.calc_types.mutant[key]['complex'].fill_composite_terms()
 
 
 # Local methods

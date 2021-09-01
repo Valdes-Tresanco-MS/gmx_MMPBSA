@@ -70,7 +70,7 @@ def make_trajectories(INPUT, FILES, size, cpptraj, pre):
     # RMS fit
     traj.rms('!(%s)' % INPUT['strip_mask'])
 
-    num_frames_total = traj.processed_frames
+    num_frames_total = int(traj.processed_frames)
     num_frames_nmode = 0
 
     # Sanity check
@@ -145,8 +145,7 @@ def make_trajectories(INPUT, FILES, size, cpptraj, pre):
         #    rectraj.Setup(INPUT['startframe'],INPUT['endframe'],INPUT['interval'])
         #    rectraj.StripSolvent(INPUT['strip_mask'])
         # else:
-        rectraj = Trajectory(FILES.receptor_prmtop,
-                             FILES.receptor_trajs, cpptraj)
+        rectraj = Trajectory(FILES.receptor_prmtop, FILES.receptor_trajs, cpptraj)
         rectraj.Setup(INPUT['startframe'], INPUT['endframe'], INPUT['interval'])
         rectraj.rms('!(%s)' % INPUT['strip_mask'])
         if INPUT['full_traj'] or INPUT['qh_entropy']:
@@ -216,10 +215,9 @@ def make_trajectories(INPUT, FILES, size, cpptraj, pre):
     if INPUT['nmoderun']:
         nmtraj = Trajectory(FILES.complex_prmtop, [pre + 'complex.%s.%d' %
                                                    (trj_suffix, i) for i in range(size)], cpptraj)
-        nmtraj.Setup(INPUT['nmstartframe'], INPUT['nmendframe'],
-                     INPUT['nminterval'])
+        nmtraj.Setup(INPUT['nmstartframe'], INPUT['nmendframe'], INPUT['nminterval'])
 
-        num_frames_nmode = nmtraj.processed_frames
+        num_frames_nmode = int(nmtraj.processed_frames)
 
         # Now split up the complex trajectory by thread
         if nmtraj.processed_frames < size:
@@ -242,9 +240,7 @@ def make_trajectories(INPUT, FILES, size, cpptraj, pre):
         if not stability:
             nmtraj = Trajectory(FILES.receptor_prmtop, [pre + 'receptor.%s.%d' %
                                                         (trj_suffix, i) for i in range(size)], cpptraj)
-            nmtraj.Setup(INPUT['nmstartframe'], INPUT['nmendframe'],
-                         INPUT['nminterval'])
-
+            nmtraj.Setup(INPUT['nmstartframe'], INPUT['nmendframe'], INPUT['nminterval'])
             # Now split up the complex trajectory by thread
             if nmtraj.processed_frames < size:
                 raise MMPBSA_Error('More processors than receptor nmode frames!')
@@ -265,9 +261,7 @@ def make_trajectories(INPUT, FILES, size, cpptraj, pre):
 
             nmtraj = Trajectory(FILES.ligand_prmtop, [pre + 'ligand.%s.%d' %
                                                       (trj_suffix, i) for i in range(size)], cpptraj)
-            nmtraj.Setup(INPUT['nmstartframe'], INPUT['nmendframe'],
-                         INPUT['nminterval'])
-
+            nmtraj.Setup(INPUT['nmstartframe'], INPUT['nmendframe'], INPUT['nminterval'])
             # Now split up the complex trajectory by thread
             if nmtraj.processed_frames < size:
                 raise MMPBSA_Error('More processors than ligand nmode frames!')
@@ -290,7 +284,7 @@ def make_trajectories(INPUT, FILES, size, cpptraj, pre):
 
     # end if INPUT['nmoderun']
 
-    return int(num_frames_total), int(num_frames_nmode)
+    return num_frames_total, num_frames_nmode
 
 
 # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
