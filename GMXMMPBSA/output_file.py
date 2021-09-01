@@ -27,6 +27,49 @@ from GMXMMPBSA.exceptions import LengthError, GMXMMPBSA_WARNING
 from GMXMMPBSA import utils
 from math import sqrt, ceil
 from os import linesep as ls
+import h5py
+
+
+def _e2h5(d, f):
+
+    # key  Energy: [gb, pb, rism std, rism gf], Decomp: [gb, pb], Entropy: [nmode, qh, ie, c2]
+    for key in d:
+        if key in ['gb', 'pb', 'rism std', 'rism gf']:
+            grp = f.create_group(key)
+            # key2 is complex, receptor, ligand, delta
+            for key2 in d[key]:
+                grp2 = grp.create_group(key2)
+                # complex, receptor, etc., is a class and the data is contained in the attribute data
+                for key3 in d[key][key2].data:
+                    dset = grp2.create_dataset(key3, data=d[key][key2].data[key3])
+        elif key in ['nmode', 'qh']:
+            grp = f.create_group(key)
+            # key2 is complex, receptor, ligand, delta
+            for key2 in d[key]:
+                grp2 = grp.create_group(key2)
+                for key3 in d[key][key2]:
+                    dset = grp2.create_dataset(key3, data=d[key][key2][key3])
+        elif key in ['ie', 'c2']:
+            grp = f.create_group(key)
+            # key2 is PB, GB or RISM?
+            for key2 in d[key].data:
+                grp2 = grp.create_group(key2)
+                for key3 in d[key].data[key2]:
+                    dset = grp2.create_dataset(key3, data=d[key].data[key2][key3])
+
+
+def data2h5(app):
+
+    f = h5py.File('RESULTS_gmx_MMPBSA.h5', 'w')
+
+    _e2h5(app.calc_types, f)
+    if hasattr(app.calc_types, 'mutant'):
+        grp = f.create_group('mutant')
+        _e2h5(app.calc_types.mutant, grp)
+
+    f.close()
+
+
 
 
 # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
