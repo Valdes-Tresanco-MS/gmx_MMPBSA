@@ -1485,6 +1485,27 @@ class DecompOut(object):
         return num_terms
 
     #==================================================
+    def get_data(self, nframes, reslist=None):
+        array_data = {}
+        for key in self.allowed_tokens:
+            array_data[key] = {}
+        for i in range(nframes):
+            for key in self.allowed_tokens:
+                for _ in range(self.num_terms):
+                    rnum, internal, vdw, eel, pol, sas, tot = self.get_next_term(key)
+                    if reslist:
+                        rnum = reslist[rnum - 1].string
+                    if rnum not in array_data[key]:
+                        array_data[key][rnum] = {}
+                        for k in ('int', 'vdw', 'eel', 'pol', 'sas', 'tot'):
+                            array_data[key][rnum][k] = EnergyVector(nframes)
+                    array_data[key][rnum]['int'][i] = internal
+                    array_data[key][rnum]['vdw'][i] = vdw
+                    array_data[key][rnum]['eel'][i] = eel
+                    array_data[key][rnum]['pol'][i] = pol
+                    array_data[key][rnum]['sas'][i] = sas
+                    array_data[key][rnum]['tot'][i] = tot
+        return array_data
 
     def _get_next_term(self, expected_type, framenum=1):
         """ Gets the next energy term from the output file(s) """
@@ -1660,6 +1681,31 @@ class PairDecompOut(DecompOut):
     indicator = "                    PRINT PAIR DECOMP - TOTAL ENERGIES"
 
     #==================================================
+
+    def get_data(self, nframes, reslist=None):
+        array_data = {}
+        for key in self.allowed_tokens:
+            array_data[key] = {}
+        for i in range(nframes):
+            for key in self.allowed_tokens:
+                for _ in range(self.num_terms):
+                    rnum, rnum2, internal, vdw, eel, pol, sas, tot = self.get_next_term(key)
+                    if reslist:
+                        rnum = reslist[rnum - 1].string
+                        rnum2 = reslist[rnum2 - 1].string
+                    if rnum not in array_data[key]:
+                        array_data[key][rnum] = {}
+                    if rnum2 not in array_data[key][rnum]:
+                        array_data[key][rnum][rnum2] = {}
+                        for k in ('int', 'vdw', 'eel', 'pol', 'sas', 'tot'):
+                            array_data[key][rnum][rnum2][k] = EnergyVector(nframes)
+                    array_data[key][rnum][rnum2]['int'][i] = internal
+                    array_data[key][rnum][rnum2]['vdw'][i] = vdw
+                    array_data[key][rnum][rnum2]['eel'][i] = eel
+                    array_data[key][rnum][rnum2]['pol'][i] = pol
+                    array_data[key][rnum][rnum2]['sas'][i] = sas
+                    array_data[key][rnum][rnum2]['tot'][i] = tot
+        return array_data
 
     def _get_next_term(self, expected_type=None, framenum=1):
         """ Gets the next energy term from the output file(s) """
