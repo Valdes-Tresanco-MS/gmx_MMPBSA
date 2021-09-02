@@ -1115,16 +1115,16 @@ class MMPBSA_App(object):
                 return_data.mutant[key] = {'complex': SingleClass(self.pre + 'mutant_' + basename[i] % 'complex',
                                                            self.normal_system.complex_prmtop, INPUT['surften'],
                                                            False, self.mpi_size, INPUT['dec_verbose']).get_data(
-                    self.numframes, self.resl['COM'])}
+                    self.numframes, self.resl['MUT_COM'])}
                 if not self.stability:
                     return_data.mutant[key]['receptor'] = SingleClass(self.pre + 'mutant_' + basename[i] % 'receptor',
                                                                self.normal_system.receptor_prmtop, INPUT['surften'],
                                                                False, self.mpi_size, INPUT['dec_verbose']).get_data(
-                        self.numframes, self.resl['REC'])
+                        self.numframes, self.resl['MUT_REC'])
                     return_data.mutant[key]['ligand'] = SingleClass(self.pre + 'mutant_' + basename[i] % 'ligand',
                                                              self.normal_system.ligand_prmtop, INPUT['surften'],
                                                              False, self.mpi_size, INPUT['dec_verbose']).get_data(
-                        self.numframes, self.resl['LIG'])
+                        self.numframes, self.resl['MUT_LIG'])
         return return_data
 # Local methods
 
