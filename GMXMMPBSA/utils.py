@@ -64,6 +64,13 @@ class Residue(int):
         i.string = f"{chain}:{name}:{number}:{icode}" if icode else f"{chain}:{name}:{number}"
         return i
 
+    def __copy__(self):
+        return Residue(self.index, self.number, self.chain, self.mol, self.name,self.icode)
+
+    def __deepcopy__(self, memo):
+        cls = self.__class__
+        return cls.__new__(cls, self.index, self.number, self.chain, self.mol, self.name,self.icode)
+
     def __repr__(self):
         text = f"{type(self).__name__}(index: {self.index}, {self.chain}:{self.name}:{self.number}"
         if self.icode:
