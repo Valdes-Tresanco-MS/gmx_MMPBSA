@@ -1580,8 +1580,10 @@ class DecompOut(object):
     def _get_next_term_csv(self, expected_type, framenum=1):
         """ Gets the next term and prints data to csv file """
         mydat = self._get_next_term(expected_type)
-        if mydat: self.csvwriter[expected_type].writerow([framenum]+mydat)
-        else: self.csvwriter[expected_type].writerow([])
+        if mydat:
+            self.csvwriter[expected_type].writerow([framenum] + mydat)
+        else:
+            self.csvwriter[expected_type].writerow([])
         return mydat
 
     #==================================================
@@ -1607,23 +1609,17 @@ class DecompOut(object):
             # Now loop over all of the terms.
             for i in range(self.num_terms):
                 int_avg = self.data[term]['int'][0][i] / numframes
-                int_std = sqrt(abs(self.data[term]['int'][1][i]/numframes -
-                                   int_avg**2))
+                int_std = sqrt(abs(self.data[term]['int'][1][i]/numframes - int_avg**2))
                 vdw_avg = self.data[term]['vdw'][0][i] / numframes
-                vdw_std = sqrt(abs(self.data[term]['vdw'][1][i]/numframes -
-                                   vdw_avg**2))
+                vdw_std = sqrt(abs(self.data[term]['vdw'][1][i]/numframes - vdw_avg**2))
                 eel_avg = self.data[term]['eel'][0][i] / numframes
-                eel_std = sqrt(abs(self.data[term]['eel'][1][i]/numframes -
-                                   eel_avg**2))
+                eel_std = sqrt(abs(self.data[term]['eel'][1][i]/numframes - eel_avg**2))
                 pol_avg = self.data[term]['pol'][0][i] / numframes
-                pol_std = sqrt(abs(self.data[term]['pol'][1][i]/numframes -
-                                   pol_avg**2))
+                pol_std = sqrt(abs(self.data[term]['pol'][1][i]/numframes - pol_avg**2))
                 sas_avg = self.data[term]['sas'][0][i] / numframes
-                sas_std = sqrt(abs(self.data[term]['sas'][1][i]/numframes -
-                                   sas_avg**2))
+                sas_std = sqrt(abs(self.data[term]['sas'][1][i]/numframes - sas_avg**2))
                 tot_avg = self.data[term]['tot'][0][i] / numframes
-                tot_std = sqrt(abs(self.data[term]['tot'][1][i]/numframes -
-                                   tot_avg**2))
+                tot_std = sqrt(abs(self.data[term]['tot'][1][i]/numframes - tot_avg**2))
                 resnm = self.prmtop.parm_data['RESIDUE_LABEL'][self.resnums[0][i]-1]
                 res_str = '%3s%4d' % (resnm, self.resnums[0][i])
                 output_file.writeline(('%s |%9.3f +/- %6.3f |%9.3f +/- %6.3f ' +
@@ -1646,23 +1642,17 @@ class DecompOut(object):
             for i in range(self.num_terms):
                 sqrt_frames = sqrt(numframes)
                 int_avg = self.data[term]['int'][0][i] / numframes
-                int_std = sqrt(abs(self.data[term]['int'][1][i]/numframes -
-                                   int_avg**2))
+                int_std = sqrt(abs(self.data[term]['int'][1][i]/numframes - int_avg**2))
                 vdw_avg = self.data[term]['vdw'][0][i] / numframes
-                vdw_std = sqrt(abs(self.data[term]['vdw'][1][i]/numframes -
-                                   vdw_avg**2))
+                vdw_std = sqrt(abs(self.data[term]['vdw'][1][i]/numframes - vdw_avg**2))
                 eel_avg = self.data[term]['eel'][0][i] / numframes
-                eel_std = sqrt(abs(self.data[term]['eel'][1][i]/numframes -
-                                   eel_avg**2))
+                eel_std = sqrt(abs(self.data[term]['eel'][1][i]/numframes - eel_avg**2))
                 pol_avg = self.data[term]['pol'][0][i] / numframes
-                pol_std = sqrt(abs(self.data[term]['pol'][1][i]/numframes -
-                                   pol_avg**2))
+                pol_std = sqrt(abs(self.data[term]['pol'][1][i]/numframes - pol_avg**2))
                 sas_avg = self.data[term]['sas'][0][i] / numframes
-                sas_std = sqrt(abs(self.data[term]['sas'][1][i]/numframes -
-                                   sas_avg**2))
+                sas_std = sqrt(abs(self.data[term]['sas'][1][i]/numframes - sas_avg**2))
                 tot_avg = self.data[term]['tot'][0][i] / numframes
-                tot_std = sqrt(abs(self.data[term]['tot'][1][i]/numframes -
-                                   tot_avg**2))
+                tot_std = sqrt(abs(self.data[term]['tot'][1][i]/numframes - tot_avg**2))
                 resnm = self.prmtop.parm_data['RESIDUE_LABEL'][self.resnums[0][i]-1]
                 res_str = '%3s%4d' % (resnm, self.resnums[0][i])
                 csvwriter.writerow([res_str, int_avg, int_std, int_std/sqrt_frames,
