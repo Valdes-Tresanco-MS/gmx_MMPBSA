@@ -491,7 +491,6 @@ class CheckMakeTop:
         self.mut_ligand_list = {}
         if self.INPUT['alarun']:
             com_mut_index, part_mut, part_index, self.mut_label = self.getMutationInfo()
-            print(com_mut_index, type(com_mut_index), part_mut, part_index, self.mut_label, '########')
             if part_mut == 'REC':
                 logging.info('Detecting mutation in Receptor. Building Mutant Receptor Structure...')
                 self.mutant_ligand_pmrtop = None
@@ -600,7 +599,7 @@ class CheckMakeTop:
     def get_masks(self):
         rec_mask = ':' + ','.join(self.resi['REC']['string'])
         lig_mask = ':' + ','.join(self.resi['LIG']['string'])
-        return rec_mask, lig_mask
+        return rec_mask, lig_mask, self.resl
 
     def get_selected_residues(self, select):
         """
@@ -659,7 +658,7 @@ class CheckMakeTop:
         order_list = []
 
         masks = {'REC': [], 'LIG': []}
-        res_list = {'REC': [], 'LIG': []}
+        res_list = {'REC': [], 'LIG': [], 'COM': []}
         com_ndx = ndx['GMXMMPBSA_REC_GMXMMPBSA_LIG']
         com_len = len(ndx['GMXMMPBSA_REC_GMXMMPBSA_LIG'])
         resindex = 1
@@ -674,12 +673,18 @@ class CheckMakeTop:
                     res_list['REC'].append(Residue(resindex, com_str.atoms[i].residue.number,
                                                    com_str.atoms[i].residue.chain, 'REC', com_str.atoms[i].residue.name,
                                                    com_str.atoms[i].residue.insertion_code))
+                    res_list['COM'].append(Residue(resindex, com_str.atoms[i].residue.number,
+                                                   com_str.atoms[i].residue.chain, 'COM', com_str.atoms[i].residue.name,
+                                                   com_str.atoms[i].residue.insertion_code))
                     resindex += 1
                     proc_res = res
             # save residue number in the lig list
             elif res != proc_res and resindex not in res_list['LIG']:
                     res_list['LIG'].append(Residue(resindex, com_str.atoms[i].residue.number,
                                                    com_str.atoms[i].residue.chain, 'LIG', com_str.atoms[i].residue.name,
+                                                   com_str.atoms[i].residue.insertion_code))
+                    res_list['COM'].append(Residue(resindex, com_str.atoms[i].residue.number,
+                                                   com_str.atoms[i].residue.chain, 'COM', com_str.atoms[i].residue.name,
                                                    com_str.atoms[i].residue.insertion_code))
                     resindex += 1
                     proc_res = res
