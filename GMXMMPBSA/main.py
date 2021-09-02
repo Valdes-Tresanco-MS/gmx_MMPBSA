@@ -568,7 +568,7 @@ class MMPBSA_App(object):
              self.FILES.mutant_complex_prmtop,
              self.FILES.mutant_receptor_prmtop, self.FILES.mutant_ligand_prmtop) = maketop.buildTopology()
             logging.info('Building AMBER Topologies from GROMACS files...Done.\n')
-            self.INPUT['receptor_mask'], self.INPUT['ligand_mask'] = maketop.get_masks()
+            self.INPUT['receptor_mask'], self.INPUT['ligand_mask'], self.resl = maketop.get_masks()
             self.mut_str = maketop.mut_label
             self.FILES.complex_fixed = self.FILES.prefix + 'COM_FIXED.pdb'
         self.FILES = self.MPI.COMM_WORLD.bcast(self.FILES, root=0)
@@ -646,6 +646,7 @@ class MMPBSA_App(object):
             else:
                 write_decomp_binding_output(self.FILES, self.INPUT, self.mpi_size,
                                             self.normal_system, self.mutant_system, self.mut_str, self.pre)
+        # Store the calc_types data in a h5 file
         data2h5(self)
         self.timer.stop_timer('output')
 
@@ -990,9 +991,6 @@ class MMPBSA_App(object):
             if INPUT['alarun']:
                 self.calc_types.mutant['c2'] = C2out()
 
-
-        # FIXME: Inlude the C2 entropy
-
         for i, key in enumerate(outkey):
             if not INPUT[triggers[i]]:
                 continue
@@ -1062,7 +1060,74 @@ class MMPBSA_App(object):
                 else:
                     self.calc_types.mutant[key]['complex'].fill_composite_terms()
 
+        if INPUT['decomprun']:
+            self.calc_types.decomp = self._get_decomp()
 
+    def _get_decomp(self):
+        from GMXMMPBSA.amber_outputs import (DecompOut, PairDecompOut, DecompBinding,
+                                             PairDecompBinding, MultiTrajDecompBinding,
+                                             MultiTrajPairDecompBinding)
+        outkey = ('gb', 'pb')
+        triggers = ('gbrun', 'pbrun')
+        basename = ('%s_gb.mdout', '%s_pb.mdout')
+        INPUT, FILES = self.INPUT, self.FILES
+        multitraj = bool(self.FILES.receptor_trajs or self.FILES.ligand_trajs)
+        # Single trajectory
+        if not multitraj:
+            # Per-residue
+            if self.INPUT['idecomp'] in [1, 2]:
+                BindingClass = DecompBinding
+                SingleClass = DecompOut
+            # Pairwise
+            else:
+                BindingClass = PairDecompBinding
+                SingleClass = PairDecompOut
+        else:  # Multiple trajectories
+            # Per-residue
+            if self.INPUT['idecomp'] in [1, 2]:
+                BindingClass = MultiTrajDecompBinding
+                SingleClass = DecompOut
+            # Pairwise
+            else:
+                BindingClass = MultiTrajPairDecompBinding
+                SingleClass = PairDecompOut
+
+        return_data = type('calc_types', (dict,), {})()
+        for i, key in enumerate(outkey):
+            if not INPUT[triggers[i]]:
+                continue
+            if not self.INPUT['mutant_only']:
+                # Do normal GB
+                return_data[key] = {'complex': SingleClass(self.pre + basename[i] % 'complex',
+                                 self.normal_system.complex_prmtop, INPUT['surften'],
+                                 False, self.mpi_size, INPUT['dec_verbose']).get_data(self.numframes, self.resl['COM'])}
+                if not self.stability:
+                    return_data[key]['receptor'] = SingleClass(self.pre + basename[i] % 'receptor',
+                                                               self.normal_system.receptor_prmtop, INPUT['surften'],
+                                                               False, self.mpi_size, INPUT['dec_verbose']).get_data(
+                        self.numframes, self.resl['REC'])
+                    return_data[key]['ligand'] = SingleClass(self.pre + basename[i] % 'ligand',
+                                                               self.normal_system.ligand_prmtop, INPUT['surften'],
+                                                               False, self.mpi_size, INPUT['dec_verbose']).get_data(
+                        self.numframes, self.resl['LIG'])
+
+            if INPUT['alarun']:
+                # Do mutant
+                return_data.mutant = {}
+                return_data.mutant[key] = {'complex': SingleClass(self.pre + 'mutant_' + basename[i] % 'complex',
+                                                           self.normal_system.complex_prmtop, INPUT['surften'],
+                                                           False, self.mpi_size, INPUT['dec_verbose']).get_data(
+                    self.numframes, self.resl['MUT_COM'])}
+                if not self.stability:
+                    return_data.mutant[key]['receptor'] = SingleClass(self.pre + 'mutant_' + basename[i] % 'receptor',
+                                                               self.normal_system.receptor_prmtop, INPUT['surften'],
+                                                               False, self.mpi_size, INPUT['dec_verbose']).get_data(
+                        self.numframes, self.resl['MUT_REC'])
+                    return_data.mutant[key]['ligand'] = SingleClass(self.pre + 'mutant_' + basename[i] % 'ligand',
+                                                             self.normal_system.ligand_prmtop, INPUT['surften'],
+                                                             False, self.mpi_size, INPUT['dec_verbose']).get_data(
+                        self.numframes, self.resl['MUT_LIG'])
+        return return_data
 # Local methods
 
 def excepthook(exception_type, exception_value, tb):

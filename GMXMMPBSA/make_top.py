@@ -29,6 +29,7 @@ import subprocess
 from pathlib import Path
 import logging
 import string
+from copy import deepcopy
 from parmed.tools.changeradii import ChRad
 
 chains_letters = list(string.ascii_uppercase)
@@ -411,18 +412,18 @@ class CheckMakeTop:
         if self.INPUT['alarun']:
             logging.info('Building Mutant Complex Topology...')
             # get mutation index in complex
-            com_mut_index, part_mut, part_index, self.mut_label = self.getMutationInfo()
-            mut_com_amb_prm = self.makeMutTop(com_amb_prm, com_mut_index)
+            self.com_mut_index, self.part_mut, self.part_index, self.mut_label = self.getMutationInfo()
+            mut_com_amb_prm = self.makeMutTop(com_amb_prm, self.com_mut_index)
             # change de PBRadii
             action = ChRad(mut_com_amb_prm, PBRadii[self.INPUT['PBRadii']])
             mut_com_amb_prm.write_parm(self.mutant_complex_pmrtop)
 
-            if part_mut == 'REC':
+            if self.part_mut == 'REC':
                 logging.info('Detecting mutation in Receptor. Building Mutant Receptor Topology...')
                 out_prmtop = self.mutant_receptor_pmrtop
                 self.mutant_ligand_pmrtop = None
                 if rec_hastop:
-                    mtop = self.makeMutTop(rec_amb_prm, part_index)
+                    mtop = self.makeMutTop(rec_amb_prm, self.part_index)
                 else:
                     mut_com_amb_prm.strip(f'!:{rec_indexes_string}')
                     mtop = mut_com_amb_prm
@@ -431,7 +432,7 @@ class CheckMakeTop:
                 out_prmtop = self.mutant_ligand_pmrtop
                 self.mutant_receptor_pmrtop = None
                 if lig_hastop:
-                    mtop = self.makeMutTop(lig_amb_prm, part_index)
+                    mtop = self.makeMutTop(lig_amb_prm, self.part_index)
                 else:
                     mut_com_amb_prm.strip(f':{rec_indexes_string}')
                     mtop = mut_com_amb_prm
@@ -490,14 +491,13 @@ class CheckMakeTop:
         self.mut_receptor_list = {}
         self.mut_ligand_list = {}
         if self.INPUT['alarun']:
-            com_mut_index, part_mut, part_index, self.mut_label = self.getMutationInfo()
-            print(com_mut_index, type(com_mut_index), part_mut, part_index, self.mut_label, '########')
-            if part_mut == 'REC':
+            self.com_mut_index, self.part_mut, self.part_index, self.mut_label = self.getMutationInfo()
+            if self.part_mut == 'REC':
                 logging.info('Detecting mutation in Receptor. Building Mutant Receptor Structure...')
                 self.mutant_ligand_pmrtop = None
                 start = 1
                 for c, r in enumerate(self.resi['REC']['num']):
-                    end, sfile = self._split_str(start, r, c, f'MUT_REC', self.receptor_str, part_index)
+                    end, sfile = self._split_str(start, r, c, f'MUT_REC', self.receptor_str, self.part_index)
                     self.mut_receptor_list[f'MREC{c}'] = sfile
                     start += end
             else:
@@ -505,7 +505,7 @@ class CheckMakeTop:
                 self.mutant_receptor_pmrtop = None
                 start = 1
                 for c, r in enumerate(self.resi['LIG']['num']):
-                    end, sfile = self._split_str(start, r, c, f'MUT_LIG', self.ligand_str, part_index)
+                    end, sfile = self._split_str(start, r, c, f'MUT_LIG', self.ligand_str, self.part_index)
                     self.mut_ligand_list[f'MLIG{c}'] =  sfile
                     start += end
 
@@ -600,7 +600,19 @@ class CheckMakeTop:
     def get_masks(self):
         rec_mask = ':' + ','.join(self.resi['REC']['string'])
         lig_mask = ':' + ','.join(self.resi['LIG']['string'])
-        return rec_mask, lig_mask
+
+        # to change the self.resl to get the mutant label in decomp analysis
+        self.resl['MUT_COM'] = deepcopy(self.resl['COM'])
+        self.resl['MUT_COM'][self.com_mut_index].name = self.INPUT['mutant']
+        # self.com_mut_index, self.part_mut, self.part_index,
+        self.resl['MUT_REC'] = deepcopy(self.resl['REC'])
+        self.resl['MUT_LIG'] = deepcopy(self.resl['LIG'])
+        if self.part_mut == 'REC':
+            self.resl['MUT_REC'][self.part_index].name = self.INPUT['mutant']
+        else:
+            self.resl['MUT_LIG'][self.part_index].name = self.INPUT['mutant']
+
+        return rec_mask, lig_mask, self.resl
 
     def get_selected_residues(self, select):
         """
@@ -659,7 +671,7 @@ class CheckMakeTop:
         order_list = []
 
         masks = {'REC': [], 'LIG': []}
-        res_list = {'REC': [], 'LIG': []}
+        res_list = {'REC': [], 'LIG': [], 'COM': []}
         com_ndx = ndx['GMXMMPBSA_REC_GMXMMPBSA_LIG']
         com_len = len(ndx['GMXMMPBSA_REC_GMXMMPBSA_LIG'])
         resindex = 1
@@ -674,12 +686,18 @@ class CheckMakeTop:
                     res_list['REC'].append(Residue(resindex, com_str.atoms[i].residue.number,
                                                    com_str.atoms[i].residue.chain, 'REC', com_str.atoms[i].residue.name,
                                                    com_str.atoms[i].residue.insertion_code))
+                    res_list['COM'].append(Residue(resindex, com_str.atoms[i].residue.number,
+                                                   com_str.atoms[i].residue.chain, 'COM', com_str.atoms[i].residue.name,
+                                                   com_str.atoms[i].residue.insertion_code))
                     resindex += 1
                     proc_res = res
             # save residue number in the lig list
             elif res != proc_res and resindex not in res_list['LIG']:
                     res_list['LIG'].append(Residue(resindex, com_str.atoms[i].residue.number,
                                                    com_str.atoms[i].residue.chain, 'LIG', com_str.atoms[i].residue.name,
+                                                   com_str.atoms[i].residue.insertion_code))
+                    res_list['COM'].append(Residue(resindex, com_str.atoms[i].residue.number,
+                                                   com_str.atoms[i].residue.chain, 'COM', com_str.atoms[i].residue.name,
                                                    com_str.atoms[i].residue.insertion_code))
                     resindex += 1
                     proc_res = res
