@@ -57,16 +57,47 @@ def _e2h5(d, f):
                 for key3 in d[key].data[key2]:
                     dset = grp2.create_dataset(key3, data=d[key].data[key2][key3])
 
+def _decomp2h5(d, f):
+    for key in d:
+        # model
+        grp = f.create_group(key)
+        # key2 is complex, receptor, ligand, delta
+        for key2 in d[key]:
+            grp2 = grp.create_group(key2)
+            # TDC, SDC, BDC
+            for key3 in d[key][key2]:
+                grp3 = grp2.create_group(key3)
+                # residue first level
+                for key4 in d[key][key2][key3]:
+                    grp4 = grp3.create_group(key4)
+                    if isinstance(d[key][key2][key3][key4], dict):
+                        # residue sec level
+                        for key5 in d[key][key2][key3][key4]:
+                            grp5 = grp4.create_group(key5)
+                            # energy terms
+                            for key6 in d[key][key2][key3][key4][key5]:
+                                dset = grp5.create_dataset(key6, data=d[key][key2][key3][key4][key5][key6])
+                    else:
+                        # energy terms
+                        for key5 in d[key][key2][key3][key4]:
+                            dset = grp4.create_dataset(key5, data=d[key][key2][key3][key4][key5])
+            # complex, receptor, etc., is a class and the data is contained in the attribute data
 
 def data2h5(app):
 
     f = h5py.File('RESULTS_gmx_MMPBSA.h5', 'w')
 
     _e2h5(app.calc_types, f)
+    if hasattr(app.calc_types, 'decomp'):
+        grp = f.create_group('decomp')
+        _decomp2h5(app.calc_types.decomp, grp)
+
     if hasattr(app.calc_types, 'mutant'):
         grp = f.create_group('mutant')
         _e2h5(app.calc_types.mutant, grp)
-
+        if hasattr(app.calc_types, 'decomp'):
+            grp2 = grp.create_group('decomp')
+            _decomp2h5(app.calc_types.decomp.mutant, grp2)
     f.close()
 
 
