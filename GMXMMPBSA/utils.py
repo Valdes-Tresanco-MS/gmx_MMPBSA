@@ -61,6 +61,7 @@ class Residue(int):
         i.mol = mol
         i.name = name
         i.icode = icode
+        i.string = f"{chain}:{name}:{number}:{icode}" if icode else f"{chain}:{name}:{number}"
         return i
 
     def __repr__(self):
