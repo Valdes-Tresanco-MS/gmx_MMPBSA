@@ -1023,7 +1023,8 @@ class MMPBSA_App(object):
                         if 'c2' in self.calc_types:
                             edata = self.calc_types[key]['delta'].data['DELTA G gas']
                             c2 = C2EntropyCalc(edata, self, self.pre + f"{key.replace(' ', '_')}_c2_entropy.dat")
-                            self.calc_types['c2'].data[key] = {'c2data': c2.c2data, 'sigma': c2.c2_std}
+                            self.calc_types['c2'].data[key] = {'c2data': c2.c2data, 'sigma': c2.ie_std,
+                                                               'c2_std': c2.c2_std, 'c2_ci': c2.c2_ci}
                             # self.calc_types[self.key]['delta'].data['DELTA G gas']
                 else:
                     self.calc_types[key]['complex'].fill_composite_terms()
@@ -1056,7 +1057,8 @@ class MMPBSA_App(object):
                             edata = self.calc_types.mutant[key]['delta'].data['DELTA G gas']
                             c2 = C2EntropyCalc(edata, self, self.pre + 'mutant_' +
                                                f"{key.replace(' ', '_')}_c2_entropy.dat")
-                            self.calc_types.mutant['c2'].data[key] = {'c2data': c2.c2data, 'sigma': c2.c2_std}
+                            self.calc_types.mutant['c2'].data[key] = {'c2data': c2.c2data, 'sigma': c2.ie_std,
+                                                                      'c2_std': c2.c2_std, 'c2_ci': c2.c2_ci}
                 else:
                     self.calc_types.mutant[key]['complex'].fill_composite_terms()
 

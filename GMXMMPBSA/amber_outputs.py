@@ -323,7 +323,7 @@ class IEout(object):
     def print_summary(self):
         """ Formatted summary of Interaction Entropy results """
 
-        ret_str = 'Model                σIE            Average       Std. Dev.   Std. Err. of Mean\n'
+        ret_str = 'Model           σ(Int. Energy)      Average       Std. Dev.   Std. Err. of Mean\n'
         ret_str += '-------------------------------------------------------------------------------\n'
         for model in self.data:
             self.data[model]['iedata'] = EnergyVector(self.data[model]['iedata'])
@@ -342,7 +342,7 @@ class C2out(object):
         self.data = {}
 
     def print_summary_csv(self, csvwriter):
-        """ Output summary of quasi-harmonic results in CSV format """
+        """ Output summary of C2 results in CSV format """
         csvwriter.writerow([f"C2 Entropy calculation from last {self.data['ieframes']} frames..."])
         csvwriter.writerow(['C2 Entropy:', '{:.2f}'.format(self.avg())])
 
@@ -362,12 +362,16 @@ class C2out(object):
     #         csvwriter.writerow([f] + [d])
     #
     def print_summary(self):
-        """ Formatted summary of Interaction Entropy results """
+        """ Formatted summary of C2 Entropy results """
 
-        ret_str = 'Model                σC2            Value       \n'
+        ret_str = 'Model           σ(Int. Energy)      Value         Std. Dev.   Conf. Interv. (95%)\n'
         ret_str += '-------------------------------------------------------------------------------\n'
         for model in self.data:
-            ret_str += '%-14s %10.3f %16.3f\n' % (model, self.data[model]['sigma'], self.data[model]['c2data'])
+            ret_str += '%-14s %10.3f %15.3f %15.3f %13.3f-%5.3f\n' % (model, self.data[model]['sigma'],
+                                                                      self.data[model]['c2data'],
+                                                                      self.data[model]['c2_std'],
+                                                                      self.data[model]['c2_ci'][0],
+                                                                      self.data[model]['c2_ci'][1])
         return ret_str
 
 #-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-

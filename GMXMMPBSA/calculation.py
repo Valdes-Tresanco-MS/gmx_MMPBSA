@@ -686,9 +686,18 @@ class C2EntropyCalc:
         R = 0.001987
         temp = self.app.INPUT['temperature']
         self.c2frames = math.ceil(self.app.numframes * (self.app.INPUT['c2_segment'] / 100))
-        self.c2_std = self.ggas[-self.c2frames:].std()
-        self.c2data = (self.c2_std ** 2) / (2 * temp * R)
-        print(self.c2frames, self.ggas, self.ggas[-self.c2frames], self.c2_std, self.c2data)
+        self.ie_std = self.ggas[-self.c2frames:].std()
+        self.c2data = (self.ie_std ** 2) / (2 * temp * R)
+
+        array_of_c2 = np.zeros(2000)
+        for i in range(2000):
+            idxs = np.random.randint(0, len(self.ggas[-self.c2frames:]), len(self.ggas[-self.c2frames:]))
+            self.ie_std = self.ggas[-self.c2frames:][idxs].std()
+            self.c2data = (self.ie_std ** 2) / (2 * temp * R)
+            array_of_c2[i] = self.c2data
+
+        self.c2_std = np.sort(array_of_c2)[100:1900].std()
+        self.c2_ci = np.percentile(np.sort(array_of_c2)[100:1900], [2.5, 97.5])
 
     def save_output(self):
         with open(self.output, 'w') as out:

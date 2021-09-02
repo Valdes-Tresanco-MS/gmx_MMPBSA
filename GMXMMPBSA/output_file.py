@@ -322,6 +322,8 @@ def write_binding_output(app):
     if INPUT['c2_entropy']:
         final_output.add_comment('C2 Entropy calculations performed using last %s frames.' %
                                  ceil(app.numframes * (INPUT['c2_segment']/100)))
+        final_output.add_comment('C2 Entropy Std. Dev. and Conf. Interv. (95%) have been obtained by '
+                                 'bootstrapping with number_of_resamplings = 2000')
 
 
     if INPUT['pbrun']:
@@ -349,7 +351,7 @@ def write_binding_output(app):
     if INPUT['nmoderun'] or INPUT['qh_entropy'] or INPUT['interaction_entropy' or INPUT['c2_entropy']]:
         final_output.add_comment('All entropy results have units kcal/mol\n' +
                                  '(Temperature for NMODE and QH is %.2f K)\n' % INPUT['temp'] +
-                                 '(Temperature for IE is %.2f K)\n' % INPUT['temperature'])
+                                 '(Temperature for IE and C2 is %.2f K)\n' % INPUT['temperature'])
     if INPUT['ifqnt']:
         final_output.add_comment(('QM/MM: Residues %s are treated with the ' +
                                   'Quantum Hamiltonian %s') % (INPUT['qm_residues'], INPUT['qm_theory']))
