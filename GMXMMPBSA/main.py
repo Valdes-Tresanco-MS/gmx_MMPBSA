@@ -142,8 +142,13 @@ class MMPBSA_App(object):
 
         if master:
             self.stdout.write('Preparing trajectories for simulation...\n')
-            self.numframes, self.numframes_nmode = make_trajectories(INPUT, FILES, self.mpi_size,
+            self.numframes, rec_frames, lig_frames, self.numframes_nmode = make_trajectories(INPUT, FILES,
+                                                                                             self.mpi_size,
                                                                      self.external_progs['cpptraj'], self.pre)
+            if self.traj_protocol == 'MTP' and not self.numframes == rec_frames == lig_frames:
+                GMXMMPBSA_ERROR('The complex, receptor, and ligand trajectories must be the same length. Since v1.5.0 '
+                                'we have simplified a few things to make the code easier to maintain. Please check the '
+                                'documentation')
 
         self.MPI.COMM_WORLD.Barrier()
 
