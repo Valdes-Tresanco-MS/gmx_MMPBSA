@@ -85,6 +85,71 @@ class Residue(int):
     def issame(self, other):
         pass
 
+
+def res2map(com_ndx, com_file):
+    """
+    :param com_str:
+    :return:
+    """
+    # read the index file
+    ndx = {}
+    with open(com_ndx) as indexf:
+        header = None
+        for line in indexf:
+            if line.startswith('['):
+                header = line.strip('\n[] ')
+                ndx[header] = []
+            else:
+                ndx[header].extend(map(int, line.split()))
+
+    masks = {'REC': [], 'LIG': []}
+    res_list = {'REC': [], 'LIG': [], 'COM': []}
+    com_ndx = ndx['GMXMMPBSA_REC_GMXMMPBSA_LIG']
+    com_len = len(ndx['GMXMMPBSA_REC_GMXMMPBSA_LIG'])
+    com_str = parmed.load_file(com_file)
+
+    resindex = 1
+    proc_res = None
+    for i in range(com_len):
+        res = [com_str.atoms[i].residue.chain, com_str.atoms[i].residue.number, com_str.atoms[
+            i].residue.insertion_code]
+        # We check who owns the residue corresponding to this atom
+        if com_ndx[i] in ndx['GMXMMPBSA_REC']:
+            # save residue number in the rec list
+            if res != proc_res and resindex not in res_list['REC']:
+                res_list['REC'].append(Residue(resindex, com_str.atoms[i].residue.number,
+                                               com_str.atoms[i].residue.chain, 'REC', com_str.atoms[i].residue.name,
+                                               com_str.atoms[i].residue.insertion_code))
+                res_list['COM'].append(Residue(resindex, com_str.atoms[i].residue.number,
+                                               com_str.atoms[i].residue.chain, 'COM', com_str.atoms[i].residue.name,
+                                               com_str.atoms[i].residue.insertion_code))
+                resindex += 1
+                proc_res = res
+        # save residue number in the lig list
+        elif res != proc_res and resindex not in res_list['LIG']:
+                res_list['LIG'].append(Residue(resindex, com_str.atoms[i].residue.number,
+                                               com_str.atoms[i].residue.chain, 'LIG', com_str.atoms[i].residue.name,
+                                               com_str.atoms[i].residue.insertion_code))
+                res_list['COM'].append(Residue(resindex, com_str.atoms[i].residue.number,
+                                               com_str.atoms[i].residue.chain, 'COM', com_str.atoms[i].residue.name,
+                                               com_str.atoms[i].residue.insertion_code))
+                resindex += 1
+                proc_res = res
+
+    masks['REC'] = list2range(res_list['REC'])
+    masks['LIG'] = list2range(res_list['LIG'])
+
+    temp = []
+    for m, value in masks.items():
+        for e in value['num']:
+            v = e[0] if isinstance(e, list) else e
+            temp.append([v, m])
+    temp.sort(key=lambda x: x[0])
+    order_list = [c[1] for c in temp]
+
+    return masks, res_list, order_list, [ndx['GMXMMPBSA_REC'], ndx['GMXMMPBSA_LIG']]
+
+
 def get_dist(coor1, coor2):
     return sqrt((coor2[0] - coor1[0]) ** 2 + (coor2[1] - coor1[1]) ** 2 + (coor2[2] - coor1[2]) ** 2)
 

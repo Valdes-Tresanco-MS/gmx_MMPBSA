@@ -23,7 +23,7 @@ Generate Amber topology files from GROMACS files
 import os
 import parmed
 from GMXMMPBSA.exceptions import *
-from GMXMMPBSA.utils import checkff, selector, get_dist, list2range, Residue
+from GMXMMPBSA.utils import checkff, selector, get_dist, list2range, res2map
 from GMXMMPBSA.alamdcrd import _scaledistance
 import subprocess
 from pathlib import Path
@@ -301,7 +301,7 @@ class CheckMakeTop:
         self.receptor_str = self.molstr(self.receptor_str_file)
         self.ligand_str = self.molstr(self.ligand_str_file)
         self.check4water()
-        self.resi, self.resl, self.orderl, self.indexes = self.res2map()
+        self.resi, self.resl, self.orderl, self.indexes = res2map(self.FILES.complex_index, self.complex_str)
         self.fix_chains_IDs(self.complex_str, self.receptor_str, self.ligand_str, self.ref_str)
 
     def check4water(self):
@@ -651,69 +651,6 @@ class CheckMakeTop:
                                   "{}".format(*res))
         return sele_res
 
-    def res2map(self):
-        """
-
-        :param com_str:
-        :return:
-        """
-        # read the index file
-        ndx = {}
-        with open(self.FILES.complex_index) as indexf:
-            header = None
-            for line in indexf:
-                if line.startswith('['):
-                    header = line.strip('\n[] ')
-                    ndx[header] = []
-                else:
-                    ndx[header].extend(map(int, line.split()))
-        com_str = self.complex_str
-        order_list = []
-
-        masks = {'REC': [], 'LIG': []}
-        res_list = {'REC': [], 'LIG': [], 'COM': []}
-        com_ndx = ndx['GMXMMPBSA_REC_GMXMMPBSA_LIG']
-        com_len = len(ndx['GMXMMPBSA_REC_GMXMMPBSA_LIG'])
-        resindex = 1
-        proc_res = None
-        for i in range(com_len):
-            res = [com_str.atoms[i].residue.chain, com_str.atoms[i].residue.number, com_str.atoms[
-                i].residue.insertion_code]
-            # We check who owns the residue corresponding to this atom
-            if com_ndx[i] in ndx['GMXMMPBSA_REC']:
-                # save residue number in the rec list
-                if res != proc_res and resindex not in res_list['REC']:
-                    res_list['REC'].append(Residue(resindex, com_str.atoms[i].residue.number,
-                                                   com_str.atoms[i].residue.chain, 'REC', com_str.atoms[i].residue.name,
-                                                   com_str.atoms[i].residue.insertion_code))
-                    res_list['COM'].append(Residue(resindex, com_str.atoms[i].residue.number,
-                                                   com_str.atoms[i].residue.chain, 'COM', com_str.atoms[i].residue.name,
-                                                   com_str.atoms[i].residue.insertion_code))
-                    resindex += 1
-                    proc_res = res
-            # save residue number in the lig list
-            elif res != proc_res and resindex not in res_list['LIG']:
-                    res_list['LIG'].append(Residue(resindex, com_str.atoms[i].residue.number,
-                                                   com_str.atoms[i].residue.chain, 'LIG', com_str.atoms[i].residue.name,
-                                                   com_str.atoms[i].residue.insertion_code))
-                    res_list['COM'].append(Residue(resindex, com_str.atoms[i].residue.number,
-                                                   com_str.atoms[i].residue.chain, 'COM', com_str.atoms[i].residue.name,
-                                                   com_str.atoms[i].residue.insertion_code))
-                    resindex += 1
-                    proc_res = res
-
-        masks['REC'] = list2range(res_list['REC'])
-        masks['LIG'] = list2range(res_list['LIG'])
-
-        temp = []
-        for m, value in masks.items():
-            for e in value['num']:
-                v = e[0] if isinstance(e, list) else e
-                temp.append([v, m])
-        temp.sort(key=lambda x: x[0])
-        order_list = [c[1] for c in temp]
-
-        return masks, res_list, order_list, [ndx['GMXMMPBSA_REC'], ndx['GMXMMPBSA_LIG']]
 
     def fixparm2amber(self, structure, removeH=False):
 
