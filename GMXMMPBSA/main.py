@@ -949,11 +949,8 @@ class MMPBSA_App(object):
         # Only the master does this
         if not self.master:
             return
-        self.calc_types = type('calc_types', (dict,), {})()
+        self.calc_types = type('calc_types', (dict,), {'mutant': {}, 'decomp': {}})()
         INPUT, FILES = self.INPUT, self.FILES
-        # Mutant will also be a dict
-        if INPUT['alarun']:
-            self.calc_types.mutant = {}
         # Quasi-harmonic analysis is a special-case, so handle that separately
         if INPUT['qh_entropy']:
             if not INPUT['mutant_only']:
@@ -1123,7 +1120,7 @@ class MMPBSA_App(object):
                         r.name = INPUT['mutant']
                         break
 
-        return_data = type('calc_types', (dict,), {})()
+        return_data = type('calc_types', (dict,), {'mutant': {}})()
         for i, key in enumerate(outkey):
             if not INPUT[triggers[i]]:
                 continue
@@ -1144,7 +1141,6 @@ class MMPBSA_App(object):
 
             if INPUT['alarun']:
                 # Do mutant
-                return_data.mutant = {}
                 return_data.mutant[key] = {'complex': SingleClass(self.pre + 'mutant_' + basename[i] % 'complex',
                                                            self.FILES.complex_prmtop, INPUT['surften'],
                                                            False, self.mpi_size, INPUT['dec_verbose']).get_data(

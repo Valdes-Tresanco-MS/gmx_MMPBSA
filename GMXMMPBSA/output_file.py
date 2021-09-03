@@ -88,14 +88,14 @@ def data2h5(app):
     f = h5py.File('RESULTS_gmx_MMPBSA.h5', 'w')
 
     _e2h5(app.calc_types, f)
-    if hasattr(app.calc_types, 'decomp'):
+    if app.calc_types.decomp:
         grp = f.create_group('decomp')
         _decomp2h5(app.calc_types.decomp, grp)
 
-    if hasattr(app.calc_types, 'mutant'):
+    if app.calc_types.mutant:
         grp = f.create_group('mutant')
         _e2h5(app.calc_types.mutant, grp)
-        if hasattr(app.calc_types, 'decomp'):
+        if app.calc_types.decomp:
             grp2 = grp.create_group('decomp')
             _decomp2h5(app.calc_types.decomp.mutant, grp2)
     f.close()
