@@ -1021,7 +1021,7 @@ class MMPBSA_App(object):
                             edata = self.calc_types[key]['delta'].data['DELTA G gas']
                             ie = InteractionEntropyCalc(edata, self,
                                                         self.pre + f"{key.replace(' ', '_')}_iteraction_entropy.dat")
-                            self.calc_types['ie'].data[key] = {'data': ie.data, 'iedata': ie.iedata, 'frames': ie.frames,
+                            self.calc_types['ie'].data[key] = {'data': ie.data, 'iedata': ie.iedata,
                                                                'ieframes': ie.ieframes, 'sigma': ie.ie_std}
                         if 'c2' in self.calc_types:
                             edata = self.calc_types[key]['delta'].data['DELTA G gas']
@@ -1054,8 +1054,7 @@ class MMPBSA_App(object):
                             mie = InteractionEntropyCalc(edata, self, self.pre + 'mutant_' +
                                                          f"{key.replace(' ', '_')}_iteraction_entropy.dat")
                             self.calc_types.mutant['ie'].data[key] = {'data': mie.data, 'iedata': mie.iedata,
-                                                                      'frames': mie.frames,
-                                                               'ieframes': mie.ieframes, 'sigma': mie.ie_std}
+                                                                      'ieframes': mie.ieframes, 'sigma': mie.ie_std}
                         if 'c2' in self.calc_types.mutant:
                             edata = self.calc_types.mutant[key]['delta'].data['DELTA G gas']
                             c2 = C2EntropyCalc(edata, self, self.pre + 'mutant_' +

@@ -328,9 +328,9 @@ class IEout(object):
         for model in self.data:
             self.data[model]['iedata'] = EnergyVector(self.data[model]['iedata'])
             stdev = self.data[model]['iedata'].stdev()
+            avg = self.data[model]['iedata'].avg()
             ret_str += '%-14s %10.3f %16.3f %15.3f %19.3f\n' % (model, self.data[model]['sigma'],
-                                                                self.data[model]['iedata'].avg(), stdev,
-                                                     stdev/sqrt(len(self.data[model]['iedata'])))
+                                                                avg, stdev, stdev/sqrt(len(self.data[model]['iedata'])))
         return ret_str
 
 #-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
