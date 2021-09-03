@@ -601,16 +601,17 @@ class CheckMakeTop:
         rec_mask = ':' + ','.join(self.resi['REC']['string'])
         lig_mask = ':' + ','.join(self.resi['LIG']['string'])
 
-        # to change the self.resl to get the mutant label in decomp analysis
-        self.resl['MUT_COM'] = deepcopy(self.resl['COM'])
-        self.resl['MUT_COM'][self.com_mut_index].name = self.INPUT['mutant']
-        # self.com_mut_index, self.part_mut, self.part_index,
-        self.resl['MUT_REC'] = deepcopy(self.resl['REC'])
-        self.resl['MUT_LIG'] = deepcopy(self.resl['LIG'])
-        if self.part_mut == 'REC':
-            self.resl['MUT_REC'][self.part_index].name = self.INPUT['mutant']
-        else:
-            self.resl['MUT_LIG'][self.part_index].name = self.INPUT['mutant']
+        if self.INPUT['alarun']:
+            # to change the self.resl to get the mutant label in decomp analysis
+            self.resl['MUT_COM'] = deepcopy(self.resl['COM'])
+            self.resl['MUT_COM'][self.com_mut_index].name = self.INPUT['mutant']
+            # self.com_mut_index, self.part_mut, self.part_index,
+            self.resl['MUT_REC'] = deepcopy(self.resl['REC'])
+            self.resl['MUT_LIG'] = deepcopy(self.resl['LIG'])
+            if self.part_mut == 'REC':
+                self.resl['MUT_REC'][self.part_index].name = self.INPUT['mutant']
+            else:
+                self.resl['MUT_LIG'][self.part_index].name = self.INPUT['mutant']
 
         return rec_mask, lig_mask, self.resl
 
