@@ -1092,6 +1092,33 @@ class MMPBSA_App(object):
                 BindingClass = MultiTrajPairDecompBinding
                 SingleClass = PairDecompOut
 
+        if not hasattr(self, 'resl'):
+            from GMXMMPBSA.utils import res2map
+            from copy import deepcopy
+            import re
+            masks, res_list, order_list, _ = res2map(FILES.complex_index, FILES.complex_fixed)
+            self.resl = res_list
+
+            if INPUT['alarun']:
+                # to change the self.resl to get the mutant label in decomp analysis
+                mut = re.split(r":\s*|/\s*", INPUT['mutant_res'])
+
+                self.resl['MUT_COM'] = deepcopy(self.resl['COM'])
+                for r in self.resl['MUT_COM']:
+                    if r.string.split(':')[0::2] == mut:
+                        r.name = INPUT['mutant']
+                        break
+                self.resl['MUT_REC'] = deepcopy(self.resl['REC'])
+                self.resl['MUT_LIG'] = deepcopy(self.resl['LIG'])
+                for r in self.resl['MUT_REC']:
+                    if r.string.split(':')[0::2] == mut:
+                        r.name = INPUT['mutant']
+                        break
+                for r in self.resl['MUT_LIG']:
+                    if r.string.split(':')[0::2] == mut:
+                        r.name = INPUT['mutant']
+                        break
+
         return_data = type('calc_types', (dict,), {})()
         for i, key in enumerate(outkey):
             if not INPUT[triggers[i]]:
@@ -1099,15 +1126,15 @@ class MMPBSA_App(object):
             if not self.INPUT['mutant_only']:
                 # Do normal GB
                 return_data[key] = {'complex': SingleClass(self.pre + basename[i] % 'complex',
-                                 self.normal_system.complex_prmtop, INPUT['surften'],
+                                 self.FILES.complex_prmtop, INPUT['surften'],
                                  False, self.mpi_size, INPUT['dec_verbose']).get_data(self.numframes, self.resl['COM'])}
                 if not self.stability:
                     return_data[key]['receptor'] = SingleClass(self.pre + basename[i] % 'receptor',
-                                                               self.normal_system.receptor_prmtop, INPUT['surften'],
+                                                               self.FILES.receptor_prmtop, INPUT['surften'],
                                                                False, self.mpi_size, INPUT['dec_verbose']).get_data(
                         self.numframes, self.resl['REC'])
                     return_data[key]['ligand'] = SingleClass(self.pre + basename[i] % 'ligand',
-                                                               self.normal_system.ligand_prmtop, INPUT['surften'],
+                                                               self.FILES.ligand_prmtop, INPUT['surften'],
                                                                False, self.mpi_size, INPUT['dec_verbose']).get_data(
                         self.numframes, self.resl['LIG'])
 
@@ -1115,16 +1142,16 @@ class MMPBSA_App(object):
                 # Do mutant
                 return_data.mutant = {}
                 return_data.mutant[key] = {'complex': SingleClass(self.pre + 'mutant_' + basename[i] % 'complex',
-                                                           self.normal_system.complex_prmtop, INPUT['surften'],
+                                                           self.FILES.complex_prmtop, INPUT['surften'],
                                                            False, self.mpi_size, INPUT['dec_verbose']).get_data(
                     self.numframes, self.resl['MUT_COM'])}
                 if not self.stability:
                     return_data.mutant[key]['receptor'] = SingleClass(self.pre + 'mutant_' + basename[i] % 'receptor',
-                                                               self.normal_system.receptor_prmtop, INPUT['surften'],
+                                                               self.FILES.receptor_prmtop, INPUT['surften'],
                                                                False, self.mpi_size, INPUT['dec_verbose']).get_data(
                         self.numframes, self.resl['MUT_REC'])
                     return_data.mutant[key]['ligand'] = SingleClass(self.pre + 'mutant_' + basename[i] % 'ligand',
-                                                             self.normal_system.ligand_prmtop, INPUT['surften'],
+                                                             self.FILES.ligand_prmtop, INPUT['surften'],
                                                              False, self.mpi_size, INPUT['dec_verbose']).get_data(
                         self.numframes, self.resl['MUT_LIG'])
         return return_data
