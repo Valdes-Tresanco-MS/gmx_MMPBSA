@@ -39,6 +39,7 @@ import logging
 from string import ascii_letters
 from GMXMMPBSA.exceptions import GMXMMPBSA_ERROR, GMXMMPBSA_WARNING
 from math import sqrt
+import parmed
 
 
 class Residue(int):
