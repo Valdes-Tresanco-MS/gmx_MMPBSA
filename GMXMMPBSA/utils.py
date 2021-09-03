@@ -107,7 +107,10 @@ def res2map(com_ndx, com_file):
     res_list = {'REC': [], 'LIG': [], 'COM': []}
     com_ndx = ndx['GMXMMPBSA_REC_GMXMMPBSA_LIG']
     com_len = len(ndx['GMXMMPBSA_REC_GMXMMPBSA_LIG'])
-    com_str = parmed.load_file(com_file)
+    if isinstance(com_file, parmed.Structure):
+        com_str = com_file
+    else:
+        com_str = parmed.load_file(com_file)
 
     resindex = 1
     proc_res = None
