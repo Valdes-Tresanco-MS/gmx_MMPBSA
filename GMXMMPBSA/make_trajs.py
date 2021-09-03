@@ -70,7 +70,9 @@ def make_trajectories(INPUT, FILES, size, cpptraj, pre):
     # RMS fit
     traj.rms('!(%s)' % INPUT['strip_mask'])
 
-    num_frames_total = int(traj.processed_frames)
+    com_frames = int(traj.processed_frames)
+    rec_frames = 0
+    lig_frames = 0
     num_frames_nmode = 0
 
     # Sanity check
@@ -147,6 +149,7 @@ def make_trajectories(INPUT, FILES, size, cpptraj, pre):
         # else:
         rectraj = Trajectory(FILES.receptor_prmtop, FILES.receptor_trajs, cpptraj)
         rectraj.Setup(INPUT['startframe'], INPUT['endframe'], INPUT['interval'])
+        rec_frames = int(rectraj.processed_frames)
         rectraj.rms('!(%s)' % INPUT['strip_mask'])
         if INPUT['full_traj'] or INPUT['qh_entropy']:
             rectraj.Outtraj(pre + 'receptor.%s' % trj_suffix,
@@ -185,6 +188,7 @@ def make_trajectories(INPUT, FILES, size, cpptraj, pre):
         # else:
         ligtraj = Trajectory(FILES.ligand_prmtop, FILES.ligand_trajs, cpptraj)
         ligtraj.Setup(INPUT['startframe'], INPUT['endframe'], INPUT['interval'])
+        lig_frames = int(ligtraj.processed_frames)
         ligtraj.rms('!(%s)' % INPUT['strip_mask'])
         ligtraj.Outtraj(pre + 'ligand.%s' % trj_suffix, filetype=INPUT['netcdf'])
         ligtraj.Outtraj(pre + 'ligand.pdb', frames='1', filetype='pdb')
@@ -283,8 +287,7 @@ def make_trajectories(INPUT, FILES, size, cpptraj, pre):
         # end if not stability
 
     # end if INPUT['nmoderun']
-
-    return num_frames_total, num_frames_nmode
+    return com_frames, rec_frames, lig_frames, num_frames_nmode
 
 
 # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
