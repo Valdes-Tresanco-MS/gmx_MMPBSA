@@ -89,8 +89,9 @@ printed, which aids in debugging of issues. (Default = 0) (Advanced Option)
      * 0: Don’t
      * 1: perform IE
 
-    !!! tip "Keep in mind"
-        - The standard deviation of the interaction energy (σIE) should always be reported.
+    !!! warning "Keep in mind"
+        - The standard deviation of the interaction energy (σIE) should always be reported when using the Interaction 
+        Entropy method.
         - The Interaction Entropy method should be avoided if σIE > ~ 3.6 kcal/mol because it is impossible to 
         converge the exponential average.
         - It is advisable to study how the Interaction Entropy depends on N by block averaging (which also provide an 
@@ -139,7 +140,7 @@ printed, which aids in debugging of issues. (Default = 0) (Advanced Option)
      * 0: Don’t
      * 1: perform C2
 
-    !!! tip "Keep in mind"
+    !!! warning "Keep in mind"
         - The standard deviation of the interaction energy (σIE) should always be reported.
         - The C2 Entropy method should be avoided if σIE > ~ 6 kcal/mol because it gives unrealistically large entropies.
         - It is advisable to study how the C2 Entropy depends on N by block averaging (which also provide an 
