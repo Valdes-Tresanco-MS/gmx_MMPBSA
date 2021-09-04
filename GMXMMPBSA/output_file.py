@@ -526,8 +526,10 @@ def write_binding_output(app):
                                          f"DELTA G binding = {d:9.4f} +/- {s:7.4f}\n")
             if INPUT['c2_entropy']:
                 d, s = c2norm.sum(sys_norm, key, 'c2data', 'DELTA TOTAL')
+                # since s is the stdev of sys_norm we need to calculate the stdev of the sum
+                std = sqrt(c2norm.data[key]['c2_std']**2 + s**2)
                 final_output.add_section(f"Using C2 Entropy Approximation:\n"
-                                         f"DELTA G binding = {d:9.4f} +/- {s:7.4f}\n")
+                                         f"DELTA G binding = {d:9.4f} +/- {std:7.4f}\n")
             if INPUT['nmoderun']:
                 davg, dstdev = sys_norm.diff(nm_sys_norm, 'DELTA TOTAL', 'Total')
                 final_output.add_section('Using Normal Mode Entropy Approximation:\n'
@@ -559,8 +561,10 @@ def write_binding_output(app):
                                          f"DELTA G binding = {d:9.4f} +/- {s:7.4f}\n")
             if INPUT['c2_entropy']:
                 d, s = c2mutant.sum(sys_mut, key, 'c2data', 'DELTA TOTAL')
+                # since s is the stdev of sys_mut we need to calculate the stdev of the sum
+                std = sqrt(c2mutant.data[key]['c2_std'] ** 2 + s ** 2)
                 final_output.add_section(f"Using C2 Entropy Approximation:\n"
-                                         f"DELTA G binding = {d:9.4f} +/- {s:7.4f}\n")
+                                         f"DELTA G binding = {d:9.4f} +/- {std:7.4f}\n")
             if INPUT['nmoderun']:
                 davg, dstdev = sys_mut.diff(nm_sys_mut, 'DELTA TOTAL', 'Total')
                 final_output.add_section('Using Normal Mode Entropy Approximation:\n'
