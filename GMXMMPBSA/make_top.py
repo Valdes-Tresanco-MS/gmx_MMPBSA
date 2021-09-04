@@ -65,7 +65,7 @@ class CheckMakeTop:
         self.use_temp = False
         self.log = open('gmx_MMPBSA.log', 'a')
 
-        self.mut_label = None
+        self.mut_label = ''
 
         # Define Gromacs executable
         self.make_ndx = self.external_progs['make_ndx']

@@ -22,6 +22,7 @@ statistics printing.
 # ##############################################################################
 
 import io
+import numpy as np
 from GMXMMPBSA.amber_outputs import EnergyVector
 from GMXMMPBSA.exceptions import LengthError, GMXMMPBSA_WARNING
 from GMXMMPBSA import utils
@@ -30,78 +31,108 @@ from os import linesep as ls
 import h5py
 
 
-def _e2h5(d, f):
-
-    # key  Energy: [gb, pb, rism std, rism gf], Decomp: [gb, pb], Entropy: [nmode, qh, ie, c2]
-    for key in d:
-        if key in ['gb', 'pb', 'rism std', 'rism gf']:
-            grp = f.create_group(key)
-            # key2 is complex, receptor, ligand, delta
-            for key2 in d[key]:
-                grp2 = grp.create_group(key2)
-                # complex, receptor, etc., is a class and the data is contained in the attribute data
-                for key3 in d[key][key2].data:
-                    dset = grp2.create_dataset(key3, data=d[key][key2].data[key3])
-        elif key in ['nmode', 'qh']:
-            grp = f.create_group(key)
-            # key2 is complex, receptor, ligand, delta
-            for key2 in d[key]:
-                grp2 = grp.create_group(key2)
-                for key3 in d[key][key2]:
-                    dset = grp2.create_dataset(key3, data=d[key][key2][key3])
-        elif key in ['ie', 'c2']:
-            grp = f.create_group(key)
-            # key2 is PB, GB or RISM?
-            for key2 in d[key].data:
-                grp2 = grp.create_group(key2)
-                for key3 in d[key].data[key2]:
-                    dset = grp2.create_dataset(key3, data=d[key].data[key2][key3])
-
-def _decomp2h5(d, f):
-    for key in d:
-        # model
-        grp = f.create_group(key)
-        # key2 is complex, receptor, ligand, delta
-        for key2 in d[key]:
-            grp2 = grp.create_group(key2)
-            # TDC, SDC, BDC
-            for key3 in d[key][key2]:
-                grp3 = grp2.create_group(key3)
-                # residue first level
-                for key4 in d[key][key2][key3]:
-                    grp4 = grp3.create_group(key4)
-                    if isinstance(d[key][key2][key3][key4], dict):
-                        # residue sec level
-                        for key5 in d[key][key2][key3][key4]:
-                            grp5 = grp4.create_group(key5)
-                            # energy terms
-                            for key6 in d[key][key2][key3][key4][key5]:
-                                dset = grp5.create_dataset(key6, data=d[key][key2][key3][key4][key5][key6])
-                    else:
-                        # energy terms
-                        for key5 in d[key][key2][key3][key4]:
-                            dset = grp4.create_dataset(key5, data=d[key][key2][key3][key4][key5])
-            # complex, receptor, etc., is a class and the data is contained in the attribute data
-
-def data2h5(app):
-
-    f = h5py.File('RESULTS_gmx_MMPBSA.h5', 'w')
-
-    _e2h5(app.calc_types, f)
-    if app.calc_types.decomp:
-        grp = f.create_group('decomp')
-        _decomp2h5(app.calc_types.decomp, grp)
-
-    if app.calc_types.mutant:
-        grp = f.create_group('mutant')
-        _e2h5(app.calc_types.mutant, grp)
+class Data2h5:
+    def __init__(self, app):
+        self.app = app
+        self.h5f = h5py.File('RESULTS_gmx_MMPBSA.h5', 'w')
+        self._e2h5(app.calc_types, self.h5f)
         if app.calc_types.decomp:
-            grp2 = grp.create_group('decomp')
-            _decomp2h5(app.calc_types.decomp.mutant, grp2)
-    f.close()
+            grp = self.h5f.create_group('decomp')
+            self._decomp2h5(app.calc_types.decomp, grp)
+        if app.calc_types.mutant:
+            grp = self.h5f.create_group('mutant')
+            self._e2h5(app.calc_types.mutant, grp)
+            if app.calc_types.decomp:
+                grp2 = grp.create_group('decomp')
+                self._decomp2h5(app.calc_types.decomp.mutant, grp2)
+        self._info2h5()
 
+    def _info2h5(self):
+        grp = self.h5f.create_group('INPUT')
+        for x in self.app.INPUT:
+            data = self.app.INPUT[x] if self.app.INPUT[x] else np.nan
+            dset = grp.create_dataset(x, data=data)
 
+        grp = self.h5f.create_group('FILES')
+        for x in dir(self.app.FILES):
+            if x.startswith('_'):
+                continue
+            d = getattr(self.app.FILES, x)
+            data = d if d else np.nan
+            dset = grp.create_dataset(x, data=data)
 
+        grp = self.h5f.create_group('INFO')
+        dset = grp.create_dataset('size', data=self.app.mpi_size)
+        dset = grp.create_dataset('numframes', data=self.app.numframes)
+        dset = grp.create_dataset('numframes_nmode', data=self.app.numframes_nmode)
+        dset = grp.create_dataset('mut_str', data=self.app.mut_str)
+        dset = grp.create_dataset('using_chamber', data=self.app.using_chamber)
+        dset = grp.create_dataset('input_file', data=self.app.input_file_text)
+
+        # save the complex fixed structure
+        com_fixed = ''.join(open(self.app.FILES.complex_fixed).readlines())
+        dset = grp.create_dataset('COM_PDB', data=com_fixed)
+
+        # get output files
+        outfile = ''.join(open(self.app.FILES.output_file).readlines())
+        dset = grp.create_dataset('output_file', data=outfile)
+        if self.app.INPUT['decomprun']:
+            doutfile = ''.join(open(self.app.FILES.decompout).readlines())
+            dset = grp.create_dataset('decomp_output_file', data=doutfile)
+
+    @staticmethod
+    def _e2h5(d, f):
+        # key  Energy: [gb, pb, rism std, rism gf], Decomp: [gb, pb], Entropy: [nmode, qh, ie, c2]
+        for key in d:
+            if key in ['gb', 'pb', 'rism std', 'rism gf']:
+                grp = f.create_group(key)
+                # key2 is complex, receptor, ligand, delta
+                for key2 in d[key]:
+                    grp2 = grp.create_group(key2)
+                    # complex, receptor, etc., is a class and the data is contained in the attribute data
+                    for key3 in d[key][key2].data:
+                        dset = grp2.create_dataset(key3, data=d[key][key2].data[key3])
+            elif key in ['nmode', 'qh']:
+                grp = f.create_group(key)
+                # key2 is complex, receptor, ligand, delta
+                for key2 in d[key]:
+                    grp2 = grp.create_group(key2)
+                    for key3 in d[key][key2]:
+                        dset = grp2.create_dataset(key3, data=d[key][key2][key3])
+            elif key in ['ie', 'c2']:
+                grp = f.create_group(key)
+                # key2 is PB, GB or RISM?
+                for key2 in d[key].data:
+                    grp2 = grp.create_group(key2)
+                    for key3 in d[key].data[key2]:
+                        dset = grp2.create_dataset(key3, data=d[key].data[key2][key3])
+
+    @staticmethod
+    def _decomp2h5(d, g):
+        for key in d:
+            # model
+            grp = g.create_group(key)
+            # key2 is complex, receptor, ligand, delta
+            for key2 in d[key]:
+                grp2 = grp.create_group(key2)
+                # TDC, SDC, BDC
+                for key3 in d[key][key2]:
+                    grp3 = grp2.create_group(key3)
+                    # residue first level
+                    for key4 in d[key][key2][key3]:
+                        grp4 = grp3.create_group(key4)
+                        if isinstance(d[key][key2][key3][key4], dict):
+                            # residue sec level
+                            for key5 in d[key][key2][key3][key4]:
+                                grp5 = grp4.create_group(key5)
+                                # energy terms
+                                for key6 in d[key][key2][key3][key4][key5]:
+                                    dset = grp5.create_dataset(key6, data=d[key][key2][key3][key4][key5][key6])
+                        else:
+                            # energy terms
+                            for key5 in d[key][key2][key3][key4]:
+                                dset = grp4.create_dataset(key5, data=d[key][key2][key3][key4][key5])
+                # complex, receptor, etc., is a class and the data is contained in the attribute data
 
 # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 

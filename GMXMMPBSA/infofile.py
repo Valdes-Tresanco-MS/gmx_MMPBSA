@@ -156,6 +156,8 @@ class InfoFile(object):
         """
         if isinstance(var, str):
             return "'%s'" % var
+        elif isinstance(var, list):
+            return "'%s'" % ', '.join([str(x) for x in var])
         else:
             return "%s" % var
 
