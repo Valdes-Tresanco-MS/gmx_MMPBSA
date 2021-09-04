@@ -46,19 +46,21 @@ class Data2h5:
                 grp2 = grp.create_group('decomp')
                 self._decomp2h5(app.calc_types.decomp.mutant, grp2)
         self._info2h5()
+        self.h5f.close()
 
     def _info2h5(self):
         grp = self.h5f.create_group('INPUT')
         for x in self.app.INPUT:
-            data = self.app.INPUT[x] if self.app.INPUT[x] else np.nan
+            data =  np.nan if self.app.INPUT[x] is None else self.app.INPUT[x]
             dset = grp.create_dataset(x, data=data)
 
         grp = self.h5f.create_group('FILES')
         for x in dir(self.app.FILES):
-            if x.startswith('_'):
+            # this must be equal to the info saved in the info file
+            if x.startswith('_') or x in ('rewrite_output', 'energyout', 'dec_energies', 'overwrite'):
                 continue
             d = getattr(self.app.FILES, x)
-            data = d if d else np.nan
+            data = np.nan if d is None else d
             dset = grp.create_dataset(x, data=data)
 
         grp = self.h5f.create_group('INFO')
@@ -97,6 +99,7 @@ class Data2h5:
                 # key2 is complex, receptor, ligand, delta
                 for key2 in d[key]:
                     grp2 = grp.create_group(key2)
+                    # vibrational, translational, rotational, total
                     for key3 in d[key][key2]:
                         dset = grp2.create_dataset(key3, data=d[key][key2][key3])
             elif key in ['ie', 'c2']:
