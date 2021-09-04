@@ -81,11 +81,9 @@ class InfoFile(object):
         # Now print out the FILES
         for var in dir(self.app.FILES):
             # Skip over __method__ functions and output files
-            if var.startswith('_') or var in ('rewrite_output', 'output_file',
-                                              'decompout', 'energyout', 'dec_energies', 'overwrite'):
+            if var.startswith('_') or var in ('rewrite_output', 'energyout', 'dec_energies', 'overwrite'):
                 continue
-            outfile.write("FILES.%s = %s\n" % (var,
-                                               self.write_var(getattr(self.app.FILES, var))))
+            outfile.write("FILES.%s = %s\n" % (var, self.write_var(getattr(self.app.FILES, var))))
 
         # Now print out the attributes we need to save
         outfile.write('size = %d\n' % self.app.mpi_size)

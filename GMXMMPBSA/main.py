@@ -1126,7 +1126,6 @@ class MMPBSA_App(object):
             if not INPUT[triggers[i]]:
                 continue
             if not self.INPUT['mutant_only']:
-                # Do normal GB
                 return_data[key] = {'complex': SingleClass(self.pre + basename[i] % 'complex',
                                  self.FILES.complex_prmtop, INPUT['surften'],
                                  False, self.mpi_size, INPUT['dec_verbose']).get_data(self.numframes, self.resl['COM'])}
