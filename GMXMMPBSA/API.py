@@ -135,83 +135,168 @@ class H52Data:
                             for key5 in d[key][key2][key3][key4]:
                                 calc_types[key][key2][(key3, key4, key5)] = d[key][key2][key3][key4][key5][()]
 
-    mut_com_res_info = []
-    mut_com = mut_rec.copy()
-    mut_com.update(mut_lig)
-    for key, value in sorted(mut_com.items()):
-        mut_com_res_info.append(value)
 
-    mut_rec_res_info = []
-    for key, value in mut_rec.items():
-        mut_rec_res_info.append(value)
+class DataMMPBSA:
+    """ Main class that holds all of the Free Energy data """
 
-    mut_lig_res_info = []
-    for key, value in mut_lig.items():
-        mut_lig_res_info.append(value)
+    def __init__(self):
+        self.frames = []
+        self.app_namespace = SimpleNamespace()
+        self.data = {'mutant': {}, 'decomp': {'mutant': {}}}
 
-    if not app.INPUT['alarun']:
-        return_data.mutant = {}
-    if app.INPUT['decomprun']:
-        # Simplify the decomp class instance creation
-        if app.INPUT['idecomp'] in (1, 2):
-            DecompClass = lambda x, part: APIDecompOut(x, part, app)
-        else:
-            DecompClass = lambda x, part: APIPairDecompOut(x, part, app)
+    def get_fromH5(self, h5file):
 
-        if not app.INPUT['mutant_only']:
-            # Do normal GB
-            if app.INPUT['gbrun']:
-                return_data['decomp'] = {'gb' : {}}
-                return_data['decomp']['gb']['complex'] = DecompClass(app.FILES.prefix + 'complex_gb.mdout',
-                                                                     com_res_info).array_data
+        h5file = H52Data(h5file)
+        self.app_namespace = h5file.app_namespace
+        self._get_data(h5file)
 
-                if not app.stability:
-                    return_data['decomp']['gb']['receptor'] = DecompClass(app.FILES.prefix + 'receptor_gb.mdout',
-                                                                          rec_res_info).array_data
-                    return_data['decomp']['gb']['ligand'] = DecompClass(app.FILES.prefix + 'ligand_gb.mdout',
-                                                                        lig_res_info).array_data
-                    return_data['decomp']['gb']['delta'] = get_delta_decomp(app, 'gb', return_data['decomp'])
-            # Do normal PB
-            if app.INPUT['pbrun']:
-                return_data['decomp'] = {'pb' : {}}
-                return_data['decomp']['pb']['complex'] = DecompClass(app.FILES.prefix + 'complex_pb.mdout',
-                                                                     com_res_info).array_data
-                if not app.stability:
-                    return_data['decomp']['pb']['receptor'] = DecompClass(app.FILES.prefix + 'receptor_pb.mdout',
-                                                                          rec_res_info).array_data
-                    return_data['decomp']['pb']['ligand'] = DecompClass(app.FILES.prefix + 'ligand_pb.mdout',
-                                                                        lig_res_info).array_data
-                    return_data['decomp']['pb']['delta'] = get_delta_decomp(app, 'pb', return_data['decomp'])
-        if app.INPUT['alarun']:
-            # Do mutant GB
-            if app.INPUT['gbrun']:
-                return_data.mutant['decomp'] = {'gb' : {}}
-                return_data.mutant['decomp']['gb']['complex'] = DecompClass(
-                    app.FILES.prefix + 'mutant_complex_gb.mdout', mut_com_res_info).array_data
-                if not app.stability:
-                    return_data.mutant['decomp']['gb']['receptor'] = DecompClass(
-                        app.FILES.prefix + 'mutant_receptor_gb.mdout', mut_rec_res_info).array_data
-                    return_data.mutant['decomp']['gb']['ligand'] = DecompClass(
-                        app.FILES.prefix + 'mutant_ligand_gb.mdout', mut_lig_res_info).array_data
-                    return_data.mutant['decomp']['gb']['delta'] = get_delta_decomp(app, 'gb',
-                                                                                   return_data.mutant['decomp'])
-            # Do mutant PB
-            if app.INPUT['pbrun']:
-                return_data.mutant['decomp'] = {'pb' : {}}
-                return_data.mutant['decomp']['pb']['complex'] = DecompClass(
-                    app.FILES.prefix + 'mutant_complex_pb.mdout', mut_com_res_info).array_data
-                if not app.stability:
-                    return_data.mutant['decomp']['pb']['receptor'] = DecompClass(
-                        app.FILES.prefix + 'mutant_receptor_pb.mdout', mut_rec_res_info).array_data
-                    return_data.mutant['decomp']['pb']['ligand'] = DecompClass(
-                        app.FILES.prefix + 'mutant_ligand_pb.mdout', mut_lig_res_info).array_data
-                    return_data.mutant['decomp']['pb']['delta'] = get_delta_decomp(app, 'pb',
-                                                                                   return_data.mutant['decomp'])
-        else:
-            return_data.mutant = None
+    def get_fromApp(self, ifile):
 
-    app_namespace = SimpleNamespace(FILES=app.FILES, INPUT=app.INPUT, numframes=app.numframes,
-                                    numframes_nmode=app.numframes_nmode)
+        app = main.MMPBSA_App(MPI)
+        info = infofile.InfoFile(app)
+        info.read_info(ifile)
+        app.normal_system = app.mutant_system = None
+        app.parse_output_files()
+        self.app_namespace = self._get_namespace(app)
+        self._get_data(app)
 
-    return return_data, app_namespace
+    @staticmethod
+    def _get_namespace(app):
+
+        input_file_text = ('|Input file:\n|--------------------------------------------------------------\n|'
+                           + ''.join(open(app.FILES.input_file).readlines()).replace('\n', '\n|') +
+                           '--------------------------------------------------------------\n')
+        INFO = {'COM_PDB': ''.join(open(app.FILES.complex_fixed).readlines()),
+                'input_file': input_file_text,
+                'mut_str': app.mut_str,
+                'numframes': app.numframes,
+                'numframes_nmode': app.numframes_nmode,
+                'output_file': ''.join(open(app.FILES.output_file).readlines()),
+                'size': app.mpi_size,
+                'using_chamber': app.using_chamber}
+        if app.INPUT['decomprun']:
+            INFO['decomp_output_file'] = ''.join(open(app.FILES.decompout).readlines())
+
+        return SimpleNamespace(FILES=app.FILES, INPUT=app.INPUT, INFO=INFO)
+
+    def _get_data(self, data_object: Union[H52Data, main.MMPBSA_App]):
+        # check the data_object type
+        h5 = True if isinstance(data_object, H52Data) else False
+        INPUT = self.app_namespace.INPUT
+        numframes = self.app_namespace.INFO['numframes']
+        numframes_nmode = self.app_namespace.INFO['numframes_nmode']
+        # See if we are doing stability
+        self.stability = self.app_namespace.FILES.stability
+
+        # Now load the data into the dict
+        self.frames = [x for x in range(INPUT['startframe'],
+                                        INPUT['startframe'] + numframes * INPUT['interval'],
+                                        INPUT['interval'])]
+        self.nmode_frames = [x for x in range(INPUT['nmstartframe'],
+                                              INPUT['nmstartframe'] + numframes_nmode * INPUT['interval'],
+                                              INPUT['interval'])]
+        # Now load the data
+        if not INPUT['mutant_only']:
+            self._get_edata(data_object.calc_types, h5)
+            if INPUT['decomprun']:
+                self._get_ddata(data_object.calc_types.decomp, h5)
+        # Are we doing a mutant?
+        if data_object.calc_types.mutant:
+            self._get_edata(data_object.calc_types.mutant, h5, True)
+            if INPUT['decomprun']:
+                self._get_ddata(data_object.calc_types.decomp.mutant, h5, True)
+
+    def _get_edata(self, calc_types, h5=False, mut=False):
+
+        data = self.data['mutant'] if mut else self.data
+        for key in calc_types:
+            if key in ['ie', 'c2']:
+                # since the model data object in MMPBSA_App contain the data in the attribute data and H5 not,
+                # we need to define a conditional object
+                calc_type_data = calc_types[key] if h5 else calc_types[key].data
+                data[key] = {}
+                if key == 'ie':
+                    for iekey in calc_type_data:
+                        data[key][iekey] = {
+                            'data': pd.DataFrame(calc_type_data[iekey]['data'], columns=['data'],
+                                                 index=self.frames),
+                            'iedata': pd.DataFrame(calc_type_data[iekey]['iedata'], columns=['iedata'],
+                                                   index=self.frames[-calc_type_data[iekey]['ieframes']:]),
+                            'ieframes': calc_type_data[iekey]['ieframes'],
+                            'sigma': calc_type_data[iekey]['sigma']}
+                else:
+                    for c2key in calc_type_data:
+                        data[key][c2key] = {'c2data': calc_type_data[c2key]['c2data'],
+                                            'sigma': calc_type_data[c2key]['sigma'],
+                                            'c2_std': calc_type_data[c2key]['c2_std'],
+                                            'c2_ci': calc_type_data[c2key]['c2_ci']}
+            else:
+                # Since the energy models have the same structure as nmode and qh, we only need to worry about
+                # correctly defining the Dataframe index, that is, the frames
+                if key == 'nmode':
+                    cframes = self.nmode_frames
+                elif key == 'qh':
+                    cframes = [0]
+                else:
+                    cframes = self.frames
+                # since the model data object in MMPBSA_App contain the data in the attribute data and H5 not,
+                # we need to define a conditional object
+                com_calc_type_data = (calc_types[key]['complex'] if h5
+                                      else calc_types[key]['complex'].data)
+                df = complex = pd.DataFrame({dkey: com_calc_type_data[dkey] for dkey in com_calc_type_data},
+                                            index=cframes)
+                if not self.stability:
+                    rec_calc_type_data = (calc_types[key]['receptor'] if h5
+                                          else calc_types[key]['receptor'].data)
+                    receptor = pd.DataFrame({dkey: rec_calc_type_data[dkey] for dkey in rec_calc_type_data},
+                                            index=cframes)
+                    lig_calc_type_data = (calc_types[key]['ligand'] if h5
+                                          else calc_types[key]['ligand'].data)
+                    ligand = pd.DataFrame({dkey: lig_calc_type_data[dkey] for dkey in lig_calc_type_data},
+                                          index=cframes)
+                    delta = complex - receptor - ligand
+                    df = pd.concat([complex, receptor, ligand, delta], axis=1,
+                                   keys=['complex', 'receptor', 'ligand', 'delta'])
+                data[key] = df
+
+    def _get_ddata(self, calc_types, h5=False, mut=False):
+        data = self.data['decomp']['mutant'] if mut else self.data['decomp']
+        # Take the decomp data
+        for key in calc_types:
+            # since the model data object in MMPBSA_App contain the data in the attribute data and H5 not,
+            # we need to define a conditional object. Also, the decomp data must be re-structured for multiplex
+            # Dataframe
+            com_calc_type_data = (calc_types[key]['complex'] if h5
+                                  else self._transform_from_lvl_decomp(calc_types[key]['complex']))
+            df = complex = pd.DataFrame(com_calc_type_data, index=self.frames)
+            if not self.stability:
+                rec_calc_type_data = (calc_types[key]['receptor'] if h5
+                                      else self._transform_from_lvl_decomp(calc_types[key]['receptor']))
+                receptor = pd.DataFrame(rec_calc_type_data, index=self.frames)
+
+                lig_calc_type_data = (calc_types[key]['ligand'] if h5
+                                      else self._transform_from_lvl_decomp(calc_types[key]['ligand']))
+                ligand = pd.DataFrame(lig_calc_type_data, index=self.frames)
+
+                delta = complex.subtract(pd.concat([receptor, ligand], axis=1)).combine_first(
+                    complex).reindex_like(df)
+                df = pd.concat([complex, receptor, ligand, delta], axis=1,
+                               keys=['complex', 'receptor', 'ligand', 'delta'])
+            data[key] = df
+
+    @staticmethod
+    def _transform_from_lvl_decomp(nd):
+        data = {}
+        for k2, v2 in nd.items():  # TDC, SDC, BDC
+            if k2 in ['SDC', 'BDC']:
+                continue
+            for k3, v3 in v2.items():  # residue
+                for k4, v4 in v3.items():  # residue in per-wise or terms in per-res
+                    if isinstance(v4, dict):  # per-wise
+                        for k5, v5 in v4.items():
+                            data[(k2, k3, k4, k5)] = v5
+                    else:
+                        data[(k2, k3, k4)] = v4
+        return data
+
 
