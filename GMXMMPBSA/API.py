@@ -36,431 +36,104 @@ from types import SimpleNamespace
 
 __all__ = ['load_gmxmmpbsa_info']
 
-make_array = lambda x: np.fromiter(x, float)
-make_array_len = lambda x: np.zeros(x, float)
 
-class mmpbsa_data(dict):
-    """ Main class that holds all of the Free Energy data """
-    def __init__(self, app):
-        super(mmpbsa_data, self).__init__()
-        """ Load data from an info object """
-        if not isinstance(app, main.MMPBSA_App):
-            raise TypeError('mmpbsa_data can only take an MMPBSA_App!')
-        # Loop through all of the data
-        if not hasattr(app, 'calc_types'):
-            raise SetupError('Output files have not yet been parsed!')
-        # Now load the data into the dict
-        has_mutant = False
-        # See if we are doing stability
-        self.stability = app.stability
-        # Now load the data
-        for key in app.calc_types:
-            if key == 'mutant' or key == 'qh':
-                has_mutant = True
-                continue
-            self[key] = {}
-            tmpdict = {}
-            if key == 'ie':
-                if not self.stability:
-                    self[key] = {'data': app.calc_types[key].data['data'], 'value': app.calc_types[key].data[
-                        'iedata'].avg(), 'frames': [app.calc_types[key].data['frames'][-app.calc_types[
-                        key].data['ieframes']], app.calc_types[key].data['frames'][-1]]}
-                continue
-            for dkey in app.calc_types[key]['complex'].data:
-                tmpdict[dkey] = make_array(app.calc_types[key]['complex'].data[dkey])
-            self[key]['complex'] = tmpdict
-            if not self.stability:
-                tmpdict = {}
-                for dkey in app.calc_types[key]['receptor'].data:
-                    tmpdict[dkey] = make_array(app.calc_types[key]['receptor'].data[dkey])
-                self[key]['receptor'] = tmpdict
-                tmpdict = {}
-                for dkey in app.calc_types[key]['ligand'].data:
-                    tmpdict[dkey] = make_array(app.calc_types[key]['ligand'].data[dkey])
-                self[key]['ligand'] = tmpdict
-                tmpdict = {}
-                for dkey in app.calc_types[key]['delta'].data:
-                    tmpdict[dkey] = make_array(app.calc_types[key]['delta'].data[dkey])
-                self[key]['delta'] = tmpdict
-
-        # Are we doing a mutant?
-        if has_mutant:
-            self.mutant = {}
-            for key in app.calc_types['mutant']:
-                if key == 'qh': continue
-                self.mutant[key] = {}
-                tmpdict = {}
-
-                if key == 'ie':
-                    if not self.stability:
-                        self.mutant[key] = {'data': app.calc_types[key].data['data'],
-                                            'value': app.calc_types[key].data['iedata'].avg(),
-                                            'frames': [app.calc_types[key].data['frames'][-app.calc_types[key].data[
-                                                'ieframes']], app.calc_types[key].data['frames'][-1]]}
-                    continue
-
-                for dkey in app.calc_types['mutant'][key]['complex'].data:
-                    tmpdict[dkey] = make_array(
-                        app.calc_types['mutant'][key]['complex'].data[dkey])
-                self.mutant[key]['complex'] = tmpdict
-                if not self.stability:
-                    self.mutant[key]['receptor'] = {}
-                    tmpdict = {}
-                    for dkey in app.calc_types['mutant'][key]['receptor'].data:
-                        tmpdict[dkey] = make_array(
-                            app.calc_types['mutant'][key]['receptor'].data[dkey])
-                    self.mutant[key]['receptor'] = tmpdict
-                    tmpdict = {}
-                    for dkey in app.calc_types['mutant'][key]['ligand'].data:
-                        tmpdict[dkey] = make_array(
-                            app.calc_types['mutant'][key]['ligand'].data[dkey])
-                    self.mutant[key]['ligand'] = tmpdict
-                    tmpdict = {}
-                    for dkey in app.calc_types['mutant'][key]['delta'].data:
-                        tmpdict[dkey] = make_array(
-                            app.calc_types['mutant'][key]['delta'].data[dkey])
-                    self.mutant[key]['delta'] = tmpdict
+class DataStore(dict):
+    def __init__(self):
+        super(DataStore, self).__init__()
+        self.mutant = {}
+        self.decomp = type('calc_types', (dict,), {'mutant': {}})()
 
 
-    def __iadd__(self, other):
-        """
-        Adding one to another extends every array. The way we do this depends on
-        whether we're using numpy arrays or
-        """
-        return self._add_numpy(other)
+class H52Data:
+    def __init__(self, fname):
+        self.h5f = h5py.File(fname, 'r')
+        self.app_namespace = SimpleNamespace(INPUT={}, FILES=SimpleNamespace(), INFO={})
+        self.calc_types = DataStore()
 
-    def _add_numpy(self, other):
-        """
-        If we have numpy available, we need to extend every array in a numpy-valid
-        way
-        """
-        used_keys = []
-        for key in self:
-            used_keys.append(key)
-            try:
-                for dkey in self[key]['complex']:
-                    _combine_np_arrays(self[key]['complex'][dkey],
-                                       other[key]['complex'][dkey])
-                for dkey in self[key]['receptor']:
-                    _combine_np_arrays(self[key]['receptor'][dkey],
-                                       other[key]['receptor'][dkey])
-                for dkey in self[key]['ligand']:
-                    _combine_np_arrays(self[key]['ligand'][dkey],
-                                       other[key]['ligand'][dkey])
-            except KeyError:
-                pass
-        for key in other:
-            if key in used_keys:
-                continue
-            # If we didn't have a particular calc type, copy that array in here
-            self[key] = deepcopy(other[key])
-        # Check mutant statuses. If the other has mutant and I don't, copy other
-        # If we both have mutant, combine.  If only I do, already done
-        if self.mutant and not other.mutant:
-            self.mutant = deepcopy(other.mutant)
-        elif self.mutant and other.mutant:
-            used_keys_mutant = []
-            for key in self.mutant:
-                used_keys_mutant.append(key)
-                try:
-                    for dkey in self[key]['complex']:
-                        _combine_np_arrays(self[key]['complex'][dkey],
-                                           other[key]['complex'][dkey])
-                    for dkey in self[key]['receptor']:
-                        _combine_np_arrays(self[key]['receptor'][dkey],
-                                           other[key]['receptor'][dkey])
-                    for dkey in self[key]['ligand']:
-                        _combine_np_arrays(self[key]['ligand'][dkey],
-                                           other[key]['ligand'][dkey])
-                except KeyError:
-                    pass
-            for key in other.mutant:
-                if key in used_keys_mutant:
-                    continue
-                self.mutant[key] = deepcopy(other.mutant[key])
-
-def _combine_np_arrays(nparray1, nparray2):
-    origsize = nparray1.shape[0]
-    nparray1.resize(origsize + nparray2.shape[0])
-    for i in range(nparray2.shape[0]):
-        nparray1[origsize + i] = nparray2[i]
-
-    def load_topologies(self):
-        """
-        Loads the topology files so we have residue information for decomp
-        analyses
-        """
-        self.app.loadcheck_prmtops()
-
-class APIDecompOut(amber_outputs.DecompOut):
-
-    def __init__(self, basename, res_info, app): #surften, num_files, verbose, nframes, prmtop):
-
-        surften = app.INPUT['surften']
-        num_files = app.mpi_size
-        verbose = app.INPUT['dec_verbose']
-        nframes = app.numframes
-        prmtop = app.FILES.complex_prmtop
-
-        amber_outputs.DecompOut.__init__(self, basename, prmtop, surften, False, num_files, verbose)
-        self.array_data = {}
-        # Make a new dict for all printed tokens (TDC,SDC,BDC)
-        for key in self.allowed_tokens:
-            self.array_data[key] = {}
-        for i in range(nframes):
-            for key in self.allowed_tokens:
-                for j in range(self.num_terms):
-                    rnum, internal, vdw, eel, pol, sas, tot = self.get_next_term(key)
-                    for c, res_name in enumerate(res_info):
-                        if c + 1 == rnum:
-                            rnum = res_name
-                    if rnum not in self.array_data[key]:
-                        self.array_data[key][rnum] = {}
-                        for k in ('int', 'vdw', 'eel', 'pol', 'sas', 'tot'):
-                            self.array_data[key][rnum][k] = make_array_len(nframes)
-                    self.array_data[key][rnum]['int'][i] = internal
-                    self.array_data[key][rnum]['vdw'][i] = vdw
-                    self.array_data[key][rnum]['eel'][i] = eel
-                    self.array_data[key][rnum]['pol'][i] = pol
-                    self.array_data[key][rnum]['sas'][i] = sas
-                    self.array_data[key][rnum]['tot'][i] = tot
-
-class APIPairDecompOut(amber_outputs.PairDecompOut):
-
-    def __init__(self, basename, res_info, app): #surften, num_files, verbose, nframes, prmtop):
-
-        surften = app.INPUT['surften']
-        num_files = app.mpi_size
-        verbose = app.INPUT['dec_verbose']
-        nframes = app.numframes
-        prmtop = app.FILES.complex_prmtop
-
-        amber_outputs.DecompOut.__init__(self, basename, prmtop, surften, False, num_files, verbose)
-        self.array_data = {}
-        # Make a new dict for all printed tokens (TDC,SDC,BDC)
-        for key in self.allowed_tokens:
-            self.array_data[key] = {}
-
-        for i in range(nframes):
-            for key in self.allowed_tokens:
-                for j in range(self.num_terms):
-                    rnum, rnum2, internal, vdw, eel, pol, sas, tot = self.get_next_term(key)
-                    for c, res_name in enumerate(res_info):
-                        if c + 1 == rnum:
-                            rnum = res_name
-                        if c + 1 == rnum2:
-                            rnum2 = res_name
-
-                    if rnum not in self.array_data[key]:
-                        self.array_data[key][rnum] = {}
-                    if rnum2 not in self.array_data[key][rnum]:
-                        self.array_data[key][rnum][rnum2] =  {}
-                        for k in ('int', 'vdw', 'eel', 'pol', 'sas', 'tot'):
-                            self.array_data[key][rnum][rnum2][k] = make_array_len(nframes)
-                    self.array_data[key][rnum][rnum2]['int'][i] = internal
-                    self.array_data[key][rnum][rnum2]['vdw'][i] = vdw
-                    self.array_data[key][rnum][rnum2]['eel'][i] = eel
-                    self.array_data[key][rnum][rnum2]['pol'][i] = pol
-                    self.array_data[key][rnum][rnum2]['sas'][i] = sas
-                    self.array_data[key][rnum][rnum2]['tot'][i] = tot
-
-def get_delta_decomp(app, decomp_calc_type, data):
-    """
-
-    :param calc_type: gb or pb
-    :param data:
-    :return:
-    """
-    data_out = {decomp_calc_type: {'delta': {}}}
-    # data_out[decomp_calc_type] = {'delta': {}}
-    tempdict = {}
-    # complex, if stability: receptor, ligand
-    com = data[decomp_calc_type]['complex']
-    rec = data[decomp_calc_type]['receptor']
-    lig = data[decomp_calc_type]['ligand']
-    for p in com:
-        tempdict[p] = {}
-        for res in com[p]:
-            if res not in tempdict[p]:
-                tempdict[p][res] = {}
-            if app.INPUT['idecomp'] in [1, 2]:
-                if rec and res in rec[p]:
-                    for para in com[p][res]:
-                        d = com[p][res][para] - rec[p][res][para]
-                        tempdict[p][res][para] = d
-                elif lig and res in lig[p]:
-                    for para in com[p][res]:
-                        d = com[p][res][para] - lig[p][res][para]
-                        tempdict[p][res][para] = d
+        for key in self.h5f:
+            if key in ['INFO', 'INPUT', 'FILES']:
+                self._h52app_namespace(key)
+            elif key == 'decomp':
+                self._h52decomp(self.h5f[key])
+            elif key == 'mutant':
+                for mkey in self.h5f[key]:
+                    self._h52e(self.h5f[key], mkey, True)
+                    if mkey == 'decomp':
+                        self._h52decomp(self.h5f[key][mkey], True)
             else:
-                if rec and res in rec[p]:
-                    for resp in com[p][res]:
-                        if resp in rec[p][res]:
-                            tempdict[p][res][resp] = {}
-                            for para in com[p][res][resp]:
-                                tempdict[p][res][resp][para] = com[p][res][resp][para] - rec[p][res][resp][para]
+                self._h52e(self.h5f, key)
+        self.h5f.close()
+
+    def _h52app_namespace(self, key):
+        for x in self.h5f[key]:
+            tvar = self.h5f[key][x][()]
+            if isinstance(tvar, bytes):
+                cvar = tvar.decode()
+            elif isinstance(tvar, np.float):
+                cvar = None if np.isnan(tvar) else tvar
+            elif isinstance(tvar, np.ndarray):
+                cvar = [x.decode() if isinstance(x, bytes) else x for x in tvar if isinstance(x, bytes)]
+            else:
+                cvar = tvar
+            if key == 'INPUT':
+                self.app_namespace.INPUT[x] = cvar
+            elif key == 'FILES':
+                setattr(self.app_namespace.FILES, x, cvar)
+            else:
+                self.app_namespace.INFO[x] = cvar
+
+    def _h52e(self, d, key, mut=False):
+
+        calc_types = self.calc_types.mutant if mut else self.calc_types
+        # key  Energy: [gb, pb, rism std, rism gf], Decomp: [gb, pb], Entropy: [nmode, qh, ie, c2]
+        if key in ['gb', 'pb', 'rism std', 'rism gf']:
+            calc_types[key] = {}
+            # key2 is complex, receptor, ligand, delta
+            for key2 in d[key]:
+                calc_types[key][key2] = {}
+                # complex, receptor, etc., is a class and the data is contained in the attribute data
+                for key3 in d[key][key2]:
+                    calc_types[key][key2][key3] = d[key][key2][key3][()]
+        elif key in ['nmode', 'qh']:
+            calc_types[key] = {}
+            # key2 is complex, receptor, ligand, delta
+            for key2 in d[key]:
+                calc_types[key][key2] = {}
+                # vibrational, translational, rotational, total
+                for key3 in d[key][key2]:
+                    calc_types[key][key2][key3] = d[key][key2][key3][()]
+
+        elif key in ['ie', 'c2']:
+            calc_types[key] = {}
+            # key2 is PB, GB or RISM?
+            for key2 in d[key]:
+                calc_types[key][key2] = {}
+                for key3 in d[key][key2]:
+                    calc_types[key][key2][key3] = d[key][key2][key3][()]
+
+    def _h52decomp(self, d, mut=False):
+        calc_types = self.calc_types.decomp.mutant if mut else self.calc_types.decomp
+        for key in d:
+            # model
+            calc_types[key] = {}
+            # key2 is complex, receptor, ligand, delta
+            for key2 in d[key]:
+                calc_types[key][key2] = {}
+                # TDC, SDC, BDC
+                for key3 in d[key][key2]:
+                    # residue first level
+                    for key4 in d[key][key2][key3]:
+                        if isinstance(d[key][key2][key3][key4], h5py.Group):
+                            # residue sec level
+                            for key5 in d[key][key2][key3][key4]:
+                                # calc_types terms
+                                for key6 in d[key][key2][key3][key4][key5]:
+                                    calc_types[key][key2][(key3, key4, key5, key6)] = d[key][key2][key3][key4][
+                                        key5][key6][()]
                         else:
-                            tempdict[p][res][resp] = {}
-                            for para in com[p][res][resp]:
-                                tempdict[p][res][resp][para] = com[p][resp][res][para]
-                elif lig and res in lig[p]:
-                    for resp in com[p][res]:
-                        if resp in lig[p][res]:
-                            tempdict[p][res][resp] = {}
-                            for para in com[p][res][resp]:
-                                tempdict[p][res][resp][para] = com[p][res][resp][para] - lig[p][res][resp][para]
-                        else:
-                            tempdict[p][res][resp] = {}
-                            for para in com[p][res][resp]:
-                                tempdict[p][res][resp][para] = com[p][resp][res][para]
-    return tempdict
-
-def load_gmxmmpbsa_info(fname):
-    """
-    Loads up an gmx_MMPBSA info file and returns a mmpbsa_data instance with all
-    of the data available in numpy arrays if numpy is available. The returned
-    object is a mmpbsa_data instance.
-
-    change the structure to get more easy way to graph per residue
-
-    mmpbsa_data attributes:
-    -----------------------
-       o  Derived from "dict"
-       o  Each solvent model is a dictionary key for a numpy array (if numpy is
-          available) or array.array (if numpy is unavailable) for each of the
-          species (complex, receptor, ligand) present in the calculation.
-       o  The alanine scanning mutant data is under another dict denoted by the
-          'mutant' key.
-
-    Data Layout:
-    ------------
-               Model     |  Dictionary Key    |  Data Keys Available
-       -------------------------------------------------------------------
-       Generalized Born  |  'gb'              |  EGB, ESURF, *
-       Poisson-Boltzmann |  'pb'              |  EPB, EDISPER, ECAVITY, *
-       3D-RISM (GF)      |  'rism gf'         |
-       3D-RISM (Standard)|  'rism std'        |
-       Normal Mode       |  'nmode'           |
-       Quasi-harmonic    |  'qh'              |
-
-    * == TOTAL, VDW, EEL, 1-4 EEL, 1-4 VDW, BOND, ANGLE, DIHED
-
-    The keys above are entries for the main dict as well as the sub-dict whose
-    key is 'mutant' in the main dict.  Each entry in the main (and mutant sub-)
-    dict is, itself, a dict with 1 or 3 keys; 'complex', 'receptor', 'ligand';
-    where 'receptor' and 'ligand' are missing for stability calculations.
-    If numpy is available, all data will be numpy.ndarray instances.  Otherwise,
-    all data will be array.array instances.
-
-    All of the objects referenced by the listed 'Dictionary Key's are dicts in
-    which the listed 'Data Keys Available' are keys to the data arrays themselves
-
-    Examples:
-    ---------
-       # Load numpy for our analyses (optional)
-       import numpy as np
-
-       # Load the _MMPBSA_info file:
-       mydata = load_mmpbsa_info('_MMPBSA_info')
-
-       # Access the complex GB data structure and calculate the autocorr. fcn.
-       autocorr = np.correlate(mydata['gb']['complex']['TOTAL'],
-                               mydata['gb']['complex']['TOTAL'])
-
-       # Calculate the standard deviation of the alanine mutant receptor in PB
-       print(mydata.mutant['pb']['receptor']['TOTAL'].std())
-    """
-    if not isinstance(fname, Path):
-        fname = Path(fname)
-
-    if not fname.exists():
-        raise NoFileExists("cannot find %s!" % fname)
-    os.chdir(fname.parent)
-    app = main.MMPBSA_App(MPI)
-    info = infofile.InfoFile(app)
-    info.read_info(fname)
-    app.normal_system = app.mutant_system = None
-    app.parse_output_files()
-    return_data = mmpbsa_data(app)
-    # Since Decomp data is parsed in a memory-efficient manner (by not storing
-    # all of the data in arrays, but rather by printing each data point as it's
-    # parsed), we need to handle the decomp data separately here
-    # Open Complex fixed structure to assign per-(residue/wise) residue name
-    try:
-        complex_str = parmed.read_PDB(app.FILES.complex_fixed)
-    except:
-        complex_str = parmed.read_PDB(app.FILES.prefix + 'COM.pdb')
-    # Get receptor and ligand masks
-    mut_index = None
-
-    rec = {}
-    mut_rec = {}
-    rmstr = app.INPUT['receptor_mask'].strip(':')
-    rml = rmstr.split(',')
-    for x in rml:
-        if len(x.split('-')) > 1:
-            start, end = x.split('-')
-            for i in range(int(start), int(end) + 1):
-                residue = complex_str.residues[i - 1]
-                icode = f'{residue.insertion_code}'
-                if icode:
-                    icode = ':' + icode
-                rec[i] = (f"{residue.chain}:{residue.name}:{residue.number}" + icode)
-                mut_rec[i] = (f"{residue.chain}:{residue.name}:{residue.number}" + icode)
-                if app.INPUT['mutant_res'] == (f"{residue.chain}:{residue.number}" + icode):
-                    mut_rec[i] = (f"{residue.chain}:{app.INPUT['mutant']}:{residue.number}" + icode)
-        else:
-            i = int(x)
-            residue = complex_str.residues[i - 1]
-            icode = f'{residue.insertion_code}'
-            if icode:
-                icode = ':' + icode
-            rec[i] = (f"{residue.chain}:{residue.name}:{residue.number}" + icode)
-            mut_rec[i] = (f"{residue.chain}:{residue.name}:{residue.number}" + icode)
-            if app.INPUT['mutant_res'] == (f"{residue.chain}:{residue.number}" + icode):
-                mut_rec[i] = (f"{residue.chain}:{app.INPUT['mutant']}:{residue.number}" + icode)
-
-    lig = {}
-    mut_lig = {}
-    lmstr = app.INPUT['ligand_mask'].strip(':')
-    lml = lmstr.split(',')
-    for x in lml:
-        if len(x.split('-')) > 1:
-            start, end = x.split('-')
-            for i in range(int(start), int(end) + 1):
-                residue = complex_str.residues[i - 1]
-                icode = f'{residue.insertion_code}'
-                if icode:
-                    icode = ':' + icode
-                lig[i] = (f"{residue.chain}:{residue.name}:{residue.number}" + icode)
-                mut_lig[i] = (f"{residue.chain}:{residue.name}:{residue.number}" + icode)
-                if app.INPUT['mutant_res'] == (f"{residue.chain}:{residue.number}" + icode):
-                    mut_lig[i] = (f"{residue.chain}:{app.INPUT['mutant']}:{residue.number}" + icode)
-        else:
-            i = int(x)
-            residue = complex_str.residues[i - 1]
-            icode = f'{residue.insertion_code}'
-            if icode:
-                icode = ':' + icode
-            lig[i] = (f"{residue.chain}:{residue.name}:{residue.number}" + icode)
-            mut_lig[i] = (f"{residue.chain}:{residue.name}:{residue.number}" + icode)
-            if app.INPUT['mutant_res'] == (f"{residue.chain}:{residue.number}" + icode):
-                mut_lig[i] = (f"{residue.chain}:{app.INPUT['mutant']}:{residue.number}" + icode)
-
-    com = rec.copy()
-    com.update(lig)
-    com_res_info = []
-    for key, value in sorted(com.items()):
-        com_res_info.append(value)
-
-    rec_res_info = []
-    for key, value in rec.items():
-        rec_res_info.append(value)
-
-    lig_res_info = []
-    for key, value in lig.items():
-        lig_res_info.append(value)
-
+                            # energy terms
+                            for key5 in d[key][key2][key3][key4]:
+                                calc_types[key][key2][(key3, key4, key5)] = d[key][key2][key3][key4][key5][()]
 
     mut_com_res_info = []
     mut_com = mut_rec.copy()
