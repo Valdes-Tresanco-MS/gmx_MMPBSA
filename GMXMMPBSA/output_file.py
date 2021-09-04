@@ -334,19 +334,15 @@ def write_binding_output(app):
     final_output.write(app.input_file_text)
     final_output.print_file_info(FILES, INPUT)
     final_output.add_comment('')
-    final_output.add_comment('Receptor mask:                  "%s"' %
-                             INPUT['receptor_mask'])
-    final_output.add_comment('Ligand mask:                    "%s"' %
-                             INPUT['ligand_mask'])
+    final_output.add_comment('Receptor mask:                  "%s"' % INPUT['receptor_mask'])
+    final_output.add_comment('Ligand mask:                    "%s"' % INPUT['ligand_mask'])
     if prmtop_system.ligand_prmtop.ptr('nres') == 1:
         final_output.add_comment('Ligand residue name is "%s"' %
                                  prmtop_system.ligand_prmtop.parm_data['RESIDUE_LABEL'][0])
     final_output.add_comment('')
-    final_output.add_comment('Calculations performed using %s complex frames.' %
-                             app.numframes)
+    final_output.add_comment('Calculations performed using %s complex frames.' % app.numframes)
     if INPUT['nmoderun']:
-        final_output.add_comment('NMODE calculations performed using %s frames.' %
-                                 app.numframes_nmode)
+        final_output.add_comment('NMODE calculations performed using %s frames.' % app.numframes_nmode)
     if INPUT['interaction_entropy']:
         final_output.add_comment('Interaction Entropy calculations performed using last %s frames.' %
                                  ceil(app.numframes * (INPUT['ie_segment']/100)))
@@ -1035,40 +1031,33 @@ class OutputFile(object):
         # if FILES.solvated_prmtop:
         #    self.writeline('|Solvated complex topology file:  %s' %
         #               FILES.solvated_prmtop)
-        self.writeline('|Complex topology file:           %s' %
-                       FILES.complex_prmtop)
+        self.writeline('|Complex topology file:           %s' % FILES.complex_prmtop)
 
         if not stability:
             # if FILES.receptor_trajs:
             #    if FILES.solvated_receptor_prmtop:
             #       self.writeline('|Solvated receptor topology file: %s' %
             #                  FILES.solvated_receptor_prmtop)
-            self.writeline('|Receptor topology file:          %s' %
-                           FILES.receptor_prmtop)
+            self.writeline('|Receptor topology file:          %s' % FILES.receptor_prmtop)
 
             # if FILES.ligand_trajs:
             # if FILES.solvated_ligand_prmtop:
             #    self.writeline('|Solvated ligand topology file:   %s' %
             #               FILES.solvated_ligand_prmtop)
-            self.writeline('|Ligand topology file:            %s' %
-                           FILES.ligand_prmtop)
+            self.writeline('|Ligand topology file:            %s' % FILES.ligand_prmtop)
 
         if INPUT['alarun']:
-            self.writeline('|Mutant complex topology file:    %s' %
-                           FILES.mutant_complex_prmtop)
+            self.writeline('|Mutant complex topology file:    %s' % FILES.mutant_complex_prmtop)
             if not stability:
-                self.writeline('|Mutant receptor topology file:   %s' %
-                               FILES.mutant_receptor_prmtop)
-                self.writeline('|Mutant ligand topology file:     %s' %
-                               FILES.mutant_ligand_prmtop)
+                self.writeline('|Mutant receptor topology file:   %s' % FILES.mutant_receptor_prmtop)
+                self.writeline('|Mutant ligand topology file:     %s' % FILES.mutant_ligand_prmtop)
 
         self.write('|Initial mdcrd(s):                ')
         for i in range(len(FILES.complex_trajs)):
             if i == 0:
                 self.writeline(FILES.complex_trajs[i])
             else:
-                self.writeline('|                                 %s' %
-                               FILES.complex_trajs[i])
+                self.writeline('|                                 %s' % FILES.complex_trajs[i])
 
         if FILES.receptor_trajs:
             self.write('|Initial Receptor mdcrd(s):       ')
@@ -1076,8 +1065,7 @@ class OutputFile(object):
                 if i == 0:
                     self.writeline(FILES.receptor_trajs[i])
                 else:
-                    self.writeline('|                                 %s' %
-                                   FILES.receptor_trajs[i])
+                    self.writeline('|                                 %s' % FILES.receptor_trajs[i])
 
         if FILES.ligand_trajs:
             self.write('|Initial Ligand mdcrd(s):         ')
@@ -1085,8 +1073,7 @@ class OutputFile(object):
                 if i == 0:
                     self.writeline(FILES.ligand_trajs[i])
                 else:
-                    self.writeline('|                                 %s' %
-                                   FILES.ligand_trajs[i])
+                    self.writeline('|                                 %s' % FILES.ligand_trajs[i])
 
     # ==================================================
 
