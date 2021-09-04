@@ -401,38 +401,62 @@ def write_binding_output(app):
                                                                                  qhmutant.total_avg()))
     # end if INPUT['entropy']
     if INPUT['interaction_entropy']:
+        ie_inconsistent = False
         if not INPUT['mutant_only']:
             ienorm = app.calc_types['ie']
             final_output.writeline('ENTROPY RESULTS (INTERACTION ENTROPY):')
             final_output.add_section(ienorm.print_summary())
+            for m in ienorm.data:
+                if ienorm.data[m]['sigma'] > 3.6:
+                    ie_inconsistent = True
         if INPUT['alarun']:
             iemutant = app.calc_types.mutant['ie']
             final_output.writeline(mut_str + ' MUTANT')
             final_output.writeline('ENTROPY RESULTS (INTERACTION ENTROPY):')
             final_output.add_section(iemutant.print_summary())
+            for m in iemutant.data:
+                if iemutant.data[m]['sigma'] > 3.6:
+                    ie_inconsistent = True
         if INPUT['alarun'] and not INPUT['mutant_only']:
             text = '\nRESULT OF ALANINE SCANNING (%s):\n' % mut_str
             for model in ienorm.data:
                 d = iemutant.data[model]['iedata'] - ienorm.data[model]['iedata']
                 text += 'DELTA DELTA S binding (%s) = %9.4f +/- %9.4f\n' % (model.upper(), d.avg(), d.stdev())
             final_output.add_section(text)
+            if ie_inconsistent:
+                final_output.writeline(
+                    'WARNING: SOME VALUES OF THE INTERACTION ENERGY STANDARD DEVIATION [ σ(Int. Energy)]\n'
+                    'ARE GREATER THAN 3.6 kcal/mol (~15 kJ/mol). THUS, THE INTERACTION ENTROPY VALUES ARE\n'
+                    'NOT RELIABLE. CHECK THIS PAPER FOR MORE INFO (https://doi.org/10.1021/acs.jctc.1c00374)\n\n')
 
     if INPUT['c2_entropy']:
+        c2_inconsistent = False
         if not INPUT['mutant_only']:
             c2norm = app.calc_types['c2']
             final_output.writeline('ENTROPY RESULTS (C2 ENTROPY):')
             final_output.add_section(c2norm.print_summary())
+            for m in c2norm.data:
+                if c2norm.data[m]['sigma'] > 3.6:
+                    c2_inconsistent = True
         if INPUT['alarun']:
             c2mutant = app.calc_types.mutant['c2']
             final_output.writeline(mut_str + ' MUTANT')
             final_output.writeline('ENTROPY RESULTS (C2 ENTROPY):')
             final_output.add_section(c2mutant.print_summary())
+            for m in c2mutant.data:
+                if c2mutant.data[m]['sigma'] > 3.6:
+                    c2_inconsistent = True
         if INPUT['alarun'] and not INPUT['mutant_only']:
             text = '\nRESULT OF ALANINE SCANNING (%s):\n' % mut_str
             for model in c2norm.data:
                 d = c2mutant.data[model]['c2data'] - c2norm.data[model]['c2data']
                 text += 'DELTA DELTA S binding (%s) = %9.4f\n' % (model.upper(), d)
             final_output.add_section(text)
+            if c2_inconsistent:
+                final_output.writeline(
+                    'WARNING: SOME VALUES OF THE INTERACTION ENERGY STANDARD DEVIATION [ σ(Int. Energy)]\n'
+                    'ARE GREATER THAN 3.6 kcal/mol (~15 kJ/mol). THUS, THE C2 ENTROPY VALUES ARE NOT\n'
+                    'RELIABLE. CHECK THIS PAPER FOR MORE INFO (https://doi.org/10.1021/acs.jctc.1c00374)\n')
 
 
     # Now print out the normal mode results
