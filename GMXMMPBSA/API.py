@@ -23,15 +23,15 @@ the full power of Python's extensions, if they want (e.g., numpy, scipy, etc.)
 #  for more details.                                                           #
 # ##############################################################################
 
-from copy import deepcopy
+from typing import Union
 from GMXMMPBSA import infofile, main, amber_outputs
 from GMXMMPBSA.exceptions import SetupError, NoFileExists
 from GMXMMPBSA.fake_mpi import MPI
-
+import pandas as pd
 from pathlib import Path
-import parmed
 import os
 import numpy as np
+import h5py
 from types import SimpleNamespace
 
 __all__ = ['load_gmxmmpbsa_info']
@@ -300,3 +300,75 @@ class DataMMPBSA:
         return data
 
 
+def load_gmxmmpbsa_info(fname: Union[Path, str]):
+    """
+    Loads up an gmx_MMPBSA info or h5 file and returns a dictionary with all
+    energy terms and  a namespace with some variables needed in gmx_MMPBSA_ana
+
+    Depending on the data type store the variable can be a Dataframe, string or
+    scalar
+
+    Data attributes:
+    -----------------------
+       o  All attributes from dict
+       o  Each solvent model is a dictionary key for a numpy array (if numpy is
+          available) or array.array (if numpy is unavailable) for each of the
+          species (complex, receptor, ligand) present in the calculation.
+       o  The alanine scanning mutant data is under another dict denoted by the
+          'mutant' key.
+
+    Data Layout:
+    ------------
+               Model       | Dict Key    |  Data Keys Available
+       --------------------------------------------------------------
+       Generalized Born    | 'gb'        |  EGB, ESURF, *
+       Poisson-Boltzmann   | 'pb'        |  EPB, EDISPER, ECAVITY, *
+       3D-RISM (GF)        | 'rism gf'   |  POLAR SOLV, APOLAR SOLV, *
+       3D-RISM (Standard)  | 'rism std'  |
+       Normal Mode         | 'nmode'     |
+       Quasi-harmonic      | 'qh'        |
+       Interaction entropy | 'ie'        |
+       C2 Entropy          | 'c2'        |
+
+
+    * == TOTAL, VDW, EEL, 1-4 EEL, 1-4 VDW, BOND, ANGLE, DIHED
+
+    The keys above are entries for the main dict as well as the sub-dict whose
+    key is 'mutant' in the main dict.  Each entry in the main (and mutant sub-)
+    dict is, itself, a dict with 1 or 3 keys; 'complex', 'receptor', 'ligand';
+    where 'receptor' and 'ligand' are missing for stability calculations.
+    If numpy is available, all data will be numpy.ndarray instances.  Otherwise,
+    all data will be array.array instances.
+
+    All of the objects referenced by the listed 'Dictionary Key's are dicts in
+    which the listed 'Data Keys Available' are keys to the data arrays themselves
+
+    Examples:
+    ---------
+       # Load numpy for our analyses (optional)
+       import numpy as np
+
+       # Load the _MMPBSA_info file:
+       mydata = load_mmpbsa_info('_MMPBSA_info')
+
+       # Access the complex GB data structure and calculate the autocorr. fcn.
+       autocorr = np.correlate(mydata['gb']['complex']['TOTAL'],
+                               mydata['gb']['complex']['TOTAL'])
+
+       # Calculate the standard deviation of the alanine mutant receptor in PB
+       print mydata.mutant['pb']['receptor']['TOTAL'].std()
+    """
+    if not isinstance(fname, Path):
+        fname = Path(fname)
+
+    if not fname.exists():
+        raise NoFileExists("cannot find %s!" % fname)
+    os.chdir(fname.parent)
+    d_mmpbsa = DataMMPBSA()
+
+    if fname.suffix == '.h5':
+        d_mmpbsa.get_fromH5(fname)
+    else:
+        d_mmpbsa.get_fromApp(fname)
+
+    return d_mmpbsa.data, d_mmpbsa.app_namespace
