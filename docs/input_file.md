@@ -84,19 +84,28 @@ printed, which aids in debugging of issues. (Default = 0) (Advanced Option)
         _Changed in v1.0.0: Include Interaction Entropy approximation_    
 
 `interaction_entropy` (default = 0) 
-:    It specifies whether to perform the [Interaction Entropy (IE)][3] approximation.
+:    It specifies whether to use the [Interaction Entropy (IE)][3] approximation.
      
      * 0: Don’t
      * 1: perform IE
 
     !!! tip "Keep in mind"
-        The Interaction Entropy method is dependent on the number of frames and the simulated time. Additionally, 
-        the results may vary depending on the system flexibility or whether constraints were used or not in the MD 
-        simulation. Please, consult this [paper][3] for further details
+        - The standard deviation of the interaction energy (σIE) should always be reported.
+        - The Interaction Entropy method should be avoided if σIE > ~ 3.6 kcal/mol because it is impossible to 
+        converge the exponential average.
+        - It is advisable to study how the Interaction Entropy depends on N by block averaging (which also provide an 
+        estimate of the precision of the calculated entropies).
+        - A sampling frequency of 10 fs, as reported in the original [IE publication][3], seems to be 3–40 times too 
+        dense. A sampling frequency of 0.1 ps would be more appropriate.
+        - The Interaction Entropy results may vary depending on the system flexibility or whether constraints were used 
+        or not in the MD simulation. 
+
+        Please, consult this [paper][10] for further details.
 
     _New in v1.4.2: Equivalent to (Deprecate) `entropy = 2`_
 
   [3]: https://pubs.acs.org/doi/abs/10.1021/jacs.6b02682
+  [10]: https://pubs.acs.org/doi/full/10.1021/acs.jctc.1c00374
 
 
 `ie_segment` (Default = 25)
@@ -123,6 +132,37 @@ printed, which aids in debugging of issues. (Default = 0) (Advanced Option)
     `entropy_temp` (Default = 298.15)
     :    ~~Specify the temperature to calculate the entropy term `−TΔS` (Only if `entropy` = 2). Avoid inconsistencies 
           with defined internal temperature (298.15 K) when `nmode` is used.~~
+
+`c2_entropy` (default = 0) 
+:    It specifies whether to use the [C2 Entropy][11] approximation.
+     
+     * 0: Don’t
+     * 1: perform C2
+
+    !!! tip "Keep in mind"
+        - The standard deviation of the interaction energy (σIE) should always be reported.
+        - The C2 Entropy method should be avoided if σIE > ~ 6 kcal/mol because it gives unrealistically large entropies.
+        - It is advisable to study how the C2 Entropy depends on N by block averaging (which also provide an 
+        estimate of the precision of the calculated entropies).
+        - A sampling frequency of 10 fs, seems to be 3–40 times too dense. A sampling frequency of 0.1 ps would be more 
+        appropriate.
+        - The C2 Entropy results may vary depending on the system flexibility or whether constraints were used 
+        or not in the MD simulation. 
+
+        Please, consult this [paper][10] for further details.
+
+    _New in v1.5.0_
+
+  [10]: https://pubs.acs.org/doi/full/10.1021/acs.jctc.1c00374
+  [11]: https://pubs.acs.org/doi/full/10.1021/acs.jctc.8b00418
+
+
+`c2_segment` (Default = 25)
+:    Representative segment (in %), starting from the last frame, for the calculation of the
+     C2 Entropy, _e.g._: `ie_segment = 25` means that the last quartile of the total number of frames
+     (`(endframe-startframe)/interval`) will be used to calculate the C2 Entropy.
+
+    _New in v1.5.0_
 
 `exp_ki` (Default = 0.0)
 :   Specify the experimental Ki in nM for correlations analysis. If not defined or exp_ki = 0 then this system will be 
