@@ -2,7 +2,6 @@
 [![support](https://img.shields.io/badge/support-JetBrains-brightgreen)](https://www.jetbrains.com/?from=gmx_MMPBSA)
 [![python](https://img.shields.io/badge/python-v3.x-blue)]()
 [![Downloads](https://pepy.tech/badge/gmx-mmpbsa)](https://pepy.tech/project/gmx-mmpbsa)
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4569307.svg)](http://doi.org/10.5281/zenodo.4569307)
 
 # Welcome to gmx_MMPBSA!
 gmx_MMPBSA is a new tool based on AMBER's MMPBSA.py aiming to perform end-state free energy calculations with GROMACS 
@@ -10,16 +9,11 @@ files. It works with all GROMACS versions along with AmberTools20 or 21.
 
 **Please see the documentation [here](https://valdes-tresanco-ms.github.io/gmx_MMPBSA/getting-started/)**
 
-## Citing us
+## Cite us
 
-At the moment we only have Zenodo [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4569307.svg)](https://doi.org/10.5281/zenodo.4569307)
+<a href="https://www.scimagojr.com/journalsearch.php?q=5100155074&amp;tip=sid&amp;exact=no" title="SCImago Journal &amp; Country Rank"><img border="0" align="right" src="https://www.scimagojr.com/journal_img.php?id=5100155074" alt="SCImago Journal &amp; Country Rank"  /></a>
 
-Cite as:
-
-Mario S. Valdés Tresanco, Mario E. Valdes-Tresanco, Pedro A. Valiente, & Ernesto Moreno Frías.
-gmx_MMPBSA (Version v1.4.3). Zenodo. http://doi.org/10.5281/zenodo.4569307
-
-**We will have the article available soon**
+Valdes-Tresanco, M.S., Valdes-Tresanco, M.E., Valiente, P.A. and Moreno E. gmx_MMPBSA: A New Tool to Perform End-State Free Energy Calculations with GROMACS. J. Chem. Theory Comput. 2021. https://doi.org/10.1021/acs.jctc.1c00645
 
 Please also consider citing MMPBSA.py's paper:
 
