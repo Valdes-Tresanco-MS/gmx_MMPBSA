@@ -17,13 +17,13 @@ alt="SCImago Journal &amp; Country Rank"  /></a>
 
 Valdés-Tresanco, M.S., Valdés-Tresanco, M.E., Valiente, P.A. and Moreno E. **gmx_MMPBSA: A New Tool to Perform 
 End-State Free Energy Calculations with GROMACS**. _Journal of Chemical Theory and Computation_, 2021. 
-https://doi.org/10.1021/acs.jctc.1c00645
+https://pubs.acs.org/doi/10.1021/acs.jctc.1c00645
 
 Please also consider citing MMPBSA.py's paper:
 
 Bill R. Miller, T. Dwight McGee, Jason M. Swails, Nadine Homeyer, Holger Gohlke, and Adrian E. Roitberg. **MMPBSA.py: 
 An Efficient Program for End-State Free Energy Calculations**. _Journal of Chemical Theory and Computation_, 2012 8 
-(9), 3314-3321. (https://pubs.acs.org/doi/10.1021/ct300418h)
+(9), 3314-3321. https://pubs.acs.org/doi/10.1021/ct300418h
 
 ---------------------------------------
 
