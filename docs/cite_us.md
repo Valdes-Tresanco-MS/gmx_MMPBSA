@@ -3,22 +3,21 @@ template: main.html
 title: Cite us
 ---
 
-## Cite us
+<a href="https://www.scimagojr.com/journalsearch.php?q=5100155074&amp;tip=sid&amp;exact=no" title="SCImago Journal 
+&amp; Country Rank"><img border="0" align="right" src="https://www.scimagojr.com/journal_img.php?id=5100155074" 
+alt="SCImago Journal &amp; Country Rank"  /></a>
 
-At the moment we only have Zenodo [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4569307.svg)](https://doi.org/10.5281/zenodo.4569307)
+Valdés-Tresanco, M.S., Valdés-Tresanco, M.E., Valiente, P.A. and Moreno E. **gmx_MMPBSA: A New Tool to Perform 
+End-State Free Energy Calculations with GROMACS**. _Journal of Chemical Theory and Computation_, 2021. 
+https://doi.org/10.1021/acs.jctc.1c00645. Download | [*.bib](gmx_MMPBSA_citation.bib)
+| [*.ris](gmx_MMPBSA_citation.ris)
 
-!!! note "Cite as"
-    Mario S. Valdés Tresanco, Mario E. Valdes-Tresanco, Pedro A. Valiente, & Ernesto Moreno Frías.
-    **gmx_MMPBSA (Version v1.4.3)**. Zenodo. http://doi.org/10.5281/zenodo.4569307. Download | [*.bib](gmx_MMPBSA_citation.bib)
-    | [*.ris](gmx_MMPBSA_citation.ris) | [*.xml](gmx_MMPBSA_citation.xml) |
+**Please also consider citing MMPBSA.py's paper:**
 
-**We will have the article available soon**
-
-!!! note "Please also consider citing MMPBSA.py's paper:"
-    Bill R. Miller, T. Dwight McGee, Jason M. Swails, Nadine Homeyer, Holger Gohlke, and Adrian E. Roitberg. **MMPBSA.
-    py: An Efficient Program for End-State Free Energy Calculations**.  _Journal of Chemical Theory and Computation_, 
-    2012 8 (9), 3314-3321. [DOI: 10.1021/ct300418h][1]. Download | [*.bib](MMPBSA_py_citation.bib)
-    | [*.ris](MMPBSA_py_citation.ris) | [*.xml](MMPBSA_py_citation.xml)
+Bill R. Miller, T. Dwight McGee, Jason M. Swails, Nadine Homeyer, Holger Gohlke, and Adrian E. Roitberg. **MMPBSA.
+py: An Efficient Program for End-State Free Energy Calculations**.  _Journal of Chemical Theory and Computation_, 
+2012 8 (9), 3314-3321. [DOI: 10.1021/ct300418h][1]. Download | [*.bib](MMPBSA_py_citation.bib)
+| [*.ris](MMPBSA_py_citation.ris) | [*.xml](MMPBSA_py_citation.xml)
 
 [1]: https://pubs.acs.org/doi/10.1021/ct300418h
 
