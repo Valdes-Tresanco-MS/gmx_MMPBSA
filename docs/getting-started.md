@@ -9,7 +9,7 @@ title: Getting started
 [![Downloads](https://pepy.tech/badge/gmx-mmpbsa)](https://pepy.tech/project/gmx-mmpbsa)
 [![DOI](https://img.shields.io/badge/DOI-10.1021%2Facs.jctc.1c00645-blue)](https://pubs.acs.org/doi/10.1021/acs.jctc.1c00645)
 
-[<img src="../assets/logo.svg" height="120" width="240" align="right"/>]()
+[<img src="../assets/TOC.png" height="120%" width="258" align="right"/>]()
 
 # Getting started
 
