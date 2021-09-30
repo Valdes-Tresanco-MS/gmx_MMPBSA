@@ -4,7 +4,7 @@ title: Cite us
 ---
 
 <a href="https://www.scimagojr.com/journalsearch.php?q=5100155074&amp;tip=sid&amp;exact=no" title="SCImago Journal 
-&amp; Country Rank"><img border="0" align="right" src="https://www.scimagojr.com/journal_img.php?id=5100155074" 
+&amp; Country Rank"><img border="0" align="right" width=175 src="https://www.scimagojr.com/journal_img.php?id=5100155074" 
 alt="SCImago Journal &amp; Country Rank"  /></a>
 
 Valdés-Tresanco, M.S., Valdés-Tresanco, M.E., Valiente, P.A. and Moreno E. **gmx_MMPBSA: A New Tool to Perform 
