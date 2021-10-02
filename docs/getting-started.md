@@ -39,6 +39,9 @@ versatility, analyses, and parallelization compared to existing programs (see [h
 
     Download | [*.bib](MMPBSA_py_citation.bib) | [*.ris](MMPBSA_py_citation.ris) | [*.xml](MMPBSA_py_citation.xml)
 
+    Visit [Cite us page](cite_us.md#example) for more information on how to cite `gmx_MMPBSA` and the programs/methods 
+    implemented in it.
+
 Multiple calculations can be performed with `gmx_MMPBSA` such as:
 
 * Normal binding free energies
