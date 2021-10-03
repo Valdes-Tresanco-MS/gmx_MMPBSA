@@ -369,6 +369,25 @@ class CustomItem(QTreeWidgetItem):
             self.app.mdi.activatePreviousSubWindow()
             self.bp_subw.close()
 
+    def plotting_heatmap(self, state):
+        from GMXMMPBSA.analyzer.plots import HeatmapChart
+        self.app.treeWidget.clearSelection()
+        options = {'general_options': self.app.systems[self.system_index]['chart_options']['general_options'],
+                   'heatmap_options': self.app.systems[self.system_index]['chart_options']['heatmap_options'],
+                   'chart_title': self.chart_title, 'chart_subtitle': self.chart_subtitle}
+        if state:
+            self.setSelected(True)
+            if not self.hmp_subw or self.frange != self.hmp_subw.frange or self.heatmap_change:
+                self.pymol_data_change = True  # To don't get to save per-residue data in the pdb
+                self.hmp_subw = HeatmapChart(self.heatmap_plot_data, self.heatmap_chart_action, options=options)
+                self.hmp_subw.frange = self.frange
+                self.heatmap_change = False # make False again
+                self.app.mdi.addSubWindow(self.hmp_subw)
+            self.hmp_subw.show()
+        elif self.hmp_subw:
+            self.app.mdi.activatePreviousSubWindow()
+            self.hmp_subw.close()
+
 
     def setup_data(self, frange, iec2frames=0):
         if self.data is None:
