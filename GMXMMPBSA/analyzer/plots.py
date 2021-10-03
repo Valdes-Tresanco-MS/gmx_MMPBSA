@@ -502,3 +502,20 @@ class MHeatmap:
             self.ax_heatmap.set_xlabel('Frames', fontdict={'fontsize': self.xlabel_fontsize})
 
 
+class OutputFiles(QMdiSubWindow):
+    def __init__(self, text, button):
+        super(OutputFiles, self).__init__()
+        self.setMinimumSize(400, 400)
+        self.textedit = QTextEdit(self)
+        self.textedit.setReadOnly(True)
+        self.setWidget(self.textedit)
+
+        font = QFont("Monospace")
+        font.setStyleHint(QFont.TypeWriter)
+        self.textedit.setFont(font)
+        self.textedit.setPlainText(''.join(text))
+
+        self.button = button
+
+    def closeEvent(self, closeEvent: QCloseEvent) -> None:
+        self.button.setChecked(False)
