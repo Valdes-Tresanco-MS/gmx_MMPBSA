@@ -39,9 +39,6 @@ class InitDialog(QDialog):
 
         self.processing_label = QLabel()
 
-        self.corr_btn = QCheckBox('Calculate correlation between systems')
-        self.corr_btn.setToolTip('Make correlation between systems. Only works if you define more than 3 systems')
-        self.corr_btn.setChecked(False)
         self.show_decomp_btn = QCheckBox('Show decomposition data')
         self.show_decomp_btn.setToolTip('Defines whether the decomposition graphs will be available during the '
                                         'session. Useful when defining a system for correlation analysis.')
@@ -57,7 +54,6 @@ class InitDialog(QDialog):
         self.remove_empty_terms_btn.clicked.connect(self.show_warn)
 
         self.check_l = QHBoxLayout()
-        self.check_l.addWidget(self.corr_btn)
         self.check_l.addWidget(self.show_decomp_btn)
         self.check_l.addWidget(self.remove_empty_charts_btn)
         self.check_l.addWidget(self.remove_empty_terms_btn)
@@ -66,6 +62,21 @@ class InitDialog(QDialog):
                                        'the representation of the data.')
         self.warn_label_empty.setStyleSheet("border:3px solid green")
         self.warn_label_empty.setWordWrap(True)
+
+        self.corr_sys_btn = QCheckBox('Calculate correlation between systems')
+        self.corr_sys_btn.setToolTip('Make correlation between systems. Only works if you define more than 3 systems')
+        self.corr_sys_btn.setChecked(False)
+
+        # mutants correlation
+        self.corr_mut_btn = QCheckBox('Calculate correlation between mutants')
+        self.corr_mut_btn.setToolTip('Make correlation between mutants systems. Only works if you define more than 3 '
+                                 'mutants')
+        self.corr_mut_btn.setChecked(False)
+
+        self.corr_group = QGroupBox('Correlation')
+        self.corr_group_layout = QGridLayout(self.corr_group)
+        self.corr_group_layout.addWidget(self.corr_sys_btn, 0, 0)
+        self.corr_group_layout.addWidget(self.corr_mut_btn, 0, 1)
 
         self.delta_btn = QCheckBox('delta')
         self.delta_btn.setChecked(True)
@@ -94,16 +105,10 @@ class InitDialog(QDialog):
         self.sys_group_layout = QVBoxLayout(self.sys_group)
         self.sys_group_layout.addLayout(self.check_l)
         self.sys_group_layout.addWidget(self.warn_label_empty)
+        self.sys_group_layout.addWidget(self.corr_group)
         self.sys_group_layout.addWidget(self.comp_group)
 
-        self.hide_tb_btn = QCheckBox('Hide ToolBar')
-        self.hide_tb_btn.setChecked(True)
-
-        self.chart_group = QGroupBox('Charts options')
-        self.chart_group_layout = QHBoxLayout(self.chart_group)
-        self.chart_group_layout.addWidget(self.hide_tb_btn)
-
-        self.header_item = QTreeWidgetItem(['Folder name','Select', 'Name', 'Exp.Ki (nM)', 'Temperature', 'Path'])
+        self.header_item = QTreeWidgetItem(['Folder name', 'Select', 'Name', 'Exp.Ki (nM)', 'Chart Settings', 'Path'])
         self.header_item.setToolTip(0, 'Container')
         self.header_item.setToolTip(1, 'Name')
         self.header_item.setTextAlignment(0, Qt.AlignCenter)
@@ -148,7 +153,6 @@ class InitDialog(QDialog):
         self.content_layout = QVBoxLayout(self)
         self.content_layout.addWidget(self.processing_label)
         self.content_layout.addWidget(self.sys_group)
-        self.content_layout.addWidget(self.chart_group)
         self.content_layout.addWidget(self.result_tree)
         self.content_layout.addWidget(self.statusbar)
         self.content_layout.addLayout(self.btn_layout)
@@ -172,15 +176,15 @@ class InitDialog(QDialog):
     def update_item_info(self, item: QTreeWidgetItem, col):
         if item.text(0) == 'All':
             return
-        path = item.info[1]
-        basename = item.text(2)
-        exp_ki = float(item.text(3))
-        temp = float(item.text(4))
-        item.info = [basename, path, exp_ki, temp]
+        # path = item.info[1]
+        # basename = item.text(2)
+        # exp_ki = float(item.text(3))
+        # custom_sett = float(item.checkState(4))
+        # item.info = [basename, path, exp_ki, custom_sett]
 
     def get_files_info(self, info_files):
         self.nfiles = len(info_files)
-        self.f_item = QTreeWidgetItem([f'All'])
+        self.f_item = QTreeWidgetItem(['All'])
         self.f_item.setCheckState(1, Qt.Checked)
         self.f_item.info = None
         self.f_item.setFlags(self.f_item.flags() | Qt.ItemIsAutoTristate)
