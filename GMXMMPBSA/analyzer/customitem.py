@@ -324,9 +324,28 @@ class CustomItem(QTreeWidgetItem):
         elif self.btn_group.id(btn) == 4:
             self.visualizing(checked)
 
-            bar_plot_data = pd.DataFrame(data=bar)
-            line_plot_data = pd.DataFrame(data={'frames': self.frames[start:end:interval],
-                                                'Energy': np.array(data['Energy']).sum(axis=0)})
+    def plotting_line(self, state):
+        from GMXMMPBSA.analyzer.plots import LineChart
+        self.app.treeWidget.clearSelection()
+
+        options = {'general_options': self.app.systems[self.system_index]['chart_options']['general_options'],
+                   'line_options': self.app.systems[self.system_index]['chart_options']['line_options'],
+                   'chart_title': self.chart_title, 'chart_subtitle': self.chart_subtitle}
+
+        if state:
+            self.setSelected(True)
+            if not self.lp_subw or self.frange != self.lp_subw.frange or self.line_change:
+                self.lp_subw = LineChart(self.line_plot_data, self.line_chart_action, data2=self.ie_plot_data,
+                                         options=options)
+                # darkgrid, whitegrid, dark, white, ticks
+                self.lp_subw.frange = self.frange  # set the frange
+                self.line_change = False  # make False again
+                self.app.mdi.addSubWindow(self.lp_subw)
+            self.lp_subw.show()
+        elif self.lp_subw:
+            self.app.mdi.activatePreviousSubWindow()
+            self.lp_subw.close()
+
 
     def setup_data(self, frange, iec2frames=0):
         if self.data is None:
