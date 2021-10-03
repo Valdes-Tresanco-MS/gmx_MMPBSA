@@ -52,17 +52,6 @@ class CorrelationItem(QTreeWidgetItem):
         self.dgnmode_sw = None
         self.dgqh_sw = None
 
-    def getplotdata(self):
-        # correlation_data[sys_name] = {'ΔG': {
-        #     'gb': {'ie': 0, 'qh': 0, 'nmode': 0},
-        #     'pb': {'ie': 0, 'qh': 0, 'nmode': 0},
-        #     'rism std': {'ie': 0, 'qh': 0, 'nmode': 0},
-        #     'rism gf': {'ie': 0, 'qh': 0, 'nmode': 0}},
-        #     'ΔH': {'gb': 0, 'pb': 0, 'rism std': 0, 'rism gf': 0},
-        #     'Exp.Energy': ki2energy(topItem.exp_ki, topItem.app.INPUT['temperature'])}
-        for system in self.cdata:
-
-            pass
 
 class CustomItem(QTreeWidgetItem):
     def __init__(self, parent, stringlist, data=None, app=None, level=0, chart_title='Binding Free Energy',
@@ -498,6 +487,3 @@ class CustomItem(QTreeWidgetItem):
             self.line_plot_data = self.bar_plot_data.sum(axis=1)
             del tempdf
 
-            return_data = Namespace(line_plot_dat=line_plot_data, bar_plot_dat=bar_plot_data,
-                                    heatmap_plot_dat=heatmap_plot_data)
-        return return_data
