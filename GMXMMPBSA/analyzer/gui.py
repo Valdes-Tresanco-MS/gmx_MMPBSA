@@ -444,16 +444,40 @@ class GMX_MMPBSA_ANA(QMainWindow):
         sub.make_chart()
 
     def frames_start_sb_update(self, value):
-        if value > self.frames_end_sb.value():
-            self.frames_end_sb.setValue(value)
+        if value > self.eframes_end_sb.value():
+            self.eframes_end_sb.setValue(value)
+
+        # print(self.current_system_index, '####')
+        if self.current_system_index:
+            current_start = value
+            current_interval = self.eframes_inter_sb.value()
+            current_end = self.eframes_end_sb.value()
+            # current_start, current_interval, current_end = self.systems[self.current_system_index]['current_frames']
+            interval = self.systems[self.current_system_index]['namespace'].INPUT['interval']
+            self.numframes_le.setText(f"{int((current_end - value) // current_interval) + 1}")
 
     def frames_end_sb_update(self, value):
-        if value < self.frames_start_sb.value():
-            self.frames_start_sb.setValue(value)
+        if value < self.eframes_start_sb.value():
+            self.eframes_start_sb.setValue(value)
+        if self.current_system_index:
+            current_start = self.eframes_start_sb.value()
+            current_interval = self.eframes_inter_sb.value()
+            current_end = value
+            # current_start, current_interval, current_end = self.systems[self.current_system_index]['current_frames']
+            interval = self.systems[self.current_system_index]['namespace'].INPUT['interval']
+            self.numframes_le.setText(f"{int((current_end - current_start) // current_interval) + 1}")
 
     def frames_inter_sb_update(self, value):
-        self.frames_start_sb.setSingleStep(value)
-        self.frames_end_sb.setSingleStep(value)
+        # self.eframes_start_sb.setSingleStep(value)
+        # self.eframes_end_sb.setSingleStep(value)
+        if self.current_system_index:
+            current_start = self.eframes_start_sb.value()
+            current_interval = value
+            current_end = self.eframes_end_sb.value()
+
+            # current_start, current_interval, current_end = self.systems[self.current_system_index]['current_frames']
+            interval = self.systems[self.current_system_index]['namespace'].INPUT['interval']
+            self.numframes_le.setText(f"{int((current_end - current_start) // (value * interval)) + 1}")
 
     def initialize(self, info_files):
 
