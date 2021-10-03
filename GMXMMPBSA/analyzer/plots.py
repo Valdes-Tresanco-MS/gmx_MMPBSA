@@ -203,87 +203,41 @@ class LineChart(ChartsBase):
                           fontsize=options['general_options']['fontsize']['title'])
         self.draw(options['chart_subtitle'])
 
-            if Charts.ROLLING in self.options['chart_type']:
-                if ('IE' not in self.item.item_name and 'NMODE' not in self.item.item_name and 'QH' not in
-                        self.item.item_name):
-                    if len(self.data.line_plot_dat['Energy']) > 50:
-                        self.data.line_plot_dat['movav'] = self.data.line_plot_dat['Energy'].rolling(
-                            int(0.1 * len(self.data.line_plot_dat['frames']))).mean()
-                        self.movav_plot = sns.lineplot(data=self.data.line_plot_dat, x='frames', color='red', linewidth=0.8,
-                                                        y='movav', label='Mov. Av.', ax=self.mpl_canvas.axes)
 
-                # self.setWindowTitle(title)
-            if Charts.BAR in self.options['chart_type']:
-                self.item.bp_subw = self
-                if self.bar_plot:
-                    self.bar_plot.cla()
-                    self.bar_plot.clear()
-                self.bar_plot = sns.barplot(data=self.data.bar_plot_dat, ci="sd", errwidth=1, ax=self.mpl_canvas.axes)
-                for label in self.mpl_canvas.axes.get_xticklabels():
-                    label.set_rotation(40)
-                    label.set_horizontalalignment('right')
-                self.mpl_canvas.axes.set_xlabel('')
-                self.mpl_canvas.axes.set_ylabel('Energy (kcal/mol)')
-                title = self.item.chart_title + '(Av.)'
+class BarChart(ChartsBase):
+    def __init__(self, data: pandas.DataFrame, button: QToolButton, options: dict = None):
+        super(BarChart, self).__init__(button, options)
 
-            if Charts.SBAR in self.options['chart_type']:
-                # TODO: stacked bars
-                pass
+        # figure canvas definition
+        self.set_cw()
+        self.fig.set_size_inches(options['bar_options']['figure']['width'],
+                                 options['bar_options']['figure']['height'])
+        if 'groups' in options and options['bar_options']['subplot-components']:
+            axes = self.fig.subplots(1, len(options['groups']), sharey=True,
+                                     gridspec_kw={'width_ratios': [len(x) for x in options['groups'].values()]})
+            palette = (sns.color_palette(options['bar_options']['palette'])
+                       if options['bar_options']['use-palette'] else None)
+            s = 0
+            for c, g in enumerate(options['groups']):
+                bar_plot_ax = sns.barplot(data=data[options['groups'][g]], ci="sd",
+                                          palette=palette[s: s + len(options['groups'][g])] if palette else palette,
+                                          color=rgb2rgbf(options['bar_options']['color']),
+                                          errwidth=1, ax=axes[c])
+                s += len(options['groups'][g])
+                if options['bar_options']['scale-big-values'] and options['scalable']:
+                    bar_plot_ax.set_yscale('symlog')
+                ylabel = '' if c != 0 else 'Energy (kcal/mol)'
+                self.setup_text(bar_plot_ax, options, key='bar_options', title=g, ylabel=ylabel)
+                setattr(self, f'cursor{c}', Cursor(bar_plot_ax, useblit=True, color='black', linewidth=0.5, ls='--'))
 
-            if Charts.HEATMAP in self.options['chart_type']:
-                self.item.hmp_subw = self
-                if self.heatmap_plot:
-                    self.mpl_canvas.axes.collections[-1].colorbar.remove()
-                    self.heatmap_plot.cla()
-                    self.heatmap_plot.clear()
+        else:
+            axes = self.fig.subplots(1, 1)
+            bar_plot_ax = sns.barplot(data=data, ci="sd", errwidth=1, ax=axes)
+            self.setup_text(bar_plot_ax, options, key='bar_options')
+            self.cursor = Cursor(bar_plot_ax, useblit=True, color='black', linewidth=0.5, ls='--')
 
-                xticklabels = self.data.heatmap_plot_dat.columns.tolist()
-                window = int(len(xticklabels) / 10)
-                if type(xticklabels[0]) == str:
-                    self.heatmap_plot = sns.heatmap(self.data.heatmap_plot_dat, ax=self.mpl_canvas.axes, center=0,
-                                                yticklabels=self.data.heatmap_plot_dat.index.tolist(),
-                                                xticklabels=window,
-                                                cmap='seismic', cbar_kws={'label': 'Energy (kcal/mol)'})
-                    title = self.item.chart_title.replace('[Per-residue]', '[Per-wise]')
-                else:
-                    self.heatmap_plot = sns.heatmap(self.data.heatmap_plot_dat, ax=self.mpl_canvas.axes, center=0,
-                                                yticklabels=self.data.heatmap_plot_dat.index.tolist(),
-                                                xticklabels=window,
-                                                cmap='seismic', cbar_kws={'label': 'Energy (kcal/mol)'})
-                    title = self.item.chart_title + '(P.f)'  # Fixme: no frames from correlation
-
-            # if Charts.RELPLOT in self.options['chart_type']:
-            #     self.item.hmp_subw = self
-            #     # Draw each cell as a scatter point with varying size and color
-            #     self.relplot = sns.relplot(
-            #         data=self.data.heatmap_plot_dat,
-            #         x="Residues", y="Pair", hue="Energy", size="Energy",
-            #         palette="seismic",
-            #         hue_norm=(-100, 100),
-            #         edgecolor=".7",
-            #         height=10,
-            #         sizes=(50, 200),
-            #         size_norm=(0, 1),
-            #     )
-            #
-            #     # Tweak the figure to finalize
-            #     self.relplot.set(xlabel="", ylabel="", aspect="equal")
-            #     self.relplot.despine(left=True, bottom=True)
-            #     self.relplot.ax.margins(.02)
-            #     for label in self.relplot.ax.get_xticklabels():
-            #         label.set_rotation(90)
-            #     for artist in self.relplot.legend.legendHandles:
-            #         artist.set_edgecolor(".7")
-            #
-            #     self.mpl_canvas.figure = self.relplot.fig
-
-            if self.item.item_name != 'IE':
-                self.mpl_canvas.axes.invert_yaxis()
+        self.fig.suptitle(f"{options['chart_title']}\n{options['chart_subtitle']}",
+                          fontsize=options['general_options']['fontsize']['title'])
+        self.draw(options['chart_subtitle'])
 
 
-            self.mpl_canvas.axes.set_title(title + '\n' + self.item.chart_subtitle)
-            self.cursor = Cursor(self.mpl_canvas.axes, useblit=True, color='black', linewidth=0.5, ls='--')
-            self.mpl_canvas.draw()
-            self.mpl_canvas.figure.tight_layout()
-            self.mpl_canvas.draw()
-            self.setWindowTitle(title)
