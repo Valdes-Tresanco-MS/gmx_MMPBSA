@@ -241,3 +241,74 @@ class BarChart(ChartsBase):
         self.draw(options['chart_subtitle'])
 
 
+class HeatmapChart(ChartsBase):
+    def __init__(self, data: pandas.DataFrame, button: QToolButton, options: dict = None):
+        super(HeatmapChart, self).__init__(button, options)
+
+        heatmap_type = int(all(data.columns == data.index)) if data.columns.size == data.index.size else 2
+        fig_width = (options['heatmap_options']['figure']['width-per-wise'] if heatmap_type == 1 else
+                     options['heatmap_options']['figure']['width-per-residue'])
+        fig_height = options['heatmap_options']['figure']['height']
+        x_rotation = (options['heatmap_options']['Per-wise']['x-rotation'] if heatmap_type == 1 else
+                      options['heatmap_options']['Per-residue']['x-rotation'])
+        cmap = (Palettes.get_palette(options['heatmap_options']['Per-wise']['palette']) if heatmap_type == 1 else
+                Palettes.get_palette(options['heatmap_options']['Per-residue']['palette']))
+
+        if options['heatmap_options']['highlight-components']:
+            mheatmap = MHeatmap(data=data,
+                                figsize=(fig_width, fig_height),
+                                dpi=self.options['dpi']['plot'],
+                                heatmap_type=heatmap_type,
+                                rec_color=rgb2rgbf(options['heatmap_options']['receptor-color']),
+                                lig_color=rgb2rgbf(options['heatmap_options']['ligand-color']),
+                                show_legend=options['heatmap_options']['legend'],
+                                remove_molid=options['heatmap_options']['remove-molid'],
+                                leg_fontsize=self.options['fontsize']['legend'],
+                                xticks_fontsize=self.options['fontsize']['x-ticks'],
+                                xlabel_fontsize=self.options['fontsize']['x-label'],
+                                x_rotation=x_rotation,
+                                num_xticks=options['heatmap_options']['Per-residue']['num-xticks'],
+                                yticks_fontsize=self.options['fontsize']['y-ticks'],
+                                y_rotation=options['heatmap_options']['y-rotation'],
+                                colorbar_label_fontsize=self.options['fontsize']['colorbar-label'],
+                                colorbar_ticks_fontsize=self.options['fontsize']['colorbar-ticks'],
+                                cmap=cmap,
+                                annot=options['heatmap_options']['Per-wise']['annotation']
+                                )
+
+            # figure canvas definition
+            self.set_cw(mheatmap.fig)
+
+            self.draw(options['chart_subtitle'], tight_layout=True)
+        else:
+            # figure canvas definition
+            self.set_cw()
+            axes = self.fig.subplots(1, 1)
+            nxticks = 1 if self.heatmap_type == 1 else self.data.columns.size // self.num_xticks
+            # heatmap_ax = sns.heatmap(data, ax=axes, center=0,
+            #                          xticklabels=nxticks, cbar_ax=self.ax_cbar,
+            #                          cbar_kws=colorbar_kws,
+            #                          cmap=self.cmap, center=0, annot=self.annot, fmt=".2f"
+            #                          # yticklabels=data.index.tolist(),
+            #                          # xticklabels=window,
+            #                          cmap='seismic', cbar_kws={'label': 'Energy (kcal/mol)'})
+            self.cursor = Cursor(axes, useblit=True, color='black', linewidth=0.5, ls='--')
+
+            self.draw(options['chart_subtitle'])
+        self.fig.suptitle(f"{options['chart_title']}\n{options['chart_subtitle']}",
+                          fontsize=options['general_options']['fontsize']['title'])
+    @staticmethod
+    def get_mol(x: str, rec_color, lig_color):
+        if x.startswith('R:'):
+            return rgb2rgbf(rec_color)
+        else:
+            return rgb2rgbf(lig_color)
+
+    def make_chart(self):
+        """
+        :param graph_type: 1: line plot, 2: bar plot, 3: heatmap plot
+        :return:
+        """
+        pass
+
+
