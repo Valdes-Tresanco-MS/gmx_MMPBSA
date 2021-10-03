@@ -167,7 +167,7 @@ class DataMMPBSA:
 
     def _get_data(self, data_object: Union[H52Data, main.MMPBSA_App]):
         # check the data_object type
-        h5 = True if isinstance(data_object, H52Data) else False
+        h5 = isinstance(data_object, H52Data)
         INPUT = self.app_namespace.INPUT
         numframes = self.app_namespace.INFO['numframes']
         numframes_nmode = self.app_namespace.INFO['numframes_nmode']
@@ -178,14 +178,16 @@ class DataMMPBSA:
         self.frames = [x for x in range(INPUT['startframe'],
                                         INPUT['startframe'] + numframes * INPUT['interval'],
                                         INPUT['interval'])]
+        INPUT['endframe'] = self.frames[-1]
+
         self.nmode_frames = [x for x in range(INPUT['nmstartframe'],
                                               INPUT['nmstartframe'] + numframes_nmode * INPUT['interval'],
                                               INPUT['interval'])]
+        if numframes_nmode:
+            INPUT['nmendframe'] = self.nmode_frames[-1]
         # Now load the data
         if not INPUT['mutant_only']:
             self._get_edata(data_object.calc_types, h5)
-            if INPUT['decomprun']:
-                self._get_ddata(data_object.calc_types.decomp, h5)
         # Are we doing a mutant?
         if data_object.calc_types.mutant:
             self._get_edata(data_object.calc_types.mutant, h5, True)
@@ -245,12 +247,12 @@ class DataMMPBSA:
                                    keys=['complex', 'receptor', 'ligand', 'delta'])
                 data[key] = df
 
-    def _get_ddata(self, calc_types, h5=False, mut=False):
-        data = self.data['decomp']['mutant'] if mut else self.data['decomp']
+    def _get_ddata(self, calc_types, h5=False):
+        data = {}
         # Take the decomp data
         for key in calc_types:
             # since the model data object in MMPBSA_App contain the data in the attribute data and H5 not,
-            # we need to define a conditional object. Also, the decomp data must be re-structured for multiplex
+            # we need to define a conditional object. Also, the decomp data must be re-structured for multiindex
             # Dataframe
             com_calc_type_data = (calc_types[key]['complex'] if h5
                                   else self._transform_from_lvl_decomp(calc_types[key]['complex']))
@@ -274,8 +276,6 @@ class DataMMPBSA:
     def _transform_from_lvl_decomp(nd):
         data = {}
         for k2, v2 in nd.items():  # TDC, SDC, BDC
-            if k2 in ['SDC', 'BDC']:
-                continue
             for k3, v3 in v2.items():  # residue
                 for k4, v4 in v3.items():  # residue in per-wise or terms in per-res
                     if isinstance(v4, dict):  # per-wise
