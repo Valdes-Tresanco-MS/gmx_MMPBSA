@@ -52,13 +52,17 @@ class GMX_MMPBSA_ANA(QMainWindow):
         super(GMX_MMPBSA_ANA, self).__init__()
         self.corr_data = {'mutant': {}}
 
+        self.systems = {}
+        self.current_system_index = None
+
         # five PyMOL instances for reckless
-        self.pymol_p1 = QProcess()
-        self.pymol_p2 = QProcess()
-        self.pymol_p3 = QProcess()
-        self.pymol_p4 = QProcess()
-        self.pymol_p5 = QProcess()
-        self.pymol_p_list = [self.pymol_p1, self.pymol_p2, self.pymol_p3, self.pymol_p4, self.pymol_p5]
+        # FIXME: now we need to iterate over all subwindows and close the PyMOL subprocess if exists
+        # self.pymol_p1 = QProcess()
+        # self.pymol_p2 = QProcess()
+        # self.pymol_p3 = QProcess()
+        # self.pymol_p4 = QProcess()
+        # self.pymol_p5 = QProcess()
+        # self.pymol_p_list = [self.pymol_p1, self.pymol_p2, self.pymol_p3, self.pymol_p4, self.pymol_p5]
 
         self.items_counter = {'charts': 0, 'pymol': [], 'bars': 0, 'line': 0, 'heatmap': 0}
 
