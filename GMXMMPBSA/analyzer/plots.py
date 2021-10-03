@@ -157,41 +157,51 @@ class ChartsBase(QMdiSubWindow):
     def closeEvent(self, closeEvent: QCloseEvent) -> None:
         self.button.setChecked(False)
 
-            self.mpl_canvas.draw()
-            self.mpl_canvas.figure.tight_layout()
-            self.mpl_canvas.draw()
-            self.setWindowTitle(self.item.chart_title)
-        else:
-            self.data = self.item.gmxMMPBSA_current_data
-            title = ''
-            if Charts.LINE in self.options['chart_type']:
-                self.item.lp_subw = self
-                # self.mpl_canvas.axes.cla()
-                if self.line_plot:
-                    self.line_plot.cla()
-                    self.line_plot.clear()
 
-                label = 'ΔH'
-                if 'IE' in self.item.item_name:
-                    label = '-TΔS'
-                if 'NMODE' in self.item.item_name or 'QH' in self.item.item_name:
-                    self.line_plot = sns.lineplot(data=self.data.line_plot_dat, x='frames', color='black',
-                                                  linewidth=0.7,
-                                                  y='Entropy', label=label, ax=self.mpl_canvas.axes)
-                else:
-                    self.line_plot = sns.lineplot(data=self.data.line_plot_dat, x='frames', color='black', linewidth=0.7,
-                             y='Energy', label=label, ax=self.mpl_canvas.axes)
+class LineChart(ChartsBase):
+    def __init__(self, data: pandas.DataFrame, button: QToolButton, options: dict = None, data2=None):
+        super(LineChart, self).__init__(button, options)
+        # figure canvas definition
+        self.set_cw()
+        self.fig.set_size_inches(options['line_options']['figure']['width'],
+                                 options['line_options']['figure']['height'])
+        axes = self.fig.subplots(1, 1)
+        line_plot_ax = sns.lineplot(data=data, color=rgb2rgbf(options['line_options']['line-color']),
+                                    linewidth=options['line_options']['line-width'], ax=axes)
+        line_plot_ax.xaxis.set_major_locator(mticker.MaxNLocator(nbins=options['line_options']['axes']['num-xticks'],
+                                                                 integer=True))
+        line_plot_ax.yaxis.set_major_locator(mticker.MaxNLocator(nbins=options['line_options']['axes']['num-yticks']))
+        self.setup_text(line_plot_ax, options, key='line_options', xlabel='Frames')
+        if data2 is not None:
+            bar_options = options['line_options']['Interaction Entropy']['bar-plot']
+            axins4 = inset_axes(axes,
+                                width=f"{bar_options['width']}%",
+                                height=f"{bar_options['height']}%",
+                                bbox_to_anchor=(
+                                    options['line_options']['Interaction Entropy']['bbox_to_anchor']['x-pos'],
+                                    options['line_options']['Interaction Entropy']['bbox_to_anchor']['y-pos'],
+                                    0.5, 0.5),
+                                bbox_transform=axes.transAxes, loc=4)
+            # plot the ie segment
+            ie_color = rgb2rgbf(options['line_options']['Interaction Entropy']['ie-color'])
+            sns.lineplot(data=data2['data'], color=ie_color, ax=axes)
+            r_sigma = rgb2rgbf(options['line_options']['Interaction Entropy']['sigma-color']['reliable'])
+            nr_sigma = rgb2rgbf(options['line_options']['Interaction Entropy']['sigma-color']['non-reliable'])
+            colors = [ie_color, r_sigma if np.all(data2.loc[:, ['sigma']].mean() < 3.6) else nr_sigma]
+            ax1 = sns.barplot(data=data2, ax=axins4, palette=colors)
+            ax1.tick_params(labelsize=bar_options['axes-fontsize'])
+            ax1.bar_label(ax1.containers[0], size=bar_options['bar-label-fontsize'], fmt='%.2f',
+                          padding=bar_options['bar-label-padding'])
+            ax1.set(xticklabels=[f"ie\n(last\n {len(data2['data'])} frames)", "σ(Int.\nEnergy)"])
+            sns.despine(ax=ax1)
+            ax1.spines['bottom'].set_color('darkgray')
+            ax1.spines['left'].set_color('darkgray')
+            ax1.tick_params(color='black', direction='out', length=6, width=2)
 
-                self.line_plot.xaxis.set_major_locator(mticker.MaxNLocator(nbins=10))
-
-                title = self.item.chart_title + '(P.f)'
-                if 'IE' in self.item.item_name:
-                    self.mpl_canvas.axes.set_ylabel('Interaction Entropy (kcal/mol)')
-                    self.mpl_canvas.axes.axvline(self.item.ie[0][0], ls='--', color='r')
-                    self.mpl_canvas.axes.hlines(self.item.ie[1], xmin=self.item.ie[0][0], xmax=self.item.ie[0][1], ls='--',
-                                                color='g')
-                else:
-                    self.mpl_canvas.axes.set_ylabel('Energy (kcal/mol)')
+        self.cursor = Cursor(axes, useblit=True, color='black', linewidth=0.5, ls='--')
+        self.fig.suptitle(f"{options['chart_title']}\n{options['chart_subtitle']}",
+                          fontsize=options['general_options']['fontsize']['title'])
+        self.draw(options['chart_subtitle'])
 
             if Charts.ROLLING in self.options['chart_type']:
                 if ('IE' not in self.item.item_name and 'NMODE' not in self.item.item_name and 'QH' not in
