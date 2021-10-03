@@ -89,20 +89,30 @@ class GMX_MMPBSA_ANA(QMainWindow):
         self.addDockWidget(Qt.RightDockWidgetArea, self.correlation_DockWidget)
 
         self.treeWidget = QTreeWidget(self)
+        self.treeWidget.setMinimumWidth(380)
         self.treeWidget.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.treeWidget.customContextMenuRequested.connect(self.data_context_menu)
+        # self.treeWidget.customContextMenuRequested.connect(self.data_context_menu)
+        self.treeWidget.itemSelectionChanged.connect(self.update_system_selection)
 
-        self.treeDockWidget.setWidget(self.treeWidget)
-        sys_label = QTreeWidgetItem(['System', 'F', 'A', 'H', 'V'])
+        self._make_options_panel()
+
+        self.data_container = QSplitter(Qt.Vertical)
+        self.data_container.addWidget(self.treeWidget)
+        self.data_container.addWidget(self.optionWidget)
+        self.data_container.setStretchFactor(0, 10)
+        # self.data_container.setStretchFactor(1, 1)
+
+        self.treeDockWidget.setWidget(self.data_container)
+        sys_label = QTreeWidgetItem(['System', 'Charts'])
         sys_label.setToolTip(0, 'System')
-        sys_label.setToolTip(1, 'Per-frame charts')
-        sys_label.setToolTip(2, 'Summation of average elements')
-        sys_label.setToolTip(3, 'Heatmap for comparative elements')
-        sys_label.setToolTip(4, 'Interactive view per-residue or per-wise calculation results')
+        sys_label.setToolTip(1, 'Charts')
+
         self.treeWidget.setHeaderItem(sys_label)
         self.treeWidget.setColumnHidden(4, True)
         header = self.treeWidget.header()
-        header.setSectionResizeMode(QHeaderView.ResizeToContents)
+        header.setStretchLastSection(False)
+        header.setSectionResizeMode(1, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(0, QHeaderView.Stretch)
 
         self.correlation_treeWidget = QTreeWidget(self)
         self.correlation_treeWidget.itemClicked.connect(self.update_table)
@@ -129,73 +139,6 @@ class GMX_MMPBSA_ANA(QMainWindow):
         self.corr_container_widget.addWidget(self.correlation_treeWidget)
         self.corr_container_widget.addWidget(self.data_table_widget)
         self.correlation_DockWidget.setWidget(self.corr_container_widget)
-
-
-        # self.optionWidget = QWidget(self)
-        # # self.optionWidget.setSizePolicy(QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum))
-        # self.optionDockWidget.setWidget(self.optionWidget)
-        # self.optionWidget_l = QVBoxLayout(self.optionWidget)
-        #
-        # self.optionWidget_c = QTabWidget(self)
-        # self.optionWidget_l.addWidget(self.optionWidget_c)
-        # self.frames_w = QWidget(self.optionWidget_c)
-        # self.optionWidget_c.addTab(self.frames_w, 'Frames')
-        # self.frames_wl = QVBoxLayout(self.frames_w)
-        #
-        # self.frames_group = QGroupBox('Range')
-        #
-        # self.frames_start_l = QLabel('Start')
-        # self.frames_end_l = QLabel('End')
-        # self.frames_inter_l = QLabel('Interval')
-        # self.frames_start_sb = QSpinBox()
-        # self.frames_start_sb.setRange(1, 10000)
-        # self.frames_start_sb.setAccelerated(True)
-        # self.frames_start_sb.valueChanged.connect(self.frames_start_sb_update)
-        # self.frames_inter_sb = QSpinBox()
-        # self.frames_inter_sb.valueChanged.connect(self.frames_start_sb_update)
-        # self.frames_end_sb = QSpinBox()
-        # self.frames_end_sb.setRange(1, 10000)
-        # self.frames_end_sb.setAccelerated(True)
-        # self.frames_end_sb.valueChanged.connect(self.frames_end_sb_update)
-        #
-        # self.frames_group_l = QGridLayout(self.frames_group)
-        # self.frames_group_l.addWidget(self.frames_start_l, 0, 0)
-        #
-        # self.frames_group_l.addWidget(self.frames_start_sb, 0, 1)
-        # self.frames_group_l.addWidget(self.frames_inter_l, 0, 2)
-        # self.frames_group_l.addWidget(self.frames_inter_sb, 0, 3)
-        # # self.frames_group_l.addWidget(QWidget(), 0, 2)
-        # self.frames_group_l.addWidget(self.frames_end_l, 0, 4)
-        # self.frames_group_l.addWidget(self.frames_end_sb, 0, 5)
-        #
-        # # self.frames_group_l.addWidget(self.frames_start_l, 0, 0)
-        # self.frames_wl.addWidget(self.frames_group)
-        # self.curr_frb = QRadioButton('Current chart')
-        # self.curr_frb.setEnabled(False)
-        # # self.curr_frb.setChecked(True)
-        # self.curr_sys_frb = QRadioButton('Selected System')
-        # self.all_frb = QRadioButton('All Systems')
-        # self.all_frb.setChecked(True)
-        #
-        # self.btn_group = QButtonGroup()
-        # self.btn_group.addButton(self.curr_frb, 1)
-        # self.btn_group.addButton(self.curr_sys_frb, 2)
-        # self.btn_group.addButton(self.all_frb, 3)
-        # self.frames_wl.addWidget(self.curr_frb)
-        # self.frames_wl.addWidget(self.curr_sys_frb)
-        # self.frames_wl.addWidget(self.all_frb)
-        # self.frames_wl.addStretch(1)
-        #
-        #
-        #
-        # self.updatecharts_btn = QPushButton('Update')
-        # self.updatecharts_btn.clicked.connect(self.update_dc)
-        # self.resetchart_btn = QPushButton('Reset')
-        # self.btn_l = QHBoxLayout()
-        # self.btn_l.addWidget(self.resetchart_btn)
-        # self.btn_l.addWidget(self.updatecharts_btn)
-        #
-        # self.optionWidget_l.addLayout(self.btn_l)
 
         # self.exportpdb = ExportDialog(self)
         # self.exportcsv = ExportDialogCSV(self)
