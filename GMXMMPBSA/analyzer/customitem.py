@@ -266,6 +266,36 @@ class CustomItem(QTreeWidgetItem):
         self.options_button.setContentsMargins(0, 0, 0, 0)
         self.options_button.setMenu(options_menu)
 
+    def _show_output_file(self, state):
+        from GMXMMPBSA.analyzer.plots import OutputFiles
+        self.app.treeWidget.clearSelection()
+        if state:
+            self.setSelected(True)
+            if not self.output_file_subw:
+                self.output_file_subw = OutputFiles(
+                    self.app.systems[self.system_index]['namespace'].INFO['output_file'],
+                    self.output_action)
+                self.app.mdi.addSubWindow(self.output_file_subw)
+            self.output_file_subw.show()
+        elif self.output_file_subw:
+            self.app.mdi.activatePreviousSubWindow()
+            self.output_file_subw.close()
+
+    def _show_decomp_output_file(self, state):
+        from GMXMMPBSA.analyzer.plots import OutputFiles
+        self.app.treeWidget.clearSelection()
+        if state:
+            self.setSelected(True)
+            if not self.decomp_output_file_subw:
+                self.decomp_output_file_subw = OutputFiles(
+                    self.app.systems[self.system_index]['namespace'].INFO['decomp_output_file'],
+                    self.decomp_output_action)
+                self.app.mdi.addSubWindow(self.decomp_output_file_subw)
+            self.decomp_output_file_subw.show()
+        elif self.decomp_output_file_subw:
+            self.app.mdi.activatePreviousSubWindow()
+            self.decomp_output_file_subw.close()
+
     def fn_btn_group(self, btn, checked):
         all_checked = all(x.isChecked() for x in self.btn_group.buttons())
         all_unchecked = not any(x.isChecked() for x in self.btn_group.buttons())
