@@ -818,29 +818,61 @@ class GMX_MMPBSA_ANA(QMainWindow):
         # self.treeWidget.itemChanged.connect(self.showdata)
         self.correlation_treeWidget.itemChanged.connect(self.showcorr)
 
-    def makeTree(self, system, data, app, options):
+    def makeTree(self, sys_index, options):
 
-        sys_name = system[0]
-        if app.FILES.stability:
-            sys_name += ' (Stability)'
-        idecomp = app.INPUT['idecomp']
-        # set visible the pymol checkbox
-        if idecomp:
-            self.treeWidget.setColumnHidden(4, False)
         # make system item
-        self.sys_item = CustomItem(self.treeWidget, [sys_name], system, app, False,
-                                   remove_empty_terms=options['remove_empty_terms'])
-        self.normalitem = CustomItem(self.sys_item, ['Normal'], has_chart=False)
-        self.makeItems(data, self.normalitem, options)
+
+        self.sys_item = CustomItem(self.treeWidget, [self.systems[sys_index]['name']], app=self, system_index=sys_index,
+                                   buttons=(-1,), remove_empty_terms=options['remove_empty_terms'])
+        self.normalitem = CustomItem(self.sys_item, ['Normal'])
+        self.makeItems(sys_index, self.normalitem, options)
         self.normalitem.setExpanded(True)
 
-        if data.mutant:
-            self.mutantitem = CustomItem(self.sys_item, ['Mutant'], has_chart=False)
-            self.makeItems(data.mutant, self.mutantitem, options, True)
+        if self.systems[sys_index]['data'].mutant:
+            self.mutantitem = CustomItem(self.sys_item, ['Mutant'])
+            self.makeItems(sys_index, self.mutantitem, options, 1)
             self.mutantitem.setExpanded(True)
+
+            self.mut_norm_item = CustomItem(self.sys_item, ['Mutant-Normal'])
+
+            norm_data = self.systems[sys_index]['data']
+            mut_data = self.systems[sys_index]['data'].mutant
+            delta_data = self.systems[sys_index]['data'].delta = {}
+            for x, y in zip(norm_data, mut_data):
+                if x in ['ie', 'c2']:
+                    continue
+                elif x == 'decomp':
+                    continue
+                else:
+                    delta_data[x] = mut_data[x] - norm_data[x]
+                # if isinstance(x, pandas.DataFrame):
+                #     self.systems[sys_index]['data'].delta = {x: }
+
+            self.makeItems(sys_index, self.mut_norm_item, options, mutant=2)
+            self.mut_norm_item.setExpanded(True)
+
         self.sys_item.setExpanded(True)
 
-    def makeItems(self, data, topItem, options, mutant=False):
+        itemiter = QTreeWidgetItemIterator(self.sys_item)
+        while itemiter.value():
+            item = itemiter.value()
+            if item.item_type in ['energy', 'ie', 'c2']:
+                frange = self.systems[item.system_index]['current_frames']
+            else:
+                frange = self.systems[item.system_index]['current_nmode_frames']
+
+            if item.item_type == 'ie':
+                eframes = self.systems[item.system_index]['current_ie_frames']
+            elif item.item_type == 'c2':
+                eframes = self.systems[item.system_index]['current_c2_frames']
+            else:
+                eframes = 0
+            item.setup_data(frange, eframes)
+            sb = item.setup_buttons()
+
+            if sb:
+                self.treeWidget.setItemWidget(item, 1, sb)
+            itemiter += 1
 
         correlation_data = self.corr_data
         mut_pre = ''
