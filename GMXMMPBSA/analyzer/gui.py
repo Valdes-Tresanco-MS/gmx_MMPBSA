@@ -357,81 +357,86 @@ class GMX_MMPBSA_ANA(QMainWindow):
             self.chart_options_w.setParameters(self.chart_options_param, showTop=False)
         self.current_system_index = parent_item.system_index
 
-    def data_context_menu(self, point):
+    def _get_changes(self, sett, osett):
+        # changes
+        line = False
+        bar = False
+        heatmap = False
 
-        index = self.treeWidget.indexAt(point)
-        if not index.isValid():
-            return
-        item = self.treeWidget.itemAt(point)
-        name = item.text(0)  # The text of the node.
-        self.cont_menu = QMenu(self.treeWidget)
-        save_line_csv = None
-        save_bar_csv = None
-        save_heatmap_csv = None
-        save_pdb = None
-        if 1 in item.col_box:
-            save_line_csv = self.cont_menu.addAction(f"Save {item.text(0)} CSV (Line)")
-        if 2 in item.col_box:
-            save_bar_csv = self.cont_menu.addAction(f"Save {item.text(0)} CSV (Bar)")
-        if 3 in item.col_box:
-            save_heatmap_csv = self.cont_menu.addAction(f"Save {item.text(0)} CSV (Heatmap)")
-        if 4 in item.col_box:
-            save_pdb = self.cont_menu.addAction("Save PDB")
-        action = self.cont_menu.exec_(self.treeWidget.mapToGlobal(point))
-        if save_line_csv and action == save_line_csv:
-            item.gmxMMPBSA_current_data.line_plot_dat.to_csv(item.syspath.parent.joinpath(
-                item.chart_subtitle.replace(' | ', '_') + '_line.csv'), index=False)
-        elif save_bar_csv and action == save_bar_csv:
-            item.gmxMMPBSA_current_data.bar_plot_dat.mean().to_csv(item.syspath.parent.joinpath(
-                item.chart_subtitle.replace(' | ', '_') + '_bar.csv'), index=True)
-        elif save_heatmap_csv and action == save_heatmap_csv:
-            item.gmxMMPBSA_current_data.heatmap_plot_dat.to_csv(item.syspath.parent.joinpath(
-                item.chart_subtitle.replace(' | ', '_') + '_heatmap.csv'), index=True)
-        elif save_pdb and action == save_pdb:
-            if hasattr(item.app.FILES, 'complex_fixed'):
-                com_pdb = item.syspath.parent.joinpath(item.app.FILES.complex_fixed)
+        for k, ko in zip(sett, osett):
+            if k == 'bar_options':
+                if sett[k] != osett[ko]:
+                    bar = True
+            elif k == 'general_options':
+                if sett[k] != osett[ko]:
+                    line = True
+                    bar = True
+                    heatmap = True
+            elif k == 'line_options':
+                if sett[k] != osett[ko]:
+                    line = True
+            elif sett[k] != osett[ko]:
+                heatmap = True
+        return line, bar, heatmap
+
+    def update_frames_fn(self):
+
+        cs = ChartSettings()
+        if self.all_frb.isChecked():
+            for x in self.systems:
+                self.systems[x]['current_frames'] = [self.eframes_start_sb.value(),
+                                                     self.eframes_end_sb.value(),
+                                                     self.eframes_inter_sb.value()]
+                # FIXME: update frames for entropy
+        # TODO: update frames for individual charts?
+        else:
+            act_frange = [self.eframes_start_sb.value(), self.eframes_end_sb.value(), self.eframes_inter_sb.value()]
+            act_sett = self.chart_options_param.saveState()
+            curr_frange = self.systems[self.current_system_index]['current_frames']
+            curr_sett = self.systems[self.current_system_index]['chart_options_state']
+
+            rdcs = cs.get_settings(act_sett)
+            rdcs_c = cs.get_settings(curr_sett)
+            if act_frange == curr_frange and rdcs == rdcs_c:
+                return
+
+            self.systems[self.current_system_index]['current_frames'] = act_frange
+            # chart options
+            self.systems[self.current_system_index]['chart_options'] = cs.get_settings(act_sett)
+            self.systems[self.current_system_index]['chart_options_state'] = act_sett
+            self.systems[self.current_system_index]['changes'] = self._get_changes(rdcs, rdcs_c)
+
+        # FIXME: create a progress bar if the task take long time
+
+        # IMPORTANT: recalculate IE and C2
+        itemiter = QTreeWidgetItemIterator(self.sys_item)
+        while itemiter.value():
+            item = itemiter.value()
+            if item.item_type in ['energy', 'ie', 'c2']:
+                frange = self.systems[item.system_index]['current_frames']
             else:
-                self.statusbar.showMessage(f'{item.app.FILES.prefix + "FIXED_COM.pdb"} not exits. The modified PDB file can '
-                                f'be inconsistent. Please, consider use the latest version of gmx_MMPBSA', 20000)
-                com_pdb = item.syspath.parent.joinpath(item.app.FILES.prefix + 'COM.pdb')
+                frange = self.systems[item.system_index]['current_nmode_frames']
 
-            com_pdb_str = parmed.read_PDB(com_pdb.as_posix())
-            res_dict = item.gmxMMPBSA_current_data.bar_plot_dat.mean().to_dict()
-            for res in com_pdb_str.residues:
-                res_notation = f'{res.chain}:{res.name}:{res.number}'
-                if res_notation in res_dict:
-                    res_energy = res_dict[res_notation]
-                else:
-                    res_energy = 0.00
-                for at in res.atoms:
-                    at.bfactor = res_energy
-            output_path = com_pdb.parent.joinpath(f'{item.sysname}_energy2bfactor.pdb')
-            com_pdb_str.save(output_path.as_posix(), 'pdb', True, renumber=False)
+            if item.item_type == 'ie':
+                eframes = self.systems[item.system_index]['current_ie_frames']
+            elif item.item_type == 'c2':
+                eframes = self.systems[item.system_index]['current_c2_frames']
+            else:
+                eframes = 0
+            item.setup_data(frange, eframes)
+            item.changes(*self.systems[item.system_index]['changes'])
+            itemiter += 1
 
-    def corr_context_menu(self, point):
+        # restore to False all changes in each system
+        for x in self.systems:
+            self.systems[x]['changes'] = [False, False, False]
 
-        index = self.correlation_treeWidget.indexAt(point)
-        if not index.isValid():
-            return
-        item = self.correlation_treeWidget.itemAt(point)
-        cont_menu = QMenu(self.correlation_treeWidget)
-        save_csv = cont_menu.addAction(f"Save {item.text(0)} model CSV")
-        action = cont_menu.exec_(self.correlation_treeWidget.mapToGlobal(point))
-
-        if action == save_csv:
-            options = QFileDialog.Options()
-            options |= QFileDialog.DontUseNativeDialog
-            fileName, _ = QFileDialog.getSaveFileName(self, "Save CSV file", f"correlation_{item.text(0)}_model.csv", "CSV (*.csv)",
-                                                      options=options)
-            if fileName:
-                item.model.to_csv(fileName, index=False)
-
-    def update_dc(self):
-        sub = self.mdi.activeSubWindow()
-        c_start = self.frames_start_sb.value() - sub.item.start
-        c_end = self.frames_end_sb.value() - sub.item.start
-        sub.item.update_data(c_start, c_end, self.frames_inter_sb.value())
-        sub.make_chart()
+        # update current open charts. This must be made after update the variables current_frames, etc., in the system
+        subwindows = self.mdi.subWindowList()
+        for sub in subwindows:
+            if sub.isVisible():
+                sub.button.setChecked(False)
+                sub.button.setChecked(True)
 
     def reset_dc(self):
         sub = self.mdi.activeSubWindow()
