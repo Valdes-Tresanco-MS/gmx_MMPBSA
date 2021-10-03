@@ -194,10 +194,11 @@ class InitDialog(QDialog):
 
         files_list = info_files
         names = []
-        c = 1
-        for fname in files_list:
+        for c, fname in enumerate(files_list, start=1):
             basename = None
             exp_ki = None
+            mut_only = False
+            mutant = None
             with open(fname) as fi:
                 for line in fi:
                     if line.startswith("INPUT['sys_name']"):
@@ -207,26 +208,60 @@ class InitDialog(QDialog):
                                 basename = f"{basename}-{names.count(basename) + 1}"
                             names.append(basename)
                     if line.startswith("INPUT['exp_ki']"):
-                        exp_ki = line.split()[2]
-                    if line.startswith("INPUT['entropy_temp']"):
-                        temp = line.split()[2]
-                    if line.startswith("INPUT['temperature']"):
-                        temp = line.split()[2]
+                        exp_ki = float(line.split()[2])
+                    if line.startswith("INPUT['mutant_only']"):
+                        mut_only = int(line.split()[2])
+                    if line.startswith("mut_str"):
+                        mutant = line.split()[2].replace("'", "")
+            # check for custom settings
+            custom_settings = fname.parent.joinpath('settings.json').exists()
+            # custom_settings = True
+            cb = QComboBox()
+            cb.addItem('Default')
+            if custom_settings:
+                cb.addItem('Custom')
+                cb.setCurrentIndex(1)
+
             if not basename:
                 basename = f'System-{c}'
             if not exp_ki:
                 exp_ki = 0.0
-            item = QTreeWidgetItem([f'{fname.parent.name}', '', f'{basename}', f'{exp_ki}', f'{temp}',
-                                    f'{fname.parent.absolute()}'])
-            item.info = [basename, Path(fname), float(exp_ki), float(temp)]
-            item.setCheckState(1, Qt.Checked)
-            item.setFlags(item.flags() |  Qt.ItemIsEditable)
-            item.setTextAlignment(2, Qt.AlignCenter)
-            item.setTextAlignment(3, Qt.AlignRight)
-            item.setTextAlignment(4, Qt.AlignCenter)
+
+            item = QTreeWidgetItem([f'{fname.parent.name}', '', f'{basename}', '', '', f'{fname.parent.absolute()}'])
+            item.setFlags(item.flags() | Qt.ItemIsAutoTristate)
+
+            self._set_item_properties(item, custom_settings=True)
             self.f_item.addChild(item)
-            c += 1
+
+            if not mut_only:
+                witem = QTreeWidgetItem(['', '', 'wild type', f'{exp_ki}', '', ''])
+                # witem.info = [basename, Path(fname)]
+                self._set_item_properties(witem)
+                item.addChild(witem)
+
+            if mutant:
+                print(mutant)
+                mitem = QTreeWidgetItem(['', '', f'{mutant}', f'{exp_ki}', '', ''])
+                # mitem.info = [basename, Path(fname)]
+                self._set_item_properties(mitem)
+                item.addChild(mitem)
+
+            item.info = [basename, Path(fname), custom_settings]
+
+            item.setExpanded(True)
+            self.result_tree.setItemWidget(item, 4, cb)
         self.f_item.setExpanded(True)
+
+    def _set_item_properties(self, item: QTreeWidgetItem, custom_settings=False):
+        # if custom_settings:
+        #     item.setText(4, 'Custom')
+        #     item.setCheckState(4, Qt.Checked)
+        #     print('fffffffffffffffffFFFF')
+        item.setCheckState(1, Qt.Checked)
+        item.setFlags(item.flags() | Qt.ItemIsEditable)
+        item.setTextAlignment(2, Qt.AlignCenter)
+        item.setTextAlignment(3, Qt.AlignRight)
+        item.setTextAlignment(4, Qt.AlignCenter)
 
     def get_data(self):
 
