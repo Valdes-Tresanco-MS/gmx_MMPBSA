@@ -874,230 +874,46 @@ class GMX_MMPBSA_ANA(QMainWindow):
                 self.treeWidget.setItemWidget(item, 1, sb)
             itemiter += 1
 
-        correlation_data = self.corr_data
-        mut_pre = ''
-        if mutant:
-            mut_pre = 'Mut. '
-            correlation_data = self.corr_data['mutant']
+    def _remove_empty(self, data, options, namespace):
+        if options['remove_empty_terms'] and (
+                'UB' in data.name
+                or 'IMP' in data.name
+                or 'CMAP' in data.name
+                and not namespace.INFO['using_chamber']
+        ):
+            return True
+        elif options['remove_empty_charts'] and (all(data > -0.01) and all(data < 0.01)):
+            # FIXME: Do we need to clarify that they are not terms like Gsolv, Ggas and TOTAL?
+            return True
 
-        parts = options['components'] + ['delta']
-        if topItem.app.FILES.stability:
-            parts.append('complex')
-        sys_name = topItem.sysname
-        correlation_data[sys_name] = {'ΔG': {
-                                            'gb': {'ΔH': np.nan, 'ie': np.nan, 'nmode': np.nan, 'qh': np.nan},
-                                            'pb': {'ΔH': np.nan, 'ie': np.nan, 'nmode': np.nan, 'qh': np.nan},
-                                            'rism std': {'ΔH': np.nan, 'ie': np.nan, 'nmode': np.nan, 'qh': np.nan},
-                                            'rism gf': {'ΔH': np.nan, 'ie': np.nan, 'nmode': np.nan, 'qh': np.nan}},
-                                      'Exp.Energy': ki2energy(topItem.exp_ki, topItem.temp)}
-        all_keys = {'models_keys': ['gb', 'pb', 'rism gf', 'rism std'], 'entropy_keys': ['ie', 'nmode', 'qh'],
-                    'decomp_keys': ['decomp']}
-        models_keys = []
-        entropy_keys = []
-        decomp_keys = []
-        keys = []
-        for key in all_keys:
-            if key == 'models_keys':
-                for mk in all_keys['models_keys']:
-                    if mk in data:
-                        models_keys.append(mk)
-            if key == 'entropy_keys':
-                for ek in all_keys['entropy_keys']:
-                    if ek in data:
-                        entropy_keys.append(ek)
-            if key == 'decomp_keys':
-                for dk in all_keys['decomp_keys']:
-                    if dk in data:
-                        decomp_keys.append(dk)
+    def _itemdata_properties(self, data, decomp=False):
+        """
+        Pre-processing the items data.
+        Get the following properties:
+        - scalable: if any value is gt 10^2
+        - separable: if contains subcategories (DH [energetics components], Per-residue[receptor and ligand])
 
-        for level in models_keys:
-            item = CustomItem(topItem, [level.upper()], has_chart=False)
-            for level1 in data[level]:
-                # LEVEL-1 [complex, receptor, ligand] + delta
-                if level1 in parts: # only show graphs for selected parts
-                    item1 = CustomItem(item, [str(level1).upper()], cdata=data[level][level1], level=1,
-                                       chart_title=f"Energetic Components",
-                                       chart_subtitle=f"{mut_pre}{sys_name} | {level.upper()} | {level1.upper()}",
-                                       col_box=[2])
-                    self.items_counter['charts'] += 1
-                    for level2 in data[level][level1]:
-                        # LEVEL-2 [GB, PB or 3D-RISM components]
-                        if level1 == 'delta' and level2 == 'DELTA TOTAL':
-                            correlation_data[sys_name]['ΔG'][level]['ΔH'] = data[level][level1][level2]
-                        if (level2 != 'DELTA TOTAL' and options['remove_empty_charts'] and
-                                abs(data[level][level1][level2].mean()) < 0.1):
-                            continue
-                        item2 = CustomItem(item1, [str(level2).upper()], cdata=data[level][level1][level2],
-                                               level=0, chart_title=f"Energetic Components",
-                                               chart_subtitle=f"{mut_pre}{sys_name} | {level.upper()} | "
-                                                              f"{level1.upper()} | {level2.upper()}",
-                                           col_box=[1])
-                        self.items_counter['charts'] += 1
-
-        # check if any entropy approach
-        if entropy_keys:
-            item = CustomItem(topItem, ['Entropy'], has_chart=False)
-            itemd = CustomItem(topItem, ['ΔG Binding'], has_chart=False)
-
-            for level in entropy_keys:
-                if level == 'ie':
-                    item1 = CustomItem(item, [str(level).upper()], cdata=data[level]['data'],
-                                       level=0, chart_title=f"Interaction Entropy (-TΔS)",
-                                       chart_subtitle=f"{mut_pre}{sys_name} | {level.upper()}",
-                                       col_box=[1])
-                    # TODO: improve ieframes calculation
-                    ieframes = int((data[level]['frames'][1] - data[level]['frames'][0])/item.interval) + 1
-                    ent = data[level]['data'][-ieframes:]
-                    item1.ie = [data[level]['frames'], data[level]['value']]
-                    self.items_counter['charts'] += 1
-                else:
-                    iteme = CustomItem(item, [str(level).upper()], has_chart=False)
-                    for level1 in data[level]:
-                        # LEVEL-1 [complex, receptor, ligand] + delta
-                        if level1 in parts:  # only show graphs for selected parts
-                            ent_dict = {datum: data[level][level1][datum] * -1 for datum in data[level][level1]}
-                            item1 = CustomItem(iteme, [str(level1).upper()], cdata=ent_dict,
-                                               level=1, chart_title=f"Entropy {str(level).upper()} approximation ("
-                                                                    f"-TΔS)",
-                                               chart_subtitle=f"{mut_pre}{sys_name} | {level.upper()} | "
-                                                              f"{level1.upper()}",
-                                               col_box=[2])
-                            # for level2 in data[level][level1]:
-                            #     item2 = CustomItem(item1, [f"{str(level).upper()} {str(level2).upper()}"],
-                            #                        cdata=data[level][level1][level2],
-                            #                        level=0.1, chart_title=f"{str(level).upper()} Entropy",
-                            #                        chart_subtitle=f"{mut_pre}{sys_name} | {level.upper()} | "
-                            #                                       f"{level1.upper()} | {level2.upper()}",
-                            #                        col_box=[1])
-                            self.items_counter['charts'] += 1
-                    ent = data[level]['delta']['Total'] * -1 # Since nmode and qh calculate the TΔS term
-
-
-                for model in correlation_data[sys_name]['ΔG']:
-                    if correlation_data[sys_name]['ΔG'][model]['ΔH'] is np.nan:
-                        continue
-                    itemd1 = CustomItem(itemd, [str(model).upper()], has_chart=False)
-
-                    if len(correlation_data[sys_name]['ΔG'][model]['ΔH']) != len(ent):
-                        dg = correlation_data[sys_name]['ΔG'][model]['ΔH'] + ent.mean()
-                        if len(correlation_data[sys_name]['ΔG'][model]['ΔH']) > len(ent):
-                            for t in range(abs(len(correlation_data[sys_name]['ΔG'][model]['ΔH']) - len(ent))):
-                                ent = np.append(ent, np.nan)
-                        # else:
-                        #     dh = correlation_data[sys_name]['ΔG'][model]['ΔH']
-                        #     for t in range(abs(len(correlation_data[sys_name]['ΔG'][model]['ΔH']) - len(ent))):
-                        #         dh = np.append(dh, np.nan)
-                    else:
-                        dg = correlation_data[sys_name]['ΔG'][model]['ΔH'] + np.nanmean(ent)
-                    itemd2 = CustomItem(itemd1, [f'ΔG Binding ({str(level).upper()})'],
-                                        cdata={'ΔH': correlation_data[sys_name]['ΔG'][model]['ΔH'], '-TΔS': ent,
-                                               'ΔG': dg},
-                                        level=1.1, chart_title=f"ΔG Binding",
-                                        chart_subtitle=f"{mut_pre}{sys_name} | {str(model).upper()} | {level.upper()}",
-                                        col_box=[2])
-                    self.items_counter['charts'] += 1
-                    correlation_data[sys_name]['ΔG'][model][level] = dg
-
-        for level in decomp_keys:
-            # omit decomp data
-            if not options['decomposition']:
-                continue
-            item = CustomItem(topItem, [str(level).upper()], has_chart=False)
-            for level1 in data[level]:
-                # LEVEL-1 [GB or PB]
-                item1 = CustomItem(item, [str(level1).upper()], has_chart=False)
-                for level2 in data[level][level1]:
-                    # LEVEL-2 [complex, receptor, ligand, delta]
-                    if level2 in parts:
-                        item2 = CustomItem(item1, [str(level2).upper()], has_chart=False)
-                        for level3 in data[level][level1][level2]:
-                            #  LEVEL-3 [TDC, SDC, BDC]
-                            if topItem.idecomp in [1, 2]:
-                                # Per-residue
-                                item_level = 2
-                            else:
-                                # Per-wise
-                                item_level = 3
-                            col_box = [1, 2, 3]
-                            # only make a checkbox for TDC
-                            if level3 == 'TDC' and level2 == 'delta':
-                                col_box.append(4)
-                            item3 = CustomItem(item2, [str(level3).upper()],
-                                               cdata=data[level][level1][level2][level3],
-                                               level=item_level, chart_title=f"Energetic Components [Per-residue]",
-                                               chart_subtitle=f"{mut_pre}{sys_name} | {level.upper()} | "
-                                                              f"{level1.upper()} | {level2.upper()} | "
-                                                              f"{level3.upper()}",
-                                               col_box=col_box)
-                            self.items_counter['charts'] += 1
-                            if 4 in col_box:
-                                self.items_counter['pymol'].append(item3)
-                            for level4 in data[level][level1][level2][level3]:
-                                # LEVEL-4 Selected residues
-                                col_box = [2]
-                                if topItem.idecomp in [1, 2]:
-                                    # Per-residue
-                                    item_level = 1
-                                else:
-                                    # Per-wise
-                                    item_level = 2
-                                    col_box.extend([1, 3])
-                                item4 = CustomItem(item3, [str(level4).upper()],
-                                                   cdata=data[level][level1][level2][level3][level4],
-                                                   level=item_level,
-                                                   chart_title=f"Energetic Components [Per-residue]",
-                                                   chart_subtitle=f"{mut_pre}{sys_name} | {str(level).upper()} | "
-                                                                  f"{str(level1).upper()} | {str(level2).upper()} | "
-                                                                  f"{str(level3).upper()} | {str(level4).upper()}",
-                                                   col_box=col_box)
-                                self.items_counter['charts'] += 1
-
-                                for level5 in data[level][level1][level2][level3][level4]:
-                                    # LEVEL-5 AA energetic terms if per-residue or per-wise residues
-                                    if topItem.idecomp in [1, 2]:
-                                        item5 = CustomItem(item4, [str(level5).upper()],
-                                                           cdata=data[level][level1][level2][level3][level4][
-                                                               level5],
-                                                           level=0,
-                                                           chart_title=f"Energetic Components [Per-wise]",
-                                                           chart_subtitle=f"{mut_pre}{sys_name} | "
-                                                                          f"{str(level).upper()} | "
-                                                                          f"{str(level1).upper()} | "
-                                                                          f"{str(level2).upper()} | "
-                                                                          f"{str(level3).upper()} | "
-                                                                          f"{str(level4).upper()} | "
-                                                                          f"{str(level5).upper()}",
-                                                           col_box=[1])
-                                        self.items_counter['charts'] += 1
-                                    else:
-                                        item5 = CustomItem(item4, [str(level5).upper()],
-                                                           cdata=data[level][level1][level2][level3][level4][level5],
-                                                           level=1,
-                                                           chart_title=f"Energetic Components [Per-wise]",
-                                                           chart_subtitle=f"{mut_pre}{sys_name} | "
-                                                                          f"{str(level).upper()} | "
-                                                                          f"{str(level1).upper()} | "
-                                                                          f"{str(level2).upper()} | "
-                                                                          f"{str(level3).upper()} | "
-                                                                          f"{str(level4).upper()} | "
-                                                                          f"{str(level5).upper()}",
-                                                           col_box=[2])
-                                        self.items_counter['charts'] += 1
-
-                                        for level6 in data[level][level1][level2][level3][level4][level5]:
-                                            item6 = CustomItem(item5, [str(level6).upper()],
-                                                               cdata=data[level][level1][level2][level3][level4][
-                                                                       level5][level6],
-                                                               level=0,
-                                                               chart_title=f"Energetic Components [Per-wise]",
-                                                               chart_subtitle=f"{mut_pre}{sys_name} | "
-                                                                              f"{str(level).upper()} | "
-                                                                              f"{str(level1).upper()} | "
-                                                                              f"{str(level2).upper()} | "
-                                                                              f"{str(level3).upper()} | "
-                                                                              f"{str(level4).upper()} | "
-                                                                              f"{str(level5).upper()} | "
-                                                                              f"{str(level6).upper()}",
-                                                               col_box=[1])
-                                            self.items_counter['charts'] += 1
-
+        Also, remove empty terms and charts according to selected options
+        @param data:
+        @return:
+        """
+        groups = {}
+        if not decomp:
+            sep_ggas_keys = []
+            sep_gsolv_keys = []
+            # remove empty charts? (BOND, ANGLE and DIHEDRAL for STP)
+            ggas_keys = ['BOND', 'ANGLE', 'DIHED', 'VDWAALS', 'EEL', '1-4 VDW', '1-4 EEL', 'UB', 'IMP', 'CMAP']
+            gsolv_keys = ['EGB', 'ESURF', 'EPB', 'ENPOLAR', 'POLAR SOLV', 'APOLAR SOLV']
+            for k in data.columns:
+                if k in ggas_keys:
+                    sep_ggas_keys.append(k)
+                elif k in gsolv_keys:
+                    sep_gsolv_keys.append(k)
+            if sep_ggas_keys:
+                groups['G gas'] = sep_ggas_keys
+                groups['G solv'] = sep_gsolv_keys
+                groups['TOTAL'] = ['G gas', 'G solv', 'TOTAL']
+        else:
+            groups['Receptor'] = None
+            groups['Ligand'] = None
+        return groups
