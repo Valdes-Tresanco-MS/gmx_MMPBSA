@@ -143,6 +143,42 @@ class GMX_MMPBSA_ANA(QMainWindow):
         # self.exportcsv = ExportDialogCSV(self)
         self.init_dialog = InitDialog(self)
 
+    def _initialize_systems(self):
+
+        # Checks all systems has the same number of frames
+        frames = [self.systems[s]['namespace'].INFO['numframes'] for s in self.systems]
+        frames_same = frames.count(frames[0]) == len(frames)
+        start = [self.systems[s]['namespace'].INPUT['startframe'] for s in self.systems]
+        start_same = start.count(start[0]) == len(start)
+        interval = [self.systems[s]['namespace'].INPUT['interval'] for s in self.systems]
+        interval_same = interval.count(interval[0]) == len(interval)
+
+        # Fixme: hacer lo mismo para comprobar si los sistemas son homogeneos
+        nmode_frames = [self.systems[s]['namespace'].INFO['numframes_nmode'] for s in self.systems]
+        nmode_frames_same = nmode_frames.count(nmode_frames[0]) == len(nmode_frames)
+
+        if all([frames_same, start_same, interval_same]):
+            self.all_frb.setEnabled(True)
+
+        # Select automatically the first item to update the option panel
+        topitem = self.treeWidget.topLevelItem(0)
+        topitem.setSelected(True)
+        # self.current_system_index = 1
+
+        f_start = self.systems[1]['namespace'].INPUT['startframe']
+        f_interval = self.systems[1]['namespace'].INPUT['interval']
+        f_end = self.systems[1]['namespace'].INPUT['endframe']
+
+        self.eframes_start_sb.setRange(f_start, f_end)
+        self.eframes_start_sb.setSingleStep(f_interval)
+        self.eframes_start_sb.setValue(f_start)
+
+        self.eframes_inter_sb.setRange(1, f_end - f_start)
+        # self.eframes_inter_sb.setValue(current_interval)
+
+        self.eframes_end_sb.setRange(f_start, f_end)
+        self.eframes_end_sb.setSingleStep(f_interval)
+        self.eframes_end_sb.setValue(f_end)
 
     def _make_options_panel(self):
 
