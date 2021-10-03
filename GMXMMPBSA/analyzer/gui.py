@@ -2,7 +2,6 @@
 #                           GPLv3 LICENSE INFO                                 #
 #                                                                              #
 #  Copyright (C) 2020  Mario S. Valdes-Tresanco and Mario E. Valdes-Tresanco   #
-#  Copyright (C) 2014  Jason Swails, Bill Miller III, and Dwight McGee         #
 #                                                                              #
 #   Project: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA                  #
 #                                                                              #
@@ -21,22 +20,29 @@ import os
 
 from queue import Queue, Empty
 from pathlib import Path
+
+import pandas
+import pandas as pd
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from GMXMMPBSA.analyzer.dialogs import InitDialog
 from GMXMMPBSA.analyzer.customitem import CustomItem, CorrelationItem
 from GMXMMPBSA.analyzer.plots import Charts
-from GMXMMPBSA.analyzer.utils import energy2pdb_pml, ki2energy, make_corr_DF
+from GMXMMPBSA.analyzer.utils import energy2pdb_pml, ki2energy, make_corr_DF, multiindex2dict
+from GMXMMPBSA.analyzer.chartsettings import ChartSettings
+# from GMXMMPBSA.analyzer.propertyeditor import properties_w
+import math
 import parmed
 import numpy as np
+
 
 def run(infofile):
     info = Path(infofile)
     app = QApplication(sys.argv)
     app.setApplicationName('GMX-MMPBSA Analyzer Tool')
     w = GMX_MMPBSA_ANA()
-    w.initialize([info])
+    w.gettting_data([info])
     w.show()
     sys.exit(app.exec())
 
