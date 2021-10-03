@@ -950,7 +950,7 @@ class MMPBSA_App(object):
         # Only the master does this
         if not self.master:
             return
-        self.calc_types = type('calc_types', (dict,), {'mutant': {}, 'decomp': {}})()
+        self.calc_types = type('calc_types', (dict,), {'mutant': {}})()
         INPUT, FILES = self.INPUT, self.FILES
         # Quasi-harmonic analysis is a special-case, so handle that separately
         if INPUT['qh_entropy']:
