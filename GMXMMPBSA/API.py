@@ -38,10 +38,8 @@ __all__ = ['load_gmxmmpbsa_info']
 
 
 class DataStore(dict):
-    def __init__(self):
-        super(DataStore, self).__init__()
-        self.mutant = {}
-        self.decomp = type('calc_types', (dict,), {'mutant': {}})()
+    def __init__(self, *args):
+        super(DataStore, self).__init__(*args)
 
 
 class H52Data:
@@ -49,6 +47,10 @@ class H52Data:
         self.h5f = h5py.File(fname, 'r')
         self.app_namespace = SimpleNamespace(INPUT={}, FILES=SimpleNamespace(), INFO={})
         self.calc_types = DataStore()
+        self.calc_types.mutant = DataStore()
+        self.calc_types.decomp = DataStore()
+        self.calc_types.decomp.mutant = DataStore()
+
 
         for key in self.h5f:
             if key in ['INFO', 'INPUT', 'FILES']:
@@ -126,7 +128,8 @@ class DataMMPBSA:
     def __init__(self):
         self.frames = []
         self.app_namespace = SimpleNamespace()
-        self.data = {'mutant': {}, 'decomp': {'mutant': {}}}
+        self.data = DataStore()
+        self.data.mutant = DataStore()
 
     def get_fromH5(self, h5file):
 
