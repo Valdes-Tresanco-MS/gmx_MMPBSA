@@ -191,13 +191,20 @@ class DataMMPBSA:
         # Are we doing a mutant?
         if data_object.calc_types.mutant:
             self._get_edata(data_object.calc_types.mutant, h5, True)
-            if INPUT['decomprun']:
-                self._get_ddata(data_object.calc_types.decomp.mutant, h5, True)
+
+        # Now we load the decomp data. Avoid to get the decomp data in first place in gmx_MMPBSA_ana
+        if INPUT['decomprun']:
+            if not INPUT['mutant_only']:
+                self.data['decomp'] = self._get_ddata(data_object.calc_types.decomp, h5)
+            if data_object.calc_types.mutant:
+                self.data.mutant['decomp'] = self._get_ddata(data_object.calc_types.decomp.mutant, h5)
 
     def _get_edata(self, calc_types, h5=False, mut=False):
 
-        data = self.data['mutant'] if mut else self.data
+        data = self.data.mutant if mut else self.data
         for key in calc_types:
+            if key == 'decomp':
+                continue
             if key in ['ie', 'c2']:
                 # since the model data object in MMPBSA_App contain the data in the attribute data and H5 not,
                 # we need to define a conditional object
@@ -271,6 +278,7 @@ class DataMMPBSA:
                 df = pd.concat([complex, receptor, ligand, delta], axis=1,
                                keys=['complex', 'receptor', 'ligand', 'delta'])
             data[key] = df
+        return data
 
     @staticmethod
     def _transform_from_lvl_decomp(nd):
