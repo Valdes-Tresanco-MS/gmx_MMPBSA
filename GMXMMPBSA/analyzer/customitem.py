@@ -2,7 +2,6 @@
 #                           GPLv3 LICENSE INFO                                 #
 #                                                                              #
 #  Copyright (C) 2020  Mario S. Valdes-Tresanco and Mario E. Valdes-Tresanco   #
-#  Copyright (C) 2014  Jason Swails, Bill Miller III, and Dwight McGee         #
 #                                                                              #
 #   Project: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA                  #
 #                                                                              #
@@ -15,12 +14,21 @@
 #  or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License    #
 #  for more details.                                                           #
 # ##############################################################################
-from PyQt5.QtWidgets import QTreeWidgetItem
-from PyQt5.QtCore import Qt
-import copy
-from types import SimpleNamespace as Namespace
-import numpy as np
+from PyQt5.QtWidgets import *
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
 import pandas as pd
+from .utils import com2str, energy2pdb_pml
+
+
+class SpacerItem(QToolButton):
+    def __init__(self, parent=None):
+        super(SpacerItem, self).__init__(parent)
+        self.setDisabled(True)
+        self.setContentsMargins(0, 0, 0, 0)
+        self.setStyleSheet("QToolButton { /* mimic the look of the QToolButton with MenuButtonPopup */ "
+                           "padding-right: 15px; /* make way for the popup button */}")
+
 
 class CorrelationItem(QTreeWidgetItem):
     def __init__(self, parent, stringlist, model=None, enthalpy=None, dgie=None, dgnmode=None, dgqh=None, col_box=None):
