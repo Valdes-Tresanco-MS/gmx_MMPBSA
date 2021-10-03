@@ -37,6 +37,11 @@ plt.rcParams["figure.autolayout"] = True
 
 import os
 
+
+def rgb2rgbf(color):
+    return [x / 255 for x in color]
+
+
 class NavigationToolbar(NavigationToolbar2QT):
     """
     overwrite NavigatorToolbar to get control over save action.
