@@ -83,8 +83,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
 
         self.treeDockWidget = QDockWidget('Data', self)
         self.addDockWidget(Qt.RightDockWidgetArea, self.treeDockWidget)
-        # self.optionDockWidget = QDockWidget('Options', self)
-        # self.addDockWidget(Qt.RightDockWidgetArea, self.optionDockWidget)
+
         self.correlation_DockWidget = QDockWidget('Correlations', self)
         self.addDockWidget(Qt.RightDockWidgetArea, self.correlation_DockWidget)
 
@@ -144,33 +143,159 @@ class GMX_MMPBSA_ANA(QMainWindow):
         # self.exportcsv = ExportDialogCSV(self)
         self.init_dialog = InitDialog(self)
 
-    def closeEvent(self, a0: QCloseEvent) -> None:
-        reply = QMessageBox.question(self, 'Message', "Are you sure to quit?", QMessageBox.Yes, QMessageBox.No)
-        if reply == QMessageBox.Yes:
-            pymol_items = [p for p in self.pymol_p_list if p.state() == QProcess.Running]
-            if pymol_items:
-                qpd = QProgressDialog('Closing PyMOL instances', 'Abort', 0, len(pymol_items), self)
-                qpd.setWindowModality(Qt.WindowModal)
-                qpd.setMinimumDuration(1000)
-                i = 0
-                for p in range(len(self.pymol_p_list)):
-                    if self.pymol_p_list[p].state() == QProcess.Running:
-                        qpd.setValue(i)
-                        self.pymol_p_list[p].kill()
-                        self.pymol_p_list[p].waitForFinished()
-                    i += 1
-                qpd.setValue(len(self.pymol_p_list))
-            a0.accept()
-        else:
-            a0.ignore()
 
-    def get_pymol_instance(self):
-        available = None
-        for inst in self.pymol_p_list:
-            if inst.state() ==  QProcess.NotRunning:
-                available = inst
-                break
-        return available
+    def _make_options_panel(self):
+
+        self.optionWidget = QWidget(self)
+        optionWidget_l = QVBoxLayout(self.optionWidget)
+        optionWidget_l.setContentsMargins(0, 0, 0, 0)
+        # optionWidget_l.addLayout(self.btn_l)
+        hl = QFrame()
+        hl.setFrameShape(QFrame.HLine)
+        hl.setFrameShadow(QFrame.Sunken)
+        optionWidget_l.addWidget(hl)
+
+        update_frames_btn = QPushButton('Update')
+        update_frames_btn.clicked.connect(self.update_frames_fn)
+        resetchart_btn = QPushButton('Reset')
+        btn_l = QHBoxLayout()
+        btn_l.addWidget(QLabel('Options'))
+        btn_l.addWidget(resetchart_btn)
+        btn_l.addWidget(update_frames_btn)
+        optionWidget_l.addLayout(btn_l)
+
+        selection_group = QGroupBox('Selection')
+        selection_group_layout = QHBoxLayout(selection_group)
+        selection_group_layout.setContentsMargins(10, 0, 10, 0)
+        # self.curr_frb = QRadioButton('Current chart')
+        # self.curr_frb.setEnabled(False)
+        # selection_group_layout.addWidget(self.curr_frb)
+        self.curr_sys_frb = QRadioButton('Selected System')
+        self.curr_sys_frb.setChecked(True)
+        selection_group_layout.addWidget(self.curr_sys_frb)
+        self.all_frb = QRadioButton('All Systems')
+        self.all_frb.setEnabled(False)
+        selection_group_layout.addWidget(self.all_frb)
+
+        optionWidget_l.addWidget(selection_group)
+
+        optionWidget_c = QTabWidget(self)
+        optionWidget_l.addWidget(optionWidget_c)
+
+        frames_w = QTabWidget(optionWidget_c)
+        frames_w.setTabPosition(QTabWidget.South)
+        optionWidget_c.addTab(frames_w, 'Frames')
+
+        frames_group = QWidget()
+
+        self.eframes_start_sb = QSpinBox()
+        # self.eframes_start_sb.setRange(1, 10000)
+        self.eframes_start_sb.setAccelerated(True)
+        self.eframes_start_sb.valueChanged.connect(self.frames_start_sb_update)
+        self.eframes_inter_sb = QSpinBox()
+        self.eframes_inter_sb.valueChanged.connect(self.frames_inter_sb_update)
+        self.eframes_end_sb = QSpinBox()
+        # self.eframes_end_sb.setRange(1, 10000)
+        self.eframes_end_sb.setAccelerated(True)
+        self.eframes_end_sb.valueChanged.connect(self.frames_end_sb_update)
+        self.numframes_le = QLineEdit()
+        self.numframes_le.setReadOnly(True)
+
+        fg_l1 = QFormLayout()
+        # fg_l1.setContentsMargins(5, 5, 5, 5)
+        # fg_l1.setSpacing(3)
+        fg_l1.addRow('Start', self.eframes_start_sb)
+        fg_l1.addRow('End', self.eframes_end_sb)
+        fg_l2 = QFormLayout()
+        # fg_l2.setContentsMargins(5, 5, 5, 5)
+        # fg_l2.setSpacing(3)
+        fg_l2.addRow('Interval', self.eframes_inter_sb)
+        fg_l2.addRow('Nr. frames', self.numframes_le)
+
+        frames_group_l = QHBoxLayout(frames_group)
+        frames_group_l.addLayout(fg_l1, 1)
+        frames_group_l.addLayout(fg_l2, 1)
+
+        frames_w.addTab(frames_group, 'Energy')
+        frames_w.setTabToolTip(0, 'Frames defined for all energy calculations')
+
+        nmframes_group = QWidget()
+        self.nmframes_start_sb = QSpinBox()
+        # self.eframes_start_sb.setRange(1, 10000)
+        self.nmframes_start_sb.setAccelerated(True)
+        self.nmframes_start_sb.valueChanged.connect(self.frames_start_sb_update)
+        self.nmframes_inter_sb = QSpinBox()
+        self.nmframes_inter_sb.valueChanged.connect(self.frames_inter_sb_update)
+        self.nmframes_end_sb = QSpinBox()
+        # self.eframes_end_sb.setRange(1, 10000)
+        self.nmframes_end_sb.setAccelerated(True)
+        self.nmframes_end_sb.valueChanged.connect(self.frames_end_sb_update)
+        self.nmnumframes_le = QLineEdit()
+        self.nmnumframes_le.setReadOnly(True)
+
+        nmfg_l1 = QFormLayout()
+        # nmfg_l1.setContentsMargins(5, 5, 5, 5)
+        # nmfg_l1.setSpacing(3)
+        nmfg_l1.addRow('Start', self.nmframes_start_sb)
+        nmfg_l1.addRow('End', self.nmframes_end_sb)
+        nmfg_l2 = QFormLayout()
+        # nmfg_l2.setContentsMargins(5, 5, 5, 5)
+        # nmfg_l2.setSpacing(3)
+        nmfg_l2.addRow('Interval', self.nmframes_inter_sb)
+        nmfg_l2.addRow('Nr. frames', self.nmnumframes_le)
+
+        nmframes_group_l = QHBoxLayout(nmframes_group)
+        nmframes_group_l.addLayout(nmfg_l1, 1)
+        nmframes_group_l.addLayout(nmfg_l2, 1)
+
+        frames_w.addTab(nmframes_group, 'NMODE')
+        frames_w.setTabToolTip(2, 'Frames defined for NMODE calculation')
+
+        ieframes_group = QWidget()
+
+        self.iesegment_sb = QSpinBox()
+        self.iesegment_sb.setRange(1, 100)
+        self.iesegment_sb.setAccelerated(True)
+        # self.segment_sb.valueChanged.connect(self.frames_start_sb_update)
+
+        self.ienumframes_le = QLineEdit()
+        self.ienumframes_le.setReadOnly(True)
+
+        ie_l = QFormLayout(ieframes_group)
+        # ie_l.setContentsMargins(5, 5, 5, 5)
+        # ie_l.setSpacing(3)
+        ie_l.addRow('Segment', self.iesegment_sb)
+        ie_l.addRow('Nr. frames', self.ienumframes_le)
+
+        frames_w.addTab(ieframes_group, 'IE')
+
+        c2frames_group = QWidget()
+        self.c2segment_sb = QSpinBox()
+        self.c2segment_sb.setRange(1, 100)
+        self.c2segment_sb.setAccelerated(True)
+        # self.segment_sb.valueChanged.connect(self.frames_start_sb_update)
+
+        self.c2numframes_le = QLineEdit()
+        self.c2numframes_le.setReadOnly(True)
+
+        c2_l = QFormLayout(c2frames_group)
+        # c2_l.setContentsMargins(5, 5, 5, 5)
+        # c2_l.setSpacing(3)
+        c2_l.addRow('Segment', self.c2segment_sb)
+        c2_l.addRow('Nr. frames', self.c2numframes_le)
+
+        frames_w.addTab(c2frames_group, 'C2')
+        frames_w.setTabToolTip(3, 'Segment defined for Interaction Entropy calculation')
+
+        # Charts options
+        from GMXMMPBSA.analyzer.parametertree import ParameterTree, Parameter
+        # from GMXMMPBSA.analyzer.propertyeditor import p
+        self.chart_options_param = Parameter().create()
+        self.chart_options_w = ParameterTree()
+
+        # properties_w.setParameters(p, showTop=False)
+        # charts_options_w = QWidget()
+        optionWidget_c.addTab(self.chart_options_w, 'Charts Options')
 
     def data_context_menu(self, point):
 
