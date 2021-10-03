@@ -30,6 +30,59 @@ R = 0.001987
 
 ncpu = multiprocessing.cpu_count()
 
+style = Path(__file__).joinpath('style')
+
+
+def com2str(com_pdb_str):
+    import parmed
+    import tempfile
+    fp = tempfile.TemporaryFile(mode='w+t')
+    fp.writelines(com_pdb_str)
+    fp.seek(0)
+    return parmed.read_PDB(fp)
+
+
+def multiindex2dict(p: Union[pd.MultiIndex, dict]) -> dict:
+    """
+    Converts a pandas Multiindex to a nested dict
+    :parm p: As this is a recursive function, initially p is a pd.MultiIndex, but after the first iteration it takes
+    the internal_dict value, so it becomes to a dictionary
+    """
+    internal_dict = {}
+    end = False
+    for x in p:
+        # Since multi-indexes have a descending hierarchical structure, it is convenient to start from the last
+        # element of each tuple. That is, we start by generating the lower level to the upper one. See the example
+        if isinstance(p, pd.MultiIndex):
+            # This checks if the tuple x without the last element has len = 1. If so, the unique value of the
+            # remaining tuple works as key in the new dict, otherwise the remaining tuple is used. Only for 2 levels
+            # pd.MultiIndex
+            if len(x[:-1]) == 1:
+                t = x[:-1][0]
+                end = True
+            else:
+                t = x[:-1]
+            if t not in internal_dict:
+                internal_dict[t] = [x[-1]]
+            else:
+                internal_dict[t].append(x[-1])
+        elif isinstance(x, tuple):
+            # This checks if the tuple x without the last element has len = 1. If so, the unique value of the
+            # remaining tuple works as key in the new dict, otherwise the remaining tuple is used
+            if len(x[:-1]) == 1:
+                t = x[:-1][0]
+                end = True
+            else:
+                t = x[:-1]
+            if t not in internal_dict:
+                internal_dict[t] = {x[-1]: p[x]}
+            else:
+                internal_dict[t][x[-1]] = p[x]
+    if end:
+        return internal_dict
+    return multiindex2dict(internal_dict)
+
+
 def calculatestar(args):
     return run_process(*args)
 
