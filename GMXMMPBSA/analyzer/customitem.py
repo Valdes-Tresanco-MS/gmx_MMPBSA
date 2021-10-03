@@ -452,6 +452,21 @@ class CustomItem(QTreeWidgetItem):
 
         return bfactor_pml
 
+    def setup_buttons(self):
+        if not self.buttons:
+            return
+        for b in self.charts_action:
+            if b not in self.buttons:
+                self.tb.addWidget(SpacerItem())
+            else:
+                self.charts_action[b]()
+        if len(self.buttons) > 1 and -1 not in self.buttons:
+            self.tb.addWidget(self.mark_all)
+        if -1 in self.buttons:
+            self._define_option_button()
+            self.tb.addWidget(self.options_button)
+
+        return self.tb
 
     def setup_data(self, frange, iec2frames=0):
         if self.data is None:
