@@ -177,12 +177,12 @@ def ki2energy(ki, temp):
 
 def make_corr_DF(corr_data: dict) -> pd.DataFrame:
     data = []
-    for x in corr_data:
+    for x, value in corr_data.items():
         if x == 'mutant':
             continue
-        for m in corr_data[x]['ΔG']:
+        for m in value['ΔG']:
             curr = [x] + [np.nanmean(corr_data[x]['ΔG'][m][d]) if type(corr_data[x]['ΔG'][m][d]) == np.ndarray
-                                     else np.nan for d in corr_data[x]['ΔG'][m] ] + [m, corr_data[x]['Exp.Energy']]
+                          else np.nan for d in corr_data[x]['ΔG'][m]] + [m, corr_data[x]['Exp.Energy']]
             data.append(curr)
     return pd.DataFrame(
         data=data,
