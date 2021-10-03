@@ -2,7 +2,6 @@
 #                           GPLv3 LICENSE INFO                                 #
 #                                                                              #
 #  Copyright (C) 2020  Mario S. Valdes-Tresanco and Mario E. Valdes-Tresanco   #
-#  Copyright (C) 2014  Jason Swails, Bill Miller III, and Dwight McGee         #
 #                                                                              #
 #   Project: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA                  #
 #                                                                              #
@@ -17,13 +16,14 @@
 # ##############################################################################
 
 from PyQt5.QtWidgets import (QDialog, QSpinBox, QLabel, QLineEdit, QPushButton, QHBoxLayout, QVBoxLayout, QCheckBox,
-                             QGroupBox, QButtonGroup, QGridLayout, QTreeWidget, QTreeWidgetItem,
-                             QTreeWidgetItemIterator, QHeaderView, QProgressBar, QStatusBar, QMessageBox)
+                             QGroupBox, QButtonGroup, QGridLayout, QTreeWidget, QTreeWidgetItem, QRadioButton,
+                             QTreeWidgetItemIterator, QHeaderView, QProgressBar, QStatusBar, QMessageBox, QComboBox)
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, pyqtSlot
 from queue import Queue, Empty
 from GMXMMPBSA import API
 from pathlib import Path
 from GMXMMPBSA.analyzer.utils import worker, ncpu
+from GMXMMPBSA.analyzer.chartsettings import ChartSettings
 
 
 
@@ -35,6 +35,7 @@ class InitDialog(QDialog):
         self.setWindowTitle('Initialization gmx_MMPBSA_ana')
         self.curr_progress = 0
         self.data = []
+        self.chart_settings = ChartSettings()
 
         self.processing_label = QLabel()
 
