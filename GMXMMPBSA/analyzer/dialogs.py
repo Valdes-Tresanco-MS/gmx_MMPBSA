@@ -269,29 +269,40 @@ class InitDialog(QDialog):
         queue = Queue()
         self.result_queue = Queue()
         self.systems_list = []
-        self.options = {'correlation': self.corr_btn.isChecked(), 'decomposition': self.show_decomp_btn.isChecked(),
-                   'components': [x.text() for x in [self.com_btn, self.rec_btn, self.lig_btn] if x.isChecked()],
+        self.options = {'corr_sys': self.corr_sys_btn.isChecked(),
+                        'corr_mut': self.corr_mut_btn.isChecked(),
+                        'decomposition': self.show_decomp_btn.isChecked(),
+                        'components': [x.text() for x in [self.com_btn, self.rec_btn, self.lig_btn] if x.isChecked()],
                         'remove_empty_charts': self.remove_empty_charts_btn.isChecked(),
-                        'remove_empty_terms':self.remove_empty_terms_btn.isChecked() ,'hide_toolbar':
-                            self.hide_tb_btn.isChecked()}
-        it = QTreeWidgetItemIterator(self.f_item)
-        while it.value():
-            item = it.value()
-            if item.checkState(1) == Qt.Checked and item.info:
-                self.systems_list.append(item.info)
-            it += 1
-        self.pb.setRange(0, len(self.systems_list))
-        if not len(self.systems_list):
-            m = QMessageBox.critical(self, 'Error processing systems', 'You must select at least one system.',
-                                     QMessageBox.Ok)
+                        'remove_empty_terms':self.remove_empty_terms_btn.isChecked(),
+                        # 'default_chart_options': self.default_settings_btn.isChecked()
+                        }
+        counter = 0
+        for c in range(self.f_item.childCount()):
+            child = self.f_item.child(c)
+            if not child.checkState(1):
+                continue
+            t = {}
+            if child.childCount():
+                for c1 in range(child.childCount()):
+                    if child.child(c1).checkState(1) == Qt.Checked:
+                        if child.child(c1).text(2) == 'wild type':
+                            t['wt'] = float(child.child(c1).text(3))
+                        else:
+                            t['mut'] = float(child.child(c1).text(3))
+            if self.result_tree.itemWidget(child, 4).currentText() == 'Default':
+                settings = self.chart_settings.read_config()
+            else:
+                settings = self.chart_settings.read_config(child.info[1].parent)
+            readable_sett = self.chart_settings.get_settings(settings)
+            child.info += [t, readable_sett, settings]
+            queue.put(child.info)
+            counter += 1
+        if not counter:
+            QMessageBox.critical(self, 'Error processing systems', 'You must select at least one system.',
+                                 QMessageBox.Ok)
             return
-
-        it = QTreeWidgetItemIterator(self.f_item)
-        while it.value():
-            item = it.value()
-            if item.checkState(1) == Qt.Checked and item.info:
-                queue.put(item.info)
-            it += 1
+        self.pb.setRange(0, counter)
         self.worker.define_dat(API.load_gmxmmpbsa_info, queue, self.result_queue, self.jobs_spin.value())
         self.worker.start()
 
