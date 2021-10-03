@@ -135,50 +135,118 @@ class CustomItem(QTreeWidgetItem):
         self.bar_change = bar
         self.heatmap_change = heatmap
 
-            bar_plot_data = pd.DataFrame(data=bar)
-            line_plot_data = pd.DataFrame(data={'frames': self.frames[start:end:interval],
-                                                'Energy': np.array(data['Energy']).sum(axis=0)})
+    def _define_line_chart_btn(self):
+        line_menu = QMenu()
+        line_menu.setTitle('Line charts menu')
+        self.line_table_action = line_menu.addAction('Show in table')
+        self.line_table_action.setCheckable(True)
+        self.line_table_action.toggled.connect(self._show_line_table)
 
-            heatmap_plot_data = pd.DataFrame(data=data['Energy'], index=data['Residues'], columns=data['frames'])
+        self.line_chart_action = QToolButton()
+        self.line_chart_action.setIcon(QIcon(
+            '/home/mario/PycharmProjects/gmx_MMPBSA/GMXMMPBSA/analyzer/style/line-chart.svg'))
+        self.line_chart_action.setText('Line Chart')
+        self.line_chart_action.setCheckable(True)
+        self.line_chart_action.setPopupMode(QToolButton.MenuButtonPopup)
+        self.line_chart_action.setContentsMargins(0, 0, 0, 0)
+        self.line_chart_action.setMenu(line_menu)
+        self.btn_group.addButton(self.line_chart_action, 1)
 
-            return_data = Namespace(line_plot_dat=line_plot_data, bar_plot_dat=bar_plot_data,
-                                    heatmap_plot_dat=heatmap_plot_data)
-        elif self.level == 2.1:
-            bar = {}
-            data = {'frames': self.nmode_frames, 'Component': [], 'Energy': []}
-            for p, d in self.cdata.items():
-                data['Component'].append(p)
-                bar[p] = d[start:end:interval]
-                data['Energy'].append(d[start:end:interval])
+        self.tb.addWidget(self.line_chart_action)
 
-            bar_plot_data = pd.DataFrame(data=bar)
-            line_plot_data = pd.DataFrame(data={'frames': self.frames[start:end:interval],
-                                                'Energy': np.array(data['Energy'])})
-            return_data.line_plot_dat = line_plot_data
-            return_data.bar_plot_dat=bar_plot_data
 
-        elif self.level == 3:
-            bar = {}
-            data = {'frames': self.frames[start:end:interval], 'Residues': [], 'Energy': [], 'Per-pair Energy': []}
-            per_pair_data = {'Residues': [], 'Pair': [], 'Energy': []}
-            for p, d in self.cdata.items():
-                data['Residues'].append(p)
-                res_t = []
-                for p1, d1 in d.items():
-                    per_pair_data['Residues'].append(p)
-                    per_pair_data['Pair'].append(p1)
-                    for p2, d2 in d1.items():
-                        if 'tot' in str(p2).lower():
-                            per_pair_data['Energy'].append(d2[start:end:interval].mean())
-                            res_t.append(d2[start:end:interval])
-                if self.remove_empty_terms:
-                    if abs(np.sum(res_t, axis=0).mean()) > 0.1:
-                        bar[p] = np.sum(res_t, axis=0)
-                else:
-                    bar[p] = np.sum(res_t, axis=0)
-                res_t_np = np.array(res_t)
-                data['Energy'].append(res_t_np.sum(axis=0))
-                data['Per-pair Energy'].append(res_t_np.mean(axis=1))
+    def _define_bar_chart_btn(self):
+        bar_menu = QMenu()
+        bar_menu.setTitle('Bar charts menu')
+        self.bar_table_action = bar_menu.addAction('Show in table')
+        self.bar_table_action.setCheckable(True)
+        self.bar_table_action.toggled.connect(self._show_bar_table)
+
+        self.bar_chart_action = QToolButton()
+        self.bar_chart_action.setIcon(
+            QIcon('/home/mario/PycharmProjects/gmx_MMPBSA/GMXMMPBSA/analyzer/style/bar-chart.png'))
+        self.bar_chart_action.setText('Bar Chart')
+        self.bar_chart_action.setCheckable(True)
+        self.bar_chart_action.setPopupMode(QToolButton.MenuButtonPopup)
+        self.bar_chart_action.setContentsMargins(0, 0, 0, 0)
+        self.bar_chart_action.setMenu(bar_menu)
+        self.btn_group.addButton(self.bar_chart_action, 2)
+
+        self.tb.addWidget(self.bar_chart_action)
+
+
+    def _define_heatmap_chart_btn(self):
+        heatmap_menu = QMenu()
+        heatmap_menu.setTitle('heatmap charts menu')
+        self.heatmap_table_action = heatmap_menu.addAction('Show in table')
+        self.heatmap_table_action.setCheckable(True)
+        self.heatmap_table_action.toggled.connect(self._show_heatmap_table)
+
+        self.heatmap_chart_action = QToolButton()
+        self.heatmap_chart_action.setIcon(
+            QIcon('/home/mario/PycharmProjects/gmx_MMPBSA/GMXMMPBSA/analyzer/style/heatmap_icon.svg'))
+        self.heatmap_chart_action.setText('Heatmap Chart')
+        self.heatmap_chart_action.setCheckable(True)
+        self.heatmap_chart_action.setPopupMode(QToolButton.MenuButtonPopup)
+        self.heatmap_chart_action.setContentsMargins(0, 0, 0, 0)
+        self.heatmap_chart_action.setMenu(heatmap_menu)
+        self.btn_group.addButton(self.heatmap_chart_action, 3)
+
+        self.tb.addWidget(self.heatmap_chart_action)
+
+    def _define_vis_btn(self):
+        heatmap_menu = QMenu()
+        heatmap_menu.setTitle('Visualization menu')
+        # self.heatmap_table_action = heatmap_menu.addAction('Show in text')
+        # self.heatmap_table_action.setCheckable(True)
+        # self.heatmap_table_action.toggled.connect(self._show_heatmap_table)
+
+        self.vis_action = QToolButton()
+        self.vis_action.setIcon(QIcon('/home/mario/PycharmProjects/gmx_MMPBSA/GMXMMPBSA/analyzer/style/molecule.svg'))
+        self.vis_action.setText('Visualization')
+        self.vis_action.setCheckable(True)
+        self.vis_action.setPopupMode(QToolButton.MenuButtonPopup)
+        self.vis_action.setContentsMargins(0, 0, 0, 0)
+        # self.vis_action.setMenu(heatmap_menu)
+        self.btn_group.addButton(self.vis_action, 4)
+
+        self.tb.addWidget(self.vis_action)
+
+    def _define_option_button(self):
+        options_menu = QMenu()
+        options_menu.setTitle('System Options')
+        self.output_action = options_menu.addAction('Show Output file')
+        self.output_action.setCheckable(True)
+        self.output_action.toggled.connect(self._show_output_file)
+        if self.app.systems[self.system_index]['namespace'].INFO['decomp_output_file']:
+            self.decomp_output_action = options_menu.addAction('Show Decomp Output file')
+            self.decomp_output_action.setCheckable(True)
+            self.decomp_output_action.toggled.connect(self._show_decomp_output_file)
+
+        self.options_button = QToolButton()
+        self.options_button.setIcon(QIcon('/home/mario/PycharmProjects/PyQtRibbon/error_checker.png'))
+        self.options_button.setText('Options')
+        self.options_button.setPopupMode(QToolButton.InstantPopup)
+        self.options_button.setContentsMargins(0, 0, 0, 0)
+        self.options_button.setMenu(options_menu)
+
+    def fn_btn_group(self, btn, checked):
+        all_checked = all(x.isChecked() for x in self.btn_group.buttons())
+        all_unchecked = not any(x.isChecked() for x in self.btn_group.buttons())
+        if all_checked:
+            self.mark_all.setCheckState(Qt.Checked)
+        elif all_unchecked:
+            self.mark_all.setCheckState(Qt.Unchecked)
+        else:
+            self.mark_all.setCheckState(Qt.PartiallyChecked)
+        if self.btn_group.id(btn) == 1:
+            self.plotting_line(checked)
+        elif self.btn_group.id(btn) == 2:
+            self.plotting_bar(checked)
+        elif self.btn_group.id(btn) == 3:
+            self.plotting_heatmap(checked)
+        elif self.btn_group.id(btn) == 4:
+            self.visualizing(checked)
 
             bar_plot_data = pd.DataFrame(data=bar)
             line_plot_data = pd.DataFrame(data={'frames': self.frames[start:end:interval],
