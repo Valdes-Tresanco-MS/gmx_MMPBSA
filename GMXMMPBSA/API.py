@@ -86,28 +86,12 @@ class H52Data:
 
         calc_types = self.calc_types.mutant if mut else self.calc_types
         # key  Energy: [gb, pb, rism std, rism gf], Decomp: [gb, pb], Entropy: [nmode, qh, ie, c2]
-        if key in ['gb', 'pb', 'rism std', 'rism gf']:
+        if key in ['gb', 'pb', 'rism std', 'rism gf', 'nmode', 'qh', 'ie', 'c2']:
             calc_types[key] = {}
             # key2 is complex, receptor, ligand, delta
             for key2 in d[key]:
                 calc_types[key][key2] = {}
                 # complex, receptor, etc., is a class and the data is contained in the attribute data
-                for key3 in d[key][key2]:
-                    calc_types[key][key2][key3] = d[key][key2][key3][()]
-        elif key in ['nmode', 'qh']:
-            calc_types[key] = {}
-            # key2 is complex, receptor, ligand, delta
-            for key2 in d[key]:
-                calc_types[key][key2] = {}
-                # vibrational, translational, rotational, total
-                for key3 in d[key][key2]:
-                    calc_types[key][key2][key3] = d[key][key2][key3][()]
-
-        elif key in ['ie', 'c2']:
-            calc_types[key] = {}
-            # key2 is PB, GB or RISM?
-            for key2 in d[key]:
-                calc_types[key][key2] = {}
                 for key3 in d[key][key2]:
                     calc_types[key][key2][key3] = d[key][key2][key3][()]
 
