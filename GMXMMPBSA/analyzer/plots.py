@@ -519,3 +519,66 @@ class OutputFiles(QMdiSubWindow):
 
     def closeEvent(self, closeEvent: QCloseEvent) -> None:
         self.button.setChecked(False)
+
+
+class PandasTableModel(QStandardItemModel):
+    def __init__(self, data, parent=None):
+        QStandardItemModel.__init__(self, parent)
+        self._df = data.round(3)
+        self.df_list = self._df.to_csv().split('\n')
+        for row in self.df_list:
+            self.appendRow([QStandardItem(f"{x}") for x in row.split(',')])
+        return
+
+    def rowCount(self, parent=None, *args, **kwargs):
+        return len(self.df_list)
+
+    def columnCount(self, parent=None, *args, **kwargs):
+        return len(self.df_list[0].split(','))
+
+class Tables(QMdiSubWindow):
+    def __init__(self, df: pd.DataFrame, button):
+        super(Tables, self).__init__()
+        self.setMinimumSize(400, 400)
+        self.table = QTableView(self)
+        self.table.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.setWidget(self.table)
+
+        self.button = button
+
+        self.table.installEventFilter(self)
+
+        self.model = PandasTableModel(df)
+        self.table.setModel(self.model)
+        h_header = self.table.horizontalHeader()
+        h_header.setSectionResizeMode(QHeaderView.Stretch)
+        h_header.setStretchLastSection(True)
+        h_header.hide()
+        v_header = self.table.verticalHeader()
+        v_header.hide()
+
+    def eventFilter(self, source, event):
+        if (event.type() == QEvent.KeyPress and event.matches(QKeySequence.Copy)):
+            self._copySelection()
+            return True
+        return super(Tables, self).eventFilter(source, event)
+
+    def _copySelection(self):
+        selection = self.table.selectedIndexes()
+        if not selection:
+            return
+        rows = sorted(index.row() for index in selection)
+        columns = sorted(index.column() for index in selection)
+        rowcount = rows[-1] - rows[0] + 1
+        colcount = columns[-1] - columns[0] + 1
+        table = [[''] * colcount for _ in range(rowcount)]
+        for index in selection:
+            row = index.row() - rows[0]
+            column = index.column() - columns[0]
+            table[row][column] = index.data() or ''
+        temp = ['\t'.join(x) + '\n' for x in table]
+        text = ''.join(temp)
+        qApp.clipboard().setText(text)
+
+    def closeEvent(self, closeEvent: QCloseEvent) -> None:
+        self.button.setChecked(False)
