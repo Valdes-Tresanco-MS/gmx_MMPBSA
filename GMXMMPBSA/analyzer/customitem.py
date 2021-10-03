@@ -65,67 +65,70 @@ class CorrelationItem(QTreeWidgetItem):
             pass
 
 class CustomItem(QTreeWidgetItem):
-    def __init__(self, parent, stringlist, system=None, app=None, has_chart=True, cdata=None, level=0,
-                 chart_title='Binding Free Energy', chart_subtitle='', col_box=(), remove_empty_terms=False):
+    def __init__(self, parent, stringlist, data=None, app=None, level=0, chart_title='Binding Free Energy',
+                 chart_subtitle='', system_index=1, iec2_data=None, item_type='energy',
+                 buttons=(), options_btn=False, remove_empty_terms=False):
         super(CustomItem, self).__init__(parent, stringlist)
 
-        if isinstance(parent, CustomItem):
-            self.syspath = parent.syspath
-            self.exp_ki = parent.exp_ki
-            self.sysname = parent.sysname
-            self.temp = parent.temp
-            self.app = parent.app
-            self.frames = parent.frames
-            self.nmode_frames = parent.nmode_frames
-            self.start = parent.start
-            self.end = parent.end
-            self.interval = parent.interval
-            self.idecomp = parent.idecomp
-            self.remove_empty_terms = parent.remove_empty_terms
-        else:
-            self.syspath = system[1]
-            self.exp_ki = system[2]
-            self.sysname = system[0]
-            self.temp = system[3]
-            self.app = app
-            self.interval = app.INPUT['interval']
-            self.start = app.INPUT['startframe']
-            self.frames = np.array([x for x in range(self.start, self.start +
-                                                     self.app.numframes * self.interval,
-                                                     self.interval)])
-            self.nmode_frames = np.array([x for x in range(app.INPUT['nmstartframe'], app.INPUT['nmstartframe'] +
-                                                     self.app.numframes_nmode * app.INPUT['nminterval'],
-                                                     app.INPUT['nminterval'])])
-            self.end = app.INPUT['endframe']
-            self.idecomp = app.INPUT['idecomp']
-            self.remove_empty_terms = remove_empty_terms
-        self.cdata = cdata
+        self.remove_empty_terms = remove_empty_terms
+        self.data = data
+        self.system_index = system_index
+        self.app = app
         self.level = level
         self.chart_title = chart_title
         self.chart_subtitle = chart_subtitle
-        self.has_chart = has_chart
         self.item_name = stringlist[0]
-        self.col_box = col_box
+        self.buttons = buttons
+        self.options_btn = options_btn
+        self.iec2_data = iec2_data
+        self.item_type = item_type
+        self.properties = {}
 
         self.lp_subw = None
         self.bp_subw = None
         self.hmp_subw = None
         self.pymol_process = None
+        self.pymol_data_change = False
+        self.bfactor_pml = None
+        self.output_file_subw = None
+        self.decomp_output_file_subw = None
+        self.line_table_subw = None
+        self.bar_table_subw = None
+        self.heatmap_table_subw = None
+        self.ie_plot_data = None
 
-        if col_box:
-            for col in col_box:
-                self.setCheckState(col, Qt.Unchecked)
+        # changes
+        self.frange = []
+        self.line_change = False
+        self.bar_change = False
+        self.heatmap_change = False
 
-    def get_data(self):
-        self.gmxMMPBSA_data = self.getplotdata()
-        self.gmxMMPBSA_current_data = copy.deepcopy(self.gmxMMPBSA_data)
 
-    def reset(self):
-        self.gmxMMPBSA_current_data = copy.deepcopy(self.gmxMMPBSA_data)
+        self.changed = False
 
-    def update_data(self, start, end, interval):
-        self.gmxMMPBSA_current_data = self.getplotdata(start, end, interval)
-        # print(self.gmxMMPBSA_current_data)
+        self.tb = QToolBar()
+        self.tb.setStyleSheet("QToolBar {padding: 0, 20, 0, 20;}")
+
+        self.tb.setIconSize(QSize(16, 16))
+        self.tb.setToolButtonStyle(Qt.ToolButtonIconOnly)
+        self.item_charts = []
+
+        self.btn_group = QButtonGroup()
+        self.btn_group.setExclusive(False)
+        self.btn_group.buttonToggled.connect(self.fn_btn_group)
+
+        self.mark_all = QCheckBox()
+        self.mark_all.setToolTip('Mark all actions at the same time')
+        self.mark_all.setTristate(True)
+        self.mark_all.setCheckable(True)
+        self.mark_all.stateChanged.connect(self.fn_mark_all)
+
+        self.charts_action = {
+            1: self._define_line_chart_btn,
+            2: self._define_bar_chart_btn,
+            3: self._define_heatmap_chart_btn,
+            4: self._define_vis_btn,
+        }
 
     def getplotdata(self, start=0, end=None, interval=1):
         """
