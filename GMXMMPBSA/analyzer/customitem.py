@@ -346,6 +346,29 @@ class CustomItem(QTreeWidgetItem):
             self.app.mdi.activatePreviousSubWindow()
             self.lp_subw.close()
 
+    def plotting_bar(self, state):
+        from GMXMMPBSA.analyzer.plots import BarChart
+        self.app.treeWidget.clearSelection()
+        options = {'general_options': self.app.systems[self.system_index]['chart_options']['general_options'],
+                   'bar_options': self.app.systems[self.system_index]['chart_options']['bar_options'],
+                   'chart_title': self.chart_title, 'chart_subtitle': self.chart_subtitle}
+        if 'groups' in self.properties:
+            options['groups'] = self.properties['groups']
+        if 'scalable' in self.properties:
+            options['scalable'] = self.properties['scalable']
+
+        if state:
+            self.setSelected(True)
+            if not self.bp_subw or self.frange != self.bp_subw.frange or self.bar_change:
+                self.bp_subw = BarChart(self.bar_plot_data, self.bar_chart_action, options=options)
+                self.bp_subw.frange = self.frange
+                self.bar_change = False # make False again
+                self.app.mdi.addSubWindow(self.bp_subw)
+            self.bp_subw.show()
+        elif self.bp_subw:
+            self.app.mdi.activatePreviousSubWindow()
+            self.bp_subw.close()
+
 
     def setup_data(self, frange, iec2frames=0):
         if self.data is None:
