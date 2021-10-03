@@ -29,8 +29,9 @@ from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter, RawDescripti
 from pathlib import Path
 from GMXMMPBSA import __version__, __mmpbsa_version__, __ambertools_version__
 from GMXMMPBSA.exceptions import GMXMMPBSA_ERROR
+from types import SimpleNamespace
 
-class OptionList(object):
+class OptionList(SimpleNamespace):
     """
     Just a container to hold the command-line options. Necessary when reading in
     a gmx_MMPBSA info file to have a container to load the results from the
