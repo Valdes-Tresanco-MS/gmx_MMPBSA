@@ -24,8 +24,8 @@ the full power of Python's extensions, if they want (e.g., numpy, scipy, etc.)
 # ##############################################################################
 
 from typing import Union
-from GMXMMPBSA import infofile, main, amber_outputs
-from GMXMMPBSA.exceptions import SetupError, NoFileExists
+from GMXMMPBSA import infofile, main
+from GMXMMPBSA.exceptions import NoFileExists
 from GMXMMPBSA.fake_mpi import MPI
 import pandas as pd
 from pathlib import Path
