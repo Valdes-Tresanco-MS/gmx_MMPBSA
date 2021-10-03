@@ -98,128 +98,64 @@ class NavigationToolbar(NavigationToolbar2QT):
                     QMessageBox.Ok, QMessageBox.NoButton)
 
 
-class MplCanvas(FigureCanvasQTAgg):
-
-    def __init__(self, parent=None, width=5, height=4, dpi=100):
-        self.fig = Figure(figsize=(width, height), dpi=dpi)
-
-        self.axes = self.fig.add_subplot(111)
-        super(MplCanvas, self).__init__(self.fig)
-
-
-class Charts(QMdiSubWindow):
-    LINE = 1
-    ROLLING = 2
-    JOINPLOT = 3
-    BAR = 4
-    SBAR = 5
-    HEATMAP = 6
-    SCATTER = 7
-    def __init__(self, *args, item, col, options:dict=None):
-        super(Charts, self).__init__(*args)
+class ChartsBase(QMdiSubWindow):
+    def __init__(self, button: QToolButton, options: dict = None):
+        super(ChartsBase, self).__init__()
         self.setMinimumSize(400, 400)
+        self.options = options['general_options']
+        self.mainwidgetmdi = QMainWindow()  # must be QMainWindow to handle the toolbar
+        sns.set_theme(style=self.options['theme'])
+        self.plot = None
+        self.frange = []  # Frames range with which it was created
+        self.button = button
+        self.setWidget(self.mainwidgetmdi)
 
-        self.mainwidgetmdi = QMainWindow() # must be QMainWindow to handle toolbar
+    def set_cw(self, fig=None):
+        # we create the figure canvas here because the fig parameter must be defined and depende of what kind of
+        # chart want to make
+        fig = Figure(dpi=self.options['dpi']['plot']) if not fig else fig
+        self.figure_canvas = FigureCanvas(fig)
+        self.fig = self.figure_canvas.figure
+        self.mainwidgetmdi.setCentralWidget(self.figure_canvas)
+        self.mpl_toolbar.setVisible(self.options['toolbar'])
+        # similar to figure canvas
+        self.mpl_toolbar = NavigationToolbar(self.figure_canvas, self)
+        # self.mpl_toolbar.setVisible(True)
+        self.mainwidgetmdi.addToolBar(Qt.BottomToolBarArea, self.mpl_toolbar)
 
-        self.mpl_canvas = MplCanvas(self, width=5, height=4, dpi=100)
-        # Create toolbar, passing canvas as first parameter, parent (self, the MainWindow) as second.
-        self.mpl_toolbar = NavigationToolbar(self.mpl_canvas, self)
-        self.mainwidgetmdi.setCentralWidget(self.mpl_canvas)
-        self.fbtn = QPushButton(self.style().standardIcon(QStyle.SP_FileDialogDetailedView), '', self.mpl_canvas)
+        self.fbtn = QPushButton(self.style().standardIcon(QStyle.SP_FileDialogDetailedView), '', self.figure_canvas)
         self.fbtn.setToolTip('Show or Hide the Navigation Toolbar')
         self.fbtn.toggled.connect(self.mpl_toolbar.setVisible)
         self.fbtn.setCheckable(True)
-        self.fbtn.setChecked(True)
+        self.fbtn.setChecked(False)
 
-        self.line_plot = None
-        self.movav_plot = None
-        self.bar_plot = None
-        self.heatmap_plot = None
-        self.reg_plot = None
-        # self.main_w_layout.addWidget(self.mpl_toolbar)
-        self.mainwidgetmdi.addToolBar(Qt.BottomToolBarArea, self.mpl_toolbar)
-        if 'hide_toolbar' in options and options['hide_toolbar']:
-            self.mpl_toolbar.setVisible(False)
-            self.fbtn.setChecked(False)
-        self.setWidget(self.mainwidgetmdi)
-        self.item = item
-        self.col = col
-        self.options = options
+    def draw(self, title, tight_layout=True):
+        if tight_layout:
+            self.fig.tight_layout()
+            self.figure_canvas.draw()
+        self.setWindowTitle(title)
+
+    def setup_text(self, ax, options, key='', title='', xlabel='', ylabel='Energy (kcal/mol)'):
+        ax.set_title(title, fontdict={'fontsize': options['general_options']['fontsize']['suptitle']})
+        ax.set_xlabel(xlabel, fontdict={'fontsize': options['general_options']['fontsize']['y-label']})
+        ax.set_ylabel(ylabel, fontdict={'fontsize': options['general_options']['fontsize']['y-label']})
+        for label in ax.get_xticklabels():
+            label.set_rotation(options[key]['axes']['x-rotation'])
+            if options[key]['axes']['x-rotation'] < 0:
+                label.set_horizontalalignment('left')
+            else:
+                label.set_horizontalalignment('right')
+            label.set_fontsize(options['general_options']['fontsize']['x-ticks'])
+        for label in ax.get_yticklabels():
+            label.set_rotation(options[key]['axes']['y-rotation'])
+            if options[key]['axes']['y-rotation'] < 0:
+                label.set_horizontalalignment('left')
+            else:
+                label.set_horizontalalignment('right')
+            label.set_fontsize(options['general_options']['fontsize']['y-ticks'])
 
     def closeEvent(self, closeEvent: QCloseEvent) -> None:
-        self.item.setCheckState(self.col, Qt.Unchecked)
-
-    def make_chart(self):
-        """
-
-        :param graph_type: 1: line plot, 2: bar plot, 3: heatmap plot
-        :return:
-        """
-        if Charts.SCATTER in self.options['chart_type']:
-            if self.reg_plot:
-                self.reg_plot.cla()
-                self.reg_plot.clear()
-            if self.col == 1:
-                self.item.dh_sw = self
-                self.data = self.item.enthalpy
-                self.reg_plot = sns.regplot(data=self.data, x='Exp.Energy', y='ΔH', ax=self.mpl_canvas.axes,
-                                            color='black', scatter_kws={'s':10}, line_kws={'lw':1})
-                # get correlation coefficients
-                pearson, ppvalue = stats.pearsonr(self.data['Exp.Energy'], self.data['ΔH'])
-                spearman, spvalue = stats.spearmanr(self.data['Exp.Energy'], self.data['ΔH'])
-            elif self.col == 2:
-                self.item.dgie_sw = self
-                self.data = self.item.dgie
-                self.reg_plot = sns.regplot(data=self.data, x='Exp.Energy', y='ΔH+IE', ax=self.mpl_canvas.axes,
-                                            color='black', scatter_kws={'s':10}, line_kws={'lw':1})
-                # get correlation coefficients
-                pearson, ppvalue = stats.pearsonr(self.data['Exp.Energy'], self.data['ΔH+IE'])
-                spearman, spvalue = stats.spearmanr(self.data['Exp.Energy'], self.data['ΔH+IE'])
-            elif self.col == 3:
-                self.item.dgnmode_sw = self
-                self.data = self.item.dgnmode
-                self.reg_plot = sns.regplot(data=self.data, x='Exp.Energy', y='ΔH+NMODE', ax=self.mpl_canvas.axes,
-                                            color='black', scatter_kws={'s':10}, line_kws={'lw':1})
-                # get correlation coefficients
-                pearson, ppvalue = stats.pearsonr(self.data['Exp.Energy'], self.data['ΔH+NMODE'])
-                spearman, spvalue = stats.spearmanr(self.data['Exp.Energy'], self.data['ΔH+NMODE'])
-            else:
-                self.item.dgqh_sw = self
-                self.data = self.item.dgqh
-                self.reg_plot = sns.regplot(data=self.data, x='Exp.Energy', y='ΔH+QH', ax=self.mpl_canvas.axes,
-                                            color='black', scatter_kws={'s':10}, line_kws={'lw':1})
-                # get correlation coefficients
-                pearson, ppvalue = stats.pearsonr(self.data['Exp.Energy'], self.data['ΔH+QH'])
-                spearman, spvalue = stats.spearmanr(self.data['Exp.Energy'], self.data['ΔH+QH'])
-
-            self.mpl_canvas.axes.set_xlabel('Exp. Energy (kcal/mol)')
-            self.mpl_canvas.axes.set_ylabel('Pred. Energy (kcal/mol)')
-            chart_subtitle = self.item.chart_subtitle[self.col - 1]
-
-            # Set limits symmetric
-            xlim = list(self.mpl_canvas.axes.get_xlim())
-            ylim = list(self.mpl_canvas.axes.get_ylim())
-            xlim = [xlim[0] - abs(xlim[0]*0.015), xlim[1] + abs(xlim[1]*0.03)]
-            ylim = [ylim[0] - abs(ylim[0]*0.015), ylim[1] + abs(ylim[1]*0.03)]
-            self.mpl_canvas.axes.set_xlim(xlim)
-            self.mpl_canvas.axes.set_ylim(ylim)
-
-            # diagonal line slope = 1
-            # self.mpl_canvas.axes.axline((xlim[0], ylim[0]), (xlim[1], ylim[1]), ls='--', linewidth=0.8, color='black')
-
-            self.mpl_canvas.axes.set_title(self.item.chart_title + '\n' + chart_subtitle)
-
-            pearson_leg = mpatches.Patch(color='white', label=f'Pearson  = {pearson:.2f}  p-value = {ppvalue:.5f}')
-            spearman_leg = mpatches.Patch(color='gray', label=f'Spearman = {spearman:.2f}  p-value = {spvalue:.5f}')
-            leg = self.mpl_canvas.axes.legend(handles=[pearson_leg, spearman_leg],
-                                              handlelength=0, handletextpad=0,
-                                              fancybox=True,
-                                              prop={'weight':'bold', 'size': 10, 'family': 'monospace'},
-                                              frameon=True
-                                              )
-            # hide markers
-            for item in leg.legendHandles:
-                item.set_visible(False)
+        self.button.setChecked(False)
 
             self.mpl_canvas.draw()
             self.mpl_canvas.figure.tight_layout()
