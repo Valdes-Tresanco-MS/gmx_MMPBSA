@@ -15,25 +15,32 @@
 #  or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License    #
 #  for more details.                                                           #
 # ##############################################################################
-
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
-from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
+import matplotlib as mpl
 import matplotlib.backend_bases
-from matplotlib.backends import qt_compat
 import matplotlib.patches as mpatches
-from matplotlib.figure import Figure
-from matplotlib.widgets import Cursor
+import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
-from PyQt5.QtWidgets import *
+import numpy as np
+import pandas
+import pandas as pd
+import seaborn as sns
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
-import seaborn as sns
-import matplotlib.pyplot as plt
+from PyQt5.QtWidgets import *
+from matplotlib import gridspec
+from matplotlib.backends import qt_compat
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas, NavigationToolbar2QT
+from matplotlib.figure import Figure
+from matplotlib.widgets import Cursor
+from mpl_toolkits.axes_grid1 import make_axes_locatable
+from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 from scipy import stats
-import math
-plt.style.use('seaborn')
-plt.rcParams["figure.autolayout"] = True
+import itertools
 
+# sns.set_theme()
+from GMXMMPBSA.analyzer.chartsettings import Palettes
+
+plt.rcParams["figure.autolayout"] = True
 
 import os
 
@@ -47,6 +54,7 @@ class NavigationToolbar(NavigationToolbar2QT):
     overwrite NavigatorToolbar to get control over save action.
     Now we can set custom dpi value
     """
+
     def __init__(self, canvas, parent, coordinates=True):
         super(NavigationToolbar, self).__init__(canvas, parent, coordinates=True)
         # NavigationToolbar2QT.__init__(canvas, parent, coordinates=True)
@@ -68,7 +76,7 @@ class NavigationToolbar(NavigationToolbar2QT):
         filters = []
         selectedFilter = None
         for name, exts in sorted_filetypes:
-            exts_list = " ".join(['*.%s' % ext for ext in exts])
+            exts_list = " ".join('*.%s' % ext for ext in exts)
             filter = '%s (%s)' % (name, exts_list)
             if default_filetype in exts:
                 selectedFilter = filter
