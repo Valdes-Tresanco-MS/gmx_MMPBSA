@@ -126,7 +126,7 @@ def gmxmmpbsa_ana():
     ifiles = get_files(parser)
     app.setApplicationName('gmx_MMPBSA Analyzer (gmx_MMPBSA_ana)')
     w = GMX_MMPBSA_ANA()
-    w.initialize(ifiles)
+    w.gettting_data(ifiles)
     w.show()
     sys.exit(app.exec())
 
