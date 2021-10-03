@@ -333,6 +333,30 @@ class GMX_MMPBSA_ANA(QMainWindow):
         # charts_options_w = QWidget()
         optionWidget_c.addTab(self.chart_options_w, 'Charts Options')
 
+    def update_system_selection(self):
+        if not self.treeWidget.selectedItems():
+            return
+        parent_item = self.treeWidget.selectedItems()[0]
+
+        if self.current_system_index == parent_item.system_index:
+            return
+        while parent_item:
+            next_item = parent_item.parent()
+            if next_item:
+                parent_item = next_item
+            else:
+                break
+        if not self.all_frb.isChecked():
+            current_start, current_end, current_interval = self.systems[parent_item.system_index]['current_frames']
+            self.eframes_start_sb.setValue(current_start)
+            self.eframes_inter_sb.setValue(current_interval)
+            self.eframes_end_sb.setValue(current_end)
+            self.numframes_le.setText(f"{int((current_end - current_start) // current_interval) + 1}")
+            print(self.systems[parent_item.system_index]['chart_options'])
+            self.chart_options_param.restoreState(self.systems[parent_item.system_index]['chart_options_state'])
+            self.chart_options_w.setParameters(self.chart_options_param, showTop=False)
+        self.current_system_index = parent_item.system_index
+
     def data_context_menu(self, point):
 
         index = self.treeWidget.indexAt(point)
