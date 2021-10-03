@@ -130,53 +130,10 @@ class CustomItem(QTreeWidgetItem):
             4: self._define_vis_btn,
         }
 
-    def getplotdata(self, start=0, end=None, interval=1):
-        """
-        Method to get data at different levels and lengths
-        :param start: first frame
-        :param end: last frame
-        """
-
-        return_data = Namespace(line_plot_dat=None, bar_plot_dat=None, heatmap_plot_dat=None)
-
-        if self.level == 0:
-            return_data.line_plot_dat = pd.DataFrame(data={'frames': self.frames[start:end:interval],
-                                                      'Energy': self.cdata[start:end:interval]})
-        elif self.level == 0.1:
-            return_data.line_plot_dat = pd.DataFrame(data={'frames': self.nmode_frames,
-                                                      'Entropy': self.cdata})
-        elif self.level == 1:
-            dat = {}
-            for p, d in self.cdata.items():
-                if type(d) not in [list, np.ndarray] :
-                    dat[p] = [d]
-                else:
-                    if self.remove_empty_terms:
-                        if abs(d[start:end:interval].mean()) > 0.1:
-                            dat[p] = d[start:end:interval]
-                    else:
-                        dat[p] = d
-            return_data.bar_plot_dat = pd.DataFrame(data=dat)
-
-        elif self.level == 1.1:
-            dat = {}
-            for p, d in self.cdata.items():
-                dat[p] = d
-            return_data.bar_plot_dat = pd.DataFrame(data=dat)
-
-        elif self.level == 2:
-            bar = {}
-            data = {'frames': self.frames[start:end:interval], 'Residues': [], 'Energy': []}
-            for p, d in self.cdata.items():
-                data['Residues'].append(p)
-                for p1, d1 in d.items():
-                    if 'tot' in str(p1).lower():
-                        if self.remove_empty_terms:
-                            if abs(d1[start:end:interval].mean()) > 0.1:
-                                bar[p] = d1[start:end:interval]
-                        else:
-                            bar[p] = d1[start:end:interval]
-                        data['Energy'].append(d1[start:end:interval])
+    def changes(self, line, bar, heatmap):
+        self.line_change = line
+        self.bar_change = bar
+        self.heatmap_change = heatmap
 
             bar_plot_data = pd.DataFrame(data=bar)
             line_plot_data = pd.DataFrame(data={'frames': self.frames[start:end:interval],
