@@ -479,7 +479,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
             interval = self.systems[self.current_system_index]['namespace'].INPUT['interval']
             self.numframes_le.setText(f"{int((current_end - current_start) // (value * interval)) + 1}")
 
-    def initialize(self, info_files):
+    def gettting_data(self, info_files):
 
         self.init_dialog.get_files_info(info_files)
         self.init_dialog.show()
@@ -756,39 +756,66 @@ class GMX_MMPBSA_ANA(QMainWindow):
         qpd.setWindowModality(Qt.WindowModal)
         qpd.setMinimumDuration(1000)
 
-        for i in range(maximum):
+        for sys_index, i in enumerate(range(maximum), start=1):
             qpd.setValue(i)
             if qpd.wasCanceled():
                 break
             system, api_data = rqueue.get()
-            result, app = api_data
-            self.makeTree(system, result, app, options)
+            # print(system)
+            name, path, settings_type, norm_mut, read_settings, settings = system
+            result, namespace = api_data
+
+            # namespace.INPUT['exp_ki'] = exp_ki
+            # namespace.INPUT['temperature'] = temp
+
+            self.systems[sys_index] = {'name': name, 'path': path, 'settings_type': settings_type,
+                                       'namespace': namespace, 'data': result,
+                                       'current_frames': [namespace.INPUT['startframe'],
+                                                          namespace.INPUT['endframe'],
+                                                          namespace.INPUT['interval']],
+                                       'current_nmode_frames': [namespace.INPUT['nmstartframe'],
+                                                                namespace.INPUT['nmendframe'],
+                                                                namespace.INPUT['nminterval']],
+                                       'current_ie_frames': math.ceil(
+                                           namespace.INFO['numframes'] * (namespace.INPUT['ie_segment'] / 100)),
+                                       'current_c2_frames': math.ceil(
+                                           namespace.INFO['numframes'] * (namespace.INPUT['c2_segment'] / 100)),
+                                       'chart_options': read_settings,
+                                       'chart_options_state': settings,
+                                       'changes': [False, False, False]}
+
+            print('options', options)
+
+            self.makeTree(sys_index, options)
+
         qpd.setLabelText(f"Processing data of {self.items_counter['charts']} items")
         qpd.setMaximum(self.items_counter['charts'])
         i = 0
         it = QTreeWidgetItemIterator(self.treeWidget)
         while it.value():
             item = it.value()
-            if item.has_chart:
+            if item:
                 qpd.setValue(i)
-                item.get_data()
+                # item.get_data()
                 i += 1
             if qpd.wasCanceled():
                 break
             it += 1
         qpd.setValue(self.items_counter['charts'])
 
-        if i != self.items_counter['charts']:
-            self.close()
+        self._initialize_systems()
 
-        if not options['correlation']: # FIXME:
+        # if i != self.items_counter['charts']:
+        #     self.close()
+
+        if not options['corr_sys']:  # FIXME:
             self.correlation_DockWidget.setEnabled(False)
             self.correlation_DockWidget.hide()
         else:
             self.make_correlation()
 
         # some late signal/slot connections
-        self.treeWidget.itemChanged.connect(self.showdata)
+        # self.treeWidget.itemChanged.connect(self.showdata)
         self.correlation_treeWidget.itemChanged.connect(self.showcorr)
 
     def makeTree(self, system, data, app, options):
