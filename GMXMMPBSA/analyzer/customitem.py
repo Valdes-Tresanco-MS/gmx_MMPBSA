@@ -388,6 +388,70 @@ class CustomItem(QTreeWidgetItem):
             self.app.mdi.activatePreviousSubWindow()
             self.hmp_subw.close()
 
+    def visualizing(self, checked):
+        self.app.treeWidget.clearSelection()
+        import os
+        if checked:
+            self.setSelected(True)
+            pymol_path = [os.path.join(path, 'pymol') for path in os.environ["PATH"].split(os.pathsep)
+                          if os.path.exists(os.path.join(path, 'pymol')) and
+                          os.access(os.path.join(path, 'pymol'), os.X_OK)]
+            if not pymol_path:
+                QMessageBox.critical(self, 'PyMOL not found!', 'PyMOL not found!. Make sure PyMOL is in the '
+                                                               'PATH.', QMessageBox.Ok)
+                self.vis_action.setChecked(False)
+                return
+            else:
+                pymol = pymol_path[0]
+
+            if not self.pymol_process:
+                self.pymol_process = QProcess()
+            elif self.pymol_process.state() == QProcess.Running:
+                QMessageBox.critical(self.app, 'This PyMOL instance already running!',
+                                     'This PyMOL instance already running! Please, close it to open a new PyMOL '
+                                     'instance', QMessageBox.Ok)
+                return
+
+            if self.pymol_data_change or not self.bfactor_pml:
+                self.bfactor_pml = self._e2pdb()
+
+            self.pymol_process.start(pymol, [self.bfactor_pml.as_posix()])
+            self.pymol_process.finished.connect(lambda: self.vis_action.setChecked(False))
+            self.pymol_data_change = False
+        elif self.pymol_process.state() == QProcess.Running:
+            self.pymol_process.kill()
+            self.pymol_process.waitForFinished(3000)
+
+    def _e2pdb(self):
+        com_pdb = self.app.systems[self.system_index]['namespace'].INFO['COM_PDB']
+        bfactor_pml = self.app.systems[self.system_index]['path'].parent.joinpath('bfactor.pml')
+        output_path = self.app.systems[self.system_index]['path'].parent.parent.joinpath(
+            f"{self.app.systems[self.system_index]['name']}_energy2bfactor.pdb")
+        qpd = QProgressDialog('Generate modified pdb and open it in PyMOL', 'Abort', 0, 2, self.app)
+        qpd.setWindowModality(Qt.WindowModal)
+        qpd.setMinimumDuration(1500)
+
+        for i in range(2):
+            qpd.setValue(i)
+            if qpd.wasCanceled():
+                break
+            if i == 0:
+                com_pdb_str = com2str(com_pdb)
+                res_dict = self.bar_plot_data.aggregate(["mean"]).iloc[0].to_dict()
+                for res in com_pdb_str.residues:
+                    res_notation = f'{res.chain}:{res.name}:{res.number}'
+                    if res.insertion_code:
+                        res_notation += res.insertion_code
+
+                    res_energy = res_dict[res_notation] if res_notation in res_dict else 0.00
+                    for at in res.atoms:
+                        at.bfactor = res_energy
+                com_pdb_str.save(output_path.as_posix(), 'pdb', True, renumber=False)
+                energy2pdb_pml(res_dict, bfactor_pml, output_path)
+        qpd.setValue(2)
+
+        return bfactor_pml
+
 
     def setup_data(self, frange, iec2frames=0):
         if self.data is None:
