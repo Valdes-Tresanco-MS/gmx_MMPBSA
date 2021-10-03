@@ -109,17 +109,16 @@ class H52Data:
                 for key3 in d[key][key2]:
                     # residue first level
                     for key4 in d[key][key2][key3]:
-                        if isinstance(d[key][key2][key3][key4], h5py.Group):
-                            # residue sec level
-                            for key5 in d[key][key2][key3][key4]:
-                                # calc_types terms
+                        for key5 in d[key][key2][key3][key4]:
+                            if isinstance(d[key][key2][key3][key4], h5py.Group):
+                                # residue sec level
                                 for key6 in d[key][key2][key3][key4][key5]:
                                     calc_types[key][key2][(key3, key4, key5, key6)] = d[key][key2][key3][key4][
                                         key5][key6][()]
-                        else:
-                            # energy terms
-                            for key5 in d[key][key2][key3][key4]:
-                                calc_types[key][key2][(key3, key4, key5)] = d[key][key2][key3][key4][key5][()]
+                            else:
+                                # energy terms
+                                for key5 in d[key][key2][key3][key4]:
+                                    calc_types[key][key2][(key3, key4, key5)] = d[key][key2][key3][key4][key5][()]
 
 
 class DataMMPBSA:
