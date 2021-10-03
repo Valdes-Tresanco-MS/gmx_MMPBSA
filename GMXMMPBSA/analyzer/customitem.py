@@ -154,6 +154,17 @@ class CustomItem(QTreeWidgetItem):
 
         self.tb.addWidget(self.line_chart_action)
 
+    def _show_line_table(self, state):
+        from GMXMMPBSA.analyzer.plots import Tables
+        self.app.treeWidget.clearSelection()
+        if state:
+            self.setSelected(True)
+            self.line_table_subw = Tables(self.line_plot_data, self.line_table_action)
+            self.app.mdi.addSubWindow(self.line_table_subw)
+            self.line_table_subw.show()
+        elif self.line_table_subw:
+            self.app.mdi.activatePreviousSubWindow()
+            self.line_table_subw.close()
 
     def _define_bar_chart_btn(self):
         bar_menu = QMenu()
@@ -174,6 +185,18 @@ class CustomItem(QTreeWidgetItem):
 
         self.tb.addWidget(self.bar_chart_action)
 
+    def _show_bar_table(self, state):
+        from GMXMMPBSA.analyzer.plots import Tables
+        self.app.treeWidget.clearSelection()
+        if state:
+            self.setSelected(True)
+            if not self.bar_table_subw:
+                self.bar_table_subw = Tables(self.bar_plot_data, self.bar_table_action)
+                self.app.mdi.addSubWindow(self.bar_table_subw)
+            self.bar_table_subw.show()
+        elif self.bar_table_subw:
+            self.app.mdi.activatePreviousSubWindow()
+            self.bar_table_subw.close()
 
     def _define_heatmap_chart_btn(self):
         heatmap_menu = QMenu()
@@ -193,6 +216,19 @@ class CustomItem(QTreeWidgetItem):
         self.btn_group.addButton(self.heatmap_chart_action, 3)
 
         self.tb.addWidget(self.heatmap_chart_action)
+
+    def _show_heatmap_table(self, state):
+        from GMXMMPBSA.analyzer.plots import Tables
+        self.app.treeWidget.clearSelection()
+        if state:
+            self.setSelected(True)
+            if not self.heatmap_table_subw:
+                self.heatmap_table_subw = Tables(self.heatmap_plot_data, self.heatmap_table_action)
+                self.app.mdi.addSubWindow(self.heatmap_table_subw)
+            self.heatmap_table_subw.show()
+        elif self.heatmap_table_subw:
+            self.app.mdi.activatePreviousSubWindow()
+            self.heatmap_table_subw.close()
 
     def _define_vis_btn(self):
         heatmap_menu = QMenu()
