@@ -296,6 +296,16 @@ class CustomItem(QTreeWidgetItem):
             self.app.mdi.activatePreviousSubWindow()
             self.decomp_output_file_subw.close()
 
+    def fn_mark_all(self, state):
+        if state == Qt.PartiallyChecked:
+            pass
+        elif state == Qt.Checked:
+            for x in self.btn_group.buttons():
+                x.setChecked(True)
+        else:
+            for x in self.btn_group.buttons():
+                x.setChecked(False)
+
     def fn_btn_group(self, btn, checked):
         all_checked = all(x.isChecked() for x in self.btn_group.buttons())
         all_unchecked = not any(x.isChecked() for x in self.btn_group.buttons())
