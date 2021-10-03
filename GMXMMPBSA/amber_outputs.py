@@ -1490,9 +1490,7 @@ class DecompOut(object):
 
     #==================================================
     def get_data(self, nframes, reslist=None):
-        array_data = {}
-        for key in self.allowed_tokens:
-            array_data[key] = {}
+        array_data = {key: {} for key in self.allowed_tokens}
         for i in range(nframes):
             for key in self.allowed_tokens:
                 for _ in range(self.num_terms):
@@ -1514,10 +1512,9 @@ class DecompOut(object):
     def _get_next_term(self, expected_type, framenum=1):
         """ Gets the next energy term from the output file(s) """
         line = self.decfile.readline()
-        if expected_type and not expected_type in self.allowed_tokens:
-            raise OutputError('BUGBUG: expected_type must be in %s' %
-                              self.allowed_tokens)
-        while not line[0:3] in self.allowed_tokens:
+        if expected_type and expected_type not in self.allowed_tokens:
+            raise OutputError('BUGBUG: expected_type must be in %s' % self.allowed_tokens)
+        while line[0:3] not in self.allowed_tokens:
             # We only get in here if we've gone off the end of a block, so our
             # current term number is 0 now.
             self.termnum = 0
@@ -1541,17 +1538,17 @@ class DecompOut(object):
         tot = internal + vdw + eel + pol + sas
         self.resnums[0][self.termnum] = resnum
         self.data[line[0:3]]['int'][0][self.termnum] += internal
-        self.data[line[0:3]]['int'][1][self.termnum] += internal * internal
+        self.data[line[0:3]]['int'][1][self.termnum] += internal**2
         self.data[line[0:3]]['vdw'][0][self.termnum] += vdw
-        self.data[line[0:3]]['vdw'][1][self.termnum] += vdw * vdw
+        self.data[line[0:3]]['vdw'][1][self.termnum] += vdw**2
         self.data[line[0:3]]['eel'][0][self.termnum] += eel
-        self.data[line[0:3]]['eel'][1][self.termnum] += eel * eel
+        self.data[line[0:3]]['eel'][1][self.termnum] += eel**2
         self.data[line[0:3]]['pol'][0][self.termnum] += pol
-        self.data[line[0:3]]['pol'][1][self.termnum] += pol * pol
+        self.data[line[0:3]]['pol'][1][self.termnum] += pol**2
         self.data[line[0:3]]['sas'][0][self.termnum] += sas
-        self.data[line[0:3]]['sas'][1][self.termnum] += sas * sas
+        self.data[line[0:3]]['sas'][1][self.termnum] += sas**2
         self.data[line[0:3]]['tot'][0][self.termnum] += tot
-        self.data[line[0:3]]['tot'][1][self.termnum] += tot * tot
+        self.data[line[0:3]]['tot'][1][self.termnum] += tot**2
         self.termnum += 1
         return [resnum, internal, vdw, eel, pol, sas, tot]
 
@@ -2139,8 +2136,6 @@ class DecompBinding(object):
             for i in range(self.num_terms):
                 int_avg = self.data_stats[term]['int'][0][i]
                 int_std = self.data_stats[term]['int'][1][i]
-                vdw_avg = self.data_stats[term]['vdw'][0][i]
-                vdw_std = self.data_stats[term]['vdw'][1][i]
                 eel_avg = self.data_stats[term]['eel'][0][i]
                 eel_std = self.data_stats[term]['eel'][1][i]
                 vdw_avg = self.data_stats[term]['vdw'][0][i]
@@ -2310,9 +2305,9 @@ class PairDecompBinding(DecompBinding):
             self.lig.write_summary_csv(self.num_lig_frames, self.output)
         # Now write the DELTAs
 
-        self.output.writerow('DELTAS:')
+        self.output.writerow(['DELTAS:'])
         for term in self.allowed_tokens:
-            self.output.writerow(DecompOut.descriptions[term])
+            self.output.writerow([DecompOut.descriptions[term]])
             self.output.writerow(['Resid 1', 'Resid 2', 'Internal', '', '',
                                   'van der Waals', '', '', 'Electrostatic', '', '',
                                   'Polar Solvation', '', '', 'Non-Polar Solv.',
@@ -2323,8 +2318,6 @@ class PairDecompBinding(DecompBinding):
                 sqrt_frames = sqrt(self.num_com_frames)
                 int_avg = self.data_stats[term]['int'][0][i]
                 int_std = self.data_stats[term]['int'][1][i]
-                vdw_avg = self.data_stats[term]['vdw'][0][i]
-                vdw_std = self.data_stats[term]['vdw'][1][i]
                 eel_avg = self.data_stats[term]['eel'][0][i]
                 eel_std = self.data_stats[term]['eel'][1][i]
                 vdw_avg = self.data_stats[term]['vdw'][0][i]
@@ -2377,8 +2370,6 @@ class PairDecompBinding(DecompBinding):
             for i in range(self.num_terms):
                 int_avg = self.data_stats[term]['int'][0][i]
                 int_std = self.data_stats[term]['int'][1][i]
-                vdw_avg = self.data_stats[term]['vdw'][0][i]
-                vdw_std = self.data_stats[term]['vdw'][1][i]
                 eel_avg = self.data_stats[term]['eel'][0][i]
                 eel_std = self.data_stats[term]['eel'][1][i]
                 vdw_avg = self.data_stats[term]['vdw'][0][i]
