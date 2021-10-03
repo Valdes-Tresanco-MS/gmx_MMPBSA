@@ -312,3 +312,193 @@ class HeatmapChart(ChartsBase):
         pass
 
 
+class MHeatmap:
+    def __init__(self, data: pd.DataFrame, figsize=None, dpi=100, heatmap_type=1, rec_color=None, lig_color=None,
+                 show_legend=True, remove_molid=True, leg_fontsize=10, xticks_fontsize=10, xlabel_fontsize=11,
+                 x_rotation=0, num_xticks=10, yticks_fontsize=10, y_rotation=0, colorbar_ticks_fontsize=9,
+                 colorbar_label_fontsize=10, cmap='seismic', annot=False):
+        """
+        This class is based on the seaborn clustermap. We created it to have more control over the components and
+        especially for the management and support of the tight_layout
+        @param data: pandas.Dataframe
+        @param figsize: Managed according to the plot decomp scheme: per-wise [symmetrical matrix] and per-residue [
+                        frames in xaxis]
+        @param dpi: figure dpi
+        @param heatmap_type: 1 per-wise, 2 per-residue
+        @param rec_color: color for receptor residues identification
+        @param lig_color: color for ligand residues identification
+        @param show_legend: show the receptor and ligand identification colorbar
+        @param remove_molid: remove the identify label (e.g. R:C:VAL:33 --> C:VAL:33)
+        @param leg_fontsize: Legend font-size
+        @param xticks_fontsize: xticks font-size. Is always defined
+        @param xlabel_fontsize: xlabel font-size. Only for per-residue plot
+        @param x_rotation: xlabels rotation
+        @param num_xticks: number of xlabels to show
+        @param yticks_fontsize: yticks font-size. Is always defined
+        @param y_rotation: ylabels rotation
+        @param colorbar_ticks_fontsize: colorbar ticks font-size
+        @param colorbar_label_fontsize: colorbar label font-size
+        @param cmap: color map
+        @param annot: show annotations
+        """
+        super(MHeatmap, self).__init__()
+        ratios = {'legend': 0.025, 'colorbar': 0.025, 'ws1': 0.03, 'color_row_col': 0.015, 'ws2': 0.002}
+        pos = {'legend': [0, 4], 'colorbar': [-1, 0], 'color_row': [-1, 2], 'color_col': [-3, 4], 'heatmap': [-1, 4]}
+        self.data = data
+        self.heatmap_type = heatmap_type
+        self.remove_molid = remove_molid
+        self.xticks_fontsize = xticks_fontsize
+        self.xlabel_fontsize = xlabel_fontsize
+        self.x_rotation = x_rotation
+        self.num_xticks = num_xticks
+        self.yticks_fontsize = yticks_fontsize
+        self.y_rotation = y_rotation
+        self.cmap = cmap
+        self.annot = annot
+
+        leg_ratios = [ratios['legend'], ratios['ws1']]
+        row_color_ratios = [ratios['color_row_col'], ratios['ws2']]
+        h_ratios = []
+        if show_legend:
+            h_ratios += leg_ratios
+        if heatmap_type == 1:  # per-wise heatmap
+            h_ratios += row_color_ratios
+        h_ratios.append(1 - sum(h_ratios))
+        self.gs = gridspec.GridSpec(len(h_ratios), 5,
+                                    hspace=0,
+                                    wspace=0,
+                                    height_ratios=h_ratios,
+                                    width_ratios=[0.025, 0.02, 0.015, 0.002, 0.938])
+        self.fig = Figure(figsize=figsize, dpi=dpi)
+        self.row_col_colors = self.data.index.map(lambda x: self._index_color(x, rec_color, lig_color))
+
+        if show_legend:
+            self.ax_legend = self.fig.add_subplot(self.gs[pos['legend'][0], pos['legend'][1]], label='Legend')
+            color = [rec_color, lig_color]
+            for c, label in enumerate(['Receptor', 'Ligand']):
+                self.ax_legend.bar(0, 0, color=color[c], label=label, linewidth=0)
+            self.ax_legend.legend(loc="center", ncol=2, prop={'size': leg_fontsize})
+            self.ax_legend.set_facecolor('white')
+            self.ax_legend.get_xaxis().set_visible(False)
+            self.ax_legend.get_yaxis().set_visible(False)
+            sns.despine(ax=self.ax_legend, left=True, bottom=True)
+
+        if heatmap_type == 1:
+            self.ax_col_colors = self.fig.add_subplot(self.gs[pos['color_col'][0], pos['color_col'][1]],
+                                                      label='Column-molid')
+
+        self.ax_cbar = self.fig.add_subplot(self.gs[-1, 0], label='Colorbar')
+        self.ax_cbar.yaxis.tick_left()
+        self.ax_cbar.yaxis.set_label_text('Energy (kcal/mol)', fontdict={'size': colorbar_label_fontsize})
+        # self.ax_cbar.yaxis.set_label_position('left')
+        for label in self.ax_cbar.get_yticklabels():
+            label.set_fontsize(colorbar_ticks_fontsize)
+
+        divider = make_axes_locatable(self.ax_cbar)
+        leg_axestop = divider.append_axes("top", size="20%", pad=0.2)
+        leg_axesbot = divider.append_axes("bottom", size="20%", pad=0.2)
+        leg_axestop.axes.set_visible(False)
+        leg_axesbot.axes.set_visible(False)
+
+        self.ax_row_colors = self.fig.add_subplot(self.gs[-1, -3], label='Row-molid')
+        self.ax_heatmap = self.fig.add_subplot(self.gs[-1, -1], label='Heatmap')
+        self.ax_heatmap.yaxis.tick_right()
+
+        self.plot_colors()
+        self.plot_matrix({'ticklocation': 'left', 'label': 'Energy (kcal/mol)'})
+
+    @staticmethod
+    def _index_color(x, rec_color, lig_color):
+        if x.startswith('R'):
+            return tuple(rec_color)
+        else:
+            return tuple(lig_color)
+
+    @staticmethod
+    def color_list_to_matrix_and_cmap(colors, axis=0):
+        """Turns a list of colors into a numpy matrix and matplotlib colormap
+
+        These arguments can now be plotted using heatmap(matrix, cmap)
+        and the provided colors will be plotted.
+
+        Parameters
+        ----------
+        colors : list of matplotlib colors
+            Colors to label the rows or columns of a dataframe.
+        ind : list of ints
+            Ordering of the rows or columns, to reorder the original colors
+            by the clustered dendrogram order
+        axis : int
+            Which axis this is labeling
+
+        Returns
+        -------
+        matrix : numpy.array
+            A numpy array of integer values, where each corresponds to a color
+            from the originally provided list of colors
+        cmap : matplotlib.colors.ListedColormap
+
+        """
+        # check for nested lists/color palettes.
+        # Will fail if matplotlib color is list not tuple
+        if any(issubclass(type(x), list) for x in colors):
+            all_colors = set(itertools.chain(*colors))
+            n = len(colors)
+            m = len(colors[0])
+        else:
+            all_colors = set(colors)
+            n = 1
+            m = len(colors)
+            colors = [colors]
+        color_to_value = {col: i for i, col in enumerate(all_colors)}
+
+        matrix = np.array([color_to_value[c]
+                           for color in colors for c in color])
+
+        shape = (n, m)
+        matrix = matrix.reshape(shape)
+        if axis == 0:
+            # row-side:
+            matrix = matrix.T
+
+        cmap = mpl.colors.ListedColormap(all_colors)
+        return matrix, cmap
+
+    def plot_colors(self, **kws):
+        # Plot the row colors
+        matrix, cmap = self.color_list_to_matrix_and_cmap(self.row_col_colors, axis=0)
+        sns.heatmap(matrix, cmap=cmap, cbar=False, ax=self.ax_row_colors, xticklabels=False, yticklabels=False, **kws)
+        # Plot the column colors
+        if self.heatmap_type == 1:
+            matrix, cmap = self.color_list_to_matrix_and_cmap(self.row_col_colors, axis=1)
+            sns.heatmap(matrix, cmap=cmap, cbar=False, ax=self.ax_col_colors, xticklabels=False, yticklabels=False,
+                        **kws)
+
+    def plot_matrix(self, colorbar_kws, **kws):
+
+        nxticks = 1 if self.heatmap_type == 1 else self.data.columns.size // self.num_xticks
+        h = sns.heatmap(self.data, ax=self.ax_heatmap, xticklabels=nxticks, cbar_ax=self.ax_cbar, cbar_kws=colorbar_kws,
+                        cmap=self.cmap, center=0, annot=self.annot, fmt=".2f", **kws)
+        ytl = self.ax_heatmap.get_yticklabels()
+        for ylabel in ytl:
+            ylabel.set_fontsize(self.yticks_fontsize)
+            ylabel.set_rotation(self.y_rotation)
+            if self.remove_molid:
+                ylabel.set_text(ylabel.get_text()[2:])
+        xtl = self.ax_heatmap.get_xticklabels()
+        for xlabel in xtl:
+            xlabel.set_fontsize(self.xticks_fontsize)
+            xlabel.set_rotation(self.x_rotation)
+            if self.remove_molid and self.heatmap_type == 1:
+                xlabel.set_text(xlabel.get_text()[2:])
+
+        if self.remove_molid:
+            self.ax_heatmap.set_yticklabels(ytl)
+            if self.heatmap_type == 1:
+                self.ax_heatmap.set_xticklabels(xtl)
+        self.ax_heatmap.yaxis.set_ticks_position('right')
+        self.ax_heatmap.yaxis.set_label_position('right')
+        if self.heatmap_type == 2:
+            self.ax_heatmap.set_xlabel('Frames', fontdict={'fontsize': self.xlabel_fontsize})
+
+
