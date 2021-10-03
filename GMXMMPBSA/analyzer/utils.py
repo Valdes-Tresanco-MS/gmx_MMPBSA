@@ -2,7 +2,6 @@
 #                           GPLv3 LICENSE INFO                                 #
 #                                                                              #
 #  Copyright (C) 2020  Mario S. Valdes-Tresanco and Mario E. Valdes-Tresanco   #
-#  Copyright (C) 2014  Jason Swails, Bill Miller III, and Dwight McGee         #
 #                                                                              #
 #   Project: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA                  #
 #                                                                              #
@@ -17,13 +16,15 @@
 # ##############################################################################
 
 import math
-from pathlib import Path
+from typing import Union
+
 from GMXMMPBSA.exceptions import GMXMMPBSA_ERROR, GMXMMPBSA_WARNING
 import pandas as pd
 import numpy as np
 from queue import Queue
 from PyQt5.QtCore import *
 import multiprocessing
+from pathlib import Path
 
 R = 0.001987
 
@@ -32,13 +33,15 @@ ncpu = multiprocessing.cpu_count()
 def calculatestar(args):
     return run_process(*args)
 
+
 def run_process(func, args):
-    basename, path, exp_ki, temp = args
-    results = func(path)
+    results = func(args[1])
     return (args, results)
+
 
 class worker(QThread):
     job_finished = pyqtSignal()
+
     def __init__(self):
         super(worker, self).__init__()
 
@@ -50,26 +53,23 @@ class worker(QThread):
 
     def run(self):
         size = self.queue.qsize()
-        TASKS = []
-        for x in range(size):
-            TASKS.append([self.fn, self.queue.get_nowait()])
-
-        if self.jobs > len(TASKS):
-            self.jobs = len(TASKS)
+        TASKS = [[self.fn, self.queue.get_nowait()] for _ in range(size)]
+        self.jobs = min(self.jobs, len(TASKS))
         with multiprocessing.Pool(self.jobs) as pool:
             imap_unordered_it = pool.imap_unordered(calculatestar, TASKS)
             for result in imap_unordered_it:
                 self.job_finished.emit()
                 self.result_queue.put(result)
 
+
 def energy2pdb_pml(residue_list, pml_path: Path, pdb_path: Path):
     with open(pml_path, 'w') as bf:
         bf.write(f'load {pdb_path}\n')
-        bf.write(f'set cartoon_oval_length, 1.0\n')
-        bf.write(f'set cartoon_rect_length, 1.2\n')
-        bf.write(f'set cartoon_rect_width, 0.3\n')
-        bf.write(f'set cartoon_side_chain_helper, 1\n')
-        bf.write(f'set light_count, 0\n')
+        bf.write('set cartoon_oval_length, 1.0\n')
+        bf.write('set cartoon_rect_length, 1.2\n')
+        bf.write('set cartoon_rect_width, 0.3\n')
+        bf.write('set cartoon_side_chain_helper, 1\n')
+        bf.write('set light_count, 0\n')
         bf.write('set_color gmxc1 = (0.0, 0.0, 0.3)\n')
         bf.write('set_color gmxc2 = (0.0, 0.0, 1.0)\n')
         bf.write('set_color gmxc3 = (1.0, 1.0, 1.0)\n')
@@ -107,7 +107,7 @@ def energy2pdb_pml(residue_list, pml_path: Path, pdb_path: Path):
             minimum = -abs(maximum)
 
         bf.write(f'show sticks, {select_text}\n')
-        bf.write(f'remove (h. and (e. c extend 1))\n')
+        bf.write('remove (h. and (e. c extend 1))\n')
         bf.write(f'spectrum b, gmxc1 gmxc2 gmxc3 gmxc4 gmxc5, minimum={minimum}, maximum={maximum}\n')
         bf.write(f'ramp_new colorbar, none, [{minimum}, 0, {maximum}], [gmxc1, gmxc2, gmxc3, gmxc4, gmxc5]\n')
         bf.write(f'center {select_text}\n')
@@ -131,8 +131,19 @@ def make_corr_DF(corr_data: dict) -> pd.DataFrame:
             curr = [x] + [np.nanmean(corr_data[x]['ΔG'][m][d]) if type(corr_data[x]['ΔG'][m][d]) == np.ndarray
                                      else np.nan for d in corr_data[x]['ΔG'][m] ] + [m, corr_data[x]['Exp.Energy']]
             data.append(curr)
-    df = pd.DataFrame(data=data, columns=['System', 'ΔH', 'ΔH+IE', 'ΔH+NMODE', 'ΔH+QH', 'MODEL', 'Exp.Energy'])
-    return df
+    return pd.DataFrame(
+        data=data,
+        columns=[
+            'System',
+            'ΔH',
+            'ΔH+IE',
+            'ΔH+NMODE',
+            'ΔH+QH',
+            'MODEL',
+            'Exp.Energy',
+        ],
+    )
+
 
 def get_files(parser_args):
     info_files = []
