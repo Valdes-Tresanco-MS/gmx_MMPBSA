@@ -102,9 +102,10 @@ class ChartsBase(QMdiSubWindow):
     def __init__(self, button: QToolButton, options: dict = None):
         super(ChartsBase, self).__init__()
         self.setMinimumSize(400, 400)
-        self.options = options['general_options']
+        self.options = options
+
         self.mainwidgetmdi = QMainWindow()  # must be QMainWindow to handle the toolbar
-        sns.set_theme(style=self.options['theme'])
+        sns.set_theme(style=self.options[('General', 'theme')])
         self.plot = None
         self.frange = []  # Frames range with which it was created
         self.button = button
@@ -113,14 +114,14 @@ class ChartsBase(QMdiSubWindow):
     def set_cw(self, fig=None):
         # we create the figure canvas here because the fig parameter must be defined and depende of what kind of
         # chart want to make
-        fig = Figure(dpi=self.options['dpi']['plot']) if not fig else fig
+        fig = Figure(dpi=self.options[('General', 'figure-format', 'dpi-plot')]) if not fig else fig
         self.figure_canvas = FigureCanvas(fig)
         self.fig = self.figure_canvas.figure
         self.mainwidgetmdi.setCentralWidget(self.figure_canvas)
-        self.mpl_toolbar.setVisible(self.options['toolbar'])
         # similar to figure canvas
         self.mpl_toolbar = NavigationToolbar(self.figure_canvas, self)
-        # self.mpl_toolbar.setVisible(True)
+        self.mpl_toolbar.setVisible(self.options['General', 'toolbar'])
+
         self.mainwidgetmdi.addToolBar(Qt.BottomToolBarArea, self.mpl_toolbar)
 
         self.fbtn = QPushButton(self.style().standardIcon(QStyle.SP_FileDialogDetailedView), '', self.figure_canvas)
@@ -129,30 +130,29 @@ class ChartsBase(QMdiSubWindow):
         self.fbtn.setCheckable(True)
         self.fbtn.setChecked(False)
 
-    def draw(self, title, tight_layout=True):
-        if tight_layout:
-            self.fig.tight_layout()
-            self.figure_canvas.draw()
-        self.setWindowTitle(title)
+    def draw(self):
+        self.fig.tight_layout()
+        self.figure_canvas.draw()
 
     def setup_text(self, ax, options, key='', title='', xlabel='', ylabel='Energy (kcal/mol)'):
-        ax.set_title(title, fontdict={'fontsize': options['general_options']['fontsize']['suptitle']})
-        ax.set_xlabel(xlabel, fontdict={'fontsize': options['general_options']['fontsize']['y-label']})
-        ax.set_ylabel(ylabel, fontdict={'fontsize': options['general_options']['fontsize']['y-label']})
+        key_list = [key] if isinstance(key, str) else key
+        ax.set_title(title, fontdict={'fontsize': options[tuple(key_list + ['fontsize', 'suptitle'])]})
+        ax.set_xlabel(xlabel, fontdict={'fontsize': options[tuple(key_list + ['fontsize', 'x-label'])]})
+        ax.set_ylabel(ylabel, fontdict={'fontsize': options[tuple(key_list + ['fontsize', 'y-label'])]})
         for label in ax.get_xticklabels():
-            label.set_rotation(options[key]['axes']['x-rotation'])
-            if options[key]['axes']['x-rotation'] < 0:
+            label.set_rotation(options[tuple(key_list + ['axes', 'x-rotation'])])
+            if options[tuple(key_list + ['axes', 'x-rotation'])] < 0:
                 label.set_horizontalalignment('left')
             else:
                 label.set_horizontalalignment('right')
-            label.set_fontsize(options['general_options']['fontsize']['x-ticks'])
+            label.set_fontsize(options[tuple(key_list + ['fontsize', 'x-ticks'])])
         for label in ax.get_yticklabels():
-            label.set_rotation(options[key]['axes']['y-rotation'])
-            if options[key]['axes']['y-rotation'] < 0:
+            label.set_rotation(options[tuple(key_list + ['axes', 'y-rotation'])])
+            if options[tuple(key_list + ['axes', 'y-rotation'])] < 0:
                 label.set_horizontalalignment('left')
             else:
                 label.set_horizontalalignment('right')
-            label.set_fontsize(options['general_options']['fontsize']['y-ticks'])
+            label.set_fontsize(options[tuple(key_list + ['fontsize', 'y-ticks'])])
 
     def closeEvent(self, closeEvent: QCloseEvent) -> None:
         self.button.setChecked(False)
@@ -161,84 +161,153 @@ class ChartsBase(QMdiSubWindow):
 class LineChart(ChartsBase):
     def __init__(self, data: pandas.DataFrame, button: QToolButton, options: dict = None, data2=None):
         super(LineChart, self).__init__(button, options)
+
+        self.ie_bar = None
+        self.ie_barlabel = None
+        self.axins4 = None
+
         # figure canvas definition
         self.set_cw()
-        self.fig.set_size_inches(options['line_options']['figure']['width'],
-                                 options['line_options']['figure']['height'])
+        self.fig.set_size_inches(options[('Line Plot', 'figure', 'width')],
+                                 options[('Line Plot', 'figure', 'height')])
         axes = self.fig.subplots(1, 1)
-        line_plot_ax = sns.lineplot(data=data, color=rgb2rgbf(options['line_options']['line-color']),
-                                    linewidth=options['line_options']['line-width'], ax=axes)
-        line_plot_ax.xaxis.set_major_locator(mticker.MaxNLocator(nbins=options['line_options']['axes']['num-xticks'],
-                                                                 integer=True))
-        line_plot_ax.yaxis.set_major_locator(mticker.MaxNLocator(nbins=options['line_options']['axes']['num-yticks']))
-        self.setup_text(line_plot_ax, options, key='line_options', xlabel='Frames')
+        self.line_plot_ax = sns.lineplot(data=data, color=rgb2rgbf(options[('Line Plot', 'line-color')]),
+                                         linewidth=options[('Line Plot', 'line-width')], ax=axes)
         if data2 is not None:
-            bar_options = options['line_options']['Interaction Entropy']['bar-plot']
-            axins4 = inset_axes(axes,
-                                width=f"{bar_options['width']}%",
-                                height=f"{bar_options['height']}%",
-                                bbox_to_anchor=(
-                                    options['line_options']['Interaction Entropy']['bbox_to_anchor']['x-pos'],
-                                    options['line_options']['Interaction Entropy']['bbox_to_anchor']['y-pos'],
-                                    0.5, 0.5),
-                                bbox_transform=axes.transAxes, loc=4)
+            self.numf = len(data2['data'])
+            self.axins4 = inset_axes(axes,
+                                     width=f"{options[('Line Plot', 'Interaction Entropy', 'bar-plot', 'width')]}%",
+                                     height=f"{options[('Line Plot', 'Interaction Entropy', 'bar-plot', 'height')]}%",
+                                     bbox_to_anchor=(
+                                         options[('Line Plot', 'Interaction Entropy', 'bar-plot', 'x-pos')],
+                                         options[('Line Plot', 'Interaction Entropy', 'bar-plot', 'y-pos')],
+                                         0.5, 0.5),
+                                     bbox_transform=axes.transAxes, loc=4, borderpad=1)
+            axes.add_patch(plt.Rectangle((options[('Line Plot', 'Interaction Entropy', 'bar-plot', 'x-pos')],
+                                          options[('Line Plot', 'Interaction Entropy', 'bar-plot', 'y-pos')]),
+                                         .5, .5, ls="--", ec="c", fc="None", transform=axes.transAxes))
             # plot the ie segment
-            ie_color = rgb2rgbf(options['line_options']['Interaction Entropy']['ie-color'])
+            ie_color = rgb2rgbf(options[('Line Plot', 'Interaction Entropy', 'ie-color')])
             sns.lineplot(data=data2['data'], color=ie_color, ax=axes)
-            r_sigma = rgb2rgbf(options['line_options']['Interaction Entropy']['sigma-color']['reliable'])
-            nr_sigma = rgb2rgbf(options['line_options']['Interaction Entropy']['sigma-color']['non-reliable'])
+            r_sigma = rgb2rgbf(options[('Line Plot', 'Interaction Entropy', 'sigma-color', 'reliable')])
+            nr_sigma = rgb2rgbf(options[('Line Plot', 'Interaction Entropy', 'sigma-color', 'non-reliable')])
             colors = [ie_color, r_sigma if np.all(data2.loc[:, ['sigma']].mean() < 3.6) else nr_sigma]
-            ax1 = sns.barplot(data=data2, ax=axins4, palette=colors)
-            ax1.tick_params(labelsize=bar_options['axes-fontsize'])
-            ax1.bar_label(ax1.containers[0], size=bar_options['bar-label-fontsize'], fmt='%.2f',
-                          padding=bar_options['bar-label-padding'])
-            ax1.set(xticklabels=[f"ie\n(last\n {len(data2['data'])} frames)", "σ(Int.\nEnergy)"])
-            sns.despine(ax=ax1)
-            ax1.spines['bottom'].set_color('darkgray')
-            ax1.spines['left'].set_color('darkgray')
-            ax1.tick_params(color='black', direction='out', length=6, width=2)
+            self.ie_bar = sns.barplot(data=data2, ax=self.axins4, palette=colors)
+            self.ie_bar.set(xticklabels=[f"ie\n(last\n {self.numf} frames)", "σ(Int.\nEnergy)"])
+            self.ie_barlabel = self.ie_bar.bar_label(self.ie_bar.containers[0],
+                                                     size=options[('Line Plot', 'Interaction Entropy', 'bar-plot',
+                                                                   'bar-label-fontsize')],
+                                                     fmt='%.2f',
+                                                     padding=options[('Line Plot', 'Interaction Entropy', 'bar-plot',
+                                                                      'bar-label-padding')])
+            sns.despine(ax=self.ie_bar)
+            self.ie_bar.spines['bottom'].set_color('darkgray')
+            self.ie_bar.spines['left'].set_color('darkgray')
+            self.ie_bar.tick_params(color='black', direction='out', length=6, width=2)
 
         self.cursor = Cursor(axes, useblit=True, color='black', linewidth=0.5, ls='--')
+
+        self.setWindowTitle(options['chart_subtitle'])
+        self.update_config(options)
+        self.draw()
+
+    def check(self):
+        pass
+
+    def update_config(self, options):
         self.fig.suptitle(f"{options['chart_title']}\n{options['chart_subtitle']}",
-                          fontsize=options['general_options']['fontsize']['title'])
-        self.draw(options['chart_subtitle'])
+                          fontsize=options[('Line Plot', 'fontsize', 'title')])
+        self.line_plot_ax.xaxis.set_major_locator(
+            mticker.MaxNLocator(nbins=options[('Line Plot', 'axes', 'num-xticks')],
+                                integer=True))
+        self.line_plot_ax.yaxis.set_major_locator(
+            mticker.MaxNLocator(nbins=options[('Line Plot', 'axes', 'num-yticks')]))
+
+        self.setup_text(self.line_plot_ax, options, key='Line Plot', xlabel='Frames')
+
+        if self.axins4:
+            for label in self.ie_barlabel:
+                label.set_fontsize(options[('Line Plot', 'Interaction Entropy', 'bar-plot', 'bar-label-fontsize')])
+            self.ie_bar.tick_params(labelsize=options[('Line Plot', 'Interaction Entropy', 'bar-plot',
+                                                       'axes-fontsize')])
+        self.draw()
 
 
 class BarChart(ChartsBase):
     def __init__(self, data: pandas.DataFrame, button: QToolButton, options: dict = None):
         super(BarChart, self).__init__(button, options)
 
+        self.bar_labels = []
         # figure canvas definition
         self.set_cw()
-        self.fig.set_size_inches(options['bar_options']['figure']['width'],
-                                 options['bar_options']['figure']['height'])
-        if 'groups' in options and options['bar_options']['subplot-components']:
-            axes = self.fig.subplots(1, len(options['groups']), sharey=True,
-                                     gridspec_kw={'width_ratios': [len(x) for x in options['groups'].values()]})
-            palette = (sns.color_palette(options['bar_options']['palette'])
-                       if options['bar_options']['use-palette'] else None)
+        self.fig.set_size_inches(options[('Bar Plot', 'figure', 'width')],
+                                 options[('Bar Plot', 'figure', 'height')])
+        if 'groups' in options and options[('Bar Plot', 'subplot-components')]:
+            self.axes = self.fig.subplots(1, len(options['groups']), sharey=True,
+                                          gridspec_kw={'width_ratios': [len(x) for x in options['groups'].values()]})
+            palette = (sns.color_palette(options[('Bar Plot', 'palette')], n_colors=data.columns.size)
+                       if options[('Bar Plot', 'use-palette')] else None)
             s = 0
             for c, g in enumerate(options['groups']):
                 bar_plot_ax = sns.barplot(data=data[options['groups'][g]], ci="sd",
                                           palette=palette[s: s + len(options['groups'][g])] if palette else palette,
-                                          color=rgb2rgbf(options['bar_options']['color']),
-                                          errwidth=1, ax=axes[c])
+                                          color=rgb2rgbf(options[('Bar Plot', 'color')]),
+                                          errwidth=1, ax=self.axes[c])
                 s += len(options['groups'][g])
-                if options['bar_options']['scale-big-values'] and options['scalable']:
+                if options[('Bar Plot', 'scale-big-values')] and options['scalable']:
                     bar_plot_ax.set_yscale('symlog')
+                if options[('Bar Plot', 'bar-label', 'show')]:
+                    bl = bar_plot_ax.bar_label(bar_plot_ax.containers[0],
+                                               size=options[('Bar Plot', 'bar-label', 'fontsize')],
+                                               fmt='%.2f',
+                                               padding=options[('Bar Plot', 'bar-label', 'padding')])
+                    self.bar_labels.append(bl)
                 ylabel = '' if c != 0 else 'Energy (kcal/mol)'
-                self.setup_text(bar_plot_ax, options, key='bar_options', title=g, ylabel=ylabel)
+                self.setup_text(bar_plot_ax, options, key='Bar Plot', title=g, ylabel=ylabel)
                 setattr(self, f'cursor{c}', Cursor(bar_plot_ax, useblit=True, color='black', linewidth=0.5, ls='--'))
 
         else:
-            axes = self.fig.subplots(1, 1)
-            bar_plot_ax = sns.barplot(data=data, ci="sd", errwidth=1, ax=axes)
-            self.setup_text(bar_plot_ax, options, key='bar_options')
+            self.axes = self.fig.subplots(1, 1)
+            bar_plot_ax = sns.barplot(data=data, ci="sd", errwidth=1, ax=self.axes)
+            if options[('Bar Plot', 'bar-label', 'show')]:
+                bl = bar_plot_ax.bar_label(bar_plot_ax.containers[0],
+                                           size=options[('Bar Plot', 'bar-label', 'fontsize')],
+                                           fmt='%.2f',
+                                           padding=options[('Bar Plot', 'bar-label', 'padding')])
+                self.bar_labels.append(bl)
+            self.setup_text(bar_plot_ax, options, key='Bar Plot')
             self.cursor = Cursor(bar_plot_ax, useblit=True, color='black', linewidth=0.5, ls='--')
 
+        # self.fig.suptitle(f"{options['chart_title']}\n{options['chart_subtitle']}",
+        #                   fontsize=options['general_options']['fontsize']['title'])
+        self.setWindowTitle(options['chart_subtitle'])
+        self.update_config(options)
+        self.draw()
+
+    def update_config(self, options):
         self.fig.suptitle(f"{options['chart_title']}\n{options['chart_subtitle']}",
-                          fontsize=options['general_options']['fontsize']['title'])
-        self.draw(options['chart_subtitle'])
+                          fontsize=options[('Bar Plot', 'fontsize', 'title')])
+        if isinstance(self.axes, np.ndarray):
+            for c, g in enumerate(options['groups']):
+                bar_plot_ax = self.axes[c]
+                if options[('Bar Plot', 'bar-label', 'show')]:
+                    for blabels in self.bar_labels:
+                        for label in blabels:
+                            label.set_fontsize(options[('Bar Plot', 'bar-label', 'fontsize')])
+                ylabel = '' if c != 0 else 'Energy (kcal/mol)'
+                self.setup_text(bar_plot_ax, options, key='Bar Plot', title=g, ylabel=ylabel)
+        else:
+            bar_plot_ax = self.axes
+            if options[('Bar Plot', 'scale-big-values')] and options['scalable']:
+                bar_plot_ax.set_yscale('symlog')
+            else:
+                bar_plot_ax.set_yscale('linear')
+            if options[('Bar Plot', 'bar-label', 'show')]:
+                for blabels in self.bar_labels:
+                    for label in blabels:
+                        label.set_fontsize(options[('Bar Plot', 'bar-label', 'fontsize')])
+            self.setup_text(self.axes, options, key='Bar Plot', xlabel='Frames')
+        self.draw()
 
 
 class HeatmapChart(ChartsBase):
@@ -297,6 +366,7 @@ class HeatmapChart(ChartsBase):
             self.draw(options['chart_subtitle'])
         self.fig.suptitle(f"{options['chart_title']}\n{options['chart_subtitle']}",
                           fontsize=options['general_options']['fontsize']['title'])
+
     @staticmethod
     def get_mol(x: str, rec_color, lig_color):
         if x.startswith('R:'):
@@ -535,6 +605,7 @@ class PandasTableModel(QStandardItemModel):
 
     def columnCount(self, parent=None, *args, **kwargs):
         return len(self.df_list[0].split(','))
+
 
 class Tables(QMdiSubWindow):
     def __init__(self, df: pd.DataFrame, button):
