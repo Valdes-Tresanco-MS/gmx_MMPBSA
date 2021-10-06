@@ -1,4 +1,4 @@
-import seaborn as sns
+from typing import Union
 from matplotlib.colors import LinearSegmentedColormap
 from matplotlib._cm import datad
 from pathlib import Path
@@ -369,16 +369,23 @@ class ChartSettings(dict):
             visualization_ation=0,
         )
 
-    def write_system_config(self, syspath: Path, settings):
+    def return_default(self):
+        self.update(self.default)
+
+    def write_system_config(self, syspath: Path = None):
         """
 
         @param syspath: Current system path
         @param settings: settings dict with custom properties
         @return:
         """
-        filename = syspath.joinpath('settings.json')
-        with open(filename, "w") as write_file:
-            json.dump(settings, write_file, indent=4)
+        if syspath is None:
+            with open(self.filename, "w") as write_file:
+                json.dump(self, write_file, indent=4)
+        else:
+            filename = syspath.joinpath('settings.json')
+            with open(filename, "w") as write_file:
+                json.dump(self, write_file, indent=4)
 
     def read_config(self, custom: Path = None):
         """
