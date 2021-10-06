@@ -28,12 +28,9 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from GMXMMPBSA.analyzer.dialogs import InitDialog
 from GMXMMPBSA.analyzer.customitem import CustomItem, CorrelationItem
-from GMXMMPBSA.analyzer.plots import Charts
 from GMXMMPBSA.analyzer.utils import energy2pdb_pml, ki2energy, make_corr_DF, multiindex2dict
 from GMXMMPBSA.analyzer.chartsettings import ChartSettings
-# from GMXMMPBSA.analyzer.propertyeditor import properties_w
 import math
-import parmed
 import numpy as np
 
 
@@ -381,7 +378,6 @@ class GMX_MMPBSA_ANA(QMainWindow):
 
     def update_frames_fn(self):
 
-        cs = ChartSettings()
         if self.all_frb.isChecked():
             for x in self.systems:
                 self.systems[x]['current_frames'] = [self.eframes_start_sb.value(),
@@ -393,18 +389,11 @@ class GMX_MMPBSA_ANA(QMainWindow):
             act_frange = [self.eframes_start_sb.value(), self.eframes_end_sb.value(), self.eframes_inter_sb.value()]
             act_sett = self.chart_options_param.saveState()
             curr_frange = self.systems[self.current_system_index]['current_frames']
-            curr_sett = self.systems[self.current_system_index]['chart_options_state']
-
-            rdcs = cs.get_settings(act_sett)
-            rdcs_c = cs.get_settings(curr_sett)
-            if act_frange == curr_frange and rdcs == rdcs_c:
-                return
+            curr_sett = self.systems[self.current_system_index]['chart_options']
 
             self.systems[self.current_system_index]['current_frames'] = act_frange
             # chart options
-            self.systems[self.current_system_index]['chart_options'] = cs.get_settings(act_sett)
-            self.systems[self.current_system_index]['chart_options_state'] = act_sett
-            self.systems[self.current_system_index]['changes'] = self._get_changes(rdcs, rdcs_c)
+            self.systems[self.current_system_index]['chart_options'].get_changes(act_sett)
 
         # FIXME: create a progress bar if the task take long time
 
@@ -424,7 +413,6 @@ class GMX_MMPBSA_ANA(QMainWindow):
             else:
                 eframes = 0
             item.setup_data(frange, eframes)
-            item.changes(*self.systems[item.system_index]['changes'])
             itemiter += 1
 
         # restore to False all changes in each system
@@ -483,129 +471,6 @@ class GMX_MMPBSA_ANA(QMainWindow):
 
         self.init_dialog.get_files_info(info_files)
         self.init_dialog.show()
-
-    def update_options(self, item: CustomItem):
-        self.frames_start_sb.setRange(item.start, item.end+item.interval)
-        self.frames_start_sb.setValue(item.start)
-        self.frames_inter_sb.setValue(item.interval)
-        self.frames_end_sb.setValue(item.end)
-
-        self.frames_start_sb.setSingleStep(self.frames_inter_sb.value())
-
-    def showdata(self, item: CustomItem, col):
-        self.treeWidget.clearSelection()
-        # self.update_options(item)   # FIXME: only when we able the options
-        if col == 1:
-            s = item.lp_subw
-            if item.checkState(col) == Qt.Checked:
-                item.setSelected(True)
-                if s:
-                    s.show()
-                else:
-                    sub = Charts(item=item, col=col, options={'chart_type':[Charts.LINE, Charts.ROLLING],
-                                                              'hide_toolbar': self.data_options['hide_toolbar']})
-                    sub.make_chart()
-                    self.mdi.addSubWindow(sub)
-                    sub.show()
-            else:
-                if s:
-                    self.mdi.activatePreviousSubWindow()
-                    s.close()
-        elif col == 2:
-            s = item.bp_subw
-            if item.checkState(col) == Qt.Checked:
-                item.setSelected(True)
-                if s:  # check if any subwindow has been store
-                    s.show()
-                else:
-                    sub = Charts(item=item, col=col, options={'chart_type':[Charts.BAR], 'hide_toolbar':
-                        self.data_options['hide_toolbar']})
-                    sub.make_chart()
-                    self.mdi.addSubWindow(sub)
-                    sub.show()
-            else:
-                if s:
-                    self.mdi.activatePreviousSubWindow()
-                    s.close()
-        elif col == 3:
-            s = item.hmp_subw
-            if item.checkState(col) == Qt.Checked:
-                item.setSelected(True)
-                if s:  # check if any subwindow has been store
-                    s.show()
-                else:
-                    sub = Charts(item=item, col=col, options={'chart_type':[Charts.HEATMAP], 'hide_toolbar':
-                        self.data_options['hide_toolbar']})
-                    sub.make_chart()
-                    self.mdi.addSubWindow(sub)
-                    sub.show()
-            else:
-                if s:
-                    self.mdi.activatePreviousSubWindow()
-                    s.close()
-        elif col == 4:
-            pymol_p = item.pymol_process
-            pymol_path = [os.path.join(path, 'pymol') for path in os.environ["PATH"].split(os.pathsep)
-                          if os.path.exists(os.path.join(path, 'pymol')) and
-                          os.access(os.path.join(path, 'pymol'), os.X_OK)]
-            if not pymol_path:
-                m = QMessageBox.critical(self, 'PyMOL not found!', 'PyMOL not found!. Make sure PyMOL is in the '
-                                                                   'PATH.', QMessageBox.Ok)
-                item.setCheckState(4, Qt.Unchecked)
-                return
-            else:
-                pymol = pymol_path[0]
-
-            if hasattr(item.app.FILES, 'complex_fixed'):
-                com_pdb = item.syspath.parent.joinpath(item.app.FILES.complex_fixed)
-            else:
-                self.statusbar.showMessage(f'{item.app.FILES.prefix + "FIXED_COM.pdb"} not exits. The modified PDB file can '
-                                f'be inconsistent. Please, consider use the latest version of gmx_MMPBSA')
-                com_pdb = item.syspath.parent.joinpath(item.app.FILES.prefix + 'COM.pdb')
-            bfactor_pml = item.syspath.parent.joinpath('bfactor.pml')
-            output_path = com_pdb.parent.joinpath(f'{item.sysname}_energy2bfactor.pdb')
-            if item.checkState(col) == Qt.Checked:
-                item.setSelected(True)
-                available_instance = self.get_pymol_instance()
-                if not available_instance:
-                    m = QMessageBox.critical(self, 'Error trying to open multiple instances of PyMOL',
-                                             'Only 5 instance of PyMOL is allowed and 5 are already running. '
-                                             'If you want to view this, please close the some one.',
-                                             QMessageBox.Ok)
-                    item.setCheckState(4, Qt.Unchecked)
-                    return
-
-                if not pymol_p or pymol_p.state() == QProcess.Running:
-                    pymol_p =  available_instance # Keep a reference to the QProcess (e.g. on self) while it's running.
-                    item.pymol_process = pymol_p # store pymol instance until we finish the process
-                qpd = QProgressDialog('Generate modified pdb and open it in PyMOL', 'Abort', 0, 2, self)
-                qpd.setWindowModality(Qt.WindowModal)
-                qpd.setMinimumDuration(1500)
-
-                for i in range(2):
-                    qpd.setValue(i)
-                    if qpd.wasCanceled():
-                        break
-                    if i == 0:
-                        com_pdb_str = parmed.read_PDB(com_pdb.as_posix())
-                        res_dict = item.gmxMMPBSA_current_data.bar_plot_dat.mean().to_dict()
-                        for res in com_pdb_str.residues:
-                            res_notation = f'{res.chain}:{res.name}:{res.number}'
-                            if res_notation in res_dict:
-                                res_energy = res_dict[res_notation]
-                            else:
-                                res_energy = 0.00
-                            for at in res.atoms:
-                                at.bfactor = res_energy
-                        com_pdb_str.save(output_path.as_posix(), 'pdb', True, renumber=False)
-                        energy2pdb_pml(res_dict, bfactor_pml, output_path)
-                qpd.setValue(2)
-                pymol_p.start(pymol, [bfactor_pml.as_posix()])
-                pymol_p.finished.connect(lambda : item.setCheckState(4, Qt.Unchecked))
-            else:
-                if pymol_p and pymol_p.state() == QProcess.Running:
-                    pymol_p.terminate()
-                    item.pymol_process = None
 
     def showcorr(self, item: CorrelationItem, col):
         self.treeWidget.clearSelection()
@@ -762,13 +627,20 @@ class GMX_MMPBSA_ANA(QMainWindow):
                 break
             system, api_data = rqueue.get()
             # print(system)
-            name, path, settings_type, norm_mut, read_settings, settings = system
+            name, path, norm_mut, settings = system
             result, namespace = api_data
 
             # namespace.INPUT['exp_ki'] = exp_ki
             # namespace.INPUT['temperature'] = temp
 
-            self.systems[sys_index] = {'name': name, 'path': path, 'settings_type': settings_type,
+            if settings == 'User-Default':
+                config = 'User-Default'
+            elif settings == 'Custom':
+                config = path
+            else:
+                config = None
+
+            self.systems[sys_index] = {'name': name, 'path': path,
                                        'namespace': namespace, 'data': result,
                                        'current_frames': [namespace.INPUT['startframe'],
                                                           namespace.INPUT['endframe'],
@@ -780,11 +652,8 @@ class GMX_MMPBSA_ANA(QMainWindow):
                                            namespace.INFO['numframes'] * (namespace.INPUT['ie_segment'] / 100)),
                                        'current_c2_frames': math.ceil(
                                            namespace.INFO['numframes'] * (namespace.INPUT['c2_segment'] / 100)),
-                                       'chart_options': read_settings,
-                                       'chart_options_state': settings,
-                                       'changes': [False, False, False]}
+                                       'chart_options': ChartSettings(config)}
 
-            print('options', options)
 
             self.makeTree(sys_index, options)
 
@@ -1065,9 +934,18 @@ class GMX_MMPBSA_ANA(QMainWindow):
 
                 for level1 in data[level]:
                     dat = data[level][level1]
-                    item1 = CustomItem(titem, [level1.upper()], data=dat['data']['data'], app=self, level=0,
-                                       item_type='ie', buttons=(1,), iec2_data={'sigma': dat['sigma'],
-                                                                                'frames': dat['ieframes']})
+                    item1 = CustomItem(
+                        titem,
+                        [level1.upper()],
+                        data=dat['data']['data'],
+                        app=self,
+                        level=0,
+                        item_type='ie',
+                        buttons=(1,),
+                        iec2_data={'sigma': dat['sigma'], 'frames': dat['ieframes']},
+                        chart_title="Interaction Entropy",
+                        chart_subtitle=f"{mut_pre}{sys_name} | {level.upper()} | {level1.upper()}"
+                    )
                     # for level2 in dat:
                     # item2 = CustomItem(titem, [level2.upper()], data=dat[level2], app=self, level=1,
                     #                        buttons=(1,), iec2_frames=dat[])
