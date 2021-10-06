@@ -5,9 +5,12 @@ from pathlib import Path
 import json
 
 
-class ChartSettings:
-    params = {
-        'type': 'group', 'enabled': True, 'expanded': True, 'name': 'params', 'value': None, 'default': None,
+class ChartSettings(dict):
+    D = 1  # Drawable
+    U = 2  # Updatable
+    R = 3  # re-plot
+    default = {
+        'type': 'group', 'enabled': True, 'expanded': True, 'name': 'parameters', 'value': None, 'default': None,
         'children': {
             'General': {
                 'type': 'group', 'enabled': True, 'expanded': True, 'name': 'General', 'value': None, 'default':
@@ -15,54 +18,25 @@ class ChartSettings:
                 'children': {
                     'theme': {
                         'type': 'list', 'enabled': True, 'expanded': True, 'name': 'theme', 'value': 'darkgrid',
-                        'values': ['darkgrid', 'whitegrid', 'dark', 'white', 'ticks'],
-                        'limits': ['darkgrid', 'whitegrid', 'dark', 'white', 'ticks'], 'default': 'darkgrid',
-                        'tip': 'Esto es un tip'},
-                    'toolbar': {'type': 'bool', 'enabled': True, 'expanded': True, 'name': 'toolbar',
-                                'value': False, 'default': False},
-                    'save-figure': {
-                        'type': 'list', 'enabled': True, 'expanded': True, 'name': 'save-figure', 'value': 'svg',
-                        'values': ['eps', 'jpg', 'jpeg', 'pdf', 'pgf', 'png', 'ps', 'raw', 'rgba', 'svg', 'svgz', 'tif',
-                                   'tiff'],
-                        'default': 'svg', 'tip': 'Esto es un tip'},
-                    'dpi': {
-                        'type': 'group', 'enabled': True, 'expanded': True, 'name': 'dpi', 'value': None, 'default':
-                            None,
-                        'children': {
-                            'plot': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'plot',
-                                     'value': 100, 'step': 10, 'accelerated': True, 'limits': (50, 300),
-                                     'default': 100},
-                            'save-color': {'type': 'int', 'enabled': True, 'expanded': True,
-                                           'name': 'save-color', 'value': 300, 'step': 10,
-                                           'accelerated': True, 'limits': (50, 1200), 'default': 300},
-                            # 'save-grayscale': {'type': 'int', 'enabled': True, 'expanded': True,
-                            #                        'name': 'save-dpi-grayscale', 'value': 600, 'step': 10,
-                            #                        'accelerated': True, 'limits': (50, 1200), 'default': 600}
-                        }},
-                    'fontsize': {
-                        'type': 'group', 'enabled': True, 'expanded': True, 'name': 'fontsize', 'value': None,
+                        'values': ['darkgrid', '---0', 'whitegrid', 'dark', 'white', 'ticks'], 'default': 'darkgrid',
+                        'tip': 'Esto es un tip', 'action_type': R},
+                    'toolbar': {'type': 'bool', 'enabled': True, 'expanded': True, 'name': 'toolbar', 'value': False,
+                                'default': False, 'action_type': U},
+                    'figure-format': {
+                        'type': 'group', 'enabled': True, 'expanded': False, 'name': 'figure-format', 'value': None,
                         'default': None,
                         'children': {
-                            'x-ticks': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'x-ticks',
-                                        'value': 10, 'default': 10},
-                            'y-ticks': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'y-ticks',
-                                        'value': 10, 'default': 10},
-                            'x-label': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'x-label',
-                                        'value': 12, 'default': 12},
-                            'y-label': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'y-label',
-                                        'value': 12, 'default': 12},
-                            'title': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'title',
-                                      'value': 14, 'default': 14},
-                            'suptitle': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'suptitle',
-                                         'value': 12, 'default': 12},
-                            'legend': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'legend',
-                                       'value': 9, 'default': 9},
-                            'colorbar-ticks': {'type': 'int', 'enabled': True, 'expanded': True,
-                                               'name': 'colorbar-ticks', 'value': 9, 'default': 9},
-                            'colorbar-label': {'type': 'int', 'enabled': True, 'expanded': True,
-                                               'name': 'colorbar-label', 'value': 11, 'default': 11},
-                            'annotation': {'type': 'int', 'enabled': True, 'expanded': True,
-                                           'name': 'annotation', 'value': 8, 'default': 8}
+                            'dpi-plot': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'dpi-plot',
+                                         'value': 100, 'step': 10, 'accelerated': True, 'limits': (50, 300),
+                                         'default': 100, 'action_type': R},
+                            'dpi-save': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'dpi-save',
+                                         'value': 300, 'step': 10, 'accelerated': True, 'limits': (50, 1200),
+                                         'default': 300, 'action_type': U},
+                            'save-format': {
+                                'type': 'list', 'enabled': True, 'expanded': True, 'name': 'save-format',
+                                'value': 'svg', 'values': ['eps', 'jpg', 'jpeg', 'pdf', 'pgf', 'png', 'ps', 'raw',
+                                                           'rgba', 'svg', 'svgz', 'tif', 'tiff'],
+                                'default': 'svg', 'tip': 'Esto es un tip', 'action_type': U},
                         }}}},
             'Line Plot': {
                 'type': 'group', 'enabled': True, 'expanded': True, 'name': 'Line Plot', 'value': None, 'default':
@@ -70,153 +44,194 @@ class ChartSettings:
                 'children': {
                     'line-width': {'type': 'float', 'enabled': True, 'expanded': True, 'name': 'line-width',
                                    'value': 0.7, 'step': 0.1, 'limits': (0.1, 1.5), 'accelerated': True,
-                                   'default': 0.7},
+                                   'default': 0.7, 'action_type': R},
                     'line-color': {'type': 'color', 'enabled': True, 'expanded': True, 'name': 'line-color',
-                                   'value': [0, 0, 0, 255], 'default': [0, 0, 0, 255]},
-                    'axes': {
-                        'type': 'group', 'enabled': True, 'expanded': True, 'name': 'axes', 'value': None,
-                        'default': None,
-                        'children': {
-                            'num-xticks': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'num-xticks',
-                                           'value': 10, 'default': 10},
-                            'num-yticks': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'num-yticks',
-                                           'value': 10, 'default': 10},
-                            'x-rotation': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'x-rotation',
-                                           'value': 0, 'step': 1, 'limits': (-90, 90), 'accelerated': True,
-                                           'default': 0},
-                            'y-rotation': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'y-rotation',
-                                           'value': 0, 'step': 1, 'limits': (-90, 90), 'accelerated': True,
-                                           'default': 0}
-                        }},
-                    'rolling': {
-                        'type': 'group', 'enabled': True, 'expanded': True, 'name': 'Rolling', 'value': None,
+                                   'value': [0, 0, 0, 255], 'default': [0, 0, 0, 255], 'action_type': R},
+
+                    'Rolling': {
+                        'type': 'group', 'enabled': True, 'expanded': False, 'name': 'Rolling', 'value': None,
                         'default': None,
                         'children': {
                             'color': {'type': 'color', 'enabled': True, 'expanded': True, 'name': 'color',
-                                      'value': [255, 0, 0, 255], 'default': [255, 0, 0, 255]},
+                                      'value': [255, 0, 0, 255], 'default': [255, 0, 0, 255], 'action_type': R},
                             'width': {'type': 'float', 'enabled': True, 'expanded': True, 'name': 'width',
-                                      'value': 0.8, 'step': 0.1, 'default': 0.8},
+                                      'value': 0.8, 'step': 0.1, 'default': 0.8, 'action_type': R},
                             'window': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'window',
-                                       'value': 50, 'step': 1, 'default': 50}}},
+                                       'value': 50, 'step': 1, 'default': 50, 'action_type': R}}},
                     'Interaction Entropy': {
-                        'type': 'group', 'enabled': True, 'expanded': True, 'name': 'Interaction Entropy',
+                        'type': 'group', 'enabled': True, 'expanded': False, 'name': 'Interaction Entropy',
                         'value': None, 'default': None,
                         'children': {
                             'ie-color': {'type': 'color', 'enabled': True, 'expanded': True, 'name': 'ie-color',
-                                         'value': [0, 0, 255, 255], 'default': [0, 0, 255, 255]},
+                                         'value': [0, 0, 255, 255], 'default': [0, 0, 255, 255], 'action_type': R},
                             'sigma-color': {
-                                'type': 'group', 'enabled': True, 'expanded': True, 'name': 'sigma-color',
+                                'type': 'group', 'enabled': True, 'expanded': False, 'name': 'sigma-color',
                                 'value': None, 'default': None,
                                 'children': {
                                     'reliable': {'type': 'color', 'enabled': True, 'expanded': True, 'name': 'reliable',
-                                                 'value': [0, 255, 0, 255], 'default': [0, 255, 0, 255]},
+                                                 'value': [0, 255, 0, 255], 'default': [0, 255, 0, 255],
+                                                 'action_type': R},
                                     'non-reliable': {'type': 'color', 'enabled': True, 'expanded': True,
                                                      'name': 'non-reliable', 'value': [255, 0, 0, 255],
-                                                     'default': [255, 0, 0, 255]}}},
+                                                     'default': [255, 0, 0, 255], 'action_type': R}}},
                             'bar-plot': {
                                 'type': 'group', 'enabled': True, 'expanded': True, 'name': 'bar-plot', 'value': None,
                                 'default': None,
                                 'children': {
                                     'bar-label-fontsize': {'type': 'int', 'enabled': True, 'expanded': True,
-                                                           'name': 'bar-label-fontsize', 'value': 8, 'default': 8},
+                                                           'name': 'bar-label-fontsize', 'value': 8, 'default': 8,
+                                                           'action_type': D},
                                     'bar-label-padding': {'type': 'int', 'enabled': True, 'expanded': True,
-                                                          'name': 'bar-label-padding', 'value': 4, 'default': 4},
+                                                          'name': 'bar-label-padding', 'value': 4, 'default': 4,
+                                                          'action_type': R},
                                     'axes-fontsize': {'type': 'int', 'enabled': True, 'expanded': True,
-                                                      'name': 'axes-fontsize', 'value': 8, 'default': 8},
+                                                      'name': 'axes-fontsize', 'value': 8, 'default': 8,
+                                                      'action_type': D},
                                     'width': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'width',
-                                              'value': 30, 'siPrefix': True, 'suffix': '%', 'default': 30},
+                                              'value': 25, 'siPrefix': True, 'suffix': '%', 'default': 25,
+                                              'action_type': R},
                                     'height': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'height',
-                                               'value': 35, 'siPrefix': True, 'suffix': '%', 'default': 35}}},
-                            'bbox_to_anchor': {
-                                'type': 'group', 'enabled': True, 'expanded': True, 'name': 'bbox_to_anchor',
-                                'value': None, 'default': None,
-                                'children': {
+                                               'value': 50, 'siPrefix': True, 'suffix': '%', 'default': 50,
+                                               'action_type': R},
                                     'x-pos': {'type': 'float', 'enabled': True, 'expanded': True, 'name': 'x-pos',
-                                              'value': 0.4, 'step': 0.01, 'limits': (0, 1), 'default': 0.4},
+                                              'value': 0.5, 'step': 0.01, 'limits': (0, 1), 'default': 0.5,
+                                              'action_type': R},
                                     'y-pos': {'type': 'float', 'enabled': True, 'expanded': True, 'name': 'y-pos',
-                                              'value': 0.15, 'step': 0.01, 'limits': (0, 1), 'default': 0.15}}}}},
+                                              'value': 0.15, 'step': 0.01, 'limits': (0, 1), 'default': 0.15,
+                                              'action_type': R}
+                                }}}},
+                    'fontsize': {
+                        'type': 'group', 'enabled': True, 'expanded': False, 'name': 'fontsize', 'value': None,
+                        'default': None,
+                        'children': {
+                            'x-ticks': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'x-ticks',
+                                        'value': 10, 'default': 10, 'action_type': D},
+                            'y-ticks': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'y-ticks',
+                                        'value': 10, 'default': 10, 'action_type': D},
+                            'x-label': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'x-label',
+                                        'value': 12, 'default': 12, 'action_type': D},
+                            'y-label': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'y-label',
+                                        'value': 12, 'default': 12, 'action_type': D},
+                            'title': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'title',
+                                      'value': 14, 'default': 14, 'action_type': D},
+                            'suptitle': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'suptitle',
+                                         'value': 12, 'default': 12, 'action_type': D},
+                            'legend': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'legend',
+                                       'value': 9, 'default': 9, 'action_type': D}}},
+                    'axes': {
+                        'type': 'group', 'enabled': True, 'expanded': False, 'name': 'axes', 'value': None,
+                        'default': None,
+                        'children': {
+                            'num-xticks': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'num-xticks',
+                                           'value': 10, 'default': 10, 'action_type': D},
+                            'num-yticks': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'num-yticks',
+                                           'value': 10, 'default': 10, 'action_type': D},
+                            'x-rotation': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'x-rotation',
+                                           'value': 0, 'step': 1, 'limits': (-90, 90), 'accelerated': True,
+                                           'default': 0, 'action_type': D},
+                            'y-rotation': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'y-rotation',
+                                           'value': 0, 'step': 1, 'limits': (-90, 90), 'accelerated': True,
+                                           'default': 0, 'action_type': D}}},
                     'figure': {
-                        'type': 'group', 'enabled': True, 'expanded': True, 'name': 'figure', 'value': None,
+                        'type': 'group', 'enabled': True, 'expanded': False, 'name': 'figure', 'value': None,
                         'default': None,
                         'children': {
                             'width': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'width', 'value': 8,
-                                      'default': 8},
+                                      'default': 8, 'action_type': D},
                             'height': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'height',
-                                       'value': 4, 'default': 4}}}}},
+                                       'value': 4, 'default': 4, 'action_type': D}}}}},
             'Bar Plot': {
                 'type': 'group', 'enabled': True, 'expanded': True, 'name': 'Bar Plot', 'value': None, 'default': None,
                 'children': {
-                    'orientation': {'type': 'list', 'enabled': True, 'expanded': True, 'name': 'orientation',
-                                    'value': 'v', 'values': ('v', 'h'), 'default': 'v'},
                     'use-palette': {'type': 'bool', 'enabled': True, 'expanded': True, 'name': 'use-palette',
-                                    'value': True, 'default': True},
+                                    'value': True, 'default': True, 'action_type': R},
                     'palette': {'type': 'list', 'enabled': True, 'expanded': True, 'name': 'palette',
-                                'value': 'husl', 'values': ['husl', 'hls', 'deep', 'muted', 'bright', 'pastel', 'dark',
-                                                            'colorblind', '---0',
+                                'value': 'husl', 'values': ['husl', '---0', 'hls', 'deep', 'muted', 'bright', 'pastel',
+                                                            'dark', 'colorblind', '---1',
                                                             'Pastel1', 'Pastel2', 'Paired', 'Accent', 'Dark2', 'Set1',
                                                             'Set2', 'Set3', 'tab10', 'tab20', 'tab20b', 'tab20c'],
-                                'default': 'husl'},
+                                'default': 'husl', 'action_type': R},
                     'color': {'type': 'color', 'enabled': True, 'expanded': True, 'name': 'color',
-                              'value': [44, 105, 176, 255], 'default': [44, 105, 176, 255]},
+                              'value': [44, 105, 176, 255], 'default': [44, 105, 176, 255], 'action_type': R},
                     'subplot-components': {'type': 'bool', 'enabled': True, 'expanded': True,
-                                           'name': 'subplot-components', 'value': True, 'default': True},
+                                           'name': 'subplot-components', 'value': True, 'default': True,
+                                           'action_type': R},
                     'scale-big-values': {'type': 'bool', 'enabled': True, 'expanded': True,
-                                         'name': 'scale-big-values', 'value': True, 'default': True},
-                    'error-line': {'type': 'group', 'enabled': True, 'expanded': True, 'name': 'error-line',
+                                         'name': 'scale-big-values', 'value': True, 'default': True, 'action_type': R},
+                    'error-line': {'type': 'group', 'enabled': True, 'expanded': False, 'name': 'error-line',
                                    'value': None, 'default': None, 'children': {
                             'width': {'type': 'float', 'enabled': True, 'expanded': True, 'name': 'width', 'value': 0.7,
-                                      'step': 0.1, 'limits': (0.1, 1.5), 'accelerated': True, 'default': 0.7},
+                                      'step': 0.1, 'limits': (0.1, 1.5), 'accelerated': True, 'default': 0.7,
+                                      'action_type': R},
                             'color': {'type': 'color', 'enabled': True, 'expanded': True, 'name': 'color',
-                                      'value': [0, 0, 0, 255], 'default': [0, 0, 0, 255]}}},
+                                      'value': [0, 0, 0, 255], 'default': [0, 0, 0, 255], 'action_type': R}}},
                     'bar-label': {
-                        'type': 'group', 'enabled': True, 'expanded': True, 'name': 'bar-label', 'value': None,
+                        'type': 'group', 'enabled': True, 'expanded': False, 'name': 'bar-label', 'value': None,
                         'default': None,
                         'children': {
                             'show': {'type': 'bool', 'enabled': True, 'expanded': True, 'name': 'show', 'value': False,
-                                     'default': False},
+                                     'default': False, 'action_type': R},
                             'fontsize': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'fontsize',
-                                         'value': 8, 'limits': (2, 20), 'default': 8},
+                                         'value': 8, 'limits': (2, 20), 'default': 8, 'action_type': D},
                             'padding': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'padding',
-                                        'value': 5, 'limits': (0, 50), 'default': 5}
+                                        'value': 5, 'limits': (0, 50), 'default': 5, 'action_type': D}
                         }},
+                    'fontsize': {
+                        'type': 'group', 'enabled': True, 'expanded': False, 'name': 'fontsize', 'value': None,
+                        'default': None,
+                        'children': {
+                            'x-ticks': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'x-ticks',
+                                        'value': 10, 'default': 10, 'action_type': D},
+                            'y-ticks': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'y-ticks',
+                                        'value': 10, 'default': 10, 'action_type': D},
+                            'x-label': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'x-label',
+                                        'value': 12, 'default': 12, 'action_type': D},
+                            'y-label': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'y-label',
+                                        'value': 12, 'default': 12, 'action_type': D},
+                            'title': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'title',
+                                      'value': 14, 'default': 14, 'action_type': D},
+                            'suptitle': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'suptitle',
+                                         'value': 12, 'default': 12, 'action_type': D}}},
                     'axes': {
-                        'type': 'group', 'enabled': True, 'expanded': True, 'name': 'axes', 'value': None,
+                        'type': 'group', 'enabled': True, 'expanded': False, 'name': 'axes', 'value': None,
                         'default': None,
                         'children': {
                             'num-yticks': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'num-yticks',
-                                           'value': 10, 'default': 10},
+                                           'value': 10, 'default': 10, 'action_type': D},
                             'x-rotation': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'x-rotation',
                                            'value': 45, 'step': 1, 'limits': (-90, 90),
-                                           'accelerated': True, 'default': 45},
+                                           'accelerated': True, 'default': 45, 'action_type': D},
                             'y-rotation': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'y-rotation',
                                            'value': 0, 'step': 1, 'limits': (-90, 90),
-                                           'accelerated': True, 'default': 0},
+                                           'accelerated': True, 'default': 0, 'action_type': D},
                         }},
                     'figure': {
-                        'type': 'group', 'enabled': True, 'expanded': True, 'name': 'figure', 'value': None,
+                        'type': 'group', 'enabled': True, 'expanded': False, 'name': 'figure', 'value': None,
                         'default': None,
                         'children': {
                             'width': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'width',
-                                      'value': 5, 'default': 5},
+                                      'value': 5, 'default': 5, 'action_type': D},
                             'height': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'height',
-                                       'value': 4, 'default': 4}}}}},
+                                       'value': 4, 'default': 4, 'action_type': D}}}}},
             'Heatmap Plot': {
                 'type': 'group', 'enabled': True, 'expanded': True, 'name': 'Heatmap Plot', 'value': None,
                 'default': None,
                 'children': {
                     'highlight-components': {'type': 'bool', 'enabled': True, 'expanded': True,
-                                             'name': 'highlight-components', 'value': True, 'default': True},
+                                             'name': 'highlight-components', 'value': True, 'default': True,
+                                             'action_type': R},
                     'legend': {'type': 'bool', 'enabled': True, 'expanded': True, 'name': 'legend', 'value': True,
-                               'default': True},
+                               'default': True, 'action_type': R},
                     'remove-molid': {'type': 'bool', 'enabled': True, 'expanded': True, 'name': 'remove-molid',
-                                     'value': True, 'default': True},
+                                     'value': True, 'default': True, 'action_type': D},
                     'receptor-color': {'type': 'color', 'enabled': True, 'expanded': True, 'name': 'receptor-color',
-                                       'value': [0, 0, 255, 255], 'default': [0, 0, 255, 255]},
+                                       'value': [0, 0, 255, 255], 'default': [0, 0, 255, 255], 'action_type': R},
                     'ligand-color': {'type': 'color', 'enabled': True, 'expanded': True, 'name': 'ligand-color',
-                                     'value': [0, 255, 0, 255], 'default': [0, 255, 0, 255]},
+                                     'value': [0, 255, 0, 255], 'default': [0, 255, 0, 255], 'action_type': R},
 
                     'y-rotation': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'y-rotation',
-                                   'value': 0, 'step': 1, 'limits': (-90, 90), 'accelerated': True, 'default': 0},
+                                   'value': 0, 'step': 1, 'limits': (-90, 90), 'accelerated': True, 'default': 0,
+                                   'action_type': D},
                     'Per-wise': {
                         'type': 'group', 'enabled': True, 'expanded': True, 'name': 'Per-wise', 'value': None,
                         'default': None,
@@ -232,12 +247,12 @@ class ChartSettings:
                                                                        'PiYG_5', 'PuOr_7', 'PuOr_5', 'RdBu_7', 'RdBu_5',
                                                                        'RdGy_7', 'RdGy_5', '---4', '---5',
                                                                        'RdYlBu', 'RdYlGn', 'Spectral', 'coolwarm'
-                                                                       ], 'default': 'seismic'},
+                                                                       ], 'default': 'seismic', 'action_type': R},
                             'annotation': {'type': 'bool', 'enabled': True, 'expanded': True, 'name': 'annotation',
-                                           'value': False, 'default': False},
+                                           'value': False, 'default': False, 'action_type': R},
                             'x-rotation': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'x-rotation',
                                            'value': 90, 'step': 1, 'limits': (-90, 90), 'accelerated': True,
-                                           'default': 90}}},
+                                           'default': 90, 'action_type': D}}},
                     'Per-residue': {
                         'type': 'group', 'enabled': True, 'expanded': True, 'name': 'Per-residue', 'value': None,
                         'default': None,
@@ -253,22 +268,48 @@ class ChartSettings:
                                                                        'PiYG_5', 'PuOr_7', 'PuOr_5', 'RdBu_7', 'RdBu_5',
                                                                        'RdGy_7', 'RdGy_5', '---4', '---5',
                                                                        'RdYlBu', 'RdYlGn', 'Spectral', 'coolwarm'
-                                                                       ], 'default': 'seismic'},
+                                                                       ], 'default': 'seismic', 'action_type': R},
                             'num-xticks': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'num-xticks',
-                                           'value': 10, 'default': 10},
+                                           'value': 10, 'default': 10, 'action_type': D},
                             'x-rotation': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'x-rotation',
                                            'value': 0, 'step': 1, 'limits': (-90, 90), 'accelerated': True,
-                                           'default': 0}}},
+                                           'default': 0, 'action_type': D}}},
+                    'fontsize': {
+                        'type': 'group', 'enabled': True, 'expanded': False, 'name': 'fontsize', 'value': None,
+                        'default': None,
+                        'children': {
+                            'x-ticks': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'x-ticks',
+                                        'value': 10, 'default': 10, 'action_type': D},
+                            'y-ticks': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'y-ticks',
+                                        'value': 10, 'default': 10, 'action_type': D},
+                            'x-label': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'x-label',
+                                        'value': 12, 'default': 12, 'action_type': D},
+                            'y-label': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'y-label',
+                                        'value': 12, 'default': 12, 'action_type': D},
+                            'title': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'title',
+                                      'value': 14, 'default': 14, 'action_type': D},
+                            'suptitle': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'suptitle',
+                                         'value': 12, 'default': 12, 'action_type': D},
+                            'legend': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'legend',
+                                       'value': 9, 'default': 9, 'action_type': D},
+                            'colorbar-ticks': {'type': 'int', 'enabled': True, 'expanded': True,
+                                               'name': 'colorbar-ticks', 'value': 9, 'default': 9, 'action_type': D},
+                            'colorbar-label': {'type': 'int', 'enabled': True, 'expanded': True,
+                                               'name': 'colorbar-label', 'value': 11, 'default': 11, 'action_type': D},
+                            'annotation': {'type': 'int', 'enabled': True, 'expanded': True,
+                                           'name': 'annotation', 'value': 8, 'default': 8, 'action_type': D}
+                        }},
                     'figure': {
-                        'type': 'group', 'enabled': True, 'expanded': True, 'name': 'figure', 'value': None,
+                        'type': 'group', 'enabled': True, 'expanded': False, 'name': 'figure', 'value': None,
                         'default': None,
                         'children': {
                             'width-per-residue': {'type': 'int', 'enabled': True, 'expanded': True,
-                                                  'name': 'width-per-residue', 'value': 10, 'default': 10},
+                                                  'name': 'width-per-residue', 'value': 10, 'default': 10,
+                                                  'action_type': D},
                             'width-per-wise': {'type': 'int', 'enabled': True, 'expanded': True,
-                                               'name': 'width-per-wise', 'value': 8, 'default': 8},
+                                               'name': 'width-per-wise', 'value': 8, 'default': 8, 'action_type': D},
                             'height': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'height',
-                                       'value': 7, 'default': 7}}}}},
+                                       'value': 7, 'default': 7, 'action_type': D}}}}},
             'Visualization': {
                 'type': 'group', 'enabled': True, 'expanded': True, 'name': 'Visualization', 'value': None,
                 'default': None,
@@ -283,7 +324,7 @@ class ChartSettings:
                                                             'BrBG_7', 'BrBG_5', 'PRGn_7', 'PRGn_5', 'PiYG_7',
                                                             'PiYG_5', 'PuOr_7', 'PuOr_5', 'RdBu_7', 'RdBu_5',
                                                             'RdGy_7', 'RdGy_5'
-                                                            ], 'default': 'auto'},
+                                                            ], 'default': 'auto', 'action_type': R},
                 }}
         }}
 
