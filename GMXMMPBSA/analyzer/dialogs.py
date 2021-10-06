@@ -23,7 +23,6 @@ from queue import Queue, Empty
 from GMXMMPBSA import API
 from pathlib import Path
 from GMXMMPBSA.analyzer.utils import worker, ncpu
-from GMXMMPBSA.analyzer.chartsettings import ChartSettings
 
 
 
@@ -35,7 +34,6 @@ class InitDialog(QDialog):
         self.setWindowTitle('Initialization gmx_MMPBSA_ana')
         self.curr_progress = 0
         self.data = []
-        self.chart_settings = ChartSettings()
 
         self.processing_label = QLabel()
 
@@ -215,12 +213,15 @@ class InitDialog(QDialog):
                         mutant = line.split()[2].replace("'", "")
             # check for custom settings
             custom_settings = fname.parent.joinpath('settings.json').exists()
+            user_default_settings = Path('~').expanduser().absolute().joinpath('.config', 'gmx_MMPBSA',
+                                                                               'settings.json').exists()
             # custom_settings = True
             cb = QComboBox()
-            cb.addItem('Default')
             if custom_settings:
                 cb.addItem('Custom')
-                cb.setCurrentIndex(1)
+            if user_default_settings:
+                cb.addItem('User-Default')
+            cb.addItem('Default')
 
             if not basename:
                 basename = f'System-{c}'
@@ -230,7 +231,7 @@ class InitDialog(QDialog):
             item = QTreeWidgetItem([f'{fname.parent.name}', '', f'{basename}', '', '', f'{fname.parent.absolute()}'])
             item.setFlags(item.flags() | Qt.ItemIsAutoTristate)
 
-            self._set_item_properties(item, custom_settings=True)
+            self._set_item_properties(item)
             self.f_item.addChild(item)
 
             if not mut_only:
@@ -246,13 +247,13 @@ class InitDialog(QDialog):
                 self._set_item_properties(mitem)
                 item.addChild(mitem)
 
-            item.info = [basename, Path(fname), custom_settings]
+            item.info = [basename, Path(fname)]
 
             item.setExpanded(True)
             self.result_tree.setItemWidget(item, 4, cb)
         self.f_item.setExpanded(True)
 
-    def _set_item_properties(self, item: QTreeWidgetItem, custom_settings=False):
+    def _set_item_properties(self, item: QTreeWidgetItem):
         # if custom_settings:
         #     item.setText(4, 'Custom')
         #     item.setCheckState(4, Qt.Checked)
@@ -290,12 +291,7 @@ class InitDialog(QDialog):
                             t['wt'] = float(child.child(c1).text(3))
                         else:
                             t['mut'] = float(child.child(c1).text(3))
-            if self.result_tree.itemWidget(child, 4).currentText() == 'Default':
-                settings = self.chart_settings.read_config()
-            else:
-                settings = self.chart_settings.read_config(child.info[1].parent)
-            readable_sett = self.chart_settings.get_settings(settings)
-            child.info += [t, readable_sett, settings]
+            child.info += [t, self.result_tree.itemWidget(child, 4).currentText()]
             queue.put(child.info)
             counter += 1
         if not counter:
