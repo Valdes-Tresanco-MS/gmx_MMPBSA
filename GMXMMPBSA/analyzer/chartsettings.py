@@ -387,64 +387,49 @@ class ChartSettings(dict):
             with open(filename, "w") as write_file:
                 json.dump(self, write_file, indent=4)
 
-    def read_config(self, custom: Path = None):
-        """
-
-        @param custom: Custom settings for a system
-        @return: settings dict
-        """
-        if custom:
-            with open(custom.joinpath('settings.json')) as read_file:
-                config = json.load(read_file)
-        elif self.filename.exists():
-            with open(self.filename) as read_file:
-                config = json.load(read_file)
+    def _get_change_type(self, rdict_value, var):
+        if rdict_value == self.D:
+            self.changes[f'{var}_redraw'] = True
+        elif rdict_value == self.R:
+            self.changes[f'{var}_replot'] = True
         else:
-            self.write_global_config()
-            config = self.params
-        return config
+            self.changes[f'{var}_update'] = True
 
-    def get_settings(self, settings):
-        print(settings)
-        settings = settings['children']
+    def get_changes(self, osett) -> None:
+        if self == osett:
+            return
+        flatten = flatten_dict(self)
+        f_osett = flatten_dict(osett)
 
-        general_options = self._get_2lvl_data(settings['General']['children'])
-        line_options = self._get_3lvl_data(settings['Line Plot']['children'])
-        bar_options = self._get_2lvl_data(settings['Bar Plot']['children'])
-        heatmap_options = self._get_3lvl_data(settings['Heatmap Plot']['children'])
+        for k, v in flatten.items():
+            if k[-1] == 'value' and v != f_osett[k]:
+                at = tuple(list(k[:-1]) + ['action_type'])
+                if k[1] == 'Bar Plot':
+                    self.changes['bar_action'] = flatten[at]
+                if k[3] == 'Interaction Entropy':
+                    self.changes['line_ie_action'] = flatten[at]
+                elif k[1] == 'Line Plot':
+                    self.changes['line_action'] = flatten[at]
+                elif k[1] == 'Heatmap Plot':
+                    self.changes['heatmap_action'] = flatten[at]
+                elif k[1] == 'General':
+                    self.changes['bar_action'] = flatten[at]
+                    self.changes['line_ie_action'] = flatten[at]
+                    self.changes['line_action'] = flatten[at]
+                    self.changes['heatmap_action'] = flatten[at]
+                else:
+                    self.changes['visualization_action'] = flatten[at]
+        self.update(osett)
 
-        return {'general_options': general_options, 'line_options': line_options, 'bar_options': bar_options,
-                'heatmap_options': heatmap_options}
+    def get_settings(self):
+        flatten = flatten_dict(self)
 
-    @staticmethod
-    def _get_3lvl_data(data):
-        options = {}
-        for k in data:
-            if 'children' in data[k]:
-                options[k] = {}
-                sub_data = data[k]['children']
-                for k1 in sub_data:
-                    if 'children' in sub_data[k1]:
-                        options[k][k1] = {}
-                        for k2 in sub_data[k1]['children']:
-                            options[k][k1][k2] = sub_data[k1]['children'][k2]['value']
-                    else:
-                        options[k][k1] = sub_data[k1]['value']
-            else:
-                options[k] = data[k]['value']
-        return options
-
-    @staticmethod
-    def _get_2lvl_data(data):
-        return {
-            k: {
-                k1: data[k]['children'][k1]['value']
-                for k1 in data[k]['children']
-            }
-            if 'children' in data[k]
-            else data[k]['value']
-            for k in data
-        }
+        items = [
+            (tuple(ik for ik in k if ik not in ['children', 'value']), v)
+            for k, v in flatten.items()
+            if 'action_type' not in k
+        ]
+        return dict(items)
 
 
 class Palette(LinearSegmentedColormap):
