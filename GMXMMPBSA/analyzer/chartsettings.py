@@ -5,6 +5,21 @@ from pathlib import Path
 import json
 
 
+def flatten_dict(d, parent_key=None):
+    if parent_key is None:
+        parent_key = []
+    items = []
+    for k, v in d.items():
+        new_key = tuple(list(parent_key) + [k if parent_key else k])
+        if isinstance(v, dict):
+            items.extend(flatten_dict(v, new_key).items())
+        elif k not in ['value', 'action_type'] or v is None:
+            continue
+        else:
+            items.append((new_key, v))
+    return dict(items)
+
+
 class ChartSettings(dict):
     D = 1  # Drawable
     U = 2  # Updatable
@@ -328,19 +343,31 @@ class ChartSettings(dict):
                 }}
         }}
 
-    def __init__(self):
+    def __init__(self, custom: Union[Path, str] = None):
+        super(ChartSettings, self).__init__()
+
         self.config_folder = Path('~').expanduser().absolute().joinpath('.config', 'gmx_MMPBSA')
         self.config_folder.mkdir(exist_ok=True)
         self.filename = self.config_folder.joinpath('settings.json')
 
-    def write_global_config(self, overwrite=False):
-        """
+        if isinstance(custom, Path):
+            with open(custom.joinpath('settings.json')) as read_file:
+                config = json.load(read_file)
+                self.update(config)
+        elif isinstance(custom, str):
+            with open(self.filename) as read_file:
+                config = json.load(read_file)
+                self.update(config)
+        else:
+            self.update(self.default)
 
-        @param overwrite: Only used to restore the original settings
-        """
-        if self.filename.exists() and overwrite or not self.filename.exists():
-            with open(self.filename, "w") as write_file:
-                json.dump(self.params, write_file, indent=4)
+        self.changes = dict(
+            line_action=0,
+            line_ie_action=0,
+            bar_action=0,
+            heatmap_action=0,
+            visualization_ation=0,
+        )
 
     def write_system_config(self, syspath: Path, settings):
         """
