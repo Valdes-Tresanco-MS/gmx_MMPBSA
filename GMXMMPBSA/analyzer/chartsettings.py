@@ -1,6 +1,6 @@
 from typing import Union
 from matplotlib.colors import LinearSegmentedColormap
-from matplotlib._cm import datad
+from matplotlib.cm import datad
 from pathlib import Path
 import json
 
@@ -49,8 +49,8 @@ class ChartSettings(dict):
                                          'default': 300, 'action_type': U},
                             'save-format': {
                                 'type': 'list', 'enabled': True, 'expanded': True, 'name': 'save-format',
-                                'value': 'svg', 'values': ['eps', 'jpg', 'jpeg', 'pdf', 'pgf', 'png', 'ps', 'raw',
-                                                           'rgba', 'svg', 'svgz', 'tif', 'tiff'],
+                                'value': 'svg', 'values': ['svg', 'png', 'tiff', 'pdf', 'eps', 'jpg', 'jpeg', 'pgf',
+                                                           'ps', 'raw', 'rgba', 'svgz', 'tif'],
                                 'default': 'svg', 'tip': 'Esto es un tip', 'action_type': U},
                         }}}},
             'Line Plot': {
@@ -174,12 +174,15 @@ class ChartSettings(dict):
                     'scale-big-values': {'type': 'bool', 'enabled': True, 'expanded': True,
                                          'name': 'scale-big-values', 'value': True, 'default': True, 'action_type': R},
                     'error-line': {'type': 'group', 'enabled': True, 'expanded': False, 'name': 'error-line',
-                                   'value': None, 'default': None, 'children': {
-                            'width': {'type': 'float', 'enabled': True, 'expanded': True, 'name': 'width', 'value': 0.7,
-                                      'step': 0.1, 'limits': (0.1, 1.5), 'accelerated': True, 'default': 0.7,
-                                      'action_type': R},
-                            'color': {'type': 'color', 'enabled': True, 'expanded': True, 'name': 'color',
-                                      'value': [0, 0, 0, 255], 'default': [0, 0, 0, 255], 'action_type': R}}},
+                                   'value': None, 'default': None,
+                                   'children': {
+                                       'width': {'type': 'float', 'enabled': True, 'expanded': True, 'name': 'width',
+                                                 'value': 0.7,
+                                                 'step': 0.1, 'limits': (0.1, 1.5), 'accelerated': True, 'default': 0.7,
+                                                 'action_type': R},
+                                       'color': {'type': 'color', 'enabled': True, 'expanded': True, 'name': 'color',
+                                                 'value': [0, 0, 0, 255], 'default': [0, 0, 0, 255],
+                                                 'action_type': R}}},
                     'bar-label': {
                         'type': 'group', 'enabled': True, 'expanded': False, 'name': 'bar-label', 'value': None,
                         'default': None,
@@ -376,7 +379,6 @@ class ChartSettings(dict):
         """
 
         @param syspath: Current system path
-        @param settings: settings dict with custom properties
         @return:
         """
         if syspath is None:
@@ -433,11 +435,11 @@ class ChartSettings(dict):
 
 
 class Palette(LinearSegmentedColormap):
-    def __init__(self, name, clist, type):
+    def __init__(self, name, clist, ptype):
         super(Palette, self).__init__(name, clist)
         self.name = name
         self.colors = [list(map(lambda x: x / 255, color)) for color in clist]
-        self.type = type
+        self.ptype = ptype
         self.colormap = self.from_list(self.name, self.colors)
 
 
@@ -708,11 +710,12 @@ class Palettes:
     tab20c = 'tab20c'
     husl = 'husl'
     hls = 'hls'
+
     # -- END -- Qualitative colormaps
 
     @classmethod
-    def get_palette(self, name):
-        palette = getattr(self, name)
+    def get_palette(cls, name):
+        palette = getattr(cls, name)
         if isinstance(palette, Palette):
             return palette.colormap
         else:
