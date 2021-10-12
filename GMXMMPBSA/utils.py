@@ -46,16 +46,17 @@ class Residue(int):
     """
     Residue class
     """
-    def __init__(self, index, number, chain, mol, name, icode=''):
+    def __init__(self, index, number, chain, mol, id, name, icode=''):
         int.__init__(index)
         self.index = index
         self.number = number
         self.chain = chain
         self.mol = mol
+        self.id = id
         self.name = name
         self.icode = icode
 
-    def __new__(cls, index, number, chain, mol, name, icode=''):
+    def __new__(cls, index, number, chain, mol, id, name, icode=''):
         i = int.__new__(cls, index)
         i.index = index
         i.number = number
@@ -63,18 +64,18 @@ class Residue(int):
         i.mol = mol
         i.name = name
         i.icode = icode
-        i.string = f"{chain}:{name}:{number}:{icode}" if icode else f"{chain}:{name}:{number}"
+        i.string = f"{id}:{chain}:{name}:{number}:{icode}" if icode else f"{id}:{chain}:{name}:{number}"
         return i
 
     def __copy__(self):
-        return Residue(self.index, self.number, self.chain, self.mol, self.name,self.icode)
+        return Residue(self.index, self.number, self.chain, self.mol, self.id, self.name, self.icode)
 
     def __deepcopy__(self, memo):
         cls = self.__class__
-        return cls.__new__(cls, self.index, self.number, self.chain, self.mol, self.name,self.icode)
+        return cls.__new__(cls, self.index, self.number, self.chain, self.mol, self.id, self.name, self.icode)
 
     def __repr__(self):
-        text = f"{type(self).__name__}(index: {self.index}, {self.chain}:{self.name}:{self.number}"
+        text = f"{type(self).__name__}(index: {self.index}, {self.id}:{self.chain}:{self.name}:{self.number}"
         if self.icode:
             text += f":{self.icode}"
         text += ')'
@@ -122,23 +123,27 @@ def res2map(com_ndx, com_file):
             # save residue number in the rec list
             if res != proc_res and resindex not in res_list['REC']:
                 res_list['REC'].append(Residue(resindex, com_str.atoms[i].residue.number,
-                                               com_str.atoms[i].residue.chain, 'REC', com_str.atoms[i].residue.name,
+                                               com_str.atoms[i].residue.chain, 'REC', 'R',
+                                               com_str.atoms[i].residue.name,
                                                com_str.atoms[i].residue.insertion_code))
                 res_list['COM'].append(Residue(resindex, com_str.atoms[i].residue.number,
-                                               com_str.atoms[i].residue.chain, 'COM', com_str.atoms[i].residue.name,
+                                               com_str.atoms[i].residue.chain, 'COM', 'R',
+                                               com_str.atoms[i].residue.name,
                                                com_str.atoms[i].residue.insertion_code))
                 resindex += 1
                 proc_res = res
         # save residue number in the lig list
         elif res != proc_res and resindex not in res_list['LIG']:
-                res_list['LIG'].append(Residue(resindex, com_str.atoms[i].residue.number,
-                                               com_str.atoms[i].residue.chain, 'LIG', com_str.atoms[i].residue.name,
-                                               com_str.atoms[i].residue.insertion_code))
-                res_list['COM'].append(Residue(resindex, com_str.atoms[i].residue.number,
-                                               com_str.atoms[i].residue.chain, 'COM', com_str.atoms[i].residue.name,
-                                               com_str.atoms[i].residue.insertion_code))
-                resindex += 1
-                proc_res = res
+            res_list['LIG'].append(Residue(resindex, com_str.atoms[i].residue.number,
+                                           com_str.atoms[i].residue.chain, 'LIG', 'L',
+                                           com_str.atoms[i].residue.name,
+                                           com_str.atoms[i].residue.insertion_code))
+            res_list['COM'].append(Residue(resindex, com_str.atoms[i].residue.number,
+                                           com_str.atoms[i].residue.chain, 'COM', 'L',
+                                           com_str.atoms[i].residue.name,
+                                           com_str.atoms[i].residue.insertion_code))
+            resindex += 1
+            proc_res = res
 
     masks['REC'] = list2range(res_list['REC'])
     masks['LIG'] = list2range(res_list['LIG'])
@@ -156,6 +161,7 @@ def res2map(com_ndx, com_file):
 
 def get_dist(coor1, coor2):
     return sqrt((coor2[0] - coor1[0]) ** 2 + (coor2[1] - coor1[1]) ** 2 + (coor2[2] - coor1[2]) ** 2)
+
 
 def list2range(input_list):
     """
@@ -193,7 +199,8 @@ def list2range(input_list):
         previous = x
     return {'num': ranges, 'string': ranges_str}
 
-def selector(selection:str):
+
+def selector(selection: str):
     string_list = re.split(r"\s|;\s*", selection)
     dist = None
     # exclude = None
@@ -252,8 +259,8 @@ def checkff():
     amberhome = os.getenv('AMBERHOME')
     if not amberhome:
         GMXMMPBSA_ERROR('Could not found Amber. Please make sure you have sourced %s/amber.sh (if you are using sh/ksh/'
-              'bash/zsh) or %s/amber.csh (if you are using csh/tcsh)' %
-              (amberhome, amberhome))
+                        'bash/zsh) or %s/amber.csh (if you are using csh/tcsh)' %
+                        (amberhome, amberhome))
         return
     amberhome = Path(amberhome)
 
@@ -268,6 +275,8 @@ def checkff():
                 shutil.rmtree(folder)
             except:
                 logging.error('Failed to delete the folder gmxMMPBSA from the Amber/dat')
+
+
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 def remove(flag, mpi_size=0, fnpre='_GMXMMPBSA_'):
@@ -389,5 +398,3 @@ class Unbuffered(object):
 
     def __getattr__(self, attr):
         return getattr(self._handle, attr)
-
-

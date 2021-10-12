@@ -2,7 +2,6 @@
 #                           GPLv3 LICENSE INFO                                 #
 #                                                                              #
 #  Copyright (C) 2020  Mario S. Valdes-Tresanco and Mario E. Valdes-Tresanco   #
-#  Copyright (C) 2014  Jason Swails, Bill Miller III, and Dwight McGee         #
 #                                                                              #
 #   Project: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA                  #
 #                                                                              #
@@ -17,8 +16,8 @@
 # ##############################################################################
 
 from PyQt5.QtWidgets import (QDialog, QSpinBox, QLabel, QLineEdit, QPushButton, QHBoxLayout, QVBoxLayout, QCheckBox,
-                             QGroupBox, QButtonGroup, QGridLayout, QTreeWidget, QTreeWidgetItem,
-                             QTreeWidgetItemIterator, QHeaderView, QProgressBar, QStatusBar, QMessageBox)
+                             QGroupBox, QButtonGroup, QGridLayout, QTreeWidget, QTreeWidgetItem, QRadioButton,
+                             QTreeWidgetItemIterator, QHeaderView, QProgressBar, QStatusBar, QMessageBox, QComboBox)
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, pyqtSlot
 from queue import Queue, Empty
 from GMXMMPBSA import API
@@ -38,9 +37,6 @@ class InitDialog(QDialog):
 
         self.processing_label = QLabel()
 
-        self.corr_btn = QCheckBox('Calculate correlation between systems')
-        self.corr_btn.setToolTip('Make correlation between systems. Only works if you define more than 3 systems')
-        self.corr_btn.setChecked(False)
         self.show_decomp_btn = QCheckBox('Show decomposition data')
         self.show_decomp_btn.setToolTip('Defines whether the decomposition graphs will be available during the '
                                         'session. Useful when defining a system for correlation analysis.')
@@ -56,7 +52,6 @@ class InitDialog(QDialog):
         self.remove_empty_terms_btn.clicked.connect(self.show_warn)
 
         self.check_l = QHBoxLayout()
-        self.check_l.addWidget(self.corr_btn)
         self.check_l.addWidget(self.show_decomp_btn)
         self.check_l.addWidget(self.remove_empty_charts_btn)
         self.check_l.addWidget(self.remove_empty_terms_btn)
@@ -65,6 +60,21 @@ class InitDialog(QDialog):
                                        'the representation of the data.')
         self.warn_label_empty.setStyleSheet("border:3px solid green")
         self.warn_label_empty.setWordWrap(True)
+
+        self.corr_sys_btn = QCheckBox('Calculate correlation between systems')
+        self.corr_sys_btn.setToolTip('Make correlation between systems. Only works if you define more than 3 systems')
+        self.corr_sys_btn.setChecked(False)
+
+        # mutants correlation
+        self.corr_mut_btn = QCheckBox('Calculate correlation between mutants')
+        self.corr_mut_btn.setToolTip('Make correlation between mutants systems. Only works if you define more than 3 '
+                                 'mutants')
+        self.corr_mut_btn.setChecked(False)
+
+        self.corr_group = QGroupBox('Correlation')
+        self.corr_group_layout = QGridLayout(self.corr_group)
+        self.corr_group_layout.addWidget(self.corr_sys_btn, 0, 0)
+        self.corr_group_layout.addWidget(self.corr_mut_btn, 0, 1)
 
         self.delta_btn = QCheckBox('delta')
         self.delta_btn.setChecked(True)
@@ -93,16 +103,10 @@ class InitDialog(QDialog):
         self.sys_group_layout = QVBoxLayout(self.sys_group)
         self.sys_group_layout.addLayout(self.check_l)
         self.sys_group_layout.addWidget(self.warn_label_empty)
+        self.sys_group_layout.addWidget(self.corr_group)
         self.sys_group_layout.addWidget(self.comp_group)
 
-        self.hide_tb_btn = QCheckBox('Hide ToolBar')
-        self.hide_tb_btn.setChecked(True)
-
-        self.chart_group = QGroupBox('Charts options')
-        self.chart_group_layout = QHBoxLayout(self.chart_group)
-        self.chart_group_layout.addWidget(self.hide_tb_btn)
-
-        self.header_item = QTreeWidgetItem(['Folder name','Select', 'Name', 'Exp.Ki (nM)', 'Temperature', 'Path'])
+        self.header_item = QTreeWidgetItem(['Folder name', 'Select', 'Name', 'Exp.Ki (nM)', 'Chart Settings', 'Path'])
         self.header_item.setToolTip(0, 'Container')
         self.header_item.setToolTip(1, 'Name')
         self.header_item.setTextAlignment(0, Qt.AlignCenter)
@@ -147,7 +151,6 @@ class InitDialog(QDialog):
         self.content_layout = QVBoxLayout(self)
         self.content_layout.addWidget(self.processing_label)
         self.content_layout.addWidget(self.sys_group)
-        self.content_layout.addWidget(self.chart_group)
         self.content_layout.addWidget(self.result_tree)
         self.content_layout.addWidget(self.statusbar)
         self.content_layout.addLayout(self.btn_layout)
@@ -171,15 +174,15 @@ class InitDialog(QDialog):
     def update_item_info(self, item: QTreeWidgetItem, col):
         if item.text(0) == 'All':
             return
-        path = item.info[1]
-        basename = item.text(2)
-        exp_ki = float(item.text(3))
-        temp = float(item.text(4))
-        item.info = [basename, path, exp_ki, temp]
+        # path = item.info[1]
+        # basename = item.text(2)
+        # exp_ki = float(item.text(3))
+        # custom_sett = float(item.checkState(4))
+        # item.info = [basename, path, exp_ki, custom_sett]
 
     def get_files_info(self, info_files):
         self.nfiles = len(info_files)
-        self.f_item = QTreeWidgetItem([f'All'])
+        self.f_item = QTreeWidgetItem(['All'])
         self.f_item.setCheckState(1, Qt.Checked)
         self.f_item.info = None
         self.f_item.setFlags(self.f_item.flags() | Qt.ItemIsAutoTristate)
@@ -189,10 +192,11 @@ class InitDialog(QDialog):
 
         files_list = info_files
         names = []
-        c = 1
-        for fname in files_list:
+        for c, fname in enumerate(files_list, start=1):
             basename = None
             exp_ki = None
+            mut_only = False
+            mutant = None
             with open(fname) as fi:
                 for line in fi:
                     if line.startswith("INPUT['sys_name']"):
@@ -202,26 +206,63 @@ class InitDialog(QDialog):
                                 basename = f"{basename}-{names.count(basename) + 1}"
                             names.append(basename)
                     if line.startswith("INPUT['exp_ki']"):
-                        exp_ki = line.split()[2]
-                    if line.startswith("INPUT['entropy_temp']"):
-                        temp = line.split()[2]
-                    if line.startswith("INPUT['temperature']"):
-                        temp = line.split()[2]
+                        exp_ki = float(line.split()[2])
+                    if line.startswith("INPUT['mutant_only']"):
+                        mut_only = int(line.split()[2])
+                    if line.startswith("mut_str"):
+                        mutant = line.split()[2].replace("'", "")
+            # check for custom settings
+            custom_settings = fname.parent.joinpath('settings.json').exists()
+            user_default_settings = Path('~').expanduser().absolute().joinpath('.config', 'gmx_MMPBSA',
+                                                                               'settings.json').exists()
+            # custom_settings = True
+            cb = QComboBox()
+            if custom_settings:
+                cb.addItem('Custom')
+            if user_default_settings:
+                cb.addItem('User-Default')
+            cb.addItem('Default')
+
             if not basename:
                 basename = f'System-{c}'
             if not exp_ki:
                 exp_ki = 0.0
-            item = QTreeWidgetItem([f'{fname.parent.name}', '', f'{basename}', f'{exp_ki}', f'{temp}',
-                                    f'{fname.parent.absolute()}'])
-            item.info = [basename, Path(fname), float(exp_ki), float(temp)]
-            item.setCheckState(1, Qt.Checked)
-            item.setFlags(item.flags() |  Qt.ItemIsEditable)
-            item.setTextAlignment(2, Qt.AlignCenter)
-            item.setTextAlignment(3, Qt.AlignRight)
-            item.setTextAlignment(4, Qt.AlignCenter)
+
+            item = QTreeWidgetItem([f'{fname.parent.name}', '', f'{basename}', '', '', f'{fname.parent.absolute()}'])
+            item.setFlags(item.flags() | Qt.ItemIsAutoTristate)
+
+            self._set_item_properties(item)
             self.f_item.addChild(item)
-            c += 1
+
+            if not mut_only:
+                witem = QTreeWidgetItem(['', '', 'wild type', f'{exp_ki}', '', ''])
+                # witem.info = [basename, Path(fname)]
+                self._set_item_properties(witem)
+                item.addChild(witem)
+
+            if mutant:
+                print(mutant)
+                mitem = QTreeWidgetItem(['', '', f'{mutant}', f'{exp_ki}', '', ''])
+                # mitem.info = [basename, Path(fname)]
+                self._set_item_properties(mitem)
+                item.addChild(mitem)
+
+            item.info = [basename, Path(fname)]
+
+            item.setExpanded(True)
+            self.result_tree.setItemWidget(item, 4, cb)
         self.f_item.setExpanded(True)
+
+    def _set_item_properties(self, item: QTreeWidgetItem):
+        # if custom_settings:
+        #     item.setText(4, 'Custom')
+        #     item.setCheckState(4, Qt.Checked)
+        #     print('fffffffffffffffffFFFF')
+        item.setCheckState(1, Qt.Checked)
+        item.setFlags(item.flags() | Qt.ItemIsEditable)
+        item.setTextAlignment(2, Qt.AlignCenter)
+        item.setTextAlignment(3, Qt.AlignRight)
+        item.setTextAlignment(4, Qt.AlignCenter)
 
     def get_data(self):
 
@@ -229,29 +270,35 @@ class InitDialog(QDialog):
         queue = Queue()
         self.result_queue = Queue()
         self.systems_list = []
-        self.options = {'correlation': self.corr_btn.isChecked(), 'decomposition': self.show_decomp_btn.isChecked(),
-                   'components': [x.text() for x in [self.com_btn, self.rec_btn, self.lig_btn] if x.isChecked()],
+        self.options = {'corr_sys': self.corr_sys_btn.isChecked(),
+                        'corr_mut': self.corr_mut_btn.isChecked(),
+                        'decomposition': self.show_decomp_btn.isChecked(),
+                        'components': [x.text() for x in [self.com_btn, self.rec_btn, self.lig_btn] if x.isChecked()],
                         'remove_empty_charts': self.remove_empty_charts_btn.isChecked(),
-                        'remove_empty_terms':self.remove_empty_terms_btn.isChecked() ,'hide_toolbar':
-                            self.hide_tb_btn.isChecked()}
-        it = QTreeWidgetItemIterator(self.f_item)
-        while it.value():
-            item = it.value()
-            if item.checkState(1) == Qt.Checked and item.info:
-                self.systems_list.append(item.info)
-            it += 1
-        self.pb.setRange(0, len(self.systems_list))
-        if not len(self.systems_list):
-            m = QMessageBox.critical(self, 'Error processing systems', 'You must select at least one system.',
-                                     QMessageBox.Ok)
+                        'remove_empty_terms':self.remove_empty_terms_btn.isChecked(),
+                        # 'default_chart_options': self.default_settings_btn.isChecked()
+                        }
+        counter = 0
+        for c in range(self.f_item.childCount()):
+            child = self.f_item.child(c)
+            if not child.checkState(1):
+                continue
+            t = {}
+            if child.childCount():
+                for c1 in range(child.childCount()):
+                    if child.child(c1).checkState(1) == Qt.Checked:
+                        if child.child(c1).text(2) == 'wild type':
+                            t['wt'] = float(child.child(c1).text(3))
+                        else:
+                            t['mut'] = float(child.child(c1).text(3))
+            child.info += [t, self.result_tree.itemWidget(child, 4).currentText()]
+            queue.put(child.info)
+            counter += 1
+        if not counter:
+            QMessageBox.critical(self, 'Error processing systems', 'You must select at least one system.',
+                                 QMessageBox.Ok)
             return
-
-        it = QTreeWidgetItemIterator(self.f_item)
-        while it.value():
-            item = it.value()
-            if item.checkState(1) == Qt.Checked and item.info:
-                queue.put(item.info)
-            it += 1
+        self.pb.setRange(0, counter)
         self.worker.define_dat(API.load_gmxmmpbsa_info, queue, self.result_queue, self.jobs_spin.value())
         self.worker.start()
 

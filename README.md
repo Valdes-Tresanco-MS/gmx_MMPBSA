@@ -17,7 +17,7 @@ files. It works with all GROMACS versions along with AmberTools20 or 21.
 alt="SCImago Journal &amp; Country Rank"  /></a>
 
 Valdés-Tresanco, M.S., Valdés-Tresanco, M.E., Valiente, P.A. and Moreno E. **gmx_MMPBSA: A New Tool to Perform 
-End-State Free Energy Calculations with GROMACS**. _Journal of Chemical Theory and Computation_, 2021. 
+End-State Free Energy Calculations with GROMACS**. _Journal of Chemical Theory and Computation_, 2021 17 (10), 6281-6291
 https://pubs.acs.org/doi/10.1021/acs.jctc.1c00645
 
 Please also consider citing MMPBSA.py's paper:

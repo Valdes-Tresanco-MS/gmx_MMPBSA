@@ -2,7 +2,6 @@
 #                           GPLv3 LICENSE INFO                                 #
 #                                                                              #
 #  Copyright (C) 2020  Mario S. Valdes-Tresanco and Mario E. Valdes-Tresanco   #
-#  Copyright (C) 2014  Jason Swails, Bill Miller III, and Dwight McGee         #
 #                                                                              #
 #   Project: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA                  #
 #                                                                              #
@@ -17,28 +16,85 @@
 # ##############################################################################
 
 import math
-from pathlib import Path
+from typing import Union
+
 from GMXMMPBSA.exceptions import GMXMMPBSA_ERROR, GMXMMPBSA_WARNING
 import pandas as pd
 import numpy as np
 from queue import Queue
 from PyQt5.QtCore import *
 import multiprocessing
+from pathlib import Path
 
 R = 0.001987
 
 ncpu = multiprocessing.cpu_count()
 
+style = Path(__file__).joinpath('style')
+
+
+def com2str(com_pdb_str):
+    import parmed
+    import tempfile
+    fp = tempfile.TemporaryFile(mode='w+t')
+    fp.writelines(com_pdb_str)
+    fp.seek(0)
+    return parmed.read_PDB(fp)
+
+
+def multiindex2dict(p: Union[pd.MultiIndex, dict]) -> dict:
+    """
+    Converts a pandas Multiindex to a nested dict
+    :parm p: As this is a recursive function, initially p is a pd.MultiIndex, but after the first iteration it takes
+    the internal_dict value, so it becomes to a dictionary
+    """
+    internal_dict = {}
+    end = False
+    for x in p:
+        # Since multi-indexes have a descending hierarchical structure, it is convenient to start from the last
+        # element of each tuple. That is, we start by generating the lower level to the upper one. See the example
+        if isinstance(p, pd.MultiIndex):
+            # This checks if the tuple x without the last element has len = 1. If so, the unique value of the
+            # remaining tuple works as key in the new dict, otherwise the remaining tuple is used. Only for 2 levels
+            # pd.MultiIndex
+            if len(x[:-1]) == 1:
+                t = x[:-1][0]
+                end = True
+            else:
+                t = x[:-1]
+            if t not in internal_dict:
+                internal_dict[t] = [x[-1]]
+            else:
+                internal_dict[t].append(x[-1])
+        elif isinstance(x, tuple):
+            # This checks if the tuple x without the last element has len = 1. If so, the unique value of the
+            # remaining tuple works as key in the new dict, otherwise the remaining tuple is used
+            if len(x[:-1]) == 1:
+                t = x[:-1][0]
+                end = True
+            else:
+                t = x[:-1]
+            if t not in internal_dict:
+                internal_dict[t] = {x[-1]: p[x]}
+            else:
+                internal_dict[t][x[-1]] = p[x]
+    if end:
+        return internal_dict
+    return multiindex2dict(internal_dict)
+
+
 def calculatestar(args):
     return run_process(*args)
 
+
 def run_process(func, args):
-    basename, path, exp_ki, temp = args
-    results = func(path)
+    results = func(args[1])
     return (args, results)
+
 
 class worker(QThread):
     job_finished = pyqtSignal()
+
     def __init__(self):
         super(worker, self).__init__()
 
@@ -50,26 +106,23 @@ class worker(QThread):
 
     def run(self):
         size = self.queue.qsize()
-        TASKS = []
-        for x in range(size):
-            TASKS.append([self.fn, self.queue.get_nowait()])
-
-        if self.jobs > len(TASKS):
-            self.jobs = len(TASKS)
+        TASKS = [[self.fn, self.queue.get_nowait()] for _ in range(size)]
+        self.jobs = min(self.jobs, len(TASKS))
         with multiprocessing.Pool(self.jobs) as pool:
             imap_unordered_it = pool.imap_unordered(calculatestar, TASKS)
             for result in imap_unordered_it:
                 self.job_finished.emit()
                 self.result_queue.put(result)
 
+
 def energy2pdb_pml(residue_list, pml_path: Path, pdb_path: Path):
     with open(pml_path, 'w') as bf:
         bf.write(f'load {pdb_path}\n')
-        bf.write(f'set cartoon_oval_length, 1.0\n')
-        bf.write(f'set cartoon_rect_length, 1.2\n')
-        bf.write(f'set cartoon_rect_width, 0.3\n')
-        bf.write(f'set cartoon_side_chain_helper, 1\n')
-        bf.write(f'set light_count, 0\n')
+        bf.write('set cartoon_oval_length, 1.0\n')
+        bf.write('set cartoon_rect_length, 1.2\n')
+        bf.write('set cartoon_rect_width, 0.3\n')
+        bf.write('set cartoon_side_chain_helper, 1\n')
+        bf.write('set light_count, 0\n')
         bf.write('set_color gmxc1 = (0.0, 0.0, 0.3)\n')
         bf.write('set_color gmxc2 = (0.0, 0.0, 1.0)\n')
         bf.write('set_color gmxc3 = (1.0, 1.0, 1.0)\n')
@@ -107,7 +160,7 @@ def energy2pdb_pml(residue_list, pml_path: Path, pdb_path: Path):
             minimum = -abs(maximum)
 
         bf.write(f'show sticks, {select_text}\n')
-        bf.write(f'remove (h. and (e. c extend 1))\n')
+        bf.write('remove (h. and (e. c extend 1))\n')
         bf.write(f'spectrum b, gmxc1 gmxc2 gmxc3 gmxc4 gmxc5, minimum={minimum}, maximum={maximum}\n')
         bf.write(f'ramp_new colorbar, none, [{minimum}, 0, {maximum}], [gmxc1, gmxc2, gmxc3, gmxc4, gmxc5]\n')
         bf.write(f'center {select_text}\n')
@@ -124,15 +177,26 @@ def ki2energy(ki, temp):
 
 def make_corr_DF(corr_data: dict) -> pd.DataFrame:
     data = []
-    for x in corr_data:
+    for x, value in corr_data.items():
         if x == 'mutant':
             continue
-        for m in corr_data[x]['ΔG']:
+        for m in value['ΔG']:
             curr = [x] + [np.nanmean(corr_data[x]['ΔG'][m][d]) if type(corr_data[x]['ΔG'][m][d]) == np.ndarray
-                                     else np.nan for d in corr_data[x]['ΔG'][m] ] + [m, corr_data[x]['Exp.Energy']]
+                          else np.nan for d in corr_data[x]['ΔG'][m]] + [m, corr_data[x]['Exp.Energy']]
             data.append(curr)
-    df = pd.DataFrame(data=data, columns=['System', 'ΔH', 'ΔH+IE', 'ΔH+NMODE', 'ΔH+QH', 'MODEL', 'Exp.Energy'])
-    return df
+    return pd.DataFrame(
+        data=data,
+        columns=[
+            'System',
+            'ΔH',
+            'ΔH+IE',
+            'ΔH+NMODE',
+            'ΔH+QH',
+            'MODEL',
+            'Exp.Energy',
+        ],
+    )
+
 
 def get_files(parser_args):
     info_files = []

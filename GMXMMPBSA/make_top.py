@@ -566,7 +566,11 @@ class CheckMakeTop:
         with open(top_file) as topf:
             for line in topf:
                 if line.startswith('#include') and 'forcefield.itp' in line:
-                    if not ('charmm' in line.lower() or 'toppar' in line.lower() or 'amber' in line.lower()):
+                    if (
+                        'charmm' not in line.lower()
+                        and 'toppar' not in line.lower()
+                        and 'amber' not in line.lower()
+                    ):
                         GMXMMPBSA_ERROR(f'Unknown force field in GROMACS topology in line:\n {line}')
                 elif '[ molecules ]' in line:
                     molsect = True

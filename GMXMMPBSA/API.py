@@ -24,8 +24,8 @@ the full power of Python's extensions, if they want (e.g., numpy, scipy, etc.)
 # ##############################################################################
 
 from typing import Union
-from GMXMMPBSA import infofile, main, amber_outputs
-from GMXMMPBSA.exceptions import SetupError, NoFileExists
+from GMXMMPBSA import infofile, main
+from GMXMMPBSA.exceptions import NoFileExists
 from GMXMMPBSA.fake_mpi import MPI
 import pandas as pd
 from pathlib import Path
@@ -38,10 +38,8 @@ __all__ = ['load_gmxmmpbsa_info']
 
 
 class DataStore(dict):
-    def __init__(self):
-        super(DataStore, self).__init__()
-        self.mutant = {}
-        self.decomp = type('calc_types', (dict,), {'mutant': {}})()
+    def __init__(self, *args):
+        super(DataStore, self).__init__(*args)
 
 
 class H52Data:
@@ -49,6 +47,10 @@ class H52Data:
         self.h5f = h5py.File(fname, 'r')
         self.app_namespace = SimpleNamespace(INPUT={}, FILES=SimpleNamespace(), INFO={})
         self.calc_types = DataStore()
+        self.calc_types.mutant = DataStore()
+        self.calc_types.decomp = DataStore()
+        self.calc_types.decomp.mutant = DataStore()
+
 
         for key in self.h5f:
             if key in ['INFO', 'INPUT', 'FILES']:
@@ -86,28 +88,12 @@ class H52Data:
 
         calc_types = self.calc_types.mutant if mut else self.calc_types
         # key  Energy: [gb, pb, rism std, rism gf], Decomp: [gb, pb], Entropy: [nmode, qh, ie, c2]
-        if key in ['gb', 'pb', 'rism std', 'rism gf']:
+        if key in ['gb', 'pb', 'rism std', 'rism gf', 'nmode', 'qh', 'ie', 'c2']:
             calc_types[key] = {}
             # key2 is complex, receptor, ligand, delta
             for key2 in d[key]:
                 calc_types[key][key2] = {}
                 # complex, receptor, etc., is a class and the data is contained in the attribute data
-                for key3 in d[key][key2]:
-                    calc_types[key][key2][key3] = d[key][key2][key3][()]
-        elif key in ['nmode', 'qh']:
-            calc_types[key] = {}
-            # key2 is complex, receptor, ligand, delta
-            for key2 in d[key]:
-                calc_types[key][key2] = {}
-                # vibrational, translational, rotational, total
-                for key3 in d[key][key2]:
-                    calc_types[key][key2][key3] = d[key][key2][key3][()]
-
-        elif key in ['ie', 'c2']:
-            calc_types[key] = {}
-            # key2 is PB, GB or RISM?
-            for key2 in d[key]:
-                calc_types[key][key2] = {}
                 for key3 in d[key][key2]:
                     calc_types[key][key2][key3] = d[key][key2][key3][()]
 
@@ -123,17 +109,16 @@ class H52Data:
                 for key3 in d[key][key2]:
                     # residue first level
                     for key4 in d[key][key2][key3]:
-                        if isinstance(d[key][key2][key3][key4], h5py.Group):
-                            # residue sec level
-                            for key5 in d[key][key2][key3][key4]:
-                                # calc_types terms
+                        for key5 in d[key][key2][key3][key4]:
+                            if isinstance(d[key][key2][key3][key4], h5py.Group):
+                                # residue sec level
                                 for key6 in d[key][key2][key3][key4][key5]:
                                     calc_types[key][key2][(key3, key4, key5, key6)] = d[key][key2][key3][key4][
                                         key5][key6][()]
-                        else:
-                            # energy terms
-                            for key5 in d[key][key2][key3][key4]:
-                                calc_types[key][key2][(key3, key4, key5)] = d[key][key2][key3][key4][key5][()]
+                            else:
+                                # energy terms
+                                for key5 in d[key][key2][key3][key4]:
+                                    calc_types[key][key2][(key3, key4, key5)] = d[key][key2][key3][key4][key5][()]
 
 
 class DataMMPBSA:
@@ -142,7 +127,8 @@ class DataMMPBSA:
     def __init__(self):
         self.frames = []
         self.app_namespace = SimpleNamespace()
-        self.data = {'mutant': {}, 'decomp': {'mutant': {}}}
+        self.data = DataStore()
+        self.data.mutant = DataStore()
 
     def get_fromH5(self, h5file):
 
@@ -181,7 +167,7 @@ class DataMMPBSA:
 
     def _get_data(self, data_object: Union[H52Data, main.MMPBSA_App]):
         # check the data_object type
-        h5 = True if isinstance(data_object, H52Data) else False
+        h5 = isinstance(data_object, H52Data)
         INPUT = self.app_namespace.INPUT
         numframes = self.app_namespace.INFO['numframes']
         numframes_nmode = self.app_namespace.INFO['numframes_nmode']
@@ -192,24 +178,33 @@ class DataMMPBSA:
         self.frames = [x for x in range(INPUT['startframe'],
                                         INPUT['startframe'] + numframes * INPUT['interval'],
                                         INPUT['interval'])]
+        INPUT['endframe'] = self.frames[-1]
+
         self.nmode_frames = [x for x in range(INPUT['nmstartframe'],
                                               INPUT['nmstartframe'] + numframes_nmode * INPUT['interval'],
                                               INPUT['interval'])]
+        if numframes_nmode:
+            INPUT['nmendframe'] = self.nmode_frames[-1]
         # Now load the data
         if not INPUT['mutant_only']:
             self._get_edata(data_object.calc_types, h5)
-            if INPUT['decomprun']:
-                self._get_ddata(data_object.calc_types.decomp, h5)
         # Are we doing a mutant?
         if data_object.calc_types.mutant:
             self._get_edata(data_object.calc_types.mutant, h5, True)
-            if INPUT['decomprun']:
-                self._get_ddata(data_object.calc_types.decomp.mutant, h5, True)
+
+        # Now we load the decomp data. Avoid to get the decomp data in first place in gmx_MMPBSA_ana
+        if INPUT['decomprun']:
+            if not INPUT['mutant_only']:
+                self.data['decomp'] = self._get_ddata(data_object.calc_types.decomp, h5)
+            if data_object.calc_types.mutant:
+                self.data.mutant['decomp'] = self._get_ddata(data_object.calc_types.decomp.mutant, h5)
 
     def _get_edata(self, calc_types, h5=False, mut=False):
 
-        data = self.data['mutant'] if mut else self.data
+        data = self.data.mutant if mut else self.data
         for key in calc_types:
+            if key == 'decomp':
+                continue
             if key in ['ie', 'c2']:
                 # since the model data object in MMPBSA_App contain the data in the attribute data and H5 not,
                 # we need to define a conditional object
@@ -259,12 +254,12 @@ class DataMMPBSA:
                                    keys=['complex', 'receptor', 'ligand', 'delta'])
                 data[key] = df
 
-    def _get_ddata(self, calc_types, h5=False, mut=False):
-        data = self.data['decomp']['mutant'] if mut else self.data['decomp']
+    def _get_ddata(self, calc_types, h5=False):
+        data = {}
         # Take the decomp data
         for key in calc_types:
             # since the model data object in MMPBSA_App contain the data in the attribute data and H5 not,
-            # we need to define a conditional object. Also, the decomp data must be re-structured for multiplex
+            # we need to define a conditional object. Also, the decomp data must be re-structured for multiindex
             # Dataframe
             com_calc_type_data = (calc_types[key]['complex'] if h5
                                   else self._transform_from_lvl_decomp(calc_types[key]['complex']))
@@ -283,13 +278,12 @@ class DataMMPBSA:
                 df = pd.concat([complex, receptor, ligand, delta], axis=1,
                                keys=['complex', 'receptor', 'ligand', 'delta'])
             data[key] = df
+        return data
 
     @staticmethod
     def _transform_from_lvl_decomp(nd):
         data = {}
         for k2, v2 in nd.items():  # TDC, SDC, BDC
-            if k2 in ['SDC', 'BDC']:
-                continue
             for k3, v3 in v2.items():  # residue
                 for k4, v4 in v3.items():  # residue in per-wise or terms in per-res
                     if isinstance(v4, dict):  # per-wise
