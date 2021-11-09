@@ -81,15 +81,17 @@ Optional, but recommended -- :octicons-check-circle-fill-16:{ .req_opt } -> Opti
 
             amber.conda install pip
 
-=== "`development`"
-    or the `development` version from [GitHub][4]:
+[comment]: <> (=== "`development`")
+
+[comment]: <> (    or the `development` version from [GitHub][4]:)
     
-        amber.python -m pip install git+https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA
+[comment]: <> (        amber.python -m pip install git+https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA)
     
-    !!! warning
-        Make sure that you have `git` installed. If not you can install it as follows:
+[comment]: <> (    !!! warning)
+
+[comment]: <> (        Make sure that you have `git` installed. If not you can install it as follows:)
     
-            sudo apt install git
+[comment]: <> (            sudo apt install git)
 
 ## Update
 
@@ -100,15 +102,17 @@ If you already have installed a previous `gmx_MMPBSA` version, you can update it
     
         amber.python -m pip install gmx_MMPBSA --upgrade
 
-=== "`development`"
-    `development` version from GitHub:
-    
-        amber.python -m pip install git+https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA --upgrade 
-    
-    !!! warning
-        Make sure that you have `git` installed. If not you can install it as follows:
+[comment]: <> (=== "`development`")
 
-            sudo apt install git
+[comment]: <> (    `development` version from GitHub:)
+    
+[comment]: <> (        amber.python -m pip install git+https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA --upgrade )
+    
+[comment]: <> (    !!! warning)
+
+[comment]: <> (        Make sure that you have `git` installed. If not you can install it as follows:)
+
+[comment]: <> (            sudo apt install git)
 
 ## Troubleshooting after installation
 
