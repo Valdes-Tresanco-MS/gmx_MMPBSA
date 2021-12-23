@@ -437,7 +437,7 @@ class CheckMakeTop:
                     mut_com_amb_prm.strip(f':{rec_indexes_string}')
                     mtop = mut_com_amb_prm
 
-            if com_top_parm == 'charmm':
+            if com_top_parm == 'chamber':
                 mut_prot_amb_prm = parmed.amber.ChamberParm.from_structure(mtop)
             else:
                 mut_prot_amb_prm = parmed.amber.AmberParm.from_structure(mtop)
@@ -758,7 +758,7 @@ class CheckMakeTop:
         mut_top = self.molstr(wt_top)
         mut_aa = self.INPUT['mutant']
 
-        bb_atoms = 'N,H,CA,HA,C,O,'
+        bb_atoms = 'N,H,CA,HA,C,O,HN,'
         nterm_atoms = 'H1,H2,H3,'
         cterm_atoms = 'OXT'
         sc_cb_atom = 'CB,'
