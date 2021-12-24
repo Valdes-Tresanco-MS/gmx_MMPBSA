@@ -177,9 +177,7 @@ class CheckMakeTop:
             self.ligand_frcmod = self.FILES.prefix + lig_name + '.frcmod'
             # run parmchk2
             parmchk2 = self.external_progs['parmchk2']
-            lig_ff = '1'
-            if "gaff2" in self.INPUT['forcefields']:
-                lig_ff = '2'
+            lig_ff = '2' if "gaff2" in self.INPUT['forcefields'] else '1'
             parmchk2_args = [parmchk2, '-i', self.FILES.ligand_mol2, '-f', 'mol2', '-o', self.ligand_frcmod, '-s',
                              lig_ff]
             if self.INPUT['debug_printlevel']:
@@ -189,8 +187,7 @@ class CheckMakeTop:
                 GMXMMPBSA_ERROR('%s failed when querying %s' % (parmchk2, self.FILES.ligand_mol2))
 
         # check if the ligand force field is gaff or gaff2 and get if the ligand mol2 was defined
-        else:
-            if ("leaprc.gaff" in self.INPUT['forcefields'] or "leaprc.gaff2" in self.INPUT['forcefields'] and not
+        elif ("leaprc.gaff" in self.INPUT['forcefields'] or "leaprc.gaff2" in self.INPUT['forcefields'] and not
             self.FILES.complex_top):
                 GMXMMPBSA_WARNING('You must define the ligand mol2 file (-lm) if the ligand forcefield is '
                                   '"leaprc.gaff" or "leaprc.gaff2". If the ligand is parametrized in Amber force '
@@ -214,14 +211,11 @@ class CheckMakeTop:
                 GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(self.editconf), self.FILES.complex_tpr))
 
         # check if stability
-        if self.FILES.stability:
-            if (self.FILES.receptor_tpr or self.FILES.ligand_tpr):
-                logging.warning('When Stability calculation mode is selected, receptor and ligand files are not '
-                                'needed...')
-            # if self.INPUT['alarun'] and (self.FILES.mutant_receptor_tpr or self.FILES.mutant_ligand_tpr):
-            #     logging.warning('When Stability calculation mode is selected, mutant receptor/mutant ligand files '
-            #                     'are not needed...')
-
+        if self.FILES.stability and (
+            (self.FILES.receptor_tpr or self.FILES.ligand_tpr)
+        ):
+            logging.warning('When Stability calculation mode is selected, receptor and ligand files are not '
+                            'needed...')
         # wt receptor
         if self.FILES.receptor_tpr:
             logging.info('A receptor structure file was defined. Using MT approach...')
@@ -291,10 +285,11 @@ class CheckMakeTop:
                 GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(self.editconf), self.FILES.complex_tpr))
 
         # check for IE variable
-        if self.FILES.receptor_tpr or self.FILES.ligand_tpr:
-            if self.INPUT['interaction_entropy'] or self.INPUT['c2_entropy']:
-                GMXMMPBSA_WARNING("The IE or C2 entropy method don't support the MTP approach...")
-                self.INPUT['interaction_entropy'] = self.INPUT['c2_entropy'] = 0
+        if (self.FILES.receptor_tpr or self.FILES.ligand_tpr) and (
+            self.INPUT['interaction_entropy'] or self.INPUT['c2_entropy']
+        ):
+            GMXMMPBSA_WARNING("The IE or C2 entropy method don't support the MTP approach...")
+            self.INPUT['interaction_entropy'] = self.INPUT['c2_entropy'] = 0
 
         # initialize receptor and ligand structures. Needed to get residues map
         self.complex_str = self.molstr(self.complex_str_file)
@@ -311,6 +306,7 @@ class CheckMakeTop:
         counter = sum(
             res.name
             in [
+                'SOL',
                 'SOD',
                 'CLA',
                 'TIP3P',
@@ -495,61 +491,66 @@ class CheckMakeTop:
         self.mut_ligand_list = {}
         if self.INPUT['alarun']:
             self.com_mut_index, self.part_mut, self.part_index, self.mut_label = self.getMutationInfo()
+            start = 1
             if self.part_mut == 'REC':
                 logging.info('Detecting mutation in Receptor. Building Mutant Receptor Structure...')
                 self.mutant_ligand_pmrtop = None
-                start = 1
                 for c, r in enumerate(self.resi['REC']['num']):
-                    end, sfile = self._split_str(start, r, c, f'MUT_REC', self.receptor_str, self.part_index)
+                    end, sfile = self._split_str(
+                        start, r, c, 'MUT_REC', self.receptor_str, self.part_index
+                    )
+
                     self.mut_receptor_list[f'MREC{c}'] = sfile
                     start += end
             else:
                 logging.info('Detecting mutation in Ligand.Building Mutant Ligand Structure...')
                 self.mutant_receptor_pmrtop = None
-                start = 1
                 for c, r in enumerate(self.resi['LIG']['num']):
-                    end, sfile = self._split_str(start, r, c, f'MUT_LIG', self.ligand_str, self.part_index)
+                    end, sfile = self._split_str(
+                        start, r, c, 'MUT_LIG', self.ligand_str, self.part_index
+                    )
+
                     self.mut_ligand_list[f'MLIG{c}'] =  sfile
                     start += end
 
     def reswithin(self):
         # Get residue form receptor-ligand interface
-        if self.INPUT['decomprun']:
-            if self.INPUT['print_res'] == 'all':
-                return
-            else:
-                dist, res_selection = selector(self.INPUT['print_res'])
-                res_list = []
+        if not self.INPUT['decomprun']:
+            return
+        if self.INPUT['print_res'] == 'all':
+            return
+        dist, res_selection = selector(self.INPUT['print_res'])
+        res_list = []
 
-                if dist:
-                    for i in self.resl['REC']:
-                        for j in self.resl['LIG']:
-                            for rat in self.complex_str.residues[i - 1].atoms:
-                                rat_coor = [rat.xx, rat.xy, rat.xz]
-                                for lat in self.complex_str.residues[j - 1].atoms:
-                                    lat_coor = [lat.xx, lat.xy, lat.xz]
-                                    if get_dist(rat_coor, lat_coor) <= dist:
-                                        if i not in res_list:
-                                            res_list.append(i)
-                                        if j not in res_list:
-                                            res_list.append(j)
-                                        break
-                elif res_selection:
-                    for i in self.resl['REC']:
-                        rres = self.complex_str.residues[i - 1]
-                        if [rres.chain, rres.number, rres.insertion_code] in res_selection:
-                            res_list.append(i)
-                            res_selection.remove([rres.chain, rres.number, rres.insertion_code])
-                    for j in self.resl['LIG']:
-                        lres = self.complex_str.residues[j - 1]
-                        if [lres.chain, lres.number, lres.insertion_code] in res_selection:
-                            res_list.append(j)
-                            res_selection.remove([lres.chain, lres.number, lres.insertion_code])
-                res_list.sort()
-                self.INPUT['print_res'] = ','.join([str(x) for x in res_list])
-                if res_selection:
-                    for res in res_selection:
-                        GMXMMPBSA_WARNING("We couldn't find this residue CHAIN:{} RES_NUM:{} ICODE: {}".format(*res))
+        if dist:
+            for i in self.resl['REC']:
+                for j in self.resl['LIG']:
+                    for rat in self.complex_str.residues[i - 1].atoms:
+                        rat_coor = [rat.xx, rat.xy, rat.xz]
+                        for lat in self.complex_str.residues[j - 1].atoms:
+                            lat_coor = [lat.xx, lat.xy, lat.xz]
+                            if get_dist(rat_coor, lat_coor) <= dist:
+                                if i not in res_list:
+                                    res_list.append(i)
+                                if j not in res_list:
+                                    res_list.append(j)
+                                break
+        elif res_selection:
+            for i in self.resl['REC']:
+                rres = self.complex_str.residues[i - 1]
+                if [rres.chain, rres.number, rres.insertion_code] in res_selection:
+                    res_list.append(i)
+                    res_selection.remove([rres.chain, rres.number, rres.insertion_code])
+            for j in self.resl['LIG']:
+                lres = self.complex_str.residues[j - 1]
+                if [lres.chain, lres.number, lres.insertion_code] in res_selection:
+                    res_list.append(j)
+                    res_selection.remove([lres.chain, lres.number, lres.insertion_code])
+        res_list.sort()
+        self.INPUT['print_res'] = ','.join([str(x) for x in res_list])
+        if res_selection:
+            for res in res_selection:
+                GMXMMPBSA_WARNING("We couldn't find this residue CHAIN:{} RES_NUM:{} ICODE: {}".format(*res))
 
     @staticmethod
     def cleantop(top_file, ndx):
@@ -565,7 +566,7 @@ class CheckMakeTop:
         ttp_file = top_file.parent.joinpath('_temp_top.top')
         temp_top = ttp_file.open(mode='w')
         # temp_top.write('; Modified by gmx_MMPBSA\n')
-
+        # FIXME: remove minimal components, and compare with the mol_str
         with open(top_file) as topf:
             for line in topf:
                 if line.startswith('#include') and 'forcefield.itp' in line:
@@ -722,7 +723,7 @@ class CheckMakeTop:
             GMXMMPBSA_ERROR("No residue for mutation was defined")
         # dict = { resind: [chain, resnum, icode]
         sele_res_dict = self.get_selected_residues(self.INPUT['mutant_res'])
-        if not len(sele_res_dict) == 1:
+        if len(sele_res_dict) != 1:
             GMXMMPBSA_ERROR('Only ONE mutant residue is allowed.')
         r = sele_res_dict[0]
         res = self.complex_str.residues[r - 1]
@@ -790,24 +791,19 @@ class CheckMakeTop:
             for res in mut_top.residues:
                 if res.name == mut_aa:
                     for at in res.atoms:
-                        if mut_aa == 'GLY':
-                            if at.name in ['HA2']:
-                                h_atoms_prop['mass'] = at.mass
-                                h_atoms_prop['element'] = at.element
-                                h_atoms_prop['atomic_number'] = at.atomic_number
-                                h_atoms_prop['charge'] = at.charge
-                                h_atoms_prop['atom_type'] = at.atom_type
-                                h_atoms_prop['type'] = at.type
-                                break
-                        else:
-                            if at.name in ['HB2']:
-                                h_atoms_prop['mass'] = at.mass
-                                h_atoms_prop['element'] = at.element
-                                h_atoms_prop['atomic_number'] = at.atomic_number
-                                h_atoms_prop['charge'] = at.charge
-                                h_atoms_prop['atom_type'] = at.atom_type
-                                h_atoms_prop['type'] = at.type
-                                break
+                        if (
+                                mut_aa == 'GLY'
+                                and at.name in ['HA2']
+                                or mut_aa != 'GLY'
+                                and at.name in ['HB2']
+                        ):
+                            h_atoms_prop['mass'] = at.mass
+                            h_atoms_prop['element'] = at.element
+                            h_atoms_prop['atomic_number'] = at.atomic_number
+                            h_atoms_prop['charge'] = at.charge
+                            h_atoms_prop['atom_type'] = at.atom_type
+                            h_atoms_prop['type'] = at.type
+                            break
                     break
         cb_atom = None
         ca_atom = None
@@ -819,54 +815,52 @@ class CheckMakeTop:
                 if self.INPUT['intdiel'] != 1.0:
                     GMXMMPBSA_WARNING('Both cas_intdiel and intdiel were defined. The dielectric constants associated '
                                       'with cas_intdiel will be ignored and intdiel will be used instead')
+                elif mut_top.residues[mut_index].name in polar_aa:
+                    self.INPUT['intdiel'] = self.INPUT['intdiel_polar']
+                    self.INPUT['indi'] = self.INPUT['intdiel_polar']
+                    logging.info(f"Setting intdiel = indi = intdiel_polar = {self.INPUT['intdiel_polar']} for "
+                                 f"Alanine scanning")
+                elif mut_top.residues[mut_index].name in nonpolar_aa:
+                    self.INPUT['intdiel'] = self.INPUT['intdiel_nonpolar']
+                    self.INPUT['indi'] = self.INPUT['intdiel_nonpolar']
+                    logging.info(f"Setting intdiel = indi = intdiel_nonpolar = {self.INPUT['intdiel_nonpolar']} "
+                                 f"for Alanine scanning")
+                elif mut_top.residues[mut_index].name in positive_aa:
+                    self.INPUT['intdiel'] = self.INPUT['intdiel_positive']
+                    self.INPUT['indi'] = self.INPUT['intdiel_positive']
+                    logging.info(f"Setting intdiel = indi = intdiel_positive = {self.INPUT['intdiel_positive']} "
+                                 f"for Alanine scanning")
+                elif mut_top.residues[mut_index].name in negative_aa:
+                    self.INPUT['intdiel'] = self.INPUT['intdiel_negative']
+                    self.INPUT['indi'] = self.INPUT['intdiel_negative']
+                    logging.info(f"Setting intdiel = indi = intdiel_negative = {self.INPUT['intdiel_negative']} "
+                                 f"for Alanine scanning")
                 else:
-                    if mut_top.residues[mut_index].name in polar_aa:
-                        self.INPUT['intdiel'] = self.INPUT['intdiel_polar']
-                        self.INPUT['indi'] = self.INPUT['intdiel_polar']
-                        logging.info(f"Setting intdiel = indi = intdiel_polar = {self.INPUT['intdiel_polar']} for "
-                                     f"Alanine scanning")
-                    elif mut_top.residues[mut_index].name in nonpolar_aa:
-                        self.INPUT['intdiel'] = self.INPUT['intdiel_nonpolar']
-                        self.INPUT['indi'] = self.INPUT['intdiel_nonpolar']
-                        logging.info(f"Setting intdiel = indi = intdiel_nonpolar = {self.INPUT['intdiel_nonpolar']} "
-                                     f"for Alanine scanning")
-                    elif mut_top.residues[mut_index].name in positive_aa:
-                        self.INPUT['intdiel'] = self.INPUT['intdiel_positive']
-                        self.INPUT['indi'] = self.INPUT['intdiel_positive']
-                        logging.info(f"Setting intdiel = indi = intdiel_positive = {self.INPUT['intdiel_positive']} "
-                                     f"for Alanine scanning")
-                    elif mut_top.residues[mut_index].name in negative_aa:
-                        self.INPUT['intdiel'] = self.INPUT['intdiel_negative']
-                        self.INPUT['indi'] = self.INPUT['intdiel_negative']
-                        logging.info(f"Setting intdiel = indi = intdiel_negative = {self.INPUT['intdiel_negative']} "
-                                     f"for Alanine scanning")
-                    else:
-                        GMXMMPBSA_WARNING(f"Unclassified mutant residue {mut_top.residues[mut_index].name}. The "
-                                          f"default intdiel will be used")
+                    GMXMMPBSA_WARNING(f"Unclassified mutant residue {mut_top.residues[mut_index].name}. The "
+                                      f"default intdiel will be used")
             if self.INPUT['pbrun']:
                 if self.INPUT['indi'] != 1.0:
                     GMXMMPBSA_WARNING('Both cas_intdiel and indi were defined. The dielectric constants associated '
                                       'with cas_intdiel will be ignored and indi will be used instead')
+                elif mut_top.residues[mut_index].name in polar_aa:
+                    self.INPUT['indi'] = self.INPUT['intdiel_polar']
+                    logging.info(f"Setting indi = intdiel_polar = {self.INPUT['intdiel_polar']} for Alanine "
+                                 f"scanning")
+                elif mut_top.residues[mut_index].name in nonpolar_aa:
+                    self.INPUT['indi'] = self.INPUT['intdiel_nonpolar']
+                    logging.info(f"Setting indi = intdiel_nonpolar = {self.INPUT['intdiel_nonpolar']} for "
+                                 f"Alanine scanning")
+                elif mut_top.residues[mut_index].name in positive_aa:
+                    self.INPUT['indi'] = self.INPUT['intdiel_positive']
+                    logging.info(f"Setting intdiel = indi = intdiel_positive = {self.INPUT['intdiel_positive']} "
+                                 f"for Alanine scanning")
+                elif mut_top.residues[mut_index].name in negative_aa:
+                    self.INPUT['indi'] = self.INPUT['intdiel_negative']
+                    logging.info(f"Setting indi = intdiel_negative = {self.INPUT['intdiel_negative']} for "
+                                 f"Alanine scanning")
                 else:
-                    if mut_top.residues[mut_index].name in polar_aa:
-                        self.INPUT['indi'] = self.INPUT['intdiel_polar']
-                        logging.info(f"Setting indi = intdiel_polar = {self.INPUT['intdiel_polar']} for Alanine "
-                                     f"scanning")
-                    elif mut_top.residues[mut_index].name in nonpolar_aa:
-                        self.INPUT['indi'] = self.INPUT['intdiel_nonpolar']
-                        logging.info(f"Setting indi = intdiel_nonpolar = {self.INPUT['intdiel_nonpolar']} for "
-                                     f"Alanine scanning")
-                    elif mut_top.residues[mut_index].name in positive_aa:
-                        self.INPUT['indi'] = self.INPUT['intdiel_positive']
-                        logging.info(f"Setting intdiel = indi = intdiel_positive = {self.INPUT['intdiel_positive']} "
-                                     f"for Alanine scanning")
-                    elif mut_top.residues[mut_index].name in negative_aa:
-                        self.INPUT['indi'] = self.INPUT['intdiel_negative']
-                        logging.info(f"Setting indi = intdiel_negative = {self.INPUT['intdiel_negative']} for "
-                                     f"Alanine scanning")
-                    else:
-                        GMXMMPBSA_WARNING(f"Unclassified mutant residue {mut_top.residues[mut_index].name}. The "
-                                          f"default indi will be used")
+                    GMXMMPBSA_WARNING(f"Unclassified mutant residue {mut_top.residues[mut_index].name}. The "
+                                      f"default indi will be used")
         mut_top.residues[mut_index].name = mut_aa
 
         for at in mut_top.residues[mut_index].atoms:
@@ -956,7 +950,7 @@ class CheckMakeTop:
                 c5 = subprocess.Popen(trjconv_echo_args, stdout=subprocess.PIPE)
                 # we get only first trajectory to extract a pdb file and make amber topology for complex
                 trjconv_args = self.trjconv + ['-f', self.FILES.ligand_trajs[0], '-s', self.FILES.ligand_tpr,
-                                          '-o', 'LIG_traj_{}.xtc'.format(i), '-n', self.FILES.ligand_index]
+                                               '-o', 'LIG_traj_{}.xtc'.format(i), '-n', self.FILES.ligand_index]
                 if self.INPUT['debug_printlevel']:
                     logging.info(
                         'Running command: ' + (' '.join(trjconv_echo_args)) + ' | ' + ' '.join(trjconv_args))
@@ -1240,7 +1234,7 @@ class CheckMakeTop:
         result = []
         l = 0
         r = 0
-        for i, e in enumerate(self.orderl):
+        for e in self.orderl:
             if e in ['R', 'REC']:
                 result.append(REC[r])
                 r += 1
