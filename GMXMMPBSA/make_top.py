@@ -23,7 +23,7 @@ Generate Amber topology files from GROMACS files
 import os
 import parmed
 from GMXMMPBSA.exceptions import *
-from GMXMMPBSA.utils import checkff, selector, get_dist, list2range, res2map
+from GMXMMPBSA.utils import checkff, selector, get_dist, list2range, res2map, get_indexes
 from GMXMMPBSA.alamdcrd import _scaledistance
 import subprocess
 from pathlib import Path
@@ -301,7 +301,10 @@ class CheckMakeTop:
         self.receptor_str = self.molstr(self.receptor_str_file)
         self.ligand_str = self.molstr(self.ligand_str_file)
         self.check4water()
-        self.resi, self.resl, self.orderl, self.indexes = res2map(self.FILES.complex_index, self.complex_str)
+        self.indexes = get_indexes(com_ndx=self.FILES.complex_index,
+                                   rec_ndx=self.FILES.receptor_index, rec_group=self.FILES.receptor_group,
+                                   lig_ndx=self.FILES.ligand_index, lig_group=self.FILES.ligand_group)
+        self.resi, self.resl, self.orderl = res2map(self.indexes, self.complex_str)
         self.fix_chains_IDs(self.complex_str, self.receptor_str, self.ligand_str, self.ref_str)
 
     def check4water(self):
@@ -329,7 +332,7 @@ class CheckMakeTop:
 
     def gmxtop2prmtop(self):
         logging.info('Building Normal Complex Amber Topology...')
-        com_top = self.cleantop(self.FILES.complex_top, self.indexes[0] + self.indexes[1])
+        com_top = self.cleantop(self.FILES.complex_top, self.indexes['COM']['COM'])
         # parmed.gromacs.GromacsTopologyFile(self.complex_temp_top,xyz=self.complex_str_file)
         com_top.coordinates = self.complex_str.coordinates
         # try:
@@ -356,7 +359,7 @@ class CheckMakeTop:
         if self.FILES.receptor_top:
             logging.info('A Receptor topology file was defined. Using MT approach...')
             logging.info('Building AMBER Receptor Topology from GROMACS Receptor Topology...')
-            rec_top = self.cleantop(self.FILES.receptor_top, self.indexes[0])
+            rec_top = self.cleantop(self.FILES.receptor_top, self.indexes['REC'])
             rec_top.coordinates = self.receptor_str.coordinates
             if rec_top.impropers or rec_top.urey_bradleys or rec_top.cmaps:
                 if com_top_parm == 'amber':
@@ -384,7 +387,7 @@ class CheckMakeTop:
         if self.FILES.ligand_top:
             logging.info('A Ligand Topology file was defined. Using MT approach...')
             logging.info('Building AMBER Ligand Topology from GROMACS Ligand Topology...')
-            lig_top = self.cleantop(self.FILES.ligand_top, self.indexes[1])
+            lig_top = self.cleantop(self.FILES.ligand_top, self.indexes['LIG'])
             lig_top.coordinates = self.ligand_str.coordinates
             if lig_top.impropers or lig_top.urey_bradleys or lig_top.cmaps:
                 if com_top_parm == 'amber':

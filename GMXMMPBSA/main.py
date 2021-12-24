@@ -1095,10 +1095,13 @@ class MMPBSA_App(object):
                 SingleClass = PairDecompOut
 
         if not hasattr(self, 'resl'):
-            from GMXMMPBSA.utils import res2map
+            from GMXMMPBSA.utils import res2map, get_indexes
             from copy import deepcopy
             import re
-            masks, res_list, order_list, _ = res2map(FILES.complex_index, FILES.complex_fixed)
+            indexes = get_indexes(com_ndx=FILES.complex_index,
+                                  rec_ndx=FILES.receptor_index, rec_group=FILES.receptor_group,
+                                  lig_ndx=FILES.ligand_index, lig_group=FILES.ligand_group)
+            masks, res_list, order_list = res2map(indexes, FILES.complex_fixed)
             self.resl = res_list
 
             if INPUT['alarun']:
