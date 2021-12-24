@@ -1470,22 +1470,20 @@ class DecompOut(object):
 
     def get_num_terms(self):
         """ Gets the number of terms in the output file """
-        decfile = open('%s.%d' % (self.basename, 0), 'r')
+        with open('%s.%d' % (self.basename, 0), 'r') as decfile:
+            lines = decfile.readlines()
         num_terms = 0
-        line = decfile.readline()
-        while line:
-            if not line.startswith(self.indicator):
-                line = decfile.readline()
-                continue
-            while line[0:3] != 'TDC':
-                line = decfile.readline()
-            while line[0:3] == 'TDC':
-                line = decfile.readline()
+        flag = False
+        for line in lines:
+            if line[:3] == 'TDC':
                 num_terms += 1
+                flag = True
+            elif flag:
+                break
             # We've now gotten to the end of the Total Decomp Contribution,
             # so we know how many terms we have
-            break
-        decfile.close()
+        if not flag:
+            raise TypeError("{}.{} have 0 TDC starts".format(self.basename, 0))
         return num_terms
 
     #==================================================
