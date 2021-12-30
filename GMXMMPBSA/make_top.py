@@ -138,6 +138,8 @@ class CheckMakeTop:
         # wt complex
         # make index for extract pdb structure
         rec_group, lig_group = self.FILES.complex_groups
+        if rec_group == lig_group:
+            GMXMMPBSA_ERROR('The receptor and ligand groups have to be different')
 
         logging.info('Making gmx_MMPBSA index for complex...')
         # merge both (rec and lig) groups into complex group, modify index and create a copy
