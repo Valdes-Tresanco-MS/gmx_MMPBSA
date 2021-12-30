@@ -842,12 +842,14 @@ class GMX_MMPBSA_ANA(QMainWindow):
                             chart_title="Energetic Components",
                             chart_subtitle=f"{mut_pre}{sys_name} | {level.upper()} | {level1.upper()} | {level2.upper()}"
                         )
+                        self.items_counter['charts'] += 1
                     if level1 in data[level]:
                         item1.data = data[level][(level1,)]
                         self._itemdata_properties(data[level][(level1,)])
                         item1.properties['scalable'] = data[level][(level1,)].gt(300).any().any()
                         item1.properties['groups'] = self._itemdata_properties(data[level][(level1,)])
-
+                    self.items_counter['charts'] += 1
+                self.items_counter['charts'] += 1
             elif level == 'decomp':
                 # omit decomp data
                 if not options['decomposition']:
@@ -905,10 +907,12 @@ class GMX_MMPBSA_ANA(QMainWindow):
                                         item5 = CustomItem(item4, [level5.upper()],
                                                            data=dat[(level2, level3, level4, level5)], app=self,
                                                            buttons=(1,))
+                                        self.items_counter['charts'] += 1
                                     else:
                                         item5 = CustomItem(item4, [level5.upper()],
                                                            data=dat[(level2, level3, level4, level5)], app=self,
                                                            level=1, buttons=(2,))
+                                        self.items_counter['charts'] += 1
                                         # energetics terms
                                         for level6 in str_dict[level2][level3][level4][level5]:
                                             item6 = CustomItem(
@@ -927,7 +931,12 @@ class GMX_MMPBSA_ANA(QMainWindow):
                                                                f"{str(level5).upper()} | "
                                                                f"{str(level6).upper()}"
                                             )
-
+                                            self.items_counter['charts'] += 1
+                                self.items_counter['charts'] += 1
+                            self.items_counter['charts'] += 1
+                        self.items_counter['charts'] += 1
+                    self.items_counter['charts'] += 1
+                self.items_counter['charts'] += 1
             elif level == 'ie':
                 titem = CustomItem(topItem, [level.upper()])
                 # print(data[level])
