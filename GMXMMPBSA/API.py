@@ -157,6 +157,7 @@ class DataMMPBSA:
                 'mut_str': app.mut_str,
                 'numframes': app.numframes,
                 'numframes_nmode': app.numframes_nmode,
+                # FIXME: arreglar compatibilidad con la versiones anteriores, algunas variables no existen
                 'output_file': ''.join(open(app.FILES.output_file).readlines()),
                 'size': app.mpi_size,
                 'using_chamber': app.using_chamber}
@@ -175,14 +176,24 @@ class DataMMPBSA:
         self.stability = self.app_namespace.FILES.stability
 
         # Now load the data into the dict
-        self.frames = [x for x in range(INPUT['startframe'],
-                                        INPUT['startframe'] + numframes * INPUT['interval'],
-                                        INPUT['interval'])]
+        self.frames = list(
+            range(
+                INPUT['startframe'],
+                INPUT['startframe'] + numframes * INPUT['interval'],
+                INPUT['interval'],
+            )
+        )
+
         INPUT['endframe'] = self.frames[-1]
 
-        self.nmode_frames = [x for x in range(INPUT['nmstartframe'],
-                                              INPUT['nmstartframe'] + numframes_nmode * INPUT['interval'],
-                                              INPUT['interval'])]
+        self.nmode_frames = list(
+            range(
+                INPUT['nmstartframe'],
+                INPUT['nmstartframe'] + numframes_nmode * INPUT['interval'],
+                INPUT['interval'],
+            )
+        )
+
         if numframes_nmode:
             INPUT['nmendframe'] = self.nmode_frames[-1]
         # Now load the data
