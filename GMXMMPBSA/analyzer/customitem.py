@@ -19,6 +19,7 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 import pandas as pd
 from .utils import com2str, energy2pdb_pml
+from .style import file_icon
 
 
 class SpacerItem(QToolButton):
@@ -249,8 +250,9 @@ class CustomItem(QTreeWidgetItem):
             self.decomp_output_action.toggled.connect(self._show_decomp_output_file)
 
         self.options_button = QToolButton()
-        self.options_button.setIcon(QIcon('/home/mario/PycharmProjects/PyQtRibbon/error_checker.png'))
-        self.options_button.setText('Options')
+        self.options_button.setIcon(QIcon(file_icon))
+        self.options_button.setText('Results files')
+        self.options_button.setToolTip('Results files')
         self.options_button.setPopupMode(QToolButton.InstantPopup)
         self.options_button.setContentsMargins(0, 0, 0, 0)
         self.options_button.setMenu(options_menu)
