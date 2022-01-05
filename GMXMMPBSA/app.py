@@ -45,17 +45,11 @@ def gmxmmpbsa():
     # Just for compatibility as mpi4py works as serial when run without mpirun
     # (since v1.4.2)
     if len(sys.argv) > 1 and sys.argv[1] in ['MPI', 'mpi']:
-        args = sys.argv
-        args.pop(1)  # remove mpi arg before passed it to app
         from mpi4py import MPI
-        # try:
-        # except ImportError:
-        #     GMXMMPBSA_ERROR('Could not import mpi4py package! Use serial version or install mpi4py.')
     else:
         # If we're not running "gmx_MMPBSA MPI", bring MPI into the top-level namespace
         # (which will overwrite the MPI from mpi4py, which we *want* to do in serial)
         from GMXMMPBSA.fake_mpi import MPI
-        args = sys.argv
     # Set up error/signal handlers
     main.setup_run()
 
@@ -64,7 +58,7 @@ def gmxmmpbsa():
 
     # Read the command-line arguments
     try:
-        app.get_cl_args(args[1:])
+        app.get_cl_args(sys.argv[1:])
     except CommandlineError as e:
         sys.stderr.write('%s: %s' % (type(e).__name__, e) + '\n')
         sys.exit(1)

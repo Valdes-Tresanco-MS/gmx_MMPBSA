@@ -725,10 +725,20 @@ class MMPBSA_App(object):
         if args is None:
             args = sys.argv
         if self.master:
-            self.FILES = self.clparser.parse_args(args)
+            text_args = ' '.join(args)
+            _mpi = True
+            # remove mpi arg before passed it to app
+            if 'mpi' in args:
+                args.remove('mpi')
+            elif 'MPI' in args:
+                args.remove('MPI')
+            else:
+                _mpi = False
+            mpi_cl = f'  mpirun -np {self.mpi_size} ' if _mpi else '  '
             # save args in gmx_MMPBSA.log
-            logging.info('Command-line\n'
-                         '  gmx_MMPBSA ' + ' '.join(args) + '\n')
+            logging.info('Command-line\n' + mpi_cl +
+                         'gmx_MMPBSA ' + text_args + '\n')
+            self.FILES = self.clparser.parse_args(args)
         else:
             self.FILES = object()
         # Broadcast the FILES
