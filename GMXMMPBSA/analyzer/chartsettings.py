@@ -20,6 +20,265 @@ def flatten_dict(d, parent_key=None):
     return dict(items)
 
 
+tooltip1 = '''
+            <html lang="en">
+
+<style>
+    table, th {
+        border-bottom: 2px solid black;
+        /*border-top: 2px solid black;*/
+    }
+    img {
+        width: 300px;
+        height: 25px;
+    }
+</style>
+<body>
+<h3>Palettes</h3>
+<p>Tooltip</p>
+<table>
+     <tr>
+        <th colspan="5">Cartoon Colors</th>
+    </tr>
+    <tr>
+        <td>ArmyRose_7</td>
+        <td><img src='/home/mario/PycharmProjects/PropertyEditor/pruebas/ArmyRose_7.png' width="200" height="16" alt=""></td>
+        <td></td>
+        <td>ArmyRose_5</td>
+        <td><img src='/home/mario/PycharmProjects/PropertyEditor/pruebas/ArmyRose_5.png' width="200" height="16" alt=""></td>
+    </tr>
+    <tr>
+        <td>Geyser_7</td>
+        <td><img src='/home/mario/PycharmProjects/PropertyEditor/pruebas/Geyser_7.png' width="200" height="16" alt=""></td>
+        <td></td>
+        <td>Geyser_5</td>
+        <td><img src='/home/mario/PycharmProjects/PropertyEditor/pruebas/Geyser_5.png' width="200" height="16" alt=""></td>
+    </tr>
+    <tr>
+        <td>TealRose_7</td>
+        <td><img src='/home/mario/PycharmProjects/PropertyEditor/pruebas/TealRose_7.png' width="200" height="16" alt=""></td>
+        <td></td>
+        <td>TealRose_5</td>
+        <td><img src='/home/mario/PycharmProjects/PropertyEditor/pruebas/TealRose_5.png' width="200" height="16" alt=""></td>
+    </tr>
+    <tr>
+        <td>Tropic_7</td>
+        <td><img src='/home/mario/PycharmProjects/PropertyEditor/pruebas/Tropic_7.png' width="200" height="16" alt=""></td>
+        <td></td>
+        <td>Tropic_5</td>
+        <td><img src='/home/mario/PycharmProjects/PropertyEditor/pruebas/Tropic_5.png' width="200" height="16" alt=""></td>
+    </tr>
+    <tr>
+        <th colspan="5">CMOcean Colors</th>
+    </tr>
+    <tr>
+        <td>Balance_7</td>
+        <td><img src='/home/mario/PycharmProjects/PropertyEditor/pruebas/Balance_7.png' width="200" height="16" alt=""></td>
+        <td></td>
+        <td>Balance_5</td>
+        <td><img src='/home/mario/PycharmProjects/PropertyEditor/pruebas/Balance_5.png' width="200" height="16" alt=""></td>
+    </tr>
+    <tr>
+        <td>Curl_7</td>
+        <td><img src='/home/mario/PycharmProjects/PropertyEditor/pruebas/Curl_7.png' width="200" height="16" alt=""></td>
+        <td></td>
+        <td>Curl_5</td>
+        <td><img src='/home/mario/PycharmProjects/PropertyEditor/pruebas/Curl_5.png' width="200" height="16" alt=""></td>
+    </tr>
+    <tr>
+        <td>Delta_7</td>
+        <td><img src='/home/mario/PycharmProjects/PropertyEditor/pruebas/Delta_7.png' width="200" height="16" alt=""></td>
+        <td></td>
+        <td>Delta_5</td>
+        <td><img src='/home/mario/PycharmProjects/PropertyEditor/pruebas/Delta_5.png' width="200" height="16" alt=""></td>
+    </tr>
+    <tr>
+        <th colspan="5">Colorbrew Colors</th>
+    </tr>
+    <tr>
+        <td>BrBG_7</td>
+        <td><img src='/home/mario/PycharmProjects/PropertyEditor/pruebas/BrBG_7.png' width="200" height="16" alt=""></td>
+        <td></td>
+        <td>BrBG_5</td>
+        <td><img src='/home/mario/PycharmProjects/PropertyEditor/pruebas/BrBG_5.png' width="200" height="16" alt=""></td>
+    </tr>
+    <tr>
+        <td>PiYG_7</td>
+        <td><img src='/home/mario/PycharmProjects/PropertyEditor/pruebas/PiYG_7.png' width="200" height="16" alt=""></td>
+        <td></td>
+        <td>PiYG_5</td>
+        <td><img src='/home/mario/PycharmProjects/PropertyEditor/pruebas/PiYG_5.png' width="200" height="16" alt=""></td>
+    </tr>
+    <tr>
+        <td>PRGn_7</td>
+        <td><img src='/home/mario/PycharmProjects/PropertyEditor/pruebas/PRGn_7.png' width="200" height="16" alt=""></td>
+        <td></td>
+        <td>PRGn_5</td>
+        <td><img src='/home/mario/PycharmProjects/PropertyEditor/pruebas/PRGn_5.png' width="200" height="16" alt=""></td>
+    </tr>
+    <tr>
+        <td>PuOr_7</td>
+        <td><img src='/home/mario/PycharmProjects/PropertyEditor/pruebas/PuOr_7.png' width="200" height="16" alt=""></td>
+        <td></td>
+        <td>PuOr_5</td>
+        <td><img src='/home/mario/PycharmProjects/PropertyEditor/pruebas/PuOr_5.png' width="200" height="16" alt=""></td>
+    </tr>
+    <tr>
+        <td>RdBu_7</td>
+        <td><img src='/home/mario/PycharmProjects/PropertyEditor/pruebas/RdBu_7.png' width="200" height="16" alt=""></td>
+        <td></td>
+        <td>RdBu_5</td>
+        <td><img src='/home/mario/PycharmProjects/PropertyEditor/pruebas/RdBu_5.png' width="200" height="16" alt=""></td>
+    </tr>
+    <tr>
+        <td>RdGy_7</td>
+        <td><img src='/home/mario/PycharmProjects/PropertyEditor/pruebas/RdGy_7.png' width="200" height="16" alt=""></td>
+        <td></td>
+        <td>RdGy_5</td>
+        <td><img src='/home/mario/PycharmProjects/PropertyEditor/pruebas/RdGy_5.png' width="200" height="16" alt=""></td>
+    </tr>
+    <tr>
+        <td>RdYlBu *</td>
+        <td><img src='/home/mario/PycharmProjects/PropertyEditor/pruebas/RdYlBu.png' width="200" height="16" alt=""></td>
+        <td></td>
+        <td>RdYlGn *</td>
+        <td><img src='/home/mario/PycharmProjects/PropertyEditor/pruebas/RdYlGn.png' width="200" height="16" alt=""></td>
+    </tr>
+    <tr>
+        <td>Spectral *</td>
+        <td><img src='/home/mario/PycharmProjects/PropertyEditor/pruebas/Spectral.png' width="200" height="16" alt=""></td>
+        <td></td>
+        <td>coolwarm *</td>
+        <td><img src='/home/mario/PycharmProjects/PropertyEditor/pruebas/coolwarm.png' width="200" height="16" alt=""></td>
+    </tr>
+</table>
+
+<p>* No compatible with PyMOL visualization</p>
+</body>
+</html>'''
+tooltip2 = '''
+            <html lang="en">
+
+<style>
+    table, th {
+        border-bottom: 2px solid black;
+        /*border-top: 2px solid black;*/
+    }
+    img {
+        width: 300px;
+        height: 25px;
+    }
+</style>
+<body>
+<h3>Palettes</h3>
+<p>Tooltip</p>
+<table>
+     <tr>
+        <th colspan="5">Color cycle - 20 -</th>
+    </tr>
+    <tr>
+        <td>husl</td>
+        <td><img src='/home/mario/PycharmProjects/PropertyEditor/pruebas/husl.png' width="200" 
+        height="16" alt=""></td>
+        <td></td>
+        <td>hls</td>
+        <td><img src='/home/mario/PycharmProjects/PropertyEditor/pruebas/hls.png' width="200" height="16" 
+        alt=""></td>
+    </tr>
+    <tr>
+        <td>tab20</td>
+        <td><img src='/home/mario/PycharmProjects/PropertyEditor/pruebas/tab20.png' width="200" height="16" 
+        alt=""></td>
+        <td></td>
+        <td>tab20b</td>
+        <td><img src='/home/mario/PycharmProjects/PropertyEditor/pruebas/tab20b.png' width="200" height="16" 
+        alt=""></td>
+    </tr>
+    <tr>
+        <td>tab20c</td>
+        <td><img src='/home/mario/PycharmProjects/PropertyEditor/pruebas/tab20c.png' width="200" height="16" 
+        alt=""></td>
+    </tr>
+    <tr>
+        <th colspan="5">Color cycle - 12 -</th>
+    </tr>
+    <tr>
+        <td>Paired</td>
+        <td><img src='/home/mario/PycharmProjects/PropertyEditor/pruebas/Paired.png' width="200" height="16" 
+        alt=""></td>
+        <td></td>
+        <td>Set3</td>
+        <td><img src='/home/mario/PycharmProjects/PropertyEditor/pruebas/Set3.png' width="200" height="16" alt=""></td>
+    </tr>
+    <tr>
+        <th colspan="5">Color cycle - 10 -</th>
+    </tr>
+    <tr>
+        <td>deep</td>
+        <td><img src='/home/mario/PycharmProjects/PropertyEditor/pruebas/deep.png' width="200" height="16" alt=""></td>
+        <td></td>
+        <td>muted</td>
+        <td><img src='/home/mario/PycharmProjects/PropertyEditor/pruebas/muted.png' width="200" height="16" alt=""></td>
+    </tr>
+    <tr>
+        <td>bright</td>
+        <td><img src='/home/mario/PycharmProjects/PropertyEditor/pruebas/bright.png' width="200" height="16" 
+        alt=""></td>
+        <td></td>
+        <td>pastel</td>
+        <td><img src='/home/mario/PycharmProjects/PropertyEditor/pruebas/pastel.png' width="200" height="16" 
+        alt=""></td>
+    </tr>
+    <tr>
+        <td>dark</td>
+        <td><img src='/home/mario/PycharmProjects/PropertyEditor/pruebas/dark.png' width="200" height="16" alt=""></td>
+        <td></td>
+        <td>colorblind</td>
+        <td><img src='/home/mario/PycharmProjects/PropertyEditor/pruebas/colorblind.png' width="200" height="16" 
+        alt=""></td>
+    </tr>
+    <tr>
+        <td>tab10</td>
+        <td><img src='/home/mario/PycharmProjects/PropertyEditor/pruebas/tab10.png' width="200" height="16" alt=""></td>
+    </tr>
+    <tr>
+        <th colspan="5">Color cycle - 9 -</th>
+    </tr>
+    <tr>
+        <td>Pastel1</td>
+        <td><img src='/home/mario/PycharmProjects/PropertyEditor/pruebas/Pastel1.png' width="200" height="16" 
+        alt=""></td>
+        <td></td>
+        <td>Set1</td>
+        <td><img src='/home/mario/PycharmProjects/PropertyEditor/pruebas/Set1.png' width="200" height="16" alt=""></td>
+    </tr>
+    <tr>
+        <th colspan="5">Color cycle - 8 -</th>
+    </tr>
+    <tr>
+        <td>Pastel2</td>
+        <td><img src='/home/mario/PycharmProjects/PropertyEditor/pruebas/Pastel2.png' width="200" height="16" 
+        alt=""></td>
+        <td></td>
+        <td>Accent</td>
+        <td><img src='/home/mario/PycharmProjects/PropertyEditor/pruebas/Accent.png' width="200" height="16" 
+        alt=""></td>
+    </tr>
+    <tr>
+        <td>Dark2</td>
+        <td><img src='/home/mario/PycharmProjects/PropertyEditor/pruebas/Dark2.png' width="200" height="16" alt=""></td>
+        <td></td>
+        <td>Set2</td>
+        <td><img src='/home/mario/PycharmProjects/PropertyEditor/pruebas/Set2.png' width="200" height="16" alt=""></td>
+    </tr>
+
+
+</table>
+
+<p>Please</p>
+</body>
+</html>'''
+
 class ChartSettings(dict):
     D = 1  # Drawable
     U = 2  # Updatable
@@ -34,7 +293,7 @@ class ChartSettings(dict):
                     'theme': {
                         'type': 'list', 'enabled': True, 'expanded': True, 'name': 'theme', 'value': 'darkgrid',
                         'values': ['darkgrid', '---0', 'whitegrid', 'dark', 'white', 'ticks'], 'default': 'darkgrid',
-                        'tip': 'Esto es un tip', 'action_type': R},
+                        'tip': tooltip1, 'action_type': R},
                     'toolbar': {'type': 'bool', 'enabled': True, 'expanded': True, 'name': 'toolbar', 'value': False,
                                 'default': False, 'action_type': U},
                     'figure-format': {
@@ -165,7 +424,7 @@ class ChartSettings(dict):
                                                             'dark', 'colorblind', '---1',
                                                             'Pastel1', 'Pastel2', 'Paired', 'Accent', 'Dark2', 'Set1',
                                                             'Set2', 'Set3', 'tab10', 'tab20', 'tab20b', 'tab20c'],
-                                'default': 'husl', 'action_type': R},
+                                'default': 'husl', 'action_type': R, 'tip': tooltip2},
                     'color': {'type': 'color', 'enabled': True, 'expanded': True, 'name': 'color',
                               'value': [44, 105, 176, 255], 'default': [44, 105, 176, 255], 'action_type': R},
                     'subplot-components': {'type': 'bool', 'enabled': True, 'expanded': True,
@@ -265,7 +524,8 @@ class ChartSettings(dict):
                                                                        'PiYG_5', 'PuOr_7', 'PuOr_5', 'RdBu_7', 'RdBu_5',
                                                                        'RdGy_7', 'RdGy_5', '---4', '---5',
                                                                        'RdYlBu', 'RdYlGn', 'Spectral', 'coolwarm'
-                                                                       ], 'default': 'seismic', 'action_type': R},
+                                                                       ], 'default': 'seismic', 'action_type': R,
+                                        'tip': tooltip1},
                             'annotation': {'type': 'bool', 'enabled': True, 'expanded': True, 'name': 'annotation',
                                            'value': False, 'default': False, 'action_type': R},
                             'x-rotation': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'x-rotation',
@@ -286,7 +546,8 @@ class ChartSettings(dict):
                                                                        'PiYG_5', 'PuOr_7', 'PuOr_5', 'RdBu_7', 'RdBu_5',
                                                                        'RdGy_7', 'RdGy_5', '---4', '---5',
                                                                        'RdYlBu', 'RdYlGn', 'Spectral', 'coolwarm'
-                                                                       ], 'default': 'seismic', 'action_type': R},
+                                                                       ], 'default': 'seismic', 'action_type': R,
+                                        'tip': tooltip1},
                             'num-xticks': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'num-xticks',
                                            'value': 10, 'default': 10, 'action_type': D},
                             'x-rotation': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'x-rotation',
@@ -342,7 +603,7 @@ class ChartSettings(dict):
                                                             'BrBG_7', 'BrBG_5', 'PRGn_7', 'PRGn_5', 'PiYG_7',
                                                             'PiYG_5', 'PuOr_7', 'PuOr_5', 'RdBu_7', 'RdBu_5',
                                                             'RdGy_7', 'RdGy_5'
-                                                            ], 'default': 'auto', 'action_type': R},
+                                                            ], 'default': 'auto', 'action_type': R, 'tip': tooltip1},
                 }}
         }}
 
