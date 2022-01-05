@@ -28,7 +28,7 @@ import signal
 import sys
 import logging
 # Import gmx_MMPBSA modules
-from GMXMMPBSA import utils
+from GMXMMPBSA import utils, __version__
 from GMXMMPBSA.amber_outputs import (QHout, NMODEout, QMMMout, GBout, PBout, PolarRISM_std_Out, RISM_std_Out,
                                      PolarRISM_gf_Out, RISM_gf_Out, SingleTrajBinding, MultiTrajBinding, IEout, C2out)
 from GMXMMPBSA.calculation import (CalculationList, EnergyCalculation, PBEnergyCalculation, RISMCalculation,
@@ -97,7 +97,7 @@ class MMPBSA_App(object):
         if not self.master:
             self.stdout = open(os.devnull, 'w')
         if self.master:
-            logging.info('Starting')
+            logging.info(f'Starting gmx_MMPBSA {__version__}')
 
         # Set up timers
         timers = [Timer() for i in range(self.mpi_size)]
