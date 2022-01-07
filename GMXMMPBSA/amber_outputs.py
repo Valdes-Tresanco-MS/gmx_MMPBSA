@@ -130,14 +130,14 @@ class AmberOutput(object):
     data_keys = ['BOND', 'ANGLE', 'DIHED', 'UB', 'IMP', 'CMAP', 'VDWAALS', 'EEL',
                  '1-4 VDW', '1-4 EEL', 'EPOL', 'ENPOL']
     # Dictionary that maps each data key to their respective composite keys
-    data_key_owner = {'BOND':['G gas', 'TOTAL'], 'ANGLE':['G gas', 'TOTAL'],
-                      'DIHED':['G gas', 'TOTAL'], 'UB':['G gas', 'TOTAL'],
-                      'IMP':['G gas', 'TOTAL'], 'CMAP':['G gas', 'TOTAL'],
-                      'VDWAALS':['G gas', 'TOTAL'], 'EEL':['G gas', 'TOTAL'],
-                      '1-4 VDW':['G gas', 'TOTAL'], '1-4 EEL':['G gas', 'TOTAL'],
-                      'EPOL':['G solv', 'TOTAL'], 'ENPOL':['G solv', 'TOTAL']}
+    data_key_owner = {'BOND':['GGAS', 'TOTAL'], 'ANGLE':['GGAS', 'TOTAL'],
+                      'DIHED':['GGAS', 'TOTAL'], 'UB':['GGAS', 'TOTAL'],
+                      'IMP':['GGAS', 'TOTAL'], 'CMAP':['GGAS', 'TOTAL'],
+                      'VDWAALS':['GGAS', 'TOTAL'], 'EEL':['GGAS', 'TOTAL'],
+                      '1-4 VDW':['GGAS', 'TOTAL'], '1-4 EEL':['GGAS', 'TOTAL'],
+                      'EPOL':['GSOLV', 'TOTAL'], 'ENPOL':['GSOLV', 'TOTAL']}
     # Which of those keys are composite
-    composite_keys = ['G gas', 'G solv', 'TOTAL']
+    composite_keys = ['GGAS', 'GSOLV', 'TOTAL']
     # What the value of verbosity must be to print out this data
     print_levels = {'BOND':2, 'ANGLE':2, 'DIHED':2, 'UB':2, 'IMP':2, 'CMAP':2,
                     'VDWAALS':1, 'EEL':1, '1-4 VDW':2, '1-4 EEL':2, 'EPOL':1,
@@ -614,14 +614,14 @@ class GBout(AmberOutput):
     data_keys = ['BOND', 'ANGLE', 'DIHED', 'UB', 'IMP', 'CMAP', 'VDWAALS', 'EEL',
                  '1-4 VDW', '1-4 EEL', 'EGB', 'ESURF']
     # Dictionary that maps each data key to their respective composite keys
-    data_key_owner = {'BOND':['G gas', 'TOTAL'], 'ANGLE':['G gas', 'TOTAL'],
-                      'DIHED':['G gas', 'TOTAL'], 'UB':['G gas', 'TOTAL'],
-                      'IMP':['G gas', 'TOTAL'], 'CMAP':['G gas', 'TOTAL'],
-                      'VDWAALS':['G gas', 'TOTAL'], 'EEL':['G gas', 'TOTAL'],
-                      '1-4 VDW':['G gas', 'TOTAL'], '1-4 EEL':['G gas', 'TOTAL'],
-                      'EGB':['G solv', 'TOTAL'], 'ESURF':['G solv', 'TOTAL']}
+    data_key_owner = {'BOND':['GGAS', 'TOTAL'], 'ANGLE':['GGAS', 'TOTAL'],
+                      'DIHED':['GGAS', 'TOTAL'], 'UB':['GGAS', 'TOTAL'],
+                      'IMP':['GGAS', 'TOTAL'], 'CMAP':['GGAS', 'TOTAL'],
+                      'VDWAALS':['GGAS', 'TOTAL'], 'EEL':['GGAS', 'TOTAL'],
+                      '1-4 VDW':['GGAS', 'TOTAL'], '1-4 EEL':['GGAS', 'TOTAL'],
+                      'EGB':['GSOLV', 'TOTAL'], 'ESURF':['GSOLV', 'TOTAL']}
     # Which of those keys are composite
-    composite_keys = ['G gas', 'G solv', 'TOTAL']
+    composite_keys = ['GGAS', 'GSOLV', 'TOTAL']
     # What the value of verbosity must be to print out this data
     print_levels = {'BOND':2, 'ANGLE':2, 'DIHED':2, 'UB':2, 'IMP':2, 'CMAP':2,
                     'VDWAALS':1, 'EEL':1, '1-4 VDW':2, '1-4 EEL':2, 'EGB':1,
@@ -689,15 +689,15 @@ class PBout(AmberOutput):
     data_keys = ['BOND', 'ANGLE', 'DIHED', 'UB', 'IMP', 'CMAP', 'VDWAALS', 'EEL',
                  '1-4 VDW', '1-4 EEL', 'EPB', 'ENPOLAR', 'EDISPER']
     # Dictionary that maps each data key to their respective composite keys
-    data_key_owner = {'BOND':['G gas', 'TOTAL'], 'ANGLE':['G gas', 'TOTAL'],
-                      'DIHED':['G gas', 'TOTAL'], 'UB':['G gas', 'TOTAL'],
-                      'IMP':['G gas', 'TOTAL'], 'CMAP':['G gas', 'TOTAL'],
-                      'VDWAALS':['G gas', 'TOTAL'], 'EEL':['G gas', 'TOTAL'],
-                      '1-4 VDW':['G gas', 'TOTAL'], '1-4 EEL':['G gas', 'TOTAL'],
-                      'EPB':['G solv', 'TOTAL'], 'ENPOLAR':['G solv', 'TOTAL'],
-                      'EDISPER':['G solv', 'TOTAL'] }
+    data_key_owner = {'BOND':['GGAS', 'TOTAL'], 'ANGLE':['GGAS', 'TOTAL'],
+                      'DIHED':['GGAS', 'TOTAL'], 'UB':['GGAS', 'TOTAL'],
+                      'IMP':['GGAS', 'TOTAL'], 'CMAP':['GGAS', 'TOTAL'],
+                      'VDWAALS':['GGAS', 'TOTAL'], 'EEL':['GGAS', 'TOTAL'],
+                      '1-4 VDW':['GGAS', 'TOTAL'], '1-4 EEL':['GGAS', 'TOTAL'],
+                      'EPB':['GSOLV', 'TOTAL'], 'ENPOLAR':['GSOLV', 'TOTAL'],
+                      'EDISPER':['GSOLV', 'TOTAL'] }
     # Which of those keys are composite
-    composite_keys = ['G gas', 'G solv', 'TOTAL']
+    composite_keys = ['GGAS', 'GSOLV', 'TOTAL']
     # What the value of verbosity must be to print out this data
     print_levels = {'BOND':2, 'ANGLE':2, 'DIHED':2, 'VDWAALS':1, 'EEL':1,
                     '1-4 VDW':2, '1-4 EEL':2, 'EPB':1, 'ENPOLAR':1, 'UB':2,
@@ -762,12 +762,12 @@ class RISMout(AmberOutput):
     data_keys = ['BOND', 'ANGLE', 'DIHED', 'VDWAALS', 'EEL', '1-4 VDW',
                  '1-4 EEL', 'ERISM']
     # Dictionary that maps each data key to their respective composite keys
-    data_key_owner = {'BOND':['G gas', 'TOTAL'], 'ANGLE':['G gas', 'TOTAL'],
-                      'DIHED':['G gas', 'TOTAL'], 'VDWAALS':['G gas', 'TOTAL'],
-                      'EEL':['G gas', 'TOTAL'], '1-4 VDW':['G gas', 'TOTAL'],
-                      '1-4 EEL':['G gas', 'TOTAL'], 'ERISM':['G solv', 'TOTAL']}
+    data_key_owner = {'BOND':['GGAS', 'TOTAL'], 'ANGLE':['GGAS', 'TOTAL'],
+                      'DIHED':['GGAS', 'TOTAL'], 'VDWAALS':['GGAS', 'TOTAL'],
+                      'EEL':['GGAS', 'TOTAL'], '1-4 VDW':['GGAS', 'TOTAL'],
+                      '1-4 EEL':['GGAS', 'TOTAL'], 'ERISM':['GSOLV', 'TOTAL']}
     # Which of those keys are composite
-    composite_keys = ['G gas', 'G solv', 'TOTAL']
+    composite_keys = ['GGAS', 'GSOLV', 'TOTAL']
     # Which of those keys belong to the gas phase energy contributions
     print_levels = {'BOND':2, 'ANGLE':2, 'DIHED':2, 'VDWAALS':1, 'EEL':1,
                     '1-4 VDW':2, '1-4 EEL':2, 'ERISM':1}
@@ -837,14 +837,14 @@ class PolarRISMout(RISMout):
     data_keys = ['BOND', 'ANGLE', 'DIHED', 'VDWAALS', 'EEL', '1-4 VDW',
                  '1-4 EEL', 'POLAR SOLV', 'APOLAR SOLV']
     # Dictionary that maps each data key to their respective composite keys
-    data_key_owner = {'BOND':['G gas', 'TOTAL'], 'ANGLE':['G gas', 'TOTAL'],
-                      'DIHED':['G gas', 'TOTAL'], 'VDWAALS':['G gas', 'TOTAL'],
-                      'EEL':['G gas', 'TOTAL'], '1-4 VDW':['G gas', 'TOTAL'],
-                      '1-4 EEL':['G gas', 'TOTAL'],
-                      'POLAR SOLV':['G solv', 'TOTAL'],
-                      'APOLAR SOLV':['G solv', 'TOTAL']}
+    data_key_owner = {'BOND':['GGAS', 'TOTAL'], 'ANGLE':['GGAS', 'TOTAL'],
+                      'DIHED':['GGAS', 'TOTAL'], 'VDWAALS':['GGAS', 'TOTAL'],
+                      'EEL':['GGAS', 'TOTAL'], '1-4 VDW':['GGAS', 'TOTAL'],
+                      '1-4 EEL':['GGAS', 'TOTAL'],
+                      'POLAR SOLV':['GSOLV', 'TOTAL'],
+                      'APOLAR SOLV':['GSOLV', 'TOTAL']}
     # Which of those keys are composite
-    composite_keys = ['G gas', 'G solv', 'TOTAL']
+    composite_keys = ['GGAS', 'GSOLV', 'TOTAL']
     # Which of those keys belong to the gas phase energy contributions
     print_levels = {'BOND':2, 'ANGLE':2, 'DIHED':2, 'VDWAALS':1, 'EEL':1,
                     '1-4 VDW':2, '1-4 EEL':2, 'POLAR SOLV':1, 'APOLAR SOLV':1}
@@ -912,15 +912,15 @@ class QMMMout(GBout):
     data_keys = ['BOND', 'ANGLE', 'DIHED', 'UB', 'IMP', 'CMAP', 'VDWAALS', 'EEL',
                  '1-4 VDW', '1-4 EEL', 'EGB', 'ESURF', 'ESCF']
     # Dictionary that maps each data key to their respective composite keys
-    data_key_owner = {'BOND':['G gas', 'TOTAL'], 'ANGLE':['G gas', 'TOTAL'],
-                      'DIHED':['G gas', 'TOTAL'], 'UB':['G gas', 'TOTAL'],
-                      'IMP':['G gas', 'TOTAL'], 'CMAP':['G gas', 'TOTAL'],
-                      'VDWAALS':['G gas', 'TOTAL'], 'EEL':['G gas', 'TOTAL'],
-                      '1-4 VDW':['G gas', 'TOTAL'], '1-4 EEL':['G gas', 'TOTAL'],
-                      'EGB':['G solv', 'TOTAL'], 'ESURF':['G solv', 'TOTAL'],
+    data_key_owner = {'BOND':['GGAS', 'TOTAL'], 'ANGLE':['GGAS', 'TOTAL'],
+                      'DIHED':['GGAS', 'TOTAL'], 'UB':['GGAS', 'TOTAL'],
+                      'IMP':['GGAS', 'TOTAL'], 'CMAP':['GGAS', 'TOTAL'],
+                      'VDWAALS':['GGAS', 'TOTAL'], 'EEL':['GGAS', 'TOTAL'],
+                      '1-4 VDW':['GGAS', 'TOTAL'], '1-4 EEL':['GGAS', 'TOTAL'],
+                      'EGB':['GSOLV', 'TOTAL'], 'ESURF':['GSOLV', 'TOTAL'],
                       'ESCF':['TOTAL']}
     # Which of those keys are composite
-    composite_keys = ['G gas', 'G solv', 'TOTAL']
+    composite_keys = ['GGAS', 'GSOLV', 'TOTAL']
     # What the value of verbosity must be to print out this data
     print_levels = {'BOND':2, 'ANGLE':2, 'DIHED':2, 'VDWAALS':1, 'EEL':1,
                     '1-4 VDW':2, '1-4 EEL':2, 'EGB':1, 'ESURF':1, 'ESCF':1,

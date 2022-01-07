@@ -1034,17 +1034,17 @@ class MMPBSA_App(object):
 
                     if key in ['gb', 'pb', 'rism std', 'rism gf']:
                         if 'ie' in self.calc_types:
-                            edata = self.calc_types[key]['delta'].data['DELTA G gas']
+                            edata = self.calc_types[key]['delta'].data['DELTA GGAS']
                             ie = InteractionEntropyCalc(edata, self,
                                                         self.pre + f"{key.replace(' ', '_')}_iteraction_entropy.dat")
                             self.calc_types['ie'].data[key] = {'data': ie.data, 'iedata': ie.iedata,
                                                                'ieframes': ie.ieframes, 'sigma': ie.ie_std}
                         if 'c2' in self.calc_types:
-                            edata = self.calc_types[key]['delta'].data['DELTA G gas']
+                            edata = self.calc_types[key]['delta'].data['DELTA GGAS']
                             c2 = C2EntropyCalc(edata, self, self.pre + f"{key.replace(' ', '_')}_c2_entropy.dat")
                             self.calc_types['c2'].data[key] = {'c2data': c2.c2data, 'sigma': c2.ie_std,
                                                                'c2_std': c2.c2_std, 'c2_ci': c2.c2_ci}
-                            # self.calc_types[self.key]['delta'].data['DELTA G gas']
+                            # self.calc_types[self.key]['delta'].data['DELTA GGAS']
                 else:
                     self.calc_types[key]['complex'].fill_composite_terms()
             # Time for mutant
@@ -1066,13 +1066,13 @@ class MMPBSA_App(object):
                         self.INPUT['verbose'], self.using_chamber)
                     if key in ['gb', 'pb', 'rism std', 'rism gf']:
                         if 'ie' in self.calc_types.mutant:
-                            edata = self.calc_types.mutant[key]['delta'].data['DELTA G gas']
+                            edata = self.calc_types.mutant[key]['delta'].data['DELTA GGAS']
                             mie = InteractionEntropyCalc(edata, self, self.pre + 'mutant_' +
                                                          f"{key.replace(' ', '_')}_iteraction_entropy.dat")
                             self.calc_types.mutant['ie'].data[key] = {'data': mie.data, 'iedata': mie.iedata,
                                                                       'ieframes': mie.ieframes, 'sigma': mie.ie_std}
                         if 'c2' in self.calc_types.mutant:
-                            edata = self.calc_types.mutant[key]['delta'].data['DELTA G gas']
+                            edata = self.calc_types.mutant[key]['delta'].data['DELTA GGAS']
                             c2 = C2EntropyCalc(edata, self, self.pre + 'mutant_' +
                                                f"{key.replace(' ', '_')}_c2_entropy.dat")
                             self.calc_types.mutant['c2'].data[key] = {'c2data': c2.c2data, 'sigma': c2.ie_std,
@@ -1190,7 +1190,7 @@ def excepthook(exception_type, exception_value, tb):
         traceback.print_tb(tb)
     _stderr.write('%s: %s\n' % (exception_type.__name__, exception_value))
     if _mpi_size > 1:
-        _stderr.write('Error occured on rank %d.' % _rank + os.linesep)
+        _stderr.write('Error occurred on rank %d.' % _rank + os.linesep)
     _stderr.write('Exiting. All files have been retained.' + os.linesep)
     _MPI.COMM_WORLD.Abort(1)
 
