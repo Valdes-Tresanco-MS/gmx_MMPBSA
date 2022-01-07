@@ -170,29 +170,26 @@ class LineChart(ChartsBase):
         self.set_cw()
         self.fig.set_size_inches(options[('Line Plot', 'figure', 'width')],
                                  options[('Line Plot', 'figure', 'height')])
-        axes = self.fig.subplots(1, 1)
-        self.line_plot_ax = sns.lineplot(data=data, color=rgb2rgbf(options[('Line Plot', 'line-color')]),
-                                         linewidth=options[('Line Plot', 'line-width')], ax=axes)
+
+        width1 = 100 - options[('Line Plot', 'Interaction Entropy', 'bar-plot', 'width')]
+        width2 = options[('Line Plot', 'Interaction Entropy', 'bar-plot', 'width')]
+        height1 = 100 - options[('Line Plot', 'Interaction Entropy', 'bar-plot', 'height')]
+        height2 = options[('Line Plot', 'Interaction Entropy', 'bar-plot', 'height')]
+
         if data2 is not None:
-            self.numf = len(data2['data'])
-            self.axins4 = inset_axes(axes,
-                                     width=f"{options[('Line Plot', 'Interaction Entropy', 'bar-plot', 'width')]}%",
-                                     height=f"{options[('Line Plot', 'Interaction Entropy', 'bar-plot', 'height')]}%",
-                                     bbox_to_anchor=(
-                                         options[('Line Plot', 'Interaction Entropy', 'bar-plot', 'x-pos')],
-                                         options[('Line Plot', 'Interaction Entropy', 'bar-plot', 'y-pos')],
-                                         0.5, 0.5),
-                                     bbox_transform=axes.transAxes, loc=4, borderpad=1)
-            axes.add_patch(plt.Rectangle((options[('Line Plot', 'Interaction Entropy', 'bar-plot', 'x-pos')],
-                                          options[('Line Plot', 'Interaction Entropy', 'bar-plot', 'y-pos')]),
-                                         .5, .5, ls="--", ec="c", fc="None", transform=axes.transAxes))
+            gs = gridspec.GridSpec(2, 2, height_ratios=[height1, height2], width_ratios=[width1, width2])
+            axes = self.fig.add_subplot(gs[:, 0])
+            self.line_plot_ax = sns.lineplot(data=data, color=rgb2rgbf(options[('Line Plot', 'line-color')]),
+                                             linewidth=options[('Line Plot', 'line-width')], ax=axes)
             # plot the ie segment
             ie_color = rgb2rgbf(options[('Line Plot', 'Interaction Entropy', 'ie-color')])
             sns.lineplot(data=data2['data'], color=ie_color, ax=axes)
+            ax2 = self.fig.add_subplot(gs[1, 1])
             r_sigma = rgb2rgbf(options[('Line Plot', 'Interaction Entropy', 'sigma-color', 'reliable')])
             nr_sigma = rgb2rgbf(options[('Line Plot', 'Interaction Entropy', 'sigma-color', 'non-reliable')])
             colors = [ie_color, r_sigma if np.all(data2.loc[:, ['sigma']].mean() < 3.6) else nr_sigma]
-            self.ie_bar = sns.barplot(data=data2, ax=self.axins4, palette=colors)
+            self.ie_bar = sns.barplot(data=data2, ax=ax2, palette=colors)
+            self.numf = len(data2['data'])
             self.ie_bar.set(xticklabels=[f"ie\n(last\n {self.numf} frames)", "σ(Int.\nEnergy)"])
             self.ie_barlabel = self.ie_bar.bar_label(self.ie_bar.containers[0],
                                                      size=options[('Line Plot', 'Interaction Entropy', 'bar-plot',
@@ -201,9 +198,10 @@ class LineChart(ChartsBase):
                                                      padding=options[('Line Plot', 'Interaction Entropy', 'bar-plot',
                                                                       'bar-label-padding')])
             sns.despine(ax=self.ie_bar)
-            self.ie_bar.spines['bottom'].set_color('darkgray')
-            self.ie_bar.spines['left'].set_color('darkgray')
-            self.ie_bar.tick_params(color='black', direction='out', length=6, width=2)
+        else:
+            axes = self.fig.subplots(1, 1)
+            self.line_plot_ax = sns.lineplot(data=data, color=rgb2rgbf(options[('Line Plot', 'line-color')]),
+                                             linewidth=options[('Line Plot', 'line-width')], ax=axes)
 
         self.cursor = Cursor(axes, useblit=True, color='black', linewidth=0.5, ls='--')
 
@@ -225,7 +223,7 @@ class LineChart(ChartsBase):
 
         self.setup_text(self.line_plot_ax, options, key='Line Plot', xlabel='Frames')
 
-        if self.axins4:
+        if self.ie_bar:
             for label in self.ie_barlabel:
                 label.set_fontsize(options[('Line Plot', 'Interaction Entropy', 'bar-plot', 'bar-label-fontsize')])
             self.ie_bar.tick_params(labelsize=options[('Line Plot', 'Interaction Entropy', 'bar-plot',
