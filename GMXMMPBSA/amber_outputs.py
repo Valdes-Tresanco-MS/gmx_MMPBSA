@@ -165,10 +165,9 @@ class AmberOutput(object):
             in spreadsheets
         """
         # Determine which keys we want to print
-        print_keys = []
-        for key in self.data_keys:
-            if self.print_levels[key] > self.verbose: continue
-            print_keys.append(key)
+        print_keys = [
+            key for key in self.data_keys if self.print_levels[key] <= self.verbose
+        ]
         # Add on the composite keys
         print_keys += self.composite_keys
 
