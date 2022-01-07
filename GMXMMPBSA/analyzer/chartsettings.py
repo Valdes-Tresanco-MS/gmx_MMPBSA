@@ -364,17 +364,11 @@ class ChartSettings(dict):
                                                       'name': 'axes-fontsize', 'value': 8, 'default': 8,
                                                       'action_type': D},
                                     'width': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'width',
-                                              'value': 25, 'siPrefix': True, 'suffix': '%', 'default': 25,
+                                              'value': 15, 'siPrefix': True, 'suffix': '%', 'default': 25,
                                               'action_type': R},
                                     'height': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'height',
                                                'value': 50, 'siPrefix': True, 'suffix': '%', 'default': 50,
                                                'action_type': R},
-                                    'x-pos': {'type': 'float', 'enabled': True, 'expanded': True, 'name': 'x-pos',
-                                              'value': 0.5, 'step': 0.01, 'limits': (0, 1), 'default': 0.5,
-                                              'action_type': R},
-                                    'y-pos': {'type': 'float', 'enabled': True, 'expanded': True, 'name': 'y-pos',
-                                              'value': 0.15, 'step': 0.01, 'limits': (0, 1), 'default': 0.15,
-                                              'action_type': R}
                                 }}}},
                     'fontsize': {
                         'type': 'group', 'enabled': True, 'expanded': False, 'name': 'fontsize', 'value': None,
