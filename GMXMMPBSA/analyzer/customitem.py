@@ -322,27 +322,27 @@ class CustomItem(QTreeWidgetItem):
         options = self.app.systems[self.system_index]['chart_options'].get_settings()
         options.update({'chart_title': self.chart_title, 'chart_subtitle': self.chart_subtitle})
         changes = self.app.systems[self.system_index]['chart_options'].changes
-
         if state:
             self.setSelected(True)
-            line_change = (changes['line_action'] == 3 or changes['line_ie_action'] == 3)
+            line_change3 = (changes['line_action'] == 3 or changes['line_ie_action'] == 3)
+            line_change1 = (changes['line_action'] == 1 or changes['line_ie_action'] == 1)
 
-            if not self.lp_subw or self.frange != self.lp_subw.frange or line_change:
+            if not self.lp_subw or self.frange != self.lp_subw.frange or line_change3:
                 self.lp_subw = LineChart(self.line_plot_data, self.line_chart_action, data2=self.ie_plot_data,
                                          options=options)
                 self.lp_subw.frange = self.frange  # set the frange
-                # self.line_change = False  # make False again
                 changes['line_action'] = 0
                 changes['line_ie_action'] = 0
                 self.app.mdi.addSubWindow(self.lp_subw)
-                self.lp_subw.show()
-            else:
-                line_change = (changes['line_action'] == 1 or changes['line_ie_action'] == 1)
-                if line_change:
-                    self.lp_subw.show()
-                    self.lp_subw.update_config(options)
-                    changes['line_action'] = 0
-                    changes['line_ie_action'] = 0
+                # self.lp_subw.show()
+            elif line_change1:
+                # self.lp_subw.show()
+                self.lp_subw.update_config(options)
+                changes['line_action'] = 0
+                changes['line_ie_action'] = 0
+            # else:
+            self.lp_subw.show()
+
         elif self.lp_subw:
             self.app.mdi.activatePreviousSubWindow()
             self.lp_subw.close()
@@ -367,11 +367,13 @@ class CustomItem(QTreeWidgetItem):
                 # self.bar_change = False  # make False again
                 changes['bar_action'] = 0
                 self.app.mdi.addSubWindow(self.bp_subw)
-                self.bp_subw.show()
+                # self.bp_subw.show()
             elif changes['bar_action'] == 1:
-                self.bp_subw.show()
+                # self.bp_subw.show()
                 self.bp_subw.update_config(options)
                 changes['bar_action'] = 0
+            # else:
+            self.bp_subw.show()
         elif self.bp_subw:
             self.app.mdi.activatePreviousSubWindow()
             self.bp_subw.close()
@@ -379,17 +381,21 @@ class CustomItem(QTreeWidgetItem):
     def plotting_heatmap(self, state):
         from GMXMMPBSA.analyzer.plots import HeatmapChart
         self.app.treeWidget.clearSelection()
-        options = {'general_options': self.app.systems[self.system_index]['chart_options']['general_options'],
-                   'heatmap_options': self.app.systems[self.system_index]['chart_options']['heatmap_options'],
-                   'chart_title': self.chart_title, 'chart_subtitle': self.chart_subtitle}
+        options = self.app.systems[self.system_index]['chart_options'].get_settings()
+        options.update({'chart_title': self.chart_title, 'chart_subtitle': self.chart_subtitle})
+        changes = self.app.systems[self.system_index]['chart_options'].changes
         if state:
             self.setSelected(True)
-            if not self.hmp_subw or self.frange != self.hmp_subw.frange or self.heatmap_change:
-                self.pymol_data_change = True  # To don't get to save per-residue data in the pdb
+            if not self.hmp_subw or self.frange != self.hmp_subw.frange or changes['heatmap_action'] == 3:
                 self.hmp_subw = HeatmapChart(self.heatmap_plot_data, self.heatmap_chart_action, options=options)
                 self.hmp_subw.frange = self.frange
-                self.heatmap_change = False # make False again
+                changes['heatmap_action'] = 0  # make False again
                 self.app.mdi.addSubWindow(self.hmp_subw)
+                # FIXME: hay que hacerlo siempre?
+                self.pymol_data_change = True  # To don't get to save per-residue data in the pdb
+            elif changes['heatmap_action'] == 1:
+                self.hmp_subw.update_config(options)
+                changes['heatmap_action'] = 0
             self.hmp_subw.show()
         elif self.hmp_subw:
             self.app.mdi.activatePreviousSubWindow()

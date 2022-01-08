@@ -364,7 +364,7 @@ class ChartSettings(dict):
                                                       'name': 'axes-fontsize', 'value': 8, 'default': 8,
                                                       'action_type': D},
                                     'width': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'width',
-                                              'value': 15, 'siPrefix': True, 'suffix': '%', 'default': 25,
+                                              'value': 15, 'siPrefix': True, 'suffix': '%', 'default': 15,
                                               'action_type': R},
                                     'height': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'height',
                                                'value': 50, 'siPrefix': True, 'suffix': '%', 'default': 50,
