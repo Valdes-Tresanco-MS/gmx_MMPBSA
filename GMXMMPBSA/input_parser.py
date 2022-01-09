@@ -25,6 +25,7 @@ ensure proper functioning.
 from GMXMMPBSA.exceptions import InputError, InternalError
 import re
 
+
 # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 class Variable(object):
@@ -39,7 +40,7 @@ class Variable(object):
           recognition
         """
         # Catch illegalities
-        if not dat_type in (int, str, float, list):
+        if dat_type not in (int, str, float, list):
             raise InputError('Variable has unknown data type %s' % dat_type.__name__)
 
         # You can't match more characters than you have characters!
@@ -47,15 +48,14 @@ class Variable(object):
 
         self.name = varname
         self.datatype = dat_type
-        if default is not None:
-            if self.datatype is str:
-                self.value = default.replace("'", '').replace('"', '')
-            elif self.datatype is list:
-                self.value = [x.strip() for x in re.split("(?<!\d)[,;](?!\d)", default.replace('"', '').replace("'", ''))]
-            else:
-                self.value = self.datatype(default)
-        else:
+        if default is None:
             self.value = None
+        elif self.datatype is str:
+            self.value = default.replace("'", '').replace('"', '')
+        elif self.datatype is list:
+            self.value = [x.strip() for x in re.split("(?<!\d)[,;](?!\d)", default.replace('"', '').replace("'", ''))]
+        else:
+            self.value = self.datatype(default)
         self.tomatch = chars_to_match
         self.case_sensitive = case_sensitive
         self.description = description
@@ -220,8 +220,15 @@ class Namelist(object):
         Prints out the full contents of this namelist in the Fortran namelist
         format
         """
-        maxlen = max([len(v) + len(str(self.variables[v].value))
-                      for v in self.variables if v is not self.trigger]) + 7
+        maxlen = (
+            max(
+                len(v) + len(str(self.variables[v].value))
+                for v in self.variables
+                if v is not self.trigger
+            )
+            + 7
+        )
+
         maxlen = max(maxlen, 25)
         retstr = '&%s\n' % self.full_name
         for variable in self.variables:
@@ -273,10 +280,7 @@ class InputFile(object):
     def print_contents(self, destination):
         """ Prints the contents of the input file """
         # Open a file to write to if need be
-        if hasattr(destination, 'write'):
-            dest = destination
-        else:
-            dest = open(destination, 'w')
+        dest = destination if hasattr(destination, 'write') else open(destination, 'w')
         for namelist in self.ordered_namelist_keys:
             destination.write('%s\n' % self.namelists[namelist])
         # Close the file if we opened it.
@@ -402,7 +406,7 @@ class InputFile(object):
                     else:
                         j += 1
 
-                namelist_fields[len(namelist_fields) - 1].extend(items)
+                namelist_fields[-1].extend(items)
 
             # end if [elif innml]
 
@@ -503,7 +507,7 @@ input_file.addNamelist('general', 'general',
                            ['ions_parameters', int, 1, 'Define ions parameters to build the Amber topology'],
                            ['keep_files', int, 2, 'How many files to keep after successful completion'],
                            ['forcefields', list, 'oldff/leaprc.ff99SB, leaprc.gaff', 'Define the force field to build '
-                                                                                   'the Amber topology'],
+                                                                                     'the Amber topology'],
                            ['netcdf', int, 0, 'Use NetCDF intermediate trajectories'],
                            ['overwrite_data', int, 0, 'Defines whether the gmxMMPBSA data will be overwritten'],
                            ['PBRadii', int, 3, 'Define PBRadii to build amber topology from GROMACS files'],
@@ -692,7 +696,8 @@ input_file.addNamelist('rism', 'rism',
                                                     'long-range asymptotic correction'],
                            ['treeTCFOrder', int, 2, 'Treecode Taylor series order for the total correlation function '
                                                     'long-range asymptotic correction'],
-                           ['treeCoulombOrder', int, 2, 'Treecode Taylor series order for the Coulomb potential energy'],
+                           ['treeCoulombOrder', int, 2,
+                            'Treecode Taylor series order for the Coulomb potential energy'],
                            ['treeDCFN0', int, 500, 'Maximum number of grid points contained within the treecode leaf '
                                                    'clusters for the direct correlation function long-range asymptotic '
                                                    'correction'],
