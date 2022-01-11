@@ -148,7 +148,7 @@ printed, which aids in debugging of issues. (Default = 0) (Advanced Option)
         - A sampling frequency of 10 fs, seems to be 3–40 times too dense. A sampling frequency of 0.1 ps would be more 
         appropriate.
         - The C2 Entropy results may vary depending on the system flexibility or whether constraints were used 
-        or not in the MD simulation. 
+        or not in the MD simulation.
 
         Please, consult this [paper][10] for further details.
 
@@ -172,9 +172,25 @@ omitted in the correlation analysis
     _New in v1.4.0_
 
 `gmx_path` 
-:     Define an additional path to search for GROMACS executables. This path takes precedence over the path defined
-      in the PATH variable. In these path the following executables will be searched: `gmx`, `gmx_mpi`, `gmx_d`,
-      `gmx_mpi_d` (GROMACS > 5.x.x), `make_ndx`, `editconf` and `trjconv` (GROMACS 4.x.x)
+:     Define a path to search for GROMACS executables. This path takes precedence over the path defined
+      in the PATH variable. In this path the following executables will be searched: `gmx`, `gmx_mpi`, `gmx_d`, or
+      `gmx_mpi_d` (GROMACS > 5.x.x), and `make_ndx`, `editconf` and `trjconv` (GROMACS 4.x.x)
+
+    !!! note "Keep in mind"
+        This variable is used when the GROMACS used to run the system differs from that of will be used for running 
+        the analyses. It takes the path to the GROMACS bin folder where the executables will be searched on. 
+        An example of the use of this variable is given below:
+
+            &general
+            sys_name="my_system",
+            verbose=2, forcefields="oldff/leaprc.ff99SBildn",leaprc.gaff"
+            gmx_path="/home/programs/gromacs/bin"
+            /
+            &gb
+            igb=5, saltcon=0.150  
+            /
+            
+            # replace this "/home/programs/gromacs/bin" with the path to the GROMACS you want to use.
 
     _New in v1.1.1_
     
