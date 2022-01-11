@@ -79,6 +79,7 @@ class CustomItem(QTreeWidgetItem):
         self.hmp_subw = None
         self.pymol_process = None
         self.pymol_data_change = False
+        self.pymol_current_palette = None
         self.bfactor_pml = None
         self.output_file_subw = None
         self.decomp_output_file_subw = None
@@ -92,7 +93,6 @@ class CustomItem(QTreeWidgetItem):
         self.line_change = False
         self.bar_change = False
         self.heatmap_change = False
-
 
         self.changed = False
 
@@ -364,15 +364,11 @@ class CustomItem(QTreeWidgetItem):
             if not self.bp_subw or self.frange != self.bp_subw.frange or changes['bar_action'] == 3:
                 self.bp_subw = BarChart(self.bar_plot_data, self.bar_chart_action, options=options)
                 self.bp_subw.frange = self.frange
-                # self.bar_change = False  # make False again
                 changes['bar_action'] = 0
                 self.app.mdi.addSubWindow(self.bp_subw)
-                # self.bp_subw.show()
             elif changes['bar_action'] == 1:
-                # self.bp_subw.show()
                 self.bp_subw.update_config(options)
                 changes['bar_action'] = 0
-            # else:
             self.bp_subw.show()
         elif self.bp_subw:
             self.app.mdi.activatePreviousSubWindow()
@@ -391,8 +387,6 @@ class CustomItem(QTreeWidgetItem):
                 self.hmp_subw.frange = self.frange
                 changes['heatmap_action'] = 0  # make False again
                 self.app.mdi.addSubWindow(self.hmp_subw)
-                # FIXME: hay que hacerlo siempre?
-                self.pymol_data_change = True  # To don't get to save per-residue data in the pdb
             elif changes['heatmap_action'] == 1:
                 self.hmp_subw.update_config(options)
                 changes['heatmap_action'] = 0
@@ -402,8 +396,18 @@ class CustomItem(QTreeWidgetItem):
             self.hmp_subw.close()
 
     def visualizing(self, checked):
+        from GMXMMPBSA.analyzer.chartsettings import Palettes
         self.app.treeWidget.clearSelection()
         import os
+        options = self.app.systems[self.system_index]['chart_options'].get_settings()
+        if options[('Visualization', 'palette')] == 'auto':
+            palette = options[('Heatmap Plot', 'Per-residue', 'palette')]
+        else:
+            palette = options[('Visualization', 'palette')]
+
+        self.pymol_data_change = self.pymol_current_palette != palette
+        self.pymol_current_palette = palette
+
         if checked:
             self.setSelected(True)
             pymol_path = [os.path.join(path, 'pymol') for path in os.environ["PATH"].split(os.pathsep)
@@ -426,7 +430,7 @@ class CustomItem(QTreeWidgetItem):
                 return
 
             if self.pymol_data_change or not self.bfactor_pml:
-                self.bfactor_pml = self._e2pdb()
+                self.bfactor_pml = self._e2pdb(Palettes.get_palette(palette).colors)
 
             self.pymol_process.start(pymol, [self.bfactor_pml.as_posix()])
             self.pymol_process.finished.connect(lambda: self.vis_action.setChecked(False))
@@ -435,10 +439,10 @@ class CustomItem(QTreeWidgetItem):
             self.pymol_process.kill()
             self.pymol_process.waitForFinished(3000)
 
-    def _e2pdb(self):
+    def _e2pdb(self, colors):
         com_pdb = self.app.systems[self.system_index]['namespace'].INFO['COM_PDB']
         bfactor_pml = self.app.systems[self.system_index]['path'].parent.joinpath('bfactor.pml')
-        output_path = self.app.systems[self.system_index]['path'].parent.parent.joinpath(
+        output_path = self.app.systems[self.system_index]['path'].parent.joinpath(
             f"{self.app.systems[self.system_index]['name']}_energy2bfactor.pdb")
         qpd = QProgressDialog('Generate modified pdb and open it in PyMOL', 'Abort', 0, 2, self.app)
         qpd.setWindowModality(Qt.WindowModal)
@@ -450,17 +454,18 @@ class CustomItem(QTreeWidgetItem):
                 break
             if i == 0:
                 com_pdb_str = com2str(com_pdb)
-                res_dict = self.bar_plot_data.aggregate(["mean"]).iloc[0].to_dict()
+                temp_dict = self.bar_plot_data.aggregate(["mean"]).iloc[0].to_dict()
+                res_dict = {k[2:]: value for k, value in temp_dict.items()}
                 for res in com_pdb_str.residues:
                     res_notation = f'{res.chain}:{res.name}:{res.number}'
                     if res.insertion_code:
                         res_notation += res.insertion_code
 
-                    res_energy = res_dict[res_notation] if res_notation in res_dict else 0.00
+                    res_energy = res_dict.get(res_notation, 0.00)
                     for at in res.atoms:
                         at.bfactor = res_energy
                 com_pdb_str.save(output_path.as_posix(), 'pdb', True, renumber=False)
-                energy2pdb_pml(res_dict, bfactor_pml, output_path)
+                energy2pdb_pml(res_dict, colors, bfactor_pml, output_path)
         qpd.setValue(2)
 
         return bfactor_pml

@@ -334,9 +334,8 @@ class HeatmapChart(ChartsBase):
         fig_height = options[('Heatmap Plot', 'figure', 'height')]
         x_rotation = (options[('Heatmap Plot', 'Per-wise', 'x-rotation')] if self.heatmap_type == 1 else
                       options[('Heatmap Plot', 'Per-residue', 'x-rotation')])
-        cmap = (Palettes.get_palette(options[('Heatmap Plot', 'Per-wise', 'palette')]) if self.heatmap_type == 1 else
-                Palettes.get_palette(options[('Heatmap Plot', 'Per-residue', 'palette')]))
-
+        cmap = (Palettes.get_colormap(options[('Heatmap Plot', 'Per-wise', 'palette')]) if self.heatmap_type == 1 else
+                Palettes.get_colormap(options[('Heatmap Plot', 'Per-residue', 'palette')]))
         nxticks = (1 if self.heatmap_type == 1 or data.columns.size < options[('Heatmap Plot', 'Per-residue', 'num-xticks')]
                    else data.columns.size // options[('Heatmap Plot', 'Per-residue', 'num-xticks')])
 

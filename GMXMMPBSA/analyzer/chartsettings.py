@@ -975,9 +975,13 @@ class Palettes:
     # -- END -- Qualitative colormaps
 
     @classmethod
-    def get_palette(cls, name):
+    def get_colormap(cls, name):
         palette = getattr(cls, name)
         if isinstance(palette, Palette):
             return palette.colormap
         else:
             return palette
+
+    @classmethod
+    def get_palette(cls, name):
+        return getattr(cls, name)

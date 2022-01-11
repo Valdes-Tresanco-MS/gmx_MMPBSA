@@ -115,7 +115,8 @@ class worker(QThread):
                 self.result_queue.put(result)
 
 
-def energy2pdb_pml(residue_list, pml_path: Path, pdb_path: Path):
+def energy2pdb_pml(residue_list, colors, pml_path: Path, pdb_path: Path):
+    pymol_colors = []
     with open(pml_path, 'w') as bf:
         bf.write(f'load {pdb_path}\n')
         bf.write('set cartoon_oval_length, 1.0\n')
@@ -123,11 +124,9 @@ def energy2pdb_pml(residue_list, pml_path: Path, pdb_path: Path):
         bf.write('set cartoon_rect_width, 0.3\n')
         bf.write('set cartoon_side_chain_helper, 1\n')
         bf.write('set light_count, 0\n')
-        bf.write('set_color gmxc1 = (0.0, 0.0, 0.3)\n')
-        bf.write('set_color gmxc2 = (0.0, 0.0, 1.0)\n')
-        bf.write('set_color gmxc3 = (1.0, 1.0, 1.0)\n')
-        bf.write('set_color gmxc4 = (1.0, 0.0, 0.0)\n')
-        bf.write('set_color gmxc5 = (0.5, 0.0, 0.0)\n')
+        for c, color in enumerate(colors):
+            bf.write(f'set_color gmxc{c} = {color}\n')
+            pymol_colors.append(f'gmxc{c}')
         bf.write('set bg_rgb, gray50\n')
 
         minimum = 999
@@ -136,7 +135,12 @@ def energy2pdb_pml(residue_list, pml_path: Path, pdb_path: Path):
         for res, energy in residue_list.items():
             icode = ''
             if res.count(':') == 3:
-                chain, name, number, icode = res.split(':')
+                if res.split(':')[0] in ['R', 'L']:
+                    id, chain, name, number = res.split(':')
+                else:
+                    chain, name, number, icode = res.split(':')
+            elif res.count(':') == 4:
+                id, chain, name, number, icode = res.split(':')
             else:
                 chain, name, number = res.split(':')
 
@@ -161,8 +165,8 @@ def energy2pdb_pml(residue_list, pml_path: Path, pdb_path: Path):
 
         bf.write(f'show sticks, {select_text}\n')
         bf.write('remove (h. and (e. c extend 1))\n')
-        bf.write(f'spectrum b, gmxc1 gmxc2 gmxc3 gmxc4 gmxc5, minimum={minimum}, maximum={maximum}\n')
-        bf.write(f'ramp_new colorbar, none, [{minimum}, 0, {maximum}], [gmxc1, gmxc2, gmxc3, gmxc4, gmxc5]\n')
+        bf.write(f'spectrum b, {" ".join(pymol_colors)}, minimum={minimum}, maximum={maximum}\n')
+        bf.write(f'ramp_new colorbar, none, {np.linspace(minimum, maximum, len(colors)).tolist()}, {pymol_colors}\n')
         bf.write(f'center {select_text}\n')
         bf.write(f'orient {select_text}\n')
         bf.write(f'zoom {select_text}, 15\n')
