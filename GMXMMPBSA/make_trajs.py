@@ -303,15 +303,21 @@ def make_mutant_trajectories(INPUT, FILES, rank, cpptraj,
 
     if INPUT['netcdf']:
         trj_suffix = 'nc'
-        raise TypeError('Alanine/Glycine scanning requires ASCII trajectories '
-                        '(netcdf=0)')
+        raise TypeError('Alanine/Glycine scanning requires ASCII trajectories (netcdf=0)')
     else:
         trj_suffix = 'mdcrd'
 
-    if not stability and not ((FILES.ligand_prmtop == FILES.mutant_ligand_prmtop
-                               and FILES.receptor_prmtop != FILES.mutant_receptor_prmtop) or (
-                                      FILES.ligand_prmtop != FILES.mutant_ligand_prmtop and
-                                      FILES.receptor_prmtop == FILES.mutant_receptor_prmtop)):
+    if (
+        not stability
+        and (
+            FILES.ligand_prmtop != FILES.mutant_ligand_prmtop
+            or FILES.receptor_prmtop == FILES.mutant_receptor_prmtop
+        )
+        and (
+            FILES.ligand_prmtop == FILES.mutant_ligand_prmtop
+            or FILES.receptor_prmtop != FILES.mutant_receptor_prmtop
+        )
+    ):
         raise MMPBSA_Error('Alanine/Glycine scanning requires either a mutated '
                            'ligand or receptor topology file with only 1 mutant residue, but not '
                            'both')

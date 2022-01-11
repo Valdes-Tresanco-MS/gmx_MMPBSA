@@ -28,7 +28,7 @@ import signal
 import sys
 import logging
 # Import gmx_MMPBSA modules
-from GMXMMPBSA import utils
+from GMXMMPBSA import utils, __version__
 from GMXMMPBSA.amber_outputs import (QHout, NMODEout, QMMMout, GBout, PBout, PolarRISM_std_Out, RISM_std_Out,
                                      PolarRISM_gf_Out, RISM_gf_Out, SingleTrajBinding, MultiTrajBinding, IEout, C2out)
 from GMXMMPBSA.calculation import (CalculationList, EnergyCalculation, PBEnergyCalculation, RISMCalculation,
@@ -97,7 +97,7 @@ class MMPBSA_App(object):
         if not self.master:
             self.stdout = open(os.devnull, 'w')
         if self.master:
-            logging.info('Starting')
+            logging.info(f'Starting gmx_MMPBSA {__version__}')
 
         # Set up timers
         timers = [Timer() for i in range(self.mpi_size)]
@@ -725,10 +725,20 @@ class MMPBSA_App(object):
         if args is None:
             args = sys.argv
         if self.master:
-            self.FILES = self.clparser.parse_args(args)
+            text_args = ' '.join(args)
+            _mpi = True
+            # remove mpi arg before passed it to app
+            if 'mpi' in args:
+                args.remove('mpi')
+            elif 'MPI' in args:
+                args.remove('MPI')
+            else:
+                _mpi = False
+            mpi_cl = f'  mpirun -np {self.mpi_size} ' if _mpi else '  '
             # save args in gmx_MMPBSA.log
-            logging.info('Command-line\n'
-                         '  gmx_MMPBSA ' + ' '.join(args) + '\n')
+            logging.info('Command-line\n' + mpi_cl +
+                         'gmx_MMPBSA ' + text_args + '\n')
+            self.FILES = self.clparser.parse_args(args)
         else:
             self.FILES = object()
         # Broadcast the FILES
@@ -813,7 +823,7 @@ class MMPBSA_App(object):
             return
         # Check deprecated variables
         # check force fields
-        if not INPUT['igb'] in [1, 2, 5, 7, 8]:
+        if INPUT['igb'] not in [1, 2, 5, 7, 8]:
             GMXMMPBSA_ERROR('Invalid value for IGB (%s)! ' % INPUT['igb'] + 'It must be 1, 2, 5, 7, or 8.', InputError)
         if INPUT['saltcon'] < 0:
             GMXMMPBSA_ERROR('SALTCON must be non-negative!', InputError)
@@ -827,28 +837,28 @@ class MMPBSA_App(object):
             GMXMMPBSA_ERROR('SCALE must be non-negative!', InputError)
         if INPUT['linit'] < 0:
             GMXMMPBSA_ERROR('LINIT must be a positive integer!', InputError)
-        if not INPUT['prbrad'] in [1.4, 1.6]:
+        if INPUT['prbrad'] not in [1.4, 1.6]:
             GMXMMPBSA_ERROR('PRBRAD (%s) must be 1.4 and 1.6!' % INPUT['prbrad'], InputError)
         if INPUT['istrng'] < 0:
             GMXMMPBSA_ERROR('ISTRNG must be non-negative!', InputError)
-        if not INPUT['inp'] in [0, 1, 2]:
+        if INPUT['inp'] not in [0, 1, 2]:
             GMXMMPBSA_ERROR('INP/NPOPT (%s) must be 0, 1, or 2!' % INPUT['inp'], InputError)
         if INPUT['cavity_surften'] < 0:
             GMXMMPBSA_ERROR('CAVITY_SURFTEN must be non-negative!', InputError)
         if INPUT['fillratio'] <= 0:
             GMXMMPBSA_ERROR('FILL_RATIO must be positive!', InputError)
-        if not INPUT['radiopt'] in [0, 1]:
+        if INPUT['radiopt'] not in [0, 1]:
             GMXMMPBSA_ERROR('RADIOPT (%s) must be 0 or 1!' % INPUT['radiopt'], InputError)
         if INPUT['dielc'] <= 0:
             GMXMMPBSA_ERROR('DIELC must be positive!', InputError)
         if INPUT['maxcyc'] < 1:
             GMXMMPBSA_ERROR('MAXCYC must be a positive integer!', InputError)
-        if not INPUT['idecomp'] in [0, 1, 2, 3, 4]:
+        if INPUT['idecomp'] not in [0, 1, 2, 3, 4]:
             GMXMMPBSA_ERROR('IDECOMP (%s) must be 1, 2, 3, or 4!' %
                              INPUT['idecomp'], InputError)
         if INPUT['idecomp'] != 0 and INPUT['sander_apbs'] == 1:
             GMXMMPBSA_ERROR('IDECOMP cannot be used with sander.APBS!', InputError)
-        if not INPUT['sander_apbs'] in [0, 1]:
+        if INPUT['sander_apbs'] not in [0, 1]:
             GMXMMPBSA_ERROR('SANDER_APBS must be 0 or 1!', InputError)
         if INPUT['alarun'] and INPUT['netcdf'] != '':
             GMXMMPBSA_ERROR('Alanine scanning is incompatible with NETCDF != 0!', InputError)
@@ -860,12 +870,12 @@ class MMPBSA_App(object):
             GMXMMPBSA_ERROR('PBRadii must be 1, 2, 3 or 4!', InputError)
         if INPUT['solvated_trajectory'] not in [0, 1]:
             GMXMMPBSA_ERROR('SOLVATED_TRAJECTORY must be 0 or 1!', InputError)
-        if not INPUT['use_sander'] in [0, 1]:
+        if INPUT['use_sander'] not in [0, 1]:
             GMXMMPBSA_ERROR('USE_SANDER must be set to 0 or 1!', InputError)
-        if not INPUT['ifqnt'] in [0, 1]:
+        if INPUT['ifqnt'] not in [0, 1]:
             GMXMMPBSA_ERROR('QMMM must be 0 or 1!', InputError)
         if INPUT['ifqnt'] == 1:
-            if not INPUT['qm_theory'] in ['PM3', 'AM1', 'MNDO', 'PDDG-PM3', 'PM3PDDG',
+            if INPUT['qm_theory'] not in ['PM3', 'AM1', 'MNDO', 'PDDG-PM3', 'PM3PDDG',
                                           'PDDG-MNDO', 'PDDGMNDO', 'PM3-CARB1',
                                           'PM3CARB1', 'DFTB', 'SCC-DFTB', 'RM1', 'PM6',
                                           'PM3-ZnB', 'PM3-MAIS', 'PM6-D', 'PM6-DH+',
@@ -893,28 +903,36 @@ class MMPBSA_App(object):
                 GMXMMPBSA_ERROR('You must specify NG if BUFFER < 0!', InputError)
             if INPUT['closure'] == 'pse' and INPUT['closureorder'] < 1:
                 GMXMMPBSA_ERROR('You must specify CLOSUREORDER if CLOSURE=pse!', InputError)
-            if not INPUT['polardecomp'] in [0, 1]:
+            if INPUT['polardecomp'] not in [0, 1]:
                 GMXMMPBSA_ERROR('POLARDECOMP must be either 0 or 1!', InputError)
-            if not INPUT['thermo'] in ['std', 'gf', 'both']:
+            if INPUT['thermo'] not in ['std', 'gf', 'both']:
                 GMXMMPBSA_ERROR('THERMO must be "std", "gf", or "both"!', InputError)
-        if not (INPUT['gbrun'] or INPUT['pbrun'] or INPUT['rismrun'] or
-                INPUT['nmoderun'] or INPUT['qh_entropy']):
+        if (
+            not INPUT['gbrun']
+            and not INPUT['pbrun']
+            and not INPUT['rismrun']
+            and not INPUT['nmoderun']
+            and not INPUT['qh_entropy']
+        ):
             GMXMMPBSA_ERROR('You did not specify any type of calculation!', InputError)
 
-        if INPUT['decomprun'] and not (INPUT['gbrun'] or INPUT['pbrun']):
+        if INPUT['decomprun'] and not INPUT['gbrun'] and not INPUT['pbrun']:
             GMXMMPBSA_ERROR('DECOMP must be run with either GB or PB!', InputError)
 
-        if not INPUT['molsurf'] and (INPUT['msoffset'] != 0 or INPUT['probe'] != 1.4):
-            if self.master:
-                logging.warning('offset and probe are molsurf-only options')
-        if not INPUT['cas_intdiel'] in [0, 1]:
+        if (
+            not INPUT['molsurf']
+            and (INPUT['msoffset'] != 0 or INPUT['probe'] != 1.4)
+            and self.master
+        ):
+            logging.warning('offset and probe are molsurf-only options')
+        if INPUT['cas_intdiel'] not in [0, 1]:
             GMXMMPBSA_ERROR('cas_intdiel must be set to 0 or 1!', InputError)
 
         # User warning when intdiel > 10
         if self.INPUT['intdiel'] > 10:
-            GMXMMPBSA_WARNING(f"Intdiel is great than 10...")
+            GMXMMPBSA_WARNING('Intdiel is great than 10...')
         # check mutant definition
-        if not self.INPUT['mutant'].upper() in ['ALA', 'A', 'GLY', 'G']:
+        if self.INPUT['mutant'].upper() not in ['ALA', 'A', 'GLY', 'G']:
             GMXMMPBSA_ERROR('The mutant most be ALA (or A) or GLY (or G)', InputError)
 
         # fixed the error when try to open gmx_MMPBSA_ana in the issue
@@ -1016,17 +1034,17 @@ class MMPBSA_App(object):
 
                     if key in ['gb', 'pb', 'rism std', 'rism gf']:
                         if 'ie' in self.calc_types:
-                            edata = self.calc_types[key]['delta'].data['DELTA G gas']
+                            edata = self.calc_types[key]['delta'].data['DELTA GGAS']
                             ie = InteractionEntropyCalc(edata, self,
                                                         self.pre + f"{key.replace(' ', '_')}_iteraction_entropy.dat")
                             self.calc_types['ie'].data[key] = {'data': ie.data, 'iedata': ie.iedata,
                                                                'ieframes': ie.ieframes, 'sigma': ie.ie_std}
                         if 'c2' in self.calc_types:
-                            edata = self.calc_types[key]['delta'].data['DELTA G gas']
+                            edata = self.calc_types[key]['delta'].data['DELTA GGAS']
                             c2 = C2EntropyCalc(edata, self, self.pre + f"{key.replace(' ', '_')}_c2_entropy.dat")
                             self.calc_types['c2'].data[key] = {'c2data': c2.c2data, 'sigma': c2.ie_std,
                                                                'c2_std': c2.c2_std, 'c2_ci': c2.c2_ci}
-                            # self.calc_types[self.key]['delta'].data['DELTA G gas']
+                            # self.calc_types[self.key]['delta'].data['DELTA GGAS']
                 else:
                     self.calc_types[key]['complex'].fill_composite_terms()
             # Time for mutant
@@ -1048,13 +1066,13 @@ class MMPBSA_App(object):
                         self.INPUT['verbose'], self.using_chamber)
                     if key in ['gb', 'pb', 'rism std', 'rism gf']:
                         if 'ie' in self.calc_types.mutant:
-                            edata = self.calc_types.mutant[key]['delta'].data['DELTA G gas']
+                            edata = self.calc_types.mutant[key]['delta'].data['DELTA GGAS']
                             mie = InteractionEntropyCalc(edata, self, self.pre + 'mutant_' +
                                                          f"{key.replace(' ', '_')}_iteraction_entropy.dat")
                             self.calc_types.mutant['ie'].data[key] = {'data': mie.data, 'iedata': mie.iedata,
                                                                       'ieframes': mie.ieframes, 'sigma': mie.ie_std}
                         if 'c2' in self.calc_types.mutant:
-                            edata = self.calc_types.mutant[key]['delta'].data['DELTA G gas']
+                            edata = self.calc_types.mutant[key]['delta'].data['DELTA GGAS']
                             c2 = C2EntropyCalc(edata, self, self.pre + 'mutant_' +
                                                f"{key.replace(' ', '_')}_c2_entropy.dat")
                             self.calc_types.mutant['c2'].data[key] = {'c2data': c2.c2data, 'sigma': c2.ie_std,
@@ -1062,8 +1080,7 @@ class MMPBSA_App(object):
                 else:
                     self.calc_types.mutant[key]['complex'].fill_composite_terms()
 
-        if INPUT['decomprun']:
-            self.calc_types.decomp = self._get_decomp()
+        self.calc_types.decomp = self._get_decomp() if INPUT['decomprun'] else None
 
     def _get_decomp(self):
         from GMXMMPBSA.amber_outputs import (DecompOut, PairDecompOut, DecompBinding,
@@ -1095,10 +1112,13 @@ class MMPBSA_App(object):
                 SingleClass = PairDecompOut
 
         if not hasattr(self, 'resl'):
-            from GMXMMPBSA.utils import res2map
+            from GMXMMPBSA.utils import res2map, get_indexes
             from copy import deepcopy
             import re
-            masks, res_list, order_list, _ = res2map(FILES.complex_index, FILES.complex_fixed)
+            indexes = get_indexes(com_ndx=FILES.complex_index,
+                                  rec_ndx=FILES.receptor_index, rec_group=FILES.receptor_group,
+                                  lig_ndx=FILES.ligand_index, lig_group=FILES.ligand_group)
+            masks, res_list, order_list = res2map(indexes, FILES.complex_fixed)
             self.resl = res_list
 
             if INPUT['alarun']:
@@ -1170,7 +1190,7 @@ def excepthook(exception_type, exception_value, tb):
         traceback.print_tb(tb)
     _stderr.write('%s: %s\n' % (exception_type.__name__, exception_value))
     if _mpi_size > 1:
-        _stderr.write('Error occured on rank %d.' % _rank + os.linesep)
+        _stderr.write('Error occurred on rank %d.' % _rank + os.linesep)
     _stderr.write('Exiting. All files have been retained.' + os.linesep)
     _MPI.COMM_WORLD.Abort(1)
 

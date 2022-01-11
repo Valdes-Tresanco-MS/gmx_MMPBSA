@@ -124,18 +124,15 @@ class Data2h5:
                     # residue first level
                     for key4 in d[key][key2][key3]:
                         grp4 = grp3.create_group(key4)
-                        if isinstance(d[key][key2][key3][key4], dict):
-                            # residue sec level
-                            for key5 in d[key][key2][key3][key4]:
+                        # residue sec level
+                        for key5 in d[key][key2][key3][key4]:
+                            if isinstance(d[key][key2][key3][key4][key5], dict):
                                 grp5 = grp4.create_group(key5)
                                 # energy terms
                                 for key6 in d[key][key2][key3][key4][key5]:
                                     dset = grp5.create_dataset(key6, data=d[key][key2][key3][key4][key5][key6])
-                        else:
-                            # energy terms
-                            for key5 in d[key][key2][key3][key4]:
+                            else:
                                 dset = grp4.create_dataset(key5, data=d[key][key2][key3][key4][key5])
-                # complex, receptor, etc., is a class and the data is contained in the attribute data
 
 # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 

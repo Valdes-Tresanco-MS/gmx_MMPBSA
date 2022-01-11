@@ -137,8 +137,10 @@ class ChartsBase(QMdiSubWindow):
     def setup_text(self, ax, options, key='', title='', xlabel='', ylabel='Energy (kcal/mol)'):
         key_list = [key] if isinstance(key, str) else key
         ax.set_title(title, fontdict={'fontsize': options[tuple(key_list + ['fontsize', 'suptitle'])]})
-        ax.set_xlabel(xlabel, fontdict={'fontsize': options[tuple(key_list + ['fontsize', 'x-label'])]})
-        ax.set_ylabel(ylabel, fontdict={'fontsize': options[tuple(key_list + ['fontsize', 'y-label'])]})
+        if xlabel:
+            ax.set_xlabel(xlabel, fontdict={'fontsize': options[tuple(key_list + ['fontsize', 'x-label'])]})
+        if ylabel:
+            ax.set_ylabel(ylabel, fontdict={'fontsize': options[tuple(key_list + ['fontsize', 'y-label'])]})
         for label in ax.get_xticklabels():
             label.set_rotation(options[tuple(key_list + ['axes', 'x-rotation'])])
             if options[tuple(key_list + ['axes', 'x-rotation'])] < 0:
@@ -170,29 +172,26 @@ class LineChart(ChartsBase):
         self.set_cw()
         self.fig.set_size_inches(options[('Line Plot', 'figure', 'width')],
                                  options[('Line Plot', 'figure', 'height')])
-        axes = self.fig.subplots(1, 1)
-        self.line_plot_ax = sns.lineplot(data=data, color=rgb2rgbf(options[('Line Plot', 'line-color')]),
-                                         linewidth=options[('Line Plot', 'line-width')], ax=axes)
+
+        width1 = 100 - options[('Line Plot', 'Interaction Entropy', 'bar-plot', 'width')]
+        width2 = options[('Line Plot', 'Interaction Entropy', 'bar-plot', 'width')]
+        height1 = 100 - options[('Line Plot', 'Interaction Entropy', 'bar-plot', 'height')]
+        height2 = options[('Line Plot', 'Interaction Entropy', 'bar-plot', 'height')]
+
         if data2 is not None:
-            self.numf = len(data2['data'])
-            self.axins4 = inset_axes(axes,
-                                     width=f"{options[('Line Plot', 'Interaction Entropy', 'bar-plot', 'width')]}%",
-                                     height=f"{options[('Line Plot', 'Interaction Entropy', 'bar-plot', 'height')]}%",
-                                     bbox_to_anchor=(
-                                         options[('Line Plot', 'Interaction Entropy', 'bar-plot', 'x-pos')],
-                                         options[('Line Plot', 'Interaction Entropy', 'bar-plot', 'y-pos')],
-                                         0.5, 0.5),
-                                     bbox_transform=axes.transAxes, loc=4, borderpad=1)
-            axes.add_patch(plt.Rectangle((options[('Line Plot', 'Interaction Entropy', 'bar-plot', 'x-pos')],
-                                          options[('Line Plot', 'Interaction Entropy', 'bar-plot', 'y-pos')]),
-                                         .5, .5, ls="--", ec="c", fc="None", transform=axes.transAxes))
+            gs = gridspec.GridSpec(2, 2, height_ratios=[height1, height2], width_ratios=[width1, width2])
+            axes = self.fig.add_subplot(gs[:, 0])
+            self.line_plot_ax = sns.lineplot(data=data, color=rgb2rgbf(options[('Line Plot', 'line-color')]),
+                                             linewidth=options[('Line Plot', 'line-width')], ax=axes)
             # plot the ie segment
             ie_color = rgb2rgbf(options[('Line Plot', 'Interaction Entropy', 'ie-color')])
             sns.lineplot(data=data2['data'], color=ie_color, ax=axes)
+            ax2 = self.fig.add_subplot(gs[1, 1])
             r_sigma = rgb2rgbf(options[('Line Plot', 'Interaction Entropy', 'sigma-color', 'reliable')])
             nr_sigma = rgb2rgbf(options[('Line Plot', 'Interaction Entropy', 'sigma-color', 'non-reliable')])
             colors = [ie_color, r_sigma if np.all(data2.loc[:, ['sigma']].mean() < 3.6) else nr_sigma]
-            self.ie_bar = sns.barplot(data=data2, ax=self.axins4, palette=colors)
+            self.ie_bar = sns.barplot(data=data2, ax=ax2, palette=colors)
+            self.numf = len(data2['data'])
             self.ie_bar.set(xticklabels=[f"ie\n(last\n {self.numf} frames)", "σ(Int.\nEnergy)"])
             self.ie_barlabel = self.ie_bar.bar_label(self.ie_bar.containers[0],
                                                      size=options[('Line Plot', 'Interaction Entropy', 'bar-plot',
@@ -201,9 +200,10 @@ class LineChart(ChartsBase):
                                                      padding=options[('Line Plot', 'Interaction Entropy', 'bar-plot',
                                                                       'bar-label-padding')])
             sns.despine(ax=self.ie_bar)
-            self.ie_bar.spines['bottom'].set_color('darkgray')
-            self.ie_bar.spines['left'].set_color('darkgray')
-            self.ie_bar.tick_params(color='black', direction='out', length=6, width=2)
+        else:
+            axes = self.fig.subplots(1, 1)
+            self.line_plot_ax = sns.lineplot(data=data, color=rgb2rgbf(options[('Line Plot', 'line-color')]),
+                                             linewidth=options[('Line Plot', 'line-width')], ax=axes)
 
         self.cursor = Cursor(axes, useblit=True, color='black', linewidth=0.5, ls='--')
 
@@ -225,7 +225,7 @@ class LineChart(ChartsBase):
 
         self.setup_text(self.line_plot_ax, options, key='Line Plot', xlabel='Frames')
 
-        if self.axins4:
+        if self.ie_bar:
             for label in self.ie_barlabel:
                 label.set_fontsize(options[('Line Plot', 'Interaction Entropy', 'bar-plot', 'bar-label-fontsize')])
             self.ie_bar.tick_params(labelsize=options[('Line Plot', 'Interaction Entropy', 'bar-plot',
@@ -242,6 +242,7 @@ class BarChart(ChartsBase):
         self.set_cw()
         self.fig.set_size_inches(options[('Bar Plot', 'figure', 'width')],
                                  options[('Bar Plot', 'figure', 'height')])
+        self.bar_frames = False
         if 'groups' in options and options[('Bar Plot', 'subplot-components')]:
             self.axes = self.fig.subplots(1, len(options['groups']), sharey=True,
                                           gridspec_kw={'width_ratios': [len(x) for x in options['groups'].values()]})
@@ -265,7 +266,9 @@ class BarChart(ChartsBase):
                 ylabel = '' if c != 0 else 'Energy (kcal/mol)'
                 self.setup_text(bar_plot_ax, options, key='Bar Plot', title=g, ylabel=ylabel)
                 setattr(self, f'cursor{c}', Cursor(bar_plot_ax, useblit=True, color='black', linewidth=0.5, ls='--'))
-
+                bar_plot_ax.set_xticklabels(self._set_xticks(bar_plot_ax, options[('Bar Plot', 'remove-molid')]))
+            if options[('Bar Plot', 'axes', 'y-inverted')]:
+                self.axes[0].invert_yaxis()
         else:
             self.axes = self.fig.subplots(1, 1)
             bar_plot_ax = sns.barplot(data=data, ci="sd", errwidth=1, ax=self.axes)
@@ -277,12 +280,23 @@ class BarChart(ChartsBase):
                 self.bar_labels.append(bl)
             self.setup_text(bar_plot_ax, options, key='Bar Plot')
             self.cursor = Cursor(bar_plot_ax, useblit=True, color='black', linewidth=0.5, ls='--')
-
-        # self.fig.suptitle(f"{options['chart_title']}\n{options['chart_subtitle']}",
-        #                   fontsize=options['general_options']['fontsize']['title'])
+            if options[('Bar Plot', 'axes', 'y-inverted')]:
+                bar_plot_ax.invert_yaxis()
+            bar_plot_ax.set_xticklabels(self._set_xticks(bar_plot_ax, options[('Bar Plot', 'remove-molid')]))
+            self.bar_frames = 'frames' in data
         self.setWindowTitle(options['chart_subtitle'])
         self.update_config(options)
         self.draw()
+
+    @staticmethod
+    def _set_xticks(axe, remove_molid):
+        xlabels = []
+        for xlabel in axe.get_xticklabels():
+            if remove_molid and xlabel.get_text()[:2] in ['R:', 'L:']:
+                xlabels.append(xlabel.get_text()[2:])
+            else:
+                xlabels.append(xlabel.get_text())
+        return xlabels
 
     def update_config(self, options):
         self.fig.suptitle(f"{options['chart_title']}\n{options['chart_subtitle']}",
@@ -306,7 +320,7 @@ class BarChart(ChartsBase):
                 for blabels in self.bar_labels:
                     for label in blabels:
                         label.set_fontsize(options[('Bar Plot', 'bar-label', 'fontsize')])
-            self.setup_text(self.axes, options, key='Bar Plot', xlabel='Frames')
+            self.setup_text(self.axes, options, key='Bar Plot', xlabel='Frames' if self.bar_frames else '')
         self.draw()
 
 
@@ -314,72 +328,107 @@ class HeatmapChart(ChartsBase):
     def __init__(self, data: pandas.DataFrame, button: QToolButton, options: dict = None):
         super(HeatmapChart, self).__init__(button, options)
 
-        heatmap_type = int(all(data.columns == data.index)) if data.columns.size == data.index.size else 2
-        fig_width = (options['heatmap_options']['figure']['width-per-wise'] if heatmap_type == 1 else
-                     options['heatmap_options']['figure']['width-per-residue'])
-        fig_height = options['heatmap_options']['figure']['height']
-        x_rotation = (options['heatmap_options']['Per-wise']['x-rotation'] if heatmap_type == 1 else
-                      options['heatmap_options']['Per-residue']['x-rotation'])
-        cmap = (Palettes.get_palette(options['heatmap_options']['Per-wise']['palette']) if heatmap_type == 1 else
-                Palettes.get_palette(options['heatmap_options']['Per-residue']['palette']))
+        self.heatmap_type = int(all(data.columns == data.index)) if data.columns.size == data.index.size else 2
+        fig_width = (options[('Heatmap Plot', 'figure', 'width-per-wise')] if self.heatmap_type == 1 else
+                     options[('Heatmap Plot', 'figure', 'width-per-residue')])
+        fig_height = options[('Heatmap Plot', 'figure', 'height')]
+        x_rotation = (options[('Heatmap Plot', 'Per-wise', 'x-rotation')] if self.heatmap_type == 1 else
+                      options[('Heatmap Plot', 'Per-residue', 'x-rotation')])
+        cmap = (Palettes.get_colormap(options[('Heatmap Plot', 'Per-wise', 'palette')]) if self.heatmap_type == 1 else
+                Palettes.get_colormap(options[('Heatmap Plot', 'Per-residue', 'palette')]))
+        nxticks = (1 if self.heatmap_type == 1 or data.columns.size < options[('Heatmap Plot', 'Per-residue', 'num-xticks')]
+                   else data.columns.size // options[('Heatmap Plot', 'Per-residue', 'num-xticks')])
 
-        if options['heatmap_options']['highlight-components']:
+        if options[('Heatmap Plot', 'highlight-components')]:
             mheatmap = MHeatmap(data=data,
                                 figsize=(fig_width, fig_height),
-                                dpi=self.options['dpi']['plot'],
-                                heatmap_type=heatmap_type,
-                                rec_color=rgb2rgbf(options['heatmap_options']['receptor-color']),
-                                lig_color=rgb2rgbf(options['heatmap_options']['ligand-color']),
-                                show_legend=options['heatmap_options']['legend'],
-                                remove_molid=options['heatmap_options']['remove-molid'],
-                                leg_fontsize=self.options['fontsize']['legend'],
-                                xticks_fontsize=self.options['fontsize']['x-ticks'],
-                                xlabel_fontsize=self.options['fontsize']['x-label'],
+                                dpi=options[('General', 'figure-format', 'dpi-plot')],
+                                heatmap_type=self.heatmap_type,
+                                rec_color=rgb2rgbf(options[('Heatmap Plot', 'receptor-color')]),
+                                lig_color=rgb2rgbf(options[('Heatmap Plot', 'ligand-color')]),
+                                show_legend=options[('Heatmap Plot', 'legend')],
+                                remove_molid=options[('Heatmap Plot', 'remove-molid')],
+                                leg_fontsize=options[('Heatmap Plot', 'fontsize', 'legend')],
+                                xticks_fontsize=options[('Heatmap Plot', 'fontsize', 'x-ticks')],
+                                xlabel_fontsize=options[('Heatmap Plot', 'fontsize', 'x-label')],
                                 x_rotation=x_rotation,
-                                num_xticks=options['heatmap_options']['Per-residue']['num-xticks'],
-                                yticks_fontsize=self.options['fontsize']['y-ticks'],
-                                y_rotation=options['heatmap_options']['y-rotation'],
-                                colorbar_label_fontsize=self.options['fontsize']['colorbar-label'],
-                                colorbar_ticks_fontsize=self.options['fontsize']['colorbar-ticks'],
+                                num_xticks=nxticks,
+                                yticks_fontsize=options[('Heatmap Plot', 'fontsize', 'y-ticks')],
+                                y_rotation=options[('Heatmap Plot', 'y-rotation')],
+                                colorbar_label_fontsize=options[('Heatmap Plot', 'fontsize', 'colorbar-label')],
+                                colorbar_ticks_fontsize=options[('Heatmap Plot', 'fontsize', 'colorbar-ticks')],
                                 cmap=cmap,
-                                annot=options['heatmap_options']['Per-wise']['annotation']
+                                annot=options[('Heatmap Plot', 'Per-wise', 'annotation')]
                                 )
 
             # figure canvas definition
             self.set_cw(mheatmap.fig)
-
-            self.draw(options['chart_subtitle'], tight_layout=True)
+            self.axes = mheatmap.ax_heatmap
         else:
             # figure canvas definition
             self.set_cw()
-            axes = self.fig.subplots(1, 1)
-            nxticks = 1 if self.heatmap_type == 1 else self.data.columns.size // self.num_xticks
-            # heatmap_ax = sns.heatmap(data, ax=axes, center=0,
-            #                          xticklabels=nxticks, cbar_ax=self.ax_cbar,
-            #                          cbar_kws=colorbar_kws,
-            #                          cmap=self.cmap, center=0, annot=self.annot, fmt=".2f"
-            #                          # yticklabels=data.index.tolist(),
-            #                          # xticklabels=window,
-            #                          cmap='seismic', cbar_kws={'label': 'Energy (kcal/mol)'})
-            self.cursor = Cursor(axes, useblit=True, color='black', linewidth=0.5, ls='--')
+            self.axes = self.fig.subplots(1, 1)
+            heatmap_ax = sns.heatmap(data, ax=self.axes, center=0,
+                                     xticklabels=nxticks, #cbar_ax=self.ax_cbar,
+                                     yticklabels=1, #cbar_ax=self.ax_cbar,
+                                     # cbar_kws=colorbar_kws,
+                                     cmap=cmap, annot=options[('Heatmap Plot', 'Per-wise', 'annotation')], fmt=".2f",
+                                     # yticklabels=data.index.tolist(),
+                                     # xticklabels=window,
+                                     cbar_kws={'label': 'Energy (kcal/mol)'})
+            ytl = heatmap_ax.get_yticklabels()
+            for ylabel in ytl:
+                ylabel.set_fontsize(options[('Heatmap Plot', 'fontsize', 'y-ticks')])
+                ylabel.set_rotation(options[('Heatmap Plot', 'y-rotation')])
+                if options[('Heatmap Plot', 'remove-molid')]:
+                    ylabel.set_text(ylabel.get_text()[2:])
+            xtl = heatmap_ax.get_xticklabels()
+            for xlabel in xtl:
+                xlabel.set_fontsize(options[('Heatmap Plot', 'fontsize', 'x-ticks')])
+                xlabel.set_rotation(x_rotation)
+                if options[('Heatmap Plot', 'remove-molid')] and self.heatmap_type == 1:
+                    xlabel.set_text(xlabel.get_text()[2:])
+                # xlabel.set_text(xlabel.get_text()[2:])
 
-            self.draw(options['chart_subtitle'])
+            if options[('Heatmap Plot', 'remove-molid')]:
+                heatmap_ax.set_yticklabels(ytl)
+                if self.heatmap_type == 1:
+                    heatmap_ax.set_xticklabels(xtl)
+            # heatmap_ax.yaxis.set_ticks_position('right')
+            # heatmap_ax.yaxis.set_label_position('right')
+            if self.heatmap_type == 2:
+                heatmap_ax.set_xlabel('Frames', fontdict={'fontsize': options[('Heatmap Plot', 'fontsize', 'x-label')]})
+
+        self.cursor = Cursor(self.axes, useblit=True, color='black', linewidth=0.5, ls='--')
+
+        self.setWindowTitle(options['chart_subtitle'])
+        self.update_config(options)
+        self.draw()
+
+    def update_config(self, options):
         self.fig.suptitle(f"{options['chart_title']}\n{options['chart_subtitle']}",
-                          fontsize=options['general_options']['fontsize']['title'])
+                          fontsize=options[('Heatmap Plot', 'fontsize', 'title')])
+        xlabel = 'Frames' if self.heatmap_type == 2 else ''
+        self.setup_text_hm(self.axes, options, xlabel=xlabel)
+        self.draw()
 
-    @staticmethod
-    def get_mol(x: str, rec_color, lig_color):
-        if x.startswith('R:'):
-            return rgb2rgbf(rec_color)
-        else:
-            return rgb2rgbf(lig_color)
-
-    def make_chart(self):
-        """
-        :param graph_type: 1: line plot, 2: bar plot, 3: heatmap plot
-        :return:
-        """
-        pass
+    def setup_text_hm(self, ax, options, title='', xlabel=''):
+        ax.set_title(title, fontdict={'fontsize': options[('Heatmap Plot', 'fontsize', 'suptitle')]})
+        if xlabel:
+            ax.set_xlabel(xlabel, fontdict={'fontsize': options[('Heatmap Plot', 'fontsize', 'x-label')]})
+        key = ['Per-residue'] if self.heatmap_type == 2 else ['Per-wise']
+        xrot = options[tuple(['Heatmap Plot'] + key + ['x-rotation'])]
+        for label in ax.get_xticklabels():
+            label.set_rotation(xrot)
+            if xrot < 0:
+                label.set_horizontalalignment('left')
+            else:
+                label.set_horizontalalignment('right')
+            label.set_fontsize(options[('Heatmap Plot', 'fontsize', 'x-ticks')])
+        yrot = options[('Heatmap Plot', 'y-rotation')]
+        for label in ax.get_yticklabels():
+            label.set_rotation(yrot)
+            label.set_fontsize(options[('Heatmap Plot', 'fontsize', 'y-ticks')])
 
 
 class MHeatmap:
@@ -546,8 +595,7 @@ class MHeatmap:
 
     def plot_matrix(self, colorbar_kws, **kws):
 
-        nxticks = 1 if self.heatmap_type == 1 else self.data.columns.size // self.num_xticks
-        h = sns.heatmap(self.data, ax=self.ax_heatmap, xticklabels=nxticks, cbar_ax=self.ax_cbar, cbar_kws=colorbar_kws,
+        h = sns.heatmap(self.data, ax=self.ax_heatmap, xticklabels=self.num_xticks, cbar_ax=self.ax_cbar, cbar_kws=colorbar_kws,
                         cmap=self.cmap, center=0, annot=self.annot, fmt=".2f", **kws)
         ytl = self.ax_heatmap.get_yticklabels()
         for ylabel in ytl:

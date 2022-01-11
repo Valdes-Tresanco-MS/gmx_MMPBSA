@@ -3,6 +3,7 @@ from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.cm import datad
 from pathlib import Path
 import json
+from GMXMMPBSA.analyzer.style import *
 
 
 def flatten_dict(d, parent_key=None):
@@ -20,6 +21,266 @@ def flatten_dict(d, parent_key=None):
     return dict(items)
 
 
+tooltip1 = '''
+            <html lang="en">
+
+<style>
+    table, th {
+        border-bottom: 2px solid black;
+        /*border-top: 2px solid black;*/
+    }
+    img {
+        width: 300px;
+        height: 25px;
+    }
+</style>
+<body>
+<h3>Palettes</h3>
+<p>Tooltip</p>''' + f'''
+<table>
+     <tr>
+        <th colspan="5">Cartoon Colors</th>
+    </tr>
+    <tr>
+        <td>ArmyRose_7</td>
+        <td><img src='{ArmyRose_7}' width="200" height="16" alt=""></td>
+        <td></td>
+        <td>ArmyRose_5</td>
+        <td><img src='{ArmyRose_5}' width="200" height="16" alt=""></td>
+    </tr>
+    <tr>
+        <td>Geyser_7</td>
+        <td><img src='{Geyser_7}' width="200" height="16" alt=""></td>
+        <td></td>
+        <td>Geyser_5</td>
+        <td><img src='{Geyser_5}' width="200" height="16" alt=""></td>
+    </tr>
+    <tr>
+        <td>TealRose_7</td>
+        <td><img src='{TealRose_7}' width="200" height="16" 
+        alt=""></td>
+        <td></td>
+        <td>TealRose_5</td>
+        <td><img src='{TealRose_5}' width="200" height="16" 
+        alt=""></td>
+    </tr>
+    <tr>
+        <td>Tropic_7</td>
+        <td><img src='{Tropic_7}' width="200" height="16" alt=""></td>
+        <td></td>
+        <td>Tropic_5</td>
+        <td><img src='{Tropic_5}' width="200" height="16" alt=""></td>
+    </tr>
+    <tr>
+        <th colspan="5">CMOcean Colors</th>
+    </tr>
+    <tr>
+        <td>Balance_7</td>
+        <td><img src='{Balance_7}' width="200" height="16" 
+        alt=""></td>
+        <td></td>
+        <td>Balance_5</td>
+        <td><img src='{Balance_5}' width="200" height="16" 
+        alt=""></td>
+    </tr>
+    <tr>
+        <td>Curl_7</td>
+        <td><img src='{Curl_7}' width="200" height="16" alt=""></td>
+        <td></td>
+        <td>Curl_5</td>
+        <td><img src='{Curl_5}' width="200" height="16" alt=""></td>
+    </tr>
+    <tr>
+        <td>Delta_7</td>
+        <td><img src='{Delta_7}' width="200" height="16" alt=""></td>
+        <td></td>
+        <td>Delta_5</td>
+        <td><img src='{Delta_5}' width="200" height="16" alt=""></td>
+    </tr>
+    <tr>
+        <th colspan="5">Colorbrew Colors</th>
+    </tr>
+    <tr>
+        <td>BrBG_7</td>
+        <td><img src='{BrBG_7}' width="200" height="16" alt=""></td>
+        <td></td>
+        <td>BrBG_5</td>
+        <td><img src='{BrBG_5}' width="200" height="16" alt=""></td>
+    </tr>
+    <tr>
+        <td>PiYG_7</td>
+        <td><img src='{PiYG_7}' width="200" height="16" alt=""></td>
+        <td></td>
+        <td>PiYG_5</td>
+        <td><img src='{PiYG_5}' width="200" height="16" alt=""></td>
+    </tr>
+    <tr>
+        <td>PRGn_7</td>
+        <td><img src='{PRGn_7}' width="200" height="16" alt=""></td>
+        <td></td>
+        <td>PRGn_5</td>
+        <td><img src='{PRGn_5}' width="200" height="16" alt=""></td>
+    </tr>
+    <tr>
+        <td>PuOr_7</td>
+        <td><img src='{PuOr_7}' width="200" height="16" alt=""></td>
+        <td></td>
+        <td>PuOr_5</td>
+        <td><img src='{PuOr_5}' width="200" height="16" alt=""></td>
+    </tr>
+    <tr>
+        <td>RdBu_7</td>
+        <td><img src='{RdBu_7}' width="200" height="16" alt=""></td>
+        <td></td>
+        <td>RdBu_5</td>
+        <td><img src='{RdBu_5}' width="200" height="16" alt=""></td>
+    </tr>
+    <tr>
+        <td>RdGy_7</td>
+        <td><img src='{RdGy_7}' width="200" height="16" alt=""></td>
+        <td></td>
+        <td>RdGy_5</td>
+        <td><img src='{RdGy_5}' width="200" height="16" alt=""></td>
+    </tr>
+    <tr>
+        <td>RdYlBu *</td>
+        <td><img src='{RdYlBu}' width="200" height="16" alt=""></td>
+        <td></td>
+        <td>RdYlGn *</td>
+        <td><img src='{RdYlGn}' width="200" height="16" alt=""></td>
+    </tr>
+    <tr>
+        <td>Spectral *</td>
+        <td><img src='{Spectral}' width="200" height="16" alt=""></td>
+        <td></td>
+        <td>coolwarm *</td>
+        <td><img src='{coolwarm}' width="200" height="16" alt=""></td>
+    </tr>
+</table>
+
+<p>* No compatible with PyMOL visualization</p>
+</body>
+</html>'''
+tooltip2 = '''
+            <html lang="en">
+
+<style>
+    table, th {
+        border-bottom: 2px solid black;
+        /*border-top: 2px solid black;*/
+    }
+    img {
+        width: 300px;
+        height: 25px;
+    }
+</style>
+<body>
+<h3>Palettes</h3>
+<p>Tooltip</p>''' + f'''
+<table>
+     <tr>
+        <th colspan="5">Color cycle - 20 -</th>
+    </tr>
+    <tr>
+        <td>husl</td>
+        <td><img src='{husl}' width="200" 
+        height="16" alt=""></td>
+        <td></td>
+        <td>hls</td>
+        <td><img src='{hls}' width="200" height="16" 
+        alt=""></td>
+    </tr>
+    <tr>
+        <td>tab20</td>
+        <td><img src='{tab20}' width="200" height="16" 
+        alt=""></td>
+        <td></td>
+        <td>tab20b</td>
+        <td><img src='{tab20b}' width="200" height="16" 
+        alt=""></td>
+    </tr>
+    <tr>
+        <td>tab20c</td>
+        <td><img src='{tab20c}' width="200" height="16" 
+        alt=""></td>
+    </tr>
+    <tr>
+        <th colspan="5">Color cycle - 12 -</th>
+    </tr>
+    <tr>
+        <td>Paired</td>
+        <td><img src='{Paired}' width="200" height="16" 
+        alt=""></td>
+        <td></td>
+        <td>Set3</td>
+        <td><img src='{Set3}' width="200" height="16" alt=""></td>
+    </tr>
+    <tr>
+        <th colspan="5">Color cycle - 10 -</th>
+    </tr>
+    <tr>
+        <td>deep</td>
+        <td><img src='{deep}' width="200" height="16" alt=""></td>
+        <td></td>
+        <td>muted</td>
+        <td><img src='{muted}' width="200" height="16" alt=""></td>
+    </tr>
+    <tr>
+        <td>bright</td>
+        <td><img src='{bright}' width="200" height="16" 
+        alt=""></td>
+        <td></td>
+        <td>pastel</td>
+        <td><img src='{pastel}' width="200" height="16" 
+        alt=""></td>
+    </tr>
+    <tr>
+        <td>dark</td>
+        <td><img src='{dark}' width="200" height="16" alt=""></td>
+        <td></td>
+        <td>colorblind</td>
+        <td><img src='{colorblind}' width="200" height="16" 
+        alt=""></td>
+    </tr>
+    <tr>
+        <td>tab10</td>
+        <td><img src='{tab10}' width="200" height="16" alt=""></td>
+    </tr>
+    <tr>
+        <th colspan="5">Color cycle - 9 -</th>
+    </tr>
+    <tr>
+        <td>Pastel1</td>
+        <td><img src='{Pastel1}' width="200" height="16" 
+        alt=""></td>
+        <td></td>
+        <td>Set1</td>
+        <td><img src='{Set1}' width="200" height="16" alt=""></td>
+    </tr>
+    <tr>
+        <th colspan="5">Color cycle - 8 -</th>
+    </tr>
+    <tr>
+        <td>Pastel2</td>
+        <td><img src='{Pastel2}' width="200" height="16" 
+        alt=""></td>
+        <td></td>
+        <td>Accent</td>
+        <td><img src='{Accent}' width="200" height="16" 
+        alt=""></td>
+    </tr>
+    <tr>
+        <td>Dark2</td>
+        <td><img src='{Dark2}' width="200" height="16" alt=""></td>
+        <td></td>
+        <td>Set2</td>
+        <td><img src='{Set2}' width="200" height="16" alt=""></td>
+    </tr>
+</table>
+<p>Please</p>
+</body>
+</html>'''
+
 class ChartSettings(dict):
     D = 1  # Drawable
     U = 2  # Updatable
@@ -34,7 +295,7 @@ class ChartSettings(dict):
                     'theme': {
                         'type': 'list', 'enabled': True, 'expanded': True, 'name': 'theme', 'value': 'darkgrid',
                         'values': ['darkgrid', '---0', 'whitegrid', 'dark', 'white', 'ticks'], 'default': 'darkgrid',
-                        'tip': 'Esto es un tip', 'action_type': R},
+                        'tip': tooltip1, 'action_type': R},
                     'toolbar': {'type': 'bool', 'enabled': True, 'expanded': True, 'name': 'toolbar', 'value': False,
                                 'default': False, 'action_type': U},
                     'figure-format': {
@@ -103,17 +364,11 @@ class ChartSettings(dict):
                                                       'name': 'axes-fontsize', 'value': 8, 'default': 8,
                                                       'action_type': D},
                                     'width': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'width',
-                                              'value': 25, 'siPrefix': True, 'suffix': '%', 'default': 25,
+                                              'value': 15, 'siPrefix': True, 'suffix': '%', 'default': 15,
                                               'action_type': R},
                                     'height': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'height',
                                                'value': 50, 'siPrefix': True, 'suffix': '%', 'default': 50,
                                                'action_type': R},
-                                    'x-pos': {'type': 'float', 'enabled': True, 'expanded': True, 'name': 'x-pos',
-                                              'value': 0.5, 'step': 0.01, 'limits': (0, 1), 'default': 0.5,
-                                              'action_type': R},
-                                    'y-pos': {'type': 'float', 'enabled': True, 'expanded': True, 'name': 'y-pos',
-                                              'value': 0.15, 'step': 0.01, 'limits': (0, 1), 'default': 0.15,
-                                              'action_type': R}
                                 }}}},
                     'fontsize': {
                         'type': 'group', 'enabled': True, 'expanded': False, 'name': 'fontsize', 'value': None,
@@ -165,7 +420,7 @@ class ChartSettings(dict):
                                                             'dark', 'colorblind', '---1',
                                                             'Pastel1', 'Pastel2', 'Paired', 'Accent', 'Dark2', 'Set1',
                                                             'Set2', 'Set3', 'tab10', 'tab20', 'tab20b', 'tab20c'],
-                                'default': 'husl', 'action_type': R},
+                                'default': 'husl', 'action_type': R, 'tip': tooltip2},
                     'color': {'type': 'color', 'enabled': True, 'expanded': True, 'name': 'color',
                               'value': [44, 105, 176, 255], 'default': [44, 105, 176, 255], 'action_type': R},
                     'subplot-components': {'type': 'bool', 'enabled': True, 'expanded': True,
@@ -173,6 +428,8 @@ class ChartSettings(dict):
                                            'action_type': R},
                     'scale-big-values': {'type': 'bool', 'enabled': True, 'expanded': True,
                                          'name': 'scale-big-values', 'value': True, 'default': True, 'action_type': R},
+                    'remove-molid': {'type': 'bool', 'enabled': True, 'expanded': True, 'name': 'remove-molid',
+                                     'value': True, 'default': True, 'action_type': R},
                     'error-line': {'type': 'group', 'enabled': True, 'expanded': False, 'name': 'error-line',
                                    'value': None, 'default': None,
                                    'children': {
@@ -222,6 +479,8 @@ class ChartSettings(dict):
                             'y-rotation': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'y-rotation',
                                            'value': 0, 'step': 1, 'limits': (-90, 90),
                                            'accelerated': True, 'default': 0, 'action_type': D},
+                            'y-inverted': {'type': 'bool', 'enabled': True, 'expanded': True, 'name': 'y-inverted',
+                                           'value': True, 'default': True, 'action_type': R}
                         }},
                     'figure': {
                         'type': 'group', 'enabled': True, 'expanded': False, 'name': 'figure', 'value': None,
@@ -241,7 +500,7 @@ class ChartSettings(dict):
                     'legend': {'type': 'bool', 'enabled': True, 'expanded': True, 'name': 'legend', 'value': True,
                                'default': True, 'action_type': R},
                     'remove-molid': {'type': 'bool', 'enabled': True, 'expanded': True, 'name': 'remove-molid',
-                                     'value': True, 'default': True, 'action_type': D},
+                                     'value': True, 'default': True, 'action_type': R},
                     'receptor-color': {'type': 'color', 'enabled': True, 'expanded': True, 'name': 'receptor-color',
                                        'value': [0, 0, 255, 255], 'default': [0, 0, 255, 255], 'action_type': R},
                     'ligand-color': {'type': 'color', 'enabled': True, 'expanded': True, 'name': 'ligand-color',
@@ -265,7 +524,8 @@ class ChartSettings(dict):
                                                                        'PiYG_5', 'PuOr_7', 'PuOr_5', 'RdBu_7', 'RdBu_5',
                                                                        'RdGy_7', 'RdGy_5', '---4', '---5',
                                                                        'RdYlBu', 'RdYlGn', 'Spectral', 'coolwarm'
-                                                                       ], 'default': 'seismic', 'action_type': R},
+                                                                       ], 'default': 'seismic', 'action_type': R,
+                                        'tip': tooltip1},
                             'annotation': {'type': 'bool', 'enabled': True, 'expanded': True, 'name': 'annotation',
                                            'value': False, 'default': False, 'action_type': R},
                             'x-rotation': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'x-rotation',
@@ -286,7 +546,8 @@ class ChartSettings(dict):
                                                                        'PiYG_5', 'PuOr_7', 'PuOr_5', 'RdBu_7', 'RdBu_5',
                                                                        'RdGy_7', 'RdGy_5', '---4', '---5',
                                                                        'RdYlBu', 'RdYlGn', 'Spectral', 'coolwarm'
-                                                                       ], 'default': 'seismic', 'action_type': R},
+                                                                       ], 'default': 'seismic', 'action_type': R,
+                                        'tip': tooltip1},
                             'num-xticks': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'num-xticks',
                                            'value': 10, 'default': 10, 'action_type': D},
                             'x-rotation': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'x-rotation',
@@ -342,7 +603,7 @@ class ChartSettings(dict):
                                                             'BrBG_7', 'BrBG_5', 'PRGn_7', 'PRGn_5', 'PiYG_7',
                                                             'PiYG_5', 'PuOr_7', 'PuOr_5', 'RdBu_7', 'RdBu_5',
                                                             'RdGy_7', 'RdGy_5'
-                                                            ], 'default': 'auto', 'action_type': R},
+                                                            ], 'default': 'auto', 'action_type': R, 'tip': tooltip1},
                 }}
         }}
 
@@ -714,9 +975,13 @@ class Palettes:
     # -- END -- Qualitative colormaps
 
     @classmethod
-    def get_palette(cls, name):
+    def get_colormap(cls, name):
         palette = getattr(cls, name)
         if isinstance(palette, Palette):
             return palette.colormap
         else:
             return palette
+
+    @classmethod
+    def get_palette(cls, name):
+        return getattr(cls, name)

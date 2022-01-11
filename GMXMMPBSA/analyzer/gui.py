@@ -779,12 +779,17 @@ class GMX_MMPBSA_ANA(QMainWindow):
                 elif k in gsolv_keys:
                     sep_gsolv_keys.append(k)
             if sep_ggas_keys:
-                groups['G gas'] = sep_ggas_keys
-                groups['G solv'] = sep_gsolv_keys
-                groups['TOTAL'] = ['G gas', 'G solv', 'TOTAL']
+                groups['GGAS'] = sep_ggas_keys
+                groups['GSOLV'] = sep_gsolv_keys
+                groups['TOTAL'] = ['GGAS', 'GSOLV', 'TOTAL']
         else:
-            groups['Receptor'] = None
-            groups['Ligand'] = None
+            groups['Receptor'] = []
+            groups['Ligand'] = []
+            for k in data.columns:
+                if k[0].startswith('R:') and k[0] not in groups['Receptor']:
+                    groups['Receptor'].append(k[0])
+                elif k[0].startswith('L:') and k[0] not in groups['Ligand']:
+                    groups['Ligand'].append(k[0])
         return groups
 
     def makeItems(self, sys_index, topItem, options, mutant=0):
@@ -820,6 +825,8 @@ class GMX_MMPBSA_ANA(QMainWindow):
                 titem = CustomItem(topItem, [level.upper()])
                 str_dict = multiindex2dict(data[level].columns)
                 for level1 in str_dict:
+                    if level1 not in parts:
+                        continue
                     item1 = CustomItem(
                         titem,
                         [level1.upper()],
@@ -842,12 +849,13 @@ class GMX_MMPBSA_ANA(QMainWindow):
                             chart_title="Energetic Components",
                             chart_subtitle=f"{mut_pre}{sys_name} | {level.upper()} | {level1.upper()} | {level2.upper()}"
                         )
+                        self.items_counter['charts'] += 1
                     if level1 in data[level]:
                         item1.data = data[level][(level1,)]
-                        self._itemdata_properties(data[level][(level1,)])
                         item1.properties['scalable'] = data[level][(level1,)].gt(300).any().any()
                         item1.properties['groups'] = self._itemdata_properties(data[level][(level1,)])
-
+                    self.items_counter['charts'] += 1
+                self.items_counter['charts'] += 1
             elif level == 'decomp':
                 # omit decomp data
                 if not options['decomposition']:
@@ -860,6 +868,8 @@ class GMX_MMPBSA_ANA(QMainWindow):
                     str_dict = multiindex2dict(dat.columns)
                     # Complex, receptor, ligand and delta
                     for level2 in str_dict:
+                        if level2 not in parts:
+                            continue
                         item2 = CustomItem(item, [level2.upper()])
                         # TDC, SDC, BDC
                         item_lvl = 2 if namespace.INPUT['idecomp'] in [1, 2] else 3
@@ -879,6 +889,8 @@ class GMX_MMPBSA_ANA(QMainWindow):
                                                f"{str(level2).upper()} | "
                                                f"{str(level3).upper()}"
                             )
+                            item3.properties['scalable'] = dat[(level2, level3)].gt(300).any().any()
+                            item3.properties['groups'] = self._itemdata_properties(dat[(level2, level3)], decomp=True)
                             # # residue first level
                             btns = (2,) if namespace.INPUT['idecomp'] in [1, 2] else (1, 2, 3)
                             item_lvl2 = 1 if namespace.INPUT['idecomp'] in [1, 2] else 2
@@ -899,16 +911,28 @@ class GMX_MMPBSA_ANA(QMainWindow):
                                                    f"{str(level3).upper()} | "
                                                    f"{str(level4).upper()}"
                                 )
+                                item4.properties['scalable'] = dat[(level2, level3, level4)].gt(300).any().any()
                                 # energetics terms
                                 for level5 in str_dict[level2][level3][level4]:
                                     if namespace.INPUT['idecomp'] in [1, 2]:
                                         item5 = CustomItem(item4, [level5.upper()],
                                                            data=dat[(level2, level3, level4, level5)], app=self,
-                                                           buttons=(1,))
+                                                           buttons=(1,),
+                                                           chart_title="Energetic Components [Per-residue]",
+                                                           chart_subtitle=f"{mut_pre}{sys_name} | "
+                                                                          f"{str(level).upper()} | "
+                                                                          f"{str(level1).upper()} | "
+                                                                          f"{str(level2).upper()} | "
+                                                                          f"{str(level3).upper()} | "
+                                                                          f"{str(level4).upper()} | "
+                                                                          f"{str(level5).upper()}"
+                                                           )
+                                        self.items_counter['charts'] += 1
                                     else:
                                         item5 = CustomItem(item4, [level5.upper()],
                                                            data=dat[(level2, level3, level4, level5)], app=self,
                                                            level=1, buttons=(2,))
+                                        self.items_counter['charts'] += 1
                                         # energetics terms
                                         for level6 in str_dict[level2][level3][level4][level5]:
                                             item6 = CustomItem(
@@ -927,7 +951,12 @@ class GMX_MMPBSA_ANA(QMainWindow):
                                                                f"{str(level5).upper()} | "
                                                                f"{str(level6).upper()}"
                                             )
-
+                                            self.items_counter['charts'] += 1
+                                self.items_counter['charts'] += 1
+                            self.items_counter['charts'] += 1
+                        self.items_counter['charts'] += 1
+                    self.items_counter['charts'] += 1
+                self.items_counter['charts'] += 1
             elif level == 'ie':
                 titem = CustomItem(topItem, [level.upper()])
                 # print(data[level])

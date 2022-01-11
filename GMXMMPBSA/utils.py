@@ -88,26 +88,35 @@ class Residue(int):
         pass
 
 
-def res2map(com_ndx, com_file):
+def get_indexes(com_ndx, rec_ndx=None, rec_group=1, lig_ndx=None, lig_group=1):
+    ndx_files = {'COM': com_ndx, 'REC': rec_ndx, 'LIG': lig_ndx}
+    ndx = {'COM': {}, 'REC': {}, 'LIG': {}}
+    for n, f in ndx_files.items():
+        if f is None:
+            continue
+        with open(f) as indexf:
+            header = None
+            for line in indexf:
+                if line.startswith('['):
+                    header = line.strip('\n[] ')
+                    ndx[n][header] = []
+                else:
+                    ndx[n][header].extend(map(int, line.split()))
+    com_indexes = {'COM': ndx['COM']['GMXMMPBSA_REC_GMXMMPBSA_LIG'], 'REC': ndx['COM']['GMXMMPBSA_REC'],
+                   'LIG': [ndx['COM']['GMXMMPBSA_LIG']]}
+    rec_indexes = ndx['REC'][list(ndx['REC'].keys())[rec_group]] if rec_ndx else {}
+    lig_indexes = ndx['LIG'][list(ndx['LIG'].keys())[lig_group]] if lig_ndx else {}
+    return {'COM': com_indexes, 'REC': rec_indexes, 'LIG': lig_indexes}
+
+
+def res2map(indexes, com_file):
     """
     :param com_str:
     :return:
     """
-    # read the index file
-    ndx = {}
-    with open(com_ndx) as indexf:
-        header = None
-        for line in indexf:
-            if line.startswith('['):
-                header = line.strip('\n[] ')
-                ndx[header] = []
-            else:
-                ndx[header].extend(map(int, line.split()))
-
     masks = {'REC': [], 'LIG': []}
     res_list = {'REC': [], 'LIG': [], 'COM': []}
-    com_ndx = ndx['GMXMMPBSA_REC_GMXMMPBSA_LIG']
-    com_len = len(ndx['GMXMMPBSA_REC_GMXMMPBSA_LIG'])
+    com_len = len(indexes['COM']['COM'])
     if isinstance(com_file, parmed.Structure):
         com_str = com_file
     else:
@@ -119,7 +128,7 @@ def res2map(com_ndx, com_file):
         res = [com_str.atoms[i].residue.chain, com_str.atoms[i].residue.number, com_str.atoms[
             i].residue.insertion_code]
         # We check who owns the residue corresponding to this atom
-        if com_ndx[i] in ndx['GMXMMPBSA_REC']:
+        if indexes['COM']['COM'][i] in indexes['COM']['REC']:
             # save residue number in the rec list
             if res != proc_res and resindex not in res_list['REC']:
                 res_list['REC'].append(Residue(resindex, com_str.atoms[i].residue.number,
@@ -156,7 +165,7 @@ def res2map(com_ndx, com_file):
     temp.sort(key=lambda x: x[0])
     order_list = [c[1] for c in temp]
 
-    return masks, res_list, order_list, [ndx['GMXMMPBSA_REC'], ndx['GMXMMPBSA_LIG']]
+    return masks, res_list, order_list
 
 
 def get_dist(coor1, coor2):
