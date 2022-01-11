@@ -242,6 +242,7 @@ class BarChart(ChartsBase):
         self.set_cw()
         self.fig.set_size_inches(options[('Bar Plot', 'figure', 'width')],
                                  options[('Bar Plot', 'figure', 'height')])
+        self.bar_frames = False
         if 'groups' in options and options[('Bar Plot', 'subplot-components')]:
             self.axes = self.fig.subplots(1, len(options['groups']), sharey=True,
                                           gridspec_kw={'width_ratios': [len(x) for x in options['groups'].values()]})
@@ -265,7 +266,9 @@ class BarChart(ChartsBase):
                 ylabel = '' if c != 0 else 'Energy (kcal/mol)'
                 self.setup_text(bar_plot_ax, options, key='Bar Plot', title=g, ylabel=ylabel)
                 setattr(self, f'cursor{c}', Cursor(bar_plot_ax, useblit=True, color='black', linewidth=0.5, ls='--'))
-
+                bar_plot_ax.set_xticklabels(self._set_xticks(bar_plot_ax, options[('Bar Plot', 'remove-molid')]))
+            if options[('Bar Plot', 'axes', 'y-inverted')]:
+                self.axes[0].invert_yaxis()
         else:
             self.axes = self.fig.subplots(1, 1)
             bar_plot_ax = sns.barplot(data=data, ci="sd", errwidth=1, ax=self.axes)
@@ -277,12 +280,23 @@ class BarChart(ChartsBase):
                 self.bar_labels.append(bl)
             self.setup_text(bar_plot_ax, options, key='Bar Plot')
             self.cursor = Cursor(bar_plot_ax, useblit=True, color='black', linewidth=0.5, ls='--')
-
-        # self.fig.suptitle(f"{options['chart_title']}\n{options['chart_subtitle']}",
-        #                   fontsize=options['general_options']['fontsize']['title'])
+            if options[('Bar Plot', 'axes', 'y-inverted')]:
+                bar_plot_ax.invert_yaxis()
+            bar_plot_ax.set_xticklabels(self._set_xticks(bar_plot_ax, options[('Bar Plot', 'remove-molid')]))
+            self.bar_frames = 'frames' in data
         self.setWindowTitle(options['chart_subtitle'])
         self.update_config(options)
         self.draw()
+
+    @staticmethod
+    def _set_xticks(axe, remove_molid):
+        xlabels = []
+        for xlabel in axe.get_xticklabels():
+            if remove_molid and xlabel.get_text()[:2] in ['R:', 'L:']:
+                xlabels.append(xlabel.get_text()[2:])
+            else:
+                xlabels.append(xlabel.get_text())
+        return xlabels
 
     def update_config(self, options):
         self.fig.suptitle(f"{options['chart_title']}\n{options['chart_subtitle']}",
@@ -306,7 +320,7 @@ class BarChart(ChartsBase):
                 for blabels in self.bar_labels:
                     for label in blabels:
                         label.set_fontsize(options[('Bar Plot', 'bar-label', 'fontsize')])
-            self.setup_text(self.axes, options, key='Bar Plot', xlabel='Frames')
+            self.setup_text(self.axes, options, key='Bar Plot', xlabel='Frames' if self.bar_frames else '')
         self.draw()
 
 
@@ -401,7 +415,6 @@ class HeatmapChart(ChartsBase):
 
     def setup_text_hm(self, ax, options, title='', xlabel=''):
         ax.set_title(title, fontdict={'fontsize': options[('Heatmap Plot', 'fontsize', 'suptitle')]})
-        print('title', title)
         if xlabel:
             ax.set_xlabel(xlabel, fontdict={'fontsize': options[('Heatmap Plot', 'fontsize', 'x-label')]})
         key = ['Per-residue'] if self.heatmap_type == 2 else ['Per-wise']

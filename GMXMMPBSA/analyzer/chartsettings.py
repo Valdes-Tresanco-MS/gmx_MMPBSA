@@ -428,6 +428,8 @@ class ChartSettings(dict):
                                            'action_type': R},
                     'scale-big-values': {'type': 'bool', 'enabled': True, 'expanded': True,
                                          'name': 'scale-big-values', 'value': True, 'default': True, 'action_type': R},
+                    'remove-molid': {'type': 'bool', 'enabled': True, 'expanded': True, 'name': 'remove-molid',
+                                     'value': True, 'default': True, 'action_type': R},
                     'error-line': {'type': 'group', 'enabled': True, 'expanded': False, 'name': 'error-line',
                                    'value': None, 'default': None,
                                    'children': {
@@ -477,6 +479,8 @@ class ChartSettings(dict):
                             'y-rotation': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'y-rotation',
                                            'value': 0, 'step': 1, 'limits': (-90, 90),
                                            'accelerated': True, 'default': 0, 'action_type': D},
+                            'y-inverted': {'type': 'bool', 'enabled': True, 'expanded': True, 'name': 'y-inverted',
+                                           'value': True, 'default': True, 'action_type': R}
                         }},
                     'figure': {
                         'type': 'group', 'enabled': True, 'expanded': False, 'name': 'figure', 'value': None,
@@ -496,7 +500,7 @@ class ChartSettings(dict):
                     'legend': {'type': 'bool', 'enabled': True, 'expanded': True, 'name': 'legend', 'value': True,
                                'default': True, 'action_type': R},
                     'remove-molid': {'type': 'bool', 'enabled': True, 'expanded': True, 'name': 'remove-molid',
-                                     'value': True, 'default': True, 'action_type': D},
+                                     'value': True, 'default': True, 'action_type': R},
                     'receptor-color': {'type': 'color', 'enabled': True, 'expanded': True, 'name': 'receptor-color',
                                        'value': [0, 0, 255, 255], 'default': [0, 0, 255, 255], 'action_type': R},
                     'ligand-color': {'type': 'color', 'enabled': True, 'expanded': True, 'name': 'ligand-color',
