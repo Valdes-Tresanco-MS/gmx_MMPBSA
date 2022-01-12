@@ -62,8 +62,8 @@ in a reasonable amount of time. Feel free to change the parameters
 according to what is better for your system.
 
 &general
-verbose=2, protein_forcefield="oldff/leaprc.ff99SBildn",
-ligand_forcefield="leaprc.gaff", PBRadii=4, ions_parameters=1
+verbose=2, forcefields="oldff/leaprc.ff99SBildn,leaprc.gaff", 
+PBRadii=4, ions_parameters=1
 /
 
 &gb

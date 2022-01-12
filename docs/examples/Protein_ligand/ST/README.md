@@ -64,7 +64,7 @@ according to what is better for your system.
 
 &general
 startframe=5, endframe=20, verbose=2,
-protein_forcefield="oldff/leaprc.ff99SB", ligand_forcefield="leaprc.gaff"
+forcefields="oldff/leaprc.ff99SB,leaprc.gaff"
 /
 
 &gb

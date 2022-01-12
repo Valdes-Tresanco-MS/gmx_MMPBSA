@@ -55,7 +55,7 @@ according to what is better for your system.
 
 &general
 endframe=5, verbose=2,
-protein_forcefield="oldff/leaprc.ff99SB", ions_parameters=1,
+forcefields="oldff/leaprc.ff99SB", ions_parameters=1,
 /
 
 &gb

@@ -56,7 +56,7 @@ according to what is better for your system.
 &general
 #
 startframe=5, endframe=21, verbose=2, interval=1,
-protein_forcefield="oldff/leaprc.ff99SB",
+forcefields="oldff/leaprc.ff99SB",
 
 #entropy variable control whether to perform a quasi-harmonic entropy (QH)
 # approximation or the Interaction Entropy approximation
