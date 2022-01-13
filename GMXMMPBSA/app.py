@@ -36,12 +36,14 @@ except ImportError:
 
 
 def gmxmmpbsa():
+    stream_handler = logging.StreamHandler()
+    stream_handler.setLevel(logging.INFO)
     logging.basicConfig(
-        level=logging.INFO,
+        level=logging.DEBUG,
         format="[%(levelname)-7s] %(message)s",
         handlers=[
             logging.FileHandler("gmx_MMPBSA.log", 'w'),
-            logging.StreamHandler()])
+            stream_handler])
     # Just for compatibility as mpi4py works as serial when run without mpirun
     # (since v1.4.2)
     if len(sys.argv) > 1 and sys.argv[1] in ['MPI', 'mpi']:
@@ -126,12 +128,14 @@ def gmxmmpbsa_ana():
 
 
 def gmxmmpbsa_test():
+    stream_handler = logging.StreamHandler()
+    stream_handler.setLevel(logging.INFO)
     logging.basicConfig(
-        level=logging.INFO,
+        level=logging.DEBUG,
         format="[%(levelname)-7s] %(message)s",
         handlers=[
             logging.FileHandler("gmx_MMPBSA_test.log", 'w'),
-            logging.StreamHandler()])
+            stream_handler])
     try:
         parser = testparser.parse_args(sys.argv[1:])
     except CommandlineError as e:
