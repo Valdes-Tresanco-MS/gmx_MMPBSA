@@ -23,7 +23,7 @@ Generate Amber topology files from GROMACS files
 import os
 import parmed
 from GMXMMPBSA.exceptions import *
-from GMXMMPBSA.utils import checkff, selector, get_dist, list2range, res2map, get_indexes
+from GMXMMPBSA.utils import selector, get_dist, list2range, res2map, get_indexes, check_str
 from GMXMMPBSA.alamdcrd import _scaledistance
 import subprocess
 from pathlib import Path
@@ -97,10 +97,6 @@ class CheckMakeTop:
         self.receptor_str_file = self.FILES.prefix + 'REC.pdb'
         self.ligand_str_file = self.FILES.prefix + 'LIG.pdb'
 
-        if self.FILES.reference_structure:
-            self.ref_str = parmed.read_PDB(self.FILES.reference_structure)
-
-        checkff()
         self.checkFiles()
 
     def checkFiles(self):
@@ -297,12 +293,14 @@ class CheckMakeTop:
         self.complex_str = self.molstr(self.complex_str_file)
         self.receptor_str = self.molstr(self.receptor_str_file)
         self.ligand_str = self.molstr(self.ligand_str_file)
+        if self.FILES.reference_structure:
+            self.ref_str = check_str(self.FILES.reference_structure, ref=True)
         self.check4water()
         self.indexes = get_indexes(com_ndx=self.FILES.complex_index,
                                    rec_ndx=self.FILES.receptor_index, rec_group=self.FILES.receptor_group,
                                    lig_ndx=self.FILES.ligand_index, lig_group=self.FILES.ligand_group)
         self.resi, self.resl, self.orderl = res2map(self.indexes, self.complex_str)
-        self.fix_chains_IDs(self.complex_str, self.receptor_str, self.ligand_str, self.ref_str)
+        self.check_structures(self.complex_str, self.receptor_str, self.ligand_str)
 
     def check4water(self):
         counter = sum(
@@ -962,13 +960,27 @@ class CheckMakeTop:
                 new_trajs.append('LIG_traj_{}.xtc'.format(i))
             self.FILES.ligand_trajs = new_trajs
 
-    def fix_chains_IDs(self, com_str, rec_str=None, lig_str=None, ref_str=None):
-        if ref_str:
+    def check_structures(self, com_str, rec_str=None, lig_str=None):
+        logging.info('Checking the structures consistency...')
+        check_str(com_str)
+        check_str(rec_str)
+        check_str(lig_str)
+
+        if self.FILES.reference_structure:
+            logging.info('Assigning chain ID to structures files according to the reference structure...')
+            ref_str = check_str(self.FILES.reference_structure)
             if len(ref_str.residues) != len(com_str.residues):
-                GMXMMPBSA_ERROR('The number of amino acids in the reference structure is different from that of the '
-                                'complex...')
+                GMXMMPBSA_ERROR(f'The number of residues of the complex ({len(com_str.residues)}) and of the '
+                                f'reference structure ({len(ref_str.residues)}) are different. Please check that the '
+                                f'reference structure is correct')
             for c, res in enumerate(ref_str.residues, start=1):
-                # TODO: check if the residues are the same
+                if com_str.residues[c-1].number != res.number or com_str.residues[c-1].name != res.name:
+                    GMXMMPBSA_ERROR('There is no match between the complex and the reference structure used. An '
+                                    f'attempt was made to assign the chain ID to "{com_str.residues[c-1].name}'
+                                    f':{com_str.residues[c-1].number}:{com_str.residues[c-1].insertion_code}" in the '
+                                    f'complex, but "{res.name}:{res.number}:{res.insertion_code}" was expected '
+                                    'based on the reference structure. Please check that the reference structure is '
+                                    'correct')
                 com_str.residues[c-1].chain = res.chain
                 if c in self.resl['REC']:
                     i = self.resl['REC'].index(c)
@@ -990,11 +1002,10 @@ class CheckMakeTop:
                     logging.warning('Assigning chains ID...')
                 else:
                     logging.warning('Already have chain ID. Re-assigning ID...')
-            elif self.INPUT['assign_chainID'] == 0 and self.FILES.complex_tpr[-3:] == 'gro':
+            elif self.INPUT['assign_chainID'] == 0 and not com_str.residues[0].chain:
                 assign = True
-                logging.warning('No reference structure was found and a gro file was used for the complex '
-                                'structure. Assigning chains ID...')
-
+                logging.warning('No reference structure was found and the complex structure not contain any chain ID. '
+                                'Assigning chains ID automatically...')
             if assign:
                 self._assign_chains_IDs(com_str, rec_str, lig_str)
         # Save fixed complex structure for analysis and set it in FILES to save in info file
@@ -1070,8 +1081,8 @@ class CheckMakeTop:
 
             previous_res_number = res.number
         if has_nucl == 1:
-            logging.warning('This structure contains nucleotides. We recommend that you use the reference '
-                            'structure')
+            logging.warning('This structure contains nucleotides. We recommend that you use the reference structure')
+
     @staticmethod
     def molstr(data):
 

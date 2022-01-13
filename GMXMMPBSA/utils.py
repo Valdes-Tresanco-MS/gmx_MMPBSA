@@ -109,6 +109,45 @@ def get_indexes(com_ndx, rec_ndx=None, rec_group=1, lig_ndx=None, lig_group=1):
     return {'COM': com_indexes, 'REC': rec_indexes, 'LIG': lig_indexes}
 
 
+def check_str(structure, ref=False):
+    if isinstance(structure, str):
+        refstr = parmed.read_PDB(structure)
+    else:
+        refstr = structure
+
+    previous = 0
+    ind = 1
+    res_dict = {}
+    duplicates = []
+    for res in refstr.residues:
+        if res.chain == '':
+            if ref:
+                GMXMMPBSA_ERROR('The reference structure used is inconsistent. The following residue does not have a '
+                                f'chain ID: {res.number}:{res.name}')
+            elif not previous:
+                res_dict[ind] = [[res.number, res.name, res.insertion_code]]
+            elif res.number - previous in [0, 1]:
+                res_dict[ind].append([res.number, res.name, res.insertion_code])
+            else:
+                ind += 1
+                res_dict[ind] = [[res.number, res.name, res.insertion_code]]
+            previous = res.number
+        elif res.chain not in res_dict:
+            res_dict[res.chain] = [[res.number, res.name, res.insertion_code]]
+        else:
+            res_dict[res.chain].append([res.number, res.name, res.insertion_code])
+
+    for chain, resl in res_dict.items():
+        res_id_list = [[x, x2] for x, x1, x2 in resl]
+        for c, x in enumerate(res_id_list):
+            if res_id_list.count(x) > 1:
+                duplicates.append(f'{chain}:{resl[c][0]}:{resl[c][1]}:{resl[c][2]}')
+    if duplicates:
+        GMXMMPBSA_ERROR(f'The {"reference" if ref else "complex"} structure used is inconsistent. The following '
+                        f'residues are duplicates:\n {", ".join(duplicates)}')
+    return refstr
+
+
 def res2map(indexes, com_file):
     """
     :param com_str:
