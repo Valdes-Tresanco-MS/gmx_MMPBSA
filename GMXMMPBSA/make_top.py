@@ -338,6 +338,10 @@ class CheckMakeTop:
         logging.info('Building Normal Complex Amber Topology...')
         com_top = self.cleantop(self.FILES.complex_top, self.indexes['COM']['COM'])
         # parmed.gromacs.GromacsTopologyFile(self.complex_temp_top,xyz=self.complex_str_file)
+        if len(com_top.atoms) != len(self.complex_str.atoms):
+            GMXMMPBSA_ERROR(f"The number of atoms in the topology ({len(com_top.atoms)}) and the complex structure "
+                            f"({len(self.complex_str.atoms)}) are different. Please check this files "
+                            f"and verify that they are correct. Otherwise report the error...")
         com_top.coordinates = self.complex_str.coordinates
         # try:
         if com_top.impropers or com_top.urey_bradleys or com_top.cmaps:
@@ -364,6 +368,10 @@ class CheckMakeTop:
             logging.info('A Receptor topology file was defined. Using MT approach...')
             logging.info('Building AMBER Receptor Topology from GROMACS Receptor Topology...')
             rec_top = self.cleantop(self.FILES.receptor_top, self.indexes['REC'])
+            if len(rec_top.atoms) != len(self.receptor_str.atoms):
+                GMXMMPBSA_ERROR(f"The number of atoms in the topology ({len(rec_top.atoms)}) and the receptor "
+                                f"structure ({len(self.receptor_str.atoms)}) are different. Please check this files "
+                                f"and verify that they are correct. Otherwise report the error...")
             rec_top.coordinates = self.receptor_str.coordinates
             if rec_top.impropers or rec_top.urey_bradleys or rec_top.cmaps:
                 if com_top_parm == 'amber':
@@ -395,6 +403,10 @@ class CheckMakeTop:
             logging.info('A Ligand Topology file was defined. Using MT approach...')
             logging.info('Building AMBER Ligand Topology from GROMACS Ligand Topology...')
             lig_top = self.cleantop(self.FILES.ligand_top, self.indexes['LIG'])
+            if len(lig_top.atoms) != len(self.ligand_str.atoms):
+                GMXMMPBSA_ERROR(f"The number of atoms in the topology ({len(lig_top.atoms)}) and the ligand "
+                                f"structure ({len(self.ligand_str.atoms)}) are different. Please check this files "
+                                f"and verify that they are correct. Otherwise report the error...")
             lig_top.coordinates = self.ligand_str.coordinates
             if lig_top.impropers or lig_top.urey_bradleys or lig_top.cmaps:
                 if com_top_parm == 'amber':
