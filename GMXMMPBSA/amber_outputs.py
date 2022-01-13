@@ -48,56 +48,54 @@ class EnergyVector(np.ndarray):
         # Input array is an already formed ndarray instance
         # We first cast to be our class type
         if isinstance(values, int):
-            obj = np.zeros((values,)).view(cls)
+            return np.zeros((values,)).view(cls)
         elif isinstance(values, (list, tuple, np.ndarray)):
-            obj = np.array(values).view(cls)
+            return np.array(values).view(cls)
         else:
-            obj = np.array([]).view(cls)
-        # Finally, we must return the newly created object:
-        return obj
+            return np.array([]).view(cls)
 
-    def __array_finalize__(self, obj):
-        # see InfoArray.__array_finalize__ for comments
-        if obj is None: return
-        self.info = getattr(obj, 'info', None)
+    # def __array_finalize__(self, obj):
+    #     # see InfoArray.__array_finalize__ for comments
+    #     if obj is None: return
+    #     self.info = getattr(obj, 'info', None)
 
     def append(self, values):
         return EnergyVector(np.append(self, values))
 
     def avg(self):
         return np.average(self)
-
-    def stdev(self):
-        return np.std(self)
-
-    def __add__(self, other):
-        return EnergyVector(np.add(self, other))
-
-    def __sub__(self, other):
-        return EnergyVector(np.subtract(self, other))
-
-    def __mul__(self, scalar):
-        return EnergyVector(np.multiply(self, scalar))
-
-    def __imul__(self, scalar):
-        for i, x in enumerate(self):
-            self[i] = x * scalar
-
-    def __iadd__(self, other):
-        if isinstance(other, (int, float)):
-            for i, _ in enumerate(self):
-                self[i] += other
-            return
-        for i, _ in enumerate(self):
-            self[i] += other[i]
-
-    def __isub__(self, other):
-        if isinstance(other, (int, float)):
-            for i, _ in enumerate(self):
-                self[i] -= other
-            return
-        for i, _ in enumerate(self):
-            self[i] -= other[i]
+    #
+    # def stdev(self):
+    #     return np.std(self)
+    #
+    # def __add__(self, other):
+    #     return EnergyVector(np.add(self, other))
+    #
+    # def __sub__(self, other):
+    #     return EnergyVector(np.subtract(self, other))
+    #
+    # def __mul__(self, scalar):
+    #     return EnergyVector(np.multiply(self, scalar))
+    #
+    # def __imul__(self, scalar):
+    #     for i, x in enumerate(self):
+    #         self[i] = x * scalar
+    #
+    # def __iadd__(self, other):
+    #     if isinstance(other, (int, float)):
+    #         for i, _ in enumerate(self):
+    #             self[i] += other
+    #         return
+    #     for i, _ in enumerate(self):
+    #         self[i] += other[i]
+    #
+    # def __isub__(self, other):
+    #     if isinstance(other, (int, float)):
+    #         for i, _ in enumerate(self):
+    #             self[i] -= other
+    #         return
+    #     for i, _ in enumerate(self):
+    #         self[i] -= other[i]
 
     def __eq__(self, other):
         return np.all(np.equal(self, other))
@@ -195,14 +193,14 @@ class AmberOutput(object):
             if not self.chamber and key in ['UB', 'IMP', 'CMAP']: continue
             # Skip any terms that have zero as every single element (i.e. EDISPER)
             if self.data[key] == 0: continue
-            stdev = self.data[key].stdev()
-            avg = self.data[key].avg()
+            stdev = self.data[key].std()
+            avg = self.data[key].mean()
             csvwriter.writerow([key, avg, stdev, stdev/sqrt(len(self.data[key]))])
 
         for key in self.composite_keys:
             # Now print out the composite terms
-            stdev = self.data[key].stdev()
-            avg = self.data[key].avg()
+            stdev = self.data[key].std()
+            avg = self.data[key].mean()
             csvwriter.writerow([key, avg, stdev, stdev/sqrt(len(self.data[key]))])
 
     #==================================================
@@ -228,17 +226,17 @@ class AmberOutput(object):
             if not self.chamber and key in ['UB', 'IMP', 'CMAP']: continue
             # Skip any terms that have zero as every single element (i.e. EDISPER)
             if self.data[key] == 0: continue
-            stdev = self.data[key].stdev()
-            ret_str += '%-14s %20.4f %21.4f %19.4f\n' % (key,
-                                                         self.data[key].avg(), stdev, stdev / sqrt(len(self.data[key])))
+            stdev = self.data[key].std()
+            ret_str += '%-14s %20.4f %21.4f %19.4f\n' % (key, self.data[key].mean(), stdev, stdev / sqrt(len(
+                self.data[key])))
 
         ret_str += '\n'
         for key in self.composite_keys:
             # Now print out the composite terms
             if key == 'TOTAL': ret_str += '\n'
-            stdev = self.data[key].stdev()
-            ret_str += '%-14s %20.4f %21.4f %19.4f\n' % (key,
-                                                         self.data[key].avg(), stdev, stdev / sqrt(len(self.data[key])))
+            stdev = self.data[key].std()
+            ret_str += '%-14s %20.4f %21.4f %19.4f\n' % (key, self.data[key].mean(), stdev, stdev / sqrt(len(
+                self.data[key])))
 
         return ret_str + '\n\n'
 
@@ -306,10 +304,10 @@ class IEout(object):
         classes and returns the average and standard deviation of that diff.
         """
         if len(self.data[model][key1]) != len(other.data[key2]):
-            return (self.data[model][key1].avg() + other.data[key2].avg(),
-                    sqrt(self.data[model][key1].stdev()**2 + other.data[key2].stdev()**2))
+            return (self.data[model][key1].mean() + other.data[key2].mean(),
+                    sqrt(self.data[model][key1].std()**2 + other.data[key2].std()**2))
         mydiff = self.data[model][key1] + other.data[key2]
-        return mydiff.avg(), mydiff.stdev()
+        return mydiff.mean(), mydiff.std()
 
     # def print_vectors(self, csvwriter):
     #     """ Prints the energy vectors to a CSV file for easy viewing
@@ -326,10 +324,10 @@ class IEout(object):
         ret_str += '-------------------------------------------------------------------------------\n'
         for model in self.data:
             self.data[model]['iedata'] = EnergyVector(self.data[model]['iedata'])
-            stdev = self.data[model]['iedata'].stdev()
-            avg = self.data[model]['iedata'].avg()
-            ret_str += '%-14s %10.3f %16.3f %15.3f %19.3f\n' % (model, self.data[model]['sigma'],
-                                                                avg, stdev, stdev/sqrt(len(self.data[model]['iedata'])))
+            stdev = self.data[model]['iedata'].std()
+            avg = self.data[model]['iedata'].mean()
+            ret_str += '%-14s %10.3f %16.3f %15.3f %19.3f\n' % (model, self.data[model]['sigma'], avg, stdev,
+                                                                stdev/sqrt(len(self.data[model]['iedata'])))
         return ret_str
 
 #-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
@@ -350,7 +348,7 @@ class C2out(object):
         Takes the sum between 2 keys of 2 different BindingStatistics
         classes and returns the average and standard deviation of that diff.
         """
-        return self.data[model][key1] + other.data[key2].avg(), other.data[key2].stdev()
+        return self.data[model][key1] + other.data[key2].mean(), other.data[key2].std()
 
     # def print_vectors(self, csvwriter):
     #     """ Prints the energy vectors to a CSV file for easy viewing
@@ -537,8 +535,8 @@ class NMODEout(object):
                             'Std. Err. of the Mean'])
 
         for key in self.data_keys:
-            stdev = self.data[key].stdev()
-            avg = self.data[key].avg()
+            stdev = self.data[key].std()
+            avg = self.data[key].mean()
             csvwriter.writerow([key, avg, stdev, stdev/sqrt(len(self.data[key]))])
 
     #==================================================
@@ -551,9 +549,9 @@ class NMODEout(object):
         ret_str += ('------------------------------------------------' +
                     '-------------------------------\n')
         for key in self.data_keys:
-            stdev = self.data[key].stdev()
+            stdev = self.data[key].std()
             ret_str += '%-14s %20.4f %21.4f %19.4f\n' % (key,
-                                                         self.data[key].avg(), stdev, stdev/sqrt(len(self.data[key])))
+                                                         self.data[key].mean(), stdev, stdev/sqrt(len(self.data[key])))
 
         return ret_str + '\n'
 
@@ -598,7 +596,6 @@ class NMODEout(object):
                     float(outfile.readline().split()[3]) * self.temp / 1000)
 
             rawline = outfile.readline()
-
     #==================================================
 
     def fill_composite_terms(self):
@@ -1076,8 +1073,8 @@ class BindingStatistics(object):
                 printkey = key
             # Now print out the stats
             if not self.missing_terms:
-                stdev = self.data[key].stdev()
-                avg = self.data[key].avg()
+                stdev = self.data[key].std()
+                avg = self.data[key].mean()
                 num_frames = len(self.data[key])
             else:
                 stdev = self.data[key][1]
@@ -1089,8 +1086,8 @@ class BindingStatistics(object):
         for key in self.composite_keys:
             # Now print out the composite terms
             if not self.missing_terms:
-                stdev = self.data[key].stdev()
-                avg = self.data[key].avg()
+                stdev = self.data[key].std()
+                avg = self.data[key].mean()
                 num_frames = len(self.data[key])
             else:
                 stdev = self.data[key][1]
@@ -1143,8 +1140,8 @@ class BindingStatistics(object):
                 printkey = key
             # Now print out the stats
             if not self.missing_terms:
-                stdev = self.data[key].stdev()
-                avg = self.data[key].avg()
+                stdev = self.data[key].std()
+                avg = self.data[key].mean()
                 num_frames = len(self.data[key])
             else:
                 stdev = self.data[key][1]
@@ -1159,8 +1156,8 @@ class BindingStatistics(object):
             # Now print out the composite terms
             if key == 'DELTA TOTAL': ret_str += '\n'
             if not self.missing_terms:
-                stdev = self.data[key].stdev()
-                avg = self.data[key].avg()
+                stdev = self.data[key].std()
+                avg = self.data[key].mean()
                 num_frames = len(self.data[key])
             else:
                 stdev = self.data[key][1]
@@ -1179,12 +1176,12 @@ class BindingStatistics(object):
         classes and returns the average and standard deviation of that diff.
         """
         if len(self.data[key1]) != len(other.data[key2]):
-            return (self.data[key1].avg() - other.data[key2].avg(),
-                    sqrt(self.data[key1].stdev() ** 2 + other.data[key2].stdev() ** 2))
+            return (self.data[key1].mean() - other.data[key2].mean(),
+                    sqrt(self.data[key1].std() ** 2 + other.data[key2].std() ** 2))
 
         mydiff = self.data[key1] - other.data[key2]
 
-        return mydiff.avg(), mydiff.stdev()
+        return mydiff.mean(), mydiff.std()
 
 #+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
@@ -1238,19 +1235,19 @@ class SingleTrajBinding(BindingStatistics):
         self.lig.fill_composite_terms()
 
         for key in self.com.data_keys:
-            self.data[key] = [self.com.data[key].avg() - self.rec.data[key].avg() -
-                              self.lig.data[key].avg(),
-                              sqrt(self.com.data[key].stdev() ** 2 +
-                                   self.rec.data[key].stdev() ** 2 +
-                                   self.lig.data[key].stdev() ** 2) ]
+            self.data[key] = [self.com.data[key].mean() - self.rec.data[key].mean() -
+                              self.lig.data[key].mean(),
+                              sqrt(self.com.data[key].std() ** 2 +
+                                   self.rec.data[key].std() ** 2 +
+                                   self.lig.data[key].std() ** 2) ]
 
         for key in self.com.composite_keys:
             self.data['DELTA ' + key] = \
-                [self.com.data[key].avg() - self.rec.data[key].avg() -
-                 self.lig.data[key].avg(),
-                 sqrt(self.com.data[key].stdev() ** 2 +
-                      self.rec.data[key].stdev() ** 2 +
-                      self.lig.data[key].stdev() ** 2) ]
+                [self.com.data[key].mean() - self.rec.data[key].mean() -
+                 self.lig.data[key].mean(),
+                 sqrt(self.com.data[key].std() ** 2 +
+                      self.rec.data[key].std() ** 2 +
+                      self.lig.data[key].std() ** 2) ]
 
     #==================================================
 
