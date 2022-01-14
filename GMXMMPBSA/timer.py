@@ -20,7 +20,7 @@ useful for profiling the performance of the script.
 #  or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License    #
 #  for more details.                                                           #
 # ##############################################################################
-
+import logging
 from time import time
 
 
@@ -105,12 +105,12 @@ class Timer(object):
         tfactor = 1
         # Now test the magnitude of the global timer so we can decide what the
         # reported units should be
-        if self.timers['global'] > 60 * 60 * 48:
+        if self.timers['global'] > 60 ** 2 * 48:
             self.units = 'days'
             tfactor = 60 * 60 * 24
-        elif self.timers['global'] > 60 * 60:
+        elif self.timers['global'] > 60 ** 2:
             self.units = 'hr.'
-            tfactor = 60 * 60
+            tfactor = 60**2
         elif self.timers['global'] > 60:
             self.units = 'min.'
             tfactor = 60
@@ -120,12 +120,11 @@ class Timer(object):
 
     # -#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
 
-    def print_(self, timer, outfile, newline=True):
+    def print_(self, timer, newline=False):
         """ Prints the value of the timer """
-        outfile.write("%-40s %8.3f %s" % (self.descriptions[timer],
-                                          self.timers[timer], self.units))
-        if newline:
-            from os import linesep as ls
-            outfile.write(ls)
+        from os import linesep as ls
+        nl = ls if newline else ''
+        msg =  "%-40s %8.3f %s" % (self.descriptions[timer], self.timers[timer], self.units) + nl
+        logging.info(msg)
 
 # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+

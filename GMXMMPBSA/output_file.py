@@ -24,7 +24,7 @@ statistics printing.
 import io
 import numpy as np
 from GMXMMPBSA.amber_outputs import EnergyVector
-from GMXMMPBSA.exceptions import LengthError, GMXMMPBSA_WARNING
+from GMXMMPBSA.exceptions import LengthError
 from GMXMMPBSA import utils
 from math import sqrt, ceil
 from os import linesep as ls

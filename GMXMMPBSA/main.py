@@ -36,7 +36,7 @@ from GMXMMPBSA.calculation import (CalculationList, EnergyCalculation, PBEnergyC
                                    InteractionEntropyCalc, C2EntropyCalc)
 from GMXMMPBSA.commandlineparser import parser
 from GMXMMPBSA.createinput import create_inputs
-from GMXMMPBSA.exceptions import (MMPBSA_Error, InternalError, InputError, GMXMMPBSA_ERROR, GMXMMPBSA_WARNING)
+from GMXMMPBSA.exceptions import (MMPBSA_Error, InternalError, InputError, GMXMMPBSA_ERROR)
 from GMXMMPBSA.findprogs import find_progs
 from GMXMMPBSA.infofile import InfoFile
 from GMXMMPBSA.fake_mpi import MPI as FakeMPI
@@ -132,7 +132,7 @@ class MMPBSA_App(object):
         self.timer.stop_timer('setup')
         # Bail out if we only wanted to generate mdin files
         if FILES.make_mdins:
-            self.stdout.write('Created mdin files. Quitting.\n')
+            logging.info('Created mdin files. Quitting.\n')
             sys.exit(0)
 
         # Now create our trajectory files
@@ -141,7 +141,7 @@ class MMPBSA_App(object):
         self.timer.start_timer('cpptraj')
 
         if master:
-            self.stdout.write('Preparing trajectories for simulation...\n')
+            logging.info('Preparing trajectories for simulation...\n')
             self.numframes, rec_frames, lig_frames, self.numframes_nmode = make_trajectories(INPUT, FILES,
                                                                                              self.mpi_size,
                                                                      self.external_progs['cpptraj'], self.pre)
@@ -157,19 +157,18 @@ class MMPBSA_App(object):
         self.timer.add_timer('muttraj', 'Mutating trajectories:')
         self.timer.start_timer('muttraj')
 
-        if INPUT['alarun']:
-            self.stdout.write('Mutating trajectories...\n')
+        if INPUT['alarun'] and self.master:
+            logging.info('Mutating trajectories...')
         _, mutant_residue = make_mutant_trajectories(INPUT, FILES, self.mpi_rank, self.external_progs['cpptraj'],
                                                      self.normal_system, self.mutant_system, self.pre)
 
         self.MPI.COMM_WORLD.Barrier()
 
         if master:
-            self.stdout.write(('%d frames were processed by cpptraj for use in '
-                               'calculation.\n') % self.numframes)
+            logging.info(('%d frames were processed by cpptraj for use in calculation.') % self.numframes)
             if INPUT['nmoderun']:
-                self.stdout.write(('%d frames were processed by cpptraj for '
-                                   'nmode calculations.\n') % self.numframes_nmode)
+                logging.info(('%d frames were processed by cpptraj for nmode calculations.') % self.numframes_nmode)
+            logging.info('')
 
         self.timer.stop_timer('muttraj')
 
@@ -229,13 +228,10 @@ class MMPBSA_App(object):
         self.calc_list = CalculationList(self.timer)
 
         if not self.INPUT['mutant_only']:
-            self.calc_list.append(
-                PrintCalc('Running calculations on normal system...'),
-                timer_key=None)
+            self.calc_list.append(PrintCalc('Running calculations on normal system...'), timer_key=None)
             self._load_calc_list(self.pre, False, self.normal_system)
         if self.INPUT['alarun']:
-            self.calc_list.append(
-                PrintCalc('\nRunning calculations on mutant system...'), timer_key=None)
+            self.calc_list.append(PrintCalc('Running calculations on mutant system...'), timer_key=None)
             self._load_calc_list(self.pre + 'mutant_', True, self.mutant_system)
 
     def _load_calc_list(self, prefix, mutant, parm_system):
@@ -300,15 +296,14 @@ class MMPBSA_App(object):
             except TypeError:
                 mdin = mdin_template
 
-            self.calc_list.append(PrintCalc(f"\nBeginning GB calculations with {progs['gb']}"), timer_key='gb')
+            self.calc_list.append(PrintCalc(f"Beginning GB calculations with {progs['gb']}"), timer_key='gb')
 
             c = EnergyCalculation(progs['gb'], parm_system.complex_prmtop,
                                   incrd % 'complex',
                                   '%scomplex.%s.%%d' % (prefix, trj_sfx),
                                   mdin, '%scomplex_gb.mdout.%%d' % (prefix),
                                   self.pre + 'restrt.%d')
-            self.calc_list.append(c, '  calculating complex contribution...',
-                                  timer_key='gb')
+            self.calc_list.append(c, '  calculating complex contribution...', timer_key='gb')
             c = SAClass(parm_system.complex_prmtop,
                         '%scomplex.%s.%%d' % (prefix, trj_sfx),
                         '%scomplex_gb_surf.dat.%%d' % prefix)
@@ -395,16 +390,14 @@ class MMPBSA_App(object):
             except TypeError:
                 mdin = mdin_template
 
-            self.calc_list.append(PrintCalc(f"\nBeginning PB calculations with {progs['pb']}"),
-                                  timer_key='pb')
+            self.calc_list.append(PrintCalc(f"Beginning PB calculations with {progs['pb']}"), timer_key='pb')
 
             c = PBEnergyCalculation(progs['pb'], parm_system.complex_prmtop,
                                     incrd % 'complex',
                                     '%scomplex.%s.%%d' % (prefix, trj_sfx),
                                     mdin, '%scomplex_pb.mdout.%%d' % (prefix),
                                     self.pre + 'restrt.%d')
-            self.calc_list.append(c, '  calculating complex contribution...',
-                                  timer_key='pb')
+            self.calc_list.append(c, '  calculating complex contribution...', timer_key='pb')
             if not self.stability:
                 try:
                     mdin = mdin_template % 'rec'
@@ -451,15 +444,13 @@ class MMPBSA_App(object):
 
         if self.INPUT['rismrun']:
             self.calc_list.append(
-                PrintCalc('\nBeginning 3D-RISM calculations with %s' %
-                          progs['rism']), timer_key='rism')
+                PrintCalc('Beginning 3D-RISM calculations with %s' % progs['rism']), timer_key='rism')
 
             c = RISMCalculation(progs['rism'], parm_system.complex_prmtop,
                                 '%scomplex.pdb' % prefix, '%scomplex.%s.%%d' %
                                 (prefix, trj_sfx), self.FILES.xvvfile,
                                 '%scomplex_rism.mdout.%%d' % prefix, self.INPUT)
-            self.calc_list.append(c, '  calculating complex contribution...',
-                                  timer_key='rism')
+            self.calc_list.append(c, '  calculating complex contribution...', timer_key='rism')
 
             if not self.stability:
                 if copy_receptor:
@@ -487,8 +478,7 @@ class MMPBSA_App(object):
                                         '%sligand.%s.%%d' % (prefix, trj_sfx),
                                         self.FILES.xvvfile,
                                         '%sligand_rism.mdout.%%d' % prefix, self.INPUT)
-                    self.calc_list.append(c, '  calculating ligand contribution...',
-                                          timer_key='rism')
+                    self.calc_list.append(c, '  calculating ligand contribution...', timer_key='rism')
 
         # end if self.INPUT['rismrun']
 
@@ -501,8 +491,7 @@ class MMPBSA_App(object):
                           '%scomplex.pdb' % prefix,
                           '%scomplex_nm.%s.%%d' % (prefix, trj_sfx),
                           '%scomplex_nm.out.%%d' % prefix, self.INPUT)
-            self.calc_list.append(c, '  calculating complex contribution...',
-                                  timer_key='nmode')
+            self.calc_list.append(c, '  calculating complex contribution...', timer_key='nmode')
 
             if not self.stability:
                 if copy_receptor:
@@ -591,7 +580,7 @@ class MMPBSA_App(object):
         FILES, INPUT = self.FILES, self.INPUT
         if self.master:
             # Now load the parms and check them
-            logging.info('Loading and checking parameter files for compatibility...\n')
+            logging.info('Loading and checking parameter files for compatibility...')
         self.normal_system = MMPBSA_System(FILES.complex_prmtop, FILES.receptor_prmtop, FILES.ligand_prmtop)
         self.using_chamber = self.normal_system.complex_prmtop.chamber
         self.mutant_system = None
@@ -612,7 +601,7 @@ class MMPBSA_App(object):
                 GMXMMPBSA_ERROR('CHAMBER prmtops cannot be used with 3D-RISM')
             if INPUT['nmoderun']:
                 GMXMMPBSA_ERROR('CHAMBER prmtops cannot be used with NMODE')
-            self.stdout.write('CHAMBER prmtops found. Forcing use of sander\n')
+            logging.info('CHAMBER prmtops found. Forcing use of sander\n')
 
         self.normal_system.Map(INPUT['receptor_mask'], INPUT['ligand_mask'])
         self.normal_system.CheckConsistency()
@@ -661,18 +650,19 @@ class MMPBSA_App(object):
         if not self.master:
             self.MPI.Finalize()
             sys.exit(0)
-        self.stdout.write('\nTiming:\n')
-        self.timer.print_('setup_gmx', self.stdout)
-        self.timer.print_('setup', self.stdout)
+        logging.info('Timing:')
+        self.timer.print_('setup_gmx')
+        self.timer.print_('setup')
 
         if not self.FILES.rewrite_output:
             self._finalize_timers()
-        self.timer.print_('output', self.stdout)
-        self.timer.print_('global', self.stdout)
+        self.timer.print_('output')
+        self.timer.print_('global', True)
+
 
         self.remove(self.INPUT['keep_files'])
 
-        logging.info('\n\nThank you for using gmx_MMPBSA. Please cite us if you publish this work with this '
+        logging.info('\nThank you for using gmx_MMPBSA. Please cite us if you publish this work with this '
                      'reference:\n    Mario S. Valdés Tresanco, Mario E. Valdes-Tresanco, Pedro A. Valiente, & '
                      'Ernesto Moreno Frías \n    gmx_MMPBSA (Version v1.4.3). '
                      'Zenodo. http://doi.org/10.5281/zenodo.4569307'
@@ -694,27 +684,27 @@ class MMPBSA_App(object):
         sys.exit(end)
 
     def _finalize_timers(self):
-        self.timer.print_('cpptraj', self.stdout)
+        self.timer.print_('cpptraj')
 
         if self.INPUT['alarun']:
-            self.timer.print_('muttraj', self.stdout)
+            self.timer.print_('muttraj', True)
 
-        self.timer.print_('calc', self.stdout)
-        self.stdout.write('\n')
+        # self.stdout.write('\n')
+        self.timer.print_('calc')
 
         if self.INPUT['gbrun']:
-            self.timer.print_('gb', self.stdout)
+            self.timer.print_('gb')
 
         if self.INPUT['pbrun']:
-            self.timer.print_('pb', self.stdout)
+            self.timer.print_('pb')
 
         if self.INPUT['nmoderun']:
-            self.timer.print_('nmode', self.stdout)
+            self.timer.print_('nmode')
 
         if self.INPUT['qh_entropy']:
-            self.timer.print_('qh', self.stdout)
+            self.timer.print_('qh', True)
 
-        self.stdout.write('\n')
+        # self.stdout.write('\n')
 
     def get_cl_args(self, args=None):
         """
@@ -928,7 +918,7 @@ class MMPBSA_App(object):
 
         # User warning when intdiel > 10
         if self.INPUT['intdiel'] > 10:
-            GMXMMPBSA_WARNING('Intdiel is great than 10...')
+            logging.warning('Intdiel is great than 10...')
         # check mutant definition
         if self.INPUT['mutant'].upper() not in ['ALA', 'A', 'GLY', 'G']:
             GMXMMPBSA_ERROR('The mutant most be ALA (or A) or GLY (or G)', InputError)
@@ -937,11 +927,11 @@ class MMPBSA_App(object):
         # https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/issues/33
         if self.INPUT['startframe'] < 1:
             # GMXMMPBSA_ERROR('The startframe variable must be >= 1')
-            GMXMMPBSA_WARNING(f"The startframe variable must be >= 1. Changing startframe from"
+            logging.warning(f"The startframe variable must be >= 1. Changing startframe from"
                               f" {self.INPUT['startframe']} to 1")
             self.INPUT['startframe'] = 1
         if self.INPUT['nmstartframe'] < 1:
-            GMXMMPBSA_WARNING(f"The nmstartframe variable must be >= 1. Changing nmstartframe from"
+            logging.warning(f"The nmstartframe variable must be >= 1. Changing nmstartframe from"
                               f" {self.INPUT['nmstartframe']} to 1")
             self.INPUT['nmstartframe'] = 1
 

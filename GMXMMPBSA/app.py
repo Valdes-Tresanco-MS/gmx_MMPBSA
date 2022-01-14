@@ -21,7 +21,7 @@ from os.path import split
 import logging
 
 try:
-    from GMXMMPBSA.exceptions import GMXMMPBSA_ERROR, InputError, CommandlineError, GMXMMPBSA_WARNING
+    from GMXMMPBSA.exceptions import GMXMMPBSA_ERROR, InputError, CommandlineError
     from GMXMMPBSA.infofile import InfoFile
     from GMXMMPBSA import main
     from GMXMMPBSA.tester import run_test
@@ -38,6 +38,8 @@ except ImportError:
 def gmxmmpbsa():
     stream_handler = logging.StreamHandler()
     stream_handler.setLevel(logging.INFO)
+    formatter = logging.Formatter("[%(levelname)-7s] %(message)s")
+    stream_handler.setFormatter(formatter)
     logging.basicConfig(
         level=logging.DEBUG,
         format="[%(levelname)-7s] %(message)s",
@@ -67,7 +69,7 @@ def gmxmmpbsa():
 
     # Perform our MMPBSA --clean now
     if app.FILES.clean:
-        sys.stdout.write('Cleaning temporary files and quitting.\n')
+        sys.logging.info('Cleaning temporary files and quitting.\n')
         app.remove(0)
         sys.exit(0)
 

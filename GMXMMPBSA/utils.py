@@ -37,7 +37,7 @@ from pathlib import Path
 import json
 import logging
 from string import ascii_letters
-from GMXMMPBSA.exceptions import GMXMMPBSA_ERROR, GMXMMPBSA_WARNING
+from GMXMMPBSA.exceptions import GMXMMPBSA_ERROR
 from math import sqrt
 import parmed
 
@@ -310,7 +310,7 @@ def selector(selection: str):
                     ci = rr[0].split(':')
                     ri = [chain, int(ci[0]), ''] if len(ci) == 1 else [chain, int(ci[0]), ci[1]]
                     if ri in res_selections:
-                        GMXMMPBSA_WARNING('Found duplicated residue in selection: CHAIN:{} RES_NUM:{} ICODE: '
+                        logging.warning('Found duplicated residue in selection: CHAIN:{} RES_NUM:{} ICODE: '
                                           '{}'.format(*ri))
                         continue
                     res_selections.append(ri)
@@ -323,7 +323,7 @@ def selector(selection: str):
                                         f' {rr[0]} and {rr[1]}')
                     for cr in range(start, end):
                         if [chain, cr, ''] in res_selections:
-                            GMXMMPBSA_WARNING('Found duplicated residue in selection: CHAIN:{} RES_NUM:{} ICODE: '
+                            logging.warning('Found duplicated residue in selection: CHAIN:{} RES_NUM:{} ICODE: '
                                               '{}'.format(chain, cr, ''))
                             continue
                         res_selections.append([chain, cr, ''])

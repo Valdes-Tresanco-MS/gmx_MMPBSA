@@ -64,8 +64,6 @@ class CheckMakeTop:
         self.INPUT = INPUT
         self.external_progs = external_programs
         self.use_temp = False
-        self.log = open('gmx_MMPBSA.log', 'a')
-
         self.mut_label = ''
 
         # Define Gromacs executable
@@ -629,7 +627,7 @@ class CheckMakeTop:
         self.INPUT['print_res'] = ','.join([str(x) for x in res_list])
         if res_selection:
             for res in res_selection:
-                GMXMMPBSA_WARNING("We couldn't find this residue CHAIN:{} RES_NUM:{} ICODE: {}".format(*res))
+                logging.warning("We couldn't find this residue CHAIN:{} RES_NUM:{} ICODE: {}".format(*res))
 
     @staticmethod
     def cleantop(top_file, ndx):
@@ -735,7 +733,7 @@ class CheckMakeTop:
         sele_res.sort()
         if res_selection:
             for res in res_selection:
-                GMXMMPBSA_WARNING("We couldn't find this residue CHAIN:{} RES_NUM:{} ICODE: "
+                logging.warning("We couldn't find this residue CHAIN:{} RES_NUM:{} ICODE: "
                                   "{}".format(*res))
         return sele_res
 
@@ -808,7 +806,7 @@ class CheckMakeTop:
         res = self.complex_str.residues[r - 1]
         icode = ':' + res.insertion_code if res.insertion_code else ''
         if not parmed.residue.AminoAcidResidue.has(res.name):
-            GMXMMPBSA_WARNING(f"Selecting residue {res.chain}:{res.name}:{res.number}{icode} can't be mutated and "
+            logging.warning(f"Selecting residue {res.chain}:{res.name}:{res.number}{icode} can't be mutated and "
                               f"will be ignored...")
         label = f"{res.name}[{res.chain}:{res.number}]{self.INPUT['mutant']}"
         if icode:
@@ -1010,8 +1008,7 @@ class CheckMakeTop:
                 if self.INPUT['debug_printlevel']:
                     logging.info('Running command: ' + (' '.join(trjconv_echo_args)) + ' | ' + ' '.join(trjconv_args))
                 logging.debug('Running command: ' + (' '.join(trjconv_echo_args)) + ' | ' + ' '.join(trjconv_args))
-                c6 = subprocess.Popen(trjconv_args,  # FIXME: start and end frames???
-                                      stdin=c5.stdout, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                c6 = subprocess.Popen(trjconv_args, stdin=c5.stdout, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
                 if c6.wait():  # if it quits with return code != 0
                     GMXMMPBSA_ERROR(
                         '%s failed when querying %s' % (' '.join(self.trjconv), self.FILES.receptor_trajs[i]))
@@ -1315,11 +1312,10 @@ class CheckMakeTop:
 
         if self.INPUT['debug_printlevel']:
             logging.info('Running command: ' + ' '.join(tleap_args))
-        p1 = subprocess.Popen(tleap_args, stdout=self.log, stderr=self.log)
+        p1 = subprocess.Popen(tleap_args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         if p1.wait():
-            GMXMMPBSA_ERROR(
-                '%s failed when querying %s' % (tleap, self.FILES.prefix + arg1)
-            )
+            GMXMMPBSA_ERROR('%s failed when querying %s' % (tleap, self.FILES.prefix + arg1))
+        log_subprocess_output(p1)
 
     def _set_com_order(self, REC, LIG):
         result = []

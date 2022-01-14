@@ -32,9 +32,10 @@ Classes:
 #  or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License    #
 #  for more details.                                                           #
 # ##############################################################################
+import logging
 
 from GMXMMPBSA.exceptions import CalcError
-from GMXMMPBSA.exceptions import GMXMMPBSA_ERROR, GMXMMPBSA_WARNING
+from GMXMMPBSA.exceptions import GMXMMPBSA_ERROR
 import os
 import sys
 import numpy as np
@@ -79,8 +80,8 @@ class CalculationList(list):
                 # Start timer, run calculation, then stop the timer
                 if self.timer_keys[i] is not None:
                     self.timer.start_timer(self.timer_keys[i])
-                if self.labels[i]:
-                    f.write(self.labels[i] + '\n')
+                if self.labels[i] and rank == 0:
+                    logging.info(self.labels[i])
                 calc.setup()
                 calc.run(rank, stdout=stdout, stderr=stderr)
                 if self.timer_keys[i] is not None:
@@ -608,7 +609,9 @@ class PrintCalc(Calculation):
         self.message = message
 
     def run(self, rank, stdout=sys.stdout, stderr=sys.stderr):
-        if rank == 0: stdout.write(self.message + '\n')
+        if rank == 0:
+            logging.info(self.message)
+            # stdout.write(self.message + '\n')
 
 
 # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
