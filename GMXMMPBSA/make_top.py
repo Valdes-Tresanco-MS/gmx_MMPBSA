@@ -985,15 +985,14 @@ class CheckMakeTop:
             trjconv_echo_args = ['echo', 'GMXMMPBSA_REC_GMXMMPBSA_LIG']
             c5 = subprocess.Popen(trjconv_echo_args, stdout=subprocess.PIPE)
             # we get only first trajectory to extract a pdb file and make amber topology for complex
-            trjconv_args = self.trjconv + ['-f', self.FILES.complex_trajs[0], '-s', self.FILES.complex_tpr,
-                                      '-o', 'COM_traj_{}.xtc'.format(i), '-n', self.FILES.complex_index]
+            trjconv_args = self.trjconv + ['-f', self.FILES.complex_trajs[i], '-s', self.FILES.complex_tpr, '-o',
+                                           'COM_traj_{}.xtc'.format(i), '-n', self.FILES.complex_index]
             if self.INPUT['debug_printlevel']:
                 logging.info('Running command: ' + (' '.join(trjconv_echo_args)) + ' | ' + ' '.join(trjconv_args))
             logging.debug('Running command: ' + (' '.join(trjconv_echo_args)) + ' | ' + ' '.join(trjconv_args))
-            c6 = subprocess.Popen(trjconv_args,  # FIXME: start and end frames???
-                                  stdin=c5.stdout, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            c6 = subprocess.Popen(trjconv_args, stdin=c5.stdout, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             if c6.wait():  # if it quits with return code != 0
-                GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(self.trjconv), self.FILES.complex_tpr))
+                GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(self.trjconv), self.FILES.complex_trajs[i]))
             new_trajs.append('COM_traj_{}.xtc'.format(i))
             log_subprocess_output(c6)
         self.FILES.complex_trajs = new_trajs
@@ -1006,9 +1005,8 @@ class CheckMakeTop:
                 trjconv_echo_args = ['echo', '{}'.format(self.FILES.receptor_group)]
                 c5 = subprocess.Popen(trjconv_echo_args, stdout=subprocess.PIPE)
                 # we get only first trajectory to extract a pdb file and make amber topology for complex
-                trjconv_args = self.trjconv + ['-f', self.FILES.receptor_trajs[0], '-s', self.FILES.receptor_tpr,
-                                          '-o', 'REC_traj_{}.xtc'.format(i), '-n',
-                                          self.FILES.receptor_index]
+                trjconv_args = self.trjconv + ['-f', self.FILES.receptor_trajs[i], '-s', self.FILES.receptor_tpr,
+                                               '-o', 'REC_traj_{}.xtc'.format(i), '-n', self.FILES.receptor_index]
                 if self.INPUT['debug_printlevel']:
                     logging.info('Running command: ' + (' '.join(trjconv_echo_args)) + ' | ' + ' '.join(trjconv_args))
                 logging.debug('Running command: ' + (' '.join(trjconv_echo_args)) + ' | ' + ' '.join(trjconv_args))
@@ -1016,7 +1014,7 @@ class CheckMakeTop:
                                       stdin=c5.stdout, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
                 if c6.wait():  # if it quits with return code != 0
                     GMXMMPBSA_ERROR(
-                        '%s failed when querying %s' % (' '.join(self.trjconv), self.FILES.receptor_tpr))
+                        '%s failed when querying %s' % (' '.join(self.trjconv), self.FILES.receptor_trajs[i]))
                 new_trajs.append('REC_traj_{}.xtc'.format(i))
                 log_subprocess_output(c6)
             self.FILES.receptor_trajs = new_trajs
@@ -1028,14 +1026,14 @@ class CheckMakeTop:
                 trjconv_echo_args = ['echo', '{}'.format(self.FILES.ligand_group)]
                 c5 = subprocess.Popen(trjconv_echo_args, stdout=subprocess.PIPE)
                 # we get only first trajectory to extract a pdb file and make amber topology for complex
-                trjconv_args = self.trjconv + ['-f', self.FILES.ligand_trajs[0], '-s', self.FILES.ligand_tpr,
-                                               '-o', 'LIG_traj_{}.xtc'.format(i), '-n', self.FILES.ligand_index]
+                trjconv_args = self.trjconv + ['-f', self.FILES.ligand_trajs[i], '-s', self.FILES.ligand_tpr, '-o',
+                                               'LIG_traj_{}.xtc'.format(i), '-n', self.FILES.ligand_index]
                 if self.INPUT['debug_printlevel']:
                     logging.info('Running command: ' + (' '.join(trjconv_echo_args)) + ' | ' + ' '.join(trjconv_args))
                 logging.debug('Running command: ' + (' '.join(trjconv_echo_args)) + ' | ' + ' '.join(trjconv_args))
                 c6 = subprocess.Popen(trjconv_args, stdin=c5.stdout, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
                 if c6.wait():  # if it quits with return code != 0
-                    GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(self.trjconv), self.FILES.ligand_tpr))
+                    GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(self.trjconv), self.FILES.ligand_trajs[i]))
                 new_trajs.append('LIG_traj_{}.xtc'.format(i))
                 log_subprocess_output(c6)
             self.FILES.ligand_trajs = new_trajs
