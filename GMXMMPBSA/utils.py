@@ -42,6 +42,15 @@ from math import sqrt
 import parmed
 
 
+def log_subprocess_output(process):
+    while True:
+        output = process.stdout.readline().decode()
+        if output:
+            logging.debug(output.strip('\n'))
+        else:
+            break
+
+
 class Residue(int):
     """
     Residue class
