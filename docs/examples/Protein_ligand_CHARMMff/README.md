@@ -50,7 +50,7 @@ That being said, once you are in the folder containing all files, the command-li
 
 where the `mmpbsa.in` input file, is a text file containing the following lines:
 
-``` linenums="1"
+``` yaml linenums="1" title="Sample input file for PB calculation"
 Sample input file for PB calculation
 This input file is meant to show only that gmx_MMPBSA works. Althought,
 we tried to used the input files as recommended in the Amber manual,
@@ -58,7 +58,7 @@ some parameters have been changed to perform more expensive calculations
 in a reasonable amount of time. Feel free to change the parameters 
 according to what is better for your system.
 
-&general
+&general   # (1)
 startframe=1, endframe=11, verbose=2,
 /
 &pb
@@ -68,6 +68,9 @@ startframe=1, endframe=11, verbose=2,
 istrng=0.15, fillratio=4.0, radiopt=0
 /
 ```
+
+1.  :man_raising_hand: I'm a code annotation! I can contain `code`, __formatted
+    text__, images, ... basically anything that can be written in Markdown.
 
 !!! warning "Remember"
     `radiopt = 0` is recommended which means using radii from the `prmtop` file
