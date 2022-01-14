@@ -23,7 +23,8 @@ Generate Amber topology files from GROMACS files
 import os
 import parmed
 from GMXMMPBSA.exceptions import *
-from GMXMMPBSA.utils import checkff, selector, get_dist, list2range, res2map, get_indexes
+from GMXMMPBSA.utils import (selector, get_dist, list2range, res2map, get_indexes, log_subprocess_output, check_str,
+                             eq_strs)
 from GMXMMPBSA.alamdcrd import _scaledistance
 import subprocess
 from pathlib import Path
@@ -97,10 +98,6 @@ class CheckMakeTop:
         self.receptor_str_file = self.FILES.prefix + 'REC.pdb'
         self.ligand_str_file = self.FILES.prefix + 'LIG.pdb'
 
-        if self.FILES.reference_structure:
-            self.ref_str = parmed.read_PDB(self.FILES.reference_structure)
-
-        checkff()
         self.checkFiles()
 
     def checkFiles(self):
@@ -153,13 +150,16 @@ class CheckMakeTop:
         if self.INPUT['debug_printlevel']:
             logging.info('Running command: ' + (' '.join(make_ndx_echo_args).replace('\n', '\\n')) + ' | ' +
                          ' '.join(make_ndx_args))
-        c2 = subprocess.Popen(make_ndx_args, stdin=c1.stdout, stdout=self.log, stderr=self.log)
+        logging.debug('Running command: ' + (' '.join(make_ndx_echo_args).replace('\n', '\\n')) + ' | ' +
+                         ' '.join(make_ndx_args))
+        c2 = subprocess.Popen(make_ndx_args, stdin=c1.stdout, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         if c2.wait():  # if it quits with return code != 0
             GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(self.make_ndx), self.FILES.complex_index))
+        log_subprocess_output(c2)
         self.FILES.complex_index = com_ndx
 
-        logging.info('Normal Complex: Saving group {}_{} in {} file as '
-                     '{}'.format(rec_group, lig_group, self.FILES.complex_index, self.complex_str_file))
+        logging.info(f'Normal Complex: Saving group {rec_group}_{lig_group} in {self.FILES.complex_index} file as '
+                     f'{self.complex_str_file}')
         editconf_echo_args = ['echo', 'GMXMMPBSA_REC_GMXMMPBSA_LIG']
         c3 = subprocess.Popen(editconf_echo_args, stdout=subprocess.PIPE)
         # we extract a pdb from structure file to make amber topology
@@ -167,10 +167,11 @@ class CheckMakeTop:
                                          self.FILES.complex_index]
         if self.INPUT['debug_printlevel']:
             logging.info('Running command: ' + (' '.join(editconf_echo_args)) + ' | ' + ' '.join(editconf_args))
-        c4 = subprocess.Popen(editconf_args, stdin=c3.stdout, stdout=self.log, stderr=self.log)
+        logging.debug('Running command: ' + (' '.join(editconf_echo_args)) + ' | ' + ' '.join(editconf_args))
+        c4 = subprocess.Popen(editconf_args, stdin=c3.stdout, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         if c4.wait():  # if it quits with return code != 0
             GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(self.editconf), self.FILES.complex_tpr))
-
+        log_subprocess_output(c4)
         # Put receptor and ligand (explicitly defined) to avoid overwrite them
         # check if ligand is not protein. In any case, non-protein ligand always most be processed
         if self.FILES.ligand_mol2:
@@ -184,14 +185,16 @@ class CheckMakeTop:
                              lig_ff]
             if self.INPUT['debug_printlevel']:
                 logging.info('Running command: ' + ' '.join(parmchk2_args))
-            l3 = subprocess.Popen(parmchk2_args, stdout=self.log, stderr=self.log)
+            logging.debug('Running command: ' + ' '.join(parmchk2_args))
+            l3 = subprocess.Popen(parmchk2_args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             if l3.wait():
                 GMXMMPBSA_ERROR('%s failed when querying %s' % (parmchk2, self.FILES.ligand_mol2))
+            log_subprocess_output(l3)
 
         # check if the ligand force field is gaff or gaff2 and get if the ligand mol2 was defined
         elif ("leaprc.gaff" in self.INPUT['forcefields'] or "leaprc.gaff2" in self.INPUT['forcefields'] and not
             self.FILES.complex_top):
-                GMXMMPBSA_WARNING('You must define the ligand mol2 file (-lm) if the ligand forcefield is '
+                logging.warning('You must define the ligand mol2 file (-lm) if the ligand forcefield is '
                                   '"leaprc.gaff" or "leaprc.gaff2". If the ligand is parametrized in Amber force '
                                   'fields ignore this warning')
 
@@ -208,10 +211,11 @@ class CheckMakeTop:
                                         self.FILES.complex_index]
             if self.INPUT['debug_printlevel']:
                 logging.info('Running command: ' + (' '.join(rec_echo_args)) + ' | ' + ' '.join(editconf_args))
-            cp2 = subprocess.Popen(editconf_args, stdin=cp1.stdout, stdout=self.log, stderr=self.log)
+            logging.debug('Running command: ' + (' '.join(rec_echo_args)) + ' | ' + ' '.join(editconf_args))
+            cp2 = subprocess.Popen(editconf_args, stdin=cp1.stdout, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             if cp2.wait():  # if it quits with return code != 0
                 GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(self.editconf), self.FILES.complex_tpr))
-
+            log_subprocess_output(cp2)
         # check if stability
         if self.FILES.stability and (
             (self.FILES.receptor_tpr or self.FILES.ligand_tpr)
@@ -221,8 +225,8 @@ class CheckMakeTop:
         # wt receptor
         if self.FILES.receptor_tpr:
             logging.info('A receptor structure file was defined. Using MT approach...')
-            logging.info('Normal receptor: Saving group {} in {} file as {}'.format(
-                self.FILES.receptor_group, self.FILES.receptor_index, self.receptor_str_file))
+            logging.info(f'Normal receptor: Saving group {self.FILES.receptor_group} in {self.FILES.receptor_index} '
+                         f'file as {self.receptor_str_file}')
             editconf_echo_args = ['echo', '{}'.format(self.FILES.receptor_group)]
             p1 = subprocess.Popen(editconf_echo_args, stdout=subprocess.PIPE)
             # we extract a pdb from structure file to make amber topology
@@ -230,10 +234,10 @@ class CheckMakeTop:
                                              self.FILES.receptor_index]
             if self.INPUT['debug_printlevel']:
                 logging.info('Running command: ' + (' '.join(editconf_echo_args)) + ' | ' + ' '.join(editconf_args))
-            cp2 = subprocess.Popen(editconf_args, stdin=p1.stdout, stdout=self.log, stderr=self.log)
+            logging.debug('Running command: ' + (' '.join(editconf_echo_args)) + ' | ' + ' '.join(editconf_args))
+            cp2 = subprocess.Popen(editconf_args, stdin=p1.stdout, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             if cp2.wait():  # if it quits with return code != 0
                 GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(self.editconf), self.FILES.receptor_tpr))
-
         else:
             logging.info('No receptor structure file was defined. Using ST approach...')
             logging.info('Using receptor structure from complex to generate AMBER topology')
@@ -247,10 +251,11 @@ class CheckMakeTop:
                                              self.FILES.complex_index]
             if self.INPUT['debug_printlevel']:
                 logging.info('Running command: ' + (' '.join(editconf_echo_args)) + ' | ' + ' '.join(editconf_args))
-            cp2 = subprocess.Popen(editconf_args, stdin=cp1.stdout, stdout=self.log, stderr=self.log)
+            logging.debug('Running command: ' + (' '.join(editconf_echo_args)) + ' | ' + ' '.join(editconf_args))
+            cp2 = subprocess.Popen(editconf_args, stdin=cp1.stdout, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             if cp2.wait():  # if it quits with return code != 0
                 GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(self.editconf), self.FILES.complex_tpr))
-
+        log_subprocess_output(cp2)
         # ligand
         # # check consistence
         if self.FILES.ligand_tpr:  # ligand is protein
@@ -266,7 +271,7 @@ class CheckMakeTop:
                                              self.FILES.ligand_index]
             if self.INPUT['debug_printlevel']:
                 logging.info('Running command: ' + (' '.join(editconf_echo_args)) + ' | ' + ' '.join(editconf_args))
-            l2 = subprocess.Popen(editconf_args, stdin=l1.stdout, stdout=self.log, stderr=self.log)
+            l2 = subprocess.Popen(editconf_args, stdin=l1.stdout, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             if l2.wait():  # if it quits with return code != 0
                 GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(self.editconf), self.FILES.ligand_tpr))
         else:
@@ -276,33 +281,35 @@ class CheckMakeTop:
             logging.info('Normal ligand: Saving group {} in {} file as {}'.format(lig_group, self.FILES.complex_index,
                                                                                   self.ligand_str_file))
             editconf_echo_args = ['echo', '{}'.format(lig_group)]
-            cl1 = subprocess.Popen(editconf_echo_args, stdout=subprocess.PIPE)
+            l1 = subprocess.Popen(editconf_echo_args, stdout=subprocess.PIPE)
             # we extract a pdb from structure file to make amber topology
             editconf_args = self.editconf + ['-f', self.FILES.complex_tpr, '-o', self.ligand_str_file, '-n',
                                              self.FILES.complex_index]
             if self.INPUT['debug_printlevel']:
                 logging.info('Running command: ' + (' '.join(editconf_echo_args)) + ' | ' + ' '.join(editconf_args))
-            cl2 = subprocess.Popen(editconf_args, stdin=cl1.stdout, stdout=self.log, stderr=self.log)
-            if cl2.wait():  # if it quits with return code != 0
+            l2 = subprocess.Popen(editconf_args, stdin=l1.stdout, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            if l2.wait():  # if it quits with return code != 0
                 GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(self.editconf), self.FILES.complex_tpr))
-
+        log_subprocess_output(l2)
         # check for IE variable
         if (self.FILES.receptor_tpr or self.FILES.ligand_tpr) and (
             self.INPUT['interaction_entropy'] or self.INPUT['c2_entropy']
         ):
-            GMXMMPBSA_WARNING("The IE or C2 entropy method don't support the MTP approach...")
+            logging.warning("The IE or C2 entropy method don't support the MTP approach...")
             self.INPUT['interaction_entropy'] = self.INPUT['c2_entropy'] = 0
 
         # initialize receptor and ligand structures. Needed to get residues map
         self.complex_str = self.molstr(self.complex_str_file)
         self.receptor_str = self.molstr(self.receptor_str_file)
         self.ligand_str = self.molstr(self.ligand_str_file)
+        if self.FILES.reference_structure:
+            self.ref_str = check_str(self.FILES.reference_structure, ref=True)
         self.check4water()
         self.indexes = get_indexes(com_ndx=self.FILES.complex_index,
                                    rec_ndx=self.FILES.receptor_index, rec_group=self.FILES.receptor_group,
                                    lig_ndx=self.FILES.ligand_index, lig_group=self.FILES.ligand_group)
         self.resi, self.resl, self.orderl = res2map(self.indexes, self.complex_str)
-        self.fix_chains_IDs(self.complex_str, self.receptor_str, self.ligand_str, self.ref_str)
+        self.check_structures(self.complex_str, self.receptor_str, self.ligand_str)
 
     def check4water(self):
         counter = sum(
@@ -332,6 +339,26 @@ class CheckMakeTop:
         logging.info('Building Normal Complex Amber Topology...')
         com_top = self.cleantop(self.FILES.complex_top, self.indexes['COM']['COM'])
         # parmed.gromacs.GromacsTopologyFile(self.complex_temp_top,xyz=self.complex_str_file)
+
+        error_info = eq_strs(com_top, self.complex_str)
+        if error_info:
+            if error_info[0] == 'atoms':
+                GMXMMPBSA_ERROR(f"The number of atoms in the topology ({error_info[1]}) and the complex structure "
+                            f"({error_info[2]}) are different. Please check this files and verify that they are "
+                                f"correct. Otherwise report the error...")
+            elif error_info[0] == 'residues':
+                GMXMMPBSA_ERROR(f"The number of residues in the topology ({error_info[1]}) and the complex structure "
+                                f"({error_info[2]}) are different. Please check this files and verify that they are "
+                                f"correct. Otherwise report the error...")
+            else:
+                text = (f'There is a mismatch between several pairs of residues ({len(error_info[1])}) of the '
+                        f'topology and the structure of the complex.')
+                if len(error_info[1]) < 10:
+                    text += '\nReference | Structure'
+                    for x in error_info[1]:
+                        text += ' <-> '.join(x) + '\n'
+                GMXMMPBSA_ERROR(text)
+
         com_top.coordinates = self.complex_str.coordinates
         # try:
         if com_top.impropers or com_top.urey_bradleys or com_top.cmaps:
@@ -346,9 +373,9 @@ class CheckMakeTop:
 
         self.fixparm2amber(com_amb_prm)
 
-        logging.info('Writing Normal Complex Amber Topology...')
-        # change de PBRadii
+        logging.info(f"Assigning PBRadii {PBRadii[self.INPUT['PBRadii']]} to Complex...")
         action = ChRad(com_amb_prm, PBRadii[self.INPUT['PBRadii']])
+        logging.info('Writing Normal Complex Amber Topology...')
         com_amb_prm.write_parm(self.complex_pmrtop)
 
         rec_indexes_string = ','.join(self.resi['REC']['string'])
@@ -358,6 +385,26 @@ class CheckMakeTop:
             logging.info('A Receptor topology file was defined. Using MT approach...')
             logging.info('Building AMBER Receptor Topology from GROMACS Receptor Topology...')
             rec_top = self.cleantop(self.FILES.receptor_top, self.indexes['REC'])
+
+            error_info = eq_strs(rec_top, self.receptor_str)
+            if error_info:
+                if error_info[0] == 'atoms':
+                    GMXMMPBSA_ERROR(f"The number of atoms in the topology ({error_info[1]}) and the receptor "
+                                    f"structure ({error_info[2]}) are different. Please check this files and verify "
+                                    f"that they are correct. Otherwise report the error...")
+                elif error_info[0] == 'residues':
+                    GMXMMPBSA_ERROR(f"The number of residues in the topology ({error_info[1]}) and the receptor "
+                                    f"structure ({error_info[2]}) are different. Please check this files and verify "
+                                    f"that they are correct. Otherwise report the error...")
+                else:
+                    text = (f'There is a mismatch between several pairs of residues ({len(error_info[1])}) of the '
+                            f'topology and the structure of the receptor.')
+                    if len(error_info[1]) < 10:
+                        text += '\nReference | Structure'
+                        for x in error_info[1]:
+                            text += ' <-> '.join(x) + '\n'
+                    GMXMMPBSA_ERROR(text)
+
             rec_top.coordinates = self.receptor_str.coordinates
             if rec_top.impropers or rec_top.urey_bradleys or rec_top.cmaps:
                 if com_top_parm == 'amber':
@@ -369,6 +416,7 @@ class CheckMakeTop:
                     GMXMMPBSA_ERROR('Inconsistent parameter format. The defined Complex is CHAMBER type while the '
                                     'Receptor is AMBER type!')
                 rec_amb_prm = parmed.amber.AmberParm.from_structure(rec_top)
+            logging.info('Changing the Receptor residues name format from GROMACS to Amber...')
             self.fixparm2amber(rec_amb_prm)
         else:
             logging.info('No Receptor topology files was defined. Using ST approach...')
@@ -377,8 +425,10 @@ class CheckMakeTop:
             rec_amb_prm = self.molstr(com_amb_prm)
             rec_amb_prm.strip(f'!:{rec_indexes_string}')
             rec_hastop = False
-        # change de PBRadii
+
+        logging.info(f"Assigning PBRadii {PBRadii[self.INPUT['PBRadii']]} to Receptor...")
         action = ChRad(rec_amb_prm, PBRadii[self.INPUT['PBRadii']])
+        logging.info('Writing Normal Receptor Amber Topology...')
         rec_amb_prm.write_parm(self.receptor_pmrtop)
 
         lig_hastop = True
@@ -386,6 +436,26 @@ class CheckMakeTop:
             logging.info('A Ligand Topology file was defined. Using MT approach...')
             logging.info('Building AMBER Ligand Topology from GROMACS Ligand Topology...')
             lig_top = self.cleantop(self.FILES.ligand_top, self.indexes['LIG'])
+
+            error_info = eq_strs(lig_top, self.ligand_str)
+            if error_info:
+                if error_info[0] == 'atoms':
+                    GMXMMPBSA_ERROR(f"The number of atoms in the topology ({error_info[1]}) and the ligand "
+                                    f"structure ({error_info[2]}) are different. Please check this files and verify "
+                                    f"that they are correct. Otherwise report the error...")
+                elif error_info[0] == 'residues':
+                    GMXMMPBSA_ERROR(f"The number of residues in the topology ({error_info[1]}) and the ligand "
+                                    f"structure ({error_info[2]}) are different. Please check this files and verify "
+                                    f"that they are correct. Otherwise report the error...")
+                else:
+                    text = (f'There is a mismatch between several pairs of residues ({len(error_info[1])}) of the '
+                            f'topology and the structure of the ligand.')
+                    if len(error_info[1]) < 10:
+                        text += '\nReference | Structure'
+                        for x in error_info[1]:
+                            text += ' <-> '.join(x) + '\n'
+                    GMXMMPBSA_ERROR(text)
+
             lig_top.coordinates = self.ligand_str.coordinates
             if lig_top.impropers or lig_top.urey_bradleys or lig_top.cmaps:
                 if com_top_parm == 'amber':
@@ -397,6 +467,7 @@ class CheckMakeTop:
                     GMXMMPBSA_ERROR('Inconsistent parameter format. The defined Complex is CHAMBER type while the '
                                     'Ligand is AMBER type!')
                 lig_amb_prm = parmed.amber.AmberParm.from_structure(lig_top)
+            logging.info('Changing the Ligand residues name format from GROMACS to Amber...')
             self.fixparm2amber(lig_amb_prm)
         else:
             logging.info('No Ligand Topology files was defined. Using ST approach...')
@@ -405,9 +476,9 @@ class CheckMakeTop:
             lig_amb_prm = self.molstr(com_amb_prm)
             lig_amb_prm.strip(f':{rec_indexes_string}')
             lig_hastop = False
-
-        # change de PBRadii
+        logging.info(f"Assigning PBRadii {PBRadii[self.INPUT['PBRadii']]} to Ligand...")
         action = ChRad(lig_amb_prm, PBRadii[self.INPUT['PBRadii']])
+        logging.info('Writing Normal Ligand Amber Topology...')
         lig_amb_prm.write_parm(self.ligand_pmrtop)
 
         if self.INPUT['alarun']:
@@ -415,8 +486,9 @@ class CheckMakeTop:
             # get mutation index in complex
             self.com_mut_index, self.part_mut, self.part_index, self.mut_label = self.getMutationInfo()
             mut_com_amb_prm = self.makeMutTop(com_amb_prm, self.com_mut_index)
-            # change de PBRadii
+            logging.info(f"Assigning PBRadii {PBRadii[self.INPUT['PBRadii']]} to Mutant Complex...")
             action = ChRad(mut_com_amb_prm, PBRadii[self.INPUT['PBRadii']])
+            logging.info('Writing Mutant Complex Amber Topology...')
             mut_com_amb_prm.write_parm(self.mutant_complex_pmrtop)
 
             if self.part_mut == 'REC':
@@ -442,8 +514,10 @@ class CheckMakeTop:
                 mut_prot_amb_prm = parmed.amber.ChamberParm.from_structure(mtop)
             else:
                 mut_prot_amb_prm = parmed.amber.AmberParm.from_structure(mtop)
-            # change de PBRadii
+            logging.info(f"Assigning PBRadii {PBRadii[self.INPUT['PBRadii']]} to Mutant "
+                         f"{'Receptor' if self.part_mut == 'REC' else 'Ligand'}...")
             action = ChRad(mut_prot_amb_prm, PBRadii[self.INPUT['PBRadii']])
+            logging.info(f"Writing Mutant {'Receptor' if self.part_mut == 'REC' else 'Ligand'} Amber Topology...")
             mut_prot_amb_prm.write_parm(out_prmtop)
         else:
             self.mutant_complex_pmrtop = None
@@ -471,10 +545,14 @@ class CheckMakeTop:
         logging.info('Generating AMBER Compatible PDB Files...')
 
         # fix receptor and structures
+        logging.info('Changing the Complex residues name format from GROMACS to Amber...')
         self.fixparm2amber(self.complex_str, removeH=True)
+        logging.info('Changing the Receptor residues name format from GROMACS to Amber...')
         self.fixparm2amber(self.receptor_str, removeH=True)
+        logging.info('Changing the Ligand residues name format from GROMACS to Amber...')
         self.fixparm2amber(self.ligand_str, removeH=True)
 
+        logging.info('Dividing receptor and ligand according to their continuity into individual PDB files..')
         self.receptor_list = {}
         start = 1
         for c, r in enumerate(self.resi['REC']['num'], start=1):
@@ -501,17 +579,15 @@ class CheckMakeTop:
                     end, sfile = self._split_str(
                         start, r, c, 'MUT_REC', self.receptor_str, self.part_index
                     )
-
                     self.mut_receptor_list[f'MREC{c}'] = sfile
                     start += end
             else:
-                logging.info('Detecting mutation in Ligand.Building Mutant Ligand Structure...')
+                logging.info('Detecting mutation in Ligand. Building Mutant Ligand Structure...')
                 self.mutant_receptor_pmrtop = None
                 for c, r in enumerate(self.resi['LIG']['num']):
                     end, sfile = self._split_str(
                         start, r, c, 'MUT_LIG', self.ligand_str, self.part_index
                     )
-
                     self.mut_ligand_list[f'MLIG{c}'] =  sfile
                     start += end
 
@@ -809,60 +885,9 @@ class CheckMakeTop:
                     break
         cb_atom = None
         ca_atom = None
-        logging.info(f"Mutating {mut_top.residues[mut_index].name} by {mut_aa}")
+        logging.info(f"Mutating {mut_top.residues[mut_index].chain}/{mut_top.residues[mut_index].number} "
+                     f"{mut_top.residues[mut_index].name} by {mut_aa}")
 
-        # change intdiel if cas_intdiel was define
-        if self.INPUT['cas_intdiel']:
-            if self.INPUT['gbrun']:
-                if self.INPUT['intdiel'] != 1.0:
-                    GMXMMPBSA_WARNING('Both cas_intdiel and intdiel were defined. The dielectric constants associated '
-                                      'with cas_intdiel will be ignored and intdiel will be used instead')
-                elif mut_top.residues[mut_index].name in polar_aa:
-                    self.INPUT['intdiel'] = self.INPUT['intdiel_polar']
-                    self.INPUT['indi'] = self.INPUT['intdiel_polar']
-                    logging.info(f"Setting intdiel = indi = intdiel_polar = {self.INPUT['intdiel_polar']} for "
-                                 f"Alanine scanning")
-                elif mut_top.residues[mut_index].name in nonpolar_aa:
-                    self.INPUT['intdiel'] = self.INPUT['intdiel_nonpolar']
-                    self.INPUT['indi'] = self.INPUT['intdiel_nonpolar']
-                    logging.info(f"Setting intdiel = indi = intdiel_nonpolar = {self.INPUT['intdiel_nonpolar']} "
-                                 f"for Alanine scanning")
-                elif mut_top.residues[mut_index].name in positive_aa:
-                    self.INPUT['intdiel'] = self.INPUT['intdiel_positive']
-                    self.INPUT['indi'] = self.INPUT['intdiel_positive']
-                    logging.info(f"Setting intdiel = indi = intdiel_positive = {self.INPUT['intdiel_positive']} "
-                                 f"for Alanine scanning")
-                elif mut_top.residues[mut_index].name in negative_aa:
-                    self.INPUT['intdiel'] = self.INPUT['intdiel_negative']
-                    self.INPUT['indi'] = self.INPUT['intdiel_negative']
-                    logging.info(f"Setting intdiel = indi = intdiel_negative = {self.INPUT['intdiel_negative']} "
-                                 f"for Alanine scanning")
-                else:
-                    GMXMMPBSA_WARNING(f"Unclassified mutant residue {mut_top.residues[mut_index].name}. The "
-                                      f"default intdiel will be used")
-            if self.INPUT['pbrun']:
-                if self.INPUT['indi'] != 1.0:
-                    GMXMMPBSA_WARNING('Both cas_intdiel and indi were defined. The dielectric constants associated '
-                                      'with cas_intdiel will be ignored and indi will be used instead')
-                elif mut_top.residues[mut_index].name in polar_aa:
-                    self.INPUT['indi'] = self.INPUT['intdiel_polar']
-                    logging.info(f"Setting indi = intdiel_polar = {self.INPUT['intdiel_polar']} for Alanine "
-                                 f"scanning")
-                elif mut_top.residues[mut_index].name in nonpolar_aa:
-                    self.INPUT['indi'] = self.INPUT['intdiel_nonpolar']
-                    logging.info(f"Setting indi = intdiel_nonpolar = {self.INPUT['intdiel_nonpolar']} for "
-                                 f"Alanine scanning")
-                elif mut_top.residues[mut_index].name in positive_aa:
-                    self.INPUT['indi'] = self.INPUT['intdiel_positive']
-                    logging.info(f"Setting intdiel = indi = intdiel_positive = {self.INPUT['intdiel_positive']} "
-                                 f"for Alanine scanning")
-                elif mut_top.residues[mut_index].name in negative_aa:
-                    self.INPUT['indi'] = self.INPUT['intdiel_negative']
-                    logging.info(f"Setting indi = intdiel_negative = {self.INPUT['intdiel_negative']} for "
-                                 f"Alanine scanning")
-                else:
-                    GMXMMPBSA_WARNING(f"Unclassified mutant residue {mut_top.residues[mut_index].name}. The "
-                                      f"default indi will be used")
         mut_top.residues[mut_index].name = mut_aa
 
         for at in mut_top.residues[mut_index].atoms:
@@ -899,6 +924,54 @@ class CheckMakeTop:
                 elif at.name in ['HB1', 'HB2', 'HB3']:
                     at.type = h_atoms_prop['type']
                     at.atom_type = h_atoms_prop['atom_type']
+
+        # change intdiel if cas_intdiel was define before end the mutation process
+        if self.INPUT['cas_intdiel']:
+            if self.INPUT['gbrun']:
+                if self.INPUT['intdiel'] != 1.0:
+                    logging.warning('Both cas_intdiel and intdiel were defined. The dielectric constants associated '
+                                    'with cas_intdiel will be ignored and intdiel will be used instead')
+                elif mut_top.residues[mut_index].name in polar_aa:
+                    self.INPUT['intdiel'] = self.INPUT['intdiel_polar']
+                    logging.info(f"Setting intdiel = intdiel_polar = {self.INPUT['intdiel_polar']} for "
+                                 f"Alanine scanning")
+                elif mut_top.residues[mut_index].name in nonpolar_aa:
+                    self.INPUT['intdiel'] = self.INPUT['intdiel_nonpolar']
+                    logging.info(f"Setting intdiel = intdiel_nonpolar = {self.INPUT['intdiel_nonpolar']} for Alanine "
+                                 f"scanning")
+                elif mut_top.residues[mut_index].name in positive_aa:
+                    self.INPUT['intdiel'] = self.INPUT['intdiel_positive']
+                    logging.info(f"Setting intdiel = intdiel_positive = {self.INPUT['intdiel_positive']} for Alanine "
+                                 f"scanning")
+                elif mut_top.residues[mut_index].name in negative_aa:
+                    self.INPUT['intdiel'] = self.INPUT['intdiel_negative']
+                    logging.info(f"Setting intdiel = intdiel_negative = {self.INPUT['intdiel_negative']} for Alanine "
+                                 f"scanning")
+                else:
+                    logging.warning(f"Unclassified mutant residue {mut_top.residues[mut_index].name}. The default "
+                                    f"intdiel will be used")
+            if self.INPUT['pbrun']:
+                if self.INPUT['indi'] != 1.0:
+                    logging.warning('Both cas_intdiel and indi were defined. The dielectric constants associated with '
+                                    'cas_intdiel will be ignored and indi will be used instead')
+                elif mut_top.residues[mut_index].name in polar_aa:
+                    self.INPUT['indi'] = self.INPUT['intdiel_polar']
+                    logging.info(f"Setting indi = intdiel_polar = {self.INPUT['intdiel_polar']} for Alanine scanning")
+                elif mut_top.residues[mut_index].name in nonpolar_aa:
+                    self.INPUT['indi'] = self.INPUT['intdiel_nonpolar']
+                    logging.info(f"Setting indi = intdiel_nonpolar = {self.INPUT['intdiel_nonpolar']} for Alanine "
+                                 f"scanning")
+                elif mut_top.residues[mut_index].name in positive_aa:
+                    self.INPUT['indi'] = self.INPUT['intdiel_positive']
+                    logging.info(f"Setting intdiel = indi = intdiel_positive = {self.INPUT['intdiel_positive']} for "
+                                 f"Alanine scanning")
+                elif mut_top.residues[mut_index].name in negative_aa:
+                    self.INPUT['indi'] = self.INPUT['intdiel_negative']
+                    logging.info(f"Setting indi = intdiel_negative = {self.INPUT['intdiel_negative']} for Alanine "
+                                 f"scanning")
+                else:
+                    logging.warning(f"Unclassified mutant residue {mut_top.residues[mut_index].name}. The default "
+                                    f"indi will be used")
         return mut_top
 
     def cleanup_trajs(self):
@@ -915,11 +988,13 @@ class CheckMakeTop:
                                       '-o', 'COM_traj_{}.xtc'.format(i), '-n', self.FILES.complex_index]
             if self.INPUT['debug_printlevel']:
                 logging.info('Running command: ' + (' '.join(trjconv_echo_args)) + ' | ' + ' '.join(trjconv_args))
+            logging.debug('Running command: ' + (' '.join(trjconv_echo_args)) + ' | ' + ' '.join(trjconv_args))
             c6 = subprocess.Popen(trjconv_args,  # FIXME: start and end frames???
-                                  stdin=c5.stdout, stdout=self.log, stderr=self.log)
+                                  stdin=c5.stdout, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             if c6.wait():  # if it quits with return code != 0
                 GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(self.trjconv), self.FILES.complex_tpr))
             new_trajs.append('COM_traj_{}.xtc'.format(i))
+            log_subprocess_output(c6)
         self.FILES.complex_trajs = new_trajs
 
         # clear trajectory
@@ -934,18 +1009,19 @@ class CheckMakeTop:
                                           '-o', 'REC_traj_{}.xtc'.format(i), '-n',
                                           self.FILES.receptor_index]
                 if self.INPUT['debug_printlevel']:
-                    logging.info('Running command: ' + (' '.join(trjconv_echo_args)) + ' | ' + ' '.join(
-                        trjconv_args))
+                    logging.info('Running command: ' + (' '.join(trjconv_echo_args)) + ' | ' + ' '.join(trjconv_args))
+                logging.debug('Running command: ' + (' '.join(trjconv_echo_args)) + ' | ' + ' '.join(trjconv_args))
                 c6 = subprocess.Popen(trjconv_args,  # FIXME: start and end frames???
-                                      stdin=c5.stdout, stdout=self.log, stderr=self.log)
+                                      stdin=c5.stdout, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
                 if c6.wait():  # if it quits with return code != 0
                     GMXMMPBSA_ERROR(
                         '%s failed when querying %s' % (' '.join(self.trjconv), self.FILES.receptor_tpr))
                 new_trajs.append('REC_traj_{}.xtc'.format(i))
+                log_subprocess_output(c6)
             self.FILES.receptor_trajs = new_trajs
 
         if self.FILES.ligand_tpr:
-            logging.info('Cleanig normal ligand trajectories...')
+            logging.info('Cleaning normal ligand trajectories...')
             new_trajs = []
             for i in range(len(self.FILES.ligand_trajs)):
                 trjconv_echo_args = ['echo', '{}'.format(self.FILES.ligand_group)]
@@ -954,21 +1030,36 @@ class CheckMakeTop:
                 trjconv_args = self.trjconv + ['-f', self.FILES.ligand_trajs[0], '-s', self.FILES.ligand_tpr,
                                                '-o', 'LIG_traj_{}.xtc'.format(i), '-n', self.FILES.ligand_index]
                 if self.INPUT['debug_printlevel']:
-                    logging.info(
-                        'Running command: ' + (' '.join(trjconv_echo_args)) + ' | ' + ' '.join(trjconv_args))
-                c6 = subprocess.Popen(trjconv_args, stdin=c5.stdout, stdout=self.log, stderr=self.log)
+                    logging.info('Running command: ' + (' '.join(trjconv_echo_args)) + ' | ' + ' '.join(trjconv_args))
+                logging.debug('Running command: ' + (' '.join(trjconv_echo_args)) + ' | ' + ' '.join(trjconv_args))
+                c6 = subprocess.Popen(trjconv_args, stdin=c5.stdout, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
                 if c6.wait():  # if it quits with return code != 0
                     GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(self.trjconv), self.FILES.ligand_tpr))
                 new_trajs.append('LIG_traj_{}.xtc'.format(i))
+                log_subprocess_output(c6)
             self.FILES.ligand_trajs = new_trajs
 
-    def fix_chains_IDs(self, com_str, rec_str=None, lig_str=None, ref_str=None):
-        if ref_str:
+    def check_structures(self, com_str, rec_str=None, lig_str=None):
+        logging.info('Checking the structures consistency...')
+        check_str(com_str)
+        check_str(rec_str)
+        check_str(lig_str)
+
+        if self.FILES.reference_structure:
+            logging.info('Assigning chain ID to structures files according to the reference structure...')
+            ref_str = check_str(self.FILES.reference_structure)
             if len(ref_str.residues) != len(com_str.residues):
-                GMXMMPBSA_ERROR('The number of amino acids in the reference structure is different from that of the '
-                                'complex...')
+                GMXMMPBSA_ERROR(f'The number of residues of the complex ({len(com_str.residues)}) and of the '
+                                f'reference structure ({len(ref_str.residues)}) are different. Please check that the '
+                                f'reference structure is correct')
             for c, res in enumerate(ref_str.residues, start=1):
-                # TODO: check if the residues are the same
+                if com_str.residues[c-1].number != res.number or com_str.residues[c-1].name != res.name:
+                    GMXMMPBSA_ERROR('There is no match between the complex and the reference structure used. An '
+                                    f'attempt was made to assign the chain ID to "{com_str.residues[c-1].name}'
+                                    f':{com_str.residues[c-1].number}:{com_str.residues[c-1].insertion_code}" in the '
+                                    f'complex, but "{res.name}:{res.number}:{res.insertion_code}" was expected '
+                                    'based on the reference structure. Please check that the reference structure is '
+                                    'correct')
                 com_str.residues[c-1].chain = res.chain
                 if c in self.resl['REC']:
                     i = self.resl['REC'].index(c)
@@ -990,11 +1081,10 @@ class CheckMakeTop:
                     logging.warning('Assigning chains ID...')
                 else:
                     logging.warning('Already have chain ID. Re-assigning ID...')
-            elif self.INPUT['assign_chainID'] == 0 and self.FILES.complex_tpr[-3:] == 'gro':
+            elif self.INPUT['assign_chainID'] == 0 and not com_str.residues[0].chain:
                 assign = True
-                logging.warning('No reference structure was found and a gro file was used for the complex '
-                                'structure. Assigning chains ID...')
-
+                logging.warning('No reference structure was found and the complex structure not contain any chain ID. '
+                                'Assigning chains ID automatically...')
             if assign:
                 self._assign_chains_IDs(com_str, rec_str, lig_str)
         # Save fixed complex structure for analysis and set it in FILES to save in info file
@@ -1070,8 +1160,8 @@ class CheckMakeTop:
 
             previous_res_number = res.number
         if has_nucl == 1:
-            logging.warning('This structure contains nucleotides. We recommend that you use the reference '
-                            'structure')
+            logging.warning('This structure contains nucleotides. We recommend that you use the reference structure')
+
     @staticmethod
     def molstr(data):
 

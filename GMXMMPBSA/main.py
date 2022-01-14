@@ -551,17 +551,16 @@ class MMPBSA_App(object):
     def make_prmtops(self):
         self.timer.add_timer('setup_gmx', 'Total GROMACS setup time:')
         self.timer.start_timer('setup_gmx')
-        # Now we're getting ready, remove existing intermediate files
-        if self.master and self.FILES.use_mdins:
-            self.remove(-1)
-        elif self.master and not self.FILES.rewrite_output:
-            self.remove(0)
+        if self.FILES.use_mdins:
+            if self.master:
+                self.remove(-1)
+        elif not self.FILES.rewrite_output:
+            if self.master:
+                self.remove(0)
 
         # Find external programs IFF we are doing a calc
         if not self.FILES.make_mdins:
-            external_progs = {}
-            if self.master:
-                external_progs = find_progs(self.INPUT, self.mpi_size)
+            external_progs = find_progs(self.INPUT, self.mpi_size) if self.master else {}
             external_progs = self.MPI.COMM_WORLD.bcast(external_progs, root=0)
             # Make external_progs an instance attribute
             self.external_progs = external_progs
@@ -763,9 +762,8 @@ class MMPBSA_App(object):
         _debug_printlevel = self.INPUT['debug_printlevel']
         self.input_file_text = str(self.input_file)
         if self.master:
-            with open('gmx_MMPBSA.log', 'a') as log:
-                log.write('[INFO   ] Input file\n')
-                log.write(self.input_file_text)
+            for line in self.input_file_text.split('\n'):
+                logging.debug(line)
 
     def process_input(self):
         """
