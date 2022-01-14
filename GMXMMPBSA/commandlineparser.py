@@ -52,16 +52,14 @@ def check_arg(str_suffix, path=False):
             result = f(*args)
             if path and not Path(result).exists():
                 GMXMMPBSA_ERROR(f'{result} do not exist or is inaccessible')
-            if not Path(result).suffix in str_suffix:
+            if Path(result).suffix not in str_suffix:
                 GMXMMPBSA_ERROR(f'{result} does not correspond to the required structure format {str_suffix}')
             return result
-
         return gmx_MMPBSA_file
-
     return decorator
 
 
-@check_arg(['.tpr', '.pdb', '.gro'], True)
+@check_arg(['.tpr', '.pdb'], True)
 def structure(arg):
     return arg
 
@@ -157,8 +155,7 @@ group.add_argument('-cs', dest='complex_tpr', metavar='<Structure File>', defaul
                    help='''Structure file of the complex. If it is Protein-Ligand 
                          (small molecule) complex and -cp is not defined, make 
                          sure that you define -lm option. See -lm description 
-                         below. Allowed formats: *.tpr (recommended), *.pdb, 
-                         *.gro''')
+                         below. Allowed formats: *.tpr (recommended), *.pdb''')
 group.add_argument('-ci', dest='complex_index', metavar='<Index File>', default=None, type=index,
                    help='Index file of the bound complex.')
 group.add_argument('-cg', dest='complex_groups', metavar='index', nargs=2, default=None, type=int,
@@ -180,7 +177,7 @@ group.add_argument('-cr', dest='reference_structure', metavar='<PDB File>', defa
 group = parser.add_argument_group('Receptor', receptor_group_des)
 group.add_argument('-rs', dest='receptor_tpr', metavar='<Structure File>', default=None, type=structure,
                    help='''Structure file of the unbound receptor for multiple trajectory approach.
-                         Allowed formats: *.tpr (recommended), *.pdb, *.gro''')
+                         Allowed formats: *.tpr (recommended), *.pdb''')
 group.add_argument('-ri', dest='receptor_index', metavar='<Index File>', default=None, type=index,
                    help='Index file of the unbound receptor.')
 group.add_argument('-rg', dest='receptor_group', metavar='index', default=None, type=int,
@@ -202,7 +199,7 @@ group.add_argument('-lm', dest='ligand_mol2', metavar='<Structure File>', defaul
                          force fields. Must be the Antechamber output *.mol2.''')
 group.add_argument('-ls', dest='ligand_tpr', metavar='<Structure File>', default=None, type=structure,
                    help='''Structure file of the unbound ligand. If ligand is a small molecule and -lp is not defined,
-                   make sure that you define above -lm option. Allowed formats: *.tpr (recommended), *.pdb, *.gro''')
+                   make sure that you define above -lm option. Allowed formats: *.tpr (recommended), *.pdb''')
 group.add_argument('-li', dest='ligand_index', metavar='<Index File>', type=index,
                    default=None, help='Index file of the unbound ligand. Only if tpr file was define in -ls.')
 group.add_argument('-lg', dest='ligand_group', metavar='index', default=None, type=int,
