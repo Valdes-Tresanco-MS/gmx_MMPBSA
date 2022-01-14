@@ -1160,23 +1160,8 @@ class CheckMakeTop:
 
     @staticmethod
     def molstr(data):
-
         if type(data) == str:
-            # data is a pdb file
-            pdb_file = data
-            try:
-                with open(pdb_file) as fo:
-                    fo = fo.readlines()
-                    for line in fo:
-                        if 'MODEL' in line or 'ENDMDL' in line:
-                            fo.remove(line)
-                with open(pdb_file, 'w') as fw:
-                    for x in fo:
-                        fw.write(x)
-            except IOError as e:
-                GMXMMPBSA_ERROR('', str(e))
-
-            structure = parmed.read_PDB(pdb_file)
+            structure = parmed.read_PDB(data)
         else:
             # data is Structure, AmberParm, ChamberParm or GromacsTopologyFile. This make a copy
             structure = data.__copy__()
