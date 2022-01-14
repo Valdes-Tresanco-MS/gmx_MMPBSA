@@ -630,10 +630,7 @@ def write_decomp_stability_output(FILES, INPUT, size, prmtop_system,
     from datetime import datetime
     from GMXMMPBSA.amber_outputs import DecompOut, PairDecompOut, idecompString
 
-    if INPUT['idecomp'] in [1, 2]:
-        DecompClass = DecompOut
-    else:
-        DecompClass = PairDecompOut
+    DecompClass = DecompOut if INPUT['idecomp'] in [1, 2] else PairDecompOut
 
     # Open up the files
     if INPUT['csv_format']:
@@ -641,20 +638,19 @@ def write_decomp_stability_output(FILES, INPUT, size, prmtop_system,
         decompout = writer(dec_out_file)
         decompout.writerow(['| Run on %s' % datetime.now().ctime()])
         if INPUT['gbrun']:
-            decompout.writerow(['| GB non-polar solvation energies calculated '
-                                'with gbsa=2'])
+            decompout.writerow(['| GB non-polar solvation energies calculated with gbsa=2'])
         decompout.writerow([idecompString[INPUT['idecomp']]])
     else:
         dec_out_file = OutputFile(FILES.decompout, 'w', 0)
         decompout = dec_out_file
         decompout.write_date()
         if INPUT['gbrun']:
-            decompout.add_comment('| GB non-polar solvation energies calculated '
-                                  'with gbsa=2')
+            decompout.add_comment('| GB non-polar solvation energies calculated with gbsa=2')
         decompout.writeline(idecompString[INPUT['idecomp']])
 
     # Open up the energyvector CSV file
-    if FILES.dec_energies: dec_energies = open(FILES.dec_energies, 'w')
+    if FILES.dec_energies:
+        dec_energies = open(FILES.dec_energies, 'w')
 
     # GB first
     if INPUT['gbrun']:
@@ -664,19 +660,16 @@ def write_decomp_stability_output(FILES, INPUT, size, prmtop_system,
 
         # See if we do normal system
         if not INPUT['mutant_only']:
-            gb_com = DecompClass(pre + 'complex_gb.mdout',
-                                 prmtop_system.complex_prmtop, INPUT['surften'], csv_prefix,
+            gb_com = DecompClass(pre + 'complex_gb.mdout', prmtop_system.complex_prmtop, INPUT['surften'], csv_prefix,
                                  size, INPUT['dec_verbose'])
             gb_com.fill_all_terms()
             if INPUT['csv_format']:
-                decompout.writerow(['Energy Decomposition Analysis (All units ' +
-                                    'kcal/mol): Generalized Born Solvent'])
+                decompout.writerow(['Energy Decomposition Analysis (All units kcal/mol): Generalized Born Solvent'])
                 decompout.writerow([])
                 gb_com.write_summary_csv(gb_com.numframes, decompout)
                 decompout.writerow([])
             else:
-                decompout.writeline('Energy Decomposition Analysis (All units ' +
-                                    'kcal/mol): Generalized Born Solvent')
+                decompout.writeline('Energy Decomposition Analysis (All units kcal/mol): Generalized Born Solvent')
                 decompout.writeline('')
                 gb_com.write_summary(gb_com.numframes, decompout)
                 decompout.writeline('')
@@ -691,19 +684,18 @@ def write_decomp_stability_output(FILES, INPUT, size, prmtop_system,
                 dec_energies.write(ls)
 
         if INPUT['alarun']:
-            gb_com = DecompClass(pre + 'mutant_complex_gb.mdout',
-                                 mutant_system.complex_prmtop, INPUT['surften'], csv_prefix,
-                                 size, INPUT['dec_verbose'])
+            gb_com = DecompClass(pre + 'mutant_complex_gb.mdout', mutant_system.complex_prmtop, INPUT['surften'],
+                                 csv_prefix, size, INPUT['dec_verbose'])
             gb_com.fill_all_terms()
             if INPUT['csv_format']:
-                decompout.writerow(['Energy Decomposition Analysis (All units ' +
-                                    'kcal/mol): Generalized Born Solvent (%s)' % mutstr])
+                decompout.writerow(['Energy Decomposition Analysis (All units kcal/mol): Generalized Born Solvent '
+                                    f'({mutstr})'])
                 decompout.writerow([])
                 gb_com.write_summary_csv(gb_com.numframes, decompout)
                 decompout.writerow([])
             else:
-                decompout.writeline('Energy Decomposition Analysis (All units ' +
-                                    'kcal/mol): Generalized Born Solvent (%s)' % mutstr)
+                decompout.writeline('Energy Decomposition Analysis (All units kcal/mol): Generalized Born Solvent '
+                                    f'({mutstr})')
                 decompout.writeline('')
                 gb_com.write_summary(gb_com.numframes, decompout)
                 decompout.writeline('')
@@ -720,25 +712,19 @@ def write_decomp_stability_output(FILES, INPUT, size, prmtop_system,
 
     # PB next
     if INPUT['pbrun']:
-        # See if we're dumping all energy terms
-        csv_prefix = ''
-        if FILES.dec_energies: csv_prefix = pre + 'pb'
-
+        csv_prefix = pre + 'pb' if FILES.dec_energies else ''
         # See if we do normal system
         if not INPUT['mutant_only']:
-            pb_com = DecompClass(pre + 'complex_pb.mdout',
-                                 prmtop_system.complex_prmtop, INPUT['surften'], csv_prefix,
+            pb_com = DecompClass(pre + 'complex_pb.mdout', prmtop_system.complex_prmtop, INPUT['surften'], csv_prefix,
                                  size, INPUT['dec_verbose'])
             pb_com.fill_all_terms()
             if INPUT['csv_format']:
-                decompout.writerow(['Energy Decomposition Analysis (All units ' +
-                                    'kcal/mol): Generalized Born Solvent'])
+                decompout.writerow(['Energy Decomposition Analysis (All units kcal/mol): Generalized Born Solvent'])
                 decompout.writerow([])
                 pb_com.write_summary_csv(pb_com.numframes, decompout)
                 decompout.writerow([])
             else:
-                decompout.writeline('Energy Decomposition Analysis (All units ' +
-                                    'kcal/mol): Poisson Boltzmann Solvent')
+                decompout.writeline('Energy Decomposition Analysis (All units kcal/mol): Poisson Boltzmann Solvent')
                 decompout.writeline('')
                 pb_com.write_summary(pb_com.numframes, decompout)
                 decompout.writeline('')
@@ -751,27 +737,25 @@ def write_decomp_stability_output(FILES, INPUT, size, prmtop_system,
                     utils.concatenate(dec_energies, csv_prefix + '.' + token + '.csv')
                 dec_energies.write(ls)
         if INPUT['alarun']:
-            pb_com = DecompClass(pre + 'mutant_complex_pb.mdout',
-                                 mutant_system.complex_prmtop, INPUT['surften'], csv_prefix,
-                                 size, INPUT['dec_verbose'])
+            pb_com = DecompClass(pre + 'mutant_complex_pb.mdout', mutant_system.complex_prmtop, INPUT['surften'],
+                                 csv_prefix, size, INPUT['dec_verbose'])
             pb_com.fill_all_terms()
             if INPUT['csv_format']:
-                decompout.writerow(['Energy Decomposition Analysis (All units ' +
-                                    'kcal/mol): Poisson Boltzmann Solvent (%s)' % mutstr])
+                decompout.writerow(['Energy Decomposition Analysis (All units kcal/mol): Poisson Boltzmann Solvent '
+                                    f'({mutstr})'])
                 decompout.writerow([])
                 pb_com.write_summary_csv(pb_com.numframes, decompout)
                 decompout.writerow([])
             else:
-                decompout.writeline('Energy Decomposition Analysis (All units ' +
-                                    'kcal/mol): Generalized Born Solvent (%s)' % mutstr)
+                decompout.writeline('Energy Decomposition Analysis (All units kcal/mol): Generalized Born Solvent '
+                                    f'({mutstr})')
                 decompout.writeline('')
                 pb_com.write_summary(pb_com.numframes, decompout)
                 decompout.writeline('')
             # Dump the energy vectors if requested
             if FILES.dec_energies:
                 del pb_com.csvwriter
-                dec_energies.write('PB Decomposition Energies (%s mutant)' %
-                                   mutstr + ls)
+                dec_energies.write('PB Decomposition Energies (%s mutant)' % mutstr + ls)
                 for token in gb_com.allowed_tokens:
                     utils.concatenate(dec_energies, csv_prefix + '.' + token + '.csv')
                 dec_energies.write(ls)
@@ -802,15 +786,15 @@ def write_decomp_binding_output(FILES, INPUT, size, prmtop_system,
         else:
             BindingClass = PairDecompBinding
             SingleClass = PairDecompOut
-    else:  # Multiple trajectories
-        # Per-residue
-        if INPUT['idecomp'] in [1, 2]:
-            BindingClass = MultiTrajDecompBinding
-            SingleClass = DecompOut
-        # Pairwise
-        else:
-            BindingClass = MultiTrajPairDecompBinding
-            SingleClass = PairDecompOut
+    # Multiple Traj
+    # per-residue
+    elif INPUT['idecomp'] in [1, 2]:
+        BindingClass = MultiTrajDecompBinding
+        SingleClass = DecompOut
+    # Pairwise
+    else:
+        BindingClass = MultiTrajPairDecompBinding
+        SingleClass = PairDecompOut
 
     # First open up our output file and turn it into a CSV writer if necessary
     if INPUT['csv_format']:
@@ -818,15 +802,13 @@ def write_decomp_binding_output(FILES, INPUT, size, prmtop_system,
         decompout = writer(dec_out_file)
         decompout.writerow(['| Run on %s' % datetime.now().ctime()])
         if INPUT['gbrun']:
-            decompout.writerow(['| GB non-polar solvation energies calculated '
-                                'with gbsa=2'])
+            decompout.writerow(['| GB non-polar solvation energies calculated with gbsa=2'])
     else:
         dec_out_file = OutputFile(FILES.decompout, 'w', 0)
         decompout = dec_out_file
         decompout.write_date()
         if INPUT['gbrun']:
-            decompout.add_comment('| GB non-polar solvation energies calculated '
-                                  'with gbsa=2')
+            decompout.add_comment('| GB non-polar solvation energies calculated with gbsa=2')
 
     # Open up the CSV energy vector file
     if FILES.dec_energies: dec_energies = open(FILES.dec_energies, 'w')
@@ -840,23 +822,23 @@ def write_decomp_binding_output(FILES, INPUT, size, prmtop_system,
             csv_prefix = csv_pre = ''
         # Normal system
         if not INPUT['mutant_only']:
-            if csv_prefix: csv_pre = csv_prefix % 'com'
-            gb_com = SingleClass(pre + 'complex_gb.mdout',
-                                 prmtop_system.complex_prmtop, INPUT['surften'],
-                                 csv_pre, size, INPUT['dec_verbose'])
-            if csv_prefix: csv_pre = csv_prefix % 'rec'
-            gb_rec = SingleClass(pre + 'receptor_gb.mdout',
-                                 prmtop_system.receptor_prmtop, INPUT['surften'],
-                                 csv_pre, size, INPUT['dec_verbose'])
-            if csv_prefix: csv_pre = csv_prefix % 'lig'
-            gb_lig = SingleClass(pre + 'ligand_gb.mdout',
-                                 prmtop_system.ligand_prmtop, INPUT['surften'],
-                                 csv_pre, size, INPUT['dec_verbose'])
-            if csv_prefix: csv_pre = pre + 'gb_bind'
-            gb_bind = BindingClass(gb_com, gb_rec, gb_lig, prmtop_system,
-                                   INPUT['idecomp'], INPUT['dec_verbose'], decompout,
-                                   csv_pre, 'Energy Decomposition Analysis ' +
-                                   '(All units kcal/mol): Generalized Born solvent')
+            if csv_prefix:
+                csv_pre = csv_prefix % 'com'
+            gb_com = SingleClass(pre + 'complex_gb.mdout', prmtop_system.complex_prmtop, INPUT['surften'], csv_pre,
+                                 size, INPUT['dec_verbose'])
+            if csv_prefix:
+                csv_pre = csv_prefix % 'rec'
+            gb_rec = SingleClass(pre + 'receptor_gb.mdout', prmtop_system.receptor_prmtop, INPUT['surften'], csv_pre,
+                                 size, INPUT['dec_verbose'])
+            if csv_prefix:
+                csv_pre = csv_prefix % 'lig'
+            gb_lig = SingleClass(pre + 'ligand_gb.mdout', prmtop_system.ligand_prmtop, INPUT['surften'], csv_pre,
+                                 size, INPUT['dec_verbose'])
+            if csv_prefix:
+                csv_pre = pre + 'gb_bind'
+            gb_bind = BindingClass(gb_com, gb_rec, gb_lig, prmtop_system, INPUT['idecomp'], INPUT['dec_verbose'],
+                                   decompout, csv_pre, 'Energy Decomposition Analysis (All units kcal/mol): '
+                                                       'Generalized Born solvent')
             # Write the data to the output file
             gb_bind.parse_all()
             # Now it's time to dump everything to the CSV file
@@ -881,24 +863,23 @@ def write_decomp_binding_output(FILES, INPUT, size, prmtop_system,
                     dec_energies.write(ls)
         # Mutant system
         if INPUT['alarun']:
-            if csv_prefix: csv_pre = csv_prefix % 'com'
-            gb_com = SingleClass(pre + 'mutant_complex_gb.mdout',
-                                 mutant_system.complex_prmtop, INPUT['surften'],
+            if csv_prefix:
+                csv_pre = csv_prefix % 'com'
+            gb_com = SingleClass(pre + 'mutant_complex_gb.mdout', mutant_system.complex_prmtop, INPUT['surften'],
                                  csv_pre, size, INPUT['dec_verbose'])
-            if csv_prefix: csv_pre = csv_prefix % 'rec'
-            gb_rec = SingleClass(pre + 'mutant_receptor_gb.mdout',
-                                 mutant_system.receptor_prmtop, INPUT['surften'],
+            if csv_prefix:
+                csv_pre = csv_prefix % 'rec'
+            gb_rec = SingleClass(pre + 'mutant_receptor_gb.mdout', mutant_system.receptor_prmtop, INPUT['surften'],
                                  csv_pre, size, INPUT['dec_verbose'])
-            if csv_prefix: csv_pre = csv_prefix % 'lig'
-            gb_lig = SingleClass(pre + 'mutant_ligand_gb.mdout',
-                                 mutant_system.ligand_prmtop, INPUT['surften'],
+            if csv_prefix:
+                csv_pre = csv_prefix % 'lig'
+            gb_lig = SingleClass(pre + 'mutant_ligand_gb.mdout', mutant_system.ligand_prmtop, INPUT['surften'],
                                  csv_pre, size, INPUT['dec_verbose'])
-            if csv_prefix: csv_pre = pre + 'gb_bind'
-            gb_bind = BindingClass(gb_com, gb_rec, gb_lig, mutant_system,
-                                   INPUT['idecomp'], INPUT['dec_verbose'], decompout,
-                                   csv_pre, 'Energy Decomposition Analysis ' +
-                                   '(All units kcal/mol): Generalized Born solvent (%s)' %
-                                   mutstr)
+            if csv_prefix:
+                csv_pre = pre + 'gb_bind'
+            gb_bind = BindingClass(gb_com, gb_rec, gb_lig, mutant_system, INPUT['idecomp'], INPUT['dec_verbose'],
+                                   decompout, csv_pre, 'Energy Decomposition Analysis (All units kcal/mol): '
+                                                       f'Generalized Born solvent ({mutstr})')
             # Write the data to the output file
             gb_bind.parse_all()
             # Now it's time to dump everything to the CSV file
@@ -931,23 +912,23 @@ def write_decomp_binding_output(FILES, INPUT, size, prmtop_system,
             csv_prefix = csv_pre = ''
         # Normal system
         if not INPUT['mutant_only']:
-            if csv_prefix: csv_pre = csv_prefix % 'com'
-            pb_com = SingleClass(pre + 'complex_pb.mdout',
-                                 prmtop_system.complex_prmtop, INPUT['cavity_surften'],
+            if csv_prefix:
+                csv_pre = csv_prefix % 'com'
+            pb_com = SingleClass(pre + 'complex_pb.mdout', prmtop_system.complex_prmtop, INPUT['cavity_surften'],
                                  csv_pre, size, INPUT['dec_verbose'])
-            if csv_prefix: csv_pre = csv_prefix % 'rec'
-            pb_rec = SingleClass(pre + 'receptor_pb.mdout',
-                                 prmtop_system.receptor_prmtop, INPUT['cavity_surften'],
+            if csv_prefix:
+                csv_pre = csv_prefix % 'rec'
+            pb_rec = SingleClass(pre + 'receptor_pb.mdout', prmtop_system.receptor_prmtop, INPUT['cavity_surften'],
                                  csv_pre, size, INPUT['dec_verbose'])
-            if csv_prefix: csv_pre = csv_prefix % 'lig'
-            pb_lig = SingleClass(pre + 'ligand_pb.mdout',
-                                 prmtop_system.ligand_prmtop, INPUT['cavity_surften'],
+            if csv_prefix:
+                csv_pre = csv_prefix % 'lig'
+            pb_lig = SingleClass(pre + 'ligand_pb.mdout', prmtop_system.ligand_prmtop, INPUT['cavity_surften'],
                                  csv_pre, size, INPUT['dec_verbose'])
-            if csv_prefix: csv_pre = pre + 'pb_bind'
-            pb_bind = BindingClass(pb_com, pb_rec, pb_lig, prmtop_system,
-                                   INPUT['idecomp'], INPUT['dec_verbose'], decompout,
-                                   csv_pre, 'Energy Decomposition Analysis ' +
-                                   '(All units kcal/mol): Poisson Boltzmann solvent')
+            if csv_prefix:
+                csv_pre = pre + 'pb_bind'
+            pb_bind = BindingClass(pb_com, pb_rec, pb_lig, prmtop_system, INPUT['idecomp'], INPUT['dec_verbose'],
+                                   decompout, csv_pre, 'Energy Decomposition Analysis (All units kcal/mol): Poisson '
+                                                       'Boltzmann solvent')
             # Write the data to the output file
             pb_bind.parse_all()
             # Now it's time to dump everything to the CSV file
@@ -972,31 +953,30 @@ def write_decomp_binding_output(FILES, INPUT, size, prmtop_system,
                     dec_energies.write(ls)
         # Mutant system
         if INPUT['alarun']:
-            if csv_prefix: csv_pre = csv_prefix % 'com'
-            pb_com = SingleClass(pre + 'mutant_complex_pb.mdout',
-                                 mutant_system.complex_prmtop, INPUT['cavity_surften'],
+            if csv_prefix:
+                csv_pre = csv_prefix % 'com'
+            pb_com = SingleClass(pre + 'mutant_complex_pb.mdout', mutant_system.complex_prmtop, INPUT['cavity_surften'],
                                  csv_pre, size, INPUT['dec_verbose'])
-            if csv_prefix: csv_pre = csv_prefix % 'rec'
-            pb_rec = SingleClass(pre + 'mutant_receptor_pb.mdout',
-                                 mutant_system.receptor_prmtop, INPUT['cavity_surften'],
+            if csv_prefix:
+                csv_pre = csv_prefix % 'rec'
+            pb_rec = SingleClass(pre + 'mutant_receptor_pb.mdout', mutant_system.receptor_prmtop,
+                                 INPUT['cavity_surften'],
                                  csv_pre, size, INPUT['dec_verbose'])
-            if csv_prefix: csv_pre = csv_prefix % 'lig'
-            pb_lig = SingleClass(pre + 'mutant_ligand_pb.mdout',
-                                 mutant_system.ligand_prmtop, INPUT['cavity_surften'],
+            if csv_prefix:
+                csv_pre = csv_prefix % 'lig'
+            pb_lig = SingleClass(pre + 'mutant_ligand_pb.mdout', mutant_system.ligand_prmtop, INPUT['cavity_surften'],
                                  csv_pre, size, INPUT['dec_verbose'])
-            if csv_prefix: csv_pre = pre + 'pb_bind'
-            pb_bind = BindingClass(pb_com, pb_rec, pb_lig, mutant_system,
-                                   INPUT['idecomp'], INPUT['dec_verbose'], decompout,
-                                   csv_pre, 'Energy Decomposition Analysis ' +
-                                   '(All units kcal/mol): Poisson Boltzmann solvent (%s)' %
-                                   mutstr)
+            if csv_prefix:
+                csv_pre = pre + 'pb_bind'
+            pb_bind = BindingClass(pb_com, pb_rec, pb_lig, mutant_system, INPUT['idecomp'], INPUT['dec_verbose'],
+                                   decompout, csv_pre, 'Energy Decomposition Analysis (All units kcal/mol): Poisson '
+                                                       f'Boltzmann solvent ({mutstr})')
             # Write the data to the output file
             pb_bind.parse_all()
             if FILES.dec_energies:
                 del pb_com.csvwriter, pb_rec.csvwriter, pb_lig.csvwriter
                 del pb_bind.csvwriter
-                dec_energies.write('PB Decomposition Energies (%s mutant)' %
-                                   mutstr + ls)
+                dec_energies.write('PB Decomposition Energies (%s mutant)' % mutstr + ls)
                 dec_energies.write(ls + 'Complex:' + ls)
                 for token in pb_com.allowed_tokens:
                     utils.concatenate(dec_energies, pre + 'pb_com.' + token + '.csv')
@@ -1034,23 +1014,19 @@ class OutputFile(object):
 
     def write(self, stuff):
         # Handle bytes/str division in Py3 transparently
-        if self._binary:
-            if isinstance(stuff, str):
-                self._handle.write(stuff.encode())
-            else:
-                self._handle.write(stuff)
+        if self._binary and isinstance(stuff, str):
+            self._handle.write(stuff.encode())
+        elif self._binary or isinstance(stuff, str):
+            self._handle.write(stuff)
         else:
-            if isinstance(stuff, str):
-                self._handle.write(stuff)
-            else:
-                self._handle.write(stuff.decode())
+            self._handle.write(stuff.decode())
         self._handle.flush()
 
     # ==================================================
 
     def separate(self):
         """ Delimiter between fields in output file """
-        for i in range(2):
+        for _ in range(2):
             self.write('-' * 79)
             self.write(ls)
 
@@ -1080,49 +1056,62 @@ class OutputFile(object):
         # if FILES.solvated_prmtop:
         #    self.writeline('|Solvated complex topology file:  %s' %
         #               FILES.solvated_prmtop)
-        self.writeline('|Complex topology file:           %s' % FILES.complex_prmtop)
+        self.writeline(f'{"|Complex Structure file:":40}{FILES.complex_tpr:>40}')
+        if FILES.complex_top:
+            self.writeline(f'{"|Complex (GROMACS) topology file:":40}{FILES.complex_top:>40}')
+        self.writeline(f'{"|Complex (AMBER) topology file:":40}{FILES.complex_prmtop:>40}')
 
         if not stability:
             # if FILES.receptor_trajs:
             #    if FILES.solvated_receptor_prmtop:
             #       self.writeline('|Solvated receptor topology file: %s' %
             #                  FILES.solvated_receptor_prmtop)
-            self.writeline('|Receptor topology file:          %s' % FILES.receptor_prmtop)
+            if FILES.receptor_tpr:
+                self.writeline(f'{"|Receptor Structure file:":40}{FILES.receptor_tpr:>40}')
+            if FILES.receptor_top:
+                self.writeline(f'{"|Receptor (GROMACS) topology file:":40}{FILES.receptor_top:>40}')
+            self.writeline(f'{"|Receptor (AMBER) topology file:":40}{FILES.receptor_prmtop:>40}')
 
             # if FILES.ligand_trajs:
             # if FILES.solvated_ligand_prmtop:
             #    self.writeline('|Solvated ligand topology file:   %s' %
             #               FILES.solvated_ligand_prmtop)
-            self.writeline('|Ligand topology file:            %s' % FILES.ligand_prmtop)
+            if FILES.ligand_mol2:
+                self.writeline(f'{"|Ligand Structure file:":40}{FILES.ligand_mol2:>40}')
+            if FILES.ligand_tpr:
+                self.writeline(f'{"|Complex Structure file:":40}{FILES.ligand_tpr:>40}')
+            if FILES.ligand_top:
+                self.writeline(f'{"|Complex (GROMACS) topology file:":40}{FILES.ligand_top:>40}')
+            self.writeline(f'{"|Complex (AMBER) topology file:":40}{FILES.ligand_prmtop:>40}')
 
         if INPUT['alarun']:
-            self.writeline('|Mutant complex topology file:    %s' % FILES.mutant_complex_prmtop)
+            self.writeline(f'{"|Mutant (AMBER) complex topology file:":40}{FILES.mutant_complex_prmtop:>40}')
             if not stability:
-                self.writeline('|Mutant receptor topology file:   %s' % FILES.mutant_receptor_prmtop)
-                self.writeline('|Mutant ligand topology file:     %s' % FILES.mutant_ligand_prmtop)
+                self.writeline(f'{"|Mutant (AMBER) receptor topology file:":40}{FILES.mutant_receptor_prmtop:>40}')
+                self.writeline(f'{"|Mutant (AMBER) ligand topology file:":40}{FILES.mutant_ligand_prmtop:>40}')
 
-        self.write('|Initial mdcrd(s):                ')
+        self.write(f'{"|Initial trajectories:":40}')
         for i in range(len(FILES.complex_trajs)):
             if i == 0:
-                self.writeline(FILES.complex_trajs[i])
+                self.writeline(f'{FILES.complex_trajs[i]:>40}')
             else:
-                self.writeline('|                                 %s' % FILES.complex_trajs[i])
+                self.writeline(f'{"|":40}{FILES.complex_trajs[i]:>40}')
 
         if FILES.receptor_trajs:
-            self.write('|Initial Receptor mdcrd(s):       ')
+            self.write(f'{"|Initial Receptor mdcrd(s):":40}')
             for i in range(len(FILES.receptor_trajs)):
                 if i == 0:
-                    self.writeline(FILES.receptor_trajs[i])
+                    self.writeline(f'{FILES.receptor_trajs[i]:>40}')
                 else:
-                    self.writeline('|                                 %s' % FILES.receptor_trajs[i])
+                    self.writeline(f'{"|":40}{FILES.receptor_trajs[i]:>40}')
 
         if FILES.ligand_trajs:
-            self.write('|Initial Ligand mdcrd(s):         ')
+            self.write(f'{"|Initial Ligand mdcrd(s):":40}')
             for i in range(len(FILES.ligand_trajs)):
                 if i == 0:
-                    self.writeline(FILES.ligand_trajs[i])
+                    self.writeline(f'{FILES.ligand_trajs[i]:>40}')
                 else:
-                    self.writeline('|                                 %s' % FILES.ligand_trajs[i])
+                    self.writeline(f'{"|":40}{FILES.ligand_trajs[i]:>40}')
 
     # ==================================================
 
