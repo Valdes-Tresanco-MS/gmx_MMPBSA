@@ -109,6 +109,37 @@ def get_indexes(com_ndx, rec_ndx=None, rec_group=1, lig_ndx=None, lig_group=1):
     return {'COM': com_indexes, 'REC': rec_indexes, 'LIG': lig_indexes}
 
 
+def _get_restype(resname):
+    if resname == 'LYN':
+        return 'LYS'
+    elif resname == 'ASH':
+        return 'ASP'
+    elif resname == 'GLH':
+        return 'GLU'
+    elif resname in ['HIP', 'HIE', 'HID']:
+        return 'HIS'
+    elif resname in ['CYX', 'CYM']:
+        return 'CYS'
+    else:
+        return resname
+
+
+def eq_strs(struct1, struct2):
+    if len(struct1.atoms) != len(struct2.atoms):
+        return 'atoms', len(struct1.atoms), len(struct2.atoms)
+    elif len(struct1.residues) != len(struct2.residues):
+        return 'residues', len(struct1.residues), len(struct2.residues)
+    else:
+        d_res = []
+        for res1, res2 in zip(struct1.residues, struct2.residues):
+            r1info = [res1.number, _get_restype(res1.name), res1.insertion_code]
+            r2info = [res2.number, _get_restype(res2.name), res2.insertion_code]
+            if r1info != r2info:
+                d_res.append([':'.join(r1info), ':'.join(r2info)])
+        if d_res:
+            return 'res_info', d_res, _
+
+
 def check_str(structure, ref=False):
     if isinstance(structure, str):
         refstr = parmed.read_PDB(structure)

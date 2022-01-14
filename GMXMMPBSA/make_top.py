@@ -23,7 +23,8 @@ Generate Amber topology files from GROMACS files
 import os
 import parmed
 from GMXMMPBSA.exceptions import *
-from GMXMMPBSA.utils import selector, get_dist, list2range, res2map, get_indexes, log_subprocess_output, check_str
+from GMXMMPBSA.utils import (selector, get_dist, list2range, res2map, get_indexes, log_subprocess_output, check_str,
+                             eq_strs)
 from GMXMMPBSA.alamdcrd import _scaledistance
 import subprocess
 from pathlib import Path
@@ -338,10 +339,26 @@ class CheckMakeTop:
         logging.info('Building Normal Complex Amber Topology...')
         com_top = self.cleantop(self.FILES.complex_top, self.indexes['COM']['COM'])
         # parmed.gromacs.GromacsTopologyFile(self.complex_temp_top,xyz=self.complex_str_file)
-        if len(com_top.atoms) != len(self.complex_str.atoms):
-            GMXMMPBSA_ERROR(f"The number of atoms in the topology ({len(com_top.atoms)}) and the complex structure "
-                            f"({len(self.complex_str.atoms)}) are different. Please check this files "
-                            f"and verify that they are correct. Otherwise report the error...")
+
+        error_info = eq_strs(com_top, self.complex_str)
+        if error_info:
+            if error_info[0] == 'atoms':
+                GMXMMPBSA_ERROR(f"The number of atoms in the topology ({error_info[1]}) and the complex structure "
+                            f"({error_info[2]}) are different. Please check this files and verify that they are "
+                                f"correct. Otherwise report the error...")
+            elif error_info[0] == 'residues':
+                GMXMMPBSA_ERROR(f"The number of residues in the topology ({error_info[1]}) and the complex structure "
+                                f"({error_info[2]}) are different. Please check this files and verify that they are "
+                                f"correct. Otherwise report the error...")
+            else:
+                text = (f'There is a mismatch between several pairs of residues ({len(error_info[1])}) of the '
+                        f'topology and the structure of the complex.')
+                if len(error_info[1]) < 10:
+                    text += '\nReference | Structure'
+                    for x in error_info[1]:
+                        text += ' <-> '.join(x) + '\n'
+                GMXMMPBSA_ERROR(text)
+
         com_top.coordinates = self.complex_str.coordinates
         # try:
         if com_top.impropers or com_top.urey_bradleys or com_top.cmaps:
@@ -368,10 +385,26 @@ class CheckMakeTop:
             logging.info('A Receptor topology file was defined. Using MT approach...')
             logging.info('Building AMBER Receptor Topology from GROMACS Receptor Topology...')
             rec_top = self.cleantop(self.FILES.receptor_top, self.indexes['REC'])
-            if len(rec_top.atoms) != len(self.receptor_str.atoms):
-                GMXMMPBSA_ERROR(f"The number of atoms in the topology ({len(rec_top.atoms)}) and the receptor "
-                                f"structure ({len(self.receptor_str.atoms)}) are different. Please check this files "
-                                f"and verify that they are correct. Otherwise report the error...")
+
+            error_info = eq_strs(rec_top, self.receptor_str)
+            if error_info:
+                if error_info[0] == 'atoms':
+                    GMXMMPBSA_ERROR(f"The number of atoms in the topology ({error_info[1]}) and the receptor "
+                                    f"structure ({error_info[2]}) are different. Please check this files and verify "
+                                    f"that they are correct. Otherwise report the error...")
+                elif error_info[0] == 'residues':
+                    GMXMMPBSA_ERROR(f"The number of residues in the topology ({error_info[1]}) and the receptor "
+                                    f"structure ({error_info[2]}) are different. Please check this files and verify "
+                                    f"that they are correct. Otherwise report the error...")
+                else:
+                    text = (f'There is a mismatch between several pairs of residues ({len(error_info[1])}) of the '
+                            f'topology and the structure of the receptor.')
+                    if len(error_info[1]) < 10:
+                        text += '\nReference | Structure'
+                        for x in error_info[1]:
+                            text += ' <-> '.join(x) + '\n'
+                    GMXMMPBSA_ERROR(text)
+
             rec_top.coordinates = self.receptor_str.coordinates
             if rec_top.impropers or rec_top.urey_bradleys or rec_top.cmaps:
                 if com_top_parm == 'amber':
@@ -403,10 +436,26 @@ class CheckMakeTop:
             logging.info('A Ligand Topology file was defined. Using MT approach...')
             logging.info('Building AMBER Ligand Topology from GROMACS Ligand Topology...')
             lig_top = self.cleantop(self.FILES.ligand_top, self.indexes['LIG'])
-            if len(lig_top.atoms) != len(self.ligand_str.atoms):
-                GMXMMPBSA_ERROR(f"The number of atoms in the topology ({len(lig_top.atoms)}) and the ligand "
-                                f"structure ({len(self.ligand_str.atoms)}) are different. Please check this files "
-                                f"and verify that they are correct. Otherwise report the error...")
+
+            error_info = eq_strs(lig_top, self.ligand_str)
+            if error_info:
+                if error_info[0] == 'atoms':
+                    GMXMMPBSA_ERROR(f"The number of atoms in the topology ({error_info[1]}) and the ligand "
+                                    f"structure ({error_info[2]}) are different. Please check this files and verify "
+                                    f"that they are correct. Otherwise report the error...")
+                elif error_info[0] == 'residues':
+                    GMXMMPBSA_ERROR(f"The number of residues in the topology ({error_info[1]}) and the ligand "
+                                    f"structure ({error_info[2]}) are different. Please check this files and verify "
+                                    f"that they are correct. Otherwise report the error...")
+                else:
+                    text = (f'There is a mismatch between several pairs of residues ({len(error_info[1])}) of the '
+                            f'topology and the structure of the ligand.')
+                    if len(error_info[1]) < 10:
+                        text += '\nReference | Structure'
+                        for x in error_info[1]:
+                            text += ' <-> '.join(x) + '\n'
+                    GMXMMPBSA_ERROR(text)
+
             lig_top.coordinates = self.ligand_str.coordinates
             if lig_top.impropers or lig_top.urey_bradleys or lig_top.cmaps:
                 if com_top_parm == 'amber':
