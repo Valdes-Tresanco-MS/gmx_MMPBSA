@@ -193,7 +193,6 @@ def res2map(indexes, com_file):
     :param com_str:
     :return:
     """
-    masks = {'REC': [], 'LIG': []}
     res_list = {'REC': [], 'LIG': [], 'COM': []}
     com_len = len(indexes['COM']['COM'])
     if isinstance(com_file, parmed.Structure):
@@ -233,8 +232,7 @@ def res2map(indexes, com_file):
             resindex += 1
             proc_res = res
 
-    masks['REC'] = list2range(res_list['REC'])
-    masks['LIG'] = list2range(res_list['LIG'])
+    masks = {'REC': list2range(res_list['REC']), 'LIG': list2range(res_list['LIG'])}
 
     temp = []
     for m, value in masks.items():
@@ -330,40 +328,6 @@ def selector(selection: str):
                             continue
                         res_selections.append([chain, cr, ''])
     return dist, res_selections
-
-
-def checkff():
-    """
-
-    :param overwrite:
-    :param sel_ff: folder/leaprc
-    Examples:
-        gmxMMPBSA/leaprc.GLYCAM_06h-1
-        oldff/leaprc.ff99SB
-        leaprc.protein.ff14SB
-
-    :return:
-    """
-    amberhome = os.getenv('AMBERHOME')
-    if not amberhome:
-        GMXMMPBSA_ERROR('Could not found Amber. Please make sure you have sourced %s/amber.sh (if you are using sh/ksh/'
-                        'bash/zsh) or %s/amber.csh (if you are using csh/tcsh)' %
-                        (amberhome, amberhome))
-        return
-    amberhome = Path(amberhome)
-
-    logging.info('Checking gmxMMPBSA data folder exists in Amber data...')
-    leap_dat = amberhome.joinpath('dat/leap/')
-
-    if list(leap_dat.glob('*/gmxMMPBSA')):
-        print([x for x in leap_dat.glob('*/gmxMMPBSA')])
-        logging.warning('Trying to remove */gmxMMPBSA from the Amber/dat. This action will be removed in v1.5.0')
-        for folder in leap_dat.glob('*/gmxMMPBSA'):
-            try:
-                shutil.rmtree(folder)
-            except:
-                logging.error('Failed to delete the folder gmxMMPBSA from the Amber/dat')
-
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
