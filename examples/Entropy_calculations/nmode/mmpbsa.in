@@ -5,7 +5,7 @@ Sample input file for entropy calculations
 &general
 sys_name="NMode",
 startframe=5, endframe=21, verbose=2, interval=1,
-protein_forcefield="oldff/leaprc.ff99SB",
+forcefields="oldff/leaprc.ff99SB",
 /
 &gb
 igb=2, saltcon=0.150,

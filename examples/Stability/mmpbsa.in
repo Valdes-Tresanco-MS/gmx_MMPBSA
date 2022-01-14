@@ -5,7 +5,7 @@ Sample input file for GB calculation
 &general
 sys_name="Stability",
 startframe=5, endframe=21, verbose=2,
-protein_forcefield="oldff/leaprc.ff99SB",
+forcefields="oldff/leaprc.ff99SB",
 /
 &gb
 igb=2, saltcon=0.150,
