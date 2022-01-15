@@ -25,13 +25,46 @@ variables should be typed as-is while strings should be put in either single- or
 set with `variable = value` and separated by commas is they appear in the same line. If the variables appear in different 
 lines, the comma is not longer needed. See several [examples][2] below. As you will see, several calculations 
 can be performed in the same run (_i.e._ `&gb` and `&pb`, `&gb` and `&alanine_scanning`, `&pb` and `&decomp`, etc). 
-Variables will usually be matched to the minimum number of characters required to uniquely identify that variable 
-within that namelist. Variables require at least 4 characters to be matched unless that variable name has fewer than 4 
-characters (in which case the whole variable name is required). For example, "star" in &general will match 
-`startframe`. However, "stare" and "sta" will match nothing.
+
 
   [1]: https://pubs.acs.org/doi/10.1021/ct300418h
   [2]: #sample-input-files
+
+## Generation
+The input file can be created using gmx_MMPBSA selecting the calculations you wish to perform.
+
+``` title="Command-line"
+gmx_MMPBSA --create_input args
+```
+    
+
+Example:
+=== "GB calculation"
+        
+        gmx_MMPBSA --create_input gb
+    
+=== "PB calculation"
+    
+        gmx_MMPBSA --create_input pb
+
+=== "GB, PB and Decomposition calculation"
+    
+        gmx_MMPBSA --create_input gb pb decomp
+
+=== "All calculations"
+
+        gmx_MMPBSA --create_input
+     
+    or 
+        
+        gmx_MMPBSA --create_input all
+        
+!!! Danger 
+    Note that several variables must be explicitly defined
+
+_New in v1.5.0_
+
+## Calculations namelist
 
 ### **`&general` namelist variables**
 
@@ -68,23 +101,32 @@ tested in previous `protein_forcefield` and `ligand_forcefield` variables.
         * In general, any forcefield present in `$AMBERHOME/dat/leap/cmd` could be use with `forcefields` variable
         * Be cautious when defining this variable since you can define two forces fields with a similar purpose which can 
           generate inconsistencies. 
-            ```
-            # Sample input file #1 with forcefield variable defined for a system with protein and/or nucleic acids
+            
+        **Input files samples:**
+
+        === "Protein and/or Nucleic acids" 
+            ``` title="Input file with forcefield variable defined for a system with protein and/or nucleic acids"
             &general
             forcefields="oldff/leaprc.ff99SB" 
             /
+            ```
 
-            # Input file #2 with forcefield variable defined for a system with only protein
+        === "Protein only"
+            ``` title="Input file with forcefield variable defined for a system with only protein"
             &general
             forcefields="leaprc.protein.ff14SB" 
             /
+            ```
 
-            # Input file #3 with forcefield variable defined for a system with protein and nucleic acids (DNA)
+        === "Protein + DNA"
+            ``` title="Input file with forcefield variable defined for a system with protein and nucleic acids (DNA)"        
             &general
             forcefields="leaprc.protein.ff14SB,leaprc.DNA.bsc1" 
             /
+            ```
 
-            # Input file #4 with forcefield variable defined for a system with protein, nucleic acids (RNA) and a organic molecule
+        === "Protein + RNA + Organic mol."
+            ``` title="Input file with forcefield variable defined for a system with protein, nucleic acids (RNA) and a organic molecule"
             &general
             forcefields="leaprc.protein.ff14SB,leaprc.RNA.OL3,leaprc.gaff2" 
             /
@@ -133,6 +175,8 @@ tested in previous `protein_forcefield` and `ligand_forcefield` variables.
 
     _Modiefied in v1.4.3. Internal change_
 
+    _Updated in v1.5.0: Documentation updated_
+
 `ions_parameters` (Default = 1)
 :   Define ions parameters to build the Amber topology. 
 
@@ -172,7 +216,7 @@ tested in previous `protein_forcefield` and `ligand_forcefield` variables.
      * 0: Don’t
      * 1: perform QH
 
-    _New in v1.4.2: Equivalent to (Deprecated) `entropy = 1`_
+    _New in v1.4.2: Equivalent to (Removed) `entropy = 1`_
 
 `interaction_entropy` (default = 0) 
 :    It specifies whether to use the [Interaction Entropy (IE)][3] approximation.
@@ -194,7 +238,9 @@ tested in previous `protein_forcefield` and `ligand_forcefield` variables.
 
         Please, consult this [paper][10] for further details.
 
-    _New in v1.4.2: Equivalent to (Deprecated) `entropy = 2`_
+    _New in v1.4.2: Equivalent to (Removed) `entropy = 2`_
+
+    _Updated in v1.5.0: Now reports the σIE and the warning related to it. Chart improved in `gmx_MMPBSA_ana`_
 
   [3]: https://pubs.acs.org/doi/abs/10.1021/jacs.6b02682
   [10]: https://pubs.acs.org/doi/full/10.1021/acs.jctc.1c00374
@@ -256,6 +302,8 @@ structure[^1] (can generate inconsistencies). If a `*.gro` file was used for com
 
     _New in v1.2.0_
 
+    _Updated in v1.5.0: Internal changes_
+
   [^1]: _The chain ID is assigned according to two criteria: **terminal amino acids** and **residue numbering**. If
         both criteria or residue numbering changes are present, we assign a new chain ID. If there are terminal 
         amino acids but the numbering of the residue continues, we do not change the ID of the chain._
@@ -268,6 +316,8 @@ printed, which aids in debugging of issues. (Default = 0) (Advanced Option)
 
     _Changed in v1.2.0: Now `gmx_MMPBSA` shows the command-line used to build AMBER topologies when 
     `debug_printlevel = 1` or higher_
+    
+    _Deprecate in v1.5.0: Since we improved logging, this variable is not needed_
 
 `exp_ki` (Default = 0.0)
 :   Specify the experimental Ki in nM for correlations analysis. If not defined or exp_ki = 0 then this system will be 
@@ -306,23 +356,6 @@ omitted in the correlation analysis
       * 0: Do NOT use temporary NetCDF trajectories
       * 1: Use temporary NetCDF trajectories
 
-??? danger "`overwrite_data` Removed" 
-    `overwrite_data` (Default = 0)
-    :   Defines whether the gmx_MMPBSA data will be overwritten. `gmx_MMPBSA` detects if the gmxMMPBSA data files exist 
-        before copying them. This option allows the user to control the copy process and prevents the system from being 
-        overloaded by copying files unnecessarily.
-    
-        * 0: don't
-        * 1: overwrite gxmMMPBSA data if exist
-    
-        !!! tip Keep in mind
-            We recommend activating this option with each new release because there may be changes and/or corrections in 
-            the gmxMMPBSA data files.
-        
-        _Removed in v1.4.3_
-
-        _New in v1.3.1_
-
 `solvated_trajectory` (Default = 1)
 :   Define if it is necessary to build a clean trajectory with no water and ions
     
@@ -330,6 +363,8 @@ omitted in the correlation analysis
     * 1: Build clean trajectory
 
     _New in v1.3.0_
+
+    _Updated in v1.5.0. Bugs fixed_
 
 `use_sander` (Default = 0)
 :   use sander for energy calculations, even when `mmpbsa_py_energy` will suffice
