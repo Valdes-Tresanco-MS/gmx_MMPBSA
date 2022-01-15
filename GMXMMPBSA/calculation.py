@@ -661,7 +661,7 @@ class InteractionEntropyCalc:
     def save_output(self):
         with open(self.output, 'w') as out:
             out.write(f'Calculation for last {self.ieframes} frames:\n')
-            out.write(f'Interaction Entropy (-TΔS): {self.iedata.mean():.4f} +/- {self.iedata.std():.4f}\n\n')
+            out.write(f'Interaction Entropy (-TΔS): {self.iedata.mean():9.4f} +/- {self.iedata.std():7.4f}\n\n')
             out.write(f'Interaction Entropy per-frame:\n')
 
             out.write('Frame # | IE value\n')
