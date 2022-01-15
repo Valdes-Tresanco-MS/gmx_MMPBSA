@@ -42,6 +42,19 @@ from math import sqrt
 import parmed
 
 
+def create_input_args(args: list):
+    if not args or 'all' in args:
+        return 'general', 'gb', 'pb', 'ala', 'nmode', 'decomp', 'rism'
+    elif 'gb' not in args and 'pb' not in args and 'rism' not in args and 'nmode' not in 'args':
+        GMXMMPBSA_ERROR('You did not specify any type of calculation!')
+    elif 'gb' not in args and 'pb' not in args and 'decomp' in args:
+        logging.warning('decomp calculation is only compatible with gb y pb calculations. Will be ignored!')
+        args.remove('decomp')
+        return ['general'] + args
+    else:
+        return ['general'] + args
+
+
 def log_subprocess_output(process):
     while True:
         output = process.stdout.readline().decode()
