@@ -9,7 +9,7 @@ title: The input file
 
 As `gmx_MMPBSA` is based on [MMPBSA.py][1], it uses an input file containing all the specification for the MM/PB(GB)SA 
 calculation. The input file is designed to be as syntactically similar to other programs in Amber as possible. 
-The input file has the same namelist structure as both sander and pmemd. The allowed namelists are 
+The input file has the same namelist structure as both sander and pmemd. The allowed namelists are:
 
 - `&general`: are typically variables that apply to all aspects of the calculation or parameters required for build 
 amber topologies from GROMACS files.
@@ -20,49 +20,7 @@ amber topologies from GROMACS files.
 - `&nmode`: unique to the normal mode (NMODE) calculations used to approximate vibrational entropies
 - `&rism`: unique to 3D-RISM calculations
 
-All of the input variables are described below according to their respective namelists. Integers and floating point 
-variables should be typed as-is while strings should be put in either single- or double-quotes. All variables should be 
-set with `variable = value` and separated by commas is they appear in the same line. If the variables appear in different 
-lines, the comma is not longer needed. See several [examples][2] below. As you will see, several calculations 
-can be performed in the same run (_i.e._ `&gb` and `&pb`, `&gb` and `&alanine_scanning`, `&pb` and `&decomp`, etc). 
-
-
   [1]: https://pubs.acs.org/doi/10.1021/ct300418h
-  [2]: #sample-input-files
-
-## Generation
-The input file can be created using gmx_MMPBSA selecting the calculations you wish to perform.
-
-``` title="Command-line"
-gmx_MMPBSA --create_input args
-```
-    
-
-Example:
-=== "GB calculation"
-        
-        gmx_MMPBSA --create_input gb
-    
-=== "PB calculation"
-    
-        gmx_MMPBSA --create_input pb
-
-=== "GB, PB and Decomposition calculation"
-    
-        gmx_MMPBSA --create_input gb pb decomp
-
-=== "All calculations"
-
-        gmx_MMPBSA --create_input
-     
-    or 
-        
-        gmx_MMPBSA --create_input all
-        
-!!! Danger 
-    Note that several variables must be explicitly defined
-
-_New in v1.5.0_
 
 ## Calculations namelist
 
@@ -891,6 +849,95 @@ have added several additional notations
 `tolerance` (Default = 1e-5)
 :   Upper bound of the precision requirement used to determine convergence of the self-consistent solution. This has 
     a strong effect on the cost of 3D-RISM calculations (smaller value for tolerance -> more computation).
+
+## Generation
+The input file can be created using gmx_MMPBSA selecting the calculations you wish to perform.
+
+``` title="Command-line"
+gmx_MMPBSA --create_input args
+```
+    
+
+Example:
+=== "GB calculation"
+        
+        gmx_MMPBSA --create_input gb
+    
+=== "PB calculation"
+    
+        gmx_MMPBSA --create_input pb
+
+=== "GB, PB and Decomposition calculation"
+    
+        gmx_MMPBSA --create_input gb pb decomp
+
+=== "All calculations"
+
+        gmx_MMPBSA --create_input
+     
+    or 
+        
+        gmx_MMPBSA --create_input all
+        
+!!! Danger 
+    Note that several variables must be explicitly defined
+
+_New in v1.5.0_
+
+## Format
+All of the input variables are described below according to their respective namelists. Integers and floating point 
+variables should be typed as-is while strings should be put in either single- or double-quotes. All variables should be 
+set with `variable = value` and separated by commas is they appear in the same line. If the variables appear in different 
+lines, the comma is no longer needed. See several [examples](#sample-input-files) below. As you will see, several 
+calculations can be performed in the same run (_i.e._ `&gb` and `&pb`, `&gb` and `&alanine_scanning`, `&pb` and
+`&decomp`, etc). As we have mentioned, the input file can be generated using the create_input option of gmx_MMPBSA. This
+style, while retaining the same Amber format (derived from Fortran), is aesthetically more familiar to the GROMACS
+style (*.mdp). However, it maintains the same essence, so it could be defined in any of the two format styles or even
+combined. See the formats below:
+
+=== "New format style "
+    ``` title="New format style Input file example"
+            
+    # General namelist variables
+    &general
+      # System name
+      sys_name             = ""
+      # First frame to analyze
+      startframe           = 1
+      # Last frame to analyze
+      endframe             = 9999999
+      ...
+      # How many energy terms to print in the final output
+      verbose              = 1
+    /
+    
+    # Generalized-Born namelist variables
+    &gb
+      # GB model to use
+      igb                  = 5
+      ...
+      # Solvent probe radius for surface area calc
+      probe                = 1.4
+    /
+    ```
+
+=== "Old format style"
+    ``` title="Old format style Input file example"
+            
+    # General namelist variables
+    &general
+      sys_name = "", startframe = 1, endframe = 9999999
+      ...
+      verbose = 1
+    /
+    
+    # Generalized-Born namelist variables
+    &gb
+      igb = 5, 
+      ...
+      probe = 1.4
+    /
+    ```
 
 ## Sample input files
 
