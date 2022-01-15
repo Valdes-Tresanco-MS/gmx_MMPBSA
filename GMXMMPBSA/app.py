@@ -19,6 +19,7 @@
 import sys
 from os.path import split
 import logging
+from pathlib import Path
 
 try:
     from GMXMMPBSA.exceptions import GMXMMPBSA_ERROR, InputError, CommandlineError
@@ -26,6 +27,7 @@ try:
     from GMXMMPBSA import main
     from GMXMMPBSA.tester import run_test
     from GMXMMPBSA.commandlineparser import anaparser, testparser
+    from GMXMMPBSA.utils import create_input_args
 except ImportError:
     import os
     amberhome = os.getenv('AMBERHOME') or '$AMBERHOME'
@@ -67,9 +69,15 @@ def gmxmmpbsa():
         sys.stderr.write('%s: %s' % (type(e).__name__, e) + '\n')
         sys.exit(1)
 
+    if app.FILES.createinput is not None:
+        args_list = create_input_args(app.FILES.createinput)
+        app.input_file.print_contents('mmpbsa.in', args_list)
+        logging.info(f'Input file creation successful. Path: {Path("mmpbsa.in").absolute()}')
+        sys.exit(0)
+
     # Perform our MMPBSA --clean now
     if app.FILES.clean:
-        sys.logging.info('Cleaning temporary files and quitting.\n')
+        logging.info('Cleaning temporary files and quitting.\n')
         app.remove(0)
         sys.exit(0)
 

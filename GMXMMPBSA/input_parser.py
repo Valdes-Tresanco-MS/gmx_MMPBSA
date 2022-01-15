@@ -23,18 +23,16 @@ ensure proper functioning.
 # ##############################################################################
 
 from GMXMMPBSA.exceptions import InputError, InternalError
+from GMXMMPBSA import __version__
 import re
 
 
-# +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-
 class Variable(object):
-    """ Base variable class. It has a name and a single value """
+    """
+    Base variable class. It has a name and a single value
+    """
 
-    # -#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
-
-    def __init__(self, varname, dat_type=int, default=None, chars_to_match=4,
-                 case_sensitive=False, description=''):
+    def __init__(self, varname, dat_type=int, default=None, case_sensitive=False, description=''):
         """ Initializes the variable type. Sets the default value as well as
           specifying how many characters are required by the parser to trigger
           recognition
@@ -42,9 +40,6 @@ class Variable(object):
         # Catch illegalities
         if dat_type not in (int, str, float, list):
             raise InputError('Variable has unknown data type %s' % dat_type.__name__)
-
-        # You can't match more characters than you have characters!
-        chars_to_match = min(chars_to_match, len(varname))
 
         self.name = varname
         self.datatype = dat_type
@@ -56,55 +51,36 @@ class Variable(object):
             self.value = [x.strip() for x in re.split("(?<!\d)[,;](?!\d)", default.replace('"', '').replace("'", ''))]
         else:
             self.value = self.datatype(default)
-        self.tomatch = chars_to_match
-        self.case_sensitive = case_sensitive
         self.description = description
-
-    # -#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
 
     def __str__(self):
         """ Prints statistics for the variable """
         string = 'Variable name:  %s\n' % self.name
         string += 'Variable type:  %s\n' % self.datatype
         string += 'Variable value: %s\n' % self.value
-        string += 'Matching chars: %s\n' % self.tomatch
         string += 'Description:    %s\n' % self.description
         return string
 
-    def help_str(self, length):
+    def help_str(self):
         """ returns the string [<name> = <value>.... # description] """
         if self.datatype is str:
-            valstring = '%s = "%s"' % (self.name, self.value)
+            valstring = f'{self.name:20s} = "{self.value:s}"'
+        elif self.datatype is list:
+            v = ','.join(self.value)
+            valstring = f'{self.name:20s} = "{v:s}"'
         else:
-            valstring = '%s = %s' % (self.name, self.value)
-        valstring += ' ' + '.' * (length - len(valstring) - 2) + ' '
+            valstring = f'{self.name:20s} = {self.value}'
+        length = 50
+        valstring += ' ' + ' ' * (length - len(valstring) - 2) + ' '
         return valstring + '# %s' % self.description
-
-    # -#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
 
     def __eq__(self, teststring):
         """ Determines if a variable string matches this variable """
-
-        if len(teststring) > len(self.name):
-            return False
-
-        if len(teststring) < self.tomatch:
-            return False
-
-        myvar = self.name
-        if not self.case_sensitive:
-            myvar = self.name.lower()
-            teststring = teststring.lower()
-
-        return myvar[:len(teststring)] == teststring
-
-    # -#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
+        return self.name == teststring
 
     def __ne__(self, teststring):
         """ Not equal """
         return not self.__eq__(teststring)
-
-    # -#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
 
     def SetValue(self, value):
         """ Sets the value of the variable """
@@ -115,8 +91,6 @@ class Variable(object):
         else:
             self.value = self.datatype(value)
 
-
-# +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 class Namelist(object):
     """ Sets up a namelist. This holds many different Variables, and these
@@ -133,10 +107,6 @@ class Namelist(object):
            as strings
    """
 
-    MIN_CHARS_TO_MATCH = 4
-
-    # -#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
-
     def __init__(self, trigger, full_name, to_match=3):
         """ Sets up the list of variables, which is just the trigger for now. The
           trigger is a logical variable that gets set to true if this namelist
@@ -151,59 +121,21 @@ class Namelist(object):
         self.full_name = full_name
         self.to_match = to_match
 
-    # -#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
-
     def __eq__(self, nml):
         """ A namelist is equal if the name matches properly """
-        return nml == self.full_name[:len(nml)] and len(nml) >= \
-               min(self.to_match, len(self.full_name))
-
-    # -#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
+        return nml == self.full_name[:len(nml)] and len(nml) >= min(self.to_match, len(self.full_name))
 
     def __ne__(self, nml):
         """ Not equal """
         return not self.__eq__(nml)
 
-    # -#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
-
     def addVariable(self, varname, datatype, default=None, description=None):
         """ Adds a variable to this namelist. It checks to make sure that it's
           going to create a conflict with an existing variable.
         """
-
         if varname in list(self.variables.keys()):
             raise InternalError('Duplicated variable %s in Namelist' % varname)
-
-        # See if we need to update the minimum number of characters that any
-        # variables need based on similarities with this variable
-        tomatch = self.MIN_CHARS_TO_MATCH
-        for var in list(self.variables.keys()):
-            # Trigger never appears, so ignore it
-            if var == self.trigger: continue
-            hit_difference = False
-            for i in range(min(len(var), len(varname))):
-                if var[i] == varname[i]: continue
-                # At this point, they differ. Update the existing variable if
-                # necessary here
-                hit_difference = True
-                if i + 1 > self.variables[var].tomatch:
-                    self.variables[var].tomatch = i + 1
-                tomatch = max(tomatch, i + 1)
-                break
-            # Now handle the case where one variable is a substring of the other
-            if not hit_difference:
-                if len(varname) > len(var):
-                    self.variables[var].tomatch = len(var)
-                    tomatch = max(len(var), tomatch)
-                else:
-                    self.variables[var].tomatch = max(self.variables[var].tomatch,
-                                                      len(varname))
-                    tomatch = len(varname)
-                    break
-        self.variables[varname] = Variable(varname, datatype, default, tomatch,
-                                           description=description)
-
-    # -#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
+        self.variables[varname] = Variable(varname, datatype, default, description=description)
 
     def Open(self):
         """ Signifies that the namelist is open """
@@ -213,31 +145,17 @@ class Namelist(object):
         if self.trigger: self.variables[self.trigger] = True
         self.open = True
 
-    # -#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
-
     def __str__(self):
         """
         Prints out the full contents of this namelist in the Fortran namelist
         format
         """
-        maxlen = (
-            max(
-                len(v) + len(str(self.variables[v].value))
-                for v in self.variables
-                if v is not self.trigger
-            )
-            + 7
-        )
-
-        maxlen = max(maxlen, 25)
         retstr = '&%s\n' % self.full_name
         for variable in self.variables:
             if variable is self.trigger: continue
-            retstr += '  %s\n' % self.variables[variable].help_str(maxlen)
+            retstr += '  %s\n' % self.variables[variable].help_str()
         return retstr + '/'
 
-
-# +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 class InputFile(object):
     """ Defines the Input File and parses it. You have to add stuff to the parser
@@ -253,15 +171,11 @@ class InputFile(object):
        INPUT = input.Parse('mmpbsa.in')
    """
 
-    # -#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
-
     def __init__(self):
         """ Initializes the input file, sets up empty arrays/dictionaries """
         self.ordered_namelist_keys = []
         self.namelists = {}
         self.text = ''  # text of the given input file
-
-    # -#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
 
     def __str__(self):
         """ Prints out the input file """
@@ -275,19 +189,31 @@ class InputFile(object):
                 '-----------------------------------------------------' +
                 '---------\n')
 
-    # -#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
-
-    def print_contents(self, destination):
+    def print_contents(self, destination, calc_list=None):
         """ Prints the contents of the input file """
         # Open a file to write to if need be
+        # section description
+        sd = {'general': '# General namelist variables',
+              'gb': '# (AMBER) Generalized-Born namelist variables',
+              'pb': '# (AMBER) Possion-Boltzmann namelist variables',
+              'rism': '# 3D-RISM namelist variables',
+              'decomp': '# Decomposition namelist variables',
+              'ala': '# Alanine scanning namelist variables',
+              'nmode': '# Normal Modes Entropy namelist variables'}
+
         dest = destination if hasattr(destination, 'write') else open(destination, 'w')
+        if calc_list:
+            dest.write(f'Input file generated by gmx_MMPBSA ({__version__})\n'
+                       f'Be careful with the variables you modify, some can have severe consequences on the results '
+                       f'you obtain.\n\n')
         for namelist in self.ordered_namelist_keys:
-            destination.write('%s\n' % self.namelists[namelist])
+            if calc_list and namelist in calc_list or not calc_list:
+                dest.write(f'{sd[namelist]}\n')
+                dest.write('%s\n\n' % self.namelists[namelist])
+
         # Close the file if we opened it.
         if dest is not destination:
             dest.close()
-
-    # -#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
 
     def addNamelist(self, name, full_name, variable_list, trigger=None):
         """ Adds a namelist to the input file that will be parsed. Variable list
@@ -311,8 +237,6 @@ class InputFile(object):
 
             self.namelists[name].addVariable(var[0], var[1], var[2], var[3])
 
-    # -#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
-
     def _full_namelist_name(self, nml):
         """ Determines what the full namelist name is. We try to make as many
           allowances as possible. We will match the first 3 characters and
@@ -324,8 +248,6 @@ class InputFile(object):
 
         raise InputError('Unrecognized namelist %s' % nml)
 
-    # -#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
-
     def Parse(self, filename):
         """
         This subroutine parses the input file. Only data in namelists are
@@ -336,13 +258,13 @@ class InputFile(object):
           conflicts between variables in namelists, an error will be raised.
           Make sure all input variables are unique!
         """
-        from os.path import exists
+        from pathlib import Path
 
         # Make sure our file exists
 
         if filename is None:
             raise InputError("No input file was provided!")
-        if not exists(filename):
+        if not Path(filename).exists():
             raise InputError("Can't find input file (%s)" % filename)
 
         # Load the whole thing into memory. This should be plenty short enough.
@@ -372,8 +294,7 @@ class InputFile(object):
 
             # Catch some errors
             if innml and line.strip().startswith('&'):
-                raise InputError('Invalid input. Terminate each namelist prior ' +
-                                 'to starting another one.')
+                raise InputError('Invalid input. Terminate each namelist prior to starting another one.')
 
             # End of a namelist
             elif innml and line.strip() in ['/', '&end']:
@@ -395,8 +316,8 @@ class InputFile(object):
 
             # We are in a namelist here, now fill in the fields
             elif innml:
+                line = line[:line.strip().index('#')] if '#' in line else line
                 items = line.strip().split(',')
-
                 # Screen any blank fields
                 j = 0
                 while j < len(items):
@@ -405,68 +326,49 @@ class InputFile(object):
                         items.pop(j)
                     else:
                         j += 1
-
                 namelist_fields[-1].extend(items)
-
             # end if [elif innml]
+        # # end for line in lines
 
-        # end for line in lines
-
-        # Combine any multi-element fields into the last field that has a = in it
-
+        # # Combine any multi-element fields into the last field that has a = in it
         begin_field = -1
         for i in range(len(namelist_fields)):
             for j in range(len(namelist_fields[i])):
-                if not '=' in namelist_fields[i][j]:
-                    if begin_field == -1:
-                        raise InputError('Invalid input file! Error reading ' +
-                                         'namelist %s' % declared_namelists[i])
-                    else:
-                        namelist_fields[i][begin_field] += \
-                            ',%s' % namelist_fields[i][j]
-                else:
+                if '=' in namelist_fields[i][j]:
                     begin_field = j
-
+                elif begin_field == -1:
+                    raise ('Invalid input file! Error reading namelist %s' % declared_namelists[i])
+                else:
+                    namelist_fields[i][begin_field] += ',%s' % namelist_fields[i][j]
         # Now parse through the items to add them to the master dictionary. Note
         # that thanks to the last step, all data in namelist_fields will be
         # contained within fields that have a '='. All others can be ignored
-
         for i in range(len(namelist_fields)):
             for j in range(len(namelist_fields[i])):
-
-                if not '=' in namelist_fields[i][j]:
+                if '=' not in namelist_fields[i][j]:
                     continue
-                else:
-                    var = namelist_fields[i][j].split('=')
-                    var[0] = var[0].strip()
-                    var[1] = var[1].strip()
+                var = namelist_fields[i][j].split('=')
+                var[0] = var[0].strip()
+                var[1] = var[1].strip()
 
-                    # Now we have to loop through all variables in that namelist to
-                    # see if this is the variable we want.
+                # Now we have to loop through all variables in that namelist to
+                # see if this is the variable we want.
+                found = False
+                for key in list(self.namelists[declared_namelists[i]].variables.keys()):
+                    if self.namelists[declared_namelists[i]].variables[key] == var[0]:
+                        self.namelists[declared_namelists[i]].variables[key].SetValue(var[1])
+                        found = True
+                        break
 
-                    found = False
-                    for key in list(self.namelists[declared_namelists[i]].variables.keys()):
-                        if self.namelists[declared_namelists[i]].variables[key] == \
-                                var[0]:
-                            self.namelists[declared_namelists[i]].variables[key]. \
-                                SetValue(var[1])
-                            found = True
-                            break
-
-                    if not found:
-                        raise InputError('Unknown variable %s in &%s' % (var[0], declared_namelists[i]))
-
+                if not found:
+                    raise InputError('Unknown variable %s in &%s' % (var[0], declared_namelists[i]))
         # Now it's time to fill the INPUT dictionary
-
         INPUT = {}
-
         for nml in self.ordered_namelist_keys:
             for var in list(self.namelists[nml].variables.keys()):
-
                 # Here, the triggers are just bool types, so protect from accessing
                 # an attribute that doesn't exist! We only allow Variable types and
                 # bool types
-
                 var_object = self.namelists[nml].variables[var]
                 try:
                     INPUT[var] = self.namelists[nml].variables[var].value
@@ -475,11 +377,8 @@ class InputFile(object):
                         INPUT[var] = var_object
                     else:
                         raise InputError('Disallowed namelist variable type')
-
         return INPUT
 
-
-# +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 # Define the MM/PBSA input file here
 input_file = InputFile()
