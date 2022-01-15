@@ -45,10 +45,10 @@ versatility, analyses, and parallelization compared to existing programs (see [h
 Multiple calculations can be performed with `gmx_MMPBSA` such as:
 
 * Normal binding free energies
-* Stability
-* Alanine scanning
-* Entropy corrections
+* Alanine scanning  
 * Decomposition schemes
+* Entropy corrections
+* Stability
 * QM/MMGBSA
 
 !!! note "There is always more..."
@@ -56,7 +56,7 @@ Multiple calculations can be performed with `gmx_MMPBSA` such as:
     supported in gmx_MMPBSA. Also check our [example page](examples/README.md) to see a detailed list of all the 
     examples available
 
-In the current version, gmx_MMPBSA support a number of different systems including but not limited to:
+In the current version, gmx_MMPBSA supports a number of different systems including but not limited to:
 
 * Protein-protein
 * Protein-ligand
@@ -70,7 +70,14 @@ In the current version, gmx_MMPBSA support a number of different systems includi
     In the current version, gmx_MMPBSA supports Amber and CHARMM force fields. That means any system built with 
     [pdb2gmx](https://manual.gromacs.org/documentation/current/onlinehelp/gmx-pdb2gmx.html) in GROMACS using 
     Amber/CHARMM force field or [CHARMM-GUI](https://www.charmm-gui.org/) is supported in gmx_MMPBSA 😀
-  
+
+The following video shows how a typical binding free energy calculation with GB model and Interaction entropy method 
+is performed in gmx_MMPBSA.
+
+<div class="embed-container">
+    <iframe src="https://www.youtube.com/embed/k1aLlBhnkxo" frameborder="0" allowfullscreen></iframe>
+</div>
+
 ## `gmx_MMPBSA` a quick overview
 `gmx_MMPBSA` is a python module that contains 3 applications: 
 
@@ -83,25 +90,17 @@ In the current version, gmx_MMPBSA support a number of different systems includi
 !!! note "Easy to run"
     gmx_MMPBSA can run in parallel and requires just few things in order to perform any kind of calculation. That is:
 
-    * an input parameters file (`in`, contains all the specifications regarding the type of calculation that is going to be performed)
-    * a MD Structure+mass(db) file (`tpr`, `pdb`, `gro`)
-    * an index file (`ndx`)
-    * receptor and ligand group (group numbers in the index files)
-    * a trajectory file (`xtc`, `pdb`, `gro`, `trr`)
-    * In certain occasions, defining a topology file (`top`) may be required.
+    * an input parameters file (`*.in`, contains all the specifications regarding the type of calculation that is going to be performed)
+    * a MD Structure+mass(db) file (`*.tpr`, `*.pdb`, `*.gro`)
+    * an index file (`*.ndx`)
+    * receptor and ligand groups (group numbers in the index file)
+    * a trajectory file (`*.xtc`, `*.pdb`, `*.gro`, `*.trr`)
+    * In certain occasions, defining a topology file (`*.top`) may be required.
 
     Once the calculation is done, you can analyze the results in [gmx_MMPBSA_ana](analyzer.md)
 
     You can check [How gmx_MMPBSA works page](howworks.md) to get more details. Also check our [example page](examples/README.md)
     to see how gmx_MMPBSA works with a real example
-
-The following video shows how a typical binding free energy calculation with GB model and Interaction entropy method 
-is done in gmx_MMPBSA
-
-<div class="embed-container">
-    <iframe src="https://www.youtube.com/embed/k1aLlBhnkxo" frameborder="0" allowfullscreen></iframe>
-</div>
-
 
 !!! Note "Ready?"
     Ready to use gmx_MMPBSA 😀? Check the [installation page](installation.md) 

@@ -7,18 +7,23 @@ title: The input file
 
 ## Description
 
-As `gmx_MMPBSA` is based on [MMPBSA.py][1], it uses an input file containing all the specification for the MM/PB(GB)
-SA calculation. The input file is designed to be as syntactically similar to other programs in Amber as possible. 
-The input file has the same namelist structure as both sander and pmemd. The allowed namelists are `&general`, `&gb`, 
-`&pb`, `&rism`, `&alanine_scanning`, `&nmode`, and `&decomp`. The input variables recognized in each namelist are 
-described below, but those in `&general` are typically variables that apply to all aspects of the calculation or 
-parameters required for build amber topologies from GROMACS files. The &gb namelist is unique to Generalized Born 
-calculations, `&pb` is unique to Poisson Boltzmann calculations, `&rism` is unique to 3D-RISM calculations, 
-`&alanine_scanning` is unique to alanine scanning calculations, `&nmode` is unique to the normal mode calculations 
-used to approximate vibrational entropies, and `&decomp` is unique to the decomposition scheme. All of the input 
-variables are described below according to their respective namelists. Integers and floating point variables should 
-be typed as-is while strings should be put in either single- or double-quotes. All variables should be set with 
-`variable = value` and separated by commas. See several [examples][2] below. As you will see, several calculations 
+As `gmx_MMPBSA` is based on [MMPBSA.py][1], it uses an input file containing all the specification for the MM/PB(GB)SA 
+calculation. The input file is designed to be as syntactically similar to other programs in Amber as possible. 
+The input file has the same namelist structure as both sander and pmemd. The allowed namelists are 
+
+- `&general`: are typically variables that apply to all aspects of the calculation or parameters required for build 
+amber topologies from GROMACS files.
+- `&gb`: unique to Generalized Born (GB) calculations
+- `&pb`: unique to Poisson Boltzmann (PB) calculations
+- `&alanine_scanning`: unique to alanine scanning calculations
+- `&decomp`: unique to the decomposition scheme  
+- `&nmode`: unique to the normal mode (NMODE) calculations used to approximate vibrational entropies
+- `&rism`: unique to 3D-RISM calculations
+
+All of the input variables are described below according to their respective namelists. Integers and floating point 
+variables should be typed as-is while strings should be put in either single- or double-quotes. All variables should be 
+set with `variable = value` and separated by commas is they appear in the same line. If the variables appear in different 
+lines, the comma is not longer needed. See several [examples][2] below. As you will see, several calculations 
 can be performed in the same run (_i.e._ `&gb` and `&pb`, `&gb` and `&alanine_scanning`, `&pb` and `&decomp`, etc). 
 Variables will usually be matched to the minimum number of characters required to uniquely identify that variable 
 within that namelist. Variables require at least 4 characters to be matched unless that variable name has fewer than 4 
@@ -30,28 +35,16 @@ characters (in which case the whole variable name is required). For example, "st
 
 ### **`&general` namelist variables**
 
-`assign_chainID` (Default = 0) 
-:   Defines the chains ID assignment mode. _It is ignored when defining a reference structure
-(recommended)_. If `assign_chainID = 1`, gmx_MMPBSA check if the structure has no chains ID and it is assigned according
-to the structure[^1]. If `assign_chainID = 2`, `gmx_MMPBSA` assign the chains ID, exist or not, according to the
-structure[^1] (can generate inconsistencies). If a `*.gro` file was used for complex structure
-(`-cs` flag) and not reference structure was provided, `gmx_MMPBSA` assume `assign_chainID = 1`. 
+`sys_name` (Default = None) (Optional)
+:   Define the System Name. This is useful when trying to analyze several systems at the same time or calculating 
+the correlation between the predicted and the experimental energies. If the name is not defined, one will be 
+assigned when loading it in gmx_MMPBSA_ana according to the order in this is done.
 
-    _New in v1.2.0_
+    !!! tip 
+        The definition of the system name is entirely optional, however it can provide a better clarity during 
+        the results analysis. All files associated with this system will be saved using its name.
 
-  [^1]: _The chain ID is assigned according to two criteria: **terminal amino acids** and **residue numbering**. If
-        both criteria or residue numbering changes are present, we assign a new chain ID. If there are terminal 
-        amino acids but the numbering of the residue continues, we do not change the ID of the chain._
-
-
-`debug_printlevel`
-:   gmx_MMPBSA prints errors by raising exceptions, and not catching fatal errors. If `debug_printlevel` is
-set to 0, then detailed tracebacks (effectively the call stack showing exactly where in the program the error occurred)
-is suppressed, so only the error message is printed. If `debug_printlevel` is set to 1 or higher, all tracebacks are
-printed, which aids in debugging of issues. (Default = 0) (Advanced Option)
-
-    _Changed in v1.2.0: Now `gmx_MMPBSA` shows the command-line used to build AMBER topologies when 
-    `debug_printlevel = 1` or higher_
+    _New in v1.4.0_  
 
 `startframe` (Default = 1)
 :   The frame from which to begin extracting snapshots from the full, concatenated trajectory comprised of
@@ -59,7 +52,119 @@ printed, which aids in debugging of issues. (Default = 0) (Advanced Option)
 
 `endframe` (Default = 9999999)
 :   The frame from which to stop extracting snapshots from the full, concatenated trajectory comprised of every
-    trajectory file supplied on the command-line. 
+    trajectory file supplied on the command-line.
+
+`forcefields` (Default = "oldff/leaprc.ff99SB,leaprc.gaff")
+:   Comma-separated list of force fields used to build Amber topologies. This variable is more flexible than the 
+previous ones (`protein_forcefield` and `ligand_forcefield`). The goal of this variable is to provide convenient 
+support for complex systems like this one: [5O8F](https://www.rcsb.org/3d-view/5o8f). It supports all force fields 
+tested in previous `protein_forcefield` and `ligand_forcefield` variables.
+    
+    !!! tip Keep in mind
+        * The value of this variable depends on the force field you used for your system in GROMACS
+        * You don't need to define forcefields` variable when you using a topology. Please refer to the section 
+          ["How gmx_MMPBSA works"](howworks.md#how-gmx_mmpbsa-works)
+        * The notation format is the one used in tleap
+        * In general, any forcefield present in `$AMBERHOME/dat/leap/cmd` could be use with `forcefields` variable
+        * Be cautious when defining this variable since you can define two forces fields with a similar purpose which can 
+          generate inconsistencies. 
+            ```
+            # Sample input file #1 with forcefield variable defined for a system with protein and/or nucleic acids
+            &general
+            forcefields="oldff/leaprc.ff99SB" 
+            /
+
+            # Input file #2 with forcefield variable defined for a system with only protein
+            &general
+            forcefields="leaprc.protein.ff14SB" 
+            /
+
+            # Input file #3 with forcefield variable defined for a system with protein and nucleic acids (DNA)
+            &general
+            forcefields="leaprc.protein.ff14SB,leaprc.DNA.bsc1" 
+            /
+
+            # Input file #4 with forcefield variable defined for a system with protein, nucleic acids (RNA) and a organic molecule
+            &general
+            forcefields="leaprc.protein.ff14SB,leaprc.RNA.OL3,leaprc.gaff2" 
+            /
+            ```
+
+    **Forcefields for Protein/Nucleic Acids together**
+
+    | Name                      | Description                                                              |
+    |:--------------------------|:-------------------------------------------------------------------------|
+    | "oldff/leaprc.ff99"       | ff99 for proteins and nucleic acids                                      |
+    | "oldff/leaprc.ff03"       | ff03 (Duan et al.) for proteins and nucleic acids                        |
+    | "oldff/leaprc.ff99SB"     | ff99SB for proteins and nucleic acids                                    |
+    | "oldff/leaprc.ff99SBildn" | ff99SB modified for the "ILDN" changes for proteins and nucleic acids    |
+    | "oldff/leaprc.ff99bsc0"   | ff99SB force field using parmbsc0 for nucleic acid                       |
+
+    **Forcefields only for proteins**
+       
+    | Name                    | Description               |
+    |:------------------------|:--------------------------|
+    | "leaprc.protein.ff14SB" | ff14SB only for proteins  |
+    | "leaprc.protein.ff19SB" | ff19SB only for proteins  |
+
+    **Forcefields only for Nucleic Acids**
+     
+    | Name              | Description                  |
+    |:------------------|:-----------------------------|    
+    | "leaprc.DNA.bsc1" | ff99bsc0+bsc1 only for DNA   |
+    | "leaprc.DNA.OL15" | ff99bsc0+OL15 only for DNA   |
+    | "leaprc.RNA.OL3"  | ff99bsc0_chiOL3 only for RNA |
+
+    **Forcefields for organic molecules, glycans and zwitterionic amino acids**
+       
+    | Name                             | Description                                                               |
+    |:---------------------------------|:--------------------------------------------------------------------------|    
+    | "leaprc.gaff"                    | General Amber Force Field for organic molecules                           |
+    | "leaprc.gaff2"                   | General Amber Force Field 2 for organic molecules                         |
+    | "leaprc.GLYCAM_06j-1"            | Glycam_06j-1 carbohydrate ff (_Compatible with ff12SB and later_)         |
+    | "leaprc.GLYCAM_06EPb"            | GLYCAM-06EPb carbohydrate ff (_Compatible with ff12SB and later_)         |
+    | "gmxMMPBSA/leaprc.GLYCAM_06h-1"  | `*` GLYCAM-0606h-1 carbohydrate ff (_Compatible with ff99SB and earlier_) |
+    | "gmxMMPBSA/leaprc.zaa99SB"       | `*` Force field for Zwitterionic amino acids (_Compatible with ff99SB_)   |
+
+    !!! tip Keep in mind
+        `*` We added the gmxMMPBSA data to the tleap path. This way, we keep `gmx_MMPBSA` data separated from Amber's.
+
+    _New in v1.4.1_
+
+    _Modiefied in v1.4.3. Internal change_
+
+`ions_parameters` (Default = 1)
+:   Define ions parameters to build the Amber topology. 
+
+    * 1: frcmod.ions234lm_126_tip3p
+    * 2: frcmod.ions234lm_iod_tip4pew
+    * 3: frcmod.ions234lm_iod_spce
+    * 4: frcmod.ions234lm_hfe_spce
+    * 5: frcmod.ions234lm_126_tip4pew
+    * 6: frcmod.ions234lm_126_spce
+    * 7: frcmod.ions234lm_1264_tip4pew
+    * 8: frcmod.ions234lm_1264_tip3p
+    * 9: frcmod.ions234lm_1264_spce
+    * 10: frcmod.ions234lm_iod_tip3p
+    * 11: frcmod.ions234lm_hfe_tip4pew
+    * 12: frcmod.ions234lm_hfe_tip3p
+
+    !!! important "Keep in mind"
+        * You don't need to define it when you use a topology. Please refer to the section 
+          ["How gmx_MMPBSA works"](howworks.md#how-gmx_mmpbsa-works)   
+        * This notation is simpler since these parameter files are generally the same for all systems
+
+`interval` (Default = 1)
+:     The offset from which to choose frames from each trajectory file. For example, an interval of 2 will pull
+      every 2nd frame beginning at startframe and ending less than or equal to endframe.
+
+`PBRadii` (Default = 3)
+:   PBRadii to build amber topology files:
+
+    * 1: bondi, recommended when igb = 7
+    * 2: mbondi, recommended when igb = 1
+    * 3: mbondi2, recommended when igb = 2 or 5
+    * 4: mbondi3, recommended when igb = 8
 
 `qh_entropy` (Default = 0) 
 :    It specifies whether to perform a quasi-harmonic entropy (QH) approximation with `ptraj` or not.
@@ -67,21 +172,7 @@ printed, which aids in debugging of issues. (Default = 0) (Advanced Option)
      * 0: Don’t
      * 1: perform QH
 
-    _New in v1.4.2: Equivalent to (Deprecate) `entropy = 1`_
-
-???+ warning "Deprecated in v1.4.2: It will be removed in next version (v1.5.0). Use `qh_entropy` or `interaction_entropy` instead"
-
-    `entropy` (default = 0) 
-    :    ~~It specifies whether to perform a quasi-harmonic entropy (QH) approximation with ptraj or the
-         [Interaction Entropy (IE)][3] approximation. The allowed values are:~~
-         
-         * ~~0: Don’t~~
-         * ~~1: perform QH~~
-         * ~~2: perform IE~~
-
-        _Deprecated since v1.4.2: Divided in `qh_entropy` and `interaction_entropy`_
-    
-        _Changed in v1.0.0: Include Interaction Entropy approximation_    
+    _New in v1.4.2: Equivalent to (Deprecated) `entropy = 1`_
 
 `interaction_entropy` (default = 0) 
 :    It specifies whether to use the [Interaction Entropy (IE)][3] approximation.
@@ -103,7 +194,7 @@ printed, which aids in debugging of issues. (Default = 0) (Advanced Option)
 
         Please, consult this [paper][10] for further details.
 
-    _New in v1.4.2: Equivalent to (Deprecate) `entropy = 2`_
+    _New in v1.4.2: Equivalent to (Deprecated) `entropy = 2`_
 
   [3]: https://pubs.acs.org/doi/abs/10.1021/jacs.6b02682
   [10]: https://pubs.acs.org/doi/full/10.1021/acs.jctc.1c00374
@@ -115,24 +206,6 @@ printed, which aids in debugging of issues. (Default = 0) (Advanced Option)
      (`(endframe-startframe)/interval`) will be used to calculate the average Interaction Entropy.
 
     _New in v1.4.2_
-
-???+ warning "Deprecated in v1.4.2: It will be removed in next version (v1.5.0). Use `ie_segment` instead"
-
-    `entropy_seg` (Default = 25)
-    :    ~~Representative segment (in %), starting from the `endframe`, for the calculation of the
-         Interaction Entropy, _e.g._: `entropy_seg = 25` means that the last quartile of the total number of frames
-         (`(endframe-startframe)/interval`) will be used to calculate the average Interaction Entropy. (Only
-          if `entropy = 2`)~~
-    
-        _Deprecated since v1.4.2: Replaced by `ie_segment`_
-        
-        _New in v1.0.0_
-
-???+ warning "Deprecated in v1.4.0: It will be removed in next version. Use `temperature` instead"
-    
-    `entropy_temp` (Default = 298.15)
-    :    ~~Specify the temperature to calculate the entropy term `−TΔS` (Only if `entropy` = 2). Avoid inconsistencies 
-          with defined internal temperature (298.15 K) when `nmode` is used.~~
 
 `c2_entropy` (default = 0) 
 :    It specifies whether to use the [C2 Entropy][11] approximation.
@@ -165,6 +238,37 @@ printed, which aids in debugging of issues. (Default = 0) (Advanced Option)
 
     _New in v1.5.0_
 
+`temperature` (Default = 298.15)  
+: Specify the temperature to calculate experimental ΔG from Ki and the Interaction Entropy (Only if `entropy` = 2). 
+Avoid inconsistencies with defined internal temperature (298.15 K) when `nmode` or `qh` are used.  
+
+    !!! warning "Keep in mind"
+        Note that the `nmode` as `qh` model to calculate the entropy term are parameterized and will only work at 298.15 K
+   
+    _New in v1.4.0: Replace `entropy_temp`_
+
+`assign_chainID` (Default = 0) 
+:   Defines the chains ID assignment mode. _It is ignored when defining a reference structure
+(recommended)_. If `assign_chainID = 1`, gmx_MMPBSA check if the structure has no chains ID and it is assigned according
+to the structure[^1]. If `assign_chainID = 2`, `gmx_MMPBSA` assign the chains ID, exist or not, according to the
+structure[^1] (can generate inconsistencies). If a `*.gro` file was used for complex structure
+(`-cs` flag) and not reference structure was provided, `gmx_MMPBSA` assume `assign_chainID = 1`. 
+
+    _New in v1.2.0_
+
+  [^1]: _The chain ID is assigned according to two criteria: **terminal amino acids** and **residue numbering**. If
+        both criteria or residue numbering changes are present, we assign a new chain ID. If there are terminal 
+        amino acids but the numbering of the residue continues, we do not change the ID of the chain._
+
+`debug_printlevel`
+:   gmx_MMPBSA prints errors by raising exceptions, and not catching fatal errors. If `debug_printlevel` is
+set to 0, then detailed tracebacks (effectively the call stack showing exactly where in the program the error occurred)
+is suppressed, so only the error message is printed. If `debug_printlevel` is set to 1 or higher, all tracebacks are
+printed, which aids in debugging of issues. (Default = 0) (Advanced Option)
+
+    _Changed in v1.2.0: Now `gmx_MMPBSA` shows the command-line used to build AMBER topologies when 
+    `debug_printlevel = 1` or higher_
+
 `exp_ki` (Default = 0.0)
 :   Specify the experimental Ki in nM for correlations analysis. If not defined or exp_ki = 0 then this system will be 
 omitted in the correlation analysis
@@ -193,10 +297,6 @@ omitted in the correlation analysis
             # replace this "/home/programs/gromacs/bin" with the path to the GROMACS you want to use.
 
     _New in v1.1.1_
-    
-`interval` (Default = 1)
-:     The offset from which to choose frames from each trajectory file. For example, an interval of 2 will pull
-      every 2nd frame beginning at startframe and ending less than or equal to endframe. 
 
 `netcdf` (Default = 0)
 :     Specifies whether or not to use NetCDF trajectories internally rather than writing temporary ASCII trajectory
@@ -222,135 +322,6 @@ omitted in the correlation analysis
         _Removed in v1.4.3_
 
         _New in v1.3.1_
-        
-
-`PBRadii` (Default = 3)
-:   PBRadii to build amber topology files:
-
-    * 1: bondi, recommended when igb = 7
-    * 2: mbondi, recommended when igb = 1
-    * 3: mbondi2, recommended when igb = 2 or 5
-    * 4: mbondi3, recommended when igb = 8
-
-`forcefields` (Default = "oldff/leaprc.ff99SB,leaprc.gaff")
-:   Comma-separated list of force fields used to build Amber topologies. This variable is more flexible than the 
-existing ones (`protein_forcefield` and `ligand_forcefield`). The goal of this variable is to provide convenient 
-support for complex systems like this one: [5O8F](https://www.rcsb.org/3d-view/5o8f). It supports all force fields 
-tested in `protein_forcefield` and `ligand_forcefield` variables:
-    
-    !!! inline end important "Keep in mind"
-        * You don't need to define it when you use a topology. Please refer to the section 
-          ["How gmx_MMPBSA works"](howworks.md#how-gmx_mmpbsa-works)
-        * _This notation format is the one used in tleap._
-
-    Protein and Nucleic Acids
-
-    * "oldff/leaprc.ff99"
-    * "oldff/leaprc.ff03"
-    * "oldff/leaprc.ff99SB"
-    * "oldff/leaprc.ff99SBildn"
-    * "leaprc.protein.ff14SB"
-    
-    
-    !!! inline end important "Keep in mind"
-        * You don't need to define it when you use a topology or the ligand is protein-like type. Please refer to the 
-        section ["How gmx_MMPBSA works"](howworks.md#how-gmx_mmpbsa-works)
-        * _This notation format is the one used in tleap._
-
-        `*` We added the gmxMMPBSA data to the tleap path. This way, we keep `gmx_MMPBSA` data separated from 
-            Amber's.
-
-    Organic molecules, Glycan and Zwitterionic amino acids
-
-    * "leaprc.gaff"
-    * "leaprc.gaff2"
-    * "leaprc.GLYCAM_06j-1"    (_Compatible with amber12SB and later_)
-    * "leaprc.GLYCAM_06EPb"    (_Compatible with amber12SB and later_)
-    * "gmxMMPBSA/leaprc.GLYCAM_06h-1"    `*`(_Compatible with amber99SB and earlier_)
-    * "gmxMMPBSA/leaprc.zaa99SB"    `*`(_Parameters for Zwitterionic amino acids. Compatible with amber 99SB_)
-  
-    !!! warning
-        Be careful defining this variable since you can define two forces fields with a similar purpose which can 
-        generate inconsistencies.    
-
-    _New in v1.4.1_
-
-    _Modiefied in v1.4.3. Internal change_
-
-
-???+ warning "Deprecated since v1.4.1: It will be removed in v1.5.0. Use `forcefields` instead"
-   
-    `protein_forcefield` (Default = "oldff/leaprc.ff99SB")
-    :   Define the force field used to build Amber topology for proteins. Make sure this force field is the same as the 
-        one used in GROMACS. Force fields tested:
-    
-        * "oldff/leaprc.ff99"
-        * "oldff/leaprc.ff03"
-        * "oldff/leaprc.ff99SB"
-        * "oldff/leaprc.ff99SBildn"
-        * "leaprc.protein.ff14SB"
-    
-        !!! important "Keep in mind"
-            * You don't need to define it when you use a topology. Please refer to the section 
-              ["How gmx_MMPBSA works"](howworks.md#how-gmx_mmpbsa-works)
-            * _This notation format is the one used in tleap._
-    
-    
-???+ warning "Deprecated since v1.4.1: It will be removed in v1.5.0. Use `forcefields` instead"
-    
-    `ligand_forcefield` (Default = "leaprc.gaff")
-    :   Define the force field used to build Amber topology for small molecules or glycams. Make sure this force field 
-        is the same as the one used for GROMACS . Force fields tested:
-    
-        * "leaprc.gaff"
-        * "leaprc.gaff2"
-        * "leaprc.GLYCAM_06j-1"    (Compatible with amber12SB and later)
-        * "leaprc.GLYCAM_06EPb"    (Compatible with amber12SB and later)
-        * "gmxMMPBSA/leaprc.GLYCAM_06h-1"    `*`(Included in gmx_MMPBSA package. Compatible with amber99SB and earlier)
-        * "gmxMMPBSA/leaprc.zaa99SB"    `*`Parameters for Zwitterionic amino acids. (Included in gmx_MMPBSA package. 
-                                           Compatible with amber 99SB)
-      
-        !!! important "Keep in mind"
-            * You don't need to define it when you use a topology or the ligand is protein-like type. Please refer to the 
-            section ["How gmx_MMPBSA works"](howworks.md#how-gmx_mmpbsa-works)
-            * _This notation format is the one used in tleap._
-    
-            `*` We create a new folder (named _gmxMMPBSA_) in each one of the Amber's parameter folders 
-                ($AMBERHOME/dat/leap/[cmd, prep, lib, parm]/gmxMMPBSA). This way, we keep `gmx_MMPBSA` data separated from 
-                Amber's.
-
-
-`ions_parameters` (Default = 1)
-:   Define ions parameters to build the Amber topology. 
-
-    * 1: frcmod.ions234lm_126_tip3p
-    * 2: frcmod.ions234lm_iod_tip4pew
-    * 3: frcmod.ions234lm_iod_spce
-    * 4: frcmod.ions234lm_hfe_spce
-    * 5: frcmod.ions234lm_126_tip4pew
-    * 6: frcmod.ions234lm_126_spce
-    * 7: frcmod.ions234lm_1264_tip4pew
-    * 8: frcmod.ions234lm_1264_tip3p
-    * 9: frcmod.ions234lm_1264_spce
-    * 10: frcmod.ions234lm_iod_tip3p
-    * 11: frcmod.ions234lm_hfe_tip4pew
-    * 12: frcmod.ions234lm_hfe_tip3p
-
-    !!! important "Keep in mind"
-        * You don't need to define it when you use a topology. Please refer to the section 
-          ["How gmx_MMPBSA works"](howworks.md#how-gmx_mmpbsa-works)   
-        * This notation is simpler since these parameter files are generally the same for all systems
-
-`sys_name` (Default = None) (Optional)
-:   Define the System Name. This is useful when trying to analyze several systems at the same time or calculating 
-the correlation between the predicted and the experimental energies. If the name is not defined, one will be 
-assigned when loading it in gmx_MMPBSA_ana according to the order in this is done.
-
-    !!! tip 
-        The definition of the system name is entirely optional, however it can provide a better clarity during 
-        the results analysis. All files associated with this system will be saved using its name.
-
-    _New in v1.4.0_   
 
 `solvated_trajectory` (Default = 1)
 :   Define if it is necessary to build a clean trajectory with no water and ions
@@ -359,15 +330,6 @@ assigned when loading it in gmx_MMPBSA_ana according to the order in this is don
     * 1: Build clean trajectory
 
     _New in v1.3.0_
-
-`temperature` (Default = 298.15)  
-: Specify the temperature to calculate experimental ΔG from Ki and the Interaction Entropy (Only if `entropy` = 2). 
-Avoid inconsistencies with defined internal temperature (298.15 K) when `nmode` or `qh` are used.  
-
-    !!! warning "Keep in mind"
-        Note that the `nmode` as `qh` model to calculate the entropy term are parameterized and will only work at 298.15 K
-   
-    _New in v1.4.0: Replace `entropy_temp`_
 
 `use_sander` (Default = 0)
 :   use sander for energy calculations, even when `mmpbsa_py_energy` will suffice
