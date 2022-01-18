@@ -4,7 +4,8 @@ Sample input file for MM/3D-RISM
 #according to what is better for your system.
 &general
 sys_name="3D-RISM",
-startframe=5, endframe=21,
+startframe=5,
+endframe=8,
 /
 &rism
 polardecomp=0, thermo="gf"

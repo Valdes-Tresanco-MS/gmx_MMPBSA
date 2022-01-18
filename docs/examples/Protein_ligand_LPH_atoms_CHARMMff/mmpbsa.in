@@ -4,7 +4,9 @@ Sample input file for GB calculation
 #according to what is better for your system.
 &general
 sys_name="Prot-Lig-ST",
-startframe=5, endframe=10, verbose=2, solvated_trajectory=0,
+startframe=5,
+endframe=9,
+verbose=2, solvated_trajectory=0,
 /
 &pb
 # radiopt=0 is recommended which means using radii from the prmtop file

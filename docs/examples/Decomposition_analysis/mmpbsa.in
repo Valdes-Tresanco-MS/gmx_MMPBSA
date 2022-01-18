@@ -4,7 +4,8 @@ Sample input file with decomposition analysis
 #according to what is better for your system.
 &general
 sys_name="Decompositon",
-startframe=5, endframe=21, interval=1,
+startframe=5,
+endframe=14,
 /
 &gb
 igb=5, saltcon=0.150,

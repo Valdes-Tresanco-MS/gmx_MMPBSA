@@ -4,7 +4,9 @@ Sample input file for entropy calculations
 #according to what is better for your system.
 &general
 sys_name="IE",
-startframe=5, endframe=21, verbose=2, interval=1,
+startframe=5,
+endframe=20,
+verbose=2,
 #entropy variable control whether to perform a quasi-harmonic entropy (QH) approximation or the 
 #Interaction Entropy (IE)(https://pubs.acs.org/doi/abs/10.1021/jacs.6b02682) approximation
 forcefields="oldff/leaprc.ff99SB", entropy=2, entropy_seg=25, temperature=298
