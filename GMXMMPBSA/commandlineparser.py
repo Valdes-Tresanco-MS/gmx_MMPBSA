@@ -215,14 +215,6 @@ group.add_argument('-lp', dest='ligand_top', metavar='<Topology>', default=None,
                    help='''Topology file of the ligand.''')
 
 group = parser.add_argument_group('Miscellaneous Actions')
-group.add_argument('-make-mdins', dest='make_mdins', default=False,
-                   action='store_true', help='''Create the input files for each
-                  calculation and quit. This allows you to modify them and
-                  re-run using -use-mdins''')
-group.add_argument('-use-mdins', dest='use_mdins', default=False,
-                   action='store_true', help='''Use existing input files for each
-                  calculation. If they do not exist with the appropriate names,
-                  %(prog)s will quit in error.''')
 group.add_argument('-rewrite-output', dest='rewrite_output', default=False,
                    action='store_true', help='''Do not re-run any calculations,
                   just parse the output files from the previous calculation and

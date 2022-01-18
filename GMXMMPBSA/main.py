@@ -121,19 +121,13 @@ class MMPBSA_App(object):
         FILES, INPUT, master = self.FILES, self.INPUT, self.master
 
         # # Now we're getting ready, remove existing intermediate files
-        # if master and FILES.use_mdins:
-        #     self.remove(-1)
         # elif master and not FILES.rewrite_output:
         #     self.remove(0)
 
         # Create input files based on INPUT dict
-        if master and not FILES.use_mdins:
+        if master:
             create_inputs(INPUT, self.normal_system, self.pre)
         self.timer.stop_timer('setup')
-        # Bail out if we only wanted to generate mdin files
-        if FILES.make_mdins:
-            logging.info('Created mdin files. Quitting.\n')
-            sys.exit(0)
 
         # Now create our trajectory files
 
@@ -540,19 +534,15 @@ class MMPBSA_App(object):
     def make_prmtops(self):
         self.timer.add_timer('setup_gmx', 'Total GROMACS setup time:')
         self.timer.start_timer('setup_gmx')
-        if self.FILES.use_mdins:
-            if self.master:
-                self.remove(-1)
-        elif not self.FILES.rewrite_output:
+        if not self.FILES.rewrite_output:
             if self.master:
                 self.remove(0)
 
         # Find external programs IFF we are doing a calc
-        if not self.FILES.make_mdins:
-            external_progs = find_progs(self.INPUT, self.mpi_size) if self.master else {}
-            external_progs = self.MPI.COMM_WORLD.bcast(external_progs, root=0)
-            # Make external_progs an instance attribute
-            self.external_progs = external_progs
+        external_progs = find_progs(self.INPUT, self.mpi_size) if self.master else {}
+        external_progs = self.MPI.COMM_WORLD.bcast(external_progs, root=0)
+        # Make external_progs an instance attribute
+        self.external_progs = external_progs
         if self.master:
             # Make amber topologies
             logging.info('Building AMBER Topologies from GROMACS files...')
