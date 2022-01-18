@@ -654,9 +654,14 @@ class InteractionEntropyCalc:
         self.data = ts
         self.ieframes = math.ceil(self.app.numframes * (self.app.INPUT['ie_segment'] / 100))
         self.iedata = self.data[-self.ieframes:]
-        self.frames = [x for x in range(self.app.INPUT['startframe'],
-                                        self.app.INPUT['startframe'] + self.app.numframes * self.app.INPUT['interval'],
-                                        self.app.INPUT['interval'])]
+        self.frames = list(
+            range(
+                self.app.INPUT['startframe'],
+                self.app.INPUT['startframe']
+                + self.app.numframes * self.app.INPUT['interval'],
+                self.app.INPUT['interval'],
+            )
+        )
 
     def save_output(self):
         with open(self.output, 'w') as out:

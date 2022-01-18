@@ -64,38 +64,6 @@ class EnergyVector(np.ndarray):
 
     def avg(self):
         return np.average(self)
-    #
-    # def stdev(self):
-    #     return np.std(self)
-    #
-    # def __add__(self, other):
-    #     return EnergyVector(np.add(self, other))
-    #
-    # def __sub__(self, other):
-    #     return EnergyVector(np.subtract(self, other))
-    #
-    # def __mul__(self, scalar):
-    #     return EnergyVector(np.multiply(self, scalar))
-    #
-    # def __imul__(self, scalar):
-    #     for i, x in enumerate(self):
-    #         self[i] = x * scalar
-    #
-    # def __iadd__(self, other):
-    #     if isinstance(other, (int, float)):
-    #         for i, _ in enumerate(self):
-    #             self[i] += other
-    #         return
-    #     for i, _ in enumerate(self):
-    #         self[i] += other[i]
-    #
-    # def __isub__(self, other):
-    #     if isinstance(other, (int, float)):
-    #         for i, _ in enumerate(self):
-    #             self[i] -= other
-    #         return
-    #     for i, _ in enumerate(self):
-    #         self[i] -= other[i]
 
     def __eq__(self, other):
         return np.all(np.equal(self, other))

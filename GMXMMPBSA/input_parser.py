@@ -64,15 +64,13 @@ class Variable(object):
     def help_str(self):
         """ returns the string [<name> = <value>.... # description] """
         if self.datatype is str:
-            valstring = f'{self.name:20s} = "{self.value:s}"'
+            valstring = f'  {self.name:20s} = "{self.value:s}"'
         elif self.datatype is list:
             v = ','.join(self.value)
-            valstring = f'{self.name:20s} = "{v:s}"'
+            valstring = f'  {self.name:20s} = "{v:s}"'
         else:
-            valstring = f'{self.name:20s} = {self.value}'
-        length = 50
-        valstring += ' ' + ' ' * (length - len(valstring) - 2) + ' '
-        return valstring + '# %s' % self.description
+            valstring = f'  {self.name:20s} = {self.value}'
+        return '  # %s\n' % self.description + valstring
 
     def __eq__(self, teststring):
         """ Determines if a variable string matches this variable """
@@ -153,7 +151,7 @@ class Namelist(object):
         retstr = '&%s\n' % self.full_name
         for variable in self.variables:
             if variable is self.trigger: continue
-            retstr += '  %s\n' % self.variables[variable].help_str()
+            retstr += '%s\n' % self.variables[variable].help_str()
         return retstr + '/'
 
 
@@ -392,36 +390,43 @@ strip_mask = ':WAT,Cl*,CIO,Cs+,IB,K*,Li+,MG*,Na+,Rb+,CS,RB,NA,F,CL'
 input_file.addNamelist('general', 'general',
                        [
                            ['sys_name', str, '', 'System name'],
+
                            ['startframe', int, 1, 'First frame to analyze'],
                            ['endframe', int, 9999999, 'Last frame to analyze'],
-                           ['forcefields', list, 'oldff/leaprc.ff99SB, leaprc.gaff', 'Define the force field to build '
-                                                                                                  'the Amber topology'],
-                           ['ions_parameters', int, 1, 'Define ions parameters to build the Amber topology'],
                            ['interval', int, 1, 'Number of frames between adjacent frames analyzed'],
+
                            ['PBRadii', int, 3, 'Define PBRadii to build amber topology from GROMACS files'],
+                           ['forcefields', list, 'oldff/leaprc.ff99SB, leaprc.gaff', 'Define the force field to build the Amber topology'],
+                           ['ions_parameters', int, 1, 'Define ions parameters to build the Amber topology'],
+
                            ['qh_entropy', int, 0, 'Do quasi-harmonic calculation'],
                            ['interaction_entropy', int, 0, 'Do Interaction Entropy calculation'],
                            ['ie_segment', int, 25, 'Trajectory segment to calculate interaction entropy'],
                            ['c2_entropy', int, 0, 'Do C2 Entropy calculation'],
                            ['c2_segment', int, 25, 'Trajectory segment to calculate c2 entropy'],
-                           ['temperature', float, 298.15, 'Temperature to calculate Binding Free Energy '
-                                                                                     'from Ki and interaction entropy'],
-                           ['assign_chainID', int, 0, 'Assign chains ID'],
-                           ['exp_ki', float, 0, 'Experimental Ki in nM'],
-                           ['gmx_path', str, '', 'Force to use this path to get GROMACS executable'],
-                           ['netcdf', int, 0, 'Use NetCDF intermediate trajectories'],
-                           ['solvated_trajectory', int, 1, 'Define if it is necessary to cleanup the trajectories'],
-                           ['use_sander', int, 0, 'Use sander to compute energies'],
-                           ['debug_printlevel', int, 0, 'Increase debugging info printed'],
-                           ['verbose', int, 1, 'How many energy terms to print in the final output'],
 
-                           # ['full_traj', int, 0, 'Print a full traj. AND the thread trajectories'],
+                           ['assign_chainID', int, 0, 'Assign chains ID'],
+                           ['debug_printlevel', int, 0, 'Increase debugging info printed'],
+                           ['exp_ki', float, 0, 'Experimental Ki in nM'],
+# FIXME: full_traj -> parece que no afecta en nada que lo quite dado que solo genera la traj de complejo en PDB
+                           ['full_traj', int, 0, 'Print a full traj. AND the thread trajectories'],
+                           ['gmx_path', str, '', 'Force to use this path to get GROMACS executable'],
+# FIXME: keep_files -> con el archivo h5 se puede eliminar todo sin afectar gmx_MMPBSA_ana
                            ['keep_files', int, 2, 'How many files to keep after successful completion'],
+
+                           ['netcdf', int, 0, 'Use NetCDF intermediate trajectories'],
                            # ['overwrite_data', int, 0, 'Defines whether the gmxMMPBSA data will be overwritten'],
                            # ['receptor_mask', str, None, 'Amber mask of receptor atoms in complex prmtop'],
                            # ['search_path', str, '', 'Look for intermediate programs in all of PATH'],
+# FIXME: save_mode -> Generamos siempre el archivo h5 o lo mantenemos vinculado a esta varaible y a keep_files?
                            ['save_mode', int, 1, 'Save mode'],
-                           # ['strip_mask', str, strip_mask, 'Amber mask to strip from solvated prmtop']
+                           ['solvated_trajectory', int, 1, 'Define if it is necessary to cleanup the trajectories'],
+# FIXME: strip_mask -> para GROMACS se hace con la variable solvated_trajectory
+                           ['strip_mask', str, strip_mask, 'Amber mask to strip from solvated prmtop'],
+                           ['temperature', float, 298.15, 'Temperature to calculate Binding Free Energy '
+                                                          'from Ki and interaction entropy'],
+                           ['use_sander', int, 0, 'Use sander to compute energies'],
+                           ['verbose', int, 1, 'How many energy terms to print in the final output']
                        ], trigger=None)
 
 input_file.addNamelist('gb', 'gb',
@@ -561,7 +566,7 @@ input_file.addNamelist('rism', 'rism',
                            ['closure', str, 'kh', 'Closure equation to use'],
                            ['buffer', float, 14, 'Distance between solute and edge of grid'],
                            ['grdspc', float, 0.5, 'Grid spacing'],
-                           ['solvcut', float, None, 'Cutoff of the box'],
+                           ['solvcut', float, -1, 'Cutoff of the box'],
                            ['tolerance', float, 1.0e-5, 'Convergence tolerance'],
                            ['closureorder', int, 1, 'Order of closure if PSE'],
                            ['ng', str, '-1,-1,-1', 'Number of grid points'],
