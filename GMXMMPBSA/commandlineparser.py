@@ -256,39 +256,41 @@ testparser = ArgumentParser(epilog=f'gmx_MMPBSA is an effort to implement the GB
 testparser.add_argument('-v', '--version', action='version',
                        version='%%(prog)s %s based on MMPBSA version %s' % (__version__, __mmpbsa_version__))
 group = testparser.add_argument_group('Test options')
-group.add_argument('-t', dest='test', choices=['all', 'minimal', '3drism','ala_scan', 'decomp',
-                                            'prot_lig_mt', 'stability', 'ie', 'nmode', 'prot_prot', 'prot_lig_st',
-                                            'prot_dna', 'metalloprot_pep', 'prot_dna_rna_ions_lig', 'prot_glycan',
-                                            'memb_prot', 'prot_lig_charmm', 'memb_charmm'], default='minimal',
+group.add_argument('-t', dest='test', choices=range(19), type=int, nargs='*', default=[2],
                    help='''\
-The level at which you want to take the test.
-* all - make all examples.
-* minimal - does a minimal test with a set of systems and analyzes that show 
-    that gmx_MMPBSA runs correctly. Only exclude 3drism and nmode because they
-    can take a long time and prot_lig_mt because it is quite similar to 
-    prot_lig_st
+The level at which you want to take the test. You can define multiple systems and 
+analysis at the same time.
+      Sys. Runs  
+* 0      16     All -- Run all examples (Can take a long time!!!)
+* 1      13     Minimal -- Does a minimal test with a set of systems and analyzes 
+                that show that gmx_MMPBSA runs correctly. Only exclude 3drism, nmode
+                protein-ligand MT because take a long time or are redundant
+* 2       9     Fast -- Only the calculations that take a short time are run (Default)
 [Systems]:
-* prot_lig_st             Protein-Ligand (Single trajectory approximation)
-* prot_prot               Protein-Protein
-* prot_dna                Protein-DNA
-* memb_prot               Protein-Membrane
-* prot_glycan             Protein-Glycan
-* metalloprot_pep         Metalloprotein-Peptide
-* prot_dna_rna_ions_lig   Protein-DNA-RNA-IONs-Ligand
-* prot_lig_charmm         Protein-Ligand (CHARMM force field)
-* memb_charmm             Protein-ligand complex in membrane with CHARMMff 
+     Slow Frames
+* 3    . | 10   Protein-Ligand (Single trajectory approximation)
+* 4    . | 10   Protein-Protein
+* 5    . | 10   Protein-DNA
+* 6    x |  4   Protein-Membrane
+* 7    . | 10   Protein-Glycan
+* 8    x |  4   Metalloprotein-Peptide
+* 9    . | 10   Protein-DNA-RNA-IONs-Ligand
+* 10   x |  4   Protein-Ligand (CHARMM force field)
+* 11   x |  4   Protein-ligand complex in membrane with CHARMMff 
 [Analysis]:
-* ala_scan                Alanine Scanning
-* stability               Stability calculation
-* decomp                  Decomposition Analysis
-* prot_lig_mt             Protein-Ligand (Multiple trajectory approximation)
-* ie                      Interaction Entropy approximation
-* nmode                   Entropy calculation using Normal Mode approximation 
-* 3drism                  Calculations using 3D-RISM approximation
+     Slow Frames
+* 12   . | 10   Alanine Scanning
+* 13   . | 10   Stability calculation
+* 14   . | 10   Decomposition Analysis
+* 15   . | 16   Interaction Entropy approximation
+* 16   . | 10   Protein-Ligand (Multiple trajectory approximation)
+* 17   x |  4   Entropy calculation using Normal Mode approximation 
+* 18   x |  4   Calculations using 3D-RISM approximation
 ''')
 group.add_argument('-f', '--folder', help='Defines the folder to store all data', type=Path, default='.')
 group.add_argument('-ng', '--nogui', help='No open gmx_MMPBSA_ana after all calculations finished',
                    action='store_true',  default=False)
-group.add_argument('-n', '--num_processors', type=int, default=1,
-                   help='Defines the number of processor cores you want to use since gmx_MMPBSA in this test uses a '
-                        'single processor')
+group.add_argument('-n', '--num_processors', type=int, default=4,
+                   help='Defines the number of processor cores you want to use with MPI per calculation. If the numer '
+                        'of frames is less than the number of cpus defined, the calculation will carry out with the '
+                        'number of frames')
