@@ -425,7 +425,6 @@ input_file.addNamelist('general', 'general',
                            ['strip_mask', str, strip_mask, 'Amber mask to strip from solvated prmtop'],
                            ['temperature', float, 298.15, 'Temperature to calculate Binding Free Energy '
                                                           'from Ki and interaction entropy'],
-                           ['use_sander', int, 0, 'Use sander to compute energies'],
                            ['verbose', int, 1, 'How many energy terms to print in the final output']
                        ], trigger=None)
 

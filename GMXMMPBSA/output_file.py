@@ -202,12 +202,9 @@ def write_stability_output(app):
         if INPUT['sander_apbs']:
             final_output.add_comment('Poisson Boltzmann calculations performed ' +
                                      'using iAPBS interface to sander (sander.APBS)')
-        elif INPUT['use_sander'] or INPUT['decomprun']:
-            final_output.add_comment('Poisson Boltzmann calculations performed ' +
-                                     'using internal PBSA solver in sander.')
         else:
             final_output.add_comment('Poisson Boltzmann calculations performed ' +
-                                     'using internal PBSA solver in mmpbsa_py_energy')
+                                     'using internal PBSA solver in sander.')
 
     final_output.add_comment('')
 
@@ -393,12 +390,9 @@ def write_binding_output(app):
         if INPUT['sander_apbs']:
             final_output.add_comment('Poisson Boltzmann calculations performed ' +
                                      'using iAPBS interface to sander (sander.APBS)')
-        elif INPUT['use_sander'] or INPUT['decomprun']:
-            final_output.add_comment('Poisson Boltzmann calculations performed ' +
-                                     'using internal PBSA solver in sander.')
         else:
             final_output.add_comment('Poisson Boltzmann calculations performed ' +
-                                     'using internal PBSA solver in mmpbsa_py_energy')
+                                     'using internal PBSA solver in sander.')
     final_output.add_comment('')
 
     if INPUT['gbrun']:

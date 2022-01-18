@@ -7,9 +7,6 @@ Methods:
                     handles it
 
 Classes: 
-    NabInput -- base class of mmpbsa_py_energy input files
-    GBNabInput -- writes input files for GB (derived from NabInput)
-    PBNabInput -- writes input files for PB (derived from NabInput)
     SanderInput -- Base class for sander input files
     SanderGBInput -- writes input files for sander GB (derived from SanderInput)
     SanderPBSAInput- writes input files for sander PB (derived from SanderInput)
@@ -104,15 +101,8 @@ def create_inputs(INPUT, prmtop_system, pre):
     else:  # not decomp
 
         if INPUT['gbrun']:
-            gb_prog = 'mmpbsa_py_energy'
-            if INPUT['use_sander'] or INPUT['ifqnt'] == 1:
-                gb_prog = 'sander'
-
-            if gb_prog == 'mmpbsa_py_energy':
-                gb_mdin = GBNabInput(INPUT)
-                gb_mdin.write_input(pre + 'gb.mdin')
             # We need separate input files for QM/gmx_MMPBSA
-            elif INPUT['ifqnt']:
+            if INPUT['ifqnt']:
                 com_input = deepcopy(INPUT)
                 rec_input = deepcopy(INPUT)
                 lig_input = deepcopy(INPUT)
@@ -147,16 +137,8 @@ def create_inputs(INPUT, prmtop_system, pre):
                 gb_mdin.write_input(pre + 'gb.mdin')
 
         if INPUT['pbrun']:
-            pb_prog = 'mmpbsa_py_energy'
-            if INPUT['sander_apbs']:
-                pb_prog = 'sander.APBS'
-            elif INPUT['use_sander']:
-                pb_prog = 'sander'
-
-            if pb_prog == 'mmpbsa_py_energy':
-                pb_mdin = PBNabInput(INPUT)
-                pb_mdin2 = PBNabInput(INPUT)
-            elif pb_prog == 'sander.APBS':
+            pb_prog = 'sander.APBS' if INPUT['sander_apbs'] else 'sander'
+            if pb_prog == 'sander.APBS':
                 pb_mdin = SanderAPBSInput(INPUT)
                 pb_mdin2 = SanderAPBSInput(INPUT)
             else:
@@ -180,111 +162,6 @@ def create_inputs(INPUT, prmtop_system, pre):
                                        trj_suffix=trj_suffix)
             qh_in.write_input(pre + 'mutant_cpptrajentropy.in')
 
-
-# +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-
-class NabInput(object):
-    """
-   Creates an input file for the Nab energy program. It must follow the format
-   expected by the nab program:
-
-   GB (or PB)
-   variable1 = value1
-   variable2 = value2
-   ...
-   variableN = valueN
-
-   input_items is a dictionary of recognized keywords in the input file
-
-   name_map is a dictionary that maps each key from input_items to the 
-   corresponding key from the INPUT dictionary in gmx_MMPBSA
-   """
-    input_items = {'foo': 'bar'}  # This should be overridden in derived classes
-    name_map = {'foo': 'orig'}  # This should be overridden in derived classes
-    calculation_type = 'GB'  # This should be overridden in derived classes
-
-    def __init__(self, INPUT):
-        # Replace each of my input_items with the value held in INPUT if applicable
-        # but if it's not in INPUT, don't pitch a fit (also ignore the possibility
-        # that not every key is mapped in name_map, since only those that are in
-        # INPUT will be mapped
-      for key in list(self.input_items.keys()):
-         try:
-             self.input_items[key] = INPUT[self.name_map[key]]
-         except KeyError:
-             pass
-
-    def write_input(self, filename):
-        """ Writes the input file to filename """
-        try:
-            infile = open(filename, 'w')
-        except TypeError:
-            infile = filename
-
-        infile.write('%s\n' % self.calculation_type)
-        for key in list(self.input_items.keys()):
-            infile.write('%s = %s\n' % (key, self.input_items[key]))
-        infile.close()
-
-
-# +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-
-class GBNabInput(NabInput):
-    """ The GB input file for the mmpbsa_py_energy NAB program """
-    input_items = {'igb': 1,
-                   'extdiel': 78.3,
-                   'saltcon': 0.0,
-                   'surften': 0.0072,
-                   'rgbmax': 999.0}
-
-    name_map = {'igb': 'igb',
-                'extdiel': 'extdiel',
-                'saltcon': 'saltcon',
-                'surften': 'surften',
-                'rgbmax': 'rgbmax'}
-    calculation_type = 'GB'
-
-
-# +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-
-class PBNabInput(NabInput):
-    """ The PB input file for the mmpbsa_py_energy NAB program """
-    input_items = {'inp': 2, 'smoothopt': 1, 'radiopt': 1,
-                   'npbopt': 0, 'solvopt': 1, 'maxitn': 1000,
-                   'nfocus': 2,
-                   'fscale': 8, 'epsin': 1.0, 'epsout': 80.0,
-                   'istrng': 0.0, 'dprob': 1.4, 'iprob': 2.0,
-                   'accept': 0.001, 'fillratio': 4, 'space': 0.5,
-                   'bcopt': 5, 'eneopt': 2,
-                   'cutnb': 0, 'sprob': 0.557,
-                   'cavity_surften': 0.0378, 'cavity_offset': -0.5692}
-
-    name_map = {'inp': 'inp', 'smoothopt': 'smoothopt', 'radiopt': 'radiopt',
-                'npbopt': 'npbopt', 'solvopt': 'solvopt', 'maxitn': 'linit',
-                'nfocus': 'nfocus',
-                'fscale': 'fscale', 'epsin': 'indi', 'epsout': 'exdi',
-                'istrng': 'istrng', 'dprob': 'prbrad', 'iprob': 'iprob',
-                'accept': 'accept', 'fillratio': 'fillratio', 'space': 'scale',
-                'bcopt': 'bcopt', 'eneopt': 'eneopt',
-                'cutnb': 'cutnb', 'sprob': 'sprob',
-                'cavity_surften': 'cavity_surften', 'cavity_offset': 'cavity_offset'}
-    calculation_type = 'PB'
-
-    def __init__(self, INPUT):
-        # Replace each of my input_items with the value held in INPUT if applicable
-        # but if it's not in INPUT, don't pitch a fit (also ignore the possibility
-        # that not every key is mapped in name_map, since only those that are in
-        # INPUT will be mapped
-        for key in list(self.input_items.keys()):
-            try:
-                self.input_items[key] = INPUT[self.name_map[key]]
-            except KeyError:
-                pass
-        # Convert the ionic strength from M to mM for PBSA
-        self.input_items['istrng'] = INPUT['istrng'] * 1000.0
-
-
-# +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 class SanderInput(object):
     """ Base class sander input file """

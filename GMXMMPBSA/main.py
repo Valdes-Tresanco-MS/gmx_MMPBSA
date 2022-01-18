@@ -234,19 +234,15 @@ class MMPBSA_App(object):
         for mutant and normal systems
         """
         # Set up a dictionary of external programs to use based one external progs
-        progs = {'gb': self.external_progs['mmpbsa_py_energy'],
+        progs = {'gb': self.external_progs['sander'],
                  'sa': self.external_progs['cpptraj'],
-                 'pb': self.external_progs['mmpbsa_py_energy'],
+                 'pb': self.external_progs['sander'],
                  'rism': self.external_progs['rism3d.snglpnt'],
                  'qh': self.external_progs['cpptraj'],
                  'nmode': self.external_progs['mmpbsa_py_nabnmode']
                  }
-        if self.INPUT['use_sander'] or self.INPUT['decomprun']:
-            progs['gb'] = progs['pb'] = self.external_progs['sander']
         if self.INPUT['sander_apbs']:
             progs['pb'] = self.external_progs['sander.APBS']
-        if self.INPUT['ifqnt']:
-            progs['gb'] = self.external_progs['sander']
 
         # NetCDF or ASCII intermediate trajectories?
         trj_sfx = 'nc' if self.INPUT['netcdf'] else 'mdcrd'
@@ -261,11 +257,7 @@ class MMPBSA_App(object):
 
         # First load the GB calculations
         if self.INPUT['gbrun']:
-            # See if we need a PDB or restart file for the inpcrd
-            if 'mmpbsa_py_energy' in progs['gb']:
-                incrd = '%s%%s.pdb' % prefix
-            else:
-                incrd = '%sdummy%%s.inpcrd' % prefix
+            incrd = '%sdummy%%s.inpcrd' % prefix
 
             # See whether we are doing molsurf or LCPO. Reduce # of arguments
             # needed to 3, filling in the others here
@@ -364,11 +356,7 @@ class MMPBSA_App(object):
 
         # Next load the PB calculations
         if self.INPUT['pbrun']:
-            # See if we need a PDB or restart file for the inpcrd
-            if 'mmpbsa_py_energy' in progs['pb']:
-                incrd = '%s%%s.pdb' % prefix
-            else:
-                incrd = '%sdummy%%s.inpcrd' % prefix
+            incrd = '%sdummy%%s.inpcrd' % prefix
 
             # Mdin depends on decomp or not
             if self.INPUT['decomprun']:
@@ -586,12 +574,10 @@ class MMPBSA_App(object):
                                                FILES.mutant_ligand_prmtop)
         # If we have a chamber prmtop, force using sander
         if self.using_chamber:
-            INPUT['use_sander'] = True
             if INPUT['rismrun']:
                 GMXMMPBSA_ERROR('CHAMBER prmtops cannot be used with 3D-RISM')
             if INPUT['nmoderun']:
                 GMXMMPBSA_ERROR('CHAMBER prmtops cannot be used with NMODE')
-            logging.info('CHAMBER prmtops found. Forcing use of sander\n')
 
         self.normal_system.Map(INPUT['receptor_mask'], INPUT['ligand_mask'])
         self.normal_system.CheckConsistency()
@@ -773,10 +759,6 @@ class MMPBSA_App(object):
         if self.INPUT['decomprun']:
             self.INPUT['gbsa'] = 2
 
-        # Force to use Sander when intdiel is defined
-        if self.INPUT['intdiel'] > 1.0:
-            self.INPUT['use_sander'] = 1
-
         # Stability: no terms cancel, so print them all
         if self.stability:
             self.INPUT['verbose'] = 2
@@ -848,8 +830,6 @@ class MMPBSA_App(object):
             GMXMMPBSA_ERROR('PBRadii must be 1, 2, 3 or 4!', InputError)
         if INPUT['solvated_trajectory'] not in [0, 1]:
             GMXMMPBSA_ERROR('SOLVATED_TRAJECTORY must be 0 or 1!', InputError)
-        if INPUT['use_sander'] not in [0, 1]:
-            GMXMMPBSA_ERROR('USE_SANDER must be set to 0 or 1!', InputError)
         if INPUT['ifqnt'] not in [0, 1]:
             GMXMMPBSA_ERROR('QMMM must be 0 or 1!', InputError)
         if INPUT['ifqnt'] == 1:
@@ -925,9 +905,6 @@ class MMPBSA_App(object):
                               f" {self.INPUT['nmstartframe']} to 1")
             self.INPUT['nmstartframe'] = 1
 
-        # check files
-        if self.FILES.complex_top or self.INPUT['cas_intdiel']:
-            self.INPUT['use_sander'] = 1
 
     def remove(self, flag):
         """ Removes temporary files """

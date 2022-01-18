@@ -8,8 +8,7 @@ Methods:
 
 Classes:
    Calculation: Base calculation class
-   EnergyCalculation: Typical GB/PB binding FE calculations. Handles all sander
-                      and mmpbsa_py_energy program calls
+   EnergyCalculation: Typical GB/PB binding FE calculations. Handles all sander program calls
    RISMCalculation: RISM binding FE calculation
    NmodeCalc: normal mode entropy calculation
    QuasiHarmCalc: Quasi-harmonic entropy calculation

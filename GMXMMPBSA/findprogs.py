@@ -41,9 +41,7 @@ def find_progs(INPUT, mpi_size=0):
     used_progs = { 'cpptraj' : True,
 
                    'tleap': True, 'parmchk2': True,
-                   'mmpbsa_py_energy' : ((INPUT['pbrun'] or INPUT['gbrun']) and not
-                                         (INPUT['use_sander'] or INPUT['decomprun'])),
-                   'sander' : (INPUT['decomprun'] or INPUT['use_sander'] or INPUT['ifqnt'] == 1),
+                   'sander' : True,
                    'sander.APBS' : INPUT['sander_apbs'] == 1,
                    'mmpbsa_py_nabnmode' : INPUT['nmoderun'],
                    'rism3d.snglpnt' : INPUT['rismrun']
