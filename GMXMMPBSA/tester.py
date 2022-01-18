@@ -21,21 +21,36 @@ import logging
 import subprocess
 import shutil
 import multiprocessing
+from pathlib import Path
 from queue import Queue
 from GMXMMPBSA.exceptions import GMXMMPBSA_ERROR
-
+from GMXMMPBSA.utils import log_subprocess_output
 
 def calculatestar(args):
     return run_process(*args)
 
+
 def run_process(system, sys_name, args):
     logging.info(f"{system[1]:60}{'RUNNING':>10}")
     os.chdir(system[0])
-    system_log = open(sys_name + '.log', 'a')
+    system_log = open(f'{sys_name}.log', 'a')
     g_p = subprocess.Popen(args, stdout=system_log, stderr=system_log)
     if g_p.wait():
         return sys_name, False
     return sys_name, True
+
+
+def _get_frames(input_file: Path):
+    startframe = 1
+    endframe = 21
+    with input_file.open() as ifile:
+        for line in ifile:
+            line = line.strip('\n').strip(',')
+            if line.startswith('startframe'):
+                startframe = int(line.split('=')[1])
+            elif line.startswith('endframe'):
+                endframe = int(line.split('=')[1])
+    return 1 + endframe - startframe
 
 
 def run_test(parser):
@@ -67,78 +82,72 @@ def run_test(parser):
     if git_p.wait():  # if it quits with return code != 0
         GMXMMPBSA_ERROR('git failed when try to clone the gmx_MMPBSA repository')
 
-    logging.info(f'Cloning gmx_MMPBSA repository...Done.')
+    logging.info('Cloning gmx_MMPBSA repository...Done.')
 
     examples = gmx_mmpbsa_test_folder.joinpath('docs', 'examples')
-    test = {
-        'prot_lig_st': [examples.joinpath('Protein_ligand', 'ST'), 'Protein-Ligand (Single trajectory approximation)'],
-        'prot_prot': [examples.joinpath('Protein_protein'), 'Protein-Protein'],
-        'prot_dna': [examples.joinpath('Protein_DNA'), 'Protein-DNA'],
-        'memb_prot': [examples.joinpath('Protein_membrane'), 'Protein-Membrane'],
-        'prot_glycan': [examples.joinpath('Protein_glycan'), 'Protein-Glycan'],
-        'metalloprot_pep': [examples.joinpath('Metalloprotein_peptide'), 'Metalloprotein-Peptide'],
-        'prot_dna_rna_ions_lig': [examples.joinpath('Protein_DNA_RNA_Ion_ligand'), 'Protein-DNA-RNA-IONs-Ligand'],
-        'prot_lig_charmm': [examples.joinpath('Protein_ligand_CHARMMff'), 'Protein-Ligand (CHARMM force field)'],
-        'memb_charmm': [examples.joinpath('Protein_membrane_CHARMMff'), 'Protein-ligand complex in membrane with '
-                                                                      'CHARMMff'],
-        'ala_scan': [examples.joinpath('Alanine_scanning'), 'Alanine Scanning'],
-        'stability': [examples.joinpath('Stability'), 'Stability calculation'],
-        'decomp': [examples.joinpath('Decomposition_analysis'), 'Decomposition Analysis'],
-        'prot_lig_mt': [examples.joinpath('Protein_ligand', 'MT'), 'Protein-Ligand (Multiple trajectory '
-                                                                   'approximation)'],
-        'ie': [examples.joinpath('Entropy_calculations', 'Interaction_Entropy'), 'Interaction Entropy approximation'],
-        'nmode': [examples.joinpath('Entropy_calculations', 'nmode'), 'Entropy calculation using Normal Mode '
-                                                                      'approximation '],
-        '3drism': [examples.joinpath('3D-RISM'), 'Calculations using 3D-RISM approximation']
+    test_sys = {
+        3: [examples.joinpath('Protein_ligand', 'ST'), 'Protein-Ligand (Single trajectory approximation)'],
+        4: [examples.joinpath('Protein_protein'), 'Protein-Protein'],
+        5: [examples.joinpath('Protein_DNA'), 'Protein-DNA'],
+        6: [examples.joinpath('Protein_membrane'), 'Protein-Membrane'],
+        7: [examples.joinpath('Protein_glycan'), 'Protein-Glycan'],
+        8: [examples.joinpath('Metalloprotein_peptide'), 'Metalloprotein-Peptide'],
+        9: [examples.joinpath('Protein_DNA_RNA_Ion_ligand'), 'Protein-DNA-RNA-IONs-Ligand'],
+        10: [examples.joinpath('Protein_ligand_CHARMMff'), 'Protein-Ligand (CHARMM force field)'],
+        11: [examples.joinpath('Protein_membrane_CHARMMff'), 'Protein-ligand complex in membrane with CHARMMff'],
+        12: [examples.joinpath('Alanine_scanning'), 'Alanine Scanning'],
+        13: [examples.joinpath('Stability'), 'Stability calculation'],
+        14: [examples.joinpath('Decomposition_analysis'), 'Decomposition Analysis'],
+        15: [examples.joinpath('Entropy_calculations', 'Interaction_Entropy'), 'Interaction Entropy approximation'],
+        16: [examples.joinpath('Protein_ligand', 'MT'), 'Protein-Ligand (Multiple trajectory approximation)'],
+        17: [examples.joinpath('Entropy_calculations', 'nmode'), 'Entropy calculation using Normal Mode '
+                                                                 'approximation'],
+        18: [examples.joinpath('3D-RISM'), 'Calculations using 3D-RISM approximation']
     }
-    all = ['prot_lig_st', 'prot_prot', 'prot_dna', 'memb_prot', 'prot_glycan', 'metalloprot_pep',
-           'prot_dna_rna_ions_lig', 'prot_lig_charmm', 'memb_charmm', 'ala_scan', 'stability', 'decomp',
-           'prot_lig_mt', 'ie', 'nmode', '3drism']
-    minimal = ['prot_lig_st', 'prot_prot', 'prot_dna', 'memb_prot', 'prot_glycan', 'metalloprot_pep',
-               'prot_dna_rna_ions_lig', 'prot_lig_charmm', 'ala_scan', 'stability', 'decomp', 'ie']
 
-    if parser.test == 'all':
-        key_list = all.copy()
-    elif parser.test == 'minimal':
-        key_list = minimal.copy()
+    if parser.test == [0]:
+        key_list = range(3, 19)
+    elif parser.test == [1]:
+        key_list = range(3, 16)
+    elif parser.test == [2]:
+        key_list = [3, 4, 5, 7, 9, 12, 13, 14, 15]
     else:
-        key_list = [parser.test]
+        key_list = parser.test
 
-    # Create tasks
-    TASKS = []
-    for x in key_list:
-        with open(test[x][0].joinpath('README.md')) as readme:
-            for line in readme:
-                if 'gmx_MMPBSA -O -i mmpbsa.in' in line:
-                    command = [gmx_mmpbsa_path] + line.strip('\n').split()[1:] + ['-nogui']
-                    TASKS.append((test[x], x, command))
+    req_cpus = {x: _get_frames(test_sys[x][0].joinpath('mmpbsa.in')) for x in key_list}
 
     if parser.num_processors > multiprocessing.cpu_count():
-        logging.warning(f'Using all processors')
+        logging.warning(f'The number cpus defined {parser.num_processors} is greater than the system cpu'
+                        f' {multiprocessing.cpu_count()}. All the cpus will be used...')
         parser.num_processors = multiprocessing.cpu_count()
 
-    if len(key_list) < parser.num_processors:
-        jobs = len(key_list)
-    else:
-        jobs = parser.num_processors
+    TASKS = []
+    for x in key_list:
+        with open(test_sys[x][0].joinpath('README.md')) as readme:
+            for line in readme:
+                if 'gmx_MMPBSA -O -i mmpbsa.in' in line:
+                    command = (['mpirun', '--use-hwthread-cpus', '-np',
+                                f'{req_cpus[x] if req_cpus[x] <= parser.num_processors else parser.num_processors}']
+                               + [gmx_mmpbsa_path, 'MPI'] + line.strip('\n').split()[1:] + ['-nogui'])
+                    TASKS.append((test_sys[x], x, command))
 
     result_list = []
-
     logging.info(f"{'Example':^60}{'STATE':>10}")
     print(80*'-')
     c = 1
-    with multiprocessing.Pool(jobs) as pool:
+    with multiprocessing.Pool(1) as pool:
         imap_unordered_it = pool.imap_unordered(calculatestar, TASKS)
         for x in imap_unordered_it:
             sys_name, result = x
             if result:
-                logging.info(f"{test[sys_name][1]:55}[{c:2}/{len(key_list):2}]{'DONE':>8}")
-                result_list.append(test[sys_name][0])
+                logging.info(f"{test_sys[sys_name][1]:55}[{c:2}/{len(key_list):2}]{'DONE':>8}")
+                result_list.append(test_sys[sys_name][0])
             else:
-                logging.error(f"{test[sys_name][1]:55}[{c:2}/{len(key_list):2}]{'ERROR':>8}\n"
+                logging.error(f"{test_sys[sys_name][1]:55}[{c:2}/{len(key_list):2}]{'ERROR':>8}\n"
                               f"           Please, check the test log\n"
-                              f"           ({test[sys_name][0].joinpath(f'{sys_name}')}.log)")
+                              f"           ({test_sys[sys_name][0].joinpath(f'{sys_name}')}.log)")
             c += 1
+
     if not parser.nogui:
         print(80 * '-')
         logging.info('Opening gmx_MMPBSA_ana...')
