@@ -391,36 +391,37 @@ strip_mask = ':WAT,Cl*,CIO,Cs+,IB,K*,Li+,MG*,Na+,Rb+,CS,RB,NA,F,CL'
 
 input_file.addNamelist('general', 'general',
                        [
-                           ['assign_chainID', int, 0, 'Assign chains ID'],
-                           ['debug_printlevel', int, 0, 'Increase debugging info printed'],
+                           ['sys_name', str, '', 'System name'],
+                           ['startframe', int, 1, 'First frame to analyze'],
                            ['endframe', int, 9999999, 'Last frame to analyze'],
+                           ['forcefields', list, 'oldff/leaprc.ff99SB, leaprc.gaff', 'Define the force field to build '
+                                                                                                  'the Amber topology'],
+                           ['ions_parameters', int, 1, 'Define ions parameters to build the Amber topology'],
+                           ['interval', int, 1, 'Number of frames between adjacent frames analyzed'],
+                           ['PBRadii', int, 3, 'Define PBRadii to build amber topology from GROMACS files'],
                            ['qh_entropy', int, 0, 'Do quasi-harmonic calculation'],
                            ['interaction_entropy', int, 0, 'Do Interaction Entropy calculation'],
                            ['ie_segment', int, 25, 'Trajectory segment to calculate interaction entropy'],
                            ['c2_entropy', int, 0, 'Do C2 Entropy calculation'],
                            ['c2_segment', int, 25, 'Trajectory segment to calculate c2 entropy'],
+                           ['temperature', float, 298.15, 'Temperature to calculate Binding Free Energy '
+                                                                                     'from Ki and interaction entropy'],
+                           ['assign_chainID', int, 0, 'Assign chains ID'],
                            ['exp_ki', float, 0, 'Experimental Ki in nM'],
-                           ['full_traj', int, 0, 'Print a full traj. AND the thread trajectories'],
                            ['gmx_path', str, '', 'Force to use this path to get GROMACS executable'],
-                           ['interval', int, 1, 'Number of frames between adjacent frames analyzed'],
-                           ['ions_parameters', int, 1, 'Define ions parameters to build the Amber topology'],
-                           ['keep_files', int, 2, 'How many files to keep after successful completion'],
-                           ['forcefields', list, 'oldff/leaprc.ff99SB, leaprc.gaff', 'Define the force field to build '
-                                                                                     'the Amber topology'],
                            ['netcdf', int, 0, 'Use NetCDF intermediate trajectories'],
-                           ['overwrite_data', int, 0, 'Defines whether the gmxMMPBSA data will be overwritten'],
-                           ['PBRadii', int, 3, 'Define PBRadii to build amber topology from GROMACS files'],
+                           ['solvated_trajectory', int, 1, 'Define if it is necessary to cleanup the trajectories'],
+                           ['use_sander', int, 0, 'Use sander to compute energies'],
+                           ['debug_printlevel', int, 0, 'Increase debugging info printed'],
+                           ['verbose', int, 1, 'How many energy terms to print in the final output'],
+
+                           # ['full_traj', int, 0, 'Print a full traj. AND the thread trajectories'],
+                           ['keep_files', int, 2, 'How many files to keep after successful completion'],
+                           # ['overwrite_data', int, 0, 'Defines whether the gmxMMPBSA data will be overwritten'],
                            # ['receptor_mask', str, None, 'Amber mask of receptor atoms in complex prmtop'],
                            # ['search_path', str, '', 'Look for intermediate programs in all of PATH'],
                            ['save_mode', int, 1, 'Save mode'],
-                           ['solvated_trajectory', int, 1, 'Define if it is necessary to cleanup the trajectories'],
-                           ['startframe', int, 1, 'First frame to analyze'],
-                           ['strip_mask', str, strip_mask, 'Amber mask to strip from solvated prmtop'],
-                           ['sys_name', str, '', 'System name'],
-                           ['temperature', float, 298.15, 'Temperature to calculate Binding Free Energy '
-                                                          'from Ki and interaction entropy'],
-                           ['use_sander', int, 0, 'Use sander to compute energies'],
-                           ['verbose', int, 1, 'How many energy terms to print in the final output']
+                           # ['strip_mask', str, strip_mask, 'Amber mask to strip from solvated prmtop']
                        ], trigger=None)
 
 input_file.addNamelist('gb', 'gb',

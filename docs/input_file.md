@@ -266,17 +266,6 @@ structure[^1] (can generate inconsistencies). If a `*.gro` file was used for com
         both criteria or residue numbering changes are present, we assign a new chain ID. If there are terminal 
         amino acids but the numbering of the residue continues, we do not change the ID of the chain._
 
-`debug_printlevel`
-:   gmx_MMPBSA prints errors by raising exceptions, and not catching fatal errors. If `debug_printlevel` is
-set to 0, then detailed tracebacks (effectively the call stack showing exactly where in the program the error occurred)
-is suppressed, so only the error message is printed. If `debug_printlevel` is set to 1 or higher, all tracebacks are
-printed, which aids in debugging of issues. (Default = 0) (Advanced Option)
-
-    _Changed in v1.2.0: Now `gmx_MMPBSA` shows the command-line used to build AMBER topologies when 
-    `debug_printlevel = 1` or higher_
-    
-    _Deprecate in v1.5.0: Since we improved logging, this variable is not needed_
-
 `exp_ki` (Default = 0.0)
 :   Specify the experimental Ki in nM for correlations analysis. If not defined or exp_ki = 0 then this system will be 
 omitted in the correlation analysis
@@ -332,7 +321,18 @@ omitted in the correlation analysis
 
     !!! note
         Sander is always used when building the Amber topology from a Gromacs topology. This, because the conversion 
-        can generate parameters that are not recognized by `mmpbsa_py_energy` 
+        can generate parameters that are not recognized by `mmpbsa_py_energy`
+
+`debug_printlevel`
+:   gmx_MMPBSA prints errors by raising exceptions, and not catching fatal errors. If `debug_printlevel` is
+set to 0, then detailed tracebacks (effectively the call stack showing exactly where in the program the error occurred)
+is suppressed, so only the error message is printed. If `debug_printlevel` is set to 1 or higher, all tracebacks are
+printed, which aids in debugging of issues. (Default = 0) (Advanced Option)
+
+    _Changed in v1.2.0: Now `gmx_MMPBSA` shows the command-line used to build AMBER topologies when 
+    `debug_printlevel = 1` or higher_
+    
+    _Deprecate in v1.5.0: Since we improved logging, this variable is not needed_
 
 `verbose` (Default = 1)
 :   The variable that specifies how much output is printed in the output file. There are three allowed values:
