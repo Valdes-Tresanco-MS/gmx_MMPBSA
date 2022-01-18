@@ -645,6 +645,10 @@ class InteractionEntropyCalc:
             aeint = energy_int.mean()
             a_energy_int = np.append(a_energy_int, aeint)
             deint = eint - aeint
+            if deint > 425:
+                GMXMMPBSA_ERROR('The internal energy of your system has very large energy fluctuation so it is not '
+                                'possible to continue with the calculations. Please, make sure your system is '
+                                'consistent')
             eceint = math.exp(deint / (k * temp))
             exp_energy_int = np.append(exp_energy_int, eceint)
             aeceint = exp_energy_int.mean()
