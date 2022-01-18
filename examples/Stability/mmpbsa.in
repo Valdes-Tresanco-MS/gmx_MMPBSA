@@ -4,7 +4,9 @@ Sample input file for GB calculation
 #according to what is better for your system.
 &general
 sys_name="Stability",
-startframe=5, endframe=21, verbose=2,
+startframe=5,
+endframe=14,
+verbose=2,
 forcefields="oldff/leaprc.ff99SB",
 /
 &gb

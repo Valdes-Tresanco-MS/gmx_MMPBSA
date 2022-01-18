@@ -7,7 +7,8 @@ according to what is better for your system.
 
 &general
 sys_name="Prot-Memb-CHARMM",
-interval=1,
+startframe=1,
+endframe=4,
 debug_printlevel=2, use_sander=1,
 /
 
