@@ -476,7 +476,7 @@ class NMODEout(object):
 
         if chamber:
             warnings.warn('nmode is incompatible with chamber topologies!')
-        self.temp = INPUT['temp']
+        self.temp = INPUT['temperature']
         self.num_files = num_files
         self.is_read = False
 

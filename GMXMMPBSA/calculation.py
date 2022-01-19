@@ -347,12 +347,10 @@ class NmodeCalc(Calculation):
         kappa = sqrt(0.10806 * INPUT['nmode_istrng'])
         if INPUT['nmode_igb']:
             option_string = ('ntpr=10000, diel=C, kappa=%f, cut=1000, gb=1, ' +
-                             'dielc=%f, temp0=%f') % (kappa,
-                                                      INPUT['dielc'], INPUT['temp'])
+                             'dielc=%f, temp0=%f') % (kappa, INPUT['dielc'], INPUT['temperature'])
         else:
             option_string = ('ntpr=10000, diel=R, kappa=%f, cut=1000, gb=0, ' +
-                             'dielc=%f, temp0=%f') % (kappa,
-                                                      INPUT['dielc'], INPUT['temp'])
+                             'dielc=%f, temp0=%f') % (kappa, INPUT['dielc'], INPUT['temperature'])
 
         self.option_string = option_string
         self.drms = INPUT['drms']

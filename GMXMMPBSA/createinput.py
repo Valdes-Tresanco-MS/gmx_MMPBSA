@@ -216,7 +216,7 @@ class SanderGBInput(SanderInput):
                 # FIXME: INPUT is a dictionary, so the keys (variables in the input list) cannot be redundant. This
                 #  means that the same variable cannot be defined for each type of calculation. This, in particular,
                 #  is the first one we see, we need to review other variants.
-                # 'maxcyc': 'maxcyc',
+                'maxcyc': 'gb_maxcyc',
                 'ncyc': 'ncyc',
                 'igb': 'igb', 'saltcon': 'saltcon', 'intdiel': 'intdiel',
                 'gbsa': 'gbsa', 'extdiel': 'extdiel', 'surften': 'surften',
@@ -253,7 +253,7 @@ class SanderPBSADECOMPInput(SanderInput):
                    'rhow_effect': 1.129, 'use_sav': 1, 'maxsph': 400}
 
     name_map = {'ntb': 'ntb', 'cut': 'cut', 'nsnb': 'nsnb',
-                'imin': 'imin', 'maxcyc': 'maxcyc',
+                'imin': 'imin', 'maxcyc': 'pb_maxcyc',
                 'ipb': 'ipb', 'inp': 'inp',
                 'ioutfm': 'netcdf', 'idecomp': 'idecomp', 'dec_verbose': 'dec_verbose',
                 'ntx': 'ntx',
@@ -327,7 +327,7 @@ class SanderPBSAInput(SanderInput):
                    'rhow_effect': 1.129, 'use_sav': 1, 'maxsph': 400}
 
     name_map = {'ntb': 'ntb', 'cut': 'cut', 'nsnb': 'nsnb',
-                'imin': 'imin', 'maxcyc': 'maxcyc',
+                'imin': 'imin', 'maxcyc': 'pb_maxcyc',
                 'ipb': 'ipb', 'inp': 'inp',
                 'ioutfm': 'netcdf',
                 'ntx': 'ntx',
@@ -400,7 +400,7 @@ class SanderPBSA2Input(SanderInput):
                    'rhow_effect': 1.129, 'use_sav': 1, 'maxsph': 400}
 
     name_map = {'ntb': 'ntb', 'cut': 'cut', 'nsnb': 'nsnb',
-                'imin': 'imin', 'maxcyc': 'maxcyc',
+                'imin': 'imin', 'maxcyc': 'pb_maxcyc',
                 'ipb': 'ipb', 'inp': 'inp',
                 'ioutfm': 'netcdf',
                 'ntx': 'ntx',
@@ -465,7 +465,7 @@ class SanderAPBSInput(SanderInput):
     name_map = {'inp': 'inp', 'idecomp': 'idecomp', 'pdie': 'indi',
                 'sdie': 'exdi', 'ionc': 'istrng', 'radiopt': 'radiopt',
                 'srad': 'prbrad', 'grid': 'scale', 'gamma': 'cavity_surften',
-                'ioutfm': 'netcdf'}
+                'ioutfm': 'netcdf', 'maxcyc': 'pb_maxcyc'}
 
     parent_namelist = {'ntb': 'cntrl', 'cut': 'cntrl', 'nsnb': 'cntrl',
                        'imin': 'cntrl', 'maxcyc': 'cntrl', 'igb': 'cntrl',

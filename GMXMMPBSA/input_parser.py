@@ -418,11 +418,9 @@ input_file.addNamelist('general', 'general',
                            # ['overwrite_data', int, 0, 'Defines whether the gmxMMPBSA data will be overwritten'],
                            # ['receptor_mask', str, None, 'Amber mask of receptor atoms in complex prmtop'],
                            # ['search_path', str, '', 'Look for intermediate programs in all of PATH'],
-# FIXME: save_mode -> Generamos siempre el archivo h5 o lo mantenemos vinculado a esta varaible y a keep_files?
-                           ['save_mode', int, 1, 'Save mode'],
                            ['solvated_trajectory', int, 1, 'Define if it is necessary to cleanup the trajectories'],
 # FIXME: strip_mask -> para GROMACS se hace con la variable solvated_trajectory
-                           ['strip_mask', str, strip_mask, 'Amber mask to strip from solvated prmtop'],
+#                          ['strip_mask', str, strip_mask, 'Amber mask to strip from solvated prmtop'],
                            ['temperature', float, 298.15, 'Temperature to calculate Binding Free Energy '
                                                           'from Ki and interaction entropy'],
                            ['verbose', int, 1, 'How many energy terms to print in the final output']
@@ -436,6 +434,7 @@ input_file.addNamelist('gb', 'gb',
                            ['surften', float, 0.0072, 'Surface tension'],
                            ['rgbmax', float, 999.0, 'Distance cutoff in Angstroms to use when computing effective '
                                                     'GB radii'],
+                           ['gb_maxcyc', int, 1, 'The maximum number of cycles of minimization'],
                            ['intdiel', float, 1.0, 'Internal dielectric constant for sander'],
                            ['ifqnt', int, 0, 'Use QM on part of the system'],
                            ['qm_theory', str, '', 'Semi-empirical QM theory to use'],
@@ -452,17 +451,19 @@ input_file.addNamelist('gb', 'gb',
 
 input_file.addNamelist('pb', 'pb',
                        [
-                           ['ntb', int, 0, 'Apply PBC conditions?'],
-                           ['cut', float, 999.0, 'Nonbonded cutoff in Angstroms'],
-                           ['nsnb', int, 99999, 'Determines the frequency of nonbonded list updates when igb=0 and '
-                                                'nbflag=0'],
-                           ['imin', int, 5, 'Decide whether to perform MD, Minimization, or Trajectory '
-                                            'Post-Processing'],
-                           ['maxcyc', int, 1, 'The maximum number of cycles of minimization'],
-                           ['ioutfm', int, 0, 'The format of coordinate and velocity trajectory files (mdcrd, mdvel '
-                                              'and inptraj).'],
-                           ['ntx', int, 1, 'Option to read the initial coordinates, velocities and box size from the '
-                                           'inpcrd file'],
+# FIXME: remove
+                           # ['ntb', int, 0, 'Apply PBC conditions?'],
+                           # ['cut', float, 999.0, 'Nonbonded cutoff in Angstroms'],
+                           # ['nsnb', int, 99999, 'Determines the frequency of nonbonded list updates when igb=0 and '
+                           #                      'nbflag=0'],
+                           # ['imin', int, 5, 'Decide whether to perform MD, Minimization, or Trajectory '
+                           #                  'Post-Processing'],
+                           ['pb_maxcyc', int, 1, 'The maximum number of cycles of minimization'],
+# FIXME: remove
+                           # ['ioutfm', int, 0, 'The format of coordinate and velocity trajectory files (mdcrd, mdvel '
+                           #                    'and inptraj).'],
+                           # ['ntx', int, 1, 'Option to read the initial coordinates, velocities and box size from the '
+                           #                 'inpcrd file'],
                            ['inp', int, 2, 'Nonpolar solvation method'],
                            ['smoothopt', int, 1, 'Instructs PB how to set up dielectric values for finite-difference '
                                                  'grid edges that are located across the solute/solvent dielectric '
@@ -505,7 +506,7 @@ input_file.addNamelist('pb', 'pb',
                            ['cutfd', float, 5.0, 'Cutoff for finite-difference interactions'],
                            ['ipb', int, 2, 'Dielectric model for PB'],
                            ['sander_apbs', int, 0, 'Use sander.APBS?'],
-                           ['pbtemp', float, 300, 'Temperature (in K) used for the PB equation'],
+                           # ['pbtemp', float, 300, 'Temperature (in K) used for the PB equation'],
                            ['arcres', float, 0.25, 'The resolution (Å) to compute solvent accessible arcs'],
                            ['mprob', float, 2.70, 'Membrane probe radius in Å'],
                            ['nbuffer', float, 0, 'Sets how far away (in grid units) the boundary of the finite '
@@ -513,9 +514,10 @@ input_file.addNamelist('pb', 'pb',
                            ['npbgrid', int, 1, 'Sets how often the finite-difference grid is regenerated'],
                            ['scalec', int, 0, 'Option to compute reaction field energy and forces'],
                            ['nsnba', int, 1, 'Sets how often atom-based pairlist is generated'],
-                           ['phiout', int, 0, 'output spatial distribution of electrostatic potential '
-                                              'for visualization?'],
-                           ['phiform', int, 0, 'Controls the format of the electrostatic potential file'],
+# FIXME: remove
+                           # ['phiout', int, 0, 'output spatial distribution of electrostatic potential '
+                           #                    'for visualization?'],
+                           # ['phiform', int, 0, 'Controls the format of the electrostatic potential file'],
                            ['decompopt', int, 2, 'Option to select different decomposition schemes when INP = 2'],
                            ['use_rmin', int, 1, 'The option to set up van der Waals radii'],
                            ['vprob', float, 1.300, 'Solvent probe radius for molecular volume (the volume enclosed by '

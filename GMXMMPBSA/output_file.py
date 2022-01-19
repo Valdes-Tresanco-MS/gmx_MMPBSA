@@ -220,7 +220,7 @@ def write_stability_output(app):
     final_output.add_comment('All units are reported in kcal/mole.')
     if INPUT['nmoderun'] or INPUT['qh_entropy'] or INPUT['interaction_entropy' or INPUT['c2_entropy']]:
         final_output.add_comment('All entropy results have units kcal/mol')
-        final_output.add_comment('(Temperature for NMODE and QH is %.2f K)\n' % INPUT['temp'])
+        final_output.add_comment('(Temperature for NMODE and QH is %.2f K)\n' % INPUT['temperature'])
         final_output.add_comment('(Temperature for IE and C2 entropy is %.2f K)\n' % INPUT['temperature'])
     if INPUT['ifqnt']:
         final_output.add_comment(('QM/MM: Residues %s are treated with the ' +
@@ -405,7 +405,7 @@ def write_binding_output(app):
     final_output.add_comment('All units are reported in kcal/mole.')
     if INPUT['nmoderun'] or INPUT['qh_entropy'] or INPUT['interaction_entropy' or INPUT['c2_entropy']]:
         final_output.add_comment('All entropy results have units kcal/mol\n' +
-                                 '(Temperature for NMODE and QH is %.2f K)\n' % INPUT['temp'] +
+                                 '(Temperature for NMODE and QH is %.2f K)\n' % INPUT['temperature'] +
                                  '(Temperature for IE and C2 is %.2f K)\n' % INPUT['temperature'])
     if INPUT['ifqnt']:
         final_output.add_comment(('QM/MM: Residues %s are treated with the ' +

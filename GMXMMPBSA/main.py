@@ -615,7 +615,7 @@ class MMPBSA_App(object):
             else:
                 write_decomp_binding_output(self.FILES, self.INPUT, self.mpi_size,
                                             self.normal_system, self.mutant_system, self.mut_str, self.pre)
-        if self.INPUT['save_mode']:
+        if self.INPUT['keep_files'] in [1, 2]:
             # Store the calc_types data in a h5 file
             Data2h5(self)
         self.timer.stop_timer('output')
@@ -773,7 +773,7 @@ class MMPBSA_App(object):
                                     self.INPUT['thermo'] in ['gf', 'both'])
 
         # Default temperature
-        self.INPUT['temp'] = 298.15
+        # self.INPUT['temp'] = 298.15
 
     def check_for_bad_input(self, INPUT=None):
         """ Checks for bad user input """
@@ -905,6 +905,8 @@ class MMPBSA_App(object):
                               f" {self.INPUT['nmstartframe']} to 1")
             self.INPUT['nmstartframe'] = 1
 
+        # set the pbtemp = temperature
+        self.INPUT['pbtemp'] = self.INPUT['temperature']
 
     def remove(self, flag):
         """ Removes temporary files """
@@ -928,9 +930,9 @@ class MMPBSA_App(object):
         # Quasi-harmonic analysis is a special-case, so handle that separately
         if INPUT['qh_entropy']:
             if not INPUT['mutant_only']:
-                self.calc_types['qh'] = QHout(self.pre + 'cpptraj_entropy.out', INPUT['temp'])
+                self.calc_types['qh'] = QHout(self.pre + 'cpptraj_entropy.out', INPUT['temperature'])
             if INPUT['alarun']:
-                self.calc_types.mutant['qh'] = QHout(self.pre + 'mutant_cpptraj_entropy.out', INPUT['temp'])
+                self.calc_types.mutant['qh'] = QHout(self.pre + 'mutant_cpptraj_entropy.out', INPUT['temperature'])
         # Set BindingClass based on whether it's a single or multiple trajectory
         # analysis
         if self.traj_protocol == 'STP':
