@@ -420,7 +420,7 @@ input_file.addNamelist('general', 'general',
                            # ['search_path', str, '', 'Look for intermediate programs in all of PATH'],
                            ['solvated_trajectory', int, 1, 'Define if it is necessary to cleanup the trajectories'],
 # FIXME: strip_mask -> para GROMACS se hace con la variable solvated_trajectory
-#                          ['strip_mask', str, strip_mask, 'Amber mask to strip from solvated prmtop'],
+                           ['strip_mask', str, strip_mask, 'Amber mask to strip from solvated prmtop'],
                            ['temperature', float, 298.15, 'Temperature to calculate Binding Free Energy '
                                                           'from Ki and interaction entropy'],
                            ['verbose', int, 1, 'How many energy terms to print in the final output']
