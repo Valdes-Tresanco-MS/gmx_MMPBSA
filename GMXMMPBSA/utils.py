@@ -154,12 +154,12 @@ def eq_strs(struct1, struct2):
     else:
         d_res = []
         for res1, res2 in zip(struct1.residues, struct2.residues):
-            r1info = [res1.number, _get_restype(res1.name), res1.insertion_code]
+            r1info = [res1.number + 1, _get_restype(res1.name), res1.insertion_code]
             r2info = [res2.number, _get_restype(res2.name), res2.insertion_code]
             if r1info != r2info:
-                d_res.append([':'.join(r1info), ':'.join(r2info)])
+                d_res.append([':'.join(str(x) for x in r1info), ':'.join(str(x) for x in r2info)])
         if d_res:
-            return 'res_info', d_res, _
+            return 'res_info', d_res, None
 
 
 def check_str(structure, ref=False):
