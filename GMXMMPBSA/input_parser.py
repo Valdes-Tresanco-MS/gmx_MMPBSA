@@ -64,13 +64,15 @@ class Variable(object):
     def help_str(self):
         """ returns the string [<name> = <value>.... # description] """
         if self.datatype is str:
-            valstring = f'  {self.name:20s} = "{self.value:s}"'
+            valstring = f'{self.name:20s} = "{self.value:s}"'
         elif self.datatype is list:
             v = ','.join(self.value)
-            valstring = f'  {self.name:20s} = "{v:s}"'
+            valstring = f'{self.name:20s} = "{v:s}"'
         else:
-            valstring = f'  {self.name:20s} = {self.value}'
-        return '  # %s\n' % self.description + valstring
+            valstring = f'{self.name:20s} = {self.value}'
+        length = 70
+        valstring += ' ' + ' ' * (length - len(valstring) - 2) + ' '
+        return valstring + '# %s' % self.description
 
     def __eq__(self, teststring):
         """ Determines if a variable string matches this variable """
@@ -151,7 +153,7 @@ class Namelist(object):
         retstr = '&%s\n' % self.full_name
         for variable in self.variables:
             if variable is self.trigger: continue
-            retstr += '%s\n' % self.variables[variable].help_str()
+            retstr += '  %s\n' % self.variables[variable].help_str()
         return retstr + '/'
 
 
