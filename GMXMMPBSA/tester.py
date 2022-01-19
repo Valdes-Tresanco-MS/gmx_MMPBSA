@@ -34,10 +34,10 @@ def run_process(system, sys_name, args):
     logging.info(f"{system[1]:60}{'RUNNING':>10}")
     os.chdir(system[0])
     system_log = open(f'{sys_name}.log', 'a')
-    g_p = subprocess.Popen(args, stdout=system_log, stderr=system_log)
+    g_p = subprocess.Popen(args, stdout=system_log, stderr=subprocess.PIPE)
     if g_p.wait():
-        return sys_name, False
-    return sys_name, True
+        return sys_name, g_p.stderr.read().decode("utf-8")
+    return sys_name, 0
 
 
 def _get_frames(input_file: Path):
@@ -126,7 +126,7 @@ def run_test(parser):
         with open(test_sys[x][0].joinpath('README.md')) as readme:
             for line in readme:
                 if 'gmx_MMPBSA -O -i mmpbsa.in' in line:
-                    command = (['mpirun', '--use-hwthread-cpus', '-np',
+                    command = (['mpirun', '-np',
                                 f'{req_cpus[x] if req_cpus[x] <= parser.num_processors else parser.num_processors}']
                                + [gmx_mmpbsa_path, 'MPI'] + line.strip('\n').split()[1:] + ['-nogui'])
                     TASKS.append((test_sys[x], x, command))
@@ -134,21 +134,21 @@ def run_test(parser):
     result_list = []
     logging.info(f"{'Example':^60}{'STATE':>10}")
     print(80*'-')
+    exitcode = 0
     c = 1
     with multiprocessing.Pool(1) as pool:
         imap_unordered_it = pool.imap_unordered(calculatestar, TASKS)
         for x in imap_unordered_it:
-            sys_name, result = x
-            if result:
+            sys_name, exitcode = x
+            if exitcode:
+                logging.error(f"{test_sys[sys_name][1]:55}[{c:2}/{len(key_list):2}]{'ERROR':>8}\n"
+                              f"           {exitcode}")
+            else:
                 logging.info(f"{test_sys[sys_name][1]:55}[{c:2}/{len(key_list):2}]{'DONE':>8}")
                 result_list.append(test_sys[sys_name][0])
-            else:
-                logging.error(f"{test_sys[sys_name][1]:55}[{c:2}/{len(key_list):2}]{'ERROR':>8}\n"
-                              f"           Please, check the test log\n"
-                              f"           ({test_sys[sys_name][0].joinpath(f'{sys_name}')}.log)")
             c += 1
 
-    if not parser.nogui:
+    if not parser.nogui and not exitcode:
         print(80 * '-')
         logging.info('Opening gmx_MMPBSA_ana...')
         g_p = subprocess.Popen([gmx_mmpbsa_ana_path, '-f'] + result_list, stdout=subprocess.PIPE,
