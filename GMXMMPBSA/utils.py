@@ -215,8 +215,8 @@ def res2map(indexes, com_file):
     resindex = 1
     proc_res = None
     for i in range(com_len):
-        res = [com_str.atoms[i].residue.chain, com_str.atoms[i].residue.number, com_str.atoms[
-            i].residue.insertion_code]
+        res = [com_str.atoms[i].residue.chain, com_str.atoms[i].residue.number, com_str.atoms[i].residue.name,
+               com_str.atoms[i].residue.insertion_code]
         # We check who owns the residue corresponding to this atom
         if indexes['COM']['COM'][i] in indexes['COM']['REC']:
             # save residue number in the rec list
