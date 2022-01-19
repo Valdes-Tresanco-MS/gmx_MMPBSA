@@ -512,7 +512,7 @@ def write_binding_output(app):
 
         # Now calculate the effect of alanine scanning
         if INPUT['alarun'] and not INPUT['mutant_only']:
-            davg, dstd = _get_diff(nm_sys_mut['Total'], nm_sys_mut['Total'])
+            davg, dstd = _get_diff(nm_sys_mut['Total'], nm_sys_norm['Total'])
             final_output.add_section(f'\nRESULT OF ALANINE SCANNING ({mut_str}):\n'
                                       f'ΔΔS binding = {davg:9.4f} +/- {dstd:9.4f}\n')
 
@@ -551,7 +551,7 @@ def write_binding_output(app):
                 final_output.add_section(f"Using C2 Entropy Approximation:\n"
                                          f"ΔG binding = {c2_davg:9.4f} +/- {c2_dstd:7.4f}\n")
             if INPUT['nmoderun']:
-                nm_davg, nm_dstd = _get_diff(sys_norm, nm_sys_norm)
+                nm_davg, nm_dstd = _get_diff(sys_norm.data['DELTA TOTAL'], nm_sys_norm['Total'])
                 final_output.add_section('Using Normal Mode Entropy Approximation:\n'
                                          f"ΔG binding = {nm_davg:9.4f} +/- {nm_dstd:7.4f}\n")
 
@@ -578,7 +578,7 @@ def write_binding_output(app):
                 final_output.add_section(f"Using C2 Entropy Approximation:\n"
                                          f"ΔG binding = {mc2_davg:9.4f} +/- {mc2_dstd:7.4f}\n")
             if INPUT['nmoderun']:
-                mnm_davg, mnm_dstd = _get_diff(sys_mut, nm_sys_mut)
+                mnm_davg, mnm_dstd = _get_diff(sys_mut['DELTA TOTAL'], nm_sys_mut['Total'])
                 final_output.add_section('Using Normal Mode Entropy Approximation:\n'
                                          f"ΔG binding = {mnm_davg:9.4f} +/- {mnm_dstd:7.4f}\n")
 
