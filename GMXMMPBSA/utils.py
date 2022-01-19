@@ -155,7 +155,7 @@ def eq_strs(struct1, struct2):
         return
 
 
-def check_str(structure, ref=False):
+def check_str(structure, ref=False, skip=False):
     if isinstance(structure, str):
         refstr = parmed.read_PDB(structure)
     else:
@@ -189,8 +189,14 @@ def check_str(structure, ref=False):
             if res_id_list.count(x) > 1:
                 duplicates.append(f'{chain}:{resl[c][0]}:{resl[c][1]}:{resl[c][2]}')
     if duplicates:
-        GMXMMPBSA_ERROR(f'The {"reference" if ref else "complex"} structure used is inconsistent. The following '
-                        f'residues are duplicates:\n {", ".join(duplicates)}')
+        if ref:
+            GMXMMPBSA_ERROR(f'The reference structure used is inconsistent. The following residues are duplicates:\n'
+                            f' {", ".join(duplicates)}')
+        elif skip:
+            return refstr
+        else:
+            logging.warning(f'The complex structure used is inconsistent. The following residues are duplicates:\n'
+                            f' {", ".join(duplicates)}')
     return refstr
 
 

@@ -1055,8 +1055,8 @@ class CheckMakeTop:
     def check_structures(self, com_str, rec_str=None, lig_str=None):
         logging.info('Checking the structures consistency...')
         check_str(com_str)
-        check_str(rec_str)
-        check_str(lig_str)
+        check_str(rec_str, skip=True)
+        check_str(lig_str, skip=True)
 
         if self.FILES.reference_structure:
             logging.info('Assigning chain ID to structures files according to the reference structure...')
