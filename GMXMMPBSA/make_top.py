@@ -225,7 +225,7 @@ class CheckMakeTop:
             logging.debug('Running command: ' + (' '.join(rec_echo_args)) + ' | ' + ' '.join(pdbrec_args))
             cp2 = subprocess.Popen(pdbrec_args, stdin=cp1.stdout, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             if cp2.wait():  # if it quits with return code != 0
-                GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(prog), self.FILES.complex_trajs[0]))
+                GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(comprog), self.FILES.complex_trajs[0]))
             log_subprocess_output(cp2)
         # check if stability
         if self.FILES.stability and (
@@ -1178,7 +1178,21 @@ class CheckMakeTop:
     @staticmethod
     def molstr(data):
         if type(data) == str:
-            structure = parmed.read_PDB(data)
+            # data is a pdb file
+            pdb_file = data
+            try:
+                with open(pdb_file) as fo:
+                    fo = fo.readlines()
+                    for line in fo:
+                        if 'MODEL' in line or 'ENDMDL' in line:
+                            fo.remove(line)
+                with open(pdb_file, 'w') as fw:
+                    for x in fo:
+                        fw.write(x)
+            except IOError as e:
+                GMXMMPBSA_ERROR('', str(e))
+
+            structure = parmed.read_PDB(pdb_file)
         else:
             # data is Structure, AmberParm, ChamberParm or GromacsTopologyFile. This make a copy
             structure = data.__copy__()
