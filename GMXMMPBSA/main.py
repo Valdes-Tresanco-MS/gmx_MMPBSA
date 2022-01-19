@@ -638,13 +638,15 @@ class MMPBSA_App(object):
 
         self.remove(self.INPUT['keep_files'])
 
-        logging.info('\nThank you for using gmx_MMPBSA. Please cite us if you publish this work with this '
-                     'reference:\n    Mario S. Valdés Tresanco, Mario E. Valdes-Tresanco, Pedro A. Valiente, & '
-                     'Ernesto Moreno Frías \n    gmx_MMPBSA (Version v1.4.3). '
-                     'Zenodo. http://doi.org/10.5281/zenodo.4569307'
-                     '\n\nAlso consider citing MMPBSA.py\n    Miller III, B. R., McGee Jr., '
-                     'T. D., Swails, J. M. Homeyer, N. Gohlke, H. and Roitberg, A. E.\n    J. Chem. Theory Comput., '
-                     '2012, 8 (9) pp 3314-3321\n')
+        logging.info('\n Thank you for using gmx_MMPBSA. Please consider supporting gmx_MMPBSA by citing our publication:'
+                     '\n Valdés-Tresanco, M.S., Valdés-Tresanco, M.E., Valiente, P.A. and Moreno E. '
+                     '\n gmx_MMPBSA: A New Tool to Perform End-State Free Energy Calculations with GROMACS. '
+                     '\n J Chem Theory Comput., 2021, 17 (10):6281-6291. Epub 2021 Sep 29. PMID: 34586825.'
+                     '\n https://pubs.acs.org/doi/10.1021/acs.jctc.1c00645'
+                     '\n\nAlso consider citing MMPBSA.py:'
+                     '\n Miller III, B. R., McGee Jr., T. D., Swails, J. M. Homeyer, N. Gohlke, H. and Roitberg, A. E.'
+                     '\n MMPBSA.py: An Efficient Program for End-State Free Energy Calculations.'
+                     '\n J. Chem. Theory Comput., 2012, 8 (9) pp 3314-3321\n')
         self.MPI.Finalize()
 
         end = 0
