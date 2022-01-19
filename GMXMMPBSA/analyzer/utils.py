@@ -14,11 +14,11 @@
 #  or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License    #
 #  for more details.                                                           #
 # ##############################################################################
-
+import logging
 import math
 from typing import Union
 
-from GMXMMPBSA.exceptions import GMXMMPBSA_ERROR, GMXMMPBSA_WARNING
+from GMXMMPBSA.exceptions import GMXMMPBSA_ERROR
 import pandas as pd
 import numpy as np
 from queue import Queue
@@ -208,7 +208,7 @@ def get_files(parser_args):
         parser_args.files = [Path('.')]
     for cf in parser_args.files:
         if not cf.exists():
-            GMXMMPBSA_WARNING(f'{cf} not found')
+            logging.warning(f'{cf} not found')
             continue
         if cf.is_dir():
             recursive_files = []
@@ -218,12 +218,12 @@ def get_files(parser_args):
                 recursive_files.extend(cf.absolute().glob('*_info'))
             for rf in recursive_files:
                 if rf in info_files:
-                    GMXMMPBSA_WARNING(f'{rf} is duplicated and will be ignored')
+                    logging.warning(f'{rf} is duplicated and will be ignored')
                     continue
                 info_files.append(rf)
         else:
             if cf in info_files:
-                GMXMMPBSA_WARNING(f'{cf} is duplicated and will be ignored')
+                logging.warning(f'{cf} is duplicated and will be ignored')
                 continue
             info_files.append(cf)
     if not len(info_files):
