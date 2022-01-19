@@ -158,17 +158,26 @@ class CheckMakeTop:
 
         logging.info(f'Normal Complex: Saving group {rec_group}_{lig_group} in {self.FILES.complex_index} file as '
                      f'{self.complex_str_file}')
-        trjconv_echo_args = ['echo', 'GMXMMPBSA_REC_GMXMMPBSA_LIG']
-        c3 = subprocess.Popen(trjconv_echo_args, stdout=subprocess.PIPE)
-        # we extract the pdb from the first frame of trajs to make amber topology
-        trjconv_args = self.trjconv + ['-f', self.FILES.complex_trajs[0], '-s', self.FILES.complex_tpr, '-o',
-                                       self.complex_str_file, '-n', self.FILES.complex_index, '-dump', '0']
+        # avoid PBC and not chain ID problems
+        pdbcom_echo_args = ['echo', 'GMXMMPBSA_REC_GMXMMPBSA_LIG']
+        c3 = subprocess.Popen(pdbcom_echo_args, stdout=subprocess.PIPE)
+
+        str_format = 'tpr' if self.FILES.complex_tpr[-3:] == 'tpr' else 'pdb'
+        if str_format == 'tpr':
+            comprog = self.trjconv
+            # we extract the pdb from the first frame of trajs to make amber topology
+            pdbcom_args = self.trjconv + ['-f', self.FILES.complex_trajs[0], '-s', self.FILES.complex_tpr, '-o',
+                                           self.complex_str_file, '-n', self.FILES.complex_index, '-dump', '0']
+        else:
+            comprog = self.editconf
+            pdbcom_args = self.editconf + ['-f', self.FILES.complex_tpr, '-n', self.FILES.complex_index, '-o',
+                                             self.complex_str_file]
         if self.INPUT['debug_printlevel']:
-            logging.info('Running command: ' + (' '.join(trjconv_echo_args)) + ' | ' + ' '.join(trjconv_args))
-        logging.debug('Running command: ' + (' '.join(trjconv_echo_args)) + ' | ' + ' '.join(trjconv_args))
-        c4 = subprocess.Popen(trjconv_args, stdin=c3.stdout, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            logging.info('Running command: ' + (' '.join(pdbcom_echo_args)) + ' | ' + ' '.join(pdbcom_args))
+        logging.debug('Running command: ' + (' '.join(pdbcom_echo_args)) + ' | ' + ' '.join(pdbcom_args))
+        c4 = subprocess.Popen(pdbcom_args, stdin=c3.stdout, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         if c4.wait():  # if it quits with return code != 0
-            GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(self.trjconv), self.FILES.complex_trajs[0]))
+            GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(comprog), self.FILES.complex_trajs[0]))
         log_subprocess_output(c4)
         # Put receptor and ligand (explicitly defined) to avoid overwrite them
         # check if ligand is not protein. In any case, non-protein ligand always most be processed
@@ -204,15 +213,19 @@ class CheckMakeTop:
                             'residues')
             rec_echo_args = ['echo', '{}'.format(rec_group)]
             cp1 = subprocess.Popen(rec_echo_args, stdout=subprocess.PIPE)
-            # we extract the pdb from the first frame of trajs to make amber topology
-            trjconv_args = self.trjconv + ['-f', self.FILES.complex_trajs[0], '-s', self.FILES.complex_tpr, '-o',
-                                           'rec_temp.pdb', '-n', self.FILES.complex_index, '-dump', '0']
+            if str_format == 'tpr':
+                # we extract the pdb from the first frame of trajs to make amber topology
+                pdbrec_args = self.trjconv + ['-f', self.FILES.complex_trajs[0], '-s', self.FILES.complex_tpr, '-o',
+                                               'rec_temp.pdb', '-n', self.FILES.complex_index, '-dump', '0']
+            else:
+                pdbrec_args = self.editconf + ['-f', self.FILES.complex_tpr, '-n', self.FILES.complex_index, '-o',
+                                               'rec_temp.pdb']
             if self.INPUT['debug_printlevel']:
-                logging.info('Running command: ' + (' '.join(rec_echo_args)) + ' | ' + ' '.join(trjconv_args))
-            logging.debug('Running command: ' + (' '.join(rec_echo_args)) + ' | ' + ' '.join(trjconv_args))
-            cp2 = subprocess.Popen(trjconv_args, stdin=cp1.stdout, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                logging.info('Running command: ' + (' '.join(rec_echo_args)) + ' | ' + ' '.join(pdbrec_args))
+            logging.debug('Running command: ' + (' '.join(rec_echo_args)) + ' | ' + ' '.join(pdbrec_args))
+            cp2 = subprocess.Popen(pdbrec_args, stdin=cp1.stdout, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             if cp2.wait():  # if it quits with return code != 0
-                GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(self.trjconv), self.FILES.complex_trajs[0]))
+                GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(prog), self.FILES.complex_trajs[0]))
             log_subprocess_output(cp2)
         # check if stability
         if self.FILES.stability and (
@@ -225,33 +238,46 @@ class CheckMakeTop:
             logging.info('A receptor structure file was defined. Using MT approach...')
             logging.info(f'Normal receptor: Saving group {self.FILES.receptor_group} in {self.FILES.receptor_index} '
                          f'file as {self.receptor_str_file}')
-            trjconv_echo_args = ['echo', '{}'.format(self.FILES.receptor_group)]
-            p1 = subprocess.Popen(trjconv_echo_args, stdout=subprocess.PIPE)
-            # we extract a pdb from structure file to make amber topology
-            trjconv_args = self.trjconv + ['-f', self.FILES.receptor_trajs[0],'-s', self.FILES.receptor_tpr, '-o',
-                                           self.receptor_str_file, '-n', self.FILES.receptor_index, '-dump', '0']
+            pdbrec_echo_args = ['echo', '{}'.format(self.FILES.receptor_group)]
+            p1 = subprocess.Popen(pdbrec_echo_args, stdout=subprocess.PIPE)
+            str_format = 'tpr' if self.FILES.receptor_tpr[-3:] == 'tpr' else 'pdb'
+            if str_format == 'tpr':
+                prog = self.trjconv
+                # we extract a pdb from structure file to make amber topology
+                pdbrec_args = self.trjconv + ['-f', self.FILES.receptor_trajs[0],'-s', self.FILES.receptor_tpr, '-o',
+                                               self.receptor_str_file, '-n', self.FILES.receptor_index, '-dump', '0']
+            else:
+                prog = self.editconf
+                pdbrec_args = self.editconf + ['-f', self.FILES.receptor_tpr, '-n', self.FILES.receptor_index, '-o',
+                                               self.receptor_str_file]
+
             if self.INPUT['debug_printlevel']:
-                logging.info('Running command: ' + (' '.join(trjconv_echo_args)) + ' | ' + ' '.join(trjconv_args))
-            logging.debug('Running command: ' + (' '.join(trjconv_echo_args)) + ' | ' + ' '.join(trjconv_args))
-            cp2 = subprocess.Popen(trjconv_args, stdin=p1.stdout, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                logging.info('Running command: ' + (' '.join(pdbrec_echo_args)) + ' | ' + ' '.join(pdbrec_args))
+            logging.debug('Running command: ' + (' '.join(pdbrec_echo_args)) + ' | ' + ' '.join(pdbrec_args))
+            cp2 = subprocess.Popen(pdbrec_args, stdin=p1.stdout, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             if cp2.wait():  # if it quits with return code != 0
-                GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(self.trjconv), self.FILES.receptor_trajs[0]))
+                GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(prog), self.FILES.receptor_trajs[0]))
         else:
             logging.info('No receptor structure file was defined. Using ST approach...')
             logging.info('Using receptor structure from complex to generate AMBER topology')
             logging.info('Normal Complex: Saving group {} in {} file as {}'.format(
                 rec_group, self.FILES.complex_index, self.receptor_str_file))
-            trjconv_echo_args = ['echo', '{}'.format(rec_group)]
-            cp1 = subprocess.Popen(trjconv_echo_args, stdout=subprocess.PIPE)
-            # we extract a pdb from structure file to make amber topology
-            trjconv_args = self.trjconv + ['-f', self.FILES.complex_trajs[0], '-s', self.FILES.complex_tpr, '-o',
-                                           self.receptor_str_file, '-n', self.FILES.complex_index, '-dump', '0']
+            pdbrec_echo_args = ['echo', '{}'.format(rec_group)]
+            cp1 = subprocess.Popen(pdbrec_echo_args, stdout=subprocess.PIPE)
+            str_format = 'tpr' if self.FILES.complex_tpr[-3:] == 'tpr' else 'pdb'
+            if str_format == 'tpr':
+                # we extract a pdb from structure file to make amber topology
+                pdbrec_args = self.trjconv + ['-f', self.FILES.complex_trajs[0], '-s', self.FILES.complex_tpr, '-o',
+                                               self.receptor_str_file, '-n', self.FILES.complex_index, '-dump', '0']
+            else:
+                pdbrec_args = self.editconf + ['-f', self.FILES.complex_tpr, '-n', self.FILES.complex_index, '-o',
+                                               self.receptor_str_file]
             if self.INPUT['debug_printlevel']:
-                logging.info('Running command: ' + (' '.join(trjconv_echo_args)) + ' | ' + ' '.join(trjconv_args))
-            logging.debug('Running command: ' + (' '.join(trjconv_echo_args)) + ' | ' + ' '.join(trjconv_args))
-            cp2 = subprocess.Popen(trjconv_args, stdin=cp1.stdout, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                logging.info('Running command: ' + (' '.join(pdbrec_echo_args)) + ' | ' + ' '.join(pdbrec_args))
+            logging.debug('Running command: ' + (' '.join(pdbrec_echo_args)) + ' | ' + ' '.join(pdbrec_args))
+            cp2 = subprocess.Popen(pdbrec_args, stdin=cp1.stdout, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             if cp2.wait():  # if it quits with return code != 0
-                GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(self.trjconv), self.FILES.complex_trajs[0]))
+                GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(comprog), self.FILES.complex_trajs[0]))
         log_subprocess_output(cp2)
         # ligand
         # # check consistence
@@ -261,34 +287,49 @@ class CheckMakeTop:
             logging.info('Normal Ligand: Saving group {} in {} file as {}'.format(
                 self.FILES.ligand_group, self.FILES.ligand_index, self.ligand_str_file))
             # wt ligand
-            trjconv_echo_args = ['echo', '{}'.format(self.FILES.ligand_group)]
-            l1 = subprocess.Popen(trjconv_echo_args, stdout=subprocess.PIPE)
-            # we extract a pdb from structure file to make amber topology
-            trjconv_args = self.trjconv + ['-f', self.FILES.ligand_trajs[0], '-s', self.FILES.ligand_tpr, '-o',
-                                           self.ligand_str_file, '-n', self.FILES.ligand_index, '-dump', '0']
+            pdblig_echo_args = ['echo', '{}'.format(self.FILES.ligand_group)]
+            l1 = subprocess.Popen(pdblig_echo_args, stdout=subprocess.PIPE)
+            str_format = 'tpr' if self.FILES.ligand_tpr[-3:] == 'tpr' else 'pdb'
+            if str_format == 'tpr':
+                prog = self.trjconv
+                # we extract a pdb from structure file to make amber topology
+                pdblig_args = self.trjconv + ['-f', self.FILES.ligand_trajs[0], '-s', self.FILES.ligand_tpr, '-o',
+                                               self.ligand_str_file, '-n', self.FILES.ligand_index, '-dump', '0']
+            else:
+                prog = self.editconf
+                pdblig_args = self.editconf + ['-f', self.FILES.ligand_tpr, '-n', self.FILES.ligand_index, '-o',
+                                               self.ligand_str_file]
             if self.INPUT['debug_printlevel']:
-                logging.info('Running command: ' + (' '.join(trjconv_echo_args)) + ' | ' + ' '.join(trjconv_args))
-            logging.debug('Running command: ' + (' '.join(trjconv_echo_args)) + ' | ' + ' '.join(trjconv_args))
-            l2 = subprocess.Popen(trjconv_args, stdin=l1.stdout, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                logging.info('Running command: ' + (' '.join(pdblig_echo_args)) + ' | ' + ' '.join(pdblig_args))
+            logging.debug('Running command: ' + (' '.join(pdblig_echo_args)) + ' | ' + ' '.join(pdblig_args))
+            l2 = subprocess.Popen(pdblig_args, stdin=l1.stdout, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             if l2.wait():  # if it quits with return code != 0
-                GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(self.trjconv), self.FILES.ligand_trajs[0]))
+                GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(prog), self.FILES.ligand_trajs[0]))
         else:
             # wt complex ligand
             logging.info('No ligand structure file was defined. Using ST approach...')
             logging.info('Using ligand structure from complex to generate AMBER topology')
             logging.info('Normal ligand: Saving group {} in {} file as {}'.format(lig_group, self.FILES.complex_index,
                                                                                   self.ligand_str_file))
-            trjconv_echo_args = ['echo', '{}'.format(lig_group)]
-            l1 = subprocess.Popen(trjconv_echo_args, stdout=subprocess.PIPE)
+            pdblig_echo_args = ['echo', '{}'.format(lig_group)]
+            l1 = subprocess.Popen(pdblig_echo_args, stdout=subprocess.PIPE)
+
+            str_format = 'tpr' if self.FILES.complex_tpr[-3:] == 'tpr' else 'pdb'
+            if str_format == 'tpr':
+                # we extract a pdb from structure file to make amber topology
+                pdblig_args = self.trjconv + ['-f', self.FILES.complex_trajs[0], '-s', self.FILES.complex_tpr, '-o',
+                                              self.ligand_str_file, '-n', self.FILES.complex_index, '-dump', '0']
+            else:
+                pdblig_args = self.editconf + ['-f', self.FILES.complex_tpr, '-n', self.FILES.complex_index, '-o',
+                                               self.ligand_str_file]
+
             # we extract a pdb from structure file to make amber topology
-            trjconv_args = self.trjconv + ['-f', self.FILES.complex_trajs[0], '-s', self.FILES.complex_tpr, '-o',
-                                           self.ligand_str_file, '-n', self.FILES.complex_index, '-dump', '0']
             if self.INPUT['debug_printlevel']:
-                logging.info('Running command: ' + (' '.join(trjconv_echo_args)) + ' | ' + ' '.join(trjconv_args))
-            logging.debug('Running command: ' + (' '.join(trjconv_echo_args)) + ' | ' + ' '.join(trjconv_args))
-            l2 = subprocess.Popen(trjconv_args, stdin=l1.stdout, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                logging.info('Running command: ' + (' '.join(pdblig_echo_args)) + ' | ' + ' '.join(pdblig_args))
+            logging.debug('Running command: ' + (' '.join(pdblig_echo_args)) + ' | ' + ' '.join(pdblig_args))
+            l2 = subprocess.Popen(pdblig_args, stdin=l1.stdout, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             if l2.wait():  # if it quits with return code != 0
-                GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(self.trjconv), self.FILES.complex_trajs[0]))
+                GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(comprog), self.FILES.complex_trajs[0]))
         log_subprocess_output(l2)
         # check for IE variable
         if (self.FILES.receptor_tpr or self.FILES.ligand_tpr) and (
