@@ -22,15 +22,14 @@ import subprocess
 import shutil
 import multiprocessing
 from pathlib import Path
-from queue import Queue
 from GMXMMPBSA.exceptions import GMXMMPBSA_ERROR
-from GMXMMPBSA.utils import log_subprocess_output
-
+import time
 def calculatestar(args):
     return run_process(*args)
 
 
 def run_process(system, sys_name, args):
+    time.sleep(0.1)
     logging.info(f"{system[1]:60}{'RUNNING':>10}")
     os.chdir(system[0])
     system_log = open(f'{sys_name}.log', 'a')
