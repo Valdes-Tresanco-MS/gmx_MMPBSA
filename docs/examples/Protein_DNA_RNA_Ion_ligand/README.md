@@ -62,10 +62,12 @@ in a reasonable amount of time. Feel free to change the parameters
 according to what is better for your system.
 
 &general
-verbose=2, forcefields="oldff/leaprc.ff99SBildn,leaprc.gaff", 
+sys_name="Prot-DNA-RNA-ION-Lig",
+startframe=1
+endframe=10
+verbose=2, forcefields="oldff/leaprc.ff99SBildn,leaprc.gaff"
 PBRadii=4, ions_parameters=1
 /
-
 &gb
 igb=8, saltcon=0.150, intdiel=10
 /

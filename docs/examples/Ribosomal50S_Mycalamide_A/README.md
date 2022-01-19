@@ -55,7 +55,7 @@ perform more expensive calculations in a reasonable amount
 of time. Feel free to change the parameters according to 
 what is better for your system.
 
-&general
+sys_name="Ribo-MycalamideA",
 verbose=2,
 /
 &gb

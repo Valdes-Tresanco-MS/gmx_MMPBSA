@@ -54,9 +54,10 @@ in a reasonable amount of time. Feel free to change the parameters
 according to what is better for your system.
 
 &general
-startframe=5, endframe=21,
+sys_name="3D-RISM",
+startframe=5,
+endframe=8,
 /
-
 &rism
 polardecomp=0, thermo="gf"
 /

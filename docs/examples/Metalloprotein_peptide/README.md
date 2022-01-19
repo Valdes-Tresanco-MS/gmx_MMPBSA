@@ -54,10 +54,11 @@ in a reasonable amount of time. Feel free to change the parameters
 according to what is better for your system.
 
 &general
-endframe=5, verbose=2,
-forcefields="oldff/leaprc.ff99SB", ions_parameters=1,
+sys_name="Metalloprotein-peptide",
+startframe=1
+endframe=4,
+verbose=2, ions_parameters=1,
 /
-
 &gb
 igb=2, saltcon=0.150,
 /

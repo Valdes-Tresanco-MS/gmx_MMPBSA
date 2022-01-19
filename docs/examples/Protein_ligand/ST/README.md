@@ -63,10 +63,12 @@ in a reasonable amount of time. Feel free to change the parameters
 according to what is better for your system.
 
 &general
-startframe=5, endframe=20, verbose=2,
+sys_name="Prot-Lig-ST",
+startframe=5,
+endframe=14,
+verbose=2,
 forcefields="oldff/leaprc.ff99SB,leaprc.gaff"
 /
-
 &gb
 igb=5, saltcon=0.150,
 /

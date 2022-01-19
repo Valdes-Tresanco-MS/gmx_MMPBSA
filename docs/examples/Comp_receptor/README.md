@@ -54,6 +54,7 @@ in a reasonable amount of time. Feel free to change the parameters
 according to what is better for your system.
 
 &general
+sys_name="Complex_receptor",
 verbose=2, forcefields="oldff/leaprc.ff99SBildn",leaprc.gaff"
 PBRadii=4, ions_parameters=1
 /

@@ -56,10 +56,12 @@ in a reasonable amount of time. Feel free to change the parameters
 according to what is better for your system.
 
 &general
-startframe=5, endframe=21, verbose=2, interval=1,
+sys_name="Stability",
+startframe=5,
+endframe=14,
+verbose=2,
 forcefields="oldff/leaprc.ff99SB",
 /
-
 &gb
 igb=2, saltcon=0.150,
 /

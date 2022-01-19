@@ -53,23 +53,27 @@ in a reasonable amount of time. Feel free to change the parameters
 according to what is better for your system.
 
 &general
-#
-startframe=5, endframe=21, verbose=2, interval=1,
-forcefields="oldff/leaprc.ff99SB"
+sys_name="NMode",
+startframe=5,
+endframe=8,
+verbose=2,
+forcefields="oldff/leaprc.ff99SB",
 /
-
 &gb
 igb=2, saltcon=0.150,
 /
 
-Note that nmode will use only a fraction of the no. of frames selected in
-&general variable (21-5/1=16 in this case). This way, nmode will only 
-process 2 frames (15th and 16th frames) #note also that some parameters 
-have been changed to perform the calculation faster (maxcyc=5, drms=100).
-The typical values for these parameters are (maxcyc=50000, drms=0.0001)
+#note that nmode will use only a fraction of the no. of frames selected in 
+#&general variable (21-5/1=16 in this case). This way, nmode will only 
+#process 2 frames (15th and 16th frames)
+#note also that some parameters have been change to perform the calculation 
+#faster (maxcyc=5, drms=100). The typical values for these parameters 
+#are (maxcyc=50000, drms=0.001)
 
 &nmode
-nmstartframe=15, nmendframe=16, nminterval=1,
+nmstartframe=5,
+nmendframe=6,
+nminterval=1,
 maxcyc=5, drms=100,
 /
 ```

@@ -54,16 +54,14 @@ in a reasonable amount of time. Feel free to change the parameters
 according to what is better for your system.
 
 &general
-#
-startframe=5, endframe=21, verbose=2, interval=1,
+sys_name="IE",
+startframe=5,
+endframe=20,
+verbose=2,
 forcefields="oldff/leaprc.ff99SB",
-
-#entropy variable control whether to perform a quasi-harmonic entropy (QH)
-# approximation or the Interaction Entropy approximation
-# (https://pubs.acs.org/doi/abs/10.1021/jacs.6b02682) 
-entropy=2, entropy_seg=25, temperature=298
+#Interaction Entropy (IE)(https://pubs.acs.org/doi/abs/10.1021/jacs.6b02682) approximation
+interaction_entropy=1, ie_segment=25, temperature=298
 /
-
 &gb
 igb=2, saltcon=0.150,
 /
