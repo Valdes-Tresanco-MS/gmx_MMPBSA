@@ -384,20 +384,12 @@ class CheckMakeTop:
         if error_info:
             if error_info[0] == 'atoms':
                 GMXMMPBSA_ERROR(f"The number of atoms in the topology ({error_info[1]}) and the complex structure "
-                            f"({error_info[2]}) are different. Please check this files and verify that they are "
-                                f"correct. Otherwise report the error...")
-            elif error_info[0] == 'residues':
-                GMXMMPBSA_ERROR(f"The number of residues in the topology ({error_info[1]}) and the complex structure "
                                 f"({error_info[2]}) are different. Please check this files and verify that they are "
                                 f"correct. Otherwise report the error...")
             else:
-                text = (f'There is a mismatch between several pairs of residues ({len(error_info[1])}) of the '
-                        f'topology and the structure of the complex.')
-                if len(error_info[1]) < 10:
-                    text += '\nReference | Structure'
-                    for x in error_info[1]:
-                        text += ' <-> '.join(x) + '\n'
-                GMXMMPBSA_ERROR(text)
+                GMXMMPBSA_ERROR(f"The number of residues in the topology ({error_info[1]}) and the complex structure "
+                                f"({error_info[2]}) are different. Please check this files and verify that they are "
+                                f"correct. Otherwise report the error...")
 
         com_top.coordinates = self.complex_str.coordinates
         # try:
@@ -432,18 +424,10 @@ class CheckMakeTop:
                     GMXMMPBSA_ERROR(f"The number of atoms in the topology ({error_info[1]}) and the receptor "
                                     f"structure ({error_info[2]}) are different. Please check this files and verify "
                                     f"that they are correct. Otherwise report the error...")
-                elif error_info[0] == 'residues':
+                else:
                     GMXMMPBSA_ERROR(f"The number of residues in the topology ({error_info[1]}) and the receptor "
                                     f"structure ({error_info[2]}) are different. Please check this files and verify "
                                     f"that they are correct. Otherwise report the error...")
-                else:
-                    text = (f'There is a mismatch between several pairs of residues ({len(error_info[1])}) of the '
-                            f'topology and the structure of the receptor.')
-                    if len(error_info[1]) < 10:
-                        text += '\nReference | Structure'
-                        for x in error_info[1]:
-                            text += ' <-> '.join(x) + '\n'
-                    GMXMMPBSA_ERROR(text)
 
             rec_top.coordinates = self.receptor_str.coordinates
             if rec_top.impropers or rec_top.urey_bradleys or rec_top.cmaps:
@@ -483,18 +467,10 @@ class CheckMakeTop:
                     GMXMMPBSA_ERROR(f"The number of atoms in the topology ({error_info[1]}) and the ligand "
                                     f"structure ({error_info[2]}) are different. Please check this files and verify "
                                     f"that they are correct. Otherwise report the error...")
-                elif error_info[0] == 'residues':
+                else:
                     GMXMMPBSA_ERROR(f"The number of residues in the topology ({error_info[1]}) and the ligand "
                                     f"structure ({error_info[2]}) are different. Please check this files and verify "
                                     f"that they are correct. Otherwise report the error...")
-                else:
-                    text = (f'There is a mismatch between several pairs of residues ({len(error_info[1])}) of the '
-                            f'topology and the structure of the ligand.')
-                    if len(error_info[1]) < 10:
-                        text += '\nReference | Structure'
-                        for x in error_info[1]:
-                            text += ' <-> '.join(x) + '\n'
-                    GMXMMPBSA_ERROR(text)
 
             lig_top.coordinates = self.ligand_str.coordinates
             if lig_top.impropers or lig_top.urey_bradleys or lig_top.cmaps:
