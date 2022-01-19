@@ -36,8 +36,8 @@ def run_process(system, sys_name, args):
     system_log = open(f'{sys_name}.log', 'a')
     g_p = subprocess.Popen(args, stdout=system_log, stderr=system_log)
     if g_p.wait():
-        return sys_name, False
-    return sys_name, True
+        return sys_name, True
+    return sys_name, False
 
 
 def _get_frames(input_file: Path):
@@ -74,15 +74,27 @@ def run_test(parser):
         GMXMMPBSA_ERROR(f'{parser.folder} not exists or is inaccessible. Please define a new folder and try again...')
 
     gmx_mmpbsa_test_folder = parser.folder.joinpath('gmx_MMPBSA_test').absolute()
-    if gmx_mmpbsa_test_folder.exists():
-        shutil.rmtree(gmx_mmpbsa_test_folder)
-    logging.info(f'Cloning gmx_MMPBSA repository in {gmx_mmpbsa_test_folder}')
-    git_p = subprocess.Popen(['git', 'clone', 'https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA',
-                              gmx_mmpbsa_test_folder.as_posix()])
-    if git_p.wait():  # if it quits with return code != 0
-        GMXMMPBSA_ERROR('git failed when try to clone the gmx_MMPBSA repository')
 
-    logging.info('Cloning gmx_MMPBSA repository...Done.')
+    if not gmx_mmpbsa_test_folder.exists() and parser.reuse:
+        GMXMMPBSA_ERROR(f'The examples directory {gmx_mmpbsa_test_folder.exists()} does not exist. To use the -r '
+                        f'option you must first have cloned the repository')
+    if not gmx_mmpbsa_test_folder.exists():
+        clonning = True
+    elif gmx_mmpbsa_test_folder.exists() and not parser.reuse:
+        shutil.rmtree(gmx_mmpbsa_test_folder)
+        clonning = True
+    else:
+        clonning = False
+
+    if clonning:
+        logging.info(f'Cloning gmx_MMPBSA repository in {gmx_mmpbsa_test_folder}')
+        git_p = subprocess.Popen(['git', 'clone', 'https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA',
+                                  gmx_mmpbsa_test_folder.as_posix()])
+        if git_p.wait():  # if it quits with return code != 0
+            GMXMMPBSA_ERROR('git failed when try to clone the gmx_MMPBSA repository')
+
+        logging.info('Cloning gmx_MMPBSA repository...Done.')
+
 
     examples = gmx_mmpbsa_test_folder.joinpath('docs', 'examples')
     test_sys = {
@@ -139,14 +151,15 @@ def run_test(parser):
     with multiprocessing.Pool(1) as pool:
         imap_unordered_it = pool.imap_unordered(calculatestar, TASKS)
         for x in imap_unordered_it:
-            sys_name, result = x
-            if result:
-                logging.info(f"{test_sys[sys_name][1]:55}[{c:2}/{len(key_list):2}]{'DONE':>8}")
-                result_list.append(test_sys[sys_name][0])
-            else:
+            sys_name, exitcode = x
+            if exitcode:
                 logging.error(f"{test_sys[sys_name][1]:55}[{c:2}/{len(key_list):2}]{'ERROR':>8}\n"
                               f"           Please, check the test log\n"
                               f"           ({test_sys[sys_name][0].joinpath(f'{sys_name}')}.log)")
+            else:
+                logging.info(f"{test_sys[sys_name][1]:55}[{c:2}/{len(key_list):2}]{'DONE':>8}")
+                result_list.append(test_sys[sys_name][0])
+
             c += 1
 
     if not parser.nogui and not exitcode:
