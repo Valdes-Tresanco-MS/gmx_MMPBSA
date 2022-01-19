@@ -34,10 +34,10 @@ def run_process(system, sys_name, args):
     logging.info(f"{system[1]:60}{'RUNNING':>10}")
     os.chdir(system[0])
     system_log = open(f'{sys_name}.log', 'a')
-    g_p = subprocess.Popen(args, stdout=system_log, stderr=subprocess.PIPE)
+    g_p = subprocess.Popen(args, stdout=system_log, stderr=system_log)
     if g_p.wait():
-        return sys_name, g_p.stderr.read().decode("utf-8")
-    return sys_name, 0
+        return sys_name, False
+    return sys_name, True
 
 
 def _get_frames(input_file: Path):
@@ -139,13 +139,14 @@ def run_test(parser):
     with multiprocessing.Pool(1) as pool:
         imap_unordered_it = pool.imap_unordered(calculatestar, TASKS)
         for x in imap_unordered_it:
-            sys_name, exitcode = x
-            if exitcode:
-                logging.error(f"{test_sys[sys_name][1]:55}[{c:2}/{len(key_list):2}]{'ERROR':>8}\n"
-                              f"           {exitcode}")
-            else:
+            sys_name, result = x
+            if result:
                 logging.info(f"{test_sys[sys_name][1]:55}[{c:2}/{len(key_list):2}]{'DONE':>8}")
                 result_list.append(test_sys[sys_name][0])
+            else:
+                logging.error(f"{test_sys[sys_name][1]:55}[{c:2}/{len(key_list):2}]{'ERROR':>8}\n"
+                              f"           Please, check the test log\n"
+                              f"           ({test_sys[sys_name][0].joinpath(f'{sys_name}')}.log)")
             c += 1
 
     if not parser.nogui and not exitcode:
