@@ -217,11 +217,12 @@ def write_stability_output(app):
                                      '\'LCPO\' surface areas')
         final_output.add_comment('')
 
-    final_output.add_comment('All units are reported in kcal/mole.')
-    if INPUT['nmoderun'] or INPUT['qh_entropy'] or INPUT['interaction_entropy' or INPUT['c2_entropy']]:
-        final_output.add_comment('All entropy results have units kcal/mol')
-        final_output.add_comment('(Temperature for NMODE and QH is %.2f K)\n' % INPUT['temperature'])
-        final_output.add_comment('(Temperature for IE and C2 entropy is %.2f K)\n' % INPUT['temperature'])
+    final_output.add_comment('Using temperature = %.2f K)\n' % INPUT['temperature'])
+    final_output.add_comment('All units are reported in kcal/mol.')
+    # if INPUT['nmoderun'] or INPUT['qh_entropy'] or INPUT['interaction_entropy' or INPUT['c2_entropy']]:
+    #     final_output.add_comment('All entropy results have units kcal/mol')
+    #     final_output.add_comment('(Temperature for NMODE and QH is %.2f K)\n' % INPUT['temperature'])
+    #     final_output.add_comment('(Temperature for IE and C2 entropy is %.2f K)\n' % INPUT['temperature'])
     if INPUT['ifqnt']:
         final_output.add_comment(('QM/MM: Residues %s are treated with the ' +
                                   'Quantum Hamiltonian %s') % (INPUT['qm_residues'], INPUT['qm_theory']))
@@ -402,11 +403,12 @@ def write_binding_output(app):
             final_output.add_comment('Generalized Born ESURF calculated using \'LCPO\' surface areas')
         final_output.add_comment('')
 
-    final_output.add_comment('All units are reported in kcal/mole.')
-    if INPUT['nmoderun'] or INPUT['qh_entropy'] or INPUT['interaction_entropy' or INPUT['c2_entropy']]:
-        final_output.add_comment('All entropy results have units kcal/mol\n' +
-                                 '(Temperature for NMODE and QH is %.2f K)\n' % INPUT['temperature'] +
-                                 '(Temperature for IE and C2 is %.2f K)\n' % INPUT['temperature'])
+    final_output.add_comment('Using temperature = %.2f K)\n' % INPUT['temperature'])
+    final_output.add_comment('All units are reported in kcal/mol.')
+    # if INPUT['nmoderun'] or INPUT['qh_entropy'] or INPUT['interaction_entropy' or INPUT['c2_entropy']]:
+    #     final_output.add_comment('All entropy results have units kcal/mol\n' +
+    #                              '(Temperature for NMODE and QH is %.2f K)\n' % INPUT['temperature'] +
+    #                              '(Temperature for IE and C2 is %.2f K)\n' % INPUT['temperature'])
     if INPUT['ifqnt']:
         final_output.add_comment(('QM/MM: Residues %s are treated with the ' +
                                   'Quantum Hamiltonian %s') % (INPUT['qm_residues'], INPUT['qm_theory']))
@@ -454,8 +456,8 @@ def write_binding_output(app):
             final_output.add_section(text)
         if ie_inconsistent:
             final_output.writeline(
-                'WARNING: SOME VALUES OF THE INTERACTION ENERGY STANDARD DEVIATION [ σ(Int. Energy) ]\n'
-                'ARE GREATER THAN 3.6 kcal/mol (~15 kJ/mol). THUS, THE INTERACTION ENTROPY VALUES ARE\n'
+                'WARNING: THE INTERACTION ENERGY STANDARD DEVIATION [ σ(Int. Energy) ]\n'
+                'IS GREATER THAN 3.6 kcal/mol (~15 kJ/mol). THUS, THE INTERACTION ENTROPY VALUES ARE\n'
                 'NOT RELIABLE. CHECK THIS PAPER FOR MORE INFO (https://doi.org/10.1021/acs.jctc.1c00374)\n\n')
 
     if INPUT['c2_entropy']:
@@ -483,8 +485,8 @@ def write_binding_output(app):
             final_output.add_section(text)
         if c2_inconsistent:
             final_output.writeline(
-                'WARNING: SOME VALUES OF THE INTERACTION ENERGY STANDARD DEVIATION [ σ(Int. Energy)]\n'
-                'ARE GREATER THAN 3.6 kcal/mol (~15 kJ/mol). THUS, THE C2 ENTROPY VALUES ARE NOT\n'
+                'WARNING: THE INTERACTION ENERGY STANDARD DEVIATION [ σ(Int. Energy)]\n'
+                'IS GREATER THAN 3.6 kcal/mol (~15 kJ/mol). THUS, THE C2 ENTROPY VALUES ARE NOT\n'
                 'RELIABLE. CHECK THIS PAPER FOR MORE INFO (https://doi.org/10.1021/acs.jctc.1c00374)\n')
 
     # Now print out the normal mode results
