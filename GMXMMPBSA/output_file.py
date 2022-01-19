@@ -452,11 +452,11 @@ def write_binding_output(app):
                 davg, dstd = _get_diff(iemutant.data[model]['iedata'], ienorm.data[model]['iedata'])
                 text += f'ΔΔS binding ({model.upper()}) = {davg:9.4f} +/- {dstd:9.4f}\n'
             final_output.add_section(text)
-            if ie_inconsistent:
-                final_output.writeline(
-                    'WARNING: SOME VALUES OF THE INTERACTION ENERGY STANDARD DEVIATION [ σ(Int. Energy) ]\n'
-                    'ARE GREATER THAN 3.6 kcal/mol (~15 kJ/mol). THUS, THE INTERACTION ENTROPY VALUES ARE\n'
-                    'NOT RELIABLE. CHECK THIS PAPER FOR MORE INFO (https://doi.org/10.1021/acs.jctc.1c00374)\n\n')
+        if ie_inconsistent:
+            final_output.writeline(
+                'WARNING: SOME VALUES OF THE INTERACTION ENERGY STANDARD DEVIATION [ σ(Int. Energy) ]\n'
+                'ARE GREATER THAN 3.6 kcal/mol (~15 kJ/mol). THUS, THE INTERACTION ENTROPY VALUES ARE\n'
+                'NOT RELIABLE. CHECK THIS PAPER FOR MORE INFO (https://doi.org/10.1021/acs.jctc.1c00374)\n\n')
 
     if INPUT['c2_entropy']:
         c2_inconsistent = False
@@ -481,11 +481,11 @@ def write_binding_output(app):
                 davg, dstd = _get_diff(c2mutant.data[model]['c2data'], c2norm.data[model]['c2data'])
                 text += f'ΔΔS binding ({model.upper()}) = {davg:9.4f} +/- {dstd:9.4f}\n'
             final_output.add_section(text)
-            if c2_inconsistent:
-                final_output.writeline(
-                    'WARNING: SOME VALUES OF THE INTERACTION ENERGY STANDARD DEVIATION [ σ(Int. Energy)]\n'
-                    'ARE GREATER THAN 3.6 kcal/mol (~15 kJ/mol). THUS, THE C2 ENTROPY VALUES ARE NOT\n'
-                    'RELIABLE. CHECK THIS PAPER FOR MORE INFO (https://doi.org/10.1021/acs.jctc.1c00374)\n')
+        if c2_inconsistent:
+            final_output.writeline(
+                'WARNING: SOME VALUES OF THE INTERACTION ENERGY STANDARD DEVIATION [ σ(Int. Energy)]\n'
+                'ARE GREATER THAN 3.6 kcal/mol (~15 kJ/mol). THUS, THE C2 ENTROPY VALUES ARE NOT\n'
+                'RELIABLE. CHECK THIS PAPER FOR MORE INFO (https://doi.org/10.1021/acs.jctc.1c00374)\n')
 
     # Now print out the normal mode results
     if INPUT['nmoderun']:
