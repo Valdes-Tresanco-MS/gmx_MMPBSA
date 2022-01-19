@@ -54,10 +54,13 @@ in a reasonable amount of time. Feel free to change the parameters
 according to what is better for your system.
 
 &general
-startframe=5, endframe=21, verbose=2, interval=1,
-forcefields="oldff/leaprc.ff99SB", PBRadii=4
+sys_name="Prot-DNA"
+startframe=5
+endframe=14
+PBRadii=4
+forcefields="oldff/leaprc.ff99SB"
+verbose=2,
 /
-
 &gb
 igb=8, saltcon=0.150, intdiel=10
 /

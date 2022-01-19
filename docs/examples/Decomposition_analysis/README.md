@@ -63,21 +63,21 @@ in a reasonable amount of time. Feel free to change the parameters
 according to what is better for your system.
 
 &general
-startframe=5, endframe=21, interval=1,
+sys_name="Decomposition",
+startframe=5,
+endframe=14,
 /
-
 &gb
 igb=5, saltcon=0.150,
 /
-Make sure to include at least one residue from both the receptor
-and ligand in the print_res mask of the &decomp section.
-http://archive.ambermd.org/201308/0075.html
-
+#make sure to include at least one residue from both the receptor
+#and ligand in the print_res mask of the &decomp section.
+#http://archive.ambermd.org/201308/0075.html
 &decomp
 idecomp=2, dec_verbose=3,
 print_res="within 4"
-# or 
-# #print_res="40,41,44,47,78,81,82,85,88,115,118,122,215,218,219,220,232,241"
+#check _GMXMMPBSA_COM_FIXED.pdb file to select which residues are going to be printed in the output file
+#print_res="40,41,44,47,78,81,82,85,88,115,118,122,215,218,219,220,232,241"
 /
 ```
 _See a detailed list of all the options in `gmx_MMPBSA` input file [here][2] as well as several [examples][3]_

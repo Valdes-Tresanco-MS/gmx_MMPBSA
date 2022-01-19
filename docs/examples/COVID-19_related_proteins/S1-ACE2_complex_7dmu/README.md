@@ -55,12 +55,11 @@ in a reasonable amount of time. Feel free to change the parameters
 according to what is better for your system.
 
 &general
+sys_name="SARS_CoV2_S1_ACE",
 verbose=2,
 /
 &pb
-# radiopt=0 is recommended which means using radii from the prmtop file
-# for both the PB calculation and for the NP calculation
-
+#radiopt=0 is recommended which means using radii from the prmtop file for both the PB calculation and for the NP calculation
 istrng=0.15, fillratio=4.0, radiopt=0, inp=1,
 /
 ```

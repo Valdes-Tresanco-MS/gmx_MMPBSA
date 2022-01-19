@@ -4,6 +4,7 @@ in the Amber manual, some parameters have been changed to perform more expensive
 parameters according to what is better for your system.
 
 &general
+sys_name="Ribo-MycalamideA",
 verbose=2,
 /
 &gb

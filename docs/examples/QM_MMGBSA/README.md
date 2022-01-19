@@ -52,7 +52,9 @@ according to what is better for your system.
 
 &general
 sys_name="QM/MMGBSA",
-startframe=1, endframe=10, verbose=2, PBRadii=2,
+startframe=1,
+endframe=10,
+verbose=2, PBRadii=2,
 /
 &gb
 igb=1, saltcon=0.150,

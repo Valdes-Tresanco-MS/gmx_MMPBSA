@@ -59,8 +59,10 @@ in a reasonable amount of time. Feel free to change the parameters
 according to what is better for your system.
 
 &general
-interval=1,
-debug_printlevel=2, use_sander=1,
+sys_name="Prot-Memb-CHARMM",
+startframe=1,
+endframe=4,
+debug_printlevel=2,
 /
 
 &pb

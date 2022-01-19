@@ -164,13 +164,15 @@ according to what is better for your system.
 
 &general
 sys_name="Prot-Lig-ST",
-startframe=1, endframe=11, verbose=2, solvated_trajectory=0,
+startframe=5,
+endframe=9,
+verbose=2, solvated_trajectory=0,
 /
 &pb
 # radiopt=0 is recommended which means using radii from the prmtop file
 # for both the PB calculation and for the NP calculation
 
-istrng=0.15, fillratio=4.0, radiopt=0, inp=1,
+istrng=0.15, fillratio=1.250, radiopt=0, inp=1,
 /
 ```
 

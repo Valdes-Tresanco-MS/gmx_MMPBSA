@@ -56,7 +56,9 @@ according to what is better for your system.
 
 &general
 sys_name="Protein-glycan",
-startframe=5, endframe=20, verbose=2,
+startframe=5,
+endframe=14,
+verbose=2,
 forcefields="oldff/leaprc.ff99SB,gmxMMPBSA/leaprc.GLYCAM_06h-1"
 /
 &gb
