@@ -112,22 +112,30 @@ class Residue(int):
 
 def get_indexes(com_ndx, rec_ndx=None, rec_group=1, lig_ndx=None, lig_group=1):
     ndx_files = {'COM': com_ndx, 'REC': rec_ndx, 'LIG': lig_ndx}
-    ndx = {'COM': {}, 'REC': {}, 'LIG': {}}
+    ndx = {'COM': {'header': [], 'index': []}, 'REC': {'header': [], 'index': []}, 'LIG': {'header': [], 'index': []}}
     for n, f in ndx_files.items():
         if f is None:
             continue
         with open(f) as indexf:
-            header = None
+            indexes = []
             for line in indexf:
                 if line.startswith('['):
                     header = line.strip('\n[] ')
-                    ndx[n][header] = []
+                    ndx[n]['header'].append(header)
+                    if indexes:
+                        ndx[n]['index'].append(indexes)
+                        indexes = []
                 else:
-                    ndx[n][header].extend(map(int, line.split()))
-    com_indexes = {'COM': ndx['COM']['GMXMMPBSA_REC_GMXMMPBSA_LIG'], 'REC': ndx['COM']['GMXMMPBSA_REC'],
-                   'LIG': [ndx['COM']['GMXMMPBSA_LIG']]}
-    rec_indexes = ndx['REC'][list(ndx['REC'].keys())[rec_group]] if rec_ndx else {}
-    lig_indexes = ndx['LIG'][list(ndx['LIG'].keys())[lig_group]] if lig_ndx else {}
+                    indexes.extend(map(int, line.split()))
+            ndx[n]['index'].append(indexes)
+
+    comind = ndx['COM']['header'].index('GMXMMPBSA_REC_GMXMMPBSA_LIG')
+    crecind = ndx['COM']['header'].index('GMXMMPBSA_REC')
+    cligind = ndx['COM']['header'].index('GMXMMPBSA_LIG')
+    com_indexes = {'COM': ndx['COM']['index'][comind], 'REC': ndx['COM']['index'][crecind],
+                   'LIG': ndx['COM']['index'][cligind]}
+    rec_indexes = ndx['REC']['index'][rec_group] if rec_ndx else {}
+    lig_indexes = ndx['LIG']['index'][lig_group] if lig_ndx else {}
     return {'COM': com_indexes, 'REC': rec_indexes, 'LIG': lig_indexes}
 
 

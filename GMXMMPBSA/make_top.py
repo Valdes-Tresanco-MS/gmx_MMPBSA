@@ -199,8 +199,7 @@ class CheckMakeTop:
             log_subprocess_output(l3)
 
         # check if the ligand force field is gaff or gaff2 and get if the ligand mol2 was defined
-        elif ("leaprc.gaff" in self.INPUT['forcefields'] or "leaprc.gaff2" in self.INPUT['forcefields'] and not
-            self.FILES.complex_top):
+        elif "leaprc.gaff2" in self.INPUT['forcefields'] and not self.FILES.complex_top:
                 logging.warning('You must define the ligand mol2 file (-lm) if the ligand forcefield is '
                                   '"leaprc.gaff" or "leaprc.gaff2". If the ligand is parametrized in Amber force '
                                   'fields ignore this warning')
