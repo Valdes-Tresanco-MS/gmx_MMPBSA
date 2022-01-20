@@ -192,11 +192,9 @@ def write_stability_output(app):
     final_output.write(app.input_file_text)
     final_output.print_file_info(FILES, INPUT)
     final_output.add_comment('')
-    final_output.add_comment('Calculations performed using %s complex frames.' %
-                             app.numframes)
+    final_output.add_comment('Calculations performed using %s complex frames.' % app.numframes)
     if INPUT['nmoderun']:
-        final_output.add_comment('NMODE calculations performed using %s frames.' %
-                                 app.numframes_nmode)
+        final_output.add_comment('NMODE calculations performed using %s frames.' % app.numframes_nmode)
 
     if INPUT['pbrun']:
         if INPUT['sander_apbs']:
@@ -210,11 +208,9 @@ def write_stability_output(app):
 
     if INPUT['gbrun']:
         if INPUT['molsurf']:
-            final_output.add_comment('Generalized Born ESURF calculated using '
-                                     '\'molsurf\' surface areas')
+            final_output.add_comment('Generalized Born ESURF calculated using \'molsurf\' surface areas')
         else:
-            final_output.add_comment('Generalized Born ESURF calculated using '
-                                     '\'LCPO\' surface areas')
+            final_output.add_comment('Generalized Born ESURF calculated using \'LCPO\' surface areas')
         final_output.add_comment('')
 
     final_output.add_comment('Using temperature = %.2f K)\n' % INPUT['temperature'])
@@ -514,7 +510,7 @@ def write_binding_output(app):
 
         # Now calculate the effect of alanine scanning
         if INPUT['alarun'] and not INPUT['mutant_only']:
-            davg, dstd = _get_diff(nm_sys_mut['Total'], nm_sys_norm['Total'])
+            davg, dstd = _get_diff(nm_sys_mut.data['Total'], nm_sys_norm.data['Total'])
             final_output.add_section(f'\nRESULT OF ALANINE SCANNING ({mut_str}):\n'
                                       f'ΔΔS binding = {davg:9.4f} +/- {dstd:9.4f}\n')
 
@@ -553,7 +549,7 @@ def write_binding_output(app):
                 final_output.add_section(f"Using C2 Entropy Approximation:\n"
                                          f"ΔG binding = {c2_davg:9.4f} +/- {c2_dstd:7.4f}\n")
             if INPUT['nmoderun']:
-                nm_davg, nm_dstd = _get_diff(sys_norm.data['DELTA TOTAL'], nm_sys_norm['Total'])
+                nm_davg, nm_dstd = _get_diff(sys_norm.data['DELTA TOTAL'], nm_sys_norm.data['Total'])
                 final_output.add_section('Using Normal Mode Entropy Approximation:\n'
                                          f"ΔG binding = {nm_davg:9.4f} +/- {nm_dstd:7.4f}\n")
 
@@ -580,7 +576,7 @@ def write_binding_output(app):
                 final_output.add_section(f"Using C2 Entropy Approximation:\n"
                                          f"ΔG binding = {mc2_davg:9.4f} +/- {mc2_dstd:7.4f}\n")
             if INPUT['nmoderun']:
-                mnm_davg, mnm_dstd = _get_diff(sys_mut['DELTA TOTAL'], nm_sys_mut['Total'])
+                mnm_davg, mnm_dstd = _get_diff(sys_mut.data['DELTA TOTAL'], nm_sys_mut.data['Total'])
                 final_output.add_section('Using Normal Mode Entropy Approximation:\n'
                                          f"ΔG binding = {mnm_davg:9.4f} +/- {mnm_dstd:7.4f}\n")
 
