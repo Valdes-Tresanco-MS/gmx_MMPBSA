@@ -347,7 +347,7 @@ printed, which aids in debugging of issues. (Default = 0) (Advanced Option)
 :   Define Internal dielectric constant without use external *.mdin file
 
 `igb` (Default = 5)
-:   Generalized Born method to use (seeSection 4).  Allowed values are 1, 2, 5, 7 and 8
+:   Generalized Born method to use (see [Section 4](https://ambermd.org/doc12/Amber20.pdf#chapter.4)).  Allowed values are 1, 2, 5, 7 and 8
 
     !!! note
         All models are now available with both `mmpbsa_py_energy` and `sander`
