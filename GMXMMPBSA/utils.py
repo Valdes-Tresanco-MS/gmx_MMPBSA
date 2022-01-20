@@ -42,6 +42,10 @@ from math import sqrt
 import parmed
 
 
+def get_std(val1, val2):
+    return sqrt(val1 ** 2 + val2 ** 2)
+
+
 def create_input_args(args: list):
     if not args or 'all' in args:
         return 'general', 'gb', 'pb', 'ala', 'nmode', 'decomp', 'rism'

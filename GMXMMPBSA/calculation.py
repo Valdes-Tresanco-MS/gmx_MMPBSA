@@ -651,7 +651,7 @@ class InteractionEntropyCalc:
             aeceint = exp_energy_int.mean()
             cts = k * temp * math.log(aeceint)
             ts = np.append(ts, cts)
-        self.ie_std = energy_int.std()
+        self.ie_std = energy_int.stdev()
         self.data = ts
         self.ieframes = math.ceil(self.app.numframes * (self.app.INPUT['ie_segment'] / 100))
         self.iedata = self.data[-self.ieframes:]
@@ -667,7 +667,7 @@ class InteractionEntropyCalc:
     def save_output(self):
         with open(self.output, 'w') as out:
             out.write(f'Calculation for last {self.ieframes} frames:\n')
-            out.write(f'Interaction Entropy (-TΔS): {self.iedata.mean():9.4f} +/- {self.iedata.std():7.4f}\n\n')
+            out.write(f'Interaction Entropy (-TΔS): {self.iedata.mean():9.4f} +/- {self.iedata.stdev():7.4f}\n\n')
             out.write(f'Interaction Entropy per-frame:\n')
 
             out.write('Frame # | IE value\n')
@@ -695,17 +695,17 @@ class C2EntropyCalc:
         R = 0.001987
         temp = self.app.INPUT['temperature']
         self.c2frames = math.ceil(self.app.numframes * (self.app.INPUT['c2_segment'] / 100))
-        self.ie_std = self.ggas[-self.c2frames:].std()
+        self.ie_std = self.ggas[-self.c2frames:].stdev()
         self.c2data = (self.ie_std ** 2) / (2 * temp * R)
 
         array_of_c2 = np.zeros(2000)
         for i in range(2000):
             idxs = np.random.randint(0, len(self.ggas[-self.c2frames:]), len(self.ggas[-self.c2frames:]))
-            self.ie_std = self.ggas[-self.c2frames:][idxs].std()
+            self.ie_std = self.ggas[-self.c2frames:][idxs].stdev()
             self.c2data = (self.ie_std ** 2) / (2 * temp * R)
             array_of_c2[i] = self.c2data
 
-        self.c2_std = np.sort(array_of_c2)[100:1900].std()
+        self.c2_std = np.sort(array_of_c2)[100:1900].stdev()
         self.c2_ci = np.percentile(np.sort(array_of_c2)[100:1900], [2.5, 97.5])
 
     def save_output(self):

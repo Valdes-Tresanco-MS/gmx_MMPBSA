@@ -136,39 +136,35 @@ class Data2h5:
 
 # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-def _get_std(val1, val2):
-    return sqrt(val1 ** 2 + val2 ** 2)
-
-
 def _get_diff(arr2, arr1):
     if isinstance(arr2, EnergyVector) and isinstance(arr1, EnergyVector):
         dmean = arr2.mean() - arr1.mean()
-        dstd = _get_std(arr2.std(), arr1.std())
+        dstd = utils.get_std(arr2.stdev(), arr1.stdev())
     elif isinstance(arr2, EnergyVector) and isinstance(arr1, (int, float)):
         dmean = arr2.mean() - arr1
-        dstd = _get_std(arr2.std(), 0)
+        dstd = utils.get_std(arr2.stdev(), 0)
     elif isinstance(arr2, (int, float)) and isinstance(arr1, EnergyVector):
         dmean = arr2 - arr1.mean()
-        dstd = _get_std(0, arr1.std())
+        dstd = utils.get_std(0, arr1.stdev())
     else:
         dmean = arr2 - arr1
-        dstd = _get_std(0, 0)
+        dstd = utils.get_std(0, 0)
     return dmean, dstd
 
 
 def _get_sum(arr2: EnergyVector, arr1: EnergyVector):
     if isinstance(arr2, EnergyVector) and isinstance(arr1, EnergyVector):
         dmean = arr2.mean() + arr1.mean()
-        dstd = _get_std(arr2.std(), arr1.std())
+        dstd = utils.get_std(arr2.stdev(), arr1.stdev())
     elif isinstance(arr2, EnergyVector) and isinstance(arr1, (int, float)):
         dmean = arr2.mean() + arr1
-        dstd = _get_std(arr2.std(), 0)
+        dstd = utils.get_std(arr2.stdev(), 0)
     elif isinstance(arr2, (int, float)) and isinstance(arr1, EnergyVector):
         dmean = arr2 + arr1.mean()
-        dstd = _get_std(0, arr1.std())
+        dstd = utils.get_std(0, arr1.stdev())
     else:
         dmean = arr2 + arr1
-        dstd = _get_std(0, 0)
+        dstd = utils.get_std(0, 0)
     return dmean, dstd
 
 
@@ -331,7 +327,7 @@ def write_stability_output(app):
 
             if INPUT['nmoderun']:
                 davg, _ = _get_diff(mnm_davg, nm_davg)
-                dstd = _get_std(mnm_dstd, nm_dstd)
+                dstd = utils.get_std(mnm_dstd, nm_dstd)
                 final_output.write('\n   (normal mode entropy)\n'
                                    f'({mut_str}) ΔΔG = {davg:9.4f} +/- {dstd:7.4f}\n')
             final_output.separate()
@@ -587,22 +583,22 @@ def write_binding_output(app):
 
             if INPUT['qh_entropy']:
                 davg, _ =_get_diff(mqh_davg, qh_davg)
-                dstd = _get_std(mqh_dstd, qh_dstd)
+                dstd = utils.get_std(mqh_dstd, qh_dstd)
                 final_output.write('\n   (quasi-harmonic entropy)\n'
                                    f'ΔΔG binding = {davg:9.4f} +/- {dstd:7.4f}\n')
             if INPUT['interaction_entropy']:
                 davg, _ = _get_diff(mie_davg, ie_davg)
-                dstd = _get_std(mie_dstd, ie_dstd)
+                dstd = utils.get_std(mie_dstd, ie_dstd)
                 final_output.write('\n   (interaction entropy)\n'
                                    f'ΔΔG binding = {davg:9.4f} +/- {dstd:7.4f}\n')
             if INPUT['c2_entropy']:
                 davg, _ = _get_diff(mc2_davg, c2_davg)
-                dstd = _get_std(mc2_dstd, c2_dstd)
+                dstd = utils.get_std(mc2_dstd, c2_dstd)
                 final_output.write('\n   (C2 entropy)\n'
                                    f'ΔΔG binding = {davg:9.4f} +/- {dstd:7.4f}\n')
             if INPUT['nmoderun']:
                 davg, _ = _get_diff(mnm_davg, nm_davg)
-                dstd = _get_std(mnm_dstd, nm_dstd)
+                dstd = utils.get_std(mnm_dstd, nm_dstd)
                 final_output.write('\n   (normal mode entropy)\n'
                                    f'ΔΔG binding = {davg:9.4f} +/- {dstd:7.4f}\n')
             final_output.separate()
