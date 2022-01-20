@@ -131,6 +131,37 @@ def get_indexes(com_ndx, rec_ndx=None, rec_group=1, lig_ndx=None, lig_group=1):
     return {'COM': com_indexes, 'REC': rec_indexes, 'LIG': lig_indexes}
 
 
+def _get_dup_args(args):
+    flags = []
+    flags_values = []
+    cv = []
+    for o in args:
+        if o.startswith('-'):
+            flags.append(o)
+            flags_values.append(cv)
+            cv = []
+        else:
+            cv.append(o)
+    flags_values.append(cv)
+
+    opt_duplicates = []
+    args_duplicates = []
+    for x in flags:
+        if flags.count(x) > 1 and x not in opt_duplicates:
+            opt_duplicates.append(x)
+    for x in flags_values:
+        if flags_values.count(x) > 1 and x and ' '.join(x) not in args_duplicates:
+            args_duplicates.append(' '.join(x))
+
+    if opt_duplicates or args_duplicates:
+        text_dup = 'Duplicates were found on the command line:\n'
+        if opt_duplicates:
+            text_dup += f"Options: {', '.join(opt_duplicates)}\n"
+        if args_duplicates:
+            text_dup += f"Arguments: {', '.join(args_duplicates)}\n"
+        GMXMMPBSA_ERROR(text_dup)
+
+
 def _get_restype(resname):
     if resname == 'LYN':
         return 'LYS'

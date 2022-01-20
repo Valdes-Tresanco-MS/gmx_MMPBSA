@@ -705,6 +705,8 @@ class MMPBSA_App(object):
             # save args in gmx_MMPBSA.log
             logging.info('Command-line\n' + mpi_cl +
                          'gmx_MMPBSA ' + text_args + '\n')
+            # check if any arg is duplicated
+            utils._get_dup_args(args)
             self.FILES = self.clparser.parse_args(args)
         else:
             self.FILES = object()
