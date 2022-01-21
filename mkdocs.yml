@@ -170,7 +170,7 @@ nav:
       - Membrane proteins: examples/Protein_membrane/README.md
       - Metalloprotein-peptide: examples/Metalloprotein_peptide/README.md
       - Protein-DNA-RNA-Ions-Ligand: examples/Protein_DNA_RNA_Ion_ligand/README.md
-      - Binding free energy calculations in multicomponent systems: examples/Comp_receptor/README.md
+      - BFE calculations in multicomponent systems: examples/Comp_receptor/README.md
       - COVID-19 related proteins:
           - Info: examples/COVID-19_related_proteins/README.md
           - Main protease: examples/COVID-19_related_proteins/Main_protease_7l5d/README.md
@@ -188,10 +188,12 @@ nav:
         - Entropy calculation:
             - Interaction Entropy: examples/Entropy_calculations/Interaction_Entropy/README.md
             - nmode Entropy: examples/Entropy_calculations/nmode/README.md
+            - C2 Entropy calculations: examples/Entropy_calculations/C2 Entropy/README.md
         - Stability calculations: examples/Stability/README.md
         - MM/3D-RISM: examples/3D-RISM/README.md
         - QM/MMGBSA: examples/QM_MMGBSA/README.md
         - Protein-Ligand (MT): examples/Protein_ligand/MT/README.md
+        - BFE with NonLinear PB solver: examples/NonLinear_PB_solver/README.md
   - Q&A:
     - Support: Q&A/README.md
     - Installation: Q&A/installation.md

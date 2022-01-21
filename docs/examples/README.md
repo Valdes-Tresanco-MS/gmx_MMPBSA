@@ -36,10 +36,12 @@ be also performed in the same run for a specific system.
 * Entropy
     * [Interaction Entropy calculations](Entropy_calculations/Interaction_Entropy/README.md)[^1][^2]
     * [nmode Entropy calculations](Entropy_calculations/nmode/README.md)[^1]
+    * [C2 Entropy calculations](Entropy_calculations/C2 Entropy/README.md)
 * [Stability calculations](Stability/README.md)[^1][^2]
 * [MM/3D-RISM](3D-RISM/README.md)[^1]    
 * [QM/MMGBSA calculations](QM_MMGBSA/README.md)
 * [Multiple Trajectory method (Protein-Ligand)](Protein_ligand/MT/README.md)[^1]
+* [BFE with NonLinear PB solver](NonLinear_PB_solver/README.md)
 
 
 

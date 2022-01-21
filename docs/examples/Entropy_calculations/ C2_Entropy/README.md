@@ -80,7 +80,7 @@ are going to be used when performing the MM/PB(GB)SA calculation with the igb5 (
 salt concentration = 0.15M.
 
 [C2 Entropy][4] will be calculated using all (100%) the frames (`c2_segment=100`). Of note, C2 method tends to give 
-unrealistically large entropies when the standard deviation of the interaction energy > ~ 6kcal/mol. Of note, two other 
+unrealistically large entropies when the standard deviation of the interaction energy > ~ 3.6kcal/mol. Of note, two other 
 methods (`QH` and `nmode`) can be used for estimating the entropic contribution, though they are way more expensive in 
 computation as compared with C2 method.
 
