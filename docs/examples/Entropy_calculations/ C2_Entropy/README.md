@@ -3,7 +3,7 @@ template: main.html
 title: C2 Entropy
 ---
 
-# Entropy calculations
+# C2 Entropy calculations
 
 !!! info
     This example can be found in the [docs/examples/Entropy_calculations/C2_Entropy][6] directory in the 

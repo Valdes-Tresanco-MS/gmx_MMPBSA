@@ -3,7 +3,7 @@ template: main.html
 title: Interaction Entropy
 ---
 
-# Entropy calculations
+# Interaction Entropy calculations
 
 !!! info
     This example can be found in the [docs/examples/Entropy_calculations/Interaction_Entropy][6] directory in the 

@@ -188,7 +188,7 @@ nav:
         - Entropy calculation:
             - Interaction Entropy: examples/Entropy_calculations/Interaction_Entropy/README.md
             - nmode Entropy: examples/Entropy_calculations/nmode/README.md
-            - C2 Entropy calculations: examples/Entropy_calculations/C2 Entropy/README.md
+            - C2 Entropy calculations: examples/Entropy_calculations/C2_Entropy/README.md
         - Stability calculations: examples/Stability/README.md
         - MM/3D-RISM: examples/3D-RISM/README.md
         - QM/MMGBSA: examples/QM_MMGBSA/README.md
