@@ -627,7 +627,8 @@ class MMPBSA_App(object):
             self.MPI.Finalize()
             sys.exit(0)
         logging.info('Timing:')
-        self.timer.print_('setup_gmx')
+        if not self.FILES.rewrite_output:
+            self.timer.print_('setup_gmx')
         self.timer.print_('setup')
 
         if not self.FILES.rewrite_output:
@@ -650,7 +651,7 @@ class MMPBSA_App(object):
         self.MPI.Finalize()
 
         end = 0
-        if self.FILES.gui:
+        if self.FILES.gui and not self.FILES.rewrite_output:
             import subprocess
             logging.info('Opening gmx_MMPBSA_ana to analyze results...\n')
             g = subprocess.Popen(['gmx_MMPBSA_ana', '-f', self.FILES.prefix + 'info'])

@@ -103,7 +103,7 @@ class InfoFile(object):
         if name is None:
             name = self.app.pre + 'info'
         #TODO Add checking for differences in FILES
-        inputre = re.compile(r'''INPUT\['(\S+)'\] = ((?:'.*')|(?:".*")|\S+)''')
+        inputre = re.compile(r'''INPUT\['(\S+)'\] = (.*)''')
         filesre = re.compile(r'''FILES\.(\S+) = (.*)''')
         otherre = re.compile(r'(\S+) = (\S+)')
         infile = open(name, 'r')
@@ -154,8 +154,6 @@ class InfoFile(object):
         """
         if isinstance(var, str):
             return "'%s'" % var
-        elif isinstance(var, list):
-            return "'%s'" % ', '.join([str(x) for x in var])
         else:
             return "%s" % var
 

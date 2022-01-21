@@ -215,7 +215,7 @@ group.add_argument('-lp', dest='ligand_top', metavar='<Topology>', default=None,
                    help='''Topology file of the ligand.''')
 
 group = parser.add_argument_group('Miscellaneous Actions')
-group.add_argument('-rewrite-output', dest='rewrite_output', default=False,
+group.add_argument('--rewrite-output', dest='rewrite_output', default=False,
                    action='store_true', help='''Do not re-run any calculations,
                   just parse the output files from the previous calculation and
                   rewrite the output files.''')
