@@ -44,10 +44,10 @@ versatility, analyses, and parallelization compared to existing programs (see [h
 
 Multiple calculations can be performed with `gmx_MMPBSA` such as:
 
-* Normal binding free energies
+* Binding free energy calculation with PB, GB and/or 3D-RISM models
 * Alanine scanning  
-* Decomposition schemes
-* Entropy corrections
+* Binding free energy decomposition (per-residue and pair-wise)
+* Entropy corrections (IE, C2, NMODE or QH)
 * Stability
 * QM/MMGBSA
 
@@ -91,10 +91,10 @@ is performed in gmx_MMPBSA.
     gmx_MMPBSA can run in parallel and requires just few things in order to perform any kind of calculation. That is:
 
     * an input parameters file (`*.in`, contains all the specifications regarding the type of calculation that is going to be performed)
-    * a MD Structure+mass(db) file (`*.tpr`, `*.pdb`, `*.gro`)
+    * a MD Structure+mass(db) file (`*.tpr`, `*.pdb`)
     * an index file (`*.ndx`)
     * receptor and ligand groups (group numbers in the index file)
-    * a trajectory file (`*.xtc`, `*.pdb`, `*.gro`, `*.trr`)
+    * a trajectory file (`*.xtc`, `*.pdb`, `*.trr`)
     * In certain occasions, defining a topology file (`*.top`) may be required.
 
     Once the calculation is done, you can analyze the results in [gmx_MMPBSA_ana](analyzer.md)
