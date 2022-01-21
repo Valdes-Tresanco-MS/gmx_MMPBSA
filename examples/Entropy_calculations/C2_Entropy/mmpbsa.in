@@ -1,0 +1,14 @@
+Sample input file for GB calculation
+#This input file is meant to show only that gmx_MMPBSA works. Although, we tried to use the input files as recommended in the
+#Amber manual, some parameters have been changed to perform more expensive calculations in a reasonable amount of time. Feel free to change the parameters
+#according to what is better for your system.
+&general
+sys_name="C2_entropy",
+startframe=5,
+endframe=20,
+verbose=2, c2_entropy=1, c2_segment=100, temperature=300,
+forcefields="oldff/leaprc.ff99SB,leaprc.gaff"
+/
+&gb
+igb=5, saltcon=0.150,
+/
