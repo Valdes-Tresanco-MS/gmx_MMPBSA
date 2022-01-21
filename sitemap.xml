@@ -161,11 +161,6 @@
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://valdes-tresanco-ms.github.io/gmx_MMPBSA/examples/Entropy_calculations/%20C2_Entropy/</loc>
-         <lastmod>2022-01-21</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
          <loc>https://valdes-tresanco-ms.github.io/gmx_MMPBSA/examples/Entropy_calculations/Interaction_Entropy/</loc>
          <lastmod>2022-01-21</lastmod>
          <changefreq>daily</changefreq>
@@ -177,6 +172,11 @@
     </url>
     <url>
          <loc>https://valdes-tresanco-ms.github.io/gmx_MMPBSA/examples/Metalloprotein_peptide/</loc>
+         <lastmod>2022-01-21</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://valdes-tresanco-ms.github.io/gmx_MMPBSA/examples/NonLinear_PB_solver/</loc>
          <lastmod>2022-01-21</lastmod>
          <changefreq>daily</changefreq>
     </url>
