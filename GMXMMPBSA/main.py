@@ -627,7 +627,8 @@ class MMPBSA_App(object):
             self.MPI.Finalize()
             sys.exit(0)
         logging.info('Timing:')
-        self.timer.print_('setup_gmx')
+        if not self.FILES.rewrite_output:
+            self.timer.print_('setup_gmx')
         self.timer.print_('setup')
 
         if not self.FILES.rewrite_output:

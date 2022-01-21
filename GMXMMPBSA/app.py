@@ -106,7 +106,6 @@ def gmxmmpbsa():
     else:
         info = InfoFile(app)
         info.read_info()
-        app.make_prmtops()
         app.loadcheck_prmtops()
 
     # Now we parse the output, print, and finish
