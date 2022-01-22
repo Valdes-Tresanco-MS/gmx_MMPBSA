@@ -765,8 +765,8 @@ class MMPBSA_App(object):
             self.INPUT['gbsa'] = 2
 
         # Stability: no terms cancel, so print them all
-        if self.stability:
-            self.INPUT['verbose'] = 2
+        # if self.stability:
+        #     self.INPUT['verbose'] = 2
 
         # 3D-RISM stuff (keywords are case-insensitive)
         self.INPUT['thermo'] = self.INPUT['thermo'].lower()

@@ -110,7 +110,7 @@ class EnergyVector(np.ndarray):
 
 #-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 
-class AmberOutput(object):
+class AmberOutput(dict):
     """
     Base Amber output class. It takes a basename as a file name and parses
     through all of the thread-specific output files (assumed to have the suffix
@@ -174,8 +174,6 @@ class AmberOutput(object):
                             'Std. Err. of Mean'])
 
         for key in self.data_keys:
-            # Skip terms we don't want to print
-            if self.verbose < self.print_levels[key]: continue
             # Skip the composite terms, since we print those at the end
             if key in self.composite_keys: continue
             # Skip chamber terms if we aren't using chamber prmtops
@@ -209,7 +207,6 @@ class AmberOutput(object):
 
         for key in self.data_keys:
             # Skip terms we don't want to print
-            if self.verbose < self.print_levels[key]: continue
             # Skip the composite terms, since we print those at the end
             if key in self.composite_keys: continue
             # Skip chamber terms if we aren't using chamber prmtops
@@ -267,8 +264,6 @@ class AmberOutput(object):
             self[key]=EnergyVector(len(self['EEL']))
 
         for key in self.data_keys:
-            if self.print_levels[key] > self.verbose:
-                continue
             if not self.chamber and key in ['UB', 'IMP', 'CMAP']:
                 continue
             for component in self.data_key_owner[key]:
@@ -303,7 +298,7 @@ class IEout(dict):
     #         in spreadsheets
     #     """
     #     csvwriter.writerow(['Frame #', 'Interaction Entropy'])
-    #     for f, d in zip(self.data['frames'], self.data['data']):
+    #     for f, d in zip(self['frames'], self['data']):
     #         csvwriter.writerow([f] + [d])
     #
     def print_summary(self):
@@ -344,7 +339,7 @@ class C2out(dict):
     #         in spreadsheets
     #     """
     #     csvwriter.writerow(['Frame #', 'Interaction Entropy'])
-    #     for f, d in zip(self.data['frames'], self.data['data']):
+    #     for f, d in zip(self['frames'], self['data']):
     #         csvwriter.writerow([f] + [d])
     #
     def print_summary(self):
@@ -980,7 +975,6 @@ class BindingStatistics(dict):
         self.com = com
         self.rec = rec
         self.lig = lig
-        self.verbose = verbose
         self.chamber = chamber
         self.inconsistent = False
         self.missing_terms = False
@@ -1036,25 +1030,22 @@ class BindingStatistics(dict):
                                 'POTENTIAL TERMS. THE VALIDITY OF THESE RESULTS ARE HIGHLY ' +
                                 'QUESTIONABLE'])
 
-        if self.verbose:
-            self.csvwriter.writerow(['Complex:'])
-            self.com.print_summary_csv(csvwriter)
-            self.csvwriter.writerow(['Receptor:'])
-            self.rec.print_summary_csv(csvwriter)
-            self.csvwriter.writerow(['Ligand:'])
-            self.lig.print_summary_csv(csvwriter)
+
+        self.csvwriter.writerow(['Complex:'])
+        self.com.print_summary_csv(csvwriter)
+        self.csvwriter.writerow(['Receptor:'])
+        self.rec.print_summary_csv(csvwriter)
+        self.csvwriter.writerow(['Ligand:'])
+        self.lig.print_summary_csv(csvwriter)
 
         csvwriter.writerow(['Differences (Complex - Receptor - Ligand):'])
         csvwriter.writerow(['Energy Component','Average','Std. Dev.',
                             'Std. Err. of Mean'])
         # Set verbose level. If verbose==0, that means we don't print com/rec/lig
         # but we print the differences as though verbose==1
-        verbose = self.verbose
-        if self.verbose == 0: verbose = 1
 
         for key in self.data_keys:
             # Skip terms we don't want to print
-            if verbose < self.print_levels[key]: continue
             # Skip the composite terms, since we print those at the end
             if key in self.composite_keys: continue
             # Skip chamber terms if we aren't using chamber prmtops
@@ -1113,14 +1104,8 @@ class BindingStatistics(dict):
         ret_str += ('------------------------------------------------' +
                     '-------------------------------\n')
 
-        # verbose == 0 only suppresses Complex, receptor, and ligand printout
-        verbose = self.verbose
-        if self.verbose == 0: verbose = 1
-        if self.inconsistent: verbose = 2
 
         for key in self.data_keys:
-            # Skip terms we don't want to print
-            if verbose < self.print_levels[key]: continue
             # Skip the composite terms, since we print those at the end
             if key in self.composite_keys: continue
             # Skip chamber terms if we aren't using chamber prmtops
@@ -1190,16 +1175,16 @@ class SingleTrajBinding(BindingStatistics):
         """ Calculates the delta statistics """
         # First thing we do is check to make sure that all of the terms that
         # should *not* be printed actually cancel out (i.e. bonded terms)
-        for key in self.com.print_levels:
-            if self.com.print_levels[key] > 1:
-                diff = self.com.data[key] - self.rec.data[key] - self.lig.data[key]
-                if diff.abs_gt(SingleTrajBinding.TINY):
-                    self.inconsistent = True
-                    # Now we have to print out everything
-                    self.com.verbose = 2
-                    self.rec.verbose = 2
-                    self.lig.verbose = 2
-                    break
+        # for key in self.com.print_levels:
+        #     if self.com.print_levels[key] > 1:
+        #         diff = self.com[key] - self.rec[key] - self.lig[key]
+        #         if diff.abs_gt(SingleTrajBinding.TINY):
+        #             self.inconsistent = True
+        #             # Now we have to print out everything
+        #             self.com.verbose = 2
+        #             self.rec.verbose = 2
+        #             self.lig.verbose = 2
+        #             break
 
         self.com.fill_composite_terms()
         self.rec.fill_composite_terms()
@@ -1252,7 +1237,6 @@ class SingleTrajBinding(BindingStatistics):
             # Determine our print_keys
             print_keys = []
             for key in self.data_keys:
-                if self.print_levels[key] > self.verbose: continue
                 print_keys.append(key)
             print_keys += self.composite_keys
 
