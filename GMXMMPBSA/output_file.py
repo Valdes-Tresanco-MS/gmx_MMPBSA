@@ -30,21 +30,23 @@ from math import sqrt, ceil
 from os import linesep as ls
 import h5py
 
+h5py.get_config().track_order = True
 
 class Data2h5:
     def __init__(self, app):
         self.app = app
         self.h5f = h5py.File('RESULTS_gmx_MMPBSA.h5', 'w')
-        self._e2h5(app.calc_types, self.h5f)
-        if app.calc_types.decomp:
-            grp = self.h5f.create_group('decomp')
-            self._decomp2h5(app.calc_types.decomp, grp)
+        grp = self.h5f.create_group('normal')
+        self._e2h5(app.calc_types.normal, grp)
         if app.calc_types.mutant:
             grp = self.h5f.create_group('mutant')
             self._e2h5(app.calc_types.mutant, grp)
-            if app.calc_types.decomp:
-                grp2 = grp.create_group('decomp')
-                self._decomp2h5(app.calc_types.decomp.mutant, grp2)
+        if app.calc_types.decomp_normal:
+            grp = self.h5f.create_group('decomp_normal')
+            self._decomp2h5(app.calc_types.decomp_normal, grp)
+        if app.calc_types.decomp_mutant:
+            grp = self.h5f.create_group('decomp_mutant')
+            self._decomp2h5(app.calc_types.decomp_mutant, grp)
         self._info2h5()
         self.h5f.close()
 
@@ -92,8 +94,8 @@ class Data2h5:
                 for key2 in d[key]:
                     grp2 = grp.create_group(key2)
                     # complex, receptor, etc., is a class and the data is contained in the attribute data
-                    for key3 in d[key][key2].data:
-                        dset = grp2.create_dataset(key3, data=d[key][key2].data[key3])
+                    for key3 in d[key][key2]:
+                        dset = grp2.create_dataset(key3, data=d[key][key2][key3])
             elif key in ['nmode', 'qh']:
                 grp = f.create_group(key)
                 # key2 is complex, receptor, ligand, delta
@@ -105,10 +107,10 @@ class Data2h5:
             elif key in ['ie', 'c2']:
                 grp = f.create_group(key)
                 # key2 is PB, GB or RISM?
-                for key2 in d[key].data:
+                for key2 in d[key]:
                     grp2 = grp.create_group(key2)
-                    for key3 in d[key].data[key2]:
-                        dset = grp2.create_dataset(key3, data=d[key].data[key2][key3])
+                    for key3 in d[key][key2]:
+                        dset = grp2.create_dataset(key3, data=d[key][key2][key3])
 
     @staticmethod
     def _decomp2h5(d, g):
