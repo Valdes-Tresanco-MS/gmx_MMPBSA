@@ -27,6 +27,8 @@ All data is stored in a special class derived from the list.
 from math import sqrt
 from GMXMMPBSA.exceptions import (OutputError, LengthError, DecompError, InternalError)
 from GMXMMPBSA.utils import get_std
+import h5py
+from types import SimpleNamespace
 import numpy as np
 import sys
 
@@ -133,16 +135,16 @@ class AmberOutput(object):
 
     #==================================================
 
-    def __init__(self, basename, INPUT, num_files=1, chamber=False):
-        self.verbose = INPUT['verbose']
+    def __init__(self, basename, INPUT, num_files=1, chamber=False, **kwargs):
+        super(AmberOutput, self).__init__(**kwargs)
         self.num_files = num_files
         self.basename = basename
         self.chamber = chamber
-        self.data = {}
+
         for key in self.data_keys:
-            self.data[key] = EnergyVector()
+            self[key] = EnergyVector()
         for key in self.composite_keys:
-            self.data[key] = EnergyVector()
+            self[key] = EnergyVector()
 
         self.is_read = False
 
@@ -152,10 +154,7 @@ class AmberOutput(object):
         """ Prints the energy vectors to a CSV file for easy viewing
             in spreadsheets
         """
-        # Determine which keys we want to print
-        print_keys = [
-            key for key in self.data_keys if self.print_levels[key] <= self.verbose
-        ]
+        print_keys = [key for key in self.data_keys]
         # Add on the composite keys
         print_keys += self.composite_keys
 
@@ -163,8 +162,8 @@ class AmberOutput(object):
         csvwriter.writerow(['Frame #'] + print_keys)
 
         # write out each frame
-        for i in range(len(self.data[print_keys[0]])):
-            csvwriter.writerow([i] + [self.data[key][i] for key in print_keys])
+        for i in range(len(self[print_keys[0]])):
+            csvwriter.writerow([i] + [self[key][i] for key in print_keys])
 
     #==================================================
 
@@ -182,30 +181,31 @@ class AmberOutput(object):
             # Skip chamber terms if we aren't using chamber prmtops
             if not self.chamber and key in ['UB', 'IMP', 'CMAP']: continue
             # Skip any terms that have zero as every single element (i.e. EDISPER)
-            if self.data[key] == 0: continue
-            stdev = self.data[key].stdev()
-            avg = self.data[key].mean()
-            csvwriter.writerow([key, avg, stdev, stdev/sqrt(len(self.data[key]))])
+            if self[key] == 0: continue
+            stdev = self[key].stdev()
+            avg = self[key].mean()
+            csvwriter.writerow([key, avg, stdev, stdev/sqrt(len(self[key]))])
 
         for key in self.composite_keys:
             # Now print out the composite terms
-            stdev = self.data[key].stdev()
-            avg = self.data[key].mean()
-            csvwriter.writerow([key, avg, stdev, stdev/sqrt(len(self.data[key]))])
+            stdev = self[key].stdev()
+            avg = self[key].mean()
+            csvwriter.writerow([key, avg, stdev, stdev/sqrt(len(self[key]))])
 
     #==================================================
 
-    def print_summary(self):
+    def print_summary(self, mol: str = None):
         """ Returns a formatted string that can be printed directly to the
             output file
         """
         if not self.is_read:
             raise OutputError('Cannot print summary before reading output files')
 
-        ret_str = ('Energy Component            Average              ' +
-                   'Std. Dev.   Std. Err. of Mean\n')
-        ret_str += ('------------------------------------------------' +
-                    '-------------------------------\n')
+        ret_str = ''
+        if mol:
+            ret_str = mol.capitalize() + '\n'
+        ret_str += 'Energy Component            Average              Std. Dev.   Std. Err. of Mean\n'
+        ret_str += '-------------------------------------------------------------------------------\n'
 
         for key in self.data_keys:
             # Skip terms we don't want to print
@@ -215,18 +215,18 @@ class AmberOutput(object):
             # Skip chamber terms if we aren't using chamber prmtops
             if not self.chamber and key in ['UB', 'IMP', 'CMAP']: continue
             # Skip any terms that have zero as every single element (i.e. EDISPER)
-            if self.data[key] == 0: continue
-            stdev = self.data[key].stdev()
-            ret_str += '%-14s %20.4f %21.4f %19.4f\n' % (key, self.data[key].mean(), stdev, stdev / sqrt(len(
-                self.data[key])))
+            if self[key] == 0: continue
+            stdev = self[key].stdev()
+            ret_str += '%-14s %20.4f %21.4f %19.4f\n' % (key, self[key].mean(), stdev, stdev / sqrt(len(
+                self[key])))
 
         ret_str += '\n'
         for key in self.composite_keys:
             # Now print out the composite terms
             if key == 'TOTAL': ret_str += '\n'
-            stdev = self.data[key].stdev()
-            ret_str += '%-14s %20.4f %21.4f %19.4f\n' % (key, self.data[key].mean(), stdev, stdev / sqrt(len(
-                self.data[key])))
+            stdev = self[key].stdev()
+            ret_str += '%-14s %20.4f %21.4f %19.4f\n' % (key, self[key].mean(), stdev, stdev / sqrt(len(
+                self[key])))
 
         return ret_str + '\n\n'
 
@@ -264,7 +264,7 @@ class AmberOutput(object):
         """
 
         for key in self.composite_keys:
-            self.data[key]=EnergyVector(len(self.data['EEL']))
+            self[key]=EnergyVector(len(self['EEL']))
 
         for key in self.data_keys:
             if self.print_levels[key] > self.verbose:
@@ -272,20 +272,19 @@ class AmberOutput(object):
             if not self.chamber and key in ['UB', 'IMP', 'CMAP']:
                 continue
             for component in self.data_key_owner[key]:
-                self.data[component] = self.data[key] + self.data[component]
-
+                self[component] = self[key] + self[component]
 #-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 
-class IEout(object):
+class IEout(dict):
     """
     Interaction Entropy output
     """
-    def __init__(self):
-        self.data = {}
+    def __init__(self, **kwargs):
+        super(IEout, self).__init__(**kwargs)
 
     def print_summary_csv(self, csvwriter):
         """ Output summary of quasi-harmonic results in CSV format """
-        csvwriter.writerow([f"Iteration Entropy calculation from last {self.data['ieframes']} frames..."])
+        csvwriter.writerow([f"Iteration Entropy calculation from last {self['ieframes']} frames..."])
         csvwriter.writerow(['Iteration Entropy:', '{:.2f}'.format(self.avg())])
 
     def sum(self, other, model, key1, key2):
@@ -293,10 +292,10 @@ class IEout(object):
         Takes the sum between 2 keys of 2 different BindingStatistics
         classes and returns the average and standard deviation of that diff.
         """
-        if len(self.data[model][key1]) != len(other.data[key2]):
-            return (self.data[model][key1].mean() + other.data[key2].mean(),
-                    sqrt(self.data[model][key1].stdev()**2 + other.data[key2].stdev()**2))
-        mydiff = self.data[model][key1] + other.data[key2]
+        if len(self[model][key1]) != len(other[key2]):
+            return (self[model][key1].mean() + other[key2].mean(),
+                    sqrt(self[model][key1].stdev()**2 + other[key2].stdev()**2))
+        mydiff = self[model][key1] + other[key2]
         return mydiff.mean(), mydiff.stdev()
 
     # def print_vectors(self, csvwriter):
@@ -312,25 +311,25 @@ class IEout(object):
 
         ret_str = 'Model           σ(Int. Energy)      Average       Std. Dev.   Std. Err. of Mean\n'
         ret_str += '-------------------------------------------------------------------------------\n'
-        for model in self.data:
-            self.data[model]['iedata'] = EnergyVector(self.data[model]['iedata'])
-            stdev = self.data[model]['iedata'].stdev()
-            avg = self.data[model]['iedata'].mean()
-            ret_str += '%-14s %10.3f %16.3f %15.3f %19.3f\n' % (model, self.data[model]['sigma'], avg, stdev,
-                                                                stdev/sqrt(len(self.data[model]['iedata'])))
+        for model in self:
+            self[model]['iedata'] = EnergyVector(self[model]['iedata'])
+            stdev = self[model]['iedata'].stdev()
+            avg = self[model]['iedata'].mean()
+            ret_str += '%-14s %10.3f %16.3f %15.3f %19.3f\n' % (model, self[model]['sigma'], avg, stdev,
+                                                                stdev/sqrt(len(self[model]['iedata'])))
         return ret_str
 
 #-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
-class C2out(object):
+class C2out(dict):
     """
     Interaction Entropy output
     """
-    def __init__(self):
-        self.data = {}
+    def __init__(self, **kwargs):
+        super(C2out, self).__init__(**kwargs)
 
     def print_summary_csv(self, csvwriter):
         """ Output summary of C2 results in CSV format """
-        csvwriter.writerow([f"C2 Entropy calculation from last {self.data['ieframes']} frames..."])
+        csvwriter.writerow([f"C2 Entropy calculation from last {self['ieframes']} frames..."])
         csvwriter.writerow(['C2 Entropy:', '{:.2f}'.format(self.avg())])
 
     def sum(self, other, model, key1, key2):
@@ -338,7 +337,7 @@ class C2out(object):
         Takes the sum between 2 keys of 2 different BindingStatistics
         classes and returns the average and standard deviation of that diff.
         """
-        return self.data[model][key1] + other.data[key2].mean(), other.data[key2].stdev()
+        return self[model][key1] + other[key2].mean(), other[key2].stdev()
 
     # def print_vectors(self, csvwriter):
     #     """ Prints the energy vectors to a CSV file for easy viewing
@@ -353,24 +352,25 @@ class C2out(object):
 
         ret_str = 'Model           σ(Int. Energy)      Value         Std. Dev.   Conf. Interv. (95%)\n'
         ret_str += '-------------------------------------------------------------------------------\n'
-        for model in self.data:
-            ret_str += '%-14s %10.3f %15.3f %15.3f %13.3f-%5.3f\n' % (model, self.data[model]['sigma'],
-                                                                      self.data[model]['c2data'],
-                                                                      self.data[model]['c2_std'],
-                                                                      self.data[model]['c2_ci'][0],
-                                                                      self.data[model]['c2_ci'][1])
+        for model in self:
+            ret_str += '%-14s %10.3f %15.3f %15.3f %13.3f-%5.3f\n' % (model, self[model]['sigma'],
+                                                                      self[model]['c2data'],
+                                                                      self[model]['c2_std'],
+                                                                      self[model]['c2_ci'][0],
+                                                                      self[model]['c2_ci'][1])
         return ret_str
 
 #-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 
-class QHout(object):
+class QHout(dict):
     """ Quasi-harmonic output file class. QH output files are strange so we won't
         derive from AmberOutput
     """
 
     #==================================================
 
-    def __init__(self, filename, temp=298.15):
+    def __init__(self, filename, temp=298.15, **kwargs):
+        super(QHout, self).__init__(**kwargs)
         self.filename = filename
         self.temperature = temp
         self.stability = False
@@ -382,13 +382,10 @@ class QHout(object):
         """ Output summary of quasi-harmonic results in CSV format """
         csvwriter.writerow(['System','Translational','Rotational','Vibrational',
                             'Total'])
-        csvwriter.writerow(['Complex:',self.com[1],self.com[2],self.com[3],
-                            self.com[0]])
+        csvwriter.writerow(['Complex:',self.com[1],self.com[2],self.com[3], self.com[0]])
         if not self.stability:
-            csvwriter.writerow(['Receptor:',self.rec[1],self.rec[2],self.rec[3],
-                                self.rec[0]])
-            csvwriter.writerow(['Ligand:',self.lig[1],self.lig[2],self.lig[3],
-                                self.lig[0]])
+            csvwriter.writerow(['Receptor:',self.rec[1],self.rec[2],self.rec[3], self.rec[0]])
+            csvwriter.writerow(['Ligand:',self.lig[1],self.lig[2],self.lig[3], self.lig[0]])
             csvwriter.writerow(['Delta S:',
                                 self.com[1] - self.rec[1] - self.lig[1],
                                 self.com[2] - self.rec[2] - self.lig[2],
@@ -399,17 +396,13 @@ class QHout(object):
 
     def print_summary(self):
         """ Formatted summary of quasi-harmonic results """
-        ret_str =  ('           Translational      Rotational      ' +
-                    'Vibrational           Total\n')
+        ret_str = '           Translational      Rotational      Vibrational           Total\n'
 
-        ret_str += 'Complex:   %13.4f %15.4f %16.4f %15.4f\n' % (self.com[1],
-                                                                 self.com[2], self.com[3], self.com[0])
+        ret_str += 'Complex:   %13.4f %15.4f %16.4f %15.4f\n' % (self.com[1], self.com[2], self.com[3], self.com[0])
 
         if not self.stability:
-            ret_str += 'Receptor:  %13.4f %15.4f %16.4f %15.4f\n' % (self.rec[1],
-                                                                     self.rec[2], self.rec[3], self.rec[0])
-            ret_str += 'Ligand:    %13.4f %15.4f %16.4f %15.4f\n' % (self.lig[1],
-                                                                     self.lig[2], self.lig[3], self.lig[0])
+            ret_str += 'Receptor:  %13.4f %15.4f %16.4f %15.4f\n' % (self.rec[1], self.rec[2], self.rec[3], self.rec[0])
+            ret_str += 'Ligand:    %13.4f %15.4f %16.4f %15.4f\n' % (self.lig[1], self.lig[2], self.lig[3], self.lig[0])
             ret_str += '\nTΔS:   %13.4f %15.4f %16.4f %15.4f\n' % (
                 self.com[1] - self.rec[1] - self.lig[1],
                 self.com[2] - self.rec[2] - self.lig[2],
@@ -476,7 +469,7 @@ class QHout(object):
 
 #-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 
-class NMODEout(object):
+class NMODEout(dict):
     """ Normal mode entropy approximation output class """
     # Ordered list of keys in the data dictionary
     data_keys = ['Translational', 'Rotational', 'Vibrational', 'Total']
@@ -488,13 +481,14 @@ class NMODEout(object):
 
     #==================================================
 
-    def __init__(self, basename, INPUT, num_files=1, chamber=False):
+    def __init__(self, basename, INPUT, num_files=1, chamber=False, **kwargs):
+        super(NMODEout, self).__init__(**kwargs)
         import warnings
         self.basename = basename
 
-        self.data = {}
+
         for key in self.data_keys:
-            self.data[key] = EnergyVector()
+            self[key] = EnergyVector()
 
         if chamber:
             warnings.warn('nmode is incompatible with chamber topologies!')
@@ -514,8 +508,8 @@ class NMODEout(object):
         csvwriter.writerow(['Frame #'] + self.data_keys)
 
         # print data
-        for i in range(len(self.data[self.data_keys[0]])):
-            csvwriter.writerow([i] + [self.data[key][i] for key in self.data_keys])
+        for i in range(len(self[self.data_keys[0]])):
+            csvwriter.writerow([i] + [self[key][i] for key in self.data_keys])
 
     #==================================================
 
@@ -525,9 +519,9 @@ class NMODEout(object):
                             'Std. Err. of the Mean'])
 
         for key in self.data_keys:
-            stdev = self.data[key].stdev()
-            avg = self.data[key].mean()
-            csvwriter.writerow([key, avg, stdev, stdev/sqrt(len(self.data[key]))])
+            stdev = self[key].stdev()
+            avg = self[key].mean()
+            csvwriter.writerow([key, avg, stdev, stdev/sqrt(len(self[key]))])
 
     #==================================================
 
@@ -539,9 +533,9 @@ class NMODEout(object):
         ret_str += ('------------------------------------------------' +
                     '-------------------------------\n')
         for key in self.data_keys:
-            stdev = self.data[key].stdev()
+            stdev = self[key].stdev()
             ret_str += '%-14s %20.4f %21.4f %19.4f\n' % (key,
-                                                         self.data[key].mean(), stdev, stdev/sqrt(len(self.data[key])))
+                                                         self[key].mean(), stdev, stdev/sqrt(len(self[key])))
 
         return ret_str + '\n'
 
@@ -576,13 +570,13 @@ class NMODEout(object):
                 sys.stderr.write('Not all frames minimized within tolerance')
 
             if rawline[0:6] == 'Total:':
-                self.data['Total'] = self.data['Total'].append(float(rawline.split()[3]) *
+                self['Total'] = self['Total'].append(float(rawline.split()[3]) *
                                           self.temp / 1000)
-                self.data['Translational'] = self.data['Translational'].append(
+                self['Translational'] = self['Translational'].append(
                     float(outfile.readline().split()[3]) * self.temp / 1000)
-                self.data['Rotational'] = self.data['Rotational'].append(
+                self['Rotational'] = self['Rotational'].append(
                     float(outfile.readline().split()[3]) * self.temp / 1000)
-                self.data['Vibrational'] = self.data['Vibrational'].append(
+                self['Vibrational'] = self['Vibrational'].append(
                     float(outfile.readline().split()[3]) * self.temp / 1000)
 
             rawline = outfile.readline()
@@ -616,11 +610,12 @@ class GBout(AmberOutput):
 
     #==================================================
 
-    def __init__(self, basename, INPUT, num_files=1, chamber=False):
-        AmberOutput.__init__(self, basename, INPUT, num_files, chamber)
+    def __init__(self, basename, INPUT, num_files=1, chamber=False, read=True, **kwargs):
+        AmberOutput.__init__(self, basename, INPUT, num_files, chamber, **kwargs)
         self.surften = INPUT['surften']
         self.surfoff = INPUT['surfoff']
-        AmberOutput._read(self)
+        if read:
+            AmberOutput._read(self)
 
     #==================================================
 
@@ -632,27 +627,27 @@ class GBout(AmberOutput):
 
             if rawline[0:5] == ' BOND':
                 words = rawline.split()
-                self.data['BOND'] = self.data['BOND'].append(float(words[2]))
-                self.data['ANGLE'] = self.data['ANGLE'].append(float(words[5]))
-                self.data['DIHED'] = self.data['DIHED'].append(float(words[8]))
+                self['BOND'] = self['BOND'].append(float(words[2]))
+                self['ANGLE'] = self['ANGLE'].append(float(words[5]))
+                self['DIHED'] = self['DIHED'].append(float(words[8]))
                 words = outfile.readline().split()
 
                 if self.chamber:
-                    self.data['UB'] = self.data['UB'].append(float(words[2]))
-                    self.data['IMP'] = self.data['IMP'].append(float(words[5]))
-                    self.data['CMAP'] = self.data['CMAP'].append(float(words[8]))
+                    self['UB'] = self['UB'].append(float(words[2]))
+                    self['IMP'] = self['IMP'].append(float(words[5]))
+                    self['CMAP'] = self['CMAP'].append(float(words[8]))
                     words = outfile.readline().split()
                 else:
-                    self.data['UB'] = self.data['UB'].append(0.0)
-                    self.data['IMP'] = self.data['IMP'].append(0.0)
-                    self.data['CMAP'] = self.data['CMAP'].append(0.0)
+                    self['UB'] = self['UB'].append(0.0)
+                    self['IMP'] = self['IMP'].append(0.0)
+                    self['CMAP'] = self['CMAP'].append(0.0)
 
-                self.data['VDWAALS'] = self.data['VDWAALS'].append(float(words[2]))
-                self.data['EEL'] = self.data['EEL'].append(float(words[5]))
-                self.data['EGB'] = self.data['EGB'].append(float(words[8]))
+                self['VDWAALS'] = self['VDWAALS'].append(float(words[2]))
+                self['EEL'] = self['EEL'].append(float(words[5]))
+                self['EGB'] = self['EGB'].append(float(words[8]))
                 words = outfile.readline().split()
-                self.data['1-4 VDW'] = self.data['1-4 VDW'].append(float(words[3]))
-                self.data['1-4 EEL'] = self.data['1-4 EEL'].append(float(words[7]))
+                self['1-4 VDW'] = self['1-4 VDW'].append(float(words[3]))
+                self['1-4 EEL'] = self['1-4 EEL'].append(float(words[7]))
             # end if rawline[0:5] == 'BOND'
 
             rawline = outfile.readline()
@@ -666,8 +661,15 @@ class GBout(AmberOutput):
         fname = '%s.%d' % (self.basename, fileno)
         fname = fname.replace('gb.mdout','gb_surf.dat')
         surf_data = _get_cpptraj_surf(fname)
-        self.data['ESURF'] = self.data['ESURF'].append((surf_data * self.surften) + self.surfoff)
+        self['ESURF'] = self['ESURF'].append((surf_data * self.surften) + self.surfoff)
 
+    def get_energies_fromdict(self, d:dict):
+        for key in d:
+            if key in ['']:
+                continue
+            self[key] = EnergyVector(d[key])
+        self.is_read = True
+        self.fill_composite_terms()
 #-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 
 class PBout(AmberOutput):
@@ -708,33 +710,33 @@ class PBout(AmberOutput):
 
             if rawline[0:5] == ' BOND':
                 words = rawline.split()
-                self.data['BOND'] = self.data['BOND'].append(float(words[2]))
-                self.data['ANGLE'] = self.data['ANGLE'].append(float(words[5]))
-                self.data['DIHED'] = self.data['DIHED'].append(float(words[8]))
+                self['BOND'] = self['BOND'].append(float(words[2]))
+                self['ANGLE'] = self['ANGLE'].append(float(words[5]))
+                self['DIHED'] = self['DIHED'].append(float(words[8]))
                 words = outfile.readline().split()
 
                 if self.chamber:
-                    self.data['UB'] = self.data['UB'].append(float(words[2]))
-                    self.data['IMP'] = self.data['IMP'].append(float(words[5]))
-                    self.data['CMAP'] = self.data['CMAP'].append(float(words[8]))
+                    self['UB'] = self['UB'].append(float(words[2]))
+                    self['IMP'] = self['IMP'].append(float(words[5]))
+                    self['CMAP'] = self['CMAP'].append(float(words[8]))
                     words = outfile.readline().split()
                 else:
-                    self.data['UB'] = self.data['UB'].append(0.0)
-                    self.data['IMP'] = self.data['IMP'].append(0.0)
-                    self.data['CMAP'] = self.data['CMAP'].append(0.0)
+                    self['UB'] = self['UB'].append(0.0)
+                    self['IMP'] = self['IMP'].append(0.0)
+                    self['CMAP'] = self['CMAP'].append(0.0)
 
-                self.data['VDWAALS'] = self.data['VDWAALS'].append(float(words[2]))
-                self.data['EEL'] = self.data['EEL'].append(float(words[5]))
-                self.data['EPB'] = self.data['EPB'].append(float(words[8]))
+                self['VDWAALS'] = self['VDWAALS'].append(float(words[2]))
+                self['EEL'] = self['EEL'].append(float(words[5]))
+                self['EPB'] = self['EPB'].append(float(words[8]))
                 words = outfile.readline().split()
-                self.data['1-4 VDW'] = self.data['1-4 VDW'].append(float(words[3]))
-                self.data['1-4 EEL'] = self.data['1-4 EEL'].append(float(words[7]))
+                self['1-4 VDW'] = self['1-4 VDW'].append(float(words[3]))
+                self['1-4 EEL'] = self['1-4 EEL'].append(float(words[7]))
                 words = outfile.readline().split()
-                self.data['ENPOLAR'] = self.data['ENPOLAR'].append(float(words[2]))
+                self['ENPOLAR'] = self['ENPOLAR'].append(float(words[2]))
                 if not self.apbs:
-                    self.data['EDISPER'] = self.data['EDISPER'].append(float(words[5]))
+                    self['EDISPER'] = self['EDISPER'].append(float(words[5]))
                 else:
-                    self.data['EDISPER'] = self.data['EDISPER'].append(0.0)
+                    self['EDISPER'] = self['EDISPER'].append(0.0)
             # end if rawline == ' BOND'
 
             rawline = outfile.readline()
@@ -783,20 +785,20 @@ class RISMout(AmberOutput):
             if re.match(r'(solute_epot|solutePotentialEnergy)',
                         rawline):
                 words = rawline.split()
-                self.data['VDWAALS'] = self.data['VDWAALS'].append(float(words[2]))
-                self.data['EEL'] = self.data['EEL'].append(float(words[3]))
-                self.data['BOND'] = self.data['BOND'].append(float(words[4]))
-                self.data['ANGLE'] = self.data['ANGLE'].append(float(words[5]))
-                self.data['DIHED'] = self.data['DIHED'].append(float(words[6]))
-                self.data['1-4 VDW'] = self.data['1-4 VDW'].append(float(words[7]))
-                self.data['1-4 EEL'] = self.data['1-4 EEL'].append(float(words[8]))
+                self['VDWAALS'] = self['VDWAALS'].append(float(words[2]))
+                self['EEL'] = self['EEL'].append(float(words[3]))
+                self['BOND'] = self['BOND'].append(float(words[4]))
+                self['ANGLE'] = self['ANGLE'].append(float(words[5]))
+                self['DIHED'] = self['DIHED'].append(float(words[6]))
+                self['1-4 VDW'] = self['1-4 VDW'].append(float(words[7]))
+                self['1-4 EEL'] = self['1-4 EEL'].append(float(words[8]))
 
             elif self.solvtype == 0 and re.match(
                     r'(rism_exchem|rism_excessChemicalPotential)\s',rawline):
-                self.data['ERISM'] = self.data['ERISM'].append(float(rawline.split()[1]))
+                self['ERISM'] = self['ERISM'].append(float(rawline.split()[1]))
             elif self.solvtype == 1 and re.match(
                     r'(rism_exchGF|rism_excessChemicalPotentialGF)\s',rawline):
-                self.data['ERISM'] = self.data['ERISM'].append(float(rawline.split()[1]))
+                self['ERISM'] = self['ERISM'].append(float(rawline.split()[1]))
 
             rawline = outfile.readline()
 
@@ -853,26 +855,26 @@ class PolarRISMout(RISMout):
             if re.match(r'(solute_epot|solutePotentialEnergy)',
                         rawline):
                 words = rawline.split()
-                self.data['VDWAALS'] = self.data['VDWAALS'].append(float(words[2]))
-                self.data['EEL'] = self.data['EEL'].append(float(words[3]))
-                self.data['BOND'] = self.data['BOND'].append(float(words[4]))
-                self.data['ANGLE'] = self.data['ANGLE'].append(float(words[5]))
-                self.data['DIHED'] = self.data['DIHED'].append(float(words[6]))
-                self.data['1-4 VDW'] = self.data['1-4 VDW'].append(float(words[8]))
-                self.data['1-4 EEL'] = self.data['1-4 EEL'].append(float(words[8]))
+                self['VDWAALS'] = self['VDWAALS'].append(float(words[2]))
+                self['EEL'] = self['EEL'].append(float(words[3]))
+                self['BOND'] = self['BOND'].append(float(words[4]))
+                self['ANGLE'] = self['ANGLE'].append(float(words[5]))
+                self['DIHED'] = self['DIHED'].append(float(words[6]))
+                self['1-4 VDW'] = self['1-4 VDW'].append(float(words[8]))
+                self['1-4 EEL'] = self['1-4 EEL'].append(float(words[8]))
 
             elif self.solvtype == 0 and re.match(
                     r'(rism_polar|rism_polarExcessChemicalPotential)\s',rawline):
-                self.data['POLAR SOLV'] = self.data['POLAR SOLV'].append(float(rawline.split()[1]))
+                self['POLAR SOLV'] = self['POLAR SOLV'].append(float(rawline.split()[1]))
             elif self.solvtype == 0 and re.match(
                     r'(rism_apolar|rism_apolarExcessChemicalPotential)\s',rawline):
-                self.data['APOLAR SOLV'] = self.data['APOLAR SOLV'].append(float(rawline.split()[1]))
+                self['APOLAR SOLV'] = self['APOLAR SOLV'].append(float(rawline.split()[1]))
             elif self.solvtype == 1 and re.match(
                     r'(rism_polGF|rism_polarExcessChemicalPotentialGF)\s',rawline):
-                self.data['POLAR SOLV'] = self.data['POLAR SOLV'].append(float(rawline.split()[1]))
+                self['POLAR SOLV'] = self['POLAR SOLV'].append(float(rawline.split()[1]))
             elif self.solvtype == 1 and re.match(
                     r'(rism_apolGF|rism_apolarExcessChemicalPotentialGF)\s',rawline):
-                self.data['APOLAR SOLV'] = self.data['APOLAR SOLV'].append(float(rawline.split()[1]))
+                self['APOLAR SOLV'] = self['APOLAR SOLV'].append(float(rawline.split()[1]))
 
             rawline = outfile.readline()
 
@@ -926,27 +928,27 @@ class QMMMout(GBout):
 
             if rawline[0:5] == ' BOND':
                 words = rawline.split()
-                self.data['BOND'] = self.data['BOND'].append(float(words[2]))
-                self.data['ANGLE'] = self.data['ANGLE'].append(float(words[5]))
-                self.data['DIHED'] = self.data['DIHED'].append(float(words[8]))
+                self['BOND'] = self['BOND'].append(float(words[2]))
+                self['ANGLE'] = self['ANGLE'].append(float(words[5]))
+                self['DIHED'] = self['DIHED'].append(float(words[8]))
                 words = outfile.readline().split()
 
                 if self.chamber:
-                    self.data['UB'] = self.data['UB'].append(float(words[2]))
-                    self.data['IMP'] = self.data['IMP'].append(float(words[5]))
-                    self.data['CMAP'] = self.data['CMAP'].append(float(words[8]))
+                    self['UB'] = self['UB'].append(float(words[2]))
+                    self['IMP'] = self['IMP'].append(float(words[5]))
+                    self['CMAP'] = self['CMAP'].append(float(words[8]))
                     words = outfile.readline().split()
                 else:
-                    self.data['UB'] = self.data['UB'].append(0.0)
-                    self.data['IMP'] = self.data['IMP'].append(0.0)
-                    self.data['CMAP'] = self.data['CMAP'].append(0.0)
+                    self['UB'] = self['UB'].append(0.0)
+                    self['IMP'] = self['IMP'].append(0.0)
+                    self['CMAP'] = self['CMAP'].append(0.0)
 
-                self.data['VDWAALS'] = self.data['VDWAALS'].append(float(words[2]))
-                self.data['EEL'] = self.data['EEL'].append(float(words[5]))
-                self.data['EGB'] = self.data['EGB'].append(float(words[8]))
+                self['VDWAALS'] = self['VDWAALS'].append(float(words[2]))
+                self['EEL'] = self['EEL'].append(float(words[5]))
+                self['EGB'] = self['EGB'].append(float(words[8]))
                 words = outfile.readline().split()
-                self.data['1-4 VDW'] = self.data['1-4 VDW'].append(float(words[3]))
-                self.data['1-4 EEL'] = self.data['1-4 EEL'].append(float(words[7]))
+                self['1-4 VDW'] = self['1-4 VDW'].append(float(words[3]))
+                self['1-4 EEL'] = self['1-4 EEL'].append(float(words[7]))
                 words = outfile.readline().split()
                 # This is where ESCF will be. Since ESCF can differ based on which
                 # qmtheory was chosen, we just check to see if it's != ESURF:
@@ -954,11 +956,11 @@ class QMMMout(GBout):
                     # It's possible that there is no space between ***ESCF and the =.
                     # If not, the ESCF variable will be the second, not the 3rd word
                     if words[0].endswith('='):
-                        self.data['ESCF'] = self.data['ESCF'].append(float(words[1]))
+                        self['ESCF'] = self['ESCF'].append(float(words[1]))
                     else:
-                        self.data['ESCF'] = self.data['ESCF'].append(float(words[2]))
+                        self['ESCF'] = self['ESCF'].append(float(words[2]))
                 else:
-                    self.data['ESCF'] = self.data['ESCF'].append(0.0)
+                    self['ESCF'] = self['ESCF'].append(0.0)
 
             rawline = outfile.readline()
 
@@ -968,12 +970,13 @@ class QMMMout(GBout):
 
 #+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-class BindingStatistics(object):
+class BindingStatistics(dict):
     """ Base class for compiling the binding statistics """
 
     #==================================================
 
-    def __init__(self, com, rec, lig, verbose=1, chamber=False):
+    def __init__(self, com, rec, lig, chamber=False, **kwargs):
+        super(BindingStatistics, self).__init__(**kwargs)
         self.com = com
         self.rec = rec
         self.lig = lig
@@ -987,7 +990,7 @@ class BindingStatistics(object):
 
         self.data_keys = self.com.data_keys
         self.composite_keys = []
-        self.data = {}
+
         for key in self.com.composite_keys:
             self.composite_keys.append('DELTA ' + key)
         self.print_levels = self.com.print_levels
@@ -1063,27 +1066,27 @@ class BindingStatistics(object):
                 printkey = key
             # Now print out the stats
             if not self.missing_terms:
-                stdev = self.data[key].stdev()
-                avg = self.data[key].mean()
-                num_frames = len(self.data[key])
+                stdev = self[key].stdev()
+                avg = self[key].mean()
+                num_frames = len(self[key])
             else:
-                stdev = self.data[key][1]
-                avg = self.data[key][0]
-                num_frames = min(len(self.com.data[key]),len(self.rec.data[key]),
-                                 len(self.lig.data[key]))
+                stdev = self[key][1]
+                avg = self[key][0]
+                num_frames = min(len(self.com[key]),len(self.rec[key]),
+                                 len(self.lig[key]))
             csvwriter.writerow([printkey, avg, stdev, stdev/sqrt(num_frames)])
 
         for key in self.composite_keys:
             # Now print out the composite terms
             if not self.missing_terms:
-                stdev = self.data[key].stdev()
-                avg = self.data[key].mean()
-                num_frames = len(self.data[key])
+                stdev = self[key].stdev()
+                avg = self[key].mean()
+                num_frames = len(self[key])
             else:
-                stdev = self.data[key][1]
-                avg = self.data[key][0]
+                stdev = self[key][1]
+                avg = self[key][0]
                 # num_frames is the same as the one from above
-            csvwriter.writerow([key, avg, stdev, stdev/sqrt(len(self.data[key]))])
+            csvwriter.writerow([key, avg, stdev, stdev/sqrt(len(self[key]))])
 
     #==================================================
 
@@ -1096,10 +1099,9 @@ class BindingStatistics(object):
         else:
             ret_str = ''
 
-        if self.verbose:
-            ret_str += 'Complex:\n' + self.com.print_summary()
-            ret_str += 'Receptor:\n' + self.rec.print_summary()
-            ret_str += 'Ligand:\n' + self.lig.print_summary()
+        ret_str += 'Complex:\n' + self.com.print_summary()
+        ret_str += 'Receptor:\n' + self.rec.print_summary()
+        ret_str += 'Ligand:\n' + self.lig.print_summary()
 
         if isinstance(self.com, NMODEout):
             col_name = '%-16s' % 'Entropy Term'
@@ -1130,14 +1132,14 @@ class BindingStatistics(object):
                 printkey = key
             # Now print out the stats
             if not self.missing_terms:
-                stdev = self.data[key].stdev()
-                avg = self.data[key].mean()
-                num_frames = len(self.data[key])
+                stdev = self[key].stdev()
+                avg = self[key].mean()
+                num_frames = len(self[key])
             else:
-                stdev = self.data[key][1]
-                avg = self.data[key][0]
-                num_frames = min(len(self.com.data[key]),len(self.rec.data[key]),
-                                 len(self.lig.data[key]))
+                stdev = self[key][1]
+                avg = self[key][0]
+                num_frames = min(len(self.com[key]),len(self.rec[key]),
+                                 len(self.lig[key]))
             ret_str += '%-14s %20.4f %21.4f %19.4f\n' % (printkey, avg, stdev,
                                                          stdev/sqrt(num_frames))
 
@@ -1146,12 +1148,12 @@ class BindingStatistics(object):
             # Now print out the composite terms
             if key == 'DELTA TOTAL': ret_str += '\n'
             if not self.missing_terms:
-                stdev = self.data[key].stdev()
-                avg = self.data[key].mean()
-                num_frames = len(self.data[key])
+                stdev = self[key].stdev()
+                avg = self[key].mean()
+                num_frames = len(self[key])
             else:
-                stdev = self.data[key][1]
-                avg = self.data[key][0]
+                stdev = self[key][1]
+                avg = self[key][0]
                 # num_frames is the same as the one from above
             ret_str += '%-14s %20.4f %21.4f %19.4f\n' % (key, avg, stdev,
                                                          stdev/sqrt(num_frames))
@@ -1165,11 +1167,11 @@ class BindingStatistics(object):
         Takes the difference between 2 keys of 2 different BindingStatistics
         classes and returns the average and standard deviation of that diff.
         """
-        if len(self.data[key1]) != len(other.data[key2]):
-            return (self.data[key1].mean() - other.data[key2].mean(),
-                    sqrt(self.data[key1].stdev() ** 2 + other.data[key2].stdev() ** 2))
+        if len(self[key1]) != len(other[key2]):
+            return (self[key1].mean() - other[key2].mean(),
+                    sqrt(self[key1].stdev() ** 2 + other[key2].stdev() ** 2))
 
-        mydiff = self.data[key1] - other.data[key2]
+        mydiff = self[key1] - other[key2]
 
         return mydiff.mean(), mydiff.stdev()
 
@@ -1204,9 +1206,9 @@ class SingleTrajBinding(BindingStatistics):
         self.lig.fill_composite_terms()
 
         for key in self.com.data_keys:
-            self.data[key] = self.com.data[key] - self.rec.data[key] - self.lig.data[key]
+            self[key] = self.com[key] - self.rec[key] - self.lig[key]
         for key in self.com.composite_keys:
-            self.data['DELTA ' + key] = self.com.data[key] - self.rec.data[key] - self.lig.data[key]
+            self['DELTA ' + key] = self.com[key] - self.rec[key] - self.lig[key]
 
     #==================================================
 
@@ -1225,19 +1227,19 @@ class SingleTrajBinding(BindingStatistics):
         self.lig.fill_composite_terms()
 
         for key in self.com.data_keys:
-            self.data[key] = [self.com.data[key].mean() - self.rec.data[key].mean() -
-                              self.lig.data[key].mean(),
-                              sqrt(self.com.data[key].stdev() ** 2 +
-                                   self.rec.data[key].stdev() ** 2 +
-                                   self.lig.data[key].stdev() ** 2) ]
+            self[key] = [self.com[key].mean() - self.rec[key].mean() -
+                              self.lig[key].mean(),
+                              sqrt(self.com[key].stdev() ** 2 +
+                                   self.rec[key].stdev() ** 2 +
+                                   self.lig[key].stdev() ** 2) ]
 
         for key in self.com.composite_keys:
-            self.data['DELTA ' + key] = \
-                [self.com.data[key].mean() - self.rec.data[key].mean() -
-                 self.lig.data[key].mean(),
-                 sqrt(self.com.data[key].stdev() ** 2 +
-                      self.rec.data[key].stdev() ** 2 +
-                      self.lig.data[key].stdev() ** 2) ]
+            self['DELTA ' + key] = \
+                [self.com[key].mean() - self.rec[key].mean() -
+                 self.lig[key].mean(),
+                 sqrt(self.com[key].stdev() ** 2 +
+                      self.rec[key].stdev() ** 2 +
+                      self.lig[key].stdev() ** 2) ]
 
     #==================================================
 
@@ -1258,8 +1260,8 @@ class SingleTrajBinding(BindingStatistics):
             csvwriter.writerow(['Frame #'] + print_keys)
 
             # write out each frame
-            for i in range(len(self.data[print_keys[0]])):
-                csvwriter.writerow([i]+[self.data[key][i] for key in print_keys])
+            for i in range(len(self[print_keys[0]])):
+                csvwriter.writerow([i]+[self[key][i] for key in print_keys])
             csvwriter.writerow([])
 
 #+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -1282,20 +1284,20 @@ class MultiTrajBinding(BindingStatistics):
         self.lig.fill_composite_terms()
 
         for key in self.com.data_keys:
-            self.data[key] = self.com.data[key] - self.rec.data[key] - self.lig.data[key]
-            # self.data[key] = [self.com.data[key].avg() - self.rec.data[key].avg() -
-            #                   self.lig.data[key].avg(),
-            #                   sqrt(self.com.data[key].stdev() ** 2 +
-            #                        self.rec.data[key].stdev() ** 2 +
-            #                        self.lig.data[key].stdev() ** 2) ]
+            self[key] = self.com[key] - self.rec[key] - self.lig[key]
+            # self[key] = [self.com[key].avg() - self.rec[key].avg() -
+            #                   self.lig[key].avg(),
+            #                   sqrt(self.com[key].stdev() ** 2 +
+            #                        self.rec[key].stdev() ** 2 +
+            #                        self.lig[key].stdev() ** 2) ]
         for key in self.com.composite_keys:
-            self.data['DELTA ' + key] = self.com.data[key] - self.rec.data[key]- self.lig.data[key]
-            # self.data['DELTA ' + key] = \
-            #     [self.com.data[key].avg() - self.rec.data[key].avg() -
-            #      self.lig.data[key].avg(),
-            #      sqrt(self.com.data[key].stdev() ** 2 +
-            #           self.rec.data[key].stdev() ** 2 +
-            #           self.lig.data[key].stdev() ** 2) ]
+            self['DELTA ' + key] = self.com[key] - self.rec[key]- self.lig[key]
+            # self['DELTA ' + key] = \
+            #     [self.com[key].avg() - self.rec[key].avg() -
+            #      self.lig[key].avg(),
+            #      sqrt(self.com[key].stdev() ** 2 +
+            #           self.rec[key].stdev() ** 2 +
+            #           self.lig[key].stdev() ** 2) ]
     #==================================================
 
     def print_summary_csv(self, csvwriter):
@@ -1322,16 +1324,16 @@ class MultiTrajBinding(BindingStatistics):
             if key in self.composite_keys: continue
             # Skip chamber terms if we aren't using chamber prmtops
             if not self.chamber and key in ['UB', 'IMP', 'CMAP']: continue
-            stdev = self.data[key][1]
-            avg = self.data[key][0]
-            num_frames = min(len(self.com.data[key]),len(self.rec.data[key]),
-                             len(self.lig.data[key]))
+            stdev = self[key][1]
+            avg = self[key][0]
+            num_frames = min(len(self.com[key]),len(self.rec[key]),
+                             len(self.lig[key]))
             csvwriter.writerow([key, avg, stdev, stdev/sqrt(num_frames)])
 
         for key in self.composite_keys:
             # Now print out the composite terms
-            stdev = self.data[key][1]
-            avg = self.data[key][0]
+            stdev = self[key][1]
+            avg = self[key][0]
             csvwriter.writerow([key, avg, stdev, stdev/sqrt(num_frames)])
 
     #==================================================
@@ -1366,19 +1368,19 @@ class MultiTrajBinding(BindingStatistics):
             if key in self.composite_keys: continue
             # Skip chamber terms if we aren't using chamber prmtops
             if not self.chamber and key in ['UB', 'IMP', 'CMAP']: continue
-            stdev = self.data[key][1]
-            num_frames = min(len(self.com.data[key]),len(self.rec.data[key]),
-                             len(self.lig.data[key]))
+            stdev = self[key][1]
+            num_frames = min(len(self.com[key]),len(self.rec[key]),
+                             len(self.lig[key]))
             ret_str += '%-14s %20.4f %21.4f %19.4f\n' % (key,
-                                                         self.data[key][0], stdev, stdev / sqrt(num_frames))
+                                                         self[key][0], stdev, stdev / sqrt(num_frames))
 
         ret_str += '\n'
         for key in self.composite_keys:
             # Now print out the composite terms
             if key == 'DELTA TOTAL': ret_str += '\n'
-            stdev = self.data[key][1]
+            stdev = self[key][1]
             ret_str += '%-14s %20.4f %21.4f %19.4f\n' % (key,
-                                                         self.data[key][0], stdev, stdev / sqrt(num_frames))
+                                                         self[key][0], stdev, stdev / sqrt(num_frames))
 
         return ret_str + '\n\n'
 
@@ -1389,12 +1391,12 @@ class MultiTrajBinding(BindingStatistics):
         Takes the difference between 2 keys of 2 different BindingStatistics
         classes and returns the average and standard deviation of that diff.
         """
-        return (self.data[key1][0] - other.data[key2][0],
-                sqrt(self.data[key1][1]**2 + other.data[key2][1]**2))
+        return (self[key1][0] - other[key2][0],
+                sqrt(self[key1][1]**2 + other[key2][1]**2))
 
 #+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-class DecompOut(object):
+class DecompOut(dict):
     " Class for decomposition output file to collect statistics and output them "
 
     indicator = "                    PRINT DECOMP - TOTAL ENERGIES"
@@ -1404,8 +1406,8 @@ class DecompOut(object):
 
     #==================================================
 
-    def __init__(self, basename, prmtop, surften, csvwriter, num_files=1,
-                 verbose=1):
+    def __init__(self, basename, prmtop, surften, csvwriter, num_files=1, **kwargs):
+        super(DecompOut, self).__init__(**kwargs)
         from csv import writer
         self.basename = basename # base name of output files
         self.prmtop = prmtop # AmberParm prmtop object
@@ -1440,9 +1442,9 @@ class DecompOut(object):
             self.num_terms = int(self.get_num_terms())
         except TypeError:
             raise OutputError('DecompOut: Not a decomp output file')
-        self.data = {}
+
         for token in self.allowed_tokens:
-            self.data[token] = {'int': [EnergyVector(self.num_terms), EnergyVector(self.num_terms)],
+            self[token] = {'int': [EnergyVector(self.num_terms), EnergyVector(self.num_terms)],
                                 'vdw': [EnergyVector(self.num_terms), EnergyVector(self.num_terms)],
                                 'eel': [EnergyVector(self.num_terms), EnergyVector(self.num_terms)],
                                 'pol': [EnergyVector(self.num_terms), EnergyVector(self.num_terms)],
@@ -1521,18 +1523,18 @@ class DecompOut(object):
         sas = float(line[51:60]) * self.surften
         tot = internal + vdw + eel + pol + sas
         self.resnums[0][self.termnum] = resnum
-        self.data[line[0:3]]['int'][0][self.termnum] += internal
-        self.data[line[0:3]]['int'][1][self.termnum] += internal**2
-        self.data[line[0:3]]['vdw'][0][self.termnum] += vdw
-        self.data[line[0:3]]['vdw'][1][self.termnum] += vdw**2
-        self.data[line[0:3]]['eel'][0][self.termnum] += eel
-        self.data[line[0:3]]['eel'][1][self.termnum] += eel**2
-        self.data[line[0:3]]['pol'][0][self.termnum] += pol
-        self.data[line[0:3]]['pol'][1][self.termnum] += pol**2
-        self.data[line[0:3]]['sas'][0][self.termnum] += sas
-        self.data[line[0:3]]['sas'][1][self.termnum] += sas**2
-        self.data[line[0:3]]['tot'][0][self.termnum] += tot
-        self.data[line[0:3]]['tot'][1][self.termnum] += tot**2
+        self[line[0:3]]['int'][0][self.termnum] += internal
+        self[line[0:3]]['int'][1][self.termnum] += internal**2
+        self[line[0:3]]['vdw'][0][self.termnum] += vdw
+        self[line[0:3]]['vdw'][1][self.termnum] += vdw**2
+        self[line[0:3]]['eel'][0][self.termnum] += eel
+        self[line[0:3]]['eel'][1][self.termnum] += eel**2
+        self[line[0:3]]['pol'][0][self.termnum] += pol
+        self[line[0:3]]['pol'][1][self.termnum] += pol**2
+        self[line[0:3]]['sas'][0][self.termnum] += sas
+        self[line[0:3]]['sas'][1][self.termnum] += sas**2
+        self[line[0:3]]['tot'][0][self.termnum] += tot
+        self[line[0:3]]['tot'][1][self.termnum] += tot**2
         self.termnum += 1
         return [resnum, internal, vdw, eel, pol, sas, tot]
 
@@ -1593,18 +1595,18 @@ class DecompOut(object):
                                   '----------------------------------')
             # Now loop over all of the terms.
             for i in range(self.num_terms):
-                int_avg = self.data[term]['int'][0][i] / numframes
-                int_std = sqrt(abs(self.data[term]['int'][1][i]/numframes - int_avg**2))
-                vdw_avg = self.data[term]['vdw'][0][i] / numframes
-                vdw_std = sqrt(abs(self.data[term]['vdw'][1][i]/numframes - vdw_avg**2))
-                eel_avg = self.data[term]['eel'][0][i] / numframes
-                eel_std = sqrt(abs(self.data[term]['eel'][1][i]/numframes - eel_avg**2))
-                pol_avg = self.data[term]['pol'][0][i] / numframes
-                pol_std = sqrt(abs(self.data[term]['pol'][1][i]/numframes - pol_avg**2))
-                sas_avg = self.data[term]['sas'][0][i] / numframes
-                sas_std = sqrt(abs(self.data[term]['sas'][1][i]/numframes - sas_avg**2))
-                tot_avg = self.data[term]['tot'][0][i] / numframes
-                tot_std = sqrt(abs(self.data[term]['tot'][1][i]/numframes - tot_avg**2))
+                int_avg = self[term]['int'][0][i] / numframes
+                int_std = sqrt(abs(self[term]['int'][1][i]/numframes - int_avg**2))
+                vdw_avg = self[term]['vdw'][0][i] / numframes
+                vdw_std = sqrt(abs(self[term]['vdw'][1][i]/numframes - vdw_avg**2))
+                eel_avg = self[term]['eel'][0][i] / numframes
+                eel_std = sqrt(abs(self[term]['eel'][1][i]/numframes - eel_avg**2))
+                pol_avg = self[term]['pol'][0][i] / numframes
+                pol_std = sqrt(abs(self[term]['pol'][1][i]/numframes - pol_avg**2))
+                sas_avg = self[term]['sas'][0][i] / numframes
+                sas_std = sqrt(abs(self[term]['sas'][1][i]/numframes - sas_avg**2))
+                tot_avg = self[term]['tot'][0][i] / numframes
+                tot_std = sqrt(abs(self[term]['tot'][1][i]/numframes - tot_avg**2))
                 resnm = self.prmtop.parm_data['RESIDUE_LABEL'][self.resnums[0][i]-1]
                 res_str = '%3s%4d' % (resnm, self.resnums[0][i])
                 output_file.writeline(('%s |%9.3f +/- %6.3f |%9.3f +/- %6.3f ' +
@@ -1626,18 +1628,18 @@ class DecompOut(object):
             csvwriter.writerow([''] + ['Avg.','Std. Dev.', 'Std. Err. of Mean']*6)
             for i in range(self.num_terms):
                 sqrt_frames = sqrt(numframes)
-                int_avg = self.data[term]['int'][0][i] / numframes
-                int_std = sqrt(abs(self.data[term]['int'][1][i]/numframes - int_avg**2))
-                vdw_avg = self.data[term]['vdw'][0][i] / numframes
-                vdw_std = sqrt(abs(self.data[term]['vdw'][1][i]/numframes - vdw_avg**2))
-                eel_avg = self.data[term]['eel'][0][i] / numframes
-                eel_std = sqrt(abs(self.data[term]['eel'][1][i]/numframes - eel_avg**2))
-                pol_avg = self.data[term]['pol'][0][i] / numframes
-                pol_std = sqrt(abs(self.data[term]['pol'][1][i]/numframes - pol_avg**2))
-                sas_avg = self.data[term]['sas'][0][i] / numframes
-                sas_std = sqrt(abs(self.data[term]['sas'][1][i]/numframes - sas_avg**2))
-                tot_avg = self.data[term]['tot'][0][i] / numframes
-                tot_std = sqrt(abs(self.data[term]['tot'][1][i]/numframes - tot_avg**2))
+                int_avg = self[term]['int'][0][i] / numframes
+                int_std = sqrt(abs(self[term]['int'][1][i]/numframes - int_avg**2))
+                vdw_avg = self[term]['vdw'][0][i] / numframes
+                vdw_std = sqrt(abs(self[term]['vdw'][1][i]/numframes - vdw_avg**2))
+                eel_avg = self[term]['eel'][0][i] / numframes
+                eel_std = sqrt(abs(self[term]['eel'][1][i]/numframes - eel_avg**2))
+                pol_avg = self[term]['pol'][0][i] / numframes
+                pol_std = sqrt(abs(self[term]['pol'][1][i]/numframes - pol_avg**2))
+                sas_avg = self[term]['sas'][0][i] / numframes
+                sas_std = sqrt(abs(self[term]['sas'][1][i]/numframes - sas_avg**2))
+                tot_avg = self[term]['tot'][0][i] / numframes
+                tot_std = sqrt(abs(self[term]['tot'][1][i]/numframes - tot_avg**2))
                 resnm = self.prmtop.parm_data['RESIDUE_LABEL'][self.resnums[0][i]-1]
                 res_str = '%3s%4d' % (resnm, self.resnums[0][i])
                 csvwriter.writerow([res_str, int_avg, int_std, int_std/sqrt_frames,
@@ -1711,18 +1713,18 @@ class PairDecompOut(DecompOut):
         pol = float(line[60:72])
         sas = float(line[73:85]) * self.surften
         tot = internal + vdw + eel + pol + sas
-        self.data[line[0:3]]['int'][0][self.termnum] += internal
-        self.data[line[0:3]]['int'][1][self.termnum] += internal * internal
-        self.data[line[0:3]]['vdw'][0][self.termnum] += vdw
-        self.data[line[0:3]]['vdw'][1][self.termnum] += vdw * vdw
-        self.data[line[0:3]]['eel'][0][self.termnum] += eel
-        self.data[line[0:3]]['eel'][1][self.termnum] += eel * eel
-        self.data[line[0:3]]['pol'][0][self.termnum] += pol
-        self.data[line[0:3]]['pol'][1][self.termnum] += pol * pol
-        self.data[line[0:3]]['sas'][0][self.termnum] += sas
-        self.data[line[0:3]]['sas'][1][self.termnum] += sas * sas
-        self.data[line[0:3]]['tot'][0][self.termnum] += tot
-        self.data[line[0:3]]['tot'][1][self.termnum] += tot * tot
+        self[line[0:3]]['int'][0][self.termnum] += internal
+        self[line[0:3]]['int'][1][self.termnum] += internal * internal
+        self[line[0:3]]['vdw'][0][self.termnum] += vdw
+        self[line[0:3]]['vdw'][1][self.termnum] += vdw * vdw
+        self[line[0:3]]['eel'][0][self.termnum] += eel
+        self[line[0:3]]['eel'][1][self.termnum] += eel * eel
+        self[line[0:3]]['pol'][0][self.termnum] += pol
+        self[line[0:3]]['pol'][1][self.termnum] += pol * pol
+        self[line[0:3]]['sas'][0][self.termnum] += sas
+        self[line[0:3]]['sas'][1][self.termnum] += sas * sas
+        self[line[0:3]]['tot'][0][self.termnum] += tot
+        self[line[0:3]]['tot'][1][self.termnum] += tot * tot
         self.resnums[0][self.termnum] = resnum
         self.resnums[1][self.termnum] = resnum2
         self.termnum += 1
@@ -1742,23 +1744,23 @@ class PairDecompOut(DecompOut):
                                   '----------------------------------------')
             # Now loop over all of the terms.
             for i in range(self.num_terms):
-                int_avg = self.data[term]['int'][0][i] / numframes
-                int_std = sqrt(abs(self.data[term]['int'][1][i]/numframes -
+                int_avg = self[term]['int'][0][i] / numframes
+                int_std = sqrt(abs(self[term]['int'][1][i]/numframes -
                                    int_avg**2))
-                vdw_avg = self.data[term]['vdw'][0][i] / numframes
-                vdw_std = sqrt(abs(self.data[term]['vdw'][1][i]/numframes -
+                vdw_avg = self[term]['vdw'][0][i] / numframes
+                vdw_std = sqrt(abs(self[term]['vdw'][1][i]/numframes -
                                    vdw_avg**2))
-                eel_avg = self.data[term]['eel'][0][i] / numframes
-                eel_std = sqrt(abs(self.data[term]['eel'][1][i]/numframes -
+                eel_avg = self[term]['eel'][0][i] / numframes
+                eel_std = sqrt(abs(self[term]['eel'][1][i]/numframes -
                                    eel_avg**2))
-                pol_avg = self.data[term]['pol'][0][i] / numframes
-                pol_std = sqrt(abs(self.data[term]['pol'][1][i]/numframes -
+                pol_avg = self[term]['pol'][0][i] / numframes
+                pol_std = sqrt(abs(self[term]['pol'][1][i]/numframes -
                                    pol_avg**2))
-                sas_avg = self.data[term]['sas'][0][i] / numframes
-                sas_std = sqrt(abs(self.data[term]['sas'][1][i]/numframes -
+                sas_avg = self[term]['sas'][0][i] / numframes
+                sas_std = sqrt(abs(self[term]['sas'][1][i]/numframes -
                                    sas_avg**2))
-                tot_avg = self.data[term]['tot'][0][i] / numframes
-                tot_std = sqrt(abs(self.data[term]['tot'][1][i]/numframes -
+                tot_avg = self[term]['tot'][0][i] / numframes
+                tot_std = sqrt(abs(self[term]['tot'][1][i]/numframes -
                                    tot_avg**2))
                 resnm = self.prmtop.parm_data['RESIDUE_LABEL'][self.resnums[0][i]-1]
                 res_str0 = '%3s%4d' % (resnm, self.resnums[0][i])
@@ -1792,23 +1794,23 @@ class PairDecompOut(DecompOut):
             csvwriter.writerow(['']*2+['Avg.','Std. Dev.', 'Std. Err. of Mean']*6)
             for i in range(self.num_terms):
                 sqrt_frames = sqrt(numframes)
-                int_avg = self.data[term]['int'][0][i] / numframes
-                int_std = sqrt(abs(self.data[term]['int'][1][i]/numframes -
+                int_avg = self[term]['int'][0][i] / numframes
+                int_std = sqrt(abs(self[term]['int'][1][i]/numframes -
                                    int_avg**2))
-                vdw_avg = self.data[term]['vdw'][0][i] / numframes
-                vdw_std = sqrt(abs(self.data[term]['vdw'][1][i]/numframes -
+                vdw_avg = self[term]['vdw'][0][i] / numframes
+                vdw_std = sqrt(abs(self[term]['vdw'][1][i]/numframes -
                                    vdw_avg**2))
-                eel_avg = self.data[term]['eel'][0][i] / numframes
-                eel_std = sqrt(abs(self.data[term]['eel'][1][i]/numframes -
+                eel_avg = self[term]['eel'][0][i] / numframes
+                eel_std = sqrt(abs(self[term]['eel'][1][i]/numframes -
                                    eel_avg**2))
-                pol_avg = self.data[term]['pol'][0][i] / numframes
-                pol_std = sqrt(abs(self.data[term]['pol'][1][i]/numframes -
+                pol_avg = self[term]['pol'][0][i] / numframes
+                pol_std = sqrt(abs(self[term]['pol'][1][i]/numframes -
                                    pol_avg**2))
-                sas_avg = self.data[term]['sas'][0][i] / numframes
-                sas_std = sqrt(abs(self.data[term]['sas'][1][i]/numframes -
+                sas_avg = self[term]['sas'][0][i] / numframes
+                sas_std = sqrt(abs(self[term]['sas'][1][i]/numframes -
                                    sas_avg**2))
-                tot_avg = self.data[term]['tot'][0][i] / numframes
-                tot_std = sqrt(abs(self.data[term]['tot'][1][i]/numframes -
+                tot_avg = self[term]['tot'][0][i] / numframes
+                tot_std = sqrt(abs(self[term]['tot'][1][i]/numframes -
                                    tot_avg**2))
                 resnm = self.prmtop.parm_data['RESIDUE_LABEL'][self.resnums[0][i]-1]
                 res_str0 = '%3s%4d' % (resnm, self.resnums[0][i])
@@ -1825,18 +1827,19 @@ class PairDecompOut(DecompOut):
 
 #+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-class DecompBinding(object):
+class DecompBinding(dict):
     """ Class for decomposition binding (per-residue) """
 
     #==================================================
 
-    def __init__(self, com, rec, lig, prmtop_system, idecomp, verbose, output,
-                 csvwriter, desc):
+    def __init__(self, com, rec, lig, prmtop_system, idecomp, output,
+                 csvwriter, desc, **kwargs):
         """
         output should be an open file and csvfile should be a csv.writer class. If
         the output format is specified as csv, then output should be a csv.writer
         class as well.
         """
+        super(DecompBinding, self).__init__(**kwargs)
         from csv import writer
         (self.com, self.rec, self.lig) = com, rec, lig
         self.num_terms = self.com.num_terms
@@ -1867,10 +1870,10 @@ class DecompBinding(object):
                 self._write_header(self.csvwriter[tok])
         else:
             self.csvwriter = None
-        self.data = {}
+
         self.data_stats = {}
         for token in self.allowed_tokens:
-            self.data[token] = {'int': [EnergyVector(self.num_terms), EnergyVector(self.num_terms)],
+            self[token] = {'int': [EnergyVector(self.num_terms), EnergyVector(self.num_terms)],
                                 'vdw': [EnergyVector(self.num_terms), EnergyVector(self.num_terms)],
                                 'eel': [EnergyVector(self.num_terms), EnergyVector(self.num_terms)],
                                 'pol': [EnergyVector(self.num_terms), EnergyVector(self.num_terms)],
@@ -1923,18 +1926,18 @@ class DecompBinding(object):
                 other_token = self.lig.get_next_term(searched_token, framenum)
 
             # Fill the data array
-            self.data[searched_token]['int'][0][0] += (com_token[1] - other_token[1])
-            self.data[searched_token]['int'][1][0] += (com_token[1] - other_token[1]) * (com_token[1] - other_token[1])
-            self.data[searched_token]['vdw'][0][0] += (com_token[2] - other_token[2])
-            self.data[searched_token]['vdw'][1][0] += (com_token[2] - other_token[2]) * (com_token[2] - other_token[2])
-            self.data[searched_token]['eel'][0][0] += (com_token[3] - other_token[3])
-            self.data[searched_token]['eel'][1][0] += (com_token[3] - other_token[3]) * (com_token[3] - other_token[3])
-            self.data[searched_token]['pol'][0][0] += (com_token[4] - other_token[4])
-            self.data[searched_token]['pol'][1][0] += (com_token[4] - other_token[4]) * (com_token[4] - other_token[4])
-            self.data[searched_token]['sas'][0][0] += (com_token[5] - other_token[5])
-            self.data[searched_token]['sas'][1][0] += (com_token[5] - other_token[5]) * (com_token[5] - other_token[5])
-            self.data[searched_token]['tot'][0][0] += (com_token[6] - other_token[6])
-            self.data[searched_token]['tot'][1][0] += (com_token[6] - other_token[6]) * (com_token[6] - other_token[6])
+            self[searched_token]['int'][0][0] += (com_token[1] - other_token[1])
+            self[searched_token]['int'][1][0] += (com_token[1] - other_token[1]) * (com_token[1] - other_token[1])
+            self[searched_token]['vdw'][0][0] += (com_token[2] - other_token[2])
+            self[searched_token]['vdw'][1][0] += (com_token[2] - other_token[2]) * (com_token[2] - other_token[2])
+            self[searched_token]['eel'][0][0] += (com_token[3] - other_token[3])
+            self[searched_token]['eel'][1][0] += (com_token[3] - other_token[3]) * (com_token[3] - other_token[3])
+            self[searched_token]['pol'][0][0] += (com_token[4] - other_token[4])
+            self[searched_token]['pol'][1][0] += (com_token[4] - other_token[4]) * (com_token[4] - other_token[4])
+            self[searched_token]['sas'][0][0] += (com_token[5] - other_token[5])
+            self[searched_token]['sas'][1][0] += (com_token[5] - other_token[5]) * (com_token[5] - other_token[5])
+            self[searched_token]['tot'][0][0] += (com_token[6] - other_token[6])
+            self[searched_token]['tot'][1][0] += (com_token[6] - other_token[6]) * (com_token[6] - other_token[6])
             if self.csvwriter:
                 self.csvwriter[searched_token].writerow([framenum,
                                                          self.resnums[0][0],
@@ -1974,23 +1977,23 @@ class DecompBinding(object):
                             com_token[0]-1],
                         self.prmtop_system.res_list[com_token[0]-1].ligand_number)
                 # Now fill the arrays
-                self.data[searched_token]['int'][0][i] += (com_token[1] - other_token[1])
-                self.data[searched_token]['int'][1][i] += (com_token[1] - other_token[1])\
+                self[searched_token]['int'][0][i] += (com_token[1] - other_token[1])
+                self[searched_token]['int'][1][i] += (com_token[1] - other_token[1])\
                                                           * (com_token[1] - other_token[1])
-                self.data[searched_token]['vdw'][0][i] += (com_token[2] - other_token[2])
-                self.data[searched_token]['vdw'][1][i] += (com_token[2] - other_token[2])\
+                self[searched_token]['vdw'][0][i] += (com_token[2] - other_token[2])
+                self[searched_token]['vdw'][1][i] += (com_token[2] - other_token[2])\
                                                           * (com_token[2] - other_token[2])
-                self.data[searched_token]['eel'][0][i] += (com_token[3] - other_token[3])
-                self.data[searched_token]['eel'][1][i] += (com_token[3] - other_token[3])\
+                self[searched_token]['eel'][0][i] += (com_token[3] - other_token[3])
+                self[searched_token]['eel'][1][i] += (com_token[3] - other_token[3])\
                                                           * (com_token[3] - other_token[3])
-                self.data[searched_token]['pol'][0][i] += (com_token[4] - other_token[4])
-                self.data[searched_token]['pol'][1][i] += (com_token[4] - other_token[4])\
+                self[searched_token]['pol'][0][i] += (com_token[4] - other_token[4])
+                self[searched_token]['pol'][1][i] += (com_token[4] - other_token[4])\
                                                           * (com_token[4] - other_token[4])
-                self.data[searched_token]['sas'][0][i] += (com_token[5] - other_token[5])
-                self.data[searched_token]['sas'][1][i] += (com_token[5] - other_token[5])\
+                self[searched_token]['sas'][0][i] += (com_token[5] - other_token[5])
+                self[searched_token]['sas'][1][i] += (com_token[5] - other_token[5])\
                                                           * (com_token[5] - other_token[5])
-                self.data[searched_token]['tot'][0][i] += (com_token[6] - other_token[6])
-                self.data[searched_token]['tot'][1][i] += (com_token[6] - other_token[6])\
+                self[searched_token]['tot'][0][i] += (com_token[6] - other_token[6])
+                self[searched_token]['tot'][1][i] += (com_token[6] - other_token[6])\
                                                           * (com_token[6] - other_token[6])
                 if self.csvwriter:
                     self.csvwriter[searched_token].writerow([framenum,
@@ -2025,11 +2028,11 @@ class DecompBinding(object):
     def _calc_avg_stdev(self):
         """ Calculates the averages and standard deviations of all of the data """
         # Do population averages and such
-        for key1 in list(self.data.keys()):
-            for key2 in list(self.data[key1].keys()):
+        for key1 in list(self.keys()):
+            for key2 in list(self[key1].keys()):
                 for i in range(self.num_terms):
-                    myavg = self.data[key1][key2][0][i] / self.numframes
-                    myavg2 = self.data[key1][key2][1][i] / self.numframes
+                    myavg = self[key1][key2][0][i] / self.numframes
+                    myavg2 = self[key1][key2][1][i] / self.numframes
                     self.data_stats[key1][key2][0][i] = myavg
                     self.data_stats[key1][key2][1][i] = sqrt(abs(myavg2-myavg*myavg))
 
@@ -2181,18 +2184,18 @@ class PairDecompBinding(DecompBinding):
                     other_token = [0,0,0,0,0,0,0,0]
 
             # Fill the data array
-            self.data[searched_token]['int'][0][0] += (com_token[2] - other_token[2])
-            self.data[searched_token]['int'][1][0] += (com_token[2] - other_token[2]) * (com_token[2] - other_token[2])
-            self.data[searched_token]['vdw'][0][0] += (com_token[3] - other_token[3])
-            self.data[searched_token]['vdw'][1][0] += (com_token[3] - other_token[3]) * (com_token[3] - other_token[3])
-            self.data[searched_token]['eel'][0][0] += (com_token[4] - other_token[4])
-            self.data[searched_token]['eel'][1][0] += (com_token[4] - other_token[4]) * (com_token[4] - other_token[4])
-            self.data[searched_token]['pol'][0][0] += (com_token[5] - other_token[5])
-            self.data[searched_token]['pol'][1][0] += (com_token[5] - other_token[5]) * (com_token[5] - other_token[5])
-            self.data[searched_token]['sas'][0][0] += (com_token[6] - other_token[6])
-            self.data[searched_token]['sas'][1][0] += (com_token[6] - other_token[6]) * (com_token[6] - other_token[6])
-            self.data[searched_token]['tot'][0][0] += (com_token[7] - other_token[7])
-            self.data[searched_token]['tot'][1][0] += (com_token[7] - other_token[7]) * (com_token[7] - other_token[7])
+            self[searched_token]['int'][0][0] += (com_token[2] - other_token[2])
+            self[searched_token]['int'][1][0] += (com_token[2] - other_token[2]) * (com_token[2] - other_token[2])
+            self[searched_token]['vdw'][0][0] += (com_token[3] - other_token[3])
+            self[searched_token]['vdw'][1][0] += (com_token[3] - other_token[3]) * (com_token[3] - other_token[3])
+            self[searched_token]['eel'][0][0] += (com_token[4] - other_token[4])
+            self[searched_token]['eel'][1][0] += (com_token[4] - other_token[4]) * (com_token[4] - other_token[4])
+            self[searched_token]['pol'][0][0] += (com_token[5] - other_token[5])
+            self[searched_token]['pol'][1][0] += (com_token[5] - other_token[5]) * (com_token[5] - other_token[5])
+            self[searched_token]['sas'][0][0] += (com_token[6] - other_token[6])
+            self[searched_token]['sas'][1][0] += (com_token[6] - other_token[6]) * (com_token[6] - other_token[6])
+            self[searched_token]['tot'][0][0] += (com_token[7] - other_token[7])
+            self[searched_token]['tot'][1][0] += (com_token[7] - other_token[7]) * (com_token[7] - other_token[7])
             if self.csvwriter:
                 self.csvwriter[searched_token].writerow([framenum,
                                                          self.resnums[0][0],
@@ -2225,23 +2228,23 @@ class PairDecompBinding(DecompBinding):
                         other_token = [0,0,0,0,0,0,0,0]
 
                 # Now fill the arrays
-                self.data[searched_token]['int'][0][i] += (com_token[2] - other_token[2])
-                self.data[searched_token]['int'][1][i] += (com_token[2] - other_token[2])\
+                self[searched_token]['int'][0][i] += (com_token[2] - other_token[2])
+                self[searched_token]['int'][1][i] += (com_token[2] - other_token[2])\
                                                             * (com_token[2] - other_token[2])
-                self.data[searched_token]['vdw'][0][i] += (com_token[3] - other_token[3])
-                self.data[searched_token]['vdw'][1][i] += (com_token[3] - other_token[3])\
+                self[searched_token]['vdw'][0][i] += (com_token[3] - other_token[3])
+                self[searched_token]['vdw'][1][i] += (com_token[3] - other_token[3])\
                                                             * (com_token[3] - other_token[3])
-                self.data[searched_token]['eel'][0][i] += (com_token[4] - other_token[4])
-                self.data[searched_token]['eel'][1][i] += (com_token[4] - other_token[4])\
+                self[searched_token]['eel'][0][i] += (com_token[4] - other_token[4])
+                self[searched_token]['eel'][1][i] += (com_token[4] - other_token[4])\
                                                             * (com_token[4] - other_token[4])
-                self.data[searched_token]['pol'][0][i] += (com_token[5] - other_token[5])
-                self.data[searched_token]['pol'][1][i] += (com_token[5] - other_token[5])\
+                self[searched_token]['pol'][0][i] += (com_token[5] - other_token[5])
+                self[searched_token]['pol'][1][i] += (com_token[5] - other_token[5])\
                                                             * (com_token[5] - other_token[5])
-                self.data[searched_token]['sas'][0][i] += (com_token[6] - other_token[6])
-                self.data[searched_token]['sas'][1][i] += (com_token[6] - other_token[6])\
+                self[searched_token]['sas'][0][i] += (com_token[6] - other_token[6])
+                self[searched_token]['sas'][1][i] += (com_token[6] - other_token[6])\
                                                             * (com_token[6] - other_token[6])
-                self.data[searched_token]['tot'][0][i] += (com_token[7] - other_token[7])
-                self.data[searched_token]['tot'][1][i] += (com_token[7] - other_token[7])\
+                self[searched_token]['tot'][0][i] += (com_token[7] - other_token[7])
+                self[searched_token]['tot'][1][i] += (com_token[7] - other_token[7])\
                                                             * (com_token[7] - other_token[7])
                 if self.csvwriter:
                     self.csvwriter[searched_token].writerow([framenum,
@@ -2447,8 +2450,8 @@ class MultiTrajDecompBinding(DecompBinding):
     def _calc_avg_stdev(self):
         """ Calculates standard deviation and averages """
         # Use error propagation and deltas of averages
-        for key1 in list(self.data.keys()):
-            for key2 in list(self.data[key1].keys()):
+        for key1 in list(self.keys()):
+            for key2 in list(self[key1].keys()):
                 num_rec_terms, num_lig_terms = 0, 0
                 for i in range(self.com.num_terms):
                     # Get the value of the other term -- either in ligand
@@ -2464,11 +2467,11 @@ class MultiTrajDecompBinding(DecompBinding):
                         numframes = self.num_lig_frames
                         oi = num_lig_terms
                         num_lig_terms += 1
-                    cavg = self.com.data[key1][key2][0][i] / self.num_com_frames
-                    oavg = other.data[key1][key2][0][oi] / numframes
-                    cvar = abs(self.com.data[key1][key2][1][i]/self.num_com_frames -
+                    cavg = self.com[key1][key2][0][i] / self.num_com_frames
+                    oavg = other[key1][key2][0][oi] / numframes
+                    cvar = abs(self.com[key1][key2][1][i]/self.num_com_frames -
                                cavg * cavg )
-                    ovar = abs(other.data[key1][key2][1][oi] / numframes -
+                    ovar = abs(other[key1][key2][1][oi] / numframes -
                                oavg * oavg )
                     self.data_stats[key1][key2][0][i] = cavg - oavg
                     self.data_stats[key1][key2][1][i] = sqrt(cvar + ovar)
@@ -2483,8 +2486,8 @@ class MultiTrajPairDecompBinding(MultiTrajDecompBinding, PairDecompBinding):
     def _calc_avg_stdev(self):
         """ Calculates standard deviation and averages """
         # Use error propagation and deltas of averages
-        for key1 in list(self.data.keys()):
-            for key2 in list(self.data[key1].keys()):
+        for key1 in list(self.keys()):
+            for key2 in list(self[key1].keys()):
                 num_rec_terms, num_lig_terms = 0, 0
                 for i in range(self.num_terms):
                     # Get the value of the other term -- either in ligand
@@ -2511,15 +2514,15 @@ class MultiTrajPairDecompBinding(MultiTrajDecompBinding, PairDecompBinding):
 
                     if alone:
                         self.data_stats[key1][key2][0][i] = \
-                            self.com.data[key1][key2][0][i]
+                            self.com[key1][key2][0][i]
                         self.data_stats[key1][key2][1][i] = \
-                            self.com.data[key1][key2][1][i]
+                            self.com[key1][key2][1][i]
                     else:
-                        cavg = self.com.data[key1][key2][0][i] / self.num_com_frames
-                        oavg = other.data[key1][key2][0][oi] / numframes
-                        cvar = abs(self.com.data[key1][key2][1][i]/self.num_com_frames
+                        cavg = self.com[key1][key2][0][i] / self.num_com_frames
+                        oavg = other[key1][key2][0][oi] / numframes
+                        cvar = abs(self.com[key1][key2][1][i]/self.num_com_frames
                                    - cavg * cavg )
-                        ovar = abs(other.data[key1][key2][1][oi] / numframes
+                        ovar = abs(other[key1][key2][1][oi] / numframes
                                    - oavg * oavg )
                         self.data_stats[key1][key2][0][i] = cavg - oavg
                         self.data_stats[key1][key2][1][i] = sqrt(cvar + ovar)
@@ -2535,7 +2538,81 @@ class MultiTrajPairDecompBinding(MultiTrajDecompBinding, PairDecompBinding):
 
     # The rest are inherited from MultiTrajDecompBinding
 
-#+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+class H5Output:
+    def __init__(self, fname):
+        self.h5f = h5py.File(fname, 'r')
+        self.app_namespace = SimpleNamespace(INPUT={}, FILES=SimpleNamespace(), INFO={})
+        self.calc_types = SimpleNamespace(normal={}, mutant={}, decomp_normal={}, decomp_mutant={})
+
+        for key in self.h5f:
+            if key in ['normal', 'mutant']:
+                self._h52e(key)
+            elif key in ['decomp_normal', 'decomp_mutant']:
+                self._h52decomp(key)
+
+            elif key in ['INFO', 'INPUT', 'FILES']:
+                self._h52app_namespace(key)
+        self.h5f.close()
+
+    def _h52app_namespace(self, key):
+        for x in self.h5f[key]:
+            tvar = self.h5f[key][x][()]
+            if isinstance(tvar, bytes):
+                cvar = tvar.decode()
+            elif isinstance(tvar, np.float):
+                cvar = None if np.isnan(tvar) else tvar
+            elif isinstance(tvar, np.ndarray):
+                cvar = [x.decode() if isinstance(x, bytes) else x for x in tvar if isinstance(x, bytes)]
+            else:
+                cvar = tvar
+            if key == 'INPUT':
+                self.app_namespace.INPUT[x] = cvar
+            elif key == 'FILES':
+                setattr(self.app_namespace.FILES, x, cvar)
+            else:
+                self.app_namespace.INFO[x] = cvar
+
+    def _h52e(self, key):
+        # key: normal or mutant
+        calc_types = getattr(self.calc_types, key)
+        # key  Energy: [gb, pb, rism std, rism gf], Decomp: [gb, pb], Entropy: [nmode, qh, ie, c2]
+        for key1 in self.h5f[key]:
+        # if key in ['gb', 'pb', 'rism std', 'rism gf', 'nmode', 'qh', 'ie', 'c2']:
+            calc_types[key1] = {}
+            # key2 is complex, receptor, ligand, delta
+            for key2 in self.h5f[key][key1]:
+                calc_types[key1][key2] = {}
+                # Energetic terms
+                for key3 in self.h5f[key][key1][key2]:
+                    calc_types[key1][key2][key3] = self.h5f[key][key1][key2][key3][()]
+
+    def _h52decomp(self, key):
+        calc_types = getattr(self.calc_types, key)
+        for key1 in self.h5f[key]:
+            # model
+            calc_types[key1] = {}
+            # key2 is complex, receptor, ligand, delta
+            for key2 in self.h5f[key][key1]:
+                calc_types[key1][key2] = {}
+                # TDC, SDC, BDC
+                for key3 in self.h5f[key][key1][key2]:
+                    # residue first level
+                    for key4 in self.h5f[key][key1][key2][key3]:
+                        for key5 in self.h5f[key][key1][key2][key3][key4]:
+                            if isinstance(self.h5f[key][key1][key2][key3][key4], h5py.Group):
+                                # residue sec level
+                                for key6 in self.h5f[key][key1][key2][key3][key4][key5]:
+                                    calc_types[key][key2][(key3, key4, key5, key6)] = \
+                                        self.h5f[key][key1][key2][key3][key4][key5][key6][()]
+                            else:
+                                # energy terms
+                                for key5 in self.h5f[key][key1][key2][key3][key4]:
+                                    calc_types[key][key2][(key3, key4, key5)] = \
+                                        self.h5f[key][key1][key2][key3][key4][key5][()]
+
+
+
 
 def _get_cpptraj_surf(fname):
     """
