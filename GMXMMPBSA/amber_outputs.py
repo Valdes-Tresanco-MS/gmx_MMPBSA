@@ -1390,7 +1390,7 @@ class DecompOut(dict):
 
     #==================================================
 
-    def __init__(self, basename, prmtop, surften, csvwriter, num_files=1, **kwargs):
+    def __init__(self, basename, prmtop, surften, csvwriter, num_files=1, verbose=1, **kwargs):
         super(DecompOut, self).__init__(**kwargs)
         from csv import writer
         self.basename = basename # base name of output files
