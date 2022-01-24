@@ -416,7 +416,7 @@ Test options:
   -t [{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18} [{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18} ...]]
                         The level the test is going to be run at. Multiple systems and analysis can be run at the same 
                         time.
-                              Sys. Runs  
+                              Nr. of Sys  
                         * 0      16     All -- Run all examples (Can take a long time!!!)
                         * 1      13     Minimal -- Does a minimal test with a set of systems and analyzes 
                                         that show that gmx_MMPBSA runs correctly. Only exclude 3drism, nmode
@@ -463,31 +463,31 @@ most recent version of the repository in the specified folder and will perform t
 
 === "minimal"
     
-        gmx_MMPBSA_test -f /home/user/Documents -n 10 [-t minimal is the default]
+        gmx_MMPBSA_test -f /home/user/Documents -n 10 [-t 2 is the default]
     
     Through this command-line, gmxMMPBSA_test will:
     
     * Download gmx_MMPBSA repository content in `/home/user/Documents`
-    * Do `minimal` set of examples
-    * Perform the calculation on 10 examples at the sime time (1 processor per example)
+    * Works with `Fast` set of examples
+    * Perform the calculation on 9 examples sequentially, using 10 cpus each time
 
 === "all"
     
-        gmx_MMPBSA_test -f /home/user/Documents -t all -n 10
+        gmx_MMPBSA_test -f /home/user/Documents -t 0 -n 10
     
     Through this command-line, gmxMMPBSA_test will:
     
     * Download gmx_MMPBSA repository content in `/home/user/Documents`
-    * Do `all` set of examples
-    * Perform the calculation on 10 examples at the sime time (1 processor per example)
+    * Works with `All` set of examples
+    * Perform the calculation on 16 examples sequentially, using 10 cpus each time
     
 === "specific"
     
-        gmx_MMPBSA_test -f /home/user/Documents -t prot_lig_st
+        gmx_MMPBSA_test -f /home/user/Documents -t 3
     
     Through this command-line, gmxMMPBSA_test will:
     
     * Download gmx_MMPBSA repository content in `/home/user/Documents`
-    * Do `prot_lig_st`[Protein-Ligand (Single Trajectory approach)] example
+    * Execute `3` [Protein-Ligand (Single Trajectory approach)] example
 
 [^1]: Taken from the MMPBSA.py paper

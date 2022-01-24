@@ -249,7 +249,7 @@ group = testparser.add_argument_group('Test options')
 group.add_argument('-t', dest='test', choices=range(19), type=int, nargs='*', default=[2],
                    help='''\
 The level the test is going to be run at. Multiple systems and analysis can be run at the same time.
-      Sys. Runs  
+      Nr. of Sys  
 * 0      16     All -- Run all examples (Can take a long time!!!)
 * 1      13     Minimal -- Does a minimal test with a set of systems and analyzes 
                 that show that gmx_MMPBSA runs correctly. Only exclude 3drism, nmode
