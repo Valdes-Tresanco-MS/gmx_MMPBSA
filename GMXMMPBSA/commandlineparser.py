@@ -237,8 +237,7 @@ group.add_argument('-r', '--recursive', help='Search recursively in this folder 
                    default=False)
 
 # tester parser
-description = ('This program is part of gmx_MMPBSA and will allow you to run the different gmx_MMPBSA calculations '
-              'examples easily.')
+description = ('This program is part of gmx_MMPBSA and will allow you to run various gmx_MMPBSA examples easily.')
 testparser = ArgumentParser(epilog=f'gmx_MMPBSA is an effort to implement the GB/PB and others calculations in '
                                   f'GROMACS. \nBased on MMPBSA.py (version {__mmpbsa_version__}) and '
                                   f'AmberTools{__ambertools_version__}',
@@ -249,8 +248,7 @@ testparser.add_argument('-v', '--version', action='version',
 group = testparser.add_argument_group('Test options')
 group.add_argument('-t', dest='test', choices=range(19), type=int, nargs='*', default=[2],
                    help='''\
-The level at which you want to take the test. You can define multiple systems and 
-analysis at the same time.
+The level the test is going to be run at. Multiple systems and analysis can be run at the same time.
       Sys. Runs  
 * 0      16     All -- Run all examples (Can take a long time!!!)
 * 1      13     Minimal -- Does a minimal test with a set of systems and analyzes 
@@ -283,6 +281,6 @@ group.add_argument('-r', '--reuse', help='Defines the existing test forlder will
 group.add_argument('-ng', '--nogui', help='No open gmx_MMPBSA_ana after all calculations finished',
                    action='store_true',  default=False)
 group.add_argument('-n', '--num_processors', type=int, default=4,
-                   help='Defines the number of processor cores you want to use with MPI per calculation. If the numer '
-                        'of frames is less than the number of cpus defined, the calculation will carry out with the '
-                        'number of frames')
+                   help='Defines the number of processor cores you want to use with MPI per calculation. If the number '
+                        'of frames is less than the number of cpus defined, the calculation will be performed with'
+                        'the number of processors = number of frames')
