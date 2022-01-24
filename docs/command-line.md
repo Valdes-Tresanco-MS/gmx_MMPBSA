@@ -11,27 +11,26 @@ title: Command-line
 ```
 $ gmx_MMPBSA -h
 
-usage: gmx_MMPBSA [-h] [-v] [--input-file-help] [-O] [-prefix <file prefix>]
-                  [-i FILE] [-xvvfile XVVFILE] [-o FILE] [-do FILE] [-eo FILE]
-                  [-deo FILE] [-nogui] [-s] [-cs <Structure File>]
-                  [-ci <Index File>] [-cg index index] [-ct [TRJ [TRJ ...]]]
-                  [-cp <Topology>] [-cr <PDB File>] [-rs <Structure File>]
-                  [-ri <Index File>] [-rg index] [-rt [TRJ [TRJ ...]]]
-                  [-rp <Topology>] [-lm <Structure File>] [-ls <Structure File>]
-                  [-li <Index File>] [-lg index] [-lt [TRJ [TRJ ...]]]
-                  [-lp <Topology>] [-make-mdins] [-use-mdins] [-rewrite-output]
-                  [--clean]
+usage: gmx_MMPBSA [-h] [-v] [--input-file-help] [--create_input [{gb,pb,rism,ala,decomp,nmode,all}] 
+                  [-O] [-prefix <file prefix>] [-i FILE] [-xvvfile XVVFILE] [-o FILE] [-do FILE] [-eo FILE]
+                  [-deo FILE] [-nogui] [-s] [-cs <Structure File>] [-ci <Index File>] [-cg index index] 
+                  [-ct [TRJ [TRJ ...]]] [-cp <Topology>] [-cr <PDB File>] [-rs <Structure File>] [-ri <Index File>] 
+                  [-rg index] [-rt [TRJ [TRJ ...]]] [-rp <Topology>] [-lm <Structure File>] [-ls <Structure File>] 
+                  [-li <Index File>] [-lg index] [-lt [TRJ [TRJ ...]]] [-lp <Topology>] [--rewrite-output] [--clean]
 
 gmx_MMPBSA is a new tool based on AMBER's MMPBSA.py aiming to perform end-state 
 free energy calculations with GROMACS files. This program is an adaptation of 
-Amber's MMPBSA.py and essentially works as such. As gmx_MMPBSA adapts MMPBSA.py, 
-since it has all the resources of this script and work with any GROMACS version.
+Amber's MMPBSA.py and essentially works as such. gmx_MMPBSA works with any GROMACS version.
+This program will calculate binding free energies using end-state free energy methods 
+on an ensemble of snapshots using a variety of implicit solvent models. This is the core 
+of gmx_MMPBSA and it will do all the calculations
 
 optional arguments:
   -h, --help            show this help message and exit
   -v, --version         show program's version number and exit
-  --input-file-help     Print all available options in the input file.
-                        (default: False)
+  --input-file-help     Print all available options in the input file. (default: False)
+  --create_input        Create an new input file with selected calculation type. (default: None)
+                         [{gb,pb,rism,ala,decomp,nmode,all}]
 
 Miscellaneous Options:
   -O, --overwrite       Allow output files to be overwritten (default: False)
@@ -134,12 +133,6 @@ Ligand:
   -lp <Topology>        Topology file of the ligand. (default: None)
 
 Miscellaneous Actions:
-  -make-mdins           Create the input files for each calculation and quit. This
-                         allows you to modify them and re-run using -use-mdins
-                         (default: False)
-  -use-mdins            Use existing input files for each calculation. If they do
-                         not exist with the appropriate names, gmx_MMPBSA will
-                         quit in error. (default: False)
   -rewrite-output       Do not re-run any calculations, just parse the output
                          files from the previous calculation and rewrite the
                          output files. (default: False)

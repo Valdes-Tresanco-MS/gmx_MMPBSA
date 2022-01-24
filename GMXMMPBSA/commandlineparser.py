@@ -91,9 +91,8 @@ def index(arg):
 
 description = ("gmx_MMPBSA is a new tool based on AMBER's MMPBSA.py aiming to perform end-state free energy calculations"
                " with GROMACS files. This program is an adaptation of Amber's MMPBSA.py and essentially works as such. "
-               "As gmx_MMPBSA adapts MMPBSA.py, since it has all the resources of this script and work with any "
-               "GROMACS version. This program will calculate binding free energies using end-state free energy "
-               "methods on an ensemble of snapshots using a variety of implicit solvent models.")
+               "gmx_MMPBSA works with any GROMACS version. This program will calculate binding free energies using "
+               "end-state free energy methods on an ensemble of snapshots using a variety of implicit solvent models.")
 
 complex_group_des = ("Complex files and info that are needed to perform the calculation. If the receptor and/or the "
                      "ligand info is not defined, we generate them from that of the complex.")
