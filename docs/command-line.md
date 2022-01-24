@@ -461,7 +461,7 @@ gmx_MMPBSA_test is designed to run a set of samples (all or minimal) or a specif
 Additionally, gmx_MMPBSA_test can run in parallel, decreasing the execution time gmx_MMPBSA_test will download the 
 most recent version of the repository in the specified folder and will perform the calculations
 
-=== "minimal"
+=== "Minimal"
     
         gmx_MMPBSA_test -f /home/user/Documents -n 10 [-t 2 is the default]
     
@@ -471,7 +471,7 @@ most recent version of the repository in the specified folder and will perform t
     * Works with `Fast` set of examples
     * Perform the calculation on 9 examples sequentially, using 10 cpus each time
 
-=== "all"
+=== "All"
     
         gmx_MMPBSA_test -f /home/user/Documents -t 0 -n 10
     
@@ -481,7 +481,7 @@ most recent version of the repository in the specified folder and will perform t
     * Works with `All` set of examples
     * Perform the calculation on 16 examples sequentially, using 10 cpus each time
     
-=== "specific"
+=== "Specific"
     
         gmx_MMPBSA_test -f /home/user/Documents -t 3
     
