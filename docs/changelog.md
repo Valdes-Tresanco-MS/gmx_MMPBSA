@@ -3,7 +3,7 @@ template: main.html
 title: Changelog
 ---
 # Changelog
-## gxm_MMPBSA v1.5.0 (coming soon...)
+## gmx_MMPBSA v1.5.0 (coming soon...)
 
 ### Additions
 #### `gmx_MMPBSA`
