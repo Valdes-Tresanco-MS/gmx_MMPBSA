@@ -3,7 +3,7 @@ template: main.html
 title: Protein-ligand (ST)
 ---
 
-# Protein-ligand binding free energy calculations (Single Trajectory method)
+# Binding free energy calculation with linear PB (LPBE)
 
 !!! info
     This example can be found in the [docs/examples/Linear_PB_solver][6] directory in the repository folder. If you didn't 

@@ -1,6 +1,6 @@
 ---
 template: main.html
-title: Complex receptors
+title: Complex receptor
 ---
 
 # Binding free energy calculations in multicomponent systems

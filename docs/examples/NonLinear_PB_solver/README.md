@@ -4,7 +4,7 @@ title: Alanine scanning
 ---
 
 
-# Binding free energy calculations with Non Linear PB solver (NLPB)
+# Binding free energy calculation with linear PB (NLPBE)
 
 !!! info
     This example can be found in the [docs/examples/NonLinear_PB_solver][6] directory in the repository folder. If you didn't 
