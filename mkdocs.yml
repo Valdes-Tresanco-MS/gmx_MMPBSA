@@ -157,7 +157,6 @@ nav:
     - How gmx_MMPBSA works: howworks.md
     - The input file: input_file.md
     - Output Files: output.md
-    - Advanced Options: advanced.md
     - Python API: api.md
     - gmx_MMPBSA_ana: analyzer.md
   - Examples:
