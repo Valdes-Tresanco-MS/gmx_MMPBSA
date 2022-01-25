@@ -185,7 +185,7 @@ nav:
         - Single Trajectory Protocol: examples/Protein_ligand/ST/README.md
         - Multiple Trajectory Protocol: examples/Protein_ligand/MT/README.md
         - BFE calculation with GB: examples/Protein_ligand/ST/README.md
-        - BFE calculation with Linear PB: examples/Protein_ligand/ST/README.md
+        - BFE calculation with Linear PB: examples/Linear_PB_solver/README.md
         - BFE calculation with NonLinear PB : examples/NonLinear_PB_solver/README.md
         - BFE calculation with 3D-RISM: examples/3D-RISM/README.md
         - Alanine scanning: examples/Alanine_scanning/README.md
