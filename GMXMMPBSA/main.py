@@ -30,7 +30,7 @@ import logging
 # Import gmx_MMPBSA modules
 from GMXMMPBSA import utils, __version__
 from GMXMMPBSA.amber_outputs import (QHout, NMODEout, QMMMout, GBout, PBout, PolarRISM_std_Out, RISM_std_Out,
-                                     PolarRISM_gf_Out, RISM_gf_Out, SingleTrajBinding, MultiTrajBinding, IEout, C2out)
+                                     PolarRISM_gf_Out, RISM_gf_Out, BindingStatistics, IEout, C2out)
 from GMXMMPBSA.calculation import (CalculationList, EnergyCalculation, PBEnergyCalculation, RISMCalculation,
                                    NmodeCalc, QuasiHarmCalc, CopyCalc, PrintCalc, LcpoCalc, MolsurfCalc,
                                    InteractionEntropyCalc, C2EntropyCalc)
@@ -939,12 +939,6 @@ class MMPBSA_App(object):
                 self.calc_types.normal['qh'] = QHout(self.pre + 'cpptraj_entropy.out', INPUT['temperature'])
             if INPUT['alarun']:
                 self.calc_types.mutant['qh'] = QHout(self.pre + 'mutant_cpptraj_entropy.out', INPUT['temperature'])
-        # Set BindingClass based on whether it's a single or multiple trajectory
-        # analysis
-        if self.traj_protocol == 'STP':
-            BindClass = SingleTrajBinding
-        else:
-            BindClass = MultiTrajBinding
         # Determine if our GB is QM/MM or not
         GBClass = QMMMout if INPUT['ifqnt'] else GBout
         # Determine which kind of RISM output class we are based on std/gf and
@@ -980,20 +974,20 @@ class MMPBSA_App(object):
                 continue
             # Non-mutant
             if not INPUT['mutant_only']:
-                self.calc_types.normal[key] = {'complex': outclass[i](self.pre + basename[i] % 'complex', self.INPUT,
-                                                               self.mpi_size, self.using_chamber)}
+                self.calc_types.normal[key] = {'complex': outclass[i](self.INPUT, self.using_chamber)}
+                self.calc_types.normal[key]['complex'].parse_from_file(self.pre + basename[i] % 'complex',
+                                                                       self.mpi_size)
                 if not self.stability:
-                    self.calc_types.normal[key]['receptor'] = outclass[i](self.pre +
-                                                                   basename[i] % 'receptor', self.INPUT, self.mpi_size,
-                                                                   self.using_chamber)
-                    self.calc_types.normal[key]['ligand'] = outclass[i](self.pre +
-                                                                 basename[i] % 'ligand', self.INPUT, self.mpi_size,
-                                                                 self.using_chamber)
-                    self.calc_types.normal[key]['delta'] = BindClass(
-                        self.calc_types.normal[key]['complex'],
-                        self.calc_types.normal[key]['receptor'],
-                        self.calc_types.normal[key]['ligand'],
-                         self.using_chamber)
+                    self.calc_types.normal[key]['receptor'] = outclass[i](self.INPUT, self.using_chamber)
+                    self.calc_types.normal[key]['receptor'].parse_from_file(self.pre + basename[i] % 'receptor',
+                                                                            self.mpi_size)
+                    self.calc_types.normal[key]['ligand'] = outclass[i](self.INPUT, self.using_chamber)
+                    self.calc_types.normal[key]['ligand'].parse_from_file(self.pre + basename[i] % 'ligand',
+                                                                          self.mpi_size)
+                    self.calc_types.normal[key]['delta'] = BindingStatistics(self.calc_types.normal[key]['complex'],
+                                                                             self.calc_types.normal[key]['receptor'],
+                                                                             self.calc_types.normal[key]['ligand'],
+                                                                             self.using_chamber)
 
                     if key in ['gb', 'pb', 'rism std', 'rism gf']:
                         if 'ie' in self.calc_types.normal:
