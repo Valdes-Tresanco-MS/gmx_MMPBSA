@@ -762,9 +762,7 @@ def write_decomp_binding_output(FILES, INPUT, size, prmtop_system,
     """ Write output file for binding free energy decomposition calculations """
     from csv import writer
     from datetime import datetime
-    from GMXMMPBSA.amber_outputs import (DecompOut, PairDecompOut, DecompBinding,
-                               PairDecompBinding, MultiTrajDecompBinding,
-                               MultiTrajPairDecompBinding)
+    from GMXMMPBSA.amber_outputs import (DecompOut, PairDecompOut, DecompBinding, PairDecompBinding)
 
     multitraj = bool(FILES.receptor_trajs or FILES.ligand_trajs)
     # Single trajectory
@@ -780,11 +778,11 @@ def write_decomp_binding_output(FILES, INPUT, size, prmtop_system,
     # Multiple Traj
     # per-residue
     elif INPUT['idecomp'] in [1, 2]:
-        BindingClass = MultiTrajDecompBinding
+        BindingClass = DecompBinding
         SingleClass = DecompOut
     # Pairwise
     else:
-        BindingClass = MultiTrajPairDecompBinding
+        BindingClass = PairDecompBinding
         SingleClass = PairDecompOut
 
     # First open up our output file and turn it into a CSV writer if necessary
@@ -815,16 +813,16 @@ def write_decomp_binding_output(FILES, INPUT, size, prmtop_system,
         if not INPUT['mutant_only']:
             if csv_prefix:
                 csv_pre = csv_prefix % 'com'
-            gb_com = SingleClass(pre + 'complex_gb.mdout', prmtop_system.complex_prmtop, INPUT['surften'], csv_pre,
-                                 size, INPUT['dec_verbose'])
+            gb_com = SingleClass()
+            gb_com.parse_from_file(pre + 'complex_gb.mdout', prmtop_system.complex_prmtop, INPUT, csv_pre, size)
             if csv_prefix:
                 csv_pre = csv_prefix % 'rec'
-            gb_rec = SingleClass(pre + 'receptor_gb.mdout', prmtop_system.receptor_prmtop, INPUT['surften'], csv_pre,
-                                 size, INPUT['dec_verbose'])
+            gb_rec = SingleClass()
+            gb_rec.parse_from_file(pre + 'receptor_gb.mdout', prmtop_system.receptor_prmtop, INPUT, csv_pre, size)
             if csv_prefix:
                 csv_pre = csv_prefix % 'lig'
-            gb_lig = SingleClass(pre + 'ligand_gb.mdout', prmtop_system.ligand_prmtop, INPUT['surften'], csv_pre,
-                                 size, INPUT['dec_verbose'])
+            gb_lig = SingleClass()
+            gb_lig.parse_from_file(pre + 'ligand_gb.mdout', prmtop_system.ligand_prmtop, INPUT, csv_pre, size)
             if csv_prefix:
                 csv_pre = pre + 'gb_bind'
             gb_bind = BindingClass(gb_com, gb_rec, gb_lig, prmtop_system, INPUT['idecomp'], INPUT['dec_verbose'],
