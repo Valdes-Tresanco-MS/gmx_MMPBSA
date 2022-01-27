@@ -8,13 +8,13 @@ This comparison is based on the documentation of the different programs
 
 
 ## Calculation features
-| Feature                               |        [g_mmpbsa][1]         |       [GMXPBSA 2.1][2]       |                     MMPBSA.py [^1]                     |      [gmx_MMPBSA][3]      |
+| Feature                               |        [g_mmpbsa][1]         |       [GMXPBSA 2.1][2]       |                     MMPBSA.py [^1]                    |      [gmx_MMPBSA][3]      |
 |:--------------------------------------|:----------------------------:|:----------------------------:|:-----------------------------------------------------:|:-------------------------:|
-| **Normal binding free energies**      |              PB              |              PB              |                       PB and GB                       |         PB and GB         |
-| * GB models                           |                              |                              |                  1, 2, 5, 7 and 8                  |    1, 2, 5, 7 and 8    |
+| **Normal binding free energies**      |              PB              |              PB              |                       PB[^10] and GB                       |         PB[^10] and GB         |
+| * GB models                           |                              |                              |                  1, 2, 5, 7 and 8                     |    1, 2, 5, 7 and 8    |
 | **Stability**                         |                              |                              |                  :material-check-bold:{.scale_icon_medium}                   |    :material-check-bold:{.scale_icon_medium}     |
-| **Alanine scanning**                  |   :material-check-bold:{.scale_icon_medium} [^2]    |      :material-check-bold:{.scale_icon_medium}      |                  :material-check-bold:{.scale_icon_medium}                   |    :material-check-bold:{.scale_icon_medium}     |
-| **Entropy corrections** [^3]          |                              |                              |                     nmode and qh                      |     nmode, qh, and IE     |
+| **Alanine scanning**                  |   :material-check-bold:{.scale_icon_medium} [^2]            |      :material-check-bold:{.scale_icon_medium}        |                  :material-check-bold:{.scale_icon_medium}                   |    :material-check-bold:{.scale_icon_medium}     |
+| **Entropy corrections** [^3]          |                              |                              |                     NMODE and QH                      |     NMODE, QH, IE, and C2     |
 | **Decomposition schemes**             |         Per-Residues         |                              |               Per-Residues and Per-Wise               | Per-Residues and Per-Wise |
 | **QM/MMGBSA**                         |                              |                              |                  :material-check-bold:{.scale_icon_medium}                   |    :material-check-bold:{.scale_icon_medium}     |
 | **MM/3D-RISM**                        |                              |                              |                  :material-check-bold:{.scale_icon_medium}                   |    :material-check-bold:{.scale_icon_medium}     |
@@ -62,6 +62,8 @@ with versions higher than 2016.x one, but still with limitations
 it is script-based
   [^8]: It is not clear whether it does support APBS versions 3.x.x
   [^9]: gmx_MMPBSA is compatible with AmberTools20 or AmberTools21
+  [^10]: gmx_MMPBSA supports Linear and Non-Linear PB equations. MMPBSA.py on the other hand, requires the user to 
+  modify manually the *.mdin input files 
   
 
   [1]: https://github.com/RashmiKumari/g_mmpbsa

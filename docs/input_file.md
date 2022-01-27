@@ -9,7 +9,7 @@ title: The input file
 
 `gmx_MMPBSA` input file contains all the specifications for the MM/PB(GB)SA calculations. The input file is 
 syntactically similar to other programs in Amber, although we incorporated a new format more similar to the one used
-on GROMACS *.mdp files. The input file contains sections called `namelist` where the variables are define for each 
+on GROMACS *.mdp files. The input file contains sections called `namelist` where the variables are defined for each 
 calculation. The allowed namelists are:
 
 - `&general`: contains variables that apply to all aspects of the calculation or parameters required for building 
