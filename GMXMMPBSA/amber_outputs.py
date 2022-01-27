@@ -25,7 +25,7 @@ All data is stored in a special class derived from the list.
 # ##############################################################################
 
 from math import sqrt
-from GMXMMPBSA.exceptions import (OutputError, LengthError, DecompError, InternalError)
+from GMXMMPBSA.exceptions import (OutputError, LengthError, DecompError)
 from GMXMMPBSA.utils import get_std
 import h5py
 from types import SimpleNamespace
@@ -127,8 +127,9 @@ class AmberOutput(dict):
                     'VDWAALS': 1, 'EEL': 1, '1-4 VDW': 2, '1-4 EEL': 2, 'EPOL': 1,
                     'ENPOL': 1}
 
-    def __init__(self, INPUT, chamber=False, **kwargs):
+    def __init__(self, mol: str, INPUT, chamber=False, **kwargs):
         super(AmberOutput, self).__init__(**kwargs)
+        self.mol = mol
         self.INPUT = INPUT
         self.chamber = chamber
         self.basename = None
@@ -144,7 +145,7 @@ class AmberOutput(dict):
         for key in self.composite_keys:
             self[key] = EnergyVector()
         AmberOutput._read(self)
-        self.fill_composite_terms()
+        self._fill_composite_terms()
 
     def parse_from_dict(self, d: dict):
         for key in d:
@@ -152,9 +153,9 @@ class AmberOutput(dict):
                 continue
             self[key] = EnergyVector(d[key])
         self.is_read = True
-        self.fill_composite_terms()
+        self._fill_composite_terms()
 
-    def print_vectors(self, csvwriter):
+    def _print_vectors(self, csvwriter):
         """ Prints the energy vectors to a CSV file for easy viewing
             in spreadsheets
         """
@@ -171,63 +172,61 @@ class AmberOutput(dict):
             csvwriter.writerow([c] + [round(self[key][i], 4) for key in print_keys])
             c += self.INPUT['interval']
 
-    def print_summary_csv(self, csvwriter):
-        """ Prints the summary in CSV format """
-        # print the header
-        csvwriter.writerow(['Energy Component', 'Average', 'Std. Dev.',
-                            'Std. Err. of Mean'])
-
-        for key in self.data_keys:
-            # Skip the composite terms, since we print those at the end
-            if key in self.composite_keys: continue
-            # Skip chamber terms if we aren't using chamber prmtops
-            if not self.chamber and key in ['UB', 'IMP', 'CMAP']: continue
-            # Skip any terms that have zero as every single element (i.e. EDISPER)
-            if self[key] == 0: continue
-            stdev = self[key].stdev()
-            avg = self[key].mean()
-            csvwriter.writerow([key, avg, stdev, stdev / sqrt(len(self[key]))])
-
-        for key in self.composite_keys:
-            # Now print out the composite terms
-            stdev = self[key].stdev()
-            avg = self[key].mean()
-            csvwriter.writerow([key, avg, stdev, stdev / sqrt(len(self[key]))])
-
-    def print_summary(self, mol: str = None):
+    def summary(self, output_format: str = 'ascii'):
         """ Returns a formatted string that can be printed directly to the
             output file
         """
         if not self.is_read:
             raise OutputError('Cannot print summary before reading output files')
 
-        ret_str = ''
-        if mol:
-            ret_str = mol.capitalize() + '\n'
-        ret_str += 'Energy Component            Average              Std. Dev.   Std. Err. of Mean\n'
-        ret_str += '-------------------------------------------------------------------------------\n'
+        _output_format = 0 if output_format == 'ascii' else 1
+
+        text = []
+
+        if _output_format:
+            text.extend([[self.mol.capitalize() + ':'],
+                        ['Energy Component', 'Average', 'Std. Dev.', 'Std. Err. of Mean']])
+        else:
+            text.extend([self.mol.capitalize() + ':',
+                         'Energy Component            Average              Std. Dev.   Std. Err. of Mean',
+                         '-------------------------------------------------------------------------------'])
 
         for key in self.data_keys:
             # Skip terms we don't want to print
             # Skip the composite terms, since we print those at the end
             if key in self.composite_keys: continue
             # Skip chamber terms if we aren't using chamber prmtops
-            if not self.chamber and key in ['UB', 'IMP', 'CMAP']: continue
+            if not self.chamber and key in ['UB', 'IMP', 'CMAP']:
+                continue
             # Skip any terms that have zero as every single element (i.e. EDISPER)
-            if self[key] == 0: continue
+            if self.INPUT['sander_apbs'] and key == 'EDISPER':
+                continue
+            if self[key] == 0:
+                continue
+            avg = self[key].mean()
             stdev = self[key].stdev()
-            ret_str += '%-14s %20.4f %21.4f %19.4f\n' % (key, self[key].mean(), stdev, stdev / sqrt(len(
-                self[key])))
+            if _output_format:
+                text.append([key, avg, stdev, stdev / sqrt(len(self[key]))])
+            else:
+                text.append('%-14s %20.4f %21.4f %19.4f' % (key, avg, stdev, stdev / sqrt(len(self[key]))))
 
-        ret_str += '\n'
+        text.append('')
         for key in self.composite_keys:
             # Now print out the composite terms
-            if key == 'TOTAL': ret_str += '\n'
+            if key == 'TOTAL':
+                if not _output_format:
+                    text.append('')
+            avg = self[key].mean()
             stdev = self[key].stdev()
-            ret_str += '%-14s %20.4f %21.4f %19.4f\n' % (key, self[key].mean(), stdev, stdev / sqrt(len(
-                self[key])))
+            if _output_format:
+                text.append([key, avg, stdev, stdev / sqrt(len(self[key]))])
+            else:
+                text.append('%-14s %20.4f %21.4f %19.4f' % (key, avg, stdev, stdev / sqrt(len(self[key]))))
 
-        return ret_str + '\n\n'
+        if _output_format:
+            return text
+        else:
+            return '\n'.join(text) + '\n\n'
 
     def _read(self):
         """
@@ -251,7 +250,7 @@ class AmberOutput(dict):
     def _extra_reading(self, fileno):
         pass
 
-    def fill_composite_terms(self):
+    def _fill_composite_terms(self):
         """
         Fills in the composite terms WITHOUT adding in terms we're not printing.
         This should be called after the final verbosity level has been set (based
@@ -575,12 +574,8 @@ class GBout(AmberOutput):
 
     # Ordered list of keys in the data dictionary
 
-    def __init__(self, INPUT, chamber=False, **kwargs):
-        AmberOutput.__init__(self, INPUT, chamber, **kwargs)
-        # self.surften = INPUT['surften']
-        # self.surfoff = INPUT['surfoff']
-        # if read:
-        #     AmberOutput._read(self)
+    def __init__(self, mol, INPUT, chamber=False, **kwargs):
+        AmberOutput.__init__(self, mol, INPUT, chamber, **kwargs)
 
     def _get_energies(self, outfile):
         """ Parses the mdout files for the GB potential terms """
@@ -636,12 +631,8 @@ class PBout(AmberOutput):
                     '1-4 VDW': 2, '1-4 EEL': 2, 'EPB': 1, 'ENPOLAR': 1, 'UB': 2,
                     'IMP': 2, 'CMAP': 2, 'EDISPER': 1}
 
-    def __init__(self, INPUT, chamber=False, **kwargs):
-        AmberOutput.__init__(self, INPUT, chamber, **kwargs)
-        self.apbs = INPUT['sander_apbs']
-        AmberOutput._read(self)
-        # FIXME:
-        if self.apbs: self.print_levels['EDISPER'] = 3  # never print this for APBS
+    def __init__(self, mol, INPUT, chamber=False, **kwargs):
+        AmberOutput.__init__(self, mol, INPUT, chamber, **kwargs)
 
     def _get_energies(self, outfile):
         """ Parses the energy values from the output files """
@@ -692,8 +683,8 @@ class RISMout(AmberOutput):
     print_levels = {'BOND': 2, 'ANGLE': 2, 'DIHED': 2, 'VDWAALS': 1, 'EEL': 1,
                     '1-4 VDW': 2, '1-4 EEL': 2, 'ERISM': 1}
 
-    def __init__(self, INPUT, chamber=False, solvtype=0, **kwargs):
-        AmberOutput.__init__(self, INPUT, chamber)
+    def __init__(self, mol, INPUT, chamber=False, solvtype=0, **kwargs):
+        AmberOutput.__init__(self, mol, INPUT, chamber)
         # FIXME: deault value
         self.solvtype = solvtype
 
@@ -731,15 +722,15 @@ class RISMout(AmberOutput):
 class RISM_std_Out(RISMout):
     """ No polar decomp RISM output file for standard free energy """
 
-    def __init__(self, INPUT, chamber=False):
-        RISMout.__init__(self, INPUT, chamber, 0)
+    def __init__(self, mol, INPUT, chamber=False):
+        RISMout.__init__(self, mol, INPUT, chamber, 0)
 
 
 class RISM_gf_Out(RISMout):
     """ No polar decomp RISM output file for Gaussian Fluctuation free energy """
 
-    def __init__(self, INPUT, chamber=False):
-        RISMout.__init__(self, INPUT, chamber, 1)
+    def __init__(self, mol, INPUT, chamber=False):
+        RISMout.__init__(self, mol, INPUT, chamber, 1)
 
 
 class PolarRISMout(RISMout):
@@ -802,15 +793,15 @@ class PolarRISMout(RISMout):
 class PolarRISM_std_Out(PolarRISMout):
     """ Polar decomp RISM output file for standard free energy """
 
-    def __init__(self, INPUT, chamber=False):
-        RISMout.__init__(self, INPUT, chamber, 0)
+    def __init__(self, mol, INPUT, chamber=False):
+        RISMout.__init__(self, mol, INPUT, chamber, 0)
 
 
 class PolarRISM_gf_Out(PolarRISMout):
     """ Polar decomp RISM output file for Gaussian Fluctuation free energy """
 
-    def __init__(self, INPUT, chamber=False):
-        RISMout.__init__(self, INPUT, chamber, 1)
+    def __init__(self, mol, INPUT, chamber=False):
+        RISMout.__init__(self, mol, INPUT, chamber, 1)
 
 
 class QMMMout(GBout):
@@ -944,18 +935,18 @@ class BindingStatistics(dict):
         for key in self.com.composite_keys:
             self['DELTA ' + key] = self.com[key] - self.rec[key] - self.lig[key]
 
-    def print_vectors(self, csvwriter):
+    def _print_vectors(self, csvwriter):
         """ Output all of the energy terms including the differences if we're
             doing a single trajectory simulation and there are no missing terms
         """
         csvwriter.writerow(['Complex Energy Terms'])
-        self.com.print_vectors(csvwriter)
+        self.com._print_vectors(csvwriter)
         csvwriter.writerow([])
         csvwriter.writerow(['Receptor Energy Terms'])
-        self.rec.print_vectors(csvwriter)
+        self.rec._print_vectors(csvwriter)
         csvwriter.writerow([])
         csvwriter.writerow(['Ligand Energy Terms'])
-        self.lig.print_vectors(csvwriter)
+        self.lig._print_vectors(csvwriter)
         csvwriter.writerow([])
 
         csvwriter.writerow(['Delta Energy Terms'])
@@ -973,80 +964,40 @@ class BindingStatistics(dict):
             c += self.com.INPUT['interval']
         csvwriter.writerow([])
 
-    def print_summary_csv(self, csvwriter):
-        """ Prints formatted output in CSV format """
-        if self.inconsistent:
-            csvwriter.writerow(['WARNING: INCONSISTENCIES EXIST WITHIN INTERNAL ' +
-                                'POTENTIAL TERMS. THE VALIDITY OF THESE RESULTS ARE HIGHLY ' +
-                                'QUESTIONABLE'])
-
-        self.csvwriter.writerow(['Complex:'])
-        self.com.print_summary_csv(csvwriter)
-        self.csvwriter.writerow(['Receptor:'])
-        self.rec.print_summary_csv(csvwriter)
-        self.csvwriter.writerow(['Ligand:'])
-        self.lig.print_summary_csv(csvwriter)
-
-        csvwriter.writerow(['Differences (Complex - Receptor - Ligand):'])
-        csvwriter.writerow(['Energy Component', 'Average', 'Std. Dev.', 'Std. Err. of Mean'])
-        # Set verbose level. If verbose==0, that means we don't print com/rec/lig
-        # but we print the differences as though verbose==1
-
-        for key in self.data_keys:
-            # Skip terms we don't want to print
-            # Skip the composite terms, since we print those at the end
-            if key in self.composite_keys: continue
-            # Skip chamber terms if we aren't using chamber prmtops
-            if not self.chamber and key in ['UB', 'IMP', 'CMAP']: continue
-            # Catch special case of NMODEout classes
-            if isinstance(self.com, NMODEout) and key == 'Total':
-                printkey = '\nTΔS binding ='
-            else:
-                printkey = key
-            # Now print out the stats
-            if not self.missing_terms:
-                stdev = self[key].stdev()
-                avg = self[key].mean()
-                num_frames = len(self[key])
-            else:
-                stdev = self[key][1]
-                avg = self[key][0]
-                num_frames = min(len(self.com[key]), len(self.rec[key]),
-                                 len(self.lig[key]))
-            csvwriter.writerow([printkey, avg, stdev, stdev / sqrt(num_frames)])
-
-        for key in self.composite_keys:
-            # Now print out the composite terms
-            if not self.missing_terms:
-                stdev = self[key].stdev()
-                avg = self[key].mean()
-                num_frames = len(self[key])
-            else:
-                stdev = self[key][1]
-                avg = self[key][0]
-                # num_frames is the same as the one from above
-            csvwriter.writerow([key, avg, stdev, stdev / sqrt(len(self[key]))])
-
-    def print_summary(self):
+    def summary(self, output_format: str = 'ascii'):
         """ Returns a string printing the summary of the binding statistics """
 
-        if self.inconsistent:
-            ret_str = ('WARNING: INCONSISTENCIES EXIST WITHIN INTERNAL POTENTIAL' +
-                       '\nTERMS. THE VALIDITY OF THESE RESULTS ARE HIGHLY QUESTIONABLE\n')
-        else:
-            ret_str = ''
+        _output_format = 0 if output_format == 'ascii' else 1
+        text = []
 
-        ret_str += 'Complex:\n' + self.com.print_summary()
-        ret_str += 'Receptor:\n' + self.rec.print_summary()
-        ret_str += 'Ligand:\n' + self.lig.print_summary()
+        if self.inconsistent:
+            if _output_format:
+                text.append(['WARNING: INCONSISTENCIES EXIST WITHIN INTERNAL POTENTIAL' +
+                            'TERMS. THE VALIDITY OF THESE RESULTS ARE HIGHLY QUESTIONABLE'])
+            else:
+                text.append('WARNING: INCONSISTENCIES EXIST WITHIN INTERNAL POTENTIAL' +
+                            '\nTERMS. THE VALIDITY OF THESE RESULTS ARE HIGHLY QUESTIONABLE\n')
+        if _output_format:
+            text.extend(self.com.summary(output_format))
+            text.extend(self.com.summary(output_format))
+            text.extend(self.com.summary(output_format))
+        else:
+            text.append(self.com.summary())
+            text.append(self.com.summary())
+            text.append(self.com.summary())
 
         if isinstance(self.com, NMODEout):
             col_name = '%-16s' % 'Entropy Term'
         else:
             col_name = '%-16s' % 'Energy Component'
-        ret_str += 'Differences (Complex - Receptor - Ligand):\n'
-        ret_str += col_name + '            Average              Std. Dev.   Std. Err. of Mean\n'
-        ret_str += '-------------------------------------------------------------------------------\n'
+
+        if _output_format:
+            text.extend([['Differences (Complex - Receptor - Ligand):'],
+                         [col_name] + ['Average', 'Std. Dev.', 'Std. Err. of Mean']])
+        else:
+            text.append('Differences (Complex - Receptor - Ligand):\n' + col_name +
+                        '            Average              Std. Dev.   Std. Err. of Mean\n'+
+                        '-------------------------------------------------------------------------------')
 
         for key in self.data_keys:
             # Skip the composite terms, since we print those at the end
@@ -1055,6 +1006,8 @@ class BindingStatistics(dict):
             # Skip chamber terms if we aren't using chamber prmtops
             if not self.chamber and key in ['UB', 'IMP', 'CMAP']:
                 continue
+            if self.com.INPUT['sander_apbs'] and key == 'EDISPER':
+                continue
             # Catch special case of NMODEout classes
             if isinstance(self.com, NMODEout) and key == 'Total':
                 printkey = '\nTΔS binding ='
@@ -1067,14 +1020,17 @@ class BindingStatistics(dict):
                 num_frames = len(self[key])
             else:
                 num_frames = min(len(self.com[key]), len(self.rec[key]), len(self.lig[key]))
-            ret_str += '%-14s %20.4f %21.4f %19.4f\n' % (printkey, avg, stdev, stdev / sqrt(num_frames))
+            if _output_format:
+                text.append([printkey, avg, stdev, stdev / sqrt(num_frames)])
+            else:
+                text.append('%-14s %20.4f %21.4f %19.4f' % (printkey, avg, stdev, stdev / sqrt(num_frames)))
 
         if self.composite_keys:
-            ret_str += '\n'
+            text.append('')
         for key in self.composite_keys:
             # Now print out the composite terms
             if key == 'DELTA TOTAL':
-                ret_str += '\n'
+                text.append('')
             stdev = self[key].stdev()
             avg = self[key].mean()
             if not self.missing_terms:
@@ -1082,9 +1038,15 @@ class BindingStatistics(dict):
             else:
                 num_frames = min(len(self.com[key]), len(self.rec[key]), len(self.lig[key]))
                 # num_frames is the same as the one from above
-            ret_str += '%-14s %20.4f %21.4f %19.4f\n' % (key, avg, stdev, stdev / sqrt(num_frames))
+            if _output_format:
+                text.append([key, avg, stdev, stdev / sqrt(len(self[key]))])
+            else:
+                text.append('%-14s %20.4f %21.4f %19.4f' % (key, avg, stdev, stdev / sqrt(num_frames)))
 
-        return ret_str + '\n\n'
+        if _output_format:
+            return text
+        else:
+            return '\n'.join(text) + '\n'
 
 
 class DecompOut(dict):
@@ -1094,9 +1056,10 @@ class DecompOut(dict):
                     'SDC': 'Sidechain Energy Decomposition:',
                     'BDC': 'Backbone Energy Decomposition:'}
 
-    def __init__(self, **kwargs):
+    def __init__(self, mol: str, **kwargs):
         super(DecompOut, self).__init__(**kwargs)
 
+        self.mol = mol
         self.resnums = None
         self.decfile = None
         self.num_terms = None
@@ -1106,15 +1069,17 @@ class DecompOut(dict):
         self.prmtop = None
         self.basename = None
         self.csvwriter = None
+        self.surften = None
         self.current_file = 0  # File counter
         self.get_next_term = self._get_next_term
 
-    def parse_from_file(self, basename, prmtop, INPUT, csvwriter, num_files=1):
+    def parse_from_file(self, basename, prmtop, INPUT, surften, csvwriter, num_files=1):
         self.basename = basename  # base name of output files
         self.prmtop = prmtop  # AmberParm prmtop object
         self.num_files = num_files  # how many MPI files we created
         self.INPUT = INPUT
         self.verbose = INPUT['dec_verbose']
+        self.surften = surften  # explicitly defined since is for GB and PB models
         # Set the term-extractor based on whether we want to dump the values to
         # a CSV file or just get the next term
         if csvwriter:
@@ -1141,7 +1106,7 @@ class DecompOut(dict):
             self[token] = {}
         self.decfile = open(basename + '.0', 'r')
         self._fill_all_terms()
-        self.fill_composite_terms()
+        self._fill_composite_terms()
 
     def parse_from_dict(self, d: dict):
         for term, v in d.items():
@@ -1153,7 +1118,7 @@ class DecompOut(dict):
                         self[term][res][res_e] = {_k: EnergyVector(_v) for _k, _v in v2.items()}
                     else:
                         self[term][res][res_e] = EnergyVector(v2)
-        self.fill_composite_terms()
+        self._fill_composite_terms()
 
     def _get_num_terms(self):
         """ Gets the number of terms in the output file """
@@ -1197,7 +1162,7 @@ class DecompOut(dict):
         vdw = float(line[21:30])
         eel = float(line[31:40])
         pol = float(line[41:50])
-        sas = float(line[51:60]) * self.INPUT['surften']
+        sas = float(line[51:60]) * self.surften
 
         if resnum not in self[line[0:3]]:
             self[line[0:3]][resnum] = {'int': EnergyVector(), 'vdw': EnergyVector(), 'eel': EnergyVector(),
@@ -1233,7 +1198,7 @@ class DecompOut(dict):
 
         self.numframes = frames
 
-    def fill_composite_terms(self):
+    def _fill_composite_terms(self):
         for term in self:
             for res in self[term]:
                 item = self[term][res][list(self[term][res].keys())[0]]
@@ -1250,17 +1215,30 @@ class DecompOut(dict):
                         tot = tot + self[term][res][e]
                     self[term][res]['tot'] = tot
 
-    def print_summary(self):
+    def summary(self, output_format: str = 'ascii'):
         """ Writes the summary in ASCII format to and open output_file """
-        ref_str = ''
+
+        _output_format = 0 if output_format == 'ascii' else 1
+
+        text = []
+        if _output_format:
+            text.append([self.mol.capitalize() + ':'])
+        else:
+            text.append(self.mol.capitalize() + ':')
+
         for term in self:
-            ref_str += self.descriptions[term] + '\n'
-            ref_str += ('Residue |       Internal      |    ' +
-                        'van der Waals    |    Electrostatic    |   Polar Solvation  ' +
-                        ' |   Non-Polar Solv.   |       TOTAL\n')
-            ref_str += ('-------------------------------------------' +
-                        '--------------------------------------------------------------' +
-                        '----------------------------------\n')
+            if _output_format:
+                text.extend([[self.descriptions[term]],
+                             ['Residue', 'Internal', '', '', 'van der Waals', '',
+                              '', 'Electrostatic', '', '', 'Polar Solvation', '',
+                              '', 'Non-Polar Solv.', '', '', 'TOTAL', '', ''],
+                             [''] + ['Avg.', 'Std. Dev.', 'Std. Err. of Mean'] * 6])
+            else:
+                text.extend([self.descriptions[term],
+                             'Residue |       Internal      |    van der Waals    |    Electrostatic    |   '
+                             'Polar Solvation   |   Non-Polar Solv.   |       TOTAL',
+                             '------------------------------------------------------------------------------'
+                             '-------------------------------------------------------------'])
             for res in self[term]:
                 int_avg = self[term][res]['int'].mean()
                 int_std = self[term][res]['int'].stdev()
@@ -1276,15 +1254,33 @@ class DecompOut(dict):
                 tot_std = self[term][res]['tot'].stdev()
                 resnm = self.prmtop.parm_data['RESIDUE_LABEL'][res]
                 res_str = '%3s%4d' % (resnm, res)
-                ref_str += (f"{str(res_str):7s} "
-                            f"|{int_avg:9.3f} +/- {int_std:6.3f} "
-                            f"|{vdw_avg:9.3f} +/- {vdw_std:6.3f} "
-                            f"|{eel_avg:9.3f} +/- {eel_std:6.3f} "
-                            f"|{pol_avg:9.3f} +/- {pol_std:6.3f} "
-                            f"|{sas_avg:9.3f} +/- {sas_std:6.3f} "
-                            f"|{tot_avg:9.3f} +/- {tot_std:6.3f}\n")
+                sqrt_frames = sqrt(len(self[term][res]['int']))
 
-        print(ref_str)
+                if _output_format:
+                    text.append([res_str,
+                                  int_avg, int_std, int_std / sqrt_frames,
+                                  vdw_avg, vdw_std, vdw_std / sqrt_frames,
+                                  eel_avg, eel_std, eel_std / sqrt_frames,
+                                  pol_avg, pol_std, pol_std / sqrt_frames,
+                                  sas_avg, sas_std, sas_std / sqrt_frames,
+                                  tot_avg, tot_std, tot_std / sqrt_frames])
+                else:
+                    text.append(f"{str(res_str):7s} "
+                                f"|{int_avg:9.3f} +/- {int_std:6.3f} "
+                                f"|{vdw_avg:9.3f} +/- {vdw_std:6.3f} "
+                                f"|{eel_avg:9.3f} +/- {eel_std:6.3f} "
+                                f"|{pol_avg:9.3f} +/- {pol_std:6.3f} "
+                                f"|{sas_avg:9.3f} +/- {sas_std:6.3f} "
+                                f"|{tot_avg:9.3f} +/- {tot_std:6.3f}")
+            if _output_format:
+                text.append([])
+            else:
+                text.append('')
+
+        if _output_format:
+            return text
+        else:
+            return '\n'.join(text)
 
     def _get_next_term_csv(self, expected_type, framenum=1):
         """ Gets the next term and prints data to csv file """
@@ -1307,75 +1303,6 @@ class DecompOut(dict):
         csvwriter.writerow(['Frame #', 'Residue', 'Internal', 'van der Waals',
                             'Electrostatic', 'Polar Solvation',
                             'Non-Polar Solv.', 'TOTAL'])
-
-    def write_summary(self, output_file):
-        """ Writes the summary in ASCII format to and open output_file """
-        for term in self:
-            output_file.writeline(self.descriptions[term])
-            output_file.writeline('Residue |       Internal      |    ' +
-                                  'van der Waals    |    Electrostatic    |   Polar Solvation  ' +
-                                  ' |   Non-Polar Solv.   |       TOTAL')
-            output_file.writeline('-------------------------------------------' +
-                                  '--------------------------------------------------------------' +
-                                  '----------------------------------')
-            for res in self[term]:
-                int_avg = self[term][res]['int'].mean()
-                int_std = self[term][res]['int'].stdev()
-                vdw_avg = self[term][res]['vdw'].mean()
-                vdw_std = self[term][res]['vdw'].stdev()
-                eel_avg = self[term][res]['eel'].mean()
-                eel_std = self[term][res]['eel'].stdev()
-                pol_avg = self[term][res]['pol'].mean()
-                pol_std = self[term][res]['pol'].stdev()
-                sas_avg = self[term][res]['sas'].mean()
-                sas_std = self[term][res]['sas'].stdev()
-                tot_avg = self[term][res]['tot'].mean()
-                tot_std = self[term][res]['tot'].stdev()
-
-                resnm = self.prmtop.parm_data['RESIDUE_LABEL'][res]
-                res_str = '%3s%4d' % (resnm, res)
-                output_file.writeline(f"{res_str} "
-                                      f"|{int_avg:9.3f} +/- {int_std:6.3f} "
-                                      f"|{vdw_avg:9.3f} +/- {vdw_std:6.3f} "
-                                      f"|{eel_avg:9.3f} +/- {eel_std:6.3f} "
-                                      f"|{pol_avg:9.3f} +/- {pol_std:6.3f} "
-                                      f"|{sas_avg:9.3f} +/- {sas_std:6.3f} "
-                                      f"|{tot_avg:9.3f} +/- {tot_std:6.3f}\n")
-            output_file.writeline('')
-
-    def write_summary_csv(self, csvwriter):
-        """ Writes the summary to a CSV file """
-        for term in self.allowed_tokens:
-            csvwriter.writerow([self.descriptions[term], ])
-            csvwriter.writerow(['Residue', 'Internal', '', '', 'van der Waals', '',
-                                '', 'Electrostatic', '', '', 'Polar Solvation', '',
-                                '', 'Non-Polar Solv.', '', '', 'TOTAL', '', ''])
-            csvwriter.writerow([''] + ['Avg.', 'Std. Dev.', 'Std. Err. of Mean'] * 6)
-            for res in self[term]:
-                int_avg = self[term][res]['int'].mean()
-                int_std = self[term][res]['int'].stdev()
-                vdw_avg = self[term][res]['vdw'].mean()
-                vdw_std = self[term][res]['vdw'].stdev()
-                eel_avg = self[term][res]['eel'].mean()
-                eel_std = self[term][res]['eel'].stdev()
-                pol_avg = self[term][res]['pol'].mean()
-                pol_std = self[term][res]['pol'].stdev()
-                sas_avg = self[term][res]['sas'].mean()
-                sas_std = self[term][res]['sas'].stdev()
-                tot_avg = self[term][res]['tot'].mean()
-                tot_std = self[term][res]['tot'].stdev()
-
-                resnm = self.prmtop.parm_data['RESIDUE_LABEL'][res - 1]
-                res_str = '%3s%4d' % (resnm, res)
-                sqrt_frames = sqrt(len(self[term][res]['int']))
-
-                csvwriter.writerow([res_str, int_avg, int_std, int_std / sqrt_frames,
-                                    vdw_avg, vdw_std, vdw_std / sqrt_frames,
-                                    eel_avg, eel_std, eel_std / sqrt_frames,
-                                    pol_avg, pol_std, pol_std / sqrt_frames,
-                                    sas_avg, sas_std, sas_std / sqrt_frames,
-                                    tot_avg, tot_std, tot_std / sqrt_frames])
-        csvwriter.writerow([])
 
 
 class PairDecompOut(DecompOut):
@@ -1408,7 +1335,7 @@ class PairDecompOut(DecompOut):
         vdw = float(line[34:46])
         eel = float(line[47:59])
         pol = float(line[60:72])
-        sas = float(line[73:85]) * self.INPUT['surften']
+        sas = float(line[73:85]) * self.surften
 
         if resnum not in self[line[0:3]]:
             self[line[0:3]][resnum] = {}
@@ -1424,53 +1351,26 @@ class PairDecompOut(DecompOut):
         self[line[0:3]][resnum][resnum2]['sas'] = self[line[0:3]][resnum][resnum2]['sas'].append(sas)
         return [resnum, resnum2, internal, vdw, eel, pol, sas]
 
-    def print_summary(self):
+    def summary(self, output_format: str = 'ascii'):
         """ Writes the summary in ASCII format to and open output_file """
-        ref_str = ''
+        _output_format = 0 if output_format == 'ascii' else 1
+        text = []
+        if _output_format:
+            text.extend([[self.mol.capitalize() + ':']])
+        else:
+            text.extend([self.mol.capitalize() + ':'])
         for term in self:
-            ref_str += self.descriptions[term] + '\n'
-            ref_str += ('Resid 1 | Resid 2 |       Internal      |    ' +
-                        'van der Waals    |    Electrostatic    |   Polar Solvation   |  ' +
-                        'Non-Polar Solv.   |       TOTAL\n')
-            ref_str += ('------------------------------------------------------------------------------------------'
-                        '-----------------------------------------------------------\n')
-            for res in self[term]:
-                for res2 in self[term][res]:
-                    int_avg = self[term][res]['int'].mean()
-                    int_std = self[term][res]['int'].stdev()
-                    vdw_avg = self[term][res]['vdw'].mean()
-                    vdw_std = self[term][res]['vdw'].stdev()
-                    eel_avg = self[term][res]['eel'].mean()
-                    eel_std = self[term][res]['eel'].stdev()
-                    pol_avg = self[term][res]['pol'].mean()
-                    pol_std = self[term][res]['pol'].stdev()
-                    sas_avg = self[term][res]['sas'].mean()
-                    sas_std = self[term][res]['sas'].stdev()
-                    tot_avg = self[term][res]['tot'].mean()
-                    tot_std = self[term][res]['tot'].stdev()
-                    resnm = self.prmtop.parm_data['RESIDUE_LABEL'][res]
-                    res_str0 = '%3s%4d' % (resnm, res)
-                    resnm = self.prmtop.parm_data['RESIDUE_LABEL'][res2]
-                    res_str1 = '%3s%4d' % (resnm, res2)
-                    ref_str += (f"{res_str0} | {res_str1}"
-                                f"|{int_avg:9.3f} +/- {int_std:6.3f} "
-                                f"|{vdw_avg:9.3f} +/- {vdw_std:6.3f} "
-                                f"|{eel_avg:9.3f} +/- {eel_std:6.3f} "
-                                f"|{pol_avg:9.3f} +/- {pol_std:6.3f} "
-                                f"|{sas_avg:9.3f} +/- {sas_std:6.3f} "
-                                f"|{tot_avg:9.3f} +/- {tot_std:6.3f}\n")
-        print(ref_str)
-
-    def write_summary(self, output_file):
-        """ Writes the summary in ASCII format to and open output_file """
-        for term in self.allowed_tokens:
-            output_file.writeline(self.descriptions[term])
-            output_file.writeline('Resid 1 | Resid 2 |       Internal      |    ' +
-                                  'van der Waals    |    Electrostatic    |   Polar Solvation   |  ' +
-                                  'Non-Polar Solv.   |       TOTAL')
-            output_file.writeline('---------------------------------------------' +
-                                  '----------------------------------------------------------------' +
-                                  '----------------------------------------')
+            if _output_format:
+                text.extend([[self.descriptions[term]],
+                             ['Resid 1', 'Resid 2', 'Internal', '', '', 'van der Waals', '', '', 'Electrostatic',
+                              '', '', 'Polar Solvation', '', '', 'Non-Polar Solv.', '', '', 'TOTAL', '', ''],
+                             [''] * 2 + ['Avg.', 'Std. Dev.', 'Std. Err. of Mean'] * 6])
+            else:
+                text.append(self.descriptions[term] + '\n' +
+                            'Resid 1 | Resid 2 |       Internal      |    van der Waals    |    Electrostatic    '
+                            '|   Polar Solvation   |  Non-Polar Solv.   |       TOTAL\n' +
+                            '-------------------------------------------------------------------------------------'
+                            '----------------------------------------------------------------')
             for res in self[term]:
                 for res2 in self[term][res]:
                     int_avg = self[term][res][res2]['int'].mean()
@@ -1485,18 +1385,35 @@ class PairDecompOut(DecompOut):
                     sas_std = self[term][res][res2]['sas'].stdev()
                     tot_avg = self[term][res][res2]['tot'].mean()
                     tot_std = self[term][res][res2]['tot'].stdev()
-                    resnm = self.prmtop.parm_data['RESIDUE_LABEL'][res - 1]
+                    resnm = self.prmtop.parm_data['RESIDUE_LABEL'][res]
                     res_str0 = '%3s%4d' % (resnm, res)
-                    resnm = self.prmtop.parm_data['RESIDUE_LABEL'][res2 - 1]
+                    resnm = self.prmtop.parm_data['RESIDUE_LABEL'][res2]
                     res_str1 = '%3s%4d' % (resnm, res2)
-                    output_file.writeline(f"{res_str0} | {res_str1} "
-                                          f"|{int_avg:9.3f} +/- {int_std:6.3f} "
-                                          f"|{vdw_avg:9.3f} +/- {vdw_std:6.3f} "
-                                          f"|{eel_avg:9.3f} +/- {eel_std:6.3f} "
-                                          f"|{pol_avg:9.3f} +/- {pol_std:6.3f} "
-                                          f"|{sas_avg:9.3f} +/- {sas_std:6.3f} "
-                                          f"|{tot_avg:9.3f} +/- {tot_std:6.3f}")
-            output_file.writeline('')
+                    sqrt_frames = sqrt(len(self[term][res][res2]['int']))
+                    if _output_format:
+                        text.append([res_str0, res_str1,
+                                     int_avg, int_std, int_std / sqrt_frames,
+                                     vdw_avg, vdw_std, vdw_std / sqrt_frames,
+                                     eel_avg, eel_std, eel_std / sqrt_frames,
+                                     pol_avg, pol_std, pol_std / sqrt_frames,
+                                     sas_avg, sas_std, sas_std / sqrt_frames,
+                                     tot_avg, tot_std, tot_std / sqrt_frames])
+                    else:
+                        text.append(f"{res_str0} | {res_str1}"
+                                    f"|{int_avg:9.3f} +/- {int_std:6.3f} "
+                                    f"|{vdw_avg:9.3f} +/- {vdw_std:6.3f} "
+                                    f"|{eel_avg:9.3f} +/- {eel_std:6.3f} "
+                                    f"|{pol_avg:9.3f} +/- {pol_std:6.3f} "
+                                    f"|{sas_avg:9.3f} +/- {sas_std:6.3f} "
+                                    f"|{tot_avg:9.3f} +/- {tot_std:6.3f}")
+            if _output_format:
+                text.append([])
+            else:
+                text.append('')
+        if _output_format:
+            return text
+        else:
+            return '\n'.join(text) + '\n\n'
 
     def _write_header(self, csvwriter):
         """ Writes a table header to the csvwriter """
@@ -1504,50 +1421,11 @@ class PairDecompOut(DecompOut):
                             'van der Waals', 'Electrostatic', 'Polar Solvation',
                             'Non-Polar Solv.', 'TOTAL'])
 
-    def write_summary_csv(self, csvwriter):
-        """ Writes the summary to a CSV file """
-        for term in self:
-            csvwriter.writerow([self.descriptions[term]])
-            csvwriter.writerow(['Resid 1', 'Resid 2', 'Internal', '', '',
-                                'van der Waals', '', '', 'Electrostatic', '', '',
-                                'Polar Solvation', '', '', 'Non-Polar Solv.', '',
-                                '', 'TOTAL', '', ''])
-            csvwriter.writerow([''] * 2 + ['Avg.', 'Std. Dev.', 'Std. Err. of Mean'] * 6)
-            for res in self[term]:
-                resnm = self.prmtop.parm_data['RESIDUE_LABEL'][res]
-                res_str0 = '%3s%4d' % (resnm, res)
-                for res2 in self[term][res]:
-                    int_avg = self[term][res][res2]['int'].mean()
-                    int_std = self[term][res][res2]['int'].stdev()
-                    vdw_avg = self[term][res][res2]['vdw'].mean()
-                    vdw_std = self[term][res][res2]['vdw'].stdev()
-                    eel_avg = self[term][res][res2]['eel'].mean()
-                    eel_std = self[term][res][res2]['eel'].stdev()
-                    pol_avg = self[term][res][res2]['pol'].mean()
-                    pol_std = self[term][res][res2]['pol'].stdev()
-                    sas_avg = self[term][res][res2]['sas'].mean()
-                    sas_std = self[term][res][res2]['sas'].stdev()
-                    tot_avg = self[term][res][res2]['tot'].mean()
-                    tot_std = self[term][res][res2]['tot'].stdev()
-
-                    resnm = self.prmtop.parm_data['RESIDUE_LABEL'][res2]
-                    res_str1 = '%3s%4d' % (resnm, res2)
-                    sqrt_frames = sqrt(len(self[term][res][res2]['int']))
-                    csvwriter.writerow([res_str0, res_str1,
-                                        int_avg, int_std, int_std / sqrt_frames,
-                                        vdw_avg, vdw_std, vdw_std / sqrt_frames,
-                                        eel_avg, eel_std, eel_std / sqrt_frames,
-                                        pol_avg, pol_std, pol_std / sqrt_frames,
-                                        sas_avg, sas_std, sas_std / sqrt_frames,
-                                        tot_avg, tot_std, tot_std / sqrt_frames])
-            csvwriter.writerow([])
-
 
 class DecompBinding(dict):
     """ Class for decomposition binding (per-residue) """
 
-    def __init__(self, com, rec, lig, prmtop_system, idecomp, verbose, output,
-                 csvwriter, desc, **kwargs):
+    def __init__(self, com, rec, lig, prmtop_system, INPUT, output, csvwriter, desc, **kwargs):
         """
         output should be an open file and csvfile should be a csv.writer class. If
         the output format is specified as csv, then output should be a csv.writer
@@ -1561,17 +1439,18 @@ class DecompBinding(dict):
         self.output = output
         self.desc = desc  # Description
         self.prmtop_system = prmtop_system
-        self.idecomp = idecomp
-        self.verbose = verbose
+        self.INPUT = INPUT
+        self.idecomp = INPUT['idecomp']
+        self.verbose = INPUT['dec_verbose']
         # Check to see if output is a csv.writer or if it's a file. The invoked
         # method, "parse_all", is set based on whether we're doing a csv output
         # or an ascii output
-        if type(output).__name__ == 'writer':  # yuck... better way?
-            self.parse_all = self._parse_all_csv
-        else:
-            self.parse_all = self._parse_all_ascii
+        # if type(output).__name__ == 'writer':  # yuck... better way?
+        #     self.parse_all = self._parse_all_csv
+        # else:
+        #     self.parse_all = self._parse_all_ascii
         # Set up the data for the DELTAs
-        if verbose in [1, 3]:
+        if self.verbose in [1, 3]:
             self.allowed_tokens = tuple(['TDC', 'SDC', 'BDC'])
         else:
             self.allowed_tokens = tuple(['TDC'])
@@ -1580,7 +1459,7 @@ class DecompBinding(dict):
             self.csvwriter = {}
             for tok in self.allowed_tokens:
                 self.csvwriter[tok] = writer(open(csvwriter + '.' + tok + '.csv', 'w'))
-                self.csvwriter[tok].writerow(['DELTA', DecompOut.descriptions[tok]])
+                self.csvwriter[tok].writerow([DecompOut.descriptions[tok]])
                 self._write_header(self.csvwriter[tok])
         else:
             self.csvwriter = None
@@ -1630,31 +1509,43 @@ class DecompBinding(dict):
                 #     self.csvwriter[term].writerow([framenum, res, self.resnums[res]] +
                 #                                   [self[term][res][x].mean() for x in self[term][res]])
 
-    def _parse_all_csv(self):
-        """ Specifically parses everything and dumps avg results to a CSV file """
+    def summary(self, output_format: str = 'ascii'):
         # Parse everything
         self._parse_all_begin()
-        # Now we have all of our DELTAs, time to print them to the CSV
-        # Print the header
-        self.output.writerow([idecompString[self.idecomp]])
-        self.output.writerow([self.desc])
-        if self.verbose > 1:
-            self.output.writerow(['Complex:'])
-            self.com.write_summary_csv(self.output)
-            self.output.writerow(['Receptor:'])
-            self.rec.write_summary_csv(self.output)
-            self.output.writerow(['Ligand:'])
-            self.lig.write_summary_csv(self.output)
-        # Now write the DELTAs
 
-        self.output.writerow(['DELTAS:'])
+        _output_format = 0 if output_format == 'ascii' else 1
+        text = []
+        if _output_format:
+            text.extend([[idecompString[self.idecomp]], [self.desc], []])
+        else:
+            text.append(idecompString[self.idecomp])
+            text.append(self.desc)
+        if self.verbose > 1:
+            if _output_format:
+                text.extend(self.com.summary(output_format))
+                text.extend(self.com.summary(output_format))
+                text.extend(self.com.summary(output_format))
+            else:
+                text.append(self.com.summary())
+                text.append(self.com.summary())
+                text.append(self.com.summary())
+        if _output_format:
+            text.append(['DELTAS:'])
+        else:
+            text.append('DELTAS:')
+
         for term in self:
-            self.output.writerow([DecompOut.descriptions[term]])
-            self.output.writerow(['Residue', 'Location', 'Internal', '', '',
-                                  'van der Waals', '', '', 'Electrostatic', '', '',
-                                  'Polar Solvation', '', '', 'Non-Polar Solv.',
-                                  '', '', 'TOTAL', '', ''])
-            self.output.writerow(['', ''] + ['Avg.', 'Std. Dev.', 'Std. Err. of Mean'] * 6)
+            if _output_format:
+                text.extend([[DecompOut.descriptions[term]],
+                             ['Residue', 'Location', 'Internal', '', '', 'van der Waals', '', '', 'Electrostatic',
+                              '', '', 'Polar Solvation', '', '', 'Non-Polar Solv.', '', '', 'TOTAL', '', ''],
+                             ['', ''] + ['Avg.', 'Std. Dev.', 'Std. Err. of Mean'] * 6])
+            else:
+                text.extend([DecompOut.descriptions[term],
+                             'Residue |  Location |       Internal      |    van der Waals    |    Electrostatic    '
+                             '|   Polar Solvation   |    Non-Polar Solv.  |       TOTAL',
+                             '---------------------------------------------------------------------------------------'
+                             '----------------------------------------------------------------'])
             for res in self[term]:
                 int_avg = self[term][res]['int'].mean()
                 int_std = self[term][res]['int'].stdev()
@@ -1668,70 +1559,31 @@ class DecompBinding(dict):
                 sas_std = self[term][res]['sas'].stdev()
                 tot_avg = self[term][res]['tot'].mean()
                 tot_std = self[term][res]['tot'].stdev()
-
-                resnm = self.prmtop_system.complex_prmtop.parm_data['RESIDUE_LABEL'][res - 1]
-                res_str = '%3s%4d' % (resnm, res)
                 sqrt_frames = sqrt(len(self[term][res]['int']))
-
-                self.output.writerow(self.resnums[res] +
-                                     [int_avg, int_std, int_std / sqrt_frames,
-                                      vdw_avg, vdw_std, vdw_std / sqrt_frames,
-                                      eel_avg, eel_std, eel_std / sqrt_frames,
-                                      pol_avg, pol_std, pol_std / sqrt_frames,
-                                      sas_avg, sas_std, sas_std / sqrt_frames,
-                                      tot_avg, tot_std, tot_std / sqrt_frames])
-            self.output.writerow([])
-
-    def _parse_all_ascii(self):
-        """ Parses all output files and prints to ASCII output format """
-        # Parse everything
-        self._parse_all_begin()
-        # Now we have all of our DELTAs, time to print them to the CSV
-        # Print the header
-        self.output.writeline(idecompString[self.idecomp])
-        self.output.writeline(self.desc)
-        self.output.writeline('')
-        if self.verbose > 1:
-            self.output.writeline('')
-            self.output.writeline('Complex:')
-            self.com.write_summary(self.output)
-            self.output.writeline('Receptor:')
-            self.rec.write_summary(self.output)
-            self.output.writeline('Ligand:')
-            self.lig.write_summary(self.output)
-        # Now write the DELTAs
-
-        self.output.writeline('DELTAS:')
-
-        for term in self:
-            self.output.writeline(DecompOut.descriptions[term])
-            self.output.writeline('Residue |  Location |       Internal      |    ' +
-                                  'van der Waals    |    Electrostatic    |   Polar Solvation   |' +
-                                  '    Non-Polar Solv.  |       TOTAL')
-            self.output.writeline('---------------------------------------------' +
-                                  '--------------------------------------------------------------' +
-                                  '--------------------------------------------')
-            for res in self[term]:
-                int_avg = self[term][res]['int'].mean()
-                int_std = self[term][res]['int'].stdev()
-                vdw_avg = self[term][res]['vdw'].mean()
-                vdw_std = self[term][res]['vdw'].stdev()
-                eel_avg = self[term][res]['eel'].mean()
-                eel_std = self[term][res]['eel'].stdev()
-                pol_avg = self[term][res]['pol'].mean()
-                pol_std = self[term][res]['pol'].stdev()
-                sas_avg = self[term][res]['sas'].mean()
-                sas_std = self[term][res]['sas'].stdev()
-                tot_avg = self[term][res]['tot'].mean()
-                tot_std = self[term][res]['tot'].stdev()
-                self.output.writeline(f"{self.resnums[res][0]} | {self.resnums[res][1]} "
-                                      f"|{int_avg:9.3f} +/- {int_std:6.3f} "
-                                      f"|{vdw_avg:9.3f} +/- {vdw_std:6.3f} "
-                                      f"|{eel_avg:9.3f} +/- {eel_std:6.3f} "
-                                      f"|{pol_avg:9.3f} +/- {pol_std:6.3f} "
-                                      f"|{sas_avg:9.3f} +/- {sas_std:6.3f} "
-                                      f"|{tot_avg:9.3f} +/- {tot_std:6.3f}")
-            self.output.writeline('')
+                if _output_format:
+                    text.append(self.resnums[res] +
+                                [int_avg, int_std, int_std / sqrt_frames,
+                                 vdw_avg, vdw_std, vdw_std / sqrt_frames,
+                                 eel_avg, eel_std, eel_std / sqrt_frames,
+                                 pol_avg, pol_std, pol_std / sqrt_frames,
+                                 sas_avg, sas_std, sas_std / sqrt_frames,
+                                 tot_avg, tot_std, tot_std / sqrt_frames])
+                else:
+                    text.append(f"{self.resnums[res][0]} | {self.resnums[res][1]} "
+                                f"|{int_avg:9.3f} +/- {int_std:6.3f} "
+                                f"|{vdw_avg:9.3f} +/- {vdw_std:6.3f} "
+                                f"|{eel_avg:9.3f} +/- {eel_std:6.3f} "
+                                f"|{pol_avg:9.3f} +/- {pol_std:6.3f} "
+                                f"|{sas_avg:9.3f} +/- {sas_std:6.3f} "
+                                f"|{tot_avg:9.3f} +/- {tot_std:6.3f}")
+            if _output_format:
+                text.append([])
+            else:
+                text.append('')
+        if _output_format:
+            return text
+        else:
+            return '\n'.join(text)
 
 
 class PairDecompBinding(DecompBinding):
@@ -1795,15 +1647,18 @@ class PairDecompBinding(DecompBinding):
                                                           [self[term][res][res2][x][i] for x in self[term][res][res2]])
                     f += self.com.INPUT['interval']
 
-    def _parse_all_csv(self):
-        """ Specifically parses everything and dumps avg results to a CSV file """
+    def summary(self, output_format: str = 'ascii'):
         # Parse everything
         self._parse_all_begin()
-        # Now we have all of our DELTAs, time to print them to the CSV
-        # Print the header
-        self.output.writerow([idecompString[self.idecomp]])
-        self.output.writerow([self.desc])
-        self.output.writerow([])
+
+        _output_format = 0 if output_format == 'ascii' else 1
+        text = []
+        if _output_format:
+            text.extend([[idecompString[self.idecomp]], [self.desc], []])
+        else:
+            text.append(idecompString[self.idecomp])
+            text.append(self.desc)
+            text.append('')
         if self.verbose > 1:
             self.output.writerow(['Complex:'])
             self.com.write_summary_csv(self.output)
@@ -1836,64 +1691,32 @@ class PairDecompBinding(DecompBinding):
                     tot_avg = self[term][res][res2]['tot'].mean()
                     tot_std = self[term][res][res2]['tot'].stdev()
                     sqrt_frames = sqrt(len(self[term][res][res2]['int']))
-                    self.output.writerow([self.resnums[(res, res2)][0], self.resnums[(res, res2)][1],
-                                          int_avg, int_std, int_std / sqrt_frames,
-                                          vdw_avg, vdw_std, vdw_std / sqrt_frames,
-                                          eel_avg, eel_std, eel_std / sqrt_frames,
-                                          pol_avg, pol_std, pol_std / sqrt_frames,
-                                          sas_avg, sas_std, sas_std / sqrt_frames,
-                                          tot_avg, tot_std, tot_std / sqrt_frames])
-            self.output.writerow([])
 
-    def _parse_all_ascii(self):
-        """ Parses all output files and prints to ASCII output format """
-        # Parse everything
-        self._parse_all_begin()
-        # Now we have all of our DELTAs, time to print them to the CSV
-        # Print the header
-        self.output.writeline(idecompString[self.idecomp])
-        self.output.writeline(self.desc)
-        self.output.writeline('')
-        if self.verbose > 1:
-            self.output.writeline('')
-            self.output.writeline('Complex:')
-            self.com.write_summary(self.output)
-            self.output.writeline('Receptor:')
-            self.rec.write_summary(self.output)
-            self.output.writeline('Ligand:')
-            self.lig.write_summary(self.output)
-        # Now write the DELTAs
+                    if _output_format:
+                        text.append([self.resnums[(res, res2)][0], self.resnums[(res, res2)][1],
+                                     int_avg, int_std, int_std / sqrt_frames,
+                                     vdw_avg, vdw_std, vdw_std / sqrt_frames,
+                                     eel_avg, eel_std, eel_std / sqrt_frames,
+                                     pol_avg, pol_std, pol_std / sqrt_frames,
+                                     sas_avg, sas_std, sas_std / sqrt_frames,
+                                     tot_avg, tot_std, tot_std / sqrt_frames])
+                    else:
+                        text.append(f"{self.resnums[(res, res2)][0]} | {self.resnums[(res, res2)][1]} "
+                                    f"|{int_avg:9.3f} +/- {int_std:6.3f} "
+                                    f"|{vdw_avg:9.3f} +/- {vdw_std:6.3f} "
+                                    f"|{eel_avg:9.3f} +/- {eel_std:6.3f} "
+                                    f"|{pol_avg:9.3f} +/- {pol_std:6.3f} "
+                                    f"|{sas_avg:9.3f} +/- {sas_std:6.3f} "
+                                    f"|{tot_avg:9.3f} +/- {tot_std:6.3f}")
+            if _output_format:
+                text.append([])
+            else:
+                text.append('')
 
-        self.output.writeline('DELTAS:')
-        for term in self:
-            self.output.writeline(DecompOut.descriptions[term])
-            self.output.writeline('Resid 1   | Resid 2   |       Internal      |    van der Waals    |    '
-                                  'Electrostatic    |   Polar Solvation   |    Non-Polar Solv.  |       TOTAL')
-            self.output.writeline('-------------------------------------------------------------------------------'
-                                  '--------------------------------------------------------------------------')
-            for res in self[term]:
-                for res2 in self[term][res]:
-                    int_avg = self[term][res][res2]['int'].mean()
-                    int_std = self[term][res][res2]['int'].stdev()
-                    vdw_avg = self[term][res][res2]['vdw'].mean()
-                    vdw_std = self[term][res][res2]['vdw'].stdev()
-                    eel_avg = self[term][res][res2]['eel'].mean()
-                    eel_std = self[term][res][res2]['eel'].stdev()
-                    pol_avg = self[term][res][res2]['pol'].mean()
-                    pol_std = self[term][res][res2]['pol'].stdev()
-                    sas_avg = self[term][res][res2]['sas'].mean()
-                    sas_std = self[term][res][res2]['sas'].stdev()
-                    tot_avg = self[term][res][res2]['tot'].mean()
-                    tot_std = self[term][res][res2]['tot'].stdev()
-                    print(res, res2, self.resnums[(res, res2)])
-                    self.output.writeline(f"{self.resnums[(res, res2)][0]} | {self.resnums[(res, res2)][1]} "
-                                          f"|{int_avg:9.3f} +/- {int_std:6.3f} "
-                                          f"|{vdw_avg:9.3f} +/- {vdw_std:6.3f} "
-                                          f"|{eel_avg:9.3f} +/- {eel_std:6.3f} "
-                                          f"|{pol_avg:9.3f} +/- {pol_std:6.3f} "
-                                          f"|{sas_avg:9.3f} +/- {sas_std:6.3f} "
-                                          f"|{tot_avg:9.3f} +/- {tot_std:6.3f}")
-            self.output.writeline('')
+        if _output_format:
+            return text
+        else:
+            return '\n'.join(text) + '\n\n'
 
 
 class H5Output:
