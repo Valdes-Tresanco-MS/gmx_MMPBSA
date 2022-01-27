@@ -164,7 +164,6 @@ nav:
     - Command-line: gmx_MMPBSA_ana_command-line.md
     - Running gmx_MMPBSA_ana: gmx_MMPBSA_ana_running.md
   - Examples:
-    - gmx_MMPBSA_test: examples/gmx_MMPBSA_test.md
     - Examples: examples/README.md
     - Systems:
       - Protein-protein: examples/Protein_protein/README.md
@@ -201,6 +200,7 @@ nav:
             - C2 Entropy calculations: examples/Entropy_calculations/C2_Entropy/README.md
         - Stability calculations: examples/Stability/README.md
         - QM/MMGBSA: examples/QM_MMGBSA/README.md
+    - gmx_MMPBSA_test: examples/gmx_MMPBSA_test.md
   - Help:
     - Support: Q&A/README.md
     - Installation: Q&A/installation.md
