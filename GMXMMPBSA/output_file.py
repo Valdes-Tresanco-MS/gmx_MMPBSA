@@ -374,8 +374,6 @@ def write_binding_output(app):
                                  ceil(app.numframes * (INPUT['c2_segment'] / 100)))
         final_output.add_comment('C2 Entropy Std. Dev. and Conf. Interv. (95%) have been obtained by '
                                  'bootstrapping with number_of_resamplings = 2000')
-
-
     if INPUT['pbrun']:
         if INPUT['sander_apbs']:
             final_output.add_comment('Poisson Boltzmann calculations performed ' +
@@ -394,10 +392,6 @@ def write_binding_output(app):
 
     final_output.add_comment('Using temperature = %.2f K)' % INPUT['temperature'])
     final_output.add_comment('All units are reported in kcal/mol.')
-    # if INPUT['nmoderun'] or INPUT['qh_entropy'] or INPUT['interaction_entropy' or INPUT['c2_entropy']]:
-    #     final_output.add_comment('All entropy results have units kcal/mol\n' +
-    #                              '(Temperature for NMODE and QH is %.2f K)\n' % INPUT['temperature'] +
-    #                              '(Temperature for IE and C2 is %.2f K)\n' % INPUT['temperature'])
     if INPUT['ifqnt']:
         final_output.add_comment(('QM/MM: Residues %s are treated with the ' +
                                   'Quantum Hamiltonian %s') % (INPUT['qm_residues'], INPUT['qm_theory']))
@@ -609,8 +603,7 @@ def write_binding_output(app):
 
 # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-def write_decomp_stability_output(FILES, INPUT, size, prmtop_system,
-                                  mutant_system, mutstr, pre):
+def write_decomp_stability_output(FILES, INPUT, size, prmtop_system, mutant_system, mutstr, pre):
     """ Write output file for stability decomposition calculations """
     from csv import writer
     from datetime import datetime
@@ -646,19 +639,16 @@ def write_decomp_stability_output(FILES, INPUT, size, prmtop_system,
 
         # See if we do normal system
         if not INPUT['mutant_only']:
-            gb_com = DecompClass(pre + 'complex_gb.mdout', prmtop_system.complex_prmtop, INPUT['surften'], csv_prefix,
-                                 size, INPUT['dec_verbose'])
-            gb_com.fill_all_terms()
+            gb_com = DecompClass('complex')
+            gb_com.parse_from_file(pre + 'complex_gb.mdout', prmtop_system.complex_prmtop, INPUT, INPUT['surften'],
+                                   csv_prefix, size)
+            gb_com._fill_all_terms()
             if INPUT['csv_format']:
                 decompout.writerow(['Energy Decomposition Analysis (All units kcal/mol): Generalized Born Solvent'])
-                decompout.writerow([])
-                gb_com._write_summary_csv(gb_com.numframes)
-                decompout.writerow([])
+                decompout.writerows(gb_com.summary('csv'))
             else:
                 decompout.writeline('Energy Decomposition Analysis (All units kcal/mol): Generalized Born Solvent')
-                decompout.writeline('')
-                gb_com.write_summary(gb_com.numframes)
-                decompout.writeline('')
+                decompout.writeline(gb_com.summary())
             # Copy over all temporary .csv files created by gb_com to the total
             # utils.concatenate removes the temporary files after they are copied
             if FILES.dec_energies:
@@ -670,28 +660,24 @@ def write_decomp_stability_output(FILES, INPUT, size, prmtop_system,
                 dec_energies.write(ls)
 
         if INPUT['alarun']:
-            gb_com = DecompClass(pre + 'mutant_complex_gb.mdout', mutant_system.complex_prmtop, INPUT['surften'],
-                                 csv_prefix, size, INPUT['dec_verbose'])
-            gb_com.fill_all_terms()
+            gb_com = DecompClass('Mutant-Complex')
+            gb_com.parse_from_file(pre + 'mutant_complex_gb.mdout', mutant_system.complex_prmtop, INPUT,
+                                   INPUT['surften'], csv_prefix, size)
+            gb_com._fill_all_terms()
             if INPUT['csv_format']:
                 decompout.writerow(['Energy Decomposition Analysis (All units kcal/mol): Generalized Born Solvent '
                                     f'({mutstr})'])
-                decompout.writerow([])
-                gb_com.write_summary_csv(gb_com.numframes, decompout)
-                decompout.writerow([])
+                decompout.writerows(gb_com.summary('csv'))
             else:
                 decompout.writeline('Energy Decomposition Analysis (All units kcal/mol): Generalized Born Solvent '
                                     f'({mutstr})')
-                decompout.writeline('')
-                gb_com.write_summary(gb_com.numframes, decompout)
-                decompout.writeline('')
+                decompout.writeline(gb_com.summary())
             # Copy over all temporary .csv files created by gb_com to the total
             # utils.concatenate removes the temporary files after they are copied
             if FILES.dec_energies:
                 # Close out the CSV files
                 del gb_com.csvwriter
-                dec_energies.write('GB Decomposition Energies (%s mutant)' %
-                                   mutstr + ls)
+                dec_energies.write('GB Decomposition Energies (%s mutant)' % mutstr + ls)
                 for token in gb_com.allowed_tokens:
                     utils.concatenate(dec_energies, csv_prefix + '.' + token + '.csv')
                 dec_energies.write(ls)
@@ -701,19 +687,16 @@ def write_decomp_stability_output(FILES, INPUT, size, prmtop_system,
         csv_prefix = pre + 'pb' if FILES.dec_energies else ''
         # See if we do normal system
         if not INPUT['mutant_only']:
-            pb_com = DecompClass(pre + 'complex_pb.mdout', prmtop_system.complex_prmtop, INPUT['surften'], csv_prefix,
-                                 size, INPUT['dec_verbose'])
-            pb_com.fill_all_terms()
+            pb_com = DecompClass('Complex')
+            pb_com.parse_from_file(pre + 'complex_pb.mdout', prmtop_system.complex_prmtop, INPUT, INPUT['surften'],
+                                   csv_prefix, size)
+            pb_com._fill_all_terms()
             if INPUT['csv_format']:
                 decompout.writerow(['Energy Decomposition Analysis (All units kcal/mol): Generalized Born Solvent'])
-                decompout.writerow([])
-                pb_com.write_summary_csv(pb_com.numframes, decompout)
-                decompout.writerow([])
+                decompout.writerows(pb_com.summary('csv'))
             else:
                 decompout.writeline('Energy Decomposition Analysis (All units kcal/mol): Poisson Boltzmann Solvent')
-                decompout.writeline('')
-                pb_com.write_summary(pb_com.numframes, decompout)
-                decompout.writeline('')
+                decompout.writeline(pb_com.summary())
             # Dump the energy vectors if requested
             if FILES.dec_energies:
                 # Close out the CSV files
@@ -723,26 +706,23 @@ def write_decomp_stability_output(FILES, INPUT, size, prmtop_system,
                     utils.concatenate(dec_energies, csv_prefix + '.' + token + '.csv')
                 dec_energies.write(ls)
         if INPUT['alarun']:
-            pb_com = DecompClass(pre + 'mutant_complex_pb.mdout', mutant_system.complex_prmtop, INPUT['surften'],
-                                 csv_prefix, size, INPUT['dec_verbose'])
-            pb_com.fill_all_terms()
+            pb_com = DecompClass('Complex')
+            pb_com.parse_from_file(pre + 'mutant_complex_pb.mdout', mutant_system.complex_prmtop, INPUT,
+                                   INPUT['surften'], csv_prefix, size)
+            pb_com._fill_all_terms()
             if INPUT['csv_format']:
                 decompout.writerow(['Energy Decomposition Analysis (All units kcal/mol): Poisson Boltzmann Solvent '
                                     f'({mutstr})'])
-                decompout.writerow([])
-                pb_com.write_summary_csv(pb_com.numframes, decompout)
-                decompout.writerow([])
+                decompout.writerows(pb_com.summary('csv'))
             else:
                 decompout.writeline('Energy Decomposition Analysis (All units kcal/mol): Generalized Born Solvent '
                                     f'({mutstr})')
-                decompout.writeline('')
-                pb_com.write_summary(pb_com.numframes, decompout)
-                decompout.writeline('')
+                decompout.writeline(pb_com.summary())
             # Dump the energy vectors if requested
             if FILES.dec_energies:
                 del pb_com.csvwriter
                 dec_energies.write('PB Decomposition Energies (%s mutant)' % mutstr + ls)
-                for token in gb_com.allowed_tokens:
+                for token in pb_com.allowed_tokens:
                     utils.concatenate(dec_energies, csv_prefix + '.' + token + '.csv')
                 dec_energies.write(ls)
 
