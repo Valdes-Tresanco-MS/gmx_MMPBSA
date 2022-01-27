@@ -224,12 +224,12 @@ def write_stability_output(app):
     if INPUT['qh_entropy']:
         if not INPUT['mutant_only']:
             qhnorm = app.calc_types['qh']
-            final_output.writeline('ENTROPY RESULTS (QUASI-HARMONIC APPROXIMATION) CALCULATED WITH PTRAJ:')
+            final_output.writeline('ENTROPY RESULTS (QUASI-HARMONIC APPROXIMATION) CALCULATED WITH CPPTRAJ:')
             final_output.add_section(qhnorm.print_summary())
         if INPUT['alarun']:
             qhmutant = app.calc_types.mutant['qh']
             final_output.writeline(mut_str + ' MUTANT')
-            final_output.writeline('ENTROPY RESULTS (QUASI-HARMONIC APPROXIMATION) CALCULATED WITH PTRAJ:')
+            final_output.writeline('ENTROPY RESULTS (QUASI-HARMONIC APPROXIMATION) CALCULATED WITH CPPTRAJ:')
             final_output.add_section(qhmutant.print_summary())
         if INPUT['alarun'] and not INPUT['mutant_only']:
             davg, dstd = _get_diff(qhmutant.total_avg(), qhnorm.total_avg())
@@ -410,12 +410,12 @@ def write_binding_output(app):
     if INPUT['qh_entropy']:
         if not INPUT['mutant_only']:
             qhnorm = app.calc_types['qh']
-            final_output.writeline('ENTROPY RESULTS (QUASI-HARMONIC APPROXIMATION) CALCULATED WITH PTRAJ:')
+            final_output.writeline('ENTROPY RESULTS (QUASI-HARMONIC APPROXIMATION) CALCULATED WITH CPPTRAJ:')
             final_output.add_section(qhnorm.print_summary())
         if INPUT['alarun']:
             qhmutant = app.calc_types.mutant['qh']
             final_output.writeline(mut_str + ' MUTANT')
-            final_output.writeline('ENTROPY RESULTS (QUASI-HARMONIC APPROXIMATION) CALCULATED WITH PTRAJ:')
+            final_output.writeline('ENTROPY RESULTS (QUASI-HARMONIC APPROXIMATION) CALCULATED WITH CPPTRAJ:')
             final_output.add_section(qhmutant.print_summary())
         if INPUT['alarun'] and not INPUT['mutant_only']:
             davg, dstd = _get_diff(qhmutant.total_avg(), qhnorm.total_avg())
