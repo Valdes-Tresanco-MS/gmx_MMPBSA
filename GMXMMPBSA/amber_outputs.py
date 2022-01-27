@@ -375,27 +375,37 @@ class QHout(dict):
         _output_format = 0 if output_format == 'ascii' else 1
         text = []
         if _output_format:
-            text.append(['','Translational', 'Rotational', 'Vibrational', 'Total'])
-            text.append([self.com[1], self.com[2], self.com[3], self.com[0]])
+            text.append(['', 'Translational', 'Rotational', 'Vibrational', 'Total'])
+            text.append(['Complex', self['complex']['Translational'], self['complex']['Rotational'],
+                         self['complex']['Vibrational'], self['complex']['Total']])
             if not self.stability:
-                text.extend([['Receptor', self.rec[1], self.rec[2], self.rec[3], self.rec[0]],
-                             ['Ligand', self.lig[1], self.lig[2], self.lig[3], self.lig[0]]])
+                text.extend([['Receptor', self['receptor']['Translational'], self['receptor']['Rotational'],
+                              self['receptor']['Vibrational'], self['receptor']['Total']],
+                             ['Ligand', self['ligand']['Translational'], self['ligand']['Rotational'],
+                              self['ligand']['Vibrational'], self['ligand']['Total']]])
                 text.append([])
-                text.append(['-TΔS', self.com[1] - self.rec[1] - self.lig[1], self.com[2] - self.rec[2] - self.lig[2],
-                              self.com[3] - self.rec[3] - self.lig[3], self.com[0] - self.rec[0] - self.lig[0]])
+                text.append(['-TΔS', self['delta']['Translational'], self['delta']['Rotational'],
+                             self['delta']['Vibrational'], self['delta']['Total']])
         else:
             text.append('           Translational      Rotational      Vibrational           Total')
-            text.append('Complex:   %13.4f %15.4f %16.4f %15.4f\n' % (self.com[1], self.com[2], self.com[3], self.com[0]))
+            text.append('Complex   %13.4f %15.4f %16.4f %15.4f\n' % (self['complex']['Translational'],
+                                                                     self['complex']['Rotational'],
+                                                                     self['complex']['Vibrational'],
+                                                                     self['complex']['Total']))
             if not self.stability:
-                text.extend(['Receptor:  %13.4f %15.4f %16.4f %15.4f\n' % (self.rec[1], self.rec[2], self.rec[3],
-                                                                           self.rec[0]),
-                             'Ligand:    %13.4f %15.4f %16.4f %15.4f\n' % (self.lig[1], self.lig[2], self.lig[3],
-                                                                           self.lig[0])])
+                text.extend(['Receptor  %13.4f %15.4f %16.4f %15.4f\n' % (self['receptor']['Translational'],
+                                                                          self['receptor']['Rotational'],
+                                                                          self['receptor']['Vibrational'],
+                                                                          self['receptor']['Total']),
+                             'Ligand    %13.4f %15.4f %16.4f %15.4f\n' % (self['ligand']['Translational'],
+                                                                          self['ligand']['Rotational'],
+                                                                          self['ligand']['Vibrational'],
+                                                                          self['ligand']['Total'])])
                 text.append('')
-                text.append('-TΔS:   %13.4f %15.4f %16.4f %15.4f\n' % (self.com[1] - self.rec[1] - self.lig[1],
-                                                                       self.com[2] - self.rec[2] - self.lig[2],
-                                                                       self.com[3] - self.rec[3] - self.lig[3],
-                                                                       self.com[0] - self.rec[0] - self.lig[0]))
+                text.append('-TΔS   %13.4f %15.4f %16.4f %15.4f\n' % (self['delta']['Translational'],
+                                                                      self['delta']['Rotational'],
+                                                                      self['delta']['Vibrational'],
+                                                                      self['delta']['Total']))
         if _output_format:
             return text
         else:
@@ -403,13 +413,19 @@ class QHout(dict):
 
     def total_avg(self):
         """ Returns the average of the total """
-        return self.com[0] - self.rec[0] - self.lig[0]
+        if self.stability:
+            return self['complex']['Total']
+        else:
+            return self['delta']['Total']
 
     def _read(self):
         """ Parses the output files and fills the data arrays """
         output = open(self.filename, 'r')
         rawline = output.readline()
-        self.com = EnergyVector(4)
+        self['complex'] = {}
+        self['receptor'] = {'Total': 0}
+        self['ligand'] = {'Total': 0}
+        self['delta'] = {}
         self.rec = EnergyVector(4)
         self.lig = EnergyVector(4)
         comdone = False  # if we've done the complex yet (filled in self.com)
@@ -420,27 +436,46 @@ class QHout(dict):
         while rawline:
             if rawline[0:6] == " Total":
                 if not comdone:
-                    self.com[0] = (float(rawline.split()[3]) * self.temperature / 1000 * -1)
-                    self.com[1] = (float(output.readline().split()[3]) * self.temperature / 1000 * -1)
-                    self.com[2] = (float(output.readline().split()[3]) * self.temperature / 1000 * -1)
-                    self.com[3] = (float(output.readline().split()[3]) * self.temperature / 1000 * -1)
+                    self['complex']['Total'] = (float(rawline.split()[3]) * self.temperature / 1000 * -1)
+                    self['complex']['Translational'] = (
+                            float(output.readline().split()[3]) * self.temperature / 1000 * -1)
+                    self['complex']['Rotational'] = (
+                            float(output.readline().split()[3]) * self.temperature / 1000 * -1)
+                    self['complex']['Vibrational'] = (
+                            float(output.readline().split()[3]) * self.temperature / 1000 * -1)
                     comdone = True
                 elif not recdone:
-                    self.rec[0] = (float(rawline.split()[3]) * self.temperature / 1000 * -1)
-                    self.rec[1] = (float(output.readline().split()[3]) * self.temperature / 1000 * -1)
-                    self.rec[2] = (float(output.readline().split()[3]) * self.temperature / 1000 * -1)
-                    self.rec[3] = (float(output.readline().split()[3]) * self.temperature / 1000 * -1)
+                    self['receptor']['Total'] = (float(rawline.split()[3]) * self.temperature / 1000 * -1)
+                    self['receptor']['Translational'] = (
+                            float(output.readline().split()[3]) * self.temperature / 1000 * -1)
+                    self['receptor']['Rotational'] = (
+                            float(output.readline().split()[3]) * self.temperature / 1000 * -1)
+                    self['receptor']['Vibrational'] = (
+                            float(output.readline().split()[3]) * self.temperature / 1000 * -1)
                     recdone = True
                 else:
-                    self.lig[0] = (float(rawline.split()[3]) * self.temperature / 1000 * -1)
-                    self.lig[1] = (float(output.readline().split()[3]) * self.temperature / 1000 * -1)
-                    self.lig[2] = (float(output.readline().split()[3]) * self.temperature / 1000 * -1)
-                    self.lig[3] = (float(output.readline().split()[3]) * self.temperature / 1000 * -1)
+                    self['ligand']['Total'] = (float(rawline.split()[3]) * self.temperature / 1000 * -1)
+                    self['ligand']['Translational'] = (
+                            float(output.readline().split()[3]) * self.temperature / 1000 * -1)
+                    self['ligand']['Rotational'] = (
+                            float(output.readline().split()[3]) * self.temperature / 1000 * -1)
+                    self['ligand']['Vibrational'] = (
+                            float(output.readline().split()[3]) * self.temperature / 1000 * -1)
                     break
             rawline = output.readline()
         # end while rawline
         self.stability = not recdone
         output.close()
+
+        # fill the delta if not stability
+        if not self.stability:
+            self['delta']['Total'] = self['complex']['Total'] - self['receptor']['Total'] - self['ligand']['Total']
+            self['delta']['Translational'] = (self['complex']['Translational'] - self['receptor']['Translational'] -
+                                              self['ligand']['Translational'])
+            self['delta']['Rotational'] = (self['complex']['Rotational'] - self['receptor']['Rotational'] -
+                                           self['ligand']['Rotational'])
+            self['delta']['Vibrational'] = (self['complex']['Vibrational'] - self['receptor']['Vibrational'] -
+                                            self['ligand']['Vibrational'])
 
 
 class NMODEout(dict):
@@ -1427,7 +1462,7 @@ class PairDecompOut(DecompOut):
 class DecompBinding(dict):
     """ Class for decomposition binding (per-residue) """
 
-    def __init__(self, com, rec, lig, prmtop_system, INPUT, output, csvwriter, desc, **kwargs):
+    def __init__(self, com, rec, lig, prmtop_system, INPUT, csvwriter, desc, **kwargs):
         """
         output should be an open file and csvfile should be a csv.writer class. If
         the output format is specified as csv, then output should be a csv.writer
@@ -1438,7 +1473,6 @@ class DecompBinding(dict):
         self.com, self.rec, self.lig = com, rec, lig
         self.num_terms = self.com.num_terms
         self.numframes = 0  # frame counter
-        self.output = output
         self.desc = desc  # Description
         self.prmtop_system = prmtop_system
         self.INPUT = INPUT
