@@ -425,7 +425,9 @@ input_file.addNamelist('general', 'general',
                            ['strip_mask', str, strip_mask, 'Amber mask to strip from solvated prmtop'],
                            ['temperature', float, 298.15, 'Temperature to calculate Binding Free Energy '
                                                           'from Ki and interaction entropy'],
-                           ['verbose', int, 1, 'How many energy terms to print in the final output']
+
+# Problem with the stdev
+#                            ['verbose', int, 1, 'How many energy terms to print in the final output']
                        ], trigger=None)
 
 input_file.addNamelist('gb', 'gb',

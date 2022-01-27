@@ -154,12 +154,12 @@ def create_inputs(INPUT, prmtop_system, pre):
         trj_suffix = 'nc' if INPUT['netcdf'] else 'mdcrd'
         com_mask, rec_mask, lig_mask = prmtop_system.Mask('all', True)
         if not INPUT['mutant_only']:
-            qh_in = QuasiHarmonicInput(com_mask, rec_mask, lig_mask, stability=stability, prefix=pre,
-                                       trj_suffix=trj_suffix)
+            qh_in = QuasiHarmonicInput(com_mask, rec_mask, lig_mask, temperature=INPUT['temperature'],
+                                       stability=stability, prefix=pre, trj_suffix=trj_suffix)
             qh_in.write_input(pre + 'cpptrajentropy.in')
         if INPUT['alarun']:
-            qh_in = QuasiHarmonicInput(com_mask, rec_mask, lig_mask, stability=stability, prefix=pre + 'mutant_',
-                                       trj_suffix=trj_suffix)
+            qh_in = QuasiHarmonicInput(com_mask, rec_mask, lig_mask, temperature=INPUT['temperature'],
+                                       stability=stability, prefix=pre + 'mutant_', trj_suffix=trj_suffix)
             qh_in.write_input(pre + 'mutant_cpptrajentropy.in')
 
 
@@ -340,7 +340,7 @@ class SanderPBSAInput(SanderInput):
                 'eneopt': 'eneopt', 'frcopt': 'frcopt', 'cutfd': 'cutfd', 'cutnb': 'cutnb',
                 'mctrdz': 'mctrdz', 'poretype': 'poretype', 'npbverb': 'npbverb',
                 'npbopt': 'npbopt',
-                'pbtemp': 'pbtemp', 'iprob': 'iprob', 'arcres': 'arcres',
+                'pbtemp': 'temperature', 'iprob': 'iprob', 'arcres': 'arcres',
                 'mprob': 'mprob', 'accept': 'accept', 'nbuffer': 'nbuffer', 'npbgrid': 'npbgrid',
                 'scalec': 'scalec', 'nsnba': 'nsnba',
                 'phiout': 'phiout', 'phiform': 'phiform',
@@ -517,24 +517,24 @@ class SanderPBDecomp(SanderPBSADECOMPInput):
 class QuasiHarmonicInput(object):
     """ Write a cpptraj input file to do a quasi-harmonic entropy calculation """
 
-    def __init__(self, com_mask, rec_mask, lig_mask, stability=False,
-                 prefix='_MMPBSA_', trj_suffix='mdcrd'):
+    def __init__(self, com_mask, rec_mask, lig_mask, temperature=298.15, stability=False,
+                 prefix='_GMXMMPBSA_', trj_suffix='mdcrd'):
         self.file_string = ("trajin %scomplex.%s\n" % (prefix, trj_suffix) +
                             "reference %savgcomplex.pdb\n" % (prefix) +
                             "rms mass reference %s\n" % (com_mask) +
                             "matrix mwcovar name comp.matrix %s\n" % (com_mask) +
                             "analyze matrix comp.matrix out " +
-                            "%scomplex_entropy.out thermo reduce\n" % (prefix))
+                            "%scomplex_entropy.out thermo reduce temp %s\n" % (prefix, temperature))
         if not stability:
             self.file_string = (self.file_string +
                                 "rms mass reference %s\n" % (rec_mask) +
                                 "matrix mwcovar name rec.matrix %s\n" % (rec_mask) +
                                 "analyze matrix rec.matrix out " +
-                                "%sreceptor_entropy.out thermo reduce\n" % (prefix) +
+                                "%sreceptor_entropy.out thermo reduce temp %s\n" % (prefix, temperature) +
                                 "rms mass reference %s\n" % (lig_mask) +
                                 "matrix mwcovar name lig.matrix %s\n" % (lig_mask) +
                                 "analyze matrix lig.matrix out " +
-                                "%sligand_entropy.out thermo reduce\n" % (prefix))
+                                "%sligand_entropy.out thermo reduce temp %s\n" % (prefix, temperature))
 
     def write_input(self, filename):
         """ Writes the input file """

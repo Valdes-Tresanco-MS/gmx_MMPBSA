@@ -30,21 +30,23 @@ from math import sqrt, ceil
 from os import linesep as ls
 import h5py
 
+h5py.get_config().track_order = True
 
 class Data2h5:
     def __init__(self, app):
         self.app = app
         self.h5f = h5py.File('RESULTS_gmx_MMPBSA.h5', 'w')
-        self._e2h5(app.calc_types, self.h5f)
-        if app.calc_types.decomp:
-            grp = self.h5f.create_group('decomp')
-            self._decomp2h5(app.calc_types.decomp, grp)
+        grp = self.h5f.create_group('normal')
+        self._e2h5(app.calc_types.normal, grp)
         if app.calc_types.mutant:
             grp = self.h5f.create_group('mutant')
             self._e2h5(app.calc_types.mutant, grp)
-            if app.calc_types.decomp:
-                grp2 = grp.create_group('decomp')
-                self._decomp2h5(app.calc_types.decomp.mutant, grp2)
+        if app.calc_types.decomp_normal:
+            grp = self.h5f.create_group('decomp_normal')
+            self._decomp2h5(app.calc_types.decomp_normal, grp)
+        if app.calc_types.decomp_mutant:
+            grp = self.h5f.create_group('decomp_mutant')
+            self._decomp2h5(app.calc_types.decomp_mutant, grp)
         self._info2h5()
         self.h5f.close()
 
@@ -92,8 +94,8 @@ class Data2h5:
                 for key2 in d[key]:
                     grp2 = grp.create_group(key2)
                     # complex, receptor, etc., is a class and the data is contained in the attribute data
-                    for key3 in d[key][key2].data:
-                        dset = grp2.create_dataset(key3, data=d[key][key2].data[key3])
+                    for key3 in d[key][key2]:
+                        dset = grp2.create_dataset(key3, data=d[key][key2][key3])
             elif key in ['nmode', 'qh']:
                 grp = f.create_group(key)
                 # key2 is complex, receptor, ligand, delta
@@ -105,10 +107,10 @@ class Data2h5:
             elif key in ['ie', 'c2']:
                 grp = f.create_group(key)
                 # key2 is PB, GB or RISM?
-                for key2 in d[key].data:
+                for key2 in d[key]:
                     grp2 = grp.create_group(key2)
-                    for key3 in d[key].data[key2]:
-                        dset = grp2.create_dataset(key3, data=d[key].data[key2][key3])
+                    for key3 in d[key][key2]:
+                        dset = grp2.create_dataset(key3, data=d[key][key2][key3])
 
     @staticmethod
     def _decomp2h5(d, g):
@@ -209,12 +211,8 @@ def write_stability_output(app):
             final_output.add_comment('Generalized Born ESURF calculated using \'LCPO\' surface areas')
         final_output.add_comment('')
 
-    final_output.add_comment('Using temperature = %.2f K)\n' % INPUT['temperature'])
+    final_output.add_comment('Using temperature = %.2f K)' % INPUT['temperature'])
     final_output.add_comment('All units are reported in kcal/mol.')
-    # if INPUT['nmoderun'] or INPUT['qh_entropy'] or INPUT['interaction_entropy' or INPUT['c2_entropy']]:
-    #     final_output.add_comment('All entropy results have units kcal/mol')
-    #     final_output.add_comment('(Temperature for NMODE and QH is %.2f K)\n' % INPUT['temperature'])
-    #     final_output.add_comment('(Temperature for IE and C2 entropy is %.2f K)\n' % INPUT['temperature'])
     if INPUT['ifqnt']:
         final_output.add_comment(('QM/MM: Residues %s are treated with the ' +
                                   'Quantum Hamiltonian %s') % (INPUT['qm_residues'], INPUT['qm_theory']))
@@ -223,47 +221,49 @@ def write_stability_output(app):
     # Start with entropies
     if INPUT['qh_entropy']:
         if not INPUT['mutant_only']:
-            qhnorm = app.calc_types['qh']
-            final_output.writeline('ENTROPY RESULTS (QUASI-HARMONIC APPROXIMATION) CALCULATED WITH CPPTRAJ:')
-            final_output.add_section(qhnorm.print_summary())
+
+            qhnorm = app.calc_types.normal['qh']
+            final_output.writeline('ENTROPY RESULTS (QUASI-HARMONIC APPROXIMATION) CALCULATED WITH PTRAJ:')
+            final_output.add_section(qhnorm.summary())
         if INPUT['alarun']:
             qhmutant = app.calc_types.mutant['qh']
             final_output.writeline(mut_str + ' MUTANT')
-            final_output.writeline('ENTROPY RESULTS (QUASI-HARMONIC APPROXIMATION) CALCULATED WITH CPPTRAJ:')
-            final_output.add_section(qhmutant.print_summary())
+            final_output.writeline('ENTROPY RESULTS (QUASI-HARMONIC APPROXIMATION) CALCULATED WITH PTRAJ:')
+            final_output.add_section(qhmutant.summary())
+
         if INPUT['alarun'] and not INPUT['mutant_only']:
             davg, dstd = _get_diff(qhmutant.total_avg(), qhnorm.total_avg())
             final_output.add_section(f'\nRESULT OF ALANINE SCANNING ({mut_str}):\n'
-                                     f'ΔΔS = {davg:9.4f} +/ {dstd:7.4f}\n')
+                                     f'-TΔΔS = {davg:9.4f} +/ {dstd:7.4f}\n')
     # end if INPUT['entropy']
 
     # Now print out the normal mode results
     if INPUT['nmoderun']:
         if not INPUT['mutant_only']:
-            nm_norm = app.calc_types['nmode']['complex']
+            nm_norm = app.calc_types.normal['nmode']['complex']
             final_output.write('ENTROPY RESULTS (HARMONIC APPROXIMATION) CALCULATED WITH NMODE:\n')
-            final_output.add_section('Complex:\n' + nm_norm.print_summary())
+            final_output.add_section(nm_norm.summary())
             # Now dump the energy vectors in CSV format
             if FILES.energyout:
                 energyvectors.writerow(['NMODE entropy results'])
-                nm_norm.print_vectors(energyvectors)
+                nm_norm._print_vectors(energyvectors)
                 energyvectors.writerow([])
 
         if INPUT['alarun']:
             nm_mut = app.calc_types.mutant['nmode']['complex']
             final_output.write(mut_str + ' MUTANT\nENTROPY RESULTS (HARMONIC APPROXIMATION) CALCULATED WITH NMODE:\n')
-            final_output.add_section('Complex:\n' + nm_mut.print_summary())
+            final_output.add_section(nm_mut.summary())
             # Now dump the energy vectors in CSV format
             if FILES.energyout:
                 energyvectors.writerow([mut_str + ' Mutant NMODE entropy results'])
-                nm_mut.print_vectors(energyvectors)
+                nm_mut._print_vectors(energyvectors)
                 energyvectors.writerow([])
 
         # Now calculate the effect of alanine scanning
         if INPUT['alarun'] and not INPUT['mutant_only']:
-            davg, dstd = _get_diff(nm_mut.data['Total'], nm_norm.data['Total'])
+            davg, dstd = _get_diff(nm_mut['Total'], nm_norm['Total'])
             final_output.add_section(f'\nRESULT OF ALANINE SCANNING ({mut_str}):\n'
-                                     f'ΔΔS = {davg:9.4f} +/- {dstd:7.4f}\n')
+                                     f'-TΔΔS = {davg:9.4f} +/- {dstd:7.4f}\n')
 
     # end if INPUT['nmoderun']
 
@@ -276,47 +276,47 @@ def write_stability_output(app):
         if not INPUT[triggers[i]]:
             continue
         if not INPUT['mutant_only']:
-            com_norm = app.calc_types[key]['complex']
+            com_norm = app.calc_types.normal[key]['complex']
             final_output.write(headers[i])
-            final_output.add_section('Complex:\n' + com_norm.print_summary())
+            final_output.add_section(com_norm.summary())
             # Dump energy vectors to a CSV
             if FILES.energyout:
                 energyvectors.writerow([headers[i].strip()])
-                com_norm.print_vectors(energyvectors)
+                com_norm._print_vectors(energyvectors)
                 energyvectors.writerow([])
 
             # Combine with the entropy(ies)
             if INPUT['qh_entropy']:
-                qh_davg, qh_dstd = _get_diff(com_norm.data['TOTAL'], qhnorm.total_avg())
+                qh_davg, qh_dstd = _get_diff(com_norm['TOTAL'], qhnorm.total_avg())
                 final_output.add_section('Using Quasi-harmonic Entropy Approximation: '
                                          f'ΔG = {qh_davg:9.4f} +/- {qh_dstd:7.4f}\n')
             if INPUT['nmoderun']:
-                nm_davg, nm_dstd = _get_diff(com_norm.data['TOTAL'], nm_norm.data['Total'])
+                nm_davg, nm_dstd = _get_diff(com_norm['TOTAL'], nm_norm['Total'])
                 final_output.add_section('Using Normal Mode Entropy Approximation: '
                                          f'ΔG = {nm_davg:9.4f} +/- {nm_dstd:7.4f}\n')
 
         if INPUT['alarun']:
             com_mut = app.calc_types.mutant[key]['complex']
             final_output.write('%s MUTANT:%s' % (mut_str, headers[i]))
-            final_output.add_section('Complex:\n' + com_mut.print_summary())
+            final_output.add_section(com_mut.summary())
             # Dump energy vectors to a CSV
             if FILES.energyout:
                 energyvectors.writerow([mut_str + ' Mutant ' + headers[i]])
-                com_mut.print_vectors(energyvectors)
+                com_mut._print_vectors(energyvectors)
                 energyvectors.writerow([])
 
             # Combine with the entropy(ies)
             if INPUT['qh_entropy']:
-                mqh_davg, mqh_dstd = _get_diff(com_mut.data['TOTAL'], qhmutant.total_avg())
+                mqh_davg, mqh_dstd = _get_diff(com_mut['TOTAL'], qhmutant.total_avg())
                 final_output.add_section('Using Quasi-harmonic Entropy Approximation: '
                                          f'ΔG = {mqh_davg:9.4f} +/- {mqh_dstd:7.4f}\n')
             if INPUT['nmoderun']:
-                mnm_davg, mnm_dstd = _get_diff(com_mut.data['TOTAL'], nm_norm.data['Total'])
+                mnm_davg, mnm_dstd = _get_diff(com_mut['TOTAL'], nm_norm['Total'])
                 final_output.add_section('Using Normal Mode Entropy Approximation: '
                                          f'ΔG = {mnm_davg:9.4f} +/- {mnm_dstd:7.4f}\n')
 
         if INPUT['alarun'] and not INPUT['mutant_only']:
-            davg, dstd = _get_diff(com_mut.data['TOTAL'], com_norm.data['TOTAL'])
+            davg, dstd = _get_diff(com_mut['TOTAL'], com_norm['TOTAL'])
             final_output.write(f'\nRESULT OF ALANINE SCANNING ({mut_str}):\n'
                                f'ΔΔH = {davg:9.4f} +/- {dstd:7.4f}\n')
 
@@ -334,10 +334,9 @@ def write_stability_output(app):
 
     # end for solv in ['gbrun', 'pbrun', ...]
 
-    if FILES.energyout: ene_csv.close()
+    if FILES.energyout:
+        ene_csv.close()
 
-
-# +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 def write_binding_output(app):
     """ Writes a binding output file """
@@ -357,7 +356,6 @@ def write_binding_output(app):
     final_output = OutputFile(FILES.output_file, 'w')
     final_output.write_date()
     final_output.add_comment('')
-    final_output.write(app.input_file_text)
     final_output.print_file_info(FILES, INPUT)
     final_output.add_comment('')
     final_output.add_comment('Receptor mask:                  "%s"' % INPUT['receptor_mask'])
@@ -376,16 +374,13 @@ def write_binding_output(app):
         final_output.add_comment('C2 Entropy calculations performed using last %s frames.' %
                                  ceil(app.numframes * (INPUT['c2_segment'] / 100)))
         final_output.add_comment('C2 Entropy Std. Dev. and Conf. Interv. (95%) have been obtained by '
-                                 'bootstrapping with number_of_resamplings = 2000')
-
-
+                                 'bootstrapping with number of re-samplings = 2000')
     if INPUT['pbrun']:
         if INPUT['sander_apbs']:
-            final_output.add_comment('Poisson Boltzmann calculations performed ' +
-                                     'using iAPBS interface to sander (sander.APBS)')
+            final_output.add_comment('Poisson Boltzmann calculations performed using iAPBS interface to sander '
+                                     '(sander.APBS)')
         else:
-            final_output.add_comment('Poisson Boltzmann calculations performed ' +
-                                     'using internal PBSA solver in sander.')
+            final_output.add_comment('Poisson Boltzmann calculations performed using internal PBSA solver in sander.')
     final_output.add_comment('')
 
     if INPUT['gbrun']:
@@ -395,12 +390,8 @@ def write_binding_output(app):
             final_output.add_comment('Generalized Born ESURF calculated using \'LCPO\' surface areas')
         final_output.add_comment('')
 
-    final_output.add_comment('Using temperature = %.2f K)\n' % INPUT['temperature'])
+    final_output.add_comment('Using temperature = %.2f K)' % INPUT['temperature'])
     final_output.add_comment('All units are reported in kcal/mol.')
-    # if INPUT['nmoderun'] or INPUT['qh_entropy'] or INPUT['interaction_entropy' or INPUT['c2_entropy']]:
-    #     final_output.add_comment('All entropy results have units kcal/mol\n' +
-    #                              '(Temperature for NMODE and QH is %.2f K)\n' % INPUT['temperature'] +
-    #                              '(Temperature for IE and C2 is %.2f K)\n' % INPUT['temperature'])
     if INPUT['ifqnt']:
         final_output.add_comment(('QM/MM: Residues %s are treated with the ' +
                                   'Quantum Hamiltonian %s') % (INPUT['qm_residues'], INPUT['qm_theory']))
@@ -409,42 +400,48 @@ def write_binding_output(app):
     # First do the entropies
     if INPUT['qh_entropy']:
         if not INPUT['mutant_only']:
-            qhnorm = app.calc_types['qh']
-            final_output.writeline('ENTROPY RESULTS (QUASI-HARMONIC APPROXIMATION) CALCULATED WITH CPPTRAJ:')
-            final_output.add_section(qhnorm.print_summary())
+            qhnorm = app.calc_types.normal['qh']
+            final_output.writeline('ENTROPY RESULTS (QUASI-HARMONIC APPROXIMATION) CALCULATED WITH PTRAJ:')
+            final_output.add_section(qhnorm.summary())
         if INPUT['alarun']:
             qhmutant = app.calc_types.mutant['qh']
             final_output.writeline(mut_str + ' MUTANT')
-            final_output.writeline('ENTROPY RESULTS (QUASI-HARMONIC APPROXIMATION) CALCULATED WITH CPPTRAJ:')
-            final_output.add_section(qhmutant.print_summary())
+            final_output.writeline('ENTROPY RESULTS (QUASI-HARMONIC APPROXIMATION) CALCULATED WITH PTRAJ:')
+            final_output.add_section(qhmutant.summary())
         if INPUT['alarun'] and not INPUT['mutant_only']:
             davg, dstd = _get_diff(qhmutant.total_avg(), qhnorm.total_avg())
             final_output.add_section(f'\nRESULT OF ALANINE SCANNING ({mut_str}):\n'
-                                     f'ΔΔS binding = {davg:9.4f} +/ {dstd:7.4f}\n')
+                                     f'-TΔΔS binding = {davg:9.4f} +/ {dstd:7.4f}\n')
 
     # end if INPUT['entropy']
     if INPUT['interaction_entropy']:
         ie_inconsistent = False
         if not INPUT['mutant_only']:
-            ienorm = app.calc_types['ie']
+            ienorm = app.calc_types.normal['ie']
             final_output.writeline('ENTROPY RESULTS (INTERACTION ENTROPY):')
-            final_output.add_section(ienorm.print_summary())
-            for m in ienorm.data:
-                if ienorm.data[m]['sigma'] > 3.6:
+            final_output.add_section(ienorm.summary())
+            # Now dump the energy vectors in CSV format
+            if FILES.energyout:
+                energyvectors.writerow(['Interaction entropy results'])
+                ienorm._print_vectors(energyvectors)
+                energyvectors.writerow([])
+
+            for m in ienorm:
+                if ienorm[m]['sigma'] > 3.6:
                     ie_inconsistent = True
         if INPUT['alarun']:
             iemutant = app.calc_types.mutant['ie']
             final_output.writeline(mut_str + ' MUTANT')
             final_output.writeline('ENTROPY RESULTS (INTERACTION ENTROPY):')
-            final_output.add_section(iemutant.print_summary())
-            for m in iemutant.data:
-                if iemutant.data[m]['sigma'] > 3.6:
+            final_output.add_section(iemutant.summary())
+            for m in iemutant:
+                if iemutant[m]['sigma'] > 3.6:
                     ie_inconsistent = True
         if INPUT['alarun'] and not INPUT['mutant_only']:
             text = f'\nRESULT OF ALANINE SCANNING ({mut_str}):\n'
-            for model in ienorm.data:
-                davg, dstd = _get_diff(iemutant.data[model]['iedata'], ienorm.data[model]['iedata'])
-                text += f'ΔΔS binding ({model.upper()}) = {davg:9.4f} +/- {dstd:9.4f}\n'
+            for model in ienorm:
+                davg, dstd = _get_diff(iemutant[model]['iedata'], ienorm[model]['iedata'])
+                text += f'-TΔΔS binding ({model.upper()}) = {davg:9.4f} +/- {dstd:9.4f}\n'
             final_output.add_section(text)
         if ie_inconsistent:
             final_output.writeline(
@@ -455,25 +452,25 @@ def write_binding_output(app):
     if INPUT['c2_entropy']:
         c2_inconsistent = False
         if not INPUT['mutant_only']:
-            c2norm = app.calc_types['c2']
+            c2norm = app.calc_types.normal['c2']
             final_output.writeline('ENTROPY RESULTS (C2 ENTROPY):')
-            final_output.add_section(c2norm.print_summary())
-            for m in c2norm.data:
-                if c2norm.data[m]['sigma'] > 3.6:
+            final_output.add_section(c2norm.summary())
+            for m in c2norm:
+                if c2norm[m]['sigma'] > 3.6:
                     c2_inconsistent = True
         if INPUT['alarun']:
             c2mutant = app.calc_types.mutant['c2']
             final_output.writeline(mut_str + ' MUTANT')
             final_output.writeline('ENTROPY RESULTS (C2 ENTROPY):')
-            final_output.add_section(c2mutant.print_summary())
-            for m in c2mutant.data:
-                if c2mutant.data[m]['sigma'] > 3.6:
+            final_output.add_section(c2mutant.summary())
+            for m in c2mutant:
+                if c2mutant[m]['sigma'] > 3.6:
                     c2_inconsistent = True
         if INPUT['alarun'] and not INPUT['mutant_only']:
             text = '\nRESULT OF ALANINE SCANNING (%s):\n' % mut_str
-            for model in c2norm.data:
-                davg, dstd = _get_diff(c2mutant.data[model]['c2data'], c2norm.data[model]['c2data'])
-                text += f'ΔΔS binding ({model.upper()}) = {davg:9.4f} +/- {dstd:9.4f}\n'
+            for model in c2norm:
+                davg, dstd = _get_diff(c2mutant[model]['c2data'], c2norm[model]['c2data'])
+                text += f'-TΔΔS binding ({model.upper()}) = {davg:9.4f} +/- {dstd:9.4f}\n'
             final_output.add_section(text)
         if c2_inconsistent:
             final_output.writeline(
@@ -484,31 +481,31 @@ def write_binding_output(app):
     # Now print out the normal mode results
     if INPUT['nmoderun']:
         if not INPUT['mutant_only']:
-            nm_sys_norm = app.calc_types['nmode']['delta']
+            nm_sys_norm = app.calc_types.normal['nmode']['delta']
             final_output.write('ENTROPY RESULTS (HARMONIC APPROXIMATION) CALCULATED WITH NMODE:\n\n')
-            final_output.add_section(nm_sys_norm.print_summary())
+            final_output.add_section(nm_sys_norm.summary())
             # Now dump the energy vectors in CSV format
             if FILES.energyout:
                 energyvectors.writerow(['NMODE entropy results'])
-                nm_sys_norm.print_vectors(energyvectors)
+                nm_sys_norm._print_vectors(energyvectors)
                 energyvectors.writerow([])
 
         if INPUT['alarun']:
             nm_sys_mut = app.calc_types.mutant['nmode']['delta']
-            final_output.write(mut_str + ' MUTANT')
-            final_output.write('ENTROPY RESULTS (HARMONIC APPROXIMATION) CALCULATED WITH NMODE:\n')
-            final_output.add_section(nm_sys_mut.print_summary())
+            final_output.writeline(mut_str + ' MUTANT')
+            final_output.writeline('ENTROPY RESULTS (HARMONIC APPROXIMATION) CALCULATED WITH NMODE:')
+            final_output.add_section(nm_sys_mut.summary())
             # Now dump the energy vectors in CSV format
             if FILES.energyout:
                 energyvectors.writerow([mut_str + ' Mutant NMODE entropy results'])
-                nm_sys_mut.print_vectors(energyvectors)
+                nm_sys_mut._print_vectors(energyvectors)
                 energyvectors.writerow([])
 
         # Now calculate the effect of alanine scanning
         if INPUT['alarun'] and not INPUT['mutant_only']:
-            davg, dstd = _get_diff(nm_sys_mut.data['Total'], nm_sys_norm.data['Total'])
+            davg, dstd = _get_diff(nm_sys_mut['Total'], nm_sys_norm['Total'])
             final_output.add_section(f'\nRESULT OF ALANINE SCANNING ({mut_str}):\n'
-                                      f'ΔΔS binding = {davg:9.4f} +/- {dstd:9.4f}\n')
+                                      f'-TΔΔS binding = {davg:9.4f} +/- {dstd:9.4f}\n')
 
     # end if INPUT['nmoderun']
 
@@ -522,62 +519,63 @@ def write_binding_output(app):
             continue
 
         if not INPUT['mutant_only']:
-            sys_norm = app.calc_types[key]['delta']
+            sys_norm = app.calc_types.normal[key]['delta']
             final_output.write(headers[i])
-            final_output.add_section(sys_norm.print_summary())
+            final_output.add_section(sys_norm.summary())
             # Dump energy vectors to a CSV
             if FILES.energyout:
                 energyvectors.writerow([headers[i].strip()])
-                sys_norm.print_vectors(energyvectors)
+                sys_norm._print_vectors(energyvectors)
                 energyvectors.writerow([])
 
             # Combine with the entropy(ies)
             if INPUT['qh_entropy']:
-                qh_davg, qh_dstd = _get_diff(sys_norm.data['DELTA TOTAL'], qhnorm.total_avg())
+                qh_davg, qh_dstd = _get_diff(sys_norm['DELTA TOTAL'], qhnorm.total_avg())
                 final_output.add_section('Using Quasi-harmonic Entropy Approximation:\n'
                                          f'ΔG binding = {qh_davg:9.4f} +/- {qh_dstd:7.4f}\n')
             if INPUT['interaction_entropy']:
-                ie_davg, ie_dstd = _get_sum(sys_norm.data['DELTA TOTAL'], ienorm.data[key]['iedata'])
+                ie_davg, ie_dstd = _get_sum(sys_norm['DELTA TOTAL'], ienorm[key]['iedata'])
                 final_output.add_section(f"Using Interaction Entropy Approximation:\n"
                                          f"ΔG binding = {ie_davg:9.4f} +/- {ie_dstd:7.4f}\n")
             if INPUT['c2_entropy']:
-                c2_davg, c2_dstd = _get_sum(sys_norm.data['DELTA TOTAL'], c2norm.data[key]['c2data'])
+                # FIXME: c2 stdev. ???
+                c2_davg, c2_dstd = _get_sum(sys_norm['DELTA TOTAL'], c2norm[key]['c2data'])
                 final_output.add_section(f"Using C2 Entropy Approximation:\n"
                                          f"ΔG binding = {c2_davg:9.4f} +/- {c2_dstd:7.4f}\n")
             if INPUT['nmoderun']:
-                nm_davg, nm_dstd = _get_diff(sys_norm.data['DELTA TOTAL'], nm_sys_norm.data['Total'])
+                nm_davg, nm_dstd = _get_diff(sys_norm['DELTA TOTAL'], nm_sys_norm['Total'])
                 final_output.add_section('Using Normal Mode Entropy Approximation:\n'
                                          f"ΔG binding = {nm_davg:9.4f} +/- {nm_dstd:7.4f}\n")
 
         if INPUT['alarun']:
             sys_mut = app.calc_types.mutant[key]['delta']
             final_output.write('%s MUTANT:%s' % (mut_str, headers[i]))
-            final_output.add_section(sys_mut.print_summary())
+            final_output.add_section(sys_mut.summary())
             # Dump energy vectors to a CSV
             if FILES.energyout:
                 energyvectors.writerow([mut_str + ' Mutant ' + headers[i]])
-                sys_mut.print_vectors(energyvectors)
+                sys_mut._print_vectors(energyvectors)
                 energyvectors.writerow([])
 
             if INPUT['qh_entropy']:
-                mqh_davg, mqh_dstd = _get_diff(sys_mut.data['DELTA TOTAL'], qhmutant.total_avg())
+                mqh_davg, mqh_dstd = _get_diff(sys_mut['DELTA TOTAL'], qhmutant.total_avg())
                 final_output.add_section('Using Quasi-harmonic Entropy Approximation:\n'
                                          f'ΔG binding = {mqh_davg:9.4f} +/- {mqh_dstd:7.4f}\n')
             if INPUT['interaction_entropy']:
-                mie_davg, mie_dstd = _get_sum(sys_mut.data['DELTA TOTAL'], iemutant.data[key]['iedata'])
+                mie_davg, mie_dstd = _get_sum(sys_mut['DELTA TOTAL'], iemutant[key]['iedata'])
                 final_output.add_section(f"Using Interaction Entropy Approximation:\n"
                                          f"ΔG binding = {mie_davg:9.4f} +/- {mie_dstd:7.4f}\n")
             if INPUT['c2_entropy']:
-                mc2_davg, mc2_dstd = _get_sum(sys_mut.data['DELTA TOTAL'], c2mutant.data[key]['c2data'])
+                mc2_davg, mc2_dstd = _get_sum(sys_mut['DELTA TOTAL'], c2mutant[key]['c2data'])
                 final_output.add_section(f"Using C2 Entropy Approximation:\n"
                                          f"ΔG binding = {mc2_davg:9.4f} +/- {mc2_dstd:7.4f}\n")
             if INPUT['nmoderun']:
-                mnm_davg, mnm_dstd = _get_diff(sys_mut.data['DELTA TOTAL'], nm_sys_mut.data['Total'])
+                mnm_davg, mnm_dstd = _get_diff(sys_mut['DELTA TOTAL'], nm_sys_mut['Total'])
                 final_output.add_section('Using Normal Mode Entropy Approximation:\n'
                                          f"ΔG binding = {mnm_davg:9.4f} +/- {mnm_dstd:7.4f}\n")
 
         if INPUT['alarun'] and not INPUT['mutant_only']:
-            davg, dstd = _get_diff(sys_mut.data['DELTA TOTAL'], sys_norm.data['DELTA TOTAL'])
+            davg, dstd = _get_diff(sys_mut['DELTA TOTAL'], sys_norm['DELTA TOTAL'])
             final_output.write(f'\nRESULT OF ALANINE SCANNING ({mut_str}):\n' 
                                f'ΔΔH binding = {davg:9.4f} +/- {dstd:7.4f}\n')
 
@@ -611,8 +609,7 @@ def write_binding_output(app):
 
 # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-def write_decomp_stability_output(FILES, INPUT, size, prmtop_system,
-                                  mutant_system, mutstr, pre):
+def write_decomp_stability_output(FILES, INPUT, size, prmtop_system, mutant_system, mutstr, pre):
     """ Write output file for stability decomposition calculations """
     from csv import writer
     from datetime import datetime
@@ -648,19 +645,16 @@ def write_decomp_stability_output(FILES, INPUT, size, prmtop_system,
 
         # See if we do normal system
         if not INPUT['mutant_only']:
-            gb_com = DecompClass(pre + 'complex_gb.mdout', prmtop_system.complex_prmtop, INPUT['surften'], csv_prefix,
-                                 size, INPUT['dec_verbose'])
-            gb_com.fill_all_terms()
+            gb_com = DecompClass('complex')
+            gb_com.parse_from_file(pre + 'complex_gb.mdout', prmtop_system.complex_prmtop, INPUT, INPUT['surften'],
+                                   csv_prefix, size)
+            gb_com._fill_all_terms()
             if INPUT['csv_format']:
                 decompout.writerow(['Energy Decomposition Analysis (All units kcal/mol): Generalized Born Solvent'])
-                decompout.writerow([])
-                gb_com.write_summary_csv(gb_com.numframes, decompout)
-                decompout.writerow([])
+                decompout.writerows(gb_com.summary('csv'))
             else:
                 decompout.writeline('Energy Decomposition Analysis (All units kcal/mol): Generalized Born Solvent')
-                decompout.writeline('')
-                gb_com.write_summary(gb_com.numframes, decompout)
-                decompout.writeline('')
+                decompout.writeline(gb_com.summary())
             # Copy over all temporary .csv files created by gb_com to the total
             # utils.concatenate removes the temporary files after they are copied
             if FILES.dec_energies:
@@ -672,28 +666,24 @@ def write_decomp_stability_output(FILES, INPUT, size, prmtop_system,
                 dec_energies.write(ls)
 
         if INPUT['alarun']:
-            gb_com = DecompClass(pre + 'mutant_complex_gb.mdout', mutant_system.complex_prmtop, INPUT['surften'],
-                                 csv_prefix, size, INPUT['dec_verbose'])
-            gb_com.fill_all_terms()
+            gb_com = DecompClass('Mutant-Complex')
+            gb_com.parse_from_file(pre + 'mutant_complex_gb.mdout', mutant_system.complex_prmtop, INPUT,
+                                   INPUT['surften'], csv_prefix, size)
+            gb_com._fill_all_terms()
             if INPUT['csv_format']:
                 decompout.writerow(['Energy Decomposition Analysis (All units kcal/mol): Generalized Born Solvent '
                                     f'({mutstr})'])
-                decompout.writerow([])
-                gb_com.write_summary_csv(gb_com.numframes, decompout)
-                decompout.writerow([])
+                decompout.writerows(gb_com.summary('csv'))
             else:
                 decompout.writeline('Energy Decomposition Analysis (All units kcal/mol): Generalized Born Solvent '
                                     f'({mutstr})')
-                decompout.writeline('')
-                gb_com.write_summary(gb_com.numframes, decompout)
-                decompout.writeline('')
+                decompout.writeline(gb_com.summary())
             # Copy over all temporary .csv files created by gb_com to the total
             # utils.concatenate removes the temporary files after they are copied
             if FILES.dec_energies:
                 # Close out the CSV files
                 del gb_com.csvwriter
-                dec_energies.write('GB Decomposition Energies (%s mutant)' %
-                                   mutstr + ls)
+                dec_energies.write('GB Decomposition Energies (%s mutant)' % mutstr + ls)
                 for token in gb_com.allowed_tokens:
                     utils.concatenate(dec_energies, csv_prefix + '.' + token + '.csv')
                 dec_energies.write(ls)
@@ -703,19 +693,16 @@ def write_decomp_stability_output(FILES, INPUT, size, prmtop_system,
         csv_prefix = pre + 'pb' if FILES.dec_energies else ''
         # See if we do normal system
         if not INPUT['mutant_only']:
-            pb_com = DecompClass(pre + 'complex_pb.mdout', prmtop_system.complex_prmtop, INPUT['surften'], csv_prefix,
-                                 size, INPUT['dec_verbose'])
-            pb_com.fill_all_terms()
+            pb_com = DecompClass('Complex')
+            pb_com.parse_from_file(pre + 'complex_pb.mdout', prmtop_system.complex_prmtop, INPUT,
+                                   INPUT['cavity_surften'], csv_prefix, size)
+            pb_com._fill_all_terms()
             if INPUT['csv_format']:
                 decompout.writerow(['Energy Decomposition Analysis (All units kcal/mol): Generalized Born Solvent'])
-                decompout.writerow([])
-                pb_com.write_summary_csv(pb_com.numframes, decompout)
-                decompout.writerow([])
+                decompout.writerows(pb_com.summary('csv'))
             else:
                 decompout.writeline('Energy Decomposition Analysis (All units kcal/mol): Poisson Boltzmann Solvent')
-                decompout.writeline('')
-                pb_com.write_summary(pb_com.numframes, decompout)
-                decompout.writeline('')
+                decompout.writeline(pb_com.summary())
             # Dump the energy vectors if requested
             if FILES.dec_energies:
                 # Close out the CSV files
@@ -725,26 +712,23 @@ def write_decomp_stability_output(FILES, INPUT, size, prmtop_system,
                     utils.concatenate(dec_energies, csv_prefix + '.' + token + '.csv')
                 dec_energies.write(ls)
         if INPUT['alarun']:
-            pb_com = DecompClass(pre + 'mutant_complex_pb.mdout', mutant_system.complex_prmtop, INPUT['surften'],
-                                 csv_prefix, size, INPUT['dec_verbose'])
-            pb_com.fill_all_terms()
+            pb_com = DecompClass('Complex')
+            pb_com.parse_from_file(pre + 'mutant_complex_pb.mdout', mutant_system.complex_prmtop, INPUT,
+                                   INPUT['cavity_surften'], csv_prefix, size)
+            pb_com._fill_all_terms()
             if INPUT['csv_format']:
                 decompout.writerow(['Energy Decomposition Analysis (All units kcal/mol): Poisson Boltzmann Solvent '
                                     f'({mutstr})'])
-                decompout.writerow([])
-                pb_com.write_summary_csv(pb_com.numframes, decompout)
-                decompout.writerow([])
+                decompout.writerows(pb_com.summary('csv'))
             else:
                 decompout.writeline('Energy Decomposition Analysis (All units kcal/mol): Generalized Born Solvent '
                                     f'({mutstr})')
-                decompout.writeline('')
-                pb_com.write_summary(pb_com.numframes, decompout)
-                decompout.writeline('')
+                decompout.writeline(pb_com.summary())
             # Dump the energy vectors if requested
             if FILES.dec_energies:
                 del pb_com.csvwriter
                 dec_energies.write('PB Decomposition Energies (%s mutant)' % mutstr + ls)
-                for token in gb_com.allowed_tokens:
+                for token in pb_com.allowed_tokens:
                     utils.concatenate(dec_energies, csv_prefix + '.' + token + '.csv')
                 dec_energies.write(ls)
 
@@ -759,30 +743,17 @@ def write_decomp_binding_output(FILES, INPUT, size, prmtop_system,
     """ Write output file for binding free energy decomposition calculations """
     from csv import writer
     from datetime import datetime
-    from GMXMMPBSA.amber_outputs import (DecompOut, PairDecompOut, DecompBinding,
-                               PairDecompBinding, MultiTrajDecompBinding,
-                               MultiTrajPairDecompBinding)
+    from GMXMMPBSA.amber_outputs import (DecompOut, PairDecompOut, DecompBinding, PairDecompBinding)
 
     multitraj = bool(FILES.receptor_trajs or FILES.ligand_trajs)
     # Single trajectory
-    if not multitraj:
-        # Per-residue
-        if INPUT['idecomp'] in [1, 2]:
-            BindingClass = DecompBinding
-            SingleClass = DecompOut
-        # Pairwise
-        else:
-            BindingClass = PairDecompBinding
-            SingleClass = PairDecompOut
-    # Multiple Traj
-    # per-residue
-    elif INPUT['idecomp'] in [1, 2]:
-        BindingClass = MultiTrajDecompBinding
-        SingleClass = DecompOut
+    if INPUT['idecomp'] in [1, 2]:
+        DecompBindingClass = DecompBinding
+        DecompClass = DecompOut
     # Pairwise
     else:
-        BindingClass = MultiTrajPairDecompBinding
-        SingleClass = PairDecompOut
+        DecompBindingClass = PairDecompBinding
+        DecompClass = PairDecompOut
 
     # First open up our output file and turn it into a CSV writer if necessary
     if INPUT['csv_format']:
@@ -812,23 +783,30 @@ def write_decomp_binding_output(FILES, INPUT, size, prmtop_system,
         if not INPUT['mutant_only']:
             if csv_prefix:
                 csv_pre = csv_prefix % 'com'
-            gb_com = SingleClass(pre + 'complex_gb.mdout', prmtop_system.complex_prmtop, INPUT['surften'], csv_pre,
-                                 size, INPUT['dec_verbose'])
+            gb_com = DecompClass('complex')
+            gb_com.parse_from_file(pre + 'complex_gb.mdout', prmtop_system.complex_prmtop, INPUT, INPUT['surften'],
+                                   csv_pre, size)
             if csv_prefix:
                 csv_pre = csv_prefix % 'rec'
-            gb_rec = SingleClass(pre + 'receptor_gb.mdout', prmtop_system.receptor_prmtop, INPUT['surften'], csv_pre,
-                                 size, INPUT['dec_verbose'])
+            gb_rec = DecompClass('receptor')
+            gb_rec.parse_from_file(pre + 'receptor_gb.mdout', prmtop_system.receptor_prmtop, INPUT, INPUT['surften'],
+                                   csv_pre, size)
             if csv_prefix:
                 csv_pre = csv_prefix % 'lig'
-            gb_lig = SingleClass(pre + 'ligand_gb.mdout', prmtop_system.ligand_prmtop, INPUT['surften'], csv_pre,
-                                 size, INPUT['dec_verbose'])
+            gb_lig = DecompClass('ligand')
+            gb_lig.parse_from_file(pre + 'ligand_gb.mdout', prmtop_system.ligand_prmtop, INPUT, INPUT['surften'],
+                                   csv_pre, size)
             if csv_prefix:
                 csv_pre = pre + 'gb_bind'
-            gb_bind = BindingClass(gb_com, gb_rec, gb_lig, prmtop_system, INPUT['idecomp'], INPUT['dec_verbose'],
-                                   decompout, csv_pre, 'Energy Decomposition Analysis (All units kcal/mol): '
-                                                       'Generalized Born solvent')
+            gb_bind = DecompBindingClass(gb_com, gb_rec, gb_lig, prmtop_system, INPUT, decompout, csv_pre,
+                                         'Energy Decomposition Analysis (All units kcal/mol): Generalized Born solvent')
+
             # Write the data to the output file
-            gb_bind.parse_all()
+            if INPUT['csv_format']:
+                decompout.writerows(gb_bind.summary('csv'))
+            else:
+                decompout.writeline(gb_bind.summary())
+            # gb_bind.parse_all()
             # Now it's time to dump everything to the CSV file
             if FILES.dec_energies:
                 del gb_com.csvwriter, gb_rec.csvwriter, gb_lig.csvwriter
@@ -843,39 +821,42 @@ def write_decomp_binding_output(FILES, INPUT, size, prmtop_system,
                 dec_energies.write(ls + 'Ligand:' + ls)
                 for token in gb_lig.allowed_tokens:
                     utils.concatenate(dec_energies, pre + 'gb_lig.' + token + '.csv')
-                # DELTAs for each frame only computed if this is a single trajectory
-                if not multitraj:
-                    dec_energies.write(ls + 'DELTAS:' + ls)
-                    for token in gb_com.allowed_tokens:
-                        utils.concatenate(dec_energies, pre + 'gb_bind.' + token + '.csv')
-                    dec_energies.write(ls)
+                dec_energies.write(ls + 'DELTAS:' + ls)
+                for token in gb_com.allowed_tokens:
+                    utils.concatenate(dec_energies, pre + 'gb_bind.' + token + '.csv')
+                dec_energies.write(ls)
         # Mutant system
         if INPUT['alarun']:
             if csv_prefix:
                 csv_pre = csv_prefix % 'com'
-            gb_com = SingleClass(pre + 'mutant_complex_gb.mdout', mutant_system.complex_prmtop, INPUT['surften'],
-                                 csv_pre, size, INPUT['dec_verbose'])
+            gb_com = DecompClass('Mutant-Complex')
+            gb_com.parse_from_file(pre + 'mutant_complex_gb.mdout', mutant_system.complex_prmtop, INPUT,
+                                   INPUT['surften'], csv_pre, size)
             if csv_prefix:
                 csv_pre = csv_prefix % 'rec'
-            gb_rec = SingleClass(pre + 'mutant_receptor_gb.mdout', mutant_system.receptor_prmtop, INPUT['surften'],
-                                 csv_pre, size, INPUT['dec_verbose'])
+            gb_rec = DecompClass('Mutant-Receptor')
+            gb_rec.parse_from_file(pre + 'mutant_receptor_gb.mdout', mutant_system.receptor_prmtop, INPUT,
+                                   INPUT['surften'], csv_pre, size)
             if csv_prefix:
                 csv_pre = csv_prefix % 'lig'
-            gb_lig = SingleClass(pre + 'mutant_ligand_gb.mdout', mutant_system.ligand_prmtop, INPUT['surften'],
-                                 csv_pre, size, INPUT['dec_verbose'])
+            gb_lig = DecompClass('Mutant-Ligand')
+            gb_lig.parse_from_file(pre + 'mutant_ligand_gb.mdout', mutant_system.ligand_prmtop, INPUT,
+                                   INPUT['surften'], csv_pre, size)
             if csv_prefix:
                 csv_pre = pre + 'gb_bind'
-            gb_bind = BindingClass(gb_com, gb_rec, gb_lig, mutant_system, INPUT['idecomp'], INPUT['dec_verbose'],
-                                   decompout, csv_pre, 'Energy Decomposition Analysis (All units kcal/mol): '
-                                                       f'Generalized Born solvent ({mutstr})')
+            gb_bind = DecompBindingClass(gb_com, gb_rec, gb_lig, mutant_system, INPUT, decompout, csv_pre,
+                                         'Energy Decomposition Analysis (All units kcal/mol): Generalized Born '
+                                         f'solvent ({mutstr})')
             # Write the data to the output file
-            gb_bind.parse_all()
+            if INPUT['csv_format']:
+                decompout.writerows(gb_bind.summary('csv'))
+            else:
+                decompout.writeline(gb_bind.summary())
             # Now it's time to dump everything to the CSV file
             if FILES.dec_energies:
                 del gb_com.csvwriter, gb_rec.csvwriter, gb_lig.csvwriter
                 del gb_bind.csvwriter
-                dec_energies.write('GB Decomposition Energies (%s mutant)' %
-                                   mutstr + ls)
+                dec_energies.write('GB Decomposition Energies (%s mutant)' % mutstr + ls)
                 dec_energies.write(ls + 'Complex:' + ls)
                 for token in gb_com.allowed_tokens:
                     utils.concatenate(dec_energies, pre + 'gb_com.' + token + '.csv')
@@ -902,23 +883,29 @@ def write_decomp_binding_output(FILES, INPUT, size, prmtop_system,
         if not INPUT['mutant_only']:
             if csv_prefix:
                 csv_pre = csv_prefix % 'com'
-            pb_com = SingleClass(pre + 'complex_pb.mdout', prmtop_system.complex_prmtop, INPUT['cavity_surften'],
-                                 csv_pre, size, INPUT['dec_verbose'])
+            pb_com = DecompClass('complex')
+            pb_com.parse_from_file(pre + 'complex_pb.mdout', prmtop_system.complex_prmtop, INPUT, INPUT['cavity_surften'],
+                                 csv_pre, size)
             if csv_prefix:
                 csv_pre = csv_prefix % 'rec'
-            pb_rec = SingleClass(pre + 'receptor_pb.mdout', prmtop_system.receptor_prmtop, INPUT['cavity_surften'],
-                                 csv_pre, size, INPUT['dec_verbose'])
+            pb_rec = DecompClass('reecptor')
+            pb_rec.parse_from_file(pre + 'receptor_pb.mdout', prmtop_system.receptor_prmtop, INPUT,
+                                 INPUT['cavity_surften'], csv_pre, size)
             if csv_prefix:
                 csv_pre = csv_prefix % 'lig'
-            pb_lig = SingleClass(pre + 'ligand_pb.mdout', prmtop_system.ligand_prmtop, INPUT['cavity_surften'],
-                                 csv_pre, size, INPUT['dec_verbose'])
+            pb_lig = DecompClass('ligand')
+            pb_lig.parse_from_file(pre + 'ligand_pb.mdout', prmtop_system.ligand_prmtop, INPUT, INPUT['cavity_surften'],
+                                 csv_pre, size)
             if csv_prefix:
                 csv_pre = pre + 'pb_bind'
-            pb_bind = BindingClass(pb_com, pb_rec, pb_lig, prmtop_system, INPUT['idecomp'], INPUT['dec_verbose'],
-                                   decompout, csv_pre, 'Energy Decomposition Analysis (All units kcal/mol): Poisson '
-                                                       'Boltzmann solvent')
+            pb_bind = DecompBindingClass(pb_com, pb_rec, pb_lig, prmtop_system, INPUT, decompout, csv_pre,
+                                         'Energy Decomposition Analysis (All units kcal/mol): Poisson Boltzmann '
+                                         'solvent')
             # Write the data to the output file
-            pb_bind.parse_all()
+            if INPUT['csv_format']:
+                decompout.writerows(pb_bind.summary('csv'))
+            else:
+                decompout.writeline(pb_bind.summary())
             # Now it's time to dump everything to the CSV file
             if FILES.dec_energies:
                 del pb_com.csvwriter, pb_rec.csvwriter, pb_lig.csvwriter
@@ -943,24 +930,30 @@ def write_decomp_binding_output(FILES, INPUT, size, prmtop_system,
         if INPUT['alarun']:
             if csv_prefix:
                 csv_pre = csv_prefix % 'com'
-            pb_com = SingleClass(pre + 'mutant_complex_pb.mdout', mutant_system.complex_prmtop, INPUT['cavity_surften'],
-                                 csv_pre, size, INPUT['dec_verbose'])
+            pb_com = DecompClass('Mutant-Complex')
+            pb_com.parse_from_file(pre + 'mutant_complex_pb.mdout', mutant_system.complex_prmtop, INPUT,
+                                   INPUT['cavity_surften'], csv_pre, size)
             if csv_prefix:
                 csv_pre = csv_prefix % 'rec'
-            pb_rec = SingleClass(pre + 'mutant_receptor_pb.mdout', mutant_system.receptor_prmtop,
-                                 INPUT['cavity_surften'],
-                                 csv_pre, size, INPUT['dec_verbose'])
+            pb_rec = DecompClass('Mutant-Receptor')
+            pb_rec.parse_from_file(pre + 'mutant_receptor_pb.mdout', mutant_system.receptor_prmtop, INPUT,
+                                 INPUT['cavity_surften'], csv_pre, size)
             if csv_prefix:
                 csv_pre = csv_prefix % 'lig'
-            pb_lig = SingleClass(pre + 'mutant_ligand_pb.mdout', mutant_system.ligand_prmtop, INPUT['cavity_surften'],
-                                 csv_pre, size, INPUT['dec_verbose'])
+            pb_lig = DecompClass('Mutant-Ligand')
+            pb_lig.parse_from_file(pre + 'mutant_ligand_pb.mdout', mutant_system.ligand_prmtop, INPUT,
+                                   INPUT['cavity_surften'], csv_pre, size)
             if csv_prefix:
                 csv_pre = pre + 'pb_bind'
-            pb_bind = BindingClass(pb_com, pb_rec, pb_lig, mutant_system, INPUT['idecomp'], INPUT['dec_verbose'],
-                                   decompout, csv_pre, 'Energy Decomposition Analysis (All units kcal/mol): Poisson '
-                                                       f'Boltzmann solvent ({mutstr})')
+            pb_bind = DecompBindingClass(pb_com, pb_rec, pb_lig, mutant_system, INPUT, decompout, csv_pre,
+                                         'Energy Decomposition Analysis (All units kcal/mol): Poisson '
+                                         f'Boltzmann solvent ({mutstr})')
             # Write the data to the output file
-            pb_bind.parse_all()
+            if INPUT['csv_format']:
+                decompout.writerows(pb_bind.summary('csv'))
+            else:
+                decompout.writeline(pb_bind.summary())
+
             if FILES.dec_energies:
                 del pb_com.csvwriter, pb_rec.csvwriter, pb_lig.csvwriter
                 del pb_bind.csvwriter
@@ -974,15 +967,14 @@ def write_decomp_binding_output(FILES, INPUT, size, prmtop_system,
                 dec_energies.write(ls + 'Ligand:' + ls)
                 for token in pb_lig.allowed_tokens:
                     utils.concatenate(dec_energies, pre + 'pb_lig.' + token + '.csv')
-                # DELTAs for each frame only computed if this is a single trajectory
-                if not multitraj:
-                    dec_energies.write(ls + 'DELTAS:' + ls)
-                    for token in gb_com.allowed_tokens:
-                        utils.concatenate(dec_energies, pre + 'pb_bind.' + token + '.csv')
-                    dec_energies.write(ls)
+                dec_energies.write(ls + 'DELTAS:' + ls)
+                for token in pb_com.allowed_tokens:
+                    utils.concatenate(dec_energies, pre + 'pb_bind.' + token + '.csv')
+                dec_energies.write(ls)
 
     # Close the file(s)
-    if FILES.dec_energies: dec_energies.close()
+    if FILES.dec_energies:
+        dec_energies.close()
     dec_out_file.close()
 
 
