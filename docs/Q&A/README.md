@@ -1,6 +1,6 @@
 ---
 template: main.html
-title: Q&A
+title: Help
 ---
 
 # Support

@@ -31,11 +31,12 @@ decomposition) can be also performed in the same run for a specific system.
 
 ## Analysis
 * [Single Trajectory Protocol](Protein_ligand/ST/README.md)[^1][^2][^3]
-* [Multiple Trajectory Protocol](Protein_ligand/MT/README.md)[^1]  
-* [Binding free energy calculation with GB](Protein_ligand/ST/README.md)
-* [Binding free energy calculation with linear PB (LPBE)](Linear_PB_solver/README.md)
-* [Binding free energy calculation with NonLinear PB (non-LPBE)](NonLinear_PB_solver/README.md)  
-* [Binding free energy calculation with 3D-RISM model](3D-RISM/README.md)[^1]
+* [Multiple Trajectory Protocol](Protein_ligand/MT/README.md)[^1]
+* Binding free energy calculations
+    * [Binding free energy calculation with GB](Protein_ligand/ST/README.md)
+    * [Binding free energy calculation with linear PB (LPBE)](Linear_PB_solver/README.md)
+    * [Binding free energy calculation with NonLinear PB (non-LPBE)](NonLinear_PB_solver/README.md)  
+    * [Binding free energy calculation with 3D-RISM model](3D-RISM/README.md)[^1]
 * [Alanine scanning](Alanine_scanning/README.md)[^1][^2][^3]
 * [Decomposition analysis](Decomposition_analysis/README.md)[^1][^2][^3]
 * Entropy

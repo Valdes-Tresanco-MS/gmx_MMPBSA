@@ -183,27 +183,28 @@ nav:
     - Analysis:
         - Single Trajectory Protocol: examples/Protein_ligand/ST/README.md
         - Multiple Trajectory Protocol: examples/Protein_ligand/MT/README.md
-        - BFE calculation with GB: examples/Protein_ligand/ST/README.md
-        - BFE calculation with Linear PB: examples/Linear_PB_solver/README.md
-        - BFE calculation with NonLinear PB : examples/NonLinear_PB_solver/README.md
-        - BFE calculation with 3D-RISM: examples/3D-RISM/README.md
+        - BFE calculations:
+            - BFE calculation with GB: examples/Protein_ligand/ST/README.md
+            - BFE calculation with Linear PB: examples/Linear_PB_solver/README.md
+            - BFE calculation with NonLinear PB : examples/NonLinear_PB_solver/README.md
+            - BFE calculation with 3D-RISM: examples/3D-RISM/README.md
         - Alanine scanning: examples/Alanine_scanning/README.md
         - Decomposition analysis: examples/Decomposition_analysis/README.md
-        - Entropy calculation:
+        - Entropy calculations:
             - Interaction Entropy: examples/Entropy_calculations/Interaction_Entropy/README.md
             - nmode Entropy: examples/Entropy_calculations/nmode/README.md
             - C2 Entropy calculations: examples/Entropy_calculations/C2_Entropy/README.md
         - Stability calculations: examples/Stability/README.md
         - QM/MMGBSA: examples/QM_MMGBSA/README.md
-  - Q&A:
+  - Help:
     - Support: Q&A/README.md
     - Installation: Q&A/installation.md
     - OS issues: Q&A/OS_issues.md
     - Calculations: Q&A/calculations.md
-  - Changelog:
+  - Info:
     - Changelog: changelog.md
     - Compatibility: compatibility.md
-  - Private Policy: private_policy.md
+    - Private Policy: private_policy.md
   - Cite us: cite_us.md
 
 

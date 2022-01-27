@@ -4,7 +4,7 @@ title: Alanine scanning
 ---
 
 
-# Protein-DNA binding free energy calculations. Alanine scanning
+# Alanine scanning
 
 !!! info
     This example can be found in the [docs/examples/Alanine_scanning][6] directory in the repository folder. If you didn't 
