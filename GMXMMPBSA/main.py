@@ -974,20 +974,20 @@ class MMPBSA_App(object):
                 continue
             # Non-mutant
             if not INPUT['mutant_only']:
-                self.calc_types.normal[key] = {'complex': outclass[i](self.INPUT, self.using_chamber)}
+                self.calc_types.normal[key] = {'complex': outclass[i]('complex', self.INPUT, self.using_chamber)}
                 self.calc_types.normal[key]['complex'].parse_from_file(self.pre + basename[i] % 'complex',
                                                                        self.mpi_size)
                 if not self.stability:
-                    self.calc_types.normal[key]['receptor'] = outclass[i](self.INPUT, self.using_chamber)
+                    self.calc_types.normal[key]['receptor'] = outclass[i]('receptor', self.INPUT, self.using_chamber)
                     self.calc_types.normal[key]['receptor'].parse_from_file(self.pre + basename[i] % 'receptor',
                                                                             self.mpi_size)
-                    self.calc_types.normal[key]['ligand'] = outclass[i](self.INPUT, self.using_chamber)
+                    self.calc_types.normal[key]['ligand'] = outclass[i]('ligand', self.INPUT, self.using_chamber)
                     self.calc_types.normal[key]['ligand'].parse_from_file(self.pre + basename[i] % 'ligand',
                                                                           self.mpi_size)
                     self.calc_types.normal[key]['delta'] = BindingStatistics(self.calc_types.normal[key]['complex'],
                                                                              self.calc_types.normal[key]['receptor'],
                                                                              self.calc_types.normal[key]['ligand'],
-                                                                             self.using_chamber)
+                                                                             self.using_chamber, self.traj_protocol)
 
                     if key in ['gb', 'pb', 'rism std', 'rism gf']:
                         if 'ie' in self.calc_types.normal:
@@ -1003,48 +1003,43 @@ class MMPBSA_App(object):
                                                                'c2_std': c2.c2_std, 'c2_ci': c2.c2_ci}
                             # self.calc_types.normal[self.key]['delta']['DELTA GGAS']
                 else:
-                    self.calc_types.normal[key]['complex'].fill_composite_terms()
+                    self.calc_types.normal[key]['complex']._fill_composite_terms()
             # Time for mutant
             if INPUT['alarun']:
-                self.calc_types.mutant[key] = {'complex':
-                                                      outclass[i](self.pre + 'mutant_' + basename[i] % 'complex',
-                                                                  self.INPUT, self.mpi_size, self.using_chamber)}
+                self.calc_types.mutant[key] = {'complex': outclass[i](self.pre + 'mutant_' + basename[i] % 'complex',
+                                                                      self.INPUT, self.mpi_size, self.using_chamber)}
                 if not self.stability:
-                    self.calc_types.mutant[key]['receptor'] = outclass[i](
-                        self.pre + 'mutant_' + basename[i] % 'receptor',
-                        self.INPUT, self.mpi_size, self.using_chamber)
-                    self.calc_types.mutant[key]['ligand'] = outclass[i](
-                        self.pre + 'mutant_' + basename[i] % 'ligand',
-                        self.INPUT, self.mpi_size, self.using_chamber)
-                    self.calc_types.mutant[key]['delta'] = BindClass(
-                        self.calc_types.mutant[key]['complex'],
-                        self.calc_types.mutant[key]['receptor'],
-                        self.calc_types.mutant[key]['ligand'],
-                         self.using_chamber)
+                    self.calc_types.mutant[key]['receptor'] = outclass[i](self.pre + 'mutant_' + basename[i] %
+                                                                          'receptor', self.INPUT, self.mpi_size,
+                                                                          self.using_chamber)
+                    self.calc_types.mutant[key]['ligand'] = outclass[i](self.pre + 'mutant_' + basename[i] % 'ligand',
+                                                                        self.INPUT, self.mpi_size, self.using_chamber)
+                    self.calc_types.mutant[key]['delta'] = BindingStatistics(self.calc_types.mutant[key]['complex'],
+                                                                             self.calc_types.mutant[key]['receptor'],
+                                                                             self.calc_types.mutant[key]['ligand'],
+                                                                             self.using_chamber, self.traj_protocol)
                     if key in ['gb', 'pb', 'rism std', 'rism gf']:
                         if 'ie' in self.calc_types.mutant:
                             edata = self.calc_types.mutant[key]['delta']['DELTA GGAS']
                             mie = InteractionEntropyCalc(edata, self, self.pre + 'mutant_' +
                                                          f"{key.replace(' ', '_')}_iteraction_entropy.dat")
                             self.calc_types.mutant['ie'][key] = {'data': mie.data, 'iedata': mie.iedata,
-                                                                      'ieframes': mie.ieframes, 'sigma': mie.ie_std}
+                                                                 'ieframes': mie.ieframes, 'sigma': mie.ie_std}
                         if 'c2' in self.calc_types.mutant:
                             edata = self.calc_types.mutant[key]['delta']['DELTA GGAS']
                             c2 = C2EntropyCalc(edata, self, self.pre + 'mutant_' +
                                                f"{key.replace(' ', '_')}_c2_entropy.dat")
                             self.calc_types.mutant['c2'][key] = {'c2data': c2.c2data, 'sigma': c2.ie_std,
-                                                                      'c2_std': c2.c2_std, 'c2_ci': c2.c2_ci}
+                                                                 'c2_std': c2.c2_std, 'c2_ci': c2.c2_ci}
                 else:
-                    self.calc_types.mutant[key]['complex'].fill_composite_terms()
+                    self.calc_types.mutant[key]['complex']._fill_composite_terms()
 
-        if INPUT['decomprun']:
-            self._get_decomp()
+        # if INPUT['decomprun']:
+        #     self._get_decomp()
         # self.calc_types.decomp = self._get_decomp() if INPUT['decomprun'] else None
 
     def _get_decomp(self):
-        from GMXMMPBSA.amber_outputs import (DecompOut, PairDecompOut, DecompBinding,
-                                             PairDecompBinding, MultiTrajDecompBinding,
-                                             MultiTrajPairDecompBinding)
+        from GMXMMPBSA.amber_outputs import (DecompOut, PairDecompOut, DecompBinding, PairDecompBinding)
         outkey = ('gb', 'pb')
         triggers = ('gbrun', 'pbrun')
         basename = ('%s_gb.mdout', '%s_pb.mdout')
@@ -1063,11 +1058,11 @@ class MMPBSA_App(object):
         else:  # Multiple trajectories
             # Per-residue
             if self.INPUT['idecomp'] in [1, 2]:
-                BindingClass = MultiTrajDecompBinding
+                BindingClass = DecompBinding
                 SingleClass = DecompOut
             # Pairwise
             else:
-                BindingClass = MultiTrajPairDecompBinding
+                BindingClass = PairDecompBinding
                 SingleClass = PairDecompOut
 
         if not hasattr(self, 'resl'):
