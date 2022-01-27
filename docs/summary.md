@@ -30,8 +30,7 @@ and mutated systems (alanine scanning) as requested. Normal mode calculations ar
 outlined in the `idecomp` variable description. This should work with all the above, though entropy terms
 cannot be decomposed.
 * **QM/MMGBSA**. This is a binding free energy (or stability calculation) using the Generalized Born solvent
-model allowing you to treat part of your system with a quantum mechanical Hamiltonian. See [“Advanced
-Options”][2] for tips about optimizing this option.
+model allowing you to treat part of your system with a quantum mechanical Hamiltonian.
 * **Membrane Protein MMPBSA**. Calculate the MMPBSA binding free energy for a ligand bound to a protein
 that is embedded into a membrane. In this case, the membrane is implemented as a slab-like region with a uniform or 
 heterogeneous dielectric constant depth profile.
@@ -40,10 +39,10 @@ heterogeneous dielectric constant depth profile.
 ## `gmx_MMPBSA` a technical view
 `gmx_MMPBSA` is a python module that contains 3 applications: 
 
-* `gmx_MMPBSA` is the fundamental application and carries out all the [calculations][3] mentioned above
-* `gmx_MMPBSA_ana` provides an intuitive way to analyze the data from gmx_MMPBSA calculations and save high-quality 
-  pictures
-* `gmx_MMPBSA_test` is a tool designed to test if the installation was successful by running one or more available 
+* [`gmx_MMPBSA`][5] is the fundamental application and carries out all the calculations mentioned above
+* [`gmx_MMPBSA_ana`][6] provides an intuitive way to analyze the data from gmx_MMPBSA calculations and save 
+  high-quality pictures
+* [`gmx_MMPBSA_test`][7] is a tool designed to test if the installation was successful by running one or more available 
   [examples][4] in gmx_MMPBSA.
 
 
@@ -51,3 +50,6 @@ heterogeneous dielectric constant depth profile.
   [2]: advanced.md#advanced-options
   [3]: #types-of-calculations-you-can-do
   [4]: examples/README.md
+  [5]: gmx_MMPBSA_running.md
+  [6]: gmx_MMPBSA_ana_running.md
+  [7]: examples/gmx_MMPBSA_test.md#running-gmx_mmpbsa_test

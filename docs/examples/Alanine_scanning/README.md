@@ -114,10 +114,10 @@ On the other hand, if this reference structure is omitted, then it will depend o
     Complex structure (`_GMXMMPBSA_FIXED_COM.pdb`), Receptor (`_GMXMMPBSA_REC_Fx.pdb`), and ligand 
     (`_GMXMMPBSA_LIG_Fy.pdb`) respectively. x and y represent the fragment for discontinuous molecules
 
-  [1]: ../../command-line.md#gmx_mmpbsa-command-line
+  [1]: ../../gmx_MMPBSA_command-line.md#gmx_mmpbsa-command-line
   [2]: ../../input_file.md#the-input-file
   [3]: ../../input_file.md#sample-input-files
   [4]: ../../analyzer.md#gmx_mmpbsa_ana-the-analyzer-tool  
   [5]: ../../input_file.md#general-namelist-variables
   [6]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/docs/examples/Alanine_scanning
-  [7]: ../../command-line.md#gmx_mmpbsa_test-command-line
+  [7]: ../gmx_MMPBSA_test.md#gmx_mmpbsa_test-command-line

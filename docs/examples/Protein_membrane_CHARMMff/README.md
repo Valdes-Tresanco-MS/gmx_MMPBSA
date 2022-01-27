@@ -95,9 +95,9 @@ input file will contain all the parameters needed for the MM/PB(GB)SA calculatio
 
 
   [1]: http://archive.ambermd.org/201508/0382.html 
-  [2]: ../../command-line.md#gmx_mmpbsa-command-line
+  [2]: ../../gmx_MMPBSA_command-line.md#gmx_mmpbsa-command-line
   [3]: ../../input_file.md#the-input-file
   [4]: ../../input_file.md#sample-input-files
   [5]: ../../analyzer.md#gmx_mmpbsa_ana-the-analyzer-tool
   [6]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/docs/examples/Protein_membrane_CHARMMff
-  [7]: ../../command-line.md#gmx_mmpbsa_test-command-line
+  [7]: ../gmx_MMPBSA_test.md#gmx_mmpbsa_test-command-line

@@ -78,9 +78,9 @@ with the igb2 (GB-OBC1) model and a salt concentration = 0.15M.
     Once the calculation is done, you can analyze the results in `gmx_MMPBSA_ana` (if you didn't define `-nogui`). 
     Please refer to the [gmx_MMPBSA_ana][4] section for more information
 
-  [1]: ../../command-line.md#gmx_mmpbsa-command-line
+  [1]: ../../gmx_MMPBSA_command-line.md#gmx_mmpbsa-command-line
   [2]: ../../input_file.md#the-input-file
   [3]: ../../input_file.md#sample-input-files
   [4]: ../../analyzer.md#gmx_mmpbsa_ana-the-analyzer-tool
   [5]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/docs/examples/3D-RISM
-  [6]: ../../command-line.md#gmx_mmpbsa_test-command-line
+  [6]: ../gmx_MMPBSA_test.md#gmx_mmpbsa_test-command-line

@@ -203,4 +203,4 @@ _All you have to do is enter the name of the program in the terminal and press t
 
 ## Testing the operation of gmx_MMPBSA
 After preparing everything to run `gmx_MMPBSA`, it only remains to check its correct operation. To know how to do it, 
-consult the documentation of [`gmx_MMPBSA_test`](command-line.md#running-gmx_mmpbsa_test)
+consult the documentation of [`gmx_MMPBSA_test`](examples/gmx_MMPBSA_test.md#running-gmx_mmpbsa_test)

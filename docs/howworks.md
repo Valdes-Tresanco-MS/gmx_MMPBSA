@@ -29,15 +29,15 @@ present in [MMPBSA.py][1] and made others more accessible to the beginner user i
 
 ## gmx_MMPBSA general workflow
 
-gmx_MMPBSA can be divided into 3 parts as shown in figure 1. IN the first part, `Preparation`, the topologies 
-and trajectories are generated, among other elements depending on the calculations, such as the mutants for the 
+gmx_MMPBSA functioning can be divided into 3 parts as shown in figure 1. In the first part, `Preparation`, the 
+topologies and trajectories are generated, among other elements depending on the calculations, such as the mutants for the 
 alanine or glycine scanning or the interaction residues during decomposition analysis. In the second part, `Calculation`,
 the binding free energies and/or entropies are estimated using the selected models. Finally, in the last step `Analysis`,
 the results can be analyzed by using the graphical user interface `gmx_MMPBSA_ana`.
 
 
 <figure markdown="1">
-[![overview][2]][2]
+![drawing](assets/images/workflow.svg){ width=75% style="display: block; margin: 0 auto"}
   <figcaption markdown="1" style="margin-top:0;">
   **Figure 1**. `gmx_MMPBSA` general workflow
   </figcaption>
@@ -123,7 +123,7 @@ In this section, we will go in detail about each file and what they are used for
 
 
 <figure markdown="1">
-[![overview][3]][3]
+![drawing](assets/images/topgeneration.svg){ width=75% style="display: block; margin: 0 auto"}
   <figcaption markdown="1" style="margin-top:0;">
   **Figure 1**. Topology generation workflow for Single Trajectory Approximation
   </figcaption>

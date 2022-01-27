@@ -87,10 +87,10 @@ entropic contribution, though they are way more expensive in computation as comp
     Once the calculation is done, you can analyze the results in `gmx_MMPBSA_ana` (if you didn't define `-nogui`). 
     Please see the [gmx_MMPBSA_ana][5] section for more information
   
-  [1]: ../../../command-line.md#gmx_mmpbsa-command-line
+  [1]: ../../../gmx_MMPBSA_command-line.md#gmx_mmpbsa-command-line
   [2]: ../../../input_file.md#the-input-file
   [3]: ../../../input_file.md#sample-input-files  
   [4]: https://pubs.acs.org/doi/abs/10.1021/jacs.6b02682
   [5]: ../../../analyzer.md#gmx_mmpbsa_ana-the-analyzer-tool
   [6]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/docs/examples/Entropy_calculations/Interaction_Entropy
-  [7]: ../../../command-line.md#gmx_mmpbsa_test-command-line
+  [7]: ../../gmx_MMPBSA_test.md#gmx_mmpbsa_test-command-line

@@ -152,14 +152,19 @@ nav:
     - gmx_MMPBSA in a nutshell: summary.md
     - gmx_MMPBSA vs other programs: versus.md
     - Installation: installation.md
-    - Command-line: command-line.md
-  - Hands to work:
+  - gmx_MMPBSA:
     - How gmx_MMPBSA works: howworks.md
+    - Command-line: gmx_MMPBSA_command-line.md
+    - Running gmx_MMPBSA: gmx_MMPBSA_running.md
     - The input file: input_file.md
-    - Output Files: output.md
+    - The output Files: output.md
     - Python API: api.md
+  - gmx_MMPBSA_ana:
     - gmx_MMPBSA_ana: analyzer.md
+    - Command-line: gmx_MMPBSA_ana_command-line.md
+    - Running gmx_MMPBSA_ana: gmx_MMPBSA_ana_running.md
   - Examples:
+    - gmx_MMPBSA_test: examples/gmx_MMPBSA_test.md
     - Examples: examples/README.md
     - Systems:
       - Protein-protein: examples/Protein_protein/README.md
