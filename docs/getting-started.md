@@ -124,6 +124,15 @@ is performed in gmx_MMPBSA.
     You can check [How gmx_MMPBSA works page](howworks.md) to get more details. Also check our 
     [example page](examples/README.md) to see how gmx_MMPBSA works with real examples
 
+## **Need help?**
+[Help](Q&A/README.md) section contains the most frequently asked questions and errors. Also, look at our 
+[Google group](https://groups.google.com/g/gmx_mmpbsa) or the [issues](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/issues)
+section to find out about specific cases and others.
+
+If you still have doubts or cannot solve the problem, please consider opening an 
+[issue](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/issues) or posting in our 
+[Google group](https://groups.google.com/g/gmx_mmpbsa)
+
 ## **Follow gmx_MMPBSA**
 Visit [Pypi Stats](https://pypistats.org/packages/gmx-mmpbsa) or [PePy](https://pepy.tech/project/gmx-mmpbsa)
 to see how gmx_MMPBSA is doing.

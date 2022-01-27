@@ -202,7 +202,7 @@ nav:
         - QM/MMGBSA: examples/QM_MMGBSA/README.md
     - gmx_MMPBSA_test: examples/gmx_MMPBSA_test.md
   - Help:
-    - Support: Q&A/README.md
+    - Help: Q&A/README.md
     - Installation: Q&A/installation.md
     - OS issues: Q&A/OS_issues.md
     - Calculations: Q&A/calculations.md
@@ -210,6 +210,6 @@ nav:
       - Changelog: changelog.md
       - Compatibility: compatibility.md
       - Private Policy: private_policy.md
-  - Cite us: cite_us.md
+  - Cite gmx_MMPBSA: cite_us.md
 
 

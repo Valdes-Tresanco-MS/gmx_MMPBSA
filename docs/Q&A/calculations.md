@@ -15,7 +15,7 @@ Here we describe a series of frequent issues related to calculations and their p
 ???+ example "ValueError: could not convert string to float: '*************'"
     : This error has two possible causes:
         
-        1. The structure defined in `-cs`, `-ps`, or `-ls` options is inconsistent, or the trajectory
+        1. The structure defined in `-cs`, `-rs`, or `-ls` options is inconsistent, or the trajectory
         has not been fitted (remove PBC) properly. This is the most common error. Many times it is because the 
         system under study is longer than some edges of the box.
         
@@ -25,7 +25,7 @@ Here we describe a series of frequent issues related to calculations and their p
                 
                 Visualize the structure contained in the structure input file given in the `-cs`, `-rs`, or `-ls` 
                 options and make sure it is consistent (as shown in Fig 1, right panel). On the other hand, if the 
-                structure is "broken" (as shown in Fig 1, left panel) this will generate inconsistent results.
+                structure is "broken" (as shown in Fig 1, left panel) this could generate inconsistent results.
                 
                 **Generate the structure from tpr file**
                     
@@ -44,7 +44,7 @@ Here we describe a series of frequent issues related to calculations and their p
 
                 Visualize the trajectory given in the `-ct`, `-rt`, or `-lt` options and make sure the PBC has been 
                 removed (as shown in Fig 2, right panel). On the other hand, if the trajectory has not been fitted (as 
-                shown in Fig 2, left panel) this will generate inconsistent results.
+                shown in Fig 2, left panel) this could generate inconsistent results.
                 
                 Steps:
     
@@ -87,11 +87,11 @@ Here we describe a series of frequent issues related to calculations and their p
         2. You are trying to calculate the energetic contribution of a very large group. Technically, the energy 
         value should not exceed 7 digits, so if you get a value higher than this, this error will occur. Although 
         `gmx_MMPBSA` can handle very large systems as described in example [Ribosomal50S_Mycalamide_A][9], it cannot 
-        determine certain energetic terms. This is a limitation of Sander when writing the output file.
+        determine certain energetic terms. This is a `sander` limitation when writing the output file.
            
             #### **Possible solutions:**
     
-            : The error could be solved by recompiling Sander with some modifications in the output function. 
+            : The error could be solved by recompiling `sander` with some modifications in the output function. 
             However, this is not recommended since the error can be large. Another possible solution could be modifying 
             the parameters of the calculation (solvent model, internal dielectric constant) or just performing the 
             calculation for a part of the system (sub-system).
