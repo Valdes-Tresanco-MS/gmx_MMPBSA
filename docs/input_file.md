@@ -28,6 +28,8 @@ The input file can be created using gmx_MMPBSA by selecting the calculations you
 
 ``` title="Command-line"
 gmx_MMPBSA --create_input args
+
+where `args` can be:  gb, pb, rism, ala, decomp, nmode, all
 ```
 
 Example:
@@ -39,7 +41,7 @@ Example:
     
         gmx_MMPBSA --create_input pb
 
-=== "GB, PB and Decomposition calculation"
+=== "GB, PB and Decomposition calculations"
     
         gmx_MMPBSA --create_input gb pb decomp
 
@@ -52,7 +54,7 @@ Example:
         gmx_MMPBSA --create_input all
         
 !!! Danger 
-    Note that several variables must be explicitly defined
+    Note that several variables must be explicitly defined in the input file
 
 _New in v1.5.0_
 
