@@ -201,10 +201,10 @@ nav:
     - Installation: Q&A/installation.md
     - OS issues: Q&A/OS_issues.md
     - Calculations: Q&A/calculations.md
-  - Info:
-    - Changelog: changelog.md
-    - Compatibility: compatibility.md
-    - Private Policy: private_policy.md
+    - Info:
+      - Changelog: changelog.md
+      - Compatibility: compatibility.md
+      - Private Policy: private_policy.md
   - Cite us: cite_us.md
 
 
