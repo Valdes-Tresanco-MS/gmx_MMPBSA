@@ -23,7 +23,7 @@ All data is stored in a special class derived from the list.
 #  or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License    #
 #  for more details.                                                           #
 # ##############################################################################
-
+import logging
 from math import sqrt
 from GMXMMPBSA.exceptions import (OutputError, LengthError, DecompError)
 from GMXMMPBSA.utils import get_std
@@ -275,42 +275,50 @@ class IEout(dict):
     def __init__(self, **kwargs):
         super(IEout, self).__init__(**kwargs)
 
-    def print_summary_csv(self, csvwriter):
-        """ Output summary of quasi-harmonic results in CSV format """
-        csvwriter.writerow([f"Iteration Entropy calculation from last {self['ieframes']} frames..."])
-        csvwriter.writerow(['Iteration Entropy:', '{:.2f}'.format(self.avg())])
+    def parse_from_dict(self, model, data: dict):
 
-    def sum(self, other, model, key1, key2):
-        """
-        Takes the sum between 2 keys of 2 different BindingStatistics
-        classes and returns the average and standard deviation of that diff.
-        """
-        if len(self[model][key1]) != len(other[key2]):
-            return (self[model][key1].mean() + other[key2].mean(),
-                    sqrt(self[model][key1].stdev() ** 2 + other[key2].stdev() ** 2))
-        mydiff = self[model][key1] + other[key2]
-        return mydiff.mean(), mydiff.stdev()
+        self[model] = {}
+        for k, v in data.items():
+            if k in ['data', 'iedata']:
+                self[model][k] = EnergyVector(v)
+            else:
+                self[model][k] = v
 
-    # def print_vectors(self, csvwriter):
-    #     """ Prints the energy vectors to a CSV file for easy viewing
-    #         in spreadsheets
-    #     """
-    #     csvwriter.writerow(['Frame #', 'Interaction Entropy'])
-    #     for f, d in zip(self['frames'], self['data']):
-    #         csvwriter.writerow([f] + [d])
-    #
-    def print_summary(self):
+    def print_vectors(self, csvwriter):
+        """ Prints the energy vectors to a CSV file for easy viewing
+            in spreadsheets
+        """
+        for model in self:
+            csvwriter.writerow([f'Model {model}'])
+            csvwriter.writerow(['Frame #', 'Interaction Entropy'])
+            for f, d in zip(self['frames'], self['data']):
+                csvwriter.writerow([f] + [d])
+            csvwriter.writerow([])
+
+    def summary(self, output_format: str = 'ascii'):
         """ Formatted summary of Interaction Entropy results """
 
-        ret_str = 'Model           σ(Int. Energy)      Average       Std. Dev.   Std. Err. of Mean\n'
-        ret_str += '-------------------------------------------------------------------------------\n'
+        _output_format = 0 if output_format == 'ascii' else 1
+        text = []
+        if _output_format:
+            text.append(['Model', 'σ(Int. Energy)', 'Average', 'Std. Dev.', 'Std. Err. of Mean'])
+        else:
+            text.append('Model           σ(Int. Energy)      Average       Std. Dev.   Std. Err. of Mean\n' +
+                        '-------------------------------------------------------------------------------')
+
+
         for model in self:
-            self[model]['iedata'] = EnergyVector(self[model]['iedata'])
-            stdev = self[model]['iedata'].stdev()
             avg = self[model]['iedata'].mean()
-            ret_str += '%-14s %10.3f %16.3f %15.3f %19.3f\n' % (model, self[model]['sigma'], avg, stdev,
-                                                                stdev / sqrt(len(self[model]['iedata'])))
-        return ret_str
+            stdev = self[model]['iedata'].stdev()
+            if _output_format:
+                text.append([model, self[model]['sigma'], avg, stdev, stdev / sqrt(len(self[model]['iedata']))])
+            else:
+                text.append('%-14s %10.3f %16.3f %15.3f %19.3f\n' % (model, self[model]['sigma'], avg, stdev,
+                                                                stdev / sqrt(len(self[model]['iedata']))))
+        if _output_format:
+            return text
+        else:
+            return '\n'.join(text)
 
 
 class C2out(dict):
@@ -321,38 +329,32 @@ class C2out(dict):
     def __init__(self, **kwargs):
         super(C2out, self).__init__(**kwargs)
 
-    def print_summary_csv(self, csvwriter):
-        """ Output summary of C2 results in CSV format """
-        csvwriter.writerow([f"C2 Entropy calculation from last {self['ieframes']} frames..."])
-        csvwriter.writerow(['C2 Entropy:', '{:.2f}'.format(self.avg())])
-
-    def sum(self, other, model, key1, key2):
-        """
-        Takes the sum between 2 keys of 2 different BindingStatistics
-        classes and returns the average and standard deviation of that diff.
-        """
-        return self[model][key1] + other[key2].mean(), other[key2].stdev()
-
-    # def print_vectors(self, csvwriter):
-    #     """ Prints the energy vectors to a CSV file for easy viewing
-    #         in spreadsheets
-    #     """
-    #     csvwriter.writerow(['Frame #', 'Interaction Entropy'])
-    #     for f, d in zip(self['frames'], self['data']):
-    #         csvwriter.writerow([f] + [d])
-    #
-    def print_summary(self):
+    def print_summary(self, output_format: str = 'ascii'):
         """ Formatted summary of C2 Entropy results """
 
-        ret_str = 'Model           σ(Int. Energy)      Value         Std. Dev.   Conf. Interv. (95%)\n'
-        ret_str += '-------------------------------------------------------------------------------\n'
+        _output_format = 0 if output_format == 'ascii' else 1
+        text = []
+        if _output_format:
+            text.append(['Model', 'σ(Int. Energy)', 'Value', 'Std. Dev.', 'Conf. Interv. (95%)'])
+        else:
+            text.append('Model           σ(Int. Energy)      Value         Std. Dev.   Conf. Interv. (95%)\n' +
+                        '-------------------------------------------------------------------------------')
+
+
         for model in self:
-            ret_str += '%-14s %10.3f %15.3f %15.3f %13.3f-%5.3f\n' % (model, self[model]['sigma'],
-                                                                      self[model]['c2data'],
-                                                                      self[model]['c2_std'],
-                                                                      self[model]['c2_ci'][0],
-                                                                      self[model]['c2_ci'][1])
-        return ret_str
+            if _output_format:
+                text.append([model, self[model]['sigma'], self[model]['c2data'], self[model]['c2_std'],
+                             f"{self[model]['c2_ci'][0]}-{self[model]['c2_ci'][1]}"])
+            else:
+                text.append('%-14s %10.3f %15.3f %15.3f %13.3f-%5.3f\n' % (model, self[model]['sigma'],
+                                                                           self[model]['c2data'],
+                                                                           self[model]['c2_std'],
+                                                                           self[model]['c2_ci'][0],
+                                                                           self[model]['c2_ci'][1]))
+        if _output_format:
+            return text
+        else:
+            return '\n'.join(text)
 
 
 class QHout(dict):
@@ -367,36 +369,37 @@ class QHout(dict):
         self.stability = False
         self._read()
 
-    def print_summary_csv(self, csvwriter):
-        """ Output summary of quasi-harmonic results in CSV format """
-        csvwriter.writerow(['System', 'Translational', 'Rotational', 'Vibrational',
-                            'Total'])
-        csvwriter.writerow(['Complex:', self.com[1], self.com[2], self.com[3], self.com[0]])
-        if not self.stability:
-            csvwriter.writerow(['Receptor:', self.rec[1], self.rec[2], self.rec[3], self.rec[0]])
-            csvwriter.writerow(['Ligand:', self.lig[1], self.lig[2], self.lig[3], self.lig[0]])
-            csvwriter.writerow(['Delta S:',
-                                self.com[1] - self.rec[1] - self.lig[1],
-                                self.com[2] - self.rec[2] - self.lig[2],
-                                self.com[3] - self.rec[3] - self.lig[3],
-                                self.com[0] - self.rec[0] - self.lig[0]])
-
-    def print_summary(self):
+    def summary(self, output_format: str = 'ascii'):
         """ Formatted summary of quasi-harmonic results """
-        ret_str = '           Translational      Rotational      Vibrational           Total\n'
 
-        ret_str += 'Complex:   %13.4f %15.4f %16.4f %15.4f\n' % (self.com[1], self.com[2], self.com[3], self.com[0])
-
-        if not self.stability:
-            ret_str += 'Receptor:  %13.4f %15.4f %16.4f %15.4f\n' % (self.rec[1], self.rec[2], self.rec[3], self.rec[0])
-            ret_str += 'Ligand:    %13.4f %15.4f %16.4f %15.4f\n' % (self.lig[1], self.lig[2], self.lig[3], self.lig[0])
-            ret_str += '\nTΔS:   %13.4f %15.4f %16.4f %15.4f\n' % (
-                self.com[1] - self.rec[1] - self.lig[1],
-                self.com[2] - self.rec[2] - self.lig[2],
-                self.com[3] - self.rec[3] - self.lig[3],
-                self.com[0] - self.rec[0] - self.lig[0])
-
-        return ret_str
+        _output_format = 0 if output_format == 'ascii' else 1
+        text = []
+        if _output_format:
+            text.append(['','Translational', 'Rotational', 'Vibrational', 'Total'])
+            text.append([self.com[1], self.com[2], self.com[3], self.com[0]])
+            if not self.stability:
+                text.extend([['Receptor', self.rec[1], self.rec[2], self.rec[3], self.rec[0]],
+                             ['Ligand', self.lig[1], self.lig[2], self.lig[3], self.lig[0]]])
+                text.append([])
+                text.append(['-TΔS', self.com[1] - self.rec[1] - self.lig[1], self.com[2] - self.rec[2] - self.lig[2],
+                              self.com[3] - self.rec[3] - self.lig[3], self.com[0] - self.rec[0] - self.lig[0]])
+        else:
+            text.append('           Translational      Rotational      Vibrational           Total')
+            text.append('Complex:   %13.4f %15.4f %16.4f %15.4f\n' % (self.com[1], self.com[2], self.com[3], self.com[0]))
+            if not self.stability:
+                text.extend(['Receptor:  %13.4f %15.4f %16.4f %15.4f\n' % (self.rec[1], self.rec[2], self.rec[3],
+                                                                           self.rec[0]),
+                             'Ligand:    %13.4f %15.4f %16.4f %15.4f\n' % (self.lig[1], self.lig[2], self.lig[3],
+                                                                           self.lig[0])])
+                text.append('')
+                text.append('-TΔS:   %13.4f %15.4f %16.4f %15.4f\n' % (self.com[1] - self.rec[1] - self.lig[1],
+                                                                       self.com[2] - self.rec[2] - self.lig[2],
+                                                                       self.com[3] - self.rec[3] - self.lig[3],
+                                                                       self.com[0] - self.rec[0] - self.lig[0]))
+        if _output_format:
+            return text
+        else:
+            return '\n'.join(text) + '\n\n'
 
     def total_avg(self):
         """ Returns the average of the total """
@@ -417,65 +420,57 @@ class QHout(dict):
         while rawline:
             if rawline[0:6] == " Total":
                 if not comdone:
-                    self.com[0] = (float(rawline.split()[3]) * self.temperature / 1000)
-                    self.com[1] = (float(output.readline().split()[3]) *
-                                   self.temperature / 1000)
-                    self.com[2] = (float(output.readline().split()[3]) *
-                                   self.temperature / 1000)
-                    self.com[3] = (float(output.readline().split()[3]) *
-                                   self.temperature / 1000)
+                    self.com[0] = (float(rawline.split()[3]) * self.temperature / 1000 * -1)
+                    self.com[1] = (float(output.readline().split()[3]) * self.temperature / 1000 * -1)
+                    self.com[2] = (float(output.readline().split()[3]) * self.temperature / 1000 * -1)
+                    self.com[3] = (float(output.readline().split()[3]) * self.temperature / 1000 * -1)
                     comdone = True
                 elif not recdone:
-                    self.rec[0] = (float(rawline.split()[3]) * self.temperature / 1000)
-                    self.rec[1] = (float(output.readline().split()[3]) *
-                                   self.temperature / 1000)
-                    self.rec[2] = (float(output.readline().split()[3]) *
-                                   self.temperature / 1000)
-                    self.rec[3] = (float(output.readline().split()[3]) *
-                                   self.temperature / 1000)
+                    self.rec[0] = (float(rawline.split()[3]) * self.temperature / 1000 * -1)
+                    self.rec[1] = (float(output.readline().split()[3]) * self.temperature / 1000 * -1)
+                    self.rec[2] = (float(output.readline().split()[3]) * self.temperature / 1000 * -1)
+                    self.rec[3] = (float(output.readline().split()[3]) * self.temperature / 1000 * -1)
                     recdone = True
                 else:
-                    self.lig[0] = (float(rawline.split()[3]) * self.temperature / 1000)
-                    self.lig[1] = (float(output.readline().split()[3]) *
-                                   self.temperature / 1000)
-                    self.lig[2] = (float(output.readline().split()[3]) *
-                                   self.temperature / 1000)
-                    self.lig[3] = (float(output.readline().split()[3]) *
-                                   self.temperature / 1000)
+                    self.lig[0] = (float(rawline.split()[3]) * self.temperature / 1000 * -1)
+                    self.lig[1] = (float(output.readline().split()[3]) * self.temperature / 1000 * -1)
+                    self.lig[2] = (float(output.readline().split()[3]) * self.temperature / 1000 * -1)
+                    self.lig[3] = (float(output.readline().split()[3]) * self.temperature / 1000 * -1)
                     break
             rawline = output.readline()
         # end while rawline
-
         self.stability = not recdone
-
         output.close()
 
 
 class NMODEout(dict):
     """ Normal mode entropy approximation output class """
     # Ordered list of keys in the data dictionary
-    data_keys = ['Translational', 'Rotational', 'Vibrational', 'Total']
+    data_keys = ['Translational', 'Rotational', 'Vibrational']
 
     # Other aspects of AmberOutputs, which are just blank arrays
-    composite_keys = []
-    data_key_owner = {}
+    composite_keys = ['Total']
+    data_key_owner = {'Translational': ['Total'], 'Rotational': ['Total'], 'Vibrational': ['Total']}
     print_levels = {'Translational': 1, 'Rotational': 1, 'Vibrational': 1, 'Total': 1}
 
-    def __init__(self, basename, INPUT, num_files=1, chamber=False, **kwargs):
+    def __init__(self, mol, **kwargs):
         super(NMODEout, self).__init__(**kwargs)
-        import warnings
+        self.mol = mol
+        self.is_read = False
+
+    def parse_from_file(self, basename, INPUT, num_files=1, chamber=False):
         self.basename = basename
 
         for key in self.data_keys:
             self[key] = EnergyVector()
 
         if chamber:
-            warnings.warn('nmode is incompatible with chamber topologies!')
-        self.temp = INPUT['temperature']
+            logging.warning('nmode is incompatible with chamber topologies!')
+        self.temperature = INPUT['temperature']
         self.num_files = num_files
         self.is_read = False
-
         self._read()
+        self._fill_composite_terms()
 
     def print_vectors(self, csvwriter):
         """ Prints the energy vectors to a CSV file for easy viewing
@@ -488,28 +483,30 @@ class NMODEout(dict):
         for i in range(len(self[self.data_keys[0]])):
             csvwriter.writerow([i] + [self[key][i] for key in self.data_keys])
 
-    def print_summary_csv(self, csvwriter):
-        """ Writes summary in CSV format """
-        csvwriter.writerow(['Entropy Term', 'Average', 'Std. Dev.',
-                            'Std. Err. of the Mean'])
-
-        for key in self.data_keys:
-            stdev = self[key].stdev()
-            avg = self[key].mean()
-            csvwriter.writerow([key, avg, stdev, stdev / sqrt(len(self[key]))])
-
-    def print_summary(self):
+    def summary(self, output_format: str = 'ascii'):
         """ Returns the formatted string of output summary """
 
-        ret_str = ('Entropy Term                Average              ' +
-                   'Std. Dev.   Std. Err. of Mean\n')
-        ret_str += ('------------------------------------------------' +
-                    '-------------------------------\n')
-        for key in self.data_keys:
-            stdev = self[key].stdev()
-            ret_str += '%-14s %20.4f %21.4f %19.4f\n' % (key, self[key].mean(), stdev, stdev / sqrt(len(self[key])))
+        _output_format = 0 if output_format == 'ascii' else 1
+        text = []
+        if _output_format:
+            text.extend([[self.mol.capitalize() + ':'],
+                         ['Entropy Term', 'Average', 'Std. Dev.', 'Std. Err. of the Mean']])
+        else:
+            text.append(self.mol.capitalize() + ':\n'
+                        'Entropy Term                Average              Std. Dev.   Std. Err. of Mean\n' +
+                        '-------------------------------------------------------------------------------')
 
-        return ret_str + '\n'
+        for key in self.data_keys:
+            avg = self[key].mean()
+            stdev = self[key].stdev()
+            if _output_format:
+                text.append([key, avg, stdev, stdev / sqrt(len(self[key]))])
+            else:
+                text.append('%-14s %20.4f %21.4f %19.4f\n' % (key, avg, stdev, stdev / sqrt(len(self[key]))))
+        if _output_format:
+            return text
+        else:
+            return '\n'.join(text) + '\n\n'
 
     def _read(self):
         """ Internal reading function to populate the data arrays """
@@ -530,7 +527,6 @@ class NMODEout(dict):
             have to store a single line at a time in addition to the arrays of
             data)
         """
-
         rawline = outfile.readline()
 
         while rawline:
@@ -538,19 +534,23 @@ class NMODEout(dict):
                 sys.stderr.write('Not all frames minimized within tolerance')
 
             if rawline[0:6] == 'Total:':
-                self['Total'] = self['Total'].append(float(rawline.split()[3]) * self.temp / 1000)
+                self['Total'] = self['Total'].append(float(rawline.split()[3]) * self.temperature / 1000 * -1)
                 self['Translational'] = self['Translational'].append(
-                    float(outfile.readline().split()[3]) * self.temp / 1000)
+                    float(outfile.readline().split()[3]) * self.temperature / 1000 * -1)
                 self['Rotational'] = self['Rotational'].append(
-                    float(outfile.readline().split()[3]) * self.temp / 1000)
+                    float(outfile.readline().split()[3]) * self.temperature / 1000 * -1)
                 self['Vibrational'] = self['Vibrational'].append(
-                    float(outfile.readline().split()[3]) * self.temp / 1000)
+                    float(outfile.readline().split()[3]) * self.temperature / 1000 * -1)
 
             rawline = outfile.readline()
 
-    def fill_composite_terms(self):
-        """ No-op for this class """
-        pass
+    def _fill_composite_terms(self):
+        for key in self.composite_keys:
+            self[key] = EnergyVector(len(self['Translational']))
+
+        for key in self.data_keys:
+            for component in self.data_key_owner[key]:
+                self[component] = self[key] + self[component]
 
 
 class GBout(AmberOutput):
