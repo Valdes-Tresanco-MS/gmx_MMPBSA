@@ -3,7 +3,7 @@ template: main.html
 title: nmode Entropy
 ---
 
-# Entropy calculations
+# Normal Mode Entropy calculations
 
 !!! info
     This example can be found in the [docs/examples/Entropy_calculations/nmode][6] directory in the 

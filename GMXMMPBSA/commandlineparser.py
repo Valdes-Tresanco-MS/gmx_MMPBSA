@@ -91,9 +91,8 @@ def index(arg):
 
 description = ("gmx_MMPBSA is a new tool based on AMBER's MMPBSA.py aiming to perform end-state free energy calculations"
                " with GROMACS files. This program is an adaptation of Amber's MMPBSA.py and essentially works as such. "
-               "As gmx_MMPBSA adapts MMPBSA.py, since it has all the resources of this script and work with any "
-               "GROMACS version. This program will calculate binding free energies using end-state free energy "
-               "methods on an ensemble of snapshots using a variety of implicit solvent models.")
+               "gmx_MMPBSA works with any GROMACS version. This program will calculate binding free energies using "
+               "end-state free energy methods on an ensemble of snapshots using a variety of implicit solvent models.")
 
 complex_group_des = ("Complex files and info that are needed to perform the calculation. If the receptor and/or the "
                      "ligand info is not defined, we generate them from that of the complex.")
@@ -238,8 +237,7 @@ group.add_argument('-r', '--recursive', help='Search recursively in this folder 
                    default=False)
 
 # tester parser
-description = ('This program is part of gmx_MMPBSA and will allow you to run the different gmx_MMPBSA calculations '
-              'examples easily.')
+description = ('This program is part of gmx_MMPBSA and will allow you to run various gmx_MMPBSA examples easily.')
 testparser = ArgumentParser(epilog=f'gmx_MMPBSA is an effort to implement the GB/PB and others calculations in '
                                   f'GROMACS. \nBased on MMPBSA.py (version {__mmpbsa_version__}) and '
                                   f'AmberTools{__ambertools_version__}',
@@ -250,9 +248,8 @@ testparser.add_argument('-v', '--version', action='version',
 group = testparser.add_argument_group('Test options')
 group.add_argument('-t', dest='test', choices=range(19), type=int, nargs='*', default=[2],
                    help='''\
-The level at which you want to take the test. You can define multiple systems and 
-analysis at the same time.
-      Sys. Runs  
+The level the test is going to be run at. Multiple systems and analysis can be run at the same time.
+      Nr. of Sys  
 * 0      16     All -- Run all examples (Can take a long time!!!)
 * 1      13     Minimal -- Does a minimal test with a set of systems and analyzes 
                 that show that gmx_MMPBSA runs correctly. Only exclude 3drism, nmode
@@ -284,6 +281,6 @@ group.add_argument('-r', '--reuse', help='Defines the existing test forlder will
 group.add_argument('-ng', '--nogui', help='No open gmx_MMPBSA_ana after all calculations finished',
                    action='store_true',  default=False)
 group.add_argument('-n', '--num_processors', type=int, default=4,
-                   help='Defines the number of processor cores you want to use with MPI per calculation. If the numer '
-                        'of frames is less than the number of cpus defined, the calculation will carry out with the '
-                        'number of frames')
+                   help='Defines the number of processor cores you want to use with MPI per calculation. If the number '
+                        'of frames is less than the number of cpus defined, the calculation will be performed with'
+                        'the number of processors = number of frames')

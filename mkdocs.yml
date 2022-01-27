@@ -157,20 +157,18 @@ nav:
     - How gmx_MMPBSA works: howworks.md
     - The input file: input_file.md
     - Output Files: output.md
-    - Advanced Options: advanced.md
     - Python API: api.md
     - gmx_MMPBSA_ana: analyzer.md
   - Examples:
     - Examples: examples/README.md
     - Systems:
       - Protein-protein: examples/Protein_protein/README.md
-      - Protein-Ligand (ST): examples/Protein_ligand/ST/README.md
+      - Protein-ligand: examples/Protein_ligand/ST/README.md
       - Protein-DNA: examples/Protein_DNA/README.md
       - Protein-glycan: examples/Protein_glycan/README.md
       - Membrane proteins: examples/Protein_membrane/README.md
       - Metalloprotein-peptide: examples/Metalloprotein_peptide/README.md
-      - Protein-DNA-RNA-Ions-Ligand: examples/Protein_DNA_RNA_Ion_ligand/README.md
-      - Binding free energy calculations in multicomponent systems: examples/Comp_receptor/README.md
+      - Multicomponent system: examples/Comp_receptor/README.md
       - COVID-19 related proteins:
           - Info: examples/COVID-19_related_proteins/README.md
           - Main protease: examples/COVID-19_related_proteins/Main_protease_7l5d/README.md
@@ -178,29 +176,35 @@ nav:
           - S1-ACE2 complex: examples/COVID-19_related_proteins/S1-ACE2_complex_7dmu/README.md
           - S1 RBD with antibody: examples/COVID-19_related_proteins/S1_RBD_with_antibody_6zlr/README.md
     - Charmm Support:
-        - Protein-Ligand (ST): examples/Protein_ligand_CHARMMff/README.md
+        - Protein-Ligand: examples/Protein_ligand_CHARMMff/README.md
         - Protein-ligand complex embedded in membrane: examples/Protein_membrane_CHARMMff/README.md
         - Mycalamide A Bound to the Large Ribosomal Subunit: examples/Ribosomal50S_Mycalamide_A/README.md
         - Protein-Ligand with LPH particles (ST): examples/Protein_ligand_LPH_atoms_CHARMMff/README.md
     - Analysis:
+        - Single Trajectory Protocol: examples/Protein_ligand/ST/README.md
+        - Multiple Trajectory Protocol: examples/Protein_ligand/MT/README.md
+        - BFE calculations:
+            - BFE calculation with GB: examples/Protein_ligand/ST/README.md
+            - BFE calculation with Linear PB: examples/Linear_PB_solver/README.md
+            - BFE calculation with NonLinear PB : examples/NonLinear_PB_solver/README.md
+            - BFE calculation with 3D-RISM: examples/3D-RISM/README.md
         - Alanine scanning: examples/Alanine_scanning/README.md
         - Decomposition analysis: examples/Decomposition_analysis/README.md
-        - Entropy calculation:
+        - Entropy calculations:
             - Interaction Entropy: examples/Entropy_calculations/Interaction_Entropy/README.md
             - nmode Entropy: examples/Entropy_calculations/nmode/README.md
+            - C2 Entropy calculations: examples/Entropy_calculations/C2_Entropy/README.md
         - Stability calculations: examples/Stability/README.md
-        - MM/3D-RISM: examples/3D-RISM/README.md
         - QM/MMGBSA: examples/QM_MMGBSA/README.md
-        - Protein-Ligand (MT): examples/Protein_ligand/MT/README.md
-  - Q&A:
+  - Help:
     - Support: Q&A/README.md
     - Installation: Q&A/installation.md
     - OS issues: Q&A/OS_issues.md
     - Calculations: Q&A/calculations.md
-  - Changelog:
-    - Changelog: changelog.md
-    - Compatibility: compatibility.md
-  - Private Policy: private_policy.md
+    - Info:
+      - Changelog: changelog.md
+      - Compatibility: compatibility.md
+      - Private Policy: private_policy.md
   - Cite us: cite_us.md
 
 

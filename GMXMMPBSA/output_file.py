@@ -221,6 +221,7 @@ def write_stability_output(app):
     # Start with entropies
     if INPUT['qh_entropy']:
         if not INPUT['mutant_only']:
+
             qhnorm = app.calc_types.normal['qh']
             final_output.writeline('ENTROPY RESULTS (QUASI-HARMONIC APPROXIMATION) CALCULATED WITH PTRAJ:')
             final_output.add_section(qhnorm.summary())
@@ -229,6 +230,7 @@ def write_stability_output(app):
             final_output.writeline(mut_str + ' MUTANT')
             final_output.writeline('ENTROPY RESULTS (QUASI-HARMONIC APPROXIMATION) CALCULATED WITH PTRAJ:')
             final_output.add_section(qhmutant.summary())
+
         if INPUT['alarun'] and not INPUT['mutant_only']:
             davg, dstd = _get_diff(qhmutant.total_avg(), qhnorm.total_avg())
             final_output.add_section(f'\nRESULT OF ALANINE SCANNING ({mut_str}):\n'

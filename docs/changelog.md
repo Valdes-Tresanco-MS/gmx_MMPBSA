@@ -3,18 +3,18 @@ template: main.html
 title: Changelog
 ---
 # Changelog
-## gxm_MMPBSA v1.5.0
+## gmx_MMPBSA v1.5.0 (coming soon...)
 
 ### Additions
 #### `gmx_MMPBSA`
 - Option to create an input file (`--create_input`)
 - New format file (h5) to store all the data result
-- enabled NonLinear PB solver in `mmpbsa_py_energy` (#63)
+- enabled NonLinear PB solver in `sander` (#63)
 - enabled all `pbsa` options in `sander` (#64)
-- enabled all `3D-Rism` variables (#68)
-- Important IE data (#91)
-- C2 Entropy method (#73)
-- New method to get the decomp data without the API classes
+- enabled all `3D-RISM` variables (#68)
+- Improve IE output data (#91)
+- New C2 Entropy method added (#73)
+- New method to get the `decomp` data without the API classes
 #### `gmx_MMPBSA_ana`
 - Chart properties selector. The following properties can be changed:
   - Font size:
@@ -42,18 +42,18 @@ title: Changelog
 - 
 ### Fixes
 #### `gmx_MMPBSA`
-- Protonated residues
+- Issue with protonated residues
 - `print_res` selection
 - Error when `startframe=0` (#66)
 - parmchk2 always uses GAFF as force field (#45)
 - Now IE is calculated for PB and GB independently (#72)
-- Alanine scanning CHARMM ff (#88)
-- Fixed MT approach (#78)
+- Issue with alanine scanning CHARMM ff (#88)
+- Issue with MT approach (#78)
 - get_num_terms function run forever if TDC term not found. (#98)
 - Check if the groups defined for receptor and ligand are the same (#86)
 - **Standard deviation calculation. This error comes from the original version of MMPBSA.py** (#105)
 - Structure consistency (#80, #79)
-- Now gmx_MMPBSA launch an error when OverflowError on IE calculation (#57)
+- Now gmx_MMPBSA launches an error when there is an `OverflowError` on IE calculation (#57)
 - Improve gmx_MMPBSA .log file (#108)
 - Inconsistency with multiple trajectories (#120)
 #### `gmx_MMPBSA_ana`
@@ -69,9 +69,9 @@ title: Changelog
 - EnergyVector changed to ndarray subclass
 - Regen expression for `mutant_res`
 - Now the COM, REC and LIG trajectories must have the same length when MT approach
-- Improved logging
+- Improved verbose logging
 - Removed `*.gro` file support in `-cs` , `-rs` and `-ls` flags
-- Changed `editconf` by `trjconv` to avoid the PBC in the tpr file (#43)
+- Added `trjconv` to avoid the PBC in the tpr file (#43)
 #### `gmx_MMPBSA_ana`
 - New set of chart buttons
 - IE plot

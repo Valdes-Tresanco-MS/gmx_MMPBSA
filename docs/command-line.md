@@ -11,27 +11,26 @@ title: Command-line
 ```
 $ gmx_MMPBSA -h
 
-usage: gmx_MMPBSA [-h] [-v] [--input-file-help] [-O] [-prefix <file prefix>]
-                  [-i FILE] [-xvvfile XVVFILE] [-o FILE] [-do FILE] [-eo FILE]
-                  [-deo FILE] [-nogui] [-s] [-cs <Structure File>]
-                  [-ci <Index File>] [-cg index index] [-ct [TRJ [TRJ ...]]]
-                  [-cp <Topology>] [-cr <PDB File>] [-rs <Structure File>]
-                  [-ri <Index File>] [-rg index] [-rt [TRJ [TRJ ...]]]
-                  [-rp <Topology>] [-lm <Structure File>] [-ls <Structure File>]
-                  [-li <Index File>] [-lg index] [-lt [TRJ [TRJ ...]]]
-                  [-lp <Topology>] [-make-mdins] [-use-mdins] [-rewrite-output]
-                  [--clean]
+usage: gmx_MMPBSA [-h] [-v] [--input-file-help] [--create_input [{gb,pb,rism,ala,decomp,nmode,all}] 
+                  [-O] [-prefix <file prefix>] [-i FILE] [-xvvfile XVVFILE] [-o FILE] [-do FILE] [-eo FILE]
+                  [-deo FILE] [-nogui] [-s] [-cs <Structure File>] [-ci <Index File>] [-cg index index] 
+                  [-ct [TRJ [TRJ ...]]] [-cp <Topology>] [-cr <PDB File>] [-rs <Structure File>] [-ri <Index File>] 
+                  [-rg index] [-rt [TRJ [TRJ ...]]] [-rp <Topology>] [-lm <Structure File>] [-ls <Structure File>] 
+                  [-li <Index File>] [-lg index] [-lt [TRJ [TRJ ...]]] [-lp <Topology>] [--rewrite-output] [--clean]
 
 gmx_MMPBSA is a new tool based on AMBER's MMPBSA.py aiming to perform end-state 
 free energy calculations with GROMACS files. This program is an adaptation of 
-Amber's MMPBSA.py and essentially works as such. As gmx_MMPBSA adapts MMPBSA.py, 
-since it has all the resources of this script and work with any GROMACS version.
+Amber's MMPBSA.py and essentially works as such. gmx_MMPBSA works with any GROMACS version.
+This program will calculate binding free energies using end-state free energy methods 
+on an ensemble of snapshots using a variety of implicit solvent models. This is the core 
+of gmx_MMPBSA and it will do all the calculations
 
 optional arguments:
   -h, --help            show this help message and exit
   -v, --version         show program's version number and exit
-  --input-file-help     Print all available options in the input file.
-                        (default: False)
+  --input-file-help     Print all available options in the input file. (default: False)
+  --create_input        Create an new input file with selected calculation type. (default: None)
+                         [{gb,pb,rism,ala,decomp,nmode,all}]
 
 Miscellaneous Options:
   -O, --overwrite       Allow output files to be overwritten (default: False)
@@ -134,12 +133,6 @@ Ligand:
   -lp <Topology>        Topology file of the ligand. (default: None)
 
 Miscellaneous Actions:
-  -make-mdins           Create the input files for each calculation and quit. This
-                         allows you to modify them and re-run using -use-mdins
-                         (default: False)
-  -use-mdins            Use existing input files for each calculation. If they do
-                         not exist with the appropriate names, gmx_MMPBSA will
-                         quit in error. (default: False)
   -rewrite-output       Do not re-run any calculations, just parse the output
                          files from the previous calculation and rewrite the
                          output files. (default: False)
@@ -409,57 +402,55 @@ must be the following structure:
 ## `gmx_MMPBSA_test` command-line
 ```
 $ gmx_MMPBSA_test -h
-usage: run_test.py [-h] [-v] [-t {all,minimal,3drism,ala_scan,decomp,prot_lig_mt,
-                                   stability,ie,nmode,prot_prot,prot_lig_st,
-                                   prot_dna,metalloprot_pep,prot_dna_rna_ions_lig,
-                                   prot_glycan,memb_prot,prot_lig_charmm}]
-                   [-f FOLDER] [-ng] [-n NUM_PROCESSORS]
+usage: gmx_MMPBSA_test [-h] [-v] 
+       [-t [{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18} [{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18} ...]]] 
+       [-f FOLDER] [-r] [-ng] [-n NUM_PROCESSORS]
 
-This program is part of gmx_MMPBSA and will allow you to run the different 
-gmx_MMPBSA calculations examples easily.
+This program is part of gmx_MMPBSA and will allow you to run various gmx_MMPBSA examples easily.
 
 optional arguments:
   -h, --help            show this help message and exit
   -v, --version         show program's version number and exit
 
 Test options:
-  -t {all,minimal,3drism,ala_scan,decomp,prot_lig_mt,stability,ie,nmode,prot_prot,
-       prot_lig_st,prot_dna,metalloprot_pep,prot_dna_rna_ions_lig,prot_glycan,
-       memb_prot,prot_lig_charmm}
-                        The level at which you want to take the test.
-                        * all - make all examples.
-                        * minimal - does a minimal test with a set of systems and 
-                                    analyzes that show that gmx_MMPBSA runs 
-                                    correctly. Only exclude 3drism and nmode 
-                                    because they can take a long time and 
-                                    prot_lig_mt because it is quite similar to
-                                    prot_lig_st
+  -t [{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18} [{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18} ...]]
+                        The level the test is going to be run at. Multiple systems and analysis can be run at the same 
+                        time.
+                              Nr. of Sys  
+                        * 0      16     All -- Run all examples (Can take a long time!!!)
+                        * 1      13     Minimal -- Does a minimal test with a set of systems and analyzes 
+                                        that show that gmx_MMPBSA runs correctly. Only exclude 3drism, nmode
+                                        protein-ligand MT because take a long time or are redundant
+                        * 2       9     Fast -- Only the calculations that take a short time are run (Default)
                         [Systems]:
-                        * prot_lig_st             Protein-Ligand (ST)
-                        * prot_prot               Protein-Protein
-                        * prot_dna                Protein-DNA
-                        * memb_prot               Protein-Membrane
-                        * prot_glycan             Protein-Glycan
-                        * metalloprot_pep         Metalloprotein-Peptide
-                        * prot_dna_rna_ions_lig   Protein-DNA-RNA-IONs-Ligand
-                        * prot_lig_charmm         Protein-Ligand (CHARMM ff)
+                             Slow Frames
+                        * 3    . | 10   Protein-Ligand (Single trajectory approximation)
+                        * 4    . | 10   Protein-Protein
+                        * 5    . | 10   Protein-DNA
+                        * 6    x |  4   Protein-Membrane
+                        * 7    . | 10   Protein-Glycan
+                        * 8    x |  4   Metalloprotein-Peptide
+                        * 9    . | 10   Protein-DNA-RNA-IONs-Ligand
+                        * 10   x |  4   Protein-Ligand (CHARMM force field)
+                        * 11   x |  4   Protein-ligand complex in membrane with CHARMMff 
                         [Analysis]:
-                        * ala_scan                Alanine Scanning
-                        * stability               Stability calculation
-                        * decomp                  Decomposition Analysis
-                        * prot_lig_mt             Protein-Ligand (MT)
-                        * ie                      Interaction Entropy 
-                                                   approximation
-                        * nmode                   Entropy calculation using 
-                                                   Normal Mode approximation 
-                        * 3drism                  Calculations using 3D-RISM 
-                                                   approximation
+                             Slow Frames
+                        * 12   . | 10   Alanine Scanning
+                        * 13   . | 10   Stability calculation
+                        * 14   . | 10   Decomposition Analysis
+                        * 15   . | 16   Interaction Entropy approximation
+                        * 16   . | 10   Protein-Ligand (Multiple trajectory approximation)
+                        * 17   x |  4   Entropy calculation using Normal Mode approximation 
+                        * 18   x |  4   Calculations using 3D-RISM approximation
   -f FOLDER, --folder FOLDER
                         Defines the folder to store all data
+  -r, --reuse           Defines the existing test forlder will be reuse
   -ng, --nogui          No open gmx_MMPBSA_ana after all calculations finished
   -n NUM_PROCESSORS, --num_processors NUM_PROCESSORS
-                        Defines the number of processor cores you want to use
-                        since gmx_MMPBSA in this test uses a single processor
+                        Defines the number of processor cores you want to use with MPI per calculation. If the number 
+                        of frames is less than the number of cpus defined, the calculation will be performed with 
+                        the number of processors = number of frames.
+
 
 gmx_MMPBSA is an effort to implement the GB/PB and others calculations in GROMACS. 
 Based on MMPBSA.py (version 16.0) and AmberTools20
@@ -470,33 +461,33 @@ gmx_MMPBSA_test is designed to run a set of samples (all or minimal) or a specif
 Additionally, gmx_MMPBSA_test can run in parallel, decreasing the execution time gmx_MMPBSA_test will download the 
 most recent version of the repository in the specified folder and will perform the calculations
 
-=== "minimal"
+=== "Minimal"
     
-        gmx_MMPBSA_test -f /home/user/Documents -n 10 [-t minimal is the default]
+        gmx_MMPBSA_test -f /home/user/Documents -n 10 [-t 2 is the default]
     
     Through this command-line, gmxMMPBSA_test will:
     
     * Download gmx_MMPBSA repository content in `/home/user/Documents`
-    * Do `minimal` set of examples
-    * Perform the calculation on 10 examples at the sime time (1 processor per example)
+    * Works with `Fast` set of examples
+    * Perform the calculation on 9 examples sequentially, using 10 cpus each time
 
-=== "all"
+=== "All"
     
-        gmx_MMPBSA_test -f /home/user/Documents -t all -n 10
-    
-    Through this command-line, gmxMMPBSA_test will:
-    
-    * Download gmx_MMPBSA repository content in `/home/user/Documents`
-    * Do `all` set of examples
-    * Perform the calculation on 10 examples at the sime time (1 processor per example)
-    
-=== "specific"
-    
-        gmx_MMPBSA_test -f /home/user/Documents -t prot_lig_st
+        gmx_MMPBSA_test -f /home/user/Documents -t 0 -n 10
     
     Through this command-line, gmxMMPBSA_test will:
     
     * Download gmx_MMPBSA repository content in `/home/user/Documents`
-    * Do `prot_lig_st`[Protein-Ligand (Single Trajectory approach)] example
+    * Works with `All` set of examples
+    * Perform the calculation on 16 examples sequentially, using 10 cpus each time
+    
+=== "Specific"
+    
+        gmx_MMPBSA_test -f /home/user/Documents -t 3
+    
+    Through this command-line, gmxMMPBSA_test will:
+    
+    * Download gmx_MMPBSA repository content in `/home/user/Documents`
+    * Execute `3` [Protein-Ligand (Single Trajectory approach)] example
 
 [^1]: Taken from the MMPBSA.py paper
