@@ -284,7 +284,7 @@ class IEout(dict):
             else:
                 self[model][k] = v
 
-    def print_vectors(self, csvwriter):
+    def _print_vectors(self, csvwriter):
         """ Prints the energy vectors to a CSV file for easy viewing
             in spreadsheets
         """
