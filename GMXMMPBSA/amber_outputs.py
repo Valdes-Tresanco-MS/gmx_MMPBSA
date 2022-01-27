@@ -880,12 +880,13 @@ class QMMMout(GBout):
 class BindingStatistics(dict):
     """ Base class for compiling the binding statistics """
 
-    def __init__(self, com, rec, lig, chamber=False, **kwargs):
+    def __init__(self, com, rec, lig, chamber=False, traj_protocol='STP', **kwargs):
         super(BindingStatistics, self).__init__(**kwargs)
         self.com = com
         self.rec = rec
         self.lig = lig
         self.chamber = chamber
+        self.traj_protocol = traj_protocol
         self.inconsistent = False
         self.missing_terms = False
 
@@ -914,16 +915,17 @@ class BindingStatistics(dict):
         TINY = 0.005
         # First thing we do is check to make sure that all of the terms that
         # should *not* be printed actually cancel out (i.e. bonded terms)
-        # for key in self.com.print_levels:
-        #     if self.com.print_levels[key] > 1:
-        #         diff = self.com[key] - self.rec[key] - self.lig[key]
-        #         if diff.abs_gt(SingleTrajBinding.TINY):
-        #             self.inconsistent = True
+        if self.traj_protocol == 'STP':
+            for key in self.com.print_levels:
+                if self.com.print_levels[key] > 1:
+                    diff = self.com[key] - self.rec[key] - self.lig[key]
+                    if diff.abs_gt(TINY):
+                        self.inconsistent = True
         #             # Now we have to print out everything
         #             self.com.verbose = 2
         #             self.rec.verbose = 2
         #             self.lig.verbose = 2
-        #             break
+                        break
 
         # FIXME: ya lo hice?
         # self.com.fill_composite_terms()
@@ -1660,22 +1662,32 @@ class PairDecompBinding(DecompBinding):
             text.append(self.desc)
             text.append('')
         if self.verbose > 1:
-            self.output.writerow(['Complex:'])
-            self.com.write_summary_csv(self.output)
-            self.output.writerow(['Receptor:'])
-            self.rec.write_summary_csv(self.output)
-            self.output.writerow(['Ligand:'])
-            self.lig.write_summary_csv(self.output)
-        # Now write the DELTAs
+            if _output_format:
+                text.extend(self.com.summary(output_format))
+                text.extend(self.rec.summary(output_format))
+                text.extend(self.lig.summary(output_format))
+            else:
+                text.append(self.com.summary())
+                text.append(self.rec.summary())
+                text.append(self.lig.summary())
+        if _output_format:
+            text.append(['DELTAS:'])
+        else:
+            text.append('DELTAS:')
 
-        self.output.writerow(['DELTAS:'])
         for term in self:
-            self.output.writerow([DecompOut.descriptions[term]])
-            self.output.writerow(['Resid 1', 'Resid 2', 'Internal', '', '',
-                                  'van der Waals', '', '', 'Electrostatic', '', '',
-                                  'Polar Solvation', '', '', 'Non-Polar Solv.',
-                                  '', '', 'TOTAL', '', ''])
-            self.output.writerow(['', ''] + ['Avg.', 'Std. Dev.', 'Std. Err. of Mean'] * 6)
+            if _output_format:
+                text.extend([[DecompOut.descriptions[term]],
+                             ['Resid 1', 'Resid 2', 'Internal', '', '', 'van der Waals', '', '', 'Electrostatic', '',
+                              '', 'Polar Solvation', '', '', 'Non-Polar Solv.', '', '', 'TOTAL', '', ''],
+                             ['', ''] + ['Avg.', 'Std. Dev.', 'Std. Err. of Mean'] * 6])
+            else:
+                text.extend([DecompOut.descriptions[term],
+                             'Resid 1   | Resid 2   |       Internal      |    van der Waals    |    Electrostatic    '
+                             '|   Polar Solvation   |    Non-Polar Solv.  |       TOTAL',
+                             '-------------------------------------------------------------------------------'
+                             '--------------------------------------------------------------------------'])
+
             for res in self[term]:
                 for res2 in self[term][res]:
                     int_avg = self[term][res][res2]['int'].mean()
