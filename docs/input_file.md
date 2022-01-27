@@ -474,7 +474,10 @@ tested in previous `protein_forcefield` and `ligand_forcefield` variables.
         100 from the complex topology file and the corresponding residues in either the ligand and/or receptor 
         topology files.
 
-        Suppost that we can have the following sequence: A:LEU:5, A:GLY:6:A, A:THR:6:B, A:SER:6:C A:ASP:6D, A:ILE:7
+        Let's suppose that we can have the following sequence: - A:LEU:5 - A:GLY:6:A - A:THR:6:B - A:SER:6:C - 
+        A:ASP:6:D - A:ILE:7
+
+        with the format `CHAIN`:`RESNAME`:`RESNUMBER`:`INSERTION_CODE`
         
         === "Right notation"
             
@@ -484,23 +487,24 @@ tested in previous `protein_forcefield` and `ligand_forcefield` variables.
             
             **Individual selection**
             :   `qm_residues="A/5,6:B,6:C,7` Will treat with quantum mechanic all mentioned residues except the 
-            residues A:6:A and A:6:D
+            residues A:6:A and A:6:D from chain A
             
             **Multiple chain selection**
-            :   `qm_residues="A/5-10,100 B/34,56` Will treat with quantum mechanic residues 3 through 10, 100 from 
-            chain A and residues 34 and 56 from Chain B.
+            :   `qm_residues="A/5-10,100 B/34,56` Will treat with quantum mechanic residues 5 through 10, and 100 from 
+            chain A, and residues 34 and 56 from Chain B.
 
         === "Wrong notation"
             `qm_residues="A/5-6B,6D-7` Will end in error.
 
 `qm_theory` 
-:   Which semi-empirical Hamiltonian should be used for the quantum calculation. Options are PM3, AM1, MNDO, PDDG-PM3, 
-    PM3PDDG, PDDG-MNDO, PDDGMNDO, PM3-CARB1, PM3CARB1, DFTB, SCC-DFTB, RM1, PM6, PM3-ZnB, PM3-MAIS, PM3ZNB, MNDO/D, 
-    MNDOD. The dispersion correction can be switched on for AM1 and PM6 by choosing AM1-D* and PM6-D, respectively. The 
-    dispersion and hydrogen bond correction will be applied for AM1-DH+ and PM6-DH+.
+:   Which semi-empirical Hamiltonian should be used for the quantum calculation. Options are `PM3`, `AM1`, `MNDO`, 
+    `PDDG-PM3`, `PM3PDDG`, `PDDG-MNDO`, `PDDGMNDO`, `PM3-CARB1`, `PM3CARB1`, `DFTB`, `SCC-DFTB`, `RM1`, `PM6`, 
+    `PM3-ZnB`, `PM3-MAIS`, `PM3ZNB`, `MNDO/D`, `MNDOD`. The dispersion correction can be switched on for `AM1` 
+    and `PM6` by choosing `AM1-D*` and `PM6-D`, respectively. The dispersion and hydrogen bond correction will be 
+    applied for `AM1-DH+` and `PM6-DH+`.
 
     !!! danger
-         No default, this must be specified if `ifqnt` variable = 1.
+         No `qm_theory` default, this must be specified if `ifqnt` = 1.
 
 `qmcharge_com` (Default = 0)
 :   The charge of the quantum section for the complex.
