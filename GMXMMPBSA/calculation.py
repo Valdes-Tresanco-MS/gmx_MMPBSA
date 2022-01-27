@@ -631,12 +631,12 @@ class InteractionEntropyCalc:
     def _calculate(self):
         # boltzmann constant in kcal/(mol⋅K)
         k = 0.001985875
-        temp = self.app.INPUT['temperature']
+        temperature = self.app.INPUT['temperature']
 
         energy_int = np.array([], dtype=np.float)
         a_energy_int = np.array([], dtype=np.float)
         exp_energy_int = np.array([], dtype=np.float)
-        ts = np.array([], dtype=np.float)
+        self.data = np.array([], dtype=np.float)
         for eint in self.ggas:
             energy_int = np.append(energy_int, eint)
             aeint = energy_int.mean()
@@ -646,13 +646,12 @@ class InteractionEntropyCalc:
                 GMXMMPBSA_ERROR('The internal energy of your system has very large energy fluctuation so it is not '
                                 'possible to continue with the calculations. Please, make sure your system is '
                                 'consistent')
-            eceint = math.exp(deint / (k * temp))
+            eceint = math.exp(deint / (k * temperature))
             exp_energy_int = np.append(exp_energy_int, eceint)
             aeceint = exp_energy_int.mean()
-            cts = k * temp * math.log(aeceint)
-            ts = np.append(ts, cts)
-        self.ie_std = energy_int.stdev()
-        self.data = ts
+            cts = k * temperature * math.log(aeceint)
+            self.data = np.append(self.data, cts)
+        self.ie_std = energy_int.std()
         self.ieframes = math.ceil(self.app.numframes * (self.app.INPUT['ie_segment'] / 100))
         self.iedata = self.data[-self.ieframes:]
         self.frames = list(
@@ -693,16 +692,16 @@ class C2EntropyCalc:
     def _calculate(self):
         # gas constant in kcal/(mol⋅K)
         R = 0.001987
-        temp = self.app.INPUT['temperature']
+        temperature = self.app.INPUT['temperature']
         self.c2frames = math.ceil(self.app.numframes * (self.app.INPUT['c2_segment'] / 100))
         self.ie_std = self.ggas[-self.c2frames:].stdev()
-        self.c2data = (self.ie_std ** 2) / (2 * temp * R)
+        self.c2data = (self.ie_std ** 2) / (2 * temperature * R)
 
         array_of_c2 = np.zeros(2000)
         for i in range(2000):
             idxs = np.random.randint(0, len(self.ggas[-self.c2frames:]), len(self.ggas[-self.c2frames:]))
             self.ie_std = self.ggas[-self.c2frames:][idxs].stdev()
-            self.c2data = (self.ie_std ** 2) / (2 * temp * R)
+            self.c2data = (self.ie_std ** 2) / (2 * temperature * R)
             array_of_c2[i] = self.c2data
 
         self.c2_std = np.sort(array_of_c2)[100:1900].stdev()
