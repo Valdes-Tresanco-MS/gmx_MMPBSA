@@ -7,22 +7,106 @@ title: The input file
 
 ## Description
 
-As `gmx_MMPBSA` is based on [MMPBSA.py][1], it uses an input file containing all the specification for the MM/PB(GB)SA 
-calculation. The input file is designed to be as syntactically similar to other programs in Amber as possible. 
-The input file has the same namelist structure as both sander and pmemd. The allowed namelists are:
+`gmx_MMPBSA` input file contains all the specifications for the MM/PB(GB)SA calculations. The input file is 
+syntactically similar to other programs in Amber, although we incorporated a new format more similar to the one used
+on GROMACS *.mdp files. The input file contains sections called `namelist` where the variables are define for each 
+calculation. The allowed namelists are:
 
-- `&general`: are typically variables that apply to all aspects of the calculation or parameters required for build 
+- `&general`: contains variables that apply to all aspects of the calculation or parameters required for building 
 amber topologies from GROMACS files.
-- `&gb`: unique to Generalized Born (GB) calculations
-- `&pb`: unique to Poisson Boltzmann (PB) calculations
-- `&alanine_scanning`: unique to alanine scanning calculations
-- `&decomp`: unique to the decomposition scheme  
-- `&nmode`: unique to the normal mode (NMODE) calculations used to approximate vibrational entropies
-- `&rism`: unique to 3D-RISM calculations
+- `&gb`: unique variables to Generalized Born (GB) calculations
+- `&pb`: unique variables to Poisson Boltzmann (PB) calculations
+- `&alanine_scanning`: unique variables to alanine scanning calculations
+- `&decomp`: unique variables to the decomposition scheme  
+- `&nmode`: unique variables to the normal mode (NMODE) calculations used to approximate vibrational entropies
+- `&rism`: unique variables to 3D-RISM calculations
 
   [1]: https://pubs.acs.org/doi/10.1021/ct300418h
 
-## Calculations namelist
+## Generation of input files with gmx_MMPBSA
+The input file can be created using gmx_MMPBSA by selecting the calculations you want to perform.
+
+``` title="Command-line"
+gmx_MMPBSA --create_input args
+```
+
+Example:
+=== "GB calculation"
+        
+        gmx_MMPBSA --create_input gb
+    
+=== "PB calculation"
+    
+        gmx_MMPBSA --create_input pb
+
+=== "GB, PB and Decomposition calculation"
+    
+        gmx_MMPBSA --create_input gb pb decomp
+
+=== "All calculations"
+
+        gmx_MMPBSA --create_input
+     
+    or 
+        
+        gmx_MMPBSA --create_input all
+        
+!!! Danger 
+    Note that several variables must be explicitly defined
+
+_New in v1.5.0_
+
+## Format
+All the input variables are described below according to their respective namelists. Integers and floating point 
+variables should be typed as-is while strings should be put in either single- or double-quotes. All variables should be 
+set with `variable = value` and separated by commas is they appear in the same line. If the variables appear in different 
+lines, the comma is no longer needed. See several [examples](#sample-input-files) below. As you will see, several 
+calculations can be performed in the same run (_i.e._ `&gb` and `&pb`, `&gb` and `&alanine_scanning`, `&pb` and
+`&decomp`, etc). As we have mentioned, the input file can be generated using the `create_input` option of gmx_MMPBSA. 
+This style, while retaining the same Amber format (derived from Fortran), is aesthetically more familiar to the GROMACS
+style (`*.mdp`). However, it maintains the same essence, so it could be defined in any of the two format styles or even
+combined. See the formats below:
+
+=== "New format style "
+    ``` title="New format style Input file example"
+            
+    # General namelist variables
+    &general
+      sys_name             = ""                      # System name
+      startframe           = 1                       # First frame to analyze
+      endframe             = 9999999                 # Last frame to analyze
+      ...
+      interval              = 1                      # The offset from which to choose frames from each trajectory file
+    /
+    
+    # Generalized-Born namelist variables
+    &gb
+      
+      igb                  = 5                       # GB model to use
+      ...
+      probe                = 1.4                     # Solvent probe radius for surface area calc
+    /
+    ```
+
+=== "Old format style"
+    ``` title="Old format style Input file example"
+            
+    # General namelist variables
+    &general
+      sys_name = "", startframe = 1, endframe = 9999999
+      ...
+      interval = 1
+    /
+    
+    # Generalized-Born namelist variables
+    &gb
+      igb = 5, 
+      ...
+      probe = 1.4
+    /
+    ```
+
+## Namelists
 
 ### **`&general` namelist variables**
 
@@ -131,7 +215,7 @@ tested in previous `protein_forcefield` and `ligand_forcefield` variables.
 
     _New in v1.4.1_
 
-    _Modiefied in v1.4.3. Internal change_
+    _Modified in v1.4.3: Internal change_
 
     _Updated in v1.5.0: Documentation updated_
 
@@ -168,11 +252,16 @@ tested in previous `protein_forcefield` and `ligand_forcefield` variables.
     * 3: mbondi2, recommended when igb = 2 or 5
     * 4: mbondi3, recommended when igb = 8
 
-`qh_entropy` (Default = 0) 
-:    It specifies whether to perform a quasi-harmonic entropy (QH) approximation with `ptraj` or not.
+`qh_entropy` (Default = 0)
+:    It specifies whether to perform a quasi-harmonic entropy (QH) approximation with `cpptraj` or not.
      
      * 0: Don’t
      * 1: perform QH
+
+    !!! important "Keep in mind"
+        * The number of frames used for QH analyses should be higher than 3N, N being the number of atoms in the 
+        complex
+        * Check this [thread](http://archive.ambermd.org/201207/0319.html) for more info on QH analysis
 
     _New in v1.4.2: Equivalent to (Removed) `entropy = 1`_
 
@@ -219,7 +308,8 @@ tested in previous `protein_forcefield` and `ligand_forcefield` variables.
 
     !!! warning "Keep in mind"
         - The standard deviation of the interaction energy (σIE) should always be reported.
-        - The C2 Entropy method should be avoided if σIE > ~ 6 kcal/mol because it gives unrealistically large entropies.
+        - The C2 Entropy method should be avoided if σIE > ~ 3.6 kcal/mol because it gives unrealistically large 
+        entropies.
         - It is advisable to study how the C2 Entropy depends on N by block averaging (which also provide an 
         estimate of the precision of the calculated entropies).
         - A sampling frequency of 10 fs, seems to be 3–40 times too dense. A sampling frequency of 0.1 ps would be more 
@@ -243,20 +333,16 @@ tested in previous `protein_forcefield` and `ligand_forcefield` variables.
     _New in v1.5.0_
 
 `temperature` (Default = 298.15)  
-: Specify the temperature to calculate experimental ΔG from Ki and the Interaction Entropy (Only if `entropy` = 2). 
-Avoid inconsistencies with defined internal temperature (298.15 K) when `nmode` or `qh` are used.  
-
-    !!! warning "Keep in mind"
-        Note that the `nmode` as `qh` model to calculate the entropy term are parameterized and will only work at 298.15 K
+:   Specify the temperature used in the calculations.
    
     _New in v1.4.0: Replace `entropy_temp`_
 
 `assign_chainID` (Default = 0) 
 :   Defines the chains ID assignment mode. _It is ignored when defining a reference structure
-(recommended)_. If `assign_chainID = 1`, gmx_MMPBSA check if the structure has no chains ID and it is assigned according
-to the structure[^1]. If `assign_chainID = 2`, `gmx_MMPBSA` assign the chains ID, exist or not, according to the
-structure[^1] (can generate inconsistencies). If a `*.gro` file was used for complex structure
-(`-cs` flag) and not reference structure was provided, `gmx_MMPBSA` assume `assign_chainID = 1`. 
+    (recommended)_. If `assign_chainID = 1`, gmx_MMPBSA check if the structure has no chains ID and it is assigned 
+    according to the structure[^1]. If `assign_chainID = 2`, `gmx_MMPBSA` assign the chains ID, exist or not, 
+    according to the structure[^1] (can generate inconsistencies). If a `*.gro` file was used for complex structure
+    (`-cs` flag) and not reference structure was provided, `gmx_MMPBSA` assume `assign_chainID = 1`. 
 
     _New in v1.2.0_
 
@@ -268,14 +354,14 @@ structure[^1] (can generate inconsistencies). If a `*.gro` file was used for com
 
 `exp_ki` (Default = 0.0)
 :   Specify the experimental Ki in nM for correlations analysis. If not defined or exp_ki = 0 then this system will be 
-omitted in the correlation analysis
+    omitted in the correlation analysis
 
     _New in v1.4.0_
 
 `gmx_path` 
-:     Define a path to search for GROMACS executables. This path takes precedence over the path defined
-      in the PATH variable. In this path the following executables will be searched: `gmx`, `gmx_mpi`, `gmx_d`, or
-      `gmx_mpi_d` (GROMACS > 5.x.x), and `make_ndx`, `editconf` and `trjconv` (GROMACS 4.x.x)
+:   Define a path to search for GROMACS executables. This path takes precedence over the path defined
+    in the PATH variable. In this path the following executables will be searched: `gmx`, `gmx_mpi`, `gmx_d`, or
+    `gmx_mpi_d` (GROMACS > 5.x.x), and `make_ndx`, `editconf` and `trjconv` (GROMACS 4.x.x)
 
     !!! note "Keep in mind"
         This variable is used when the GROMACS used to run the system differs from that of will be used for running 
@@ -296,12 +382,12 @@ omitted in the correlation analysis
     _New in v1.1.1_
 
 `netcdf` (Default = 0)
-:     Specifies whether or not to use NetCDF trajectories internally rather than writing temporary ASCII trajectory
-      files. For very large trajectories, this could offer significant speedups, and requires less temporary space. 
-      However, this option is incompatible with alanine scanning.
+:   Specifies whether or not to use NetCDF trajectories internally rather than writing temporary ASCII trajectory
+    files. For very large trajectories, this could offer significant speedups, and requires less temporary space. 
+    However, this option is incompatible with alanine scanning.
 
-      * 0: Do NOT use temporary NetCDF trajectories
-      * 1: Use temporary NetCDF trajectories
+    * 0: Do NOT use temporary NetCDF trajectories
+    * 1: Use temporary NetCDF trajectories
 
 `solvated_trajectory` (Default = 1)
 :   Define if it is necessary to build a clean trajectory with no water and ions
@@ -313,26 +399,16 @@ omitted in the correlation analysis
 
     _Updated in v1.5.0. Bugs fixed_
 
-`use_sander` (Default = 0)
-:   use sander for energy calculations, even when `mmpbsa_py_energy` will suffice
-    
-    * 0: Use `mmpbsa_py_energy` when possible
-    * 1: Always use sander
-
-    !!! note
-        Sander is always used when building the Amber topology from a Gromacs topology. This, because the conversion 
-        can generate parameters that are not recognized by `mmpbsa_py_energy`
-
 `debug_printlevel`
 :   gmx_MMPBSA prints errors by raising exceptions, and not catching fatal errors. If `debug_printlevel` is
-set to 0, then detailed tracebacks (effectively the call stack showing exactly where in the program the error occurred)
-is suppressed, so only the error message is printed. If `debug_printlevel` is set to 1 or higher, all tracebacks are
-printed, which aids in debugging of issues. (Default = 0) (Advanced Option)
+    set to 0, then detailed tracebacks (effectively the call stack showing exactly where in the program the error 
+    occurred) is suppressed, so only the error message is printed. If `debug_printlevel` is set to 1 or higher, all 
+    tracebacks are printed, which aids in debugging of issues. (Default = 0) (Advanced Option)
 
     _Changed in v1.2.0: Now `gmx_MMPBSA` shows the command-line used to build AMBER topologies when 
     `debug_printlevel = 1` or higher_
     
-    _Deprecate in v1.5.0: Since we improved logging, this variable is not needed_
+    _Deprecated in v1.5.0: Since we improved verbose logging, this variable is not needed_
 
 `verbose` (Default = 1)
 :   The variable that specifies how much output is printed in the output file. There are three allowed values:
@@ -347,10 +423,8 @@ printed, which aids in debugging of issues. (Default = 0) (Advanced Option)
 :   Define Internal dielectric constant without use external *.mdin file
 
 `igb` (Default = 5)
-:   Generalized Born method to use (see [Section 4](https://ambermd.org/doc12/Amber20.pdf#chapter.4)).  Allowed values are 1, 2, 5, 7 and 8
-
-    !!! note
-        All models are now available with both `mmpbsa_py_energy` and `sander`
+:   Generalized Born method to use (see [Section 4](https://ambermd.org/doc12/Amber20.pdf#chapter.4)). Allowed values 
+    are 1, 2, 5, 7 and 8
 
 `saltcon` (Default = 0.0)
 :   Salt concentration in Molarity.
@@ -362,13 +436,13 @@ printed, which aids in debugging of issues. (Default = 0) (Advanced Option)
 :   Surface tension value. Units in kcal/mol/Å^2^
 
 `molsurf` (Default 0)
-:   Define the algorithm to calculate the surface area for the nonpolar solvation termWhen
+:   Define the algorithm to calculate the surface area for the non polar solvation term
     
     * 0: LCPO (Linear Combination of Pairwise Overlaps)
     * 1: molsurf algorithm
 
 `probe` (Default = 1.4)
-:   Radius of the probe molecule (supposed to be the size of a solvent molecule), in Angstroms, to use when
+:   Radius of the probe molecule (supposed to be the size of a solvent molecule), in Ångstroms, to use when
     determining the molecular surface. 
     
     !!! note
@@ -384,13 +458,10 @@ printed, which aids in debugging of issues. (Default = 0) (Advanced Option)
     * 0: Potential function is strictly classical
     * 1: Use QM/MM
 
-    !!! note
-        This functionality requires `sander`
-
 `qm_residues`
 :   Complex residues to treat with quantum mechanics. All residues treated with quantum mechanics in the complex 
     must be treated with quantum mechanics in the receptor or ligand to obtain meaningful results. This notation is 
-    the same used for `print_res` variable 
+    the same used for `print_res` variable in `&decomp` namelist
 
     Notation: [ `CHAIN`/(`RESNUM` or `RESNUM-RESNUM`) ]
     :    Treat with quantum mechanics residues individual or ranges. This notation also supports insertion codes, in 
@@ -427,7 +498,7 @@ printed, which aids in debugging of issues. (Default = 0) (Advanced Option)
     dispersion and hydrogen bond correction will be applied for AM1-DH+ and PM6-DH+.
 
     !!! danger
-         No default, this must be specified if QM/MM calculations are going to be performed.
+         No default, this must be specified if `ifqnt` variable = 1.
 
 `qmcharge_com` (Default = 0)
 :   The charge of the quantum section for the complex.
@@ -446,15 +517,7 @@ printed, which aids in debugging of issues. (Default = 0) (Advanced Option)
 ### **`&pb` namelist variables**
 
 !!! note
-    PB calculations can be performed either with **_mmpbsa_py_energy_** or **_sander_**. Of note, **_mmpbsa_py_energy_**
-    works with a lower number of variables compared to **_sander_**. Nevertheless, **_mmpbsa_py_energy_** will suffice 
-    for most routine applications of PB. 
-
-    **_mmpbsa_py_energy_** variables: `inp`, `smoothopt`, `radiopt`, `npbopt`, `solvopt`, `maxitn (linit)`, `nfocus`, 
-    `fscale`, `epsin (indi)`, `epsout (exdi)`, `istrng`, `dprob (prbrad)`, `iprob`, `accept`, `fillratio`, 
-    `space (1/scale)`, `bcopt`, `eneopt`, `cutnb`, `sprob`, `cavity_surften`, `cavity_offset`
-
-    On the other hand, **_sander_** offers access to all [pbsa][5] functionalities.
+    **_sander_** offers access to all [pbsa][5] functionalities.
 
     **_sander_** variables: `ntb`, `cut`, `nsnb`, `imin`, `maxcyc`, `ipb`, `inp`, `ioutfm`, `ntx`, `epsin (indi)`, 
     `epsout (exdi)`, `istrng`, `radiopt`, `sprob`, `dprob (prbrad)`, `space (1/scale)`, `maxitn (linit)`, 
@@ -463,25 +526,24 @@ printed, which aids in debugging of issues. (Default = 0) (Advanced Option)
     `npbopt`, `pbtemp0`, `iprob`, `arcres`, `mprob`, `accept`, `nbuffer`, `npbgrid`, `scalec`, `nsnba`, `phiout`, 
     `phiform`, `decompopt`, `use_rmin`, `vprob`, `rhow_effect`, `use_sav`, `maxsph`
 
-    Hereafter, a selected group of variables is presented, which should suffice for most PB calculations.  The default 
+    Hereafter, a selected group of variables is presented, which should suffice for most PB calculations. The default 
     values for these parameters are appropriate for most calculations on solvated molecular systems. Also note that 
     the default options may have changed over time. A more thorough description of all the options can be found 
     [here][5]. For a detailed discussion of all related options on the quality of the MM/PB(GB)SA calculations, 
     please check this [publication][6].
 
-`npbopt` (Default = 0) 
+`npbopt` (Default = 0)
 :   Option to select the linear, or the full nonlinear PB equation.
 
-    * 0: Linear PB equation is solved
-    * 1: Nonlinear PB equation is solved
+    * 0: Linear PB equation (LPBE) is solved
+    * 1: Nonlinear PB equation (NLPBE) is solved
 
     !!! note
         While the linear PB equation will suffice for most calculations, the nonlinear PB equation is recommended 
-        for highly charged systems. It is supported in both **_mmpbsa_py_energy_** and **_sander_**. Parameters such 
-        as `eneopt` or `cutnb` should be adjusted accordingly when using the nonlinear PB equation. Check the following 
-        threads on how to proceed in [mmbsa_py_energy](http://archive.ambermd.org/201203/0191.html) or 
-        [sander](http://archive.ambermd.org/201610/0114.html) when using the nonlinear PB equation. Last but not 
-        least, take into account that using nonlinear PB equation can significantly increase the calculation time 
+        for highly charged systems. Parameters such as `eneopt` or `cutnb` should be adjusted accordingly when 
+        using the NLPBE. Check the following threads ([T1](http://archive.ambermd.org/201203/0191.html) and 
+        [T2](http://archive.ambermd.org/201610/0114.html)) on how to proceed when using NLPBE. Last but not 
+        least, take into account that using NLPBE can significantly increase the calculation time 
         required for PB calculation.
 
 `inp` (Default = 2) 
@@ -567,25 +629,25 @@ printed, which aids in debugging of issues. (Default = 0) (Advanced Option)
 `mutant_only`  (Default = 0)
 :   Option to perform specified calculations only for the mutants. 
 
-    * 0: Do mutant and original
-    * 1: Do mutant only
+    * 0: Perform calcultion on mutant and original
+    * 1: Perform calcultion on mutant only
     
     !!! note
         Note that all calculation details are controlled in the other namelists, though for alanine scanning to be 
         performed, the namelist must be included (blank if desired)
 
 `mutant` (Default = "ALA") 
-:   Defines the residue by which it is going to mutate. Allowed values are: `"ALA"` or `"A"` for Alanine scanning and 
-    `"GLY"` or `"G"` for Glycine scanning.
+:   Defines the residue that it is going to be mutated for. Allowed values are: `"ALA"` or `"A"` for Alanine scanning 
+    and `"GLY"` or `"G"` for Glycine scanning.
 
     _Changed in v1.3.0: Change mol (receptor or ligand) by mutant aminoacid (ALA or GLY)_
 
 `mutant_res` (Default = None. Most be defined)
 :   Define the specific residue that is going to be mutated. Use the following format CHAIN:RESNUM (eg: 'A:350') or 
-CHAIN:RESNUM:INSERTION_CODE if applicable (eg: "A:27:B"). 
+    CHAIN:RESNUM:INSERTION_CODE if applicable (eg: "A:27:B"). 
 
     !!! important
-        * Only one residue for mutation is supported!
+        * Only one residue can be mutated per calculation!
         * We recommend using the reference structure (-cr) to ensure the perfect match between the selected residue in 
         the defined structure or topology 
         * This option allow `gmx_MMPBSA` to do the mutation. This way the user does not have to provide the mutant 
@@ -612,13 +674,13 @@ mutated.
 
 `intdiel_nonpolar` (Default = 1)
 :   Define the `intdiel`(GB)/`indi`(PB) value for nonpolar residues (`PHE`, `TRP`, `VAL`, `ILE`, `LEU`, `MET`, `PRO`,
-`CYX`, `ALA`, `GLY`, `PRO`)
+    `CYX`, `ALA`, `GLY`, `PRO`)
     
     _New in v1.4.2_
 
 `intdiel_polar` (Default = 3)
 :   Define the `intdiel`(GB)/`indi`(PB) value for polar residues (`TYR`, `SER`, `THR`, `CYM`, `CYS`, `HIE`, `HID`, 
-`ASN`, `GLN`, `ASH`, `GLH`, `LYN`)
+    `ASN`, `GLN`, `ASH`, `GLH`, `LYN`)
     
     _New in v1.4.2_
 
@@ -670,10 +732,11 @@ mutated.
 
 `csv_format`  (Default = 1 [CSV-formatted output file])
 :   Print the decomposition output in a Comma-Separated-Variable (CSV) file. CSV files open natively in most
-spreadsheets. 
-    * If set to 1, this variable will cause the data to be written out in a CSV file, and standard error of the mean 
-    will be calculated and included for all data. 
-    * If set to 0, the standard, ASCII format will be used for the output file.
+    spreadsheets. 
+
+    * 0: data to be written out in the standard ASCII format.
+    * 1: data to be written out in a CSV file, and standard error of the mean will be calculated and included for all 
+    data.
 
 `dec_verbose` (Default = 0)
 :   Set the level of output to print in the decomp_output file.
@@ -696,11 +759,11 @@ spreadsheets.
     * 4: Pairwise decomp with 1-4 EEL added to EEL and 1-4 VDW added to VDW potential terms
 
     !!! warning
-        * No default. This must be specified!.
+        * No default. This must be specified!
 
 `print_res` (Default = "within 6")
-:   Select residues from the complex to print. The default selection should be sufficient in most cases, however we 
-have added several additional notations
+:   Select residues whose information is going to be printed in the output file. The default selection should be 
+    sufficient in most cases, however we have added several additional notations
     
     === "By Distance"
         Notation: [ `within` `distance` ]
@@ -722,8 +785,8 @@ have added several additional notations
             receptor topology files.
 
             !!! danger
-                make sure to include at least one residue from both the receptor and ligand in the `print_res` mask of the 
-                `&decomp` section. Check http://archive.ambermd.org/201308/0075.html
+                make sure to include at least one residue from both the receptor and ligand in the `print_res` mask of 
+                the `&decomp` section. Check http://archive.ambermd.org/201308/0075.html
 
             Suppost that we can have the following sequence where chain A is the receptor and B is the ligand: 
             A:LEU:5, A:GLY:6:A, A:THR:6:B, A:SER:6:C A:ASP:6D, A:ILE:7 , B:25
@@ -769,7 +832,7 @@ have added several additional notations
     for a thorough description of options and theory. A list of references can be found there, too.
     
     We have included more variables in 3D-RISM calculations than the ones available in the MMPBSA.py original code. That 
-    way, users can be more in control and tackle various issues (e.g., convergence problems).
+    way, users can be more in control and tackle various issues (_e.g._, convergence problems).
 
     **3D-RISM variables and their default values:** 
 
@@ -850,99 +913,11 @@ have added several additional notations
 :   Upper bound of the precision requirement used to determine convergence of the self-consistent solution. This has 
     a strong effect on the cost of 3D-RISM calculations (smaller value for tolerance -> more computation).
 
-## Generation
-The input file can be created using gmx_MMPBSA selecting the calculations you wish to perform.
-
-``` title="Command-line"
-gmx_MMPBSA --create_input args
-```
-    
-
-Example:
-=== "GB calculation"
-        
-        gmx_MMPBSA --create_input gb
-    
-=== "PB calculation"
-    
-        gmx_MMPBSA --create_input pb
-
-=== "GB, PB and Decomposition calculation"
-    
-        gmx_MMPBSA --create_input gb pb decomp
-
-=== "All calculations"
-
-        gmx_MMPBSA --create_input
-     
-    or 
-        
-        gmx_MMPBSA --create_input all
-        
-!!! Danger 
-    Note that several variables must be explicitly defined
-
-_New in v1.5.0_
-
-## Format
-All of the input variables are described below according to their respective namelists. Integers and floating point 
-variables should be typed as-is while strings should be put in either single- or double-quotes. All variables should be 
-set with `variable = value` and separated by commas is they appear in the same line. If the variables appear in different 
-lines, the comma is no longer needed. See several [examples](#sample-input-files) below. As you will see, several 
-calculations can be performed in the same run (_i.e._ `&gb` and `&pb`, `&gb` and `&alanine_scanning`, `&pb` and
-`&decomp`, etc). As we have mentioned, the input file can be generated using the create_input option of gmx_MMPBSA. This
-style, while retaining the same Amber format (derived from Fortran), is aesthetically more familiar to the GROMACS
-style (*.mdp). However, it maintains the same essence, so it could be defined in any of the two format styles or even
-combined. See the formats below:
-
-=== "New format style "
-    ``` title="New format style Input file example"
-            
-    # General namelist variables
-    &general
-      # System name
-      sys_name             = ""
-      # First frame to analyze
-      startframe           = 1
-      # Last frame to analyze
-      endframe             = 9999999
-      ...
-      # How many energy terms to print in the final output
-      verbose              = 1
-    /
-    
-    # Generalized-Born namelist variables
-    &gb
-      # GB model to use
-      igb                  = 5
-      ...
-      # Solvent probe radius for surface area calc
-      probe                = 1.4
-    /
-    ```
-
-=== "Old format style"
-    ``` title="Old format style Input file example"
-            
-    # General namelist variables
-    &general
-      sys_name = "", startframe = 1, endframe = 9999999
-      ...
-      verbose = 1
-    /
-    
-    # Generalized-Born namelist variables
-    &gb
-      igb = 5, 
-      ...
-      probe = 1.4
-    /
-    ```
 
 ## Sample input files
 
 !!! tip
-    You can refer to the [examples](examples/3D-RISM/README.md) to understand the input file in a practical way.
+    You can refer to the [examples](examples/README.md) to understand the input file in a practical way.
 
 ### GB and PB
 
@@ -952,7 +927,7 @@ from structures. Please refer to the section "How gmx_MMPBSA works"
 
 &general
 startframe=5, endframe=100, interval=5, verbose=2, 
-protein_forcefield="oldff/leaprc.ff99SB", ligand_forcefield="leaprc.gaff"
+forcefields="oldff/leaprc.ff99SB,leaprc.gaff"
 /
 
 &gb
@@ -971,7 +946,7 @@ Sample input file for Alanine scanning
 
 &general
 startframe=5, endframe=21, verbose=2, interval=1,
-protein_forcefield="oldff/leaprc.ff99SB", PBRadii=4
+forcefields="oldff/leaprc.ff99SB", PBRadii=4
 /
 
 &gb
@@ -989,11 +964,10 @@ mutant='ALA', mutant_res='B:12'
 Sample input file for entropy calculations
 
 &general
-startframe=5, endframe=21, verbose=2, interval=1,
-# `entropy` variable control whether to perform a quasi-harmonic entropy (QH)
-# or the Interaction Entropy (IE)
+startframe=5, endframe=21, interval=1,
+# Interaction Entropy (IE)
 # (https://pubs.acs.org/doi/abs/10.1021/jacs.6b02682) approximation
-protein_forcefield="oldff/leaprc.ff99SB", entropy=2, entropy_seg=25,
+forcefields="oldff/leaprc.ff99SB", interaction_entropy=1, ie_segment=25,
 temperature=298
 /
 
@@ -1015,7 +989,7 @@ Sample input file with decomposition analysis
 Make sure to include at least one residue from both the receptor
 and ligand in the print_res mask of the &decomp section.
 http://archive.ambermd.org/201308/0075.html. This is automally
-guaranteed if use "within" keyword.
+guaranteed when using "within" keyword.
 
 &general
 startframe=5, endframe=21, interval=1,
@@ -1068,8 +1042,7 @@ polardecomp=1, thermo="gf"
 Sample input file for MMPBSA with membrane proteins
 
 &general
-startframe=1, endframe=100, interval=1, 
-debug_printlevel=2, use_sander=1,
+startframe=1, endframe=100, interval=1,
 /
 
 &pb
