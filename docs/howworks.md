@@ -59,10 +59,10 @@ field is used, AMBER's topologies are generated from GROMACS topologies exclusiv
 
 **Table 1:** Required input files for every force field 
 
-| Force field |   Structure   | Index |  Trajectory        | Topology | Reference Structure | Small Molecule Mol2 |
-|:-----------:|:-------------:|:-----:|:------------------:|:--------:|:-------------------:|:-------------------:|
-|    AMBER    | tpr, gro, pdb |  ndx  | xtc, trr, pdb, gro | Optional |      Optional       |   Only if not top   |
-|   CHARMM    | tpr, gro, pdb |  ndx  | xtc, trr, pdb, gro |  Always  |      Optional       |         No          |
+| Force field |   Structure   | Index |  Trajectory        | Topology | Reference Structure | Small Molecule Mol2         |
+|:-----------:|:-------------:|:-----:|:------------------:|:--------:|:-------------------:|:---------------------------:|
+|    AMBER    | tpr, pdb      |  ndx  | xtc, trr, pdb      | Optional |      Optional       |   Only if not top defined   |
+|   CHARMM    | tpr, pdb      |  ndx  | xtc, trr, pdb      |  Always  |      Optional       |              No             |
 
 ## Topology preparation
 

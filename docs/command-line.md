@@ -71,8 +71,8 @@ Complex:
   -cs <Structure File>  Structure file of the complex. If it is Protein-Ligand
                          (small molecule) complex and -cp is not defined, make
                          sure that you define -lm option. See -lm description
-                         below Allowed formats: *.tpr (recommended), *.pdb,
-                         *.gro (default: None)
+                         below Allowed formats: *.tpr (recommended), *.pdb 
+                         (default: None)
   -ci <Index File>      Index file of the bound complex. (default: None)
   -cg index index       Groups of receptor and ligand in complex index file. The
                         notation is as follows:
