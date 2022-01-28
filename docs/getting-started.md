@@ -15,6 +15,14 @@ gmx_MMPBSA is a new tool based on AMBER's MMPBSA.py aiming to perform end-state 
 files. **_It works with all GROMACS versions along with AmberTools20 or 21 and brings improvements in compatibility, 
 versatility, analyses, and parallelization compared to existing programs (see [here](versus.md) for a detailed comparison)_**
 
+[comment]: <> (<div style="text-align:center">)
+
+[comment]: <> (<a href="https://info.flagcounter.com/Zm6l"><img src="https://s11.flagcounter.)
+
+[comment]: <> (com/map/Zm6l/size_s/txt_000000/border_CCCCCC/pageviews_1/viewers_0/flags_0/" alt="Flag Counter" border="0"></a>)
+
+[comment]: <> (</div>)
+
 !!! note "Cite gmx_MMPBSA"
     <a href="https://www.scimagojr.com/journalsearch.php?q=5100155074&amp;tip=sid&amp;exact=no" title="SCImago Journal 
     &amp; Country Rank"><img border="0" align="left" width=160 src="https://www.scimagojr.com/journal_img.php?id=5100155074" 
@@ -105,7 +113,8 @@ is performed in gmx_MMPBSA.
 * [gmx_MMPBSA](summary.md) is the fundamental application and carries out the calculations mentioned above
 * [gmx_MMPBSA_ana](analyzer.md) provides an intuitive way to analyze the data from gmx_MMPBSA calculations and save 
   high-quality pictures
-* [gmx_MMPBSA_test](command-line.md#running-gmx_mmpbsa_test) is a tool designed to test if the installation was 
+* [gmx_MMPBSA_test](examples/gmx_MMPBSA_test.md#gmx_mmpbsa_test-command-line) is a tool designed to test if the installation 
+  was 
   successful by running one or more available [examples](examples/README.md) in gmx_MMPBSA.
   
 !!! note "Easy to run"
