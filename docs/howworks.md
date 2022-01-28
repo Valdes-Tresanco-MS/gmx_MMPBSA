@@ -12,11 +12,11 @@ files.
 
 Basically, `gmx_MMPBSA` provides all the [MMPBSA.py][1] functionalities and more to GROMACS users.
 
-[MMPBSA.py][1] is an excellent and well-known tool to perform calculations with the PB and GB models in 
-AMBER (February/2021 more than 1200 citations). On the other hand, there are tools like `g_mmpbsa` that are well 
-known within the GROMACS community (February/2021 more than 1100 citations). Interestingly, [MMPBSA.py][1] is more 
-robust and was published first, however, both have a similar number of citations. This is probably due to the fact 
-that the GROMACS (Open source and free) community is large, while AMBER has the restriction of a paid license, 
+[MMPBSA.py][1] is an excellent and well-known tool to perform end-point binding free energy calculations in 
+AMBER (January/2022 more than 1500 citations). On the other hand, there are tools like `g_mmpbsa` that are well 
+known within the GROMACS community (January/2022 more than 1700 citations). Interestingly, [MMPBSA.py][1] is more 
+robust and was published first, however, `g_mmpbsa` has higher number of citations. This is probably due to 
+the fact that the GROMACS (Open source and free) community is large, while AMBER has the restriction of a paid license, 
 or a small community with free academic license.
 
 The use of [MMPBSA.py][1] for GROMACS users requires enormous effort to successfully complete the process. In that 
@@ -32,9 +32,9 @@ Amber.
 
 gmx_MMPBSA functioning can be divided into 3 parts as shown in figure 1. In the first part, `Preparation`, the 
 topologies and trajectories are generated, among other elements depending on the calculations, such as the mutants for the 
-alanine or glycine scanning or the interaction residues during decomposition analysis. In the second part, `Calculation`,
-the binding free energies and/or entropies are estimated using the selected models. Finally, in the last step `Analysis`,
-the results can be analyzed by using the graphical user interface `gmx_MMPBSA_ana`.
+alanine/glycine scanning or the list of interacting residues during decomposition analysis. In the second part, 
+`Calculation`, the binding free energies and/or entropies are estimated using the selected models. Finally, in the 
+last step `Analysis`, the results can be analyzed by using the graphical user interface `gmx_MMPBSA_ana`.
 
 
 <figure markdown="1">
@@ -70,9 +70,9 @@ In this section, we will go in detail about each file and what they are used for
 
 **GROMACS files**
 
-`MD Structure+mass(db) (*.tpr, *.pdb):`
+`MD Structure+mass(db) (*.tpr, *.pdb)`
 :   This file is used to generate the structure in pdb format of the complex with `editconf` or `trjconv`. We recommend 
-    using the *.tpr (production *.tpr) format.
+    using the `*.tpr` (production `*.tpr`) format.
 
 `Index (*.ndx)` 
 :   This the file that contains the index of each element contained in the *.tpr file, organized as groups. This file 

@@ -110,7 +110,7 @@ is performed in gmx_MMPBSA.
 ## **`gmx_MMPBSA` a quick overview**
 `gmx_MMPBSA` is a python module that contains 3 applications: 
 
-* [gmx_MMPBSA](summary.md) is the fundamental application and carries out the calculations mentioned above
+* [gmx_MMPBSA](howworks.md) is the fundamental application and carries out the calculations mentioned above
 * [gmx_MMPBSA_ana](analyzer.md) provides an intuitive way to analyze the data from gmx_MMPBSA calculations and save 
   high-quality pictures
 * [gmx_MMPBSA_test](examples/gmx_MMPBSA_test.md#gmx_mmpbsa_test-command-line) is a tool designed to test if the installation 
