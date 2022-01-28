@@ -6,8 +6,8 @@ title: gmx_MMPBSA in a nutshell
 # `gmx_MMPBSA` in a nutshell
 `gmx_MMPBSA` provides all the [MMPBSA.py][1] functionalities to GROMACS users. 
 In addition, other functionalities have been implemented that ease a number of calculations (_e.g._ MM/PB(GB)SA 
-with user-defined internal dielectric constant, interaction entropy and C2 entropy calculations). A GUI application is 
-also incorporated that allows for visualizing the results and saving high-quality images.
+with user-defined internal dielectric constant, interaction entropy and C2 entropy calculations). A GUI application 
+`gmx_MMPBSA_ana` is also incorporated that allows for visualizing the results and saving high-quality images.
 
 ## Types of calculations you can do
 There are many options available in `gmx_MMPBSA`. These are some calculations you can perform with `gmx_MMPBSA`:
@@ -27,8 +27,8 @@ calculated.
 quasi-harmonic, the normal mode, interaction entropy or C2 approximations. Calculations will be performed for the normal 
 and mutated systems (alanine scanning) as requested. Normal mode calculations are done with the
 `mmpbsa_py_nabnmode` program included with AmberTools.
-* **Decomposition schemes**. The energy terms will be decomposed according to the decomposition scheme
-outlined in the `idecomp` variable description. This should work with all the above, though entropy terms
+* **Decomposition schemes**. The energy terms will be decomposed according to the decomposition scheme (per-residue or 
+per-wise) outlined in the `idecomp` variable description. This should work with all the above, though entropy terms
 cannot be decomposed.
 * **QM/MMGBSA**. This is a binding free energy (or stability calculation) using the Generalized Born solvent
 model allowing you to treat part of your system with a quantum mechanical Hamiltonian.
@@ -51,6 +51,6 @@ heterogeneous dielectric constant depth profile.
   [2]: advanced.md#advanced-options
   [3]: #types-of-calculations-you-can-do
   [4]: examples/README.md
-  [5]: gmx_MMPBSA_running.md
-  [6]: gmx_MMPBSA_ana_running.md
+  [5]: howworks.md
+  [6]: analyzer.md
   [7]: examples/gmx_MMPBSA_test.md#running-gmx_mmpbsa_test
