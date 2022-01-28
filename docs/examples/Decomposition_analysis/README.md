@@ -21,10 +21,10 @@ In this case, `gmx_MMPBSA` requires:
 | Input File required            | Required |           Type             | Description |
 |:-------------------------------|:--------:|:--------------------------:|:-------------------------------------------------------------------------------------------------------------|
 | Input parameters file          | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |           `in`          | Input file containing all the specifications regarding the type of calculation that is going to be performed |
-| The MD Structure+mass(db) file | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |    `tpr` `pdb` `gro`    | Structure file containing the system coordinates |
+| The MD Structure+mass(db) file | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |    `tpr` `pdb`    | Structure file containing the system coordinates |
 | An index file                  | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |          `ndx`    | file containing the receptor and ligand in separated groups |
 | Receptor and ligand group      | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |        `integers`       | Receptor and ligand group numbers in the index file |
-| A trajectory file              | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } | `xtc` `pdb` `gro` `trr` | Final GROMACS MD trajectory, fitted and with no pbc. |
+| A trajectory file              | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } | `xtc` `pdb` `trr` | Final GROMACS MD trajectory, fitted and with no pbc. |
 | Ligand parameters file         | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |          `mol2`         | The Antechamber output  `mol2` file of ligand parametrization|
 | A topology file (not included) | :octicons-check-circle-fill-16:{ .req_opt .scale_icon_medium }    |           `top`         | GROMACS topology file (The `* .itp` files defined in the topology must be in the same folder |
 | A Reference Structure file     | :octicons-check-circle-fill-16:{ .req_optrec .scale_icon_medium } |           `pdb`         | Complex reference structure file (without hydrogens) with the desired assignment of chain ID and residue numbers |
@@ -34,7 +34,7 @@ Optional, but recommended -- :octicons-check-circle-fill-16:{ .req_opt } -> Opti
 
 !!! tip "Remember"
     When a topology file is defined, the ligand mol2 file is not needed. The ligand mol2 file only required when  
-    `gmx_MMPBSA` build the amber topology from a structure  
+    `gmx_MMPBSA` builds the amber topology from a structure  
 
 _See a detailed list of all the flags in gmx_MMPBSA command line [here][1]_
 
@@ -42,7 +42,7 @@ That being said, once you are in the folder containing all files, the command-li
 
 === "gmx_MMPBSA_test"
 
-        gmx_MMPBSA_test -t decomp
+        gmx_MMPBSA_test -t 14
 
 === "Serial"
 

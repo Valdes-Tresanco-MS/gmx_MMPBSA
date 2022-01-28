@@ -17,10 +17,10 @@ In this case, `gmx_MMPBSA` requires:
 | Input File required            | Required |           Type             | Description |
 |:-------------------------------|:--------:|:--------------------------:|:-------------------------------------------------------------------------------------------------------------|
 | Input parameters file          | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |           `in`          | Input file containing all the specifications regarding the type of calculation that is going to be performed |
-| The MD Structure+mass(db) file | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |    `tpr` `pdb` `gro`    | Structure file containing the system coordinates |
+| The MD Structure+mass(db) file | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |    `tpr` `pdb`    | Structure file containing the system coordinates |
 | An index file                  | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |          `ndx`    | File containing the receptor and ligand in separated groups |
 | Receptor and ligand group      | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |        `integers`       | Group numbers in the index files |
-| A trajectory file              | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } | `xtc` `pdb` `gro` `trr` | Final GROMACS MD trajectory, fitted and with no pbc. |
+| A trajectory file              | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } | `xtc` `pdb` `trr` | Final GROMACS MD trajectory, fitted and with no pbc. |
 | A topology file (not included) | :octicons-check-circle-fill-16:{ .req_opt .scale_icon_medium }    |           `top`         | GROMACS topology file (The `* .itp` files defined in the topology must be in the same folder |
 | A Reference Structure file     | :octicons-check-circle-fill-16:{ .req_optrec .scale_icon_medium } |           `pdb`         | Complex reference structure file (without hydrogens) with the desired assignment of chain ID and residue numbers |
               
@@ -29,21 +29,12 @@ Optional, but recommended -- :octicons-check-circle-fill-16:{ .req_opt } -> Opti
 
 _See a detailed list of all the flags in gmx_MMPBSA command line [here][1]_
 
-* An input parameters file (*.in) -- input file containing all the specifications regarding the type of calculation that
-is going to be performed
-* The MD Structure+mass(db) file (*.tpr, *.pdb, *.gro) 
-* An index file (*.ndx) -- *.ndx file containing the receptor and ligand in separated groups
-* Receptor and ligand group numbers in the index file
-* A trajectory file (*.xtc, *.pdb, *.gro, *.trr) -- final GROMACS MD trajectory, fitted and with no pbc.
-
-_See a detailed list of all the flags in gmx_MMPBSA command line [here][1]_
-
 ## Command-line
 That being said, once you are in the folder containing all files, the command-line will be as follows:
 
 === "gmx_MMPBSA_test"
 
-        gmx_MMPBSA_test -t prot_prot
+        gmx_MMPBSA_test -t 4
 
 === "Serial"
 

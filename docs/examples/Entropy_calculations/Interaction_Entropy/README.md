@@ -16,10 +16,10 @@ In this case, `gmx_MMPBSA` requires:
 | Input File required            | Required |           Type             | Description |
 |:-------------------------------|:--------:|:--------------------------:|:-------------------------------------------------------------------------------------------------------------|
 | Input parameters file          | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |           `in`          | Input file containing all the specifications regarding the type of calculation that is going to be performed |
-| The MD Structure+mass(db) file | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |    `tpr` `pdb` `gro`    | Structure file containing the system coordinates |
+| The MD Structure+mass(db) file | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |    `tpr` `pdb`    | Structure file containing the system coordinates |
 | An index file                  | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |          `ndx`    | file containing the receptor and ligand in separated groups |
 | Receptor and ligand group      | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |        `integers`       | Receptor and ligand group numbers in the index file |
-| A trajectory file              | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } | `xtc` `pdb` `gro` `trr` | Final GROMACS MD trajectory, fitted and with no pbc. |
+| A trajectory file              | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } | `xtc` `pdb` `trr` | Final GROMACS MD trajectory, fitted and with no pbc. |
 | A topology file (not included) | :octicons-check-circle-fill-16:{ .req_opt .scale_icon_medium }    |           `top`         | GROMACS topology file (The `* .itp` files defined in the topology must be in the same folder |
 | A Reference Structure file     | :octicons-check-circle-fill-16:{ .req_optrec .scale_icon_medium } |           `pdb`         | Complex reference structure file (without hydrogens) with the desired assignment of chain ID and residue numbers |
               
@@ -33,7 +33,7 @@ That being said, once you are in the folder containing all files, the command-li
 
 === "gmx_MMPBSA_test"
 
-        gmx_MMPBSA_test -t ie
+        gmx_MMPBSA_test -t 15
 
 === "Serial"
 
@@ -81,7 +81,7 @@ in` input file will contain all the parameters needed for the MM/PB(GB)SA calcul
 calculation with the igb2 (GB-OBC1) model and a salt concentration = 0.15M.
 
 [Interaction Entropy (IE)][4] will be calculated and the average for the last quartile (`entropy_seg=25`) of the 
-total number of frames will be reported. Of note, two other methods (`QH` and `nmode`) can be used for estimating the 
+total number of frames will be reported. Of note, two other methods (`QH` and `NMODE`) can be used for estimating the 
 entropic contribution, though they are way more expensive in computation as compared with IE method.
 !!! note
     Once the calculation is done, you can analyze the results in `gmx_MMPBSA_ana` (if you didn't define `-nogui`). 

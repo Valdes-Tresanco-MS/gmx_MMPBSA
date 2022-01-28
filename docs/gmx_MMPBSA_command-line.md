@@ -94,13 +94,13 @@ Receptor:
 
   -rs <Structure File>  Structure file of the unbound receptor for multiple
                          trajectory approach. Allowed formats: *.tpr (recommended),
-                         *.pdb, *.gro (default: None)
+                         *.pdb (default: None)
   -ri <Index File>      Index file of the unbound receptor. (default: None)
   -rg index             Receptor group in receptor index file. Notation:
                          "-lg <Receptor group>", e.g. -rg 1 (default: None)
   -rt [TRJ [TRJ ...]]   Input trajectories of the unbound receptor for multiple
                          trajectory approach. Allowed formats: *.xtc (recommended),
-                         *.trr, *.pdb, *.gro (specify as many as you'd like).
+                         *.trr, *.pdb (specify as many as you'd like).
                          (default: None)
   -rp <Topology>        Topology file of the receptor. (default: None)
 
@@ -118,14 +118,14 @@ Ligand:
   -ls <Structure File>  Structure file of the unbound ligand. If ligand is a 
                          small molecule and -lp is not defined, make sure that you
                          define above -lm option. Allowed formats: *.tpr 
-                         (recommended), *.pdb, *.gro (default: None)
+                         (recommended), *.pdb (default: None)
   -li <Index File>      Index file of the unbound ligand. Only if tpr file was
                          define in -ls. (default: None)
   -lg index             Ligand group in ligand index file. Notation:
                          "-lg <Ligand group>", e.g. -lg 13 (default: None)
   -lt [TRJ [TRJ ...]]   Input trajectories of the unbound ligand for multiple
                          trajectory approach. Allowed formats: *.xtc
-                        (recommended), *.trr, *.pdb, *.gro (specify as many as
+                        (recommended), *.trr, *.pdb (specify as many as
                          you'd like). (default: None)
   -lp <Topology>        Topology file of the ligand. (default: None)
 

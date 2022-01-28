@@ -20,10 +20,10 @@ In this case, `gmx_MMPBSA` requires:
 | Input File required            | Required |           Type             | Description |
 |:-------------------------------|:--------:|:--------------------------:|:-------------------------------------------------------------------------------------------------------------|
 | Input parameters file          | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |           `in`          | Input file containing all the specifications regarding the type of calculation that is going to be performed |
-| The MD Structure+mass(db) file | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |    `tpr` `pdb` `gro`    | (**Complex, Receptor and Ligand**) Structure file containing the system coordinates |
+| The MD Structure+mass(db) file | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |    `tpr` `pdb`    | (**Complex, Receptor and Ligand**) Structure file containing the system coordinates |
 | An index file                  | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |          `ndx`    | (**Complex, Receptor and Ligand**) file containing the receptor and ligand in separated groups |
 | Receptor and ligand group      | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |        `integers`       | (**Complex, Receptor and Ligand**) Group numbers in the index files |
-| A trajectory file              | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } | `xtc` `pdb` `gro` `trr` | (**Complex, Receptor and Ligand**) Final GROMACS MD trajectory, fitted and with no pbc. |
+| A trajectory file              | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } | `xtc` `pdb` `trr` | (**Complex, Receptor and Ligand**) Final GROMACS MD trajectory, fitted and with no pbc. |
 | Ligand parameters file         | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |          `mol2`         | The Antechamber output  `mol2` file of ligand parametrization|
 | A topology file (not included) | :octicons-check-circle-fill-16:{ .req_opt .scale_icon_medium }    |           `top`         | (**Complex, Receptor and Ligand**) GROMACS topology file (The `* .itp` files defined in the topology must be in the same folder |
 | A Reference Structure file     | :octicons-check-circle-fill-16:{ .req_optrec .scale_icon_medium } |           `pdb`         | Complex reference structure file (without hydrogens) with the desired assignment of chain ID and residue numbers |
@@ -41,7 +41,7 @@ _See a detailed list of all the flags in gmx_MMPBSA command line [here][1]_
 That being said, once you are in the folder containing all files, the command-line will be as follows:
 === "gmx_MMPBSA_test"
 
-        gmx_MMPBSA_test -t prot_lig_mt
+        gmx_MMPBSA_test -t 16
 
 === "Serial"
 
