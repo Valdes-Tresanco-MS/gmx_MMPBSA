@@ -83,7 +83,6 @@ combined. See the formats below:
     
     # Generalized-Born namelist variables
     &gb
-      
       igb                  = 5                       # GB model to use
       ...
       probe                = 1.4                     # Solvent probe radius for surface area calc
