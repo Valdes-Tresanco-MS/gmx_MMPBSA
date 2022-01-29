@@ -221,6 +221,11 @@
          <changefreq>daily</changefreq>
     </url>
     <url>
+         <loc>https://valdes-tresanco-ms.github.io/gmx_MMPBSA/examples/Protein_DNA_RNA_Ion_ligand/</loc>
+         <lastmod>2022-01-29</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
          <loc>https://valdes-tresanco-ms.github.io/gmx_MMPBSA/examples/Protein_glycan/</loc>
          <lastmod>2022-01-29</lastmod>
          <changefreq>daily</changefreq>
