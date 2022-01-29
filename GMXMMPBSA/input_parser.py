@@ -32,23 +32,30 @@ class Variable(object):
     Base variable class. It has a name and a single value
     """
 
-    def __init__(self, varname, dat_type=int, default=None, case_sensitive=False, description=''):
+    def __init__(self, varname, dat_type=int, default=None, description='', int_dat_type=str):
         """ Initializes the variable type. Sets the default value as well as
           specifying how many characters are required by the parser to trigger
           recognition
         """
         # Catch illegalities
-        if dat_type not in (int, str, float, list):
+        if dat_type not in (int, str, float, list, tuple):
             raise InputError('Variable has unknown data type %s' % dat_type.__name__)
+        if int_dat_type not in (int, str, float):
+            raise InputError('Variable has unknown internal data type %s' % int_dat_type)
 
         self.name = varname
         self.datatype = dat_type
+        self.int_datatype = int_dat_type
         if default is None:
             self.value = None
         elif self.datatype is str:
             self.value = default.replace("'", '').replace('"', '')
-        elif self.datatype is list:
-            self.value = [x.strip() for x in re.split("(?<!\d)[,;](?!\d)", default.replace('"', '').replace("'", ''))]
+        elif self.datatype in [list, tuple]:
+            if isinstance(default, str):
+                self.value = [self.int_datatype(x.strip()) for x in re.split(';\s*|,\s*', default.replace('"',''))]
+            else:
+                self.value = [default]
+            print(self.value)
         else:
             self.value = self.datatype(default)
         self.description = description
@@ -65,9 +72,13 @@ class Variable(object):
         """ returns the string [<name> = <value>.... # description] """
         if self.datatype is str:
             valstring = f'{self.name:20s} = "{self.value:s}"'
-        elif self.datatype is list:
-            v = ','.join(self.value)
-            valstring = f'{self.name:20s} = "{v:s}"'
+        elif self.datatype in [list, tuple]:
+            if self.int_datatype == str:
+                v = ','.join(self.value)
+                valstring = f'{self.name:20s} = "{v}"'
+            else:
+                v = ','.join(map(str, self.value))
+                valstring = f'{self.name:20s} = {v}'
         else:
             valstring = f'{self.name:20s} = {self.value}'
         length = 70
@@ -86,8 +97,9 @@ class Variable(object):
         """ Sets the value of the variable """
         if self.datatype is str:
             self.value = value.replace('"', '').replace("'", '')
-        elif self.datatype is list:
-            self.value = [x.strip() for x in re.split("(?<!\d)[,;](?!\d)", value.replace('"', '').replace("'", ''))]
+        elif self.datatype in [list, tuple]:
+            data = value.replace('"', '').replace("'", '')
+            self.value = [self.int_datatype(x.strip()) for x in re.split(';\s*|,\s*', data)]
         else:
             self.value = self.datatype(value)
 
@@ -129,13 +141,13 @@ class Namelist(object):
         """ Not equal """
         return not self.__eq__(nml)
 
-    def addVariable(self, varname, datatype, default=None, description=None):
+    def addVariable(self, varname, datatype, default=None, description=None, int_dat_type=str):
         """ Adds a variable to this namelist. It checks to make sure that it's
           going to create a conflict with an existing variable.
         """
         if varname in list(self.variables.keys()):
             raise InternalError('Duplicated variable %s in Namelist' % varname)
-        self.variables[varname] = Variable(varname, datatype, default, description=description)
+        self.variables[varname] = Variable(varname, datatype, default, description, int_dat_type)
 
     def Open(self):
         """ Signifies that the namelist is open """
@@ -231,11 +243,14 @@ class InputFile(object):
 
         for var in variable_list:
 
-            if not isinstance(var, (list, tuple)) or len(var) != 4:
+            if not isinstance(var, (list, tuple)) or len(var) not in [4, 5]:
                 raise InputError('variables in variable_list must be lists of ' +
-                                 'length 4. [varname, datatype, default, description]')
-
-            self.namelists[name].addVariable(var[0], var[1], var[2], var[3])
+                                 'length 4 or 5. [varname, datatype, default, description, internal_datatype ('
+                                 'Optional)]')
+            if len(var) == 4:
+                self.namelists[name].addVariable(var[0], var[1], var[2], var[3])
+            else:
+                self.namelists[name].addVariable(var[0], var[1], var[2], var[3], var[4])
 
     def _full_namelist_name(self, nml):
         """ Determines what the full namelist name is. We try to make as many
@@ -391,23 +406,28 @@ strip_mask = ':WAT,Cl*,CIO,Cs+,IB,K*,Li+,MG*,Na+,Rb+,CS,RB,NA,F,CL'
 
 input_file.addNamelist('general', 'general',
                        [
+                            # Basic options
                            ['sys_name', str, '', 'System name'],
-
                            ['startframe', int, 1, 'First frame to analyze'],
                            ['endframe', int, 9999999, 'Last frame to analyze'],
                            ['interval', int, 1, 'Number of frames between adjacent frames analyzed'],
-
+                            # Parameters options
                            ['PBRadii', int, 3, 'Define PBRadii to build amber topology from GROMACS files'],
-                           ['forcefields', list, 'oldff/leaprc.ff99SB, leaprc.gaff', 'Define the force field to build the Amber topology'],
+                           ['forcefields', list, 'oldff/leaprc.ff99SB, leaprc.gaff', 'Define the force field to build '
+                                                                                     'the Amber topology'],
                            ['ions_parameters', int, 1, 'Define ions parameters to build the Amber topology'],
+                           ['temperature', float, 298.15, 'Temperature'],
 
+                            # Entropy options
                            ['qh_entropy', int, 0, 'Do quasi-harmonic calculation'],
                            ['interaction_entropy', int, 0, 'Do Interaction Entropy calculation'],
                            ['ie_segment', int, 25, 'Trajectory segment to calculate interaction entropy'],
                            ['c2_entropy', int, 0, 'Do C2 Entropy calculation'],
                            ['c2_segment', int, 25, 'Trajectory segment to calculate c2 entropy'],
 
+                            # Miscellaneous options
                            ['assign_chainID', int, 0, 'Assign chains ID'],
+# FIXME: deprecated
                            ['debug_printlevel', int, 0, 'Increase debugging info printed'],
                            ['exp_ki', float, 0, 'Experimental Ki in nM'],
 # FIXME: full_traj -> parece que no afecta en nada que lo quite dado que solo genera la traj de complejo en PDB
@@ -423,122 +443,140 @@ input_file.addNamelist('general', 'general',
                            ['solvated_trajectory', int, 1, 'Define if it is necessary to cleanup the trajectories'],
 # FIXME: strip_mask -> para GROMACS se hace con la variable solvated_trajectory
                            ['strip_mask', str, strip_mask, 'Amber mask to strip from solvated prmtop'],
-                           ['temperature', float, 298.15, 'Temperature to calculate Binding Free Energy '
-                                                          'from Ki and interaction entropy'],
 
-# Problem with the stdev
-#                            ['verbose', int, 1, 'How many energy terms to print in the final output']
+# FIXME: Problem with the stdev. We can implemented to output only no for clculations
+                           # ['verbose', int, 1, 'How many energy terms to print in the final output']
                        ], trigger=None)
 
 input_file.addNamelist('gb', 'gb',
                        [
                            ['igb', int, 5, 'GB model to use'],
-                           ['extdiel', float, 78.3, 'External dielectric constant for sander'],
-                           ['saltcon', float, 0, 'Salt concentration (M)'],
-                           ['surften', float, 0.0072, 'Surface tension'],
-                           ['rgbmax', float, 999.0, 'Distance cutoff in Angstroms to use when computing effective '
-                                                    'GB radii'],
                            ['gb_maxcyc', int, 1, 'The maximum number of cycles of minimization'],
                            ['intdiel', float, 1.0, 'Internal dielectric constant for sander'],
+                           ['extdiel', float, 78.3, 'External dielectric constant for sander'],
+
+                           ['saltcon', float, 0, 'Salt concentration (M)'],
+                           ['rgbmax', float, 999.0, 'Distance cutoff in Angstroms to use when computing effective '
+                                                    'GB radii'],
+# FIXME: offset needs revision. MMPBSA.py defined it as 'offset': -999999.0, but in the Amber manual is 0.09 Å
+# FIXME: gbsa is only defined for decomp if self.INPUT['decomprun']: self.INPUT['gbsa'] = 2. molsurf is who replaces this variable
+                           ['surften', float, 0.0072, 'Surface tension'],
+                           ['surfoff', float, 0.0, 'Surface tension offset'],
+                           ['molsurf', int, 0, 'Use Connelly surface (\'molsurf\' program)'],
+                           ['msoffset', float, 0.0, 'Offset for molsurf calculation'],
+                           ['probe', float, 1.4, 'Solvent probe radius for surface area calc'],
+
+                            # Options for QM
                            ['ifqnt', int, 0, 'Use QM on part of the system'],
+# FIXME: Use the same default value (PM3) as sqm?
                            ['qm_theory', str, '', 'Semi-empirical QM theory to use'],
                            ['qm_residues', str, '', 'Residues to treat with QM'],
                            ['qmcharge_com', int, 0, 'Charge of QM region in complex'],
                            ['qmcharge_lig', int, 0, 'Charge of QM region in ligand'],
                            ['qmcharge_rec', int, 0, 'Charge of QM region in receptor'],
-                           ['qmcut', float, 9999, 'Cutoff in the QM region'],
-                           ['surfoff', float, 0.0, 'Surface tension offset'],
-                           ['molsurf', int, 0, 'Use Connelly surface (\'molsurf\' program)'],
-                           ['msoffset', float, 0.0, 'Offset for molsurf calculation'],
-                           ['probe', float, 1.4, 'Solvent probe radius for surface area calc']
+                           ['qmcut', float, 9999, 'Cutoff in the QM region']
                        ], trigger='gbrun')
 
 input_file.addNamelist('pb', 'pb',
                        [
-# FIXME: remove
-                           # ['ntb', int, 0, 'Apply PBC conditions?'],
-                           # ['cut', float, 999.0, 'Nonbonded cutoff in Angstroms'],
-                           # ['nsnb', int, 99999, 'Determines the frequency of nonbonded list updates when igb=0 and '
-                           #                      'nbflag=0'],
-                           # ['imin', int, 5, 'Decide whether to perform MD, Minimization, or Trajectory '
-                           #                  'Post-Processing'],
-                           ['pb_maxcyc', int, 1, 'The maximum number of cycles of minimization'],
-# FIXME: remove
-                           # ['ioutfm', int, 0, 'The format of coordinate and velocity trajectory files (mdcrd, mdvel '
-                           #                    'and inptraj).'],
-                           # ['ntx', int, 1, 'Option to read the initial coordinates, velocities and box size from the '
-                           #                 'inpcrd file'],
+                            # Basic input options
+                           ['ipb', int, 2, 'Dielectric model for PB'],
                            ['inp', int, 2, 'Nonpolar solvation method'],
+                           ['pb_maxcyc', int, 1, 'The maximum number of cycles of minimization'],
+                           ['sander_apbs', int, 0, 'Use sander.APBS?'],
+
+                           # Options to define the physical constants
+                           ['indi', float, 1, 'Internal dielectric constant'],
+                           ['exdi', float, 80, 'External dielectric constant'],
+                           ['emem', float, 1.0, 'Membrane dielectric constant'],
                            ['smoothopt', int, 1, 'Instructs PB how to set up dielectric values for finite-difference '
                                                  'grid edges that are located across the solute/solvent dielectric '
                                                  'boundary'],
-                           ['radiopt', int, 1, 'Use optimized radii?'],
-                           ['npbopt', int, 0, 'Use NonLinear PB solver?'],
-                           ['solvopt', int, 1, 'Select iterative solver'],
-                           ['linit', int, 1000, 'Number of SCF iterations'],
-                           ['nfocus', int, 2, 'Electrostatic focusing calculation'],
-                           ['fscale', int, 8, 'Set the ratio between the coarse and fine grid spacings in an '
-                                              'electrostatic focussing calculation'],
-                           ['indi', float, 1, 'Internal dielectric constant'],
-                           ['exdi', float, 80, 'External dielectric constant'],
                            ['istrng', float, 0.0, 'Ionic strength (M)'],
+                           ['radiopt', int, 1, 'Use optimized radii?'],
                            ['prbrad', float, 1.4, 'Probe radius'],
                            ['iprob', float, 2.0, 'Mobile ion probe radius (Angstroms) for ion accessible surface used '
                                                  'to define the Stern layer'],
-                           ['accept', float, 0.001, 'Sets the iteration convergence criterion (relative to the initial '
-                                                    'residue)'],
-                           ['fillratio', float, 4, 'See "fillratio" in AmberTools/PBSA manual'],
-                           ['scale', float, 2.0, '1/scale = grid spacing for the finite difference solver '
-                                                 '(default = 1/2 Å)'],
-                           ['bcopt', int, 5, 'Boundary condition option'],
-                           ['eneopt', int, 2, 'Compute electrostatic energy and forces'],
-                           ['cutnb', float, 0.0, 'Cutoff for nonbonded interations'],
-                           ['sprob', float, 0.557, 'Solvent probe radius for solvent accessible surface area (SASA) '
-                                                   'used to compute the dispersion term'],
-                           ['cavity_surften', float, 0.0378, 'Surface tension'],
-                           ['cavity_offset', float, -0.5692, 'Offset for nonpolar solvation calc'],
-                           ['emem', float, 1.0, 'Membrane dielectric constant'],
-                           ['memopt', int, 0, 'Use PB optimization for membrane'],
-                           # ['memoptzero', int, 0, 'Used in PB optimization for ligand'],
                            ['sasopt', int, 0, 'Molecular surface in PB implict model'],
+# FIXME: saopt and triopt needs revision
+                           ['arcres', float, 0.25, 'The resolution (Å) to compute solvent accessible arcs'],
+
+                            # Options for Implicit Membranes
+                           ['memopt', int, 0, 'Use PB optimization for membrane'],
+                           ['mprob', float, 2.70, 'Membrane probe radius in Å'],
                            ['mthick', float, 40.0, 'Membrane thickness'],
                            ['mctrdz', float, 0.0, 'Distance to offset membrane in Z direction'],
-                           ['maxarcdot', int, 1500, 'Number of dots used to store arc dots per atom '],
                            ['poretype', int, 1, 'Use exclusion region for channel proteins'],
-                           ['npbverb', int, 0, 'Option to turn on verbose mode'],
-                           ['frcopt', int, 0, 'Output for computing electrostatic forces'],
-                           ['cutfd', float, 5.0, 'Cutoff for finite-difference interactions'],
-                           ['ipb', int, 2, 'Dielectric model for PB'],
-                           ['sander_apbs', int, 0, 'Use sander.APBS?'],
-                           # ['pbtemp', float, 300, 'Temperature (in K) used for the PB equation'],
-                           ['arcres', float, 0.25, 'The resolution (Å) to compute solvent accessible arcs'],
-                           ['mprob', float, 2.70, 'Membrane probe radius in Å'],
+
+                           # Options to select numerical procedures
+                           ['npbopt', int, 0, 'Use NonLinear PB solver?'],
+                           ['solvopt', int, 1, 'Select iterative solver'],
+                           ['accept', float, 0.001, 'Sets the iteration convergence criterion (relative to the initial '
+                                                    'residue)'],
+                           ['linit', int, 1000, 'Number of SCF iterations'],
+                           ['fillratio', float, 4, 'See "fillratio" in AmberTools/PBSA manual'],
+                           ['scale', float, 2.0, '1/scale = grid spacing for the finite difference solver (default = '
+                                                 '1/2 Å)'],
                            ['nbuffer', float, 0, 'Sets how far away (in grid units) the boundary of the finite '
                                                  'difference grid is away from the solute surface'],
+                           ['nfocus', int, 2, 'Electrostatic focusing calculation'],
+                           ['fscale', int, 8, 'Set the ratio between the coarse and fine grid spacings in an '
+                                              'electrostatic focussing calculation'],
                            ['npbgrid', int, 1, 'Sets how often the finite-difference grid is regenerated'],
+
+                            #  Options to compute energy and forces
+                           ['bcopt', int, 5, 'Boundary condition option'],
+                           ['eneopt', int, 2, 'Compute electrostatic energy and forces'],
+                           ['frcopt', int, 0, 'Output for computing electrostatic forces'],
                            ['scalec', int, 0, 'Option to compute reaction field energy and forces'],
+                           ['cutfd', float, 5.0, 'Cutoff for finite-difference interactions'],
+                           ['cutnb', float, 0.0, 'Cutoff for nonbonded interations'],
                            ['nsnba', int, 1, 'Sets how often atom-based pairlist is generated'],
-# FIXME: remove
-                           # ['phiout', int, 0, 'output spatial distribution of electrostatic potential '
-                           #                    'for visualization?'],
-                           # ['phiform', int, 0, 'Controls the format of the electrostatic potential file'],
+
+                            # Options to select a non-polar solvation treatment
                            ['decompopt', int, 2, 'Option to select different decomposition schemes when INP = 2'],
                            ['use_rmin', int, 1, 'The option to set up van der Waals radii'],
+                           ['sprob', float, 0.557, 'Solvent probe radius for solvent accessible surface area (SASA) '
+                                                   'used to compute the dispersion term'],
                            ['vprob', float, 1.300, 'Solvent probe radius for molecular volume (the volume enclosed by '
                                                    'SASA) used to compute nonpolar cavity solvation free energy'],
                            ['rhow_effect', float, 1.129, 'Effective water density used in the non-polar dispersion '
                                                          'term calculation'],
                            ['use_sav', int, 1, 'The option to use molecular volume (the volume enclosed by SASA) or '
                                                'to use molecular surface (SASA) for cavity term calculation'],
+                           ['cavity_surften', float, 0.0378, 'Surface tension'],
+                           ['cavity_offset', float, -0.5692, 'Offset for nonpolar solvation calc'],
                            ['maxsph', int, 400, 'Approximate number of dots to represent the maximum atomic solvent '
-                                                'accessible surface']
+                                                'accessible surface'],
+# FIXME: need revision. It seems that it is only available for nab
+                           ['maxarcdot', int, 1500, 'Number of dots used to store arc dots per atom '],
+
+                           # Options for visualization and output
+                           ['npbverb', int, 0, 'Option to turn on verbose mode']
+
+                           # FIXME: remove
+                           # ['ntb', int, 0, 'Apply PBC conditions?'],
+                           # ['cut', float, 999.0, 'Nonbonded cutoff in Angstroms'],
+                           # ['nsnb', int, 99999, 'Determines the frequency of nonbonded list updates when igb=0 and '
+                           #                      'nbflag=0'],
+                           # ['imin', int, 5, 'Decide whether to perform MD, Minimization, or Trajectory '
+                           #                  'Post-Processing'],
+                           # ['ioutfm', int, 0, 'The format of coordinate and velocity trajectory files (mdcrd, mdvel '
+                           #                    'and inptraj).'],
+                           # ['ntx', int, 1, 'Option to read the initial coordinates, velocities and box size from the '
+                           #                 'inpcrd file'],
+                           # ['memoptzero', int, 0, 'Used in PB optimization for ligand'],
+                           # ['pbtemp', float, 300, 'Temperature (in K) used for the PB equation'],
+                           # ['phiout', int, 0, 'output spatial distribution of electrostatic potential '
+                           #                    'for visualization?'],
+                           # ['phiform', int, 0, 'Controls the format of the electrostatic potential file'],
                        ], trigger='pbrun')
 
 input_file.addNamelist('ala', 'alanine_scanning',
                        [
-                           ['mutant_only', int, 0, 'Only compute mutant energies'],
-                           ['mutant', str, 'ALA', 'Defines if Alanine or Glycine scanning will be performed'],
                            ['mutant_res', str, '', 'Which residue will be mutated'],
+                           ['mutant', str, 'ALA', 'Defines if Alanine or Glycine scanning will be performed'],
+                           ['mutant_only', int, 0, 'Only compute mutant energies'],
                            ['cas_intdiel', int, 0, 'Change the intdiel value based on which aa is mutated'],
                            ['intdiel_nonpolar', int, 1, 'intdiel for nonpolar residues'],
                            ['intdiel_polar', int, 3, 'intdiel for polar residues'],
@@ -548,34 +586,38 @@ input_file.addNamelist('ala', 'alanine_scanning',
 
 input_file.addNamelist('nmode', 'nmode',
                        [
-                           ['dielc', float, 1, 'Dielectric constant'],
-                           ['drms', float, 0.001, 'Minimization gradient cutoff'],
-                           ['maxcyc', int, 10000, 'Maximum number of minimization cycles'],
-                           ['nminterval', int, 1, 'Interval to take snapshots for normal mode analysis'],
+                            # Basic Options
+                           ['nmstartframe', int, 1, 'First frame to analyze for normal modes'],
                            ['nmendframe', int, 1000000, 'Last frame to analyze for normal modes'],
+                           ['nminterval', int, 1, 'Interval to take snapshots for normal mode analysis'],
+                            # Parameters options
                            ['nmode_igb', int, 1, 'GB model to use for normal mode calculation'],
                            ['nmode_istrng', float, 0, 'Ionic strength for GB model (M)'],
-                           ['nmstartframe', int, 1, 'First frame to analyze for normal modes']
+                           ['dielc', float, 1, 'Dielectric constant'],
+                            # Minimization options
+                           ['drms', float, 0.001, 'Minimization gradient cutoff'],
+                           ['maxcyc', int, 10000, 'Maximum number of minimization cycles'],
                        ], trigger='nmoderun')
 
 input_file.addNamelist('decomp', 'decomposition',
                        [
-                           ['csv_format', int, 1, 'Write decomposition data in CSV format'],
-                           ['dec_verbose', int, 0, 'Control energy terms are printed to the output'],
                            ['idecomp', int, 0, 'Which type of decomposition analysis to do'],
-                           ['print_res', str, 'within 6', 'Which residues to print decomposition data for']
+                           ['dec_verbose', int, 0, 'Control energy terms are printed to the output'],
+                           ['print_res', str, 'within 6', 'Which residues to print decomposition data for'],
+                           ['csv_format', int, 1, 'Write decomposition data in CSV format']
                        ], trigger='decomprun')
 
 input_file.addNamelist('rism', 'rism',
                        [
-                           ['closure', str, 'kh', 'Closure equation to use'],
+                           ['closure', list, 'kh', 'Closure equation to use'],
                            ['buffer', float, 14, 'Distance between solute and edge of grid'],
-                           ['grdspc', float, 0.5, 'Grid spacing'],
+                           ['grdspc', list, 0.5, 'Grid spacing', float],
                            ['solvcut', float, -1, 'Cutoff of the box'],
-                           ['tolerance', str, '1.0e-5', 'Convergence tolerance'],
-                           ['closureorder', int, 1, 'Order of closure if PSE'],
-                           ['ng', str, '-1,-1,-1', 'Number of grid points'],
-                           ['solvbox', str, '-1,-1,-1', 'Box limits'],
+                           ['tolerance', list, 1.0e-5, 'Convergence tolerance', float],
+                           # FIXME: deprecated
+                           # ['closureorder', int, 1, 'Order of closure if PSE'],
+                           ['ng', list, '-1,-1,-1', 'Number of grid points', int],
+                           ['solvbox', list, '-1,-1,-1', 'Box limits', int],
                            ['polardecomp', int, 0, 'Break solv. energy into polar and nonpolar terms'],
                            ['rism_verbose', int, 0, 'Control how much 3D-RISM info to print'],
                            ['thermo', str, 'std', 'Type of thermodynamic analysis to do'],
@@ -594,8 +636,8 @@ input_file.addNamelist('rism', 'rism',
                            ['entropicDecomp', int, 0, 'Decomposes solvation free energy into energy and entropy '
                                                       'components'],
                            ['pc+', int, 0, 'Compute the PC+/3D-RISM excess chemical potential functional'],
-                           ['uccoeff', str, '0.0,0.0,0.0,0.0', 'Compute the UC excess chemical potential functional '
-                                                               'with the provided coefficients'],
+                           ['uccoeff', list, '0.0,0.0,0.0,0.0', 'Compute the UC excess chemical potential functional '
+                                                               'with the provided coefficients', float],
                            ['treeDCF', int, 1, 'Use direct sum or the treecode approximation to calculate the direct '
                                                'correlation function long-range asymptotic correction'],
                            ['treeTCF', int, 1, 'Use direct sum or the treecode approximation to calculate the total '
@@ -627,5 +669,4 @@ input_file.addNamelist('rism', 'rism',
                                                                  'accuracy of the calculation'],
                            ['ljTolerance', float, -1.0, 'Determines the Lennard-Jones cutoff distance based on the '
                                                         'desired accuracy of the calculation']
-
                        ], trigger='rismrun')

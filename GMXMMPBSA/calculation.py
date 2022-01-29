@@ -223,16 +223,16 @@ class RISMCalculation(Calculation):
 
         # Set up instance variables
         self.xvvfile = xvvfile
-        self.closure = INPUT['closure']
+        self.closure = ','.join(map(str, INPUT['closure']))
         self.polardecomp = INPUT['polardecomp']
-        self.ng = str(INPUT['ng']).replace(' ', '')  # get rid of spaces
-        self.solvbox = INPUT['solvbox']
+        self.ng = ','.join(map(str, INPUT['ng']))
+        self.solvbox = ','.join(map(str, INPUT['solvbox']))
         self.buffer = INPUT['buffer']
-        self.grdspc = str(INPUT['grdspc']).replace(' ', '')
+        self.grdspc = ','.join(map(str, INPUT['grdspc']))
         self.solvcut = INPUT['solvcut']
-        self.tolerance = INPUT['tolerance']
+        self.tolerance = ','.join(map(str, INPUT['tolerance']))
         self.verbose = INPUT['rism_verbose']
-        self.solvbox = INPUT['solvbox']
+        self.solvbox = ','.join(map(str, INPUT['solvbox']))
         self.gf = INPUT['rismrun_gf']
 
         self.asympCorr = INPUT['asympCorr']
@@ -244,7 +244,7 @@ class RISMCalculation(Calculation):
         self.centering = INPUT['centering']
         self.entropicDecomp = INPUT['entropicDecomp']
         self.pc_plus = INPUT['pc+']
-        self.uccoeff = str(INPUT['uccoeff']).replace(' ', '')  # get rid of spaces
+        self.uccoeff = ','.join(map(str, INPUT['uccoeff']))
         self.treeDCF = INPUT['treeDCF']
         self.treeTCF = INPUT['treeTCF']
         self.treeCoulomb = INPUT['treeCoulomb']
@@ -267,22 +267,9 @@ class RISMCalculation(Calculation):
             necessary command-line arguments
         """
         # Set up some defaults
-
-        if self.ng == "-1,-1,-1":
-            ngflag = False
-        else:
-            ngflag = True
-
-        if self.solvbox == "-1,-1,-1":
-            solvboxflag = False
-        else:
-            solvboxflag = True
-
-        if self.polardecomp:
-            polardecompflag = True
-        else:
-            polardecompflag = False
-
+        ngflag = self.ng != "-1,-1,-1"
+        solvboxflag = self.solvbox != "-1,-1,-1"
+        polardecompflag = bool(self.polardecomp)
         Calculation.setup(self)
         self.command_args.extend(('--xvv', self.xvvfile,
                                   '--closure', self.closure,
