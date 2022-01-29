@@ -55,7 +55,6 @@ class Variable(object):
                 self.value = [self.int_datatype(x.strip()) for x in re.split(';\s*|,\s*', default.replace('"',''))]
             else:
                 self.value = [default]
-            print(self.value)
         else:
             self.value = self.datatype(default)
         self.description = description

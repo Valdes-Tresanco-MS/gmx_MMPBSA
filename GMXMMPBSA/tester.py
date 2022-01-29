@@ -24,6 +24,8 @@ import multiprocessing
 from pathlib import Path
 from GMXMMPBSA.exceptions import GMXMMPBSA_ERROR
 import time
+
+
 def calculatestar(args):
     return run_process(*args)
 
@@ -94,7 +96,6 @@ def run_test(parser):
 
         logging.info('Cloning gmx_MMPBSA repository...Done.')
 
-
     examples = gmx_mmpbsa_test_folder.joinpath('docs', 'examples')
     test_sys = {
         3: [examples.joinpath('Protein_ligand', 'ST'), 'Protein-Ligand (Single trajectory approximation)'],
@@ -119,7 +120,7 @@ def run_test(parser):
     if parser.test == [0]:
         key_list = range(3, 19)
     elif parser.test == [1]:
-        key_list = range(3, 16)
+        key_list = [3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 14, 15]
     elif parser.test == [2]:
         key_list = [3, 4, 5, 7, 9, 12, 13, 14, 15]
     else:
@@ -144,7 +145,7 @@ def run_test(parser):
 
     result_list = []
     logging.info(f"{'Example':^60}{'STATE':>10}")
-    print(80*'-')
+    print(80 * '-')
     exitcode = 0
     c = 1
     with multiprocessing.Pool(1) as pool:
