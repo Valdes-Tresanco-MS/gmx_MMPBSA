@@ -154,12 +154,12 @@ as well as some reviews:
   [1]: https://pubs.acs.org/doi/10.1021/ct300418h
   [2]: https://pubs.acs.org/doi/abs/10.1021/jacs.6b02682
 
-  [3]: https://ambermd.org/doc12/Amber20.pdf
-  [4]: https://ambermd.org/doc12/Amber20.pdf#chapter.34
-  [5]: https://ambermd.org/doc12/Amber20.pdf#chapter.4
-  [6]: https://ambermd.org/doc12/Amber20.pdf#chapter.6
-  [7]: https://ambermd.org/doc12/Amber20.pdf#chapter.7
-  [8]: https://ambermd.org/doc12/Amber20.pdf#subsection.10.1.3
+  [3]: https://ambermd.org/doc12/Amber21.pdf
+  [4]: https://ambermd.org/doc12/Amber21.pdf#chapter.36
+  [5]: https://ambermd.org/doc12/Amber21.pdf#chapter.4
+  [6]: https://ambermd.org/doc12/Amber21.pdf#chapter.6
+  [7]: https://ambermd.org/doc12/Amber21.pdf#chapter.7
+  [8]: https://ambermd.org/doc12/Amber21.pdf#subsection.11.1.3
   [9]: https://pubs.acs.org/doi/abs/10.1021/ja981844+
   [10]: https://pubs.acs.org/doi/abs/10.1021/ar000033j
   [11]: https://onlinelibrary.wiley.com/doi/abs/10.1002/jcc.10379

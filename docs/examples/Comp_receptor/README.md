@@ -83,7 +83,7 @@ recommended for GB-Neck2 solvation model. Also, a high dielectric constant `intd
 high number of charged residues at the interface.
 
 In this case, Li/Merz ion parameters (12-6 normal usage set) for Mg ions were used. Check 
-[Amber manual](https://ambermd.org/doc12/Amber20.pdf#section.3.6) for more info on ion parameters.
+[Amber manual](https://ambermd.org/doc12/Amber21.pdf#section.3.6) for more info on ion parameters.
 !!! note
     Once the calculation is done, you can analyze the results in `gmx_MMPBSA_ana` (if you didn't define `-nogui`). 
     Please see the [gmx_MMPBSA_ana][4] section for more information

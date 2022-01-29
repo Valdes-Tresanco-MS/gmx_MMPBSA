@@ -84,7 +84,7 @@ trajectories will be obtained from that of the complex. To do so, a MD Structure
 a trajectory file (`com_traj.pdb`), and both the receptor and ligand group numbers in the index file (`1 13`) are needed.
 A ligand .mol2 file is also needed for generating the ligand topology. The `mmpbsa.in` input file will contain all the
 parameters needed for the MM/PB(GB)SA calculation. Of note, special parameters for MMPBSA with membrane proteins have
-been included. See more [here](https://ambermd.org/doc12/Amber20.pdf#subsection.6.2.4).
+been included. See more [here](https://ambermd.org/doc12/Amber21.pdf#subsection.6.2.4).
 !!! note
     Once the calculation is done, you can analyze the results in `gmx_MMPBSA_ana` (if you didn't define `-nogui`). 
     Please see the [gmx_MMPBSA_ana][4] section for more information

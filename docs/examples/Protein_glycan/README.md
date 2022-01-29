@@ -80,7 +80,7 @@ calculation with the igb5 (GB-OBC2) model and a salt concentration = 0.15M.
 Of note, the recommended GLYCAM force fields are: * "leaprc.GLYCAM_06j-1" (Compatible with amber12SB and later), 
 "leaprc.GLYCAM_06EPb" (Compatible with amber12SB and later), and "leaprc.GLYCAM_06h-1" (Compatible with amber99SB and 
 earlier. It is included in `gmx_MMPBSA` package. If it is selected, it will be copied to $AMBERHOME/dat/x) Check 
-[Amber manual](https://ambermd.org/doc12/Amber20.pdf#section.3.3) for more info on GLYCAM force fields.
+[Amber manual](https://ambermd.org/doc12/Amber21.pdf#section.3.3) for more info on GLYCAM force fields.
 !!! note
     Once the calculation is done, you can analyze the results in `gmx_MMPBSA_ana` (if you didn't define `-nogui`). 
     Please see the [gmx_MMPBSA_ana][4] section for more information

@@ -17,7 +17,7 @@ There are many options available in `gmx_MMPBSA`. These are some calculations yo
 receptor and/or ligand that are NOT specified will be extracted from that of the complex. This allows a 1-, 
 2-, or 3-trajectory analysis. All PB calculations and GB models are performed via the `sander` program. Calculations 
 with 3D-RISM solvent model are performed with `rism3d.snglpnt` built with AmberTools.
-* **Stability** calculations with any model solvent model (_i.e_ PB, GB or 3D-RISM).
+* **Stability** calculations with any solvent model (_i.e_ PB, GB or 3D-RISM).
 * **Alanine scanning** with either PB or GB implicit solvent models. All trajectories will be mutated to match
 the mutated topology files, and whichever calculations that would be carried out for the normal systems are
 also carried out for the mutated systems. Note that only 1 mutation is allowed per simulation, and it must

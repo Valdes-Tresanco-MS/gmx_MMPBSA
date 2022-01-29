@@ -69,7 +69,7 @@ modify manually the *.mdin input files
   [1]: https://github.com/RashmiKumari/g_mmpbsa
   [2]: https://github.com/aspitaleri/gmxpbsa
   [3]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA
-  [4]: https://ambermd.org/doc12/Amber20.pdf#chapter.34
+  [4]: https://ambermd.org/doc12/Amber21.pdf#chapter.36
   [5]: https://github.com/williamdlees/AmberUtils
 
   
