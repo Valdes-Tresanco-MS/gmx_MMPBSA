@@ -846,17 +846,15 @@ class MMPBSA_App(object):
                 GMXMMPBSA_ERROR('The total charge of the ligand and receptor ' +
                                  'does not equal the charge of the complex!', InputError)
         if INPUT['rismrun']:
-            if INPUT['rism_verbose'] > 2 or INPUT['rism_verbose'] < 0:
+            if INPUT['rism_verbose'] not in [0, 1, 2]:
                 GMXMMPBSA_ERROR('RISM_VERBOSE must be 0, 1, or 2!', InputError)
             if INPUT['buffer'] < 0 and INPUT['solvcut'] < 0:
                 GMXMMPBSA_ERROR('If BUFFER < 0, SOLVCUT must be > 0!', InputError)
-            for tol in [float(t) for t in ''.join((INPUT['tolerance']).split()).split(',')]:
-                if tol < 0:
+            for tol in INPUT['tolerance']:
+                if tol <= 0:
                     GMXMMPBSA_ERROR('TOLERANCE must be positive!', InputError)
             if INPUT['buffer'] < 0 and INPUT['ng'] == '':
                 GMXMMPBSA_ERROR('You must specify NG if BUFFER < 0!', InputError)
-            if INPUT['closure'] == 'pse' and INPUT['closureorder'] < 1:
-                GMXMMPBSA_ERROR('You must specify CLOSUREORDER if CLOSURE=pse!', InputError)
             if INPUT['polardecomp'] not in [0, 1]:
                 GMXMMPBSA_ERROR('POLARDECOMP must be either 0 or 1!', InputError)
             if INPUT['thermo'] not in ['std', 'gf', 'both']:
