@@ -1103,16 +1103,18 @@ class DecompOut(dict):
         self.allowed_tokens = tuple(['TDC'])
         self.verbose = None
         self.num_files = None
-        self.prmtop = None
+        self.resl = None
         self.basename = None
         self.csvwriter = None
         self.surften = None
         self.current_file = 0  # File counter
         self.get_next_term = self._get_next_term
 
-    def parse_from_file(self, basename, prmtop, INPUT, surften, csvwriter, num_files=1):
+    def parse_from_file(self, basename, resl, INPUT, surften, csvwriter, num_files=1, mut=False):
         self.basename = basename  # base name of output files
-        self.prmtop = prmtop  # AmberParm prmtop object
+        self.resl = resl
+        self.mut = mut
+
         self.num_files = num_files  # how many MPI files we created
         self.INPUT = INPUT
         self.verbose = INPUT['dec_verbose']
@@ -1145,16 +1147,19 @@ class DecompOut(dict):
         self._fill_all_terms()
         self._fill_composite_terms()
 
-    def parse_from_dict(self, d: dict):
-        for term, v in d.items():
+    def parse_from_dict(self, d):
+        for term in d:
             self[term] = {}
-            for res, v1 in v.items():
+            for res in d[term]:
                 self[term][res] = {}
-                for res_e, v2 in v1.items():
-                    if isinstance(v2, dict):
-                        self[term][res][res_e] = {_k: EnergyVector(_v) for _k, _v in v2.items()}
+                for res_e in d[term][res]:
+                    if isinstance(d[term][res][res_e], np.ndarray):
+                        self[term][res][res_e] = EnergyVector(d[term][res][res_e][()])
                     else:
-                        self[term][res][res_e] = EnergyVector(v2)
+                        self[term][res][res_e] = {}
+                        for res2 in d[term][res][res_e]:
+                            self[term][res][res_e][res2] = EnergyVector(d[term][res][res_e][res2][()])
+
         self._fill_composite_terms()
 
     def _get_num_terms(self):
@@ -1193,8 +1198,11 @@ class DecompOut(dict):
         # Return [res #, internal, vdw, eel, pol, sas]
         if expected_type and expected_type != line[0:3]:
             raise OutputError(('Expecting %s type, but got %s type. Re-run ' +
-                               'gmx_MMPBSA with the correct dec_verbose') % (expected_type, line[0:3]))
-        resnum = int(line[4:10])
+                               'gmx_MMPBSA with the correct dec_verbose') % (expected_type, line[:3]))
+        if self.mut and self.resl[int(line[4:10]) - 1].is_mutant():
+            resnum = self.resl[int(line[4:10]) - 1].mutant_string
+        else:
+            resnum = self.resl[int(line[4:10]) - 1].string
         internal = float(line[11:20])
         vdw = float(line[21:30])
         eel = float(line[31:40])
@@ -1272,9 +1280,9 @@ class DecompOut(dict):
                              [''] + ['Avg.', 'Std. Dev.', 'Std. Err. of Mean'] * 6])
             else:
                 text.extend([self.descriptions[term],
-                             'Residue |       Internal      |    van der Waals    |    Electrostatic    |   '
+                             'Residue        |       Internal      |    van der Waals    |    Electrostatic    |   '
                              'Polar Solvation   |   Non-Polar Solv.   |       TOTAL',
-                             '------------------------------------------------------------------------------'
+                             '-------------------------------------------------------------------------------------'
                              '-------------------------------------------------------------'])
             for res in self[term]:
                 int_avg = self[term][res]['int'].mean()
@@ -1289,12 +1297,10 @@ class DecompOut(dict):
                 sas_std = self[term][res]['sas'].stdev()
                 tot_avg = self[term][res]['tot'].mean()
                 tot_std = self[term][res]['tot'].stdev()
-                resnm = self.prmtop.parm_data['RESIDUE_LABEL'][res]
-                res_str = '%3s%4d' % (resnm, res)
                 sqrt_frames = sqrt(len(self[term][res]['int']))
 
                 if _output_format:
-                    text.append([res_str,
+                    text.append([res,
                                   int_avg, int_std, int_std / sqrt_frames,
                                   vdw_avg, vdw_std, vdw_std / sqrt_frames,
                                   eel_avg, eel_std, eel_std / sqrt_frames,
@@ -1302,7 +1308,7 @@ class DecompOut(dict):
                                   sas_avg, sas_std, sas_std / sqrt_frames,
                                   tot_avg, tot_std, tot_std / sqrt_frames])
                 else:
-                    text.append(f"{str(res_str):7s} "
+                    text.append(f"{res:14s} "
                                 f"|{int_avg:9.3f} +/- {int_std:6.3f} "
                                 f"|{vdw_avg:9.3f} +/- {vdw_std:6.3f} "
                                 f"|{eel_avg:9.3f} +/- {eel_std:6.3f} "
@@ -1323,14 +1329,7 @@ class DecompOut(dict):
         """ Gets the next term and prints data to csv file """
         mydat = self._get_next_term(expected_type)
         if mydat:
-            resnm = self.prmtop.parm_data['RESIDUE_LABEL'][mydat[0] - 1]
-            res_str = '%3s%4d' % (resnm, mydat[0])
-            if len(mydat) == 7:
-                resnm2 = self.prmtop.parm_data['RESIDUE_LABEL'][mydat[1] - 1]
-                res_str2 = '%3s%4d' % (resnm2, mydat[1])
-                self.csvwriter[expected_type].writerow([framenum] + [res_str, res_str2] + mydat[2:] + [sum(mydat[-5:])])
-            else:
-                self.csvwriter[expected_type].writerow([framenum] + [res_str] + mydat[1:] + [sum(mydat[-5:])])
+            self.csvwriter[expected_type].writerow([framenum] + mydat + [sum(mydat[-5:])])
         else:
             self.csvwriter[expected_type].writerow([])
         return mydat
@@ -1366,8 +1365,16 @@ class PairDecompOut(DecompOut):
         if expected_type and expected_type != line[0:3]:
             raise OutputError(('Expecting %s type, but got %s type. Re-run ' +
                                'gmx_MMPBSA with the correct dec_verbose') % (expected_type, line[0:3]))
-        resnum = int(line[4:11])
-        resnum2 = int(line[13:20])
+
+        if self.mut and self.resl[int(line[4:11]) - 1].is_mutant():
+            resnum = self.resl[int(line[4:11]) - 1].mutant_string
+        else:
+            resnum = self.resl[int(line[4:11]) - 1].string
+        if self.mut and self.resl[int(line[13:20]) - 1].is_mutant():
+            resnum2 = self.resl[int(line[13:20]) - 1].mutant_string
+        else:
+            resnum2 = self.resl[int(line[13:20]) - 1].string
+
         internal = float(line[21:33])
         vdw = float(line[34:46])
         eel = float(line[47:59])
@@ -1404,10 +1411,10 @@ class PairDecompOut(DecompOut):
                              [''] * 2 + ['Avg.', 'Std. Dev.', 'Std. Err. of Mean'] * 6])
             else:
                 text.append(self.descriptions[term] + '\n' +
-                            'Resid 1 | Resid 2 |       Internal      |    van der Waals    |    Electrostatic    '
-                            '|   Polar Solvation   |  Non-Polar Solv.   |       TOTAL\n' +
-                            '-------------------------------------------------------------------------------------'
-                            '----------------------------------------------------------------')
+                            'Resid 1        | Resid 2        |       Internal      |    van der Waals    '
+                            '|    Electrostatic    |   Polar Solvation   |  Non-Polar Solv.   |       TOTAL\n' +
+                            '-----------------------------------------------------------------------------'
+                            '--------------------------------------------------------------------------------------')
             for res in self[term]:
                 for res2 in self[term][res]:
                     int_avg = self[term][res][res2]['int'].mean()
@@ -1422,13 +1429,9 @@ class PairDecompOut(DecompOut):
                     sas_std = self[term][res][res2]['sas'].stdev()
                     tot_avg = self[term][res][res2]['tot'].mean()
                     tot_std = self[term][res][res2]['tot'].stdev()
-                    resnm = self.prmtop.parm_data['RESIDUE_LABEL'][res]
-                    res_str0 = '%3s%4d' % (resnm, res)
-                    resnm = self.prmtop.parm_data['RESIDUE_LABEL'][res2]
-                    res_str1 = '%3s%4d' % (resnm, res2)
                     sqrt_frames = sqrt(len(self[term][res][res2]['int']))
                     if _output_format:
-                        text.append([res_str0, res_str1,
+                        text.append([res, res2,
                                      int_avg, int_std, int_std / sqrt_frames,
                                      vdw_avg, vdw_std, vdw_std / sqrt_frames,
                                      eel_avg, eel_std, eel_std / sqrt_frames,
@@ -1436,7 +1439,7 @@ class PairDecompOut(DecompOut):
                                      sas_avg, sas_std, sas_std / sqrt_frames,
                                      tot_avg, tot_std, tot_std / sqrt_frames])
                     else:
-                        text.append(f"{res_str0} | {res_str1}"
+                        text.append(f"{res:14s} | {res2:14s} "
                                     f"|{int_avg:9.3f} +/- {int_std:6.3f} "
                                     f"|{vdw_avg:9.3f} +/- {vdw_std:6.3f} "
                                     f"|{eel_avg:9.3f} +/- {eel_std:6.3f} "
@@ -1462,7 +1465,7 @@ class PairDecompOut(DecompOut):
 class DecompBinding(dict):
     """ Class for decomposition binding (per-residue) """
 
-    def __init__(self, com, rec, lig, prmtop_system, INPUT, csvwriter, desc, **kwargs):
+    def __init__(self, com, rec, lig, INPUT, csvwriter, desc, **kwargs):
         """
         output should be an open file and csvfile should be a csv.writer class. If
         the output format is specified as csv, then output should be a csv.writer
@@ -1474,7 +1477,6 @@ class DecompBinding(dict):
         self.num_terms = self.com.num_terms
         self.numframes = 0  # frame counter
         self.desc = desc  # Description
-        self.prmtop_system = prmtop_system
         self.INPUT = INPUT
         self.idecomp = INPUT['idecomp']
         self.verbose = INPUT['dec_verbose']
@@ -1520,17 +1522,7 @@ class DecompBinding(dict):
         for term in self.com:
             for res in self.com[term]:
                 self[term][res] = {}
-                res_label = self.prmtop_system.complex_prmtop.parm_data['RESIDUE_LABEL'][res - 1]
-
-                if self.prmtop_system.res_list[res].receptor_number:
-                    rec_num = self.prmtop_system.res_list[res].receptor_number - 1
-                    self.resnums[res] = ['%3s%4d' % (res_label, res), f"R {res_label:3s}{rec_num:4d}"]
-                    other_token = self.rec[term][rec_num]
-                else:
-                    lig_num = self.prmtop_system.res_list[res].ligand_number - 1
-                    self.resnums[res] = ['%3s%4d' % (res_label, res), f"L {res_label:3s}{lig_num:4d}"]
-                    other_token = self.lig[term][lig_num]
-
+                other_token = self.rec[term][res] if res.startswith('R') else self.lig[term][res]
                 for e in self.com[term][res]:
                     self[term][res][e] = self.com[term][res][e] - other_token[e]
 
@@ -1538,12 +1530,8 @@ class DecompBinding(dict):
                 f = self.com.INPUT['startframe']
                 for i in range(self.com.numframes):
                     for res in self.com[term]:
-                        self.csvwriter[term].writerow([f] + self.resnums[res] +
-                                                      [self[term][res][x][i] for x in self[term][res]])
+                        self.csvwriter[term].writerow([f, res] + [self[term][res][x][i] for x in self[term][res]])
                     f += self.com.INPUT['interval']
-                # if self.csvwriter:
-                #     self.csvwriter[term].writerow([framenum, res, self.resnums[res]] +
-                #                                   [self[term][res][x].mean() for x in self[term][res]])
 
     def summary(self, output_format: str = 'ascii'):
         # Parse everything
@@ -1573,14 +1561,14 @@ class DecompBinding(dict):
         for term in self:
             if _output_format:
                 text.extend([[DecompOut.descriptions[term]],
-                             ['Residue', 'Location', 'Internal', '', '', 'van der Waals', '', '', 'Electrostatic',
+                             ['Residue', 'Internal', '', '', 'van der Waals', '', '', 'Electrostatic',
                               '', '', 'Polar Solvation', '', '', 'Non-Polar Solv.', '', '', 'TOTAL', '', ''],
                              ['', ''] + ['Avg.', 'Std. Dev.', 'Std. Err. of Mean'] * 6])
             else:
                 text.extend([DecompOut.descriptions[term],
-                             'Residue |  Location |       Internal      |    van der Waals    |    Electrostatic    '
+                             'Residue        |       Internal      |    van der Waals    |    Electrostatic    '
                              '|   Polar Solvation   |    Non-Polar Solv.  |       TOTAL',
-                             '---------------------------------------------------------------------------------------'
+                             '----------------------------------------------------------------------------------'
                              '----------------------------------------------------------------'])
             for res in self[term]:
                 int_avg = self[term][res]['int'].mean()
@@ -1597,15 +1585,15 @@ class DecompBinding(dict):
                 tot_std = self[term][res]['tot'].stdev()
                 sqrt_frames = sqrt(len(self[term][res]['int']))
                 if _output_format:
-                    text.append(self.resnums[res] +
-                                [int_avg, int_std, int_std / sqrt_frames,
+                    text.append([res,
+                                 int_avg, int_std, int_std / sqrt_frames,
                                  vdw_avg, vdw_std, vdw_std / sqrt_frames,
                                  eel_avg, eel_std, eel_std / sqrt_frames,
                                  pol_avg, pol_std, pol_std / sqrt_frames,
                                  sas_avg, sas_std, sas_std / sqrt_frames,
                                  tot_avg, tot_std, tot_std / sqrt_frames])
                 else:
-                    text.append(f"{self.resnums[res][0]} | {self.resnums[res][1]} "
+                    text.append(f"{res:14s} "
                                 f"|{int_avg:9.3f} +/- {int_std:6.3f} "
                                 f"|{vdw_avg:9.3f} +/- {vdw_std:6.3f} "
                                 f"|{eel_avg:9.3f} +/- {eel_std:6.3f} "
@@ -1638,35 +1626,21 @@ class PairDecompBinding(DecompBinding):
         for term in self.com:
             for res in self.com[term]:
                 self[term][res] = {}
-                res_label = self.prmtop_system.complex_prmtop.parm_data['RESIDUE_LABEL'][res - 1]
                 for res2 in self.com[term][res]:
                     self[term][res][res2] = {}
-                    res2_label = self.prmtop_system.complex_prmtop.parm_data['RESIDUE_LABEL'][res2 - 1]
-                    if self.prmtop_system.res_list[res].receptor_number:
-                        res_num = self.prmtop_system.res_list[res].receptor_number - 1
-                        res_name = f"R {res_label:3s}{res_num:4d}"
-                        if self.prmtop_system.res_list[res2].receptor_number:
-                            rec_num = self.prmtop_system.res_list[res2].receptor_number - 1
-                            res_name2 = f"R {res2_label:3s}{rec_num:4d}"
-                            # Both residues are in the receptor -- pull the next one
-                            other_token = self.rec[term][res_num][rec_num]
-                        else:
-                            lig_num = self.prmtop_system.res_list[res2].ligand_number - 1
-                            res_name2 = f"L {res2_label:3s}{lig_num:4d}"
-                            other_token = {}
+                    if res.startswith('R') and res2.startswith('R'):
+                        # Both residues are in the receptor -- pull the next one
+                        other_token = self.rec[term][res][res2]
+                    elif (
+                        res.startswith('R')
+                        and not res2.startswith('R')
+                        or not res.startswith('R')
+                        and not res2.startswith('L')
+                    ):
+                        other_token = {}
                     else:
-                        res_num = self.prmtop_system.res_list[res].ligand_number - 1
-                        res_name = f"L {res_label:3s}{res_num:4d}"
-                        if self.prmtop_system.res_list[res2].ligand_number:
-                            lig_num = self.prmtop_system.res_list[res2].ligand_number - 1
-                            res_name2 = f"L {res2_label:3s}{lig_num:4d}"
-                            # Both residues are in the ligand -- pull the next one
-                            other_token = self.lig[term][res_num][lig_num]
-                        else:
-                            rec_num = self.prmtop_system.res_list[res2].receptor_number - 1
-                            res_name2 = f"R {res2_label:3s}{rec_num:4d}"
-                            other_token = {}
-                    self.resnums[(res, res2)] = (res_name, res_name2)
+                        # Both residues are in the ligand -- pull the next one
+                        other_token = self.lig[term][res][res2]
                     for e in self.com[term][res][res2]:
                         if other_token:
                             self[term][res][res2][e] = self.com[term][res][res2][e] - other_token[e]
@@ -1678,8 +1652,7 @@ class PairDecompBinding(DecompBinding):
                 for i in range(self.com.numframes):
                     for res in self.com[term]:
                         for res2 in self.com[term][res]:
-                            self.csvwriter[term].writerow([f, self.resnums[(res, res2)][0],
-                                                           self.resnums[(res, res2)][1]] +
+                            self.csvwriter[term].writerow([f, res, res2] +
                                                           [self[term][res][res2][x][i] for x in self[term][res][res2]])
                     f += self.com.INPUT['interval']
 
@@ -1717,9 +1690,9 @@ class PairDecompBinding(DecompBinding):
                              ['', ''] + ['Avg.', 'Std. Dev.', 'Std. Err. of Mean'] * 6])
             else:
                 text.extend([DecompOut.descriptions[term],
-                             'Resid 1   | Resid 2   |       Internal      |    van der Waals    |    Electrostatic    '
+                             'Resid 1        | Resid 2        |       Internal      |    van der Waals    |    Electrostatic    '
                              '|   Polar Solvation   |    Non-Polar Solv.  |       TOTAL',
-                             '-------------------------------------------------------------------------------'
+                             '-----------------------------------------------------------------------------------------'
                              '--------------------------------------------------------------------------'])
 
             for res in self[term]:
@@ -1739,7 +1712,7 @@ class PairDecompBinding(DecompBinding):
                     sqrt_frames = sqrt(len(self[term][res][res2]['int']))
 
                     if _output_format:
-                        text.append([self.resnums[(res, res2)][0], self.resnums[(res, res2)][1],
+                        text.append([res, res2,
                                      int_avg, int_std, int_std / sqrt_frames,
                                      vdw_avg, vdw_std, vdw_std / sqrt_frames,
                                      eel_avg, eel_std, eel_std / sqrt_frames,
@@ -1747,7 +1720,7 @@ class PairDecompBinding(DecompBinding):
                                      sas_avg, sas_std, sas_std / sqrt_frames,
                                      tot_avg, tot_std, tot_std / sqrt_frames])
                     else:
-                        text.append(f"{self.resnums[(res, res2)][0]} | {self.resnums[(res, res2)][1]} "
+                        text.append(f"{res:14s} | {res2:14s} "
                                     f"|{int_avg:9.3f} +/- {int_std:6.3f} "
                                     f"|{vdw_avg:9.3f} +/- {vdw_std:6.3f} "
                                     f"|{eel_avg:9.3f} +/- {eel_std:6.3f} "
