@@ -1754,42 +1754,50 @@ class H5Output:
                 self.app_namespace.INFO[x] = cvar
 
     def _h52e(self, key):
+
+        GBClass = QMMMout if self.app_namespace.INPUT['ifqnt'] else GBout
+        # Determine which kind of RISM output class we are based on std/gf and
+        # polardecomp
+        if self.app_namespace.INPUT['polardecomp']:
+            RISM_GF = PolarRISM_gf_Out
+            RISM_Std = PolarRISM_std_Out
+        else:
+            RISM_GF = RISM_gf_Out
+            RISM_Std = RISM_std_Out
+        energy_outkeys = {'nmode': NMODEout, 'gb': GBClass, 'pb': PBout, 'rism std': RISM_Std, 'rism gf': RISM_GF}
+        ent_outkeys = {'ie': IEout, 'c2': C2out}
         # key: normal or mutant
         calc_types = getattr(self.calc_types, key)
         # key  Energy: [gb, pb, rism std, rism gf], Decomp: [gb, pb], Entropy: [nmode, qh, ie, c2]
         for key1 in self.h5f[key]:
             # if key in ['gb', 'pb', 'rism std', 'rism gf', 'nmode', 'qh', 'ie', 'c2']:
-            calc_types[key1] = {}
-            # key2 is complex, receptor, ligand, delta
+            if key1 == 'qh':
+                calc_types[key1] = QHout()
+                calc_types[key1].parse_from_h5(self.h5f[key][key1])
+                continue
+            elif key1 in ent_outkeys:
+                calc_types[key1] = ent_outkeys[key1]()
+                calc_types[key1].parse_from_h5(self.h5f[key][key1])
+                continue
+            else:
+                calc_types[key1] = {}
+            # key2 is complex, receptor, ligand, delta or model for ie and c2
             for key2 in self.h5f[key][key1]:
-                calc_types[key1][key2] = {}
-                # Energetic terms
-                for key3 in self.h5f[key][key1][key2]:
-                    calc_types[key1][key2][key3] = self.h5f[key][key1][key2][key3][()]
+                if key1 not in energy_outkeys:
+                    continue
+                calc_types[key1][key2] = energy_outkeys[key1](key2, None)
+                calc_types[key1][key2].parse_from_h5(self.h5f[key][key1][key2])
 
     def _h52decomp(self, key):
+        DecompClass = DecompOut if self.app_namespace.INPUT['idecomp'] in [1, 2] else PairDecompOut
         calc_types = getattr(self.calc_types, key)
         for key1 in self.h5f[key]:
             # model
             calc_types[key1] = {}
             # key2 is complex, receptor, ligand, delta
             for key2 in self.h5f[key][key1]:
-                calc_types[key1][key2] = {}
-                # TDC, SDC, BDC
-                for key3 in self.h5f[key][key1][key2]:
-                    # residue first level
-                    for key4 in self.h5f[key][key1][key2][key3]:
-                        for key5 in self.h5f[key][key1][key2][key3][key4]:
-                            if isinstance(self.h5f[key][key1][key2][key3][key4], h5py.Group):
-                                # residue sec level
-                                for key6 in self.h5f[key][key1][key2][key3][key4][key5]:
-                                    calc_types[key][key2][(key3, key4, key5, key6)] = \
-                                        self.h5f[key][key1][key2][key3][key4][key5][key6][()]
-                            else:
-                                # energy terms
-                                for key5 in self.h5f[key][key1][key2][key3][key4]:
-                                    calc_types[key][key2][(key3, key4, key5)] = \
-                                        self.h5f[key][key1][key2][key3][key4][key5][()]
+                calc_types[key1][key2] = DecompClass(key2)
+                calc_types[key1][key2].parse_from_h5(self.h5f[key][key1][key2])
 
 
 def _get_cpptraj_surf(fname):
