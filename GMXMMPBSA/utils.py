@@ -506,7 +506,8 @@ def remove(flag, mpi_size=0, fnpre='_GMXMMPBSA_'):
     allfiles = os.listdir(os.getcwd())
     tempfiles = []
     for fil in allfiles:
-        if fil.startswith(fnpre): tempfiles.append(fil)
+        if fil.startswith(fnpre):
+            tempfiles.append(fil)
 
     if flag == -1:  # internal -- keep all mdin files
         for fil in tempfiles:

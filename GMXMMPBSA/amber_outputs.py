@@ -1785,7 +1785,8 @@ class H5Output:
             for key2 in self.h5f[key][key1]:
                 if key1 not in energy_outkeys:
                     continue
-                calc_types[key1][key2] = energy_outkeys[key1](key2, None)
+                calc_types[key1][key2] = energy_outkeys[key1](key2, self.app_namespace.INPUT,
+                                                              self.app_namespace.INFO['using_chamber'])
                 calc_types[key1][key2].parse_from_h5(self.h5f[key][key1][key2])
 
     def _h52decomp(self, key):

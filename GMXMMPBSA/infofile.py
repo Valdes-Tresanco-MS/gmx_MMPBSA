@@ -154,10 +154,7 @@ class InfoFile(object):
         Wrapper to return a string in which str vars are enclosed in quotes and
         numeric types (int and float) are not
         """
-        if isinstance(var, str):
-            return "'%s'" % var
-        else:
-            return "%s" % var
+        return "'%s'" % var if isinstance(var, str) else "%s" % var
 
 
 def _determine_type(thing):
