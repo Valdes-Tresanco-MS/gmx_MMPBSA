@@ -64,7 +64,7 @@ class CheckMakeTop:
         self.INPUT = INPUT
         self.external_progs = external_programs
         self.use_temp = False
-        self.mut_label = ''
+        self.com_mut_index = None
 
         # Define Gromacs executable
         self.make_ndx = self.external_progs['make_ndx']
