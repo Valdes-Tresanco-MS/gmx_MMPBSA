@@ -112,7 +112,7 @@ combined. See the formats below:
 
 ### **`&general` namelist variables**
 
-#### **`&general` basic input options**
+#### **Basic input options**
 
 `sys_name` (Default = None)
 :   Define the System Name. This is useful when trying to analyze several systems at the same time or calculating 
@@ -137,7 +137,7 @@ trajectory file supplied on the command-line.
 :     The offset from which to choose frames from each trajectory file. For example, an interval of 2 will pull
 every 2nd frame beginning at startframe and ending less than or equal to endframe.
 
-#### **`&general` parameter options**
+#### **Parameter options**
 
 `forcefields` (Default = "oldff/leaprc.ff99SB,leaprc.gaff")
 :   Comma-separated list of force fields used to build Amber topologies. This variable is more flexible than the 
@@ -263,7 +263,7 @@ tested in previous `protein_forcefield` and `ligand_forcefield` variables.
    
     _New in v1.4.0: Replace `entropy_temp`_
 
-#### **`&general` entropy options**
+#### **Entropy options**
 
 `qh_entropy` (Default = 0)
 :    It specifies whether to perform a quasi-harmonic entropy (QH) approximation with `cpptraj` or not.
@@ -352,7 +352,7 @@ C2 Entropy, _e.g._: `ie_segment = 25` means that the last quartile of the total 
 
     _New in v1.5.0_
 
-#### **`&general` miscellaneous options**
+#### **Miscellaneous options**
 
 `assign_chainID` (Default = 0) 
 :   Defines the chains ID assignment mode. _It is ignored when defining a reference structure
@@ -447,6 +447,8 @@ tracebacks are printed, which aids in debugging of issues. (Default = 0) (Advanc
     * A tutorial on binding free energy calculation with GB model is available 
     [here](examples/Protein_ligand/ST/README.md)
 
+#### **Basic input options**
+
 `igb` (Default = 5)
 :   Generalized Born method to use (see [Section 4](https://ambermd.org/doc12/Amber21.pdf#chapter.4)). Allowed values 
 are 1, 2, 5, 7 and 8.
@@ -486,7 +488,7 @@ molecular surface.
     !!! note
         only applicable when `molsurf` is set to 1
 
-#### **`&gb` QM options**
+#### **QM options**
 
 `ifqnt` (Default = 0)
 :   Specifies whether a part of the system is treated with quantum mechanics.
@@ -578,7 +580,7 @@ the same used for `print_res` variable in `&decomp` namelist
     * A tutorial on binding free energy calculation with PB model is available 
     [here](examples/Linear_PB_solver/README.md)
 
-#### **`&pb` basic input options**
+#### **Basic input options**
 
 `ipb` (Default = 2) 
 :   Option to set up a dielectric model for all numerical PB procedures. `ipb = 1` corresponds to a classical geometric 
@@ -632,7 +634,7 @@ method, while a level-set based algebraic method is used when `ipb > 2`.
     * 0: Don’t use `APBS`
     * 1: Use `sander.APBS`
 
-#### **`&pb` options to define the physical constants**
+#### **Options to define the physical constants**
 
 `indi` (Default = 1.0)
 :   Internal dielectric constant. This corresponds to `epsin` in [pbsa][5].
@@ -694,7 +696,7 @@ solute/solvent dielectric boundary.
 :   The `arcres` keyword gives the resolution (in Å) of dots used to represent solvent accessible arcs. More
 generally, `arcres` should be set to max(0.125 Å, 0.5h) (h is the grid spacing). ([ref.][239])
 
-#### **`&pb` options for implicit membranes**
+#### **Options for implicit membranes**
 
 `memopt` (Default = 0)
 :   Option to turn the implicit membrane on and off. The membrane is implemented as a slab like region with a uniform 
@@ -736,7 +738,7 @@ that of the water. ([ref.][248])
     * 0: Do not turn on the pore searching algorithm.
     * 1: Turn on the pore searching algorithm.
 
-#### **`&pb` options to select numerical procedures**
+#### **Options to select numerical procedures**
 
 `npbopt` (Default = 0)
 :   Option to select the linear, or the full nonlinear PB equation.
@@ -796,7 +798,7 @@ molecule. When `nfocus` = 1, no focusing is used. It is recommended that `nfocus
 `npbgrid` (Default = 1)
 :   Sets how often the finite-difference grid is regenerated.
 
-#### **`&pb` options to compute energy and forces**
+#### **Options to compute energy and forces**
 
 `bcopt` (Default = 5)
 :   Boundary condition options.
@@ -873,7 +875,7 @@ Waals interactions only. The particle-particle portion of the Coulombic interact
 `nsnba` (Default = 1)
 :   Sets how often (steps) atom-based pairlist is generated.
 
-#### **`&pb` options to select a non-polar solvation treatment**
+#### **Options to select a non-polar solvation treatment**
 
 `decompopt` (Default = 2)
 :   Option to select different decomposition schemes when `inp = 2`. See ([ref.][227]) for a detailed discussion
@@ -947,7 +949,7 @@ summation of the atomic SASA’s. A molecular SASA is used for both PB dielectri
   [5]: https://ambermd.org/doc12/Amber21.pdf#chapter.6
   [6]: https://onlinelibrary.wiley.com/doi/10.1002/jcc.24467
 
-#### **`&pb` options for output**
+#### **Options for output**
 
 `npbverb` (Default = 0)
 :   Verbose mode.
@@ -1347,7 +1349,7 @@ spreadsheets.
     * A sample nmode input file is shown [here](input_file.md#entropy-with-nmode)
     * A tutorial on normal mode analysis is available [here](examples/Entropy_calculations/nmode/README.md)
 
-#### **`&nmode` basic options**
+#### **Basic input options**
 
 `nmstartframe`[^2]
 :   Frame number to begin performing `nmode` calculations on 
@@ -1362,7 +1364,7 @@ spreadsheets.
 `nminterval`[^2] (Default = 1)
 :   Offset from which to choose frames to perform `nmode` calculations on
 
-#### **`&nmode` parameter options**
+#### **Parameter options**
 
 `nmode_igb` (Default = 1)
 :   Value for Generalized Born model to be used in calculations. Options are:
