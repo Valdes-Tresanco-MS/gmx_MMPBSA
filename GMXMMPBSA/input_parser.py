@@ -412,10 +412,10 @@ input_file.addNamelist('general', 'general',
                            ['endframe', int, 9999999, 'Last frame to analyze'],
                            ['interval', int, 1, 'Number of frames between adjacent frames analyzed'],
                             # Parameters options
-                           ['PBRadii', int, 3, 'Define PBRadii to build amber topology from GROMACS files'],
                            ['forcefields', list, 'oldff/leaprc.ff99SB, leaprc.gaff', 'Define the force field to build '
                                                                                      'the Amber topology'],
                            ['ions_parameters', int, 1, 'Define ions parameters to build the Amber topology'],
+                           ['PBRadii', int, 3, 'Define PBRadii to build amber topology from GROMACS files'],
                            ['temperature', float, 298.15, 'Temperature'],
 
                             # Entropy options
@@ -451,14 +451,16 @@ input_file.addNamelist('general', 'general',
 input_file.addNamelist('gb', 'gb',
                        [
                            ['igb', int, 5, 'GB model to use'],
-                           ['gb_maxcyc', int, 1, 'The maximum number of cycles of minimization'],
+# FIXME: Remove?
+                           # ['gb_maxcyc', int, 1, 'The maximum number of cycles of minimization'],
                            ['intdiel', float, 1.0, 'Internal dielectric constant for sander'],
-                           ['extdiel', float, 78.3, 'External dielectric constant for sander'],
+                           ['extdiel', float, 78.5, 'External dielectric constant for sander'],
 
                            ['saltcon', float, 0, 'Salt concentration (M)'],
+# FIXME: Remove?
                            ['rgbmax', float, 999.0, 'Distance cutoff in Angstroms to use when computing effective '
                                                     'GB radii'],
-# FIXME: offset needs revision. MMPBSA.py defined it as 'offset': -999999.0, but in the Amber manual is 0.09 Å
+# FIXME: offset needs revision. MMPBSA.py defined it as 'offset': -999999.0, but in the Amber manual is 0.09 Å (solved)
 # FIXME: gbsa is only defined for decomp if self.INPUT['decomprun']: self.INPUT['gbsa'] = 2. molsurf is who replaces this variable
                            ['surften', float, 0.0072, 'Surface tension'],
                            ['surfoff', float, 0.0, 'Surface tension offset'],
@@ -482,7 +484,8 @@ input_file.addNamelist('pb', 'pb',
                             # Basic input options
                            ['ipb', int, 2, 'Dielectric model for PB'],
                            ['inp', int, 2, 'Nonpolar solvation method'],
-                           ['pb_maxcyc', int, 1, 'The maximum number of cycles of minimization'],
+# FIXME: Remove?
+                           #['pb_maxcyc', int, 1, 'The maximum number of cycles of minimization'],
                            ['sander_apbs', int, 0, 'Use sander.APBS?'],
 
                            # Options to define the physical constants
@@ -549,9 +552,9 @@ input_file.addNamelist('pb', 'pb',
                            ['maxsph', int, 400, 'Approximate number of dots to represent the maximum atomic solvent '
                                                 'accessible surface'],
 # FIXME: need revision. It seems that it is only available for nab
-                           ['maxarcdot', int, 1500, 'Number of dots used to store arc dots per atom '],
+                           #['maxarcdot', int, 1500, 'Number of dots used to store arc dots per atom '],
 
-                           # Options for visualization and output
+                           # Options for output
                            ['npbverb', int, 0, 'Option to turn on verbose mode']
 
                            # FIXME: remove
@@ -572,6 +575,66 @@ input_file.addNamelist('pb', 'pb',
                            # ['phiform', int, 0, 'Controls the format of the electrostatic potential file'],
                        ], trigger='pbrun')
 
+input_file.addNamelist('rism', 'rism',
+                       [
+                           ['closure', list, 'kh', 'Closure equation to use'],
+# FIXME: deprecated
+                           # ['closureorder', int, 1, 'Order of closure if PSE'],
+                           ['noasympcorr', int, 1, 'Turn off long range asymptotic corrections for thermodynamic '
+                                                   'output only'],
+                           ['buffer', float, 14, 'Distance between solute and edge of grid'],
+                           ['solvcut', float, -1, 'Cutoff of the box'],
+                           ['grdspc', list, 0.5, 'Grid spacing', float],
+['ng', list, '-1,-1,-1', 'Number of grid points', int],
+['solvbox', list, '-1,-1,-1', 'Box limits', int],
+
+                           ['tolerance', list, 1.0e-5, 'Convergence tolerance', float],
+['ljTolerance', float, -1.0, 'Determines the Lennard-Jones cutoff distance based on the '
+                                                        'desired accuracy of the calculation'],
+['asympKSpaceTolerance', float, -1.0, 'Determines the reciprocal space long range '
+                                                                 'asymptotics cutoff distance based on the desired '
+                                                                 'accuracy of the calculation'],
+['treeDCF', int, 1, 'Use direct sum or the treecode approximation to calculate the direct '
+                                               'correlation function long-range asymptotic correction'],
+                           ['treeTCF', int, 1, 'Use direct sum or the treecode approximation to calculate the total '
+                                               'correlation function long-range asymptotic correction'],
+                           ['treeCoulomb', int, 0, 'Use direct sum or the treecode approximation to calculate the '
+                                                   'Coulomb potential energy'],
+['treeDCFMAC', float, 0.1, 'Treecode multipole acceptance criterion for the direct '
+                                                      'correlation function long-range asymptotic correction'],
+                           ['treeTCFMAC', float, 0.1, 'Treecode multipole acceptance criterion for the total '
+                                                      'correlation function long-range asymptotic correction'],
+                           ['treeCoulombMAC', float, 0.1, 'Treecode multipole acceptance criterion for the Coulomb '
+                                                          'potential energy'],
+['treeDCFOrder', int, 2, 'Treecode Taylor series order for the direct correlation function '
+                                                    'long-range asymptotic correction'],
+                           ['treeTCFOrder', int, 2, 'Treecode Taylor series order for the total correlation function '
+                                                    'long-range asymptotic correction'],
+                           ['treeCoulombOrder', int, 2,
+                            'Treecode Taylor series order for the Coulomb potential energy'],
+                           ['treeDCFN0', int, 500, 'Maximum number of grid points contained within the treecode leaf '
+                                                   'clusters for the direct correlation function long-range asymptotic '
+                                                   'correction'],
+                           ['treeTCFN0', int, 500, 'Maximum number of grid points contained within the treecode leaf '
+                                                   'clusters for the total correlation function long-range asymptotic '
+                                                   'correction'],
+                           ['treeCoulombN0', int, 500, 'Maximum number of grid points contained within the treecode '
+                                                       'leaf clusters for the Coulomb potential energy'],
+['mdiis_del', float, 0.7, 'MDIIS step size'],
+['mdiis_nvec', int, 5, 'Number of previous iterations MDIIS uses to predict a new solution'],
+['mdiis_restart', float, 10.0, 'If the current residual is mdiis_restart times larger than '
+                                                          'the smallest residual in memory, then the MDIIS procedure '
+                                                          'is restarted using the lowest residual solution stored in '
+                                                          'memory'],
+['maxstep', int, 10000, 'Maximum number of iterative steps per solution'],
+['npropagate', int, 5, 'Number of previous solutions to use in predicting a new solution'],
+                           ['polardecomp', int, 0, 'Break solv. energy into polar and nonpolar terms'],
+['entropicDecomp', int, 0, 'Decomposes solvation free energy into energy and entropy '
+                                                      'components'],
+                           ['rism_verbose', int, 0, 'Control how much 3D-RISM info to print'],
+                           ['thermo', str, 'std', 'Type of thermodynamic analysis to do']
+                       ], trigger='rismrun')
+
 input_file.addNamelist('ala', 'alanine_scanning',
                        [
                            ['mutant_res', str, '', 'Which residue will be mutated'],
@@ -583,6 +646,14 @@ input_file.addNamelist('ala', 'alanine_scanning',
                            ['intdiel_positive', int, 5, 'intdiel for positive charged residues'],
                            ['intdiel_negative', int, 5, 'intdiel for negative charged residues']
                        ], trigger='alarun')
+
+input_file.addNamelist('decomp', 'decomposition',
+                       [
+                           ['idecomp', int, 0, 'Which type of decomposition analysis to do'],
+                           ['dec_verbose', int, 0, 'Control energy terms are printed to the output'],
+                           ['print_res', str, 'within 6', 'Which residues to print decomposition data for'],
+                           ['csv_format', int, 1, 'Write decomposition data in CSV format']
+                       ], trigger='decomprun')
 
 input_file.addNamelist('nmode', 'nmode',
                        [
@@ -598,75 +669,3 @@ input_file.addNamelist('nmode', 'nmode',
                            ['drms', float, 0.001, 'Minimization gradient cutoff'],
                            ['maxcyc', int, 10000, 'Maximum number of minimization cycles'],
                        ], trigger='nmoderun')
-
-input_file.addNamelist('decomp', 'decomposition',
-                       [
-                           ['idecomp', int, 0, 'Which type of decomposition analysis to do'],
-                           ['dec_verbose', int, 0, 'Control energy terms are printed to the output'],
-                           ['print_res', str, 'within 6', 'Which residues to print decomposition data for'],
-                           ['csv_format', int, 1, 'Write decomposition data in CSV format']
-                       ], trigger='decomprun')
-
-input_file.addNamelist('rism', 'rism',
-                       [
-                           ['closure', list, 'kh', 'Closure equation to use'],
-                           ['buffer', float, 14, 'Distance between solute and edge of grid'],
-                           ['grdspc', list, 0.5, 'Grid spacing', float],
-                           ['solvcut', float, -1, 'Cutoff of the box'],
-                           ['tolerance', list, 1.0e-5, 'Convergence tolerance', float],
-                           # FIXME: deprecated
-                           # ['closureorder', int, 1, 'Order of closure if PSE'],
-                           ['ng', list, '-1,-1,-1', 'Number of grid points', int],
-                           ['solvbox', list, '-1,-1,-1', 'Box limits', int],
-                           ['polardecomp', int, 0, 'Break solv. energy into polar and nonpolar terms'],
-                           ['rism_verbose', int, 0, 'Control how much 3D-RISM info to print'],
-                           ['thermo', str, 'std', 'Type of thermodynamic analysis to do'],
-
-                           ['asympCorr', int, 1, 'Turn off long range asymptotic corrections for thermodynamic '
-                                                 'output only'],
-                           ['mdiis_del', float, 0.7, 'MDIIS step size'],
-                           ['mdiis_restart', float, 10.0, 'If the current residual is mdiis_restart times larger than '
-                                                          'the smallest residual in memory, then the MDIIS procedure '
-                                                          'is restarted using the lowest residual solution stored in '
-                                                          'memory'],
-                           ['mdiis_nvec', int, 5, 'Number of previous iterations MDIIS uses to predict a new solution'],
-                           ['maxstep', int, 10000, 'Maximum number of iterative steps per solution'],
-                           ['npropagate', int, 5, 'Number of previous solutions to use in predicting a new solution'],
-                           ['centering', int, 1, 'Select how solute is centered in the solvent box'],
-                           ['entropicDecomp', int, 0, 'Decomposes solvation free energy into energy and entropy '
-                                                      'components'],
-                           ['pc+', int, 0, 'Compute the PC+/3D-RISM excess chemical potential functional'],
-                           ['uccoeff', list, '0.0,0.0,0.0,0.0', 'Compute the UC excess chemical potential functional '
-                                                               'with the provided coefficients', float],
-                           ['treeDCF', int, 1, 'Use direct sum or the treecode approximation to calculate the direct '
-                                               'correlation function long-range asymptotic correction'],
-                           ['treeTCF', int, 1, 'Use direct sum or the treecode approximation to calculate the total '
-                                               'correlation function long-range asymptotic correction'],
-                           ['treeCoulomb', int, 0, 'Use direct sum or the treecode approximation to calculate the '
-                                                   'Coulomb potential energy'],
-                           ['treeDCFOrder', int, 2, 'Treecode Taylor series order for the direct correlation function '
-                                                    'long-range asymptotic correction'],
-                           ['treeTCFOrder', int, 2, 'Treecode Taylor series order for the total correlation function '
-                                                    'long-range asymptotic correction'],
-                           ['treeCoulombOrder', int, 2,
-                            'Treecode Taylor series order for the Coulomb potential energy'],
-                           ['treeDCFN0', int, 500, 'Maximum number of grid points contained within the treecode leaf '
-                                                   'clusters for the direct correlation function long-range asymptotic '
-                                                   'correction'],
-                           ['treeTCFN0', int, 500, 'Maximum number of grid points contained within the treecode leaf '
-                                                   'clusters for the total correlation function long-range asymptotic '
-                                                   'correction'],
-                           ['treeCoulombN0', int, 500, 'Maximum number of grid points contained within the treecode '
-                                                       'leaf clusters for the Coulomb potential energy'],
-                           ['treeDCFMAC', float, 0.1, 'Treecode multipole acceptance criterion for the direct '
-                                                      'correlation function long-range asymptotic correction'],
-                           ['treeTCFMAC', float, 0.1, 'Treecode multipole acceptance criterion for the total '
-                                                      'correlation function long-range asymptotic correction'],
-                           ['treeCoulombMAC', float, 0.1, 'Treecode multipole acceptance criterion for the Coulomb '
-                                                          'potential energy'],
-                           ['asympKSpaceTolerance', float, -1.0, 'Determines the reciprocal space long range '
-                                                                 'asymptotics cutoff distance based on the desired '
-                                                                 'accuracy of the calculation'],
-                           ['ljTolerance', float, -1.0, 'Determines the Lennard-Jones cutoff distance based on the '
-                                                        'desired accuracy of the calculation']
-                       ], trigger='rismrun')

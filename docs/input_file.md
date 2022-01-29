@@ -112,6 +112,8 @@ combined. See the formats below:
 
 ### **`&general` namelist variables**
 
+#### **`&general` basic input options**
+
 `sys_name` (Default = None)
 :   Define the System Name. This is useful when trying to analyze several systems at the same time or calculating 
 the correlation between the predicted and the experimental energies. If the name is not defined, one will be 
@@ -130,6 +132,12 @@ every trajectory file placed on the command-line. This is always the first frame
 `endframe` (Default = 9999999)
 :   The frame from which to stop extracting snapshots from the full, concatenated trajectory comprised of every
 trajectory file supplied on the command-line.
+
+`interval` (Default = 1)
+:     The offset from which to choose frames from each trajectory file. For example, an interval of 2 will pull
+every 2nd frame beginning at startframe and ending less than or equal to endframe.
+
+#### **`&general` parameter options**
 
 `forcefields` (Default = "oldff/leaprc.ff99SB,leaprc.gaff")
 :   Comma-separated list of force fields used to build Amber topologies. This variable is more flexible than the 
@@ -242,10 +250,6 @@ tested in previous `protein_forcefield` and `ligand_forcefield` variables.
           ["How gmx_MMPBSA works"](howworks.md#how-gmx_mmpbsa-works)   
         * This notation is simpler since these parameter files are generally the same for all systems
 
-`interval` (Default = 1)
-:     The offset from which to choose frames from each trajectory file. For example, an interval of 2 will pull
-every 2nd frame beginning at startframe and ending less than or equal to endframe.
-
 `PBRadii` (Default = 3)
 :   PBRadii to build amber topology files:
 
@@ -253,6 +257,13 @@ every 2nd frame beginning at startframe and ending less than or equal to endfram
     * 2: mbondi, recommended when igb = 1
     * 3: mbondi2, recommended when igb = 2 or 5
     * 4: mbondi3, recommended when igb = 8
+
+`temperature` (Default = 298.15)  
+:   Specify the temperature (in K) used in the calculations.
+   
+    _New in v1.4.0: Replace `entropy_temp`_
+
+#### **`&general` entropy options**
 
 `qh_entropy` (Default = 0)
 :    It specifies whether to perform a quasi-harmonic entropy (QH) approximation with `cpptraj` or not.
@@ -341,10 +352,7 @@ C2 Entropy, _e.g._: `ie_segment = 25` means that the last quartile of the total 
 
     _New in v1.5.0_
 
-`temperature` (Default = 298.15)  
-:   Specify the temperature (in K) used in the calculations.
-   
-    _New in v1.4.0: Replace `entropy_temp`_
+#### **`&general` miscellaneous options**
 
 `assign_chainID` (Default = 0) 
 :   Defines the chains ID assignment mode. _It is ignored when defining a reference structure
@@ -439,27 +447,37 @@ tracebacks are printed, which aids in debugging of issues. (Default = 0) (Advanc
     * A tutorial on binding free energy calculation with GB model is available 
     [here](examples/Protein_ligand/ST/README.md)
 
-`intdiel` (Default = 1.0)
-:   Define Internal dielectric constant.
-
 `igb` (Default = 5)
 :   Generalized Born method to use (see [Section 4](https://ambermd.org/doc12/Amber21.pdf#chapter.4)). Allowed values 
 are 1, 2, 5, 7 and 8.
 
+`intdiel` (Default = 1.0)
+:   Define Internal dielectric constant.
+
+`extdiel` (Default = 78.5)
+:   Define External dielectric constant.
+
 `saltcon` (Default = 0.0)
 :   Salt concentration in Molarity (M).
 
-`surfoff` (Default = 0.0)
-:   Offset to correct (by addition) the value of the non-polar contribution to the solvation free energy term.
+`rgbmax` (Default = 999.0)
+:   Distance cutoff in Angstroms to use when computing effective GB radii.
 
 `surften` (Default = 0.0072)
 :   Surface tension value. Units in kcal/mol/Å^2^
+
+`surfoff` (Default = 0.0)
+:   Offset to correct (by addition) the value of the non-polar contribution to the solvation free energy term.
 
 `molsurf` (Default = 0)
 :   Define the algorithm to calculate the surface area for the non polar solvation term.
     
     * 0: LCPO (Linear Combination of Pairwise Overlaps)
     * 1: molsurf algorithm
+
+`msoffset` (Default = 0) 
+:   Offset to apply to the individual atomic radii in the system when calculating the `molsurf` surface. See the
+description of the `molsurf` action command in [cpptraj][4].
 
 `probe` (Default = 1.4)
 :   Radius in Å of the probe molecule (supposed to be the size of a solvent molecule), to use when determining the 
@@ -468,9 +486,7 @@ molecular surface.
     !!! note
         only applicable when `molsurf` is set to 1
 
-`msoffset` (Default = 0) 
-:   Offset to apply to the individual atomic radii in the system when calculating the `molsurf` surface. See the
-description of the `molsurf` action command in [cpptraj][4].
+#### **`&gb` QM options**
 
 `ifqnt` (Default = 0)
 :   Specifies whether a part of the system is treated with quantum mechanics.
@@ -483,6 +499,16 @@ description of the `molsurf` action command in [cpptraj][4].
         * A sample QM/MMGBSA input file is shown [here](input_file.md#qmmmgbsa)
         * A tutorial on binding free energy calculation with QM/MMGBSA is available 
         [here](examples/QM_MMGBSA/README.md)
+
+`qm_theory` 
+:   Which semi-empirical Hamiltonian should be used for the quantum calculation. Options are `PM3`, `AM1`, `MNDO`, 
+`PDDG-PM3`, `PM3PDDG`, `PDDG-MNDO`, `PDDGMNDO`, `PM3-CARB1`, `PM3CARB1`, `DFTB`, `SCC-DFTB`, `RM1`, `PM6`, 
+`PM3-ZnB`, `PM3-MAIS`, `PM3ZNB`, `MNDO/D`, `MNDOD`. The dispersion correction can be switched on for `AM1` 
+and `PM6` by choosing `AM1-D*` and `PM6-D`, respectively. The dispersion and hydrogen bond correction will be 
+applied for `AM1-DH+` and `PM6-DH+`.
+
+    !!! danger
+         No `qm_theory` default, this must be specified if `ifqnt` = 1.
 
 `qm_residues`
 :   Complex residues to treat with quantum mechanics. All residues treated with quantum mechanics in the complex 
@@ -519,16 +545,6 @@ the same used for `print_res` variable in `&decomp` namelist
 
         === "Wrong notation"
             `qm_residues="A/5-6B,6D-7` Will end in error.
-
-`qm_theory` 
-:   Which semi-empirical Hamiltonian should be used for the quantum calculation. Options are `PM3`, `AM1`, `MNDO`, 
-`PDDG-PM3`, `PM3PDDG`, `PDDG-MNDO`, `PDDGMNDO`, `PM3-CARB1`, `PM3CARB1`, `DFTB`, `SCC-DFTB`, `RM1`, `PM6`, 
-`PM3-ZnB`, `PM3-MAIS`, `PM3ZNB`, `MNDO/D`, `MNDOD`. The dispersion correction can be switched on for `AM1` 
-and `PM6` by choosing `AM1-D*` and `PM6-D`, respectively. The dispersion and hydrogen bond correction will be 
-applied for `AM1-DH+` and `PM6-DH+`.
-
-    !!! danger
-         No `qm_theory` default, this must be specified if `ifqnt` = 1.
 
 `qmcharge_com` (Default = 0)
 :   The charge of the quantum section for the complex.
@@ -609,13 +625,24 @@ method, while a level-set based algebraic method is used when `ipb > 2`.
   [227]: https://pubs.acs.org/doi/abs/10.1021/jp073399n
   [229]: https://onlinelibrary.wiley.com/doi/10.1002/jcc.540100504
 
+`sander_apbs` (Default = 0)
+:   Option to use `APBS` for `PB` calculation instead of the built-in `PBSA` solver. This will work only through the
+    `iAPBS` interface built into `sander.APBS`. Instructions for this can be found online at the iAPBS/APBS websites.
+    
+    * 0: Don’t use `APBS`
+    * 1: Use `sander.APBS`
+
 #### **`&pb` options to define the physical constants**
+
+`indi` (Default = 1.0)
+:   Internal dielectric constant. This corresponds to `epsin` in [pbsa][5].
 
 `exdi` (Default = 80.0)
 :   External dielectric constant. This corresponds to `epsout` in [pbsa][5].
 
-`indi` (Default = 1.0)
-:   Internal dielectric constant. This corresponds to `epsin` in [pbsa][5].
+`emem` (Default = 1.0)
+:   Sets the membrane dielectric constant. Only used if `memopt` > 0, does nothing otherwise. Value
+used should be between `indi` and `exdi` or there may be errors. This corresponds to `epsmem` in [pbsa][5].
 
 `smoothopt` (Default = 1)
 :   Instructs PB how to set up dielectric values for finite-difference grid edges that are located across the
@@ -846,14 +873,6 @@ Waals interactions only. The particle-particle portion of the Coulombic interact
 `nsnba` (Default = 1)
 :   Sets how often (steps) atom-based pairlist is generated.
 
-#### **`&pb` options for output**
-
-`npbverb` (Default = 0)
-:   Verbose mode.
-
-    * 0: Off
-    * 1: On
-
 #### **`&pb` options to select a non-polar solvation treatment**
 
 `decompopt` (Default = 2)
@@ -925,17 +944,16 @@ from the first step are buried. The exposed dots of each atom after the second s
 accessible portion of the atom and are used to compute the SASA of the atom. The molecular SASA is simply a 
 summation of the atomic SASA’s. A molecular SASA is used for both PB dielectric map assignment and for NP calculations.
 
-#### **`&pb` calculation with sander_apbs**
-
-`sander_apbs` (Default = 0)
-:   Option to use `APBS` for `PB` calculation instead of the built-in `PBSA` solver. This will work only through the
-    `iAPBS` interface built into `sander.APBS`. Instructions for this can be found online at the iAPBS/APBS websites.
-    
-    * 0: Don’t use `APBS`
-    * 1: Use `sander.APBS`
-
   [5]: https://ambermd.org/doc12/Amber21.pdf#chapter.6
   [6]: https://onlinelibrary.wiley.com/doi/10.1002/jcc.24467
+
+#### **`&pb` options for output**
+
+`npbverb` (Default = 0)
+:   Verbose mode.
+
+    * 0: Off
+    * 1: On
 
 ### **`&rism` namelist variables**
 
@@ -1019,7 +1037,7 @@ accuracy and how this interacts with `ljTolerance`, `buffer`, and `solvbox`. Thr
 the calculation. See [§7.2.3](https://ambermd.org/doc12/Amber21.pdf#subsection.7.2.3) for details on how this affects 
 numerical accuracy and how this interacts with `tolerance`, `buffer`, and `solvbox`.
 
-`asympKSpace` (Default = -1)
+`asympKSpaceTolerance` (Default = -1)
 :   Tolerance reciprocal space long range asymptotics accuracy (Optional.) Determines the reciprocal space long 
 range asymptotic cutoff distance based on the desired accuracy of the calculation. 
 See [§7.2.3](https://ambermd.org/doc12/Amber21.pdf#subsection.7.2.3) for details on how this affects numerical 
@@ -1143,22 +1161,6 @@ and "both" will print out separate sections for both.
     * A sample alanine scanning input file is shown [here](input_file.md#alanine-scanning)
     * A tutorial on alanine scanning is available [here](examples/Alanine_scanning/README.md)
 
-`mutant_only`  (Default = 0)
-:   Option to perform specified calculations only for the mutants. 
-
-    * 0: Perform calcultion on mutant and original
-    * 1: Perform calcultion on mutant only
-    
-    !!! note
-        Note that all calculation details are controlled in the other namelists, though for alanine scanning to be 
-        performed, the namelist must be included (blank if desired)
-
-`mutant` (Default = "ALA") 
-:   Defines the residue that it is going to be mutated for. Allowed values are: `"ALA"` or `"A"` for Alanine scanning 
-    and `"GLY"` or `"G"` for Glycine scanning.
-
-    _Changed in v1.3.0: Change mol (receptor or ligand) by mutant aminoacid (ALA or GLY)_
-
 `mutant_res` (Default = None. Most be defined)
 :   Define the specific residue that is going to be mutated. Use the following format CHAIN:RESNUM (eg: 'A:350') or 
 CHAIN:RESNUM:INSERTION_CODE if applicable (eg: "A:27:B"). 
@@ -1171,6 +1173,22 @@ CHAIN:RESNUM:INSERTION_CODE if applicable (eg: "A:27:B").
         topology
     
     _Changed in v1.4.0: Allow mutation in antibodies since it support insertion code notation_
+
+`mutant` (Default = "ALA") 
+:   Defines the residue that it is going to be mutated for. Allowed values are: `"ALA"` or `"A"` for Alanine scanning 
+    and `"GLY"` or `"G"` for Glycine scanning.
+
+    _Changed in v1.3.0: Change mol (receptor or ligand) by mutant aminoacid (ALA or GLY)_
+
+`mutant_only`  (Default = 0)
+:   Option to perform specified calculations only for the mutants. 
+
+    * 0: Perform calcultion on mutant and original
+    * 1: Perform calcultion on mutant only
+    
+    !!! note
+        Note that all calculation details are controlled in the other namelists, though for alanine scanning to be 
+        performed, the namelist must be included (blank if desired)
 
 `cas_intdiel` (Default = 0)
 :   The dielectric constant (`intdiel`(GB)/`indi`(PB)) will be modified depending on the nature of the residue to be 
@@ -1223,13 +1241,16 @@ mutated.
     * A sample decomp input file is shown [here](input_file.md#decomposition-analysis)
     * A tutorial on binding free energy decomposition is available [here](examples/Decomposition_analysis/README.md)
 
-`csv_format`  (Default = 1)
-:   Print the decomposition output in a Comma-Separated-Values (CSV) file. CSV files open natively in most
-spreadsheets. 
+`idecomp`
+:   Energy decomposition scheme to use:
+    
+    * 1: Per-residue decomp with 1-4 terms added to internal potential terms
+    * 2: Per-residue decomp with 1-4 EEL added to EEL and 1-4 VDW added to VDW potential terms
+    * 3: Pairwise decomp with 1-4 terms added to internal potential terms
+    * 4: Pairwise decomp with 1-4 EEL added to EEL and 1-4 VDW added to VDW potential terms
 
-    * 0: data to be written out in the standard ASCII format.
-    * 1: data to be written out in a CSV file, and standard error of the mean will be calculated and included for all 
-    data.
+    !!! warning
+        * No default. This must be specified!
 
 `dec_verbose` (Default = 0)
 :   Set the level of output to print in the decomp_output file.
@@ -1242,17 +1263,6 @@ spreadsheets.
     !!! note
         If the values 0 or 2 are chosen, only the Total contributions are required, so only those will be printed to the
         mdout files to cut down on the size of the mdout files and the time required to parse them.
-
-`idecomp`
-:   Energy decomposition scheme to use:
-    
-    * 1: Per-residue decomp with 1-4 terms added to internal potential terms
-    * 2: Per-residue decomp with 1-4 EEL added to EEL and 1-4 VDW added to VDW potential terms
-    * 3: Pairwise decomp with 1-4 terms added to internal potential terms
-    * 4: Pairwise decomp with 1-4 EEL added to EEL and 1-4 VDW added to VDW potential terms
-
-    !!! warning
-        * No default. This must be specified!
 
 `print_res` (Default = "within 6")
 :   Select residues whose information is going to be printed in the output file. The default selection should be 
@@ -1317,6 +1327,14 @@ sufficient in most cases, however we have added several additional notations
     
     _Changed in v1.4.0: Improve residue selection_
 
+`csv_format`  (Default = 1)
+:   Print the decomposition output in a Comma-Separated-Values (CSV) file. CSV files open natively in most
+spreadsheets. 
+
+    * 0: data to be written out in the standard ASCII format.
+    * 1: data to be written out in a CSV file, and standard error of the mean will be calculated and included for all 
+    data.
+
 ### **`&nmode` namelist variables**
 
 !!! note "Keep in mind"
@@ -1329,20 +1347,22 @@ sufficient in most cases, however we have added several additional notations
     * A sample nmode input file is shown [here](input_file.md#entropy-with-nmode)
     * A tutorial on normal mode analysis is available [here](examples/Entropy_calculations/nmode/README.md)
 
-`dielc` (Default = 1.0)
-:   Distance-dependent dielectric constant 
+#### **`&nmode` basic options**
 
-`drms` (Default = 0.001)
-:   Convergence criteria for minimized energy gradient.
+`nmstartframe`[^2]
+:   Frame number to begin performing `nmode` calculations on 
 
-`maxcyc` (Default = 10000)
-:   Maximum number of minimization cycles to use per snapshot in sander.
+  [^2]: _These variables will choose a subset of the frames chosen from the variables in the `&general` namelist. Thus,
+        the "trajectory" from which snapshots will be chosen for `nmode` calculations will be the collection of 
+        snapshots upon which the other calculations were performed._
+
+`nmendframe`[^2] (Default = 1000000)
+:   Frame number to stop performing `nmode` calculations on 
 
 `nminterval`[^2] (Default = 1)
 :   Offset from which to choose frames to perform `nmode` calculations on
 
-`nmendframe`[^2] (Default = 1000000)
-:   Frame number to stop performing `nmode` calculations on 
+#### **`&nmode` parameter options**
 
 `nmode_igb` (Default = 1)
 :   Value for Generalized Born model to be used in calculations. Options are:
@@ -1352,14 +1372,16 @@ sufficient in most cases, however we have added several additional notations
 
 `nmode_istrng` (Default = 0.0)
 :   Ionic strength to use in `nmode` calculations. Units are Molarity (M). Non-zero values are ignored if `nmode_igb`
-is 0 above. 
+is 0 above.
 
-`nmstartframe`[^2]
-:   Frame number to begin performing `nmode` calculations on 
+`dielc` (Default = 1.0)
+:   Distance-dependent dielectric constant 
 
-  [^2]: _These variables will choose a subset of the frames chosen from the variables in the `&general` namelist. Thus,
-        the "trajectory" from which snapshots will be chosen for `nmode` calculations will be the collection of 
-        snapshots upon which the other calculations were performed._
+`drms` (Default = 0.001)
+:   Convergence criteria for minimized energy gradient.
+
+`maxcyc` (Default = 10000)
+:   Maximum number of minimization cycles to use per snapshot in sander.
 
 ## Sample input files
 

@@ -195,7 +195,7 @@ class SanderGBInput(SanderInput):
     input_items = {'ntb': 0, 'cut': 999.0, 'nsnb': 99999,
                    'imin': 5, 'maxcyc': 1, 'ncyc': 0,
                    'igb': 5, 'saltcon': 0.0, 'intdiel': 1.0,
-                   'gbsa': 0, 'extdiel': 80.0, 'surften': 0.0072,
+                   'gbsa': 0, 'extdiel': 78.5, 'surften': 0.0072,
                    'ioutfm': 0, 'idecomp': 0, 'offset': -999999.0,
                    'dec_verbose': 0, 'ifqnt': 0, 'qmmask': '',
                    'qm_theory': '', 'qmcharge': 0, 'qmgb': 2,

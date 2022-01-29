@@ -235,7 +235,7 @@ class RISMCalculation(Calculation):
         self.solvbox = ','.join(map(str, INPUT['solvbox']))
         self.gf = INPUT['rismrun_gf']
 
-        self.asympCorr = INPUT['asympCorr']
+        self.noasympcorr = INPUT['noasympcorr']
         self.mdiis_del = INPUT['mdiis_del']
         self.mdiis_restart = INPUT['mdiis_restart']
         self.mdiis_nvec = INPUT['mdiis_nvec']
