@@ -851,8 +851,9 @@ class MMPBSA_App(object):
                 GMXMMPBSA_ERROR('RISM_VERBOSE must be 0, 1, or 2!', InputError)
             if INPUT['buffer'] < 0 and INPUT['solvcut'] < 0:
                 GMXMMPBSA_ERROR('If BUFFER < 0, SOLVCUT must be > 0!', InputError)
-            if INPUT['tolerance'] < 0:
-                GMXMMPBSA_ERROR('TOLERANCE must be positive!', InputError)
+            for tol in [float(t) for t in ''.join((INPUT['tolerance']).split()).split(',')]:
+                if tol < 0:
+                    GMXMMPBSA_ERROR('TOLERANCE must be positive!', InputError)
             if INPUT['buffer'] < 0 and INPUT['ng'] == '':
                 GMXMMPBSA_ERROR('You must specify NG if BUFFER < 0!', InputError)
             if INPUT['closure'] == 'pse' and INPUT['closureorder'] < 1:
