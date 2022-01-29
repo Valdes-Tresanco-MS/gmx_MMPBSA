@@ -499,7 +499,7 @@ class CheckMakeTop:
         if self.INPUT['alarun']:
             logging.info('Building Mutant Complex Topology...')
             # get mutation index in complex
-            self.com_mut_index, self.part_mut, self.part_index, self.mut_label = self.getMutationInfo()
+            self.com_mut_index, self.part_mut, self.part_index = self.getMutationInfo()
             mut_com_amb_prm = self.makeMutTop(com_amb_prm, self.com_mut_index)
             logging.info(f"Assigning PBRadii {PBRadii[self.INPUT['PBRadii']]} to Mutant Complex...")
             action = ChRad(mut_com_amb_prm, PBRadii[self.INPUT['PBRadii']])
@@ -567,7 +567,7 @@ class CheckMakeTop:
         logging.info('Changing the Ligand residues name format from GROMACS to Amber...')
         self.fixparm2amber(self.ligand_str, removeH=True)
 
-        logging.info('Dividing receptor and ligand according to their continuity into individual PDB files..')
+        logging.info('Splitting  receptor and ligand in PDB files..')
         self.receptor_list = {}
         start = 1
         for c, r in enumerate(self.resi['REC']['num'], start=1):
@@ -585,7 +585,7 @@ class CheckMakeTop:
         self.mut_receptor_list = {}
         self.mut_ligand_list = {}
         if self.INPUT['alarun']:
-            self.com_mut_index, self.part_mut, self.part_index, self.mut_label = self.getMutationInfo()
+            self.com_mut_index, self.part_mut, self.part_index = self.getMutationInfo()
             start = 1
             if self.part_mut == 'REC':
                 logging.info('Detecting mutation in Receptor. Building Mutant Receptor Structure...')
@@ -603,47 +603,8 @@ class CheckMakeTop:
                     end, sfile = self._split_str(
                         start, r, c, 'MUT_LIG', self.ligand_str, self.part_index
                     )
-                    self.mut_ligand_list[f'MLIG{c}'] =  sfile
+                    self.mut_ligand_list[f'MLIG{c}'] = sfile
                     start += end
-
-    def reswithin(self):
-        # Get residue form receptor-ligand interface
-        if not self.INPUT['decomprun']:
-            return
-        if self.INPUT['print_res'] == 'all':
-            return
-        dist, res_selection = selector(self.INPUT['print_res'])
-        res_list = []
-
-        if dist:
-            for i in self.resl['REC']:
-                for j in self.resl['LIG']:
-                    for rat in self.complex_str.residues[i - 1].atoms:
-                        rat_coor = [rat.xx, rat.xy, rat.xz]
-                        for lat in self.complex_str.residues[j - 1].atoms:
-                            lat_coor = [lat.xx, lat.xy, lat.xz]
-                            if get_dist(rat_coor, lat_coor) <= dist:
-                                if i not in res_list:
-                                    res_list.append(i)
-                                if j not in res_list:
-                                    res_list.append(j)
-                                break
-        elif res_selection:
-            for i in self.resl['REC']:
-                rres = self.complex_str.residues[i - 1]
-                if [rres.chain, rres.number, rres.insertion_code] in res_selection:
-                    res_list.append(i)
-                    res_selection.remove([rres.chain, rres.number, rres.insertion_code])
-            for j in self.resl['LIG']:
-                lres = self.complex_str.residues[j - 1]
-                if [lres.chain, lres.number, lres.insertion_code] in res_selection:
-                    res_list.append(j)
-                    res_selection.remove([lres.chain, lres.number, lres.insertion_code])
-        res_list.sort()
-        self.INPUT['print_res'] = ','.join([str(x) for x in res_list])
-        if res_selection:
-            for res in res_selection:
-                logging.warning("We couldn't find this residue CHAIN:{} RES_NUM:{} ICODE: {}".format(*res))
 
     @staticmethod
     def cleantop(top_file, ndx):
@@ -703,17 +664,7 @@ class CheckMakeTop:
         lig_mask = ':' + ','.join(self.resi['LIG']['string'])
 
         if self.INPUT['alarun']:
-            # to change the self.resl to get the mutant label in decomp analysis
-            self.resl['MUT_COM'] = deepcopy(self.resl['COM'])
-            self.resl['MUT_COM'][self.com_mut_index].name = self.INPUT['mutant']
-            # self.com_mut_index, self.part_mut, self.part_index,
-            self.resl['MUT_REC'] = deepcopy(self.resl['REC'])
-            self.resl['MUT_LIG'] = deepcopy(self.resl['LIG'])
-            if self.part_mut == 'REC':
-                self.resl['MUT_REC'][self.part_index].name = self.INPUT['mutant']
-            else:
-                self.resl['MUT_LIG'][self.part_index].name = self.INPUT['mutant']
-
+            self.resl[self.com_mut_index].set_mut(self.INPUT['mutant'])
         return rec_mask, lig_mask, self.resl
 
     def get_selected_residues(self, select):
@@ -723,25 +674,33 @@ class CheckMakeTop:
         dist, res_selection = selector(select)
         sele_res = []
         if dist:
-            for i in self.resl['REC']:
-                for j in self.resl['LIG']:
-                    for rat in self.complex_str.residues[i - 1].atoms:
+            for rres in self.resl:
+                if rres.is_ligand():
+                    continue
+                for lres in self.resl:
+                    if lres.is_receptor():
+                        continue
+                    for rat in self.complex_str.residues[rres - 1].atoms:
                         rat_coor = [rat.xx, rat.xy, rat.xz]
-                        for lat in self.complex_str.residues[j - 1].atoms:
+                        for lat in self.complex_str.residues[lres - 1].atoms:
                             lat_coor = [lat.xx, lat.xy, lat.xz]
                             if get_dist(rat_coor, lat_coor) <= dist:
-                                if i not in sele_res:
-                                    sele_res.append(i)
-                                if j not in sele_res:
-                                    sele_res.append(j)
+                                if rres not in sele_res:
+                                    sele_res.append(rres)
+                                if lres not in sele_res:
+                                    sele_res.append(lres)
                                 break
         elif res_selection:
-            for i in self.resl['REC']:
+            for i in self.resl:
+                if i.is_ligand():
+                    continue
                 rres = self.complex_str.residues[i - 1]
                 if [rres.chain, rres.number, rres.insertion_code] in res_selection:
                     sele_res.append(i)
                     res_selection.remove([rres.chain, rres.number, rres.insertion_code])
-            for j in self.resl['LIG']:
+            for j in self.resl:
+                if j.is_receptor():
+                    continue
                 lres = self.complex_str.residues[j - 1]
                 if [lres.chain, lres.number, lres.insertion_code] in res_selection:
                     sele_res.append(j)
@@ -824,15 +783,12 @@ class CheckMakeTop:
         if not parmed.residue.AminoAcidResidue.has(res.name):
             logging.warning(f"Selecting residue {res.chain}:{res.name}:{res.number}{icode} can't be mutated and "
                               f"will be ignored...")
-        label = f"{res.name}[{res.chain}:{res.number}]{self.INPUT['mutant']}"
-        if icode:
-            label = f"{res.name}[{res.chain}:{res.number}:{res.insertion_code}]{self.INPUT['mutant']}"
 
-        if r in self.resl['REC']:
-            part_index = self.resl['REC'].index(r)
+        if r.is_receptor():
+            part_index = r.id_index - 1
             part_mut = 'REC'
-        elif r in self.resl['LIG']:
-            part_index = self.resl['LIG'].index(r)
+        elif r.is_ligand():
+            part_index = r.id_index - 1
             part_mut = 'LIG'
         else:
             part_index = None
@@ -843,7 +799,7 @@ class CheckMakeTop:
                 GMXMMPBSA_ERROR(f'Residue {res.chain}:{res.number} not found')
 
         # return r - 1 since r is the complex mutant index from amber selection format. Needed for top mutation only
-        return r - 1, part_mut, part_index, label
+        return r - 1, part_mut, part_index
 
     def makeMutTop(self, wt_top, mut_index, pdb=False):
         """
@@ -1064,7 +1020,7 @@ class CheckMakeTop:
                 GMXMMPBSA_ERROR(f'The number of residues of the complex ({len(com_str.residues)}) and of the '
                                 f'reference structure ({len(ref_str.residues)}) are different. Please check that the '
                                 f'reference structure is correct')
-            for c, res in enumerate(ref_str.residues, start=1):
+            for c, res in enumerate(ref_str.residues):
                 if com_str.residues[c-1].number != res.number or com_str.residues[c-1].name != res.name:
                     GMXMMPBSA_ERROR('There is no match between the complex and the reference structure used. An '
                                     f'attempt was made to assign the chain ID to "{com_str.residues[c-1].name}'
@@ -1072,12 +1028,11 @@ class CheckMakeTop:
                                     f'complex, but "{res.name}:{res.number}:{res.insertion_code}" was expected '
                                     'based on the reference structure. Please check that the reference structure is '
                                     'correct')
-                com_str.residues[c-1].chain = res.chain
-                if c in self.resl['REC']:
-                    i = self.resl['REC'].index(c)
+                com_str.residues[c].chain = res.chain
+                i = self.resl[c].id_index - 1
+                if self.resl[c].is_receptor():
                     rec_str.residues[i].chain = res.chain
                 else:
-                    i = self.resl['LIG'].index(c)
                     lig_str.residues[i].chain = res.chain
         else:
             assign = False
@@ -1109,26 +1064,24 @@ class CheckMakeTop:
         previous_res_number = 0
         curr_chain_id = 'A'
         has_nucl = 0
-        for c, res in enumerate(com_str.residues, start=1):
+        for c, res in enumerate(com_str.residues):
             if res.chain:
                 if res.chain != curr_chain_id:
                     res.chain = curr_chain_id
-                    if c in self.resl['REC']:
-                        i = self.resl['REC'].index(c)
+                    i = self.resl[c].id_index - 1
+                    if self.resl[c].is_receptor():
                         rec_str.residues[i].chain = res.chain
                     else:
-                        i = self.resl['LIG'].index(c)
                         lig_str.residues[i].chain = res.chain
                 if res.chain not in chains_ids:
                     chains_ids.append(res.chain)
             else:
                 res.chain = curr_chain_id
 
-                if c in self.resl['REC']:
-                    i = self.resl['REC'].index(c)
+                i = self.resl[c].id_index - 1
+                if self.resl[c].is_receptor():
                     rec_str.residues[i].chain = res.chain
                 else:
-                    i = self.resl['LIG'].index(c)
                     lig_str.residues[i].chain = res.chain
                 if curr_chain_id not in chains_ids:
                     chains_ids.append(curr_chain_id)
@@ -1140,11 +1093,11 @@ class CheckMakeTop:
                 chain_by_ter = False
                 curr_chain_id = chains_letters[chains_letters.index(chains_ids[-1]) + 1]
                 res.chain = curr_chain_id
-                if c in self.resl['REC']:
-                    i = self.resl['REC'].index(c)
+
+                i = self.resl[c].id_index - 1
+                if self.resl[c].is_receptor():
                     rec_str.residues[i].chain = res.chain
                 else:
-                    i = self.resl['LIG'].index(c)
                     lig_str.residues[i].chain = res.chain
                 if res.chain not in chains_ids:
                     chains_ids.append(res.chain)
@@ -1154,12 +1107,10 @@ class CheckMakeTop:
                 chain_by_num = False
                 curr_chain_id = chains_letters[chains_letters.index(chains_ids[-1]) + 1]
                 res.chain = curr_chain_id
-
-                if c + 1 in self.resl['REC']:
-                    i = self.resl['REC'].index(c)
+                i = self.resl[c].id_index - 1
+                if self.resl[c + 1].is_receptor():
                     rec_str.residues[i].chain = res.chain
                 else:
-                    i = self.resl['LIG'].index(c)
                     lig_str.residues[i].chain = res.chain
                 if res.chain not in chains_ids:
                     chains_ids.append(res.chain)

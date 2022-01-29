@@ -517,13 +517,11 @@ class MMPBSA_App(object):
                               self.INPUT['ligand_mask'], self.pre)
             self.calc_list.append(c, '', timer_key='qh')
 
-
     def make_prmtops(self):
         self.timer.add_timer('setup_gmx', 'Total GROMACS setup time:')
         self.timer.start_timer('setup_gmx')
-        if not self.FILES.rewrite_output:
-            if self.master:
-                self.remove(0)
+        if not self.FILES.rewrite_output and self.master:
+            self.remove(0)
 
         # Find external programs IFF we are doing a calc
         external_progs = find_progs(self.INPUT, self.mpi_size) if self.master else {}
@@ -539,7 +537,8 @@ class MMPBSA_App(object):
              self.FILES.mutant_receptor_prmtop, self.FILES.mutant_ligand_prmtop) = maketop.buildTopology()
             logging.info('Building AMBER Topologies from GROMACS files...Done.\n')
             self.INPUT['receptor_mask'], self.INPUT['ligand_mask'], self.resl = maketop.get_masks()
-            self.mut_str = maketop.mut_label
+            self.mutant_index = maketop.com_mut_index
+            self.mut_str = self.resl[maketop.com_mut_index] if self.mutant_index else ''
             self.FILES.complex_fixed = self.FILES.prefix + 'COM_FIXED.pdb'
         self.FILES = self.MPI.COMM_WORLD.bcast(self.FILES, root=0)
         self.INPUT = self.MPI.COMM_WORLD.bcast(self.INPUT, root=0)
@@ -1043,34 +1042,19 @@ class MMPBSA_App(object):
             DecompClass = PairDecompOut
 
         if not hasattr(self, 'resl'):
-            from GMXMMPBSA.utils import res2map, get_indexes
-            from copy import deepcopy
-            import re
-            indexes = get_indexes(com_ndx=FILES.complex_index,
-                                  rec_ndx=FILES.receptor_index, rec_group=FILES.receptor_group,
-                                  lig_ndx=FILES.ligand_index, lig_group=FILES.ligand_group)
-            masks, res_list, order_list = res2map(indexes, FILES.complex_fixed)
-            self.resl = res_list
-
+            from GMXMMPBSA.utils import mask2list
+            self.resl = mask2list(FILES.complex_fixed, INPUT['receptor_mask'], INPUT['ligand_mask'])
             if INPUT['alarun']:
-                # to change the self.resl to get the mutant label in decomp analysis
-                mut = re.split(r":\s*|/\s*", INPUT['mutant_res'])
+                self.resl[self.mutant_index].set_mut(INPUT['mutant'])
 
-                self.resl['MUT_COM'] = deepcopy(self.resl['COM'])
-                for r in self.resl['MUT_COM']:
-                    if r.string.split(':')[0::2] == mut:
-                        r.name = INPUT['mutant']
-                        break
-                self.resl['MUT_REC'] = deepcopy(self.resl['REC'])
-                self.resl['MUT_LIG'] = deepcopy(self.resl['LIG'])
-                for r in self.resl['MUT_REC']:
-                    if r.string.split(':')[0::2] == mut:
-                        r.name = INPUT['mutant']
-                        break
-                for r in self.resl['MUT_LIG']:
-                    if r.string.split(':')[0::2] == mut:
-                        r.name = INPUT['mutant']
-                        break
+        rec_list = {}
+        lig_list = {}
+        for x in self.resl:
+            if x.is_receptor():
+                rec_list[x.id_index - 1] = x
+            else:
+                lig_list[x.id_index - 1] = x
+
 
         for i, key in enumerate(outkey):
             if not INPUT[triggers[i]]:
@@ -1086,26 +1070,26 @@ class MMPBSA_App(object):
                     csv_pre = csv_prefix % 'com'
                 self.calc_types.decomp_normal[key] = {'complex': DecompClass('complex')}
                 self.calc_types.decomp_normal[key]['complex'].parse_from_file(self.pre + basename[i] % 'complex',
-                                                                              self.normal_system.complex_prmtop, INPUT,
-                                                                              surften, csv_pre, self.mpi_size)
+                                                                              self.resl, INPUT, surften, csv_pre,
+                                                                              self.mpi_size)
                 if not self.stability:
                     if csv_prefix:
                         csv_pre = csv_prefix % 'rec'
                     self.calc_types.decomp_normal[key]['receptor'] = DecompClass('receptor')
                     self.calc_types.decomp_normal[key]['receptor'].parse_from_file(self.pre + basename[i] % 'receptor',
-                                                                                   self.normal_system.receptor_prmtop, INPUT,
-                                                                                   surften, csv_pre, self.mpi_size)
+                                                                                   rec_list, INPUT, surften,
+                                                                                   csv_pre, self.mpi_size)
                     if csv_prefix:
                         csv_pre = csv_prefix % 'lig'
                     self.calc_types.decomp_normal[key]['ligand'] = DecompClass('ligand')
                     self.calc_types.decomp_normal[key]['ligand'].parse_from_file(self.pre + basename[i] % 'ligand',
-                                                                                 self.normal_system.ligand_prmtop, INPUT,
-                                                                                 surften, csv_pre, self.mpi_size)
+                                                                                 lig_list, INPUT, surften, csv_pre,
+                                                                                 self.mpi_size)
                     if csv_prefix:
                         csv_pre = self.pre + f'{key}_bind'
                     self.calc_types.decomp_normal[key]['delta'] = DecompBindingClass(
                         self.calc_types.decomp_normal[key]['complex'], self.calc_types.decomp_normal[key]['receptor'],
-                        self.calc_types.decomp_normal[key]['ligand'], self.normal_system, INPUT, csv_pre,
+                        self.calc_types.decomp_normal[key]['ligand'], INPUT, csv_pre,
                         'Energy Decomposition Analysis (All units kcal/mol): Generalized Born solvent')
 
             if INPUT['alarun']:
@@ -1114,29 +1098,26 @@ class MMPBSA_App(object):
                     csv_pre = csv_prefix % 'com'
                 self.calc_types.decomp_mutant[key] = {'complex': DecompClass('Mutant-Complex')}
                 self.calc_types.decomp_mutant[key]['complex'].parse_from_file(self.pre + 'mutant_' + basename[i]
-                                                                              % 'complex',
-                                                                              self.mutant_system.complex_prmtop,
-                                                                              INPUT, surften, self.mpi_size)
+                                                                              % 'complex', self.resl, INPUT, surften,
+                                                                              self.mpi_size)
                 if not self.stability:
                     if csv_prefix:
                         csv_pre = csv_prefix % 'rec'
                     self.calc_types.decomp_mutant[key]['receptor'] = DecompClass('Mutant-Receptor')
                     self.calc_types.decomp_mutant[key]['receptor'].parse_from_file(self.pre + 'mutant_' + basename[i]
-                                                                                   % 'receptor',
-                                                                                   self.mutant_system.receptor_prmtop,
-                                                                                   INPUT, surften, self.mpi_size)
+                                                                                   % 'receptor', rec_list, INPUT,
+                                                                                   surften, self.mpi_size)
                     if csv_prefix:
                         csv_pre = csv_prefix % 'lig'
                     self.calc_types.decomp_mutant[key]['ligand'] = DecompClass('Mutant-Ligand')
                     self.calc_types.decomp_mutant[key]['ligand'].parse_from_file(self.pre + 'mutant_' + basename[i]
-                                                                                 % 'ligand',
-                                                                                 self.mutant_system.ligand_prmtop,
-                                                                                 INPUT, surften, self.mpi_size)
+                                                                                 % 'ligand', lig_list, INPUT,
+                                                                                 surften, self.mpi_size)
                     if csv_prefix:
                         csv_pre = self.pre + f'{key}_bind'
                     self.calc_types.decomp_mutant[key]['delta'] = DecompBindingClass(
                         self.calc_types.decomp_mutant[key]['complex'], self.calc_types.decomp_mutant[key]['receptor'],
-                        self.calc_types.decomp_mutant[key]['ligand'], self.mutant_system, INPUT, csv_pre,
+                        self.calc_types.decomp_mutant[key]['ligand'], INPUT, csv_pre,
                         f'Energy Decomposition Analysis (All units kcal/mol): Generalized Born solvent '
                         f'({self.mut_str})')
 

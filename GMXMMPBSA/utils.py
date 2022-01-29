@@ -59,6 +59,40 @@ def create_input_args(args: list):
         return ['general'] + args
 
 
+def mask2list(com_str, rec_mask, lig_mask):
+    rm_list = rec_mask.strip(":").split(',')
+    lm_list = lig_mask.strip(':').split(',')
+    res_list = []
+
+    for r in rm_list:
+        if '-' in r:
+            s, e = r.split('-')
+            for i in range(int(s) - 1, int(e)):
+                res_list.append([i, 'R'])
+        else:
+            res_list.append([int(r) - 1, 'R'])
+    for l in lm_list:
+        if '-' in l:
+            s, e = l.split('-')
+            for i in range(int(s) - 1, int(e)):
+                res_list.append([i, 'L'])
+        else:
+            res_list.append([int(l) - 1, 'L'])
+    res_list = sorted(res_list, key=lambda x: x[0])
+    comstr = parmed.load_file(com_str)
+    resl = []
+    rec_index = 1
+    lig_index = 1
+    for res, rl in zip(comstr.residues, res_list):
+        if rl[1] == 'R':
+            resl.append(Residue(rl[0] + 1, res.number, res.chain, rl[1], rec_index, res.name, res.insertion_code))
+            rec_index += 1
+        else:
+            resl.append(Residue(rl[0] + 1, res.number, res.chain, rl[1], lig_index, res.name, res.insertion_code))
+            lig_index += 1
+    return resl
+
+
 def log_subprocess_output(process):
     while True:
         output = process.stdout.readline().decode()
@@ -72,33 +106,39 @@ class Residue(int):
     """
     Residue class
     """
-    def __init__(self, index, number, chain, mol, id, name, icode=''):
+    def __init__(self, index, number, chain, id, id_index, name, icode=''):
         int.__init__(index)
         self.index = index
         self.number = number
         self.chain = chain
-        self.mol = mol
         self.id = id
+        self.id_index = id_index
         self.name = name
         self.icode = icode
+        self.mutant_label = None
+        self.string = f"{id}:{chain}:{name}:{number}:{icode}" if icode else f"{id}:{chain}:{name}:{number}"
+        self.mutant_string = None
 
-    def __new__(cls, index, number, chain, mol, id, name, icode=''):
+    def __new__(cls, index, number, chain, id, id_index, name, icode=''):
         i = int.__new__(cls, index)
         i.index = index
         i.number = number
         i.chain = chain
-        i.mol = mol
+        i.id = id
+        i.id_index = id_index
         i.name = name
         i.icode = icode
+        i.mutant_label = None
+        i.mutant_string = None
         i.string = f"{id}:{chain}:{name}:{number}:{icode}" if icode else f"{id}:{chain}:{name}:{number}"
         return i
 
     def __copy__(self):
-        return Residue(self.index, self.number, self.chain, self.mol, self.id, self.name, self.icode)
+        return Residue(self.index, self.number, self.chain, self.id, self.id_index, self.name, self.icode)
 
     def __deepcopy__(self, memo):
         cls = self.__class__
-        return cls.__new__(cls, self.index, self.number, self.chain, self.mol, self.id, self.name, self.icode)
+        return cls.__new__(cls, self.index, self.number, self.chain, self.id, self.id_index, self.name, self.icode)
 
     def __repr__(self):
         text = f"{type(self).__name__}(index: {self.index}, {self.id}:{self.chain}:{self.name}:{self.number}"
@@ -110,8 +150,23 @@ class Residue(int):
     def __str__(self):
         return f"{self.index}"
 
+    def is_mutant(self):
+        return bool(self.mutant_label)
+
+    def is_receptor(self):
+        return self.id == 'R'
+
+    def is_ligand(self):
+        return self.id == 'L'
+
     def issame(self, other):
         pass
+
+    def set_mut(self, mut):
+        self.mutant_label = (f"{self.chain}/{self.number}{':' + self.icode if self.icode else ''} - {self.name}"
+                             f"x{mut}")
+        self.mutant_string = (f"{self.id}:{self.chain}:{mut}:{self.number}:{self.icode}" if self.icode
+                              else f"{self.id}:{self.chain}:{mut}:{self.number}")
 
 
 def get_indexes(com_ndx, rec_ndx=None, rec_group=1, lig_ndx=None, lig_group=1):
@@ -248,7 +303,9 @@ def res2map(indexes, com_file):
     :param com_str:
     :return:
     """
-    res_list = {'REC': [], 'LIG': [], 'COM': []}
+    res_list = []
+    rec_list = []
+    lig_list = []
     com_len = len(indexes['COM']['COM'])
     if isinstance(com_file, parmed.Structure):
         com_str = com_file
@@ -256,6 +313,8 @@ def res2map(indexes, com_file):
         com_str = parmed.load_file(com_file)
 
     resindex = 1
+    rec_index = 1
+    lig_index = 1
     proc_res = None
     for i in range(com_len):
         res = [com_str.atoms[i].residue.chain, com_str.atoms[i].residue.number, com_str.atoms[i].residue.name,
@@ -263,31 +322,27 @@ def res2map(indexes, com_file):
         # We check who owns the residue corresponding to this atom
         if indexes['COM']['COM'][i] in indexes['COM']['REC']:
             # save residue number in the rec list
-            if res != proc_res and resindex not in res_list['REC']:
-                res_list['REC'].append(Residue(resindex, com_str.atoms[i].residue.number,
-                                               com_str.atoms[i].residue.chain, 'REC', 'R',
-                                               com_str.atoms[i].residue.name,
-                                               com_str.atoms[i].residue.insertion_code))
-                res_list['COM'].append(Residue(resindex, com_str.atoms[i].residue.number,
-                                               com_str.atoms[i].residue.chain, 'COM', 'R',
-                                               com_str.atoms[i].residue.name,
-                                               com_str.atoms[i].residue.insertion_code))
+            if res != proc_res and resindex not in res_list:
+                rec_list.append(resindex)
+                res_list.append(Residue(resindex, com_str.atoms[i].residue.number,
+                                        com_str.atoms[i].residue.chain, 'R',rec_index,
+                                        com_str.atoms[i].residue.name,
+                                        com_str.atoms[i].residue.insertion_code))
                 resindex += 1
+                rec_index += 1
                 proc_res = res
         # save residue number in the lig list
-        elif res != proc_res and resindex not in res_list['LIG']:
-            res_list['LIG'].append(Residue(resindex, com_str.atoms[i].residue.number,
-                                           com_str.atoms[i].residue.chain, 'LIG', 'L',
-                                           com_str.atoms[i].residue.name,
-                                           com_str.atoms[i].residue.insertion_code))
-            res_list['COM'].append(Residue(resindex, com_str.atoms[i].residue.number,
-                                           com_str.atoms[i].residue.chain, 'COM', 'L',
-                                           com_str.atoms[i].residue.name,
-                                           com_str.atoms[i].residue.insertion_code))
+        elif res != proc_res and resindex not in res_list:
+            lig_list.append(resindex)
+            res_list.append(Residue(resindex, com_str.atoms[i].residue.number,
+                                    com_str.atoms[i].residue.chain, 'L', lig_index,
+                                    com_str.atoms[i].residue.name,
+                                    com_str.atoms[i].residue.insertion_code))
             resindex += 1
+            lig_index += 1
             proc_res = res
 
-    masks = {'REC': list2range(res_list['REC']), 'LIG': list2range(res_list['LIG'])}
+    masks = {'REC': list2range(rec_list), 'LIG': list2range(lig_list)}
 
     temp = []
     for m, value in masks.items():
