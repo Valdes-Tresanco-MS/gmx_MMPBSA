@@ -54,7 +54,7 @@ class InfoFile(object):
         outfile = open(name, 'w')
         # The data we have to write: INPUT, FILES, and the following attributes:
         # numframes, numframes_nmode, mpi_size (also recognize size),
-        # input_file_text, mut_str
+        # input_file_text, mut_str, mutant_index
 
         # Start with INPUT (and the editable vars). Allow this to recognize INFO
         # files from the last version of gmx_MMPBSA
@@ -89,7 +89,9 @@ class InfoFile(object):
         outfile.write('size = %d\n' % self.app.mpi_size)
         outfile.write('numframes = %d\n' % self.app.numframes)
         outfile.write('numframes_nmode = %d\n' % self.app.numframes_nmode)
-        outfile.write("mut_str = '%s'\n" % self.app.mut_str)
+        outfile.write("mutant_index = %s\n" % self.app.mutant_index)
+        outfile.write("mut_str = '%s'\n" % self.app.resl[self.app.mutant_index].mutant_label
+                      if self.app.mutant_index else '')
         outfile.write('using_chamber = %s\n' % self.app.using_chamber)
         outfile.write(self.app.input_file_text)
 
@@ -152,10 +154,7 @@ class InfoFile(object):
         Wrapper to return a string in which str vars are enclosed in quotes and
         numeric types (int and float) are not
         """
-        if isinstance(var, str):
-            return "'%s'" % var
-        else:
-            return "%s" % var
+        return "'%s'" % var if isinstance(var, str) else "%s" % var
 
 
 def _determine_type(thing):

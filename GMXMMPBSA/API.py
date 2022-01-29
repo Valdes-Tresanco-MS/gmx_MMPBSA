@@ -27,6 +27,7 @@ from typing import Union
 from GMXMMPBSA import infofile, main
 from GMXMMPBSA.exceptions import NoFileExists
 from GMXMMPBSA.fake_mpi import MPI
+from GMXMMPBSA.amber_outputs import H5Output
 import pandas as pd
 from pathlib import Path
 import os
@@ -42,84 +43,6 @@ class DataStore(dict):
         super(DataStore, self).__init__(*args)
 
 
-class H52Data:
-    def __init__(self, fname):
-        self.h5f = h5py.File(fname, 'r')
-        self.app_namespace = SimpleNamespace(INPUT={}, FILES=SimpleNamespace(), INFO={})
-        self.calc_types = DataStore()
-        self.calc_types.mutant = DataStore()
-        self.calc_types.decomp = DataStore()
-        self.calc_types.decomp.mutant = DataStore()
-
-
-        for key in self.h5f:
-            if key in ['INFO', 'INPUT', 'FILES']:
-                self._h52app_namespace(key)
-            elif key == 'decomp':
-                self._h52decomp(self.h5f[key])
-            elif key == 'mutant':
-                for mkey in self.h5f[key]:
-                    self._h52e(self.h5f[key], mkey, True)
-                    if mkey == 'decomp':
-                        self._h52decomp(self.h5f[key][mkey], True)
-            else:
-                self._h52e(self.h5f, key)
-        self.h5f.close()
-
-    def _h52app_namespace(self, key):
-        for x in self.h5f[key]:
-            tvar = self.h5f[key][x][()]
-            if isinstance(tvar, bytes):
-                cvar = tvar.decode()
-            elif isinstance(tvar, np.float):
-                cvar = None if np.isnan(tvar) else tvar
-            elif isinstance(tvar, np.ndarray):
-                cvar = [x.decode() if isinstance(x, bytes) else x for x in tvar if isinstance(x, bytes)]
-            else:
-                cvar = tvar
-            if key == 'INPUT':
-                self.app_namespace.INPUT[x] = cvar
-            elif key == 'FILES':
-                setattr(self.app_namespace.FILES, x, cvar)
-            else:
-                self.app_namespace.INFO[x] = cvar
-
-    def _h52e(self, d, key, mut=False):
-
-        calc_types = self.calc_types.mutant if mut else self.calc_types
-        # key  Energy: [gb, pb, rism std, rism gf], Decomp: [gb, pb], Entropy: [nmode, qh, ie, c2]
-        if key in ['gb', 'pb', 'rism std', 'rism gf', 'nmode', 'qh', 'ie', 'c2']:
-            calc_types[key] = {}
-            # key2 is complex, receptor, ligand, delta
-            for key2 in d[key]:
-                calc_types[key][key2] = {}
-                # complex, receptor, etc., is a class and the data is contained in the attribute data
-                for key3 in d[key][key2]:
-                    calc_types[key][key2][key3] = d[key][key2][key3][()]
-
-    def _h52decomp(self, d, mut=False):
-        calc_types = self.calc_types.decomp.mutant if mut else self.calc_types.decomp
-        for key in d:
-            # model
-            calc_types[key] = {}
-            # key2 is complex, receptor, ligand, delta
-            for key2 in d[key]:
-                calc_types[key][key2] = {}
-                # TDC, SDC, BDC
-                for key3 in d[key][key2]:
-                    # residue first level
-                    for key4 in d[key][key2][key3]:
-                        for key5 in d[key][key2][key3][key4]:
-                            if isinstance(d[key][key2][key3][key4], h5py.Group):
-                                # residue sec level
-                                for key6 in d[key][key2][key3][key4][key5]:
-                                    calc_types[key][key2][(key3, key4, key5, key6)] = d[key][key2][key3][key4][
-                                        key5][key6][()]
-                            else:
-                                # energy terms
-                                for key5 in d[key][key2][key3][key4]:
-                                    calc_types[key][key2][(key3, key4, key5)] = d[key][key2][key3][key4][key5][()]
-
 
 class DataMMPBSA:
     """ Main class that holds all of the Free Energy data """
@@ -132,7 +55,7 @@ class DataMMPBSA:
 
     def get_fromH5(self, h5file):
 
-        h5file = H52Data(h5file)
+        h5file = H5Output(h5file)
         self.app_namespace = h5file.app_namespace
         self._get_data(h5file)
 
@@ -154,6 +77,7 @@ class DataMMPBSA:
                            '--------------------------------------------------------------\n')
         INFO = {'COM_PDB': ''.join(open(app.FILES.complex_fixed).readlines()),
                 'input_file': input_file_text,
+                'mutant_index': app.mutant_index,
                 'mut_str': app.mut_str,
                 'numframes': app.numframes,
                 'numframes_nmode': app.numframes_nmode,

@@ -69,6 +69,7 @@ class Data2h5:
         dset = grp.create_dataset('size', data=self.app.mpi_size)
         dset = grp.create_dataset('numframes', data=self.app.numframes)
         dset = grp.create_dataset('numframes_nmode', data=self.app.numframes_nmode)
+        dset = grp.create_dataset('mutant_index', data= np.nan if self.app.mutant_index is None else self.app.mutant_index)
         dset = grp.create_dataset('mut_str', data=self.app.mut_str)
         dset = grp.create_dataset('using_chamber', data=self.app.using_chamber)
         dset = grp.create_dataset('input_file', data=self.app.input_file_text)
