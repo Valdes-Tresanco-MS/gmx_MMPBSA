@@ -25,7 +25,7 @@ parameters required for building AMBER topologies from GROMACS files.
   [1]: https://pubs.acs.org/doi/10.1021/ct300418h
 
 ## Generation of input files with gmx_MMPBSA
-The input file can be created using gmx_MMPBSA by selecting the calculations you want to perform.
+The input file can be created using `gmx_MMPBSA` by selecting the calculations you want to perform.
 
 ``` title="Command-line"
 gmx_MMPBSA --create_input args
@@ -64,8 +64,8 @@ All the input variables are described below according to their respective nameli
 variables should be typed as-is while strings should be put in either single- or double-quotes. All variables should be 
 set with `variable = value` and separated by commas is they appear in the same line. If the variables appear in different 
 lines, the comma is no longer needed. See several [examples](#sample-input-files) below. As you will see, several 
-calculations can be performed in the same run (_i.e._ `&gb` and `&pb`, `&gb` and `&alanine_scanning`, `&pb` and
-`&decomp`, etc). As we have mentioned, the input file can be generated using the `create_input` option of gmx_MMPBSA. 
+calculations can be performed in the same run (_i.e._ `&gb` and `&pb`; `&gb` and `&alanine_scanning`; `&pb` and
+`&decomp`; etc). As we have mentioned, the input file can be generated using the `create_input` option of `gmx_MMPBSA`. 
 This style, while retaining the same Amber format (derived from Fortran), is aesthetically more familiar to the GROMACS
 style (`*.mdp`). However, it maintains the same essence, so it could be defined in any of the two format styles or even
 combined. See the formats below:
@@ -112,10 +112,10 @@ combined. See the formats below:
 
 ### **`&general` namelist variables**
 
-`sys_name` (Default = None) (Optional)
+`sys_name` (Default = None)
 :   Define the System Name. This is useful when trying to analyze several systems at the same time or calculating 
 the correlation between the predicted and the experimental energies. If the name is not defined, one will be 
-assigned when loading it in gmx_MMPBSA_ana according to the order in this is done.
+assigned when loading it in `gmx_MMPBSA_ana` according to the order in this is done.
 
     !!! tip 
         The definition of the system name is entirely optional, however it can provide a better clarity during 
@@ -125,11 +125,11 @@ assigned when loading it in gmx_MMPBSA_ana according to the order in this is don
 
 `startframe` (Default = 1)
 :   The frame from which to begin extracting snapshots from the full, concatenated trajectory comprised of
-    every trajectory file placed on the command-line. This is always the first frame read.
+every trajectory file placed on the command-line. This is always the first frame read.
 
 `endframe` (Default = 9999999)
 :   The frame from which to stop extracting snapshots from the full, concatenated trajectory comprised of every
-    trajectory file supplied on the command-line.
+trajectory file supplied on the command-line.
 
 `forcefields` (Default = "oldff/leaprc.ff99SB,leaprc.gaff")
 :   Comma-separated list of force fields used to build Amber topologies. This variable is more flexible than the 
@@ -244,7 +244,7 @@ tested in previous `protein_forcefield` and `ligand_forcefield` variables.
 
 `interval` (Default = 1)
 :     The offset from which to choose frames from each trajectory file. For example, an interval of 2 will pull
-      every 2nd frame beginning at startframe and ending less than or equal to endframe.
+every 2nd frame beginning at startframe and ending less than or equal to endframe.
 
 `PBRadii` (Default = 3)
 :   PBRadii to build amber topology files:
@@ -275,7 +275,7 @@ tested in previous `protein_forcefield` and `ligand_forcefield` variables.
 
     !!! note "Keep in mind"
         - The Interaction Entropy can be calculated independently of the solvent model used.
-        - A sample Interaction Entropy input file is shown [here](input_fiel.md#interaction-entropy)
+        - A sample Interaction Entropy input file is shown [here](input_file.md#interaction-entropy)
         - A tutorial on the use of Interaction Entropy is 
         available [here](examples/Entropy_calculations/Interaction_Entropy/README.md)
         - The standard deviation of the interaction energy (`σIE`) should always be reported when using the Interaction 
@@ -301,8 +301,8 @@ tested in previous `protein_forcefield` and `ligand_forcefield` variables.
 
 `ie_segment` (Default = 25)
 :    Representative segment (in %), starting from the last frame, for the calculation of the
-     Interaction Entropy, _e.g._: `ie_segment = 25` means that the last quartile of the total number of frames
-     (`(endframe-startframe)/interval`) will be used to calculate the average Interaction Entropy.
+Interaction Entropy, _e.g._: `ie_segment = 25` means that the last quartile of the total number of frames
+(`(endframe-startframe)/interval`) will be used to calculate the average Interaction Entropy.
 
     _New in v1.4.2_
 
@@ -336,8 +336,8 @@ tested in previous `protein_forcefield` and `ligand_forcefield` variables.
 
 `c2_segment` (Default = 25)
 :    Representative segment (in %), starting from the last frame, for the calculation of the
-     C2 Entropy, _e.g._: `ie_segment = 25` means that the last quartile of the total number of frames
-     (`(endframe-startframe)/interval`) will be used to calculate the C2 Entropy.
+C2 Entropy, _e.g._: `ie_segment = 25` means that the last quartile of the total number of frames
+(`(endframe-startframe)/interval`) will be used to calculate the C2 Entropy.
 
     _New in v1.5.0_
 
@@ -348,10 +348,10 @@ tested in previous `protein_forcefield` and `ligand_forcefield` variables.
 
 `assign_chainID` (Default = 0) 
 :   Defines the chains ID assignment mode. _It is ignored when defining a reference structure
-    (recommended)_. If `assign_chainID = 1`, gmx_MMPBSA check if the structure has no chains ID and it is assigned 
-    according to the structure[^1]. If `assign_chainID = 2`, `gmx_MMPBSA` assign the chains ID, exist or not, 
-    according to the structure[^1] (can generate inconsistencies). If a `*.gro` file was used for complex structure
-    (`-cs` flag) and not reference structure was provided, `gmx_MMPBSA` assume `assign_chainID = 1`. 
+(recommended)_. If `assign_chainID = 1`, `gmx_MMPBSA` check if the structure has no chains ID and it is assigned 
+according to the structure[^1]. If `assign_chainID = 2`, `gmx_MMPBSA` assign the chains ID, exist or not, 
+according to the structure[^1] (can generate inconsistencies). If a `*.gro` file was used for complex structure
+(`-cs` flag) and not reference structure was provided, `gmx_MMPBSA` assume `assign_chainID = 1`. 
 
     _New in v1.2.0_
 
@@ -363,14 +363,14 @@ tested in previous `protein_forcefield` and `ligand_forcefield` variables.
 
 `exp_ki` (Default = 0.0)
 :   Specify the experimental Ki in nM for correlations analysis. If not defined or exp_ki = 0 then this system will be 
-    omitted in the correlation analysis
+omitted in the correlation analysis
 
     _New in v1.4.0_
 
 `gmx_path` 
 :   Define a path to search for GROMACS executables. This path takes precedence over the path defined
-    in the PATH variable. In this path the following executables will be searched: `gmx`, `gmx_mpi`, `gmx_d`, or
-    `gmx_mpi_d` (GROMACS > 5.x.x), and `make_ndx`, `editconf` and `trjconv` (GROMACS 4.x.x)
+in the PATH variable. In this path the following executables will be searched: `gmx`, `gmx_mpi`, `gmx_d`, or
+`gmx_mpi_d` (GROMACS > 5.x.x), and `make_ndx`, `editconf` and `trjconv` (GROMACS 4.x.x)
 
     !!! note "Keep in mind"
         This variable is used when the GROMACS used to run the system differs from that of will be used for running 
@@ -392,8 +392,8 @@ tested in previous `protein_forcefield` and `ligand_forcefield` variables.
 
 `netcdf` (Default = 0)
 :   Specifies whether or not to use NetCDF trajectories internally rather than writing temporary ASCII trajectory
-    files. For very large trajectories, this could offer significant speedups, and requires less temporary space. 
-    However, this option is incompatible with alanine scanning.
+files. For very large trajectories, this could offer significant speedups, and requires less temporary space. 
+However, this option is incompatible with alanine scanning.
 
     * 0: Do NOT use temporary NetCDF trajectories
     * 1: Use temporary NetCDF trajectories
@@ -409,10 +409,10 @@ tested in previous `protein_forcefield` and `ligand_forcefield` variables.
     _Updated in v1.5.0. Bugs fixed_
 
 `debug_printlevel`
-:   gmx_MMPBSA prints errors by raising exceptions, and not catching fatal errors. If `debug_printlevel` is
-    set to 0, then detailed tracebacks (effectively the call stack showing exactly where in the program the error 
-    occurred) is suppressed, so only the error message is printed. If `debug_printlevel` is set to 1 or higher, all 
-    tracebacks are printed, which aids in debugging of issues. (Default = 0) (Advanced Option)
+:   `gmx_MMPBSA` prints errors by raising exceptions, and not catching fatal errors. If `debug_printlevel` is
+set to 0, then detailed tracebacks (effectively the call stack showing exactly where in the program the error 
+occurred) is suppressed, so only the error message is printed. If `debug_printlevel` is set to 1 or higher, all 
+tracebacks are printed, which aids in debugging of issues. (Default = 0) (Advanced Option)
 
     _Changed in v1.2.0: Now `gmx_MMPBSA` shows the command-line used to build AMBER topologies when 
     `debug_printlevel = 1` or higher_
@@ -443,8 +443,8 @@ tested in previous `protein_forcefield` and `ligand_forcefield` variables.
 :   Define Internal dielectric constant without use external *.mdin file
 
 `igb` (Default = 5)
-:   Generalized Born method to use (see [Section 4](https://ambermd.org/doc12/Amber20.pdf#chapter.4)). Allowed values 
-    are 1, 2, 5, 7 and 8
+:   Generalized Born method to use (see [Section 4](https://ambermd.org/doc12/Amber21.pdf#chapter.4)). Allowed values 
+are 1, 2, 5, 7 and 8
 
 `saltcon` (Default = 0.0)
 :   Salt concentration in Molarity.
@@ -463,14 +463,14 @@ tested in previous `protein_forcefield` and `ligand_forcefield` variables.
 
 `probe` (Default = 1.4)
 :   Radius  in Å of the probe molecule (supposed to be the size of a solvent molecule), to use when
-    determining the molecular surface. 
+determining the molecular surface. 
     
     !!! note
         only applicable when `molsurf` is set to 1
 
 `msoffset` (Default = 0) 
 :   Offset to apply to the individual atomic radii in the system when calculating the `molsurf` surface. See the
-    description of the `molsurf` action command in [cpptraj][4].
+description of the `molsurf` action command in [cpptraj][4].
 
 `ifqnt` (Default = 0)
 :   Specifies whether a part of the system is treated with quantum mechanics.
@@ -486,8 +486,8 @@ tested in previous `protein_forcefield` and `ligand_forcefield` variables.
 
 `qm_residues`
 :   Complex residues to treat with quantum mechanics. All residues treated with quantum mechanics in the complex 
-    must be treated with quantum mechanics in the receptor or ligand to obtain meaningful results. This notation is 
-    the same used for `print_res` variable in `&decomp` namelist
+must be treated with quantum mechanics in the receptor or ligand to obtain meaningful results. This notation is 
+the same used for `print_res` variable in `&decomp` namelist
 
     Notation: [ `CHAIN`/(`RESNUM` or `RESNUM-RESNUM`) ]
     :    Treat with quantum mechanics residues individual or ranges. This notation also supports insertion codes, in 
@@ -522,10 +522,10 @@ tested in previous `protein_forcefield` and `ligand_forcefield` variables.
 
 `qm_theory` 
 :   Which semi-empirical Hamiltonian should be used for the quantum calculation. Options are `PM3`, `AM1`, `MNDO`, 
-    `PDDG-PM3`, `PM3PDDG`, `PDDG-MNDO`, `PDDGMNDO`, `PM3-CARB1`, `PM3CARB1`, `DFTB`, `SCC-DFTB`, `RM1`, `PM6`, 
-    `PM3-ZnB`, `PM3-MAIS`, `PM3ZNB`, `MNDO/D`, `MNDOD`. The dispersion correction can be switched on for `AM1` 
-    and `PM6` by choosing `AM1-D*` and `PM6-D`, respectively. The dispersion and hydrogen bond correction will be 
-    applied for `AM1-DH+` and `PM6-DH+`.
+`PDDG-PM3`, `PM3PDDG`, `PDDG-MNDO`, `PDDGMNDO`, `PM3-CARB1`, `PM3CARB1`, `DFTB`, `SCC-DFTB`, `RM1`, `PM6`, 
+`PM3-ZnB`, `PM3-MAIS`, `PM3ZNB`, `MNDO/D`, `MNDOD`. The dispersion correction can be switched on for `AM1` 
+and `PM6` by choosing `AM1-D*` and `PM6-D`, respectively. The dispersion and hydrogen bond correction will be 
+applied for `AM1-DH+` and `PM6-DH+`.
 
     !!! danger
          No `qm_theory` default, this must be specified if `ifqnt` = 1.
@@ -542,7 +542,7 @@ tested in previous `protein_forcefield` and `ligand_forcefield` variables.
 `qmcut` (Default = 9999.0)
 :   The cutoff for the qm/mm charge interactions.
     
-  [4]: https://ambermd.org/doc12/Amber20.pdf#chapter.32
+  [4]: https://ambermd.org/doc12/Amber21.pdf#chapter.34
 
 ### **`&pb` namelist variables**
 
@@ -569,36 +569,45 @@ tested in previous `protein_forcefield` and `ligand_forcefield` variables.
 method, while a level-set based algebraic method is used when `ipb > 2`.
 
     * 0: No electrostatic solvation free energy is computed.
-    * 1: The dielectric interface between solvent and solute is built with a geometric approach. [217]
+    * 1: The dielectric interface between solvent and solute is built with a geometric approach. ([ref.][217])
     * 2: The dielectric interface is implemented with the level set function. Use of a level set function
     simplifies the calculation of the intersection points of the molecular surface and grid edges and
-    leads to more stable numerical calculations. [239]
+    leads to more stable numerical calculations. ([ref.][239])
     * 4: The dielectric interface is also implemented with the level set function. However, the linear
     equations on the grid points nearby the dielectric boundary are constructed using the IIM. In this
     option, The dielectric constant do not need to be smoothed, that is, `smoothopt` is useless.
     Only the linear PB equation is supported, that is, `npbopt = 0`. Starting from the Amber 2018
-    release, `solvopt` is no longer relevant as only one stable solver is supported.[233]
+    release, `solvopt` is no longer relevant as only one stable solver is supported. ([ref.][233])
     * 6: The dielectric interface is implemented analytically with the revised density function approach
     (`sasopt = 2`). The linear equations on the irregular points are constructed using the IIM and
-    fully utilizing the analytical surface. Otherwise, it is exactly the same as `ipb = 4`.[240]
+    fully utilizing the analytical surface. Otherwise, it is exactly the same as `ipb = 4`. ([ref.][240])
     * 7: The dielectric interface is implemented analytically with the revised density function approach
     (`sasopt = 2`). The linear equations on the irregular points are constructed using the Χ-factor
-    harmonic average method.[241]
+    harmonic average method. ([ref.][241])
     * 8: The dielectric interface is implemented analytically with the revised density function approach
     (`sasopt = 2`). The linear equations on the irregular points are constructed using the secondorder harmonic 
-    average method.[241]
+    average method. ([ref.][241])
+
+  [217]: https://onlinelibrary.wiley.com/doi/10.1002/jcc.10120
+  [239]: https://pubs.acs.org/doi/10.1021/ct300341d
+  [233]: https://www.sciencedirect.com/science/article/abs/pii/S0009261408016539?via%3Dihub
+  [240]: https://onlinelibrary.wiley.com/doi/10.1002/jcc.25783
+  [241]: https://pubs.acs.org/doi/10.1021/acs.jctc.9b00602
 
 `inp` (Default = 2) 
 :   Option to select different methods to compute non-polar solvation free energy.
 
     * 0: No non-polar solvation free energy is computed.
     * 1: The total non-polar solvation free energy is modeled as a single term linearly proportional to the
-    solvent accessible surface area. If `inp = 1`, `use_sav` must be equal to 0. [227]
+    solvent accessible surface area. If `inp = 1`, `use_sav` must be equal to 0. ([ref.][227])
     * 2: The total non-polar solvation free energy is modeled as two terms: the cavity term and the
     dispersion term. The dispersion term is computed with a surface-based integration method
-    [227] closely related to the PCM solvent for quantum chemical programs.[229] Under this
+    ([ref.][227]) closely related to the PCM solvent for quantum chemical programs. ([ref.][229]) Under this
     framework, the cavity term is still computed as a term linearly proportional to the molecular
     solvent-accessible-surface area (SASA) or the molecular volume enclosed by SASA.
+
+  [227]: https://pubs.acs.org/doi/abs/10.1021/jp073399n
+  [229]: https://onlinelibrary.wiley.com/doi/10.1002/jcc.540100504
 
 #### **`&pb` options to define the physical constants**
 
@@ -616,9 +625,11 @@ solute/solvent dielectric boundary.
     average of `indi` and `exdi`.
     * 1: A weighted harmonic average of `indi` and `exdi` is used for boundary grid edges. The
     weights for `indi` and `exdi` are fractions of the boundary grid edges that are inside or
-    outside the solute surface.[243]
+    outside the solute surface. ([ref.][243])
     * 2: The dielectric constants of the boundary grid edges are set to either `indi` or `exdi` depending on whether 
     the midpoints of the grid edges are inside or outside the solute surface.
+
+  [243]: https://pubs.acs.org/doi/10.1021/cr00101a005
 
 `istrng` (Default = 0.0)
 :   Ionic strength in Molarity. It is converted to mM for `PBSA` and kept as M for `APBS`.
@@ -627,11 +638,13 @@ solute/solvent dielectric boundary.
 :   The option to set up atomic radii.
 
     * 0: Use radii from the prmtop file for both the PB calculation and for the non-polar calculation (see `inp`) 
-    * 1: Use atom-type/charge-based radii by Tan and Luo [244] for the PB calculation. Note that the
+    * 1: Use atom-type/charge-based radii by Tan and Luo ([ref.][244]) for the PB calculation. Note that the
     radii are optimized for Amber atom types as in standard residues from the Amber database and should work fine for
     `standard` complexes such as protein-protein, protein-DNA. On the other hand, if a molecule in your system was 
     built by antechamber, _i.e._, if GAFF atom types are used, or any other extrenal software, radii from the prmtop 
     file should be used (`radiopt = 0`). Check this [thread](http://archive.ambermd.org/201303/0548.html) for more info.
+
+  [244]: https://pubs.acs.org/doi/abs/10.1021/jp063479b
 
 `prbrad` (Default = 1.4)
 :   Solvent probe radius in Angstroms. Allowed values are 1.4 and 1.6. This corresponds to `dprob` in [pbsa][5].
@@ -642,15 +655,17 @@ solute/solvent dielectric boundary.
 `sasopt` (Default = 0)
 :   Option to determine which kind of molecular surfaces to be used in the Poisson-Boltzmann implicit solvent model.
 
-    * 0: Use the solvent excluded surface as implemented by[239]
+    * 0: Use the solvent excluded surface as implemented by ([ref.][239])
     * 1: Use the solvent accessible surface. Apparently, this reduces to the van der Waals surface when
     the `prbrad` is set to zero.
-    * 2: Use the smooth surface defined by a revised density function.[245] This must be combined with
+    * 2: Use the smooth surface defined by a revised density function. ([ref.][245]) This must be combined with
     `ipb > 2.
 
+  [245]: https://pubs.acs.org/doi/10.1021/ct900318u
+
 `arcres` (Default = 0.25)
-:   The `arcres` keyword gives the resolution (in the unit of Å) of dots used to represent solvent accessible arcs. More
-generally, `arcres` should be set to max(0.125 Å, 0.5h) (h is the grid spacing). See [239].
+:   The `arcres` keyword gives the resolution (in Å) of dots used to represent solvent accessible arcs. More
+generally, `arcres` should be set to max(0.125 Å, 0.5h) (h is the grid spacing). ([ref.][239])
 
 #### **`&pb` options for implicit membranes**
 
@@ -659,13 +674,13 @@ generally, `arcres` should be set to max(0.125 Å, 0.5h) (h is the grid spacing)
 or heterogeneous dielectric constant depth profile.
 
     * 0: No implicit membrane used.
-    * 1: Use a uniform membrane dielectric constant in a slab-like implicit membrane.[246]
+    * 1: Use a uniform membrane dielectric constant in a slab-like implicit membrane. ([ref.][246])
     * 2: Use a heterogeneous membrane dielectric constant in a slab-like implicit membrane. The dielectric constant 
     varies with depth from a value of 1 in the membrane center to 80 at the membrane
-    periphery. The dielectric constant depth profile was implemented using the PCHIP fitting.[247]
+    periphery. The dielectric constant depth profile was implemented using the PCHIP fitting. ([ref.][247])
     * 3: Use a heterogeneous membrane dielectric constant in a slab-like implicit membrane. The dielectric constant 
     varies with depth from a value of 1 in the membrane center to 80 at the membrane periphery. The dielectric constant 
-    depth profile was implemented using the Spline fitting.[247]
+    depth profile was implemented using the Spline fitting. ([ref.][247])
 
     !!! note "Keep in mind"
         * Calculations for implicit membranes can be performed only with PB
@@ -673,9 +688,14 @@ or heterogeneous dielectric constant depth profile.
         * A tutorial on binding free energy calculation for membrane proteins is available 
         [here](examples/Protein_membrane/README.md)
 
+  [246]: https://www.sciencedirect.com/science/article/abs/pii/S0009261412012808?via%3Dihub
+  [247]: https://pubs.acs.org/doi/abs/10.1021/acs.jcim.9b00363
+
 `mprob` (Default = 2.70)
 :   Membrane probe radius in Å. This is used to specify the highly different lipid molecule accessibility versus 
-that of the water.[248]
+that of the water. ([ref.][248])
+
+  [248]: https://pubs.acs.org/doi/abs/10.1021/acs.jctc.7b00382
 
 `mthick` (Default = 40)
 :   Membrane thickness in Å. This is different from the previous default of 20 Å.
@@ -684,7 +704,7 @@ that of the water.[248]
 :   Membrane center in Å in the z direction. Default is 0.0 - membrane centered at the center of the protein.
 
 `poretype` (Default = 1)
-:   Turn on and off the automatic depth-first search method to identify the pore.[248]
+:   Turn on and off the automatic depth-first search method to identify the pore. ([ref.][248])
 
     * 0: Do not turn on the pore searching algorithm.
     * 1: Turn on the pore searching algorithm.
@@ -714,15 +734,19 @@ that of the water.[248]
     * 3 Conjugate gradient (Periodic version available under `bcopt = 10`). This option requires a large
     `linit` to converge.
     * 4 SOR. This option requires a large `linit` to converge.
-    * 5 Adaptive SOR. This is only compatible with `npbopt = 1`. This option requires a large `linit` converge.[219]
-    * 6 Damped SOR. This is only compatible with `npbopt = 1`. This option requires a large `linit` to converge.[219]
+    * 5 Adaptive SOR. This is only compatible with `npbopt = 1`. This option requires a large `linit` 
+    converge. ([ref.][219])
+    * 6 Damped SOR. This is only compatible with `npbopt = 1`. This option requires a large `linit` to 
+    converge. ([ref.][219])
+
+  [219]: https://pubs.acs.org/doi/10.1021/ct900381r
 
 `accept` (Default = 0.001)
 :   Sets the iteration convergence criterion (relative to the initial residue).
 
 `linit` (Default = 1000) 
 :   Sets the maximum number of iterations for the finite difference solvers. Note that `linit` has to be set to a 
-much larger value, _e.g._ 10,000, for the less efficient solvers, such as conjugate gradient and SOR, to converge. 
+much larger value, _e.g._ 10000, for the less efficient solvers, such as conjugate gradient and SOR, to converge. 
 This corresponds to `maxitn` in [pbsa][5].
 
 `fillratio` (Default = 4.0) 
@@ -755,20 +779,22 @@ molecule. When `nfocus` = 1, no focusing is used. It is recommended that `nfocus
     * 5: Computation of boundary grid potentials using all grid charges. Total electrostatic potentials
     and energy are computed.
     * 6: Computation of boundary grid potentials using all grid charges. Reaction field potentials and
-    energy are computed with the charge singularity free formalism.[236]
+    energy are computed with the charge singularity free formalism. ([ref.][236])
     * 10: Periodic boundary condition is used. Total electrostatic potentials and energy are computed.
     Can be used with `solvopt = 1, 2, 3, or 4` and `ipb = 1 or 2`. It should only be used on chargeneutral systems. If 
     the system net charge is detected to be nonzero, it will be neutralized by
     applying a small neutralizing charge on each grid (_i.e._ a uniform plasma) before solving.
 
+  [236]: https://aip.scitation.org/doi/abs/10.1063/1.3099708
+
 `eneopt` (Default = 2)
 :   Option to compute total electrostatic energy and forces.
 
     * 1: Compute total electrostatic energy and forces with the particle-particle particle-mesh (P3M)
-    procedure outlined in Lu and Luo.[223] In doing so, energy term EPB in the output file is set
+    procedure outlined in Lu and Luo. ([ref.][223]) In doing so, energy term EPB in the output file is set
     to zero, while EEL includes both the reaction field energy and the Coulombic energy. The van
     der Waals energy is computed along with the particle-particle portion of the Coulombic energy.
-    The electrostatic forces and dielectric boundary forces can also be computed.[223] This option
+    The electrostatic forces and dielectric boundary forces can also be computed. ([ref.][223]) This option
     requires a nonzero `cutnb` and `bcopt = 5`.
     * 2: Use dielectric boundary surface charges to compute the reaction field energy. Both
     the Coulombic energy and the van der Waals energy are computed via summation of pairwise
@@ -780,6 +806,8 @@ molecule. When `nfocus` = 1, no focusing is used. It is recommended that `nfocus
     for both solvation and Coulombic energy and forces for larger systems. A more robust and
     clean set of routines were used for the P3M and dielectric surface force calculations.
 
+  [223]: https://aip.scitation.org/doi/10.1063/1.1622376
+
 `frcopt` (Default = 0)
 :   Option to compute and output electrostatic forces to a file named force.dat in the working directory.
 
@@ -788,9 +816,12 @@ molecule. When `nfocus` = 1, no focusing is used. It is recommended that `nfocus
     computed using the electric field on dielectric boundary. The forces are output in the unit of
     kcal/mol·Å.
     * 2: Use dielectric boundary surface polarized charges to compute the reaction field forces and dielectric 
-    boundary forces [237] The forces are output in the unit of kcal/mol·Å.
+    boundary forces ([ref.][237]) The forces are output in the unit of kcal/mol·Å.
     * 3: Reaction field forces are computed using dielectric boundary polarized charge. Dielectric boundary forces 
-    are computed using the electric field on dielectric boundary. [249] The forces are output in the unit of kcal/mol·Å.
+    are computed using the electric field on dielectric boundary. ([ref.][249]) The forces are output in kcal/mol·Å.
+
+  [237]: https://www.sciencedirect.com/science/article/abs/pii/S0009261411010487?via%3Dihub
+  [249]: https://pubs.rsc.org/en/content/articlelanding/2012/cp/c2cp43237d
 
 `scalec` (Default = 0)
 :   Option to compute reaction field energy and forces.
@@ -802,7 +833,8 @@ molecule. When `nfocus` = 1, no focusing is used. It is recommended that `nfocus
 
 `cutfd` (Default = 5.0)
 :   Atom-based cutoff distance to remove short-range finite-difference interactions, and to add pairwise
-charge-based interactions. This is used for both energy and force calculations. See Eqn (20) in Lu and Luo.[223]
+charge-based interactions. This is used for both energy and force calculations. See Eqn (20) in 
+Lu and Luo. ([ref.][223])
 
 `cutnb` (Default = 0.0)
 :   Atom-based cutoff distance for van der Waals interactions, and pairwise Coulombic interactions when `eneopt` = 2.
@@ -825,10 +857,10 @@ Waals interactions only. The particle-particle portion of the Coulombic interact
 #### **`&pb` options to select a non-polar solvation treatment**
 
 `decompopt` (Default = 2)
-:   Option to select different decomposition schemes when `inp = 2`. See [227] for a detailed discussion
-of the different schemes. The _σ_ decomposition scheme is the best of the three schemes studied.[227] As discussed in 
-Ref. [227], `decompopt = 1` is not a very accurate approach even if it is more straightforward to understand the 
-decomposition.
+:   Option to select different decomposition schemes when `inp = 2`. See ([ref.][227]) for a detailed discussion
+of the different schemes. The _σ_ decomposition scheme is the best of the three schemes studied. ([ref.][227]) As 
+discussed in ([ref.][227]), `decompopt = 1` is not a very accurate approach even if it is more straightforward to 
+understand the decomposition.
 
     * 1: The 6/12 decomposition scheme.
     * 2: The _σ_ decomposition scheme.
@@ -836,34 +868,34 @@ decomposition.
 
 `use_rmin` (Default = 1)
 :   The option to set up van der Waals radii. The default is to use van der Waals _rmin_ to improve the agreement with
-TIP3P [227].
+TIP3P. ([ref.][227])
 
     * 0: Use atomic van der Waals _σ_ values.
     * 1: Use atomic van der Waals _rmin_ values.
 
 `sprob` (Default = 0.557)
 :   Solvent probe radius in Å for solvent accessible surface area (SASA) used to compute the dispersion term,
-default to 0.557 Å in the _σ_ decomposition scheme as optimized in Ref. [227] with respect to the
+default to 0.557 Å in the _σ_ decomposition scheme as optimized in ([ref.][227]) with respect to the
 TIP3P solvent and the PME treatment. Recommended values for other decomposition schemes can
-be found in Table 4 of [227]. If `use_sav = 0` (see below), `sprob` can be used to compute SASA
+be found in Table 4 of ([ref.][227]). If `use_sav = 0` (see below), `sprob` can be used to compute SASA
 for the cavity term as well. Unfortunately, the recommended value is different from that used in the
-dispersion term calculation as documented in Ref. [227] Thus two separate calculations are
+dispersion term calculation as documented in ([ref.][227]). Thus two separate calculations are
 needed when `use_sav = 0`, one for the dispersion term and one for the cavity term. Therefore,
-please carefully read Ref. [227] before proceeding with the option of `use_sav = 0`. Note that
+please carefully read ([ref.][227]) before proceeding with the option of `use_sav = 0`. Note that
 `sprob` was used for ALL three terms of solvation free energies, _i.e._, electrostatic, attractive, and
-repulsive terms in previous releases in Amber. However, it was found in the more recent study [227]
+repulsive terms in previous releases in Amber. However, it was found in the more recent study ([ref.][227])
 that it was impossible to use the same probe radii for all three terms after each term was calibrated
-and validated with respect to the TIP3P solvent. [227, 244]
+and validated with respect to the TIP3P solvent. ([ref.][227])
 
 `vprob` (Default = 1.300)
 :   Solvent probe radius in Å for molecular volume (the volume enclosed by SASA) used to compute non polar cavity 
-solvation free energy, default to 1.300 Å, the value optimized in Ref. [227] with respect to the TIP3P solvent. 
-Recommended values for other decomposition schemes can be found in Tables 1-3 of Ref. [227].
+solvation free energy, default to 1.300 Å, the value optimized in ([ref.][227]) with respect to the TIP3P solvent. 
+Recommended values for other decomposition schemes can be found in Tables 1-3 of ([ref.][227]).
 
 `rhow_effect` (Default = 1.129)
 :   Effective water density used in the non-polar dispersion term calculation, default to 1.129 for `decompopt = 2`, the 
-_σ_ scheme. This was optimized in Ref. [227] with respect to the TIP3P solvent in PME. Optimized values for other 
-decomposition schemes can be found in Table 4 of Ref. [227].
+_σ_ scheme. This was optimized in ([ref.][227]) with respect to the TIP3P solvent in PME. Optimized values for other 
+decomposition schemes can be found in Table 4 of ([ref.][227]).
 
 `use_sav` (Default = 1)
 :   The option to use molecular volume (the volume enclosed by SASA) or to use molecular surface (SASA) for cavity term 
@@ -876,13 +908,13 @@ biomacromolecules.
 `cavity_surften` (Default = 0.0378)
 :   The regression coefficient for the linear relation between the total non-polar solvation free energy (`inp` = 1) or 
 the cavity free energy (`inp = 2`) and SASA/volume enclosed by SASA. The default value is for `inp = 2` and set to the 
-best of three tested schemes as reported in Ref. [227], _i.e._ `decompopt = 2`, `use_rmin = 1`, and `use_sav = 1`. See 
+best of three tested schemes as reported in ([ref.][227]), _i.e._ `decompopt = 2`, `use_rmin = 1`, and `use_sav = 1`. See 
 recommended values in Tables 1-3 for other schemes.
 
 `cavity_offset` (Default = -0.5692)
 :   The regression offset for the linear relation between the total non-polar solvation free energy (`inp`= 1) or 
 the cavity free energy (`inp = 2`) and SASA/volume enclosed by SASA. The default value is for `inp` = 2 and set to 
-the best of three tested schemes as reported in Ref. [227], _i.e._ `decompopt = 2`, `use_rmin = 1`, and `use_sav = 1`. 
+the best of three tested schemes as reported in ([ref.][227]), _i.e._ `decompopt = 2`, `use_rmin = 1`, and `use_sav = 1`. 
 See recommended values in Tables 1-3 for other schemes.
 
 `maxsph` (Default = 400)
@@ -902,7 +934,7 @@ summation of the atomic SASA’s. A molecular SASA is used for both PB dielectri
     * 0: Don’t use `APBS`
     * 1: Use `sander.APBS`
 
-  [5]: https://ambermd.org/doc12/Amber20.pdf#chapter.6
+  [5]: https://ambermd.org/doc12/Amber21.pdf#chapter.6
   [6]: https://onlinelibrary.wiley.com/doi/10.1002/jcc.24467
 
 ### **`&rism` namelist variables**
@@ -923,56 +955,164 @@ summation of the atomic SASA’s. A molecular SASA is used for both PB dielectri
     * We have included more variables in 3D-RISM calculations than the ones available in the MMPBSA.py original code. 
     That way, users can be more in control and tackle various issues (_e.g._, convergence problems).
     * One advantage of `3D-RISM` is that an arbitrary solvent can be chosen; you just need to change the `xvvfile` 
-    specified on the command line (see [34.3.2][8]).
+    specified on the command line (see `-xvvfile` flag in [§34.3.2][8]).
 
-  [7]: https://ambermd.org/doc12/Amber20.pdf#chapter.7
-  [8]: https://ambermd.org/doc12/Amber20.pdf#subsection.34.3.2
+  [7]: https://ambermd.org/doc12/Amber21.pdf#chapter.7
+  [8]: https://ambermd.org/doc12/Amber21.pdf#subsection.36.3.2
 
 `closure` (Default = "kh")
-:   The approximation to the closure relation. Allowed choices are `kh` (Kovalenko-Hirata), `hnc` (Hypernetted- chain),
-    or `psen` (Partial Series Expansion of order-n) where "n" is a positive integer (_e.g._, "pse3").
+:   A comma-separated list of one or more of `kh` (Kovalenko-Hirata), `hnc` (Hypernetted- chain) or `psen` (Partial 
+Series Expansion of order-n) where “n” is a positive integer (_e.g._, "pse3"). If more than one closure is provided, 
+the 3D-RISM solver will use the closures in order to obtain a solution for the last closure in the list when no previous
+solutions are available. The solution for the last closure in the list is used for all output. This can be useful for 
+difficult to converge calculations. (see [§7.3.1](https://ambermd.org/doc12/Amber21.pdf#subsection.7.3.1))
 
-A whitespace separated list of one or more of KH, HNC or PSEn where
-“n” is a positive integer. If more than one closure is provided, the 3D-RISM solver will use the
-closures in order to obtain a solution for the last closure in the list when no previous solutions are
-available. The solution for the last closure in the list is used for all output. This can be useful for
-difficult to converge calculations
+`noasympcorr` (Default = 1) 
+:   Turn off long range asymptotic corrections for thermodynamic output only. Long range asymptotics are still used to 
+calculate the solution.
 
+`buffer` (Default = 14)
+:   Minimum distance in Å between solute and edge of solvation box. Specify this with `grdspc` below. Mutually exclusive
+with `ng` and `solvbox`. See [§7.2.3](https://ambermd.org/doc12/Amber21.pdf#subsection.7.2.3) for details on 
+how this affects numerical accuracy and how this interacts with 
+`ljTolerance`, and `tolerance`
 
+`solvcut`  (Default = `buffer` )
+:   Cutoff used for solute-solvent interactions. The default value is that of buffer. Therefore, if you set `buffer` < 
+0 and specify `ng` and `solvbox` instead, you must set `solvcut` to a nonzero value, or the program will quit in error.
 
+`grdspc`(Default = 0.5)
+:   Grid spacing in Å of the solvation box. Specify this with `buffer` above. Mutually exclusive with `ng` and 
+`solvbox`.
 
-
-`buffer` (Default = 14 Å)
-:   Minimum distance between solute and edge of solvation box. Specify this with `grdspc` below. Mutually exclusive
-    with ng and solvbox. Set buffer < 0 if you wish to use `ng` and `solvbox`.
-
-???+ warning "Deprecated"
-    `closureorder` (Default = 1)
-    :    The order at which the PSE-n closure is truncated if closure is specified as "pse" or "psen" (no integers).
-
-`grdspc`(Default = 0.5 Å)
-:   Grid spacing of the solvation box. Specify this with buffer above. Mutually exclusive with `ng` and `solvbox`.
-
-`ng` 
-:   Number of grid points to use in the x, y, and z directions. Used only if buffer < 0. Mutually exclusive with `buffer`
-    and `grdspc` above, and paired with `solvbox` below. 
+`ng` (Default = '-1,-1,-1')
+:   Comma separated number of grid points to use in the x, y, and z directions. Used only if buffer < 0. Mutually 
+exclusive with `buffer` and `grdspc` above, and paired with `solvbox` below.
 
     !!! warning 
         No default, this must be set if buffer < 0. Define like `ng=1000,1000,1000`
 
-`solvbox`
-:   Length of the solvation box in the x, y, and z dimensions. Used only if buffer < 0. Mutually exclusive with
-    `buffer` and `grdspc` above, and paired with `ng` above. 
+`solvbox` (Default = '-1,-1,-1')
+:   Comma separated solvation box side length for x, y, and z dimensions. Used only if `buffer` < 0. Mutually exclusive 
+with `buffer` and `grdspc` above, and paired with `ng` above. 
 
     !!! warning 
         No default, this must be set if buffer < 0. Define like `solvbox=20,20,20`
 
+`tolerance` (Default = 1e-5)
+:   A comma-separated list of maximum residual values for solution convergence. This has a strong effect on the 
+cost of 3D-RISM calculations (smaller value for tolerance -> more computation). When used in combination with a list 
+of closures it is possible to define different tolerances for each of the closures. This can be useful for difficult 
+to converge calculations (see [§7.3.1](https://ambermd.org/doc12/Amber21.pdf#subsection.7.3.1)). For the sake of 
+efficiency, it is best to use as high a tolerance as possible for all but the last closure. 
+See [§7.2.3](https://ambermd.org/doc12/Amber21.pdf#subsection.7.2.3) for details on how this affects numerical 
+accuracy and how this interacts with `ljTolerance`, `buffer`, and `solvbox`. Three formats of list are possible:
+
+    * one tolerance: All closures but the last use a tolerance of 1. The last tolerance in the list is used
+    by the last closure. In practice this is the most efficient.
+    * two tolerances: All closures but the last use the first tolerance in the list. The last tolerance in the
+    list is used by the last closure.
+    * n tolerances: Tolerances from the list are assigned to the closure list in order.
+
+`ljTolerance` (Default = -1)
+:   Lennard-Jones accuracy (Optional.) Determines the Lennard-Jones cutoff distance based on the desired accuracy of 
+the calculation. See [§7.2.3](https://ambermd.org/doc12/Amber21.pdf#subsection.7.2.3) for details on how this affects 
+numerical accuracy and how this interacts with `tolerance`, `buffer`, and `solvbox`.
+
+`asympKSpace` (Default = -1)
+:   Tolerance reciprocal space long range asymptotics accuracy (Optional.) Determines the reciprocal space long 
+range asymptotic cutoff distance based on the desired accuracy of the calculation. 
+See [§7.2.3](https://ambermd.org/doc12/Amber21.pdf#subsection.7.2.3) for details on how this affects numerical 
+accuracy. Possible values are:
+
+    * < 0: asympKSpaceTolerance = tolerance/10
+    * 0: no cutoff
+    * > 0: given value determines the maximum error in the reciprocal-space long range asymptotics calculations
+
+`treeDCF` (Default = 1)
+:   Use direct sum, or the treecode approximation to calculate the direct correlation function long-range asymptotic 
+correction.
+
+    * 0: Use direct sum
+    * 1: Use treecode approximation
+
+`treeTCF` (Default = 1)
+:   Use direct sum, or the treecode approximation to calculate the total correlation function long-range asymptotic 
+correction.
+
+    * 0: Use direct sum
+    * 1: Use treecode approximation
+
+`treeCoulomb` (Default = 1)
+:   Use direct sum, or the treecode approximation to calculate the Coulomb potential energy.
+
+    * 0: Use direct sum
+    * 1: Use treecode approximation
+
+`treeDCFMAC` (Default = 0.1)
+:   Treecode multipole acceptance criterion for the direct correlation function long-range asymptotic correction.
+
+`treeTCFMAC` (Default = 0.1)
+:   Treecode multipole acceptance criterion for the total correlation function long-range asymptotic correction.
+
+`treeCoulombMAC` (Default = 0.1)
+:   Treecode multipole acceptance criterion for the Coulomb potential energy.
+
+`treeDCFOrder` (Default = 2)
+:   Treecode Taylor series order for the direct correlation function long-range asymptotic correction.
+
+`treeTCFOrder` (Default = 2)
+:   Treecode Taylor series order for the total correlation function long-range asymptotic correction. Note that the 
+Taylor expansion used does not converge exactly to the TCF long-range asymptotic correction, so a very high order 
+will not necessarily increase accuracy.
+
+`treeCoulombOrder` (Default = 2)
+:   Treecode Taylor series order for the Coulomb potential energy.
+
+`treeDCFN0` (Default = 500)
+:   Maximum number of grid points contained within the treecode leaf clusters for the direct correlation function 
+long-range asymptotic correction. This sets the depth of the hierarchical octtree.
+
+`treeTCFN0` (Default = 500)
+:   Maximum number of grid points contained within the treecode leaf clusters for the total correlation function 
+long-range asymptotic correction. This sets the depth of the hierarchical octtree.
+
+`treeCoulombN0` (Default = 500)
+:   Maximum number of grid points contained within the treecode leaf clusters for the Coulomb potential energy. This 
+sets the depth of the hierarchical octtree.
+
+`mdiis_del` (Default = 0.7)
+:   MDIIS step size.
+
+`mdiis_nvec` (Default = 5)
+:   Number of previous iterations MDIIS uses to predict a new solution.
+
+`mdiis_restart` (Default = 10)
+:   If the current residual is mdiis_restart times larger than the smallest residual in memory, then the MDIIS 
+procedure is restarted using the lowest residual solution stored in memory. Increasing this number can sometimes 
+help convergence.
+
+`maxstep` (Default = 10000)
+:   Maximum number of iterative steps per solution.
+
+`npropagate` (Default = 5)
+:   Number of previous solutions to use in predicting a new solution.
+
 `polardecomp` (Default = 0)
-:   Decompose the solvation free energy into polar and non-polar contributions. Note that this will increase 
-    computation time by roughly 80%. 
-    
-    * 0: Don’t decompose solvation free energy. 
-    * 1: Decompose solvation free energy. 
+:   Decomposes solvation free energy into polar and non-polar components. Note that this typically requires 80% more 
+computation time.
+
+    * 0: Don’t decompose solvation free energy into polar and non-polar components. 
+    * 1: Decompose solvation free energy into polar and non-polar components.
+
+`entropicDecomp` (Default = 1)
+:   Decomposes solvation free energy into energy and entropy components. Also performs temperature derivatives of 
+other calculated quantities. Note that this typically requires 80% more computation time and requires a .xvv file 
+version 1.000 or higher (see [§7.1.3](https://ambermd.org/doc12/Amber21.pdf#subsection.7.1.3) and 
+[§7.3](https://ambermd.org/doc12/Amber21.pdf#section.7.3)).
+
+    * 0: Don’t decompose solvation free energy into energy and entropy components. 
+    * 1: Decompose solvation free energy into energy and entropy components.
 
 `rism_verbose` (Default = 0)
 :   Level of output in temporary RISM output files. May be helpful for debugging or following convergence. 
@@ -982,23 +1122,14 @@ difficult to converge calculations
     * 2: additionally prints the residual for each iteration and details of the MDIIS solver (useful for debugging 
     and convergence analyses)
 
-`solvcut`  (Default = buffer )
-:   Cutoff used for solute-solvent interactions. The default is the value of buffer. Therefore, if you set `buffer` < 
-    0 and specify `ng` and `solvbox` instead, you must set `solvcut` to a nonzero value, or the program will quit in 
-    error.
-
 `thermo` (Default = "std")
 :   Which thermodynamic equation you want to use to calculate solvation properties. Options are "std", "gf", or 
-    "both" (case-INsensitive). "std" uses the standard closure relation, "gf" uses the Gaussian Fluctuation 
-    approximation, and "both" will print out separate sections for both.
+"both" (case-INsensitive). "std" uses the standard closure relation, "gf" uses the Gaussian Fluctuation approximation, 
+and "both" will print out separate sections for both.
     
     !!! note
         Note that all data are printed out for each RISM simulation, so no choice is any more computationally demanding 
         than another.
-
-`tolerance` (Default = 1e-5)
-:   Upper bound of the precision requirement used to determine convergence of the self-consistent solution. This has 
-    a strong effect on the cost of 3D-RISM calculations (smaller value for tolerance -> more computation).
 
 ### **`&alanine_scanning` namelist variables**
 
@@ -1030,7 +1161,7 @@ difficult to converge calculations
 
 `mutant_res` (Default = None. Most be defined)
 :   Define the specific residue that is going to be mutated. Use the following format CHAIN:RESNUM (eg: 'A:350') or 
-    CHAIN:RESNUM:INSERTION_CODE if applicable (eg: "A:27:B"). 
+CHAIN:RESNUM:INSERTION_CODE if applicable (eg: "A:27:B"). 
 
     !!! important
         * Only one residue can be mutated per calculation!
@@ -1060,13 +1191,13 @@ mutated.
 
 `intdiel_nonpolar` (Default = 1)
 :   Define the `intdiel`(GB)/`indi`(PB) value for nonpolar residues (`PHE`, `TRP`, `VAL`, `ILE`, `LEU`, `MET`, `PRO`,
-    `CYX`, `ALA`, `GLY`, `PRO`)
+`CYX`, `ALA`, `GLY`, `PRO`)
     
     _New in v1.4.2_
 
 `intdiel_polar` (Default = 3)
 :   Define the `intdiel`(GB)/`indi`(PB) value for polar residues (`TYR`, `SER`, `THR`, `CYM`, `CYS`, `HIE`, `HID`, 
-    `ASN`, `GLN`, `ASH`, `GLH`, `LYN`)
+`ASN`, `GLN`, `ASH`, `GLH`, `LYN`)
     
     _New in v1.4.2_
 
@@ -1094,7 +1225,7 @@ mutated.
 
 `csv_format`  (Default = 1 [CSV-formatted output file])
 :   Print the decomposition output in a Comma-Separated-Variable (CSV) file. CSV files open natively in most
-    spreadsheets. 
+spreadsheets. 
 
     * 0: data to be written out in the standard ASCII format.
     * 1: data to be written out in a CSV file, and standard error of the mean will be calculated and included for all 
@@ -1125,7 +1256,7 @@ mutated.
 
 `print_res` (Default = "within 6")
 :   Select residues whose information is going to be printed in the output file. The default selection should be 
-    sufficient in most cases, however we have added several additional notations
+sufficient in most cases, however we have added several additional notations
     
     === "By Distance"
         Notation: [ `within` `distance` ]
@@ -1221,7 +1352,7 @@ mutated.
 
 `nmode_istrng` (Default = 0.0)
 :   Ionic strength to use in `nmode` calculations. Units are Molarity. Non-zero values are ignored if `nmode_igb`
-    is 0 above. 
+is 0 above. 
 
 `nmstartframe`[^2]
 :   Frame number to begin performing `nmode` calculations on 
