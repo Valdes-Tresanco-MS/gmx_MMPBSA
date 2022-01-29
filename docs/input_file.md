@@ -222,7 +222,7 @@ tested in previous `protein_forcefield` and `ligand_forcefield` variables.
     _Updated in v1.5.0: Documentation updated_
 
 `ions_parameters` (Default = 1)
-:   Define ions parameters to build the Amber topology. 
+:   Define ions parameters to build the Amber topology (see [§3.6](https://ambermd.org/doc12/Amber21.pdf#section.3.6)). 
 
     * 1: frcmod.ions234lm_126_tip3p
     * 2: frcmod.ions234lm_iod_tip4pew
@@ -342,7 +342,7 @@ C2 Entropy, _e.g._: `ie_segment = 25` means that the last quartile of the total 
     _New in v1.5.0_
 
 `temperature` (Default = 298.15)  
-:   Specify the temperature used in the calculations.
+:   Specify the temperature (in K) used in the calculations.
    
     _New in v1.4.0: Replace `entropy_temp`_
 
@@ -362,8 +362,8 @@ according to the structure[^1] (can generate inconsistencies). If a `*.gro` file
         amino acids but the numbering of the residue continues, we do not change the ID of the chain._
 
 `exp_ki` (Default = 0.0)
-:   Specify the experimental Ki in nM for correlations analysis. If not defined or exp_ki = 0 then this system will be 
-omitted in the correlation analysis
+:   Specify the experimental Ki (in nM) for correlations analysis. If not defined or exp_ki = 0 then this system 
+will be omitted in the correlation analysis
 
     _New in v1.4.0_
 
@@ -391,7 +391,7 @@ in the PATH variable. In this path the following executables will be searched: `
     _New in v1.1.1_
 
 `netcdf` (Default = 0)
-:   Specifies whether or not to use NetCDF trajectories internally rather than writing temporary ASCII trajectory
+:   Specifies whether to use NetCDF trajectories internally rather than writing temporary ASCII trajectory
 files. For very large trajectories, this could offer significant speedups, and requires less temporary space. 
 However, this option is incompatible with alanine scanning.
 
@@ -399,10 +399,10 @@ However, this option is incompatible with alanine scanning.
     * 1: Use temporary NetCDF trajectories
 
 `solvated_trajectory` (Default = 1)
-:   Define if it is necessary to build a clean trajectory with no water and ions
+:   Define if it is necessary to generate a clean trajectory with no water and ions
     
     * 0: Don’t
-    * 1: Build clean trajectory
+    * 1: Generate clean trajectory
 
     _New in v1.3.0_
 
@@ -440,30 +440,30 @@ tracebacks are printed, which aids in debugging of issues. (Default = 0) (Advanc
     [here](examples/Protein_ligand/ST/README.md)
 
 `intdiel` (Default = 1.0)
-:   Define Internal dielectric constant without use external *.mdin file
+:   Define Internal dielectric constant.
 
 `igb` (Default = 5)
 :   Generalized Born method to use (see [Section 4](https://ambermd.org/doc12/Amber21.pdf#chapter.4)). Allowed values 
-are 1, 2, 5, 7 and 8
+are 1, 2, 5, 7 and 8.
 
 `saltcon` (Default = 0.0)
-:   Salt concentration in Molarity.
+:   Salt concentration in Molarity (M).
 
-`surfoff` (Default 0.0)
-:   Offset to correct (by addition) the value of the non-polar contribution to the solvation free energy term
+`surfoff` (Default = 0.0)
+:   Offset to correct (by addition) the value of the non-polar contribution to the solvation free energy term.
 
 `surften` (Default = 0.0072)
 :   Surface tension value. Units in kcal/mol/Å^2^
 
-`molsurf` (Default 0)
-:   Define the algorithm to calculate the surface area for the non polar solvation term
+`molsurf` (Default = 0)
+:   Define the algorithm to calculate the surface area for the non polar solvation term.
     
     * 0: LCPO (Linear Combination of Pairwise Overlaps)
     * 1: molsurf algorithm
 
 `probe` (Default = 1.4)
-:   Radius  in Å of the probe molecule (supposed to be the size of a solvent molecule), to use when
-determining the molecular surface. 
+:   Radius in Å of the probe molecule (supposed to be the size of a solvent molecule), to use when determining the 
+molecular surface.
     
     !!! note
         only applicable when `molsurf` is set to 1
@@ -632,7 +632,7 @@ solute/solvent dielectric boundary.
   [243]: https://pubs.acs.org/doi/10.1021/cr00101a005
 
 `istrng` (Default = 0.0)
-:   Ionic strength in Molarity. It is converted to mM for `PBSA` and kept as M for `APBS`.
+:   Ionic strength in Molarity (M). It is converted to mM for `PBSA` and kept as M for `APBS`.
 
 `radiopt` (Default = 1)
 :   The option to set up atomic radii.
@@ -647,10 +647,10 @@ solute/solvent dielectric boundary.
   [244]: https://pubs.acs.org/doi/abs/10.1021/jp063479b
 
 `prbrad` (Default = 1.4)
-:   Solvent probe radius in Angstroms. Allowed values are 1.4 and 1.6. This corresponds to `dprob` in [pbsa][5].
+:   Solvent probe radius (in Å). Allowed values are 1.4 and 1.6. This corresponds to `dprob` in [pbsa][5].
 
 `iprob` (Default = 2.0)
-:   Mobile ion probe radius for ion accessible surface used to define the Stern layer.
+:   Mobile ion probe radius (in Å) for ion accessible surface used to define the Stern layer.
 
 `sasopt` (Default = 0)
 :   Option to determine which kind of molecular surfaces to be used in the Poisson-Boltzmann implicit solvent model.
@@ -692,16 +692,16 @@ or heterogeneous dielectric constant depth profile.
   [247]: https://pubs.acs.org/doi/abs/10.1021/acs.jcim.9b00363
 
 `mprob` (Default = 2.70)
-:   Membrane probe radius in Å. This is used to specify the highly different lipid molecule accessibility versus 
+:   Membrane probe radius (in Å). This is used to specify the highly different lipid molecule accessibility versus 
 that of the water. ([ref.][248])
 
   [248]: https://pubs.acs.org/doi/abs/10.1021/acs.jctc.7b00382
 
 `mthick` (Default = 40)
-:   Membrane thickness in Å. This is different from the previous default of 20 Å.
+:   Membrane thickness (in Å). This is different from the previous default of 20 Å.
 
 `mctrdz` (Default = 0.0)
-:   Membrane center in Å in the z direction. Default is 0.0 - membrane centered at the center of the protein.
+:   Membrane center (in Å) in the z direction. Default is 0.0 - membrane centered at the center of the protein.
 
 `poretype` (Default = 1)
 :   Turn on and off the automatic depth-first search method to identify the pore. ([ref.][248])
@@ -874,7 +874,7 @@ TIP3P. ([ref.][227])
     * 1: Use atomic van der Waals _rmin_ values.
 
 `sprob` (Default = 0.557)
-:   Solvent probe radius in Å for solvent accessible surface area (SASA) used to compute the dispersion term,
+:   Solvent probe radius (in Å) for solvent accessible surface area (SASA) used to compute the dispersion term,
 default to 0.557 Å in the _σ_ decomposition scheme as optimized in ([ref.][227]) with respect to the
 TIP3P solvent and the PME treatment. Recommended values for other decomposition schemes can
 be found in Table 4 of ([ref.][227]). If `use_sav = 0` (see below), `sprob` can be used to compute SASA
@@ -888,7 +888,7 @@ that it was impossible to use the same probe radii for all three terms after eac
 and validated with respect to the TIP3P solvent. ([ref.][227])
 
 `vprob` (Default = 1.300)
-:   Solvent probe radius in Å for molecular volume (the volume enclosed by SASA) used to compute non polar cavity 
+:   Solvent probe radius (in Å) for molecular volume (the volume enclosed by SASA) used to compute non polar cavity 
 solvation free energy, default to 1.300 Å, the value optimized in ([ref.][227]) with respect to the TIP3P solvent. 
 Recommended values for other decomposition schemes can be found in Tables 1-3 of ([ref.][227]).
 
@@ -972,7 +972,7 @@ difficult to converge calculations. (see [§7.3.1](https://ambermd.org/doc12/Amb
 calculate the solution.
 
 `buffer` (Default = 14)
-:   Minimum distance in Å between solute and edge of solvation box. Specify this with `grdspc` below. Mutually exclusive
+:   Minimum distance (in Å) between solute and edge of solvation box. Specify this with `grdspc` below. Mutually exclusive
 with `ng` and `solvbox`. See [§7.2.3](https://ambermd.org/doc12/Amber21.pdf#subsection.7.2.3) for details on 
 how this affects numerical accuracy and how this interacts with 
 `ljTolerance`, and `tolerance`
@@ -982,7 +982,7 @@ how this affects numerical accuracy and how this interacts with
 0 and specify `ng` and `solvbox` instead, you must set `solvcut` to a nonzero value, or the program will quit in error.
 
 `grdspc`(Default = 0.5)
-:   Grid spacing in Å of the solvation box. Specify this with `buffer` above. Mutually exclusive with `ng` and 
+:   Grid spacing (in Å) of the solvation box. Specify this with `buffer` above. Mutually exclusive with `ng` and 
 `solvbox`.
 
 `ng` (Default = '-1,-1,-1')
@@ -999,7 +999,7 @@ with `buffer` and `grdspc` above, and paired with `ng` above.
     !!! warning 
         No default, this must be set if buffer < 0. Define like `solvbox=20,20,20`
 
-`tolerance` (Default = 1e-5)
+`tolerance` (Default = 0.00001)
 :   A comma-separated list of maximum residual values for solution convergence. This has a strong effect on the 
 cost of 3D-RISM calculations (smaller value for tolerance -> more computation). When used in combination with a list 
 of closures it is possible to define different tolerances for each of the closures. This can be useful for difficult 
@@ -1223,8 +1223,8 @@ mutated.
     * A sample decomp input file is shown [here](input_file.md#decomposition-analysis)
     * A tutorial on binding free energy decomposition is available [here](examples/Decomposition_analysis/README.md)
 
-`csv_format`  (Default = 1 [CSV-formatted output file])
-:   Print the decomposition output in a Comma-Separated-Variable (CSV) file. CSV files open natively in most
+`csv_format`  (Default = 1)
+:   Print the decomposition output in a Comma-Separated-Values (CSV) file. CSV files open natively in most
 spreadsheets. 
 
     * 0: data to be written out in the standard ASCII format.
@@ -1351,7 +1351,7 @@ sufficient in most cases, however we have added several additional notations
     * 1: HCT GB model 
 
 `nmode_istrng` (Default = 0.0)
-:   Ionic strength to use in `nmode` calculations. Units are Molarity. Non-zero values are ignored if `nmode_igb`
+:   Ionic strength to use in `nmode` calculations. Units are Molarity (M). Non-zero values are ignored if `nmode_igb`
 is 0 above. 
 
 `nmstartframe`[^2]
