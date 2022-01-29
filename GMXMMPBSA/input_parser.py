@@ -32,23 +32,30 @@ class Variable(object):
     Base variable class. It has a name and a single value
     """
 
-    def __init__(self, varname, dat_type=int, default=None, case_sensitive=False, description=''):
+    def __init__(self, varname, dat_type=int, default=None, description='', int_dat_type=str):
         """ Initializes the variable type. Sets the default value as well as
           specifying how many characters are required by the parser to trigger
           recognition
         """
         # Catch illegalities
-        if dat_type not in (int, str, float, list):
+        if dat_type not in (int, str, float, list, tuple):
             raise InputError('Variable has unknown data type %s' % dat_type.__name__)
+        if int_dat_type not in (int, str, float):
+            raise InputError('Variable has unknown internal data type %s' % int_dat_type)
 
         self.name = varname
         self.datatype = dat_type
+        self.int_datatype = int_dat_type
         if default is None:
             self.value = None
         elif self.datatype is str:
             self.value = default.replace("'", '').replace('"', '')
-        elif self.datatype is list:
-            self.value = [x.strip() for x in re.split("(?<!\d)[,;](?!\d)", default.replace('"', '').replace("'", ''))]
+        elif self.datatype in [list, tuple]:
+            if isinstance(default, str):
+                self.value = [self.int_datatype(x.strip()) for x in re.split(';\s*|,\s*', default.replace('"',''))]
+            else:
+                self.value = [default]
+            print(self.value)
         else:
             self.value = self.datatype(default)
         self.description = description
@@ -65,9 +72,13 @@ class Variable(object):
         """ returns the string [<name> = <value>.... # description] """
         if self.datatype is str:
             valstring = f'{self.name:20s} = "{self.value:s}"'
-        elif self.datatype is list:
-            v = ','.join(self.value)
-            valstring = f'{self.name:20s} = "{v:s}"'
+        elif self.datatype in [list, tuple]:
+            if self.int_datatype == str:
+                v = ','.join(self.value)
+                valstring = f'{self.name:20s} = "{v}"'
+            else:
+                v = ','.join(map(str, self.value))
+                valstring = f'{self.name:20s} = {v}'
         else:
             valstring = f'{self.name:20s} = {self.value}'
         length = 70
@@ -86,8 +97,9 @@ class Variable(object):
         """ Sets the value of the variable """
         if self.datatype is str:
             self.value = value.replace('"', '').replace("'", '')
-        elif self.datatype is list:
-            self.value = [x.strip() for x in re.split("(?<!\d)[,;](?!\d)", value.replace('"', '').replace("'", ''))]
+        elif self.datatype in [list, tuple]:
+            data = value.replace('"', '').replace("'", '')
+            self.value = [self.int_datatype(x.strip()) for x in re.split(';\s*|,\s*', data)]
         else:
             self.value = self.datatype(value)
 
@@ -129,13 +141,13 @@ class Namelist(object):
         """ Not equal """
         return not self.__eq__(nml)
 
-    def addVariable(self, varname, datatype, default=None, description=None):
+    def addVariable(self, varname, datatype, default=None, description=None, int_dat_type=str):
         """ Adds a variable to this namelist. It checks to make sure that it's
           going to create a conflict with an existing variable.
         """
         if varname in list(self.variables.keys()):
             raise InternalError('Duplicated variable %s in Namelist' % varname)
-        self.variables[varname] = Variable(varname, datatype, default, description=description)
+        self.variables[varname] = Variable(varname, datatype, default, description, int_dat_type)
 
     def Open(self):
         """ Signifies that the namelist is open """
@@ -231,11 +243,14 @@ class InputFile(object):
 
         for var in variable_list:
 
-            if not isinstance(var, (list, tuple)) or len(var) != 4:
+            if not isinstance(var, (list, tuple)) or len(var) not in [4, 5]:
                 raise InputError('variables in variable_list must be lists of ' +
-                                 'length 4. [varname, datatype, default, description]')
-
-            self.namelists[name].addVariable(var[0], var[1], var[2], var[3])
+                                 'length 4 or 5. [varname, datatype, default, description, internal_datatype ('
+                                 'Optional)]')
+            if len(var) == 4:
+                self.namelists[name].addVariable(var[0], var[1], var[2], var[3])
+            else:
+                self.namelists[name].addVariable(var[0], var[1], var[2], var[3], var[4])
 
     def _full_namelist_name(self, nml):
         """ Determines what the full namelist name is. We try to make as many
@@ -572,10 +587,11 @@ input_file.addNamelist('rism', 'rism',
                            ['buffer', float, 14, 'Distance between solute and edge of grid'],
                            ['grdspc', float, 0.5, 'Grid spacing'],
                            ['solvcut', float, -1, 'Cutoff of the box'],
-                           ['tolerance', str, '1.0e-5', 'Convergence tolerance'],
-                           ['closureorder', int, 1, 'Order of closure if PSE'],
-                           ['ng', str, '-1,-1,-1', 'Number of grid points'],
-                           ['solvbox', str, '-1,-1,-1', 'Box limits'],
+                           ['tolerance', list, 1.0e-5, 'Convergence tolerance', float],
+                           # FIXME: deprecated
+                           # ['closureorder', int, 1, 'Order of closure if PSE'],
+                           ['ng', list, '-1,-1,-1', 'Number of grid points', int],
+                           ['solvbox', list, '-1,-1,-1', 'Box limits', int],
                            ['polardecomp', int, 0, 'Break solv. energy into polar and nonpolar terms'],
                            ['rism_verbose', int, 0, 'Control how much 3D-RISM info to print'],
                            ['thermo', str, 'std', 'Type of thermodynamic analysis to do'],
@@ -594,8 +610,8 @@ input_file.addNamelist('rism', 'rism',
                            ['entropicDecomp', int, 0, 'Decomposes solvation free energy into energy and entropy '
                                                       'components'],
                            ['pc+', int, 0, 'Compute the PC+/3D-RISM excess chemical potential functional'],
-                           ['uccoeff', str, '0.0,0.0,0.0,0.0', 'Compute the UC excess chemical potential functional '
-                                                               'with the provided coefficients'],
+                           ['uccoeff', list, '0.0,0.0,0.0,0.0', 'Compute the UC excess chemical potential functional '
+                                                               'with the provided coefficients', float],
                            ['treeDCF', int, 1, 'Use direct sum or the treecode approximation to calculate the direct '
                                                'correlation function long-range asymptotic correction'],
                            ['treeTCF', int, 1, 'Use direct sum or the treecode approximation to calculate the total '
