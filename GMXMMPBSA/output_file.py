@@ -124,10 +124,17 @@ class Data2h5:
 
 # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-def _get_diff(arr2, arr1):
+def _get_diff(arr2, arr1, mut=False):
+
     if isinstance(arr2, EnergyVector) and isinstance(arr1, EnergyVector):
-        dmean = arr2.mean() - arr1.mean()
-        dstd = utils.get_std(arr2.stdev(), arr1.stdev())
+        if mut:
+            d = arr2 - arr1
+            dmean = d.mean()
+            dstd = d.std()
+        else:
+            dmean = arr2.mean() - arr1.mean()
+            dstd = utils.get_std(arr2.stdev(), arr1.stdev())
+
     elif isinstance(arr2, EnergyVector) and isinstance(arr1, (int, float)):
         dmean = arr2.mean() - arr1
         dstd = utils.get_std(arr2.stdev(), 0)
@@ -380,8 +387,8 @@ def write_outputs(app):
                     final_output.add_section(f"Using Interaction Entropy Approximation:\n"
                                              f"ΔG binding = {ie_davg:9.4f} +/- {ie_dstd:7.4f}\n")
                 if INPUT['c2_entropy']:
-                    # FIXME: c2 stdev. ???
-                    c2_davg, c2_dstd = _get_sum(sys_norm['DELTA TOTAL'], c2norm[key]['c2data'])
+                    c2_davg, sys_dstd = _get_sum(sys_norm['DELTA TOTAL'], c2norm[key]['c2data'])
+                    c2_dstd = utils.get_std(sys_dstd, c2norm[key]['c2_std'])
                     final_output.add_section(f"Using C2 Entropy Approximation:\n"
                                              f"ΔG binding = {c2_davg:9.4f} +/- {c2_dstd:7.4f}\n")
             if INPUT['nmoderun']:
@@ -431,33 +438,41 @@ def write_outputs(app):
 
         if INPUT['alarun'] and not INPUT['mutant_only']:
             if stability:
-                davg, dstd = _get_diff(sys_mut['TOTAL'], sys_norm['TOTAL'])
+                ddh_davg, ddh_dstd = _get_diff(sys_mut['TOTAL'], sys_norm['TOTAL'], True)
             else:
-                davg, dstd = _get_diff(sys_mut['DELTA TOTAL'], sys_norm['DELTA TOTAL'])
+                ddh_davg, ddh_dstd = _get_diff(sys_mut['DELTA TOTAL'], sys_norm['DELTA TOTAL'], True)
             final_output.write(f'\nRESULT OF ALANINE SCANNING ({mut_str}):\n' 
-                               f'ΔΔH binding = {davg:9.4f} +/- {dstd:7.4f}\n')
+                               f'ΔΔH binding = {ddh_davg:9.4f} +/- {ddh_dstd:7.4f}\n')
 
             if INPUT['qh_entropy']:
-                davg, _ =_get_diff(mqh_davg, qh_davg)
-                dstd = utils.get_std(mqh_dstd, qh_dstd)
+                ddqh_davg, _ =_get_diff(qhmutant['Total'], qhnorm['Total'])
+                ddgqh_davg = ddh_davg + ddqh_davg
+                # this std is the same of ΔΔH
+                # dstd = utils.get_std(mqh_dstd, qh_dstd)
                 final_output.write('\n   (quasi-harmonic entropy)\n'
-                                   f'ΔΔG{"" if stability else " binding"} = {davg:9.4f} +/- {dstd:7.4f}\n')
+                                   f'ΔΔG{"" if stability else " binding"} = {ddgqh_davg:9.4f} +/- {ddh_dstd:7.4f}\n')
             if not stability:
                 if INPUT['interaction_entropy']:
-                    davg, _ = _get_diff(mie_davg, ie_davg)
-                    dstd = utils.get_std(mie_dstd, ie_dstd)
+                    ddie_davg, ddie_dstd = _get_diff(iemutant[key]['iedata'], ienorm[key]['iedata'], True)
+                    # dstd = utils.get_std(mie_dstd, ie_dstd)
+                    ddgie_davg = ddh_davg + ddie_davg
+                    ddgie_dstd = utils.get_std(ddh_dstd, ddie_dstd)
                     final_output.write('\n   (interaction entropy)\n'
-                                       f'ΔΔG binding = {davg:9.4f} +/- {dstd:7.4f}\n')
+                                       f'ΔΔG binding = {ddgie_davg:9.4f} +/- {ddgie_dstd:7.4f}\n')
                 if INPUT['c2_entropy']:
-                    davg, _ = _get_diff(mc2_davg, c2_davg)
-                    dstd = utils.get_std(mc2_dstd, c2_dstd)
+                    ddc2_davg = c2mutant[key]['c2data'] - c2norm[key]['c2data']
+                    ddc2_dstd = c2mutant[key]['c2_std'] - c2norm[key]['c2_std']
+                    ddgc2_davg = ddh_davg + ddc2_davg
+                    ddgc2_dstd = utils.get_std(ddh_dstd, ddc2_dstd)
+                    # dstd = utils.get_std(mc2_dstd, c2_dstd)
                     final_output.write('\n   (C2 entropy)\n'
-                                       f'ΔΔG binding = {davg:9.4f} +/- {dstd:7.4f}\n')
+                                       f'ΔΔG binding = {ddgc2_davg:9.4f} +/- {ddgc2_dstd:7.4f}\n')
             if INPUT['nmoderun']:
-                davg, _ = _get_diff(mnm_davg, nm_davg)
-                dstd = utils.get_std(mnm_dstd, nm_dstd)
+                ddnm_davg, ddnm_dstd = _get_diff(nm_sys_mut['Total'], nm_sys_norm['Total'], True)
+                ddgnm_davg = ddh_davg + ddnm_davg
+                ddgnm_dstd = utils.get_std(ddh_dstd, ddnm_dstd)
                 final_output.write('\n   (normal mode entropy)\n'
-                                   f'ΔΔG{"" if stability else " binding"} = {davg:9.4f} +/- {dstd:7.4f}\n')
+                                   f'ΔΔG{"" if stability else " binding"} = {ddgnm_davg:9.4f} +/- {ddgnm_dstd:7.4f}\n')
             final_output.separate()
 
     # end for solv in ['gbrun', 'pbrun', ...]
