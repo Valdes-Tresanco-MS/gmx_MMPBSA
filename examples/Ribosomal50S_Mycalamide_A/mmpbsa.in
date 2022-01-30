@@ -5,7 +5,6 @@ parameters according to what is better for your system.
 
 &general
 sys_name="Ribo-MycalamideA",
-verbose=2,
 /
 &gb
 igb=8, intdiel=10, saltcon=0.15,
