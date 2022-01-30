@@ -65,7 +65,7 @@ according to what is better for your system.
 sys_name="Prot-DNA-RNA-ION-Lig",
 startframe=1
 endframe=10
-verbose=2, forcefields="oldff/leaprc.ff99SBildn,leaprc.gaff"
+forcefields="oldff/leaprc.ff99SBildn,leaprc.gaff"
 PBRadii=4, ions_parameters=1
 /
 &gb

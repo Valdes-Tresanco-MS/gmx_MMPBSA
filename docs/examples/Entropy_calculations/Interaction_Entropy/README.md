@@ -57,7 +57,6 @@ according to what is better for your system.
 sys_name="IE",
 startframe=5,
 endframe=20,
-verbose=2,
 forcefields="oldff/leaprc.ff99SB",
 #Interaction Entropy (IE)(https://pubs.acs.org/doi/abs/10.1021/jacs.6b02682) approximation
 interaction_entropy=1, ie_segment=25, temperature=298

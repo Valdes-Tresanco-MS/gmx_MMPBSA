@@ -60,8 +60,10 @@ according to what is better for your system.
 
 &general
 sys_name="C2_entropy",
-startframe=5, endframe=21, verbose=2, c2_entropy=1, c2_segment=100, temperature=300,
-forcefields="oldff/leaprc.ff99SB,leaprc.gaff"
+startframe=5, 
+endframe=21, 
+forcefields="oldff/leaprc.ff99SB,leaprc.gaff",
+c2_entropy=1, c2_segment=100, temperature=300,
 /
 &gb
 igb=5, saltcon=0.150,

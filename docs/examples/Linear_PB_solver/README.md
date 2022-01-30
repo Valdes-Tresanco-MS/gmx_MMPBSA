@@ -63,7 +63,6 @@ for your system.
 sys_name="Linear_PB",
 startframe=5,
 endframe=14,
-verbose=2,
 forcefields="oldff/leaprc.ff99SB,leaprc.gaff"
 /
 &pb

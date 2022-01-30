@@ -62,7 +62,6 @@ according to what is better for your system.
 sys_name="Prot-Memb-CHARMM",
 startframe=1,
 endframe=4,
-debug_printlevel=2,
 /
 
 &pb

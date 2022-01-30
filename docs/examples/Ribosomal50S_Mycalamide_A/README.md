@@ -56,7 +56,6 @@ of time. Feel free to change the parameters according to
 what is better for your system.
 
 sys_name="Ribo-MycalamideA",
-verbose=2,
 /
 &gb
 igb=8, intdiel=10, saltcon=0.15,

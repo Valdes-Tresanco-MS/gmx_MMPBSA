@@ -57,7 +57,7 @@ according to what is better for your system.
 sys_name="Metalloprotein-peptide",
 startframe=1
 endframe=4,
-verbose=2, ions_parameters=1,
+ions_parameters=1,
 /
 &gb
 igb=2, saltcon=0.150,
