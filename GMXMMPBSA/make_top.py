@@ -998,10 +998,10 @@ class CheckMakeTop:
                                 f'reference structure ({len(ref_str.residues)}) are different. Please check that the '
                                 f'reference structure is correct')
             for c, res in enumerate(ref_str.residues):
-                if com_str.residues[c-1].number != res.number or com_str.residues[c-1].name != res.name:
+                if com_str.residues[c].number != res.number or com_str.residues[c].name != res.name:
                     GMXMMPBSA_ERROR('There is no match between the complex and the reference structure used. An '
-                                    f'attempt was made to assign the chain ID to "{com_str.residues[c-1].name}'
-                                    f':{com_str.residues[c-1].number}:{com_str.residues[c-1].insertion_code}" in the '
+                                    f'attempt was made to assign the chain ID to "{com_str.residues[c].name}'
+                                    f':{com_str.residues[c].number}:{com_str.residues[c].insertion_code}" in the '
                                     f'complex, but "{res.name}:{res.number}:{res.insertion_code}" was expected '
                                     'based on the reference structure. Please check that the reference structure is '
                                     'correct')

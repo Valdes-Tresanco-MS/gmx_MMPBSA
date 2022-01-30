@@ -113,7 +113,7 @@ class AmberOutput(dict):
     """
     # Ordered list of keys in the data dictionary
     data_keys = ['BOND', 'ANGLE', 'DIHED', 'VDWAALS', 'EEL', '1-4 VDW', '1-4 EEL']
-    chamber_keys = ['UB', 'IMP', 'CMAP']
+    chamber_keys = ['CMAP', 'IMP', 'UB']
     # Dictionary that maps each data key to their respective composite keys
     data_key_owner = {'BOND': ['GGAS', 'TOTAL'], 'ANGLE': ['GGAS', 'TOTAL'], 'DIHED': ['GGAS', 'TOTAL'],
                       'VDWAALS': ['GGAS', 'TOTAL'], 'EEL': ['GGAS', 'TOTAL'], '1-4 VDW': ['GGAS', 'TOTAL'],
@@ -148,7 +148,9 @@ class AmberOutput(dict):
         self.apbs = INPUT['sander_apbs']
 
         if self.chamber:
-            self.data_keys += self.chamber_keys
+            for key in self.chamber_keys:
+                if key not in self.data_keys:
+                    self.data_keys.insert(3, key)
 
     def parse_from_file(self, basename, num_files=1):
         self.num_files = num_files
@@ -655,7 +657,7 @@ class PBout(AmberOutput):
     def __init__(self, mol, INPUT, chamber=False, **kwargs):
         AmberOutput.__init__(self, mol, INPUT, chamber, **kwargs)
 
-        if self.INPUT['inp'] == 2:
+        if self.INPUT['inp'] == 2 and 'EDISPER' not in self.data_keys:
             self.data_keys += ['EDISPER']
 
     def _get_energies(self, outfile):
