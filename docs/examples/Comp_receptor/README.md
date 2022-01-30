@@ -59,7 +59,7 @@ according to what is better for your system.
 
 &general
 sys_name="Complex_receptor",
-verbose=2, forcefields="oldff/leaprc.ff99SBildn",leaprc.gaff"
+forcefields="oldff/leaprc.ff99SBildn",leaprc.gaff"
 PBRadii=4, ions_parameters=1
 /
 &gb

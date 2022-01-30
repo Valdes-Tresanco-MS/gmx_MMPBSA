@@ -62,7 +62,6 @@ according to what is better for your system.
 sys_name="Prot-Lig-CHARMM",
 startframe=1,
 endframe=4,
-verbose=2,
 /
 &pb
 # radiopt=0 is recommended which means using radii from the prmtop file for both the PB calculation and for the NP

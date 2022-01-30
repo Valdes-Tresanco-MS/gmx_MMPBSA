@@ -66,7 +66,6 @@ according to what is better for your system.
 sys_name="Prot-Lig-ST",
 startframe=5,
 endframe=14,
-verbose=2,
 forcefields="oldff/leaprc.ff99SB,leaprc.gaff"
 /
 &gb

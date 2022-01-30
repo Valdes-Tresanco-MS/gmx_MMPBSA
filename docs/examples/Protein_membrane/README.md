@@ -64,7 +64,6 @@ according to what is better for your system.
 sys_name="Prot-Memb",
 startframe=1,
 endframe=4,
-debug_printlevel=2,
 /
 &pb
 radiopt=0, indi=20.0, istrng=0.150,

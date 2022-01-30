@@ -56,7 +56,6 @@ according to what is better for your system.
 
 &general
 sys_name="SARS_CoV2_Papain_like_protease",
-verbose=2,
 /
 &pb
 #radiopt=0 is recommended which means using radii from the prmtop file for both the PB calculation and for the NP calculation

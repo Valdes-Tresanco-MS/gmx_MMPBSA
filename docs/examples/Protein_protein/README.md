@@ -58,7 +58,6 @@ according to what is better for your system.
 sys_name="Prot-Prot",
 startframe=5,
 endframe=14,
-verbose=2,
 forcefields="oldff/leaprc.ff99SB",
 /
 &gb

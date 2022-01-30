@@ -56,7 +56,6 @@ according to what is better for your system.
 sys_name="NMode",
 startframe=5,
 endframe=8,
-verbose=2,
 forcefields="oldff/leaprc.ff99SB",
 /
 &gb

@@ -166,7 +166,7 @@ according to what is better for your system.
 sys_name="Prot-Lig-ST",
 startframe=5,
 endframe=9,
-verbose=2, solvated_trajectory=0,
+solvated_trajectory=0,
 /
 &pb
 # radiopt=0 is recommended which means using radii from the prmtop file

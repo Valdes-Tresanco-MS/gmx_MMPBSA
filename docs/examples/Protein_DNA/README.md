@@ -59,7 +59,6 @@ startframe=5
 endframe=14
 PBRadii=4
 forcefields="oldff/leaprc.ff99SB"
-verbose=2,
 /
 &gb
 igb=8, saltcon=0.150, intdiel=10
