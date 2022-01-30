@@ -21,6 +21,8 @@ Generate Amber topology files from GROMACS files
 # ##############################################################################
 
 import os
+import textwrap
+
 import parmed
 from GMXMMPBSA.exceptions import *
 from GMXMMPBSA.utils import (selector, get_dist, list2range, res2map, get_indexes, log_subprocess_output, check_str,
@@ -115,7 +117,35 @@ class CheckMakeTop:
             tops = self.makeToptleap()
 
         if self.INPUT['decomprun']:
-            self.INPUT['print_res'] = ','.join(str(x) for x in self.get_selected_residues(self.INPUT['print_res']))
+            decomp_res = self.get_selected_residues(self.INPUT['print_res'])
+            if 'within' in self.INPUT['print_res']:
+                logging.info(f"Selecting residues by distance ({self.INPUT['print_res'].split()[1]} Å) between "
+                             f"receptor and ligand for decomposition analysis...")
+            else:
+                logging.info('User-selected residues for decomposition analysis...')
+
+            textwraped = textwrap.wrap('\t'.join(x.string for x in decomp_res), tabsize=4, width=120)
+            logging.info(f'Selected {len(decomp_res)} residues:\n' + '\n'.join(textwraped) + '\n')
+
+            if self.INPUT['idecomp'] in [3, 4]:
+                if len(decomp_res) > 5 and self.INPUT['dec_verbose'] in [1, 3]:
+                    mols = 3
+                    energy_terms = 6
+                    num_res = len(decomp_res)
+                    total_items = energy_terms * mols * num_res**2
+                    logging.warning(f"Using idecomp = {self.INPUT['idecomp']} and dec_verbose ="
+                                    f" {self.INPUT['dec_verbose']} will be generated {total_items} items. This can "
+                                    f"lead to high resource consumption!...")
+                elif len(decomp_res) > 10 and self.INPUT['dec_verbose'] in [0, 2]:
+                    mols = 1
+                    energy_terms = 6
+                    num_res = len(decomp_res)
+                    total_items = energy_terms * mols * num_res ** 2
+                    logging.warning(f"Using idecomp = {self.INPUT['idecomp']} and dec_verbose ="
+                                    f" {self.INPUT['dec_verbose']} will be generated {total_items} items. This can "
+                                    f"lead to high resource consumption!...")
+
+            self.INPUT['print_res'] = ','.join(list2range(decomp_res)['string'])
         if self.INPUT['qm_residues']:
             self.INPUT['qm_residues'] = ','.join(str(x) for x in self.get_selected_residues(self.INPUT['qm_residues']))
 
@@ -692,7 +722,7 @@ class CheckMakeTop:
         if res_selection:
             for res in res_selection:
                 logging.warning("We couldn't find this residue CHAIN:{} RES_NUM:{} ICODE: "
-                                  "{}".format(*res))
+                                "{}".format(*res))
         return sele_res
 
 
