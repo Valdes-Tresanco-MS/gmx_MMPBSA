@@ -683,10 +683,8 @@ class PBout(AmberOutput):
                 self['1-4 EEL'] = self['1-4 EEL'].append(float(words[7]))
                 words = outfile.readline().split()
                 self['ENPOLAR'] = self['ENPOLAR'].append(float(words[2]))
-                if not self.apbs:
+                if self.INPUT['inp'] == 2 and not self.apbs:
                     self['EDISPER'] = self['EDISPER'].append(float(words[5]))
-                else:
-                    self['EDISPER'] = self['EDISPER'].append(0.0)
             rawline = outfile.readline()
 
 
