@@ -426,8 +426,8 @@ input_file.addNamelist('general', 'general',
 
                             # Miscellaneous options
                            ['assign_chainID', int, 0, 'Assign chains ID'],
-# FIXME: deprecated
-                           ['debug_printlevel', int, 0, 'Increase debugging info printed'],
+# FIXME: removed
+                           # ['debug_printlevel', int, 0, 'Increase debugging info printed'],
                            ['exp_ki', float, 0, 'Experimental Ki in nM'],
 # FIXME: full_traj -> parece que no afecta en nada que lo quite dado que solo genera la traj de complejo en PDB
                            ['full_traj', int, 0, 'Print a full traj. AND the thread trajectories'],
@@ -443,7 +443,7 @@ input_file.addNamelist('general', 'general',
 # FIXME: strip_mask -> para GROMACS se hace con la variable solvated_trajectory
                            ['strip_mask', str, strip_mask, 'Amber mask to strip from solvated prmtop'],
 
-# FIXME: Problem with the stdev. We can implemented to output only no for clculations
+# FIXME: removed
                            # ['verbose', int, 1, 'How many energy terms to print in the final output']
                        ], trigger=None)
 
@@ -551,7 +551,7 @@ input_file.addNamelist('pb', 'pb',
                            ['maxsph', int, 400, 'Approximate number of dots to represent the maximum atomic solvent '
                                                 'accessible surface'],
 # FIXME: need revision. It seems that it is only available for nab
-                           #['maxarcdot', int, 1500, 'Number of dots used to store arc dots per atom '],
+                           ['maxarcdot', int, 1500, 'Number of dots used to store arc dots per atom'],
 
                            # Options for output
                            ['npbverb', int, 0, 'Option to turn on verbose mode']
