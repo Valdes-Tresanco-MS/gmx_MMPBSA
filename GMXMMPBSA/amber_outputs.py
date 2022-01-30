@@ -346,7 +346,7 @@ class C2out(dict):
             for term in d[model]:
                 self[model][term] = d[model][term][()]
 
-    def print_summary(self, output_format: str = 'ascii'):
+    def summary(self, output_format: str = 'ascii'):
         """ Formatted summary of C2 Entropy results """
 
         _output_format = 0 if output_format == 'ascii' else 1
