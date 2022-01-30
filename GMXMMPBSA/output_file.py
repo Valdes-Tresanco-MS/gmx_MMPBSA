@@ -528,7 +528,6 @@ def write_decomp_output(app):
 
             # Now it's time to dump everything to the CSV file
             if FILES.dec_energies:
-                print(decomp_norm.csvwriter)
                 if not stability:
                     del app.calc_types.decomp_normal[key]['receptor'].csvwriter
                     del app.calc_types.decomp_normal[key]['ligand'].csvwriter

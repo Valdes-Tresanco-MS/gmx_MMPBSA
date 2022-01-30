@@ -277,9 +277,16 @@ class IEout(dict):
     """
     Interaction Entropy output
     """
-
-    def __init__(self, **kwargs):
+    def __init__(self, INPUT, **kwargs):
         super(IEout, self).__init__(**kwargs)
+        self.INPUT = INPUT
+
+    def parse_from_dict(self, model, d: dict):
+        self[model] = {}
+        for term, dat in d.items():
+            self[model][term] = EnergyVector(dat) if term in ['data', 'iedata'] else dat
+            print(model, term, self[model][term])
+
 
     def parse_from_h5(self, d):
         for model in d:
@@ -297,8 +304,10 @@ class IEout(dict):
         for model in self:
             csvwriter.writerow([f'Model {model}'])
             csvwriter.writerow(['Frame #', 'Interaction Entropy'])
-            for f, d in zip(self['frames'], self['data']):
+            f = self.INPUT['startframe']
+            for d in self[model]['data']:
                 csvwriter.writerow([f] + [d])
+                f += self.INPUT['interval']
             csvwriter.writerow([])
 
     def summary(self, output_format: str = 'ascii'):
@@ -332,7 +341,6 @@ class C2out(dict):
         super(C2out, self).__init__(**kwargs)
 
     def parse_from_h5(self, d):
-
         for model in d:
             self[model] = {}
             for term in d[model]:
