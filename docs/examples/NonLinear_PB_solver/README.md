@@ -54,7 +54,8 @@ according to what is better for your system.
 
 &general
 sys_name="NonLinear_PB",
-startframe=5, endframe=10,
+startframe=5,
+endframe=10,
 forcefields="oldff/leaprc.ff99SB",
 /
 &pb
