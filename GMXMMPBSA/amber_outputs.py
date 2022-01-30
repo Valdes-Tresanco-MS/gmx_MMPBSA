@@ -112,21 +112,30 @@ class AmberOutput(dict):
     .# where # spans from 0 to num_files - 1
     """
     # Ordered list of keys in the data dictionary
-    data_keys = ['BOND', 'ANGLE', 'DIHED', 'UB', 'IMP', 'CMAP', 'VDWAALS', 'EEL',
-                 '1-4 VDW', '1-4 EEL', 'EPOL', 'ENPOL']
+    data_keys = ['BOND', 'ANGLE', 'DIHED', 'VDWAALS', 'EEL', '1-4 VDW', '1-4 EEL']
+    chamber_keys = ['UB', 'IMP', 'CMAP']
     # Dictionary that maps each data key to their respective composite keys
-    data_key_owner = {'BOND': ['GGAS', 'TOTAL'], 'ANGLE': ['GGAS', 'TOTAL'],
-                      'DIHED': ['GGAS', 'TOTAL'], 'UB': ['GGAS', 'TOTAL'],
-                      'IMP': ['GGAS', 'TOTAL'], 'CMAP': ['GGAS', 'TOTAL'],
-                      'VDWAALS': ['GGAS', 'TOTAL'], 'EEL': ['GGAS', 'TOTAL'],
-                      '1-4 VDW': ['GGAS', 'TOTAL'], '1-4 EEL': ['GGAS', 'TOTAL'],
-                      'EPOL': ['GSOLV', 'TOTAL'], 'ENPOL': ['GSOLV', 'TOTAL']}
+    data_key_owner = {'BOND': ['GGAS', 'TOTAL'], 'ANGLE': ['GGAS', 'TOTAL'], 'DIHED': ['GGAS', 'TOTAL'],
+                      'VDWAALS': ['GGAS', 'TOTAL'], 'EEL': ['GGAS', 'TOTAL'], '1-4 VDW': ['GGAS', 'TOTAL'],
+                      '1-4 EEL': ['GGAS', 'TOTAL'],
+                      # charmm
+                      'UB': ['GGAS', 'TOTAL'], 'IMP': ['GGAS', 'TOTAL'], 'CMAP': ['GGAS', 'TOTAL'],
+                      # non lineal PB
+                      'EEL+EPB': ['TOTAL'],
+                      # PB
+                      'EPB': ['GSOLV', 'TOTAL'], 'ENPOLAR': ['GSOLV', 'TOTAL'], 'EDISPER': ['GSOLV', 'TOTAL'],
+                      # GB
+                      'EGB': ['GSOLV', 'TOTAL'], 'ESURF': ['GSOLV', 'TOTAL'],
+                      # QM/GB
+                      'ESCF': ['TOTAL'],
+                      # RISM
+                      'POLAR SOLV': ['GSOLV', 'TOTAL'], 'APOLAR SOLV': ['GSOLV', 'TOTAL'],
+                      'ERISM': ['GSOLV', 'TOTAL'],
+                      }
     # Which of those keys are composite
     composite_keys = ['GGAS', 'GSOLV', 'TOTAL']
     # What the value of verbosity must be to print out this data
-    print_levels = {'BOND': 2, 'ANGLE': 2, 'DIHED': 2, 'UB': 2, 'IMP': 2, 'CMAP': 2,
-                    'VDWAALS': 1, 'EEL': 1, '1-4 VDW': 2, '1-4 EEL': 2, 'EPOL': 1,
-                    'ENPOL': 1}
+    print_levels = {'BOND': 2, 'ANGLE': 2, 'DIHED': 2, 'VDWAALS': 1, 'EEL': 1, '1-4 VDW': 2, '1-4 EEL': 2, 'EPOL': 1}
 
     def __init__(self, mol: str, INPUT, chamber=False, **kwargs):
         super(AmberOutput, self).__init__(**kwargs)
@@ -136,6 +145,10 @@ class AmberOutput(dict):
         self.basename = None
         self.num_files = None
         self.is_read = False
+        self.apbs = INPUT['sander_apbs']
+
+        if self.chamber:
+            self.data_keys += self.chamber_keys
 
     def parse_from_file(self, basename, num_files=1):
         self.num_files = num_files
@@ -197,9 +210,6 @@ class AmberOutput(dict):
             # Skip the composite terms, since we print those at the end
             if key in self.composite_keys:
                 continue
-            # Skip chamber terms if we aren't using chamber prmtops
-            if not self.chamber and key in ['UB', 'IMP', 'CMAP']:
-                continue
             # Skip any terms that have zero as every single element (i.e. EDISPER)
             if self.INPUT['sander_apbs'] and key == 'EDISPER':
                 continue
@@ -259,8 +269,6 @@ class AmberOutput(dict):
             self[key] = EnergyVector(len(self['EEL']))
 
         for key in self.data_keys:
-            if not self.chamber and key in ['UB', 'IMP', 'CMAP']:
-                continue
             for component in self.data_key_owner[key]:
                 self[component] = self[key] + self[component]
 
@@ -587,21 +595,8 @@ class NMODEout(dict):
 
 class GBout(AmberOutput):
     """ Amber output class for normal generalized Born simulations """
-    # Ordered list of keys in the data dictionary
-    data_keys = ['BOND', 'ANGLE', 'DIHED', 'UB', 'IMP', 'CMAP', 'VDWAALS', 'EEL',
-                 '1-4 VDW', '1-4 EEL', 'EGB', 'ESURF']
-    # Dictionary that maps each data key to their respective composite keys
-    data_key_owner = {'BOND': ['GGAS', 'TOTAL'], 'ANGLE': ['GGAS', 'TOTAL'],
-                      'DIHED': ['GGAS', 'TOTAL'], 'UB': ['GGAS', 'TOTAL'],
-                      'IMP': ['GGAS', 'TOTAL'], 'CMAP': ['GGAS', 'TOTAL'],
-                      'VDWAALS': ['GGAS', 'TOTAL'], 'EEL': ['GGAS', 'TOTAL'],
-                      '1-4 VDW': ['GGAS', 'TOTAL'], '1-4 EEL': ['GGAS', 'TOTAL'],
-                      'EGB': ['GSOLV', 'TOTAL'], 'ESURF': ['GSOLV', 'TOTAL']}
-    # Which of those keys are composite
-    composite_keys = ['GGAS', 'GSOLV', 'TOTAL']
-    # What the value of verbosity must be to print out this data
-    print_levels = {'BOND': 2, 'ANGLE': 2, 'DIHED': 2, 'UB': 2, 'IMP': 2, 'CMAP': 2,
-                    'VDWAALS': 1, 'EEL': 1, '1-4 VDW': 2, '1-4 EEL': 2, 'EGB': 1,
+    data_keys = ['BOND', 'ANGLE', 'DIHED', 'VDWAALS', 'EEL', '1-4 VDW', '1-4 EEL', 'EGB', 'ESURF']
+    print_levels = {'BOND': 2, 'ANGLE': 2, 'DIHED': 2, 'VDWAALS': 1, 'EEL': 1, '1-4 VDW': 2, '1-4 EEL': 2, 'EGB': 1,
                     'ESURF': 1}
 
     # Ordered list of keys in the data dictionary
@@ -624,10 +619,6 @@ class GBout(AmberOutput):
                     self['IMP'] = self['IMP'].append(float(words[5]))
                     self['CMAP'] = self['CMAP'].append(float(words[8]))
                     words = outfile.readline().split()
-                else:
-                    self['UB'] = self['UB'].append(0.0)
-                    self['IMP'] = self['IMP'].append(0.0)
-                    self['CMAP'] = self['CMAP'].append(0.0)
                 self['VDWAALS'] = self['VDWAALS'].append(float(words[2]))
                 self['EEL'] = self['EEL'].append(float(words[5]))
                 self['EGB'] = self['EGB'].append(float(words[8]))
@@ -646,25 +637,18 @@ class GBout(AmberOutput):
 
 class PBout(AmberOutput):
     # Ordered list of keys in the data dictionary
-    data_keys = ['BOND', 'ANGLE', 'DIHED', 'UB', 'IMP', 'CMAP', 'VDWAALS', 'EEL',
-                 '1-4 VDW', '1-4 EEL', 'EPB', 'ENPOLAR', 'EDISPER']
-    # Dictionary that maps each data key to their respective composite keys
-    data_key_owner = {'BOND': ['GGAS', 'TOTAL'], 'ANGLE': ['GGAS', 'TOTAL'],
-                      'DIHED': ['GGAS', 'TOTAL'], 'UB': ['GGAS', 'TOTAL'],
-                      'IMP': ['GGAS', 'TOTAL'], 'CMAP': ['GGAS', 'TOTAL'],
-                      'VDWAALS': ['GGAS', 'TOTAL'], 'EEL': ['GGAS', 'TOTAL'],
-                      '1-4 VDW': ['GGAS', 'TOTAL'], '1-4 EEL': ['GGAS', 'TOTAL'],
-                      'EPB': ['GSOLV', 'TOTAL'], 'ENPOLAR': ['GSOLV', 'TOTAL'],
-                      'EDISPER': ['GSOLV', 'TOTAL']}
-    # Which of those keys are composite
-    composite_keys = ['GGAS', 'GSOLV', 'TOTAL']
+    # FIXME: include Non linear PB
+    data_keys = ['BOND', 'ANGLE', 'DIHED', 'VDWAALS', 'EEL', '1-4 VDW', '1-4 EEL', 'EPB', 'ENPOLAR']
+
     # What the value of verbosity must be to print out this data
     print_levels = {'BOND': 2, 'ANGLE': 2, 'DIHED': 2, 'VDWAALS': 1, 'EEL': 1,
-                    '1-4 VDW': 2, '1-4 EEL': 2, 'EPB': 1, 'ENPOLAR': 1, 'UB': 2,
-                    'IMP': 2, 'CMAP': 2, 'EDISPER': 1}
+                    '1-4 VDW': 2, '1-4 EEL': 2, 'EPB': 1, 'ENPOLAR': 1, 'EDISPER': 1}
 
     def __init__(self, mol, INPUT, chamber=False, **kwargs):
         AmberOutput.__init__(self, mol, INPUT, chamber, **kwargs)
+
+        if self.INPUT['inp'] == 2:
+            self.data_keys += ['EDISPER']
 
     def _get_energies(self, outfile):
         """ Parses the energy values from the output files """
@@ -681,10 +665,6 @@ class PBout(AmberOutput):
                     self['IMP'] = self['IMP'].append(float(words[5]))
                     self['CMAP'] = self['CMAP'].append(float(words[8]))
                     words = outfile.readline().split()
-                else:
-                    self['UB'] = self['UB'].append(0.0)
-                    self['IMP'] = self['IMP'].append(0.0)
-                    self['CMAP'] = self['CMAP'].append(0.0)
                 self['VDWAALS'] = self['VDWAALS'].append(float(words[2]))
                 self['EEL'] = self['EEL'].append(float(words[5]))
                 self['EPB'] = self['EPB'].append(float(words[8]))
@@ -701,16 +681,7 @@ class PBout(AmberOutput):
 
 
 class RISMout(AmberOutput):
-    # Ordered list of keys in the data dictionary
-    data_keys = ['BOND', 'ANGLE', 'DIHED', 'VDWAALS', 'EEL', '1-4 VDW',
-                 '1-4 EEL', 'ERISM']
-    # Dictionary that maps each data key to their respective composite keys
-    data_key_owner = {'BOND': ['GGAS', 'TOTAL'], 'ANGLE': ['GGAS', 'TOTAL'],
-                      'DIHED': ['GGAS', 'TOTAL'], 'VDWAALS': ['GGAS', 'TOTAL'],
-                      'EEL': ['GGAS', 'TOTAL'], '1-4 VDW': ['GGAS', 'TOTAL'],
-                      '1-4 EEL': ['GGAS', 'TOTAL'], 'ERISM': ['GSOLV', 'TOTAL']}
-    # Which of those keys are composite
-    composite_keys = ['GGAS', 'GSOLV', 'TOTAL']
+    data_keys = ['BOND', 'ANGLE', 'DIHED', 'VDWAALS', 'EEL', '1-4 VDW', '1-4 EEL', 'ERISM']
     # Which of those keys belong to the gas phase energy contributions
     print_levels = {'BOND': 2, 'ANGLE': 2, 'DIHED': 2, 'VDWAALS': 1, 'EEL': 1,
                     '1-4 VDW': 2, '1-4 EEL': 2, 'ERISM': 1}
@@ -767,36 +738,23 @@ class RISM_gf_Out(RISMout):
 
 class PolarRISMout(RISMout):
     # Ordered list of keys in the data dictionary
-    data_keys = ['BOND', 'ANGLE', 'DIHED', 'VDWAALS', 'EEL', '1-4 VDW',
-                 '1-4 EEL', 'POLAR SOLV', 'APOLAR SOLV']
-    # Dictionary that maps each data key to their respective composite keys
-    data_key_owner = {'BOND': ['GGAS', 'TOTAL'], 'ANGLE': ['GGAS', 'TOTAL'],
-                      'DIHED': ['GGAS', 'TOTAL'], 'VDWAALS': ['GGAS', 'TOTAL'],
-                      'EEL': ['GGAS', 'TOTAL'], '1-4 VDW': ['GGAS', 'TOTAL'],
-                      '1-4 EEL': ['GGAS', 'TOTAL'],
-                      'POLAR SOLV': ['GSOLV', 'TOTAL'],
-                      'APOLAR SOLV': ['GSOLV', 'TOTAL']}
-    # Which of those keys are composite
-    composite_keys = ['GGAS', 'GSOLV', 'TOTAL']
+    data_keys = ['BOND', 'ANGLE', 'DIHED', 'VDWAALS', 'EEL', '1-4 VDW', '1-4 EEL', 'ERISM', 'POLAR SOLV', 'APOLAR SOLV']
     # Which of those keys belong to the gas phase energy contributions
     print_levels = {'BOND': 2, 'ANGLE': 2, 'DIHED': 2, 'VDWAALS': 1, 'EEL': 1,
                     '1-4 VDW': 2, '1-4 EEL': 2, 'POLAR SOLV': 1, 'APOLAR SOLV': 1}
 
     def _get_energies(self, outfile):
         """ Parses the RISM output file for energy terms """
-
         # Getting the RISM solvation energies requires some decision-making.
         # There are 2 possibilities (right now):
         #
         # 1. Standard free energy (solvtype==0)
         # 2. GF free energy (solvtype==1)
-
         rawline = outfile.readline()
 
         while rawline:
 
-            if re.match(r'(solute_epot|solutePotentialEnergy)',
-                        rawline):
+            if re.match(r'(solute_epot|solutePotentialEnergy)', rawline):
                 words = rawline.split()
                 self['VDWAALS'] = self['VDWAALS'].append(float(words[2]))
                 self['EEL'] = self['EEL'].append(float(words[3]))
@@ -838,23 +796,10 @@ class PolarRISM_gf_Out(PolarRISMout):
 
 class QMMMout(GBout):
     """ Class for QM/MM GBSA output files """
-    # Ordered list of keys in the data dictionary
-    data_keys = ['BOND', 'ANGLE', 'DIHED', 'UB', 'IMP', 'CMAP', 'VDWAALS', 'EEL',
-                 '1-4 VDW', '1-4 EEL', 'EGB', 'ESURF', 'ESCF']
-    # Dictionary that maps each data key to their respective composite keys
-    data_key_owner = {'BOND': ['GGAS', 'TOTAL'], 'ANGLE': ['GGAS', 'TOTAL'],
-                      'DIHED': ['GGAS', 'TOTAL'], 'UB': ['GGAS', 'TOTAL'],
-                      'IMP': ['GGAS', 'TOTAL'], 'CMAP': ['GGAS', 'TOTAL'],
-                      'VDWAALS': ['GGAS', 'TOTAL'], 'EEL': ['GGAS', 'TOTAL'],
-                      '1-4 VDW': ['GGAS', 'TOTAL'], '1-4 EEL': ['GGAS', 'TOTAL'],
-                      'EGB': ['GSOLV', 'TOTAL'], 'ESURF': ['GSOLV', 'TOTAL'],
-                      'ESCF': ['TOTAL']}
-    # Which of those keys are composite
-    composite_keys = ['GGAS', 'GSOLV', 'TOTAL']
+    data_keys = ['BOND', 'ANGLE', 'DIHED', 'VDWAALS', 'EEL', '1-4 VDW', '1-4 EEL', 'EGB', 'ESURF', 'ESCF']
     # What the value of verbosity must be to print out this data
     print_levels = {'BOND': 2, 'ANGLE': 2, 'DIHED': 2, 'VDWAALS': 1, 'EEL': 1,
-                    '1-4 VDW': 2, '1-4 EEL': 2, 'EGB': 1, 'ESURF': 1, 'ESCF': 1,
-                    'UB': 2, 'IMP': 2, 'CMAP': 2}
+                    '1-4 VDW': 2, '1-4 EEL': 2, 'EGB': 1, 'ESURF': 1, 'ESCF': 1}
 
     def _get_energies(self, outfile):
         """ Parses the energies from a QM/MM output file. NOTE, however, that a
@@ -878,10 +823,6 @@ class QMMMout(GBout):
                     self['IMP'] = self['IMP'].append(float(words[5]))
                     self['CMAP'] = self['CMAP'].append(float(words[8]))
                     words = outfile.readline().split()
-                else:
-                    self['UB'] = self['UB'].append(0.0)
-                    self['IMP'] = self['IMP'].append(0.0)
-                    self['CMAP'] = self['CMAP'].append(0.0)
 
                 self['VDWAALS'] = self['VDWAALS'].append(float(words[2]))
                 self['EEL'] = self['EEL'].append(float(words[5]))
@@ -903,6 +844,7 @@ class QMMMout(GBout):
 
 class BindingStatistics(dict):
     """ Base class for compiling the binding statistics """
+    st_null = ['BOND', 'ANGLE', 'DIHED', '1-4 VDW', '1-4 EEL']
 
     def __init__(self, com, rec, lig, chamber=False, traj_protocol='STP', **kwargs):
         super(BindingStatistics, self).__init__(**kwargs)
@@ -918,6 +860,7 @@ class BindingStatistics(dict):
         self.composite_keys = []
 
         for key in self.com.composite_keys:
+            self['DELTA ' + key] = EnergyVector(len(self.com['VDWAALS']))
             self.composite_keys.append('DELTA ' + key)
         self.print_levels = self.com.print_levels
         try:
@@ -937,26 +880,19 @@ class BindingStatistics(dict):
         # should *not* be printed actually cancel out (i.e. bonded terms)
         if self.traj_protocol == 'STP':
             TINY = 0.005
-            for key in self.com.print_levels:
-                if self.com.print_levels[key] > 1:
-                    diff = self.com[key] - self.rec[key] - self.lig[key]
-                    if diff.abs_gt(TINY):
-                        self.inconsistent = True
-                        #             # Now we have to print out everything
-                        #             self.com.verbose = 2
-                        #             self.rec.verbose = 2
-                        #             self.lig.verbose = 2
-                        break
-
-        # FIXME: ya lo hice?
-        # self.com.fill_composite_terms()
-        # self.rec.fill_composite_terms()
-        # self.lig.fill_composite_terms()
+            for key in self.st_null:
+                diff = self.com[key] - self.rec[key] - self.lig[key]
+                if diff.abs_gt(TINY):
+                    self.inconsistent = True
+                    break
 
         for key in self.com.data_keys:
             self[key] = self.com[key] - self.rec[key] - self.lig[key]
-        for key in self.com.composite_keys:
-            self['DELTA ' + key] = self.com[key] - self.rec[key] - self.lig[key]
+        for key in self.com.data_keys:
+            if self.traj_protocol == 'STP' and key in self.st_null:
+                continue
+            for component in self.com.data_key_owner[key]:
+                self['DELTA ' + component] = self[key] + self['DELTA ' + component]
 
     def _print_vectors(self, csvwriter):
         """ Output all of the energy terms including the differences if we're
@@ -1002,12 +938,12 @@ class BindingStatistics(dict):
                             '\nTERMS. THE VALIDITY OF THESE RESULTS ARE HIGHLY QUESTIONABLE\n')
         if _output_format:
             text.extend(self.com.summary(output_format))
-            text.extend(self.com.summary(output_format))
-            text.extend(self.com.summary(output_format))
+            text.extend(self.rec.summary(output_format))
+            text.extend(self.lig.summary(output_format))
         else:
             text.append(self.com.summary())
-            text.append(self.com.summary())
-            text.append(self.com.summary())
+            text.append(self.rec.summary())
+            text.append(self.lig.summary())
 
         if isinstance(self.com, NMODEout):
             col_name = '%-16s' % 'Entropy Term'
