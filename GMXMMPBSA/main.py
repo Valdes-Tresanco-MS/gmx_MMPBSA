@@ -536,7 +536,7 @@ class MMPBSA_App(object):
             logging.info('Building AMBER Topologies from GROMACS files...Done.\n')
             self.INPUT['receptor_mask'], self.INPUT['ligand_mask'], self.resl = maketop.get_masks()
             self.mutant_index = maketop.com_mut_index
-            self.mut_str = self.resl[maketop.com_mut_index] if self.mutant_index else ''
+            self.mut_str = self.resl[maketop.com_mut_index].mutant_label if self.mutant_index else ''
             self.FILES.complex_fixed = self.FILES.prefix + 'COM_FIXED.pdb'
         self.FILES = self.MPI.COMM_WORLD.bcast(self.FILES, root=0)
         self.INPUT = self.MPI.COMM_WORLD.bcast(self.INPUT, root=0)
@@ -986,19 +986,20 @@ class MMPBSA_App(object):
                             c2 = C2EntropyCalc(edata, self, self.pre + f"{key.replace(' ', '_')}_c2_entropy.dat")
                             self.calc_types.normal['c2'][key] = {'c2data': c2.c2data, 'sigma': c2.ie_std,
                                                                'c2_std': c2.c2_std, 'c2_ci': c2.c2_ci}
-                            # self.calc_types.normal[self.key]['delta']['DELTA GGAS']
-                else:
-                    self.calc_types.normal[key]['complex']._fill_composite_terms()
             # Time for mutant
             if INPUT['alarun']:
-                self.calc_types.mutant[key] = {'complex': outclass[i](self.pre + 'mutant_' + basename[i] % 'complex',
-                                                                      self.INPUT, self.mpi_size, self.using_chamber)}
+                self.calc_types.mutant[key] = {'complex': outclass[i]('Mutant-Complex', self.INPUT, self.using_chamber)}
+                self.calc_types.mutant[key]['complex'].parse_from_file(self.pre + 'mutant_' + basename[i] % 'complex',
+                                                                      self.mpi_size)
                 if not self.stability:
-                    self.calc_types.mutant[key]['receptor'] = outclass[i](self.pre + 'mutant_' + basename[i] %
-                                                                          'receptor', self.INPUT, self.mpi_size,
+                    self.calc_types.mutant[key]['receptor'] = outclass[i]('Mutant-Ligand', self.INPUT,
                                                                           self.using_chamber)
-                    self.calc_types.mutant[key]['ligand'] = outclass[i](self.pre + 'mutant_' + basename[i] % 'ligand',
-                                                                        self.INPUT, self.mpi_size, self.using_chamber)
+                    self.calc_types.mutant[key]['receptor'].parse_from_file(self.pre + 'mutant_' + basename[i] %
+                                                                          'receptor', self.mpi_size)
+                    self.calc_types.mutant[key]['ligand'] = outclass[i]('Mutant-Ligand', self.INPUT,
+                                                                        self.using_chamber)
+                    self.calc_types.mutant[key]['ligand'].parse_from_file(self.pre + 'mutant_' + basename[i] % 'ligand',
+                                                                        self.mpi_size)
                     self.calc_types.mutant[key]['delta'] = BindingStatistics(self.calc_types.mutant[key]['complex'],
                                                                              self.calc_types.mutant[key]['receptor'],
                                                                              self.calc_types.mutant[key]['ligand'],
