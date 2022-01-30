@@ -417,22 +417,14 @@ However, this option is incompatible with alanine scanning.
     _Updated in v1.5.0. Bugs fixed_
 
 `debug_printlevel`
-:   `gmx_MMPBSA` prints errors by raising exceptions, and not catching fatal errors. If `debug_printlevel` is
-set to 0, then detailed tracebacks (effectively the call stack showing exactly where in the program the error 
-occurred) is suppressed, so only the error message is printed. If `debug_printlevel` is set to 1 or higher, all 
-tracebacks are printed, which aids in debugging of issues. (Default = 0) (Advanced Option)
-
-    _Changed in v1.2.0: Now `gmx_MMPBSA` shows the command-line used to build AMBER topologies when 
-    `debug_printlevel = 1` or higher_
+:   `gmx_MMPBSA` prints errors by raising exceptions and print all tracebacks which aids in debugging of issues.
     
-    _Deprecated in v1.5.0: Since we improved verbose logging, this variable is not needed_
+    _Removed in v1.5.0: Since we improved verbose logging, this variable is not needed_
 
-`verbose` (Default = 1)
-:   The variable that specifies how much output is printed in the output file. There are three allowed values:
+`verbose`
+:   The variable that specifies how much output is printed in the output file.
 
-    * 0: print difference terms
-    * 1: print all complex, receptor, and ligand terms
-    * 2: also print bonded terms if one trajectory is used
+    _Removed in v1.5.0: Always print all terms (including bonded) for complex, receptor, and ligand_
 
 ### **`&gb` namelist variables**
 
@@ -615,7 +607,6 @@ method, while a level-set based algebraic method is used when `ipb > 2`.
 `inp` (Default = 2) 
 :   Option to select different methods to compute non-polar solvation free energy.
 
-    * 0: No non-polar solvation free energy is computed.
     * 1: The total non-polar solvation free energy is modeled as a single term linearly proportional to the
     solvent accessible surface area. If `inp = 1`, `use_sav` must be equal to 0. ([ref.][227])
     * 2: The total non-polar solvation free energy is modeled as two terms: the cavity term and the
