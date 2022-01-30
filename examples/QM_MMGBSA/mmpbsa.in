@@ -1,16 +1,17 @@
-Sample input file for GB calculation
+Sample input file for QM/MMGBSA calculation
 #This input file is meant to show only that gmx_MMPBSA works. Although, we tried to use the input files as recommended in the
 #Amber manual, some parameters have been changed to perform more expensive calculations in a reasonable amount of time. Feel free to change the parameters
 #according to what is better for your system.
 
 &general
 sys_name="QM/MMGBSA",
-startframe=1,
-endframe=10,
+startframe=5,
+endframe=14,
 PBRadii=2,
+forcefields="oldff/leaprc.ff99SB,leaprc.gaff"
 /
 &gb
 igb=1, saltcon=0.150,
 ifqnt=1, qm_theory=PM3,
-qm_residues="A/31,36 C/62,73,75,85 D/91"
+qm_residues="A/40-41,44,47,78,81-82,85,88,115,118,122,215,218-220,232 B/241"
 /
