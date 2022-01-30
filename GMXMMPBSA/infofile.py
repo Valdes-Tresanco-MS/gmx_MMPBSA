@@ -35,8 +35,7 @@ class InfoFile(object):
     """
 
     # Make a list about which INPUT variables are editable
-    EDITABLE_INFO_VARS = ['debug_printlevel',
-                          'csv_format', 'dec_verbose', 'temperature', 'exp_ki', 'sys_name', 'ie_segment',
+    EDITABLE_INFO_VARS = ['csv_format', 'dec_verbose', 'temperature', 'exp_ki', 'sys_name', 'ie_segment',
                           'interaction_entropy']
 
     EDIT_WITH_CARE_VARS = ['']

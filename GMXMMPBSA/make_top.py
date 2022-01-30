@@ -145,9 +145,6 @@ class CheckMakeTop:
 
         com_ndx = self.FILES.prefix + 'COM_index.ndx'
         make_ndx_args = self.make_ndx + ['-n', self.FILES.complex_index, '-o', com_ndx]
-        if self.INPUT['debug_printlevel']:
-            logging.info('Running command: ' + (' '.join(make_ndx_echo_args).replace('\n', '\\n')) + ' | ' +
-                         ' '.join(make_ndx_args))
         logging.debug('Running command: ' + (' '.join(make_ndx_echo_args).replace('\n', '\\n')) + ' | ' +
                          ' '.join(make_ndx_args))
         c2 = subprocess.Popen(make_ndx_args, stdin=c1.stdout, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
@@ -172,8 +169,6 @@ class CheckMakeTop:
             comprog = self.editconf
             pdbcom_args = self.editconf + ['-f', self.FILES.complex_tpr, '-n', self.FILES.complex_index, '-o',
                                              self.complex_str_file]
-        if self.INPUT['debug_printlevel']:
-            logging.info('Running command: ' + (' '.join(pdbcom_echo_args)) + ' | ' + ' '.join(pdbcom_args))
         logging.debug('Running command: ' + (' '.join(pdbcom_echo_args)) + ' | ' + ' '.join(pdbcom_args))
         c4 = subprocess.Popen(pdbcom_args, stdin=c3.stdout, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         if c4.wait():  # if it quits with return code != 0
@@ -190,8 +185,6 @@ class CheckMakeTop:
             lig_ff = '2' if "gaff2" in self.INPUT['forcefields'] else '1'
             parmchk2_args = [parmchk2, '-i', self.FILES.ligand_mol2, '-f', 'mol2', '-o', self.ligand_frcmod, '-s',
                              lig_ff]
-            if self.INPUT['debug_printlevel']:
-                logging.info('Running command: ' + ' '.join(parmchk2_args))
             logging.debug('Running command: ' + ' '.join(parmchk2_args))
             l3 = subprocess.Popen(parmchk2_args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             if l3.wait():
@@ -219,8 +212,6 @@ class CheckMakeTop:
             else:
                 pdbrec_args = self.editconf + ['-f', self.FILES.complex_tpr, '-n', self.FILES.complex_index, '-o',
                                                'rec_temp.pdb']
-            if self.INPUT['debug_printlevel']:
-                logging.info('Running command: ' + (' '.join(rec_echo_args)) + ' | ' + ' '.join(pdbrec_args))
             logging.debug('Running command: ' + (' '.join(rec_echo_args)) + ' | ' + ' '.join(pdbrec_args))
             cp2 = subprocess.Popen(pdbrec_args, stdin=cp1.stdout, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             if cp2.wait():  # if it quits with return code != 0
@@ -250,8 +241,6 @@ class CheckMakeTop:
                 pdbrec_args = self.editconf + ['-f', self.FILES.receptor_tpr, '-n', self.FILES.receptor_index, '-o',
                                                self.receptor_str_file]
 
-            if self.INPUT['debug_printlevel']:
-                logging.info('Running command: ' + (' '.join(pdbrec_echo_args)) + ' | ' + ' '.join(pdbrec_args))
             logging.debug('Running command: ' + (' '.join(pdbrec_echo_args)) + ' | ' + ' '.join(pdbrec_args))
             cp2 = subprocess.Popen(pdbrec_args, stdin=p1.stdout, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             if cp2.wait():  # if it quits with return code != 0
@@ -271,8 +260,6 @@ class CheckMakeTop:
             else:
                 pdbrec_args = self.editconf + ['-f', self.FILES.complex_tpr, '-n', self.FILES.complex_index, '-o',
                                                self.receptor_str_file]
-            if self.INPUT['debug_printlevel']:
-                logging.info('Running command: ' + (' '.join(pdbrec_echo_args)) + ' | ' + ' '.join(pdbrec_args))
             logging.debug('Running command: ' + (' '.join(pdbrec_echo_args)) + ' | ' + ' '.join(pdbrec_args))
             cp2 = subprocess.Popen(pdbrec_args, stdin=cp1.stdout, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             if cp2.wait():  # if it quits with return code != 0
@@ -298,8 +285,6 @@ class CheckMakeTop:
                 prog = self.editconf
                 pdblig_args = self.editconf + ['-f', self.FILES.ligand_tpr, '-n', self.FILES.ligand_index, '-o',
                                                self.ligand_str_file]
-            if self.INPUT['debug_printlevel']:
-                logging.info('Running command: ' + (' '.join(pdblig_echo_args)) + ' | ' + ' '.join(pdblig_args))
             logging.debug('Running command: ' + (' '.join(pdblig_echo_args)) + ' | ' + ' '.join(pdblig_args))
             l2 = subprocess.Popen(pdblig_args, stdin=l1.stdout, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             if l2.wait():  # if it quits with return code != 0
@@ -323,8 +308,6 @@ class CheckMakeTop:
                                                self.ligand_str_file]
 
             # we extract a pdb from structure file to make amber topology
-            if self.INPUT['debug_printlevel']:
-                logging.info('Running command: ' + (' '.join(pdblig_echo_args)) + ' | ' + ' '.join(pdblig_args))
             logging.debug('Running command: ' + (' '.join(pdblig_echo_args)) + ' | ' + ' '.join(pdblig_args))
             l2 = subprocess.Popen(pdblig_args, stdin=l1.stdout, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             if l2.wait():  # if it quits with return code != 0
@@ -957,8 +940,6 @@ class CheckMakeTop:
             # we get only first trajectory to extract a pdb file and make amber topology for complex
             trjconv_args = self.trjconv + ['-f', self.FILES.complex_trajs[i], '-s', self.FILES.complex_tpr, '-o',
                                            'COM_traj_{}.xtc'.format(i), '-n', self.FILES.complex_index]
-            if self.INPUT['debug_printlevel']:
-                logging.info('Running command: ' + (' '.join(trjconv_echo_args)) + ' | ' + ' '.join(trjconv_args))
             logging.debug('Running command: ' + (' '.join(trjconv_echo_args)) + ' | ' + ' '.join(trjconv_args))
             c6 = subprocess.Popen(trjconv_args, stdin=c5.stdout, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             if c6.wait():  # if it quits with return code != 0
@@ -977,8 +958,6 @@ class CheckMakeTop:
                 # we get only first trajectory to extract a pdb file and make amber topology for complex
                 trjconv_args = self.trjconv + ['-f', self.FILES.receptor_trajs[i], '-s', self.FILES.receptor_tpr,
                                                '-o', 'REC_traj_{}.xtc'.format(i), '-n', self.FILES.receptor_index]
-                if self.INPUT['debug_printlevel']:
-                    logging.info('Running command: ' + (' '.join(trjconv_echo_args)) + ' | ' + ' '.join(trjconv_args))
                 logging.debug('Running command: ' + (' '.join(trjconv_echo_args)) + ' | ' + ' '.join(trjconv_args))
                 c6 = subprocess.Popen(trjconv_args, stdin=c5.stdout, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
                 if c6.wait():  # if it quits with return code != 0
@@ -997,8 +976,6 @@ class CheckMakeTop:
                 # we get only first trajectory to extract a pdb file and make amber topology for complex
                 trjconv_args = self.trjconv + ['-f', self.FILES.ligand_trajs[i], '-s', self.FILES.ligand_tpr, '-o',
                                                'LIG_traj_{}.xtc'.format(i), '-n', self.FILES.ligand_index]
-                if self.INPUT['debug_printlevel']:
-                    logging.info('Running command: ' + (' '.join(trjconv_echo_args)) + ' | ' + ' '.join(trjconv_args))
                 logging.debug('Running command: ' + (' '.join(trjconv_echo_args)) + ' | ' + ' '.join(trjconv_args))
                 c6 = subprocess.Popen(trjconv_args, stdin=c5.stdout, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
                 if c6.wait():  # if it quits with return code != 0
@@ -1276,8 +1253,6 @@ class CheckMakeTop:
             data_path.as_posix(),
         ]
 
-        if self.INPUT['debug_printlevel']:
-            logging.info('Running command: ' + ' '.join(tleap_args))
         p1 = subprocess.Popen(tleap_args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         if p1.wait():
             GMXMMPBSA_ERROR('%s failed when querying %s' % (tleap, self.FILES.prefix + arg1))

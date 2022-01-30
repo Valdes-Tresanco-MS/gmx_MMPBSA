@@ -54,7 +54,6 @@ _unbuf_stdout = utils.Unbuffered(sys.stdout)  # unbuffered stdout
 _unbuf_stderr = utils.Unbuffered(sys.stderr)  # unbuffered stderr
 _stdout = sys.stdout
 _stderr = sys.stderr
-_debug_printlevel = 2
 _mpi_size = 1
 _rank = 0
 _MPI = FakeMPI()
@@ -67,7 +66,6 @@ class MMPBSA_App(object):
     # The command line parser and input file objects are class attributes here
     clparser = parser
     input_file = _input_file
-    debug_printlevel = 2
 
     def __init__(self, MPI, stdout=None, stderr=None, size=None):
         """
@@ -714,13 +712,11 @@ class MMPBSA_App(object):
 
     def read_input_file(self, infile=None):
         """ Reads the input file, pull it from FILES if not provided here """
-        global _debug_printlevel
         if infile is None:
             if not hasattr(self, 'FILES'):
                 GMXMMPBSA_ERROR('FILES not present and no input file given!', InternalError)
             infile = self.FILES.input_file
         self.INPUT = self.input_file.Parse(infile)
-        _debug_printlevel = self.INPUT['debug_printlevel']
         self.input_file_text = str(self.input_file)
         if self.master:
             for line in self.input_file_text.split('\n'):
@@ -1023,7 +1019,6 @@ class MMPBSA_App(object):
 
         if INPUT['decomprun']:
             self._get_decomp()
-        # self.calc_types.decomp = self._get_decomp() if INPUT['decomprun'] else None
 
     def _get_decomp(self):
         from GMXMMPBSA.amber_outputs import (DecompOut, PairDecompOut, DecompBinding, PairDecompBinding)
@@ -1131,8 +1126,8 @@ def excepthook(exception_type, exception_value, tb):
     behavior
     """
     import traceback
-    global _debug_printlevel, _stderr, _mpi_size, _rank
-    if _debug_printlevel > 1 or not isinstance(exception_type, MMPBSA_Error):
+    global _stderr, _mpi_size, _rank
+    if not isinstance(exception_type, MMPBSA_Error):
         traceback.print_tb(tb)
     _stderr.write('%s: %s\n' % (exception_type.__name__, exception_value))
     if _mpi_size > 1:
