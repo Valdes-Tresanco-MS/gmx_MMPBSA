@@ -502,27 +502,28 @@ def remove(flag, mpi_size=0, fnpre='_GMXMMPBSA_'):
                     fnpre + 'mutant_receptor_gb_surf.dat',
                     fnpre + 'mutant_ligand_gb_surf.dat', fnpre + 'info']
 
-    # Collect all of the temporary files (those starting with _MMPBSA_)
+    # Collect all of the temporary files (those starting with _GMXMMPBSA_)
     allfiles = os.listdir(os.getcwd())
-    tempfiles = []
-    for fil in allfiles:
-        if fil.startswith(fnpre):
-            tempfiles.append(fil)
-
+    tempfiles = [fil for fil in allfiles if fil.startswith(fnpre) or fil.startswith('#COM_traj_') or
+                 fil.startswith('#REC_traj_') or fil.startswith('#LIG_traj_')]
     if flag == -1:  # internal -- keep all mdin files
         for fil in tempfiles:
-            if not fil in input_files: os.remove(fil)
+            if fil not in input_files:
+                os.remove(fil)
     elif flag == 0:  # remove all temporary files
-        for fil in tempfiles: os.remove(fil)
+        for fil in tempfiles:
+            os.remove(fil)
     elif flag == 1:  # keep keep mdcrds, mdouts, and other relevant output files
         for fil in tempfiles:
-            if fil in keep_files_1: continue  # keep this file
+            if fil in keep_files_1:
+                continue  # keep this file
             # Now we have to split out this file and analyze the base. If the
             # suffix is just a number (corresponding to a thread-specific output
             # file or trajectory), then we only want to remove it if in the base
             # name is not in keep_files_1
             base, ext = os.path.splitext(fil)
-            if ext.strip('.').isdigit() and base in keep_files_1: continue
+            if ext.strip('.').isdigit() and base in keep_files_1:
+                continue
             # if we've made it this far, remove the file
             os.remove(fil)
 

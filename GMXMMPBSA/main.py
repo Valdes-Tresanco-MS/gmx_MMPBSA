@@ -628,14 +628,14 @@ class MMPBSA_App(object):
         self.remove(self.INPUT['keep_files'])
 
         logging.info('\n Thank you for using gmx_MMPBSA. Please consider supporting gmx_MMPBSA by citing our publication:'
-                     '\n Valdés-Tresanco, M.S., Valdés-Tresanco, M.E., Valiente, P.A. and Moreno E. '
-                     '\n gmx_MMPBSA: A New Tool to Perform End-State Free Energy Calculations with GROMACS. '
-                     '\n J Chem Theory Comput., 2021, 17 (10):6281-6291. Epub 2021 Sep 29. PMID: 34586825.'
-                     '\n https://pubs.acs.org/doi/10.1021/acs.jctc.1c00645'
+                     '\n    Valdés-Tresanco, M.S., Valdés-Tresanco, M.E., Valiente, P.A. and Moreno E. '
+                     '\n    gmx_MMPBSA: A New Tool to Perform End-State Free Energy Calculations with GROMACS. '
+                     '\n    J Chem Theory Comput., 2021, 17 (10):6281-6291. Epub 2021 Sep 29. PMID: 34586825.'
+                     '\n    https://pubs.acs.org/doi/10.1021/acs.jctc.1c00645'
                      '\n\nAlso consider citing MMPBSA.py:'
-                     '\n Miller III, B. R., McGee Jr., T. D., Swails, J. M. Homeyer, N. Gohlke, H. and Roitberg, A. E.'
-                     '\n MMPBSA.py: An Efficient Program for End-State Free Energy Calculations.'
-                     '\n J. Chem. Theory Comput., 2012, 8 (9) pp 3314-3321\n')
+                     '\n    Miller III, B. R., McGee Jr., T. D., Swails, J. M. Homeyer, N. Gohlke, H. and Roitberg, A. E.'
+                     '\n    MMPBSA.py: An Efficient Program for End-State Free Energy Calculations.'
+                     '\n    J. Chem. Theory Comput., 2012, 8 (9) pp 3314-3321\n')
         self.MPI.Finalize()
 
         end = 0
@@ -945,9 +945,9 @@ class MMPBSA_App(object):
 
         if self.INPUT['interaction_entropy']:
             if not INPUT['mutant_only']:
-                self.calc_types.normal['ie'] = IEout()
+                self.calc_types.normal['ie'] = IEout(INPUT)
             if INPUT['alarun']:
-                self.calc_types.mutant['ie'] = IEout()
+                self.calc_types.mutant['ie'] = IEout(INPUT)
         if self.INPUT['c2_entropy']:
             if not INPUT['mutant_only']:
                 self.calc_types.normal['c2'] = C2out()
@@ -979,13 +979,14 @@ class MMPBSA_App(object):
                             edata = self.calc_types.normal[key]['delta']['DELTA GGAS']
                             ie = InteractionEntropyCalc(edata, self,
                                                         self.pre + f"{key.replace(' ', '_')}_iteraction_entropy.dat")
-                            self.calc_types.normal['ie'][key] = {'data': ie.data, 'iedata': ie.iedata,
-                                                               'ieframes': ie.ieframes, 'sigma': ie.ie_std}
+                            self.calc_types.normal['ie'].parse_from_dict(key, {'data': ie.data, 'iedata': ie.iedata,
+                                                                               'ieframes': ie.ieframes,
+                                                                               'sigma': ie.ie_std})
                         if 'c2' in self.calc_types.normal:
                             edata = self.calc_types.normal[key]['delta']['DELTA GGAS']
                             c2 = C2EntropyCalc(edata, self, self.pre + f"{key.replace(' ', '_')}_c2_entropy.dat")
                             self.calc_types.normal['c2'][key] = {'c2data': c2.c2data, 'sigma': c2.ie_std,
-                                                               'c2_std': c2.c2_std, 'c2_ci': c2.c2_ci}
+                                                                 'c2_std': c2.c2_std, 'c2_ci': c2.c2_ci}
             # Time for mutant
             if INPUT['alarun']:
                 self.calc_types.mutant[key] = {'complex': outclass[i]('Mutant-Complex', self.INPUT, self.using_chamber)}
@@ -1009,8 +1010,9 @@ class MMPBSA_App(object):
                             edata = self.calc_types.mutant[key]['delta']['DELTA GGAS']
                             mie = InteractionEntropyCalc(edata, self, self.pre + 'mutant_' +
                                                          f"{key.replace(' ', '_')}_iteraction_entropy.dat")
-                            self.calc_types.mutant['ie'][key] = {'data': mie.data, 'iedata': mie.iedata,
-                                                                 'ieframes': mie.ieframes, 'sigma': mie.ie_std}
+                            self.calc_types.mutant['ie'].parse_from_dict(key, {'data': mie.data, 'iedata': mie.iedata,
+                                                                               'ieframes': mie.ieframes,
+                                                                               'sigma': mie.ie_std})
                         if 'c2' in self.calc_types.mutant:
                             edata = self.calc_types.mutant[key]['delta']['DELTA GGAS']
                             c2 = C2EntropyCalc(edata, self, self.pre + 'mutant_' +
