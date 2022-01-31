@@ -201,10 +201,10 @@ class AmberOutput(dict):
 
         if _output_format:
             text.extend([[self.mol.capitalize() + ':'],
-                         ['Energy Component', 'Average', 'Std. Dev.', 'Std. Err. of Mean']])
+                         ['Energy Component', 'Average', 'SD(Prop.)', 'SD', 'SEM', 'SD(Prop.)']])
         else:
             text.extend([self.mol.capitalize() + ':',
-                         'Energy Component            Average              Std. Dev.   Std. Err. of Mean',
+                         'Energy Component       Average     SD(Prop.)         SD   SEM(Prop.)        SEM',
                          '-------------------------------------------------------------------------------'])
 
         for key in self.data_keys:
@@ -219,10 +219,13 @@ class AmberOutput(dict):
                 continue
             avg = self[key].mean()
             stdev = self[key].stdev()
+            semp = stdev / sqrt(len(self[key]))
+            std = self[key].std()
+            sem = std / sqrt(len(self[key]))
             if _output_format:
-                text.append([key, avg, stdev, stdev / sqrt(len(self[key]))])
+                text.append([key, avg, stdev, std, semp, sem])
             else:
-                text.append('%-14s %20.4f %21.4f %19.4f' % (key, avg, stdev, stdev / sqrt(len(self[key]))))
+                text.append(f'{key:16s} {avg:13.2f} {stdev:13.2f} {std:10.2f} {semp:12.2f} {sem:10.2f}')
 
         text.append('')
         for key in self.composite_keys:
@@ -231,10 +234,13 @@ class AmberOutput(dict):
                 text.append('')
             avg = self[key].mean()
             stdev = self[key].stdev()
+            semp = stdev / sqrt(len(self[key]))
+            std = self[key].std()
+            sem = std / sqrt(len(self[key]))
             if _output_format:
-                text.append([key, avg, stdev, stdev / sqrt(len(self[key]))])
+                text.append([key, avg, stdev, std, semp, sem])
             else:
-                text.append('%-14s %20.4f %21.4f %19.4f' % (key, avg, stdev, stdev / sqrt(len(self[key]))))
+                text.append(f'{key:16s} {avg:13.2f} {stdev:13.2f} {std:10.2f} {semp:12.2f} {sem:10.2f}')
 
         return text if _output_format else '\n'.join(text) + '\n\n'
 
@@ -958,10 +964,10 @@ class BindingStatistics(dict):
 
         if _output_format:
             text.extend([['Differences (Complex - Receptor - Ligand):'],
-                         [col_name] + ['Average', 'Std. Dev.', 'Std. Err. of Mean']])
+                         [col_name] + ['Average', 'SD(Prop.)', 'SD', 'SEM(Prop.)', 'SEM']])
         else:
-            text.append('Differences (Complex - Receptor - Ligand):\n' + col_name +
-                        '            Average              Std. Dev.   Std. Err. of Mean\n' +
+            text.append('Differences (Complex - Receptor - Ligand):\n' + f'{col_name:16s}' +
+                        '       Average     SD(Prop.)         SD   SEM(Prop.)        SEM\n' +
                         '-------------------------------------------------------------------------------')
 
         for key in self.data_keys:
@@ -981,14 +987,18 @@ class BindingStatistics(dict):
             # Now print out the stats
             stdev = self[key].stdev()
             avg = self[key].mean()
+            std = self[key].std()
             if not self.missing_terms:
                 num_frames = len(self[key])
             else:
                 num_frames = min(len(self.com[key]), len(self.rec[key]), len(self.lig[key]))
+            semp = stdev / sqrt(num_frames)
+            sem = std / sqrt(num_frames)
+
             if _output_format:
-                text.append([printkey, avg, stdev, stdev / sqrt(num_frames)])
+                text.append([printkey, avg, stdev, std, semp, sem])
             else:
-                text.append('%-14s %20.4f %21.4f %19.4f' % (printkey, avg, stdev, stdev / sqrt(num_frames)))
+                text.append(f'{printkey:16s} {avg:13.2f} {stdev:13.2f} {std:10.2f} {semp:12.2f} {sem:10.2f}')
 
         if self.composite_keys:
             text.append('')
@@ -998,15 +1008,18 @@ class BindingStatistics(dict):
                 text.append('')
             stdev = self[key].stdev()
             avg = self[key].mean()
+            std = self[key].std()
             if not self.missing_terms:
                 num_frames = len(self[key])
             else:
                 num_frames = min(len(self.com[key]), len(self.rec[key]), len(self.lig[key]))
+            semp = stdev / sqrt(num_frames)
+            sem = std / sqrt(num_frames)
                 # num_frames is the same as the one from above
             if _output_format:
-                text.append([key, avg, stdev, stdev / sqrt(len(self[key]))])
+                text.append([key, avg, stdev, std, semp, sem])
             else:
-                text.append('%-14s %20.4f %21.4f %19.4f' % (key, avg, stdev, stdev / sqrt(num_frames)))
+                text.append(f'{key:16s} {avg:13.2f} {stdev:13.2f} {std:10.2f} {semp:12.2f} {sem:10.2f}')
 
         return text if _output_format else '\n'.join(text) + '\n'
 
