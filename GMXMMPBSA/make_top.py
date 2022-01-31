@@ -872,6 +872,8 @@ class CheckMakeTop:
         logging.info(f"Mutating {mut_top.residues[mut_index].chain}/{mut_top.residues[mut_index].number} "
                      f"{mut_top.residues[mut_index].name} by {mut_aa}")
 
+        mutant_resname = mut_top.residues[mut_index].name
+
         mut_top.residues[mut_index].name = mut_aa
 
         for at in mut_top.residues[mut_index].atoms:
@@ -915,47 +917,46 @@ class CheckMakeTop:
                 if self.INPUT['intdiel'] != 1.0:
                     logging.warning('Both cas_intdiel and intdiel were defined. The dielectric constants associated '
                                     'with cas_intdiel will be ignored and intdiel will be used instead')
-                elif mut_top.residues[mut_index].name in polar_aa:
+                elif mutant_resname in polar_aa:
                     self.INPUT['intdiel'] = self.INPUT['intdiel_polar']
                     logging.info(f"Setting intdiel = intdiel_polar = {self.INPUT['intdiel_polar']} for "
                                  f"Alanine scanning")
-                elif mut_top.residues[mut_index].name in nonpolar_aa:
+                elif mutant_resname in nonpolar_aa:
                     self.INPUT['intdiel'] = self.INPUT['intdiel_nonpolar']
                     logging.info(f"Setting intdiel = intdiel_nonpolar = {self.INPUT['intdiel_nonpolar']} for Alanine "
                                  f"scanning")
-                elif mut_top.residues[mut_index].name in positive_aa:
+                elif mutant_resname in positive_aa:
                     self.INPUT['intdiel'] = self.INPUT['intdiel_positive']
                     logging.info(f"Setting intdiel = intdiel_positive = {self.INPUT['intdiel_positive']} for Alanine "
                                  f"scanning")
-                elif mut_top.residues[mut_index].name in negative_aa:
+                elif mutant_resname in negative_aa:
                     self.INPUT['intdiel'] = self.INPUT['intdiel_negative']
                     logging.info(f"Setting intdiel = intdiel_negative = {self.INPUT['intdiel_negative']} for Alanine "
                                  f"scanning")
                 else:
-                    logging.warning(f"Unclassified mutant residue {mut_top.residues[mut_index].name}. The default "
+                    logging.warning(f"Unclassified mutant residue {mutant_resname}. The default "
                                     f"intdiel will be used")
             if self.INPUT['pbrun']:
                 if self.INPUT['indi'] != 1.0:
                     logging.warning('Both cas_intdiel and indi were defined. The dielectric constants associated with '
                                     'cas_intdiel will be ignored and indi will be used instead')
-                elif mut_top.residues[mut_index].name in polar_aa:
+                elif mutant_resname in polar_aa:
                     self.INPUT['indi'] = self.INPUT['intdiel_polar']
                     logging.info(f"Setting indi = intdiel_polar = {self.INPUT['intdiel_polar']} for Alanine scanning")
-                elif mut_top.residues[mut_index].name in nonpolar_aa:
+                elif mutant_resname in nonpolar_aa:
                     self.INPUT['indi'] = self.INPUT['intdiel_nonpolar']
                     logging.info(f"Setting indi = intdiel_nonpolar = {self.INPUT['intdiel_nonpolar']} for Alanine "
                                  f"scanning")
-                elif mut_top.residues[mut_index].name in positive_aa:
+                elif mutant_resname in positive_aa:
                     self.INPUT['indi'] = self.INPUT['intdiel_positive']
                     logging.info(f"Setting intdiel = indi = intdiel_positive = {self.INPUT['intdiel_positive']} for "
                                  f"Alanine scanning")
-                elif mut_top.residues[mut_index].name in negative_aa:
+                elif mutant_resname in negative_aa:
                     self.INPUT['indi'] = self.INPUT['intdiel_negative']
                     logging.info(f"Setting indi = intdiel_negative = {self.INPUT['intdiel_negative']} for Alanine "
                                  f"scanning")
                 else:
-                    logging.warning(f"Unclassified mutant residue {mut_top.residues[mut_index].name}. The default "
-                                    f"indi will be used")
+                    logging.warning(f"Unclassified mutant residue {mutant_resname}. The default indi will be used")
         return mut_top
 
     def cleanup_trajs(self):

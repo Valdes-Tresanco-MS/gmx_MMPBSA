@@ -127,7 +127,7 @@ class AmberOutput(dict):
                       # GB
                       'EGB': ['GSOLV', 'TOTAL'], 'ESURF': ['GSOLV', 'TOTAL'],
                       # QM/GB
-                      'ESCF': ['TOTAL'],
+                      'ESCF': ['GGAS', 'TOTAL'],
                       # RISM
                       'POLAR SOLV': ['GSOLV', 'TOTAL'], 'APOLAR SOLV': ['GSOLV', 'TOTAL'],
                       'ERISM': ['GSOLV', 'TOTAL'],
