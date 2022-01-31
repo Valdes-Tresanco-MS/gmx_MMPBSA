@@ -229,6 +229,16 @@ tested in previous `protein_forcefield` and `ligand_forcefield` variables.
 
     _Updated in v1.5.0: Documentation updated_
 
+`protein_forcefield`
+:   Define the force field to build Amber topology for protein
+
+    _Removed in v1.5.0: Use `forcefields` variable_
+
+`ligand_forcefield`
+:   Define the force field to build Amber topology for ligand (small molecule)
+
+    _Removed in v1.5.0: Use `forcefields` variable_
+
 `ions_parameters` (Default = 1)
 :   Define ions parameters to build the Amber topology (see [§3.6](https://ambermd.org/doc12/Amber21.pdf#section.3.6)). 
 
@@ -416,6 +426,16 @@ However, this option is incompatible with alanine scanning.
 
     _Updated in v1.5.0. Bugs fixed_
 
+`use_sander`
+:   Use sander for energy calculations, even when `mmpbsa_py_energy` will suffice
+
+    _Removed in v1.5.0: Now sander is used in all calculations_
+
+`keep_files` 
+:   The variable that specifies which temporary files are kept.
+
+    _Removed in v1.5.0: Now all generated trajectory and mdout files created by sander simulations are kept_
+
 `debug_printlevel`
 :   `gmx_MMPBSA` prints errors by raising exceptions and print all tracebacks which aids in debugging of issues.
     
@@ -450,6 +470,8 @@ are 1, 2, 5, 7 and 8.
 
 `extdiel` (Default = 78.5)
 :   Define External dielectric constant.
+
+    _New in v1.5.0_
 
 `saltcon` (Default = 0.0)
 :   Salt concentration in Molarity (M).
@@ -604,6 +626,8 @@ method, while a level-set based algebraic method is used when `ipb > 2`.
   [240]: https://onlinelibrary.wiley.com/doi/10.1002/jcc.25783
   [241]: https://pubs.acs.org/doi/10.1021/acs.jctc.9b00602
 
+    _New in v1.5.0_
+
 `inp` (Default = 2) 
 :   Option to select different methods to compute non-polar solvation free energy.
 
@@ -651,6 +675,8 @@ solute/solvent dielectric boundary.
 
   [243]: https://pubs.acs.org/doi/10.1021/cr00101a005
 
+    _New in v1.5.0_
+
 `istrng` (Default = 0.0)
 :   Ionic strength in Molarity (M). It is converted to mM for `PBSA` and kept as M for `APBS`.
 
@@ -672,6 +698,8 @@ solute/solvent dielectric boundary.
 `iprob` (Default = 2.0)
 :   Mobile ion probe radius (in Å) for ion accessible surface used to define the Stern layer.
 
+    _New in v1.5.0_
+
 `sasopt` (Default = 0)
 :   Option to determine which kind of molecular surfaces to be used in the Poisson-Boltzmann implicit solvent model.
 
@@ -683,9 +711,13 @@ solute/solvent dielectric boundary.
 
   [245]: https://pubs.acs.org/doi/10.1021/ct900318u
 
+    _New in v1.5.0_
+
 `arcres` (Default = 0.25)
 :   The `arcres` keyword gives the resolution (in Å) of dots used to represent solvent accessible arcs. More
 generally, `arcres` should be set to max(0.125 Å, 0.5h) (h is the grid spacing). ([ref.][239])
+
+    _New in v1.5.0_
 
 #### **Options for implicit membranes**
 
@@ -717,6 +749,8 @@ that of the water. ([ref.][248])
 
   [248]: https://pubs.acs.org/doi/abs/10.1021/acs.jctc.7b00382
 
+    _New in v1.5.0_
+
 `mthick` (Default = 40)
 :   Membrane thickness (in Å). This is different from the previous default of 20 Å.
 
@@ -746,6 +780,8 @@ that of the water. ([ref.][248])
         least, take into account that using NLPBE can significantly increase the calculation time required for 
         PB calculation.
 
+    _New in v1.5.0_
+
 `solvopt` (Default = 1)
 :   Option to select iterative solvers.
 
@@ -761,8 +797,12 @@ that of the water. ([ref.][248])
 
   [219]: https://pubs.acs.org/doi/10.1021/ct900381r
 
+    _New in v1.5.0_
+
 `accept` (Default = 0.001)
 :   Sets the iteration convergence criterion (relative to the initial residue).
+
+    _New in v1.5.0_
 
 `linit` (Default = 1000) 
 :   Sets the maximum number of iterations for the finite difference solvers. Note that `linit` has to be set to a 
@@ -779,15 +819,23 @@ This corresponds to `maxitn` in [pbsa][5].
 :   Sets how far away (in grid units) the boundary of the finite difference grid is away from the solute
 surface; _i.e._, automatically set to be at least a solvent probe or ion probe (diameter) away from the solute surface.
 
+    _New in v1.5.0_
+
 `nfocus` (Default = 2)
 :   Set how many successive FD calculations will be used to perform an electrostatic focussing calculation on a 
 molecule. When `nfocus` = 1, no focusing is used. It is recommended that `nfocus = 1` when the multigrid solver is used.
 
+    _New in v1.5.0_
+
 `fscale` (Default = 8)
 :   Set the ratio between the coarse and fine grid spacings in an electrostatic focussing calculation.
 
+    _New in v1.5.0_
+
 `npbgrid` (Default = 1)
 :   Sets how often the finite-difference grid is regenerated.
+
+    _New in v1.5.0_
 
 #### **Options to compute energy and forces**
 
@@ -806,6 +854,8 @@ molecule. When `nfocus` = 1, no focusing is used. It is recommended that `nfocus
     applying a small neutralizing charge on each grid (_i.e._ a uniform plasma) before solving.
 
   [236]: https://aip.scitation.org/doi/abs/10.1063/1.3099708
+
+    _New in v1.5.0_
 
 `eneopt` (Default = 2)
 :   Option to compute total electrostatic energy and forces.
@@ -828,6 +878,8 @@ molecule. When `nfocus` = 1, no focusing is used. It is recommended that `nfocus
 
   [223]: https://aip.scitation.org/doi/10.1063/1.1622376
 
+    _New in v1.5.0_
+
 `frcopt` (Default = 0)
 :   Option to compute and output electrostatic forces to a file named force.dat in the working directory.
 
@@ -843,6 +895,8 @@ molecule. When `nfocus` = 1, no focusing is used. It is recommended that `nfocus
   [237]: https://www.sciencedirect.com/science/article/abs/pii/S0009261411010487?via%3Dihub
   [249]: https://pubs.rsc.org/en/content/articlelanding/2012/cp/c2cp43237d
 
+    _New in v1.5.0_
+
 `scalec` (Default = 0)
 :   Option to compute reaction field energy and forces.
 
@@ -851,20 +905,28 @@ molecule. When `nfocus` = 1, no focusing is used. It is recommended that `nfocus
     * 1: Scale dielectric boundary surface charges using Gauss’s law before computing reaction field
     energy and forces.
 
+    _New in v1.5.0_
+
 `cutfd` (Default = 5.0)
 :   Atom-based cutoff distance to remove short-range finite-difference interactions, and to add pairwise
 charge-based interactions. This is used for both energy and force calculations. See Eqn (20) in 
 Lu and Luo. ([ref.][223])
+
+    _New in v1.5.0_
 
 `cutnb` (Default = 0.0)
 :   Atom-based cutoff distance for van der Waals interactions, and pairwise Coulombic interactions when `eneopt` = 2.
 When `cutnb` is set to the default value of 0, no cutoff will be used for van der Waals and Coulombic interactions, 
 _i.e._, all pairwise interactions will be included. When `eneopt = 1`, this is the cutoff distance used for van der 
 Waals interactions only. The particle-particle portion of the Coulombic interactions is computed with the cutoff of 
-`cutfd`. 
+`cutfd`.
+
+    _New in v1.5.0_
 
 `nsnba` (Default = 1)
 :   Sets how often (steps) atom-based pairlist is generated.
+
+    _New in v1.5.0_
 
 #### **Options to select a non-polar solvation treatment**
 
@@ -878,12 +940,16 @@ understand the decomposition.
     * 2: The _σ_ decomposition scheme.
     * 3: The WCA decomposition scheme.
 
+    _New in v1.5.0_
+
 `use_rmin` (Default = 1)
 :   The option to set up van der Waals radii. The default is to use van der Waals _rmin_ to improve the agreement with
 TIP3P. ([ref.][227])
 
     * 0: Use atomic van der Waals _σ_ values.
     * 1: Use atomic van der Waals _rmin_ values.
+
+    _New in v1.5.0_
 
 `sprob` (Default = 0.557)
 :   Solvent probe radius (in Å) for solvent accessible surface area (SASA) used to compute the dispersion term,
@@ -899,23 +965,31 @@ repulsive terms in previous releases in Amber. However, it was found in the more
 that it was impossible to use the same probe radii for all three terms after each term was calibrated
 and validated with respect to the TIP3P solvent. ([ref.][227])
 
+    _New in v1.5.0_
+
 `vprob` (Default = 1.300)
 :   Solvent probe radius (in Å) for molecular volume (the volume enclosed by SASA) used to compute non polar cavity 
 solvation free energy, default to 1.300 Å, the value optimized in ([ref.][227]) with respect to the TIP3P solvent. 
 Recommended values for other decomposition schemes can be found in Tables 1-3 of ([ref.][227]).
+
+    _New in v1.5.0_
 
 `rhow_effect` (Default = 1.129)
 :   Effective water density used in the non-polar dispersion term calculation, default to 1.129 for `decompopt = 2`, the 
 _σ_ scheme. This was optimized in ([ref.][227]) with respect to the TIP3P solvent in PME. Optimized values for other 
 decomposition schemes can be found in Table 4 of ([ref.][227]).
 
+    _New in v1.5.0_
+
 `use_sav` (Default = 1)
 :   The option to use molecular volume (the volume enclosed by SASA) or to use molecular surface (SASA) for cavity term 
 calculation. Recent study shows that the molecular volume approach transfers better from small training molecules to 
 biomacromolecules.
 
-    * 0: Use SASA to estimate cavity free energy.
-    * 1: Use the molecular volume enclosed by SASA.
+    * 0: Use SASA to estimate cavity free energy
+    * 1: Use the molecular volume enclosed by SASA
+
+    _New in v1.5.0_
 
 `cavity_surften` (Default = 0.0378)
 :   The regression coefficient for the linear relation between the total non-polar solvation free energy (`inp` = 1) or 
@@ -940,6 +1014,8 @@ summation of the atomic SASA’s. A molecular SASA is used for both PB dielectri
   [5]: https://ambermd.org/doc12/Amber21.pdf#chapter.6
   [6]: https://onlinelibrary.wiley.com/doi/10.1002/jcc.24467
 
+    _New in v1.5.0_
+
 #### **Options for output**
 
 `npbverb` (Default = 0)
@@ -947,6 +1023,8 @@ summation of the atomic SASA’s. A molecular SASA is used for both PB dielectri
 
     * 0: Off
     * 1: On
+
+    _New in v1.5.0_
 
 ### **`&rism` namelist variables**
 
@@ -981,6 +1059,8 @@ difficult to converge calculations. (see [§7.3.1](https://ambermd.org/doc12/Amb
 `noasympcorr` (Default = 1) 
 :   Turn off long range asymptotic corrections for thermodynamic output only. Long range asymptotics are still used to 
 calculate the solution.
+
+    _New in v1.5.0_
 
 `buffer` (Default = 14)
 :   Minimum distance (in Å) between solute and edge of solvation box. Specify this with `grdspc` below. Mutually exclusive
@@ -1030,6 +1110,8 @@ accuracy and how this interacts with `ljTolerance`, `buffer`, and `solvbox`. Thr
 the calculation. See [§7.2.3](https://ambermd.org/doc12/Amber21.pdf#subsection.7.2.3) for details on how this affects 
 numerical accuracy and how this interacts with `tolerance`, `buffer`, and `solvbox`.
 
+    _New in v1.5.0_
+
 `asympKSpaceTolerance` (Default = -1)
 :   Tolerance reciprocal space long range asymptotics accuracy (Optional.) Determines the reciprocal space long 
 range asymptotic cutoff distance based on the desired accuracy of the calculation. 
@@ -1040,12 +1122,16 @@ accuracy. Possible values are:
     * 0: no cutoff
     * > 0: given value determines the maximum error in the reciprocal-space long range asymptotics calculations
 
+    _New in v1.5.0_
+
 `treeDCF` (Default = 1)
 :   Use direct sum, or the treecode approximation to calculate the direct correlation function long-range asymptotic 
 correction.
 
     * 0: Use direct sum
     * 1: Use treecode approximation
+
+    _New in v1.5.0_
 
 `treeTCF` (Default = 1)
 :   Use direct sum, or the treecode approximation to calculate the total correlation function long-range asymptotic 
@@ -1054,60 +1140,92 @@ correction.
     * 0: Use direct sum
     * 1: Use treecode approximation
 
+    _New in v1.5.0_
+
 `treeCoulomb` (Default = 1)
 :   Use direct sum, or the treecode approximation to calculate the Coulomb potential energy.
 
     * 0: Use direct sum
     * 1: Use treecode approximation
 
+    _New in v1.5.0_
+
 `treeDCFMAC` (Default = 0.1)
 :   Treecode multipole acceptance criterion for the direct correlation function long-range asymptotic correction.
+
+    _New in v1.5.0_
 
 `treeTCFMAC` (Default = 0.1)
 :   Treecode multipole acceptance criterion for the total correlation function long-range asymptotic correction.
 
+    _New in v1.5.0_
+
 `treeCoulombMAC` (Default = 0.1)
 :   Treecode multipole acceptance criterion for the Coulomb potential energy.
 
+    _New in v1.5.0_
+
 `treeDCFOrder` (Default = 2)
 :   Treecode Taylor series order for the direct correlation function long-range asymptotic correction.
+
+    _New in v1.5.0_
 
 `treeTCFOrder` (Default = 2)
 :   Treecode Taylor series order for the total correlation function long-range asymptotic correction. Note that the 
 Taylor expansion used does not converge exactly to the TCF long-range asymptotic correction, so a very high order 
 will not necessarily increase accuracy.
 
+    _New in v1.5.0_
+
 `treeCoulombOrder` (Default = 2)
 :   Treecode Taylor series order for the Coulomb potential energy.
+
+    _New in v1.5.0_
 
 `treeDCFN0` (Default = 500)
 :   Maximum number of grid points contained within the treecode leaf clusters for the direct correlation function 
 long-range asymptotic correction. This sets the depth of the hierarchical octtree.
 
+    _New in v1.5.0_
+
 `treeTCFN0` (Default = 500)
 :   Maximum number of grid points contained within the treecode leaf clusters for the total correlation function 
 long-range asymptotic correction. This sets the depth of the hierarchical octtree.
+
+    _New in v1.5.0_
 
 `treeCoulombN0` (Default = 500)
 :   Maximum number of grid points contained within the treecode leaf clusters for the Coulomb potential energy. This 
 sets the depth of the hierarchical octtree.
 
+    _New in v1.5.0_
+
 `mdiis_del` (Default = 0.7)
 :   MDIIS step size.
 
+    _New in v1.5.0_
+
 `mdiis_nvec` (Default = 5)
 :   Number of previous iterations MDIIS uses to predict a new solution.
+
+    _New in v1.5.0_
 
 `mdiis_restart` (Default = 10)
 :   If the current residual is mdiis_restart times larger than the smallest residual in memory, then the MDIIS 
 procedure is restarted using the lowest residual solution stored in memory. Increasing this number can sometimes 
 help convergence.
 
+    _New in v1.5.0_
+
 `maxstep` (Default = 10000)
 :   Maximum number of iterative steps per solution.
 
+    _New in v1.5.0_
+
 `npropagate` (Default = 5)
 :   Number of previous solutions to use in predicting a new solution.
+
+    _New in v1.5.0_
 
 `polardecomp` (Default = 0)
 :   Decomposes solvation free energy into polar and non-polar components. Note that this typically requires 80% more 
@@ -1124,6 +1242,8 @@ version 1.000 or higher (see [§7.1.3](https://ambermd.org/doc12/Amber21.pdf#sub
 
     * 0: Don’t decompose solvation free energy into energy and entropy components. 
     * 1: Decompose solvation free energy into energy and entropy components.
+
+    _New in v1.5.0_
 
 `rism_verbose` (Default = 0)
 :   Level of output in temporary RISM output files. May be helpful for debugging or following convergence. 
