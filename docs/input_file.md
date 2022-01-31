@@ -807,11 +807,7 @@ This corresponds to `maxitn` in [pbsa][5].
 :   The ratio between the longest dimension of the rectangular finite-difference grid and that of the solute. A default
 value of 4 is large enough to be used for a small solute, such as a ligand molecule. Using a smaller value for 
 `fillratio` may cause part of the small solute to lie outside the finite-difference grid, causing the 
-finite-difference solvers to fail. For macromolecules is fine to use 4, or a smaller value like 2. 
-
-
-The ratio between the longest dimension of the rectangular finite-difference grid and that of the
-solute. Default is 2.0. It is suggested that a larger FILLRATIO, for example 4.0, . .
+finite-difference solvers to fail. For macromolecules is fine to use 4, or a smaller value like 2.
 
 `scale` (Default = 2.0)
 :   Resolution of the Poisson Boltzmann grid. It is equal to the reciprocal of the grid spacing (`space` in [pbsa][5]).
