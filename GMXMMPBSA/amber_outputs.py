@@ -287,8 +287,6 @@ class IEout(dict):
         self[model] = {}
         for term, dat in d.items():
             self[model][term] = EnergyVector(dat) if term in ['data', 'iedata'] else dat
-            print(model, term, self[model][term])
-
 
     def parse_from_h5(self, d):
         for model in d:
