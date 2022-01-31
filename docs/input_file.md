@@ -471,7 +471,7 @@ are 1, 2, 5, 7 and 8.
 `extdiel` (Default = 78.5)
 :   Define External dielectric constant.
 
-    _New in v1.5.0_
+    _New in v1.5.0: This variable `= 80.0` in previous versions_
 
 `saltcon` (Default = 0.0)
 :   Salt concentration in Molarity (M).
@@ -486,7 +486,7 @@ are 1, 2, 5, 7 and 8.
 :   Offset to correct (by addition) the value of the non-polar contribution to the solvation free energy term.
 
 `molsurf` (Default = 0)
-:   Define the algorithm to calculate the surface area for the non polar solvation term.
+:   Define the algorithm to calculate the surface area for the non-polar solvation term.
     
     * 0: LCPO (Linear Combination of Pairwise Overlaps)
     * 1: molsurf algorithm
@@ -626,8 +626,6 @@ method, while a level-set based algebraic method is used when `ipb > 2`.
   [240]: https://onlinelibrary.wiley.com/doi/10.1002/jcc.25783
   [241]: https://pubs.acs.org/doi/10.1021/acs.jctc.9b00602
 
-    _New in v1.5.0_
-
 `inp` (Default = 2) 
 :   Option to select different methods to compute non-polar solvation free energy.
 
@@ -710,8 +708,6 @@ solute/solvent dielectric boundary.
     `ipb > 2.
 
   [245]: https://pubs.acs.org/doi/10.1021/ct900318u
-
-    _New in v1.5.0_
 
 `arcres` (Default = 0.25)
 :   The `arcres` keyword gives the resolution (in Å) of dots used to represent solvent accessible arcs. More
@@ -797,8 +793,6 @@ that of the water. ([ref.][248])
 
   [219]: https://pubs.acs.org/doi/10.1021/ct900381r
 
-    _New in v1.5.0_
-
 `accept` (Default = 0.001)
 :   Sets the iteration convergence criterion (relative to the initial residue).
 
@@ -810,7 +804,14 @@ much larger value, _e.g._ 10000, for the less efficient solvers, such as conjuga
 This corresponds to `maxitn` in [pbsa][5].
 
 `fillratio` (Default = 4.0) 
-:   The ratio between the longest dimension of the rectangular finite-difference grid and that of the solute.
+:   The ratio between the longest dimension of the rectangular finite-difference grid and that of the solute. A default
+value of 4 is large enough to be used for a small solute, such as a ligand molecule. Using a smaller value for 
+`fillratio` may cause part of the small solute to lie outside the finite-difference grid, causing the 
+finite-difference solvers to fail. For macromolecules is fine to use 4, or a smaller value like 2. 
+
+
+The ratio between the longest dimension of the rectangular finite-difference grid and that of the
+solute. Default is 2.0. It is suggested that a larger FILLRATIO, for example 4.0, . .
 
 `scale` (Default = 2.0)
 :   Resolution of the Poisson Boltzmann grid. It is equal to the reciprocal of the grid spacing (`space` in [pbsa][5]).
@@ -824,8 +825,6 @@ surface; _i.e._, automatically set to be at least a solvent probe or ion probe (
 `nfocus` (Default = 2)
 :   Set how many successive FD calculations will be used to perform an electrostatic focussing calculation on a 
 molecule. When `nfocus` = 1, no focusing is used. It is recommended that `nfocus = 1` when the multigrid solver is used.
-
-    _New in v1.5.0_
 
 `fscale` (Default = 8)
 :   Set the ratio between the coarse and fine grid spacings in an electrostatic focussing calculation.
@@ -849,13 +848,11 @@ molecule. When `nfocus` = 1, no focusing is used. It is recommended that `nfocus
     * 6: Computation of boundary grid potentials using all grid charges. Reaction field potentials and
     energy are computed with the charge singularity free formalism. ([ref.][236])
     * 10: Periodic boundary condition is used. Total electrostatic potentials and energy are computed.
-    Can be used with `solvopt = 1, 2, 3, or 4` and `ipb = 1 or 2`. It should only be used on chargeneutral systems. If 
-    the system net charge is detected to be nonzero, it will be neutralized by
+    Can be used with `solvopt = 1, 2, 3, or 4` and `ipb = 1 or 2`. It should only be used on charge-neutral 
+    systems. If the system net charge is detected to be nonzero, it will be neutralized by
     applying a small neutralizing charge on each grid (_i.e._ a uniform plasma) before solving.
 
   [236]: https://aip.scitation.org/doi/abs/10.1063/1.3099708
-
-    _New in v1.5.0_
 
 `eneopt` (Default = 2)
 :   Option to compute total electrostatic energy and forces.
@@ -878,8 +875,6 @@ molecule. When `nfocus` = 1, no focusing is used. It is recommended that `nfocus
 
   [223]: https://aip.scitation.org/doi/10.1063/1.1622376
 
-    _New in v1.5.0_
-
 `frcopt` (Default = 0)
 :   Option to compute and output electrostatic forces to a file named force.dat in the working directory.
 
@@ -894,8 +889,6 @@ molecule. When `nfocus` = 1, no focusing is used. It is recommended that `nfocus
 
   [237]: https://www.sciencedirect.com/science/article/abs/pii/S0009261411010487?via%3Dihub
   [249]: https://pubs.rsc.org/en/content/articlelanding/2012/cp/c2cp43237d
-
-    _New in v1.5.0_
 
 `scalec` (Default = 0)
 :   Option to compute reaction field energy and forces.
@@ -912,16 +905,12 @@ molecule. When `nfocus` = 1, no focusing is used. It is recommended that `nfocus
 charge-based interactions. This is used for both energy and force calculations. See Eqn (20) in 
 Lu and Luo. ([ref.][223])
 
-    _New in v1.5.0_
-
 `cutnb` (Default = 0.0)
 :   Atom-based cutoff distance for van der Waals interactions, and pairwise Coulombic interactions when `eneopt` = 2.
 When `cutnb` is set to the default value of 0, no cutoff will be used for van der Waals and Coulombic interactions, 
 _i.e._, all pairwise interactions will be included. When `eneopt = 1`, this is the cutoff distance used for van der 
 Waals interactions only. The particle-particle portion of the Coulombic interactions is computed with the cutoff of 
-`cutfd`.
-
-    _New in v1.5.0_
+`cutfd`._
 
 `nsnba` (Default = 1)
 :   Sets how often (steps) atom-based pairlist is generated.
@@ -968,7 +957,7 @@ and validated with respect to the TIP3P solvent. ([ref.][227])
     _New in v1.5.0_
 
 `vprob` (Default = 1.300)
-:   Solvent probe radius (in Å) for molecular volume (the volume enclosed by SASA) used to compute non polar cavity 
+:   Solvent probe radius (in Å) for molecular volume (the volume enclosed by SASA) used to compute non-polar cavity 
 solvation free energy, default to 1.300 Å, the value optimized in ([ref.][227]) with respect to the TIP3P solvent. 
 Recommended values for other decomposition schemes can be found in Tables 1-3 of ([ref.][227]).
 
@@ -1015,6 +1004,9 @@ summation of the atomic SASA’s. A molecular SASA is used for both PB dielectri
   [6]: https://onlinelibrary.wiley.com/doi/10.1002/jcc.24467
 
     _New in v1.5.0_
+
+`maxarcdot` (Default = 1500)
+:   Number of dots used to store arc dots per atom.
 
 #### **Options for output**
 
@@ -1321,7 +1313,7 @@ mutated.
     _New in v1.4.2_
 
 `intdiel_nonpolar` (Default = 1)
-:   Define the `intdiel`(GB)/`indi`(PB) value for nonpolar residues (`PHE`, `TRP`, `VAL`, `ILE`, `LEU`, `MET`, `PRO`,
+:   Define the `intdiel`(GB)/`indi`(PB) value for non-polar residues (`PHE`, `TRP`, `VAL`, `ILE`, `LEU`, `MET`, `PRO`,
 `CYX`, `ALA`, `GLY`, `PRO`)
     
     _New in v1.4.2_
