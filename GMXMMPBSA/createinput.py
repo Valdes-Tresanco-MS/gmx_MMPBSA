@@ -192,108 +192,120 @@ class SanderInput(object):
 
 class SanderGBInput(SanderInput):
     """ GB sander input file """
-    input_items = {'ntb': 0, 'cut': 999.0, 'nsnb': 99999,
-                   'imin': 5, 'maxcyc': 1, 'ncyc': 0,
-                   'igb': 5, 'saltcon': 0.0, 'intdiel': 1.0,
-                   'gbsa': 0, 'extdiel': 78.5, 'surften': 0.0072,
-                   'ioutfm': 0, 'idecomp': 0, 'offset': -999999.0,
-                   'dec_verbose': 0, 'ifqnt': 0, 'qmmask': '',
-                   'qm_theory': '', 'qmcharge': 0, 'qmgb': 2,
-                   'qmcut': 999.0}
+    input_items = {'ntb': 0, 'cut': 999.0, 'nsnb': 99999, 'idecomp': 0, 'offset': -999999.0,
+                   'imin': 5, 'maxcyc': 1, 'ncyc': 0, 'gbsa': 0, 'ioutfm': 0, 'dec_verbose': 0,
+                   # Basic options
+                   'igb': 5, 'intdiel': 1.0, 'extdiel': 78.5, 'saltcon': 0.0, 'surften': 0.0072,
+                   'surfoff': 0.0, 'molsurf': 0, 'msoffset': 0.0, 'probe': 1.4,
+                   # QM options
+                   'ifqnt': 0, 'qmmask': '', 'qm_theory': '', 'qmcharge': 0,
+                   'qmgb': 2, 'qmcut': 999.0, 'qmcharge_com': 0, 'qmcharge_rec': 0,
+                   'qmcharge_lig': 0}
 
-    parent_namelist = {'ntb': 'cntrl', 'cut': 'cntrl', 'nsnb': 'cntrl',
-                       'imin': 'cntrl', 'maxcyc': 'cntrl', 'ncyc': 'cntrl',
-                       'igb': 'cntrl', 'saltcon': 'cntrl', 'intdiel': 'cntrl',
-                       'gbsa': 'cntrl', 'extdiel': 'cntrl', 'surften': 'cntrl',
-                       'ioutfm': 'cntrl', 'idecomp': 'cntrl', 'offset': 'cntrl',
-                       'dec_verbose': 'cntrl', 'ifqnt': 'cntrl',
-                       'qmmask': 'qmmm',
-                       'qm_theory': 'qmmm', 'qmcharge': 'qmmm', 'qmgb': 'qmmm',
-                       'qmcut': 'qmmm'}
+    parent_namelist = {'ntb': 'cntrl', 'cut': 'cntrl', 'nsnb': 'cntrl', 'idecomp': 'cntrl', 'offset': 'cntrl',
+                       'imin': 'cntrl', 'maxcyc': 'cntrl', 'ncyc': 'cntrl', 'gbsa': 'cntrl', 'ioutfm': 'cntrl',
+                       'dec_verbose': 'cntrl',
+                       # Basic options
+                       'igb': 'cntrl', 'intdiel': 'cntrl', 'extdiel': 'cntrl', 'saltcon': 'cntrl',
+                       'surften': 'cntrl', 'surfoff': 'cntrl', 'molsurf': 'cntrl', 'msoffset': 'cntrl',
+                       'probe': 'cntrl',
+                       # QM options
+                       'ifqnt': 'cntrl', 'qmmask': 'qmmm', 'qm_theory': 'qmmm', 'qmcharge': 'qmmm',
+                       'qmgb': 'qmmm', 'qmcut': 'qmmm',
+                       'qmcharge_com': 'qmmm',  'qmcharge_rec': 'qmmm',  'qmcharge_lig': 'qmmm'}
 
-    name_map = {'ntb': 'ntb', 'cut': 'cut', 'nsnb': 'nsnb',
-                'imin': 'imin',
-                # FIXME: INPUT is a dictionary, so the keys (variables in the input list) cannot be redundant. This
-                #  means that the same variable cannot be defined for each type of calculation. This, in particular,
-                #  is the first one we see, we need to review other variants.
-                'maxcyc': 'gb_maxcyc',
-                'ncyc': 'ncyc',
-                'igb': 'igb', 'saltcon': 'saltcon', 'intdiel': 'intdiel',
-                'gbsa': 'gbsa', 'extdiel': 'extdiel', 'surften': 'surften',
-                'ioutfm': 'netcdf', 'idecomp': 'idecomp', 'offset': 'offset',
-                'dec_verbose': 'dec_verbose', 'ifqnt': 'ifqnt',
-                'qmmask': 'qmmask',
-                'qm_theory': 'qm_theory', 'qmcharge': 'qmcharge', 'qmgb': 'qmgb',
-                'qmcut': 'qmcut'}
+    name_map = {'ntb': 'ntb', 'cut': 'cut', 'nsnb': 'nsnb', 'idecomp': 'idecomp', 'offset': 'offset',
+                'imin': 'imin', 'gbsa': 'gbsa', 'ioutfm': 'netcdf', 'dec_verbose': 'dec_verbose',
+                'maxcyc': 'gb_maxcyc', 'ncyc': 'ncyc',
+                # Basic options
+                'igb': 'igb', 'intdiel': 'intdiel', 'extdiel': 'extdiel', 'saltcon': 'saltcon',
+                'surften': 'surften', 'surfoff': 'surfoff', 'molsurf': 'molsurf', 'msoffset': 'msoffset',
+                'probe': 'probe',
+                # QM options
+                'ifqnt': 'ifqnt',  'qmmask': 'qmmask', 'qm_theory': 'qm_theory',
+                'qmcharge': 'qmcharge',  'qmgb': 'qmgb', 'qmcut': 'qmcut',
+                'qmcharge_com': 'qmcharge_com',  'qmcharge_rec': 'qmcharge_rec', 'qmcharge_lig': 'qmcharge_lig'}
 
 
 # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 class SanderPBSADECOMPInput(SanderInput):
     """ PB sander input file """
-    input_items = {'ntb': 0, 'cut': 999.0, 'nsnb': 99999,
-                   'imin': 5, 'maxcyc': 1,
+    input_items = {'ntb': 0, 'cut': 999.0, 'nsnb': 99999, 'ioutfm': 0, 'idecomp': 0, 'dec_verbose': 0,
+                   'imin': 5, 'maxcyc': 1, 'ntx': 1, 'pbtemp': 300,
+                   # Basic input options
                    'ipb': 2, 'inp': 2,
-                   'ioutfm': 0, 'idecomp': 0, 'dec_verbose': 0,
-                   'ntx': 1,
-                   'epsin': 1.0, 'epsout': 80.0,
-                   'istrng': 0.0, 'radiopt': 0, 'sprob': 0.557, 'dprob': 1.4,
-                   'space': 0.5, 'maxitn': 1000, 'cavity_surften': 0.0378,
-                   'cavity_offset': -0.5692, 'fillratio': 4.0,
-                   'epsmem': 1.0, 'membraneopt': 0, 'sasopt': 0,
-                   'mthick': 40, 'maxarcdot': 1500, 'solvopt': 2, 'nfocus': 2, 'bcopt': 5,
-                   'eneopt': 2, 'frcopt': 0, 'cutfd': 5.0, 'cutnb': 0.0,
-                   'mctrdz': 0.0, 'poretype': 1, 'npbverb': 0,
-                   'npbopt': 0,
-                   'pbtemp': 300, 'iprob': 2.0, 'arcres': 0.25,
-                   'mprob': 2.70, 'accept': 0.001, 'nbuffer': 0, 'npbgrid': 1,
-                   'scalec': 0, 'nsnba': 1,
-                   'phiout': 0, 'phiform': 0,
-                   'decompopt': 2, 'use_rmin': 1, 'vprob': 1.300,
-                   'rhow_effect': 1.129, 'use_sav': 1, 'maxsph': 400}
+                   # Options to define the physical constants
+                   'epsin': 1.0, 'epsout': 80.0, 'epsmem': 1.0, 'smoothopt': 1, 'istrng': 0.0,
+                   'radiopt': 1, 'dprob': 1.4, 'iprob': 2.0, 'sasopt': 0, 'arcres': 0.25,
+                   # Options for Implicit Membranes
+                   'membraneopt': 0, 'mprob': 2.70, 'mthick': 40, 'mctrdz': 0.0,
+                   'poretype': 1,
+                   # Options to select numerical procedures
+                   'npbopt': 0, 'solvopt': 1, 'accept': 0.001, 'maxitn': 1000, 'fillratio': 4.0,
+                   'space': 0.5, 'nbuffer': 0, 'nfocus': 2, 'fscale': 8, 'npbgrid': 1,
+                   # Options to compute energy and forces
+                   'bcopt': 5, 'eneopt': 2, 'frcopt': 0, 'scalec': 0, 'cutfd': 5.0, 'cutnb': 0.0,
+                   'nsnba': 1,
+                   # Options to select a non - polar solvation treatment
+                   'decompopt': 2, 'use_rmin': 1, 'sprob': 0.557, 'vprob': 1.300,
+                   'rhow_effect': 1.129, 'use_sav': 1, 'cavity_surften': 0.0378,
+                   'cavity_offset': -0.5692, 'maxsph': 400, 'maxarcdot': 1500,
+                   # Options for output
+                   'npbverb': 0}
 
-    name_map = {'ntb': 'ntb', 'cut': 'cut', 'nsnb': 'nsnb',
-                'imin': 'imin', 'maxcyc': 'pb_maxcyc',
+    name_map = {'ntb': 'ntb', 'cut': 'cut', 'nsnb': 'nsnb', 'ioutfm': 'netcdf',
+                'idecomp': 'idecomp', 'dec_verbose': 'dec_verbose',
+                'imin': 'imin', 'maxcyc': 'pb_maxcyc', 'ntx': 'ntx', 'pbtemp': 'temperature',
+                # Basic input options
                 'ipb': 'ipb', 'inp': 'inp',
-                'ioutfm': 'netcdf', 'idecomp': 'idecomp', 'dec_verbose': 'dec_verbose',
-                'ntx': 'ntx',
-                'epsin': 'indi', 'epsout': 'exdi',
-                'istrng': 'istrng', 'radiopt': 'radiopt', 'sprob': 'sprob', 'dprob': 'prbrad',
-                'space': 'scale', 'maxitn': 'linit', 'cavity_surften': 'cavity_surften',
-                'cavity_offset': 'cavity_offset', 'fillratio': 'fillratio',
-                'epsmem': 'emem', 'membraneopt': 'memopt', 'sasopt': 'sasopt',
-                'mthick': 'mthick', 'maxarcdot': 'maxarcdot', 'solvopt': 'solvopt', 'nfocus': 'nfocus',
-                'bcopt': 'bcopt',
-                'eneopt': 'eneopt', 'frcopt': 'frcopt', 'cutfd': 'cutfd', 'cutnb': 'cutnb',
-                'mctrdz': 'mctrdz', 'poretype': 'poretype', 'npbverb': 'npbverb',
-                'npbopt': 'npbopt',
-                'pbtemp': 'pbtemp', 'iprob': 'iprob', 'arcres': 'arcres',
-                'mprob': 'mprob', 'accept': 'accept', 'nbuffer': 'nbuffer', 'npbgrid': 'npbgrid',
-                'scalec': 'scalec', 'nsnba': 'nsnba',
-                'phiout': 'phiout', 'phiform': 'phiform',
-                'decompopt': 'decompopt', 'use_rmin': 'use_rmin', 'vprob': 'vprob',
-                'rhow_effect': 'rhow_effect', 'use_sav': 'use_sav', 'maxsph': 'maxsph'}
+                # Options to define the physical constants
+                'epsin': 'indi', 'epsout': 'exdi', 'epsmem': 'emem', 'smoothopt': 'smoothopt',
+                'istrng': 'istrng', 'radiopt': 'radiopt', 'dprob': 'prbrad', 'iprob': 'iprob',
+                'sasopt': 'sasopt', 'arcres': 'arcres',
+                # Options for Implicit Membranes
+                'membraneopt': 'memopt', 'mprob': 'mprob', 'mthick': 'mthick', 'mctrdz': 'mctrdz',
+                'poretype': 'poretype',
+                # Options to select numerical procedures
+                'npbopt': 'npbopt', 'solvopt': 'solvopt', 'accept': 'accept', 'maxitn': 'linit',
+                'fillratio': 'fillratio', 'space': 'scale', 'nbuffer': 'nbuffer', 'nfocus': 'nfocus',
+                'fscale': 'fscale', 'npbgrid': 'npbgrid',
+                # Options to compute energy and forces
+                'bcopt': 'bcopt', 'eneopt': 'eneopt', 'frcopt': 'frcopt', 'scalec': 'scalec',
+                'cutfd': 'cutfd', 'cutnb': 'cutnb', 'nsnba': 'nsnba',
+                # Options to select a non-polar solvation treatment
+                'decompopt': 'decompopt', 'use_rmin': 'use_rmin', 'sprob': 'sprob',
+                'vprob': 'vprob', 'rhow_effect': 'rhow_effect', 'use_sav': 'use_sav',
+                'cavity_surften': 'cavity_surften', 'cavity_offset': 'cavity_offset',
+                'maxsph': 'maxsph', 'maxarcdot': 'maxarcdot',
+                # Options for output
+                'npbverb': 'npbverb'}
 
-    parent_namelist = {'ntb': 'cntrl', 'cut': 'cntrl', 'nsnb': 'cntrl',
-                       'imin': 'cntrl', 'maxcyc': 'cntrl',
+    parent_namelist = {'ntb': 'cntrl', 'cut': 'cntrl', 'nsnb': 'cntrl', 'ioutfm': 'cntrl',
+                       'idecomp': 'cntrl', 'dec_verbose': 'cntrl',
+                       'imin': 'cntrl', 'maxcyc': 'cntrl', 'ntx': 'cntrl', 'pbtemp': 'pb',
+                       # Basic input options
                        'ipb': 'cntrl', 'inp': 'cntrl',
-                       'ioutfm': 'cntrl', 'idecomp': 'cntrl', 'dec_verbose': 'cntrl',
-                       'ntx': 'cntrl',
-                       'epsin': 'pb', 'epsout': 'pb',
-                       'istrng': 'pb', 'radiopt': 'pb', 'sprob': 'pb', 'dprob': 'pb',
-                       'space': 'pb', 'maxitn': 'pb', 'cavity_surften': 'pb',
-                       'cavity_offset': 'pb', 'fillratio': 'pb',
-                       'epsmem': 'pb', 'membraneopt': 'pb', 'sasopt': 'pb',
-                       'mthick': 'pb', 'maxarcdot': 'pb', 'solvopt': 'pb', 'nfocus': 'pb', 'bcopt': 'pb',
-                       'eneopt': 'pb', 'frcopt': 'pb', 'cutfd': 'pb', 'cutnb': 'pb',
-                       'mctrdz': 'pb', 'poretype': 'pb', 'npbverb': 'pb',
-                       'npbopt': 'pb',
-                       'pbtemp': 'pb', 'iprob': 'pb', 'arcres': 'pb',
-                       'mprob': 'pb', 'accept': 'pb', 'nbuffer': 'pb', 'npbgrid': 'pb',
-                       'scalec': 'pb', 'nsnba': 'pb',
-                       'phiout': 'pb', 'phiform': 'pb',
-                       'decompopt': 'pb', 'use_rmin': 'pb', 'vprob': 'pb',
-                       'rhow_effect': 'pb', 'use_sav': 'pb', 'maxsph': 'pb'}
+                       # Options to define the physical constants
+                       'epsin': 'pb', 'epsout': 'pb', 'epsmem': 'pb', 'smoothopt': 'pb',
+                       'istrng': 'pb', 'radiopt': 'pb', 'dprob': 'pb', 'iprob': 'pb',
+                       'sasopt': 'pb', 'arcres': 'pb',
+                       # Options for Implicit Membranes
+                       'membraneopt': 'pb', 'mprob': 'pb', 'mthick': 'pb', 'mctrdz': 'pb',
+                       'poretype': 'pb',
+                       # Options to select numerical procedures
+                       'npbopt': 'pb', 'solvopt': 'pb', 'accept': 'pb', 'maxitn': 'pb',
+                       'fillratio': 'pb', 'space': 'pb', 'nbuffer': 'pb', 'nfocus': 'pb',
+                       'fscale': 'pb', 'npbgrid': 'pb',
+                       # Options to compute energy and forces
+                       'bcopt': 'pb', 'eneopt': 'pb', 'frcopt': 'pb', 'scalec': 'pb',
+                       'cutfd': 'pb', 'cutnb': 'pb', 'nsnba': 'pb',
+                       # Options to select a non-polar solvation treatment
+                       'decompopt': 'pb', 'use_rmin': 'pb', 'sprob': 'pb', 'vprob': 'pb',
+                       'rhow_effect': 'pb', 'use_sav': 'pb', 'cavity_surften': 'pb',
+                       'cavity_offset': 'pb', 'maxsph': 'pb', 'maxarcdot': 'pb',
+                       # Options for output
+                       'npbverb': 'pb'}
 
     def __init__(self, INPUT):
         # We need to change istrng to mM (from M).
@@ -305,68 +317,79 @@ class SanderPBSADECOMPInput(SanderInput):
 
 class SanderPBSAInput(SanderInput):
     """ PB sander input file """
-    input_items = {'ntb': 0, 'cut': 999.0, 'nsnb': 99999,
-                   'imin': 5, 'maxcyc': 1,
+    input_items = {'ntb': 0, 'cut': 999.0, 'nsnb': 99999, 'ioutfm': 0,
+                   'imin': 5, 'maxcyc': 1, 'ntx': 1, 'pbtemp': 300,
+                   # Basic input options
                    'ipb': 2, 'inp': 2,
-                   'ioutfm': 0,
-                   'ntx': 1,
-                   'epsin': 1.0, 'epsout': 80.0,
-                   'istrng': 0.0, 'radiopt': 0, 'sprob': 0.557, 'dprob': 1.4,
-                   'space': 0.5, 'maxitn': 1000, 'cavity_surften': 0.0378,
-                   'cavity_offset': -0.5692, 'fillratio': 4.0,
-                   'epsmem': 1.0, 'membraneopt': 0, 'sasopt': 0,
-                   'mthick': 40, 'maxarcdot': 1500, 'solvopt': 1, 'nfocus': 2, 'bcopt': 5,
-                   'eneopt': 2, 'frcopt': 0, 'cutfd': 5.0, 'cutnb': 0.0,
-                   'mctrdz': 0.0, 'poretype': 1, 'npbverb': 0,
-                   'npbopt': 0,
-                   'pbtemp': 300, 'iprob': 2.0, 'arcres': 0.25,
-                   'mprob': 2.70, 'accept': 0.001, 'nbuffer': 0, 'npbgrid': 1,
-                   'scalec': 0, 'nsnba': 1,
-                   'phiout': 0, 'phiform': 0,
-                   'decompopt': 2, 'use_rmin': 1, 'vprob': 1.300,
-                   'rhow_effect': 1.129, 'use_sav': 1, 'maxsph': 400}
+                   # Options to define the physical constants
+                   'epsin': 1.0, 'epsout': 80.0, 'epsmem': 1.0, 'smoothopt': 1, 'istrng': 0.0,
+                   'radiopt': 1, 'dprob': 1.4, 'iprob': 2.0, 'sasopt': 0, 'arcres': 0.25,
+                   # Options for Implicit Membranes
+                   'membraneopt': 0, 'mprob': 2.70, 'mthick': 40, 'mctrdz': 0.0,
+                   'poretype': 1,
+                   # Options to select numerical procedures
+                   'npbopt': 0, 'solvopt': 1, 'accept': 0.001, 'maxitn': 1000, 'fillratio': 4.0,
+                   'space': 0.5, 'nbuffer': 0, 'nfocus': 2, 'fscale': 8, 'npbgrid': 1,
+                   # Options to compute energy and forces
+                   'bcopt': 5, 'eneopt': 2, 'frcopt': 0, 'scalec': 0, 'cutfd': 5.0, 'cutnb': 0.0,
+                   'nsnba': 1,
+                   # Options to select a non - polar solvation treatment
+                   'decompopt': 2, 'use_rmin': 1, 'sprob': 0.557, 'vprob': 1.300,
+                   'rhow_effect': 1.129, 'use_sav': 1, 'cavity_surften': 0.0378,
+                   'cavity_offset': -0.5692, 'maxsph': 400, 'maxarcdot': 1500,
+                   # Options for output
+                   'npbverb': 0}
 
-    name_map = {'ntb': 'ntb', 'cut': 'cut', 'nsnb': 'nsnb',
-                'imin': 'imin', 'maxcyc': 'pb_maxcyc',
+    name_map = {'ntb': 'ntb', 'cut': 'cut', 'nsnb': 'nsnb', 'ioutfm': 'netcdf',
+                'imin': 'imin', 'maxcyc': 'pb_maxcyc', 'ntx': 'ntx', 'pbtemp': 'temperature',
+                # Basic input options
                 'ipb': 'ipb', 'inp': 'inp',
-                'ioutfm': 'netcdf',
-                'ntx': 'ntx',
-                'epsin': 'indi', 'epsout': 'exdi',
-                'istrng': 'istrng', 'radiopt': 'radiopt', 'sprob': 'sprob', 'dprob': 'prbrad',
-                'space': 'scale', 'maxitn': 'linit', 'cavity_surften': 'cavity_surften',
-                'cavity_offset': 'cavity_offset', 'fillratio': 'fillratio',
-                'epsmem': 'emem', 'membraneopt': 'memopt', 'sasopt': 'sasopt',
-                'mthick': 'mthick', 'maxarcdot': 'maxarcdot', 'solvopt': 'solvopt', 'nfocus': 'nfocus', 'bcopt': 'bcopt',
-                'eneopt': 'eneopt', 'frcopt': 'frcopt', 'cutfd': 'cutfd', 'cutnb': 'cutnb',
-                'mctrdz': 'mctrdz', 'poretype': 'poretype', 'npbverb': 'npbverb',
-                'npbopt': 'npbopt',
-                'pbtemp': 'temperature', 'iprob': 'iprob', 'arcres': 'arcres',
-                'mprob': 'mprob', 'accept': 'accept', 'nbuffer': 'nbuffer', 'npbgrid': 'npbgrid',
-                'scalec': 'scalec', 'nsnba': 'nsnba',
-                'phiout': 'phiout', 'phiform': 'phiform',
-                'decompopt': 'decompopt', 'use_rmin': 'use_rmin', 'vprob': 'vprob',
-                'rhow_effect': 'rhow_effect', 'use_sav': 'use_sav', 'maxsph': 'maxsph'}
+                # Options to define the physical constants
+                'epsin': 'indi', 'epsout': 'exdi', 'epsmem': 'emem', 'smoothopt': 'smoothopt',
+                'istrng': 'istrng', 'radiopt': 'radiopt', 'dprob': 'prbrad', 'iprob': 'iprob',
+                'sasopt': 'sasopt', 'arcres': 'arcres',
+                # Options for Implicit Membranes
+                'membraneopt': 'memopt', 'mprob': 'mprob', 'mthick': 'mthick', 'mctrdz': 'mctrdz',
+                'poretype': 'poretype',
+                # Options to select numerical procedures
+                'npbopt': 'npbopt', 'solvopt': 'solvopt', 'accept': 'accept', 'maxitn': 'linit',
+                'fillratio': 'fillratio', 'space': 'scale', 'nbuffer': 'nbuffer', 'nfocus': 'nfocus',
+                'fscale': 'fscale', 'npbgrid': 'npbgrid',
+                # Options to compute energy and forces
+                'bcopt': 'bcopt', 'eneopt': 'eneopt', 'frcopt': 'frcopt', 'scalec': 'scalec',
+                'cutfd': 'cutfd', 'cutnb': 'cutnb', 'nsnba': 'nsnba',
+                # Options to select a non-polar solvation treatment
+                'decompopt': 'decompopt', 'use_rmin': 'use_rmin', 'sprob': 'sprob',
+                'vprob': 'vprob', 'rhow_effect': 'rhow_effect', 'use_sav': 'use_sav',
+                'cavity_surften': 'cavity_surften', 'cavity_offset': 'cavity_offset',
+                'maxsph': 'maxsph', 'maxarcdot': 'maxarcdot',
+                # Options for output
+                'npbverb': 'npbverb'}
 
-    parent_namelist = {'ntb': 'cntrl', 'cut': 'cntrl', 'nsnb': 'cntrl',
-                       'imin': 'cntrl', 'maxcyc': 'cntrl',
+    parent_namelist = {'ntb': 'cntrl', 'cut': 'cntrl', 'nsnb': 'cntrl', 'ioutfm': 'cntrl',
+                       'imin': 'cntrl', 'maxcyc': 'cntrl', 'ntx': 'cntrl', 'pbtemp': 'pb',
+                       # Basic input options
                        'ipb': 'cntrl', 'inp': 'cntrl',
-                       'ioutfm': 'cntrl',
-                       'ntx': 'cntrl',
-                       'epsin': 'pb', 'epsout': 'pb',
-                       'istrng': 'pb', 'radiopt': 'pb', 'sprob': 'pb', 'dprob': 'pb',
-                       'space': 'pb', 'maxitn': 'pb', 'cavity_surften': 'pb',
-                       'cavity_offset': 'pb', 'fillratio': 'pb',
-                       'epsmem': 'pb', 'membraneopt': 'pb', 'sasopt': 'pb',
-                       'mthick': 'pb', 'maxarcdot': 'pb', 'solvopt': 'pb', 'nfocus': 'pb', 'bcopt': 'pb',
-                       'eneopt': 'pb', 'frcopt': 'pb', 'cutfd': 'pb', 'cutnb': 'pb',
-                       'mctrdz': 'pb', 'poretype': 'pb', 'npbverb': 'pb',
-                       'npbopt': 'pb',
-                       'pbtemp': 'pb', 'iprob': 'pb', 'arcres': 'pb',
-                       'mprob': 'pb', 'accept': 'pb', 'nbuffer': 'pb', 'npbgrid': 'pb',
-                       'scalec': 'pb', 'nsnba': 'pb',
-                       'phiout': 'pb', 'phiform': 'pb',
-                       'decompopt': 'pb', 'use_rmin': 'pb', 'vprob': 'pb',
-                       'rhow_effect': 'pb', 'use_sav': 'pb', 'maxsph': 'pb'}
+                       # Options to define the physical constants
+                       'epsin': 'pb', 'epsout': 'pb', 'epsmem': 'pb', 'smoothopt': 'pb',
+                       'istrng': 'pb', 'radiopt': 'pb', 'dprob': 'pb', 'iprob': 'pb',
+                       'sasopt': 'pb', 'arcres': 'pb',
+                       # Options for Implicit Membranes
+                       'membraneopt': 'pb', 'mprob': 'pb', 'mthick': 'pb', 'mctrdz': 'pb',
+                       'poretype': 'pb',
+                       # Options to select numerical procedures
+                       'npbopt': 'pb', 'solvopt': 'pb', 'accept': 'pb', 'maxitn': 'pb',
+                       'fillratio': 'pb', 'space': 'pb', 'nbuffer': 'pb', 'nfocus': 'pb',
+                       'fscale': 'pb', 'npbgrid': 'pb',
+                       # Options to compute energy and forces
+                       'bcopt': 'pb', 'eneopt': 'pb', 'frcopt': 'pb', 'scalec': 'pb',
+                       'cutfd': 'pb', 'cutnb': 'pb', 'nsnba': 'pb',
+                       # Options to select a non-polar solvation treatment
+                       'decompopt': 'pb', 'use_rmin': 'pb', 'sprob': 'pb', 'vprob': 'pb',
+                       'rhow_effect': 'pb', 'use_sav': 'pb', 'cavity_surften': 'pb',
+                       'cavity_offset': 'pb', 'maxsph': 'pb', 'maxarcdot': 'pb',
+                       # Options for output
+                       'npbverb': 'pb'}
 
     def __init__(self, INPUT):
         # We need to change istrng to mM (from M).
@@ -378,69 +401,79 @@ class SanderPBSAInput(SanderInput):
 
 class SanderPBSA2Input(SanderInput):
     """ PB sander input file """
-    input_items = {'ntb': 0, 'cut': 999.0, 'nsnb': 99999,
-                   'imin': 5, 'maxcyc': 1,
+    input_items = {'ntb': 0, 'cut': 999.0, 'nsnb': 99999, 'ioutfm': 0,
+                   'imin': 5, 'maxcyc': 1, 'ntx': 1, 'pbtemp': 300,
+                   # Basic input options
                    'ipb': 2, 'inp': 2,
-                   'ioutfm': 0,
-                   'ntx': 1,
-                   'epsin': 1.0, 'epsout': 80.0,
-                   'istrng': 0.0, 'radiopt': 0, 'sprob': 0.557, 'dprob': 1.4,
-                   'space': 0.5, 'maxitn': 1000, 'cavity_surften': 0.0378,
-                   'cavity_offset': -0.5692, 'fillratio': 4.0,
-                   'epsmem': 1.0, 'membraneopt': 0, 'sasopt': 0,
-                   'mthick': 40, 'maxarcdot': 1500, 'solvopt': 2, 'nfocus': 2, 'bcopt': 5,
-                   'eneopt': 2, 'frcopt': 0, 'cutfd': 5.0, 'cutnb': 0.0,
-                   'mctrdz': 0.0, 'poretype': 1, 'npbverb': 0,
-                   'npbopt': 0,
-                   'pbtemp': 300, 'iprob': 2.0, 'arcres': 0.25,
-                   'mprob': 2.70, 'accept': 0.001, 'nbuffer': 0, 'npbgrid': 1,
-                   'scalec': 0, 'nsnba': 1,
-                   'phiout': 0, 'phiform': 0,
-                   'decompopt': 2, 'use_rmin': 1, 'vprob': 1.300,
-                   'rhow_effect': 1.129, 'use_sav': 1, 'maxsph': 400}
+                   # Options to define the physical constants
+                   'epsin': 1.0, 'epsout': 80.0, 'epsmem': 1.0, 'smoothopt': 1, 'istrng': 0.0,
+                   'radiopt': 1, 'dprob': 1.4, 'iprob': 2.0, 'sasopt': 0, 'arcres': 0.25,
+                   # Options for Implicit Membranes
+                   'membraneopt': 0, 'mprob': 2.70, 'mthick': 40, 'mctrdz': 0.0,
+                   'poretype': 1,
+                   # Options to select numerical procedures
+                   'npbopt': 0, 'solvopt': 1, 'accept': 0.001, 'maxitn': 1000, 'fillratio': 4.0,
+                   'space': 0.5, 'nbuffer': 0, 'nfocus': 2, 'fscale': 8, 'npbgrid': 1,
+                   # Options to compute energy and forces
+                   'bcopt': 5, 'eneopt': 2, 'frcopt': 0, 'scalec': 0, 'cutfd': 5.0, 'cutnb': 0.0,
+                   'nsnba': 1,
+                   # Options to select a non - polar solvation treatment
+                   'decompopt': 2, 'use_rmin': 1, 'sprob': 0.557, 'vprob': 1.300,
+                   'rhow_effect': 1.129, 'use_sav': 1, 'cavity_surften': 0.0378,
+                   'cavity_offset': -0.5692, 'maxsph': 400, 'maxarcdot': 1500,
+                   # Options for output
+                   'npbverb': 0}
 
-    name_map = {'ntb': 'ntb', 'cut': 'cut', 'nsnb': 'nsnb',
-                'imin': 'imin', 'maxcyc': 'pb_maxcyc',
+    name_map = {'ntb': 'ntb', 'cut': 'cut', 'nsnb': 'nsnb', 'ioutfm': 'netcdf',
+                'imin': 'imin', 'maxcyc': 'pb_maxcyc', 'ntx': 'ntx', 'pbtemp': 'temperature',
+                # Basic input options
                 'ipb': 'ipb', 'inp': 'inp',
-                'ioutfm': 'netcdf',
-                'ntx': 'ntx',
-                'epsin': 'indi', 'epsout': 'exdi',
-                'istrng': 'istrng', 'radiopt': 'radiopt', 'sprob': 'sprob', 'dprob': 'prbrad',
-                'space': 'scale', 'maxitn': 'linit', 'cavity_surften': 'cavity_surften',
-                'cavity_offset': 'cavity_offset', 'fillratio': 'fillratio',
-                'epsmem': 'emem', 'membraneopt': 'memopt', 'sasopt': 'sasopt',
-                'mthick': 'mthick', 'maxarcdot': 'maxarcdot', 'solvopt': 'solvopt', 'nfocus': 'nfocus',
-                'bcopt': 'bcopt',
-                'eneopt': 'eneopt', 'frcopt': 'frcopt', 'cutfd': 'cutfd', 'cutnb': 'cutnb',
-                'mctrdz': 'mctrdz', 'poretype': 'poretype', 'npbverb': 'npbverb',
-                'npbopt': 'npbopt',
-                'pbtemp': 'pbtemp', 'iprob': 'iprob', 'arcres': 'arcres',
-                'mprob': 'mprob', 'accept': 'accept', 'nbuffer': 'nbuffer', 'npbgrid': 'npbgrid',
-                'scalec': 'scalec', 'nsnba': 'nsnba',
-                'phiout': 'phiout', 'phiform': 'phiform',
-                'decompopt': 'decompopt', 'use_rmin': 'use_rmin', 'vprob': 'vprob',
-                'rhow_effect': 'rhow_effect', 'use_sav': 'use_sav', 'maxsph': 'maxsph'}
+                # Options to define the physical constants
+                'epsin': 'indi', 'epsout': 'exdi', 'epsmem': 'emem', 'smoothopt': 'smoothopt',
+                'istrng': 'istrng', 'radiopt': 'radiopt', 'dprob': 'prbrad', 'iprob': 'iprob',
+                'sasopt': 'sasopt', 'arcres': 'arcres',
+                # Options for Implicit Membranes
+                'membraneopt': 'memopt', 'mprob': 'mprob', 'mthick': 'mthick', 'mctrdz': 'mctrdz',
+                'poretype': 'poretype',
+                # Options to select numerical procedures
+                'npbopt': 'npbopt', 'solvopt': 'solvopt', 'accept': 'accept', 'maxitn': 'linit',
+                'fillratio': 'fillratio', 'space': 'scale', 'nbuffer': 'nbuffer', 'nfocus': 'nfocus',
+                'fscale': 'fscale', 'npbgrid': 'npbgrid',
+                # Options to compute energy and forces
+                'bcopt': 'bcopt', 'eneopt': 'eneopt', 'frcopt': 'frcopt', 'scalec': 'scalec',
+                'cutfd': 'cutfd', 'cutnb': 'cutnb', 'nsnba': 'nsnba',
+                # Options to select a non-polar solvation treatment
+                'decompopt': 'decompopt', 'use_rmin': 'use_rmin', 'sprob': 'sprob',
+                'vprob': 'vprob', 'rhow_effect': 'rhow_effect', 'use_sav': 'use_sav',
+                'cavity_surften': 'cavity_surften', 'cavity_offset': 'cavity_offset',
+                'maxsph': 'maxsph', 'maxarcdot': 'maxarcdot',
+                # Options for output
+                'npbverb': 'npbverb'}
 
-    parent_namelist = {'ntb': 'cntrl', 'cut': 'cntrl', 'nsnb': 'cntrl',
-                       'imin': 'cntrl', 'maxcyc': 'cntrl',
+    parent_namelist = {'ntb': 'cntrl', 'cut': 'cntrl', 'nsnb': 'cntrl', 'ioutfm': 'cntrl',
+                       'imin': 'cntrl', 'maxcyc': 'cntrl', 'ntx': 'cntrl', 'pbtemp': 'pb',
+                       # Basic input options
                        'ipb': 'cntrl', 'inp': 'cntrl',
-                       'ioutfm': 'cntrl',
-                       'ntx': 'cntrl',
-                       'epsin': 'pb', 'epsout': 'pb',
-                       'istrng': 'pb', 'radiopt': 'pb', 'sprob': 'pb', 'dprob': 'pb',
-                       'space': 'pb', 'maxitn': 'pb', 'cavity_surften': 'pb',
-                       'cavity_offset': 'pb', 'fillratio': 'pb',
-                       'epsmem': 'pb', 'membraneopt': 'pb', 'sasopt': 'pb',
-                       'mthick': 'pb', 'maxarcdot': 'pb', 'solvopt': 'pb', 'nfocus': 'pb', 'bcopt': 'pb',
-                       'eneopt': 'pb', 'frcopt': 'pb', 'cutfd': 'pb', 'cutnb': 'pb',
-                       'mctrdz': 'pb', 'poretype': 'pb', 'npbverb': 'pb',
-                       'npbopt': 'pb',
-                       'pbtemp': 'pb', 'iprob': 'pb', 'arcres': 'pb',
-                       'mprob': 'pb', 'accept': 'pb', 'nbuffer': 'pb', 'npbgrid': 'pb',
-                       'scalec': 'pb', 'nsnba': 'pb',
-                       'phiout': 'pb', 'phiform': 'pb',
-                       'decompopt': 'pb', 'use_rmin': 'pb', 'vprob': 'pb',
-                       'rhow_effect': 'pb', 'use_sav': 'pb', 'maxsph': 'pb'}
+                       # Options to define the physical constants
+                       'epsin': 'pb', 'epsout': 'pb', 'epsmem': 'pb', 'smoothopt': 'pb',
+                       'istrng': 'pb', 'radiopt': 'pb', 'dprob': 'pb', 'iprob': 'pb',
+                       'sasopt': 'pb', 'arcres': 'pb',
+                       # Options for Implicit Membranes
+                       'membraneopt': 'pb', 'mprob': 'pb', 'mthick': 'pb', 'mctrdz': 'pb',
+                       'poretype': 'pb',
+                       # Options to select numerical procedures
+                       'npbopt': 'pb', 'solvopt': 'pb', 'accept': 'pb', 'maxitn': 'pb',
+                       'fillratio': 'pb', 'space': 'pb', 'nbuffer': 'pb', 'nfocus': 'pb',
+                       'fscale': 'pb', 'npbgrid': 'pb',
+                       # Options to compute energy and forces
+                       'bcopt': 'pb', 'eneopt': 'pb', 'frcopt': 'pb', 'scalec': 'pb',
+                       'cutfd': 'pb', 'cutnb': 'pb', 'nsnba': 'pb',
+                       # Options to select a non-polar solvation treatment
+                       'decompopt': 'pb', 'use_rmin': 'pb', 'sprob': 'pb', 'vprob': 'pb',
+                       'rhow_effect': 'pb', 'use_sav': 'pb', 'cavity_surften': 'pb',
+                       'cavity_offset': 'pb', 'maxsph': 'pb', 'maxarcdot': 'pb',
+                       # Options for output
+                       'npbverb': 'pb'}
 
     def __init__(self, INPUT):
         # We need to change istrng to mM (from M).
