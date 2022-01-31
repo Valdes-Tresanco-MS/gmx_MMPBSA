@@ -457,8 +457,8 @@ input_file.addNamelist('gb', 'gb',
 
                            ['saltcon', float, 0, 'Salt concentration (M)'],
 # FIXME: Remove?
-                           ['rgbmax', float, 999.0, 'Distance cutoff in Angstroms to use when computing effective '
-                                                    'GB radii'],
+                           # ['rgbmax', float, 999.0, 'Distance cutoff in Angstroms to use when computing effective '
+                           #                          'GB radii'],
 # FIXME: offset needs revision. MMPBSA.py defined it as 'offset': -999999.0, but in the Amber manual is 0.09 Å (solved)
 # FIXME: gbsa is only defined for decomp if self.INPUT['decomprun']: self.INPUT['gbsa'] = 2. molsurf is who replaces this variable
                            ['surften', float, 0.0072, 'Surface tension'],
@@ -526,7 +526,7 @@ input_file.addNamelist('pb', 'pb',
                                               'electrostatic focussing calculation'],
                            ['npbgrid', int, 1, 'Sets how often the finite-difference grid is regenerated'],
 
-                            #  Options to compute energy and forces
+                            # Options to compute energy and forces
                            ['bcopt', int, 5, 'Boundary condition option'],
                            ['eneopt', int, 2, 'Compute electrostatic energy and forces'],
                            ['frcopt', int, 0, 'Output for computing electrostatic forces'],
