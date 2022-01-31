@@ -128,22 +128,22 @@ class CheckMakeTop:
             logging.info(f'Selected {len(decomp_res)} residues:\n' + '\n'.join(textwraped) + '\n')
 
             if self.INPUT['idecomp'] in [3, 4]:
-                if len(decomp_res) > 5 and self.INPUT['dec_verbose'] in [1, 3]:
-                    mols = 3
-                    energy_terms = 6
-                    num_res = len(decomp_res)
-                    total_items = energy_terms * mols * num_res**2
+                if self.INPUT['dec_verbose'] == 0:
+                    mol_terms = 1
+                elif self.INPUT['dec_verbose'] == 1:
+                    mol_terms = 3
+                elif self.INPUT['dec_verbose'] == 2:
+                    mol_terms = 4
+                else:
+                    mol_terms = 12
+                energy_terms = 6
+                num_res = len(decomp_res)
+                total_items = energy_terms * mol_terms * num_res**2
+                if total_items > 250:
                     logging.warning(f"Using idecomp = {self.INPUT['idecomp']} and dec_verbose ="
-                                    f" {self.INPUT['dec_verbose']} will be generated {total_items} items. This can "
-                                    f"lead to high resource consumption!...")
-                elif len(decomp_res) > 10 and self.INPUT['dec_verbose'] in [0, 2]:
-                    mols = 1
-                    energy_terms = 6
-                    num_res = len(decomp_res)
-                    total_items = energy_terms * mols * num_res ** 2
-                    logging.warning(f"Using idecomp = {self.INPUT['idecomp']} and dec_verbose ="
-                                    f" {self.INPUT['dec_verbose']} will be generated {total_items} items. This can "
-                                    f"lead to high resource consumption!...")
+                                    f" {self.INPUT['dec_verbose']} will generate approximately {total_items} items. "
+                                    f"Large print selections can demand a large amount of memory and take a "
+                                    f"significant amount of time to print!")
 
             self.INPUT['print_res'] = ','.join(list2range(decomp_res)['string'])
         if self.INPUT['qm_residues']:
