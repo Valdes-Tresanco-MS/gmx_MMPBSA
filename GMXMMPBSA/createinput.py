@@ -315,7 +315,7 @@ class SanderPBSAInput(SanderInput):
                    'space': 0.5, 'maxitn': 1000, 'cavity_surften': 0.0378,
                    'cavity_offset': -0.5692, 'fillratio': 4.0,
                    'epsmem': 1.0, 'membraneopt': 0, 'sasopt': 0,
-                   'mthick': 40, 'maxarcdot': 1500, 'solvopt': 2, 'nfocus': 2, 'bcopt': 5,
+                   'mthick': 40, 'maxarcdot': 1500, 'solvopt': 1, 'nfocus': 2, 'bcopt': 5,
                    'eneopt': 2, 'frcopt': 0, 'cutfd': 5.0, 'cutnb': 0.0,
                    'mctrdz': 0.0, 'poretype': 1, 'npbverb': 0,
                    'npbopt': 0,
