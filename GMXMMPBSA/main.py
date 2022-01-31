@@ -159,7 +159,6 @@ class MMPBSA_App(object):
             logging.info(('%d frames were processed by cpptraj for use in calculation.') % self.numframes)
             if INPUT['nmoderun']:
                 logging.info(('%d frames were processed by cpptraj for nmode calculations.') % self.numframes_nmode)
-            logging.info('')
 
         self.timer.stop_timer('muttraj')
 
@@ -916,6 +915,7 @@ class MMPBSA_App(object):
         from types import SimpleNamespace
         if not self.master:
             return
+        logging.info('Parsing results to output files...')
         self.calc_types = SimpleNamespace(normal={}, mutant={}, decomp_normal={}, decomp_mutant={})
         INPUT, FILES = self.INPUT, self.FILES
         # Quasi-harmonic analysis is a special-case, so handle that separately
@@ -991,16 +991,16 @@ class MMPBSA_App(object):
             if INPUT['alarun']:
                 self.calc_types.mutant[key] = {'complex': outclass[i]('Mutant-Complex', self.INPUT, self.using_chamber)}
                 self.calc_types.mutant[key]['complex'].parse_from_file(self.pre + 'mutant_' + basename[i] % 'complex',
-                                                                      self.mpi_size)
+                                                                       self.mpi_size)
                 if not self.stability:
-                    self.calc_types.mutant[key]['receptor'] = outclass[i]('Mutant-Ligand', self.INPUT,
+                    self.calc_types.mutant[key]['receptor'] = outclass[i]('Mutant-Receptor', self.INPUT,
                                                                           self.using_chamber)
                     self.calc_types.mutant[key]['receptor'].parse_from_file(self.pre + 'mutant_' + basename[i] %
-                                                                          'receptor', self.mpi_size)
+                                                                            'receptor', self.mpi_size)
                     self.calc_types.mutant[key]['ligand'] = outclass[i]('Mutant-Ligand', self.INPUT,
                                                                         self.using_chamber)
                     self.calc_types.mutant[key]['ligand'].parse_from_file(self.pre + 'mutant_' + basename[i] % 'ligand',
-                                                                        self.mpi_size)
+                                                                          self.mpi_size)
                     self.calc_types.mutant[key]['delta'] = BindingStatistics(self.calc_types.mutant[key]['complex'],
                                                                              self.calc_types.mutant[key]['receptor'],
                                                                              self.calc_types.mutant[key]['ligand'],
