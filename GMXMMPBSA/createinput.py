@@ -196,35 +196,29 @@ class SanderGBInput(SanderInput):
                    'imin': 5, 'maxcyc': 1, 'ncyc': 0, 'gbsa': 0, 'ioutfm': 0, 'dec_verbose': 0,
                    # Basic options
                    'igb': 5, 'intdiel': 1.0, 'extdiel': 78.5, 'saltcon': 0.0, 'surften': 0.0072,
-                   'surfoff': 0.0, 'molsurf': 0, 'msoffset': 0.0, 'probe': 1.4,
                    # QM options
                    'ifqnt': 0, 'qmmask': '', 'qm_theory': '', 'qmcharge': 0,
-                   'qmgb': 2, 'qmcut': 999.0, 'qmcharge_com': 0, 'qmcharge_rec': 0,
-                   'qmcharge_lig': 0}
+                   'qmgb': 2, 'qmcut': 999.0}
 
     parent_namelist = {'ntb': 'cntrl', 'cut': 'cntrl', 'nsnb': 'cntrl', 'idecomp': 'cntrl', 'offset': 'cntrl',
                        'imin': 'cntrl', 'maxcyc': 'cntrl', 'ncyc': 'cntrl', 'gbsa': 'cntrl', 'ioutfm': 'cntrl',
                        'dec_verbose': 'cntrl',
                        # Basic options
                        'igb': 'cntrl', 'intdiel': 'cntrl', 'extdiel': 'cntrl', 'saltcon': 'cntrl',
-                       'surften': 'cntrl', 'surfoff': 'cntrl', 'molsurf': 'cntrl', 'msoffset': 'cntrl',
-                       'probe': 'cntrl',
+                       'surften': 'cntrl',
                        # QM options
                        'ifqnt': 'cntrl', 'qmmask': 'qmmm', 'qm_theory': 'qmmm', 'qmcharge': 'qmmm',
-                       'qmgb': 'qmmm', 'qmcut': 'qmmm',
-                       'qmcharge_com': 'qmmm',  'qmcharge_rec': 'qmmm',  'qmcharge_lig': 'qmmm'}
+                       'qmgb': 'qmmm', 'qmcut': 'qmmm'}
 
     name_map = {'ntb': 'ntb', 'cut': 'cut', 'nsnb': 'nsnb', 'idecomp': 'idecomp', 'offset': 'offset',
                 'imin': 'imin', 'gbsa': 'gbsa', 'ioutfm': 'netcdf', 'dec_verbose': 'dec_verbose',
                 'maxcyc': 'gb_maxcyc', 'ncyc': 'ncyc',
                 # Basic options
                 'igb': 'igb', 'intdiel': 'intdiel', 'extdiel': 'extdiel', 'saltcon': 'saltcon',
-                'surften': 'surften', 'surfoff': 'surfoff', 'molsurf': 'molsurf', 'msoffset': 'msoffset',
-                'probe': 'probe',
+                'surften': 'surften',
                 # QM options
                 'ifqnt': 'ifqnt',  'qmmask': 'qmmask', 'qm_theory': 'qm_theory',
-                'qmcharge': 'qmcharge',  'qmgb': 'qmgb', 'qmcut': 'qmcut',
-                'qmcharge_com': 'qmcharge_com',  'qmcharge_rec': 'qmcharge_rec', 'qmcharge_lig': 'qmcharge_lig'}
+                'qmcharge': 'qmcharge', 'qmgb': 'qmgb', 'qmcut': 'qmcut'}
 
 
 # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
