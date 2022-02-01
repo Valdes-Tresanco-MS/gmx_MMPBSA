@@ -871,9 +871,7 @@ class BindingStatistics(dict):
         self.data_keys = self.com.data_keys
         self.composite_keys = []
 
-        for key in self.com.composite_keys:
-            self['DELTA ' + key] = EnergyVector(len(self.com['VDWAALS']))
-            self.composite_keys.append('DELTA ' + key)
+
         self.print_levels = self.com.print_levels
         try:
             self._delta()
@@ -900,6 +898,9 @@ class BindingStatistics(dict):
 
         for key in self.com.data_keys:
             self[key] = self.com[key] - self.rec[key] - self.lig[key]
+        for key in self.com.composite_keys:
+            self['DELTA ' + key] = EnergyVector(len(self.com['VDWAALS']))
+            self.composite_keys.append('DELTA ' + key)
         for key in self.com.data_keys:
             if self.traj_protocol == 'STP' and key in self.st_null:
                 continue

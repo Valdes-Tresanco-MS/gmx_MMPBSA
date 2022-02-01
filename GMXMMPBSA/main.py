@@ -1096,20 +1096,20 @@ class MMPBSA_App(object):
                 self.calc_types.decomp_mutant[key] = {'complex': DecompClass('Mutant-Complex')}
                 self.calc_types.decomp_mutant[key]['complex'].parse_from_file(self.pre + 'mutant_' + basename[i]
                                                                               % 'complex', self.resl, INPUT, surften,
-                                                                              self.mpi_size)
+                                                                              csv_pre, self.mpi_size)
                 if not self.stability:
                     if csv_prefix:
                         csv_pre = csv_prefix % 'rec'
                     self.calc_types.decomp_mutant[key]['receptor'] = DecompClass('Mutant-Receptor')
                     self.calc_types.decomp_mutant[key]['receptor'].parse_from_file(self.pre + 'mutant_' + basename[i]
                                                                                    % 'receptor', rec_list, INPUT,
-                                                                                   surften, self.mpi_size)
+                                                                                   surften, csv_pre, self.mpi_size)
                     if csv_prefix:
                         csv_pre = csv_prefix % 'lig'
                     self.calc_types.decomp_mutant[key]['ligand'] = DecompClass('Mutant-Ligand')
                     self.calc_types.decomp_mutant[key]['ligand'].parse_from_file(self.pre + 'mutant_' + basename[i]
                                                                                  % 'ligand', lig_list, INPUT,
-                                                                                 surften, self.mpi_size)
+                                                                                 surften, csv_pre, self.mpi_size)
                     if csv_prefix:
                         csv_pre = self.pre + f'{key}_bind'
                     self.calc_types.decomp_mutant[key]['delta'] = DecompBindingClass(
