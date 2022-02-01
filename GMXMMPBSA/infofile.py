@@ -106,7 +106,7 @@ class InfoFile(object):
         #TODO Add checking for differences in FILES
         inputre = re.compile(r'''INPUT\['(\S+)'\] = (.*)''')
         filesre = re.compile(r'''FILES\.(\S+) = (.*)''')
-        otherre = re.compile(r'(\S+) = (\S+)')
+        otherre = re.compile(r'(\S+) = (.*)')
         infile = open(name, 'r')
         input_text = ''
         for line in infile:
@@ -116,20 +116,18 @@ class InfoFile(object):
             if line.startswith('|'):
                 input_text += line
                 continue
-            rematch = inputre.match(line)
-            if rematch:
+            if rematch := inputre.match(line):
                 var, val = rematch.groups()
                 val = _determine_type(val)
                 self.app.INPUT[var] = val
                 continue
-            rematch = filesre.match(line)
-            if rematch:
+            if rematch := filesre.match(line):
                 var, val = rematch.groups()
                 val = _determine_type(val)
                 setattr(self.app.FILES, var, val)
                 continue
-            rematch = otherre.match(line)
-            if rematch:
+            if rematch := otherre.match(line):
+                print(line)
                 var, val = rematch.groups()
                 val = _determine_type(val)
                 if var == 'size':
