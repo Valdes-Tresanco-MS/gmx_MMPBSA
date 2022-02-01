@@ -976,14 +976,14 @@ class MMPBSA_App(object):
 
                     if key in ['gb', 'pb', 'rism std', 'rism gf']:
                         if 'ie' in self.calc_types.normal:
-                            edata = self.calc_types.normal[key]['delta']['DELTA GGAS']
+                            edata = self.calc_types.normal[key]['delta']['GGAS']
                             ie = InteractionEntropyCalc(edata, self,
                                                         self.pre + f"{key.replace(' ', '_')}_iteraction_entropy.dat")
                             self.calc_types.normal['ie'].parse_from_dict(key, {'data': ie.data, 'iedata': ie.iedata,
                                                                                'ieframes': ie.ieframes,
                                                                                'sigma': ie.ie_std})
                         if 'c2' in self.calc_types.normal:
-                            edata = self.calc_types.normal[key]['delta']['DELTA GGAS']
+                            edata = self.calc_types.normal[key]['delta']['GGAS']
                             c2 = C2EntropyCalc(edata, self, self.pre + f"{key.replace(' ', '_')}_c2_entropy.dat")
                             self.calc_types.normal['c2'][key] = {'c2data': c2.c2data, 'sigma': c2.ie_std,
                                                                  'c2_std': c2.c2_std, 'c2_ci': c2.c2_ci}
@@ -1007,14 +1007,14 @@ class MMPBSA_App(object):
                                                                              self.using_chamber, self.traj_protocol)
                     if key in ['gb', 'pb', 'rism std', 'rism gf']:
                         if 'ie' in self.calc_types.mutant:
-                            edata = self.calc_types.mutant[key]['delta']['DELTA GGAS']
+                            edata = self.calc_types.mutant[key]['delta']['GGAS']
                             mie = InteractionEntropyCalc(edata, self, self.pre + 'mutant_' +
                                                          f"{key.replace(' ', '_')}_iteraction_entropy.dat")
                             self.calc_types.mutant['ie'].parse_from_dict(key, {'data': mie.data, 'iedata': mie.iedata,
                                                                                'ieframes': mie.ieframes,
                                                                                'sigma': mie.ie_std})
                         if 'c2' in self.calc_types.mutant:
-                            edata = self.calc_types.mutant[key]['delta']['DELTA GGAS']
+                            edata = self.calc_types.mutant[key]['delta']['GGAS']
                             c2 = C2EntropyCalc(edata, self, self.pre + 'mutant_' +
                                                f"{key.replace(' ', '_')}_c2_entropy.dat")
                             self.calc_types.mutant['c2'][key] = {'c2data': c2.c2data, 'sigma': c2.ie_std,
