@@ -654,7 +654,7 @@ class InteractionEntropyCalc:
         with open(self.output, 'w') as out:
             out.write(f'Calculation for last {self.ieframes} frames:\n')
             out.write(f'Interaction Entropy (-TΔS): {self.iedata.mean():9.4f} +/- {self.iedata.std():7.4f}\n\n')
-            out.write(f'Interaction Entropy per-frame:\n')
+            out.write('Interaction Entropy per-frame:\n')
 
             out.write('Frame # | IE value\n')
             for f, d in zip(self.frames, self.data):
@@ -680,23 +680,21 @@ class C2EntropyCalc:
         # gas constant in kcal/(mol⋅K)
         R = 0.001987
         temperature = self.app.INPUT['temperature']
-        self.c2frames = math.ceil(self.app.numframes * (self.app.INPUT['c2_segment'] / 100))
-        self.ie_std = self.ggas[-self.c2frames:].std()
+        self.ie_std = self.ggas.std()
         self.c2data = (self.ie_std ** 2) / (2 * temperature * R)
 
         array_of_c2 = np.zeros(2000)
         for i in range(2000):
-            idxs = np.random.randint(0, len(self.ggas[-self.c2frames:]), len(self.ggas[-self.c2frames:]))
-            self.ie_std = self.ggas[-self.c2frames:][idxs].std()
-            self.c2data = (self.ie_std ** 2) / (2 * temperature * R)
-            array_of_c2[i] = self.c2data
+            idxs = np.random.randint(0, len(self.ggas), len(self.ggas))
+            ie_std = self.ggas[idxs].std()
+            c2data = (ie_std ** 2) / (2 * temperature * R)
+            array_of_c2[i] = c2data
 
         self.c2_std = np.sort(array_of_c2)[100:1900].std()
         self.c2_ci = np.percentile(np.sort(array_of_c2)[100:1900], [2.5, 97.5])
 
     def save_output(self):
         with open(self.output, 'w') as out:
-            out.write(f'Calculation for last {self.c2frames} frames:\n')
             out.write(f'C2 Entropy (-TΔS): {self.c2data:.4f}\n\n')
 
 
