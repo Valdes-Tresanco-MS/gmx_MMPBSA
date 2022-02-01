@@ -63,7 +63,7 @@ sys_name="C2_entropy",
 startframe=5, 
 endframe=21, 
 forcefields="oldff/leaprc.ff99SB,leaprc.gaff",
-c2_entropy=1, c2_segment=100, temperature=300,
+c2_entropy=1, temperature=300,
 /
 &gb
 igb=5, saltcon=0.150,
@@ -81,7 +81,7 @@ parameters needed for the MM/PB(GB)SA calculation. In this case, 16 frames `(end
 are going to be used when performing the MM/PB(GB)SA calculation with the igb5 (GB-OBC2) model and a 
 salt concentration = 0.15M.
 
-[C2 Entropy][4] will be calculated using all (100%) the frames (`c2_segment=100`). Of note, C2 method tends to give 
+[C2 Entropy][4] will be calculated using all (100%) the frames. Of note, C2 method tends to give 
 unrealistically large entropies when the standard deviation of the interaction energy > ~ 3.6kcal/mol. Of note, two other 
 methods (`QH` and `nmode`) can be used for estimating the entropic contribution, though they are way more expensive in 
 computation as compared with C2 method.
