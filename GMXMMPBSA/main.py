@@ -1029,7 +1029,7 @@ class MMPBSA_App(object):
         triggers = ('gbrun', 'pbrun')
         basename = ('%s_gb.mdout', '%s_pb.mdout')
         INPUT, FILES = self.INPUT, self.FILES
-
+        headers = {'gb': 'Generalized Born', 'pb': 'Poisson Boltzmann'}
         if INPUT['idecomp'] in [1, 2]:
             DecompBindingClass = DecompBinding
             DecompClass = DecompOut
@@ -1087,7 +1087,7 @@ class MMPBSA_App(object):
                     self.calc_types.decomp_normal[key]['delta'] = DecompBindingClass(
                         self.calc_types.decomp_normal[key]['complex'], self.calc_types.decomp_normal[key]['receptor'],
                         self.calc_types.decomp_normal[key]['ligand'], INPUT, csv_pre,
-                        'Energy Decomposition Analysis (All units kcal/mol): Generalized Born solvent')
+                        f'Energy Decomposition Analysis (All units kcal/mol): {headers[key]} model')
 
             if INPUT['alarun']:
                 # Do mutant
@@ -1115,8 +1115,7 @@ class MMPBSA_App(object):
                     self.calc_types.decomp_mutant[key]['delta'] = DecompBindingClass(
                         self.calc_types.decomp_mutant[key]['complex'], self.calc_types.decomp_mutant[key]['receptor'],
                         self.calc_types.decomp_mutant[key]['ligand'], INPUT, csv_pre,
-                        f'Energy Decomposition Analysis (All units kcal/mol): Generalized Born solvent '
-                        f'({self.mut_str})')
+                        f'Energy Decomposition Analysis (All units kcal/mol): {headers[key]} model ({self.mut_str})')
 
 
 # Local methods

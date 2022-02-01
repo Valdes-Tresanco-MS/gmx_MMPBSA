@@ -1507,7 +1507,7 @@ class DecompBinding(dict):
                 text.extend([[DecompOut.descriptions[term]],
                              ['Residue', 'Internal', '', '', 'van der Waals', '', '', 'Electrostatic',
                               '', '', 'Polar Solvation', '', '', 'Non-Polar Solv.', '', '', 'TOTAL', '', ''],
-                             ['', ''] + ['Avg.', 'Std. Dev.', 'Std. Err. of Mean'] * 6])
+                             [''] + ['Avg.', 'Std. Dev.', 'Std. Err. of Mean'] * 6])
             else:
                 text.extend([DecompOut.descriptions[term],
                              'Residue        |       Internal      |    van der Waals    |    Electrostatic    '
