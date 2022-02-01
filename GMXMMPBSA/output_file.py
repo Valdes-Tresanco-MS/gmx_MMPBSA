@@ -199,8 +199,6 @@ def write_outputs(app):
             final_output.add_comment('Interaction Entropy calculations performed using last %s frames.' %
                                      ceil(app.numframes * (INPUT['ie_segment'] / 100)))
         if INPUT['c2_entropy']:
-            final_output.add_comment('C2 Entropy calculations performed using last %s frames.' %
-                                     ceil(app.numframes * (INPUT['c2_segment'] / 100)))
             final_output.add_comment('C2 Entropy Std. Dev. and Conf. Interv. (95%) have been obtained by '
                                      'bootstrapping with number of re-samplings = 2000')
     if INPUT['pbrun']:

@@ -340,7 +340,7 @@ class IEout(dict):
 
 class C2out(dict):
     """
-    Interaction Entropy output
+    C2 Entropy output
     """
 
     def __init__(self, **kwargs):
@@ -358,9 +358,9 @@ class C2out(dict):
         _output_format = 0 if output_format == 'ascii' else 1
         text = []
         if _output_format:
-            text.append(['Model', 'σ(Int. Energy)', 'Value', 'Std. Dev.', 'Conf. Interv. (95%)'])
+            text.append(['Model', 'σ(Int. Energy)', 'C2 Value', 'Std. Dev.', 'Conf. Interv. (95%)'])
         else:
-            text.append('Model           σ(Int. Energy)      Value         Std. Dev.   Conf. Interv. (95%)\n' +
+            text.append('Model           σ(Int. Energy)    C2 Value         Std. Dev.   Conf. Interv. (95%)\n' +
                         '-------------------------------------------------------------------------------')
 
         for model in self:
