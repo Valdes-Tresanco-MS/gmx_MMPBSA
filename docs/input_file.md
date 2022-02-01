@@ -13,8 +13,7 @@ on GROMACS *.mdp files. The input file contains sections called `namelist` where
 calculation. The allowed namelists are:
 
 - [`&general`](input_file.md#general-namelist-variables): contains variables that apply to all aspects of the 
-  calculation or 
-parameters required for building AMBER topologies from GROMACS files.
+calculation or parameters required for building AMBER topologies from GROMACS files.
 - [`&gb`](input_file.md#gb-namelist-variables): unique variables to Generalized Born (GB) calculations
 - [`&pb`](input_file.md#pb-namelist-variables): unique variables to Poisson Boltzmann (PB) calculations
 - [`&rism`](input_file.md#rism-namelist-variables): unique variables to 3D-RISM calculations
@@ -353,14 +352,6 @@ Interaction Entropy, _e.g._: `ie_segment = 25` means that the last quartile of t
 
   [10]: https://pubs.acs.org/doi/full/10.1021/acs.jctc.1c00374
   [11]: https://pubs.acs.org/doi/full/10.1021/acs.jctc.8b00418
-
-
-`c2_segment` (Default = 25)
-:    Representative segment (in %), starting from the last frame, for the calculation of the
-C2 Entropy, _e.g._: `ie_segment = 25` means that the last quartile of the total number of frames
-(`(endframe-startframe)/interval`) will be used to calculate the C2 Entropy.
-
-    _New in v1.5.0_
 
 #### **Miscellaneous options**
 
