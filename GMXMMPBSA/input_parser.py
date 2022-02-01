@@ -422,7 +422,6 @@ input_file.addNamelist('general', 'general',
                            ['interaction_entropy', int, 0, 'Do Interaction Entropy calculation'],
                            ['ie_segment', int, 25, 'Trajectory segment to calculate interaction entropy'],
                            ['c2_entropy', int, 0, 'Do C2 Entropy calculation'],
-                           ['c2_segment', int, 25, 'Trajectory segment to calculate c2 entropy'],
 
                             # Miscellaneous options
                            ['assign_chainID', int, 0, 'Assign chains ID'],
