@@ -80,7 +80,7 @@ class InfoFile(object):
         # Now print out the FILES
         for var in dir(self.app.FILES):
             # Skip over __method__ functions and output files
-            if var.startswith('_') or var in ('rewrite_output', 'energyout', 'dec_energies', 'overwrite'):
+            if var.startswith('_') or var in ('rewrite_output', 'energyout', 'overwrite'):
                 continue
             outfile.write("FILES.%s = %s\n" % (var, self.write_var(getattr(self.app.FILES, var))))
 
@@ -96,6 +96,7 @@ class InfoFile(object):
 
     def read_info(self, name=None):
         """ Reads a _MMPBSA_info file and populates the app """
+        # FIXME: get this info from the info or h5 file
         from GMXMMPBSA.commandlineparser import OptionList
         # Give self.app a FILES attribute if it does not have one yet before
         # trying to modify it
@@ -127,7 +128,6 @@ class InfoFile(object):
                 setattr(self.app.FILES, var, val)
                 continue
             if rematch := otherre.match(line):
-                print(line)
                 var, val = rematch.groups()
                 val = _determine_type(val)
                 if var == 'size':
