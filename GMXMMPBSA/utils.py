@@ -444,91 +444,30 @@ def selector(selection: str):
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-def remove(flag, mpi_size=0, fnpre='_GMXMMPBSA_'):
+def remove(flag, fnpre='_GMXMMPBSA_'):
     """ Removes temporary files. Allows for different levels of cleanliness """
-
-    # A list of all input files that we keep for the flag -use-mdins
-    input_files = [fnpre + 'gb.mdin', fnpre + 'pb.mdin', fnpre + 'pb.mdin2',
-                   fnpre + 'gb_decomp_com.mdin', fnpre + 'gb_decomp_rec.mdin',
-                   fnpre + 'gb_decomp_lig.mdin', fnpre + 'pb_decomp_com.mdin',
-                   fnpre + 'pb_decomp_rec.mdin', fnpre + 'pb_decomp_lig.mdin',
-                   fnpre + 'cpptrajentropy.in',
-                   fnpre + 'mutant_cpptrajentropy.in',
-                   fnpre + 'gb_qmmm_com.mdin', fnpre + 'gb_qmmm_rec.mdin',
-                   fnpre + 'gb_qmmm_lig.mdin']
-
-    # All the extra files we keep for keep_files = 1
-    keep_files_1 = [fnpre + 'ligand.mdcrd', fnpre + 'ligand.nc',
-                    fnpre + 'mutant_ligand.mdcrd', fnpre + 'mutant_ligand.nc',
-                    fnpre + 'complex.mdcrd', fnpre + 'mutant_complex.mdcrd',
-                    fnpre + 'complex.nc', fnpre + 'mutant_complex.nc',
-                    fnpre + 'receptor.mdcrd', fnpre + 'mutant_receptor.mdcrd',
-                    fnpre + 'receptor.nc', fnpre + 'mutant_receptor.nc',
-                    fnpre + 'dummycomplex.inpcrd', fnpre + 'complex.pdb',
-                    fnpre + 'dummyreceptor.inpcrd', fnpre + 'receptor.pdb',
-                    fnpre + 'dummyligand.inpcrd', fnpre + 'ligand.pdb',
-                    fnpre + 'mutant_dummycomplex.inpcrd',
-                    fnpre + 'mutant_dummyreceptor.inpcrd',
-                    fnpre + 'mutant_dummyligand.inpcrd',
-                    fnpre + 'mutant_complex.pdb', fnpre + 'mutant_receptor.pdb',
-                    fnpre + 'mutant_ligand.pdb', fnpre + 'complex_nm.mdcrd',
-                    fnpre + 'complex_nm.nc', fnpre + 'mutant_complex_nm.mdcrd',
-                    fnpre + 'mutant_complex_nm.nc', fnpre + 'receptor_nm.mdcrd',
-                    fnpre + 'receptor_nm.nc', fnpre + 'mutant_receptor_nm.nc',
-                    fnpre + 'mutant_receptor_nm.mdcrd', fnpre + 'ligand_nm.nc',
-                    fnpre + 'ligand_nm.mdcrd', fnpre + 'mutant_ligand_nm.nc',
-                    fnpre + 'mutant_ligand_nm.mdcrd', fnpre + 'avgcomplex.pdb',
-                    fnpre + 'mutant_avgcomplex.pdb', fnpre + 'ligand_entropy.out',
-                    fnpre + 'complex_entropy.out', fnpre + 'receptor_entropy.out',
-                    fnpre + 'cpptraj_entropy.out',
-                    fnpre + 'mutant_cpptraj_entropy.out',
-                    fnpre + 'mutant_complex_entropy.out',
-                    fnpre + 'mutant_receptor_entropy.out',
-                    fnpre + 'mutant_ligand_entropy.out',
-                    fnpre + 'complex_gb.mdout', fnpre + 'mutant_complex_gb.mdout',
-                    fnpre + 'receptor_gb.mdout', fnpre + 'mutant_receptor_gb.mdout',
-                    fnpre + 'ligand_gb.mdout', fnpre + 'mutant_ligand_gb.mdout',
-                    fnpre + 'complex_pb.mdout', fnpre + 'mutant_complex_pb.mdout',
-                    fnpre + 'receptor_pb.mdout', fnpre + 'mutant_receptor_pb.mdout',
-                    fnpre + 'ligand_pb.mdout', fnpre + 'mutant_ligand_pb.mdout',
-                    fnpre + 'complex_rism.mdout',
-                    fnpre + 'mutant_complex_rism.mdout',
-                    fnpre + 'receptor_rism.mdout',
-                    fnpre + 'mutant_receptor_rism.mdout',
-                    fnpre + 'ligand_rism.mdout', fnpre + 'mutant_ligand_rism.mdout',
-                    fnpre + 'complex_nm.out', fnpre + 'mutant_complex_nm.out',
-                    fnpre + 'receptor_nm.out', fnpre + 'mutant_receptor_nm.out',
-                    fnpre + 'ligand_nm.out', fnpre + 'mutant_ligand_nm.out',
-                    fnpre + 'complex_gb_surf.dat', fnpre + 'receptor_gb_surf.dat',
-                    fnpre + 'ligand_gb_surf.dat',
-                    fnpre + 'mutant_complex_gb_surf.dat',
-                    fnpre + 'mutant_receptor_gb_surf.dat',
-                    fnpre + 'mutant_ligand_gb_surf.dat', fnpre + 'info']
-
     # Collect all of the temporary files (those starting with _GMXMMPBSA_)
     allfiles = os.listdir(os.getcwd())
-    tempfiles = [fil for fil in allfiles if fil.startswith(fnpre) or fil.startswith('#COM_traj_') or
-                 fil.startswith('#REC_traj_') or fil.startswith('#LIG_traj_')]
-    if flag == -1:  # internal -- keep all mdin files
-        for fil in tempfiles:
-            if fil not in input_files:
+
+    other_files = ['COM.prmtop', 'REC.prmtop', 'LIG.prmtop', 'MUT_COM.prmtop', 'MUT_REC.prmtop', 'MUT_LIG.prmtop',
+                   'leap.log']
+    result_files = ['gmx_MMPBSA.log', 'FINAL_RESULTS_MMPBSA.dat', 'FINAL_DECOMP_MMPBSA.dat']
+    if flag == -1:
+        for fil in allfiles:
+            if (
+                    fil.startswith(fnpre) or
+                    bool(re.match('#?(COM|REC|LIG|MUT_COM|MUT_REC|MUT_LIG)_traj_(\d)\.xtc', fil)) or
+                    fil == 'RESULTS_gmx_MMPBSA.h5' or
+                    fil in other_files or
+                    fil in result_files):
                 os.remove(fil)
+
     elif flag == 0:  # remove all temporary files
-        for fil in tempfiles:
-            os.remove(fil)
-    elif flag == 1:  # keep keep mdcrds, mdouts, and other relevant output files
-        for fil in tempfiles:
-            if fil in keep_files_1:
-                continue  # keep this file
-            # Now we have to split out this file and analyze the base. If the
-            # suffix is just a number (corresponding to a thread-specific output
-            # file or trajectory), then we only want to remove it if in the base
-            # name is not in keep_files_1
-            base, ext = os.path.splitext(fil)
-            if ext.strip('.').isdigit() and base in keep_files_1:
-                continue
-            # if we've made it this far, remove the file
-            os.remove(fil)
+        for fil in allfiles:
+
+            if fil.startswith(fnpre) or bool(re.match('#?(COM|REC|LIG|MUT_COM|MUT_REC|MUT_LIG)_traj_(\d)\.xtc',
+                                                      fil)) or fil in other_files:
+                os.remove(fil)
 
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

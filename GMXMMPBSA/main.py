@@ -518,7 +518,7 @@ class MMPBSA_App(object):
         self.timer.add_timer('setup_gmx', 'Total GROMACS setup time:')
         self.timer.start_timer('setup_gmx')
         if not self.FILES.rewrite_output and self.master:
-            self.remove(0)
+            self.remove(-1)
 
         # Find external programs IFF we are doing a calc
         external_progs = find_progs(self.INPUT, self.mpi_size) if self.master else {}
@@ -602,7 +602,7 @@ class MMPBSA_App(object):
         write_outputs(self)
         if self.INPUT['decomprun']:
             write_decomp_output(self)
-        if self.INPUT['keep_files'] in [1, 2]:
+        if self.INPUT['keep_files'] in [0, 2]:
             # Store the calc_types data in a h5 file
             Data2h5(self)
         self.timer.stop_timer('output')
@@ -640,8 +640,12 @@ class MMPBSA_App(object):
         end = 0
         if self.FILES.gui and not self.FILES.rewrite_output:
             import subprocess
+            from pathlib import Path
             logging.info('Opening gmx_MMPBSA_ana to analyze results...\n')
-            g = subprocess.Popen(['gmx_MMPBSA_ana', '-f', self.FILES.prefix + 'info'])
+            ifile = Path(self.FILES.prefix + 'info')
+            if not ifile.exists():
+                ifile = Path('RESULTS_gmx_MMPBSA.h5')
+            g = subprocess.Popen(['python', '/home/mario/PycharmProjects/gmx_MMPBSA/run_ana.py', '-f', ifile.as_posix()])
             if g.wait():
                 end = 1
         if end:
@@ -901,7 +905,7 @@ class MMPBSA_App(object):
         """ Removes temporary files """
         if not self.master:
             return
-        utils.remove(flag, mpi_size=self.mpi_size, fnpre=self.pre)
+        utils.remove(flag, fnpre=self.pre)
 
     def sync_mpi(self):
         """ Throws up a barrier """
@@ -976,14 +980,14 @@ class MMPBSA_App(object):
 
                     if key in ['gb', 'pb', 'rism std', 'rism gf']:
                         if 'ie' in self.calc_types.normal:
-                            edata = self.calc_types.normal[key]['delta']['DELTA GGAS']
+                            edata = self.calc_types.normal[key]['delta']['GGAS']
                             ie = InteractionEntropyCalc(edata, self,
                                                         self.pre + f"{key.replace(' ', '_')}_iteraction_entropy.dat")
                             self.calc_types.normal['ie'].parse_from_dict(key, {'data': ie.data, 'iedata': ie.iedata,
                                                                                'ieframes': ie.ieframes,
                                                                                'sigma': ie.ie_std})
                         if 'c2' in self.calc_types.normal:
-                            edata = self.calc_types.normal[key]['delta']['DELTA GGAS']
+                            edata = self.calc_types.normal[key]['delta']['GGAS']
                             c2 = C2EntropyCalc(edata, self, self.pre + f"{key.replace(' ', '_')}_c2_entropy.dat")
                             self.calc_types.normal['c2'][key] = {'c2data': c2.c2data, 'sigma': c2.ie_std,
                                                                  'c2_std': c2.c2_std, 'c2_ci': c2.c2_ci}
@@ -1007,14 +1011,14 @@ class MMPBSA_App(object):
                                                                              self.using_chamber, self.traj_protocol)
                     if key in ['gb', 'pb', 'rism std', 'rism gf']:
                         if 'ie' in self.calc_types.mutant:
-                            edata = self.calc_types.mutant[key]['delta']['DELTA GGAS']
+                            edata = self.calc_types.mutant[key]['delta']['GGAS']
                             mie = InteractionEntropyCalc(edata, self, self.pre + 'mutant_' +
                                                          f"{key.replace(' ', '_')}_iteraction_entropy.dat")
                             self.calc_types.mutant['ie'].parse_from_dict(key, {'data': mie.data, 'iedata': mie.iedata,
                                                                                'ieframes': mie.ieframes,
                                                                                'sigma': mie.ie_std})
                         if 'c2' in self.calc_types.mutant:
-                            edata = self.calc_types.mutant[key]['delta']['DELTA GGAS']
+                            edata = self.calc_types.mutant[key]['delta']['GGAS']
                             c2 = C2EntropyCalc(edata, self, self.pre + 'mutant_' +
                                                f"{key.replace(' ', '_')}_c2_entropy.dat")
                             self.calc_types.mutant['c2'][key] = {'c2data': c2.c2data, 'sigma': c2.ie_std,

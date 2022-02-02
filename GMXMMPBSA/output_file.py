@@ -379,16 +379,16 @@ def write_outputs(app):
                 if stability:
                     qh_davg, qh_dstd = _get_diff(sys_norm['TOTAL'], qhnorm['Total'])
                 else:
-                    qh_davg, qh_dstd = _get_diff(sys_norm['DELTA TOTAL'], qhnorm['Total'])
+                    qh_davg, qh_dstd = _get_diff(sys_norm['TOTAL'], qhnorm['Total'])
                 final_output.add_section('Using Quasi-harmonic Entropy Approximation:\n'
                                          f'ΔG{"" if stability else " binding"} = {qh_davg:9.4f} +/- {qh_dstd:7.4f}\n')
             if not stability:
                 if INPUT['interaction_entropy']:
-                    ie_davg, ie_dstd = _get_sum(sys_norm['DELTA TOTAL'], ienorm[key]['iedata'])
+                    ie_davg, ie_dstd = _get_sum(sys_norm['TOTAL'], ienorm[key]['iedata'])
                     final_output.add_section(f"Using Interaction Entropy Approximation:\n"
                                              f"ΔG binding = {ie_davg:9.4f} +/- {ie_dstd:7.4f}\n")
                 if INPUT['c2_entropy']:
-                    c2_davg, sys_dstd = _get_sum(sys_norm['DELTA TOTAL'], c2norm[key]['c2data'])
+                    c2_davg, sys_dstd = _get_sum(sys_norm['TOTAL'], c2norm[key]['c2data'])
                     c2_dstd = utils.get_std(sys_dstd, c2norm[key]['c2_std'])
                     final_output.add_section(f"Using C2 Entropy Approximation:\n"
                                              f"ΔG binding = {c2_davg:9.4f} +/- {c2_dstd:7.4f}\n")
@@ -396,7 +396,7 @@ def write_outputs(app):
                 if stability:
                     nm_davg, nm_dstd = _get_diff(sys_norm['TOTAL'], nm_sys_norm['Total'])
                 else:
-                    nm_davg, nm_dstd = _get_diff(sys_norm['DELTA TOTAL'], nm_sys_norm['Total'])
+                    nm_davg, nm_dstd = _get_diff(sys_norm['TOTAL'], nm_sys_norm['Total'])
                     final_output.add_section('Using Normal Mode Entropy Approximation:\n'
                                              f'ΔG{"" if stability else " binding"} = {nm_davg:9.4f} +/- {nm_dstd:7.4f}\n')
 
@@ -417,23 +417,23 @@ def write_outputs(app):
                 if stability:
                     mqh_davg, mqh_dstd = _get_diff(sys_mut['TOTAL'], qhmutant['Total'])
                 else:
-                    mqh_davg, mqh_dstd = _get_diff(sys_mut['DELTA TOTAL'], qhmutant['Total'])
+                    mqh_davg, mqh_dstd = _get_diff(sys_mut['TOTAL'], qhmutant['Total'])
                 final_output.add_section('Using Quasi-harmonic Entropy Approximation:\n'
                                          f'ΔG{"" if stability else " binding"} = {mqh_davg:9.4f} +/- {mqh_dstd:7.4f}\n')
             if not stability:
                 if INPUT['interaction_entropy']:
-                    mie_davg, mie_dstd = _get_sum(sys_mut['DELTA TOTAL'], iemutant[key]['iedata'])
+                    mie_davg, mie_dstd = _get_sum(sys_mut['TOTAL'], iemutant[key]['iedata'])
                     final_output.add_section(f"Using Interaction Entropy Approximation:\n"
                                              f"ΔG binding = {mie_davg:9.4f} +/- {mie_dstd:7.4f}\n")
                 if INPUT['c2_entropy']:
-                    mc2_davg, mc2_dstd = _get_sum(sys_mut['DELTA TOTAL'], c2mutant[key]['c2data'])
+                    mc2_davg, mc2_dstd = _get_sum(sys_mut['TOTAL'], c2mutant[key]['c2data'])
                     final_output.add_section(f"Using C2 Entropy Approximation:\n"
                                              f"ΔG binding = {mc2_davg:9.4f} +/- {mc2_dstd:7.4f}\n")
             if INPUT['nmoderun']:
                 if stability:
                     mnm_davg, mnm_dstd = _get_diff(sys_mut['TOTAL'], nm_sys_mut['Total'])
                 else:
-                    mnm_davg, mnm_dstd = _get_diff(sys_mut['DELTA TOTAL'], nm_sys_mut['Total'])
+                    mnm_davg, mnm_dstd = _get_diff(sys_mut['TOTAL'], nm_sys_mut['Total'])
                 final_output.add_section('Using Normal Mode Entropy Approximation:\n'
                                          f'ΔG{"" if stability else " binding"} = {mnm_davg:9.4f} +/- {mnm_dstd:7.4f}\n')
 
@@ -441,7 +441,7 @@ def write_outputs(app):
             if stability:
                 ddh_davg, ddh_dstd = _get_diff(sys_mut['TOTAL'], sys_norm['TOTAL'], True)
             else:
-                ddh_davg, ddh_dstd = _get_diff(sys_mut['DELTA TOTAL'], sys_norm['DELTA TOTAL'], True)
+                ddh_davg, ddh_dstd = _get_diff(sys_mut['TOTAL'], sys_norm['TOTAL'], True)
             final_output.write(f'\nRESULT OF ALANINE SCANNING ({mut_str}):\n' 
                                f'ΔΔH binding = {ddh_davg:9.4f} +/- {ddh_dstd:7.4f}\n')
 

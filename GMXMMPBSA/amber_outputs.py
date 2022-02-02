@@ -899,13 +899,13 @@ class BindingStatistics(dict):
         for key in self.com.data_keys:
             self[key] = self.com[key] - self.rec[key] - self.lig[key]
         for key in self.com.composite_keys:
-            self['DELTA ' + key] = EnergyVector(len(self.com['VDWAALS']))
-            self.composite_keys.append('DELTA ' + key)
+            self[key] = EnergyVector(len(self.com['VDWAALS']))
+            self.composite_keys.append(key)
         for key in self.com.data_keys:
             if self.traj_protocol == 'STP' and key in self.st_null:
                 continue
             for component in self.com.data_key_owner[key]:
-                self['DELTA ' + component] = self[key] + self['DELTA ' + component]
+                self[component] = self[key] + self[component]
 
     def _print_vectors(self, csvwriter):
         """ Output all of the energy terms including the differences if we're
@@ -949,14 +949,15 @@ class BindingStatistics(dict):
             else:
                 text.append('WARNING: INCONSISTENCIES EXIST WITHIN INTERNAL POTENTIAL' +
                             '\nTERMS. THE VALIDITY OF THESE RESULTS ARE HIGHLY QUESTIONABLE\n')
-        if _output_format:
-            text.extend(self.com.summary(output_format))
-            text.extend(self.rec.summary(output_format))
-            text.extend(self.lig.summary(output_format))
-        else:
-            text.append(self.com.summary())
-            text.append(self.rec.summary())
-            text.append(self.lig.summary())
+        if self.com.INPUT['verbose']:
+            if _output_format:
+                text.extend(self.com.summary(output_format))
+                text.extend(self.rec.summary(output_format))
+                text.extend(self.lig.summary(output_format))
+            else:
+                text.append(self.com.summary())
+                text.append(self.rec.summary())
+                text.append(self.lig.summary())
 
         if isinstance(self.com, NMODEout):
             col_name = '%-16s' % 'Entropy Term'
@@ -964,10 +965,10 @@ class BindingStatistics(dict):
             col_name = '%-16s' % 'Energy Component'
 
         if _output_format:
-            text.extend([['Differences (Complex - Receptor - Ligand):'],
+            text.extend([['Delta (Complex - Receptor - Ligand):'],
                          [col_name] + ['Average', 'SD(Prop.)', 'SD', 'SEM(Prop.)', 'SEM']])
         else:
-            text.append('Differences (Complex - Receptor - Ligand):\n' + f'{col_name:16s}' +
+            text.append('Delta (Complex - Receptor - Ligand):\n' + f'{col_name:16s}' +
                         '       Average     SD(Prop.)         SD   SEM(Prop.)        SEM\n' +
                         '-------------------------------------------------------------------------------')
 
@@ -975,14 +976,14 @@ class BindingStatistics(dict):
             # Skip the composite terms, since we print those at the end
             if key in self.composite_keys:
                 continue
-            # Skip chamber terms if we aren't using chamber prmtops
-            if not self.chamber and key in ['UB', 'IMP', 'CMAP']:
-                continue
-            if self.com.INPUT['sander_apbs'] and key == 'EDISPER':
-                continue
+            # # Skip chamber terms if we aren't using chamber prmtops
+            # if not self.chamber and key in ['UB', 'IMP', 'CMAP']:
+            #     continue
+            # if self.com.INPUT['sander_apbs'] and key == 'EDISPER':
+            #     continue
             # Catch special case of NMODEout classes
             if isinstance(self.com, NMODEout) and key == 'Total':
-                printkey = '\nTΔS binding ='
+                printkey = '\n-TΔS binding ='
             else:
                 printkey = key
             # Now print out the stats
@@ -997,15 +998,15 @@ class BindingStatistics(dict):
             sem = std / sqrt(num_frames)
 
             if _output_format:
-                text.append([printkey, avg, stdev, std, semp, sem])
+                text.append(['Δ' + printkey, avg, stdev, std, semp, sem])
             else:
-                text.append(f'{printkey:16s} {avg:13.2f} {stdev:13.2f} {std:10.2f} {semp:12.2f} {sem:10.2f}')
+                text.append(f"{'Δ' + printkey:16s} {avg:13.2f} {stdev:13.2f} {std:10.2f} {semp:12.2f} {sem:10.2f}")
 
         if self.composite_keys:
             text.append('')
         for key in self.composite_keys:
             # Now print out the composite terms
-            if key == 'DELTA TOTAL':
+            if key == 'TOTAL':
                 text.append('')
             stdev = self[key].stdev()
             avg = self[key].mean()
@@ -1018,9 +1019,9 @@ class BindingStatistics(dict):
             sem = std / sqrt(num_frames)
                 # num_frames is the same as the one from above
             if _output_format:
-                text.append([key, avg, stdev, std, semp, sem])
+                text.append(['Δ' + key, avg, stdev, std, semp, sem])
             else:
-                text.append(f'{key:16s} {avg:13.2f} {stdev:13.2f} {std:10.2f} {semp:12.2f} {sem:10.2f}')
+                text.append(f"{'Δ' + key:16s} {avg:13.2f} {stdev:13.2f} {std:10.2f} {semp:12.2f} {sem:10.2f}")
 
         return text if _output_format else '\n'.join(text) + '\n'
 

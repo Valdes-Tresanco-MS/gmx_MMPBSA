@@ -442,8 +442,7 @@ input_file.addNamelist('general', 'general',
 # FIXME: strip_mask -> para GROMACS se hace con la variable solvated_trajectory
                            ['strip_mask', str, strip_mask, 'Amber mask to strip from solvated prmtop'],
 
-# FIXME: removed
-                           # ['verbose', int, 1, 'How many energy terms to print in the final output']
+                           ['verbose', int, 1, 'How many energy terms to print in the final output']
                        ], trigger=None)
 
 input_file.addNamelist('gb', 'gb',
