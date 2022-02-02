@@ -10,8 +10,9 @@ endframe=10,
 forcefields="oldff/leaprc.ff99SB",
 /
 &pb
+npbopt=1,
 indi=10.0, istrng=0.15,                                                     
-radiopt=0, npbopt=1,                                           
+radiopt=0,
 eneopt=1, cutnb=8.0,
 /
 # check these threads 
