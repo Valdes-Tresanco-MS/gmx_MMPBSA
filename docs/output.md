@@ -108,24 +108,24 @@ TOTAL                    36.05          5.41       4.16         1.35       1.04 
 Differences (Complex - Receptor - Ligand):                                          |---> Differences in Energetic components                
 Energy Component       Average     SD(Prop.)         SD   SEM(Prop.)        SEM     |                                                        
 -------------------------------------------------------------------------------     |                                                        
-BOND                      0.00         30.48       0.00         7.62       0.00     |---> bond potential term                                
-ANGLE                     0.00         39.08       0.00         9.77       0.00     |---> angle potential term                               
-DIHED                    -0.00         21.45       0.00         5.36       0.00     |---> dihedral potential term                            
-VDWAALS                 -58.89         20.10       2.31         5.03       0.58     |---> van der Waals contribution                         
-EEL                     -31.13         31.78       3.04         7.95       0.76     |---> electrostatic contribution                         
-1-4 VDW                   0.00         21.23       0.00         5.31       0.00     |---> van der Waals 1-4 contribution                     
-1-4 EEL                  -0.00         32.57       0.00         8.14       0.00     |---> electrostatic 1-4 contribution                     
-EGB                      40.99         22.99       1.41         5.75       0.35     |---> polar contribution to the solvation free energy    
-ESURF                    -8.22          0.84       0.09         0.21       0.02     |---> non-polar contribution to the solvation free energy
-                                                                                    |                                                        
-DELTA GGAS              -90.02         37.61       3.31         9.40       0.83     |---> = BOND + ANGLE + DIHED + VDWAALS + EEL             
-DELTA GSOLV              32.77         23.00       1.37         5.75       0.34     |---> = EGB + ESURF                                      
-                                                                                    |                                                        
-DELTA TOTAL             -57.25         44.08       2.55        11.02       0.64     |---> = DELTA G gas + DELTA G solv                       
+ΔBOND                     0.00         30.48       0.00         7.62       0.00     |---> bond potential term                                
+ΔANGLE                    0.00         39.08       0.00         9.77       0.00     |---> angle potential term                               
+ΔDIHED                   -0.00         21.45       0.00         5.36       0.00     |---> dihedral potential term                            
+ΔVDWAALS                -58.89         20.10       2.31         5.03       0.58     |---> van der Waals contribution                         
+ΔEEL                    -31.13         31.78       3.04         7.95       0.76     |---> electrostatic contribution                         
+Δ1-4 VDW                  0.00         21.23       0.00         5.31       0.00     |---> van der Waals 1-4 contribution                     
+Δ1-4 EEL                 -0.00         32.57       0.00         8.14       0.00     |---> electrostatic 1-4 contribution                     
+ΔEGB                     40.99         22.99       1.41         5.75       0.35     |---> polar contribution to the solvation free energy    
+ΔESURF                   -8.22          0.84       0.09         0.21       0.02     |---> non-polar contribution to the solvation free energy
+                                                                                    |                                                                                                                                         
+ΔGGAS                   -90.02         37.61       3.31         9.40       0.83     |---> = ΔBOND + ΔANGLE + ΔDIHED + ΔVDWAALS + ΔEEL             
+ΔGSOLV                   32.77         23.00       1.37         5.75       0.34     |---> = ΔEGB + ΔESURF                                      
+                                                                                    |                                                                                                                                       
+ΔTOTAL                  -57.25         44.08       2.55        11.02       0.64     |---> = ΔGGAS + ΔGSOLV                       
 -------------------------------------------------------------------------------
 -------------------------------------------------------------------------------
 Using C2 Entropy Approximation:                                                     |---> binding free energy
-ΔG binding =  -50.1911 +/- 44.1339                                                  |     ΔG binding = ΔH - TΔS
+ΔG binding =  -50.1911 +/- 44.1339                                                  |     ΔG binding = ΔTOTAL - TΔS
 -------------------------------------------------------------------------------
 -------------------------------------------------------------------------------
 ```
