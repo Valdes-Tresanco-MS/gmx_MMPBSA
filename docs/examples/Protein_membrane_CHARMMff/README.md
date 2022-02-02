@@ -64,9 +64,9 @@ startframe=1,
 endframe=4,
 /
 &pb
-memopt=1, emem=7.0, indi=4.0,
-mctrdz=-10.383, mthick=36.086, poretype=1,
-radiopt=0, indi=4.0, istrng=0.150, fillratio=1.25, inp=2,
+memopt=1, emem=7.0, indi=1.0,
+mctrdz=37, mthick=40, poretype=1,
+radiopt=0, istrng=0.150, fillratio=1.25, inp=2,
 sasopt=0, solvopt=2, ipb=1, bcopt=10, nfocus=1, linit=1000,
 eneopt=1, cutfd=7.0, cutnb=99.0,
 maxarcdot=15000,
@@ -99,8 +99,8 @@ input file will contain all the parameters needed for the MM/PB(GB)SA calculatio
     The value of `emem` should always be set to a value greater than or equal to `indi` (solute dielectric constant, 
     4 in this example) and less than `exdi` (solvent dielectric constant, 80.0 default). 
 
-    The thickness is controlled by the `mthick` option (36.086 Å in this case). The center of the membrane region is 
-    controlled with `mctrdz` and in this case the membrane region will be centered at -10.383 Å down of the center 
+    The thickness is controlled by the `mthick` option (40 Å in this case). The center of the membrane region is 
+    controlled with `mctrdz` and in this case the membrane region will be centered at 37 Å from the center 
     of the protein. If calculations are performed on a protein with a solvent-filled channel region, this 
     region would be identified automatically by setting `poretype=1`.
 
