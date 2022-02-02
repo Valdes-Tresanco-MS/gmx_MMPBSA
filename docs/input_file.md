@@ -781,7 +781,7 @@ that of the water. ([ref.][248])
 `solvopt` (Default = 1)
 :   Option to select iterative solvers.
 
-    * 1 Modified ICCG or Periodic (PICCG) if `bcopt = 10` is.
+    * 1 Modified ICCG or Periodic (PICCG) if `bcopt = 10`.
     * 2 Geometric multigrid. A four-level v-cycle implementation is applied by default.
     * 3 Conjugate gradient (Periodic version available under `bcopt = 10`). This option requires a large
     `linit` to converge.
@@ -1546,10 +1546,13 @@ startframe=1, endframe=100, interval=1,
 /
 
 &pb
-radiopt=0, indi=20.0, istrng=0.150, fillratio=1.25, ipb=1, 
-nfocus=1, bcopt=10, eneopt=1, cutfd=7.0, cutnb=99.0, npbverb=1,
-solvopt=2, inp=2, memopt=1, emem=7.0, mctrdz=-10.383, 
-mthick=36.086, poretype=1, maxarcdot=15000
+memopt=1, emem=7.0, indi=4.0,
+mctrdz=-10.383, mthick=36.086, poretype=1,
+radiopt=0, indi=4.0, istrng=0.150, fillratio=1.25, inp=2,
+sasopt=0, solvopt=2, ipb=1, bcopt=10, nfocus=1, linit=1000,
+eneopt=1, cutfd=7.0, cutnb=99.0,
+maxarcdot=15000,
+npbverb=1,
 /
 ```
 
