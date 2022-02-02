@@ -747,6 +747,8 @@ that of the water. ([ref.][248])
 
     _New in v1.5.0_
 
+[<img src="../assets/prot_memb.png" height="200" width="258" align="right"/>]()
+
 `mthick` (Default = 40)
 :   Membrane thickness (in Å). This is different from the previous default of 20 Å.
 

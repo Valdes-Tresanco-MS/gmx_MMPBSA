@@ -92,19 +92,14 @@ for MMPBSA with membrane proteins have been included.
     slab-like planar region of uniform dielectric constant running parallel to the xy plane. The dielectric constant 
     can be controlled using `emem`. We set the membrane interior dielectric constant to a value of 7.0 in this example. 
     The value of `emem` should always be set to a value greater than or equal to `indi` (solute dielectric constant, 
-    4 in this example) and less than `exdi` (solvent dielectric constant, 80.0 default). 
+    4 in this example) and less than `exdi` (solvent dielectric constant, 80.0 default).
+
+    [<img src="../../assets/prot_memb.png" height="200" width="258" align="right"/>]()
 
     The thickness is controlled by the `mthick` option (36.086 Å in this case). The center of the membrane region is 
     controlled with `mctrdz` and in this case the membrane region will be centered at -10.383 Å down of the center 
     of the protein. If calculations are performed on a protein with a solvent-filled channel region, this 
     region would be identified automatically by setting `poretype=1`.
-
-    
-    !!! Danger
-        Note that we used a smaller `fillratio=1.25` compared to the defult one (4.0). Be cautious when changing this 
-        parameter as its increase may lead to a considerable RAM usage (specially when running the program in parralel). 
-        Just for your information, using the default `fillratio=4.0` in this relatively small system requieres as much as 
-        ~30GB per thread :exploding_head: and more time to finish the calculation.
     
     When using the implicit membrane model, the default `sasopt=0`, _i.e._ the classical solvent excluded
     surface, is recommended due to its better numerical behavior. When running with the default options, the program 
@@ -126,6 +121,12 @@ for MMPBSA with membrane proteins have been included.
     properly decomposed. Since `EPB` and `EEL` are combined into the "gas phase" term, the gas and solvation terms 
     can't be separated. Nevertheless, the total ΔTOTAL should be perfectly fine, since everything is sum up together 
     in the end.
+
+    !!! Danger
+        Note that we used a smaller `fillratio=1.25` compared to the defult one (4.0). Be cautious when changing this 
+        parameter as its increase may lead to a considerable RAM usage (specially when running the program in parralel). 
+        Just for your information, using the default `fillratio=4.0` in this relatively small system requieres as much as 
+        ~30GB per thread :exploding_head: and more time to finish the calculation.
 
 !!! note
     Once the calculation is done, you can analyze the results in `gmx_MMPBSA_ana` (if you didn't define `-nogui`). 
