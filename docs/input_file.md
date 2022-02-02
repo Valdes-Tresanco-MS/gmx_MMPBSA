@@ -406,11 +406,11 @@ in the PATH variable. In this path the following executables will be searched: `
     _New in v1.1.1_
 
 `keep_files`
-:   Specifies which temporary files are kept.
+:   Specifies which files are kept.
 
-    * 0: Delete all temporary files
-    * 1: Keep only Hierarchical Data Format (h5) file
-    * 1: Keep all temporary files and Hierarchical Data Format (h5) file
+    * 0: Keep only Hierarchical Data Format (h5) file
+    * 1: Keep all temporary files (_prefix_*)
+    * 2: Keep all temporary files and Hierarchical Data Format (h5) file
 
 `netcdf` (Default = 0)
 :   Specifies whether to use NetCDF trajectories internally rather than writing temporary ASCII trajectory
@@ -434,6 +434,14 @@ However, this option is incompatible with alanine scanning.
 :   Use sander for energy calculations, even when `mmpbsa_py_energy` will suffice.
 
     _Removed in v1.5.0: Now sander is used in all calculations_
+
+verbose (Default = 0)
+:   Specifies how much output is printed in the output file.
+
+    * 0: Print only difference terms
+    * 1: Print all complex, receptor, ligand, and difference terms
+
+    _Updated in v1.5.0_
 
 `strip_mask` (Default = ":WAT,Cl*,CIO,Cs+,IB,K*,Li+,MG*,Na+,Rb+,CS,RB,NA,F,CL")          
 :   Amber mask to strip from solvated prmtop.

@@ -10,138 +10,140 @@ title: Output files
 This is how a typical output file looks like:
 
 ```
-| Run on Wed Jun 16 02:53:07 2021                                                   |---> Date of running
+| Run on Mon Jan 31 02:21:02 2022                                                   |---> Date of running
 |
-|Input file:
-|--------------------------------------------------------------                     | 
-|Sample input file for GB calculation                                               |
-|#This input file is meant to show only that gmx_MMPBSA works. Although, we         |
-|#tried to use the input files as recommended in the                                |
-|#Amber manual, some parameters have been changed to perform more expensive         |
-|#calculations in a reasonable amount of time. Feel free to change the              |
-|#parameters according to what is better for your system.                           |
-|&general                                                                           |
-|startframe=301, endframe=1000, verbose=2, PBRadii=3, interval=7,                   |---> Input file (*.in) 
-|/                                                                                  |
-|&gb                                                                                |
-|igb=2, saltcon=0.150,                                                              |
-|/                                                                                  |
-|&pb                                                                                |
-|istrng=0.15, fillratio=4.0, radiopt=0,                                             |
-|/                                                                                  |
-|--------------------------------------------------------------
-|gmx_MMPBSA Version=v1.4.3+6.g25a02b8 based on MMPBSA.py v.16.0                     |---> gmx_MMPBSA version used
-|Complex topology file:           COM.prmtop                                        |
-|Receptor topology file:          REC.prmtop                                        |
-|Ligand topology file:            LIG.prmtop                                        |
-|Initial mdcrd(s):                COM_traj_0.xtc                                    |
+|gmx_MMPBSA Version=v1.4.3+393.g73cc94c based on MMPBSA.py v.16.0                   |---> gmx_MMPBSA version used        
+|Complex Structure file:                                                 com.tpr    |                                    
+|Complex (AMBER) topology file:                                       COM.prmtop    |                                    
+|Receptor (AMBER) topology file:                                      REC.prmtop    |---> input files used                                 
+|Ligand Structure file:                                              ligand.mol2    |                                    
+|Complex (AMBER) topology file:                                       LIG.prmtop    |                                    
+|Initial trajectories:                                            COM_traj_0.xtc    |                                    
 |                                                                                   
-|Receptor mask:                  ":1-266"                                           |  
-|Ligand mask:                    ":267"                                             |---> receptor and ligand information
-|Ligand residue name is "MFU"                                                       |
-|                                                                                   
-|Calculations performed using 100 complex frames.                                   |
-|Poisson Boltzmann calculations performed using internal PBSA solver in sander.     |
-|                                                                                   |---> general description of the 
-|Generalized Born ESURF calculated using 'LCPO' surface areas                       |     method used and units
+|Receptor mask:                  ":1-240"                                           |                                    
+|Ligand mask:                    ":241"                                             |---> receptor and ligand masks                                     
+|Ligand residue name is "RAL"                                                       |                                    
+|                                                                                                                       
+|Calculations performed using 16 complex frames.                                    |---> general description of the     
+|C2 Entropy calculations performed using last 16 frames.                            |     methods used and units         
+|C2 Entropy Std. Dev. and Conf. Interv. (95%) have been obtained                    |                                    
+|by bootstrapping with number of re-samplings = 2000                                |                                    
 |                                                                                   |
-|All units are reported in kcal/mole.                                               |
+|Generalized Born ESURF calculated using 'LCPO' surface areas                       |
+|                                                                                   |
+|Using temperature = 300.00 K)                                                      |
+|All units are reported in kcal/mol.                                                |
+|                                                                                   |
+|SD - Standard Deviation,  SEM - Standard Error of the Mean                         |
+|(Prop.) - Propagation of uncertainty                                               |
+|(https://en.wikipedia.org/wiki/Propagation_of_uncertainty#Example_formulae)        |
 -------------------------------------------------------------------------------
--------------------------------------------------------------------------------
+-------------------------------------------------------------------------------     |
+ENTROPY RESULTS (C2 ENTROPY):                                                       |---> entropy results in case                                                                                                                                                                                          
+Model           σ(Int. Energy)      Value         Std. Dev.   Conf. Interv. (95%)   |     any entropy aproximation was
+-------------------------------------------------------------------------------     |     used                        
+gb                  2.900           7.055           2.117         4.641-12.542      |
+-------------------------------------------------------------------------------     |
+-------------------------------------------------------------------------------     
 
-GENERALIZED BORN:                                                                   |---> results for GB calculation
+GENERALIZED BORN:                                                                   |---> model used (GB in this case)
 
 Complex:
-Energy Component            Average              Std. Dev.   Std. Err. of Mean      |
--------------------------------------------------------------------------------     |
-BOND                       759.4785               23.3077              2.3308       |
-ANGLE                     1803.1508               30.8183              3.0818       |
-DIHED                     3216.1217               18.5641              1.8564       |
-VDWAALS                  -2085.3102               15.8085              1.5808       |
-EEL                     -18735.2906               44.2758              4.4276       |
-1-4 VDW                    873.7890               11.3567              1.1357       |
-1-4 EEL                  11088.2966               34.0205              3.4021       |---> Energetic components (complex)
-EGB                      -2349.7950               20.1898              2.0190       |
-ESURF                       74.5964                0.4837              0.0484       |
-                                                                                    |
-G gas                    -3079.7641               46.8525              4.6852       |
-G solv                   -2275.1986               20.1875              2.0187       |
-                                                                                    |
-TOTAL                    -5354.9627               39.7488              3.9749       |
+Energy Component       Average     SD(Prop.)         SD   SEM(Prop.)        SEM     |                                   
+-------------------------------------------------------------------------------     |                                   
+BOND                    730.92         21.73      21.73         5.43       5.43     |                                   
+ANGLE                  2022.96         27.54      27.54         6.89       6.89     |                                   
+DIHED                  2631.46         15.99      15.99         4.00       4.00     |                                   
+VDWAALS               -2035.53         14.81      14.81         3.70       3.70     |                                   
+EEL                  -16750.43         22.60      22.60         5.65       5.65     |                                   
+1-4 VDW                 911.73         15.17      15.17         3.79       3.79     |                                   
+1-4 EEL               10292.96         23.03      23.03         5.76       5.76     |---> Energy components (complex)
+EGB                   -3270.77         15.90      15.90         3.98       3.98     |                                   
+ESURF                    96.07          0.58       0.58         0.15       0.15     |                                   
+                                                                                    |                                   
+GGAS                  -2195.93         54.56      33.37        13.64       8.34     |                                   
+GSOLV                 -3174.70         15.91      15.72         3.98       3.93     |                                   
+                                                                                    |                                   
+TOTAL                 -5370.63         56.84      31.88        14.21       7.97     |                                   
 
 
 Receptor:
-Energy Component            Average              Std. Dev.   Std. Err. of Mean      |                                   
--------------------------------------------------------------------------------     |                                   
-BOND                       752.3559               22.9770              2.2977       |                                   
-ANGLE                     1787.7219               30.5141              3.0514       |                                   
-DIHED                     3211.0390               18.6469              1.8647       |                                   
-VDWAALS                  -2066.0693               15.3943              1.5394       |                                   
-EEL                     -18584.3471               43.8360              4.3836       |                                   
-1-4 VDW                    873.7890               11.3567              1.1357       |                                   
-1-4 EEL                  11088.2966               34.0205              3.4021       |---> Energetic components (receptor)
-EGB                      -2365.3357               20.2920              2.0292       |                                   
-ESURF                       75.1071                0.4790              0.0479       |                                   
-                                                                                    |                                   
-G gas                    -2937.2141               46.8804              4.6880       |                                   
-G solv                   -2290.2286               20.2874              2.0287       |                                   
-                                                                                    |                                   
-TOTAL                    -5227.4426               39.5203              3.9520       |                                   
+Energy Component       Average     SD(Prop.)         SD   SEM(Prop.)        SEM     |                                    
+-------------------------------------------------------------------------------     |                                    
+BOND                    719.57         21.28      21.28         5.32       5.32     |                                    
+ANGLE                  1996.26         27.60      27.60         6.90       6.90     |                                    
+DIHED                  2597.25         13.84      13.84         3.46       3.46     |                                    
+VDWAALS               -1972.61         13.52      13.52         3.38       3.38     |                                    
+EEL                  -16735.20         22.33      22.33         5.58       5.58     |                                    
+1-4 VDW                 895.00         14.81      14.81         3.70       3.70     |                                    
+1-4 EEL               10339.15         23.01      23.01         5.75       5.75     |---> Energy components (receptor)
+EGB                   -3288.63         16.59      16.59         4.15       4.15     |                                    
+ESURF                    99.77          0.61       0.61         0.15       0.15     |                                    
+                                                                                    |                                    
+GGAS                  -2160.58         53.26      35.11        13.31       8.78     |                                    
+GSOLV                 -3188.86         16.60      16.39         4.15       4.10     |                                    
+                                                                                    |                                    
+TOTAL                 -5349.43         55.78      32.13        13.95       8.03     |                                    
 
 
 Ligand:
-Energy Component            Average              Std. Dev.   Std. Err. of Mean      |                                   
--------------------------------------------------------------------------------     |                                   
-BOND                         7.1226                2.2202              0.2220       |                                   
-ANGLE                       15.4289                2.9490              0.2949       |                                   
-DIHED                        5.0827                0.5376              0.0538       |                                   
-VDWAALS                     -1.9909                0.3267              0.0327       |                                   
-EEL                        -96.9811                2.5449              0.2545       |                                   
-EGB                        -25.3239                1.3225              0.1322       |                                   
-ESURF                        2.2611                0.0154              0.0015       |---> Energetic components (ligand)
-                                                                                    |                                   
-G gas                      -71.3377                5.0695              0.5070       |                                   
-G solv                     -23.0628                1.3164              0.1316       |                                   
-                                                                                    |                                   
-TOTAL                      -94.4005                4.4250              0.4425       |                                   
-                                                                                                                       
-                                                                                                                       
-Differences (Complex - Receptor - Ligand):                                          |---> Differences in Energetic components
-Energy Component            Average              Std. Dev.   Std. Err. of Mean      |
--------------------------------------------------------------------------------     |
-BOND                        -0.0000                0.0000              0.0000       |---> bond potential term
-ANGLE                       -0.0000                0.0000              0.0000       |---> angle potential term
-DIHED                        0.0000                0.0001              0.0000       |---> dihedral potential term
-VDWAALS                    -17.2500                2.4428              0.2443       |---> van der Waals contribution
-EEL                        -53.9624                4.2749              0.4275       |---> electrostatic contribution
-1-4 VDW                      0.0000                0.0000              0.0000       |---> van der Waals 1-4 contribution
-1-4 EEL                      0.0000                0.0000              0.0000       |---> electrostatic 1-4 contribution
-EGB                         40.8646                2.0983              0.2098       |---> polar contribution to the solvation free energy
-ESURF                       -2.7718                0.0462              0.0046       |---> non-polar contribution to the solvation free energy 
+Energy Component       Average     SD(Prop.)         SD   SEM(Prop.)        SEM     |                                  
+-------------------------------------------------------------------------------     |                                  
+BOND                     11.35          1.94       1.94         0.48       0.48     |                                  
+ANGLE                    26.70          2.68       2.68         0.67       0.67     |                                  
+DIHED                    34.21          3.59       3.59         0.90       0.90     |                                  
+VDWAALS                  -4.03          1.35       1.35         0.34       0.34     |                                  
+EEL                      15.90          0.96       0.96         0.24       0.24     |                                  
+1-4 VDW                  16.73          1.19       1.19         0.30       0.30     |                                  
+1-4 EEL                 -46.19          0.94       0.94         0.24       0.24     |---> Energy components (ligand)
+EGB                     -23.14          0.63       0.63         0.16       0.16     |                                  
+ESURF                     4.52          0.02       0.02         0.00       0.00     |                                  
+                                                                                    |                                  
+GGAS                     54.67          5.37       3.97         1.34       0.99     |                                  
+GSOLV                   -18.61          0.63       0.63         0.16       0.16     |                                  
                                                                                     |
-DELTA G gas                -71.2123                3.3059              0.3306       |---> = BOND + ANGLE + DIHED + VDWAALS + EEL
-DELTA G solv                38.0928                2.1012              0.2101       |---> = EGB + ESURF
-                                                                                    |
-DELTA TOTAL                -33.1195                2.1204              0.2120       |---> = DELTA G gas + DELTA G solv
+TOTAL                    36.05          5.41       4.16         1.35       1.04     |
 
 
+Differences (Complex - Receptor - Ligand):                                          |---> Differences in Energetic components                
+Energy Component       Average     SD(Prop.)         SD   SEM(Prop.)        SEM     |                                                        
+-------------------------------------------------------------------------------     |                                                        
+BOND                      0.00         30.48       0.00         7.62       0.00     |---> bond potential term                                
+ANGLE                     0.00         39.08       0.00         9.77       0.00     |---> angle potential term                               
+DIHED                    -0.00         21.45       0.00         5.36       0.00     |---> dihedral potential term                            
+VDWAALS                 -58.89         20.10       2.31         5.03       0.58     |---> van der Waals contribution                         
+EEL                     -31.13         31.78       3.04         7.95       0.76     |---> electrostatic contribution                         
+1-4 VDW                   0.00         21.23       0.00         5.31       0.00     |---> van der Waals 1-4 contribution                     
+1-4 EEL                  -0.00         32.57       0.00         8.14       0.00     |---> electrostatic 1-4 contribution                     
+EGB                      40.99         22.99       1.41         5.75       0.35     |---> polar contribution to the solvation free energy    
+ESURF                    -8.22          0.84       0.09         0.21       0.02     |---> non-polar contribution to the solvation free energy
+                                                                                    |                                                        
+DELTA GGAS              -90.02         37.61       3.31         9.40       0.83     |---> = BOND + ANGLE + DIHED + VDWAALS + EEL             
+DELTA GSOLV              32.77         23.00       1.37         5.75       0.34     |---> = EGB + ESURF                                      
+                                                                                    |                                                        
+DELTA TOTAL             -57.25         44.08       2.55        11.02       0.64     |---> = DELTA G gas + DELTA G solv                       
+-------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
+Using C2 Entropy Approximation:                                                     |---> binding free energy
+ΔG binding =  -50.1911 +/- 44.1339                                                  |     ΔG binding = ΔH - TΔS
 -------------------------------------------------------------------------------
 -------------------------------------------------------------------------------
 ```
 
-The header of the output file will contain information about the calculation. It will show a copy of the input file as
-well as the names of all files that were used in the calculation (topology files and coordinate file(s)). If the masks
+The header of the output file will contain information about the calculation. It will also show the names of all files 
+that were used in the calculation (topology files and coordinate file(s)). If the masks
 were not specified, it prints its best guess so that you can verify its accuracy, along with the residue name of the
-ligand (if it is only a single residue). The energy and entropy contributions are broken up into their components as
-they are in sander and `nmode` or `ptraj`. The contributions are further broken into `G gas` and `G solv`. The polar and
-non-polar contributions are `EGB` (or `EPB`) and `ESURF` (or `ECAVITY` / `ENPOLAR`), respectively for `GB` (or `PB`) 
-calculations. A single trajectory does not produce any differences between bond lengths, angles, or dihedrals
-between the complex and receptor/ligand structures. Thus, when subtracted they cancel completely. This includes the
-`BOND`, `ANGLE`, `DIHED`, and `1-4 interactions`. If inconsistencies are found, these values are displayed and inconsistency
-warnings are printed. When this occurs the results are generally useless. Of course this does not hold for the multiple
-trajectory protocol, and so all energy components are printed in this case. Finally, all warnings generated during the
-calculation that do not result in fatal errors are printed after calculation details but before any results.
-
+ligand (if it is only a single residue). After that, general information about methods, units, constants used is 
+included. Entropy results are shown next in case any entropy approximation was used. Next, the energy and entropy 
+contributions are broken up into their components as they are in `sander` and `nmode` or `cpptraj`. The contributions 
+are further broken for the complex, receptor and ligand into `GGAS` and `GSOLV`. `GGAS` is the interaction energy 
+and is obtained after sum the internal(bonded) components (`BOND` + `ANGLE` + `DIHED`) and the 
+non-bonded (`VDWAALS` + `EEL`) components. For `GSOLV`, the polar and non-polar contributions are `EGB` (or `EPB`) 
+and `ESURF` (or `ENPOLAR + EDISPER`), respectively for `GB` (or `PB`) calculations. A single trajectory protocol does 
+not produce any differences between bond lengths, angles, or dihedrals between the complex and receptor/ligand 
+structures. Thus, when subtracted they cancel completely. This includes the `BOND`, `ANGLE`, `DIHED`, and `1-4 
+interactions`. If inconsistencies are found, these values are displayed and inconsistency warnings are printed. When 
+this occurs the results are generally useless. Of course this does not hold for the multiple trajectory protocol.
 
 ## Temporary Files
 
