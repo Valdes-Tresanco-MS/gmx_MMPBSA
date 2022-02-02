@@ -116,8 +116,8 @@ for MMPBSA with membrane proteins have been included.
     computed with the particle-particle particle-mesh (P3M) procedure outlined in Lu and Luo.[8] In doing so, 
     energy term `EPB` in the output file is set to zero, while `EEL` term includes both the reaction field 
     energy (`EPB`) and the Coulombic energy (`EEL`). The van der Waals energy is computed along with the 
-    particle-particle portion of the Coulombic energy. This option requires a nonzero CUTNB (in this case, `cutnb=8.0`) 
-    and BCOPT = 5 (default option). It's noteworthy mentioning that `ΔGGAS` and `ΔGSOLV` as reported are no longer 
+    particle-particle portion of the Coulombic energy. This option requires a nonzero CUTNB (in this case, `cutnb=8.0`).
+    It's noteworthy mentioning that `ΔGGAS` and `ΔGSOLV` as reported are no longer 
     properly decomposed. Since `EPB` and `EEL` are combined into the "gas phase" term, the gas and solvation terms 
     can't be separated. Nevertheless, the total ΔTOTAL should be perfectly fine, since everything is sum up together 
     in the end.
