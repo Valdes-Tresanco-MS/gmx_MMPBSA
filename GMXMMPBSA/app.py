@@ -78,7 +78,7 @@ def gmxmmpbsa():
     # Perform our MMPBSA --clean now
     if app.FILES.clean:
         logging.info('Cleaning temporary files and quitting.\n')
-        app.remove(0)
+        app.remove(-1)
         sys.exit(0)
 
     # See if we wanted to print out our input file options
