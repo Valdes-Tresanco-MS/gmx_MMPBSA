@@ -489,7 +489,7 @@ input_file.addNamelist('pb', 'pb',
                            ['indi', float, 1, 'Internal dielectric constant'],
                            ['exdi', float, 80, 'External dielectric constant'],
                            ['emem', float, 1.0, 'Membrane dielectric constant'],
-                           ['smoothopt', int, 1, 'Instructs PB how to set up dielectric values for finite-difference '
+                           ['smoothopt', int, 1, 'Set up dielectric values for finite-difference '
                                                  'grid edges that are located across the solute/solvent dielectric '
                                                  'boundary'],
                            ['istrng', float, 0.0, 'Ionic strength (M)'],
@@ -582,28 +582,28 @@ input_file.addNamelist('rism', 'rism',
                            ['buffer', float, 14, 'Distance between solute and edge of grid'],
                            ['solvcut', float, -1, 'Cutoff of the box'],
                            ['grdspc', list, 0.5, 'Grid spacing', float],
-['ng', list, '-1,-1,-1', 'Number of grid points', int],
-['solvbox', list, '-1,-1,-1', 'Box limits', int],
+                           ['ng', list, '-1,-1,-1', 'Number of grid points', int],
+                           ['solvbox', list, '-1,-1,-1', 'Box limits', int],
 
                            ['tolerance', list, 1.0e-5, 'Convergence tolerance', float],
-['ljTolerance', float, -1.0, 'Determines the Lennard-Jones cutoff distance based on the '
+                           ['ljTolerance', float, -1.0, 'Determines the Lennard-Jones cutoff distance based on the '
                                                         'desired accuracy of the calculation'],
-['asympKSpaceTolerance', float, -1.0, 'Determines the reciprocal space long range '
+                           ['asympKSpaceTolerance', float, -1.0, 'Determines the reciprocal space long range '
                                                                  'asymptotics cutoff distance based on the desired '
                                                                  'accuracy of the calculation'],
-['treeDCF', int, 1, 'Use direct sum or the treecode approximation to calculate the direct '
+                           ['treeDCF', int, 1, 'Use direct sum or the treecode approximation to calculate the direct '
                                                'correlation function long-range asymptotic correction'],
                            ['treeTCF', int, 1, 'Use direct sum or the treecode approximation to calculate the total '
                                                'correlation function long-range asymptotic correction'],
                            ['treeCoulomb', int, 0, 'Use direct sum or the treecode approximation to calculate the '
                                                    'Coulomb potential energy'],
-['treeDCFMAC', float, 0.1, 'Treecode multipole acceptance criterion for the direct '
+                           ['treeDCFMAC', float, 0.1, 'Treecode multipole acceptance criterion for the direct '
                                                       'correlation function long-range asymptotic correction'],
                            ['treeTCFMAC', float, 0.1, 'Treecode multipole acceptance criterion for the total '
                                                       'correlation function long-range asymptotic correction'],
                            ['treeCoulombMAC', float, 0.1, 'Treecode multipole acceptance criterion for the Coulomb '
                                                           'potential energy'],
-['treeDCFOrder', int, 2, 'Treecode Taylor series order for the direct correlation function '
+                           ['treeDCFOrder', int, 2, 'Treecode Taylor series order for the direct correlation function '
                                                     'long-range asymptotic correction'],
                            ['treeTCFOrder', int, 2, 'Treecode Taylor series order for the total correlation function '
                                                     'long-range asymptotic correction'],
@@ -617,16 +617,16 @@ input_file.addNamelist('rism', 'rism',
                                                    'correction'],
                            ['treeCoulombN0', int, 500, 'Maximum number of grid points contained within the treecode '
                                                        'leaf clusters for the Coulomb potential energy'],
-['mdiis_del', float, 0.7, 'MDIIS step size'],
-['mdiis_nvec', int, 5, 'Number of previous iterations MDIIS uses to predict a new solution'],
-['mdiis_restart', float, 10.0, 'If the current residual is mdiis_restart times larger than '
+                           ['mdiis_del', float, 0.7, 'MDIIS step size'],
+                           ['mdiis_nvec', int, 5, 'Number of previous iterations MDIIS uses to predict a new solution'],
+                           ['mdiis_restart', float, 10.0, 'If the current residual is mdiis_restart times larger than '
                                                           'the smallest residual in memory, then the MDIIS procedure '
                                                           'is restarted using the lowest residual solution stored in '
                                                           'memory'],
-['maxstep', int, 10000, 'Maximum number of iterative steps per solution'],
-['npropagate', int, 5, 'Number of previous solutions to use in predicting a new solution'],
+                           ['maxstep', int, 10000, 'Maximum number of iterative steps per solution'],
+                           ['npropagate', int, 5, 'Number of previous solutions to use in predicting a new solution'],
                            ['polardecomp', int, 0, 'Break solv. energy into polar and nonpolar terms'],
-['entropicDecomp', int, 0, 'Decomposes solvation free energy into energy and entropy '
+                           ['entropicDecomp', int, 0, 'Decomposes solvation free energy into energy and entropy '
                                                       'components'],
                            ['rism_verbose', int, 0, 'Control how much 3D-RISM info to print'],
                            ['thermo', str, 'std', 'Type of thermodynamic analysis to do']

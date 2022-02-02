@@ -333,7 +333,7 @@ Interaction Entropy, _e.g._: `ie_segment = 25` means that the last quartile of t
      * 1: perform C2
 
     !!! note "Keep in mind"
-        - The Interaction Entropy can be calculated independently of the solvent model used.
+        - The C2 Entropy can be calculated independently of the solvent model used.
         - A tutorial on the use of C2 Entropy is 
         available [here](examples/Entropy_calculations/C2_Entropy/README.md)
         - The standard deviation of the interaction energy (`σIE`) should always be reported.
@@ -376,6 +376,12 @@ will be omitted in the correlation analysis
 
     _New in v1.4.0_
 
+`full_traj` (Default = 0)
+:   Print trajectories
+
+    * 0: Print only thread trajectories in *.mdcrd format
+    * 1: Print a full traj and the thread trajectories in *.mdcrd format
+
 `gmx_path` 
 :   Define a path to search for GROMACS executables. This path takes precedence over the path defined
 in the PATH variable. In this path the following executables will be searched: `gmx`, `gmx_mpi`, `gmx_d`, or
@@ -394,10 +400,17 @@ in the PATH variable. In this path the following executables will be searched: `
             &gb
             igb=5, saltcon=0.150  
             /
-            
+           
             # replace this "/home/programs/gromacs/bin" with the path to the GROMACS you want to use.
 
     _New in v1.1.1_
+
+`keep_files`
+:   Specifies which temporary files are kept.
+
+    * 0: Delete all temporary files
+    * 1: Keep only Hierarchical Data Format (h5) file
+    * 1: Keep all temporary files and Hierarchical Data Format (h5) file
 
 `netcdf` (Default = 0)
 :   Specifies whether to use NetCDF trajectories internally rather than writing temporary ASCII trajectory
@@ -408,7 +421,7 @@ However, this option is incompatible with alanine scanning.
     * 1: Use temporary NetCDF trajectories
 
 `solvated_trajectory` (Default = 1)
-:   Define if it is necessary to generate a clean trajectory with no water and ions
+:   Define if it is necessary to generate a clean trajectory with no water and ions.
     
     * 0: Don’t
     * 1: Generate clean trajectory
@@ -418,24 +431,12 @@ However, this option is incompatible with alanine scanning.
     _Updated in v1.5.0. Bugs fixed_
 
 `use_sander`
-:   Use sander for energy calculations, even when `mmpbsa_py_energy` will suffice
+:   Use sander for energy calculations, even when `mmpbsa_py_energy` will suffice.
 
     _Removed in v1.5.0: Now sander is used in all calculations_
 
-`keep_files` 
-:   The variable that specifies which temporary files are kept.
-
-    _Removed in v1.5.0: Now all generated trajectory and mdout files created by sander simulations are kept_
-
-`debug_printlevel`
-:   `gmx_MMPBSA` prints errors by raising exceptions and print all tracebacks which aids in debugging of issues.
-    
-    _Removed in v1.5.0: Since we improved verbose logging, this variable is not needed_
-
-`verbose`
-:   The variable that specifies how much output is printed in the output file.
-
-    _Removed in v1.5.0: Always print all terms (including bonded) for complex, receptor, and ligand_
+`strip_mask` (Default = ":WAT,Cl*,CIO,Cs+,IB,K*,Li+,MG*,Na+,Rb+,CS,RB,NA,F,CL")          
+:   Amber mask to strip from solvated prmtop.
 
 ### **`&gb` namelist variables**
 
