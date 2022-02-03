@@ -606,19 +606,17 @@ class InteractionEntropyCalc:
     :return {IE_key: data}
     """
 
-    def __init__(self, ggas, app, output):
+    def __init__(self, ggas, INPUT):
         self.ggas = ggas
-        self.app = app
-        self.output = output
+        self.INPUT = INPUT
         self.data = []
 
         self._calculate()
-        self.save_output()
 
     def _calculate(self):
         # boltzmann constant in kcal/(mol⋅K)
         k = 0.001985875
-        temperature = self.app.INPUT['temperature']
+        temperature = self.INPUT['temperature']
 
         energy_int = np.array([], dtype=np.float)
         a_energy_int = np.array([], dtype=np.float)
@@ -638,20 +636,21 @@ class InteractionEntropyCalc:
             aeceint = exp_energy_int.mean()
             cts = k * temperature * math.log(aeceint)
             self.data = np.append(self.data, cts)
+        numframes = len(self.data)
         self.ie_std = energy_int.std()
-        self.ieframes = math.ceil(self.app.numframes * (self.app.INPUT['ie_segment'] / 100))
+        self.ieframes = math.ceil(numframes * (self.INPUT['ie_segment'] / 100))
         self.iedata = self.data[-self.ieframes:]
         self.frames = list(
             range(
-                self.app.INPUT['startframe'],
-                self.app.INPUT['startframe']
-                + self.app.numframes * self.app.INPUT['interval'],
-                self.app.INPUT['interval'],
+                self.INPUT['startframe'],
+                self.INPUT['startframe']
+                + numframes * self.INPUT['interval'],
+                self.INPUT['interval'],
             )
         )
 
-    def save_output(self):
-        with open(self.output, 'w') as out:
+    def save_output(self, filename):
+        with open(filename, 'w') as out:
             out.write(f'Calculation for last {self.ieframes} frames:\n')
             out.write(f'Interaction Entropy (-TΔS): {self.iedata.mean():9.4f} +/- {self.iedata.std():7.4f}\n\n')
             out.write('Interaction Entropy per-frame:\n')
@@ -668,18 +667,16 @@ class C2EntropyCalc:
     :return {IE_key: data}
     """
 
-    def __init__(self, ggas, app, output):
+    def __init__(self, ggas, INPUT):
         self.ggas = ggas
-        self.app = app
-        self.output = output
+        self.INPUT = INPUT
 
         self._calculate()
-        self.save_output()
 
     def _calculate(self):
         # gas constant in kcal/(mol⋅K)
         R = 0.001987
-        temperature = self.app.INPUT['temperature']
+        temperature = self.INPUT['temperature']
         self.ie_std = self.ggas.std()
         self.c2data = (self.ie_std ** 2) / (2 * temperature * R)
 
@@ -693,8 +690,8 @@ class C2EntropyCalc:
         self.c2_std = np.sort(array_of_c2)[100:1900].std()
         self.c2_ci = np.percentile(np.sort(array_of_c2)[100:1900], [2.5, 97.5])
 
-    def save_output(self):
-        with open(self.output, 'w') as out:
+    def save_output(self, filename):
+        with open(filename, 'w') as out:
             out.write(f'C2 Entropy (-TΔS): {self.c2data:.4f}\n\n')
 
 

@@ -868,6 +868,7 @@ class BindingStatistics(dict):
         self.com = com
         self.rec = rec
         self.lig = lig
+        self.INPUT = self.com.INPUT
         self.chamber = chamber
         self.traj_protocol = traj_protocol
         self.inconsistent = False
