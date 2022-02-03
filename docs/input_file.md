@@ -850,7 +850,7 @@ molecule. When `nfocus` = 1, no focusing is used. It is recommended that `nfocus
 `bcopt` (Default = 5)
 :   Boundary condition options.
 
-    * 1: Boundary grid potentials are set as zero, i.e. conductor. Total electrostatic potentials and energy
+    * 1: Boundary grid potentials are set as zero, _i.e._ conductor. Total electrostatic potentials and energy
     are computed.
     * 5: Computation of boundary grid potentials using all grid charges. Total electrostatic potentials
     and energy are computed.
@@ -1607,7 +1607,7 @@ mutant='ALA', mutant_res='B:12'
 ### Decomposition analysis
 
 ```
-Sample input file with decomposition analysis
+Sample input file for decomposition analysis
 Make sure to include at least one residue from both the receptor
 and ligand in the print_res mask of the &decomp section.
 http://archive.ambermd.org/201308/0075.html. This is automally
