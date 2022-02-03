@@ -222,26 +222,26 @@ class AmberOutput(dict):
                 continue
             if self[key] == 0:
                 continue
-            avg = self[key].mean()
-            stdev = self[key].stdev()
-            semp = stdev / sqrt(len(self[key]))
-            std = self[key].std()
-            sem = std / sqrt(len(self[key]))
+            avg = float(self[key].mean())
+            stdev = float(self[key].stdev())
+            semp = float(stdev / sqrt(len(self[key])))
+            std = float(self[key].std())
+            sem = float(std / sqrt(len(self[key])))
             if _output_format:
                 text.append([key, avg, stdev, std, semp, sem])
             else:
                 text.append(f'{key:16s} {avg:13.2f} {stdev:13.2f} {std:10.2f} {semp:12.2f} {sem:10.2f}')
-
-        text.append('')
+        if not _output_format:
+            text.append('')
         for key in self.composite_keys:
             # Now print out the composite terms
             if key == 'TOTAL' and not _output_format:
                 text.append('')
-            avg = self[key].mean()
-            stdev = self[key].stdev()
-            semp = stdev / sqrt(len(self[key]))
-            std = self[key].std()
-            sem = std / sqrt(len(self[key]))
+            avg = float(self[key].mean())
+            stdev = float(self[key].stdev())
+            semp = float(stdev / sqrt(len(self[key])))
+            std = float(self[key].std())
+            sem = float(std / sqrt(len(self[key])))
             if _output_format:
                 text.append([key, avg, stdev, std, semp, sem])
             else:
@@ -333,8 +333,8 @@ class IEout(dict):
                         '-------------------------------------------------------------------------------')
 
         for model in self:
-            avg = self[model]['iedata'].mean()
-            stdev = self[model]['iedata'].stdev()
+            avg = float(self[model]['iedata'].mean())
+            stdev = float(self[model]['iedata'].stdev())
             if _output_format:
                 text.append([model, self[model]['sigma'], avg, stdev, stdev / sqrt(len(self[model]['iedata']))])
             else:
@@ -560,8 +560,8 @@ class NMODEout(dict):
                         '-------------------------------------------------------------------------------')
 
         for key in self.data_keys:
-            avg = self[key].mean()
-            stdev = self[key].stdev()
+            avg = float(self[key].mean())
+            stdev = float(self[key].stdev())
             if _output_format:
                 text.append([key, avg, stdev, stdev / sqrt(len(self[key]))])
             else:
@@ -992,36 +992,36 @@ class BindingStatistics(dict):
             else:
                 printkey = key
             # Now print out the stats
-            stdev = self[key].stdev()
-            avg = self[key].mean()
-            std = self[key].std()
+            stdev = float(self[key].stdev())
+            avg = float(self[key].mean())
+            std = float(self[key].std())
             if not self.missing_terms:
                 num_frames = len(self[key])
             else:
                 num_frames = min(len(self.com[key]), len(self.rec[key]), len(self.lig[key]))
-            semp = stdev / sqrt(num_frames)
-            sem = std / sqrt(num_frames)
+            semp = float(stdev / sqrt(num_frames))
+            sem = float(std / sqrt(num_frames))
 
             if _output_format:
                 text.append(['Δ' + printkey, avg, stdev, std, semp, sem])
             else:
                 text.append(f"{'Δ' + printkey:16s} {avg:13.2f} {stdev:13.2f} {std:10.2f} {semp:12.2f} {sem:10.2f}")
 
-        if self.composite_keys:
+        if self.composite_keys and not _output_format:
             text.append('')
         for key in self.composite_keys:
             # Now print out the composite terms
-            if key == 'TOTAL':
+            if key == 'TOTAL' and not _output_format:
                 text.append('')
-            stdev = self[key].stdev()
-            avg = self[key].mean()
-            std = self[key].std()
+            stdev = float(self[key].stdev())
+            avg = float(self[key].mean())
+            std = float(self[key].std())
             if not self.missing_terms:
                 num_frames = len(self[key])
             else:
                 num_frames = min(len(self.com[key]), len(self.rec[key]), len(self.lig[key]))
-            semp = stdev / sqrt(num_frames)
-            sem = std / sqrt(num_frames)
+            semp = float(stdev / sqrt(num_frames))
+            sem = float(std / sqrt(num_frames))
                 # num_frames is the same as the one from above
             if _output_format:
                 text.append(['Δ' + key, avg, stdev, std, semp, sem])
