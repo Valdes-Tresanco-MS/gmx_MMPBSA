@@ -30,7 +30,8 @@ import logging
 # Import gmx_MMPBSA modules
 from GMXMMPBSA import utils, __version__
 from GMXMMPBSA.amber_outputs import (QHout, NMODEout, QMMMout, GBout, PBout, PolarRISM_std_Out, RISM_std_Out,
-                                     PolarRISM_gf_Out, RISM_gf_Out, BindingStatistics, IEout, C2out)
+                                     PolarRISM_gf_Out, RISM_gf_Out, BindingStatistics, IEout, C2out,
+                                     DeltaBindingStatistics)
 from GMXMMPBSA.calculation import (CalculationList, EnergyCalculation, PBEnergyCalculation, RISMCalculation,
                                    NmodeCalc, QuasiHarmCalc, CopyCalc, PrintCalc, LcpoCalc, MolsurfCalc,
                                    InteractionEntropyCalc, C2EntropyCalc)
@@ -920,7 +921,8 @@ class MMPBSA_App(object):
         if not self.master:
             return
         logging.info('Parsing results to output files...')
-        self.calc_types = SimpleNamespace(normal={}, mutant={}, decomp_normal={}, decomp_mutant={})
+        self.calc_types = SimpleNamespace(normal={}, mutant={}, mut_norm={}, decomp_normal={}, decomp_mutant={},
+                                          decomp_mut_norm={})
         INPUT, FILES = self.INPUT, self.FILES
         # Quasi-harmonic analysis is a special-case, so handle that separately
         if INPUT['qh_entropy']:
@@ -981,14 +983,15 @@ class MMPBSA_App(object):
                     if key in ['gb', 'pb', 'rism std', 'rism gf']:
                         if 'ie' in self.calc_types.normal:
                             edata = self.calc_types.normal[key]['delta']['GGAS']
-                            ie = InteractionEntropyCalc(edata, self,
-                                                        self.pre + f"{key.replace(' ', '_')}_iteraction_entropy.dat")
+                            ie = InteractionEntropyCalc(edata, INPUT)
+                            ie.save_output(self.pre + f"{key.replace(' ', '_')}_interaction_entropy.dat")
                             self.calc_types.normal['ie'].parse_from_dict(key, {'data': ie.data, 'iedata': ie.iedata,
                                                                                'ieframes': ie.ieframes,
                                                                                'sigma': ie.ie_std})
                         if 'c2' in self.calc_types.normal:
                             edata = self.calc_types.normal[key]['delta']['GGAS']
-                            c2 = C2EntropyCalc(edata, self, self.pre + f"{key.replace(' ', '_')}_c2_entropy.dat")
+                            c2 = C2EntropyCalc(edata, INPUT)
+                            c2.save_output(self.pre + f"{key.replace(' ', '_')}_c2_entropy.dat")
                             self.calc_types.normal['c2'][key] = {'c2data': c2.c2data, 'sigma': c2.ie_std,
                                                                  'c2_std': c2.c2_std, 'c2_ci': c2.c2_ci}
             # Time for mutant
@@ -1012,17 +1015,26 @@ class MMPBSA_App(object):
                     if key in ['gb', 'pb', 'rism std', 'rism gf']:
                         if 'ie' in self.calc_types.mutant:
                             edata = self.calc_types.mutant[key]['delta']['GGAS']
-                            mie = InteractionEntropyCalc(edata, self, self.pre + 'mutant_' +
-                                                         f"{key.replace(' ', '_')}_iteraction_entropy.dat")
+                            mie = InteractionEntropyCalc(edata, INPUT)
+                            mie.save_output(self.pre + 'mutant_' +f"{key.replace(' ', '_')}_iteraction_entropy.dat")
                             self.calc_types.mutant['ie'].parse_from_dict(key, {'data': mie.data, 'iedata': mie.iedata,
                                                                                'ieframes': mie.ieframes,
                                                                                'sigma': mie.ie_std})
                         if 'c2' in self.calc_types.mutant:
                             edata = self.calc_types.mutant[key]['delta']['GGAS']
-                            c2 = C2EntropyCalc(edata, self, self.pre + 'mutant_' +
-                                               f"{key.replace(' ', '_')}_c2_entropy.dat")
+                            c2 = C2EntropyCalc(edata, INPUT)
+                            c2.save_output(self.pre + 'mutant_' +f"{key.replace(' ', '_')}_c2_entropy.dat")
                             self.calc_types.mutant['c2'][key] = {'c2data': c2.c2data, 'sigma': c2.ie_std,
                                                                  'c2_std': c2.c2_std, 'c2_ci': c2.c2_ci}
+            if INPUT['alarun'] and not INPUT['mutant_only']:
+                self.calc_types.mut_norm[key] = DeltaBindingStatistics(self.calc_types.mutant[key]['delta'],
+                                                                       self.calc_types.normal[key]['delta'])
+
+        if not hasattr(self, 'resl'):
+            from GMXMMPBSA.utils import mask2list
+            self.resl = mask2list(FILES.complex_fixed, INPUT['receptor_mask'], INPUT['ligand_mask'])
+            if INPUT['alarun']:
+                self.resl[self.mutant_index].set_mut(INPUT['mutant'])
 
         if INPUT['decomprun']:
             self._get_decomp()
@@ -1041,12 +1053,6 @@ class MMPBSA_App(object):
         else:
             DecompBindingClass = PairDecompBinding
             DecompClass = PairDecompOut
-
-        if not hasattr(self, 'resl'):
-            from GMXMMPBSA.utils import mask2list
-            self.resl = mask2list(FILES.complex_fixed, INPUT['receptor_mask'], INPUT['ligand_mask'])
-            if INPUT['alarun']:
-                self.resl[self.mutant_index].set_mut(INPUT['mutant'])
 
         rec_list = {}
         lig_list = {}

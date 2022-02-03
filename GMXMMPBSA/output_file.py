@@ -53,7 +53,7 @@ class Data2h5:
     def _info2h5(self):
         grp = self.h5f.create_group('INPUT')
         for x in self.app.INPUT:
-            data =  np.nan if self.app.INPUT[x] is None else self.app.INPUT[x]
+            data = np.nan if self.app.INPUT[x] is None else self.app.INPUT[x]
             dset = grp.create_dataset(x, data=data)
 
         grp = self.h5f.create_group('FILES')
@@ -347,6 +347,10 @@ def write_outputs(app):
 
         # Now calculate the effect of alanine scanning
         if INPUT['alarun'] and not INPUT['mutant_only']:
+            nm_sys_norm = app.calc_types.mut_norm['nmode']
+            final_output.write('ENTROPY RESULTS (HARMONIC APPROXIMATION) CALCULATED WITH NMODE:\n\n')
+            final_output.add_section(nm_sys_norm.summary())
+
             davg, dstd = _get_diff(nm_sys_mut['Total'], nm_sys_norm['Total'])
             final_output.add_section(f'\nRESULT OF ALANINE SCANNING ({mut_str}):\n'
                                       f'-TΔΔS{"" if stability else " binding"} = {davg:9.4f} +/- {dstd:9.4f}\n')
@@ -438,10 +442,10 @@ def write_outputs(app):
                                          f'ΔG{"" if stability else " binding"} = {mnm_davg:9.4f} +/- {mnm_dstd:7.4f}\n')
 
         if INPUT['alarun'] and not INPUT['mutant_only']:
-            if stability:
-                ddh_davg, ddh_dstd = _get_diff(sys_mut['TOTAL'], sys_norm['TOTAL'], True)
-            else:
-                ddh_davg, ddh_dstd = _get_diff(sys_mut['TOTAL'], sys_norm['TOTAL'], True)
+            ddh_davg, ddh_dstd = _get_diff(sys_mut['TOTAL'], sys_norm['TOTAL'], True)
+            mut_norm = app.calc_types.mut_norm[key]
+            final_output.add_section(mut_norm.summary())
+
             final_output.write(f'\nRESULT OF ALANINE SCANNING ({mut_str}):\n' 
                                f'ΔΔH binding = {ddh_davg:9.4f} +/- {ddh_dstd:7.4f}\n')
 
