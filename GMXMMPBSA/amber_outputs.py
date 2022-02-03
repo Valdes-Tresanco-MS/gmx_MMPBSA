@@ -1031,6 +1031,103 @@ class BindingStatistics(dict):
         return text if _output_format else '\n'.join(text) + '\n'
 
 
+class DeltaBindingStatistics(dict):
+    """ Base class for compiling the binding statistics """
+    st_null = ['BOND', 'ANGLE', 'DIHED', '1-4 VDW', '1-4 EEL']
+
+    def __init__(self,  mut: BindingStatistics, norm: BindingStatistics, **kwargs):
+        super(DeltaBindingStatistics, self).__init__(**kwargs)
+
+        self.mut = mut
+        self.norm = norm
+
+        self.data_keys = self.norm.data_keys
+        self.composite_keys = ['GGAS', 'GSOLV', 'TOTAL']
+
+
+        self._delta()
+
+    def _delta(self):
+        """
+        Calculates the delta statistics. Should check for any consistencies that
+        would cause verbosity levels to change, and it should change them
+        accordingly in the child classes
+        """
+        for key in self.norm:
+            self[key] = self.mut[key] - self.norm[key]
+
+    def _print_vectors(self, csvwriter):
+        """ Output all of the energy terms including the differences if we're
+            doing a single trajectory simulation and there are no missing terms
+        """
+        csvwriter.writerow(['Delta Delta Energy Terms (Mutant - Normal)'])
+
+        # write the header
+        csvwriter.writerow(['Frame #'] + list(self.keys()))
+
+        # write out each frame
+        c = self.norm.INPUT['startframe']
+        for i in range(len(self['VDWAALS'])):
+            csvwriter.writerow([c] + [round(self[key][i], 4) for key in self])
+            c += self.norm.INPUT['interval']
+        csvwriter.writerow([])
+
+    def summary(self, output_format: str = 'ascii'):
+        """ Returns a string printing the summary of the binding statistics """
+
+        _output_format = 0 if output_format == 'ascii' else 1
+        text = []
+
+        if isinstance(self.norm.com, NMODEout):
+            col_name = '%-16s' % 'Entropy Term'
+        else:
+            col_name = '%-16s' % 'Energy Component'
+
+        if _output_format:
+            text.extend([['Delta Delta (Mutant - Normal):'],
+                         [col_name] + ['Average', 'SD(Prop.)', 'SD', 'SEM(Prop.)', 'SEM']])
+        else:
+            text.append('Delta Delta (Mutant - Normal):\n' + f'{col_name:16s}' +
+                        '       Average                       SD                     SEM\n' +
+                        '-------------------------------------------------------------------------------')
+
+        for key in self.norm.data_keys:
+            # # Skip chamber terms if we aren't using chamber prmtops
+            # Catch special case of NMODEout classes
+            if isinstance(self.norm.com, NMODEout) and key == 'Total':
+                printkey = '\n-TΔΔS binding ='
+            else:
+                printkey = key
+            # Now print out the stats
+            avg = float(self[key].mean())
+            std = float(self[key].std())
+            num_frames = len(self[key])
+            sem = float(std / sqrt(num_frames))
+
+            if _output_format:
+                text.append(['ΔΔ' + printkey, avg, std, sem])
+            else:
+                text.append(f"{'ΔΔ' + printkey:16s} {avg:13.2f} {std:24.2f} {sem:23.2f}")
+
+        if self.composite_keys:
+            text.append('')
+        for key in self.composite_keys:
+            # Now print out the composite terms
+            if key == 'TOTAL':
+                text.append('')
+            avg = float(self[key].mean())
+            std = float(self[key].std())
+            num_frames = len(self[key])
+            sem = float(std / sqrt(num_frames))
+                # num_frames is the same as the one from above
+            if _output_format:
+                text.append(['ΔΔ' + key, avg, std, sem])
+            else:
+                text.append(f"{'ΔΔ' + key:16s} {avg:13.2f} {std:24.2f} {sem:23.2f}")
+
+        return text if _output_format else '\n'.join(text) + '\n'
+
+
 class DecompOut(dict):
     """ Class for decomposition output file to collect statistics and output them """
     indicator = "                    PRINT DECOMP - TOTAL ENERGIES"
