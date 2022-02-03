@@ -13,5 +13,5 @@ forcefields="oldff/leaprc.ff99SB", PBRadii=4,
 igb=8, saltcon=0.150,
 /
 &alanine_scanning
-mutant='ALA', mutant_res='B:13', cas_intdiel=1
+mutant='ALA', mutant_res='B/13', cas_intdiel=1
 /

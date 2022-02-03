@@ -1275,22 +1275,24 @@ and "both" will print out separate sections for both.
     * A sample alanine scanning input file is shown [here](input_file.md#alanine-scanning)
     * A tutorial on alanine scanning is available [here](examples/Alanine_scanning/README.md)
 
-`mutant_res` (Default = None. Most be defined)
-:   Define the specific residue that is going to be mutated. Use the following format CHAIN:RESNUM (eg: 'A:350') or 
-CHAIN:RESNUM:INSERTION_CODE if applicable (eg: "A:27:B"). 
+`mutant_res` (Default = None. Must be defined)
+:   Define the specific residue that is going to be mutated. Use the following format CHAIN/RESNUM (_e.g._: 'A/350') or 
+CHAIN/RESNUM:INSERTION_CODE if applicable (_e.g._: "A/27:B").
 
     !!! important
         * Only one residue can be mutated per calculation!
         * We recommend using the reference structure (-cr) to ensure the perfect match between the selected residue in 
         the defined structure or topology 
-        * This option allow `gmx_MMPBSA` to do the mutation. This way the user does not have to provide the mutant 
-        topology
+        * Wehn this varibale is defined, `gmx_MMPBSA` performs the mutation. This way the user does not have to 
+        provide the mutant topology
     
-    _Changed in v1.4.0: Allow mutation in antibodies since it support insertion code notation_
+    _Changed in v1.4.0: Allows mutation in antibodies since it support insertion code notation_
 
 `mutant` (Default = "ALA") 
-:   Defines the residue that it is going to be mutated for. Allowed values are: `"ALA"` or `"A"` for Alanine scanning 
-    and `"GLY"` or `"G"` for Glycine scanning.
+:   Defines the residue that it is going to be mutated for. Allowed values are: 
+
+    * `"ALA"` or `"A"`: Alanine scanning
+    * `"GLY"` or `"G"`: Glycine scanning
 
     _Changed in v1.3.0: Change mol (receptor or ligand) by mutant aminoacid (ALA or GLY)_
 
