@@ -188,6 +188,11 @@ class AmberOutput(dict):
             csvwriter.writerow([c] + [round(self[key][i], 4) for key in print_keys])
             c += self.INPUT['interval']
 
+    def set_frame_range(self, start=0, end=None, interval=1):
+        for key in self.data_keys:
+            self[key] = self[key][start:end:interval]
+        self._fill_composite_terms()
+
     def summary(self, output_format: str = 'ascii'):
         """ Returns a formatted string that can be printed directly to the
             output file
