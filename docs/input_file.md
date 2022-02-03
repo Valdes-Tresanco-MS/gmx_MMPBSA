@@ -462,8 +462,19 @@ verbose (Default = 0)
 #### **Basic input options**
 
 `igb` (Default = 5)
-:   Generalized Born method to use (see [Section 4](https://ambermd.org/doc12/Amber21.pdf#chapter.4)). Allowed values 
-are 1, 2, 5, 7 and 8.
+:   Generalized Born method to use (see [§4](https://ambermd.org/doc12/Amber21.pdf#chapter.4) for more info).
+
+    * 1: The [Hawkins, Cramer, Truhlar][191] pairwise GB model (GB-HCT)
+    * 2: Modified GB model 1 developed by [A. Onufriev, D. Bashford and D.A. Case][188] (GB-OBC1)
+    * 5: Modified GB model 2 developed by [A. Onufriev, D. Bashford and D.A. Case][188] (GB-OBC2)
+    * 7: GBn model described by [Mongan, Simmerling, McCammon, Case and Onufriev][206] (GB-Neck)
+    * 8: Same GB functional form as the GBn model (igb=7), but with different parameters. Developed by [Nguyen, Pérez, 
+         Bermeo, and Simmerling][200] (GB-Neck2)
+
+  [191]: https://pubs.acs.org/doi/10.1021/jp961710n
+  [188]: https://onlinelibrary.wiley.com/doi/10.1002/prot.20033
+  [206]: https://pubs.acs.org/doi/10.1021/ct600085e
+  [200]: https://pubs.acs.org/doi/10.1021/acs.jctc.5b00271
 
 `intdiel` (Default = 1.0)
 :   Define Internal dielectric constant.
