@@ -128,10 +128,11 @@ input file will contain all the parameters needed for the MM/PB(GB)SA calculatio
     in the end.
 
     !!! Danger
-        Note that we used a smaller `fillratio=1.25` compared to the defult one (4.0). Be cautious when changing this 
-        parameter as its increase may lead to a considerable RAM usage (specially when running the program in parralel). 
-        Just for your information, using the default `fillratio=4.0` in this relatively small system requieres as much as 
-        ~30GB per thread :exploding_head: and more time to finish the calculation.
+        Note that a smaller `fillratio=1.25` is used compared to the defult one (4.0). The use of a periodic boundary 
+        also allowed a somewhat small fill ratio (_i.e._, the ratio of the finite-difference box dimension over the 
+        solute dimension) of 1.25 to be used in these 
+        calculations ([ref](https://pubs.acs.org/doi/full/10.1021/acs.jctc.7b00382)). Be cautious when changing this 
+        parameter as its increase may lead to a considerable RAM usage (specially when running the program in parralel).
 
 !!! note
     Once the calculation is done, you can analyze the results in `gmx_MMPBSA_ana` (if you didn't define `-nogui`). 

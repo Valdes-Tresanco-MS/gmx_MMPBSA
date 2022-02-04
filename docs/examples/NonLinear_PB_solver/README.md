@@ -83,11 +83,11 @@ performing the the MM/PB(GB)SA calculation with the Non Linear PB solver (`npbop
 
 !!! warning
     When running a NLPB solver, `eneopt` is set = 1. That way, the total electrostatic energy and forces will be 
-    computed with the particle-particle particle-mesh (P3M) procedure outlined in Lu and Luo.[8] In doing so, 
+    computed with the particle-particle particle-mesh (P3M) procedure outlined in [Lu and Luo][8]. In doing so, 
     energy term `EPB` in the output file is set to zero, while `EEL` term includes both the reaction field 
     energy (`EPB`) and the Coulombic energy (`EEL`). The van der Waals energy is computed along with the 
-    particle-particle portion of the Coulombic energy. This option requires a nonzero CUTNB (in this case, `cutnb=8.0`) 
-    and BCOPT = 5 (default option).
+    particle-particle portion of the Coulombic energy. This option requires a nonzero `cutnb` (in this 
+    case, `cutnb=8.0`) and `bcopt = 5` (default option).
 
     It's noteworthy mentioning that `ΔGGAS` and `ΔGSOLV` as reported are no longer properly decomposed. Since 
     `EPB` and `EEL` are combined into the "gas phase" term, the gas and solvation terms can't be separated. 
