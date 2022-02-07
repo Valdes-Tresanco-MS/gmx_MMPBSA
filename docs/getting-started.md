@@ -39,9 +39,9 @@ versatility, analyses, and parallelization compared to existing programs (see [h
 
     **Please, also consider citing MMPBSA.py's paper:**
 
-    Bill R. Miller, T. Dwight McGee, Jason M. Swails, Nadine Homeyer, Holger Gohlke, and Adrian E. Roitberg. MMPBSA.
-    py: An Efficient Program for End-State Free Energy Calculations.  Journal of Chemical Theory and Computation, 
-    2012 8 (9), 3314-3321. https://pubs.acs.org/doi/10.1021/ct300418h. 
+    Bill R. Miller, T. Dwight McGee, Jason M. Swails, Nadine Homeyer, Holger Gohlke, and Adrian E. Roitberg. 
+    _MMPBSA.py: An Efficient Program for End-State Free Energy Calculations_. Journal of Chemical Theory and 
+    Computation, 2012 8 (9), 3314-3321. https://pubs.acs.org/doi/10.1021/ct300418h. 
 
     Download | [*.bib](MMPBSA_py_citation.bib) | [*.ris](MMPBSA_py_citation.ris) | [*.xml](MMPBSA_py_citation.xml)
 

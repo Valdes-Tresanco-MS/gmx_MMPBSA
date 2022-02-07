@@ -114,13 +114,18 @@ def run_test(parser):
         16: [examples.joinpath('Protein_ligand', 'MT'), 'Protein-Ligand (Multiple trajectory approximation)'],
         17: [examples.joinpath('Entropy_calculations', 'nmode'), 'Entropy calculation using Normal Mode '
                                                                  'approximation'],
-        18: [examples.joinpath('3D-RISM'), 'Calculations using 3D-RISM approximation']
+        18: [examples.joinpath('3D-RISM'), 'Calculations using 3D-RISM approximation'],
+        19: [examples.joinpath('Entropy_calculations', 'C2_Entropy'), 'C2 Entropy approximation'],
+        20: [examples.joinpath('Linear_PB_solver'), 'LPB Calculation'],
+        21: [examples.joinpath('NonLinear_PB_solver'), 'NLPB Calculation'],
+        22: [examples.joinpath('Protein_ligand_LPH_atoms_CHARMMff'), 'Protein-Ligand_LPH (CHARMM force field)'],
+        23: [examples.joinpath('QM_MMGBSA'), 'QM/MMGBSA Calculation']
     }
 
     if parser.test == [0]:
         key_list = range(3, 19)
     elif parser.test == [1]:
-        key_list = [3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 14, 15]
+        key_list = [3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 14, 15, 16, 19, 20, 21, 22, 23]
     elif parser.test == [2]:
         key_list = [3, 4, 5, 7, 9, 12, 13, 14, 15]
     else:

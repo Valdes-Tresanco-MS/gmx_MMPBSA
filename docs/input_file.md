@@ -149,7 +149,8 @@ tested in previous `protein_forcefield` and `ligand_forcefield` variables.
         * You don't need to define forcefields` variable when you using a topology. Please refer to the section 
           ["How gmx_MMPBSA works"](howworks.md#how-gmx_mmpbsa-works)
         * The notation format is the one used in tleap
-        * In general, any forcefield present in `$AMBERHOME/dat/leap/cmd` could be use with `forcefields` variable
+        * In general, any forcefield present in `$AMBERHOME/dat/leap/cmd` could be use with `forcefields` variable. 
+        (Check [§3](https://ambermd.org/doc12/Amber21.pdf#chapter.3) for more information)
         * Be cautious when defining this variable since you can define two forces fields with a similar purpose which can 
           generate inconsistencies. 
             
@@ -271,6 +272,8 @@ tested in previous `protein_forcefield` and `ligand_forcefield` variables.
 :   Specify the temperature (in K) used in the calculations.
    
     _New in v1.4.0: Replace `entropy_temp`_
+
+    _Reworked in v1.5.0: Temperature value used not only for entropy but all calculations
 
 #### **Entropy options**
 
@@ -433,7 +436,7 @@ However, this option is incompatible with alanine scanning.
 `use_sander`
 :   Use sander for energy calculations, even when `mmpbsa_py_energy` will suffice.
 
-    _Removed in v1.5.0: Now sander is used in all calculations_
+    _Removed in v1.5.0: Now `sander` is used in all calculations_
 
 verbose (Default = 0)
 :   Specifies how much output is printed in the output file.
@@ -462,8 +465,19 @@ verbose (Default = 0)
 #### **Basic input options**
 
 `igb` (Default = 5)
-:   Generalized Born method to use (see [Section 4](https://ambermd.org/doc12/Amber21.pdf#chapter.4)). Allowed values 
-are 1, 2, 5, 7 and 8.
+:   Generalized Born method to use (see [§4](https://ambermd.org/doc12/Amber21.pdf#chapter.4) for more info).
+
+    * 1: The [Hawkins, Cramer, Truhlar][191] pairwise GB model (GB-HCT)
+    * 2: Modified GB model 1 developed by [A. Onufriev, D. Bashford and D.A. Case][188] (GB-OBC1)
+    * 5: Modified GB model 2 developed by [A. Onufriev, D. Bashford and D.A. Case][188] (GB-OBC2)
+    * 7: GBn model described by [Mongan, Simmerling, McCammon, Case and Onufriev][206] (GB-Neck)
+    * 8: Same GB functional form as the GBn model (igb=7), but with different parameters. Developed by [Nguyen, Pérez, 
+         Bermeo, and Simmerling][200] (GB-Neck2)
+
+  [191]: https://pubs.acs.org/doi/10.1021/jp961710n
+  [188]: https://onlinelibrary.wiley.com/doi/10.1002/prot.20033
+  [206]: https://pubs.acs.org/doi/10.1021/ct600085e
+  [200]: https://pubs.acs.org/doi/10.1021/acs.jctc.5b00271
 
 `intdiel` (Default = 1.0)
 :   Define Internal dielectric constant.
@@ -477,7 +491,7 @@ are 1, 2, 5, 7 and 8.
 :   Salt concentration in Molarity (M).
 
 `rgbmax` (Default = 999.0)
-:   Distance cutoff in Angstroms to use when computing effective GB radii.
+:   Distance cutoff in Å to use when computing effective GB radii.
 
 `surften` (Default = 0.0072)
 :   Surface tension value. Units in kcal/mol/Å^2^
@@ -574,7 +588,7 @@ the same used for `print_res` variable in `&decomp` namelist
 `qmcut` (Default = 9999.0)
 :   The cutoff for the qm/mm charge interactions.
     
-  [4]: https://ambermd.org/doc12/Amber21.pdf#chapter.34
+  [4]: https://ambermd.org/doc12/Amber21.pdf#subsection.34.11.49
 
 ### **`&pb` namelist variables**
 
@@ -719,7 +733,8 @@ generally, `arcres` should be set to max(0.125 Å, 0.5h) (h is the grid spacing)
 
 `memopt` (Default = 0)
 :   Option to turn the implicit membrane on and off. The membrane is implemented as a slab like region with a uniform 
-or heterogeneous dielectric constant depth profile.
+or heterogeneous dielectric constant depth profile. Details of the implicit membrane setup can be 
+found [here](https://pubs.acs.org/doi/full/10.1021/acs.jctc.7b00382).
 
     * 0: No implicit membrane used.
     * 1: Use a uniform membrane dielectric constant in a slab-like implicit membrane. ([ref.][246])
@@ -735,6 +750,8 @@ or heterogeneous dielectric constant depth profile.
         * A sample input file is shown [here](input_file.md#mmpbsa-with-membrane-proteins)
         * A tutorial on binding free energy calculation for membrane proteins is available 
         [here](examples/Protein_membrane/README.md)
+        * Check this thread for more info on [Parameters for Implicit 
+        Membranes](http://archive.ambermd.org/202006/0088.html)
 
   [246]: https://www.sciencedirect.com/science/article/abs/pii/S0009261412012808?via%3Dihub
   [247]: https://pubs.acs.org/doi/abs/10.1021/acs.jcim.9b00363
@@ -747,11 +764,13 @@ that of the water. ([ref.][248])
 
     _New in v1.5.0_
 
+[<img src="../assets/prot_memb.png" height="200" width="258" align="right"/>]()
+
 `mthick` (Default = 40)
 :   Membrane thickness (in Å). This is different from the previous default of 20 Å.
 
 `mctrdz` (Default = 0.0)
-:   Membrane center (in Å) in the z direction. Default is 0.0 - membrane centered at the center of the protein.
+:   Membrane center (in Å) in the z direction.
 
 `poretype` (Default = 1)
 :   Turn on and off the automatic depth-first search method to identify the pore. ([ref.][248])
@@ -804,10 +823,10 @@ much larger value, _e.g._ 10000, for the less efficient solvers, such as conjuga
 This corresponds to `maxitn` in [pbsa][5].
 
 `fillratio` (Default = 4.0) 
-:   The ratio between the longest dimension of the rectangular finite-difference grid and that of the solute. A default
-value of 4 is large enough to be used for a small solute, such as a ligand molecule. Using a smaller value for 
-`fillratio` may cause part of the small solute to lie outside the finite-difference grid, causing the 
-finite-difference solvers to fail. For macromolecules is fine to use 4, or a smaller value like 2.
+:   The ratio between the longest dimension of the rectangular finite-difference grid and that of the solute. For 
+macromolecules is fine to use 4, or a smaller value like 2. A default value of 4 is large enough to be used for a 
+small solute, such as a ligand molecule. Using a smaller value for `fillratio` may cause part of the small solute 
+to lie outside the finite-difference grid, causing the finite-difference solvers to fail. 
 
 `scale` (Default = 2.0)
 :   Resolution of the Poisson Boltzmann grid. It is equal to the reciprocal of the grid spacing (`space` in [pbsa][5]).
@@ -837,7 +856,7 @@ molecule. When `nfocus` = 1, no focusing is used. It is recommended that `nfocus
 `bcopt` (Default = 5)
 :   Boundary condition options.
 
-    * 1: Boundary grid potentials are set as zero, i.e. conductor. Total electrostatic potentials and energy
+    * 1: Boundary grid potentials are set as zero, _i.e._ conductor. Total electrostatic potentials and energy
     are computed.
     * 5: Computation of boundary grid potentials using all grid charges. Total electrostatic potentials
     and energy are computed.
@@ -858,7 +877,7 @@ molecule. When `nfocus` = 1, no focusing is used. It is recommended that `nfocus
     to zero, while EEL includes both the reaction field energy and the Coulombic energy. The van
     der Waals energy is computed along with the particle-particle portion of the Coulombic energy.
     The electrostatic forces and dielectric boundary forces can also be computed. ([ref.][223]) This option
-    requires a nonzero `cutnb` and `bcopt = 5`.
+    requires a nonzero `cutnb` and `bcopt = 5` for soluble proteins / `bcopt = 10` for membrane proteins.
     * 2: Use dielectric boundary surface charges to compute the reaction field energy. Both
     the Coulombic energy and the van der Waals energy are computed via summation of pairwise
     atomic interactions. Energy term EPB in the output file is the reaction field energy. EEL is the
@@ -1262,22 +1281,24 @@ and "both" will print out separate sections for both.
     * A sample alanine scanning input file is shown [here](input_file.md#alanine-scanning)
     * A tutorial on alanine scanning is available [here](examples/Alanine_scanning/README.md)
 
-`mutant_res` (Default = None. Most be defined)
-:   Define the specific residue that is going to be mutated. Use the following format CHAIN:RESNUM (eg: 'A:350') or 
-CHAIN:RESNUM:INSERTION_CODE if applicable (eg: "A:27:B"). 
+`mutant_res` (Default = None. Must be defined)
+:   Define the specific residue that is going to be mutated. Use the following format CHAIN/RESNUM (_e.g._: 'A/350') or 
+CHAIN/RESNUM:INSERTION_CODE if applicable (_e.g._: "A/27:B").
 
     !!! important
         * Only one residue can be mutated per calculation!
         * We recommend using the reference structure (-cr) to ensure the perfect match between the selected residue in 
         the defined structure or topology 
-        * This option allow `gmx_MMPBSA` to do the mutation. This way the user does not have to provide the mutant 
-        topology
+        * Wehn this varibale is defined, `gmx_MMPBSA` performs the mutation. This way the user does not have to 
+        provide the mutant topology
     
-    _Changed in v1.4.0: Allow mutation in antibodies since it support insertion code notation_
+    _Changed in v1.4.0: Allows mutation in antibodies since it support insertion code notation_
 
 `mutant` (Default = "ALA") 
-:   Defines the residue that it is going to be mutated for. Allowed values are: `"ALA"` or `"A"` for Alanine scanning 
-    and `"GLY"` or `"G"` for Glycine scanning.
+:   Defines the residue that it is going to be mutated for. Allowed values are: 
+
+    * `"ALA"` or `"A"`: Alanine scanning
+    * `"GLY"` or `"G"`: Glycine scanning
 
     _Changed in v1.3.0: Change mol (receptor or ligand) by mutant aminoacid (ALA or GLY)_
 
@@ -1371,11 +1392,11 @@ sufficient in most cases, however we have added several additional notations
     
     === "By Distance"
         Notation: [ `within` `distance` ]
-        :   `within` corresponds to the keyword and `distance` to the maximum distance criterion in 
-            Angstroms necessary to select the residues from both the receptor and the ligand
+        :   `within` corresponds to the keyword and `distance` to the maximum distance criterion in Å necessary to 
+            select the residues from both the receptor and the ligand
 
         !!! example
-            `print_res="within 6"` Will print all residues within 6 Angstroms between receptor and 
+            `print_res="within 6"` Will print all residues within 6 Å between receptor and 
             ligand including both.
 
     === "Amino acid selection"
@@ -1592,7 +1613,7 @@ mutant='ALA', mutant_res='B:12'
 ### Decomposition analysis
 
 ```
-Sample input file with decomposition analysis
+Sample input file for decomposition analysis
 Make sure to include at least one residue from both the receptor
 and ligand in the print_res mask of the &decomp section.
 http://archive.ambermd.org/201308/0075.html. This is automally
@@ -1608,7 +1629,7 @@ igb=5, saltcon=0.150,
 
 &decomp
 idecomp=2, dec_verbose=3,
-# This will print all residues that are less than 4 angstroms between
+# This will print all residues that are less than 4 Å between
 # the receptor and the ligand
 print_res="within 4"
 /
