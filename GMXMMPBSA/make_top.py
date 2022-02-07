@@ -396,11 +396,11 @@ class CheckMakeTop:
         if error_info:
             if error_info[0] == 'atoms':
                 GMXMMPBSA_ERROR(f"The number of atoms in the topology ({error_info[1]}) and the complex structure "
-                                f"({error_info[2]}) are different. Please check this files and verify that they are "
+                                f"({error_info[2]}) are different. Please check these files and verify that they are "
                                 f"correct. Otherwise report the error...")
             else:
                 GMXMMPBSA_ERROR(f"The number of residues in the topology ({error_info[1]}) and the complex structure "
-                                f"({error_info[2]}) are different. Please check this files and verify that they are "
+                                f"({error_info[2]}) are different. Please check these files and verify that they are "
                                 f"correct. Otherwise report the error...")
 
         com_top.coordinates = self.complex_str.coordinates
