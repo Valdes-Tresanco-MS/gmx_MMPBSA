@@ -14,9 +14,9 @@
 #  or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License    #
 #  for more details.                                                           #
 # ##############################################################################
-from PyQt5.QtWidgets import *
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
+from PyQt6.QtWidgets import *
+from PyQt6.QtCore import *
+from PyQt6.QtGui import *
 import pandas as pd
 from .utils import com2str, energy2pdb_pml
 from .style import file_icon
@@ -100,7 +100,7 @@ class CustomItem(QTreeWidgetItem):
         self.tb.setStyleSheet("QToolBar {padding: 0, 20, 0, 20;}")
 
         self.tb.setIconSize(QSize(16, 16))
-        self.tb.setToolButtonStyle(Qt.ToolButtonIconOnly)
+        self.tb.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonIconOnly)
         self.item_charts = []
 
         self.btn_group = QButtonGroup()
@@ -137,7 +137,7 @@ class CustomItem(QTreeWidgetItem):
             '/home/mario/PycharmProjects/gmx_MMPBSA/GMXMMPBSA/analyzer/style/line-chart.svg'))
         self.line_chart_action.setText('Line Chart')
         self.line_chart_action.setCheckable(True)
-        self.line_chart_action.setPopupMode(QToolButton.MenuButtonPopup)
+        self.line_chart_action.setPopupMode(QToolButton.ToolButtonPopupMode.MenuButtonPopup)
         self.line_chart_action.setContentsMargins(0, 0, 0, 0)
         self.line_chart_action.setMenu(line_menu)
         self.btn_group.addButton(self.line_chart_action, 1)
@@ -168,7 +168,7 @@ class CustomItem(QTreeWidgetItem):
             QIcon('/home/mario/PycharmProjects/gmx_MMPBSA/GMXMMPBSA/analyzer/style/bar-chart.png'))
         self.bar_chart_action.setText('Bar Chart')
         self.bar_chart_action.setCheckable(True)
-        self.bar_chart_action.setPopupMode(QToolButton.MenuButtonPopup)
+        self.bar_chart_action.setPopupMode(QToolButton.ToolButtonPopupMode.MenuButtonPopup)
         self.bar_chart_action.setContentsMargins(0, 0, 0, 0)
         self.bar_chart_action.setMenu(bar_menu)
         self.btn_group.addButton(self.bar_chart_action, 2)
@@ -200,7 +200,7 @@ class CustomItem(QTreeWidgetItem):
             QIcon('/home/mario/PycharmProjects/gmx_MMPBSA/GMXMMPBSA/analyzer/style/heatmap_icon.svg'))
         self.heatmap_chart_action.setText('Heatmap Chart')
         self.heatmap_chart_action.setCheckable(True)
-        self.heatmap_chart_action.setPopupMode(QToolButton.MenuButtonPopup)
+        self.heatmap_chart_action.setPopupMode(QToolButton.ToolButtonPopupMode.MenuButtonPopup)
         self.heatmap_chart_action.setContentsMargins(0, 0, 0, 0)
         self.heatmap_chart_action.setMenu(heatmap_menu)
         self.btn_group.addButton(self.heatmap_chart_action, 3)
@@ -231,7 +231,7 @@ class CustomItem(QTreeWidgetItem):
         self.vis_action.setIcon(QIcon('/home/mario/PycharmProjects/gmx_MMPBSA/GMXMMPBSA/analyzer/style/molecule.svg'))
         self.vis_action.setText('Visualization')
         self.vis_action.setCheckable(True)
-        self.vis_action.setPopupMode(QToolButton.MenuButtonPopup)
+        self.vis_action.setPopupMode(QToolButton.ToolButtonPopupMode.MenuButtonPopup)
         self.vis_action.setContentsMargins(0, 0, 0, 0)
         # self.vis_action.setMenu(heatmap_menu)
         self.btn_group.addButton(self.vis_action, 4)
@@ -253,7 +253,7 @@ class CustomItem(QTreeWidgetItem):
         self.options_button.setIcon(QIcon(file_icon))
         self.options_button.setText('Results files')
         self.options_button.setToolTip('Results files')
-        self.options_button.setPopupMode(QToolButton.InstantPopup)
+        self.options_button.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
         self.options_button.setContentsMargins(0, 0, 0, 0)
         self.options_button.setMenu(options_menu)
 
@@ -288,9 +288,9 @@ class CustomItem(QTreeWidgetItem):
             self.decomp_output_file_subw.close()
 
     def fn_mark_all(self, state):
-        if state == Qt.PartiallyChecked:
+        if state == Qt.CheckState.PartiallyChecked:
             pass
-        elif state == Qt.Checked:
+        elif state == Qt.CheckState.Checked:
             for x in self.btn_group.buttons():
                 x.setChecked(True)
         else:
@@ -300,12 +300,15 @@ class CustomItem(QTreeWidgetItem):
     def fn_btn_group(self, btn, checked):
         all_checked = all(x.isChecked() for x in self.btn_group.buttons())
         all_unchecked = not any(x.isChecked() for x in self.btn_group.buttons())
+        oldState = self.mark_all.blockSignals(True)
         if all_checked:
-            self.mark_all.setCheckState(Qt.Checked)
+            self.mark_all.setCheckState(Qt.CheckState.Checked)
         elif all_unchecked:
-            self.mark_all.setCheckState(Qt.Unchecked)
+            self.mark_all.setCheckState(Qt.CheckState.Unchecked)
         else:
-            self.mark_all.setCheckState(Qt.PartiallyChecked)
+            self.mark_all.setCheckState(Qt.CheckState.PartiallyChecked)
+        self.mark_all.blockSignals(oldState)
+
         if self.btn_group.id(btn) == 1:
             self.plotting_line(checked)
         elif self.btn_group.id(btn) == 2:
@@ -445,7 +448,7 @@ class CustomItem(QTreeWidgetItem):
         output_path = self.app.systems[self.system_index]['path'].parent.joinpath(
             f"{self.app.systems[self.system_index]['name']}_energy2bfactor.pdb")
         qpd = QProgressDialog('Generate modified pdb and open it in PyMOL', 'Abort', 0, 2, self.app)
-        qpd.setWindowModality(Qt.WindowModal)
+        qpd.setWindowModality(Qt.WindowModality.WindowModal)
         qpd.setMinimumDuration(1500)
 
         for i in range(2):

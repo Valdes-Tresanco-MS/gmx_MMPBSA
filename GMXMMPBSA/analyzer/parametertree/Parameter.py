@@ -19,7 +19,7 @@
 #  for more details.                                                           #
 # ##############################################################################
 
-from PyQt5.QtCore import *
+from PyQt6.QtCore import *
 import os, weakref, re
 from .ParameterItem import ParameterItem
 import warnings

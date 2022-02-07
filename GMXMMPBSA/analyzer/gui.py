@@ -23,9 +23,10 @@ from pathlib import Path
 
 import pandas
 import pandas as pd
-from PyQt5.QtWidgets import *
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
+from GMXMMPBSA.API import load_gmxmmpbsa_info, MMPBSA_API
+from PyQt6.QtWidgets import *
+from PyQt6.QtCore import *
+from PyQt6.QtGui import *
 from GMXMMPBSA.analyzer.dialogs import InitDialog
 from GMXMMPBSA.analyzer.customitem import CustomItem, CorrelationItem
 from GMXMMPBSA.analyzer.utils import energy2pdb_pml, ki2energy, make_corr_DF, multiindex2dict
@@ -64,7 +65,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
         self.items_counter = {'charts': 0, 'pymol': [], 'bars': 0, 'line': 0, 'heatmap': 0}
 
         self.mdi = QMdiArea(self)
-        self.mdi.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.mdi.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.setCentralWidget(self.mdi)
 
         self.menubar = self.menuBar()
@@ -79,20 +80,20 @@ class GMX_MMPBSA_ANA(QMainWindow):
         self.statusbar = self.statusBar()
 
         self.treeDockWidget = QDockWidget('Data', self)
-        self.addDockWidget(Qt.RightDockWidgetArea, self.treeDockWidget)
+        self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.treeDockWidget)
 
         self.correlation_DockWidget = QDockWidget('Correlations', self)
-        self.addDockWidget(Qt.RightDockWidgetArea, self.correlation_DockWidget)
+        self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.correlation_DockWidget)
 
         self.treeWidget = QTreeWidget(self)
         self.treeWidget.setMinimumWidth(380)
-        self.treeWidget.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.treeWidget.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         # self.treeWidget.customContextMenuRequested.connect(self.data_context_menu)
         self.treeWidget.itemSelectionChanged.connect(self.update_system_selection)
 
         self._make_options_panel()
 
-        self.data_container = QSplitter(Qt.Vertical)
+        self.data_container = QSplitter(Qt.Orientation.Vertical)
         self.data_container.addWidget(self.treeWidget)
         self.data_container.addWidget(self.optionWidget)
         self.data_container.setStretchFactor(0, 10)
@@ -107,13 +108,13 @@ class GMX_MMPBSA_ANA(QMainWindow):
         self.treeWidget.setColumnHidden(4, True)
         header = self.treeWidget.header()
         header.setStretchLastSection(False)
-        header.setSectionResizeMode(1, QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(0, QHeaderView.Stretch)
+        header.setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)
+        header.setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
 
         self.correlation_treeWidget = QTreeWidget(self)
         self.correlation_treeWidget.itemClicked.connect(self.update_table)
-        self.correlation_treeWidget.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.correlation_treeWidget.customContextMenuRequested.connect(self.corr_context_menu)
+        self.correlation_treeWidget.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        # self.correlation_treeWidget.customContextMenuRequested.connect(self.corr_context_menu)
         model_label = QTreeWidgetItem(['MODEL', 'ΔH', 'ΔH+IE', 'ΔH+NMODE', 'ΔH+QH'])
         model_label.setToolTip(0, 'Selected Model')
         model_label.setToolTip(1, 'Correlation plot for ΔG = ΔH+IE')
@@ -122,16 +123,16 @@ class GMX_MMPBSA_ANA(QMainWindow):
         model_label.setToolTip(4, 'Correlation plot for ΔH only')
         self.correlation_treeWidget.setHeaderItem(model_label)
         cheader = self.correlation_treeWidget.header()
-        cheader.setSectionResizeMode(QHeaderView.ResizeToContents)
+        cheader.setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
 
         self.data_table_widget = QTableWidget(0, 3)
         self.data_table_widget.setHorizontalHeaderLabels(['System', 'Exp.ΔG'])
         self.data_table_energy_col = QTableWidgetItem('None')
         self.data_table_widget.setHorizontalHeaderItem(2, self.data_table_energy_col)
-        self.data_table_widget.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
+        self.data_table_widget.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
         self.data_table_widget.horizontalHeader().setStretchLastSection(True)
 
-        self.corr_container_widget = QSplitter(Qt.Vertical)
+        self.corr_container_widget = QSplitter(Qt.Orientation.Vertical)
         self.corr_container_widget.addWidget(self.correlation_treeWidget)
         self.corr_container_widget.addWidget(self.data_table_widget)
         self.correlation_DockWidget.setWidget(self.corr_container_widget)
@@ -184,8 +185,8 @@ class GMX_MMPBSA_ANA(QMainWindow):
         optionWidget_l.setContentsMargins(0, 0, 0, 0)
         # optionWidget_l.addLayout(self.btn_l)
         hl = QFrame()
-        hl.setFrameShape(QFrame.HLine)
-        hl.setFrameShadow(QFrame.Sunken)
+        hl.setFrameShape(QFrame.Shape.HLine)
+        hl.setFrameShadow(QFrame.Shadow.Sunken)
         optionWidget_l.addWidget(hl)
 
         update_frames_btn = QPushButton('Update')
@@ -216,7 +217,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
         optionWidget_l.addWidget(optionWidget_c)
 
         frames_w = QTabWidget(optionWidget_c)
-        frames_w.setTabPosition(QTabWidget.South)
+        frames_w.setTabPosition(QTabWidget.TabPosition.South)
         optionWidget_c.addTab(frames_w, 'Frames')
 
         frames_group = QWidget()
@@ -618,7 +619,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
         self.init_dialog.close()
         maximum = rqueue.qsize()
         qpd = QProgressDialog('Creating systems tree', 'Abort', 0, maximum, self)
-        qpd.setWindowModality(Qt.WindowModal)
+        qpd.setWindowModality(Qt.WindowModality.WindowModal)
         qpd.setMinimumDuration(1000)
 
         for sys_index, i in enumerate(range(maximum), start=1):

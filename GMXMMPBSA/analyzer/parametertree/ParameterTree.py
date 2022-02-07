@@ -18,8 +18,8 @@
 #  for more details.                                                           #
 # ##############################################################################
 
-from PyQt5.QtWidgets import *
-from PyQt5.QtCore import *
+from PyQt6.QtWidgets import *
+from PyQt6.QtCore import *
 from .ParameterItem import ParameterItem
 
 
@@ -35,13 +35,13 @@ class ParameterTree(QTreeWidget):
         ============== ========================================================
         """
         super(ParameterTree, self).__init__(parent)
-        self.setVerticalScrollMode(QTreeWidget.ScrollPerPixel)
+        self.setVerticalScrollMode(QTreeWidget.ScrollMode.ScrollPerPixel)
         self.setAnimated(True)
         self.setColumnCount(2)
         self.setHeaderLabels(["Parameter", "Value"])
         self.setAlternatingRowColors(True)
         self.paramSet = None
-        self.header().setSectionResizeMode(QHeaderView.ResizeToContents)
+        self.header().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
         self.setHeaderHidden(not showHeader)
         self.lastSel = None
         self.setRootIsDecorated(False)

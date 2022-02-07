@@ -20,9 +20,9 @@
 
 
 import os
-from PyQt5.QtCore import *
-from PyQt5.QtWidgets import *
-from PyQt5.QtGui import *
+from PyQt6.QtCore import *
+from PyQt6.QtWidgets import *
+from PyQt6.QtGui import *
 from .Parameter import Parameter, registerParameterType
 from .ParameterItem import ParameterItem
 from collections import OrderedDict
@@ -47,7 +47,7 @@ class ColorButton(QPushButton):
         super(ColorButton, self).__init__(parent)
         self.setColor(color)
         self.colorDialog = QColorDialog()
-        self.colorDialog.setOption(QColorDialog.DontUseNativeDialog, True)
+        self.colorDialog.setOption(QColorDialog.ColorDialogOption.DontUseNativeDialog, True)
         self.colorDialog.currentColorChanged.connect(self.dialogColorChanged)
         self.colorDialog.rejected.connect(self.colorRejected)
         self.colorDialog.colorSelected.connect(self.colorSelected)
@@ -343,7 +343,7 @@ class WidgetParameterItem(ParameterItem):
     def showEditor(self):
         self.widget.show()
         self.displayLabel.hide()
-        self.widget.setFocus(Qt.OtherFocusReason)
+        self.widget.setFocus(Qt.FocusReason.OtherFocusReason)
 
     def hideEditor(self):
         self.widget.hide()
@@ -492,7 +492,7 @@ class GroupParameterItem(ParameterItem):
             l.addStretch()
             self.addWidgetBox = w
             self.addItem = QTreeWidgetItem([])
-            self.addItem.setFlags(Qt.ItemIsEnabled)
+            self.addItem.setFlags(Qt.ItemFlag.ItemIsEnabled)
             self.addItem.depth = self.depth + 1
             ParameterItem.addChild(self, self.addItem)
             self.addItem.setSizeHint(0, self.addWidgetBox.sizeHint())
