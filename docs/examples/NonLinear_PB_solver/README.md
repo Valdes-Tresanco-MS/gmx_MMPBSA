@@ -44,7 +44,7 @@ That being said, once you are in the folder containing all files, the command-li
 
 where the `mmpbsa.in` input file, is a text file containing the following lines:
 
-``` linenums="1"
+``` yaml linenums="1" title="Sample input file for NLPB calculation"
 Sample input file for NLPB
 This input file is meant to show only that gmx_MMPBSA works. Althought,
 we tried to used the input files as recommended in the Amber manual,
