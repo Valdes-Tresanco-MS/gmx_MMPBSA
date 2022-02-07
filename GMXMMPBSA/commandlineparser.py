@@ -246,7 +246,7 @@ testparser = ArgumentParser(epilog=f'gmx_MMPBSA is an effort to implement the GB
 testparser.add_argument('-v', '--version', action='version',
                        version='%%(prog)s %s based on MMPBSA version %s' % (__version__, __mmpbsa_version__))
 group = testparser.add_argument_group('Test options')
-group.add_argument('-t', dest='test', choices=range(19), type=int, nargs='*', default=[2],
+group.add_argument('-t', dest='test', choices=list(range(19)) + [101], type=int, nargs='*', default=[2],
                    help='''\
 The level the test is going to be run at. Multiple systems and analysis can be run at the same time.
       Nr. of Sys  

@@ -125,9 +125,11 @@ def run_test(parser):
     if parser.test == [0]:
         key_list = range(3, 19)
     elif parser.test == [1]:
-        key_list = [3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 14, 15, 16, 19, 20, 21, 22, 23]
+        key_list = [3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 14, 15]
     elif parser.test == [2]:
         key_list = [3, 4, 5, 7, 9, 12, 13, 14, 15]
+    elif parser.test == [101]:
+        key_list = [3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 14, 15, 16, 19, 20, 21, 22, 23]
     else:
         key_list = parser.test
 
