@@ -291,24 +291,6 @@ class GMX_MMPBSA_ANA(QMainWindow):
 
         frames_w.addTab(ieframes_group, 'IE')
 
-        c2frames_group = QWidget()
-        self.c2segment_sb = QSpinBox()
-        self.c2segment_sb.setRange(1, 100)
-        self.c2segment_sb.setAccelerated(True)
-        # self.segment_sb.valueChanged.connect(self.frames_start_sb_update)
-
-        self.c2numframes_le = QLineEdit()
-        self.c2numframes_le.setReadOnly(True)
-
-        c2_l = QFormLayout(c2frames_group)
-        # c2_l.setContentsMargins(5, 5, 5, 5)
-        # c2_l.setSpacing(3)
-        c2_l.addRow('Segment', self.c2segment_sb)
-        c2_l.addRow('Nr. frames', self.c2numframes_le)
-
-        frames_w.addTab(c2frames_group, 'C2')
-        frames_w.setTabToolTip(3, 'Segment defined for Interaction Entropy calculation')
-
         # Charts options
         from GMXMMPBSA.analyzer.parametertree import ParameterTree, Parameter
         # from GMXMMPBSA.analyzer.propertyeditor import p
