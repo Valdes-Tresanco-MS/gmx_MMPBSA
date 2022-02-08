@@ -22,12 +22,15 @@ the full power of Python's extensions, if they want (e.g., numpy, scipy, etc.)
 #  or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License    #
 #  for more details.                                                           #
 # ##############################################################################
-
+from copy import copy, deepcopy
 from typing import Union
+
+from GMXMMPBSA.calculation import InteractionEntropyCalc, C2EntropyCalc
+
 from GMXMMPBSA import infofile, main
 from GMXMMPBSA.exceptions import NoFileExists
 from GMXMMPBSA.fake_mpi import MPI
-from GMXMMPBSA.amber_outputs import H5Output
+from GMXMMPBSA.amber_outputs import H5Output, BindingStatistics, IEout, C2out, DeltaBindingStatistics
 import pandas as pd
 from pathlib import Path
 import os
@@ -35,31 +38,251 @@ import numpy as np
 import h5py
 from types import SimpleNamespace
 
-__all__ = ['load_gmxmmpbsa_info']
 
-
-class DataStore(dict):
-    def __init__(self, *args):
-        super(DataStore, self).__init__(*args)
-
-
-
-class DataMMPBSA:
-    """ Main class that holds all of the Free Energy data """
+class MMPBSA_API():
+    """ Main class that holds all the Free Energy data """
 
     def __init__(self):
-        self.frames = []
         self.app_namespace = SimpleNamespace()
-        self.data = DataStore()
-        self.data.mutant = DataStore()
+        self.raw_energy = None
+        self.data = {}
 
-    def get_fromH5(self, h5file):
+        self.set_config()
 
+    def set_config(self, starttime=0, timestep=0, timeunit='ps'):
+        self.starttime = starttime
+        self.timestep = timestep
+        self.timeunit = timeunit
+
+    def load_file(self, fname: Union[Path, str]):
+        """
+        Load the info or h5 file and extract the info
+
+        Args:
+            fname: String- or Path-like file reference
+
+        Returns:
+
+        """
+        if not isinstance(fname, Path):
+            fname = Path(fname)
+        if not fname.exists():
+            raise NoFileExists("cannot find %s!" % fname)
+        os.chdir(fname.parent)
+
+        if fname.suffix == '.h5':
+            self._get_fromH5(fname)
+        else:
+            self._get_fromApp(fname)
+
+    def get_info(self):
+        """
+        Get all variables in the INFO dictionary
+        Returns:
+
+        """
+        return self.app_namespace.INFO
+
+    def get_input(self):
+        """
+        Get all variables defined in the INPUT dictionary
+        Returns:
+
+        """
+        return self.app_namespace.INPUT
+
+    def get_files(self):
+        """
+        Get all variables in the FILES dictionary
+        Returns:
+
+        """
+        return self.app_namespace.FILES
+
+    def get_raw_energy(self):
+        """
+        Get the energy data for normal and mutant in structured dict
+        Returns:
+
+        """
+        return self.data
+
+    def _get_df(self, raw_energy, key, delta=False):
+        df_models = {}
+        if self.timestep:
+            index = pd.Series(list(self.frames.values()), name=f'Time ({self.timeunit})')
+        else:
+            index = pd.Series(list(self.frames.keys()), name='Frames')
+        for model, data in raw_energy[key].items():
+            if model in ['gb', 'pb', 'rism std', 'rism gf']:
+                df_models[model] = pd.DataFrame(self._energy2flatdict(data), index=index)
+            elif model == 'ie':
+                temp = {}
+                for m, iedata in data.items():
+                    df = pd.DataFrame({'data': iedata['data']}, index=index)
+                    df1 = pd.DataFrame({'iedata': iedata['iedata'], 'sigma': iedata['sigma']},
+                                       index=index[-iedata['ieframes']:])
+                    temp[m] = pd.concat([df, df1], axis=1)
+                df_models[model] = pd.concat(temp.values(), axis=1, keys=temp.keys())
+            elif model == 'c2':
+                temp = {m: pd.DataFrame({'c2data': c2data['c2data'], 'sigma': c2data['sigma']}, index=[0])
+                        for m, c2data in data.items()}
+                df_models[model] = pd.concat(temp.values(), axis=1, keys=temp.keys())
+
+
+            # print('######################')
+            # print(df_models[model].columns.get_level_values(1))
+            # print(df_models[model]['complex', 'BOND'])
+            print(df_models[model])
+            # print('######################')
+
+
+
+            # if delta:
+            #     df_models[model] = pd.DataFrame(raw_energy[key][model]['delta'], index=index)
+            #     df_models[model].columns = pd.MultiIndex.from_product([['delta'], df_models[model].columns])
+            # else:
+            #     dfnc = pd.DataFrame(data=raw_energy[key][model]['complex'], index=index)
+            #     dfnr = pd.DataFrame(data=raw_energy[key][model]['receptor'], index=index)
+            #     dfnl = pd.DataFrame(data=raw_energy[key][model]['ligand'], index=index)
+            #     dfnd = pd.DataFrame(data=raw_energy[key][model]['delta'], index=index)
+            #     df_models[model] = pd.concat([dfnc, dfnr, dfnl, dfnd], axis=1, keys=['complex', 'receptor', 'ligand',
+            #                                                                          'delta'])
+        return df_models
+
+    def get_energy(self):
+
+        raw_energy = self.get_raw_energy()
+
+        energy = {}
+        if raw_energy['normal']:
+            energy['normal'] = self._get_df(raw_energy, 'normal')
+        if raw_energy['mutant']:
+            energy['mutant'] = self._get_df(raw_energy, 'mutant')
+        if raw_energy['mutant-normal']:
+            energy['mutant-normal'] = self._get_df(raw_energy, 'mutant-normal', True)
+        #
+        # if raw_energy['decomp_normal']:
+        #     raw_energy['decomp_normal'] = self._get_df(raw_energy, 'decomp_normal')
+
+
+
+        return energy
+
+    def update_energy_frames(self, startframe, endframe, interval=1):
+
+        self._get_frames()
+        start = list(self.frames.keys()).index(startframe)
+        end = list(self.frames.keys()).index(endframe) + 1
+
+        # 6- get the number of frames
+        self._update_frames(startframe, endframe, interval)
+
+        # TODO:
+        # 1- Iterar sobre cada clase que contiene la data y crear una copia (sino no se puede recobrar la data original)
+        self.data = deepcopy(self._oringin)
+        for key, v in self.data.items():
+            # key: normal, mutant, decomp_normal, decomp_mutant
+            if key in ['normal', 'mutant']:
+                for model, v1 in v.items():
+                    if model in ['gb', 'pb', 'rism std', 'rism gf']:
+        # 2- Actualizar los frames y recalcular los composites
+                        v1['complex'].set_frame_range(start, end, interval)
+                        if not self.stability:
+                            v1['receptor'].set_frame_range(start, end, interval)
+                            v1['ligand'].set_frame_range(start, end, interval)
+        # 3- Recalcular los deltas
+                            v1['delta'] = BindingStatistics(v1['complex'], v1['receptor'], v1['ligand'],
+                                                               self.app_namespace.INFO['using_chamber'],
+                                                               self.traj_protocol)
+        # 4- Recalcular las entropías basadas en GGAS
+                            if self.app_namespace.INPUT['interaction_entropy']:
+                                edata = v1['delta']['GGAS']
+                                ie = InteractionEntropyCalc(edata, self.app_namespace.INPUT)
+                                ieout = IEout(self.app_namespace.INPUT)
+                                v['ie'][model] = ieout.parse_from_dict(key, {'data': ie.data, 'iedata': ie.iedata,
+                                                                                  'ieframes': ie.ieframes,
+                                                                                  'sigma': ie.ie_std})
+                            if self.app_namespace.INPUT['c2_entropy']:
+                                edata = v1['delta']['GGAS']
+                                c2 = C2EntropyCalc(edata, self.app_namespace.INPUT)
+                                v['c2'][model] = {'c2data': c2.c2data, 'sigma': c2.ie_std, 'c2_std': c2.c2_std,
+                                                  'c2_ci': c2.c2_ci}
+
+        # 5- Recalcular los delta delta sin CAS
+        if 'normal' in self.data and self.data['normal'] and 'mutant' in self.data and self.data['mutant']:
+            for model in self.data['normal']:
+                print(self.data['mutant'].keys())
+                if model in ['gb', 'pb', 'rism std', 'rism gf']:
+                    self.data['mutant-normal'][model] = DeltaBindingStatistics(self.data['mutant'][model]['delta'],
+                                                                     self.data['normal'][model]['delta'])
+
+
+        # 6- Recalcular los summary
+        self.get_summary()
+        # 7- actualizar la data de salida
+        # return self.data
+
+    def get_summary(self):
+        summary = {}
+
+        for m, v in self.data.items():
+            if m not in ['mutant-normal', 'mutant', 'normal']:
+                continue
+            for model, v1 in v.items():
+                if m == 'mutant-normal':
+                    # summary[m][model] = [v1.mean(), v1.std(), v1.std() /len(self.frames)]
+                    continue
+                else:
+                    summary[(m, model)] = {}
+                for mol, v2 in v1.items():
+                    try:
+                        print(mol, v2)
+                        if v2:
+                            summ = v2.summary('csv')
+                            summary[(m, model, (mol,))] = pd.DataFrame(summ[2:], columns=summ[1])
+                            # summary[m][model][(mol,)] = v2.summary('csv')[1:]
+
+                        else:
+                            print(mol)
+            #             summary[m][model][mol][(mol,)] = [v2.mean(), v2.stdev(), v2.std(), v2.stdev() / len(self.frames),
+            #                                               v2.std() /len(self.frames)]
+                    except:
+                        pass
+        # df = pd.DataFrame(summary['gb']['complex'], columns=['Category', 'Name', 'Marks'])
+
+        return summary
+
+    def get_gb_energy(self):
+        energy = self.get_energy()
+        gb_energy = {}
+        if 'normal' in energy and 'gb' in energy['normal']:
+            gb_energy['normal'] = energy['normal']['gb']
+        if 'mutant' in energy and 'gb' in energy['mutant']:
+            gb_energy['mutant'] = energy['mutant']['gb']
+        return gb_energy
+
+    def get_normal_gb_energy(self):
+        energy = self.get_gb_energy()
+        if 'normal' in energy:
+            return energy['normal']
+
+    def get_mutant_gb_energy(self):
+        energy = self.get_gb_energy()
+        if 'mutant' in energy:
+            return energy['mutant']
+
+    def _get_fromH5(self, h5file):
         h5file = H5Output(h5file)
         self.app_namespace = h5file.app_namespace
-        self._get_data(h5file)
+        self._oringin = {'normal': h5file.calc_types.normal, 'mutant': h5file.calc_types.mutant,
+                         'decomp_normal': h5file.calc_types.decomp_normal, 'decomp_mutant': h5file.calc_types.decomp_mutant,
+                         'mutant-normal': h5file.calc_types.mut_norm,
+                         'decomp_mutant-normal': h5file.calc_types.decomp_mut_norm}
+        self.data = copy(self._oringin)
+        self._get_frames()
 
-    def get_fromApp(self, ifile):
+    def _get_fromApp(self, ifile):
 
         app = main.MMPBSA_App(MPI)
         info = infofile.InfoFile(app)
@@ -67,21 +290,27 @@ class DataMMPBSA:
         app.normal_system = app.mutant_system = None
         app.parse_output_files()
         self.app_namespace = self._get_namespace(app)
-        self._get_data(app)
+        self._oringin = {'normal': app.calc_types.normal, 'mutant': app.calc_types.mutant,
+                         'decomp_normal': app.calc_types.decomp_normal, 'decomp_mutant': app.calc_types.decomp_mutant,
+                         'mutant-normal': app.calc_types.mut_norm,
+                         'decomp_mutant-normal': app.calc_types.decomp_mut_norm}
+        self.data = copy(self._oringin)
+        self._get_frames()
+        self._get_data(None)
 
     @staticmethod
     def _get_namespace(app):
 
-        input_file_text = ('|Input file:\n|--------------------------------------------------------------\n|'
-                           + ''.join(open(app.FILES.input_file).readlines()).replace('\n', '\n|') +
-                           '--------------------------------------------------------------\n')
+        # input_file_text = ('|Input file:\n|--------------------------------------------------------------\n|'
+        #                    + ''.join(open(app.FILES.input_file).readlines()).replace('\n', '\n|') +
+        #                    '--------------------------------------------------------------\n')
+        print(app.mutant_index)
         INFO = {'COM_PDB': ''.join(open(app.FILES.complex_fixed).readlines()),
-                'input_file': input_file_text,
+                'input_file': app.input_file_text,
                 'mutant_index': app.mutant_index,
-                'mut_str': app.mut_str,
+                'mut_str': app.resl[app.mutant_index].mutant_label if app.mutant_index else '',
                 'numframes': app.numframes,
                 'numframes_nmode': app.numframes_nmode,
-                # FIXME: arreglar compatibilidad con la versiones anteriores, algunas variables no existen
                 'output_file': ''.join(open(app.FILES.output_file).readlines()),
                 'size': app.mpi_size,
                 'using_chamber': app.using_chamber}
@@ -90,144 +319,160 @@ class DataMMPBSA:
 
         return SimpleNamespace(FILES=app.FILES, INPUT=app.INPUT, INFO=INFO)
 
-    def _get_data(self, data_object: Union[H52Data, main.MMPBSA_App]):
-        # check the data_object type
-        h5 = isinstance(data_object, H52Data)
+    def _get_frames(self):
+
+        INPUT = self.app_namespace.INPUT
+        numframes = self.app_namespace.INFO['numframes']
+
+        frames_list = list(range(INPUT['startframe'], INPUT['startframe'] + numframes * INPUT['interval'],
+                                 INPUT['interval']))
+        INPUT['endframe'] = frames_list[-1]
+
+        ts = 1 if not self.timestep else self.timestep
+        time_step_list = list(range(self.starttime, self.starttime + len(frames_list) * ts, ts * INPUT['interval']))
+        self.frames = dict(zip(frames_list, time_step_list))
+
+    def _update_frames(self, startframe, endframe, interval):
+
+        # get the original frames list
+        self._get_frames()
+
+
+        curr_frames = list(range(startframe, endframe + interval, interval))
+        frames = list(self.frames.keys())
+        for x in frames:
+            if x not in curr_frames:
+                self.frames.pop(x)
+
+        print('updated frames', self.frames)
+
+    def get_com(self):
+        return copy(self.data['normal']['gb']['complex'])
+
+    def _get_data(self, calc_types):
+        """
+
+        Args:
+            calc_types:
+
+        Returns:
+
+        """
+        # check the calc_types type
         INPUT = self.app_namespace.INPUT
         numframes = self.app_namespace.INFO['numframes']
         numframes_nmode = self.app_namespace.INFO['numframes_nmode']
         # See if we are doing stability
         self.stability = self.app_namespace.FILES.stability
+        self.mutant_only = self.app_namespace.INPUT['mutant_only']
+        self.traj_protocol = ('MTP' if self.app_namespace.FILES.receptor_trajs or
+                                       self.app_namespace.FILES.ligand_trajs else 'STP')
 
-        # Now load the data into the dict
-        self.frames = list(
-            range(
-                INPUT['startframe'],
-                INPUT['startframe'] + numframes * INPUT['interval'],
-                INPUT['interval'],
-            )
-        )
 
-        INPUT['endframe'] = self.frames[-1]
-
-        self.nmode_frames = list(
-            range(
-                INPUT['nmstartframe'],
-                INPUT['nmstartframe'] + numframes_nmode * INPUT['interval'],
-                INPUT['interval'],
-            )
-        )
-
-        if numframes_nmode:
-            INPUT['nmendframe'] = self.nmode_frames[-1]
         # Now load the data
-        if not INPUT['mutant_only']:
-            self._get_edata(data_object.calc_types, h5)
-        # Are we doing a mutant?
-        if data_object.calc_types.mutant:
-            self._get_edata(data_object.calc_types.mutant, h5, True)
+        # if not INPUT['mutant_only']:
+        #     self._get_edata(calc_types.normal)
 
-        # Now we load the decomp data. Avoid to get the decomp data in first place in gmx_MMPBSA_ana
-        if INPUT['decomprun']:
-            if not INPUT['mutant_only']:
-                self.data['decomp'] = self._get_ddata(data_object.calc_types.decomp, h5)
-            if data_object.calc_types.mutant:
-                self.data.mutant['decomp'] = self._get_ddata(data_object.calc_types.decomp.mutant, h5)
-
-    def _get_edata(self, calc_types, h5=False, mut=False):
-
-        data = self.data.mutant if mut else self.data
-        for key in calc_types:
-            if key == 'decomp':
-                continue
-            if key in ['ie', 'c2']:
-                # since the model data object in MMPBSA_App contain the data in the attribute data and H5 not,
-                # we need to define a conditional object
-                calc_type_data = calc_types[key] if h5 else calc_types[key].data
-                data[key] = {}
-                if key == 'ie':
-                    for iekey in calc_type_data:
-                        data[key][iekey] = {
-                            'data': pd.DataFrame(calc_type_data[iekey]['data'], columns=['data'],
-                                                 index=self.frames),
-                            'iedata': pd.DataFrame(calc_type_data[iekey]['iedata'], columns=['iedata'],
-                                                   index=self.frames[-calc_type_data[iekey]['ieframes']:]),
-                            'ieframes': calc_type_data[iekey]['ieframes'],
-                            'sigma': calc_type_data[iekey]['sigma']}
-                else:
-                    for c2key in calc_type_data:
-                        data[key][c2key] = {'c2data': calc_type_data[c2key]['c2data'],
-                                            'sigma': calc_type_data[c2key]['sigma'],
-                                            'c2_std': calc_type_data[c2key]['c2_std'],
-                                            'c2_ci': calc_type_data[c2key]['c2_ci']}
-            else:
-                # Since the energy models have the same structure as nmode and qh, we only need to worry about
-                # correctly defining the Dataframe index, that is, the frames
-                if key == 'nmode':
-                    cframes = self.nmode_frames
-                elif key == 'qh':
-                    cframes = [0]
-                else:
-                    cframes = self.frames
-                # since the model data object in MMPBSA_App contain the data in the attribute data and H5 not,
-                # we need to define a conditional object
-                com_calc_type_data = (calc_types[key]['complex'] if h5
-                                      else calc_types[key]['complex'].data)
-                df = complex = pd.DataFrame({dkey: com_calc_type_data[dkey] for dkey in com_calc_type_data},
-                                            index=cframes)
-                if not self.stability:
-                    rec_calc_type_data = (calc_types[key]['receptor'] if h5
-                                          else calc_types[key]['receptor'].data)
-                    receptor = pd.DataFrame({dkey: rec_calc_type_data[dkey] for dkey in rec_calc_type_data},
-                                            index=cframes)
-                    lig_calc_type_data = (calc_types[key]['ligand'] if h5
-                                          else calc_types[key]['ligand'].data)
-                    ligand = pd.DataFrame({dkey: lig_calc_type_data[dkey] for dkey in lig_calc_type_data},
-                                          index=cframes)
-                    delta = complex - receptor - ligand
-                    df = pd.concat([complex, receptor, ligand, delta], axis=1,
-                                   keys=['complex', 'receptor', 'ligand', 'delta'])
-                data[key] = df
-
-    def _get_ddata(self, calc_types, h5=False):
-        data = {}
-        # Take the decomp data
-        for key in calc_types:
-            # since the model data object in MMPBSA_App contain the data in the attribute data and H5 not,
-            # we need to define a conditional object. Also, the decomp data must be re-structured for multiindex
-            # Dataframe
-            com_calc_type_data = (calc_types[key]['complex'] if h5
-                                  else self._transform_from_lvl_decomp(calc_types[key]['complex']))
-            df = complex = pd.DataFrame(com_calc_type_data, index=self.frames)
-            if not self.stability:
-                rec_calc_type_data = (calc_types[key]['receptor'] if h5
-                                      else self._transform_from_lvl_decomp(calc_types[key]['receptor']))
-                receptor = pd.DataFrame(rec_calc_type_data, index=self.frames)
-
-                lig_calc_type_data = (calc_types[key]['ligand'] if h5
-                                      else self._transform_from_lvl_decomp(calc_types[key]['ligand']))
-                ligand = pd.DataFrame(lig_calc_type_data, index=self.frames)
-
-                delta = complex.subtract(pd.concat([receptor, ligand], axis=1)).combine_first(
-                    complex).reindex_like(df)
-                df = pd.concat([complex, receptor, ligand, delta], axis=1,
-                               keys=['complex', 'receptor', 'ligand', 'delta'])
-            data[key] = df
-        return data
+    # def _get_edata(self, calc_type_data):
+    #     from GMXMMPBSA.amber_outputs import GBout
+    #     for key in calc_type_data:
+    #
+    #         if key == 'gb':
+    #             com = GBout(None, self.app_namespace.INPUT, read=False)
+    #             com.parse_from_h5(calc_type_data[key]['complex'])
+    #             # com.get_energies_fromdict(calc_type_data[key]['complex'])
+    #         # if key in ['ie', 'c2']:
+    #         #     data[key] = {}
+    #         #     if key == 'ie':
+    #         #         for iekey in calc_type_data:
+    #         #             data[key][iekey] = {
+    #         #                 'data': pd.DataFrame(calc_type_data[iekey]['data'], columns=['data'],
+    #         #                                      index=pd.Index(self.frames, names='frames')),
+    #         #                 'iedata': pd.DataFrame(calc_type_data[iekey]['iedata'], columns=['iedata'],
+    #         #                                        index=self.frames[-calc_type_data[iekey]['ieframes']:]),
+    #         #                 'ieframes': calc_type_data[iekey]['ieframes'],
+    #         #                 'sigma': calc_type_data[iekey]['sigma']}
+    #         #     else:
+    #         #         for c2key in calc_type_data:
+    #         #             data[key][c2key] = {'c2data': calc_type_data[c2key]['c2data'],
+    #         #                                 'sigma': calc_type_data[c2key]['sigma'],
+    #         #                                 'c2_std': calc_type_data[c2key]['c2_std'],
+    #         #                                 'c2_ci': calc_type_data[c2key]['c2_ci']}
+    #         # else:
+    #     #         # Since the energy models have the same structure as nmode and qh, we only need to worry about
+    #     #         # correctly defining the Dataframe index, that is, the frames
+    #     #         if key == 'nmode':
+    #     #             cframes = self.nmode_frames
+    #     #         elif key == 'qh':
+    #     #             cframes = [0]
+    #     #         else:
+    #     #             cframes = self.frames
+    #     #         # since the model data object in MMPBSA_App contain the data in the attribute data and H5 not,
+    #     #         # we need to define a conditional object
+    #     #         com_calc_type_data = (calc_types[key]['complex'] if h5
+    #     #                               else calc_types[key]['complex'].data)
+    #     #         df = complex = pd.DataFrame({dkey: com_calc_type_data[dkey] for dkey in com_calc_type_data},
+    #     #                                     index=pd.Series(cframes, name='frames'))
+    #     #         if not self.stability:
+    #     #             rec_calc_type_data = (calc_types[key]['receptor'] if h5
+    #     #                                   else calc_types[key]['receptor'].data)
+    #     #             receptor = pd.DataFrame({dkey: rec_calc_type_data[dkey] for dkey in rec_calc_type_data},
+    #     #                                     index=pd.Series(cframes, name='frames'))
+    #     #             lig_calc_type_data = (calc_types[key]['ligand'] if h5
+    #     #                                   else calc_types[key]['ligand'].data)
+    #     #             ligand = pd.DataFrame({dkey: lig_calc_type_data[dkey] for dkey in lig_calc_type_data},
+    #     #                                   index=pd.Series(cframes, name='frames'))
+    #     #             delta = complex - receptor - ligand
+    #     #             df = pd.concat([complex, receptor, ligand, delta], axis=1,
+    #     #                            keys=['complex', 'receptor', 'ligand', 'delta'])
+    #     #         data[key] = df
+    #
+    # def _get_ddata(self, calc_types, h5=False):
+    #     data = {}
+    #     # Take the decomp data
+    #     for key in calc_types:
+    #         # since the model data object in MMPBSA_App contain the data in the attribute data and H5 not,
+    #         # we need to define a conditional object. Also, the decomp data must be re-structured for multiindex
+    #         # Dataframe
+    #         com_calc_type_data = (calc_types[key]['complex'] if h5
+    #                               else self._transform_from_lvl_decomp(calc_types[key]['complex']))
+    #         df = complex = pd.DataFrame(com_calc_type_data, index=self.frames)
+    #         if not self.stability:
+    #             rec_calc_type_data = (calc_types[key]['receptor'] if h5
+    #                                   else self._transform_from_lvl_decomp(calc_types[key]['receptor']))
+    #             receptor = pd.DataFrame(rec_calc_type_data, index=self.frames)
+    #
+    #             lig_calc_type_data = (calc_types[key]['ligand'] if h5
+    #                                   else self._transform_from_lvl_decomp(calc_types[key]['ligand']))
+    #             ligand = pd.DataFrame(lig_calc_type_data, index=self.frames)
+    #
+    #             delta = complex.subtract(pd.concat([receptor, ligand], axis=1)).combine_first(
+    #                 complex).reindex_like(df)
+    #             df = pd.concat([complex, receptor, ligand, delta], axis=1,
+    #                            keys=['complex', 'receptor', 'ligand', 'delta'])
+    #         data[key] = df
+    #     return data
 
     @staticmethod
-    def _transform_from_lvl_decomp(nd):
+    def _energy2flatdict(nd, omit=None):
+        if not omit:
+            omit = []
         data = {}
-        for k2, v2 in nd.items():  # TDC, SDC, BDC
-            for k3, v3 in v2.items():  # residue
-                for k4, v4 in v3.items():  # residue in per-wise or terms in per-res
-                    if isinstance(v4, dict):  # per-wise
-                        for k5, v5 in v4.items():
-                            data[(k2, k3, k4, k5)] = v5
-                    else:
-                        data[(k2, k3, k4)] = v4
+        for k1, v1 in nd.items():  # Complex, receptor, ligand and delta
+            if k1 in omit:
+                continue
+            for k2, v2 in v1.items():  # TDC, SDC, BDC or terms
+                if isinstance(v2, dict):  # per-wise
+                    for k3, v3 in v2.items():  # residue
+                        for k4, v4 in v3.items():  # residue in per-wise or terms in per-res
+                            if isinstance(v4, dict):  # per-wise
+                                for k5, v5 in v4.items():
+                                    data[(k1, k2, k3, k4, k5)] = v5
+                            else:
+                                data[(k1, k2, k3, k4)] = v4
+                else:
+                    data[(k1, k2)] = v2
         return data
-
 
 def load_gmxmmpbsa_info(fname: Union[Path, str]):
     """
@@ -285,7 +530,7 @@ def load_gmxmmpbsa_info(fname: Union[Path, str]):
                                mydata['gb']['complex']['TOTAL'])
 
        # Calculate the standard deviation of the alanine mutant receptor in PB
-       print mydata.mutant['pb']['receptor']['TOTAL'].std()
+       print mydata.mutant['pb']['receptor']['TOTAL'].stdev()
     """
     if not isinstance(fname, Path):
         fname = Path(fname)
@@ -293,11 +538,6 @@ def load_gmxmmpbsa_info(fname: Union[Path, str]):
     if not fname.exists():
         raise NoFileExists("cannot find %s!" % fname)
     os.chdir(fname.parent)
-    d_mmpbsa = DataMMPBSA()
-
-    if fname.suffix == '.h5':
-        d_mmpbsa.get_fromH5(fname)
-    else:
-        d_mmpbsa.get_fromApp(fname)
-
-    return d_mmpbsa.data, d_mmpbsa.app_namespace
+    d_mmpbsa = MMPBSA_API()
+    d_mmpbsa.load_file(fname)
+    return d_mmpbsa.get_energy(), d_mmpbsa.app_namespace
