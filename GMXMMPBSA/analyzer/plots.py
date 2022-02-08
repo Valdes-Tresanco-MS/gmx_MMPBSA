@@ -645,45 +645,96 @@ class OutputFiles(QMdiSubWindow):
         self.button.setChecked(False)
 
 
-class PandasTableModel(QStandardItemModel):
-    def __init__(self, data, parent=None):
-        QStandardItemModel.__init__(self, parent)
-        self._df = data.round(3)
-        self.df_list = self._df.to_csv().split('\n')
-        for row in self.df_list:
-            self.appendRow([QStandardItem(f"{x}") for x in row.split(',')])
-        return
-
-    def rowCount(self, parent=None, *args, **kwargs):
-        return len(self.df_list)
-
-    def columnCount(self, parent=None, *args, **kwargs):
-        return len(self.df_list[0].split(','))
-
-
 class Tables(QMdiSubWindow):
-    def __init__(self, df: pd.DataFrame, button):
+    def __init__(self, df: pd.DataFrame, button: QToolButton, options: dict = None, summary=False):
         super(Tables, self).__init__()
         self.setMinimumSize(400, 400)
-        self.table = QTableView(self)
-        self.table.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        self.setWidget(self.table)
+        self.container = QWidget()
+        self.setWidget(self.container)
+        self.container_layout = QVBoxLayout(self.container)
+        self.container_layout.setContentsMargins(0, 0, 0, 0)
 
+        self.options = options
+        self.setWindowTitle(self.options['table_name'])
+        self.table_name = self.options['table_name'].replace(' | ', '_')
         self.button = button
+
+        self.table = QTableWidget(self)
+        self.container_layout.addWidget(self.table)
+        self._df = df.round(2)
+
+        if summary:
+            self.df_list = df.values.tolist()
+            labels = list(df.columns)
+            rows = len(df.index)
+            cols = len(df.columns)
+        else:
+            temp_df_list = [x.split(',') for x in df.to_csv().split('\n')]
+            self.df_list = temp_df_list[1:]
+            labels = temp_df_list[0]
+            rows = len(self.df_list) - 1
+            cols = len(self.df_list[0])
+
+        self.table.setColumnCount(cols)
+        self.table.setRowCount(rows)
+        self.table.setHorizontalHeaderLabels(labels)
+
+        for r, row in enumerate(self.df_list):
+            for c, col in enumerate(row):
+                text = f'{float(col):.2f}' if c else col
+                item = QTableWidgetItem(text)
+                if c == 0:
+                    if not summary:
+                        item.setTextAlignment(Qt.AlignmentFlag.AlignRight)
+                    if col in ['BOND', 'ANGLE', 'DIHED', 'VDWAALS', 'EEL', '1-4 VDW', '1-4 EEL', 'GGAS',
+                               'ΔBOND', 'ΔANGLE', 'ΔDIHED', 'ΔVDWAALS', 'ΔEEL', 'Δ1-4 VDW', 'Δ1-4 EEL', 'ΔGGAS',
+                               'ΔΔBOND', 'ΔΔANGLE', 'ΔΔDIHED', 'ΔΔVDWAALS', 'ΔΔEEL', 'ΔΔ1-4 VDW', 'ΔΔ1-4 EEL',
+                               'ΔΔGGAS']:
+                        item.setBackground(QColor('orange'))
+                    elif col in ['EGB', 'ESURF', 'GSOLV',
+                                 'ΔEGB', 'ΔESURF', 'ΔGSOLV',
+                                 'ΔEGB', 'ΔESURF', 'ΔGSOLV']:
+                        item.setBackground(QColor('green'))
+                    else:
+                        item.setBackground(QColor('white'))
+                if c > 0:
+                    item.setTextAlignment(Qt.AlignmentFlag.AlignRight)
+                self.table.setItem(r, c, item)
 
         self.table.installEventFilter(self)
 
-        self.model = PandasTableModel(df)
-        self.table.setModel(self.model)
+        self.save_btn = QPushButton('Save')
+        self.save_btn.clicked.connect(self.saveToFile)
+        self.save_format = QComboBox()
+        self.save_format.addItem('*.csv')
+        # self.save_format.addItem('*.xlsx')
+        self.save_layout = QHBoxLayout()
+        self.save_layout.addStretch(10)
+        self.save_layout.addWidget(self.save_format)
+        self.save_layout.addWidget(self.save_btn)
+        self.container_layout.addLayout(self.save_layout)
+
         h_header = self.table.horizontalHeader()
-        h_header.setSectionResizeMode(QHeaderView.Stretch)
+        h_header.setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         h_header.setStretchLastSection(True)
-        h_header.hide()
         v_header = self.table.verticalHeader()
         v_header.hide()
 
+    def saveToFile(self):
+        filter = self.save_format.currentText()
+        fileName, _ = QFileDialog.getSaveFileName(self, "Save table content to file",
+                                                  self.table_name + filter[1:],
+                                                  "CSV (*.csv);;Excel (*.xlsx);;All Files (*)",
+                                                  "CSV (*.csv)" if filter == '*.csv' else "Excel (*.xlsx)")
+        if not fileName:
+            return
+        if filter == '*.csv':
+            self._df.to_csv(fileName)
+        else:
+            self._df.to_excel(fileName)
+
     def eventFilter(self, source, event):
-        if (event.type() == QEvent.KeyPress and event.matches(QKeySequence.Copy)):
+        if (event.type() == QEvent.Type.KeyPress and event.matches(QKeySequence.StandardKey.Copy)):
             self._copySelection()
             return True
         return super(Tables, self).eventFilter(source, event)
@@ -697,13 +748,16 @@ class Tables(QMdiSubWindow):
         rowcount = rows[-1] - rows[0] + 1
         colcount = columns[-1] - columns[0] + 1
         table = [[''] * colcount for _ in range(rowcount)]
+        header = [[''] * colcount]
         for index in selection:
             row = index.row() - rows[0]
             column = index.column() - columns[0]
             table[row][column] = index.data() or ''
-        temp = ['\t'.join(x) + '\n' for x in table]
+            if not header[0][column]:
+                header[0][column] = self.table.horizontalHeaderItem(column).text()
+        temp = ['\t'.join(x) + '\n' for x in header] + ['\t'.join(x) + '\n' for x in table]
         text = ''.join(temp)
-        qApp.clipboard().setText(text)
+        QApplication.clipboard().setText(text)
 
     def closeEvent(self, closeEvent: QCloseEvent) -> None:
         self.button.setChecked(False)
