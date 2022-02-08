@@ -40,13 +40,13 @@ class CorrelationItem(QTreeWidgetItem):
         self.dgie = dgie
         self.dgnmode = dgnmode
         self.dgqh = dgqh
-        self.chart_title = f'Correlation Using {stringlist[0].upper()} model'
-        self.chart_subtitle = ['Exp. Energy vs Enthalpy (ΔH)', 'Exp. Energy vs Pred. Energy (ΔH+IE)',
+        self.title = f'Correlation Using {stringlist[0].upper()} model'
+        self.subtitle = ['Exp. Energy vs Enthalpy (ΔH)', 'Exp. Energy vs Pred. Energy (ΔH+IE)',
                                'Exp. Energy vs Pred. Energy (ΔH+NMODE)', 'Exp. Energy vs Pred. Energy (ΔH+QH)']
         self.item_name = stringlist[0]
         if col_box:
             for col in col_box:
-                self.setCheckState(col, Qt.Unchecked)
+                self.setCheckState(col, Qt.CheckState.Unchecked)
 
         self.dh_sw = None
         self.dgie_sw = None
@@ -55,18 +55,16 @@ class CorrelationItem(QTreeWidgetItem):
 
 
 class CustomItem(QTreeWidgetItem):
-    def __init__(self, parent, stringlist, data=None, app=None, level=0, chart_title='Binding Free Energy',
-                 chart_subtitle='', system_index=1, iec2_data=None, item_type='energy',
-                 buttons=(), options_btn=False, remove_empty_terms=False):
+    def __init__(self, parent, stringlist, app=None, title='Binding Free Energy', subtitle='', system_index=1,
+                 iec2_data=None, buttons=(), keys_path=None):
         super(CustomItem, self).__init__(parent, stringlist)
 
         self.remove_empty_terms = remove_empty_terms
         self.data = data
         self.system_index = system_index
         self.app = app
-        self.level = level
-        self.chart_title = chart_title
-        self.chart_subtitle = chart_subtitle
+        self.title = title
+        self.subtitle = subtitle
         self.item_name = stringlist[0]
         self.buttons = buttons
         self.options_btn = options_btn
@@ -323,7 +321,7 @@ class CustomItem(QTreeWidgetItem):
         self.app.treeWidget.clearSelection()
 
         options = self.app.systems[self.system_index]['chart_options'].get_settings()
-        options.update({'chart_title': self.chart_title, 'chart_subtitle': self.chart_subtitle})
+        options.update({'title': self.title, 'subtitle': self.subtitle})
         changes = self.app.systems[self.system_index]['chart_options'].changes
         if state:
             self.setSelected(True)
@@ -354,7 +352,7 @@ class CustomItem(QTreeWidgetItem):
         from GMXMMPBSA.analyzer.plots import BarChart
         self.app.treeWidget.clearSelection()
         options = self.app.systems[self.system_index]['chart_options'].get_settings()
-        options.update({'chart_title': self.chart_title, 'chart_subtitle': self.chart_subtitle})
+        options.update({'title': self.title, 'subtitle': self.subtitle})
         changes = self.app.systems[self.system_index]['chart_options'].changes
 
         if 'groups' in self.properties:
@@ -381,7 +379,7 @@ class CustomItem(QTreeWidgetItem):
         from GMXMMPBSA.analyzer.plots import HeatmapChart
         self.app.treeWidget.clearSelection()
         options = self.app.systems[self.system_index]['chart_options'].get_settings()
-        options.update({'chart_title': self.chart_title, 'chart_subtitle': self.chart_subtitle})
+        options.update({'title': self.title, 'subtitle': self.subtitle})
         changes = self.app.systems[self.system_index]['chart_options'].changes
         if state:
             self.setSelected(True)
