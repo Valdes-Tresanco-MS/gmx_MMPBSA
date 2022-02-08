@@ -49,7 +49,7 @@ That being said, once you are in the folder containing all files, the command-li
 
 where the `mmpbsa.in` input file, is a text file containing the following lines:
 
-``` linenums="1"
+``` yaml linenums="1" title="Sample input file for QM/MMGBSA calculation"
 Sample input file for QM/MMGBSA calculation
 This input file is meant to show only that gmx_MMPBSA works. 
 Although, we tried to use the input files as recommended in the
