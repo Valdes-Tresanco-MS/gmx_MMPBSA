@@ -348,6 +348,9 @@ def write_outputs(app):
         # Now calculate the effect of alanine scanning
         if INPUT['alarun'] and not INPUT['mutant_only']:
             nm_sys_norm = app.calc_types.mut_norm['nmode']
+            mut_norm = app.calc_types.mut_norm['nmode']['delta']
+            final_output.add_section(mut_norm.summary())
+
             final_output.write('ENTROPY RESULTS (HARMONIC APPROXIMATION) CALCULATED WITH NMODE:\n\n')
             final_output.add_section(nm_sys_norm.summary())
 
@@ -442,12 +445,13 @@ def write_outputs(app):
                                          f'ΔG{"" if stability else " binding"} = {mnm_davg:9.4f} +/- {mnm_dstd:7.4f}\n')
 
         if INPUT['alarun'] and not INPUT['mutant_only']:
-            ddh_davg, ddh_dstd = _get_diff(sys_mut['TOTAL'], sys_norm['TOTAL'], True)
-            mut_norm = app.calc_types.mut_norm[key]
+            mut_norm = app.calc_types.mut_norm[key]['delta']
             final_output.add_section(mut_norm.summary())
+            ddh_davg = mut_norm['TOTAL'].mean()
+            ddh_dstd = mut_norm['TOTAL'].std()
 
             final_output.write(f'\nRESULT OF ALANINE SCANNING ({mut_str}):\n' 
-                               f'ΔΔH binding = {ddh_davg:9.4f} +/- {ddh_dstd:7.4f}\n')
+                               f"ΔΔH binding = {ddh_davg:9.4f} +/- {ddh_dstd:7.4f}\n")
 
             if INPUT['qh_entropy']:
                 ddqh_davg, _ =_get_diff(qhmutant['Total'], qhnorm['Total'])
