@@ -52,15 +52,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
 
         self.systems = {}
         self.current_system_index = None
-
-        # five PyMOL instances for reckless
-        # FIXME: now we need to iterate over all subwindows and close the PyMOL subprocess if exists
-        # self.pymol_p1 = QProcess()
-        # self.pymol_p2 = QProcess()
-        # self.pymol_p3 = QProcess()
-        # self.pymol_p4 = QProcess()
-        # self.pymol_p5 = QProcess()
-        # self.pymol_p_list = [self.pymol_p1, self.pymol_p2, self.pymol_p3, self.pymol_p4, self.pymol_p5]
+        self.pymol_p_list = []
 
         self.items_counter = {'charts': 0, 'pymol': [], 'bars': 0, 'line': 0, 'heatmap': 0}
 
@@ -137,8 +129,6 @@ class GMX_MMPBSA_ANA(QMainWindow):
         self.corr_container_widget.addWidget(self.data_table_widget)
         self.correlation_DockWidget.setWidget(self.corr_container_widget)
 
-        # self.exportpdb = ExportDialog(self)
-        # self.exportcsv = ExportDialogCSV(self)
         self.init_dialog = InitDialog(self)
 
     def _initialize_systems(self):
@@ -161,7 +151,6 @@ class GMX_MMPBSA_ANA(QMainWindow):
         # Select automatically the first item to update the option panel
         topitem = self.treeWidget.topLevelItem(0)
         topitem.setSelected(True)
-        # self.current_system_index = 1
 
         f_start = self.systems[1]['namespace'].INPUT['startframe']
         f_interval = self.systems[1]['namespace'].INPUT['interval']
@@ -172,7 +161,6 @@ class GMX_MMPBSA_ANA(QMainWindow):
         self.eframes_start_sb.setValue(f_start)
 
         self.eframes_inter_sb.setRange(1, f_end - f_start)
-        # self.eframes_inter_sb.setValue(current_interval)
 
         self.eframes_end_sb.setRange(f_start, f_end)
         self.eframes_end_sb.setSingleStep(f_interval)
@@ -189,13 +177,13 @@ class GMX_MMPBSA_ANA(QMainWindow):
         hl.setFrameShadow(QFrame.Shadow.Sunken)
         optionWidget_l.addWidget(hl)
 
-        update_frames_btn = QPushButton('Update')
-        update_frames_btn.clicked.connect(self.update_frames_fn)
+        update_btn = QPushButton('Update')
+        update_btn.clicked.connect(self.update_fn)
         resetchart_btn = QPushButton('Reset')
         btn_l = QHBoxLayout()
         btn_l.addWidget(QLabel('Options'))
         btn_l.addWidget(resetchart_btn)
-        btn_l.addWidget(update_frames_btn)
+        btn_l.addWidget(update_btn)
         optionWidget_l.addLayout(btn_l)
 
         selection_group = QGroupBox('Selection')
@@ -350,8 +338,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
             self.eframes_inter_sb.setValue(current_interval)
             self.eframes_end_sb.setValue(current_end)
             self.numframes_le.setText(f"{int((current_end - current_start) // current_interval) + 1}")
-            print(self.systems[parent_item.system_index]['chart_options'])
-            self.chart_options_param.restoreState(self.systems[parent_item.system_index]['chart_options_state'])
+            self.chart_options_param.restoreState(self.systems[parent_item.system_index]['chart_options'])
             self.chart_options_w.setParameters(self.chart_options_param, showTop=False)
         self.current_system_index = parent_item.system_index
 
@@ -473,73 +460,73 @@ class GMX_MMPBSA_ANA(QMainWindow):
         self.init_dialog.get_files_info(info_files)
         self.init_dialog.show()
 
-    def showcorr(self, item: CorrelationItem, col):
-        self.treeWidget.clearSelection()
-        # self.update_options(item)   # FIXME: only when we able the options
-        if col == 1:
-            s = item.dh_sw
-            if item.checkState(col) == Qt.Checked:
-                item.setSelected(True)
-                if s:
-                    s.show()
-                else:
-                    sub = Charts(item=item, col=col, options={'chart_type':[Charts.SCATTER], 'hide_toolbar':
-                        self.data_options['hide_toolbar']})
-                    sub.make_chart()
-                    self.mdi.addSubWindow(sub)
-                    sub.show()
-            else:
-                if s:
-                    self.mdi.activatePreviousSubWindow()
-                    s.close()
-        elif col == 2:
-            s = item.dgie_sw
-            if item.checkState(col) == Qt.Checked:
-                item.setSelected(True)
-                if s:  # check if any subwindow has been store
-                    s.show()
-                else:
-                    sub = Charts(item=item, col=col, options={'chart_type':[Charts.SCATTER], 'hide_toolbar':
-                        self.data_options['hide_toolbar']})
-                    sub.make_chart()
-                    self.mdi.addSubWindow(sub)
-                    sub.show()
-            else:
-                if s:
-                    self.mdi.activatePreviousSubWindow()
-                    s.close()
-        elif col == 3:
-            s = item.dgnmode_sw
-            if item.checkState(col) == Qt.Checked:
-                item.setSelected(True)
-                if s:  # check if any subwindow has been store
-                    s.show()
-                else:
-                    sub = Charts(item=item, col=col, options={'chart_type':[Charts.SCATTER], 'hide_toolbar':
-                        self.data_options['hide_toolbar']})
-                    sub.make_chart()
-                    self.mdi.addSubWindow(sub)
-                    sub.show()
-            else:
-                if s:
-                    self.mdi.activatePreviousSubWindow()
-                    s.close()
-        elif col == 4:
-            s = item.dgqh_sw
-            if item.checkState(col) == Qt.Checked:
-                item.setSelected(True)
-                if s:  # check if any subwindow has been store
-                    s.show()
-                else:
-                    sub = Charts(item=item, col=col, options={'chart_type':[Charts.SCATTER], 'hide_toolbar':
-                        self.data_options['hide_toolbar']})
-                    sub.make_chart()
-                    self.mdi.addSubWindow(sub)
-                    sub.show()
-            else:
-                if s:
-                    self.mdi.activatePreviousSubWindow()
-                    s.close()
+    # def showcorr(self, item: CorrelationItem, col):
+    #     self.treeWidget.clearSelection()
+    #     # self.update_options(item)   # FIXME: only when we able the options
+    #     if col == 1:
+    #         s = item.dh_sw
+    #         if item.checkState(col) == Qt.Checked:
+    #             item.setSelected(True)
+    #             if s:
+    #                 s.show()
+    #             else:
+    #                 sub = Charts(item=item, col=col, options={'chart_type': [Charts.SCATTER], 'hide_toolbar':
+    #                     self.data_options['hide_toolbar']})
+    #                 sub.make_chart()
+    #                 self.mdi.addSubWindow(sub)
+    #                 sub.show()
+    #         else:
+    #             if s:
+    #                 self.mdi.activatePreviousSubWindow()
+    #                 s.close()
+    #     elif col == 2:
+    #         s = item.dgie_sw
+    #         if item.checkState(col) == Qt.Checked:
+    #             item.setSelected(True)
+    #             if s:  # check if any subwindow has been store
+    #                 s.show()
+    #             else:
+    #                 sub = Charts(item=item, col=col, options={'chart_type': [Charts.SCATTER], 'hide_toolbar':
+    #                     self.data_options['hide_toolbar']})
+    #                 sub.make_chart()
+    #                 self.mdi.addSubWindow(sub)
+    #                 sub.show()
+    #         else:
+    #             if s:
+    #                 self.mdi.activatePreviousSubWindow()
+    #                 s.close()
+    #     elif col == 3:
+    #         s = item.dgnmode_sw
+    #         if item.checkState(col) == Qt.Checked:
+    #             item.setSelected(True)
+    #             if s:  # check if any subwindow has been store
+    #                 s.show()
+    #             else:
+    #                 sub = Charts(item=item, col=col, options={'chart_type': [Charts.SCATTER], 'hide_toolbar':
+    #                     self.data_options['hide_toolbar']})
+    #                 sub.make_chart()
+    #                 self.mdi.addSubWindow(sub)
+    #                 sub.show()
+    #         else:
+    #             if s:
+    #                 self.mdi.activatePreviousSubWindow()
+    #                 s.close()
+    #     elif col == 4:
+    #         s = item.dgqh_sw
+    #         if item.checkState(col) == Qt.Checked:
+    #             item.setSelected(True)
+    #             if s:  # check if any subwindow has been store
+    #                 s.show()
+    #             else:
+    #                 sub = Charts(item=item, col=col, options={'chart_type': [Charts.SCATTER], 'hide_toolbar':
+    #                     self.data_options['hide_toolbar']})
+    #                 sub.make_chart()
+    #                 self.mdi.addSubWindow(sub)
+    #                 sub.show()
+    #         else:
+    #             if s:
+    #                 self.mdi.activatePreviousSubWindow()
+    #                 s.close()
 
     def update_table(self, item: CorrelationItem, col):
 
@@ -556,11 +543,9 @@ class GMX_MMPBSA_ANA(QMainWindow):
         col_label = self.correlation_treeWidget.headerItem().text(col)
         self.data_table_energy_col.setText(f"{item.text(0)}({col_label})")
 
-        row = 0
-        for v in data[col_label]:
+        for row, v in enumerate(data[col_label]):
             titem = QTableWidgetItem(f'{v:.2f}')
             self.data_table_widget.setItem(row, 2, titem)
-            row += 1
 
     def make_correlation(self):
 
