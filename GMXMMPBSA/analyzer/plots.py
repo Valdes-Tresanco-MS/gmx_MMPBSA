@@ -162,12 +162,14 @@ class ChartsBase(QMdiSubWindow):
 
 
 class LineChart(ChartsBase):
-    def __init__(self, data: pandas.DataFrame, button: QToolButton, options: dict = None, data2=None):
+    def __init__(self, data: pandas.DataFrame, button: QToolButton, options: dict = None):
         super(LineChart, self).__init__(button, options)
 
         self.ie_bar = None
         self.ie_barlabel = None
         self.axins4 = None
+
+        self.data = data
 
         # figure canvas definition
         self.set_cw()
@@ -179,21 +181,22 @@ class LineChart(ChartsBase):
         height1 = 100 - options[('Line Plot', 'Interaction Entropy', 'bar-plot', 'height')]
         height2 = options[('Line Plot', 'Interaction Entropy', 'bar-plot', 'height')]
 
-        if data2 is not None:
+        if 'ie' in options:
             gs = gridspec.GridSpec(2, 2, height_ratios=[height1, height2], width_ratios=[width1, width2])
             axes = self.fig.add_subplot(gs[:, 0])
-            self.line_plot_ax = sns.lineplot(data=data, color=rgb2rgbf(options[('Line Plot', 'line-color')]),
+            self.line_plot_ax = sns.lineplot(data=data['data'],
+                                             color=rgb2rgbf(options[('Line Plot', 'line-color')]),
                                              linewidth=options[('Line Plot', 'line-width')], ax=axes)
             # plot the ie segment
             ie_color = rgb2rgbf(options[('Line Plot', 'Interaction Entropy', 'ie-color')])
-            sns.lineplot(data=data2['data'], color=ie_color, ax=axes)
+            sns.lineplot(data=data['iedata'], color=ie_color, ax=axes)
             ax2 = self.fig.add_subplot(gs[1, 1])
             r_sigma = rgb2rgbf(options[('Line Plot', 'Interaction Entropy', 'sigma-color', 'reliable')])
             nr_sigma = rgb2rgbf(options[('Line Plot', 'Interaction Entropy', 'sigma-color', 'non-reliable')])
-            colors = [ie_color, r_sigma if np.all(data2.loc[:, ['sigma']].mean() < 3.6) else nr_sigma]
-            self.ie_bar = sns.barplot(data=data2, ax=ax2, palette=colors)
-            self.numf = len(data2['data'])
-            self.ie_bar.set(xticklabels=[f"ie\n(last\n {self.numf} frames)", "σ(Int.\nEnergy)"])
+            colors = [ie_color, r_sigma if np.all(data.loc[:, ['sigma']].mean() < 3.6) else nr_sigma]
+            self.ie_bar = sns.barplot(data=data[['iedata', 'sigma']], ax=ax2, palette=colors)
+            numf = data['iedata'].count()
+            self.ie_bar.set(xticklabels=[f"ie\n(last\n {numf} frames)", "σ(Int.\nEnergy)"])
             self.ie_barlabel = self.ie_bar.bar_label(self.ie_bar.containers[0],
                                                      size=options[('Line Plot', 'Interaction Entropy', 'bar-plot',
                                                                    'bar-label-fontsize')],
@@ -204,11 +207,13 @@ class LineChart(ChartsBase):
         else:
             axes = self.fig.subplots(1, 1)
             self.line_plot_ax = sns.lineplot(data=data, color=rgb2rgbf(options[('Line Plot', 'line-color')]),
-                                             linewidth=options[('Line Plot', 'line-width')], ax=axes)
-
+                                             linewidth=options[('Line Plot', 'line-width')], label=data.name, ax=axes)
+            moving_avg = sns.lineplot(data=data.rolling(2, min_periods=1).mean(), color='red',
+                                      linewidth=options[('Line Plot', 'line-width')], label='Mov. Av.',
+                                      ls='--', ax=axes)
         self.cursor = Cursor(axes, useblit=True, color='black', linewidth=0.5, ls='--')
 
-        self.setWindowTitle(options['chart_subtitle'])
+        self.setWindowTitle(options['subtitle'])
         self.update_config(options)
         self.draw()
 
@@ -216,7 +221,7 @@ class LineChart(ChartsBase):
         pass
 
     def update_config(self, options):
-        self.fig.suptitle(f"{options['chart_title']}\n{options['chart_subtitle']}",
+        self.fig.suptitle(f"{options['title']}\n{options['subtitle']}",
                           fontsize=options[('Line Plot', 'fontsize', 'title')])
         self.line_plot_ax.xaxis.set_major_locator(
             mticker.MaxNLocator(nbins=options[('Line Plot', 'axes', 'num-xticks')],
@@ -224,7 +229,7 @@ class LineChart(ChartsBase):
         self.line_plot_ax.yaxis.set_major_locator(
             mticker.MaxNLocator(nbins=options[('Line Plot', 'axes', 'num-yticks')]))
 
-        self.setup_text(self.line_plot_ax, options, key='Line Plot', xlabel='Frames')
+        self.setup_text(self.line_plot_ax, options, key='Line Plot', xlabel=self.data.index.name)
 
         if self.ie_bar:
             for label in self.ie_barlabel:
