@@ -213,9 +213,17 @@ def get_files(parser_args):
         if cf.is_dir():
             recursive_files = []
             if parser_args.recursive:
-                recursive_files.extend(cf.absolute().glob('*/*_info'))
+                files = list(cf.absolute().glob('*/*_info'))
+                if files:
+                    recursive_files.extend(files)
+                else:
+                    recursive_files.extend(cf.absolute().glob('*/RESULTS_gmx_MMPBSA.h5'))
             else:
-                recursive_files.extend(cf.absolute().glob('*_info'))
+                files = list(cf.absolute().glob('*_info'))
+                if files:
+                    recursive_files.extend(files)
+                else:
+                    recursive_files.extend(cf.absolute().glob('RESULTS_gmx_MMPBSA.h5'))
             for rf in recursive_files:
                 if rf in info_files:
                     logging.warning(f'{rf} is duplicated and will be ignored')
