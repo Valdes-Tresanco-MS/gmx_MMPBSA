@@ -249,7 +249,7 @@ class BarChart(ChartsBase):
         self.fig.set_size_inches(options[('Bar Plot', 'figure', 'width')],
                                  options[('Bar Plot', 'figure', 'height')])
         self.bar_frames = False
-        if 'groups' in options and options[('Bar Plot', 'subplot-components')]:
+        if options['groups'] and options[('Bar Plot', 'subplot-components')]:
             self.axes = self.fig.subplots(1, len(options['groups']), sharey=True,
                                           gridspec_kw={'width_ratios': [len(x) for x in options['groups'].values()]})
             palette = (sns.color_palette(options[('Bar Plot', 'palette')], n_colors=data.columns.size)
@@ -261,7 +261,7 @@ class BarChart(ChartsBase):
                                           color=rgb2rgbf(options[('Bar Plot', 'color')]),
                                           errwidth=1, ax=self.axes[c])
                 s += len(options['groups'][g])
-                if options[('Bar Plot', 'scale-big-values')] and options['scalable']:
+                if options[('Bar Plot', 'scale-yaxis')]: # and options['scalable']:
                     bar_plot_ax.set_yscale('symlog')
                 if options[('Bar Plot', 'bar-label', 'show')]:
                     bl = bar_plot_ax.bar_label(bar_plot_ax.containers[0],
@@ -290,7 +290,7 @@ class BarChart(ChartsBase):
                 bar_plot_ax.invert_yaxis()
             bar_plot_ax.set_xticklabels(self._set_xticks(bar_plot_ax, options[('Bar Plot', 'remove-molid')]))
             self.bar_frames = 'frames' in data
-        self.setWindowTitle(options['chart_subtitle'])
+        self.setWindowTitle(options['subtitle'])
         self.update_config(options)
         self.draw()
 
@@ -305,7 +305,7 @@ class BarChart(ChartsBase):
         return xlabels
 
     def update_config(self, options):
-        self.fig.suptitle(f"{options['chart_title']}\n{options['chart_subtitle']}",
+        self.fig.suptitle(f"{options['title']}\n{options['subtitle']}",
                           fontsize=options[('Bar Plot', 'fontsize', 'title')])
         if isinstance(self.axes, np.ndarray):
             for c, g in enumerate(options['groups']):
@@ -318,7 +318,10 @@ class BarChart(ChartsBase):
                 self.setup_text(bar_plot_ax, options, key='Bar Plot', title=g, ylabel=ylabel)
         else:
             bar_plot_ax = self.axes
-            if options[('Bar Plot', 'scale-big-values')] and options['scalable']:
+            if options[('Bar Plot', 'scale-yaxis')]: # and options['scalable']:
+                # self.formatter.set_scientific(True)
+                # bar_plot_ax.yaxis.set_major_formatter(self.formatter)
+                # plt.ticklabel_format(style='sci', scilimits=(-3, 2))
                 bar_plot_ax.set_yscale('symlog')
             else:
                 bar_plot_ax.set_yscale('linear')
