@@ -1027,8 +1027,8 @@ class MMPBSA_App(object):
                             self.calc_types.mutant['c2'][key] = {'c2data': c2.c2data, 'sigma': c2.ie_std,
                                                                  'c2_std': c2.c2_std, 'c2_ci': c2.c2_ci}
             if INPUT['alarun'] and not INPUT['mutant_only']:
-                self.calc_types.mut_norm[key] = DeltaBindingStatistics(self.calc_types.mutant[key]['delta'],
-                                                                       self.calc_types.normal[key]['delta'])
+                self.calc_types.mut_norm[key] = {'delta': DeltaBindingStatistics(
+                    self.calc_types.mutant[key]['delta'],self.calc_types.normal[key]['delta'])}
 
         if not hasattr(self, 'resl'):
             from GMXMMPBSA.utils import mask2list
