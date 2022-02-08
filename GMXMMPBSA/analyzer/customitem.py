@@ -523,34 +523,3 @@ class CustomItem(QTreeWidgetItem):
 
 
         return self.tb
-
-    def setup_data(self, frange, iec2frames=0):
-        if self.data is None:
-            return
-        if self.frange == frange:
-            return
-        self.frange = frange
-        if self.level == 0:
-            self.line_plot_data = self.data.loc[frange[0]:frange[1]:frange[2]]
-            if self.item_type == 'ie':
-                tempserie = self.line_plot_data[-iec2frames:]
-                self.ie_plot_data = pd.concat([tempserie, pd.Series([self.iec2_data['sigma']] * iec2frames,
-                                                                    index=tempserie.index, name='sigma')], axis=1)
-        elif self.level == 1:
-            self.bar_plot_data = self.data.loc[frange[0]:frange[1]:frange[2]]
-            # IMPORTANT: can be used in nmode
-        elif self.level == 2:
-            tempdf = self.data.loc[frange[0]:frange[1]:frange[2], self.data.columns.get_level_values(1) == 'tot']
-            self.bar_plot_data = tempdf.droplevel(level=1, axis=1)
-            self.line_plot_data = self.bar_plot_data.sum(axis=1)
-            self.heatmap_plot_data = self.bar_plot_data.transpose(copy=True)
-            del tempdf
-        elif self.level == 3:
-            # Select only the "tot" column, remove the level, change first level of comlumn to rows and remove the mean
-            # index
-            tempdf = self.data.loc[frange[0]:frange[1]:frange[2], self.data.columns.get_level_values(2) == 'tot']
-            self.heatmap_plot_data = tempdf.aggregate(["mean"]).droplevel(level=2, axis=1).stack().droplevel(level=0)
-            self.bar_plot_data = tempdf.sum(axis=1, level=0)
-            self.line_plot_data = self.bar_plot_data.sum(axis=1)
-            del tempdf
-
