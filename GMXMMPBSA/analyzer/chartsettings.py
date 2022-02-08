@@ -325,16 +325,27 @@ class ChartSettings(dict):
                     'line-color': {'type': 'color', 'enabled': True, 'expanded': True, 'name': 'line-color',
                                    'value': [0, 0, 0, 255], 'default': [0, 0, 0, 255], 'action_type': R},
 
-                    'Rolling': {
-                        'type': 'group', 'enabled': True, 'expanded': True, 'name': 'Rolling', 'value': None,
+                    'Rolling average': {
+                        'type': 'group', 'enabled': True, 'expanded': True, 'name': 'Rolling average', 'value': None,
                         'default': None,
                         'children': {
+                            'show': {'type': 'bool', 'enabled': True, 'expanded': True, 'name': 'show', 'value': True,
+                                     'default': True, 'action_type': R},
                             'color': {'type': 'color', 'enabled': True, 'expanded': True, 'name': 'color',
                                       'value': [255, 0, 0, 255], 'default': [255, 0, 0, 255], 'action_type': R},
+                            'style': {'type': 'list', 'enabled': True, 'expanded': True, 'name': 'style',
+                                      'value': 'dashed', 'values': ['dashed', 'solid', 'dashdot', 'dotted'],
+                                      'default': 'dashed', 'action_type': R},
                             'width': {'type': 'float', 'enabled': True, 'expanded': True, 'name': 'width',
                                       'value': 0.8, 'step': 0.1, 'default': 0.8, 'action_type': R},
                             'window': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'window',
-                                       'value': 50, 'step': 1, 'default': 50, 'action_type': R}}},
+                                       'value': 50, 'step': 1, 'default': 50, 'action_type': R},
+                            'first_obs': {'type': 'list', 'enabled': True, 'expanded': True, 'name': 'first_obs',
+                                          'value': 'window', 'values': ['window', 'start'], 'default': 'window',
+                                          'action_type': R, 'tip': 'Defines where the moving average is plotted from. '
+                                                                   'For window, the moving average will be plotted '
+                                                                   'from the defined window size, and for start, '
+                                                                   'the plot will start at the first value.'}}},
                     'fontsize': {
                         'type': 'group', 'enabled': True, 'expanded': True, 'name': 'fontsize', 'value': None,
                         'default': None,
