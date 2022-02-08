@@ -281,6 +281,7 @@ tooltip2 = '''
 </body>
 </html>'''
 
+
 class ChartSettings(dict):
     D = 1  # Drawable
     U = 2  # Updatable
@@ -299,7 +300,7 @@ class ChartSettings(dict):
                     'toolbar': {'type': 'bool', 'enabled': True, 'expanded': True, 'name': 'toolbar', 'value': False,
                                 'default': False, 'action_type': U},
                     'figure-format': {
-                        'type': 'group', 'enabled': True, 'expanded': False, 'name': 'figure-format', 'value': None,
+                        'type': 'group', 'enabled': True, 'expanded': True, 'name': 'figure-format', 'value': None,
                         'default': None,
                         'children': {
                             'dpi-plot': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'dpi-plot',
@@ -315,7 +316,7 @@ class ChartSettings(dict):
                                 'default': 'svg', 'tip': 'Esto es un tip', 'action_type': U},
                         }}}},
             'Line Plot': {
-                'type': 'group', 'enabled': True, 'expanded': True, 'name': 'Line Plot', 'value': None, 'default':
+                'type': 'group', 'enabled': True, 'expanded': False, 'name': 'Line Plot', 'value': None, 'default':
                     None,
                 'children': {
                     'line-width': {'type': 'float', 'enabled': True, 'expanded': True, 'name': 'line-width',
@@ -325,7 +326,7 @@ class ChartSettings(dict):
                                    'value': [0, 0, 0, 255], 'default': [0, 0, 0, 255], 'action_type': R},
 
                     'Rolling': {
-                        'type': 'group', 'enabled': True, 'expanded': False, 'name': 'Rolling', 'value': None,
+                        'type': 'group', 'enabled': True, 'expanded': True, 'name': 'Rolling', 'value': None,
                         'default': None,
                         'children': {
                             'color': {'type': 'color', 'enabled': True, 'expanded': True, 'name': 'color',
@@ -334,14 +335,74 @@ class ChartSettings(dict):
                                       'value': 0.8, 'step': 0.1, 'default': 0.8, 'action_type': R},
                             'window': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'window',
                                        'value': 50, 'step': 1, 'default': 50, 'action_type': R}}},
-                    'Interaction Entropy': {
-                        'type': 'group', 'enabled': True, 'expanded': False, 'name': 'Interaction Entropy',
-                        'value': None, 'default': None,
+                    'fontsize': {
+                        'type': 'group', 'enabled': True, 'expanded': True, 'name': 'fontsize', 'value': None,
+                        'default': None,
+                        'children': {
+                            'x-ticks': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'x-ticks',
+                                        'value': 10, 'default': 10, 'action_type': D},
+                            'y-ticks': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'y-ticks',
+                                        'value': 10, 'default': 10, 'action_type': D},
+                            'x-label': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'x-label',
+                                        'value': 12, 'default': 12, 'action_type': D},
+                            'y-label': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'y-label',
+                                        'value': 12, 'default': 12, 'action_type': D},
+                            'title': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'title',
+                                      'value': 14, 'default': 14, 'action_type': D},
+                            'suptitle': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'suptitle',
+                                         'value': 12, 'default': 12, 'action_type': D},
+                            'legend': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'legend',
+                                       'value': 9, 'default': 9, 'action_type': D}}},
+                    'axes': {
+                        'type': 'group', 'enabled': True, 'expanded': True, 'name': 'axes', 'value': None,
+                        'default': None,
+                        'children': {
+                            'num-xticks': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'num-xticks',
+                                           'value': 10, 'default': 10, 'action_type': D},
+                            'num-yticks': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'num-yticks',
+                                           'value': 10, 'default': 10, 'action_type': D},
+                            'x-rotation': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'x-rotation',
+                                           'value': 0, 'step': 1, 'limits': (-90, 90), 'accelerated': True,
+                                           'default': 0, 'action_type': D},
+                            'y-rotation': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'y-rotation',
+                                           'value': 0, 'step': 1, 'limits': (-90, 90), 'accelerated': True,
+                                           'default': 0, 'action_type': D}}},
+                    'figure': {
+                        'type': 'group', 'enabled': True, 'expanded': True, 'name': 'figure', 'value': None,
+                        'default': None,
+                        'children': {
+                            'width': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'width', 'value': 8,
+                                      'default': 8, 'action_type': D},
+                            'height': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'height',
+                                       'value': 4, 'default': 4, 'action_type': D}}}}},
+            'Bar Plot': {
+                'type': 'group', 'enabled': True, 'expanded': False, 'name': 'Bar Plot', 'value': None, 'default': None,
+                'children': {
+                    'use-palette': {'type': 'bool', 'enabled': True, 'expanded': True, 'name': 'use-palette',
+                                    'value': True, 'default': True, 'action_type': R},
+                    'palette': {'type': 'list', 'enabled': True, 'expanded': True, 'name': 'palette',
+                                'value': 'husl', 'values': ['husl', '---0', 'hls', 'deep', 'muted', 'bright', 'pastel',
+                                                            'dark', 'colorblind', '---1',
+                                                            'Pastel1', 'Pastel2', 'Paired', 'Accent', 'Dark2', 'Set1',
+                                                            'Set2', 'Set3', 'tab10', 'tab20', 'tab20b', 'tab20c'],
+                                'default': 'husl', 'action_type': R, 'tip': tooltip2},
+                    'color': {'type': 'color', 'enabled': True, 'expanded': True, 'name': 'color',
+                              'value': [44, 105, 176, 255], 'default': [44, 105, 176, 255], 'action_type': R},
+                    'subplot-components': {'type': 'bool', 'enabled': True, 'expanded': True,
+                                           'name': 'subplot-components', 'value': True, 'default': True,
+                                           'action_type': R},
+                    'scale-yaxis': {'type': 'bool', 'enabled': True, 'expanded': True,
+                                         'name': 'scale-yaxis', 'value': True, 'default': True, 'action_type': R},
+                    'remove-molid': {'type': 'bool', 'enabled': True, 'expanded': True, 'name': 'remove-molid',
+                                     'value': True, 'default': True, 'action_type': R},
+                    'IE/C2 Entropy': {
+                        'type': 'group', 'enabled': True, 'expanded': True, 'name': 'IE/C2 Entropy', 'value': None,
+                        'default': None,
                         'children': {
                             'ie-color': {'type': 'color', 'enabled': True, 'expanded': True, 'name': 'ie-color',
                                          'value': [0, 0, 255, 255], 'default': [0, 0, 255, 255], 'action_type': R},
                             'sigma-color': {
-                                'type': 'group', 'enabled': True, 'expanded': False, 'name': 'sigma-color',
+                                'type': 'group', 'enabled': True, 'expanded': True, 'name': 'sigma-color',
                                 'value': None, 'default': None,
                                 'children': {
                                     'reliable': {'type': 'color', 'enabled': True, 'expanded': True, 'name': 'reliable',
@@ -370,67 +431,7 @@ class ChartSettings(dict):
                                                'value': 50, 'siPrefix': True, 'suffix': '%', 'default': 50,
                                                'action_type': R},
                                 }}}},
-                    'fontsize': {
-                        'type': 'group', 'enabled': True, 'expanded': False, 'name': 'fontsize', 'value': None,
-                        'default': None,
-                        'children': {
-                            'x-ticks': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'x-ticks',
-                                        'value': 10, 'default': 10, 'action_type': D},
-                            'y-ticks': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'y-ticks',
-                                        'value': 10, 'default': 10, 'action_type': D},
-                            'x-label': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'x-label',
-                                        'value': 12, 'default': 12, 'action_type': D},
-                            'y-label': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'y-label',
-                                        'value': 12, 'default': 12, 'action_type': D},
-                            'title': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'title',
-                                      'value': 14, 'default': 14, 'action_type': D},
-                            'suptitle': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'suptitle',
-                                         'value': 12, 'default': 12, 'action_type': D},
-                            'legend': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'legend',
-                                       'value': 9, 'default': 9, 'action_type': D}}},
-                    'axes': {
-                        'type': 'group', 'enabled': True, 'expanded': False, 'name': 'axes', 'value': None,
-                        'default': None,
-                        'children': {
-                            'num-xticks': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'num-xticks',
-                                           'value': 10, 'default': 10, 'action_type': D},
-                            'num-yticks': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'num-yticks',
-                                           'value': 10, 'default': 10, 'action_type': D},
-                            'x-rotation': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'x-rotation',
-                                           'value': 0, 'step': 1, 'limits': (-90, 90), 'accelerated': True,
-                                           'default': 0, 'action_type': D},
-                            'y-rotation': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'y-rotation',
-                                           'value': 0, 'step': 1, 'limits': (-90, 90), 'accelerated': True,
-                                           'default': 0, 'action_type': D}}},
-                    'figure': {
-                        'type': 'group', 'enabled': True, 'expanded': False, 'name': 'figure', 'value': None,
-                        'default': None,
-                        'children': {
-                            'width': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'width', 'value': 8,
-                                      'default': 8, 'action_type': D},
-                            'height': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'height',
-                                       'value': 4, 'default': 4, 'action_type': D}}}}},
-            'Bar Plot': {
-                'type': 'group', 'enabled': True, 'expanded': True, 'name': 'Bar Plot', 'value': None, 'default': None,
-                'children': {
-                    'use-palette': {'type': 'bool', 'enabled': True, 'expanded': True, 'name': 'use-palette',
-                                    'value': True, 'default': True, 'action_type': R},
-                    'palette': {'type': 'list', 'enabled': True, 'expanded': True, 'name': 'palette',
-                                'value': 'husl', 'values': ['husl', '---0', 'hls', 'deep', 'muted', 'bright', 'pastel',
-                                                            'dark', 'colorblind', '---1',
-                                                            'Pastel1', 'Pastel2', 'Paired', 'Accent', 'Dark2', 'Set1',
-                                                            'Set2', 'Set3', 'tab10', 'tab20', 'tab20b', 'tab20c'],
-                                'default': 'husl', 'action_type': R, 'tip': tooltip2},
-                    'color': {'type': 'color', 'enabled': True, 'expanded': True, 'name': 'color',
-                              'value': [44, 105, 176, 255], 'default': [44, 105, 176, 255], 'action_type': R},
-                    'subplot-components': {'type': 'bool', 'enabled': True, 'expanded': True,
-                                           'name': 'subplot-components', 'value': True, 'default': True,
-                                           'action_type': R},
-                    'scale-yaxis': {'type': 'bool', 'enabled': True, 'expanded': True,
-                                         'name': 'scale-yaxis', 'value': True, 'default': True, 'action_type': R},
-                    'remove-molid': {'type': 'bool', 'enabled': True, 'expanded': True, 'name': 'remove-molid',
-                                     'value': True, 'default': True, 'action_type': R},
-                    'error-line': {'type': 'group', 'enabled': True, 'expanded': False, 'name': 'error-line',
+                    'error-line': {'type': 'group', 'enabled': True, 'expanded': True, 'name': 'error-line',
                                    'value': None, 'default': None,
                                    'children': {
                                        'width': {'type': 'float', 'enabled': True, 'expanded': True, 'name': 'width',
@@ -441,7 +442,7 @@ class ChartSettings(dict):
                                                  'value': [0, 0, 0, 255], 'default': [0, 0, 0, 255],
                                                  'action_type': R}}},
                     'bar-label': {
-                        'type': 'group', 'enabled': True, 'expanded': False, 'name': 'bar-label', 'value': None,
+                        'type': 'group', 'enabled': True, 'expanded': True, 'name': 'bar-label', 'value': None,
                         'default': None,
                         'children': {
                             'show': {'type': 'bool', 'enabled': True, 'expanded': True, 'name': 'show', 'value': False,
@@ -452,7 +453,7 @@ class ChartSettings(dict):
                                         'value': 5, 'limits': (0, 50), 'default': 5, 'action_type': R}
                         }},
                     'fontsize': {
-                        'type': 'group', 'enabled': True, 'expanded': False, 'name': 'fontsize', 'value': None,
+                        'type': 'group', 'enabled': True, 'expanded': True, 'name': 'fontsize', 'value': None,
                         'default': None,
                         'children': {
                             'x-ticks': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'x-ticks',
@@ -468,7 +469,7 @@ class ChartSettings(dict):
                             'suptitle': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'suptitle',
                                          'value': 12, 'default': 12, 'action_type': D}}},
                     'axes': {
-                        'type': 'group', 'enabled': True, 'expanded': False, 'name': 'axes', 'value': None,
+                        'type': 'group', 'enabled': True, 'expanded': True, 'name': 'axes', 'value': None,
                         'default': None,
                         'children': {
                             'num-yticks': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'num-yticks',
@@ -483,7 +484,7 @@ class ChartSettings(dict):
                                            'value': True, 'default': True, 'action_type': R}
                         }},
                     'figure': {
-                        'type': 'group', 'enabled': True, 'expanded': False, 'name': 'figure', 'value': None,
+                        'type': 'group', 'enabled': True, 'expanded': True, 'name': 'figure', 'value': None,
                         'default': None,
                         'children': {
                             'width': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'width',
@@ -491,7 +492,7 @@ class ChartSettings(dict):
                             'height': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'height',
                                        'value': 4, 'default': 4, 'action_type': D}}}}},
             'Heatmap Plot': {
-                'type': 'group', 'enabled': True, 'expanded': True, 'name': 'Heatmap Plot', 'value': None,
+                'type': 'group', 'enabled': True, 'expanded': False, 'name': 'Heatmap Plot', 'value': None,
                 'default': None,
                 'children': {
                     'highlight-components': {'type': 'bool', 'enabled': True, 'expanded': True,
@@ -554,7 +555,7 @@ class ChartSettings(dict):
                                            'value': 0, 'step': 1, 'limits': (-90, 90), 'accelerated': True,
                                            'default': 0, 'action_type': D}}},
                     'fontsize': {
-                        'type': 'group', 'enabled': True, 'expanded': False, 'name': 'fontsize', 'value': None,
+                        'type': 'group', 'enabled': True, 'expanded': True, 'name': 'fontsize', 'value': None,
                         'default': None,
                         'children': {
                             'x-ticks': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'x-ticks',
@@ -579,7 +580,7 @@ class ChartSettings(dict):
                                            'name': 'annotation', 'value': 8, 'default': 8, 'action_type': D}
                         }},
                     'figure': {
-                        'type': 'group', 'enabled': True, 'expanded': False, 'name': 'figure', 'value': None,
+                        'type': 'group', 'enabled': True, 'expanded': True, 'name': 'figure', 'value': None,
                         'default': None,
                         'children': {
                             'width-per-residue': {'type': 'int', 'enabled': True, 'expanded': True,
@@ -590,7 +591,7 @@ class ChartSettings(dict):
                             'height': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'height',
                                        'value': 7, 'default': 7, 'action_type': D}}}}},
             'Visualization': {
-                'type': 'group', 'enabled': True, 'expanded': True, 'name': 'Visualization', 'value': None,
+                'type': 'group', 'enabled': True, 'expanded': False, 'name': 'Visualization', 'value': None,
                 'default': None,
                 'children': {
                     'palette': {'type': 'list', 'enabled': True, 'expanded': True, 'name': 'palette',

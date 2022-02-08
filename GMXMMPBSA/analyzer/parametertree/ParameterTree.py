@@ -45,7 +45,19 @@ class ParameterTree(QTreeWidget):
         self.setHeaderHidden(not showHeader)
         self.lastSel = None
         self.setRootIsDecorated(False)
-        
+        self.itemClicked.connect(self.alt_expanded)
+
+    def alt_expanded(self, item:QTreeWidgetItem, col):
+        topitem =self.topLevelItem(0)
+        nchild = topitem.childCount()
+        childs = [topitem.child(x) for x in range(nchild)]
+        if item in childs and item.isExpanded():
+            return
+        for child in childs:
+            child.setExpanded(False)
+        item.setExpanded(True)
+        self.scrollToItem(item)
+
     def setParameters(self, param, showTop=True):
         """
         Set the top-level :class:`Parameter <pyqtgraph.parametertree.Parameter>`

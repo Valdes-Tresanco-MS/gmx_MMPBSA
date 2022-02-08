@@ -277,7 +277,14 @@ class BarChart(ChartsBase):
                 self.axes[0].invert_yaxis()
         else:
             self.axes = self.fig.subplots(1, 1)
-            bar_plot_ax = sns.barplot(data=data, ci="sd", errwidth=1, ax=self.axes)
+            if 'c2' in options:
+                ie_color = rgb2rgbf(options[('Line Plot', 'Interaction Entropy', 'ie-color')])
+                r_sigma = rgb2rgbf(options[('Line Plot', 'Interaction Entropy', 'sigma-color', 'reliable')])
+                nr_sigma = rgb2rgbf(options[('Line Plot', 'Interaction Entropy', 'sigma-color', 'non-reliable')])
+                palette = [ie_color, r_sigma if np.all(data.loc[:, ['sigma']].mean() < 3.6) else nr_sigma]
+
+            bar_plot_ax = sns.barplot(data=data, ci="sd", errwidth=1, ax=self.axes, palette=palette,
+                                      color=rgb2rgbf(options[('Bar Plot', 'color')]),)
             if options[('Bar Plot', 'bar-label', 'show')]:
                 bl = bar_plot_ax.bar_label(bar_plot_ax.containers[0],
                                            size=options[('Bar Plot', 'bar-label', 'fontsize')],
@@ -286,7 +293,7 @@ class BarChart(ChartsBase):
                 self.bar_labels.append(bl)
             self.setup_text(bar_plot_ax, options, key='Bar Plot')
             self.cursor = Cursor(bar_plot_ax, useblit=True, color='black', linewidth=0.5, ls='--')
-            if options[('Bar Plot', 'axes', 'y-inverted')]:
+            if options[('Bar Plot', 'axes', 'y-inverted')] and 'c2' not in options:
                 bar_plot_ax.invert_yaxis()
             bar_plot_ax.set_xticklabels(self._set_xticks(bar_plot_ax, options[('Bar Plot', 'remove-molid')]))
             self.bar_frames = 'frames' in data
