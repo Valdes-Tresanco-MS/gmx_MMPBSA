@@ -390,10 +390,7 @@ class CheckMakeTop:
     def gmxtop2prmtop(self):
         logging.info('Building Normal Complex Amber Topology...')
         com_top = self.cleantop(self.FILES.complex_top, self.indexes['COM']['COM'])
-        # parmed.gromacs.GromacsTopologyFile(self.complex_temp_top,xyz=self.complex_str_file)
-
-        error_info = eq_strs(com_top, self.complex_str)
-        if error_info:
+        if error_info := eq_strs(com_top, self.complex_str):
             if error_info[0] == 'atoms':
                 GMXMMPBSA_ERROR(f"The number of atoms in the topology ({error_info[1]}) and the complex structure "
                                 f"({error_info[2]}) are different. Please check this files and verify that they are "
@@ -430,8 +427,7 @@ class CheckMakeTop:
             logging.info('Building AMBER Receptor Topology from GROMACS Receptor Topology...')
             rec_top = self.cleantop(self.FILES.receptor_top, self.indexes['REC'])
 
-            error_info = eq_strs(rec_top, self.receptor_str)
-            if error_info:
+            if error_info := eq_strs(rec_top, self.receptor_str):
                 if error_info[0] == 'atoms':
                     GMXMMPBSA_ERROR(f"The number of atoms in the topology ({error_info[1]}) and the receptor "
                                     f"structure ({error_info[2]}) are different. Please check this files and verify "
@@ -473,8 +469,7 @@ class CheckMakeTop:
             logging.info('Building AMBER Ligand Topology from GROMACS Ligand Topology...')
             lig_top = self.cleantop(self.FILES.ligand_top, self.indexes['LIG'])
 
-            error_info = eq_strs(lig_top, self.ligand_str)
-            if error_info:
+            if error_info := eq_strs(lig_top, self.ligand_str):
                 if error_info[0] == 'atoms':
                     GMXMMPBSA_ERROR(f"The number of atoms in the topology ({error_info[1]}) and the ligand "
                                     f"structure ({error_info[2]}) are different. Please check this files and verify "
@@ -684,6 +679,7 @@ class CheckMakeTop:
         """
         Convert string selection format to amber index list
         """
+        # FIXME: Error when any residue is selected
         dist, res_selection = selector(select)
         sele_res = []
         if dist:
