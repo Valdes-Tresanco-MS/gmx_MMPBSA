@@ -446,9 +446,6 @@ verbose (Default = 0)
 
     _Updated in v1.5.0_
 
-`strip_mask` (Default = ":WAT,Cl*,CIO,Cs+,IB,K*,Li+,MG*,Na+,Rb+,CS,RB,NA,F,CL")          
-:   Amber mask to strip from solvated prmtop.
-
 ### **`&gb` namelist variables**
 
 !!! note "Keep in mind"
