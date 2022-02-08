@@ -27,11 +27,12 @@ from GMXMMPBSA.analyzer.utils import worker, ncpu
 
 
 class InitDialog(QDialog):
-    def __init__(self,parent=None):
+    def __init__(self, parent=None):
         super(InitDialog, self).__init__(parent)
         self.parent = parent
-        self.setWindowModality(Qt.WindowModal)
+        self.setWindowModality(Qt.WindowModality.WindowModal)
         self.setWindowTitle('Initialization gmx_MMPBSA_ana')
+        self.setMinimumWidth(650)
         self.curr_progress = 0
         self.data = []
 
@@ -99,6 +100,44 @@ class InitDialog(QDialog):
         self.comp_group_layout.addWidget(self.lig_btn, 0, 3)
         self.comp_group_layout.addWidget(self.warn_label_big, 1, 0, 1, 4)
 
+        self.hide_tb_btn = QCheckBox('Hide ToolBar')
+        self.hide_tb_btn.setChecked(True)
+
+        self.other_options = QHBoxLayout()
+        self.chart_group = QGroupBox('Charts options')
+        self.other_options.addWidget(self.chart_group)
+        self.chart_group_layout = QHBoxLayout(self.chart_group)
+        self.chart_group_layout.addWidget(self.hide_tb_btn)
+
+        self.frame2time = QGroupBox('Convert frames to time')
+        self.frame2time.setCheckable(True)
+        self.frame2time.setChecked(False)
+        self.frame2time_layout = QHBoxLayout(self.frame2time)
+        self.time_start_label = QLabel('Start:')
+        self.frame2time_layout.addWidget(self.time_start_label)
+        self.time_start = QSpinBox()
+        self.time_start.setRange(0, 10000)
+        self.time_start.setAccelerated(True)
+        self.frame2time_layout.addWidget(self.time_start)
+
+        self.time_step_label = QLabel('Scale:')
+        self.frame2time_layout.addWidget(self.time_step_label)
+        self.time_step = QSpinBox()
+        self.time_step.setRange(1, 1000)
+        self.time_step.setValue(10)
+        self.time_step.setAccelerated(True)
+        self.frame2time_layout.addWidget(self.time_step)
+        # self.frame2time_layout.addStretch(1)
+        self.time_unit_label = QLabel('Unit:')
+        self.frame2time_layout.addWidget(self.time_unit_label)
+        self.time_unit = QComboBox()
+        self.time_unit.addItems(['ps', 'ns'])
+        self.frame2time_layout.addWidget(self.time_unit)
+
+        self.other_options.addWidget(self.frame2time)
+
+
+
         self.sys_group = QGroupBox('Systems options')
         self.sys_group_layout = QVBoxLayout(self.sys_group)
         self.sys_group_layout.addLayout(self.check_l)
@@ -151,6 +190,7 @@ class InitDialog(QDialog):
         self.content_layout = QVBoxLayout(self)
         self.content_layout.addWidget(self.processing_label)
         self.content_layout.addWidget(self.sys_group)
+        self.content_layout.addLayout(self.other_options)
         self.content_layout.addWidget(self.result_tree)
         self.content_layout.addWidget(self.statusbar)
         self.content_layout.addLayout(self.btn_layout)
@@ -197,20 +237,31 @@ class InitDialog(QDialog):
             exp_ki = None
             mut_only = False
             mutant = None
-            with open(fname) as fi:
-                for line in fi:
-                    if line.startswith("INPUT['sys_name']"):
-                        basename = str(line.split()[2]).strip('"\'')
-                        if basename in names:
-                            while basename in names:
-                                basename = f"{basename}-{names.count(basename) + 1}"
-                            names.append(basename)
-                    if line.startswith("INPUT['exp_ki']"):
-                        exp_ki = float(line.split()[2])
-                    if line.startswith("INPUT['mutant_only']"):
-                        mut_only = int(line.split()[2])
-                    if line.startswith("mut_str"):
-                        mutant = line.split()[2].replace("'", "")
+            if fname.suffix == '.h5':
+                with h5py.File(fname) as fi:
+                    basename = fi['INPUT']['sys_name'][()].decode('utf-8')
+                    if basename in names:
+                        while basename in names:
+                            basename = f"{basename}-{names.count(basename) + 1}"
+                        names.append(basename)
+                    exp_ki = float(fi['INPUT']['exp_ki'][()])
+                    mut_only = int(fi['INPUT']['mutant_only'][()])
+                    mutant = fi['INFO']['mut_str'][()].decode('utf-8')
+            else:
+                with open(fname) as fi:
+                    for line in fi:
+                        if line.startswith("INPUT['sys_name']"):
+                            basename = str(line.split()[2]).strip('"\'')
+                            if basename in names:
+                                while basename in names:
+                                    basename = f"{basename}-{names.count(basename) + 1}"
+                                names.append(basename)
+                        if line.startswith("INPUT['exp_ki']"):
+                            exp_ki = float(line.split()[2])
+                        if line.startswith("INPUT['mutant_only']"):
+                            mut_only = int(line.split()[2])
+                        if line.startswith("mut_str"):
+                            mutant = line.split('=')[1]
             # check for custom settings
             custom_settings = fname.parent.joinpath('settings.json').exists()
             user_default_settings = Path('~').expanduser().absolute().joinpath('.config', 'gmx_MMPBSA',
@@ -241,7 +292,6 @@ class InitDialog(QDialog):
                 item.addChild(witem)
 
             if mutant:
-                print(mutant)
                 mitem = QTreeWidgetItem(['', '', f'{mutant}', f'{exp_ki}', '', ''])
                 # mitem.info = [basename, Path(fname)]
                 self._set_item_properties(mitem)
@@ -272,6 +322,9 @@ class InitDialog(QDialog):
                         'components': [x.text() for x in [self.com_btn, self.rec_btn, self.lig_btn] if x.isChecked()],
                         'remove_empty_charts': self.remove_empty_charts_btn.isChecked(),
                         'remove_empty_terms':self.remove_empty_terms_btn.isChecked(),
+                        'timestep': self.time_step.value() if self.frame2time.isChecked() else 0,
+                        'timeunit': self.time_unit.currentText(),
+                        'timestart': self.time_start.value()
                         # 'default_chart_options': self.default_settings_btn.isChecked()
                         }
         counter = 0
@@ -282,7 +335,7 @@ class InitDialog(QDialog):
             t = {}
             if child.childCount():
                 for c1 in range(child.childCount()):
-                    if child.child(c1).checkState(1) == Qt.Checked:
+                    if child.child(c1).checkState(1) == Qt.CheckState.Checked:
                         if child.child(c1).text(2) == 'wild type':
                             t['wt'] = float(child.child(c1).text(3))
                         else:
@@ -295,8 +348,7 @@ class InitDialog(QDialog):
                                  QMessageBox.Ok)
             return
         self.pb.setRange(0, counter)
-        self.worker.define_dat(API.load_gmxmmpbsa_info, queue, self.result_queue, self.jobs_spin.value())
-        self.worker.start()
+        self.parent.read_data(queue, self.options)
 
     def jobfinished(self):
         self.curr_progress += 1
