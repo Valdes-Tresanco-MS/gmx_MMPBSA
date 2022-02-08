@@ -116,20 +116,20 @@ def gmxmmpbsa():
 
 def gmxmmpbsa_ana():
     try:
-        from PyQt5.QtWidgets import QApplication
-        from GMXMMPBSA.analyzer.gui import GMX_MMPBSA_ANA
-        from GMXMMPBSA.analyzer.utils import get_files
+        from PyQt6.QtWidgets import QApplication
     except ImportError as e:
         GMXMMPBSA_ERROR('Could not import PyQt5. gmx_MMPBSA_ana will be disabled until you install it')
+    from GMXMMPBSA.analyzer.gui import GMX_MMPBSA_ANA
+    from GMXMMPBSA.analyzer.utils import get_files
 
     app = QApplication(sys.argv)
+    app.setApplicationName('gmx_MMPBSA Analyzer (gmx_MMPBSA_ana)')
     try:
         parser = anaparser.parse_args(sys.argv[1:])
     except CommandlineError as e:
         GMXMMPBSA_ERROR('%s: %s' % (type(e).__name__, e))
         sys.exit(1)
     ifiles = get_files(parser)
-    app.setApplicationName('gmx_MMPBSA Analyzer (gmx_MMPBSA_ana)')
     w = GMX_MMPBSA_ANA()
     w.gettting_data(ifiles)
     w.show()
