@@ -59,18 +59,16 @@ class CustomItem(QTreeWidgetItem):
                  iec2_data=None, buttons=(), keys_path=None):
         super(CustomItem, self).__init__(parent, stringlist)
 
-        self.remove_empty_terms = remove_empty_terms
-        self.data = data
         self.system_index = system_index
         self.app = app
         self.title = title
         self.subtitle = subtitle
         self.item_name = stringlist[0]
         self.buttons = buttons
-        self.options_btn = options_btn
         self.iec2_data = iec2_data
-        self.item_type = item_type
         self.properties = {}
+
+        self.keys_path = keys_path
 
         self.lp_subw = None
         self.bp_subw = None
@@ -144,10 +142,12 @@ class CustomItem(QTreeWidgetItem):
 
     def _show_line_table(self, state):
         from GMXMMPBSA.analyzer.plots import Tables
+        line_plot_data = self.app.systems[self.system_index]['items_data'][self.keys_path]['line_plot_data'][0]
+        options = {'table_name': self.subtitle}
         self.app.treeWidget.clearSelection()
         if state:
             self.setSelected(True)
-            self.line_table_subw = Tables(self.line_plot_data, self.line_table_action)
+            self.line_table_subw = Tables(line_plot_data, self.line_table_action, options)
             self.app.mdi.addSubWindow(self.line_table_subw)
             self.line_table_subw.show()
         elif self.line_table_subw:
@@ -176,10 +176,12 @@ class CustomItem(QTreeWidgetItem):
     def _show_bar_table(self, state):
         from GMXMMPBSA.analyzer.plots import Tables
         self.app.treeWidget.clearSelection()
+        options = {'table_name': self.subtitle}
+        bar_plot_data = self.app.systems[self.system_index]['items_data'][self.keys_path]['bar_plot_data'][0]
         if state:
             self.setSelected(True)
             if not self.bar_table_subw:
-                self.bar_table_subw = Tables(self.bar_plot_data, self.bar_table_action)
+                self.bar_table_subw = Tables(bar_plot_data, self.bar_table_action, options)
                 self.app.mdi.addSubWindow(self.bar_table_subw)
             self.bar_table_subw.show()
         elif self.bar_table_subw:
@@ -323,27 +325,23 @@ class CustomItem(QTreeWidgetItem):
         options = self.app.systems[self.system_index]['chart_options'].get_settings()
         options.update({'title': self.title, 'subtitle': self.subtitle})
         changes = self.app.systems[self.system_index]['chart_options'].changes
+        line_plot_data = self.app.systems[self.system_index]['items_data'][self.keys_path]['line_plot_data'][0]
+        datachange = self.app.systems[self.system_index]['items_data'][self.keys_path]['line_plot_data'][2]
+        # temp_ie = self.app.systems[self.system_index]['items_data'][self.keys_path]['ie_plot_data']
+        # ie_plot_data =  temp_ie[0] if temp_ie else temp_ie
+        options.update(self.app.systems[self.system_index]['items_data'][self.keys_path]['line_plot_data'][1])
         if state:
             self.setSelected(True)
             line_change3 = (changes['line_action'] == 3 or changes['line_ie_action'] == 3)
             line_change1 = (changes['line_action'] == 1 or changes['line_ie_action'] == 1)
 
-            if not self.lp_subw or self.frange != self.lp_subw.frange or line_change3:
-                self.lp_subw = LineChart(self.line_plot_data, self.line_chart_action, data2=self.ie_plot_data,
-                                         options=options)
-                self.lp_subw.frange = self.frange  # set the frange
-                changes['line_action'] = 0
-                changes['line_ie_action'] = 0
+            if not self.lp_subw or datachange or line_change3:
+                self.lp_subw = LineChart(line_plot_data, self.line_chart_action, options=options)
+                self.app.systems[self.system_index]['items_data'][self.keys_path]['line_plot_data'][2] = False
                 self.app.mdi.addSubWindow(self.lp_subw)
-                # self.lp_subw.show()
             elif line_change1:
-                # self.lp_subw.show()
                 self.lp_subw.update_config(options)
-                changes['line_action'] = 0
-                changes['line_ie_action'] = 0
-            # else:
             self.lp_subw.show()
-
         elif self.lp_subw:
             self.app.mdi.activatePreviousSubWindow()
             self.lp_subw.close()
@@ -355,21 +353,18 @@ class CustomItem(QTreeWidgetItem):
         options.update({'title': self.title, 'subtitle': self.subtitle})
         changes = self.app.systems[self.system_index]['chart_options'].changes
 
-        if 'groups' in self.properties:
-            options['groups'] = self.properties['groups']
-        if 'scalable' in self.properties:
-            options['scalable'] = self.properties['scalable']
+        bar_plot_data = self.app.systems[self.system_index]['items_data'][self.keys_path]['bar_plot_data'][0]
+        datachange = self.app.systems[self.system_index]['items_data'][self.keys_path]['bar_plot_data'][2]
+        options.update(self.app.systems[self.system_index]['items_data'][self.keys_path]['bar_plot_data'][1])
 
         if state:
             self.setSelected(True)
-            if not self.bp_subw or self.frange != self.bp_subw.frange or changes['bar_action'] == 3:
-                self.bp_subw = BarChart(self.bar_plot_data, self.bar_chart_action, options=options)
-                self.bp_subw.frange = self.frange
-                changes['bar_action'] = 0
+            if not self.bp_subw or datachange or changes['bar_action'] == 3:
+                self.bp_subw = BarChart(bar_plot_data, self.bar_chart_action, options=options)
+                self.app.systems[self.system_index]['items_data'][self.keys_path]['bar_plot_data'][2] = False
                 self.app.mdi.addSubWindow(self.bp_subw)
             elif changes['bar_action'] == 1:
                 self.bp_subw.update_config(options)
-                changes['bar_action'] = 0
             self.bp_subw.show()
         elif self.bp_subw:
             self.app.mdi.activatePreviousSubWindow()
@@ -381,16 +376,16 @@ class CustomItem(QTreeWidgetItem):
         options = self.app.systems[self.system_index]['chart_options'].get_settings()
         options.update({'title': self.title, 'subtitle': self.subtitle})
         changes = self.app.systems[self.system_index]['chart_options'].changes
+        heatmap_plot_data = self.app.systems[self.system_index]['items_data'][self.keys_path]['heatmap_plot_data'][0]
+        datachange = self.app.systems[self.system_index]['items_data'][self.keys_path]['heatmap_plot_data'][2]
         if state:
             self.setSelected(True)
-            if not self.hmp_subw or self.frange != self.hmp_subw.frange or changes['heatmap_action'] == 3:
-                self.hmp_subw = HeatmapChart(self.heatmap_plot_data, self.heatmap_chart_action, options=options)
-                self.hmp_subw.frange = self.frange
-                changes['heatmap_action'] = 0  # make False again
+            if not self.hmp_subw or datachange or changes['heatmap_action'] == 3:
+                self.hmp_subw = HeatmapChart(heatmap_plot_data, self.heatmap_chart_action, options=options)
+                self.app.systems[self.system_index]['items_data'][self.keys_path]['heatmap_plot_data'][2] = False
                 self.app.mdi.addSubWindow(self.hmp_subw)
             elif changes['heatmap_action'] == 1:
                 self.hmp_subw.update_config(options)
-                changes['heatmap_action'] = 0
             self.hmp_subw.show()
         elif self.hmp_subw:
             self.app.mdi.activatePreviousSubWindow()
@@ -411,17 +406,19 @@ class CustomItem(QTreeWidgetItem):
 
         if checked:
             self.setSelected(True)
-            pymol_path = [os.path.join(path, 'pymol') for path in os.environ["PATH"].split(os.pathsep)
-                          if os.path.exists(os.path.join(path, 'pymol')) and
-                          os.access(os.path.join(path, 'pymol'), os.X_OK)]
-            if not pymol_path:
+            if pymol_path := [
+                os.path.join(path, 'pymol')
+                for path in os.environ["PATH"].split(os.pathsep)
+                if os.path.exists(os.path.join(path, 'pymol'))
+                and os.access(os.path.join(path, 'pymol'), os.X_OK)
+            ]:
+                pymol = pymol_path[0]
+
+            else:
                 QMessageBox.critical(self, 'PyMOL not found!', 'PyMOL not found!. Make sure PyMOL is in the '
                                                                'PATH.', QMessageBox.Ok)
                 self.vis_action.setChecked(False)
                 return
-            else:
-                pymol = pymol_path[0]
-
             if not self.pymol_process:
                 self.pymol_process = QProcess()
             elif self.pymol_process.state() == QProcess.Running:
@@ -479,11 +476,21 @@ class CustomItem(QTreeWidgetItem):
                 self.tb.addWidget(SpacerItem())
             else:
                 self.charts_action[b]()
-        if len(self.buttons) > 1 and -1 not in self.buttons:
-            self.tb.addWidget(self.mark_all)
+
         if -1 in self.buttons:
             self._define_option_button()
-            self.tb.addWidget(self.options_button)
+        elif -2 in self.buttons:
+            self._define_result_table_btn()
+        elif len(self.buttons) > 1:
+            self.tb.addWidget(self.mark_all)
+
+
+        # if len(self.buttons) > 1 and -1 not in self.buttons:
+        #     self.tb.addWidget(self.mark_all)
+        # if -1 in self.buttons:
+        #     self._define_option_button()
+        #     self.tb.addWidget(self.options_button)
+
 
         return self.tb
 
