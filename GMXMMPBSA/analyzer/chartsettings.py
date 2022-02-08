@@ -426,8 +426,8 @@ class ChartSettings(dict):
                     'subplot-components': {'type': 'bool', 'enabled': True, 'expanded': True,
                                            'name': 'subplot-components', 'value': True, 'default': True,
                                            'action_type': R},
-                    'scale-big-values': {'type': 'bool', 'enabled': True, 'expanded': True,
-                                         'name': 'scale-big-values', 'value': True, 'default': True, 'action_type': R},
+                    'scale-yaxis': {'type': 'bool', 'enabled': True, 'expanded': True,
+                                         'name': 'scale-yaxis', 'value': True, 'default': True, 'action_type': R},
                     'remove-molid': {'type': 'bool', 'enabled': True, 'expanded': True, 'name': 'remove-molid',
                                      'value': True, 'default': True, 'action_type': R},
                     'error-line': {'type': 'group', 'enabled': True, 'expanded': False, 'name': 'error-line',
@@ -449,7 +449,7 @@ class ChartSettings(dict):
                             'fontsize': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'fontsize',
                                          'value': 8, 'limits': (2, 20), 'default': 8, 'action_type': D},
                             'padding': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'padding',
-                                        'value': 5, 'limits': (0, 50), 'default': 5, 'action_type': D}
+                                        'value': 5, 'limits': (0, 50), 'default': 5, 'action_type': R}
                         }},
                     'fontsize': {
                         'type': 'group', 'enabled': True, 'expanded': False, 'name': 'fontsize', 'value': None,
@@ -658,12 +658,17 @@ class ChartSettings(dict):
         else:
             self.changes[f'{var}_update'] = True
 
-    def get_changes(self, osett) -> None:
-        if self == osett:
-            return
+    def is_changed(self, osett) -> bool:
         flatten = flatten_dict(self)
         f_osett = flatten_dict(osett)
+        return flatten != f_osett
 
+    def get_changes(self, osett) -> None:
+
+        flatten = flatten_dict(self)
+        f_osett = flatten_dict(osett)
+        if flatten == f_osett:
+            return
         for k, v in flatten.items():
             if k[-1] == 'value' and v != f_osett[k]:
                 at = tuple(list(k[:-1]) + ['action_type'])
