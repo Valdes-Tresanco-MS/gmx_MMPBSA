@@ -324,77 +324,113 @@ class GMX_MMPBSA_ANA(QMainWindow):
             self.chart_options_w.setParameters(self.chart_options_param, showTop=False)
         self.current_system_index = parent_item.system_index
 
-    def _get_changes(self, sett, osett):
-        # changes
-        line = False
-        bar = False
-        heatmap = False
+    def update_fn(self):
 
-        for k, ko in zip(sett, osett):
-            if k == 'bar_options':
-                if sett[k] != osett[ko]:
-                    bar = True
-            elif k == 'general_options':
-                if sett[k] != osett[ko]:
-                    line = True
-                    bar = True
-                    heatmap = True
-            elif k == 'line_options':
-                if sett[k] != osett[ko]:
-                    line = True
-            elif sett[k] != osett[ko]:
-                heatmap = True
-        return line, bar, heatmap
+        recalc_energy = []
+        recalc_nmode = []
+        recalc_ie = []
+        repaint = []
 
-    def update_frames_fn(self):
+        act_frange = [self.eframes_start_sb.value(), self.eframes_end_sb.value(), self.eframes_inter_sb.value()]
+        act_sett = self.chart_options_param.saveState()
+
+        processed_sys = []
 
         if self.all_frb.isChecked():
             for x in self.systems:
-                self.systems[x]['current_frames'] = [self.eframes_start_sb.value(),
-                                                     self.eframes_end_sb.value(),
-                                                     self.eframes_inter_sb.value()]
-                # FIXME: update frames for entropy
-        # TODO: update frames for individual charts?
+                processed_sys.append(x)
+                if act_frange != self.systems[x]['current_frames']:
+                    recalc_energy.append(x)
+
+                self.systems[x]['current_frames'] = act_frange
+                if self.systems[x]['chart_options'].is_changed(act_sett):
+                    repaint.append(x)
         else:
-            act_frange = [self.eframes_start_sb.value(), self.eframes_end_sb.value(), self.eframes_inter_sb.value()]
-            act_sett = self.chart_options_param.saveState()
-            curr_frange = self.systems[self.current_system_index]['current_frames']
-            curr_sett = self.systems[self.current_system_index]['chart_options']
+            processed_sys.append(self.current_system_index)
+            if act_frange != self.systems[self.current_system_index]['current_frames']:
+                recalc_energy.append(self.current_system_index)
 
-            self.systems[self.current_system_index]['current_frames'] = act_frange
-            # chart options
-            self.systems[self.current_system_index]['chart_options'].get_changes(act_sett)
+            if self.systems[self.current_system_index]['chart_options'].is_changed(act_sett):
+                repaint.append(self.current_system_index)
 
-        # FIXME: create a progress bar if the task take long time
+        maximum = len(recalc_energy) + len(recalc_ie) + len(recalc_nmode) + len(repaint)
 
-        # IMPORTANT: recalculate IE and C2
-        itemiter = QTreeWidgetItemIterator(self.sys_item)
-        while itemiter.value():
-            item = itemiter.value()
-            if item.item_type in ['energy', 'ie', 'c2']:
-                frange = self.systems[item.system_index]['current_frames']
-            else:
-                frange = self.systems[item.system_index]['current_nmode_frames']
+        if not maximum:
+            return
+        maximum += 1 # close and re-open current active windows
 
-            if item.item_type == 'ie':
-                eframes = self.systems[item.system_index]['current_ie_frames']
-            elif item.item_type == 'c2':
-                eframes = self.systems[item.system_index]['current_c2_frames']
-            else:
-                eframes = 0
-            item.setup_data(frange, eframes)
-            itemiter += 1
+        qpd = QProgressDialog('Creating systems tree', 'Abort', 0, maximum, self)
+        qpd.setWindowModality(Qt.WindowModality.WindowModal)
+        qpd.setMinimumDuration(0)
+        v = 0
+        if recalc_energy:
+            qpd.setLabelText('Recalculating energies for selected frames range')
+            for e in recalc_energy:
+                v += 1
+                self.systems[e]['api'].update_energy_frames(*act_frange)
+                self.systems[e]['data'] = self.systems[e]['api'].get_energy()
+                self.systems[e]['current_frames'] = act_frange
+                qpd.setValue(v)
+                qpd.setValue(v)
+        if recalc_nmode:
+            qpd.setLabelText('Recalculating nmode for selected frames range')
+            for e in recalc_nmode:
+                v += 1
+                # self.systems[e]['api'].update_energy_frames(*act_frange)
+                self.systems[e]['current_frames'] = act_frange
+                qpd.setValue(v)
+        if recalc_ie:
+            qpd.setLabelText('Recalculating Interaction Entropy for selected frames range')
+            for e in recalc_ie:
+                v += 1
+                # self.systems[e]['api'].update_energy_frames(*act_frange)
+                self.systems[e]['current_frames'] = act_frange
+                qpd.setValue(v)
+        if repaint:
+            qpd.setLabelText('Updating charts options')
+            for e in repaint:
+                v += 1
+                self.systems[e]['chart_options'].get_changes(act_sett)
+                qpd.setValue(v)
 
-        # restore to False all changes in each system
-        for x in self.systems:
-            self.systems[x]['changes'] = [False, False, False]
+        comp = []
+        if recalc_energy and recalc_ie and recalc_nmode:
+            comp.append('all')
+        else:
+            if recalc_energy:
+                comp.append('energy')
+            if recalc_ie:
+                comp.append('ie')
+            if recalc_nmode:
+                comp.append('nmode')
 
-        # update current open charts. This must be made after update the variables current_frames, etc., in the system
+        qpd.setLabelText('Setting data...')
+        for s in processed_sys:
+            parts = list(self.systems[s]['data'].keys())
+            for p in parts:
+                self.setting_item_data(s, p, comp=tuple(comp))
+            self.systems[s]['items_summary'] = self.systems[s]['api'].get_summary()
+
+        qpd.setLabelText('Updating opened charts')
+
+
         subwindows = self.mdi.subWindowList()
         for sub in subwindows:
             if sub.isVisible():
                 sub.button.setChecked(False)
                 sub.button.setChecked(True)
+
+
+        # re-assign changes to native state after replot all open charts
+        for s in processed_sys:
+            self.systems[s]['chart_options'].changes = dict(line_action=0,
+                                                            line_ie_action=0,
+                                                            bar_action=0,
+                                                            heatmap_action=0,
+                                                            visualization_ation=0)
+
+
+        qpd.setValue(maximum)
 
     def reset_dc(self):
         sub = self.mdi.activeSubWindow()
