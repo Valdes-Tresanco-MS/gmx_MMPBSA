@@ -244,7 +244,7 @@ class CustomItem(QTreeWidgetItem):
         self.output_action = options_menu.addAction('Show Output file')
         self.output_action.setCheckable(True)
         self.output_action.toggled.connect(self._show_output_file)
-        if self.app.systems[self.system_index]['namespace'].INFO['decomp_output_file']:
+        if self.app.systems[self.system_index]['namespace'].INPUT['decomprun']:
             self.decomp_output_action = options_menu.addAction('Show Decomp Output file')
             self.decomp_output_action.setCheckable(True)
             self.decomp_output_action.toggled.connect(self._show_decomp_output_file)
@@ -256,6 +256,8 @@ class CustomItem(QTreeWidgetItem):
         self.options_button.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
         self.options_button.setContentsMargins(0, 0, 0, 0)
         self.options_button.setMenu(options_menu)
+
+        self.tb.addWidget(self.options_button)
 
     def _show_output_file(self, state):
         from GMXMMPBSA.analyzer.plots import OutputFiles
@@ -287,6 +289,18 @@ class CustomItem(QTreeWidgetItem):
             self.app.mdi.activatePreviousSubWindow()
             self.decomp_output_file_subw.close()
 
+    def _define_result_table_btn(self):
+
+        self.result_table_action = QToolButton()
+        self.result_table_action.setIcon(
+            QIcon('/home/mario/PycharmProjects/gmx_MMPBSA/GMXMMPBSA/analyzer/style/heatmap_icon.svg'))
+        self.result_table_action.setText('Result Table')
+        self.result_table_action.setCheckable(True)
+        self.result_table_action.setContentsMargins(0, 0, 0, 0)
+        self.btn_group.addButton(self.result_table_action, 5)
+
+        self.tb.addWidget(self.result_table_action)
+
     def fn_mark_all(self, state):
         if state == Qt.CheckState.PartiallyChecked:
             pass
@@ -317,6 +331,8 @@ class CustomItem(QTreeWidgetItem):
             self.plotting_heatmap(checked)
         elif self.btn_group.id(btn) == 4:
             self.visualizing(checked)
+        elif self.btn_group.id(btn) == 5:
+            self.result_table(checked)
 
     def plotting_line(self, state):
         from GMXMMPBSA.analyzer.plots import LineChart
@@ -467,6 +483,20 @@ class CustomItem(QTreeWidgetItem):
         qpd.setValue(2)
 
         return bfactor_pml
+
+    def result_table(self, state):
+        from GMXMMPBSA.analyzer.plots import Tables
+        self.app.treeWidget.clearSelection()
+        table_data = self.app.systems[self.system_index]['items_summary'][self.keys_path]
+        options = {'table_name': 'Summary | ' + self.subtitle}
+        if state:
+            self.setSelected(True)
+            self.result_table_subw = Tables(table_data, self.result_table_action, options, True)
+            self.app.mdi.addSubWindow(self.result_table_subw)
+            self.result_table_subw.show()
+        elif self.result_table_subw:
+            self.app.mdi.activatePreviousSubWindow()
+            self.result_table_subw.close()
 
     def setup_buttons(self):
         if not self.buttons:
