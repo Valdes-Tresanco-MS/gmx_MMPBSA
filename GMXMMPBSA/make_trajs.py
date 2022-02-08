@@ -37,8 +37,8 @@ from warnings import warn
 from GMXMMPBSA.exceptions import (TrajError, MMPBSA_Error, InternalError,
                                   MutantResError)
 
+strip_mask = ':WAT,Cl*,CIO,Cs+,IB,K*,Li+,MG*,Na+,Rb+,CS,RB,NA,F,CL'
 
-# +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 def make_trajectories(INPUT, FILES, size, cpptraj, pre):
     """
@@ -60,7 +60,7 @@ def make_trajectories(INPUT, FILES, size, cpptraj, pre):
     #    traj.Setup(INPUT['startframe'], INPUT['endframe'], INPUT['interval'])
     #    if not stability:
     #       traj.Image()
-    #    traj.StripSolvent(INPUT['strip_mask'])
+    #    traj.StripSolvent(strip_mask)
     # # If we do not have a solvated topology...
     # else:
     #    print FILES.complex_prmtop, FILES.complex_trajs, cpptraj
@@ -68,7 +68,7 @@ def make_trajectories(INPUT, FILES, size, cpptraj, pre):
     traj = Trajectory(FILES.complex_prmtop, FILES.complex_trajs, cpptraj)
     traj.Setup(INPUT['startframe'], INPUT['endframe'], INPUT['interval'])
     # RMS fit
-    traj.rms('!(%s)' % INPUT['strip_mask'])
+    traj.rms('!(%s)' % strip_mask)
 
     com_frames = int(traj.processed_frames)
     rec_frames = 0
@@ -117,7 +117,7 @@ def make_trajectories(INPUT, FILES, size, cpptraj, pre):
                          frames=frame_string, filetype=INPUT['netcdf'])
             last_frame += frame_count[i]
         traj.Unstrip(restrip_solvent=True)
-        traj.rms('!(%s)' % INPUT['strip_mask'])
+        traj.rms('!(%s)' % strip_mask)
 
     if not stability and not FILES.ligand_trajs:
         traj.Strip(INPUT['receptor_mask'])
@@ -132,7 +132,7 @@ def make_trajectories(INPUT, FILES, size, cpptraj, pre):
                          frames=frame_string, filetype=INPUT['netcdf'])
             last_frame += frame_count[i]
         traj.Unstrip(restrip_solvent=True)
-        traj.rms('!(%s)' % INPUT['strip_mask'])
+        traj.rms('!(%s)' % strip_mask)
 
     # Run cpptraj to get the trajectory
     traj.Run(pre + 'normal_traj_cpptraj.out')
@@ -145,12 +145,12 @@ def make_trajectories(INPUT, FILES, size, cpptraj, pre):
         #    rectraj = Trajectory(FILES.solvated_receptor_prmtop,
         #                         FILES.receptor_trajs, cpptraj)
         #    rectraj.Setup(INPUT['startframe'],INPUT['endframe'],INPUT['interval'])
-        #    rectraj.StripSolvent(INPUT['strip_mask'])
+        #    rectraj.StripSolvent(strip_mask)
         # else:
         rectraj = Trajectory(FILES.receptor_prmtop, FILES.receptor_trajs, cpptraj)
         rectraj.Setup(INPUT['startframe'], INPUT['endframe'], INPUT['interval'])
         rec_frames = int(rectraj.processed_frames)
-        rectraj.rms('!(%s)' % INPUT['strip_mask'])
+        rectraj.rms('!(%s)' % strip_mask)
         if INPUT['full_traj'] or INPUT['qh_entropy']:
             rectraj.Outtraj(pre + 'receptor.%s' % trj_suffix,
                             filetype=INPUT['netcdf'])
@@ -184,12 +184,12 @@ def make_trajectories(INPUT, FILES, size, cpptraj, pre):
         #    ligtraj = Trajectory(FILES.solvated_ligand_prmtop,
         #                         FILES.ligand_trajs, cpptraj)
         #    ligtraj.Setup(INPUT['startframe'],INPUT['endframe'],INPUT['interval'])
-        #    ligtraj.StripSolvent(INPUT['strip_mask'])
+        #    ligtraj.StripSolvent(strip_mask)
         # else:
         ligtraj = Trajectory(FILES.ligand_prmtop, FILES.ligand_trajs, cpptraj)
         ligtraj.Setup(INPUT['startframe'], INPUT['endframe'], INPUT['interval'])
         lig_frames = int(ligtraj.processed_frames)
-        ligtraj.rms('!(%s)' % INPUT['strip_mask'])
+        ligtraj.rms('!(%s)' % strip_mask)
         ligtraj.Outtraj(pre + 'ligand.%s' % trj_suffix, filetype=INPUT['netcdf'])
         ligtraj.Outtraj(pre + 'ligand.pdb', frames='1', filetype='pdb')
         ligtraj.Outtraj(pre + 'dummyligand.inpcrd', frames='1',

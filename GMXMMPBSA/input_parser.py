@@ -397,8 +397,6 @@ class InputFile(object):
 # Define the MM/PBSA input file here
 input_file = InputFile()
 
-strip_mask = ':WAT,Cl*,CIO,Cs+,IB,K*,Li+,MG*,Na+,Rb+,CS,RB,NA,F,CL'
-
 # Add namelists with a list of variables. The variables are added to the
 # namelists in lists. The entries are:
 # [<variable name> <variable type> <default value> <# of characters to match>]
@@ -440,7 +438,7 @@ input_file.addNamelist('general', 'general',
                            # ['search_path', str, '', 'Look for intermediate programs in all of PATH'],
                            ['solvated_trajectory', int, 1, 'Define if it is necessary to cleanup the trajectories'],
 # FIXME: strip_mask -> para GROMACS se hace con la variable solvated_trajectory
-                           ['strip_mask', str, strip_mask, 'Amber mask to strip from solvated prmtop'],
+#                            ['strip_mask', str, strip_mask, 'Amber mask to strip from solvated prmtop'],
 
                            ['verbose', int, 1, 'How many energy terms to print in the final output']
                        ], trigger=None)
