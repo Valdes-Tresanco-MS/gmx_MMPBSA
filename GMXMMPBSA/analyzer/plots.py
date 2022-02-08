@@ -337,6 +337,8 @@ class HeatmapChart(ChartsBase):
     def __init__(self, data: pandas.DataFrame, button: QToolButton, options: dict = None):
         super(HeatmapChart, self).__init__(button, options)
 
+        self.data = data
+
         self.heatmap_type = int(all(data.columns == data.index)) if data.columns.size == data.index.size else 2
         fig_width = (options[('Heatmap Plot', 'figure', 'width-per-wise')] if self.heatmap_type == 1 else
                      options[('Heatmap Plot', 'figure', 'width-per-residue')])
@@ -406,18 +408,19 @@ class HeatmapChart(ChartsBase):
             # heatmap_ax.yaxis.set_ticks_position('right')
             # heatmap_ax.yaxis.set_label_position('right')
             if self.heatmap_type == 2:
-                heatmap_ax.set_xlabel('Frames', fontdict={'fontsize': options[('Heatmap Plot', 'fontsize', 'x-label')]})
+                heatmap_ax.set_xlabel(data.columns.name, fontdict={'fontsize': options[('Heatmap Plot', 'fontsize',
+                                                                                  'x-label')]})
 
         self.cursor = Cursor(self.axes, useblit=True, color='black', linewidth=0.5, ls='--')
 
-        self.setWindowTitle(options['chart_subtitle'])
+        self.setWindowTitle(options['subtitle'])
         self.update_config(options)
         self.draw()
 
     def update_config(self, options):
-        self.fig.suptitle(f"{options['chart_title']}\n{options['chart_subtitle']}",
+        self.fig.suptitle(f"{options['title']}\n{options['subtitle']}",
                           fontsize=options[('Heatmap Plot', 'fontsize', 'title')])
-        xlabel = 'Frames' if self.heatmap_type == 2 else ''
+        xlabel = self.data.columns.name if self.heatmap_type == 2 else ''
         self.setup_text_hm(self.axes, options, xlabel=xlabel)
         self.draw()
 
@@ -537,10 +540,7 @@ class MHeatmap:
 
     @staticmethod
     def _index_color(x, rec_color, lig_color):
-        if x.startswith('R'):
-            return tuple(rec_color)
-        else:
-            return tuple(lig_color)
+        return tuple(rec_color) if x.startswith('R') else tuple(lig_color)
 
     @staticmethod
     def color_list_to_matrix_and_cmap(colors, axis=0):
@@ -553,9 +553,6 @@ class MHeatmap:
         ----------
         colors : list of matplotlib colors
             Colors to label the rows or columns of a dataframe.
-        ind : list of ints
-            Ordering of the rows or columns, to reorder the original colors
-            by the clustered dendrogram order
         axis : int
             Which axis this is labeling
 
