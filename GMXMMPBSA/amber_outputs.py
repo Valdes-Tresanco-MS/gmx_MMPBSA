@@ -26,7 +26,7 @@ All data is stored in a special class derived from the list.
 import logging
 from math import sqrt
 from GMXMMPBSA.exceptions import (OutputError, LengthError, DecompError)
-from GMXMMPBSA.utils import get_std
+from GMXMMPBSA.utils import get_std, get_corrstd
 import h5py
 from types import SimpleNamespace
 import numpy as np
@@ -68,6 +68,22 @@ class EnergyVector(np.ndarray):
 
     def avg(self):
         return np.average(self)
+
+    def corr_add(self, other):
+        selfstd = self.com_std or float(self.std())
+        comp_std = None
+        if isinstance(other, EnergyVector):
+            otherstd = other.com_std or float(other.std())
+            comp_std = get_corrstd(selfstd, otherstd)
+        return EnergyVector(np.add(self, other), comp_std)
+
+    def corr_sub(self, other):
+        self_std = self.com_std or float(np.asarray(self).std())
+        comp_std = None
+        if isinstance(other, EnergyVector):
+            other_std = other.com_std or float(np.asarray(other).std())
+            comp_std = get_corrstd(self_std, other_std)
+        return EnergyVector(np.subtract(self, other), comp_std)
 
     def __add__(self, other):
         selfstd = self.com_std or float(self.std())
@@ -903,7 +919,11 @@ class BindingStatistics(dict):
                     break
 
         for key in self.com.data_keys:
-            self[key] = self.com[key] - self.rec[key] - self.lig[key]
+            if self.traj_protocol == 'STP':
+                temp = self.com[key].corr_sub(self.rec[key])
+                self[key] = temp.corr_sub(self.lig[key])
+            else:
+                self[key] = self.com[key] - self.rec[key] - self.lig[key]
         for key in self.com.composite_keys:
             self[key] = EnergyVector(len(self.com['VDWAALS']))
             self.composite_keys.append(key)
@@ -982,11 +1002,6 @@ class BindingStatistics(dict):
             # Skip the composite terms, since we print those at the end
             if key in self.composite_keys:
                 continue
-            # # Skip chamber terms if we aren't using chamber prmtops
-            # if not self.chamber and key in ['UB', 'IMP', 'CMAP']:
-            #     continue
-            # if self.com.INPUT['sander_apbs'] and key == 'EDISPER':
-            #     continue
             # Catch special case of NMODEout classes
             if isinstance(self.com, NMODEout) and key == 'Total':
                 printkey = '\n-TΔS binding ='
@@ -1055,7 +1070,18 @@ class DeltaBindingStatistics(dict):
         accordingly in the child classes
         """
         for key in self.norm:
-            self[key] = self.mut[key] - self.norm[key]
+            if key in self.composite_keys:
+                continue
+            self[key] = self.mut[key].corr_sub(self.norm[key])
+
+        for key in self.composite_keys:
+            self[key] = EnergyVector(len(self.norm['VDWAALS']))
+            # self.composite_keys.append(key)
+        for key in self.data_keys:
+            for component in self.norm.com.data_key_owner[key]:
+                self[component] = self[key] + self[component]
+
+
 
     def _print_vectors(self, csvwriter):
         """ Output all of the energy terms including the differences if we're
@@ -1089,7 +1115,7 @@ class DeltaBindingStatistics(dict):
                          [col_name] + ['Average', 'SD(Prop.)', 'SD', 'SEM(Prop.)', 'SEM']])
         else:
             text.append('Delta Delta (Mutant - Normal):\n' + f'{col_name:16s}' +
-                        '       Average                       SD                     SEM\n' +
+                        '       Average     SD(Prop.)         SD   SEM(Prop.)        SEM\n' +
                         '-------------------------------------------------------------------------------')
 
         for key in self.norm.data_keys:
@@ -1100,15 +1126,16 @@ class DeltaBindingStatistics(dict):
             else:
                 printkey = key
             # Now print out the stats
+            stdev = float(self[key].stdev())
             avg = float(self[key].mean())
             std = float(self[key].std())
             num_frames = len(self[key])
             sem = float(std / sqrt(num_frames))
-
+            semp = float(stdev / sqrt(num_frames))
             if _output_format:
-                text.append(['ΔΔ' + printkey, avg, std, sem])
+                text.append(['ΔΔ' + printkey, avg, stdev, std, semp, sem])
             else:
-                text.append(f"{'ΔΔ' + printkey:16s} {avg:13.2f} {std:24.2f} {sem:23.2f}")
+                text.append(f"{'ΔΔ' + printkey:16s} {avg:13.2f} {stdev:13.2f} {std:10.2f} {semp:12.2f} {sem:10.2f}")
 
         if self.composite_keys:
             text.append('')
@@ -1116,15 +1143,17 @@ class DeltaBindingStatistics(dict):
             # Now print out the composite terms
             if key == 'TOTAL':
                 text.append('')
+            stdev = float(self[key].stdev())
             avg = float(self[key].mean())
             std = float(self[key].std())
             num_frames = len(self[key])
             sem = float(std / sqrt(num_frames))
+            semp = float(stdev / sqrt(num_frames))
                 # num_frames is the same as the one from above
             if _output_format:
-                text.append(['ΔΔ' + key, avg, std, sem])
+                text.append(['ΔΔ' + key, avg, stdev, std, semp, sem])
             else:
-                text.append(f"{'ΔΔ' + key:16s} {avg:13.2f} {std:24.2f} {sem:23.2f}")
+                text.append(f"{'ΔΔ' + key:16s} {avg:13.2f} {stdev:13.2f} {std:10.2f} {semp:12.2f} {sem:10.2f}")
 
         return text if _output_format else '\n'.join(text) + '\n'
 
