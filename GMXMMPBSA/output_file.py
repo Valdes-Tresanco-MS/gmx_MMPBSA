@@ -188,7 +188,7 @@ def write_outputs(app):
         final_output.add_comment('Receptor mask:                  "%s"' % INPUT['receptor_mask'])
         final_output.add_comment('Ligand mask:                    "%s"' % INPUT['ligand_mask'])
         if prmtop_system.ligand_prmtop.ptr('nres') == 1:
-            final_output.add_comment('Ligand residue name is:                  "%s"' %
+            final_output.add_comment('Ligand residue name is:         "%s"' %
                                      prmtop_system.ligand_prmtop.parm_data['RESIDUE_LABEL'][0])
     final_output.add_comment('')
     final_output.add_comment('Calculations performed using %s complex frames' % app.numframes)
