@@ -201,7 +201,7 @@ class AmberOutput(dict):
         # write out each frame
         c = self.INPUT['startframe']
         for i in range(len(self[print_keys[0]])):
-            csvwriter.writerow([c] + [round(self[key][i], 4) for key in print_keys])
+            csvwriter.writerow([c] + [round(self[key][i], 2) for key in print_keys])
             c += self.INPUT['interval']
 
     def set_frame_range(self, start=0, end=None, interval=1):
@@ -333,7 +333,7 @@ class IEout(dict):
             csvwriter.writerow(['Frame #', 'Interaction Entropy'])
             f = self.INPUT['startframe']
             for d in self[model]['data']:
-                csvwriter.writerow([f] + [d])
+                csvwriter.writerow([f] + [round(d, 2)])
                 f += self.INPUT['interval']
             csvwriter.writerow([])
 
@@ -560,7 +560,7 @@ class NMODEout(dict):
 
         # print data
         for i in range(len(self[self.data_keys[0]])):
-            csvwriter.writerow([i] + [self[key][i] for key in self.data_keys])
+            csvwriter.writerow([i] + [round(self[key][i], 2) for key in self.data_keys])
 
     def summary(self, output_format: str = 'ascii'):
         """ Returns the formatted string of output summary """
@@ -958,7 +958,7 @@ class BindingStatistics(dict):
         # write out each frame
         c = self.com.INPUT['startframe']
         for i in range(len(self[print_keys[0]])):
-            csvwriter.writerow([c] + [round(self[key][i], 4) for key in print_keys])
+            csvwriter.writerow([c] + [round(self[key][i], 2) for key in print_keys])
             c += self.com.INPUT['interval']
         csvwriter.writerow([])
 
@@ -1095,7 +1095,7 @@ class DeltaBindingStatistics(dict):
         # write out each frame
         c = self.norm.INPUT['startframe']
         for i in range(len(self['VDWAALS'])):
-            csvwriter.writerow([c] + [round(self[key][i], 4) for key in self])
+            csvwriter.writerow([c] + [round(self[key][i], 2) for key in self])
             c += self.norm.INPUT['interval']
         csvwriter.writerow([])
 
@@ -1170,7 +1170,6 @@ class DecompOut(dict):
 
         self.mut = None
         self.mol = mol
-        self.resnums = None
         self.decfile = None
         self.num_terms = None
         self.allowed_tokens = tuple(['TDC'])
@@ -1214,7 +1213,6 @@ class DecompOut(dict):
         except TypeError:
             raise OutputError('DecompOut: Not a decomp output file')
         for token in self.allowed_tokens:
-            self.resnums = [[0 for i in range(self.num_terms)], [0 for i in range(self.num_terms)]]
             self[token] = {}
         self.decfile = open(basename + '.0', 'r')
         self._fill_all_terms()
@@ -1580,7 +1578,6 @@ class DecompBinding(dict):
             self.csvwriter = None
         for token in self.allowed_tokens:
             self[token] = {}
-            self.resnums = {}
 
     def _write_header(self, csvwriter):
         """ Writes the header to the CSV file (legend at top of chart) """
@@ -1624,12 +1621,12 @@ class DecompBinding(dict):
         if self.verbose > 1:
             if _output_format:
                 text.extend(self.com.summary(output_format))
-                text.extend(self.com.summary(output_format))
-                text.extend(self.com.summary(output_format))
+                text.extend(self.rec.summary(output_format))
+                text.extend(self.lig.summary(output_format))
             else:
                 text.append(self.com.summary())
-                text.append(self.com.summary())
-                text.append(self.com.summary())
+                text.append(self.rec.summary())
+                text.append(self.lig.summary())
         if _output_format:
             text.append(['DELTAS:'])
         else:
