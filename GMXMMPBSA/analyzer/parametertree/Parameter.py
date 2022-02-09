@@ -19,8 +19,8 @@
 #  for more details.                                                           #
 # ##############################################################################
 
-from PyQt6.QtCore import *
-import os, weakref, re
+from PyQt5.QtCore import *
+import weakref, re
 from .ParameterItem import ParameterItem
 import warnings
 

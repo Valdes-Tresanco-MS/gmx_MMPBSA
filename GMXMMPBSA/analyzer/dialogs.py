@@ -15,10 +15,10 @@
 #  for more details.                                                           #
 # ##############################################################################
 import h5py
-from PyQt6.QtWidgets import (QDialog, QSpinBox, QLabel, QLineEdit, QPushButton, QHBoxLayout, QVBoxLayout, QCheckBox,
+from PyQt5.QtWidgets import (QDialog, QSpinBox, QLabel, QLineEdit, QPushButton, QHBoxLayout, QVBoxLayout, QCheckBox,
                              QGroupBox, QButtonGroup, QGridLayout, QTreeWidget, QTreeWidgetItem, QRadioButton,
                              QTreeWidgetItemIterator, QHeaderView, QProgressBar, QStatusBar, QMessageBox, QComboBox)
-from PyQt6.QtCore import Qt, QThread, pyqtSignal, pyqtSlot
+from PyQt5.QtCore import Qt, QThread, pyqtSignal, pyqtSlot
 from queue import Queue, Empty
 from GMXMMPBSA import API
 from pathlib import Path
@@ -30,7 +30,7 @@ class InitDialog(QDialog):
     def __init__(self, parent=None):
         super(InitDialog, self).__init__(parent)
         self.parent = parent
-        self.setWindowModality(Qt.WindowModality.WindowModal)
+        self.setWindowModality(Qt.WindowModal)
         self.setWindowTitle('Initialization gmx_MMPBSA_ana')
         self.setMinimumWidth(650)
         self.curr_progress = 0
@@ -148,14 +148,14 @@ class InitDialog(QDialog):
         self.header_item = QTreeWidgetItem(['Folder name', 'Select', 'Name', 'Exp.Ki (nM)', 'Chart Settings', 'Path'])
         self.header_item.setToolTip(0, 'Container')
         self.header_item.setToolTip(1, 'Name')
-        self.header_item.setTextAlignment(0, Qt.AlignmentFlag.AlignCenter)
-        self.header_item.setTextAlignment(1, Qt.AlignmentFlag.AlignCenter)
-        self.header_item.setTextAlignment(2, Qt.AlignmentFlag.AlignCenter)
-        self.header_item.setTextAlignment(3, Qt.AlignmentFlag.AlignCenter)
-        self.header_item.setTextAlignment(4, Qt.AlignmentFlag.AlignCenter)
+        self.header_item.setTextAlignment(0, Qt.AlignCenter)
+        self.header_item.setTextAlignment(1, Qt.AlignCenter)
+        self.header_item.setTextAlignment(2, Qt.AlignCenter)
+        self.header_item.setTextAlignment(3, Qt.AlignCenter)
+        self.header_item.setTextAlignment(4, Qt.AlignCenter)
         self.result_tree = QTreeWidget(self)
         self.result_tree.setHeaderItem(self.header_item)
-        self.result_tree.header().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
+        self.result_tree.header().setSectionResizeMode(QHeaderView.ResizeToContents)
         self.result_tree.itemChanged.connect(self.update_item_info)
         self.pb = QProgressBar()
         # self.pb.setRange(0, 0)
@@ -182,8 +182,8 @@ class InitDialog(QDialog):
         self.btn_layout.addWidget(self.jobs_label, 1)
         self.btn_layout.addWidget(self.jobs_spin, 1)
         self.btn_layout.addStretch(1)
-        self.btn_layout.addWidget(self.cancel_btn, 2, alignment=Qt.AlignmentFlag.AlignRight)
-        self.btn_layout.addWidget(self.accept_btn, 2, alignment=Qt.AlignmentFlag.AlignRight)
+        self.btn_layout.addWidget(self.cancel_btn, 2, alignment=Qt.AlignRight)
+        self.btn_layout.addWidget(self.accept_btn, 2, alignment=Qt.AlignRight)
 
         self.statusbar = QStatusBar(self)
 
@@ -223,9 +223,9 @@ class InitDialog(QDialog):
     def get_files_info(self, info_files):
         self.nfiles = len(info_files)
         self.f_item = QTreeWidgetItem(['All'])
-        self.f_item.setCheckState(1, Qt.CheckState.Checked)
+        self.f_item.setCheckState(1, Qt.Checked)
         self.f_item.info = None
-        self.f_item.setFlags(self.f_item.flags() | Qt.ItemFlag.ItemIsAutoTristate)
+        self.f_item.setFlags(self.f_item.flags() | Qt.ItemIsAutoTristate)
         self.result_tree.addTopLevelItem(self.f_item)
 
         self.processing_label.setText(f'Processing {self.nfiles} systems...')
@@ -280,7 +280,7 @@ class InitDialog(QDialog):
                 exp_ki = 0.0
 
             item = QTreeWidgetItem([f'{fname.parent.name}', '', f'{basename}', '', '', f'{fname.parent.absolute()}'])
-            item.setFlags(item.flags() | Qt.ItemFlag.ItemIsAutoTristate)
+            item.setFlags(item.flags() | Qt.ItemIsAutoTristate)
 
             self._set_item_properties(item)
             self.f_item.addChild(item)
@@ -304,11 +304,11 @@ class InitDialog(QDialog):
         self.f_item.setExpanded(True)
 
     def _set_item_properties(self, item: QTreeWidgetItem):
-        item.setCheckState(1, Qt.CheckState.Checked)
-        item.setFlags(item.flags() | Qt.ItemFlag.ItemIsEditable)
-        item.setTextAlignment(2, Qt.AlignmentFlag.AlignCenter)
-        item.setTextAlignment(3, Qt.AlignmentFlag.AlignRight)
-        item.setTextAlignment(4, Qt.AlignmentFlag.AlignCenter)
+        item.setCheckState(1, Qt.Checked)
+        item.setFlags(item.flags() | Qt.ItemIsEditable)
+        item.setTextAlignment(2, Qt.AlignCenter)
+        item.setTextAlignment(3, Qt.AlignRight)
+        item.setTextAlignment(4, Qt.AlignCenter)
 
     def get_data(self):
 
@@ -335,7 +335,7 @@ class InitDialog(QDialog):
             t = {}
             if child.childCount():
                 for c1 in range(child.childCount()):
-                    if child.child(c1).checkState(1) == Qt.CheckState.Checked:
+                    if child.child(c1).checkState(1) == Qt.Checked:
                         if child.child(c1).text(2) == 'wild type':
                             t['wt'] = float(child.child(c1).text(3))
                         else:
@@ -387,8 +387,8 @@ class ExportDialog(QDialog):
 
         self.btn_layout = QHBoxLayout()
         self.btn_layout.addStretch(1)
-        self.btn_layout.addWidget(self.save_btn, alignment=Qt.AlignmentFlag.AlignRight)
-        self.btn_layout.addWidget(self.close_btn, alignment=Qt.AlignmentFlag.AlignRight)
+        self.btn_layout.addWidget(self.save_btn, alignment=Qt.AlignRight)
+        self.btn_layout.addWidget(self.close_btn, alignment=Qt.AlignRight)
 
         self.layout = QVBoxLayout(self)
         self.layout.addLayout(self.out_layout)
@@ -440,8 +440,8 @@ class ExportDialogCSV(QDialog):
 
         self.btn_layout = QHBoxLayout()
         self.btn_layout.addStretch(1)
-        self.btn_layout.addWidget(self.save_btn, alignment=Qt.AlignmentFlag.AlignRight)
-        self.btn_layout.addWidget(self.close_btn, alignment=Qt.AlignmentFlag.AlignRight)
+        self.btn_layout.addWidget(self.save_btn, alignment=Qt.AlignRight)
+        self.btn_layout.addWidget(self.close_btn, alignment=Qt.AlignRight)
 
         self.layout = QVBoxLayout(self)
         self.layout.addLayout(self.out_layout)

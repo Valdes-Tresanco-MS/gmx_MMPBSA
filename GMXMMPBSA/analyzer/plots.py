@@ -23,9 +23,9 @@ import numpy as np
 import pandas
 import pandas as pd
 import seaborn as sns
-from PyQt6.QtCore import *
-from PyQt6.QtGui import *
-from PyQt6.QtWidgets import *
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
+from PyQt5.QtWidgets import *
 from matplotlib import gridspec
 from matplotlib.backends import qt_compat
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas, NavigationToolbar2QT
@@ -122,9 +122,9 @@ class ChartsBase(QMdiSubWindow):
         self.mpl_toolbar = NavigationToolbar(self.figure_canvas, self)
         self.mpl_toolbar.setVisible(self.options['General', 'toolbar'])
 
-        self.mainwidgetmdi.addToolBar(Qt.ToolBarArea.BottomToolBarArea, self.mpl_toolbar)
+        self.mainwidgetmdi.addToolBar(Qt.BottomToolBarArea, self.mpl_toolbar)
 
-        self.fbtn = QPushButton(self.style().standardIcon(QStyle.StandardPixmap.SP_FileDialogDetailedView), '',
+        self.fbtn = QPushButton(self.style().standardIcon(QStyle.SP_FileDialogDetailedView), '',
                                 self.figure_canvas)
         self.fbtn.setToolTip('Show or Hide the Navigation Toolbar')
         self.fbtn.toggled.connect(self.mpl_toolbar.setVisible)
@@ -699,7 +699,7 @@ class Tables(QMdiSubWindow):
                 item = QTableWidgetItem(text)
                 if c == 0:
                     if not summary:
-                        item.setTextAlignment(Qt.AlignmentFlag.AlignRight)
+                        item.setTextAlignment(Qt.AlignRight)
                     if col in ['BOND', 'ANGLE', 'DIHED', 'VDWAALS', 'EEL', '1-4 VDW', '1-4 EEL', 'GGAS',
                                'ΔBOND', 'ΔANGLE', 'ΔDIHED', 'ΔVDWAALS', 'ΔEEL', 'Δ1-4 VDW', 'Δ1-4 EEL', 'ΔGGAS',
                                'ΔΔBOND', 'ΔΔANGLE', 'ΔΔDIHED', 'ΔΔVDWAALS', 'ΔΔEEL', 'ΔΔ1-4 VDW', 'ΔΔ1-4 EEL',
@@ -712,7 +712,7 @@ class Tables(QMdiSubWindow):
                     else:
                         item.setBackground(QColor('white'))
                 if c > 0:
-                    item.setTextAlignment(Qt.AlignmentFlag.AlignRight)
+                    item.setTextAlignment(Qt.AlignRight)
                 self.table.setItem(r, c, item)
 
         self.table.installEventFilter(self)
@@ -748,7 +748,7 @@ class Tables(QMdiSubWindow):
             self._df.to_excel(fileName)
 
     def eventFilter(self, source, event):
-        if (event.type() == QEvent.Type.KeyPress and event.matches(QKeySequence.StandardKey.Copy)):
+        if (event.type() == QEvent.KeyPress and event.matches(QKeySequence.Copy)):
             self._copySelection()
             return True
         return super(Tables, self).eventFilter(source, event)
