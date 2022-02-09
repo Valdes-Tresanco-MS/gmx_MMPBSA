@@ -116,7 +116,7 @@ def gmxmmpbsa():
 
 def gmxmmpbsa_ana():
     try:
-        from PyQt6.QtWidgets import QApplication
+        from PyQt5.QtWidgets import QApplication
     except ImportError as e:
         GMXMMPBSA_ERROR('Could not import PyQt5. gmx_MMPBSA_ana will be disabled until you install it')
     from GMXMMPBSA.analyzer.gui import GMX_MMPBSA_ANA

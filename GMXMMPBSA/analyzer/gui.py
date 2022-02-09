@@ -24,9 +24,9 @@ from pathlib import Path
 import pandas
 import pandas as pd
 from GMXMMPBSA.API import load_gmxmmpbsa_info, MMPBSA_API
-from PyQt6.QtWidgets import *
-from PyQt6.QtCore import *
-from PyQt6.QtGui import *
+from PyQt5.QtWidgets import *
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
 from GMXMMPBSA.analyzer.dialogs import InitDialog
 from GMXMMPBSA.analyzer.customitem import CustomItem, CorrelationItem
 from GMXMMPBSA.analyzer.utils import energy2pdb_pml, ki2energy, make_corr_DF, multiindex2dict
@@ -57,7 +57,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
         self.items_counter = {'charts': 0, 'pymol': [], 'bars': 0, 'line': 0, 'heatmap': 0}
 
         self.mdi = QMdiArea(self)
-        self.mdi.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.mdi.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setCentralWidget(self.mdi)
 
         self.menubar = self.menuBar()
@@ -72,20 +72,20 @@ class GMX_MMPBSA_ANA(QMainWindow):
         self.statusbar = self.statusBar()
 
         self.treeDockWidget = QDockWidget('Data', self)
-        self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.treeDockWidget)
+        self.addDockWidget(Qt.RightDockWidgetArea, self.treeDockWidget)
 
         self.correlation_DockWidget = QDockWidget('Correlations', self)
-        self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.correlation_DockWidget)
+        self.addDockWidget(Qt.RightDockWidgetArea, self.correlation_DockWidget)
 
         self.treeWidget = QTreeWidget(self)
         self.treeWidget.setMinimumWidth(380)
-        self.treeWidget.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.treeWidget.setContextMenuPolicy(Qt.CustomContextMenu)
         # self.treeWidget.customContextMenuRequested.connect(self.data_context_menu)
         self.treeWidget.itemSelectionChanged.connect(self.update_system_selection)
 
         self._make_options_panel()
 
-        self.data_container = QSplitter(Qt.Orientation.Vertical)
+        self.data_container = QSplitter(Qt.Vertical)
         self.data_container.addWidget(self.treeWidget)
         self.data_container.addWidget(self.optionWidget)
         self.data_container.setStretchFactor(0, 10)
@@ -100,8 +100,8 @@ class GMX_MMPBSA_ANA(QMainWindow):
         self.treeWidget.setColumnHidden(4, True)
         header = self.treeWidget.header()
         header.setStretchLastSection(False)
-        header.setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)
-        header.setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
+        header.setSectionResizeMode(1, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(0, QHeaderView.Stretch)
 
         self.correlation_treeWidget = QTreeWidget(self)
         self.correlation_treeWidget.itemClicked.connect(self.update_table)
@@ -121,10 +121,10 @@ class GMX_MMPBSA_ANA(QMainWindow):
         self.data_table_widget.setHorizontalHeaderLabels(['System', 'Exp.ΔG'])
         self.data_table_energy_col = QTableWidgetItem('None')
         self.data_table_widget.setHorizontalHeaderItem(2, self.data_table_energy_col)
-        self.data_table_widget.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
+        self.data_table_widget.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
         self.data_table_widget.horizontalHeader().setStretchLastSection(True)
 
-        self.corr_container_widget = QSplitter(Qt.Orientation.Vertical)
+        self.corr_container_widget = QSplitter(Qt.Vertical)
         self.corr_container_widget.addWidget(self.correlation_treeWidget)
         self.corr_container_widget.addWidget(self.data_table_widget)
         self.correlation_DockWidget.setWidget(self.corr_container_widget)
@@ -173,8 +173,8 @@ class GMX_MMPBSA_ANA(QMainWindow):
         optionWidget_l.setContentsMargins(0, 0, 0, 0)
         # optionWidget_l.addLayout(self.btn_l)
         hl = QFrame()
-        hl.setFrameShape(QFrame.Shape.HLine)
-        hl.setFrameShadow(QFrame.Shadow.Sunken)
+        hl.setFrameShape(QFrame.HLine)
+        hl.setFrameShadow(QFrame.Sunken)
         optionWidget_l.addWidget(hl)
 
         update_btn = QPushButton('Update')
@@ -360,7 +360,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
         maximum += 1 # close and re-open current active windows
 
         qpd = QProgressDialog('Creating systems tree', 'Abort', 0, maximum, self)
-        qpd.setWindowModality(Qt.WindowModality.WindowModal)
+        qpd.setWindowModality(Qt.WindowModal)
         qpd.setMinimumDuration(0)
         v = 0
         if recalc_energy:
@@ -441,7 +441,6 @@ class GMX_MMPBSA_ANA(QMainWindow):
         if value > self.eframes_end_sb.value():
             self.eframes_end_sb.setValue(value)
 
-        # print(self.current_system_index, '####')
         if self.current_system_index:
             current_start = value
             current_interval = self.eframes_inter_sb.value()
@@ -621,7 +620,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
         self.init_dialog.close()
         max_sixe = queue.qsize()
         qpd = QProgressDialog('Reading output files', 'Abort', 0, max_sixe, self)
-        qpd.setWindowModality(Qt.WindowModality.WindowModal)
+        qpd.setWindowModality(Qt.WindowModal)
         qpd.setMinimumDuration(0)
         # qpd.setRange(0, queue.qsize())
         results = []
@@ -644,7 +643,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
         self.data_options = options
         maximum = len(results)
         qpd = QProgressDialog('Creating systems tree', 'Abort', 0, maximum, self)
-        qpd.setWindowModality(Qt.WindowModality.WindowModal)
+        qpd.setWindowModality(Qt.WindowModal)
         qpd.setMinimumDuration(1000)
 
         for i , c in enumerate(range(maximum), start=1):
