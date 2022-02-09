@@ -1,5 +1,5 @@
 name: gmx_MMPBSA_ana Bug Report
-description: Report a bug or issue with gmx_MMPBSA.
+description: Report a bug or issue with gmx_MMPBSA_ana.
 title: "[Bug-gmx_MMPBSA_ana]: "
 body:
   - type: textarea
