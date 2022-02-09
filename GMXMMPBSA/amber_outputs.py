@@ -234,10 +234,11 @@ class AmberOutput(dict):
             if key in self.composite_keys:
                 continue
             # Skip any terms that have zero as every single element (i.e. EDISPER)
-            if self.INPUT['sander_apbs'] and key == 'EDISPER':
-                continue
-            if self[key] == 0:
-                continue
+            # if self.INPUT['sander_apbs']:
+            #     continue
+            # if self[key] == 0:
+            #     print(key)
+            #     continue
             avg = float(self[key].mean())
             stdev = float(self[key].stdev())
             semp = float(stdev / sqrt(len(self[key])))
@@ -673,7 +674,7 @@ class GBout(AmberOutput):
 class PBout(AmberOutput):
     # Ordered list of keys in the data dictionary
     # FIXME: include Non linear PB
-    data_keys = ['BOND', 'ANGLE', 'DIHED', 'VDWAALS', 'EEL', '1-4 VDW', '1-4 EEL', 'EPB', 'ENPOLAR']
+    data_keys = ['BOND', 'ANGLE', 'DIHED', 'VDWAALS', 'EEL', '1-4 VDW', '1-4 EEL', 'EPB', 'ENPOLAR', 'EDISPER']
 
     # What the value of verbosity must be to print out this data
     print_levels = {'BOND': 2, 'ANGLE': 2, 'DIHED': 2, 'VDWAALS': 1, 'EEL': 1,
@@ -682,8 +683,8 @@ class PBout(AmberOutput):
     def __init__(self, mol, INPUT, chamber=False, **kwargs):
         AmberOutput.__init__(self, mol, INPUT, chamber, **kwargs)
 
-        if self.INPUT['inp'] == 2 and 'EDISPER' not in self.data_keys:
-            self.data_keys += ['EDISPER']
+        # if 'EDISPER' not in self.data_keys:
+        #     self.data_keys += ['EDISPER']
 
     def _get_energies(self, outfile):
         """ Parses the energy values from the output files """
@@ -710,6 +711,8 @@ class PBout(AmberOutput):
                 self['ENPOLAR'] = self['ENPOLAR'].append(float(words[2]))
                 if self.INPUT['inp'] == 2 and not self.apbs:
                     self['EDISPER'] = self['EDISPER'].append(float(words[5]))
+                else:
+                    self['EDISPER'] = self['EDISPER'].append(0.00)
             rawline = outfile.readline()
 
 
