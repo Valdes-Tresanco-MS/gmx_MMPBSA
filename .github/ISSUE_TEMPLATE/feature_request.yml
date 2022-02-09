@@ -41,8 +41,8 @@ body:
     id: difficulty
     attributes:
       label: Difficulty to implement
-      description: If you are familiar with the gmx_MMPBSA code, tell us how difficult you think it will be
-      to implement this new feature.
+      description: |
+          If you are familiar with the gmx_MMPBSA code, tell us how difficult you think it will be to implement this new feature.
       options:
         - low
         - medium
