@@ -10,22 +10,22 @@ title: Output files
 This is how a typical output file looks like:
 
 
-```  yaml title="Code block with title"
+```  yaml title="Output file"
 | Run on Mon Jan 31 02:21:02 2022                                                   | # (1)
-|
+|                                                                                   +
 |gmx_MMPBSA Version=v1.4.3+393.g73cc94c based on MMPBSA.py v.16.0                   | # (2) 
-|Complex Structure file:                                                 com.tpr    +    
-|Complex (AMBER) topology file:                                       COM.prmtop    |                                    
-|Receptor (AMBER) topology file:                                      REC.prmtop    | # (3)  
-|Ligand Structure file:                                              ligand.mol2    |                                    
-|Complex (AMBER) topology file:                                       LIG.prmtop    |                                    
-|Initial trajectories:                                            COM_traj_0.xtc    +                                
+|Complex Structure file                                                  com.tpr    +    
+|Complex (AMBER) topology file                                        COM.prmtop    |                                   
+|Receptor (AMBER) topology file                                       REC.prmtop    | # (3)  
+|Ligand Structure file                                               ligand.mol2    |                                   
+|Complex (AMBER) topology file                                        LIG.prmtop    |                                    
+|Initial trajectories                                             COM_traj_0.xtc    +                                
 |                                                                                   
-|Receptor mask:                  ":1-240"                                           | # (4)                                    
-|Ligand mask:                    ":241"                                             |                                    
-|Ligand residue name is "RAL"                                                       |                                    
+|Receptor mask                   "1-240"                                            + # (4)                                
+|Ligand mask                     "241"                                              |                                  
+|Ligand residue name is "RAL"                                                       +                            
 |                                                                                                                       
-|Calculations performed using 16 complex frames.                                    | # (5) 
+|Calculations performed using 16 complex frames.                                    + # (5) 
 |C2 Entropy calculations performed using last 16 frames.                            |             
 |C2 Entropy Std. Dev. and Conf. Interv. (95%) have been obtained                    |                                    
 |by bootstrapping with number of re-samplings = 2000                                |                                    
@@ -37,20 +37,20 @@ This is how a typical output file looks like:
 |                                                                                   |
 |SD - Standard Deviation,  SEM - Standard Error of the Mean                         |
 |(Prop.) - Propagation of uncertainty                                               |
-|(https://en.wikipedia.org/wiki/Propagation_of_uncertainty#Example_formulae)        |
+|(https://en.wikipedia.org/wiki/Propagation_of_uncertainty#Example_formulae)        +
 -------------------------------------------------------------------------------
--------------------------------------------------------------------------------     |
+-------------------------------------------------------------------------------     +
 ENTROPY RESULTS (C2 ENTROPY):                                                       | # (6)                                                                                                                                                                                            
 Model           σ(Int. Energy)      Value         Std. Dev.   Conf. Interv. (95%)   |     
 -------------------------------------------------------------------------------     |                             
 gb                  2.900           7.055           2.117         4.641-12.542      |
--------------------------------------------------------------------------------     |
+-------------------------------------------------------------------------------     +
 -------------------------------------------------------------------------------     
 
 GENERALIZED BORN:                                                                   | # (7)
 
 Complex:
-Energy Component       Average     SD(Prop.)         SD   SEM(Prop.)        SEM     |                                   
+Energy Component       Average     SD(Prop.)         SD   SEM(Prop.)        SEM     +                                   
 -------------------------------------------------------------------------------     |                                   
 BOND                    730.92         21.73      21.73         5.43       5.43     |                                   
 ANGLE                  2022.96         27.54      27.54         6.89       6.89     |                                   
@@ -65,11 +65,11 @@ ESURF                    96.07          0.58       0.58         0.15       0.15 
 GGAS                  -2195.93         54.56      33.37        13.64       8.34     |             
 GSOLV                 -3174.70         15.91      15.72         3.98       3.93     |                                   
                                                                                     |                                   
-TOTAL                 -5370.63         56.84      31.88        14.21       7.97     |                                   
+TOTAL                 -5370.63         56.84      31.88        14.21       7.97     +                                   
 
 
 Receptor:
-Energy Component       Average     SD(Prop.)         SD   SEM(Prop.)        SEM     |                                    
+Energy Component       Average     SD(Prop.)         SD   SEM(Prop.)        SEM     +                                  
 -------------------------------------------------------------------------------     |                                    
 BOND                    719.57         21.28      21.28         5.32       5.32     |                                    
 ANGLE                  1996.26         27.60      27.60         6.90       6.90     |                                    
@@ -84,11 +84,11 @@ ESURF                    99.77          0.61       0.61         0.15       0.15 
 GGAS                  -2160.58         53.26      35.11        13.31       8.78     |                                    
 GSOLV                 -3188.86         16.60      16.39         4.15       4.10     |                                    
                                                                                     |                                    
-TOTAL                 -5349.43         55.78      32.13        13.95       8.03     |                                    
+TOTAL                 -5349.43         55.78      32.13        13.95       8.03     +                                
 
 
 Ligand:
-Energy Component       Average     SD(Prop.)         SD   SEM(Prop.)        SEM     |                                  
+Energy Component       Average     SD(Prop.)         SD   SEM(Prop.)        SEM     +                                  
 -------------------------------------------------------------------------------     |                                  
 BOND                     11.35          1.94       1.94         0.48       0.48     |                                  
 ANGLE                    26.70          2.68       2.68         0.67       0.67     |                                  
@@ -103,15 +103,14 @@ ESURF                     4.52          0.02       0.02         0.00       0.00 
 GGAS                     54.67          5.37       3.97         1.34       0.99     |                                  
 GSOLV                   -18.61          0.63       0.63         0.16       0.16     |                                  
                                                                                     |
-TOTAL                    36.05          5.41       4.16         1.35       1.04     |
+TOTAL                    36.05          5.41       4.16         1.35       1.04     +
 
 
-Delta (Complex - Receptor - Ligand):                                                | # (11)               
+Delta (Complex - Receptor - Ligand):                                                + # (11)               
 Energy Component       Average     SD(Prop.)         SD   SEM(Prop.)        SEM     |                                                        
 -------------------------------------------------------------------------------     |                                                        
 ΔBOND                     0.00         30.48       0.00         7.62       0.00     | # (12)                            
-ΔANGLE                    0.00         39.08       0.00         9.77       0.00     | # (13)                          
-     
+ΔANGLE                    0.00         39.08       0.00         9.77       0.00     | # (13)                               
 ΔDIHED                   -0.00         21.45       0.00         5.36       0.00     | # (14)                            
 ΔVDWAALS                -58.89         20.10       2.31         5.03       0.58     | # (15)                         
 ΔEEL                    -31.13         31.78       3.04         7.95       0.76     | # (16)                         
@@ -123,7 +122,7 @@ Energy Component       Average     SD(Prop.)         SD   SEM(Prop.)        SEM 
 ΔGGAS                   -90.02         37.61       3.31         9.40       0.83     | # (21)             
 ΔGSOLV                   32.77         23.00       1.37         5.75       0.34     | # (22)                           
                                                                                     |                                                                                                                                       
-ΔTOTAL                  -57.25         44.08       2.55        11.02       0.64     | # (23)                       
+ΔTOTAL                  -57.25         44.08       2.55        11.02       0.64     + # (23)                       
 -------------------------------------------------------------------------------
 -------------------------------------------------------------------------------
 Using C2 Entropy Approximation:                                                     | # (24) 
@@ -172,7 +171,7 @@ structures. Thus, when subtracted they cancel completely. This includes the `BON
 interactions`. If inconsistencies are found, these values are displayed and inconsistency warnings are printed. When 
 this occurs the results are generally useless. Of course this does not hold for the multiple trajectory protocol.
 
-## Temporary Files
+## Temporary files
 
 !!! warning
     This section does not record all the temporary files that are currently generated.

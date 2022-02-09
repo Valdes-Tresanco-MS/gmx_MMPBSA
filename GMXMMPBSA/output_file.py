@@ -219,8 +219,9 @@ def write_outputs(app):
     final_output.add_comment('Using temperature = %.2f K)' % INPUT['temperature'])
     final_output.add_comment('All units are reported in kcal/mol.')
     final_output.add_comment('')
-    final_output.add_comment('SD - Standard Deviation,  SEM - Standard Error of the Mean')
-    final_output.add_comment('(Prop.) - Propagation of uncertainty (https://en.wikipedia.org/wiki/Propagation_of_uncertainty#Example_formulae)')
+    final_output.add_comment('SD - Sample standard deviation, SEM - Sample standard error of the mean')
+    final_output.add_comment('SD(Prop.), SEM(Prop.) - SD and SEM obtained with propagation of uncertainty formula')
+    final_output.add_comment('https://en.wikipedia.org/wiki/Propagation_of_uncertainty#Example_formulae)')
     if INPUT['ifqnt']:
         final_output.add_comment(('QM/MM: Residues %s are treated with the ' +
                                   'Quantum Hamiltonian %s') % (INPUT['qm_residues'], INPUT['qm_theory']))
