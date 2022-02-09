@@ -188,15 +188,15 @@ def write_outputs(app):
         final_output.add_comment('Receptor mask:                  "%s"' % INPUT['receptor_mask'])
         final_output.add_comment('Ligand mask:                    "%s"' % INPUT['ligand_mask'])
         if prmtop_system.ligand_prmtop.ptr('nres') == 1:
-            final_output.add_comment('Ligand residue name is "%s"' %
+            final_output.add_comment('Ligand residue name is:                  "%s"' %
                                      prmtop_system.ligand_prmtop.parm_data['RESIDUE_LABEL'][0])
     final_output.add_comment('')
-    final_output.add_comment('Calculations performed using %s complex frames.' % app.numframes)
+    final_output.add_comment('Calculations performed using %s complex frames' % app.numframes)
     if INPUT['nmoderun']:
-        final_output.add_comment('NMODE calculations performed using %s frames.' % app.numframes_nmode)
+        final_output.add_comment('NMODE calculations performed using %s frames' % app.numframes_nmode)
     if not stability:
         if INPUT['interaction_entropy']:
-            final_output.add_comment('Interaction Entropy calculations performed using last %s frames.' %
+            final_output.add_comment('Interaction Entropy calculations performed using last %s frames' %
                                      ceil(app.numframes * (INPUT['ie_segment'] / 100)))
         if INPUT['c2_entropy']:
             final_output.add_comment('C2 Entropy Std. Dev. and Conf. Interv. (95%) have been obtained by '
@@ -206,7 +206,7 @@ def write_outputs(app):
             final_output.add_comment('Poisson Boltzmann calculations performed using iAPBS interface to sander '
                                      '(sander.APBS)')
         else:
-            final_output.add_comment('Poisson Boltzmann calculations performed using internal PBSA solver in sander.')
+            final_output.add_comment('Poisson Boltzmann calculations performed using internal PBSA solver in sander')
     final_output.add_comment('')
 
     if INPUT['gbrun']:
@@ -221,7 +221,8 @@ def write_outputs(app):
     final_output.add_comment('')
     final_output.add_comment('SD - Sample standard deviation, SEM - Sample standard error of the mean')
     final_output.add_comment('SD(Prop.), SEM(Prop.) - SD and SEM obtained with propagation of uncertainty formula')
-    final_output.add_comment('https://en.wikipedia.org/wiki/Propagation_of_uncertainty#Example_formulae)')
+    final_output.add_comment('https://en.wikipedia.org/wiki/Propagation_of_uncertainty#Example_formulae')
+
     if INPUT['ifqnt']:
         final_output.add_comment(('QM/MM: Residues %s are treated with the ' +
                                   'Quantum Hamiltonian %s') % (INPUT['qm_residues'], INPUT['qm_theory']))
@@ -234,7 +235,7 @@ def write_outputs(app):
                 qhnorm = app.calc_types.normal['qh']['complex']
             else:
                 qhnorm = app.calc_types.normal['qh']['delta']
-            final_output.writeline('ENTROPY RESULTS (QUASI-HARMONIC APPROXIMATION) CALCULATED WITH PTRAJ:')
+            final_output.writeline('ENTROPY RESULTS (QUASI-HARMONIC APPROXIMATION) CALCULATED WITH CPPTRAJ:')
             final_output.add_section(qhnorm.summary())
         if INPUT['alarun']:
             if stability:
@@ -243,7 +244,7 @@ def write_outputs(app):
                 qhnorm = app.calc_types.mutant['qh']['delta']
             qhmutant = app.calc_types.mutant['qh']
             final_output.writeline(mut_str + ' MUTANT')
-            final_output.writeline('ENTROPY RESULTS (QUASI-HARMONIC APPROXIMATION) CALCULATED WITH PTRAJ:')
+            final_output.writeline('ENTROPY RESULTS (QUASI-HARMONIC APPROXIMATION) CALCULATED WITH CPPTRAJ:')
             final_output.add_section(qhmutant.summary())
         if INPUT['alarun'] and not INPUT['mutant_only']:
             davg, dstd = _get_diff(qhmutant['Total'], qhnorm['Total'])
