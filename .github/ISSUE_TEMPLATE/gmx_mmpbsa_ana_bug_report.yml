@@ -50,8 +50,8 @@ body:
   - type: input
     id: gmx_mmpbsa-version
     attributes:
-      label: gmx_MMPBSA Version
-      description: "In terminal: `gmx_MMPBSA -v`"
+      label: gmx_MMPBSA_ana Version
+      description: "In terminal: `gmx_MMPBSA_ana -v`"
   - type: input
     id: python-version
     attributes:
