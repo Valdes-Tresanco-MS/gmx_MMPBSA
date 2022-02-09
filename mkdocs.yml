@@ -157,7 +157,7 @@ nav:
     - Command-line: gmx_MMPBSA_command-line.md
     - Running gmx_MMPBSA: gmx_MMPBSA_running.md
     - The input file: input_file.md
-    - The output Files: output.md
+    - The output file: output.md
     - Python API: api.md
   - gmx_MMPBSA_ana:
     - gmx_MMPBSA_ana: analyzer.md
