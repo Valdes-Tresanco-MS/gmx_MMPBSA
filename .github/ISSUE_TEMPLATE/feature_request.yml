@@ -1,0 +1,50 @@
+name: Feature Request
+description: Suggest new functionality to add to gmx_MMPBSA!
+title: "[ENH]: "
+labels: [New feature]
+body:
+  - type: markdown
+    attributes:
+      value: |
+         Check the [issues](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/issues) to see if this feature 
+        has already been requested
+  - type: dropdown
+    id: tool
+    attributes:
+      label: In which tool?
+      description: The new feature that you propose in which tool would it be?
+      options:
+        - gmx_MMPBSA
+        - gmx_MMPBSA_ana
+        - gmx_MMPBSA_test
+  - type: textarea
+    id: new
+    attributes:
+      label: New Feature
+      description: Briefly describe the new feature. (2-4 sentences)
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: Describe what this feature consists of.
+  - type: dropdown
+    id: relevance
+    attributes:
+      label: Relevance
+      description: What level of relevance do you attribute to it?
+      options:
+        - low
+        - medium
+        - high
+  - type: dropdown
+    id: difficulty
+    attributes:
+      label: Difficulty to implement
+      description: If you are familiar with the gmx_MMPBSA code, tell us how difficult you think it will be
+      to implement this new feature.
+      options:
+        - low
+        - medium
+        - high

@@ -1,0 +1,58 @@
+name: gmx_MMPBSA Bug Report
+description: Report a bug or issue with gmx_MMPBSA.
+title: "[Bug-gmx_MMPBSA]: "
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Bug summary
+      description:  Describe the bug in 1-2 short sentences
+      placeholder:
+      value:
+    validations:
+      required: true
+  - type: textarea
+    id: pront
+    attributes:
+      label: Terminal output
+      description: Provides the output of your terminal
+      placeholder: Paste your terminal output here
+      render: bash
+    validations:
+      required: true
+  - type: textarea
+    id: details
+    attributes:
+      label: gmx_MMPBSA.log
+      description: Provides the gmx_MMPBSA.log file
+      placeholder: Drag and drop your gmx_MMPBSA.log file here
+    validations:
+      required: true
+  - type: input
+    id: operating-system
+    attributes:
+      label: Operating system
+      description: Windows, Window Subsystem for Linux, OS/X, Arch, Debian, Ubuntu, etc.
+  - type: input
+    id: gmx_mmpbsa-version
+    attributes:
+      label: gmx_MMPBSA Version
+      description: "In terminal: `gmx_MMPBSA -v`"
+  - type: input
+    id: python-version
+    attributes:
+      label: Python version
+      description: "In console: `python --version`"
+  - type: dropdown
+    id: install
+    attributes:
+      label: Installation
+      description: How did you install gmx_MMPBSA?
+      options:
+        - pip
+        - AmberTools compilation + pip
+        - AmberTools compilation + conda
+        - conda AmberTools + pip
+        - conda AmberTools + conda
+        - from source (.tar.gz)
+        - git checkout

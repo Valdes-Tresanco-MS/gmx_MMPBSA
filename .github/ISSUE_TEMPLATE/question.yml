@@ -1,0 +1,12 @@
+name: Question
+description: Ask us your questions
+title: "[Question]: "
+labels: [Question]
+body:
+  - type: input
+    id: question
+    attributes:
+      label: My Question is...
+      description: Ask your question here
+    validations:
+      required: true
