@@ -132,28 +132,28 @@ Using C2 Entropy Approximation:                                                 
 
 1. Date of running
 2. gmx_MMPBSA version used
-3. input files used
-4. receptor and ligand masks
-5. general description of the methods used and units 
-6. entropy results in case any entropy approximation was used
-7. model used (GB in this case)
+3. Input files used
+4. Receptor and ligand masks
+5. General description of the methods used and units 
+6. Entropy results in case any entropy approximation was used
+7. Model used (GB in this case)
 8. Energy components (complex)
 9. Energy components (receptor)
 10. Energy components (ligand)
 11. Energy components (delta)
-12. bond potential term
-13. angle potential term
-14. dihedral potential term
-15. van der Waals contribution
-16. electrostatic contribution
-17. van der Waals 1-4 contribution
-18. electrostatic 1-4 contribution
-19. polar contribution to the solvation free energy
-20. non-polar contribution to the solvation free energy
+12. Bond potential term
+13. Angle potential term
+14. Dihedral potential term
+15. Van der Waals contribution
+16. Electrostatic contribution
+17. Van der Waals 1-4 contribution
+18. Electrostatic 1-4 contribution
+19. Polar contribution to the solvation free energy
+20. Non-polar contribution to the solvation free energy
 21. = ΔBOND + ΔANGLE + ΔDIHED + ΔVDWAALS + ΔEEL
 22. = ΔEGB + ΔESURF
 23. = ΔGGAS + ΔGSOLV
-24. binding free energy<br>ΔG binding = ΔTOTAL - TΔS
+24. Binding free energy<br>ΔG binding = ΔTOTAL - TΔS
 
 The header of the output file will contain information about the calculation. It will also show the names of all files 
 that were used in the calculation (topology files and coordinate file(s)). If the masks
