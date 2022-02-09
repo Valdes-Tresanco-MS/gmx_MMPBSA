@@ -256,7 +256,7 @@ class CheckMakeTop:
         # wt receptor
         if self.FILES.receptor_tpr:
             logging.info('A receptor structure file was defined. Using MT approach...')
-            logging.info(f'Normal receptor: Saving group {self.FILES.receptor_group} in {self.FILES.receptor_index} '
+            logging.info(f'Normal Receptor: Saving group {self.FILES.receptor_group} in {self.FILES.receptor_index} '
                          f'file as {self.receptor_str_file}')
             pdbrec_echo_args = ['echo', '{}'.format(self.FILES.receptor_group)]
             p1 = subprocess.Popen(pdbrec_echo_args, stdout=subprocess.PIPE)
@@ -278,7 +278,7 @@ class CheckMakeTop:
         else:
             logging.info('No receptor structure file was defined. Using ST approach...')
             logging.info('Using receptor structure from complex to generate AMBER topology')
-            logging.info('Normal Complex: Saving group {} in {} file as {}'.format(
+            logging.info('Normal Receptor: Saving group {} in {} file as {}'.format(
                 rec_group, self.FILES.complex_index, self.receptor_str_file))
             pdbrec_echo_args = ['echo', '{}'.format(rec_group)]
             cp1 = subprocess.Popen(pdbrec_echo_args, stdout=subprocess.PIPE)
@@ -323,7 +323,7 @@ class CheckMakeTop:
             # wt complex ligand
             logging.info('No ligand structure file was defined. Using ST approach...')
             logging.info('Using ligand structure from complex to generate AMBER topology')
-            logging.info('Normal ligand: Saving group {} in {} file as {}'.format(lig_group, self.FILES.complex_index,
+            logging.info('Normal Ligand: Saving group {} in {} file as {}'.format(lig_group, self.FILES.complex_index,
                                                                                   self.ligand_str_file))
             pdblig_echo_args = ['echo', '{}'.format(lig_group)]
             l1 = subprocess.Popen(pdblig_echo_args, stdout=subprocess.PIPE)
@@ -388,7 +388,7 @@ class CheckMakeTop:
                             f'molecules in the complex.')
 
     def gmxtop2prmtop(self):
-        logging.info('Building Normal Complex Amber Topology...')
+        logging.info('Building Normal Complex Amber topology...')
         com_top = self.cleantop(self.FILES.complex_top, self.indexes['COM']['COM'])
         if error_info := eq_strs(com_top, self.complex_str):
             if error_info[0] == 'atoms':
@@ -416,7 +416,7 @@ class CheckMakeTop:
 
         logging.info(f"Assigning PBRadii {PBRadii[self.INPUT['PBRadii']]} to Complex...")
         action = ChRad(com_amb_prm, PBRadii[self.INPUT['PBRadii']])
-        logging.info('Writing Normal Complex Amber Topology...')
+        logging.info('Writing Normal Complex Amber topology...')
         com_amb_prm.write_parm(self.complex_pmrtop)
 
         rec_indexes_string = ','.join(self.resi['REC']['string'])
@@ -451,8 +451,8 @@ class CheckMakeTop:
             logging.info('Changing the Receptor residues name format from GROMACS to Amber...')
             self.fixparm2amber(rec_amb_prm)
         else:
-            logging.info('No Receptor topology files was defined. Using ST approach...')
-            logging.info('Building AMBER Receptor Topology from Complex...')
+            logging.info('No Receptor topology file was defined. Using ST approach...')
+            logging.info('Building AMBER Receptor topology from Complex...')
             # we make a copy for receptor topology
             rec_amb_prm = self.molstr(com_amb_prm)
             rec_amb_prm.strip(f'!:{rec_indexes_string}')
@@ -460,7 +460,7 @@ class CheckMakeTop:
 
         logging.info(f"Assigning PBRadii {PBRadii[self.INPUT['PBRadii']]} to Receptor...")
         action = ChRad(rec_amb_prm, PBRadii[self.INPUT['PBRadii']])
-        logging.info('Writing Normal Receptor Amber Topology...')
+        logging.info('Writing Normal Receptor Amber topology...')
         rec_amb_prm.write_parm(self.receptor_pmrtop)
 
         lig_hastop = True
@@ -493,15 +493,15 @@ class CheckMakeTop:
             logging.info('Changing the Ligand residues name format from GROMACS to Amber...')
             self.fixparm2amber(lig_amb_prm)
         else:
-            logging.info('No Ligand Topology files was defined. Using ST approach...')
-            logging.info('Building AMBER Ligand Topology from Complex...')
+            logging.info('No Ligand topology file was defined. Using ST approach...')
+            logging.info('Building AMBER Ligand topology from Complex...')
             # we make a copy for ligand topology
             lig_amb_prm = self.molstr(com_amb_prm)
             lig_amb_prm.strip(f':{rec_indexes_string}')
             lig_hastop = False
         logging.info(f"Assigning PBRadii {PBRadii[self.INPUT['PBRadii']]} to Ligand...")
         action = ChRad(lig_amb_prm, PBRadii[self.INPUT['PBRadii']])
-        logging.info('Writing Normal Ligand Amber Topology...')
+        logging.info('Writing Normal Ligand Amber topology...')
         lig_amb_prm.write_parm(self.ligand_pmrtop)
 
         if self.INPUT['alarun']:
@@ -511,11 +511,11 @@ class CheckMakeTop:
             mut_com_amb_prm = self.makeMutTop(com_amb_prm, self.com_mut_index)
             logging.info(f"Assigning PBRadii {PBRadii[self.INPUT['PBRadii']]} to Mutant Complex...")
             action = ChRad(mut_com_amb_prm, PBRadii[self.INPUT['PBRadii']])
-            logging.info('Writing Mutant Complex Amber Topology...')
+            logging.info('Writing Mutant Complex Amber topology...')
             mut_com_amb_prm.write_parm(self.mutant_complex_pmrtop)
 
             if self.part_mut == 'REC':
-                logging.info('Detecting mutation in Receptor. Building Mutant Receptor Topology...')
+                logging.info('Detecting mutation in Receptor. Building Mutant Receptor topology...')
                 out_prmtop = self.mutant_receptor_pmrtop
                 self.mutant_ligand_pmrtop = None
                 if rec_hastop:
@@ -524,7 +524,7 @@ class CheckMakeTop:
                     mut_com_amb_prm.strip(f'!:{rec_indexes_string}')
                     mtop = mut_com_amb_prm
             else:
-                logging.info('Detecting mutation in Ligand. Building Mutant Ligand Topology...')
+                logging.info('Detecting mutation in Ligand. Building Mutant Ligand topology...')
                 out_prmtop = self.mutant_ligand_pmrtop
                 self.mutant_receptor_pmrtop = None
                 if lig_hastop:
@@ -540,7 +540,7 @@ class CheckMakeTop:
             logging.info(f"Assigning PBRadii {PBRadii[self.INPUT['PBRadii']]} to Mutant "
                          f"{'Receptor' if self.part_mut == 'REC' else 'Ligand'}...")
             action = ChRad(mut_prot_amb_prm, PBRadii[self.INPUT['PBRadii']])
-            logging.info(f"Writing Mutant {'Receptor' if self.part_mut == 'REC' else 'Ligand'} Amber Topology...")
+            logging.info(f"Writing Mutant {'Receptor' if self.part_mut == 'REC' else 'Ligand'} Amber topology...")
             mut_prot_amb_prm.write_parm(out_prmtop)
         else:
             self.mutant_complex_pmrtop = None
@@ -596,7 +596,7 @@ class CheckMakeTop:
             self.com_mut_index, self.part_mut, self.part_index = self.getMutationInfo()
             start = 1
             if self.part_mut == 'REC':
-                logging.info('Detecting mutation in Receptor. Building Mutant Receptor Structure...')
+                logging.info('Detecting mutation in Receptor. Building Mutant Receptor structure...')
                 self.mutant_ligand_pmrtop = None
                 for c, r in enumerate(self.resi['REC']['num']):
                     end, sfile = self._split_str(
