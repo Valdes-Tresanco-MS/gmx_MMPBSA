@@ -165,10 +165,16 @@ are further broken for the complex, receptor and ligand into `GGAS` and `GSOLV`.
 and is obtained after sum the internal(bonded) components (`BOND` + `ANGLE` + `DIHED`) and the 
 non-bonded (`VDWAALS` + `EEL`) components. For `GSOLV`, the polar and non-polar contributions are `EGB` (or `EPB`) 
 and `ESURF` (or `ENPOLAR + EDISPER`), respectively for `GB` (or `PB`) calculations. A single trajectory protocol does 
-not produce any differences between bond lengths, angles, or dihedrals between the complex and receptor/ligand 
-structures. Thus, when subtracted they cancel completely. This includes the `BOND`, `ANGLE`, `DIHED`, and `1-4 
-interactions`. If inconsistencies are found, these values are displayed and inconsistency warnings are printed. When 
-this occurs the results are generally useless. Of course this does not hold for the multiple trajectory protocol.
+not produce any differences between bond lengths, angles, dihedrals or 1-4 interactions between the complex and 
+receptor/ligand structures. Thus, when subtracted they cancel completely. If not, these values are displayed and 
+inconsistency warnings are printed. When this occurs the results are generally useless. Of course this does not 
+hold for the multiple trajectory protocol as independent trajectories are used for the complex, receptor and ligand. 
+Two approaches are used when calculating the standard deviation, and the standard error of the mean. The `SD` and `SEM`
+values are calculated using a sample (array) of values. On the other hand, `SD(Prop.)` and `SEM(Prop.)` are 
+obtained with the 
+[propagation of uncertainty formula](https://en.wikipedia.org/wiki/Propagation_of_uncertainty#Example_formulae) for 
+_f_ = _A_ - _B_. Check this [thread](http://archive.ambermd.org/201202/0317.html) for more details on MM/PB(GB)SA 
+statistics.
 
 ## Temporary files
 
