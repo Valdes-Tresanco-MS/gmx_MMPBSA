@@ -217,11 +217,12 @@ def write_outputs(app):
         final_output.add_comment('')
 
     final_output.add_comment('Using temperature = %.2f K)' % INPUT['temperature'])
-    final_output.add_comment('All units are reported in kcal/mol.')
+    final_output.add_comment('All units are reported in kcal/mol')
     final_output.add_comment('')
     final_output.add_comment('SD - Sample standard deviation, SEM - Sample standard error of the mean')
     final_output.add_comment('SD(Prop.), SEM(Prop.) - SD and SEM obtained with propagation of uncertainty formula')
     final_output.add_comment('https://en.wikipedia.org/wiki/Propagation_of_uncertainty#Example_formulae')
+    final_output.add_comment('')
 
     if INPUT['ifqnt']:
         final_output.add_comment(('QM/MM: Residues %s are treated with the ' +
@@ -688,10 +689,10 @@ class OutputFile(object):
             if FILES.ligand_mol2:
                 self.writeline(f'{"|Ligand Structure file:":40}{FILES.ligand_mol2:>40}')
             if FILES.ligand_tpr:
-                self.writeline(f'{"|Complex Structure file:":40}{FILES.ligand_tpr:>40}')
+                self.writeline(f'{"|Ligand Structure file:":40}{FILES.ligand_tpr:>40}')
             if FILES.ligand_top:
-                self.writeline(f'{"|Complex (GROMACS) topology file:":40}{FILES.ligand_top:>40}')
-            self.writeline(f'{"|Complex (AMBER) topology file:":40}{FILES.ligand_prmtop:>40}')
+                self.writeline(f'{"|Ligand (GROMACS) topology file:":40}{FILES.ligand_top:>40}')
+            self.writeline(f'{"|Ligand (AMBER) topology file:":40}{FILES.ligand_prmtop:>40}')
 
         if INPUT['alarun']:
             self.writeline(f'{"|Mutant (AMBER) complex topology file:":40}{FILES.mutant_complex_prmtop:>40}')
