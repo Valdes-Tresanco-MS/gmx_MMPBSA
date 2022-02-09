@@ -6,8 +6,7 @@ body:
   - type: markdown
     attributes:
       value: |
-         Check the [issues](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/issues) to see if this feature 
-        has already been requested
+         Check the [issues](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/issues) to see if this feature has already been requested
   - type: dropdown
     id: tool
     attributes:
