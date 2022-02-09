@@ -109,14 +109,20 @@ class MMPBSA_API():
 
     def _get_df(self, raw_energy, key, delta=False):
         df_models = {}
+        terms = {'energy': [], 'entropy': []}
         if self.timestep:
             index = pd.Series(list(self.frames.values()), name=f'Time ({self.timeunit})')
         else:
             index = pd.Series(list(self.frames.keys()), name='Frames')
         for model, data in raw_energy[key].items():
-            if model in ['gb', 'pb', 'rism std', 'rism gf']:
+            if model in ['gb', 'pb', 'rism std', 'rism gf', 'nmode', 'qh']:
+                if model in ['nmode', 'qh']:
+                    terms['entropy'].append(model)
+                else:
+                    terms['energy'].append(model)
                 df_models[model] = pd.DataFrame(self._energy2flatdict(data), index=index)
             elif model == 'ie':
+                terms['entropy'].append(model)
                 temp = {}
                 for m, iedata in data.items():
                     df = pd.DataFrame({'data': iedata['data']}, index=index)
@@ -125,29 +131,28 @@ class MMPBSA_API():
                     temp[m] = pd.concat([df, df1], axis=1)
                 df_models[model] = pd.concat(temp.values(), axis=1, keys=temp.keys())
             elif model == 'c2':
+                terms['entropy'].append(model)
                 temp = {m: pd.DataFrame({'c2data': c2data['c2data'], 'sigma': c2data['sigma']}, index=[0])
                         for m, c2data in data.items()}
                 df_models[model] = pd.concat(temp.values(), axis=1, keys=temp.keys())
 
-
-            # print('######################')
-            # print(df_models[model].columns.get_level_values(1))
-            # print(df_models[model]['complex', 'BOND'])
-            print(df_models[model])
-            # print('######################')
-
-
-
-            # if delta:
-            #     df_models[model] = pd.DataFrame(raw_energy[key][model]['delta'], index=index)
-            #     df_models[model].columns = pd.MultiIndex.from_product([['delta'], df_models[model].columns])
-            # else:
-            #     dfnc = pd.DataFrame(data=raw_energy[key][model]['complex'], index=index)
-            #     dfnr = pd.DataFrame(data=raw_energy[key][model]['receptor'], index=index)
-            #     dfnl = pd.DataFrame(data=raw_energy[key][model]['ligand'], index=index)
-            #     dfnd = pd.DataFrame(data=raw_energy[key][model]['delta'], index=index)
-            #     df_models[model] = pd.concat([dfnc, dfnr, dfnl, dfnd], axis=1, keys=['complex', 'receptor', 'ligand',
-            #                                                                          'delta'])
+        # Calculate binding
+        if terms['energy'] and terms['entropy']:
+            df_models['binding'] = {}
+            for m in terms['energy']:
+                for e in terms['entropy']:
+                    total = df_models[m]['delta']['TOTAL']
+                    total.name = 'ΔH'
+                    if e in ['nmode', 'qh']:
+                        df_models['binding'][f"{m}+{e}"] = pd.concat(df_models[m], axis=1)
+                        ent = df_models[e]['delta']['Total']
+                    else:
+                        k = 'iedata' if e == 'ie' else 'c2data'
+                        ent = df_models[e][m][k]
+                    ent.name = '-TΔS'
+                    temp = pd.concat([total, ent], axis=1)
+                    dg = pd.Series(total.mean() + ent.mean(), index=[total.index.tolist()[-1]], name='ΔG')
+                    df_models['binding'][f"{m}+{e}"] = pd.concat([temp, dg], axis=1)
         return df_models
 
     def get_energy(self):
@@ -212,7 +217,6 @@ class MMPBSA_API():
         # 5- Recalcular los delta delta sin CAS
         if 'normal' in self.data and self.data['normal'] and 'mutant' in self.data and self.data['mutant']:
             for model in self.data['normal']:
-                print(self.data['mutant'].keys())
                 if model in ['gb', 'pb', 'rism std', 'rism gf']:
                     self.data['mutant-normal'][model] = DeltaBindingStatistics(self.data['mutant'][model]['delta'],
                                                                      self.data['normal'][model]['delta'])
@@ -237,7 +241,6 @@ class MMPBSA_API():
                     summary[(m, model)] = {}
                 for mol, v2 in v1.items():
                     try:
-                        print(mol, v2)
                         if v2:
                             summ = v2.summary('csv')
                             summary[(m, model, (mol,))] = pd.DataFrame(summ[2:], columns=summ[1])
@@ -304,7 +307,6 @@ class MMPBSA_API():
         # input_file_text = ('|Input file:\n|--------------------------------------------------------------\n|'
         #                    + ''.join(open(app.FILES.input_file).readlines()).replace('\n', '\n|') +
         #                    '--------------------------------------------------------------\n')
-        print(app.mutant_index)
         INFO = {'COM_PDB': ''.join(open(app.FILES.complex_fixed).readlines()),
                 'input_file': app.input_file_text,
                 'mutant_index': app.mutant_index,

@@ -860,35 +860,38 @@ class GMX_MMPBSA_ANA(QMainWindow):
         parts = self.systems[sys_index]['options']['components'] + ['delta']
         if namespace.FILES.stability:
             parts.append('complex')
-        for level in data:
-            if level in ['gb', 'pb', 'rism gf', 'rism std', 'nmode', 'qh']:
-                titem = CustomItem(top_item, [level.upper()])
-                titem.setExpanded(True)
 
-                str_dict = multiindex2dict(data[level].columns)
-                for level1 in str_dict:
-                    if level1 not in parts:
-                        continue
-                    item1 = CustomItem(titem,
-                                       [level1.upper()],
-                                       app=self,
-                                       buttons=(2, -2),
-                                       title="Energetic Components",
-                                       subtitle=f"{sys_name} ({part.capitalize()}) | {level.upper()} | {level1.upper()}",
-                                       keys_path=(part, level, (level1,))
-                                       )
-                    print((part, level, (level1,)))
-                    for level2 in str_dict[level1]:
-                        item2 = CustomItem(item1,
-                                           [level2.upper()],
+        for level in ['gb', 'pb', 'rism gf', 'rism std', 'nmode', 'qh', 'ie', 'c2', 'binding']:
+            if level in data:
+                if level in ['gb', 'pb', 'rism gf', 'rism std', 'nmode', 'qh']:
+                    titem = CustomItem(top_item, [level.upper()])
+                    titem.setExpanded(True)
+
+                    str_dict = multiindex2dict(data[level].columns)
+                    for level1 in str_dict:
+                        if level1 not in parts:
+                            continue
+                        item1 = CustomItem(titem,
+                                           [level1.upper()],
                                            app=self,
-                                           buttons=(1,),
+                                           buttons=(2, -2),
                                            title="Energetic Components",
-                                           subtitle=f"{sys_name} ({part.capitalize()}) | {level.upper()} | "
-                                                    f"{level1.upper()} | {level2.upper()}",
-                                           keys_path=(part, level, (level1, level2))
+                                           subtitle=f"{sys_name} ({part.capitalize()}) | {level.upper()} | {level1.upper()}",
+                                           keys_path=(part, level, (level1,))
                                            )
-                        self.items_counter['charts'] += 1
+                        if level == 'qh':
+                            continue
+                        for level2 in str_dict[level1]:
+                            item2 = CustomItem(item1,
+                                               [level2.upper()],
+                                               app=self,
+                                               buttons=(1,),
+                                               title="Energetic Components",
+                                               subtitle=f"{sys_name} ({part.capitalize()}) | {level.upper()} | "
+                                                        f"{level1.upper()} | {level2.upper()}",
+                                               keys_path=(part, level, (level1, level2))
+                                               )
+                            self.items_counter['charts'] += 1
 
             # elif level == 'decomp':
             #     # omit decomp data
@@ -1012,35 +1015,50 @@ class GMX_MMPBSA_ANA(QMainWindow):
             #         # item2 = CustomItem(titem, [level2.upper()], data=dat[level2], app=self, level=1,
             #         #                        buttons=(1,), iec2_frames=dat[])
 
-        for level in data:
-            if level == 'c2':
-                titem = CustomItem(top_item, [level.upper()])
-                str_dict = multiindex2dict(data[level].columns)
-                for level1 in str_dict:
-                    item1 = CustomItem(
-                                titem,
-                                [level1.upper()],
-                                app=self,
-                                buttons=(2,),
-                                # iec2_data={'sigma': dat['sigma'], 'frames': dat['ieframes']},
-                                title="C2 Entropy",
-                                subtitle=f"{mut_pre}{sys_name} | {level.upper()} | {level1.upper()}",
-                                keys_path=(part, level, (level1,))
-                            )
-            elif level == 'ie':
-                titem = CustomItem(top_item, [level.upper()])
-                str_dict = multiindex2dict(data[level].columns)
-                for level1 in str_dict:
-                    item1 = CustomItem(
-                        titem,
-                        [level1.upper()],
-                        app=self,
-                        buttons=(1,),
-                        # iec2_data={'sigma': dat['sigma'], 'frames': dat['ieframes']},
-                        title="Interaction Entropy",
-                        subtitle=f"{mut_pre}{sys_name} | {level.upper()} | {level1.upper()}",
-                        keys_path=(part, level, (level1,))
-                    )
+        # for level in data:
+                elif level == 'c2':
+                    titem = CustomItem(top_item, [level.upper()])
+                    str_dict = multiindex2dict(data[level].columns)
+                    for level1 in str_dict:
+                        item1 = CustomItem(
+                                    titem,
+                                    [level1.upper()],
+                                    app=self,
+                                    buttons=(2,),
+                                    # iec2_data={'sigma': dat['sigma'], 'frames': dat['ieframes']},
+                                    title="C2 Entropy",
+                                    subtitle=f"{sys_name} ({part.capitalize()}) | {level.upper()} | {level1.upper()}",
+                                    keys_path=(part, level, (level1,))
+                                )
+                elif level == 'ie':
+                    titem = CustomItem(top_item, [level.upper()])
+                    str_dict = multiindex2dict(data[level].columns)
+                    for level1 in str_dict:
+                        item1 = CustomItem(
+                            titem,
+                            [level1.upper()],
+                            app=self,
+                            buttons=(1,),
+                            # iec2_data={'sigma': dat['sigma'], 'frames': dat['ieframes']},
+                            title="Interaction Entropy",
+                            subtitle=f"{sys_name} ({part.capitalize()}) | {level.upper()} | {level1.upper()}",
+                            keys_path=(part, level, (level1,))
+                        )
+                elif level == 'binding':
+                    titem = CustomItem(top_item, ['Binding Energy'])
+                    for level1 in data[level]:
+                        item1 = CustomItem(
+                            titem,
+                            [level1.upper()],
+                            app=self,
+                            buttons=(2,),
+                            # iec2_data={'sigma': dat['sigma'], 'frames': dat['ieframes']},
+                            title="Binding Energy",
+                            subtitle=f"{sys_name} ({part.capitalize()}) | {level.upper()} | {level1.upper()}",
+                            keys_path=(part, level, (level1,))
+                        )
+        # for level in data:
+
 
     def setting_item_data(self, sys_index, part, comp=('all')):
         correlation_data = self.corr_data
@@ -1070,39 +1088,37 @@ class GMX_MMPBSA_ANA(QMainWindow):
             key_list.extend(['gb', 'pb', 'rism gf', 'rism std'])
         elif 'all' in comp:
             key_list.extend(['gb', 'pb', 'rism gf', 'rism std', 'nmode', 'qh', 'c2'])
+        for level in ['gb', 'pb', 'rism gf', 'rism std', 'nmode', 'qh', 'ie', 'c2', 'binding']:
+            if level in data:
+                if level in ['gb', 'pb', 'rism gf', 'rism std', 'nmode', 'qh']:
+                    # FIXME: include the decomp
+                    str_dict = multiindex2dict(data[level].columns)
+                    for level1 in str_dict:
+                        if level1 not in parts:
+                            continue
+                        self.systems[sys_index]['items_data'][(part, level, (level1,))] = self._setup_data(
+                            data[level][(level1,)], level=1)
+                        for level2 in str_dict[level1]:
+                            # if self._remove_empty(data[level][(level1, level2)], options, namespace):
+                            #     del data[level][(level1, level2)]
+                            #     continue
 
-        for level in data:
-            print('@@@', level)
-            # FIXME: include the decomp
-            if level in ['gb', 'pb', 'rism gf', 'rism std']:
-                str_dict = multiindex2dict(data[level].columns)
-                for level1 in str_dict:
-                    if level1 not in parts:
-                        continue
-                    self.systems[sys_index]['items_data'][(part, level, (level1,))] = self._setup_data(
-                        data[level][(level1,)], level=1)
-                    for level2 in str_dict[level1]:
-                        # if self._remove_empty(data[level][(level1, level2)], options, namespace):
-                        #     del data[level][(level1, level2)]
-                        #     continue
-
-                        temp_dat = data[level][(level1, level2)]
-                        temp_dat.name = level2
-                        self.systems[sys_index]['items_data'][(part, level, (level1, level2))] = self._setup_data(
-                            temp_dat)
-                        del temp_dat
-
-            elif comp == 'ie':
-                pass
-            elif level == 'c2':
-                str_dict = multiindex2dict(data[level].columns)
-                for level1 in str_dict:
-                    print('#####', data[level][(level1,)])
-                    self.systems[sys_index]['items_data'][(part, level, (level1,))] = self._setup_data(
-                        data[level][(level1,)], level=1)
-            elif level == 'ie':
-                str_dict = multiindex2dict(data[level].columns)
-                for level1 in str_dict:
-                    print('#####', data[level][(level1,)])
-                    self.systems[sys_index]['items_data'][(part, level, (level1,))] = self._setup_data(
-                        data[level][(level1,)], ie=True, level=0)
+                            temp_dat = data[level][(level1, level2)]
+                            temp_dat.name = level2
+                            self.systems[sys_index]['items_data'][(part, level, (level1, level2))] = self._setup_data(
+                                temp_dat)
+                            del temp_dat
+                elif level == 'c2':
+                    str_dict = multiindex2dict(data[level].columns)
+                    for level1 in str_dict:
+                        self.systems[sys_index]['items_data'][(part, level, (level1,))] = self._setup_data(
+                            data[level][(level1,)], iec2=True, level=1)
+                elif level == 'ie':
+                    str_dict = multiindex2dict(data[level].columns)
+                    for level1 in str_dict:
+                        self.systems[sys_index]['items_data'][(part, level, (level1,))] = self._setup_data(
+                            data[level][(level1,)], iec2=True, level=0)
+                elif level == 'binding':
+                    for level1 in data[level]:
+                        self.systems[sys_index]['items_data'][(part, level, (level1,))] = self._setup_data(
+                            data[level][level1], level=1)
