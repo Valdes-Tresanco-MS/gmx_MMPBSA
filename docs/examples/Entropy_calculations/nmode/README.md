@@ -63,8 +63,8 @@ igb=2, saltcon=0.150,
 /
 
 #note that nmode will use only a fraction of the no. of frames selected in 
-#&general variable (21-5/1=16 in this case). This way, nmode will only 
-#process 2 frames (15th and 16th frames)
+#&general variable. This way, nmode will only 
+#process 2 frames (5th and 6th frames)
 #note also that some parameters have been change to perform the calculation 
 #faster (maxcyc=5, drms=100). The typical values for these parameters 
 #are (maxcyc=50000, drms=0.001)
@@ -84,8 +84,8 @@ In this case, a single trajectory (ST) approximation is followed, which means th
 the ligand is also another protein) amber format topologies and trajectories will be obtained from that of the 
 complex. To do so, a MD Structure+mass(db) file (`com.tpr`), an index file (`index.ndx`), a trajectory file 
 (`com_traj.xtc`), and both the receptor and ligand group numbers in the index file (`19 20`) are needed. The `mmpbsa.
-in` input file will contain all the parameters needed for the MM/PB(GB)SA calculation. In this case, 16 frames 
-`(endframe-startframe)/interval = (21-5)/1 = 16` are going to be used when performing the the MM/PB(GB)SA 
+in` input file will contain all the parameters needed for the MM/PB(GB)SA calculation. In this case, 4 frames 
+are going to be used when performing the the MM/PB(GB)SA 
 calculation with the igb2 (GB-OBC1) model and a salt concentration = 0.15M.
 
 `nmode` will be used for estimating the entropic contribution, though it's way more expensive in computation as compared 
