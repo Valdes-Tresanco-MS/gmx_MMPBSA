@@ -76,7 +76,7 @@ the ligand is also another protein) amber format topologies and trajectories wil
 complex. To do so, a MD Structure+mass(db) file (`com.tpr`), an index file (`index.ndx`), a trajectory file 
 (`com_traj.xtc`), and both the receptor and ligand group numbers in the index file (`19 20`) are needed. The `mmpbsa.
 in` input file will contain all the parameters needed for the MM/PB(GB)SA calculation. In this case, 16 frames 
-`(endframe-startframe)/interval = (21-5)/1 = 16` are going to be used when performing the the MM/PB(GB)SA 
+are going to be used when performing the the MM/PB(GB)SA 
 calculation with the igb2 (GB-OBC1) model and a salt concentration = 0.15M.
 
 [Interaction Entropy (IE)][4] will be calculated and the average for the last quartile (`entropy_seg=25`) of the 

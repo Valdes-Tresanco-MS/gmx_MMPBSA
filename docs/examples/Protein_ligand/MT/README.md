@@ -85,7 +85,7 @@ a trajectory file (`rec_traj.pdb`), and the receptor group number in the rec_ind
 a ligand .mol2 file is needed for generating the ligand topology. Besides, a MD Structure+mass(db) file (`lig.pdb`), an 
 index file (`lig_index.ndx`), a trajectory file (`lig_traj.pdb`), and ligand group number in the lig_index file (`2`) are 
 needed. The `mmpbsa.in` input file will contain all the parameters needed for the MM/PB(GB)SA calculation. In this case,
-16 frames `(endframe-startframe)/interval = (21-5)/1 = 16` are going to be used when performing the the MM/PB(GB)SA 
+10 frames are going to be used when performing the the MM/PB(GB)SA 
 calculation with the igb5 (GB-OBC2) model and a salt concentration = 0.15M.
 
 !!! note

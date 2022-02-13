@@ -77,7 +77,7 @@ In this case, a single trajectory (ST) approximation is followed, which means th
 trajectories will be obtained from that of the complex. To do so, a MD Structure+mass(db) file (`com.tpr`), an index file (`index.ndx`),
 a trajectory file (`com_traj.xtc`), and both the receptor and ligand group numbers in the index file (`1 13`) are needed.
 A ligand .mol2 file is also needed for generating the ligand topology. The `mmpbsa.in` input file will contain all the 
-parameters needed for the MM/PB(GB)SA calculation. In this case, 16 frames `(endframe-startframe)/interval = (21-5)/1 = 16`
+parameters needed for the MM/PB(GB)SA calculation. In this case, 17 frames 
 are going to be used when performing the MM/PB(GB)SA calculation with the igb5 (GB-OBC2) model and a 
 salt concentration = 0.15M.
 
