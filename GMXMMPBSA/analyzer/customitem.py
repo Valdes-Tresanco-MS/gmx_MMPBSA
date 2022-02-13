@@ -410,13 +410,23 @@ class CustomItem(QTreeWidgetItem):
         from GMXMMPBSA.analyzer.chartsettings import Palettes
         self.app.treeWidget.clearSelection()
         import os
+        changes = self.app.systems[self.system_index]['chart_options'].changes
         options = self.app.systems[self.system_index]['chart_options'].get_settings()
         if options[('Visualization', 'palette')] == 'auto':
             palette = options[('Heatmap Plot', 'Per-residue', 'palette')]
         else:
             palette = options[('Visualization', 'palette')]
 
-        self.pymol_data_change = self.pymol_current_palette != palette
+        pymol_options = {'colors': Palettes.get_palette(palette).colors}
+        for o in options:
+            if o[0] != 'Visualization' or o == ('Visualization', 'palette'):
+                continue
+            if o[1] == 'background':
+                pymol_options['bg_rgb'] = options[o]
+            else:
+                pymol_options[o[1]] = options[o]
+
+        self.pymol_data_change = bool(changes['visualization_action'] or self.pymol_current_palette != palette)
         self.pymol_current_palette = palette
 
         if checked:
@@ -436,14 +446,13 @@ class CustomItem(QTreeWidgetItem):
                 return
             if not self.pymol_process:
                 self.pymol_process = QProcess()
+                self.app.pymol_p_list.append([self.pymol_process, self])
             elif self.pymol_process.state() == QProcess.Running:
                 QMessageBox.critical(self.app, 'This PyMOL instance already running!',
                                      'This PyMOL instance already running! Please, close it to open a new PyMOL '
                                      'instance', QMessageBox.Ok)
                 return
-
-            if self.pymol_data_change or not self.bfactor_pml:
-                self.bfactor_pml = self._e2pdb(Palettes.get_palette(palette).colors)
+            self.bfactor_pml = self._e2pdb(pymol_options)
 
             self.pymol_process.start(pymol, [self.bfactor_pml.as_posix()])
             self.pymol_process.finished.connect(lambda: self.vis_action.setChecked(False))
@@ -452,12 +461,12 @@ class CustomItem(QTreeWidgetItem):
             self.pymol_process.kill()
             self.pymol_process.waitForFinished(3000)
 
-    def _e2pdb(self, colors):
+    def _e2pdb(self, options):
         com_pdb = self.app.systems[self.system_index]['namespace'].INFO['COM_PDB']
         bfactor_pml = self.app.systems[self.system_index]['path'].parent.joinpath('bfactor.pml')
         output_path = self.app.systems[self.system_index]['path'].parent.joinpath(
             f"{self.app.systems[self.system_index]['name']}_{self.part}_energy2bfactor.pdb")
-        qpd = QProgressDialog('Generate modified pdb and open it in PyMOL', 'Abort', 0, 2, self.app)
+        qpd = QProgressDialog('Generating modified pdb and open it in PyMOL...', 'Abort', 0, 2, self.app)
         qpd.setWindowModality(Qt.WindowModality.WindowModal)
         qpd.setMinimumDuration(1500)
 
@@ -479,7 +488,7 @@ class CustomItem(QTreeWidgetItem):
                     for at in res.atoms:
                         at.bfactor = res_energy
                 com_pdb_str.save(output_path.as_posix(), 'pdb', True, renumber=False)
-                energy2pdb_pml(res_dict, colors, bfactor_pml, output_path)
+                energy2pdb_pml(res_dict, options, bfactor_pml, output_path)
         qpd.setValue(2)
 
         return bfactor_pml
