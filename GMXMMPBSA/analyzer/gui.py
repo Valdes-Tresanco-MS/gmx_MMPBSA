@@ -878,8 +878,9 @@ class GMX_MMPBSA_ANA(QMainWindow):
                                            app=self,
                                            buttons=(2, -2),
                                            title="Energetic Components",
-                                           subtitle=f"{sys_name} ({part.capitalize()}) | {level.upper()} | {level1.upper()}",
-                                           keys_path=(part, level, (level1,))
+                                           subtitle=f"{sys_name} | {level.upper()} | {level1.upper()}",
+                                           keys_path=(part, level, (level1,)),
+                                           part=part
                                            )
                         if level == 'qh':
                             continue
@@ -889,24 +890,25 @@ class GMX_MMPBSA_ANA(QMainWindow):
                                                app=self,
                                                buttons=(1,),
                                                title="Energetic Components",
-                                               subtitle=f"{sys_name} ({part.capitalize()}) | {level.upper()} | "
+                                               subtitle=f"{sys_name} | {level.upper()} | "
                                                         f"{level1.upper()} | {level2.upper()}",
-                                               keys_path=(part, level, (level1, level2))
+                                               keys_path=(part, level, (level1, level2)),
+                                               part=part
                                                )
                             self.items_counter['charts'] += 1
                 elif level == 'c2':
                     titem = CustomItem(top_item, [level.upper()])
                     str_dict = multiindex2dict(data[level].columns)
                     for level1 in str_dict:
-                        item1 = CustomItem(
-                                    titem,
-                                    [level1.upper()],
-                                    app=self,
-                                    buttons=(2,),
-                                    title="C2 Entropy",
-                                    subtitle=f"{sys_name} ({part.capitalize()}) | {level.upper()} | {level1.upper()}",
-                                    keys_path=(part, level, (level1,))
-                                )
+                        item1 = CustomItem(titem,
+                                           [level1.upper()],
+                                           app=self,
+                                           buttons=(2,),
+                                           title="C2 Entropy",
+                                           subtitle=f"{sys_name} | {level.upper()} | {level1.upper()}",
+                                           keys_path=(part, level, (level1,)),
+                                           part=part
+                                           )
                 elif level == 'ie':
                     titem = CustomItem(top_item, [level.upper()])
                     str_dict = multiindex2dict(data[level].columns)
@@ -917,21 +919,21 @@ class GMX_MMPBSA_ANA(QMainWindow):
                             app=self,
                             buttons=(1,),
                             title="Interaction Entropy",
-                            subtitle=f"{sys_name} ({part.capitalize()}) | {level.upper()} | {level1.upper()}",
+                            subtitle=f"{sys_name} | {level.upper()} | {level1.upper()}",
                             keys_path=(part, level, (level1,))
                         )
                 elif level == 'binding':
                     titem = CustomItem(top_item, ['Binding Energy'])
                     for level1 in data[level]:
-                        item1 = CustomItem(
-                            titem,
-                            [level1.upper()],
-                            app=self,
-                            buttons=(2,),
-                            title="Binding Energy",
-                            subtitle=f"{sys_name} ({part.capitalize()}) | ΔG | {level1.upper()}",
-                            keys_path=(part, level, (level1,))
-                        )
+                        item1 = CustomItem(titem,
+                                           [level1.upper()],
+                                           app=self,
+                                           buttons=(2,),
+                                           title="Binding Energy",
+                                           subtitle=f"{sys_name} | ΔG | {level1.upper()}",
+                                           keys_path=(part, level, (level1,)),
+                                           part=part
+                                           )
 
     def makedecompItems(self, sys_index, part, classif_item):
         sys_name = self.systems[sys_index]['name']
@@ -960,9 +962,10 @@ class GMX_MMPBSA_ANA(QMainWindow):
                                            app=self,
                                            buttons=(1, 2, 3, 4),
                                            title=f"Energetic Components {title}",
-                                           subtitle=f"{sys_name} ({part.capitalize()}) | {level.upper()} | "
+                                           subtitle=f"{sys_name} | {level.upper()} | "
                                                     f"{level1.upper()} | {level2.upper()}",
-                                           keys_path=(part, level, (level1, level2))
+                                           keys_path=(part, level, (level1, level2)),
+                                           part=part
                                            )
                         self.items_counter['charts'] += 1
                         # residue first level
