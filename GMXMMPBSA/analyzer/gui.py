@@ -432,15 +432,25 @@ class GMX_MMPBSA_ANA(QMainWindow):
                 self.setting_item_data(s, p, comp=tuple(comp))
             self.systems[s]['items_summary'] = self.systems[s]['api'].get_summary()
 
-        qpd.setLabelText('Updating opened charts')
-
+        qpd.setLabelText('Updating open charts')
 
         subwindows = self.mdi.subWindowList()
-        for sub in subwindows:
-            if sub.isVisible():
-                sub.button.setChecked(False)
-                sub.button.setChecked(True)
-
+        for s in processed_sys:
+            changes = self.systems[s]['chart_options'].changes
+            for sub in subwindows:
+                if sub.item_parent.system_index != s:
+                    continue
+                if not sub.isVisible():
+                    continue
+                if (changes['bar_action'] or changes['line_ie_action'] or
+                        changes['line_action'] or changes['heatmap_action']):
+                    sub.button.setChecked(False)
+                    sub.button.setChecked(True)
+            pymol_items = [[p, item] for p, item in self.pymol_p_list if p.state() == QProcess.Running]
+            for p, item in pymol_items:
+                p.kill()
+                p.waitForFinished()
+                item.vis_action.setChecked(True)
 
         # re-assign changes to native state after replot all open charts
         for s in processed_sys:
@@ -448,7 +458,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
                                                             line_ie_action=0,
                                                             bar_action=0,
                                                             heatmap_action=0,
-                                                            visualization_ation=0)
+                                                            visualization_action=0)
 
 
         qpd.setValue(maximum)
@@ -913,15 +923,15 @@ class GMX_MMPBSA_ANA(QMainWindow):
                     titem = CustomItem(top_item, [level.upper()])
                     str_dict = multiindex2dict(data[level].columns)
                     for level1 in str_dict:
-                        item1 = CustomItem(
-                            titem,
-                            [level1.upper()],
-                            app=self,
-                            buttons=(1,),
-                            title="Interaction Entropy",
-                            subtitle=f"{sys_name} | {level.upper()} | {level1.upper()}",
-                            keys_path=(part, level, (level1,))
-                        )
+                        item1 = CustomItem(titem,
+                                           [level1.upper()],
+                                           app=self,
+                                           buttons=(1,),
+                                           title="Interaction Entropy",
+                                           subtitle=f"{sys_name} | {level.upper()} | {level1.upper()}",
+                                           keys_path=(part, level, (level1,)),
+                                           part=part
+                                           )
                 elif level == 'binding':
                     titem = CustomItem(top_item, ['Binding Energy'])
                     for level1 in data[level]:
