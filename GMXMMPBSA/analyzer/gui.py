@@ -108,12 +108,22 @@ class GMX_MMPBSA_ANA(QMainWindow):
         self.correlation_treeWidget.itemClicked.connect(self.update_table)
         self.correlation_treeWidget.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         # self.correlation_treeWidget.customContextMenuRequested.connect(self.corr_context_menu)
-        model_label = QTreeWidgetItem(['MODEL', 'ΔH', 'ΔH+IE', 'ΔH+NMODE', 'ΔH+QH'])
+        model_label = QTreeWidgetItem(['MODEL', 'ΔGeff', 'ΔGie', 'ΔGc2', 'ΔGnm', 'ΔGqh'])
         model_label.setToolTip(0, 'Selected Model')
-        model_label.setToolTip(1, 'Correlation plot for ΔG = ΔH+IE')
-        model_label.setToolTip(2, 'Correlation plot for ΔG = ΔH+NMODE')
-        model_label.setToolTip(3, 'Correlation plot for ΔG = ΔH+QH')
-        model_label.setToolTip(4, 'Correlation plot for ΔH only')
+        model_label.setToolTip(1, '''<html>Correlation plot for ΔG<sub>effective</sub>. Energy 
+        when entropy contribution is neglected. Calculated as ΔG<sub>effective</sub> = ΔH</html>''')
+        model_label.setToolTip(2, '''<html>Correlation plot for ΔG<sub>ie</sub>. Energy 
+        when entropy contribution is calculated using the Interaction Entropy method. Calculated as 
+        ΔG<sub>ie</sub> = ΔH + -TΔS<sub>IE</sub></html>''')
+        model_label.setToolTip(3, '''<html>Correlation plot for ΔG<sub>c2</sub>. Energy 
+        when entropy contribution is calculated using the C2 Entropy method. Calculated as 
+        ΔG<sub>c2</sub> = ΔH + -TΔS<sub>C2</sub></html>''')
+        model_label.setToolTip(4, '''<html>Correlation plot for ΔG<sub>nm</sub>. Energy 
+        when entropy contribution is calculated using the Normal Modes Entropy method. Calculated as 
+        ΔG<sub>nm</sub> = ΔH + -TΔS<sub>NMODE</sub></html>''')
+        model_label.setToolTip(5, '''<html>Correlation plot for ΔG<sub>ie</sub>. Energy 
+        when entropy contribution is calculated using the Quasi-Harmonic Entropy method. Calculated as 
+        ΔG<sub>qh</sub> = ΔH + -TΔS<sub>QH</sub></html>''')
         self.correlation_treeWidget.setHeaderItem(model_label)
         cheader = self.correlation_treeWidget.header()
         cheader.setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
@@ -122,10 +132,10 @@ class GMX_MMPBSA_ANA(QMainWindow):
         self.data_table_widget.setHorizontalHeaderLabels(['System', 'Exp.ΔG'])
         self.data_table_energy_col = QTableWidgetItem('None')
         self.data_table_widget.setHorizontalHeaderItem(2, self.data_table_energy_col)
-        self.data_table_widget.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
+        self.data_table_widget.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
         self.data_table_widget.horizontalHeader().setStretchLastSection(True)
 
-        self.corr_container_widget = QSplitter(Qt.Vertical)
+        self.corr_container_widget = QSplitter(Qt.Orientation.Vertical)
         self.corr_container_widget.addWidget(self.correlation_treeWidget)
         self.corr_container_widget.addWidget(self.data_table_widget)
         self.correlation_DockWidget.setWidget(self.corr_container_widget)
@@ -597,7 +607,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
             self.correlation_DockWidget.hide()
             return
 
-        df = make_corr_DF(self.corr_data) # FIXME:
+        df = make_corr_DF(self.corr_data)  # FIXME:
         # get df for each model
         models = ['gb', 'pb', 'rism std', 'rism gf']
         columns = ['ΔH', 'ΔH+IE', 'ΔH+NMODE', 'ΔH+QH']
