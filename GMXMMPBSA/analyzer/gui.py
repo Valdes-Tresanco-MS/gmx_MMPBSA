@@ -62,17 +62,6 @@ class GMX_MMPBSA_ANA(QMainWindow):
         self.mdi.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.setCentralWidget(self.mdi)
 
-        self.menubar = self.menuBar()
-        # self.opendirAct = QAction("Open gmx_MMPBSA Dir...", self)
-        # self.opendirAct.triggered.connect(self.getInfoFile)
-        self.fileMenu = self.menuBar().addMenu("&File")
-        # self.fileMenu.addAction(self.opendirAct)
-        self.fileMenu.addAction('Close All..', self.mdi.closeAllSubWindows)
-        self.viewMenu = self.menuBar().addMenu("&View")
-        self.viewMenu.addAction('Tile SubWindows', self.mdi.tileSubWindows)
-        self.viewMenu.addAction('Cascade SubWindows', self.mdi.cascadeSubWindows)
-        self.statusbar = self.statusBar()
-
         self.treeDockWidget = QDockWidget('Data', self)
         self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.treeDockWidget)
 
@@ -140,7 +129,55 @@ class GMX_MMPBSA_ANA(QMainWindow):
         self.corr_container_widget.addWidget(self.data_table_widget)
         self.correlation_DockWidget.setWidget(self.corr_container_widget)
 
+        self.menubar = self.menuBar()
+        # self.opendirAct = QAction("Open gmx_MMPBSA Dir...", self)
+        # self.opendirAct.triggered.connect(self.getInfoFile)
+        self.fileMenu = self.menuBar().addMenu("&File")
+        # self.fileMenu.addAction(self.opendirAct)
+        self.fileMenu.addAction('Close All..', self.mdi.closeAllSubWindows)
+        self.viewMenu = self.menuBar().addMenu("&View")
+        self.viewMenu.addAction('Show Data', self.treeDockWidget.show)
+        self.viewMenu.addAction('Show Correlation', self.correlation_DockWidget.show)
+        self.viewMenu.addAction('Show Options', self.optionDockWidget.show)
+        self.viewMenu.addSeparator()
+        self.viewMenu.addAction('Tile SubWindows', self.mdi.tileSubWindows)
+        self.viewMenu.addAction('Cascade SubWindows', self.mdi.cascadeSubWindows)
+        self.aboutMenu = self.menuBar().addMenu("&About")
+        self.aboutMenu.addAction('Help', self._help)
+        self.aboutMenu.addAction('Documentation', self.treeDockWidget.show)
+        self.aboutMenu.addAction('Report a bug', self.treeDockWidget.show)
+        self.aboutMenu.addAction('Google group', self.treeDockWidget.show)
+        self.aboutMenu.addAction('About gmx_MMPBSA', self._about_dialog)
+        self.statusbar = self.statusBar()
+
+
         self.init_dialog = InitDialog(self)
+
+    def _about_dialog(self):
+        from GMXMMPBSA import __version__
+        QMessageBox.about(self, "About gmx_MMPBSA",
+                          "<h2>About gmx_MMPBSA</h2>"
+                          "<b>gmx_MMPBSA</b> is a new tool based on AMBER's MMPBSA.py aiming to perform end-state free "
+                          "energy calculations with GROMACS files.<br><br>"
+                          f"<b>Version:</b> {__version__}"
+                          "<h2>Cite gmx_MMPBSA</h2>"
+                          "Valdés-Tresanco, M.S., Valdés-Tresanco, M.E., Valiente, P.A. and Moreno E. "
+                          "gmx_MMPBSA: A New Tool to Perform End-State Free Energy Calculations with GROMACS. "
+                          "Journal of Chemical Theory and Computation, 2021 17 (10), 6281-6291. "
+                          "<a href='https://pubs.acs.org/doi/10.1021/acs.jctc.1c00645'>"
+                          "https://pubs.acs.org/doi/10.1021/acs.jctc.1c00645</a>")
+
+    def _help(self):
+        QDesktopServices().openUrl(QUrl('https://valdes-tresanco-ms.github.io/gmx_MMPBSA/analyzer/'))
+
+    def _doc(self):
+        QDesktopServices().openUrl(QUrl('https://valdes-tresanco-ms.github.io/gmx_MMPBSA/'))
+
+    def _bug(self):
+        QDesktopServices().openUrl(QUrl('https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/issues/new/choose'))
+
+    def _group(self):
+        QDesktopServices().openUrl(QUrl('https://groups.google.com/g/gmx_mmpbsa'))
 
     def _initialize_systems(self):
 
