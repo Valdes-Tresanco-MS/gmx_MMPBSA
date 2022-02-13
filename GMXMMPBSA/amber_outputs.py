@@ -1574,13 +1574,16 @@ class DecompBinding(dict):
         if csvwriter:
             self.csvwriter = {}
             for tok in self.allowed_tokens:
-                self.csvwriter[tok] = writer(open(csvwriter + '.' + tok + '.csv', 'w'))
+                self.csvwriter[tok] = writer(open(f'{csvwriter}.{tok}.csv', 'w'))
                 self.csvwriter[tok].writerow([DecompOut.descriptions[tok]])
                 self._write_header(self.csvwriter[tok])
         else:
             self.csvwriter = None
         for token in self.allowed_tokens:
             self[token] = {}
+
+        # Parse everything
+        self._parse_all_begin()
 
     def _write_header(self, csvwriter):
         """ Writes the header to the CSV file (legend at top of chart) """
@@ -1611,25 +1614,20 @@ class DecompBinding(dict):
                     f += self.com.INPUT['interval']
 
     def summary(self, output_format: str = 'ascii'):
-        # Parse everything
-        self._parse_all_begin()
 
         _output_format = 0 if output_format == 'ascii' else 1
         text = []
         if _output_format:
             text.extend([[idecompString[self.idecomp]], [self.desc], []])
         else:
-            text.append(idecompString[self.idecomp])
-            text.append(self.desc)
+            text.extend((idecompString[self.idecomp], self.desc))
         if self.verbose > 1:
             if _output_format:
                 text.extend(self.com.summary(output_format))
                 text.extend(self.rec.summary(output_format))
                 text.extend(self.lig.summary(output_format))
             else:
-                text.append(self.com.summary())
-                text.append(self.rec.summary())
-                text.append(self.lig.summary())
+                text.extend((self.com.summary(), self.rec.summary(), self.lig.summary()))
         if _output_format:
             text.append(['DELTAS:'])
         else:
@@ -1731,26 +1729,20 @@ class PairDecompBinding(DecompBinding):
                     f += self.com.INPUT['interval']
 
     def summary(self, output_format: str = 'ascii'):
-        # Parse everything
-        self._parse_all_begin()
 
         _output_format = 0 if output_format == 'ascii' else 1
         text = []
         if _output_format:
             text.extend([[idecompString[self.idecomp]], [self.desc], []])
         else:
-            text.append(idecompString[self.idecomp])
-            text.append(self.desc)
-            text.append('')
+            text.extend((idecompString[self.idecomp], self.desc, ''))
         if self.verbose > 1:
             if _output_format:
                 text.extend(self.com.summary(output_format))
                 text.extend(self.rec.summary(output_format))
                 text.extend(self.lig.summary(output_format))
             else:
-                text.append(self.com.summary())
-                text.append(self.rec.summary())
-                text.append(self.lig.summary())
+                text.extend((self.com.summary(), self.rec.summary(), self.lig.summary()))
         if _output_format:
             text.append(['DELTAS:'])
         else:
