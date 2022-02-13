@@ -737,29 +737,11 @@ class GMX_MMPBSA_ANA(QMainWindow):
             # self.normalitem.setExpanded(True)
 
         classif_item = CustomItem(sys_item, ['Decomposition'])
-
-        # if self.systems[sys_index]['namespace'].INPUT['mutant_only']:
-        #     self.mutantitem = CustomItem(sys_item, ['Mutant'])
-        #     self.makeItems(sys_index, 'mutant', self.mutantitem, options, 1)
-        #     self.mutantitem.setExpanded(True)
-
-            # self.mut_norm_item = CustomItem(sys_item, ['Mutant-Normal'])
-            #
-            # norm_data = self.systems[sys_index]['data']
-            # mut_data = self.systems[sys_index]['data'].mutant
-            # delta_data = self.systems[sys_index]['data'].delta = {}
-            # for x, y in zip(norm_data, mut_data):
-            #     if x in ['ie', 'c2']:
-            #         continue
-            #     elif x == 'decomp':
-            #         continue
-            #     else:
-            #         delta_data[x] = mut_data[x] - norm_data[x]
-            #     # if isinstance(x, pandas.DataFrame):
-            #     #     self.systems[sys_index]['data'].delta = {x: }
-            #
-            # self.makeItems(sys_index, self.mut_norm_item, options, mutant=2)
-            # self.mut_norm_item.setExpanded(True)
+        for part in ['decomp_normal', 'decomp_mutant']:
+            if part not in self.systems[sys_index]['data']:
+                continue
+            self.makedecompItems(sys_index, part, classif_item)
+            self.setting_item_data(sys_index, part)
 
         sys_item.setExpanded(True)
 
@@ -836,7 +818,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
             cont['bar_plot_data'] = [data, dict(groups=self._itemdata_properties(data)), change]
             print('@#@#', cont['bar_plot_data'])
         elif level == 2:
-            tempdf = data.loc[data.columns.get_level_values(1) == 'tot']
+            tempdf = data.loc[:, data.columns.get_level_values(1) == 'tot']
             bar_plot_data = tempdf.droplevel(level=1, axis=1)
             cont['bar_plot_data'] = [bar_plot_data, dict(groups=self._itemdata_properties(bar_plot_data)), change]
             cont['line_plot_data'] = [bar_plot_data.sum(axis=1), {}, change]
@@ -846,10 +828,10 @@ class GMX_MMPBSA_ANA(QMainWindow):
         elif level == 3:
             # Select only the "tot" column, remove the level, change first level of columns to rows and remove the mean
             # index
-            tempdf = data.loc[data.columns.get_level_values(2) == 'tot']
+            tempdf = data.loc[:, data.columns.get_level_values(2) == 'tot']
             cont['heatmap_plot_data'] = [
                 tempdf.aggregate(["mean"]).droplevel(level=2, axis=1).stack().droplevel(level=0), {}, change]
-            bar_plot_data = tempdf.sum(axis=1, level=0)
+            bar_plot_data = tempdf.groupby(axis=1, level=0, sort=False).sum()
             cont['bar_plot_data'] = [bar_plot_data, dict(groups=self._itemdata_properties(bar_plot_data)), change]
             cont['line_plot_data'] = [bar_plot_data.sum(axis=1), {}, change]
             del tempdf
@@ -914,130 +896,6 @@ class GMX_MMPBSA_ANA(QMainWindow):
                                                keys_path=(part, level, (level1, level2))
                                                )
                             self.items_counter['charts'] += 1
-
-            # elif level == 'decomp':
-            #     # omit decomp data
-            #     if not options['decomposition']:
-            #         continue
-            #     titem = CustomItem(sys_item, [level.upper()])
-            #     for level1 in data[level]:
-            #         # GB or PB
-            #         dat = data[level][level1]
-            #         item = CustomItem(titem, [level1.upper()])
-            #         str_dict = multiindex2dict(dat.columns)
-            #         # Complex, receptor, ligand and delta
-            #         for level2 in str_dict:
-            #             if level2 not in parts:
-            #                 continue
-            #             item2 = CustomItem(item, [level2.upper()])
-            #             # TDC, SDC, BDC
-            #             item_lvl = 2 if namespace.INPUT['idecomp'] in [1, 2] else 3
-            #             title = '[Per-residue]' if namespace.INPUT['idecomp'] in [1, 2] else '[Per-wise]'
-            #             for level3 in str_dict[level2]:
-            #                 item3 = CustomItem(
-            #                     item2,
-            #                     [level3.upper()],
-            #                     data=dat[(level2, level3)],
-            #                     app=self,
-            #                     level=item_lvl,
-            #                     buttons=(1, 2, 3, 4),
-            #                     chart_title=f"Energetic Components {title}",
-            #                     chart_subtitle=f"{mut_pre}{sys_name} | "
-            #                                    f"{str(level).upper()} | "
-            #                                    f"{str(level1).upper()} | "
-            #                                    f"{str(level2).upper()} | "
-            #                                    f"{str(level3).upper()}"
-            #                 )
-            #                 item3.properties['scalable'] = dat[(level2, level3)].gt(300).any().any()
-            #                 item3.properties['groups'] = self._itemdata_properties(dat[(level2, level3)], decomp=True)
-            #                 # # residue first level
-            #                 btns = (2,) if namespace.INPUT['idecomp'] in [1, 2] else (1, 2, 3)
-            #                 item_lvl2 = 1 if namespace.INPUT['idecomp'] in [1, 2] else 2
-            #
-            #                 for level4 in str_dict[level2][level3]:
-            #                     item4 = CustomItem(
-            #                         item3,
-            #                         [level4.upper()],
-            #                         data=dat[(level2, level3, level4)],
-            #                         app=self,
-            #                         level=item_lvl2,
-            #                         buttons=btns,
-            #                         chart_title="Energetic Components",
-            #                         chart_subtitle=f"{mut_pre}{sys_name} | "
-            #                                        f"{str(level).upper()} | "
-            #                                        f"{str(level1).upper()} | "
-            #                                        f"{str(level2).upper()} | "
-            #                                        f"{str(level3).upper()} | "
-            #                                        f"{str(level4).upper()}"
-            #                     )
-            #                     item4.properties['scalable'] = dat[(level2, level3, level4)].gt(300).any().any()
-            #                     # energetics terms
-            #                     for level5 in str_dict[level2][level3][level4]:
-            #                         if namespace.INPUT['idecomp'] in [1, 2]:
-            #                             item5 = CustomItem(item4, [level5.upper()],
-            #                                                data=dat[(level2, level3, level4, level5)], app=self,
-            #                                                buttons=(1,),
-            #                                                chart_title="Energetic Components [Per-residue]",
-            #                                                chart_subtitle=f"{mut_pre}{sys_name} | "
-            #                                                               f"{str(level).upper()} | "
-            #                                                               f"{str(level1).upper()} | "
-            #                                                               f"{str(level2).upper()} | "
-            #                                                               f"{str(level3).upper()} | "
-            #                                                               f"{str(level4).upper()} | "
-            #                                                               f"{str(level5).upper()}"
-            #                                                )
-            #                             self.items_counter['charts'] += 1
-            #                         else:
-            #                             item5 = CustomItem(item4, [level5.upper()],
-            #                                                data=dat[(level2, level3, level4, level5)], app=self,
-            #                                                level=1, buttons=(2,))
-            #                             self.items_counter['charts'] += 1
-            #                             # energetics terms
-            #                             for level6 in str_dict[level2][level3][level4][level5]:
-            #                                 item6 = CustomItem(
-            #                                     item5,
-            #                                     [level6.upper()],
-            #                                     data=dat[(level2, level3, level4, level5, level6)],
-            #                                     app=self,
-            #                                     buttons=(1,),
-            #                                     chart_title="Energetic Components [Per-wise]",
-            #                                     chart_subtitle=f"{mut_pre}{sys_name} | "
-            #                                                    f"{str(level).upper()} | "
-            #                                                    f"{str(level1).upper()} | "
-            #                                                    f"{str(level2).upper()} | "
-            #                                                    f"{str(level3).upper()} | "
-            #                                                    f"{str(level4).upper()} | "
-            #                                                    f"{str(level5).upper()} | "
-            #                                                    f"{str(level6).upper()}"
-            #                                 )
-            #                                 self.items_counter['charts'] += 1
-            #                     self.items_counter['charts'] += 1
-            #                 self.items_counter['charts'] += 1
-            #             self.items_counter['charts'] += 1
-            #         self.items_counter['charts'] += 1
-            #     self.items_counter['charts'] += 1
-            # elif level == 'ie':
-            #     titem = CustomItem(sys_item, [level.upper()])
-            #
-            #     for level1 in data[level]:
-            #         dat = data[level][level1]
-            #         item1 = CustomItem(
-            #             titem,
-            #             [level1.upper()],
-            #             data=dat['data']['data'],
-            #             app=self,
-            #             level=0,
-            #             item_type='ie',
-            #             buttons=(1,),
-            #             iec2_data={'sigma': dat['sigma'], 'frames': dat['ieframes']},
-            #             chart_title="Interaction Entropy",
-            #             chart_subtitle=f"{mut_pre}{sys_name} | {level.upper()} | {level1.upper()}"
-            #         )
-            #         # for level2 in dat:
-            #         # item2 = CustomItem(titem, [level2.upper()], data=dat[level2], app=self, level=1,
-            #         #                        buttons=(1,), iec2_frames=dat[])
-
-        # for level in data:
                 elif level == 'c2':
                     titem = CustomItem(top_item, [level.upper()])
                     str_dict = multiindex2dict(data[level].columns)
@@ -1047,7 +905,6 @@ class GMX_MMPBSA_ANA(QMainWindow):
                                     [level1.upper()],
                                     app=self,
                                     buttons=(2,),
-                                    # iec2_data={'sigma': dat['sigma'], 'frames': dat['ieframes']},
                                     title="C2 Entropy",
                                     subtitle=f"{sys_name} ({part.capitalize()}) | {level.upper()} | {level1.upper()}",
                                     keys_path=(part, level, (level1,))
@@ -1061,7 +918,6 @@ class GMX_MMPBSA_ANA(QMainWindow):
                             [level1.upper()],
                             app=self,
                             buttons=(1,),
-                            # iec2_data={'sigma': dat['sigma'], 'frames': dat['ieframes']},
                             title="Interaction Entropy",
                             subtitle=f"{sys_name} ({part.capitalize()}) | {level.upper()} | {level1.upper()}",
                             keys_path=(part, level, (level1,))
@@ -1074,13 +930,102 @@ class GMX_MMPBSA_ANA(QMainWindow):
                             [level1.upper()],
                             app=self,
                             buttons=(2,),
-                            # iec2_data={'sigma': dat['sigma'], 'frames': dat['ieframes']},
                             title="Binding Energy",
-                            subtitle=f"{sys_name} ({part.capitalize()}) | {level.upper()} | {level1.upper()}",
+                            subtitle=f"{sys_name} ({part.capitalize()}) | ΔG | {level1.upper()}",
                             keys_path=(part, level, (level1,))
                         )
-        # for level in data:
 
+    def makedecompItems(self, sys_index, part, classif_item):
+        sys_name = self.systems[sys_index]['name']
+        data = self.systems[sys_index]['data'][part]
+        namespace = self.systems[sys_index]['namespace']
+        top_item = CustomItem(classif_item, [part.capitalize()])
+        top_item.setExpanded(True)
+        parts = self.systems[sys_index]['options']['components'] + ['delta']
+        if namespace.FILES.stability:
+            parts.append('complex')
+
+        for level in ['gb', 'pb']:
+            if level in data:
+                titem = CustomItem(top_item, [level.upper()])
+                titem.setExpanded(True)
+
+                str_dict = multiindex2dict(data[level].columns)
+                for level1 in str_dict:
+                    if level1 not in parts:
+                        continue
+                    item1 = CustomItem(titem, [level1.upper()])
+                    for level2 in str_dict[level1]:
+                        title = '[Per-residue]' if namespace.INPUT['idecomp'] in [1, 2] else '[Per-wise]'
+                        item2 = CustomItem(item1,
+                                           [level2.upper()],
+                                           app=self,
+                                           buttons=(1, 2, 3, 4),
+                                           title=f"Energetic Components {title}",
+                                           subtitle=f"{sys_name} ({part.capitalize()}) | {level.upper()} | "
+                                                    f"{level1.upper()} | {level2.upper()}",
+                                           keys_path=(part, level, (level1, level2))
+                                           )
+                        self.items_counter['charts'] += 1
+                        # residue first level
+                        btns = (2,) if namespace.INPUT['idecomp'] in [1, 2] else (1, 2, 3)
+                        for level3 in str_dict[level1][level2]:
+
+                            item3 = CustomItem(item2,
+                                               [level3.upper()],
+                                               app=self,
+                                               buttons=btns,
+                                               # title=f"Energetic Components {title}",
+                                               # subtitle=f"{sys_name} ({part}) | "
+                                               #                f"{str(level).upper()} | "
+                                               #                f"{str(level1).upper()} | "
+                                               #                f"{str(level2).upper()} | "
+                                               #                f"{str(level3).upper()}"
+                                               keys_path=(part, level, (level1, level2, level3))
+                                               )
+                            # residue first level
+                            #             btns = (2,) if namespace.INPUT['idecomp'] in [1, 2] else (1, 2, 3)
+                            for level4 in str_dict[level1][level2][level3]:
+                                if namespace.INPUT['idecomp'] in [1, 2]:
+                                    item5 = CustomItem(item3,
+                                                       [level4.upper()],
+                                                       app=self,
+                                                       buttons=(1,),
+                                                       title="Energetic Components [Per-residue]",
+                                                       subtitle=f"{sys_name} ({part})| "
+                                                                      f"{str(level).upper()} | "
+                                                                      f"{str(level1).upper()} | "
+                                                                      f"{str(level2).upper()} | "
+                                                                      f"{str(level3).upper()} | "
+                                                                      f"{str(level4).upper()}",
+                                                       keys_path=(part, level, (level1, level2, level3, level4))
+                                                       )
+                                    self.items_counter['charts'] += 1
+                                else:
+                                    item4 = CustomItem(item3,
+                                                       [level4.upper()],
+                                                       app=self,
+                                                       buttons=(2,),
+                                                       keys_path=(part, level, (level1, level2, level3, level4))
+                                                       )
+                                    self.items_counter['charts'] += 1
+                                    # energetics terms
+                                    for level5 in str_dict[level1][level2][level3][level4]:
+                                        item5 = CustomItem(item4,
+                                                           [level5.upper()],
+                                                           app=self,
+                                                           buttons=(1,),
+                                                           title="Energetic Components [Per-wise]",
+                                                           subtitle=f"{sys_name} ({part}) | "
+                                                                    f"{str(level).upper()} | "
+                                                                    f"{str(level1).upper()} | "
+                                                                    f"{str(level2).upper()} | "
+                                                                    f"{str(level3).upper()} | "
+                                                                    f"{str(level4).upper()} | "
+                                                                    f"{str(level5).upper()}",
+                                                           keys_path=(
+                                                           part, level, (level1, level2, level3, level4, level5))
+                                                           )
 
     def setting_item_data(self, sys_index, part, comp=('all')):
         correlation_data = self.corr_data
@@ -1118,18 +1063,61 @@ class GMX_MMPBSA_ANA(QMainWindow):
                     for level1 in str_dict:
                         if level1 not in parts:
                             continue
-                        self.systems[sys_index]['items_data'][(part, level, (level1,))] = self._setup_data(
-                            data[level][(level1,)], level=1)
+                        if not part.startswith('decomp'):
+                            self.systems[sys_index]['items_data'][(part, level, (level1,))] = self._setup_data(
+                                    data[level][(level1,)], level=1)
                         for level2 in str_dict[level1]:
                             # if self._remove_empty(data[level][(level1, level2)], options, namespace):
                             #     del data[level][(level1, level2)]
                             #     continue
+                            if not part.startswith('decomp'):
+                                temp_dat = data[level][(level1, level2)]
+                                temp_dat.name = level2
+                                self.systems[sys_index]['items_data'][(part, level, (level1, level2))] = self._setup_data(
+                                    temp_dat)
+                                del temp_dat
+                            else:
+                                item_lvl = 2 if namespace.INPUT['idecomp'] in [1, 2] else 3
+                                temp_dat = data[level][(level1, level2)]
+                                temp_dat.name = level2
+                                self.systems[sys_index]['items_data'][(part, level, (level1, level2))] = \
+                                    self._setup_data(temp_dat, level=item_lvl)
+                                del temp_dat
+                                # residue first level
+                                btns = (2,) if namespace.INPUT['idecomp'] in [1, 2] else (1, 2, 3)
+                                for level3 in str_dict[level1][level2]:
+                                    item_lvl2 = 1 if namespace.INPUT['idecomp'] in [1, 2] else 2
+                                    temp_dat = data[level][(level1, level2, level3)]
+                                    temp_dat.name = level3
+                                    self.systems[sys_index]['items_data'][(part, level, (level1, level2, level3))] = \
+                                        self._setup_data(temp_dat, level=item_lvl2)
+                                    del temp_dat
+                                    # residue first level
+                                    #             btns = (2,) if namespace.INPUT['idecomp'] in [1, 2] else (1, 2, 3)
+                                    for level4 in str_dict[level1][level2][level3]:
+                                        temp_dat = data[level][(level1, level2, level3, level4)]
+                                        temp_dat.name = level4
+                                        if namespace.INPUT['idecomp'] in [1, 2]:
+                                            self.systems[sys_index]['items_data'][
+                                                (part, level, (level1, level2, level3, level4))] = \
+                                                self._setup_data(temp_dat)
+                                            del temp_dat
+                                        else:
+                                            self.systems[sys_index]['items_data'][
+                                                (part, level, (level1, level2, level3, level4))] = \
+                                                self._setup_data(temp_dat, level=1)
+                                            del temp_dat
+                                            # energetics terms
+                                            for level5 in str_dict[level1][level2][level3][level4]:
+                                                temp_dat = data[level][(level1, level2, level3, level4, level5)]
+                                                temp_dat.name = level5
+                                                self.systems[sys_index]['items_data'][
+                                                    (part, level, (level1, level2, level3, level4, level5))] = \
+                                                    self._setup_data(temp_dat)
+                                                del temp_dat
 
-                            temp_dat = data[level][(level1, level2)]
-                            temp_dat.name = level2
-                            self.systems[sys_index]['items_data'][(part, level, (level1, level2))] = self._setup_data(
-                                temp_dat)
-                            del temp_dat
+
+
                 elif level == 'c2':
                     str_dict = multiindex2dict(data[level].columns)
                     for level1 in str_dict:

@@ -122,7 +122,7 @@ class ChartsBase(QMdiSubWindow):
         self.mpl_toolbar = NavigationToolbar(self.figure_canvas, self)
         self.mpl_toolbar.setVisible(self.options['General', 'toolbar'])
 
-        self.mainwidgetmdi.addToolBar(Qt.BottomToolBarArea, self.mpl_toolbar)
+        self.mainwidgetmdi.addToolBar(Qt.ToolBarArea.BottomToolBarArea, self.mpl_toolbar)
 
         self.fbtn = QPushButton(self.style().standardIcon(QStyle.SP_FileDialogDetailedView), '',
                                 self.figure_canvas)
