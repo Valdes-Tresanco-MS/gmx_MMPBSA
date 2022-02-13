@@ -55,17 +55,17 @@ class CorrelationItem(QTreeWidgetItem):
 
 class CustomItem(QTreeWidgetItem):
     def __init__(self, parent, stringlist, app=None, title='Binding Free Energy', subtitle='', system_index=1,
-                 iec2_data=None, buttons=(), keys_path=None):
+                 buttons=(), keys_path=None, part=''):
         super(CustomItem, self).__init__(parent, stringlist)
 
         self.system_index = system_index
         self.app = app
         self.title = title
-        self.subtitle = subtitle
+        self.subtitle = f'({part.capitalize()}) {subtitle}' if part else subtitle
         self.item_name = stringlist[0]
         self.buttons = buttons
-        self.iec2_data = iec2_data
         self.properties = {}
+        self.part = part
 
         self.keys_path = keys_path
 
@@ -456,7 +456,7 @@ class CustomItem(QTreeWidgetItem):
         com_pdb = self.app.systems[self.system_index]['namespace'].INFO['COM_PDB']
         bfactor_pml = self.app.systems[self.system_index]['path'].parent.joinpath('bfactor.pml')
         output_path = self.app.systems[self.system_index]['path'].parent.joinpath(
-            f"{self.app.systems[self.system_index]['name']}_energy2bfactor.pdb")
+            f"{self.app.systems[self.system_index]['name']}_{self.part}_energy2bfactor.pdb")
         qpd = QProgressDialog('Generate modified pdb and open it in PyMOL', 'Abort', 0, 2, self.app)
         qpd.setWindowModality(Qt.WindowModality.WindowModal)
         qpd.setMinimumDuration(1500)
