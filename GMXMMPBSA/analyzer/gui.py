@@ -31,6 +31,7 @@ from GMXMMPBSA.analyzer.dialogs import InitDialog
 from GMXMMPBSA.analyzer.customitem import CustomItem, CorrelationItem
 from GMXMMPBSA.analyzer.utils import energy2pdb_pml, ki2energy, make_corr_DF, multiindex2dict
 from GMXMMPBSA.analyzer.chartsettings import ChartSettings
+from GMXMMPBSA.analyzer.parametertree import ParameterTree, Parameter
 import math
 import numpy as np
 
@@ -48,6 +49,7 @@ def run(infofile):
 class GMX_MMPBSA_ANA(QMainWindow):
     def __init__(self):
         super(GMX_MMPBSA_ANA, self).__init__()
+        self.showMaximized()
         self.corr_data = {'mutant': {}}
 
         self.systems = {}
@@ -57,7 +59,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
         self.items_counter = {'charts': 0, 'pymol': [], 'bars': 0, 'line': 0, 'heatmap': 0}
 
         self.mdi = QMdiArea(self)
-        self.mdi.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.mdi.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.setCentralWidget(self.mdi)
 
         self.menubar = self.menuBar()
@@ -72,26 +74,25 @@ class GMX_MMPBSA_ANA(QMainWindow):
         self.statusbar = self.statusBar()
 
         self.treeDockWidget = QDockWidget('Data', self)
-        self.addDockWidget(Qt.RightDockWidgetArea, self.treeDockWidget)
+        self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.treeDockWidget)
 
         self.correlation_DockWidget = QDockWidget('Correlations', self)
-        self.addDockWidget(Qt.RightDockWidgetArea, self.correlation_DockWidget)
+        self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.correlation_DockWidget)
+
+        self.optionDockWidget = QDockWidget('Options', self)
+        self.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.optionDockWidget)
 
         self.treeWidget = QTreeWidget(self)
         self.treeWidget.setMinimumWidth(380)
-        self.treeWidget.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.treeWidget.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         # self.treeWidget.customContextMenuRequested.connect(self.data_context_menu)
         self.treeWidget.itemSelectionChanged.connect(self.update_system_selection)
 
         self._make_options_panel()
 
-        self.data_container = QSplitter(Qt.Vertical)
-        self.data_container.addWidget(self.treeWidget)
-        self.data_container.addWidget(self.optionWidget)
-        self.data_container.setStretchFactor(0, 10)
-        # self.data_container.setStretchFactor(1, 1)
+        self.treeDockWidget.setWidget(self.treeWidget)
+        self.optionDockWidget.setWidget(self.optionWidget)
 
-        self.treeDockWidget.setWidget(self.data_container)
         sys_label = QTreeWidgetItem(['System', 'Charts'])
         sys_label.setToolTip(0, 'System')
         sys_label.setToolTip(1, 'Charts')
@@ -170,21 +171,17 @@ class GMX_MMPBSA_ANA(QMainWindow):
 
         self.optionWidget = QWidget(self)
         optionWidget_l = QVBoxLayout(self.optionWidget)
-        optionWidget_l.setContentsMargins(0, 0, 0, 0)
-        # optionWidget_l.addLayout(self.btn_l)
-        hl = QFrame()
-        hl.setFrameShape(QFrame.HLine)
-        hl.setFrameShadow(QFrame.Sunken)
-        optionWidget_l.addWidget(hl)
 
-        update_btn = QPushButton('Update')
-        update_btn.clicked.connect(self.update_fn)
-        resetchart_btn = QPushButton('Reset')
-        btn_l = QHBoxLayout()
-        btn_l.addWidget(QLabel('Options'))
-        btn_l.addWidget(resetchart_btn)
-        btn_l.addWidget(update_btn)
-        optionWidget_l.addLayout(btn_l)
+        conf_menu = QMenu()
+        conf_menu.setTitle('Option configuratio')
+        self.default_action = conf_menu.addAction('Set as default')
+        self.import_action = conf_menu.addAction('Import')
+        # self.line_table_action.toggled.connect(self._show_line_table)
+
+        self.options_conf_btn = QToolButton()
+        self.options_conf_btn.setIcon(self.style().standardIcon(QStyle.SP_DriveFDIcon))
+        self.options_conf_btn.setPopupMode(QToolButton.InstantPopup)
+        self.options_conf_btn.setMenu(conf_menu)
 
         selection_group = QGroupBox('Selection')
         selection_group_layout = QHBoxLayout(selection_group)
@@ -203,13 +200,23 @@ class GMX_MMPBSA_ANA(QMainWindow):
 
         optionWidget_c = QTabWidget(self)
         optionWidget_l.addWidget(optionWidget_c)
+        optionWidget_c.setCornerWidget(self.options_conf_btn)
 
-        frames_w = QTabWidget(optionWidget_c)
-        frames_w.setTabPosition(QTabWidget.TabPosition.South)
+        # Charts options
+        self.chart_options_param = Parameter().create()
+        self.chart_options_w = ParameterTree()
+
+        # properties_w.setParameters(p, showTop=False)
+        # charts_options_w = QWidget()
+        optionWidget_c.addTab(self.chart_options_w, 'Charts Options')
+
+
+        frames_w = QWidget(optionWidget_c)
         optionWidget_c.addTab(frames_w, 'Frames')
+        frames_l = QVBoxLayout(frames_w)
 
-        frames_group = QWidget()
-
+        frames_group = QGroupBox('Energy')
+        frames_l.addWidget(frames_group)
         self.eframes_start_sb = QSpinBox()
         # self.eframes_start_sb.setRange(1, 10000)
         self.eframes_start_sb.setAccelerated(True)
@@ -224,13 +231,9 @@ class GMX_MMPBSA_ANA(QMainWindow):
         self.numframes_le.setReadOnly(True)
 
         fg_l1 = QFormLayout()
-        # fg_l1.setContentsMargins(5, 5, 5, 5)
-        # fg_l1.setSpacing(3)
         fg_l1.addRow('Start', self.eframes_start_sb)
         fg_l1.addRow('End', self.eframes_end_sb)
         fg_l2 = QFormLayout()
-        # fg_l2.setContentsMargins(5, 5, 5, 5)
-        # fg_l2.setSpacing(3)
         fg_l2.addRow('Interval', self.eframes_inter_sb)
         fg_l2.addRow('Nr. frames', self.numframes_le)
 
@@ -238,10 +241,10 @@ class GMX_MMPBSA_ANA(QMainWindow):
         frames_group_l.addLayout(fg_l1, 1)
         frames_group_l.addLayout(fg_l2, 1)
 
-        frames_w.addTab(frames_group, 'Energy')
-        frames_w.setTabToolTip(0, 'Frames defined for all energy calculations')
+        frames_l.addWidget(frames_group)
+        # frames_w.setTabToolTip(0, 'Frames defined for all energy calculations')
 
-        nmframes_group = QWidget()
+        nmframes_group = QGroupBox('nmode')
         self.nmframes_start_sb = QSpinBox()
         # self.eframes_start_sb.setRange(1, 10000)
         self.nmframes_start_sb.setAccelerated(True)
@@ -270,10 +273,10 @@ class GMX_MMPBSA_ANA(QMainWindow):
         nmframes_group_l.addLayout(nmfg_l1, 1)
         nmframes_group_l.addLayout(nmfg_l2, 1)
 
-        frames_w.addTab(nmframes_group, 'NMODE')
-        frames_w.setTabToolTip(2, 'Frames defined for NMODE calculation')
-
-        ieframes_group = QWidget()
+        frames_l.addWidget(nmframes_group)
+        # frames_w.setTabToolTip(2, 'Frames defined for NMODE calculation')
+        #
+        ieframes_group = QGroupBox('IE')
 
         self.iesegment_sb = QSpinBox()
         self.iesegment_sb.setRange(1, 100)
@@ -284,22 +287,31 @@ class GMX_MMPBSA_ANA(QMainWindow):
         self.ienumframes_le.setReadOnly(True)
 
         ie_l = QFormLayout(ieframes_group)
-        # ie_l.setContentsMargins(5, 5, 5, 5)
-        # ie_l.setSpacing(3)
         ie_l.addRow('Segment', self.iesegment_sb)
         ie_l.addRow('Nr. frames', self.ienumframes_le)
 
-        frames_w.addTab(ieframes_group, 'IE')
+        frames_l.addWidget(ieframes_group)
+        frames_l.addStretch(1)
 
-        # Charts options
-        from GMXMMPBSA.analyzer.parametertree import ParameterTree, Parameter
-        # from GMXMMPBSA.analyzer.propertyeditor import p
-        self.chart_options_param = Parameter().create()
-        self.chart_options_w = ParameterTree()
 
-        # properties_w.setParameters(p, showTop=False)
-        # charts_options_w = QWidget()
-        optionWidget_c.addTab(self.chart_options_w, 'Charts Options')
+
+        update_btn = QPushButton('Update')
+        update_btn.clicked.connect(self.update_fn)
+        resetchart_btn = QPushButton('Reset')
+
+        btn_l = QHBoxLayout()
+        btn_l.addWidget(resetchart_btn)
+        btn_l.addWidget(update_btn)
+        optionWidget_l.addLayout(btn_l)
+
+        optionWidget_c.currentChanged.connect(self._control_options_config)
+
+
+    def _control_options_config(self, ind):
+        if ind:
+            self.options_conf_btn.setEnabled(False)
+        else:
+            self.options_conf_btn.setEnabled(True)
 
     def update_system_selection(self):
         if not self.treeWidget.selectedItems():
@@ -309,8 +321,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
         if self.current_system_index == parent_item.system_index:
             return
         while parent_item:
-            next_item = parent_item.parent()
-            if next_item:
+            if next_item := parent_item.parent():
                 parent_item = next_item
             else:
                 break
@@ -360,7 +371,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
         maximum += 1 # close and re-open current active windows
 
         qpd = QProgressDialog('Creating systems tree', 'Abort', 0, maximum, self)
-        qpd.setWindowModality(Qt.WindowModal)
+        qpd.setWindowModality(Qt.WindowModality.WindowModal)
         qpd.setMinimumDuration(0)
         v = 0
         if recalc_energy:
@@ -620,7 +631,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
         self.init_dialog.close()
         max_sixe = queue.qsize()
         qpd = QProgressDialog('Reading output files', 'Abort', 0, max_sixe, self)
-        qpd.setWindowModality(Qt.WindowModal)
+        qpd.setWindowModality(Qt.WindowModality.WindowModal)
         qpd.setMinimumDuration(0)
         # qpd.setRange(0, queue.qsize())
         results = []
@@ -643,7 +654,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
         self.data_options = options
         maximum = len(results)
         qpd = QProgressDialog('Creating systems tree', 'Abort', 0, maximum, self)
-        qpd.setWindowModality(Qt.WindowModal)
+        qpd.setWindowModality(Qt.WindowModality.WindowModal)
         qpd.setMinimumDuration(1000)
 
         for i , c in enumerate(range(maximum), start=1):
@@ -701,6 +712,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
 
         # FIXME: Binding
         classif_item = CustomItem(sys_item, ['ΔH/-TΔS/ΔG'])
+        classif_item.setExpanded(True)
 
         # FIXME: add decomp data
 
