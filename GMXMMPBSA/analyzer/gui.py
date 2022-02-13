@@ -802,21 +802,19 @@ class GMX_MMPBSA_ANA(QMainWindow):
                     groups['Ligand'].append(k[0])
         return groups
 
-    def _setup_data(self, data, ie=False, level=0):
+    def _setup_data(self, data, iec2=False, level=0):
 
         # this variable show if the data changed or not. At first time, it is true, then when plotting become in false
         change = True
 
         cont = {'ie_plot_data': None, 'line_plot_data': None, 'bar_plot_data': None, 'heatmap_plot_data': None}
         if level == 0:
-            options = {'ie': True} if ie else {}
+            options = {'ie': True} if iec2 else {}
             cont['line_plot_data'] = [data, options, change]
-            # if data2:
-            #     cont['ie_plot_data'] = [data2, {}, change]
-
         elif level == 1:
-            cont['bar_plot_data'] = [data, dict(groups=self._itemdata_properties(data)), change]
-            print('@#@#', cont['bar_plot_data'])
+            options = {'c2': True} if iec2 else {}
+            options.update(dict(groups=self._itemdata_properties(data)))
+            cont['bar_plot_data'] = [data, options, change]
         elif level == 2:
             tempdf = data.loc[:, data.columns.get_level_values(1) == 'tot']
             bar_plot_data = tempdf.droplevel(level=1, axis=1)
