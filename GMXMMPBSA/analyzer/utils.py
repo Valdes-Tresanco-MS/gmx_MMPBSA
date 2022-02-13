@@ -115,22 +115,22 @@ class worker(QThread):
                 self.result_queue.put(result)
 
 
-def energy2pdb_pml(residue_list, colors, pml_path: Path, pdb_path: Path):
+def energy2pdb_pml(residue_list, options, pml_path: Path, pdb_path: Path):
     pymol_colors = []
     with open(pml_path, 'w') as bf:
         bf.write(f'load {pdb_path}\n')
-        bf.write('set cartoon_oval_length, 1.0\n')
-        bf.write('set cartoon_rect_length, 1.2\n')
-        bf.write('set cartoon_rect_width, 0.3\n')
-        bf.write('set cartoon_side_chain_helper, 1\n')
-        bf.write('set light_count, 0\n')
-        for c, color in enumerate(colors):
+        bf.write(f"set cartoon_oval_length, {options['cartoon_oval_length']}\n")
+        bf.write(f"set cartoon_rect_length, {options['cartoon_rect_length']}\n")
+        bf.write(f"set cartoon_rect_width, {options['cartoon_rect_width']}\n")
+        bf.write(f"set cartoon_side_chain_helper, {options['cartoon_side_chain_helper']}\n")
+        bf.write(f"set light_count, {options['light_count']}\n")
+        for c, color in enumerate(options['colors']):
             bf.write(f'set_color gmxc{c} = {color}\n')
             pymol_colors.append(f'gmxc{c}')
-        bf.write('set bg_rgb, gray50\n')
+        bf.write(f"set bg_rgb, {options['bg_rgb']}\n")
 
-        minimum = 999
-        maximum = -999
+        minimum = 99999
+        maximum = -99999
         select = {}
         for res, energy in residue_list.items():
             icode = ''
@@ -163,20 +163,25 @@ def energy2pdb_pml(residue_list, colors, pml_path: Path, pdb_path: Path):
         else:
             minimum = -abs(maximum)
 
-        bf.write(f'show sticks, {select_text}\n')
+        bf.write("show cartoon, (all)\n")
+        bf.write(f'select sele_residues, {select_text}\n')
+        if options['representation'] not in ['lines+mesh', 'sticks+mesh', 'lines+dots', 'sticks+dots']:
+            bf.write(f"show {options['representation']}, sele_residues\n")
+        else:
+            bf.write(f"show {options['representation'].split('+')[0]}, sele_residues\n")
+            bf.write(f"show {options['representation'].split('+')[1]}, sele_residues\n")
         bf.write('remove (h. and (e. c extend 1))\n')
         bf.write(f'spectrum b, {" ".join(pymol_colors)}, minimum={minimum}, maximum={maximum}\n')
-        bf.write(f'ramp_new colorbar, none, {np.linspace(minimum, maximum, len(colors)).tolist()}, {pymol_colors}\n')
-        bf.write(f'center {select_text}\n')
-        bf.write(f'orient {select_text}\n')
-        bf.write(f'zoom {select_text}, 15\n')
+        bf.write(f'ramp_new energybar, none, {np.linspace(minimum, maximum, len(pymol_colors)).tolist()},'
+                 f' {pymol_colors}\n')
+        bf.write('center sele_residues\n')
+        bf.write('orient sele_residues\n')
+        bf.write('zoom sele_residues, 15\n')
 
 
 def ki2energy(ki, temp):
     # deltaG (inhibition) = R * T * ln ( Ki )
-    if not ki:
-        return np.nan
-    return R * temp * math.log(ki * 1e-9)
+    return np.nan if not ki else R * temp * math.log(ki * 1e-9)
 
 
 def make_corr_DF(corr_data: dict) -> pd.DataFrame:

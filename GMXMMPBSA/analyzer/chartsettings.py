@@ -638,7 +638,8 @@ class ChartSettings(dict):
                                    'default': 'gray50', 'action_type': R},
                     'representation': {'type': 'list', 'enabled': True, 'expanded': True, 'name': 'representation',
                                        'value': 'sticks', 'values': ['sticks', '---0', 'lines', '---1', 'spheres',
-                                                                     'surface', 'dots', 'lines+dots', 'sticks+dots'],
+                                                                     'surface', 'mesh', 'dots', 'lines+dots',
+                                                                     'sticks+dots'],
                                        'default': 'sticks', 'action_type': R},
                 }}
         }}
