@@ -118,7 +118,7 @@ class MMPBSA_API():
             if model in ['gb', 'pb', 'rism std', 'rism gf', 'nmode', 'qh']:
                 if model in ['nmode', 'qh']:
                     terms['entropy'].append(model)
-                else:
+                elif model in ['gb', 'pb', 'rism std', 'rism gf']:
                     terms['energy'].append(model)
                 df_models[model] = pd.DataFrame(self._energy2flatdict(data), index=index)
             elif model == 'ie':
@@ -166,11 +166,12 @@ class MMPBSA_API():
             energy['mutant'] = self._get_df(raw_energy, 'mutant')
         if raw_energy['mutant-normal']:
             energy['mutant-normal'] = self._get_df(raw_energy, 'mutant-normal', True)
-        #
-        # if raw_energy['decomp_normal']:
-        #     raw_energy['decomp_normal'] = self._get_df(raw_energy, 'decomp_normal')
 
-
+        if raw_energy['decomp_normal']:
+            energy['decomp_normal'] = self._get_df(raw_energy, 'decomp_normal')
+        if raw_energy['decomp_mutant']:
+            energy['decomp_mutant'] = self._get_df(raw_energy, 'decomp_mutant')
+            # print(energy['decomp_normal'])
 
         return energy
 
