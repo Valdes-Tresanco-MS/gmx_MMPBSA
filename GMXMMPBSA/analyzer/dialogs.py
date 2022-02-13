@@ -158,15 +158,6 @@ class InitDialog(QDialog):
         # self.pb.setRange(0, 0)
         # self.save_btn.clicked.connect(self.save)
 
-        self.jobs_label = QLabel('Jobs:')
-        self.jobs_label.setToolTip('Defines how many cores of your processor will be used simultaneously to process '
-                                   'the selected systems')
-        self.jobs_spin = QSpinBox(self)
-        self.jobs_spin.setToolTip('Defines how many cores of your processor will be used simultaneously to process '
-                                  'the selected systems')
-        self.jobs_spin.setRange(1, ncpu-1)
-        self.jobs_spin.setValue(ncpu-1)
-
         self.accept_btn = QPushButton('Accept')
         self.accept_btn.clicked.connect(self.get_data)
 
@@ -175,9 +166,6 @@ class InitDialog(QDialog):
 
         self.btn_layout = QHBoxLayout()
         self.btn_layout.addWidget(self.pb, 10)
-        self.btn_layout.addStretch(1)
-        self.btn_layout.addWidget(self.jobs_label, 1)
-        self.btn_layout.addWidget(self.jobs_spin, 1)
         self.btn_layout.addStretch(1)
         self.btn_layout.addWidget(self.cancel_btn, 2, alignment=Qt.AlignmentFlag.AlignRight)
         self.btn_layout.addWidget(self.accept_btn, 2, alignment=Qt.AlignmentFlag.AlignRight)
@@ -191,10 +179,6 @@ class InitDialog(QDialog):
         self.content_layout.addWidget(self.result_tree)
         self.content_layout.addWidget(self.statusbar)
         self.content_layout.addLayout(self.btn_layout)
-
-        self.worker = worker()
-        self.worker.job_finished.connect(self.jobfinished)
-        self.worker.finished.connect(self.alljobs_finished)
 
     def show_warn(self):
         if self.com_btn.isChecked() or self.rec_btn.isChecked() or self.lig_btn.isChecked():
@@ -345,122 +329,3 @@ class InitDialog(QDialog):
             return
         self.pb.setRange(0, counter)
         self.parent.read_data(queue, self.options)
-
-    def jobfinished(self):
-        self.curr_progress += 1
-        self.pb.setValue(self.curr_progress)
-
-    def alljobs_finished(self):
-        self.worker.deleteLater()
-        self.parent.process_data(self.result_queue, self.options)
-
-
-class ExportDialog(QDialog):
-    def __init__(self, parent=None):
-        super(ExportDialog, self).__init__(parent)
-        self.parent = parent
-        self.setWindowTitle('Save Energy to b-factor')
-        self.current_frame_s = QSpinBox()
-        self.current_frame_l = QLabel('Frame:')
-
-        self.output_label = QLabel('Output:')
-        self.output_text = QLineEdit('complex_e2bfactor')
-        self.output_text.setPlaceholderText('complex_e2bfactor')
-        self.save_btn = QPushButton('Save')
-        self.save_btn.clicked.connect(self.save)
-        self.close_btn = QPushButton('Close')
-        self.close_btn.clicked.connect(self.close)
-
-        self.out_layout = QHBoxLayout()
-        self.out_layout.addWidget(self.output_label)
-        self.out_layout.addWidget(self.output_text)
-
-        self.frame_layout = QHBoxLayout()
-        self.frame_layout.addWidget(self.current_frame_l)
-        self.frame_layout.addWidget(self.current_frame_s)
-        # self.frame_layout.addWidget(self.interval_l, alignment=Qt.AlignRight)
-        # self.frame_layout.addWidget(self.interval_s)
-
-        self.btn_layout = QHBoxLayout()
-        self.btn_layout.addStretch(1)
-        self.btn_layout.addWidget(self.save_btn, alignment=Qt.AlignmentFlag.AlignRight)
-        self.btn_layout.addWidget(self.close_btn, alignment=Qt.AlignmentFlag.AlignRight)
-
-        self.layout = QVBoxLayout(self)
-        self.layout.addLayout(self.out_layout)
-        # self.layout.addWidget(self.location_btn)
-        self.layout.addLayout(self.frame_layout)
-        self.layout.addLayout(self.btn_layout)
-
-        self.getdata()
-
-    @pyqtSlot()
-    def save(self):
-        self.ntraj.Outtraj('_temp_.pdb', frames=str(self.current_frame_s.value()),
-                           filetype='pdb')
-        self.ntraj.Run('cpptraj.out')
-        pdb = PDB()
-        pdb.parse('_temp_.pdb')
-        with open(str(self.output_text.text()) + '.pdb', 'w') as pdbout:
-            for atm in pdb.allAtoms:
-                if atm['id'] == 'TER':
-                    pdbout.write(pdb.getOutLine(atm, ter=True))
-                else:
-                    if atm['resnum'] in self.parent.decomp and atm['resname'] in std_aa:
-                        atm['b_factor'] = self.parent.decomp[atm['resnum']]
-                    else:
-                        atm['b_factor'] = 0.0
-                    pdbout.write(pdb.getOutLine(atm, ter=False))
-        # os.remove('_temp_.pdb')
-        self.parent.statusbar.showMessage('Saving {} file... Done'.format(self.output_text.text() + '.pdb'))
-        self.close()
-
-
-class ExportDialogCSV(QDialog):
-    def __init__(self, parent=None):
-        super(ExportDialogCSV, self).__init__(parent)
-        self.parent = parent
-        self.setWindowTitle('Export Energy to CSV')
-
-        self.output_label = QLabel('Output:')
-        self.output_text = QLineEdit('TOTAL_ENERGY')
-        self.output_text.setPlaceholderText('TOTAL_ENERGY')
-        self.save_btn = QPushButton('Save')
-        self.save_btn.clicked.connect(self.save)
-        self.close_btn = QPushButton('Close')
-        self.close_btn.clicked.connect(self.close)
-
-        self.out_layout = QHBoxLayout()
-        self.out_layout.addWidget(self.output_label)
-        self.out_layout.addWidget(self.output_text)
-
-        self.btn_layout = QHBoxLayout()
-        self.btn_layout.addStretch(1)
-        self.btn_layout.addWidget(self.save_btn, alignment=Qt.AlignmentFlag.AlignRight)
-        self.btn_layout.addWidget(self.close_btn, alignment=Qt.AlignmentFlag.AlignRight)
-
-        self.layout = QVBoxLayout(self)
-        self.layout.addLayout(self.out_layout)
-        self.layout.addLayout(self.btn_layout)
-
-    @pyqtSlot()
-    def save(self):
-        with open(str(self.output_text.text()) + '.csv', 'w') as out_file:
-            if self.parent.gb_data:
-                out_file.write('GB data\n')
-                out_file.write(','.join(['FRAME'] + [x[0].upper() for x in self.parent.gb_data]) + '\n')
-                self.parent.writeData(out_file, self.parent.gb_data)
-            if self.parent.mut_gb_data:
-                out_file.write('Mutant GB data\n')
-                out_file.write(','.join(['FRAME'] + [x[0].upper() for x in self.parent.mut_gb_data]) + '\n')
-                self.parent.writeData(out_file, self.parent.mut_gb_data)
-            if self.parent.pb_data:
-                out_file.write('PB data\n')
-                out_file.write(','.join(['FRAME'] + [x[0].upper() for x in self.parent.pb_data]) + '\n')
-                self.parent.writeData(out_file, self.parent.pb_data)
-            if self.parent.mut_pb_data:
-                out_file.write('Mutant PB data\n')
-                out_file.write(','.join(['FRAME'] + [x[0].upper() for x in self.parent.mut_pb_data]) + '\n')
-                self.parent.writeData(out_file, self.parent.mut_pb_data)
-        self.parent.statusbar.showMessage('Exporting PB/GB energy to csv file... Done.')
-        self.close()
