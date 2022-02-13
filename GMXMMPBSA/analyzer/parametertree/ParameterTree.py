@@ -51,7 +51,7 @@ class ParameterTree(QTreeWidget):
         topitem =self.topLevelItem(0)
         nchild = topitem.childCount()
         childs = [topitem.child(x) for x in range(nchild)]
-        if item in childs and item.isExpanded():
+        if item in childs and item.isExpanded() or item not in childs:
             return
         for child in childs:
             child.setExpanded(False)

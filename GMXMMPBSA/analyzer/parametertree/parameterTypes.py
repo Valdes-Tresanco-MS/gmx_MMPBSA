@@ -148,7 +148,7 @@ class WidgetParameterItem(ParameterItem):
         if self.asSubItem:
             self.subItem = QTreeWidgetItem()
             self.subItem.depth = self.depth + 1
-            self.subItem.setFlags(Qt.NoItemFlags)
+            self.subItem.setFlags(Qt.ItemFlag.NoItemFlags)
             self.addChild(self.subItem)
 
         self.defaultBtn = QPushButton()
@@ -343,7 +343,7 @@ class WidgetParameterItem(ParameterItem):
     def showEditor(self):
         self.widget.show()
         self.displayLabel.hide()
-        self.widget.setFocus(Qt.OtherFocusReason)
+        self.widget.setFocus(Qt.FocusReason.OtherFocusReason)
 
     def hideEditor(self):
         self.widget.hide()
@@ -492,7 +492,7 @@ class GroupParameterItem(ParameterItem):
             l.addStretch()
             self.addWidgetBox = w
             self.addItem = QTreeWidgetItem([])
-            self.addItem.setFlags(Qt.ItemIsEnabled)
+            self.addItem.setFlags(Qt.ItemFlag.ItemIsEnabled)
             self.addItem.depth = self.depth + 1
             ParameterItem.addChild(self, self.addItem)
             self.addItem.setSizeHint(0, self.addWidgetBox.sizeHint())
