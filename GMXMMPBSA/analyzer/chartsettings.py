@@ -616,20 +616,18 @@ class ChartSettings(dict):
                                                             'PiYG_5', 'PuOr_7', 'PuOr_5', 'RdBu_7', 'RdBu_5',
                                                             'RdGy_7', 'RdGy_5'
                                                             ], 'default': 'auto', 'action_type': R, 'tip': tooltip1},
-                    'cartoon': {
-                        'type': 'group', 'enabled': True, 'expanded': True, 'name': 'cartoon', 'value': None,
-                        'default': None,
-                        'children': {
-                            'oval_length': {'type': 'float', 'enabled': True, 'expanded': True,
-                                            'name': 'oval_length', 'value': 1.0, 'default': 1.0,
+                    'cartoon_oval_length': {'type': 'float', 'enabled': True, 'expanded': True,
+                                            'name': 'cartoon_oval_length', 'value': 1.0, 'default': 1.0,
                                             'action_type': R},
-                            'rect_length': {'type': 'float', 'enabled': True, 'expanded': True,
-                                            'name': 'rect_length', 'value': 1.2, 'default': 1.2, 'action_type': R},
-                            'rect_width': {'type': 'float', 'enabled': True, 'expanded': True,
-                                           'name': 'rect_width', 'value': 0.3, 'default': 0.3, 'action_type': R},
-                            'side_chain_helper': {'type': 'bool', 'enabled': True, 'expanded': True,
-                                                  'name': 'side_chain_helper', 'value': True, 'default': True,
-                                                  'action_type': R}}},
+                    'cartoon_rect_length': {'type': 'float', 'enabled': True, 'expanded': True,
+                                            'name': 'cartoon_rect_length', 'value': 1.2, 'default': 1.2,
+                                            'action_type': R},
+                    'cartoon_rect_width': {'type': 'float', 'enabled': True, 'expanded': True,
+                                           'name': 'cartoon_rect_width', 'value': 0.3, 'default': 0.3,
+                                           'action_type': R},
+                    'cartoon_side_chain_helper': {'type': 'bool', 'enabled': True, 'expanded': True,
+                                          'name': 'cartoon_side_chain_helper', 'value': True, 'default': True,
+                                          'action_type': R},
                     'light_count': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'light_count',
                                     'value': 1, 'step': 1, 'accelerated': False, 'limits': (1, 10),
                                     'default': 1, 'action_type': R},
@@ -637,7 +635,12 @@ class ChartSettings(dict):
                                    'value': 'gray50', 'values': ['gray50', '---0', 'black',
                                                                  'gray10', 'gray20', 'gray30', 'gray40',
                                                                  'gray60', 'gray70', 'gray80', 'gray90', 'white'],
-                                   'default': 'gray50', 'action_type': R}}}
+                                   'default': 'gray50', 'action_type': R},
+                    'representation': {'type': 'list', 'enabled': True, 'expanded': True, 'name': 'representation',
+                                       'value': 'sticks', 'values': ['sticks', '---0', 'lines', '---1', 'spheres',
+                                                                     'surface', 'dots', 'lines+dots', 'sticks+dots'],
+                                       'default': 'sticks', 'action_type': R},
+                }}
         }}
 
     def __init__(self, custom: Union[Path, str] = None):
@@ -663,7 +666,7 @@ class ChartSettings(dict):
             line_ie_action=0,
             bar_action=0,
             heatmap_action=0,
-            visualization_ation=0,
+            visualization_action=0,
         )
 
     def return_default(self):
@@ -707,7 +710,7 @@ class ChartSettings(dict):
                 at = tuple(list(k[:-1]) + ['action_type'])
                 if k[1] == 'Bar Plot':
                     self.changes['bar_action'] = flatten[at]
-                if k[3] == 'Interaction Entropy':
+                if k[3] == 'IE/C2 Entropy':
                     self.changes['line_ie_action'] = flatten[at]
                 elif k[1] == 'Line Plot':
                     self.changes['line_action'] = flatten[at]
