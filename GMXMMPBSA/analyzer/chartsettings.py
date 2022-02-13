@@ -616,7 +616,28 @@ class ChartSettings(dict):
                                                             'PiYG_5', 'PuOr_7', 'PuOr_5', 'RdBu_7', 'RdBu_5',
                                                             'RdGy_7', 'RdGy_5'
                                                             ], 'default': 'auto', 'action_type': R, 'tip': tooltip1},
-                }}
+                    'cartoon': {
+                        'type': 'group', 'enabled': True, 'expanded': True, 'name': 'cartoon', 'value': None,
+                        'default': None,
+                        'children': {
+                            'oval_length': {'type': 'float', 'enabled': True, 'expanded': True,
+                                            'name': 'oval_length', 'value': 1.0, 'default': 1.0,
+                                            'action_type': R},
+                            'rect_length': {'type': 'float', 'enabled': True, 'expanded': True,
+                                            'name': 'rect_length', 'value': 1.2, 'default': 1.2, 'action_type': R},
+                            'rect_width': {'type': 'float', 'enabled': True, 'expanded': True,
+                                           'name': 'rect_width', 'value': 0.3, 'default': 0.3, 'action_type': R},
+                            'side_chain_helper': {'type': 'bool', 'enabled': True, 'expanded': True,
+                                                  'name': 'side_chain_helper', 'value': True, 'default': True,
+                                                  'action_type': R}}},
+                    'light_count': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'light_count',
+                                    'value': 1, 'step': 1, 'accelerated': False, 'limits': (1, 10),
+                                    'default': 1, 'action_type': R},
+                    'background': {'type': 'list', 'enabled': True, 'expanded': True, 'name': 'background',
+                                   'value': 'gray50', 'values': ['gray50', '---0', 'black',
+                                                                 'gray10', 'gray20', 'gray30', 'gray40',
+                                                                 'gray60', 'gray70', 'gray80', 'gray90', 'white'],
+                                   'default': 'gray50', 'action_type': R}}}
         }}
 
     def __init__(self, custom: Union[Path, str] = None):
