@@ -99,10 +99,11 @@ class NavigationToolbar(NavigationToolbar2QT):
 
 
 class ChartsBase(QMdiSubWindow):
-    def __init__(self, button: QToolButton, options: dict = None):
+    def __init__(self, button: QToolButton, options: dict = None, item_parent=None):
         super(ChartsBase, self).__init__()
         self.setMinimumSize(400, 400)
         self.options = options
+        self.item_parent = item_parent
 
         self.mainwidgetmdi = QMainWindow()  # must be QMainWindow to handle the toolbar
         sns.set_theme(style=self.options[('General', 'theme')])
@@ -699,7 +700,7 @@ class Tables(QMdiSubWindow):
                 item = QTableWidgetItem(text)
                 if c == 0:
                     if not summary:
-                        item.setTextAlignment(Qt.AlignRight)
+                        item.setTextAlignment(Qt.AlignmentFlag.AlignRight)
                     if col in ['BOND', 'ANGLE', 'DIHED', 'VDWAALS', 'EEL', '1-4 VDW', '1-4 EEL', 'GGAS',
                                'ΔBOND', 'ΔANGLE', 'ΔDIHED', 'ΔVDWAALS', 'ΔEEL', 'Δ1-4 VDW', 'Δ1-4 EEL', 'ΔGGAS',
                                'ΔΔBOND', 'ΔΔANGLE', 'ΔΔDIHED', 'ΔΔVDWAALS', 'ΔΔEEL', 'ΔΔ1-4 VDW', 'ΔΔ1-4 EEL',
@@ -712,7 +713,7 @@ class Tables(QMdiSubWindow):
                     else:
                         item.setBackground(QColor('white'))
                 if c > 0:
-                    item.setTextAlignment(Qt.AlignRight)
+                    item.setTextAlignment(Qt.AlignmentFlag.AlignRight)
                 self.table.setItem(r, c, item)
 
         self.table.installEventFilter(self)
