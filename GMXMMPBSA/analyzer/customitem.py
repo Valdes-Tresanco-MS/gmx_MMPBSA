@@ -45,7 +45,7 @@ class CorrelationItem(QTreeWidgetItem):
         self.item_name = stringlist[0]
         if col_box:
             for col in col_box:
-                self.setCheckState(col, Qt.Unchecked)
+                self.setCheckState(col, Qt.CheckState.Unchecked)
 
         self.dh_sw = None
         self.dgie_sw = None
@@ -95,7 +95,7 @@ class CustomItem(QTreeWidgetItem):
         self.tb.setStyleSheet("QToolBar {padding: 0, 20, 0, 20;}")
 
         self.tb.setIconSize(QSize(16, 16))
-        self.tb.setToolButtonStyle(Qt.ToolButtonIconOnly)
+        self.tb.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonIconOnly)
         self.item_charts = []
 
         self.btn_group = QButtonGroup()
@@ -301,9 +301,9 @@ class CustomItem(QTreeWidgetItem):
         self.tb.addWidget(self.result_table_action)
 
     def fn_mark_all(self, state):
-        if state == Qt.PartiallyChecked:
+        if state == Qt.CheckState.PartiallyChecked:
             pass
-        elif state == Qt.Checked:
+        elif state == Qt.CheckState.Checked:
             for x in self.btn_group.buttons():
                 x.setChecked(True)
         else:
@@ -315,11 +315,11 @@ class CustomItem(QTreeWidgetItem):
         all_unchecked = not any(x.isChecked() for x in self.btn_group.buttons())
         oldState = self.mark_all.blockSignals(True)
         if all_checked:
-            self.mark_all.setCheckState(Qt.Checked)
+            self.mark_all.setCheckState(Qt.CheckState.Checked)
         elif all_unchecked:
-            self.mark_all.setCheckState(Qt.Unchecked)
+            self.mark_all.setCheckState(Qt.CheckState.Unchecked)
         else:
-            self.mark_all.setCheckState(Qt.PartiallyChecked)
+            self.mark_all.setCheckState(Qt.CheckState.PartiallyChecked)
         self.mark_all.blockSignals(oldState)
 
         if self.btn_group.id(btn) == 1:
@@ -458,7 +458,7 @@ class CustomItem(QTreeWidgetItem):
         output_path = self.app.systems[self.system_index]['path'].parent.joinpath(
             f"{self.app.systems[self.system_index]['name']}_energy2bfactor.pdb")
         qpd = QProgressDialog('Generate modified pdb and open it in PyMOL', 'Abort', 0, 2, self.app)
-        qpd.setWindowModality(Qt.WindowModal)
+        qpd.setWindowModality(Qt.WindowModality.WindowModal)
         qpd.setMinimumDuration(1500)
 
         for i in range(2):
@@ -467,7 +467,8 @@ class CustomItem(QTreeWidgetItem):
                 break
             if i == 0:
                 com_pdb_str = com2str(com_pdb)
-                temp_dict = self.bar_plot_data.aggregate(["mean"]).iloc[0].to_dict()
+                bar_plot_data = self.app.systems[self.system_index]['items_data'][self.keys_path]['bar_plot_data'][0]
+                temp_dict = bar_plot_data.aggregate(["mean"]).iloc[0].to_dict()
                 res_dict = {k[2:]: value for k, value in temp_dict.items()}
                 for res in com_pdb_str.residues:
                     res_notation = f'{res.chain}:{res.name}:{res.number}'
@@ -487,7 +488,7 @@ class CustomItem(QTreeWidgetItem):
         from GMXMMPBSA.analyzer.plots import Tables
         self.app.treeWidget.clearSelection()
         table_data = self.app.systems[self.system_index]['items_summary'][self.keys_path]
-        options = {'table_name': 'Summary | ' + self.subtitle}
+        options = {'table_name': f'Summary | {self.subtitle}'}
         if state:
             self.setSelected(True)
             self.result_table_subw = Tables(table_data, self.result_table_action, options, True)
