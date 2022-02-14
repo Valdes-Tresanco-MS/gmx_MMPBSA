@@ -46,7 +46,7 @@ negative_aa = ['GLU', 'ASP']
 nonpolar_aa = ['PHE', 'TRP', 'VAL', 'ILE', 'LEU', 'MET', 'PRO', 'CYX', 'ALA', 'GLY']
 polar_aa = ['TYR', 'SER', 'THR', 'CYM', 'CYS', 'HIE', 'HID', 'GLN', 'ASN', 'ASH', 'GLH', 'LYN']
 
-PBRadii = {1: 'bondi', 2: 'mbondi', 3: 'mbondi2', 4: 'mbondi3'}
+PBRadii = {1: 'bondi', 2: 'mbondi', 3: 'mbondi2', 4: 'mbondi3', 5: 'mbondi_pb2', 6: 'mbondi_pb3', 7: 'charmm_radii'}
 
 ions_para_files = {1: 'frcmod.ions234lm_126_tip3p', 2: 'frcmod.ions234lm_iod_tip4pew', 3: 'frcmod.ions234lm_iod_spce',
                    4: 'frcmod.ions234lm_hfe_spce', 5: 'frcmod.ions234lm_126_tip4pew', 6: 'frcmod.ions234lm_126_spce',
@@ -388,6 +388,8 @@ class CheckMakeTop:
                             f'molecules in the complex.')
 
     def gmxtop2prmtop(self):
+        logging.info('Using topology conversion. Setting radiopt = 0...')
+        self.INPUT['radiopt'] = 0
         logging.info('Building Normal Complex Amber topology...')
         com_top = self.cleantop(self.FILES.complex_top, self.indexes['COM']['COM'])
         if error_info := eq_strs(com_top, self.complex_str):
@@ -405,9 +407,11 @@ class CheckMakeTop:
         if com_top.impropers or com_top.urey_bradleys or com_top.cmaps:
             com_amb_prm = parmed.amber.ChamberParm.from_structure(com_top)
             com_top_parm = 'chamber'
+            logging.info('Detected CHARMM topology format...')
         else:
             com_amb_prm = parmed.amber.AmberParm.from_structure(com_top)
             com_top_parm = 'amber'
+            logging.info('Detected AMBER topology format...')
 
         # IMPORTANT: make_trajs ends in error if the box is defined
         com_amb_prm.box = None
@@ -415,6 +419,8 @@ class CheckMakeTop:
         self.fixparm2amber(com_amb_prm)
 
         logging.info(f"Assigning PBRadii {PBRadii[self.INPUT['PBRadii']]} to Complex...")
+        if com_top_parm == 'amber' and self.INPUT['PBRadii'] == 7:
+            GMXMMPBSA_ERROR(f"The PBRadii {PBRadii[self.INPUT['PBRadii']]} is not compatible with Amber topologies...")
         action = ChRad(com_amb_prm, PBRadii[self.INPUT['PBRadii']])
         logging.info('Writing Normal Complex Amber topology...')
         com_amb_prm.write_parm(self.complex_pmrtop)
@@ -565,8 +571,10 @@ class CheckMakeTop:
         Generate parmed structure object for complex, receptor and ligand ( if it is protein-like)
         :return:
         """
-        logging.info('Generating AMBER Compatible PDB Files...')
+        if self.INPUT['PBRadii'] == 7:
+            GMXMMPBSA_ERROR(f"The PBRadii {PBRadii[self.INPUT['PBRadii']]} is not compatible with Amber topologies...")
 
+        logging.info('Generating AMBER Compatible PDB Files...')
         # fix receptor and structures
         logging.info('Changing the Complex residues name format from GROMACS to Amber...')
         self.fixparm2amber(self.complex_str, removeH=True)
@@ -1072,7 +1080,8 @@ class CheckMakeTop:
             if assign:
                 self._assign_chains_IDs(com_str, rec_str, lig_str)
         # Save fixed complex structure for analysis and set it in FILES to save in info file
-        com_str.save(self.FILES.prefix + 'COM_FIXED.pdb', 'pdb', True, renumber=False)
+        com_str.save(f'{self.FILES.prefix}COM_FIXED.pdb', 'pdb', True, renumber=False)
+        logging.info('')
 
     def _assign_chains_IDs(self, com_str, rec_str, lig_str):
         chains_ids = []
@@ -1172,12 +1181,15 @@ class CheckMakeTop:
             ofile.write(f'source {ff}\n')
         ofile.write('loadOff atomic_ions.lib\n')
         ofile.write('loadamberparams {}\n'.format(ions_para_files[self.INPUT['ions_parameters']]))
-        ofile.write('set default PBRadii {}\n'.format(PBRadii[self.INPUT['PBRadii']]))
-
+        # check if it is a modified PBRadii
+        if self.INPUT['PBRadii'] in [5, 6]:
+            ofile.write('set default PBRadii {}\n'.format(PBRadii[1]))
+        else:
+            ofile.write('set default PBRadii {}\n'.format(PBRadii[self.INPUT['PBRadii']]))
 
     def makeToptleap(self):
         logging.info('Building tleap input files...')
-        with open(self.FILES.prefix + 'leap.in', 'w') as tif:
+        with open(f'{self.FILES.prefix}leap.in', 'w') as tif:
             self._write_ff(tif)
             REC = []
             LIG = []
@@ -1196,8 +1208,7 @@ class CheckMakeTop:
                     self.ligand_pmrtop = None
                 else:
                     tif.write(f'saveamberparm LIG1 {self.ligand_pmrtop} {self.FILES.prefix}LIG.inpcrd\n')
-                for lig in self.ligand_list:
-                    LIG.append(f'{lig}')
+                LIG.extend(f'{lig}' for lig in self.ligand_list)
             else:
                 for lig in self.ligand_list:
                     LIG.append(f'{lig}')
@@ -1223,8 +1234,31 @@ class CheckMakeTop:
         tleap = self.external_progs['tleap']
         self._run_tleap(tleap, 'leap.in', data_path)
 
+        # check if it is a modified PBRadii
+        if self.INPUT['PBRadii'] in [5, 6]:
+            com_prmtop = parmed.load_file(self.complex_pmrtop)
+            com_amb_parm = parmed.amber.AmberParm.from_structure(com_prmtop)
+            action = ChRad(com_amb_parm, PBRadii[self.INPUT['PBRadii']])
+            logging.info(f"Assigning modified PBRadii {PBRadii[self.INPUT['PBRadii']]} to Normal Complex Amber "
+                         f"topology...")
+            com_amb_parm.write_parm(self.complex_pmrtop)
+            if not self.FILES.stability:
+                rec_prmtop = parmed.load_file(self.receptor_pmrtop)
+                rec_amb_parm = parmed.amber.AmberParm.from_structure(rec_prmtop)
+                action = ChRad(rec_amb_parm, PBRadii[self.INPUT['PBRadii']])
+                logging.info(f"Assigning modified PBRadii {PBRadii[self.INPUT['PBRadii']]} to Normal Receptor Amber "
+                             f"topology...")
+                rec_amb_parm.write_parm(self.receptor_pmrtop)
+
+                lig_prmtop = parmed.load_file(self.ligand_pmrtop)
+                lig_amb_parm = parmed.amber.AmberParm.from_structure(lig_prmtop)
+                action = ChRad(lig_amb_parm, PBRadii[self.INPUT['PBRadii']])
+                logging.info(f"Assigning modified PBRadii {PBRadii[self.INPUT['PBRadii']]} to Normal Ligand Amber "
+                             f"topology...")
+                lig_amb_parm.write_parm(self.ligand_pmrtop)
+
         if self.INPUT['alarun']:
-            with open(self.FILES.prefix + 'mut_leap.in', 'w') as mtif:
+            with open(f'{self.FILES.prefix}mut_leap.in', 'w') as mtif:
                 self._write_ff(mtif)
 
                 if self.mutant_receptor_pmrtop:
@@ -1277,6 +1311,29 @@ class CheckMakeTop:
                 mtif.write('quit')
 
             self._run_tleap(tleap, 'mut_leap.in', data_path)
+
+            # check if it is a modified PBRadii
+            if self.INPUT['PBRadii'] in [5, 6]:
+                mcom_prmtop = parmed.load_file(self.mutant_complex_pmrtop)
+                mcom_amb_parm = parmed.amber.AmberParm.from_structure(mcom_prmtop)
+                action = ChRad(mcom_amb_parm, PBRadii[self.INPUT['PBRadii']])
+                logging.info(f"Assigning modified PBRadii {PBRadii[self.INPUT['PBRadii']]} to Mutant Complex Amber "
+                             f"topology...")
+                mcom_amb_parm.write_parm(self.mutant_complex_pmrtop)
+                if not self.FILES.stability:
+                    mrec_prmtop = parmed.load_file(self.mutant_receptor_pmrtop)
+                    mrec_amb_parm = parmed.amber.AmberParm.from_structure(mrec_prmtop)
+                    action = ChRad(rec_amb_parm, PBRadii[self.INPUT['PBRadii']])
+                    logging.info(f"Assigning modified PBRadii {PBRadii[self.INPUT['PBRadii']]} to Mutant Receptor "
+                                 f"Amber topology...")
+                    mrec_amb_parm.write_parm(self.mutant_receptor_pmrtop)
+
+                    mlig_prmtop = parmed.load_file(self.mutant_ligand_pmrtop)
+                    mlig_amb_parm = parmed.amber.AmberParm.from_structure(mlig_prmtop)
+                    action = ChRad(mlig_amb_parm, PBRadii[self.INPUT['PBRadii']])
+                    logging.info(f"Assigning modified PBRadii {PBRadii[self.INPUT['PBRadii']]} to Mutant Ligand Amber "
+                                 f"topology...")
+                    mlig_amb_parm.write_parm(self.mutant_ligand_pmrtop)
 
         else:
             self.mutant_complex_pmrtop = None
