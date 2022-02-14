@@ -199,7 +199,6 @@ tested in previous `protein_forcefield` and `ligand_forcefield` variables.
     | Name                    | Description               |
     |:------------------------|:--------------------------|
     | "leaprc.protein.ff14SB" | ff14SB only for proteins  |
-    | "leaprc.protein.ff19SB" | ff19SB only for proteins  |
 
     **Forcefields only for Nucleic Acids**
      

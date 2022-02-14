@@ -654,7 +654,13 @@ class CheckMakeTop:
                         # standard gmx form
                         'NA', 'CL', 'SOL',
                         # charmm-GUI form ??
-                        'SOD', 'CLA', 'TIP3P', 'TIP4P', 'TIPS3P', 'TIP5P', 'SPC', 'SPC/E', 'SPCE', 'TIP3o', 'WAT']
+                        'SOD', 'Na+', 'CLA', 'Cl-', 'CAL', 'CA', 'MG', 'POT', 'K+',
+                        'TIP3P', 'TIP3', 'TP3', 'TIPS3P', 'TIP3o',
+                        'TIP4P', 'TIP4PEW', 'T4E', 'TIP4PD',
+                        'TIP5P',
+                        'SPC', 'SPC/E', 'SPCE',
+                        'WAT',
+                        'OPC']
                     if not line.split():
                         continue
                     if line.split()[0].strip().upper() in sol_ion:
