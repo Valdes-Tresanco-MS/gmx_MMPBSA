@@ -526,6 +526,11 @@ class NMODEout(dict):
         self.mol = mol
         self.is_read = False
 
+    def set_frame_range(self, start=0, end=None, interval=1):
+        for key in self.data_keys:
+            self[key] = self[key][start:end:interval]
+        self._fill_composite_terms()
+
     def parse_from_file(self, basename, INPUT, num_files=1, chamber=False):
         self.basename = basename
 
@@ -1168,7 +1173,18 @@ class DecompOut(dict):
         self.surften = None
         self.current_file = 0  # File counter
 
-    def parse_from_file(self, basename, resl, INPUT, surften, csvwriter, num_files=1, mut=False):
+    def set_frame_range(self, start=0, end=None, interval=1):
+        frames_updated = False
+        for term in self.allowed_tokens:
+            for res in self[term]:
+                for et in self[term][res]:
+                    self[term][res][et] = self[term][res][et][start:end:interval]
+                    if not frames_updated:
+                        self.numframes = len(self[term][res][et][start:end:interval])
+                        frames_updated = True
+        self._fill_composite_terms()
+
+    def parse_from_file(self, basename, resl, INPUT, surften, num_files=1, mut=False):
         self.basename = basename  # base name of output files
         self.resl = resl
         self.mut = mut
@@ -1358,27 +1374,17 @@ class PairDecompOut(DecompOut):
     """ Same as DecompOut, but for Pairwise decomposition """
     indicator = "                    PRINT PAIR DECOMP - TOTAL ENERGIES"
 
-    def _get_next_term(self, expected_type=None, framenum=1):
-        """ Gets the next energy term from the output file(s) """
-        line = self.decfile.readline()
-        if expected_type and expected_type not in self.allowed_tokens:
-            raise OutputError('BUGBUG: expected_type must be in %s' %
-                              self.allowed_tokens)
-        while line[:3] not in self.allowed_tokens:
-            # We only get in here if we've gone off the end of a block, so our
-            # current term number is 0 now.
-            line = self.decfile.readline()
-            if not line:
-                self.decfile.close()
-                if self.current_file == self.num_files - 1:
-                    return []
-                self.current_file += 1
-                self.decfile = open('%s.%d' % (self.basename, self.current_file), 'r')
-                line = self.decfile.readline()
-        # Return [res #, internal, vdw, eel, pol, sas]
-        if expected_type and expected_type != line[:3]:
-            raise OutputError(('Expecting %s type, but got %s type. Re-run ' +
-                               'gmx_MMPBSA with the correct dec_verbose') % (expected_type, line[:3]))
+    def set_frame_range(self, start=0, end=None, interval=1):
+        frames_updated = False
+        for term in self.allowed_tokens:
+            for res in self[term]:
+                for res2 in self[term][res]:
+                    for et in self[term][res][res2]:
+                        self[term][res][res2][et] = self[term][res][res2][et][start:end:interval]
+                        if not frames_updated:
+                            self.numframes = len(self[term][res][res2][et][start:end:interval])
+                            frames_updated = True
+        self._fill_composite_terms()
 
     def _get_decomp_energies(self, outfile):
         self.numframes = 0
