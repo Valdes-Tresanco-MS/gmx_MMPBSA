@@ -1194,22 +1194,9 @@ class DecompOut(dict):
         self.INPUT = INPUT
         self.verbose = INPUT['dec_verbose']
         self.surften = surften  # explicitly defined since is for GB and PB models
-        # Set the term-extractor based on whether we want to dump the values to
-        # a CSV file or just get the next term
-        if csvwriter:
-            self.get_next_term = self._get_next_term_csv
 
         if self.verbose in [1, 3]:
             self.allowed_tokens = tuple(['TDC', 'SDC', 'BDC'])
-
-        # Create a separate csvwriter for each of the different token types,
-        # and store them in a dictionary
-        if csvwriter:
-            self.csvwriter = {}
-            for tok in self.allowed_tokens:
-                self.csvwriter[tok] = writer(open(csvwriter + '.' + tok + '.csv', 'w'))
-                self.csvwriter[tok].writerow([self.descriptions[tok]])
-                self._write_header(self.csvwriter[tok])
 
         try:
             self.num_terms = int(self._get_num_terms())
@@ -1520,63 +1507,47 @@ class PairDecompOut(DecompOut):
                 text.append('')
         return text if _output_format else '\n'.join(text) + '\n\n'
 
-    def _write_header(self, csvwriter):
-        """ Writes a table header to the csvwriter """
-        csvwriter.writerow(['Frame #', 'Resid 1', 'Resid 2', 'Internal',
-                            'van der Waals', 'Electrostatic', 'Polar Solvation',
-                            'Non-Polar Solv.', 'TOTAL'])
-
 
 class DecompBinding(dict):
     """ Class for decomposition binding (per-residue) """
 
-    def __init__(self, com, rec, lig, INPUT, csvwriter, desc, **kwargs):
+    def __init__(self, com, rec, lig, INPUT, desc=None, **kwargs):
         """
         output should be an open file and csvfile should be a csv.writer class. If
         the output format is specified as csv, then output should be a csv.writer
         class as well.
         """
         super(DecompBinding, self).__init__(**kwargs)
-        from csv import writer
         self.com, self.rec, self.lig = com, rec, lig
         self.num_terms = self.com.num_terms
-        self.numframes = 0  # frame counter
         self.desc = desc  # Description
         self.INPUT = INPUT
         self.idecomp = INPUT['idecomp']
         self.verbose = INPUT['dec_verbose']
-        # Check to see if output is a csv.writer or if it's a file. The invoked
-        # method, "parse_all", is set based on whether we're doing a csv output
-        # or an ascii output
-        # if type(output).__name__ == 'writer':  # yuck... better way?
-        #     self.parse_all = self._parse_all_csv
-        # else:
-        #     self.parse_all = self._parse_all_ascii
         # Set up the data for the DELTAs
         if self.verbose in [1, 3]:
             self.allowed_tokens = tuple(['TDC', 'SDC', 'BDC'])
         else:
             self.allowed_tokens = tuple(['TDC'])
-        # Open up a separate CSV writer for all of the allowed tokens
-        if csvwriter:
-            self.csvwriter = {}
-            for tok in self.allowed_tokens:
-                self.csvwriter[tok] = writer(open(f'{csvwriter}.{tok}.csv', 'w'))
-                self.csvwriter[tok].writerow([DecompOut.descriptions[tok]])
-                self._write_header(self.csvwriter[tok])
-        else:
-            self.csvwriter = None
         for token in self.allowed_tokens:
             self[token] = {}
 
         # Parse everything
         self._parse_all_begin()
 
-    def _write_header(self, csvwriter):
-        """ Writes the header to the CSV file (legend at top of chart) """
-        csvwriter.writerow(['Frame #', 'Residue', 'Location', 'Internal',
-                            'van der Waals', 'Electrostatic', 'Polar Solvation',
-                            'Non-Polar Solv.', 'TOTAL'])
+    def _print_vectors(self, csvwriter):
+        tokens = {'TDC': 'Total Decomposition Contribution (TDC)',
+                  'SDC': 'Sidechain Decomposition Contribution (SDC)',
+                  'BDC': 'Backbone Decomposition Contribution (BDC)'}
+        for term in self.allowed_tokens:
+            csvwriter.writerow([tokens[term]])
+            csvwriter.writerow(['Frame #', 'Residue', 'Internal', 'van der Waals', 'Electrostatic', 'Polar Solvation',
+                                'Non-Polar Solv.', 'TOTAL'])
+            c = self.INPUT['startframe']
+            for i in range(self.com.numframes):
+                for res in self[term]:
+                    csvwriter.writerow([c, res] + [round(self[term][res][key][i], 2) for key in self[term][res]])
+                c += self.INPUT['interval']
 
     def _parse_all_begin(self):
         """ Parses through all of the terms in all of the frames, but doesn't
@@ -1592,13 +1563,6 @@ class DecompBinding(dict):
                 other_token = self.rec[term][res] if res.startswith('R') else self.lig[term][res]
                 for e in self.com[term][res]:
                     self[term][res][e] = self.com[term][res][e] - other_token[e]
-
-            if self.csvwriter:
-                f = self.com.INPUT['startframe']
-                for i in range(self.com.numframes):
-                    for res in self.com[term]:
-                        self.csvwriter[term].writerow([f, res] + [self[term][res][x][i] for x in self[term][res]])
-                    f += self.com.INPUT['interval']
 
     def summary(self, output_format: str = 'ascii'):
 
@@ -1672,12 +1636,6 @@ class DecompBinding(dict):
 class PairDecompBinding(DecompBinding):
     """ Class for decomposition binding (pairwise) """
 
-    def _write_header(self, csvwriter):
-        """ Writes the header to the CSV file (legend at top of chart) """
-        csvwriter.writerow(['Frame #', 'Resid 1', 'Resid 2', 'Internal',
-                            'van der Waals', 'Electrostatic', 'Polar Solvation',
-                            'Non-Polar Solv.', 'TOTAL'])
-
     def _parse_all_begin(self):
         """ Parses through all of the terms in all of the frames, but doesn't
             do any printing
@@ -1706,14 +1664,21 @@ class PairDecompBinding(DecompBinding):
                         else:
                             self[term][res][res2][e] = self.com[term][res][res2][e]
 
-            if self.csvwriter:
-                f = self.com.INPUT['startframe']
-                for i in range(self.com.numframes):
-                    for res in self.com[term]:
-                        for res2 in self.com[term][res]:
-                            self.csvwriter[term].writerow([f, res, res2] +
-                                                          [self[term][res][res2][x][i] for x in self[term][res][res2]])
-                    f += self.com.INPUT['interval']
+    def _print_vectors(self, csvwriter):
+        tokens = {'TDC': 'Total Decomposition Contribution (TDC)',
+                  'SDC': 'Sidechain Decomposition Contribution (SDC)',
+                  'BDC': 'Backbone Decomposition Contribution (BDC)'}
+        for term in self.allowed_tokens:
+            csvwriter.writerow([tokens[term]])
+            csvwriter.writerow(['Frame #', 'Resid 1', 'Resid 2', 'Internal', 'van der Waals', 'Electrostatic',
+                                'Polar Solvation', 'Non-Polar Solv.', 'TOTAL'])
+            c = self.com.INPUT['startframe']
+            for i in range(self.com.numframes):
+                for res in self[term]:
+                    for res2 in self[term][res]:
+                        csvwriter.writerow([c, res, res2] +
+                                           [round(self[term][res][res2][key][i], 2) for key in self[term][res][res2]])
+                c += self.com.INPUT['interval']
 
     def summary(self, output_format: str = 'ascii'):
 
