@@ -233,12 +233,6 @@ class AmberOutput(dict):
             # Skip the composite terms, since we print those at the end
             if key in self.composite_keys:
                 continue
-            # Skip any terms that have zero as every single element (i.e. EDISPER)
-            # if self.INPUT['sander_apbs']:
-            #     continue
-            # if self[key] == 0:
-            #     print(key)
-            #     continue
             avg = float(self[key].mean())
             stdev = float(self[key].stdev())
             semp = float(stdev / sqrt(len(self[key])))
@@ -276,9 +270,7 @@ class AmberOutput(dict):
 
         for fileno in range(self.num_files):
             with open('%s.%d' % (self.basename, fileno)) as output_file:
-                # output_file = open('%s.%d' % (self.basename, fileno), 'r')
                 self._get_energies(output_file)
-            # output_file.close()
             # If we have to get energies elsewhere (e.g., with GB and ESURF), do
             # that here. This is an empty function when unnecessary
             self._extra_reading(fileno)
@@ -424,24 +416,27 @@ class QHout(dict):
         _output_format = 0 if output_format == 'ascii' else 1
         text = []
         if _output_format:
-            text.append(['', 'Translational', 'Rotational', 'Vibrational', 'Total'])
-            text.append(['Complex', self['complex']['Translational'], self['complex']['Rotational'],
-                         self['complex']['Vibrational'], self['complex']['Total']])
+            text.extend((['', 'Translational', 'Rotational', 'Vibrational', 'Total'],
+                         ['Complex', self['complex']['Translational'], self['complex']['Rotational'],
+                          self['complex']['Vibrational'], self['complex']['Total']]))
+
             if not self.stability:
                 text.extend([['Receptor', self['receptor']['Translational'], self['receptor']['Rotational'],
                               self['receptor']['Vibrational'], self['receptor']['Total']],
                              ['Ligand', self['ligand']['Translational'], self['ligand']['Rotational'],
-                              self['ligand']['Vibrational'], self['ligand']['Total']]])
-                text.append([])
-                text.append(['-TΔS', self['delta']['Translational'], self['delta']['Rotational'],
-                             self['delta']['Vibrational'], self['delta']['Total']])
+                              self['ligand']['Vibrational'], self['ligand']['Total']],
+                             [],
+                             ['-TΔS', self['delta']['Translational'], self['delta']['Rotational'],
+                              self['delta']['Vibrational'], self['delta']['Total']]])
+
             return text
         else:
-            text.append('           Translational      Rotational      Vibrational           Total')
-            text.append('Complex   %13.4f %15.4f %16.4f %15.4f\n' % (self['complex']['Translational'],
-                                                                     self['complex']['Rotational'],
-                                                                     self['complex']['Vibrational'],
-                                                                     self['complex']['Total']))
+            text.extend(('           Translational      Rotational      Vibrational           Total',
+                         'Complex   %13.4f %15.4f %16.4f %15.4f\n' % (self['complex']['Translational'],
+                                                                      self['complex']['Rotational'],
+                                                                      self['complex']['Vibrational'],
+                                                                      self['complex']['Total'])))
+
             if not self.stability:
                 text.extend(['Receptor  %13.4f %15.4f %16.4f %15.4f\n' % (self['receptor']['Translational'],
                                                                           self['receptor']['Rotational'],
@@ -450,12 +445,13 @@ class QHout(dict):
                              'Ligand    %13.4f %15.4f %16.4f %15.4f\n' % (self['ligand']['Translational'],
                                                                           self['ligand']['Rotational'],
                                                                           self['ligand']['Vibrational'],
-                                                                          self['ligand']['Total'])])
-                text.append('')
-                text.append('-TΔS   %13.4f %15.4f %16.4f %15.4f\n' % (self['delta']['Translational'],
-                                                                      self['delta']['Rotational'],
-                                                                      self['delta']['Vibrational'],
-                                                                      self['delta']['Total']))
+                                                                          self['ligand']['Total']),
+                             '',
+                             '-TΔS   %13.4f %15.4f %16.4f %15.4f\n' % (self['delta']['Translational'],
+                                                                       self['delta']['Rotational'],
+                                                                       self['delta']['Vibrational'],
+                                                                       self['delta']['Total'])])
+
             return '\n'.join(text) + '\n\n'
 
     def _read(self):
@@ -603,9 +599,7 @@ class NMODEout(dict):
             have to store a single line at a time in addition to the arrays of
             data)
         """
-        rawline = outfile.readline()
-
-        while rawline:
+        while rawline:= outfile.readline():
             if rawline[:35] == '   |---- Entropy not Calculated---|':
                 sys.stderr.write('Not all frames minimized within tolerance')
 
@@ -617,8 +611,6 @@ class NMODEout(dict):
                     float(outfile.readline().split()[3]) * self.temperature / 1000 * -1)
                 self['Vibrational'] = self['Vibrational'].append(
                     float(outfile.readline().split()[3]) * self.temperature / 1000 * -1)
-
-            rawline = outfile.readline()
 
     def _fill_composite_terms(self):
         for key in self.composite_keys:
@@ -642,8 +634,7 @@ class GBout(AmberOutput):
 
     def _get_energies(self, outfile):
         """ Parses the mdout files for the GB potential terms """
-        rawline = outfile.readline()
-        while rawline:
+        while rawline:= outfile.readline():
             if rawline[:5] == ' BOND':
                 words = rawline.split()
                 self['BOND'] = self['BOND'].append(float(words[2]))
@@ -661,7 +652,6 @@ class GBout(AmberOutput):
                 words = outfile.readline().split()
                 self['1-4 VDW'] = self['1-4 VDW'].append(float(words[3]))
                 self['1-4 EEL'] = self['1-4 EEL'].append(float(words[7]))
-            rawline = outfile.readline()
 
     def _extra_reading(self, fileno):
         # Load the ESURF data from the cpptraj output
@@ -688,8 +678,7 @@ class PBout(AmberOutput):
 
     def _get_energies(self, outfile):
         """ Parses the energy values from the output files """
-        rawline = outfile.readline()
-        while rawline:
+        while rawline:= outfile.readline():
             if rawline[:5] == ' BOND':
                 words = rawline.split()
                 self['BOND'] = self['BOND'].append(float(words[2]))
@@ -713,7 +702,6 @@ class PBout(AmberOutput):
                     self['EDISPER'] = self['EDISPER'].append(float(words[5]))
                 else:
                     self['EDISPER'] = self['EDISPER'].append(0.00)
-            rawline = outfile.readline()
 
 
 class RISMout(AmberOutput):
@@ -736,9 +724,7 @@ class RISMout(AmberOutput):
         # 1. Standard free energy (solvtype==0)
         # 2. GF free energy (solvtype==1)
 
-        rawline = outfile.readline()
-
-        while rawline:
+        while rawline:= outfile.readline():
 
             if re.match(r'(solute_epot|solutePotentialEnergy)', rawline):
                 words = rawline.split()
@@ -754,8 +740,6 @@ class RISMout(AmberOutput):
                 self['ERISM'] = self['ERISM'].append(float(rawline.split()[1]))
             elif self.solvtype == 1 and re.match(r'(rism_exchGF|rism_excessChemicalPotentialGF)\s', rawline):
                 self['ERISM'] = self['ERISM'].append(float(rawline.split()[1]))
-
-            rawline = outfile.readline()
 
 
 class RISM_std_Out(RISMout):
@@ -786,9 +770,8 @@ class PolarRISMout(RISMout):
         #
         # 1. Standard free energy (solvtype==0)
         # 2. GF free energy (solvtype==1)
-        rawline = outfile.readline()
 
-        while rawline:
+        while rawline := outfile.readline():
 
             if re.match(r'(solute_epot|solutePotentialEnergy)', rawline):
                 words = rawline.split()
@@ -812,8 +795,6 @@ class PolarRISMout(RISMout):
             elif self.solvtype == 1 and re.match(
                     r'(rism_apolGF|rism_apolarExcessChemicalPotentialGF)\s', rawline):
                 self['APOLAR SOLV'] = self['APOLAR SOLV'].append(float(rawline.split()[1]))
-
-            rawline = outfile.readline()
 
 
 class PolarRISM_std_Out(PolarRISMout):
@@ -843,10 +824,7 @@ class QMMMout(GBout):
             entirely outside this system
         """
 
-        rawline = outfile.readline()
-
-        while rawline:
-
+        while rawline := outfile.readline():
             if rawline[:5] == ' BOND':
                 words = rawline.split()
                 self['BOND'] = self['BOND'].append(float(words[2]))
@@ -875,7 +853,6 @@ class QMMMout(GBout):
                     self['ESCF'] = self['ESCF'].append(float(words[1]))
                 else:
                     self['ESCF'] = self['ESCF'].append(float(words[2]))
-            rawline = outfile.readline()
 
 
 class BindingStatistics(dict):
@@ -984,10 +961,7 @@ class BindingStatistics(dict):
                 text.extend(self.rec.summary(output_format))
                 text.extend(self.lig.summary(output_format))
             else:
-                text.append(self.com.summary())
-                text.append(self.rec.summary())
-                text.append(self.lig.summary())
-
+                text.extend((self.com.summary(), self.rec.summary(), self.lig.summary()))
         if isinstance(self.com, NMODEout):
             col_name = '%-16s' % 'Entropy Term'
         else:
@@ -1022,9 +996,12 @@ class BindingStatistics(dict):
             sem = float(std / sqrt(num_frames))
 
             if _output_format:
-                text.append(['Δ' + printkey, avg, stdev, std, semp, sem])
+                text.append([f'Δ{printkey}', avg, stdev, std, semp, sem])
             else:
-                text.append(f"{'Δ' + printkey:16s} {avg:13.2f} {stdev:13.2f} {std:10.2f} {semp:12.2f} {sem:10.2f}")
+                text.append(
+                    f'{f"Δ{printkey}":16s} {avg:13.2f} {stdev:13.2f} {std:10.2f} {semp:12.2f} {sem:10.2f}'
+                )
+
 
         if self.composite_keys and not _output_format:
             text.append('')
@@ -1041,11 +1018,13 @@ class BindingStatistics(dict):
                 num_frames = min(len(self.com[key]), len(self.rec[key]), len(self.lig[key]))
             semp = float(stdev / sqrt(num_frames))
             sem = float(std / sqrt(num_frames))
-                # num_frames is the same as the one from above
             if _output_format:
-                text.append(['Δ' + key, avg, stdev, std, semp, sem])
+                text.append([f'Δ{key}', avg, stdev, std, semp, sem])
             else:
-                text.append(f"{'Δ' + key:16s} {avg:13.2f} {stdev:13.2f} {std:10.2f} {semp:12.2f} {sem:10.2f}")
+                text.append(
+                    f'{f"Δ{key}":16s} {avg:13.2f} {stdev:13.2f} {std:10.2f} {semp:12.2f} {sem:10.2f}'
+                )
+
 
         return text if _output_format else '\n'.join(text) + '\n'
 
@@ -1136,9 +1115,12 @@ class DeltaBindingStatistics(dict):
             sem = float(std / sqrt(num_frames))
             semp = float(stdev / sqrt(num_frames))
             if _output_format:
-                text.append(['ΔΔ' + printkey, avg, stdev, std, semp, sem])
+                text.append([f'ΔΔ{printkey}', avg, stdev, std, semp, sem])
             else:
-                text.append(f"{'ΔΔ' + printkey:16s} {avg:13.2f} {stdev:13.2f} {std:10.2f} {semp:12.2f} {sem:10.2f}")
+                text.append(
+                    f'{f"ΔΔ{printkey}":16s} {avg:13.2f} {stdev:13.2f} {std:10.2f} {semp:12.2f} {sem:10.2f}'
+                )
+
 
         if self.composite_keys:
             text.append('')
@@ -1152,11 +1134,13 @@ class DeltaBindingStatistics(dict):
             num_frames = len(self[key])
             sem = float(std / sqrt(num_frames))
             semp = float(stdev / sqrt(num_frames))
-                # num_frames is the same as the one from above
             if _output_format:
-                text.append(['ΔΔ' + key, avg, stdev, std, semp, sem])
+                text.append([f'ΔΔ{key}', avg, stdev, std, semp, sem])
             else:
-                text.append(f"{'ΔΔ' + key:16s} {avg:13.2f} {stdev:13.2f} {std:10.2f} {semp:12.2f} {sem:10.2f}")
+                text.append(
+                    f'{f"ΔΔ{key}":16s} {avg:13.2f} {stdev:13.2f} {std:10.2f} {semp:12.2f} {sem:10.2f}'
+                )
+
 
         return text if _output_format else '\n'.join(text) + '\n'
 
@@ -1183,7 +1167,6 @@ class DecompOut(dict):
         self.csvwriter = None
         self.surften = None
         self.current_file = 0  # File counter
-        self.get_next_term = self._get_next_term
 
     def parse_from_file(self, basename, resl, INPUT, surften, csvwriter, num_files=1, mut=False):
         self.basename = basename  # base name of output files
