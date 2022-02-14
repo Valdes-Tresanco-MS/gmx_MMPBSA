@@ -1217,8 +1217,8 @@ class DecompOut(dict):
             raise OutputError('DecompOut: Not a decomp output file')
         for token in self.allowed_tokens:
             self[token] = {}
-        self.decfile = open(basename + '.0', 'r')
-        self._fill_all_terms()
+
+        self._read()
         self._fill_composite_terms()
 
     def parse_from_h5(self, d):
@@ -1253,74 +1253,57 @@ class DecompOut(dict):
             raise TypeError("{}.{} have 0 TDC starts".format(self.basename, 0))
         return num_terms
 
-    def _get_next_term(self, expected_type, framenum=1):
-        """ Gets the next energy term from the output file(s) """
-        line = self.decfile.readline()
-        if expected_type and expected_type not in self.allowed_tokens:
-            raise OutputError('BUGBUG: expected_type must be in %s' % self.allowed_tokens)
-        while line[:3] not in self.allowed_tokens:
-            # We only get in here if we've gone off the end of a block, so our
-            # current term number is 0 now.
-            line = self.decfile.readline()
-            if not line:
-                self.decfile.close()
-                if self.current_file == self.num_files - 1:
-                    return []
-                self.current_file += 1
-                self.decfile = open('%s.%d' % (self.basename, self.current_file), 'r')
-                line = self.decfile.readline()
-        # Return [res #, internal, vdw, eel, pol, sas]
-        if expected_type and expected_type != line[:3]:
-            raise OutputError(('Expecting %s type, but got %s type. Re-run ' +
-                               'gmx_MMPBSA with the correct dec_verbose') % (expected_type, line[:3]))
-        if self.mut and self.resl[int(line[4:10]) - 1].is_mutant():
-            resnum = self.resl[int(line[4:10]) - 1].mutant_string
-        else:
-            resnum = self.resl[int(line[4:10]) - 1].string
-        internal = float(line[11:20])
-        vdw = float(line[21:30])
-        eel = float(line[31:40])
-        pol = float(line[41:50])
-        sas = float(line[51:60]) * self.surften
-
-        if resnum not in self[line[:3]]:
-            self[line[:3]][resnum] = {
-                'int': EnergyVector(),
-                'vdw': EnergyVector(),
-                'eel': EnergyVector(),
-                'pol': EnergyVector(),
-                'sas': EnergyVector()
-            }
-
-        self[line[:3]][resnum]['int'] = self[line[:3]][resnum]['int'].append(internal)
-        self[line[:3]][resnum]['vdw'] = self[line[:3]][resnum]['vdw'].append(vdw)
-        self[line[:3]][resnum]['eel'] = self[line[:3]][resnum]['eel'].append(eel)
-        self[line[:3]][resnum]['pol'] = self[line[:3]][resnum]['pol'].append(pol)
-        self[line[:3]][resnum]['sas'] = self[line[:3]][resnum]['sas'].append(sas)
-        return [resnum, internal, vdw, eel, pol, sas]
-
-    def _fill_all_terms(self):
+    def _read(self):
         """
-        This is for stability calculations -- just get all of the terms to
-        fill up the data arrays.
+        Internal reading function. This should be called at the end of __init__.
+        It loops through all of the output files to populate the arrays
         """
-        token_counter = 0
-        searched_type = self.allowed_tokens[0]
-        framenum = self.INPUT['startframe']
-        frames = 0
-        com_token = self.get_next_term(self.allowed_tokens[0], framenum)
-        while com_token:
-            # Get all of the tokens
-            for _ in range(1, self.num_terms):
-                com_token = self.get_next_term(searched_type, framenum)
-            token_counter += 1
-            searched_type = self.allowed_tokens[token_counter % len(self.allowed_tokens)]
-            if token_counter % len(self.allowed_tokens) == 0:
-                framenum += self.INPUT['interval']
-                frames += 1
-            com_token = self.get_next_term(searched_type, framenum)
+        for fileno in range(self.num_files):
+            with open('%s.%d' % (self.basename, fileno)) as output_file:
+                self._get_decomp_energies(output_file)
 
-        self.numframes = frames
+    def _get_decomp_energies(self, outfile):
+        self.numframes = 0
+        while line := outfile.readline():
+            if line[:3] in self.allowed_tokens:
+                if self.mut and self.resl[int(line[4:10]) - 1].is_mutant():
+                    resnum = self.resl[int(line[4:10]) - 1].mutant_string
+                else:
+                    resnum = self.resl[int(line[4:10]) - 1].string
+                internal = float(line[11:20])
+                vdw = float(line[21:30])
+                eel = float(line[31:40])
+                pol = float(line[41:50])
+                sas = float(line[51:60]) * self.surften
+
+                if resnum not in self[line[:3]]:
+                    self[line[:3]][resnum] = {
+                        'int': EnergyVector(),
+                        'vdw': EnergyVector(),
+                        'eel': EnergyVector(),
+                        'pol': EnergyVector(),
+                        'sas': EnergyVector()
+                    }
+                self[line[:3]][resnum]['int'] = self[line[:3]][resnum]['int'].append(internal)
+                self[line[:3]][resnum]['vdw'] = self[line[:3]][resnum]['vdw'].append(vdw)
+                self[line[:3]][resnum]['eel'] = self[line[:3]][resnum]['eel'].append(eel)
+                self[line[:3]][resnum]['pol'] = self[line[:3]][resnum]['pol'].append(pol)
+                self[line[:3]][resnum]['sas'] = self[line[:3]][resnum]['sas'].append(sas)
+                self.numframes = len(self[line[:3]][resnum]['int'])
+
+    def _print_vectors(self, csvwriter):
+        tokens = {'TDC': 'Total Decomposition Contribution (TDC)',
+                  'SDC': 'Sidechain Decomposition Contribution (SDC)',
+                  'BDC': 'Backbone Decomposition Contribution (BDC)'}
+        for term in self.allowed_tokens:
+            csvwriter.writerow([tokens[term]])
+            csvwriter.writerow(['Frame #', 'Residue', 'Internal', 'van der Waals', 'Electrostatic', 'Polar Solvation',
+                                'Non-Polar Solv.', 'TOTAL'])
+            c = self.INPUT['startframe']
+            for i in range(self.numframes):
+                for res in self[term]:
+                    csvwriter.writerow([c, res] + [round(self[term][res][key][i], 2) for key in self[term][res]])
+                c += self.INPUT['interval']
 
     def _fill_composite_terms(self):
         for term in self:
@@ -1329,12 +1312,12 @@ class DecompOut(dict):
                 # pair decomp scheme
                 if isinstance(item, dict):
                     for res2 in self[term][res]:
-                        tot = EnergyVector(len(self[term][res][res2]['int']))
+                        tot = EnergyVector(self.numframes)
                         for e in self[term][res][res2]:
                             tot = tot + self[term][res][res2][e]
                         self[term][res][res2]['tot'] = tot
                 else:
-                    tot = EnergyVector(len(self[term][res]['int']))
+                    tot = EnergyVector(self.numframes)
                     for e in self[term][res]:
                         tot = tot + self[term][res][e]
                     self[term][res]['tot'] = tot
@@ -1376,7 +1359,7 @@ class DecompOut(dict):
                 sas_std = self[term][res]['sas'].stdev()
                 tot_avg = self[term][res]['tot'].mean()
                 tot_std = self[term][res]['tot'].stdev()
-                sqrt_frames = sqrt(len(self[term][res]['int']))
+                sqrt_frames = sqrt(self.numframes)
 
                 if _output_format:
                     text.append([res,
@@ -1400,22 +1383,6 @@ class DecompOut(dict):
                 text.append('')
 
         return text if _output_format else '\n'.join(text)
-
-    def _get_next_term_csv(self, expected_type, framenum=1):
-        """ Gets the next term and prints data to csv file """
-        mydat = self._get_next_term(expected_type)
-        if mydat:
-            self.csvwriter[expected_type].writerow([framenum] + mydat + [sum(mydat[-5:])])
-        else:
-            self.csvwriter[expected_type].writerow([])
-        return mydat
-
-    def _write_header(self, csvwriter):
-        """ Writes a table header to a passed CSV file """
-        csvwriter.writerow(['Frame #', 'Residue', 'Internal', 'van der Waals',
-                            'Electrostatic', 'Polar Solvation',
-                            'Non-Polar Solv.', 'TOTAL'])
-
 
 class PairDecompOut(DecompOut):
     """ Same as DecompOut, but for Pairwise decomposition """
@@ -1443,38 +1410,58 @@ class PairDecompOut(DecompOut):
             raise OutputError(('Expecting %s type, but got %s type. Re-run ' +
                                'gmx_MMPBSA with the correct dec_verbose') % (expected_type, line[:3]))
 
-        if self.mut and self.resl[int(line[4:11]) - 1].is_mutant():
-            resnum = self.resl[int(line[4:11]) - 1].mutant_string
-        else:
-            resnum = self.resl[int(line[4:11]) - 1].string
-        if self.mut and self.resl[int(line[13:20]) - 1].is_mutant():
-            resnum2 = self.resl[int(line[13:20]) - 1].mutant_string
-        else:
-            resnum2 = self.resl[int(line[13:20]) - 1].string
+    def _get_decomp_energies(self, outfile):
+        self.numframes = 0
+        while line := outfile.readline():
+            if line[:3] in self.allowed_tokens:
+                if self.mut and self.resl[int(line[4:11]) - 1].is_mutant():
+                    resnum = self.resl[int(line[4:11]) - 1].mutant_string
+                else:
+                    resnum = self.resl[int(line[4:11]) - 1].string
+                if self.mut and self.resl[int(line[13:20]) - 1].is_mutant():
+                    resnum2 = self.resl[int(line[13:20]) - 1].mutant_string
+                else:
+                    resnum2 = self.resl[int(line[13:20]) - 1].string
 
-        internal = float(line[21:33])
-        vdw = float(line[34:46])
-        eel = float(line[47:59])
-        pol = float(line[60:72])
-        sas = float(line[73:85]) * self.surften
+                internal = float(line[21:33])
+                vdw = float(line[34:46])
+                eel = float(line[47:59])
+                pol = float(line[60:72])
+                sas = float(line[73:85]) * self.surften
 
-        if resnum not in self[line[:3]]:
-            self[line[:3]][resnum] = {}
+                if resnum not in self[line[:3]]:
+                    self[line[:3]][resnum] = {}
 
-        if resnum2 not in self[line[:3]][resnum]:
-            self[line[:3]][resnum][resnum2] = {
-                'int': EnergyVector(),
-                'vdw': EnergyVector(),
-                'eel': EnergyVector(),
-                'pol': EnergyVector(),
-                'sas': EnergyVector()}
+                if resnum2 not in self[line[:3]][resnum]:
+                    self[line[:3]][resnum][resnum2] = {
+                        'int': EnergyVector(),
+                        'vdw': EnergyVector(),
+                        'eel': EnergyVector(),
+                        'pol': EnergyVector(),
+                        'sas': EnergyVector()}
 
-        self[line[:3]][resnum][resnum2]['int'] = self[line[:3]][resnum][resnum2]['int'].append(internal)
-        self[line[:3]][resnum][resnum2]['vdw'] = self[line[:3]][resnum][resnum2]['vdw'].append(vdw)
-        self[line[:3]][resnum][resnum2]['eel'] = self[line[:3]][resnum][resnum2]['eel'].append(eel)
-        self[line[:3]][resnum][resnum2]['pol'] = self[line[:3]][resnum][resnum2]['pol'].append(pol)
-        self[line[:3]][resnum][resnum2]['sas'] = self[line[:3]][resnum][resnum2]['sas'].append(sas)
-        return [resnum, resnum2, internal, vdw, eel, pol, sas]
+                self[line[:3]][resnum][resnum2]['int'] = self[line[:3]][resnum][resnum2]['int'].append(internal)
+                self[line[:3]][resnum][resnum2]['vdw'] = self[line[:3]][resnum][resnum2]['vdw'].append(vdw)
+                self[line[:3]][resnum][resnum2]['eel'] = self[line[:3]][resnum][resnum2]['eel'].append(eel)
+                self[line[:3]][resnum][resnum2]['pol'] = self[line[:3]][resnum][resnum2]['pol'].append(pol)
+                self[line[:3]][resnum][resnum2]['sas'] = self[line[:3]][resnum][resnum2]['sas'].append(sas)
+                self.numframes = len(self[line[:3]][resnum][resnum2]['int'])
+
+    def _print_vectors(self, csvwriter):
+        tokens = {'TDC': 'Total Decomposition Contribution (TDC)',
+                  'SDC': 'Sidechain Decomposition Contribution (SDC)',
+                  'BDC': 'Backbone Decomposition Contribution (BDC)'}
+        for term in self.allowed_tokens:
+            csvwriter.writerow([tokens[term]])
+            csvwriter.writerow(['Frame #', 'Resid 1', 'Resid 2', 'Internal', 'van der Waals', 'Electrostatic',
+                                'Polar Solvation', 'Non-Polar Solv.', 'TOTAL'])
+            c = self.INPUT['startframe']
+            for i in range(self.numframes):
+                for res in self[term]:
+                    for res2 in self[term][res]:
+                        csvwriter.writerow([c, res, res2] +
+                                           [round(self[term][res][res2][key][i], 2) for key in self[term][res][res2]])
+                c += self.INPUT['interval']
 
     def summary(self, output_format: str = 'ascii'):
         """ Writes the summary in ASCII format to and open output_file """
