@@ -29,9 +29,9 @@ An Efficient Program for End-State Free Energy Calculations**. _Journal of Chemi
 ---------------------------------------
 
 Authors:
-- Mario Sergio Valdés Tresanco, PhD Student. _University of Medellin, Colombia_
-- Mario Ernesto Valdés Tresanco, PhD Student. _University of Calgary, Canada._
-- Pedro Alberto Valiente, PhD. _University of Toronto, Canada_
-- Ernesto Moreno Frías, PhD. _University of Medellin, Colombia_
+- [Mario Sergio Valdés Tresanco](https://www.researchgate.net/profile/Mario-Valdes-Tresanco-2), PhD Student. _University of Medellin, Colombia_
+- [Mario Ernesto Valdés Tresanco](https://www.researchgate.net/profile/Mario-Valdes-Tresanco), PhD Student. _University of Calgary, Canada._
+- [Pedro Alberto Valiente](https://www.researchgate.net/profile/Pedro-Valiente), PhD. _University of Toronto, Canada_
+- [Ernesto Moreno Frías](https://www.researchgate.net/profile/Ernesto-Moreno-Frias), PhD. _University of Medellin, Colombia_
 
 ---------------------------------------
