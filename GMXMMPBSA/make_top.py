@@ -874,8 +874,8 @@ class CheckMakeTop:
                     break
         cb_atom = None
         ca_atom = None
-        logging.info(f"Mutating {mut_top.residues[mut_index].chain}/{mut_top.residues[mut_index].number} "
-                     f"{mut_top.residues[mut_index].name} by {mut_aa}")
+        logging.info(f"Mutating {self.complex_str.residues[mut_index].chain}/{self.complex_str.residues[mut_index].number} "
+                     f"{self.complex_str.residues[mut_index].name} by {mut_aa}")
 
         mutant_resname = mut_top.residues[mut_index].name
 
