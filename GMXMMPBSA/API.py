@@ -30,7 +30,8 @@ from GMXMMPBSA.calculation import InteractionEntropyCalc, C2EntropyCalc
 from GMXMMPBSA import infofile, main
 from GMXMMPBSA.exceptions import NoFileExists
 from GMXMMPBSA.fake_mpi import MPI
-from GMXMMPBSA.amber_outputs import H5Output, BindingStatistics, IEout, C2out, DeltaBindingStatistics
+from GMXMMPBSA.amber_outputs import (H5Output, BindingStatistics, IEout, C2out, DeltaBindingStatistics,
+                                     DecompBinding, PairDecompBinding)
 import pandas as pd
 from pathlib import Path
 import os
@@ -214,6 +215,20 @@ class MMPBSA_API():
                                 c2 = C2EntropyCalc(edata, self.app_namespace.INPUT)
                                 v['c2'][model] = {'c2data': c2.c2data, 'sigma': c2.ie_std, 'c2_std': c2.c2_std,
                                                   'c2_ci': c2.c2_ci}
+            elif key in ['decomp_normal', 'decomp_mutant']:
+                for model, v1 in v.items():
+                    v1['complex'].set_frame_range(start, end, interval)
+                    if not self.stability:
+                        v1['receptor'].set_frame_range(start, end, interval)
+                        v1['ligand'].set_frame_range(start, end, interval)
+                        # 3- Recalcular los deltas
+                        if self.app_namespace.INPUT['idecomp'] in [1, 2]:
+                            Decomp_Delta = DecompBinding
+                        else:
+                            Decomp_Delta = PairDecompBinding
+                        v1['delta'] = Decomp_Delta(v1['complex'], v1['receptor'], v1['ligand'],
+                                                   self.app_namespace.INPUT)
+
 
         # 5- Recalcular los delta delta sin CAS
         if 'normal' in self.data and self.data['normal'] and 'mutant' in self.data and self.data['mutant']:
