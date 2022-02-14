@@ -556,7 +556,7 @@ class CheckMakeTop:
         if mut_index:
             str_ = self.makeMutTop(str_, mut_index, True)
         str_.strip(mask)
-        str_file = self.FILES.prefix + f'{basename}_F{c}.pdb'
+        str_file = f'{self.FILES.prefix}{basename}_F{c}.pdb'
         str_.save(str_file, 'pdb', True, renumber=False)
         return end, str_file
 
@@ -788,10 +788,11 @@ class CheckMakeTop:
             GMXMMPBSA_ERROR('Only ONE mutant residue is allowed.')
         r = sele_res_dict[0]
         res = self.complex_str.residues[r - 1]
-        icode = ':' + res.insertion_code if res.insertion_code else ''
-        if not parmed.residue.AminoAcidResidue.has(res.name):
-            logging.warning(f"Selecting residue {res.chain}:{res.name}:{res.number}{icode} can't be mutated and "
-                              f"will be ignored...")
+        icode = f':{res.insertion_code}' if res.insertion_code else ''
+        if (not parmed.residue.AminoAcidResidue.has(res.name) or res.name in ['CYX', 'PRO', 'GLY'] or
+                res.name == 'ALA' and self.INPUT['mutant'] == 'ALA'):
+            GMXMMPBSA_ERROR(f"Selecting residue {res.chain}:{res.name}:{res.number}{icode} can't be mutated. Please, "
+                            f"define a valid residue...")
 
         if r.is_receptor():
             part_index = r.id_index - 1
@@ -820,27 +821,27 @@ class CheckMakeTop:
         mut_top = self.molstr(wt_top)
         mut_aa = self.INPUT['mutant']
 
-        bb_atoms = 'N,H,CA,HA,C,O,HN,'
-        nterm_atoms = 'H1,H2,H3,'
+        bb_atoms = 'N,H,CA,HA,C,O,HN'
+        nterm_atoms = 'H1,H2,H3'
         cterm_atoms = 'OXT'
-        sc_cb_atom = 'CB,'
+        sc_cb_atom = 'CB'
         sc_ala_atoms = ('HB,' +  # VAL, ILE, THR
                         'HB1,HB2,' +
                         'CG1,CG2,OG1,' +  # VAL, ILE, THR
                         'OG,' +  # SER
                         'SG,' +  # CYS
-                        'CG,')
+                        'CG')
 
         if mut_aa in ['GLY', 'G']:
             # FIXME: allow terminal residues to mutate?
-            strip_mask = f':{mut_index + 1} &!@' + bb_atoms + nterm_atoms + cterm_atoms
+            strip_mask = f":{mut_index + 1} &!@{','.join([bb_atoms, nterm_atoms, cterm_atoms])}"
             if not pdb:
-                strip_mask += sc_cb_atom
+                strip_mask += f",{sc_cb_atom}"
         else:
             # FIXME: allow terminal residues to mutate?
-            strip_mask = f':{mut_index + 1} &!@' + bb_atoms + sc_cb_atom + nterm_atoms + cterm_atoms
+            strip_mask = f":{mut_index + 1} &!@{','.join([bb_atoms, sc_cb_atom, nterm_atoms, cterm_atoms])}"
             if not pdb:
-                strip_mask += sc_ala_atoms
+                strip_mask += f",{sc_ala_atoms}"
         mut_top.strip(strip_mask)
 
         h_atoms_prop = {}
@@ -891,7 +892,23 @@ class CheckMakeTop:
             else:
                 if at.name == 'CB':
                     cb_atom = at
-                if at.name in ['CG1', 'CG2', 'OG1', 'OG', 'SG', 'CG']:
+                    continue
+                if at.name == 'CG2':  # VAL, LEU and THR
+                    at.name = 'HB2'
+                    cb_atom.xx, cb_atom.xy, cb_atom.xz, at.xx, at.xy, at.xz = _scaledistance(
+                        [cb_atom.xx, cb_atom.xy,
+                         cb_atom.xz, at.xx, at.xy,
+                         at.xz], 1.09)
+                    for ref_at in h_atoms_prop:
+                        setattr(at, ref_at, h_atoms_prop[ref_at])
+                elif at.name in ['HB']: # VAL, LEU and THR
+                    at.name = 'HB1'
+                    at.type = h_atoms_prop['type']
+                    at.atom_type = h_atoms_prop['atom_type']
+                elif at.name in ['CG', 'OG', 'SG',   # LEU, PHE, TRP, MET, TYR, ARG, LYS, ASN, GLN, ASP, GLU, HIS,
+                                 # PRO (EXCLUDED), CYS (EXCLUDED IF S-S), SER
+                                 'CG1', 'OG1'   # VAL, LEU and THR
+                                 ]:
                     at.name = 'HB3'
                     cb_atom.xx, cb_atom.xy, cb_atom.xz, at.xx, at.xy, at.xz = _scaledistance(
                         [cb_atom.xx, cb_atom.xy,
@@ -899,10 +916,6 @@ class CheckMakeTop:
                          at.xz], 1.09)
                     for ref_at in h_atoms_prop:
                         setattr(at, ref_at, h_atoms_prop[ref_at])
-                elif at.name in ['HB']:
-                    at.name = 'HB1'
-                    at.type = h_atoms_prop['type']
-                    at.atom_type = h_atoms_prop['atom_type']
                 elif at.name in ['HB1', 'HB2', 'HB3']:
                     at.type = h_atoms_prop['type']
                     at.atom_type = h_atoms_prop['atom_type']
