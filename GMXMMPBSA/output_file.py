@@ -407,7 +407,7 @@ def write_outputs(app):
                     nm_davg, nm_dstd = _get_diff(sys_norm['TOTAL'], nm_sys_norm['Total'])
                 else:
                     nm_davg, nm_dstd = _get_diff(sys_norm['TOTAL'], nm_sys_norm['Total'])
-                    final_output.add_section('Using Normal Mode Entropy Approximation:\n'
+                final_output.add_section('Using Normal Mode Entropy Approximation:\n'
                                              f'ΔG{"" if stability else " binding"} = {nm_davg:9.4f} +/- {nm_dstd:7.4f}\n')
 
         if INPUT['alarun']:
@@ -522,7 +522,8 @@ def write_decomp_output(app):
 
     # Open up the CSV energy vector file
     if FILES.dec_energies:
-        dec_energies = open(FILES.dec_energies, 'w')
+        dec_energies_f = open(FILES.dec_energies, 'w')
+        dec_energies = writer(dec_energies_f)
 
     for i, key in enumerate(outkeys):
         if not INPUT[triggers[i]]:
@@ -540,30 +541,18 @@ def write_decomp_output(app):
 
             # Now it's time to dump everything to the CSV file
             if FILES.dec_energies:
+                dec_energies.writerow([headers[i] + '\n'])
+                dec_energies.writerow(['Complex:'])
+                app.calc_types.decomp_normal[key]['complex']._print_vectors(dec_energies)
                 if not stability:
-                    del app.calc_types.decomp_normal[key]['receptor'].csvwriter
-                    del app.calc_types.decomp_normal[key]['ligand'].csvwriter
-                    del app.calc_types.decomp_normal[key]['delta'].csvwriter
-                del app.calc_types.decomp_normal[key]['complex'].csvwriter
-
-                dec_energies.write(headers[i] + '\n')
-                dec_energies.write('Complex:')
-                for token in decomp_norm.allowed_tokens:
-                    utils.concatenate(dec_energies, app.pre + f'{key}_com.' + token + '.csv')
-                if not stability:
-                    dec_energies.write('\n')
-                    dec_energies.write('Receptor:')
-                    for token in decomp_norm.allowed_tokens:
-                        utils.concatenate(dec_energies, app.pre + f'{key}_rec.' + token + '.csv')
-                        dec_energies.write('\n')
-                    dec_energies.write('Ligand:')
-                    for token in decomp_norm.allowed_tokens:
-                        utils.concatenate(dec_energies, app.pre + f'{key}_lig.' + token + '.csv')
-                        dec_energies.write('\n')
-                    dec_energies.write('DELTAS:')
-                    for token in decomp_norm.allowed_tokens:
-                        utils.concatenate(dec_energies, app.pre + f'{key}_bind.' + token + '.csv')
-                dec_energies.write('\n')
+                    dec_energies.writerow(['\n'])
+                    dec_energies.writerow(['Receptor:'])
+                    app.calc_types.decomp_normal[key]['receptor']._print_vectors(dec_energies)
+                    dec_energies.writerow(['Ligand:'])
+                    app.calc_types.decomp_normal[key]['ligand']._print_vectors(dec_energies)
+                    dec_energies.writerow(['DELTAS:'])
+                    app.calc_types.decomp_normal[key]['delta']._print_vectors(dec_energies)
+                dec_energies.writerow('\n')
         # Mutant system
         if INPUT['alarun']:
             if stability:
@@ -578,35 +567,24 @@ def write_decomp_output(app):
                 decompout.writeline(decomp_mut.summary())
             # Now it's time to dump everything to the CSV file
             if FILES.dec_energies:
+                dec_energies.writerow([headers[i] + '(%s mutant)\n' % app.mut_str])
+                dec_energies.writerow(['Complex:'])
+                app.calc_types.decomp_mutant[key]['complex']._print_vectors(dec_energies)
                 if not stability:
-                    del app.calc_types.decomp_mutant[key]['receptor'].csvwriter
-                    del app.calc_types.decomp_mutant[key]['ligand'].csvwriter
-                    del app.calc_types.decomp_mutant[key]['delta'].csvwriter
-                del app.calc_types.decomp_mutant[key]['complex'].csvwriter
-
-                dec_energies.write(headers[i] + '(%s mutant)\n' % app.mut_str)
-                dec_energies.write('Complex:')
-                for token in decomp_mut.allowed_tokens:
-                    utils.concatenate(dec_energies, app.pre + f'{key}_com.' + token + '.csv')
-                if not stability:
-                    dec_energies.write('\n')
-                    dec_energies.write('Receptor:')
-                    for token in decomp_mut.allowed_tokens:
-                        utils.concatenate(dec_energies, app.pre + f'{key}_rec.' + token + '.csv')
-                    dec_energies.write('\n')
-                    dec_energies.write('Ligand:')
-                    for token in decomp_mut.allowed_tokens:
-                        utils.concatenate(dec_energies, app.pre + f'{key}_lig.' + token + '.csv')
-
-                    dec_energies.write('\n')
-                    dec_energies.write('DELTAS:')
-                    for token in decomp_mut.allowed_tokens:
-                        utils.concatenate(dec_energies, app.pre + f'{key}_bind.' + token + '.csv')
-                dec_energies.write('\n')
+                    dec_energies.writerow(['\n'])
+                    dec_energies.writerow(['Receptor:'])
+                    app.calc_types.decomp_mutant[key]['receptor']._print_vectors(dec_energies)
+                    dec_energies.writerow(['\n'])
+                    dec_energies.writerow(['Ligand:'])
+                    app.calc_types.decomp_mutant[key]['ligand']._print_vectors(dec_energies)
+                    dec_energies.writerow(['\n'])
+                    dec_energies.writerow(['DELTAS:'])
+                    app.calc_types.decomp_mutant[key]['delta']._print_vectors(dec_energies)
+                dec_energies.writerow(['\n'])
 
     # Close the file(s)
     if FILES.dec_energies:
-        dec_energies.close()
+        dec_energies_f.close()
     dec_out_file.close()
 
 
