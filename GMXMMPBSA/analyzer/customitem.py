@@ -351,7 +351,7 @@ class CustomItem(QTreeWidgetItem):
             line_change1 = (changes['line_action'] == 1 or changes['line_ie_action'] == 1)
 
             if not self.lp_subw or datachange or line_change3:
-                self.lp_subw = LineChart(line_plot_data, self.line_chart_action, options=options)
+                self.lp_subw = LineChart(line_plot_data, self.line_chart_action, options=options, item_parent=self)
                 self.app.systems[self.system_index]['items_data'][self.keys_path]['line_plot_data'][2] = False
                 self.app.mdi.addSubWindow(self.lp_subw)
             elif line_change1:
@@ -375,7 +375,7 @@ class CustomItem(QTreeWidgetItem):
         if state:
             self.setSelected(True)
             if not self.bp_subw or datachange or changes['bar_action'] == 3:
-                self.bp_subw = BarChart(bar_plot_data, self.bar_chart_action, options=options)
+                self.bp_subw = BarChart(bar_plot_data, self.bar_chart_action, options=options, item_parent=self)
                 self.app.systems[self.system_index]['items_data'][self.keys_path]['bar_plot_data'][2] = False
                 self.app.mdi.addSubWindow(self.bp_subw)
             elif changes['bar_action'] == 1:
@@ -396,7 +396,8 @@ class CustomItem(QTreeWidgetItem):
         if state:
             self.setSelected(True)
             if not self.hmp_subw or datachange or changes['heatmap_action'] == 3:
-                self.hmp_subw = HeatmapChart(heatmap_plot_data, self.heatmap_chart_action, options=options)
+                self.hmp_subw = HeatmapChart(heatmap_plot_data, self.heatmap_chart_action, options=options,
+                                             item_parent=self)
                 self.app.systems[self.system_index]['items_data'][self.keys_path]['heatmap_plot_data'][2] = False
                 self.app.mdi.addSubWindow(self.hmp_subw)
             elif changes['heatmap_action'] == 1:

@@ -821,8 +821,8 @@ class MMPBSA_App(object):
             GMXMMPBSA_ERROR('IDECOMP cannot be 0 for Decomposition analysis!', InputError)
         if INPUT['ions_parameters'] not in range(1,13):
             GMXMMPBSA_ERROR('Ions parameters file name must be in %s!' % range(1,13), InputError)
-        if INPUT['PBRadii'] not in [1, 2, 3, 4]:
-            GMXMMPBSA_ERROR('PBRadii must be 1, 2, 3 or 4!', InputError)
+        if INPUT['PBRadii'] not in range(1, 8):
+            GMXMMPBSA_ERROR('PBRadii must be 1, 2, 3, 4, 5, 6, or 7!', InputError)
         if INPUT['solvated_trajectory'] not in [0, 1]:
             GMXMMPBSA_ERROR('SOLVATED_TRAJECTORY must be 0 or 1!', InputError)
         if INPUT['ifqnt'] not in [0, 1]:
@@ -920,7 +920,7 @@ class MMPBSA_App(object):
         from types import SimpleNamespace
         if not self.master:
             return
-        logging.info('Parsing results to output files...')
+        logging.info('Parsing results to output files...\n')
         self.calc_types = SimpleNamespace(normal={}, mutant={}, mut_norm={}, decomp_normal={}, decomp_mutant={},
                                           decomp_mut_norm={})
         INPUT, FILES = self.INPUT, self.FILES

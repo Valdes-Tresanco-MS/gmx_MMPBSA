@@ -33,6 +33,158 @@ ncpu = multiprocessing.cpu_count()
 style = Path(__file__).joinpath('style')
 
 
+def bar_label(ax, container, labels=None, *, fmt="%g", label_type="edge", padding=0, **kwargs):
+    """
+    Fixed bar_label for inverted axes. matplotlib >= 3.5.2 ???
+
+    PR: https://github.com/matplotlib/matplotlib/pull/22447
+
+    Label a bar plot.
+
+    Adds labels to bars in the given `.BarContainer`.
+    You may need to adjust the axis limits to fit the labels.
+
+    Parameters
+    ----------
+    container : `.BarContainer`
+        Container with all the bars and optionally errorbars, likely
+        returned from `.bar` or `.barh`.
+
+    labels : array-like, optional
+        A list of label texts, that should be displayed. If not given, the
+        label texts will be the data values formatted with *fmt*.
+
+    fmt : str, default: '%g'
+        A format string for the label.
+
+    label_type : {'edge', 'center'}, default: 'edge'
+        The label type. Possible values:
+
+        - 'edge': label placed at the end-point of the bar segment, and the
+          value displayed will be the position of that end-point.
+        - 'center': label placed in the center of the bar segment, and the
+          value displayed will be the length of that segment.
+          (useful for stacked bars, i.e.,
+          :doc:`/gallery/lines_bars_and_markers/bar_label_demo`)
+
+    padding : float, default: 0
+        Distance of label from the end of the bar, in points.
+
+    **kwargs
+        Any remaining keyword arguments are passed through to
+        `.Axes.annotate`. The alignment parameters (
+        *horizontalalignment* / *ha*, *verticalalignment* / *va*) are
+        not supported because the labels are automatically aligned to
+        the bars.
+
+    Returns
+    -------
+    list of `.Text`
+        A list of `.Text` instances for the labels.
+    """
+    from matplotlib import _api
+    import itertools
+
+    for key in ['horizontalalignment', 'ha', 'verticalalignment', 'va']:
+        if key in kwargs:
+            raise ValueError(
+                f"Passing {key!r} to bar_label() is not supported.")
+
+    # want to know whether to put label on positive or negative direction
+    # cannot use np.sign here because it will return 0 if x == 0
+    a, b = ax.yaxis.get_view_interval()
+    y_inverted = a > b
+    c, d = ax.xaxis.get_view_interval()
+    x_inverted = c > d
+    def sign(x):
+        return 1 if x >= 0 else -1
+
+    _api.check_in_list(['edge', 'center'], label_type=label_type)
+
+    bars = container.patches
+    errorbar = container.errorbar
+    datavalues = container.datavalues
+    orientation = container.orientation
+
+    if errorbar:
+        # check "ErrorbarContainer" for the definition of these elements
+        lines = errorbar.lines  # attribute of "ErrorbarContainer" (tuple)
+        barlinecols = lines[2]  # 0: data_line, 1: caplines, 2: barlinecols
+        barlinecol = barlinecols[0]  # the "LineCollection" of error bars
+        errs = barlinecol.get_segments()
+    else:
+        errs = []
+
+    if labels is None:
+        labels = []
+
+    annotations = []
+
+    for bar, err, dat, lbl in itertools.zip_longest(
+            bars, errs, datavalues, labels
+    ):
+        (x0, y0), (x1, y1) = bar.get_bbox().get_points()
+        xc, yc = (x0 + x1) / 2, (y0 + y1) / 2
+
+        if orientation == "vertical":
+            extrema = max(y0, y1) if dat >= 0 else min(y0, y1)
+            length = abs(y0 - y1)
+        elif orientation == "horizontal":
+            extrema = max(x0, x1) if dat >= 0 else min(x0, x1)
+            length = abs(x0 - x1)
+
+        if err is None:
+            endpt = extrema
+        elif orientation == "vertical":
+            endpt = err[:, 1].max() if dat >= 0 else err[:, 1].min()
+        elif orientation == "horizontal":
+            endpt = err[:, 0].max() if dat >= 0 else err[:, 0].min()
+
+        if label_type == "center":
+            value = sign(dat) * length
+        elif label_type == "edge":
+            value = extrema
+
+        if label_type == "center":
+            xy = xc, yc
+        elif label_type == "edge" and orientation == "vertical":
+            xy = xc, endpt
+        elif label_type == "edge" and orientation == "horizontal":
+            xy = endpt, yc
+
+        if orientation == "vertical":
+            y_direction = -1 if y_inverted else 1
+            xytext = 0, y_direction * sign(dat) * padding
+        else:
+            x_direction = -1 if x_inverted else 1
+            xytext = x_direction * sign(dat) * padding, 0
+
+        if label_type == "center":
+            ha, va = "center", "center"
+        elif label_type == "edge":
+            if orientation == "vertical":
+                ha = 'center'
+                if y_inverted:
+                    va = 'top' if dat > 0 else 'bottom'  # also handles NaN
+                else:
+                    va = 'top' if dat < 0 else 'bottom'  # also handles NaN
+            elif orientation == "horizontal":
+                if x_inverted:
+                    ha = 'right' if dat > 0 else 'left'  # also handles NaN
+                else:
+                    ha = 'right' if dat < 0 else 'left'  # also handles NaN
+                va = 'center'
+
+        if np.isnan(dat):
+            lbl = ''
+
+        annotation = ax.annotate(fmt % value if lbl is None else lbl,
+                                   xy, xytext, textcoords="offset points",
+                                   ha=ha, va=va, **kwargs)
+        annotations.append(annotation)
+
+    return annotations
+
 def com2str(com_pdb_str):
     import parmed
     import tempfile

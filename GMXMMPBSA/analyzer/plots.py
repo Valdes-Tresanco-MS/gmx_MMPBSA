@@ -16,7 +16,6 @@
 # ##############################################################################
 import matplotlib as mpl
 import matplotlib.backend_bases
-import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
 import numpy as np
@@ -32,12 +31,12 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 from matplotlib.widgets import Cursor
 from mpl_toolkits.axes_grid1 import make_axes_locatable
-from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 from scipy import stats
 import itertools
 
 # sns.set_theme()
 from GMXMMPBSA.analyzer.chartsettings import Palettes
+from GMXMMPBSA.analyzer.utils import bar_label
 
 plt.rcParams["figure.autolayout"] = True
 
@@ -163,8 +162,8 @@ class ChartsBase(QMdiSubWindow):
 
 
 class LineChart(ChartsBase):
-    def __init__(self, data: pandas.DataFrame, button: QToolButton, options: dict = None):
-        super(LineChart, self).__init__(button, options)
+    def __init__(self, data: pandas.DataFrame, button: QToolButton, options: dict = None, item_parent=None):
+        super(LineChart, self).__init__(button, options, item_parent)
 
         self.ie_bar = None
         self.ie_barlabel = None
@@ -198,12 +197,12 @@ class LineChart(ChartsBase):
             self.ie_bar = sns.barplot(data=data[['iedata', 'sigma']], ax=ax2, palette=colors)
             numf = data['iedata'].count()
             self.ie_bar.set(xticklabels=[f"ie\n(last\n {numf} frames)", "σ(Int.\nEnergy)"])
-            self.ie_barlabel = self.ie_bar.bar_label(self.ie_bar.containers[0],
-                                                     size=options[('Bar Plot', 'IE/C2 Entropy', 'bar-plot',
-                                                                   'bar-label-fontsize')],
-                                                     fmt='%.2f',
-                                                     padding=options[('Bar Plot', 'IE/C2 Entropy', 'bar-plot',
-                                                                      'bar-label-padding')])
+            self.ie_barlabel = bar_label(self.ie_bar, self.ie_bar.containers[0],
+                                         size=options[('Bar Plot', 'IE/C2 Entropy', 'bar-plot', 'bar-label-fontsize')],
+                                         fmt='%.2f',
+                                         padding=options[('Bar Plot', 'IE/C2 Entropy', 'bar-plot',
+                                                          'bar-label-padding')]
+                                         )
             sns.despine(ax=self.ie_bar)
         else:
             axes = self.fig.subplots(1, 1)
@@ -247,8 +246,8 @@ class LineChart(ChartsBase):
 
 
 class BarChart(ChartsBase):
-    def __init__(self, data: pandas.DataFrame, button: QToolButton, options: dict = None):
-        super(BarChart, self).__init__(button, options)
+    def __init__(self, data: pandas.DataFrame, button: QToolButton, options: dict = None, item_parent=None):
+        super(BarChart, self).__init__(button, options, item_parent)
 
         self.bar_labels = []
         # figure canvas definition
@@ -261,7 +260,8 @@ class BarChart(ChartsBase):
         if options['groups'] and options[('Bar Plot', 'subplot-components')]:
             self.axes = self.fig.subplots(1, len(options['groups']), sharey=True,
                                           gridspec_kw={'width_ratios': [len(x) for x in options['groups'].values()]})
-
+            if options[('Bar Plot', 'axes', 'y-inverted')]:
+                self.axes[0].invert_yaxis()
             s = 0
             for c, g in enumerate(options['groups']):
                 bar_plot_ax = sns.barplot(data=data[options['groups'][g]], ci="sd",
@@ -272,17 +272,16 @@ class BarChart(ChartsBase):
                 if options[('Bar Plot', 'scale-yaxis')]: # and options['scalable']:
                     bar_plot_ax.set_yscale('symlog')
                 if options[('Bar Plot', 'bar-label', 'show')]:
-                    bl = bar_plot_ax.bar_label(bar_plot_ax.containers[0],
-                                               size=options[('Bar Plot', 'bar-label', 'fontsize')],
-                                               fmt='%.2f',
-                                               padding=options[('Bar Plot', 'bar-label', 'padding')])
+                    bl = bar_label(bar_plot_ax, bar_plot_ax.containers[0],
+                                   size=options[('Bar Plot', 'bar-label', 'fontsize')],
+                                   fmt='%.2f',
+                                   padding=options[('Bar Plot', 'bar-label', 'padding')],
+                                   label_type=options[('Bar Plot', 'bar-label', 'label_type')])
                     self.bar_labels.append(bl)
                 ylabel = '' if c != 0 else 'Energy (kcal/mol)'
                 self.setup_text(bar_plot_ax, options, key='Bar Plot', title=g, ylabel=ylabel)
                 setattr(self, f'cursor{c}', Cursor(bar_plot_ax, useblit=True, color='black', linewidth=0.5, ls='--'))
                 bar_plot_ax.set_xticklabels(self._set_xticks(bar_plot_ax, options[('Bar Plot', 'remove-molid')]))
-            if options[('Bar Plot', 'axes', 'y-inverted')]:
-                self.axes[0].invert_yaxis()
         else:
             self.axes = self.fig.subplots(1, 1)
             if 'c2' in options:
@@ -293,16 +292,17 @@ class BarChart(ChartsBase):
 
             bar_plot_ax = sns.barplot(data=data, ci="sd", errwidth=1, ax=self.axes, palette=palette,
                                       color=rgb2rgbf(options[('Bar Plot', 'color')]),)
+            if options[('Bar Plot', 'axes', 'y-inverted')] and 'c2' not in options:
+                bar_plot_ax.invert_yaxis()
             if options[('Bar Plot', 'bar-label', 'show')]:
-                bl = bar_plot_ax.bar_label(bar_plot_ax.containers[0],
-                                           size=options[('Bar Plot', 'bar-label', 'fontsize')],
-                                           fmt='%.2f',
-                                           padding=options[('Bar Plot', 'bar-label', 'padding')])
+                bl = bar_label(bar_plot_ax, bar_plot_ax.containers[0],
+                               size=options[('Bar Plot', 'bar-label', 'fontsize')],
+                               fmt='%.2f',
+                               padding=options[('Bar Plot', 'bar-label', 'padding')],
+                               label_type=options[('Bar Plot', 'bar-label', 'label_type')])
                 self.bar_labels.append(bl)
             self.setup_text(bar_plot_ax, options, key='Bar Plot')
             self.cursor = Cursor(bar_plot_ax, useblit=True, color='black', linewidth=0.5, ls='--')
-            if options[('Bar Plot', 'axes', 'y-inverted')] and 'c2' not in options:
-                bar_plot_ax.invert_yaxis()
             bar_plot_ax.set_xticklabels(self._set_xticks(bar_plot_ax, options[('Bar Plot', 'remove-molid')]))
             self.bar_frames = 'frames' in data
         self.setWindowTitle(options['subtitle'])
@@ -349,8 +349,8 @@ class BarChart(ChartsBase):
 
 
 class HeatmapChart(ChartsBase):
-    def __init__(self, data: pandas.DataFrame, button: QToolButton, options: dict = None):
-        super(HeatmapChart, self).__init__(button, options)
+    def __init__(self, data: pandas.DataFrame, button: QToolButton, options: dict = None, item_parent=None):
+        super(HeatmapChart, self).__init__(button, options, item_parent)
 
         self.data = data
 
