@@ -475,7 +475,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
         for s in processed_sys:
             changes = self.systems[s]['chart_options'].changes
             for sub in subwindows:
-                if sub.item_parent.system_index != s:
+                if not sub.item_parent or sub.item_parent.system_index != s:
                     continue
                 if not sub.isVisible():
                     continue
@@ -783,12 +783,13 @@ class GMX_MMPBSA_ANA(QMainWindow):
             self.setting_item_data(sys_index, part)
             # self.normalitem.setExpanded(True)
 
-        classif_item = CustomItem(sys_item, ['Decomposition'])
-        for part in ['decomp_normal', 'decomp_mutant']:
-            if part not in self.systems[sys_index]['data']:
-                continue
-            self.makedecompItems(sys_index, part, classif_item)
-            self.setting_item_data(sys_index, part)
+        if self.systems[sys_index]['namespace'].INPUT['idecomp']:
+            classif_item = CustomItem(sys_item, ['Decomposition'])
+            for part in ['decomp_normal', 'decomp_mutant']:
+                if part not in self.systems[sys_index]['data']:
+                    continue
+                self.makedecompItems(sys_index, part, classif_item)
+                self.setting_item_data(sys_index, part)
 
         sys_item.setExpanded(True)
 
@@ -796,8 +797,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
         itemiter = QTreeWidgetItemIterator(sys_item)
         while itemiter.value():
             item = itemiter.value()
-            sb = item.setup_buttons()
-            if sb:
+            if sb := item.setup_buttons():
                 self.treeWidget.setItemWidget(item, 1, sb)
             itemiter += 1
 

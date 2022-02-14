@@ -403,7 +403,7 @@ class ChartSettings(dict):
                                            'name': 'subplot-components', 'value': True, 'default': True,
                                            'action_type': R},
                     'scale-yaxis': {'type': 'bool', 'enabled': True, 'expanded': True,
-                                         'name': 'scale-yaxis', 'value': True, 'default': True, 'action_type': R},
+                                         'name': 'scale-yaxis', 'value': False, 'default': False, 'action_type': R},
                     'remove-molid': {'type': 'bool', 'enabled': True, 'expanded': True, 'name': 'remove-molid',
                                      'value': True, 'default': True, 'action_type': R},
                     'IE/C2 Entropy': {
@@ -460,6 +460,9 @@ class ChartSettings(dict):
                                      'default': False, 'action_type': R},
                             'fontsize': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'fontsize',
                                          'value': 8, 'limits': (2, 20), 'default': 8, 'action_type': D},
+                            'label_type': {'type': 'list', 'enabled': True, 'expanded': True, 'name': 'label_type',
+                                           'value': 'edge', 'values': ['edge', 'center'], 'default': 'edge',
+                                           'action_type': R},
                             'padding': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'padding',
                                         'value': 5, 'limits': (0, 50), 'default': 5, 'action_type': R}
                         }},
