@@ -353,7 +353,6 @@ class GMX_MMPBSA_ANA(QMainWindow):
 
         optionWidget_c.currentChanged.connect(self._control_options_config)
 
-
     def _control_options_config(self, ind):
         if ind:
             self.options_conf_btn.setEnabled(False)
@@ -400,7 +399,6 @@ class GMX_MMPBSA_ANA(QMainWindow):
                 if act_frange != self.systems[x]['current_frames']:
                     recalc_energy.append(x)
 
-                self.systems[x]['current_frames'] = act_frange
                 if self.systems[x]['chart_options'].is_changed(act_sett):
                     repaint.append(x)
         else:
@@ -435,7 +433,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
             for e in recalc_nmode:
                 v += 1
                 # self.systems[e]['api'].update_energy_frames(*act_frange)
-                self.systems[e]['current_frames'] = act_frange
+                self.systems[e]['current_nmode_frames'] = act_frange
                 qpd.setValue(v)
         if recalc_ie:
             qpd.setLabelText('Recalculating Interaction Entropy for selected frames range')
@@ -709,18 +707,17 @@ class GMX_MMPBSA_ANA(QMainWindow):
 
     def process_data(self, results: list, options):
         self.data_options = options
-        maximum = len(results)
+        maximum = len(results) + 3
         qpd = QProgressDialog('Creating systems tree', 'Abort', 0, maximum, self)
         qpd.setWindowModality(Qt.WindowModality.WindowModal)
-        qpd.setMinimumDuration(1000)
+        qpd.setMinimumDuration(0)
 
-        for i , c in enumerate(range(maximum), start=1):
+        for i, c in enumerate(range(len(results)), start=1):
             qpd.setValue(i)
             if qpd.wasCanceled():
                 break
             system, api = results[c]
-            name, path, norm_mut, settings = system
-
+            name, path, exp_ki, settings = system
             energy = api.get_energy()
             namespace = api.app_namespace
             summary = api.get_summary()
@@ -733,29 +730,34 @@ class GMX_MMPBSA_ANA(QMainWindow):
                 config = None
 
             self.systems[i] = {'name': name, 'path': path, 'api': api,
-                                       'namespace': namespace, 'data': energy,
-                                       'current_frames': [namespace.INPUT['startframe'],
-                                                          namespace.INPUT['endframe'],
-                                                          namespace.INPUT['interval']],
-                                       'current_nmode_frames': [namespace.INPUT['nmstartframe'],
-                                                                namespace.INPUT['nmendframe'],
-                                                                namespace.INPUT['nminterval']],
-                                       'current_ie_frames': math.ceil(
-                                           namespace.INFO['numframes'] * (namespace.INPUT['ie_segment'] / 100)),
-                                       'chart_options': ChartSettings(config),
-                                'options': options,
-                               'items_data': {}, 'items_summary': api.get_summary()}
-
-
+                               'namespace': namespace, 'data': energy,
+                               'current_frames': [namespace.INPUT['startframe'],
+                                                  namespace.INPUT['endframe'],
+                                                  namespace.INPUT['interval']],
+                               'current_nmode_frames': [namespace.INPUT['nmstartframe'],
+                                                        namespace.INPUT['nmendframe'],
+                                                        namespace.INPUT['nminterval']],
+                               'current_ie_frames': math.ceil(
+                                   namespace.INFO['numframes'] * (namespace.INPUT['ie_segment'] / 100)),
+                               'chart_options': ChartSettings(config),
+                               'options': options,
+                               'items_data': {}, 'items_summary': summary,
+                               'exp_ki': exp_ki
+                               }
             self.makeTree(i)
-        qpd.setValue(maximum)
+        qpd.setLabelText('Initializing first system...')
         self._initialize_systems()
+        qpd.setValue(i + 1)
 
         if not options['corr_sys']:  # FIXME:
             self.correlation_DockWidget.setEnabled(False)
             self.correlation_DockWidget.hide()
         else:
+            qpd.setLabelText('Calculating correlation...')
             self.make_correlation()
+            qpd.setValue(i + 2)
+
+        qpd.setValue(maximum)
 
         # some late signal/slot connections
         # self.treeWidget.itemChanged.connect(self.showdata)
@@ -771,21 +773,20 @@ class GMX_MMPBSA_ANA(QMainWindow):
         classif_item = CustomItem(sys_item, ['ΔH/-TΔS/ΔG'])
         classif_item.setExpanded(True)
 
-        # FIXME: add decomp data
+        print_keys = list(self.systems[sys_index]['exp_ki'].keys())
+        decomp_print_keys = [f"decomp_{x}" for x in self.systems[sys_index]['exp_ki'].keys()]
+        if 'normal' in print_keys and 'mutant' in print_keys:
+            print_keys.append('mutant-normal')
 
-        for part in ['normal', 'mutant', 'mutant-normal']:
-            # FIXME: check if was selected in the init_dialog
-        # if not self.systems[sys_index]['namespace'].INPUT['mutant_only']:
-            # self.normalitem = CustomItem(sys_item, ['Normal'])
+        for part in print_keys:
             if part not in self.systems[sys_index]['data']:
                 continue
             self.makeItems(sys_index, part, classif_item)
             self.setting_item_data(sys_index, part)
-            # self.normalitem.setExpanded(True)
 
         if self.systems[sys_index]['namespace'].INPUT['idecomp']:
             classif_item = CustomItem(sys_item, ['Decomposition'])
-            for part in ['decomp_normal', 'decomp_mutant']:
+            for part in decomp_print_keys:
                 if part not in self.systems[sys_index]['data']:
                     continue
                 self.makedecompItems(sys_index, part, classif_item)
