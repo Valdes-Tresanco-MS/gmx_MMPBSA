@@ -921,8 +921,7 @@ class MMPBSA_App(object):
         if not self.master:
             return
         logging.info('Parsing results to output files...\n')
-        self.calc_types = SimpleNamespace(normal={}, mutant={}, mut_norm={}, decomp_normal={}, decomp_mutant={},
-                                          decomp_mut_norm={})
+        self.calc_types = SimpleNamespace(normal={}, mutant={}, mut_norm={}, decomp_normal={}, decomp_mutant={})
         INPUT, FILES = self.INPUT, self.FILES
         # Quasi-harmonic analysis is a special-case, so handle that separately
         if INPUT['qh_entropy']:
