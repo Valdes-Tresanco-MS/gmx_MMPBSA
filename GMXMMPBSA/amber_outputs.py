@@ -1180,7 +1180,7 @@ class DecompOut(dict):
                 for et in self[term][res]:
                     self[term][res][et] = self[term][res][et][start:end:interval]
                     if not frames_updated:
-                        self.numframes = len(self[term][res][et][start:end:interval])
+                        self.numframes = len(self[term][res][et])
                         frames_updated = True
         self._fill_composite_terms()
 
@@ -1382,7 +1382,7 @@ class PairDecompOut(DecompOut):
                     for et in self[term][res][res2]:
                         self[term][res][res2][et] = self[term][res][res2][et][start:end:interval]
                         if not frames_updated:
-                            self.numframes = len(self[term][res][res2][et][start:end:interval])
+                            self.numframes = len(self[term][res][res2][et])
                             frames_updated = True
         self._fill_composite_terms()
 
