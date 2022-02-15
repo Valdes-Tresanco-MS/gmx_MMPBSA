@@ -59,6 +59,20 @@ class NavigationToolbar(NavigationToolbar2QT):
         l = self.layout()
         # l = QHBoxLayout()
         l.setContentsMargins(0, 0, 0, 0)
+        self.save_format = 'png'
+        self.save_dpi = 300
+        self.filename = 'image'
+
+    def update_options(self, options):
+        if 'save-format' in options:
+            self.save_format = options['save-format']
+        if 'dpi-save' in options:
+            self.save_dpi = options['dpi-save']
+        if 'filename' in options:
+            self.filename = options['filename'].replace(' | ', '_').replace(' ', '_')
+        from icecream import ic
+        ic(self.save_format, self.save_dpi, self.filename)
+
 
     def _init_toolbar(self):
         pass
@@ -70,13 +84,14 @@ class NavigationToolbar(NavigationToolbar2QT):
         default_filetype = self.canvas.get_default_filetype()
 
         startpath = os.path.expanduser(matplotlib.rcParams['savefig.directory'])
-        start = os.path.join(startpath, self.canvas.get_default_filename())
+        filename = f'{self.filename}.{self.save_format}'
+        start = os.path.join(startpath, filename)
         filters = []
         selectedFilter = None
         for name, exts in sorted_filetypes:
             exts_list = " ".join('*.%s' % ext for ext in exts)
             filter = '%s (%s)' % (name, exts_list)
-            if default_filetype in exts:
+            if self.save_format in exts:
                 selectedFilter = filter
             filters.append(filter)
         filters = ';;'.join(filters)
@@ -121,7 +136,9 @@ class ChartsBase(QMdiSubWindow):
         # similar to figure canvas
         self.mpl_toolbar = NavigationToolbar(self.figure_canvas, self)
         self.mpl_toolbar.setVisible(self.options['General', 'toolbar'])
-
+        self.mpl_toolbar.update_options({'save-format': self.options[('General', 'figure-format', 'save-format')],
+                                         'dpi-save': self.options[('General', 'figure-format', 'dpi-save')],
+                                         'filename': self.options['subtitle']})
         self.mainwidgetmdi.addToolBar(Qt.ToolBarArea.BottomToolBarArea, self.mpl_toolbar)
 
         self.fbtn = QPushButton(self.style().standardIcon(QStyle.SP_FileDialogDetailedView), '',
