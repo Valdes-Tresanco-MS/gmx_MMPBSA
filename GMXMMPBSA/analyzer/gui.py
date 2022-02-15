@@ -481,6 +481,13 @@ class GMX_MMPBSA_ANA(QMainWindow):
                         changes['line_action'] or changes['heatmap_action']):
                     sub.button.setChecked(False)
                     sub.button.setChecked(True)
+                elif changes['figure']:
+                    chart_sett = self.systems[s]['chart_options'].get_settings()
+                    options = {'save-format': chart_sett[('General', 'figure-format', 'save-format')],
+                               'dpi-save': chart_sett[('General', 'figure-format', 'dpi-save')]
+                               }
+                    sub.mpl_toolbar.update_options(options)
+                    sub.fbtn.setChecked(chart_sett[('General', 'toolbar')])
             pymol_items = [[p, item] for p, item in self.pymol_p_list if p.state() == QProcess.Running]
             for p, item in pymol_items:
                 p.kill()
@@ -493,7 +500,8 @@ class GMX_MMPBSA_ANA(QMainWindow):
                                                             line_ie_action=0,
                                                             bar_action=0,
                                                             heatmap_action=0,
-                                                            visualization_action=0)
+                                                            visualization_action=0,
+                                                            figure=0)
 
 
         qpd.setValue(maximum)

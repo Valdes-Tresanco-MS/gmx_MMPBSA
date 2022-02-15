@@ -671,6 +671,7 @@ class ChartSettings(dict):
             bar_action=0,
             heatmap_action=0,
             visualization_action=0,
+            figure=0
         )
 
     def return_default(self):
@@ -721,10 +722,13 @@ class ChartSettings(dict):
                 elif k[1] == 'Heatmap Plot':
                     self.changes['heatmap_action'] = flatten[at]
                 elif k[1] == 'General':
-                    self.changes['bar_action'] = flatten[at]
-                    self.changes['line_ie_action'] = flatten[at]
-                    self.changes['line_action'] = flatten[at]
-                    self.changes['heatmap_action'] = flatten[at]
+                    if len(k) > 5 and k[5] in ['dpi-save', 'save-format'] or k[3] == 'toolbar':
+                        self.changes['figure'] = flatten[at]
+                    else:
+                        self.changes['bar_action'] = flatten[at]
+                        self.changes['line_ie_action'] = flatten[at]
+                        self.changes['line_action'] = flatten[at]
+                        self.changes['heatmap_action'] = flatten[at]
                 else:
                     self.changes['visualization_action'] = flatten[at]
         self.update(osett)
