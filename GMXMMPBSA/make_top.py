@@ -1163,13 +1163,20 @@ class CheckMakeTop:
             # data is a pdb file
             pdb_file = data
             try:
+                new_str = []
                 with open(pdb_file) as fo:
                     fo = fo.readlines()
                     for line in fo:
                         if 'MODEL' in line or 'ENDMDL' in line:
-                            fo.remove(line)
+                            continue
+                        # check new charmm-gui format for Amber ff19SB (with N- and C- terminals)
+                        if 'ATOM' in line:
+                            resn = line[17:21].strip()
+                            if len(resn) == 4 and resn.startswith(('N', 'C')):
+                                line = f'{line[:17]}{resn[1:]} {line[21:]}'
+                        new_str.append(line)
                 with open(pdb_file, 'w') as fw:
-                    for x in fo:
+                    for x in new_str:
                         fw.write(x)
             except IOError as e:
                 GMXMMPBSA_ERROR('', str(e))
