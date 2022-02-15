@@ -144,9 +144,9 @@ class GMX_MMPBSA_ANA(QMainWindow):
         self.viewMenu.addAction('Cascade SubWindows', self.mdi.cascadeSubWindows)
         self.aboutMenu = self.menuBar().addMenu("&About")
         self.aboutMenu.addAction('Help', self._help)
-        self.aboutMenu.addAction('Documentation', self.treeDockWidget.show)
-        self.aboutMenu.addAction('Report a bug', self.treeDockWidget.show)
-        self.aboutMenu.addAction('Google group', self.treeDockWidget.show)
+        self.aboutMenu.addAction('Documentation', self._doc)
+        self.aboutMenu.addAction('Report a bug', self._bug)
+        self.aboutMenu.addAction('Google group', self._group)
         self.aboutMenu.addAction('About gmx_MMPBSA', self._about_dialog)
         self.statusbar = self.statusBar()
 
