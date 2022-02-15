@@ -44,6 +44,7 @@ class MMPBSA_API():
     """ Main class that holds all the Free Energy data """
 
     def __init__(self):
+        self.print_keys = None
         self.app_namespace = SimpleNamespace()
         self.raw_energy = None
         self.data = {}
@@ -106,16 +107,17 @@ class MMPBSA_API():
         Returns:
 
         """
+        self.data = deepcopy(self._oringin)
         return self.data
 
-    def _get_df(self, raw_energy, key, delta=False):
+    def _get_df(self, key):
         df_models = {}
         terms = {'energy': [], 'entropy': []}
         if self.timestep:
             index = pd.Series(list(self.frames.values()), name=f'Time ({self.timeunit})')
         else:
             index = pd.Series(list(self.frames.keys()), name='Frames')
-        for model, data in raw_energy[key].items():
+        for model, data in self.data[key].items():
             if model in ['gb', 'pb', 'rism std', 'rism gf', 'nmode', 'qh']:
                 if model in ['nmode', 'qh']:
                     terms['entropy'].append(model)
@@ -156,24 +158,20 @@ class MMPBSA_API():
                     df_models['binding'][f"{m}+{e}"] = pd.concat([temp, dg], axis=1)
         return df_models
 
-    def get_energy(self):
-
-        raw_energy = self.get_raw_energy()
-
+    def get_energy(self, keys: list = None):
         energy = {}
-        if raw_energy['normal']:
-            energy['normal'] = self._get_df(raw_energy, 'normal')
-        if raw_energy['mutant']:
-            energy['mutant'] = self._get_df(raw_energy, 'mutant')
-        if raw_energy['mutant-normal']:
-            energy['mutant-normal'] = self._get_df(raw_energy, 'mutant-normal', True)
+        temp_print_keys = keys or list(self.data.keys())
+        self.print_keys = []
+        to_remove_keys = [x for x in self.data.keys() if x not in keys] if keys else []
 
-        if raw_energy['decomp_normal']:
-            energy['decomp_normal'] = self._get_df(raw_energy, 'decomp_normal')
-        if raw_energy['decomp_mutant']:
-            energy['decomp_mutant'] = self._get_df(raw_energy, 'decomp_mutant')
-            # print(energy['decomp_normal'])
-
+        for key in temp_print_keys:
+            if key not in self.data:
+                print(f'Not key {key} in the data')
+            else:
+                self.print_keys.append(key)
+                energy[key] = self._get_df(key)
+        for k in to_remove_keys:
+            del self.data[k]
         return energy
 
     def update_energy_frames(self, startframe, endframe, interval=1):
@@ -185,24 +183,26 @@ class MMPBSA_API():
         # 6- get the number of frames
         self._update_frames(startframe, endframe, interval)
 
-        # TODO:
-        # 1- Iterar sobre cada clase que contiene la data y crear una copia (sino no se puede recobrar la data original)
+        # Create a copy to recover the original data any time
         self.data = deepcopy(self._oringin)
+        # Iterate over all containing classes
         for key, v in self.data.items():
             # key: normal, mutant, decomp_normal, decomp_mutant
+            if key not in self.print_keys:
+                continue
             if key in ['normal', 'mutant']:
                 for model, v1 in v.items():
                     if model in ['gb', 'pb', 'rism std', 'rism gf']:
-        # 2- Actualizar los frames y recalcular los composites
+                        # Update the frame range and re-calculate the composite terms
                         v1['complex'].set_frame_range(start, end, interval)
                         if not self.stability:
                             v1['receptor'].set_frame_range(start, end, interval)
                             v1['ligand'].set_frame_range(start, end, interval)
-        # 3- Recalcular los deltas
+                            # Re-calculate deltas
                             v1['delta'] = BindingStatistics(v1['complex'], v1['receptor'], v1['ligand'],
                                                                self.app_namespace.INFO['using_chamber'],
                                                                self.traj_protocol)
-        # 4- Recalcular las entropías basadas en GGAS
+                            # Re-calculate GGAS based entropies
                             if self.app_namespace.INPUT['interaction_entropy']:
                                 edata = v1['delta']['GGAS']
                                 ie = InteractionEntropyCalc(edata, self.app_namespace.INPUT)
@@ -221,7 +221,7 @@ class MMPBSA_API():
                     if not self.stability:
                         v1['receptor'].set_frame_range(start, end, interval)
                         v1['ligand'].set_frame_range(start, end, interval)
-                        # 3- Recalcular los deltas
+                        # Recalculate decomp delta
                         if self.app_namespace.INPUT['idecomp'] in [1, 2]:
                             Decomp_Delta = DecompBinding
                         else:
@@ -229,23 +229,19 @@ class MMPBSA_API():
                         v1['delta'] = Decomp_Delta(v1['complex'], v1['receptor'], v1['ligand'],
                                                    self.app_namespace.INPUT)
 
-
-        # 5- Recalcular los delta delta sin CAS
-        if 'normal' in self.data and self.data['normal'] and 'mutant' in self.data and self.data['mutant']:
-            for model in self.data['normal']:
-                if model in ['gb', 'pb', 'rism std', 'rism gf']:
-                    self.data['mutant-normal'][model] = DeltaBindingStatistics(self.data['mutant'][model]['delta'],
-                                                                     self.data['normal'][model]['delta'])
-
-
-        # 6- Recalcular los summary
+        # Re-calculate delta delta if CAS
+        if 'mutant-normal' in self.print_keys:
+            if 'normal' in self.data and self.data['normal'] and 'mutant' in self.data and self.data['mutant']:
+                for model in self.data['normal']:
+                    if model in ['gb', 'pb', 'rism std', 'rism gf']:
+                        self.data['mutant-normal'][model] = {'delta':
+                            DeltaBindingStatistics(self.data['mutant'][model]['delta'],
+                                                   self.data['normal'][model]['delta'])}
+        # Re-calculate summaries
         self.get_summary()
-        # 7- actualizar la data de salida
-        # return self.data
 
     def get_summary(self):
         summary = {}
-
         for m, v in self.data.items():
             if m not in ['mutant-normal', 'mutant', 'normal']:
                 continue
@@ -312,7 +308,8 @@ class MMPBSA_API():
         self._oringin = {'normal': app.calc_types.normal, 'mutant': app.calc_types.mutant,
                          'decomp_normal': app.calc_types.decomp_normal, 'decomp_mutant': app.calc_types.decomp_mutant,
                          'mutant-normal': app.calc_types.mut_norm,
-                         'decomp_mutant-normal': app.calc_types.decomp_mut_norm}
+                         # 'decomp_mutant-normal': app.calc_types.decomp_mut_norm
+                         }
         self.data = copy(self._oringin)
         self._get_frames()
         self._get_data(None)
