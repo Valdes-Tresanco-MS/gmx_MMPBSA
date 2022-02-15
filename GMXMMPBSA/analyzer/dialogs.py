@@ -17,7 +17,8 @@
 import h5py
 from PyQt5.QtWidgets import (QDialog, QSpinBox, QLabel, QLineEdit, QPushButton, QHBoxLayout, QVBoxLayout, QCheckBox,
                              QGroupBox, QButtonGroup, QGridLayout, QTreeWidget, QTreeWidgetItem, QRadioButton,
-                             QTreeWidgetItemIterator, QHeaderView, QProgressBar, QStatusBar, QMessageBox, QComboBox)
+                             QTreeWidgetItemIterator, QHeaderView, QProgressBar, QStatusBar, QMessageBox, QComboBox,
+                             QDialogButtonBox)
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, pyqtSlot
 from queue import Queue, Empty
 from GMXMMPBSA import API
@@ -158,17 +159,21 @@ class InitDialog(QDialog):
         # self.pb.setRange(0, 0)
         # self.save_btn.clicked.connect(self.save)
 
-        self.accept_btn = QPushButton('Accept')
-        self.accept_btn.clicked.connect(self.get_data)
+        btnbox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        accept_btn = btnbox.button(QDialogButtonBox.Ok)
+        accept_btn.setText('Accept')
+        accept_btn.setDefault(True)
+        accept_btn.clicked.connect(self.get_data)
 
-        self.cancel_btn = QPushButton('Cancel')
-        self.cancel_btn.clicked.connect(self.parent.close)
+        cancel_btn = btnbox.button(QDialogButtonBox.Cancel)
+        cancel_btn.setDefault(False)
+        cancel_btn.clicked.connect(self.close)
 
         self.btn_layout = QHBoxLayout()
         self.btn_layout.addWidget(self.pb, 10)
         self.btn_layout.addStretch(1)
-        self.btn_layout.addWidget(self.cancel_btn, 2, alignment=Qt.AlignmentFlag.AlignRight)
-        self.btn_layout.addWidget(self.accept_btn, 2, alignment=Qt.AlignmentFlag.AlignRight)
+        self.btn_layout.addWidget(btnbox)
+
 
         self.statusbar = QStatusBar(self)
 
@@ -266,7 +271,7 @@ class InitDialog(QDialog):
             self.f_item.addChild(item)
 
             if not mut_only:
-                witem = QTreeWidgetItem(['', '', 'wild type', f'{exp_ki}', '', ''])
+                witem = QTreeWidgetItem(['', '', 'normal', f'{exp_ki}', '', ''])
                 # witem.info = [basename, Path(fname)]
                 self._set_item_properties(witem)
                 item.addChild(witem)
@@ -316,10 +321,10 @@ class InitDialog(QDialog):
             if child.childCount():
                 for c1 in range(child.childCount()):
                     if child.child(c1).checkState(1) == Qt.CheckState.Checked:
-                        if child.child(c1).text(2) == 'wild type':
-                            t['wt'] = float(child.child(c1).text(3))
+                        if child.child(c1).text(2) == 'normal':
+                            t['normal'] = float(child.child(c1).text(3))
                         else:
-                            t['mut'] = float(child.child(c1).text(3))
+                            t['mutant'] = float(child.child(c1).text(3))
             child.info += [t, self.result_tree.itemWidget(child, 4).currentText()]
             queue.put(child.info)
             counter += 1
