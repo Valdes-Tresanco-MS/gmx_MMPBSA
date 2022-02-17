@@ -257,11 +257,36 @@ class GMX_MMPBSA_ANA(QMainWindow):
     def _set_as_default(self):
         self.systems[self.current_system_index]['chart_options'].write_system_config()
         self.statusbar.showMessage(f"Setting this setting as default in "
-                                   f"{self.systems[self.current_system_index]['chart_options'].filename.as_posix()}")
+                                   f"{self.systems[self.current_system_index]['chart_options'].filename.as_posix()}...")
         self.systems[self.current_system_index]['chart_options'].set_as_default()
         self.chart_options_param.restoreState(self.systems[self.current_system_index]['chart_options'])
         self.chart_options_w.setParameters(self.chart_options_param, showTop=False)
         self.update_fn()
+
+    def _reset2default(self):
+        self.systems[self.current_system_index]['chart_options'] = ChartSettings()
+        self.statusbar.showMessage("Restore default settings...")
+        self.chart_options_param.restoreState(self.systems[self.current_system_index]['chart_options'])
+        self.chart_options_w.setParameters(self.chart_options_param, showTop=False)
+        self.update_fn()
+
+    def _set_user_config(self):
+        p = self.systems[self.current_system_index]['path']
+        fn = p.joinpath('setting.json')
+        if fn.exists():
+            self.systems[self.current_system_index]['chart_options'] = ChartSettings(fn)
+            self.statusbar.showMessage(f"Setting user configuration for this system from {fn.as_posix()}...")
+            self.chart_options_param.restoreState(self.systems[self.current_system_index]['chart_options'])
+            self.chart_options_w.setParameters(self.chart_options_param, showTop=False)
+            self.update_fn()
+        else:
+            return
+
+    def _save_user_config(self):
+        p = self.systems[self.current_system_index]['path']
+        fn = p.joinpath('settings.json')
+        self.systems[self.current_system_index]['chart_options'].write_system_config(p)
+        self.statusbar.showMessage(f"Saving user config for this system {fn.as_posix()}...")
 
     def _make_options_panel(self):
 
@@ -269,11 +294,24 @@ class GMX_MMPBSA_ANA(QMainWindow):
         optionWidget_l = QVBoxLayout(self.optionWidget)
 
         conf_menu = QMenu()
+        conf_menu.setToolTipsVisible(True)
         conf_menu.setTitle('Option configuratio')
-        self.default_action = conf_menu.addAction('Set as default')
-        self.default_action.triggered.connect(self._set_as_default)
-        self.import_action = conf_menu.addAction('Import')
-        # self.line_table_action.toggled.connect(self._show_line_table)
+        self.set_as_default_action = conf_menu.addAction('Set as default')
+        self.set_as_default_action.setToolTip('Save the current setting as the global default settings.')
+        self.set_as_default_action.triggered.connect(self._set_as_default)
+        self.default_action = conf_menu.addAction('Reset to default')
+        self.default_action.setToolTip('Restores the default settings set by the developers as the settings '
+                                              'for the selected systems.')
+        self.default_action.triggered.connect(self._reset2default)
+        conf_menu.addSeparator()
+        self.use_user_config_action = conf_menu.addAction('User-config')
+        self.use_user_config_action.setToolTip('Uses the specific settings for this system if it was saved.')
+        self.use_user_config_action.triggered.connect(self._set_as_default)
+        self.set_user_config_action = conf_menu.addAction('Save User-config')
+        self.set_user_config_action.setToolTip('Force save the current setting for this system. Before gmx_MMPBSA_ana '
+                                               'closes, if there are configuration changes, you can decide if you '
+                                               'want to save them.')
+        self.set_user_config_action.triggered.connect(self._set_as_default)
 
         self.options_conf_btn = QToolButton()
         self.options_conf_btn.setIcon(self.style().standardIcon(QStyle.SP_DriveFDIcon))
@@ -790,11 +828,11 @@ class GMX_MMPBSA_ANA(QMainWindow):
             if settings == 'User-Default':
                 config = 'User-Default'
             elif settings == 'Custom':
-                config = path
+                config = path.parent
             else:
                 config = None
 
-            self.systems[i] = {'name': name, 'path': path, 'api': api,
+            self.systems[i] = {'name': name, 'path': path.parent, 'api': api,
                                'namespace': namespace, 'data': energy,
                                'current_frames': [namespace.INPUT['startframe'],
                                                   namespace.INPUT['endframe'],
