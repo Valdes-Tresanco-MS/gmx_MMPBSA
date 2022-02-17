@@ -14,7 +14,7 @@ def flatten_dict(d, parent_key=None):
         new_key = tuple(list(parent_key) + [k if parent_key else k])
         if isinstance(v, dict):
             items.extend(flatten_dict(v, new_key).items())
-        elif k not in ['value', 'action_type'] or v is None:
+        elif k not in ['value', 'action_type', 'default'] or v is None:
             continue
         else:
             items.append((new_key, v))
@@ -720,6 +720,15 @@ class ChartSettings(dict):
         flatten = flatten_dict(self)
         f_osett = flatten_dict(osett)
         return flatten != f_osett
+
+    def is_default_changed(self):
+        flatten = flatten_dict(self)
+        for x, v in flatten.items():
+            if x[-1] != 'value':
+                continue
+            ks = list(x[:-1])
+            if v == flatten[tuple(ks + ['default'])]:
+                return True
 
     def get_changes(self, osett) -> None:
 

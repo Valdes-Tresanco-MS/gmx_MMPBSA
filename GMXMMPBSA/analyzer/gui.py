@@ -154,6 +154,55 @@ class GMX_MMPBSA_ANA(QMainWindow):
 
         self.init_dialog = InitDialog(self)
 
+    def closeEvent(self, a0: QCloseEvent) -> None:
+
+        changes = [
+            x
+            for x in self.systems
+            if self.systems[x]['chart_options'].is_default_changed()
+        ]
+
+        savequitbtn = None
+        quitbtn = None
+        if changes:
+            msgBox = QMessageBox()
+            msgBox.setWindowTitle('Quit...')
+            msgBox.setText("Are you sure to quit?")
+            msgBox.setInformativeText("Some graphics settings were modified. Do you want to save your changes?")
+            msgBox.setDetailedText("The systems below have chances:\n - " +
+                                   '\n - '.join([self.systems[x]['name'] for x in changes]))
+            savequitbtn = msgBox.addButton("Save and Quit", QMessageBox.AcceptRole)
+            abortbtn = msgBox.addButton(QMessageBox.Cancel)
+            quitbtn = msgBox.addButton("Quit", QMessageBox.AcceptRole)
+            msgBox.setDefaultButton(savequitbtn)
+            msgBox.exec()
+            action = msgBox.clickedButton()
+
+        else:
+            action = QMessageBox.question(self, 'Message', "Are you sure to quit?", QMessageBox.Yes, QMessageBox.No)
+
+        if action in [QMessageBox.Yes, quitbtn, savequitbtn]:
+
+            if action == savequitbtn:
+                for x in changes:
+                    self.systems[x]['chart_options'].write_system_config(self.systems[x]['path'])
+
+            if pymol_items := [
+                p for p in self.pymol_p_list if p.state() == QProcess.Running
+            ]:
+                qpd = QProgressDialog('Closing PyMOL instances', 'Abort', 0, len(pymol_items), self)
+                qpd.setWindowModality(Qt.WindowModality.WindowModal)
+                qpd.setMinimumDuration(1000)
+                for i, p in enumerate(range(len(self.pymol_p_list))):
+                    if self.pymol_p_list[p].state() == QProcess.Running:
+                        qpd.setValue(i)
+                        self.pymol_p_list[p].kill()
+                        self.pymol_p_list[p].waitForFinished()
+                qpd.setValue(len(self.pymol_p_list))
+            a0.accept()
+        else:
+            a0.ignore()
+
     def _about_dialog(self):
         from GMXMMPBSA import __version__
         QMessageBox.about(self, "About gmx_MMPBSA",
