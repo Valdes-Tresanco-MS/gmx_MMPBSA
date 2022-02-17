@@ -21,6 +21,20 @@ def flatten_dict(d, parent_key=None):
     return dict(items)
 
 
+def value2deafult(d):
+    """
+    Iterate recursively the settings dict and make default = value
+    """
+    if isinstance(d, dict):
+        if 'default' in d and 'value' in d:
+            d['default'] = d['value']
+        if 'children' in d:
+            value2deafult(d['children'])
+        else:
+            for k, v in d.items():
+                value2deafult(v)
+
+
 tooltip1 = '''
             <html lang="en">
 
@@ -651,7 +665,6 @@ class ChartSettings(dict):
         super(ChartSettings, self).__init__()
 
         self.config_folder = Path('~').expanduser().absolute().joinpath('.config', 'gmx_MMPBSA')
-        self.config_folder.mkdir(exist_ok=True)
         self.filename = self.config_folder.joinpath('settings.json')
 
         if isinstance(custom, Path):
@@ -674,6 +687,9 @@ class ChartSettings(dict):
             figure=0
         )
 
+    def config_created(self):
+        return self.filename.exists()
+
     def return_default(self):
         self.update(self.default)
 
@@ -684,6 +700,7 @@ class ChartSettings(dict):
         @return:
         """
         if syspath is None:
+            self.config_folder.mkdir(exist_ok=True)
             with open(self.filename, "w") as write_file:
                 json.dump(self, write_file, indent=4)
         else:
@@ -742,6 +759,10 @@ class ChartSettings(dict):
             if 'action_type' not in k
         ]
         return dict(items)
+
+    def set_as_default(self):
+        value2deafult(self)
+
 
 
 class Palette(LinearSegmentedColormap):

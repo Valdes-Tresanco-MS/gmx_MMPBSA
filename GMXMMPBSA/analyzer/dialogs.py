@@ -23,6 +23,8 @@ from PyQt5.QtCore import Qt, QThread, pyqtSignal, pyqtSlot
 from queue import Queue, Empty
 from GMXMMPBSA import API
 from pathlib import Path
+
+from GMXMMPBSA.analyzer.chartsettings import ChartSettings
 from GMXMMPBSA.analyzer.utils import worker, ncpu
 
 
@@ -35,7 +37,7 @@ class InitDialog(QDialog):
         self.setMinimumWidth(650)
         self.curr_progress = 0
         self.data = []
-
+        self.chart_default_setting = ChartSettings()
         self.processing_label = QLabel()
 
         self.show_decomp_btn = QCheckBox('Show decomposition data')
@@ -102,12 +104,15 @@ class InitDialog(QDialog):
 
         self.hide_tb_btn = QCheckBox('Hide ToolBar')
         self.hide_tb_btn.setChecked(True)
+        self.reset_default_config = QCheckBox('Reset Default Configuration')
+        self.reset_default_config.clicked.connect(self.show_warn)
 
         self.other_options = QHBoxLayout()
         self.chart_group = QGroupBox('Charts options')
         self.other_options.addWidget(self.chart_group)
         self.chart_group_layout = QHBoxLayout(self.chart_group)
         self.chart_group_layout.addWidget(self.hide_tb_btn)
+        self.chart_group_layout.addWidget(self.reset_default_config)
 
         self.frame2time = QGroupBox('Convert frames to time')
         self.frame2time.setCheckable(True)
@@ -135,6 +140,16 @@ class InitDialog(QDialog):
         self.frame2time_layout.addWidget(self.time_unit)
 
         self.other_options.addWidget(self.frame2time)
+
+        self.warn_label_config = QLabel(f'The global default graphics settings will be stored in:\n'
+                                        f'{self.chart_default_setting.filename.as_posix()}')
+        self.warn_label_config.setStyleSheet("border:3px solid orange")
+        self.warn_label_config.setWordWrap(True)
+        self.warn_label_config.show()
+        if self.chart_default_setting.config_created():
+            self.warn_label_config.hide()
+
+
 
         self.sys_group = QGroupBox('Systems options')
         self.sys_group_layout = QVBoxLayout(self.sys_group)
@@ -182,6 +197,7 @@ class InitDialog(QDialog):
         self.content_layout.addWidget(self.sys_group)
         self.content_layout.addLayout(self.other_options)
         self.content_layout.addWidget(self.result_tree)
+        self.content_layout.addWidget(self.warn_label_config)
         self.content_layout.addWidget(self.statusbar)
         self.content_layout.addLayout(self.btn_layout)
 
@@ -195,6 +211,13 @@ class InitDialog(QDialog):
             self.warn_label_empty.show()
         else:
             self.warn_label_empty.hide()
+
+        if not self.chart_default_setting.config_created() or self.reset_default_config.isChecked():
+            self.warn_label_config.show()
+        else:
+            self.warn_label_config.hide()
+
+
 
     def update_item_info(self, item: QTreeWidgetItem, col):
         if item.text(0) == 'All':
@@ -249,14 +272,10 @@ class InitDialog(QDialog):
                             mutant = line.strip('\n').split('=')[1].strip(" '")
             # check for custom settings
             custom_settings = fname.parent.joinpath('settings.json').exists()
-            user_default_settings = Path('~').expanduser().absolute().joinpath('.config', 'gmx_MMPBSA',
-                                                                               'settings.json').exists()
-            # custom_settings = True
+
             cb = QComboBox()
             if custom_settings:
                 cb.addItem('Custom')
-            if user_default_settings:
-                cb.addItem('User-Default')
             cb.addItem('Default')
 
             if not basename:
@@ -333,4 +352,8 @@ class InitDialog(QDialog):
                                  QMessageBox.Ok)
             return
         self.pb.setRange(0, counter)
+        # Store the global default graphics settings if not exits
+        if not self.chart_default_setting.config_created() or self.reset_default_config.isChecked():
+            self.chart_default_setting.write_system_config()
+
         self.parent.read_data(queue, self.options)

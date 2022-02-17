@@ -205,6 +205,15 @@ class GMX_MMPBSA_ANA(QMainWindow):
         self.eframes_end_sb.setSingleStep(f_interval)
         self.eframes_end_sb.setValue(f_end)
 
+    def _set_as_default(self):
+        self.systems[self.current_system_index]['chart_options'].write_system_config()
+        self.statusbar.showMessage(f"Setting this setting as default in "
+                                   f"{self.systems[self.current_system_index]['chart_options'].filename.as_posix()}")
+        self.systems[self.current_system_index]['chart_options'].set_as_default()
+        self.chart_options_param.restoreState(self.systems[self.current_system_index]['chart_options'])
+        self.chart_options_w.setParameters(self.chart_options_param, showTop=False)
+        self.update_fn()
+
     def _make_options_panel(self):
 
         self.optionWidget = QWidget(self)
@@ -213,6 +222,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
         conf_menu = QMenu()
         conf_menu.setTitle('Option configuratio')
         self.default_action = conf_menu.addAction('Set as default')
+        self.default_action.triggered.connect(self._set_as_default)
         self.import_action = conf_menu.addAction('Import')
         # self.line_table_action.toggled.connect(self._show_line_table)
 
