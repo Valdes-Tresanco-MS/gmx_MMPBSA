@@ -406,7 +406,7 @@ class CheckMakeTop:
 
         com_top.coordinates = self.complex_str.coordinates
         # try:
-        if com_top.impropers or com_top.urey_bradleys or com_top.cmaps:
+        if com_top.impropers or com_top.urey_bradleys:
             com_amb_prm = parmed.amber.ChamberParm.from_structure(com_top)
             com_top_parm = 'chamber'
             logging.info('Detected CHARMM topology format...')
@@ -446,7 +446,7 @@ class CheckMakeTop:
                                     f"that they are correct. Otherwise report the error...")
 
             rec_top.coordinates = self.receptor_str.coordinates
-            if rec_top.impropers or rec_top.urey_bradleys or rec_top.cmaps:
+            if rec_top.impropers or rec_top.urey_bradleys:
                 if com_top_parm == 'amber':
                     GMXMMPBSA_ERROR('Inconsistent parameter format. The defined Complex is AMBER type while the '
                                     'Receptor is CHAMBER type!')
@@ -488,7 +488,7 @@ class CheckMakeTop:
                                     f"that they are correct. Otherwise report the error...")
 
             lig_top.coordinates = self.ligand_str.coordinates
-            if lig_top.impropers or lig_top.urey_bradleys or lig_top.cmaps:
+            if lig_top.impropers or lig_top.urey_bradleys:
                 if com_top_parm == 'amber':
                     GMXMMPBSA_ERROR('Inconsistent parameter format. The defined Complex is AMBER type while the '
                                     'Ligand is CHAMBER type!')
