@@ -25,6 +25,7 @@ re-supplying all of the information again.
 import re
 import warnings
 
+
 class InfoFile(object):
     """
     This is the class responsible for backing up all of the calculation
@@ -35,10 +36,10 @@ class InfoFile(object):
     """
 
     # Make a list about which INPUT variables are editable
-    EDITABLE_INFO_VARS = ['csv_format', 'dec_verbose', 'temperature', 'exp_ki', 'sys_name', 'ie_segment',
-                          'interaction_entropy']
+    EDITABLE_INFO_VARS = ['csv_format', 'dec_verbose', 'exp_ki', 'sys_name', 'ie_segment', 'interaction_entropy',
+                          'c2_entropy', 'verbose']
 
-    EDIT_WITH_CARE_VARS = ['']
+    EDIT_WITH_CARE_VARS = ['inp']
 
     DEPRECATED_VARS = []
 
@@ -49,7 +50,7 @@ class InfoFile(object):
     def write_info(self, name=None):
         """ Writes the info file to the info name """
         if name is None:
-            name = self.app.pre + 'info'
+            name = f'{self.app.pre}info'
         outfile = open(name, 'w')
         # The data we have to write: INPUT, FILES, and the following attributes:
         # numframes, numframes_nmode, mpi_size (also recognize size),
@@ -73,7 +74,7 @@ class InfoFile(object):
         outfile.write('#\n# MODIFY NOTHING BELOW HERE, OR GET WHAT YOU DESERVE\n')
         for var in list(self.app.INPUT.keys()):
             if (var in InfoFile.EDITABLE_INFO_VARS or var in InfoFile.EDIT_WITH_CARE_VARS or
-                var in InfoFile.DEPRECATED_VARS):
+                    var in InfoFile.DEPRECATED_VARS):
                 continue
             outfile.write("INPUT['%s'] = %s\n" % (var, self.write_var(self.app.INPUT[var])))
 
@@ -90,7 +91,7 @@ class InfoFile(object):
         outfile.write('numframes_nmode = %d\n' % self.app.numframes_nmode)
         outfile.write("mutant_index = %s\n" % self.app.mutant_index)
         outfile.write("mut_str = '%s'\n" % (self.app.resl[self.app.mutant_index].mutant_label
-                      if self.app.mutant_index else ""))
+                                            if self.app.mutant_index else ""))
         outfile.write('using_chamber = %s\n' % self.app.using_chamber)
         outfile.write(self.app.input_file_text)
 
@@ -103,9 +104,9 @@ class InfoFile(object):
         if not hasattr(self.app, 'FILES'):
             self.app.FILES = OptionList()
         if name is None:
-            name = self.app.pre + 'info'
-        #TODO Add checking for differences in FILES
-        inputre = re.compile(r'''INPUT\['(\S+)'\] = (.*)''')
+            name = f'{self.app.pre}info'
+        # TODO Add checking for differences in FILES
+        inputre = re.compile(r'''INPUT\['(\S+)'] = (.*)''')
         filesre = re.compile(r'''FILES\.(\S+) = (.*)''')
         otherre = re.compile(r'(\S+) = (.*)')
         infile = open(name, 'r')
@@ -158,18 +159,18 @@ def _determine_type(thing):
     """ Determines what type this thing is """
     # If it is a string with quotes, strip off the quotes
     if thing.startswith('"') and thing.endswith('"'):
-        return thing[1:len(thing)-1]
+        return thing[1:-1]
     if thing.startswith("'") and thing.endswith("'"):
-        return thing[1:len(thing)-1]
+        return thing[1:-1]
 
     # Check for bool or None
-    if thing == 'True':
-        return True
-    elif thing == 'False':
+    if thing == 'False':
         return False
     elif thing == 'None':
         return None
 
+    elif thing == 'True':
+        return True
     # Check for int, then check for float
     try:
         return int(thing)

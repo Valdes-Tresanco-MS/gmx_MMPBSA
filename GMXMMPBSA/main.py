@@ -38,7 +38,6 @@ from GMXMMPBSA.calculation import (CalculationList, EnergyCalculation, PBEnergyC
 from GMXMMPBSA.commandlineparser import parser
 from GMXMMPBSA.createinput import create_inputs
 from GMXMMPBSA.exceptions import (MMPBSA_Error, InternalError, InputError, GMXMMPBSA_ERROR)
-from GMXMMPBSA.findprogs import find_progs
 from GMXMMPBSA.infofile import InfoFile
 from GMXMMPBSA.fake_mpi import MPI as FakeMPI
 from GMXMMPBSA.input_parser import input_file as _input_file
@@ -96,6 +95,7 @@ class MMPBSA_App(object):
             self.stdout = open(os.devnull, 'w')
         if self.master:
             logging.info(f'Starting gmx_MMPBSA {__version__}')
+            utils.get_sys_info()
 
         # Set up timers
         timers = [Timer() for i in range(self.mpi_size)]
@@ -522,7 +522,7 @@ class MMPBSA_App(object):
             self.remove(-1)
 
         # Find external programs IFF we are doing a calc
-        external_progs = find_progs(self.INPUT, self.mpi_size) if self.master else {}
+        external_progs = utils.find_progs(self.INPUT, self.mpi_size) if self.master else {}
         external_progs = self.MPI.COMM_WORLD.bcast(external_progs, root=0)
         # Make external_progs an instance attribute
         self.external_progs = external_progs
@@ -537,7 +537,7 @@ class MMPBSA_App(object):
             self.INPUT['receptor_mask'], self.INPUT['ligand_mask'], self.resl = maketop.get_masks()
             self.mutant_index = maketop.com_mut_index
             self.mut_str = self.resl[maketop.com_mut_index].mutant_label if self.mutant_index else ''
-            self.FILES.complex_fixed = self.FILES.prefix + 'COM_FIXED.pdb'
+            self.FILES.complex_fixed = f'{self.FILES.prefix}COM_FIXED.pdb'
         self.FILES = self.MPI.COMM_WORLD.bcast(self.FILES, root=0)
         self.INPUT = self.MPI.COMM_WORLD.bcast(self.INPUT, root=0)
         self.sync_mpi()

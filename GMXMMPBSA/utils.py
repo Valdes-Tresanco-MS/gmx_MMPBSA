@@ -31,8 +31,10 @@ List of functions and a brief description of their purpose
 # ##############################################################################
 
 import os
+import platform
 import re
 import shutil
+import sys
 from pathlib import Path
 import json
 import logging
@@ -473,26 +475,84 @@ def remove(flag, fnpre='_GMXMMPBSA_'):
                 os.remove(fil)
 
 
-# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+def find_progs(INPUT, mpi_size=0):
+    """ Find the necessary programs based in the user INPUT """
+    # List all of the used programs with the conditions that they are needed
+    logging.info('Checking external programs...')
+    used_progs = {'cpptraj': True,
+                  'tleap': True,
+                  'parmchk2': True,
+                  'sander': True,
+                  'sander.APBS': INPUT['sander_apbs'] == 1,
+                  'mmpbsa_py_nabnmode': INPUT['nmoderun'],
+                  'rism3d.snglpnt': INPUT['rismrun']
+                  }
+    gro_exe = {
+        'gmx5': [
+            # look for any available gromacs executable
+            'gmx', 'gmx_mpi', 'gmx_d', 'gmx_mpi_d'],
+        'gmx4': [
+            # look for gromacs 4.x
+            'make_ndx', 'trjconv', 'editconf']}
 
-def concatenate(file1, file2):
-    """ Adds contents of file2 onto beginning of file1 """
-    import os
-    chunksize = 1048576  # Read the file in 1 MB chunks
-    # Open the 2 files, the first in append mode
-    with open(file2, 'r') as fl2:
-        # Add a newline (make it OS-independent) to the first file if it doesn't
-        # already end in one
-        file1.write(os.linesep)
+    # The returned dictionary:
+    my_progs = {}
 
-        str1 = fl2.read(chunksize)
-        while str1:
-            file1.write(str1)
-            str1 = fl2.read(chunksize)
+    search_parth = INPUT['gmx_path'] or os.environ['PATH']
 
-    file1.flush()
-    # Now remove the merged file (file2)
-    os.remove(file2)
+    for prog, needed in used_progs.items():
+        my_progs[prog] = shutil.which(prog, path=search_parth)
+        if needed:
+            if not my_progs[prog]:
+                GMXMMPBSA_ERROR('Could not find necessary program [%s]' % prog)
+            logging.info('%s found! Using %s' % (prog, str(my_progs[prog])))
+
+    g5 = False
+    for gv, g_exes in gro_exe.items():
+        if gv == 'gmx5':
+            for prog in g_exes:
+                if exe := shutil.which(prog, path=search_parth):
+                    logging.info('Using GROMACS version > 5.x.x!')
+                    my_progs['make_ndx'] = [exe, 'make_ndx']
+                    my_progs['editconf'] = [exe, 'editconf']
+                    my_progs['trjconv'] = [exe, 'trjconv']
+                    g5 = True
+                    if prog in ['gmx_mpi', 'gmx_mpi_d'] and mpi_size > 1:
+                        GMXMMPBSA_ERROR('gmx_mpi and gmx_mpi_d are not supported when running gmx_MMPBSA in parallel '
+                                        'due to incompatibility between the mpi libraries used to compile GROMACS and '
+                                        'mpi4py respectively. You can still use gmx_mpi or gmx_mpi_d to run gmx_MMPBSA '
+                                        'serial. For parallel calculations use gmx instead')
+                    logging.info('%s found! Using %s' % (prog, exe))
+                    break
+            if g5:
+                break
+        else:
+            logging.info('Using GROMACS version 4.x.x!')
+            for prog in g_exes:
+                if exe := shutil.which(prog, path=search_parth):
+                    my_progs[prog] = [exe]
+                    logging.info('%s found! Using %s' % (prog, str(my_progs[prog])))
+
+    if 'make_ndx' not in my_progs or 'editconf' not in my_progs or 'trjconv' not in my_progs:
+        GMXMMPBSA_ERROR('Could not find necessary program [ GROMACS ]')
+    logging.info('Checking external programs...Done.\n')
+    return my_progs
+
+
+def get_sys_info():
+    """
+    Print relevant system info for debugging proposes in the gmx_MMPBSA.log file
+    """
+    logging.debug(f"WDIR          : {Path('.').absolute().as_posix()}")
+    logging.debug(f"AMBERHOME     : {os.environ['AMBERHOME'] if 'AMBERHOME' in os.environ else ''}")
+    logging.debug(f"PYTHON EXE    : {shutil.which('python')}")
+    logging.debug("PYTHON VERSION: " + ''.join(sys.version.split('\n')))
+    logging.debug(f"MPI           : {shutil.which('mpirun')}")
+    logging.debug(f"ParmEd        : {parmed.__version__}")
+    logging.debug(f"OS PLATFORM   : {platform.platform()}")
+    logging.debug(f"OS SYSTEM     : {platform.system()}")
+    logging.debug(f"OS VERSION    : {platform.version()}")
+    logging.debug(f"OS PROCESSOR  : {platform.processor()}\n")
 
 
 class Unbuffered(object):
