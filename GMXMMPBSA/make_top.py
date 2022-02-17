@@ -73,6 +73,8 @@ class CheckMakeTop:
         self.trjconv = self.external_progs['trjconv']
         self.editconf = self.external_progs['editconf']
 
+        self.cys_bonds = {'COM': [], 'REC': [], 'LIG': []}
+
         self.ref_str = None
 
         self.ligand_tpr = None
@@ -577,11 +579,11 @@ class CheckMakeTop:
         logging.info('Generating AMBER Compatible PDB Files...')
         # fix receptor and structures
         logging.info('Changing the Complex residues name format from GROMACS to Amber...')
-        self.fixparm2amber(self.complex_str, removeH=True)
+        self.fixparm2amber(self.complex_str, 'COM')
         logging.info('Changing the Receptor residues name format from GROMACS to Amber...')
-        self.fixparm2amber(self.receptor_str, removeH=True)
+        self.fixparm2amber(self.receptor_str, 'REC')
         logging.info('Changing the Ligand residues name format from GROMACS to Amber...')
-        self.fixparm2amber(self.ligand_str, removeH=True)
+        self.fixparm2amber(self.ligand_str, 'LIG')
 
         logging.info('Splitting  receptor and ligand in PDB files..')
         self.receptor_list = {}
@@ -663,7 +665,7 @@ class CheckMakeTop:
                         'OPC']
                     if not line.split():
                         continue
-                    if line.split()[0].strip().upper() in sol_ion:
+                    if line.split()[0].strip() in sol_ion:
                         continue
                 temp_top.write(line)
         temp_top.close()
@@ -736,9 +738,9 @@ class CheckMakeTop:
         return sele_res
 
 
-    def fixparm2amber(self, structure, removeH=False):
+    def fixparm2amber(self, structure, str_name=None):
 
-        for residue in structure.residues:
+        for c, residue in enumerate(structure.residues, start=1):
             # change atoms name from GROMACS to AMBER
             for atom in residue.atoms:
                 if atom.name == 'OC1':
@@ -773,12 +775,22 @@ class CheckMakeTop:
                 elif 'HE2' in atoms:
                     residue.name = 'HIE'
             elif residue.name in cys_name:
-                if residue.name == 'CYX':
-                    continue
                 for atom in residue.atoms:
                     if 'SG' in atom.name:
                         for bondedatm in atom.bond_partners:
                             if bondedatm.name == 'SG':
+                                if str_name:
+                                    if str_name == 'COM':
+                                        cys1 = c
+                                        cys2 = structure.residues.index(bondedatm.residue) + 1
+                                    else:
+                                        cys1 = residue.number
+                                        cys2 = bondedatm.residue.number
+                                    if ([cys1, cys2] not in self.cys_bonds[str_name] and
+                                            [cys2, cys1] not in self.cys_bonds[str_name]):
+                                        self.cys_bonds[str_name].append([cys1, cys2])
+                                if residue.name == 'CYX' and bondedatm.residue.name == 'CYX':
+                                    continue
                                 residue.name = 'CYX'
                                 bondedatm.residue.name = 'CYX'
                         break
@@ -789,8 +801,8 @@ class CheckMakeTop:
                 for atom in residue.atoms:
                     if 'H' in atom.name and atom.atomic_number == 0:
                         atom.atomic_number = 1
-            # Remove H atoms. Only when using the pdb files with tleap to build the topologies
-        if removeH:
+                # Remove H atoms. Only when using the pdb files with tleap to build the topologies
+        if str_name:
             structure.strip('@/H')
 
     def getMutationInfo(self):
@@ -1231,15 +1243,21 @@ class CheckMakeTop:
                     self.ligand_pmrtop = None
                 else:
                     tif.write(f'LIG_OUT = combine {{ {lig_out} }}\n')
+                    for cys1, cys2 in self.cys_bonds['LIG']:
+                        tif.write(f'bond LIG_OUT.{cys1}.SG LIG_OUT.{cys2}.SG\n')
                     tif.write(f'saveamberparm LIG_OUT {self.ligand_pmrtop} {self.FILES.prefix}LIG.inpcrd\n')
             COM = self._set_com_order(REC, LIG)
             if self.FILES.stability:
                 self.receptor_pmrtop = None
             else:
                 tif.write(f'REC_OUT = combine {{ { rec_out } }}\n')
+                for cys1, cys2 in self.cys_bonds['REC']:
+                    tif.write(f'bond REC_OUT.{cys1}.SG REC_OUT.{cys2}.SG\n')
                 tif.write(f'saveamberparm REC_OUT {self.receptor_pmrtop} {self.FILES.prefix}REC.inpcrd\n')
             com_out = ' '.join(COM)
             tif.write(f'COM_OUT = combine {{ {com_out} }}\n')
+            for cys1, cys2 in self.cys_bonds['COM']:
+                tif.write(f'bond COM_OUT.{cys1}.SG COM_OUT.{cys2}.SG\n')
             tif.write('saveamberparm COM_OUT {t} {p}COM.inpcrd\n'.format(t=self.complex_pmrtop, p=self.FILES.prefix))
             tif.write('quit')
         # changed in v1.4.3. We source the gmxMMPBSA ff directly from the data folder instead of copy to the Amber/dat
@@ -1283,6 +1301,8 @@ class CheckMakeTop:
 
                     if not self.FILES.stability:
                         mtif.write(f'MREC_OUT = combine {{ {mrec_out} }}\n')
+                        for cys1, cys2 in self.cys_bonds['REC']:
+                            tif.write(f'bond MREC_OUT.{cys1}.SG MREC_OUT.{cys2}.SG\n')
                         mtif.write(
                             'saveamberparm MREC_OUT {t} {p}MUT_REC.inpcrd\n'.format(t=self.mutant_receptor_pmrtop,
                                                                                     p=self.FILES.prefix))
@@ -1309,6 +1329,8 @@ class CheckMakeTop:
 
                     if not self.FILES.stability:
                         mtif.write(f'MLIG_OUT = combine {{ {mlig_out} }}\n')
+                        for cys1, cys2 in self.cys_bonds['LIG']:
+                            tif.write(f'bond MLIG_OUT.{cys1}.SG MLIG_OUT.{cys2}.SG\n')
                         mtif.write('saveamberparm MLIG_OUT {t} {p}MUT_LIG.inpcrd\n'.format(
                             t=self.mutant_ligand_pmrtop, p=self.FILES.prefix))
                     else:
@@ -1319,6 +1341,8 @@ class CheckMakeTop:
                 MCOM = self._set_com_order(REC, LIG)
                 mcom_out = ' '.join(MCOM)
                 mtif.write(f'MCOM_OUT = combine {{ {mcom_out} }}\n')
+                for cys1, cys2 in self.cys_bonds['COM']:
+                    tif.write(f'bond MCOM_OUT.{cys1}.SG MCOM_OUT.{cys2}.SG\n')
                 mtif.write('saveamberparm MCOM_OUT {t} {p}MUT_COM.inpcrd\n'.format(t=self.mutant_complex_pmrtop,
                                                                                    p=self.FILES.prefix))
                 mtif.write('quit')
