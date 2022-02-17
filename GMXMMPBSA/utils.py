@@ -479,13 +479,33 @@ def find_progs(INPUT, mpi_size=0):
     """ Find the necessary programs based in the user INPUT """
     # List all of the used programs with the conditions that they are needed
     logging.info('Checking external programs...')
-    import os
-    chunksize = 1048576  # Read the file in 1 MB chunks
-    # Open the 2 files, the first in append mode
-    with open(file2, 'r') as fl2:
-        # Add a newline (make it OS-independent) to the first file if it doesn't
-        # already end in one
-        file1.write(os.linesep)
+    used_progs = {'cpptraj': True,
+                  'tleap': True,
+                  'parmchk2': True,
+                  'sander': True,
+                  'sander.APBS': INPUT['sander_apbs'] == 1,
+                  'mmpbsa_py_nabnmode': INPUT['nmoderun'],
+                  'rism3d.snglpnt': INPUT['rismrun']
+                  }
+    gro_exe = {
+        'gmx5': [
+            # look for any available gromacs executable
+            'gmx', 'gmx_mpi', 'gmx_d', 'gmx_mpi_d'],
+        'gmx4': [
+            # look for gromacs 4.x
+            'make_ndx', 'trjconv', 'editconf']}
+
+    # The returned dictionary:
+    my_progs = {}
+
+    search_parth = INPUT['gmx_path'] or os.environ['PATH']
+
+    for prog, needed in used_progs.items():
+        my_progs[prog] = shutil.which(prog, path=search_parth)
+        if needed:
+            if not my_progs[prog]:
+                GMXMMPBSA_ERROR('Could not find necessary program [%s]' % prog)
+            logging.info('%s found! Using %s' % (prog, str(my_progs[prog])))
 
     g5 = False
     for gv, g_exes in gro_exe.items():
