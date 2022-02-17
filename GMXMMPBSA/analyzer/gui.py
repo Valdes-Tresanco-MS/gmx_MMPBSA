@@ -53,6 +53,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
         self.corr_data = {'mutant': {}}
 
         self.systems = {}
+        self.all_systems_active = True
         self.current_system_index = None
         self.pymol_p_list = []
 
@@ -181,19 +182,9 @@ class GMX_MMPBSA_ANA(QMainWindow):
 
     def _initialize_systems(self):
 
-        # Checks all systems has the same number of frames
-        frames = [self.systems[s]['namespace'].INFO['numframes'] for s in self.systems]
-        frames_same = frames.count(frames[0]) == len(frames)
-        start = [self.systems[s]['namespace'].INPUT['startframe'] for s in self.systems]
-        start_same = start.count(start[0]) == len(start)
-        interval = [self.systems[s]['namespace'].INPUT['interval'] for s in self.systems]
-        interval_same = interval.count(interval[0]) == len(interval)
-
-        # Fixme: hacer lo mismo para comprobar si los sistemas son homogeneos
-        nmode_frames = [self.systems[s]['namespace'].INFO['numframes_nmode'] for s in self.systems]
-        nmode_frames_same = nmode_frames.count(nmode_frames[0]) == len(nmode_frames)
-
-        if all([frames_same, start_same, interval_same]):
+        if len(self.systems):
+            self.all_systems_active = False
+        if self.all_systems_active:
             self.all_frb.setEnabled(True)
 
         # Select automatically the first item to update the option panel
@@ -356,8 +347,12 @@ class GMX_MMPBSA_ANA(QMainWindow):
     def _control_options_config(self, ind):
         if ind:
             self.options_conf_btn.setEnabled(False)
+            if not self.all_systems_active:
+                self.all_frb.setEnabled(False)
         else:
             self.options_conf_btn.setEnabled(True)
+            if self.all_systems_active:
+                self.all_frb.setEnabled(True)
 
     def update_system_selection(self):
         if not self.treeWidget.selectedItems():
@@ -720,6 +715,9 @@ class GMX_MMPBSA_ANA(QMainWindow):
         qpd.setWindowModality(Qt.WindowModality.WindowModal)
         qpd.setMinimumDuration(0)
 
+        # check if all systems have the same frames range
+        frange_base = []
+
         for i, c in enumerate(range(len(results)), start=1):
             qpd.setValue(i)
             if qpd.wasCanceled():
@@ -753,6 +751,16 @@ class GMX_MMPBSA_ANA(QMainWindow):
                                'exp_ki': exp_ki
                                }
             self.makeTree(i)
+            if not frange_base:
+                frange_base = [namespace.INPUT['startframe'], namespace.INPUT['endframe'],
+                               namespace.INPUT['interval'], namespace.INPUT['nmstartframe'],
+                               namespace.INPUT['nmendframe'], namespace.INPUT['nminterval']]
+                continue
+            if frange_base != [namespace.INPUT['startframe'], namespace.INPUT['endframe'],
+                               namespace.INPUT['interval'], namespace.INPUT['nmstartframe'],
+                               namespace.INPUT['nmendframe'], namespace.INPUT['nminterval']]:
+                self.all_systems_active = False
+
         qpd.setLabelText('Initializing first system...')
         self._initialize_systems()
         qpd.setValue(i + 1)
