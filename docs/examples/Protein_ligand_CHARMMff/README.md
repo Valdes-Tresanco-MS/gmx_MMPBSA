@@ -8,6 +8,8 @@ title: Protein-ligand (Charmm)
     optimized for amber atom types (_i.e._ bondi, mbondi, mbondi2, mbondi3) and CHARMM force field hasn't been tested 
     extensively. Please, check this [thread][1] for more information and proceed with caution.
 
+    **:material-new-box:{:.heart } in gmx_MMPBSA v1.5.0!!!**
+
     In gmx_MMPBSA v1.5.0 we have added a new PB radii set named _charmm_radii_. **This radii set should be used only 
     with systems prepared with CHARMM force fields**. The atomic radii set for Poisson-Boltzmann calculations has been 
     derived from average solvent electrostatic charge distribution with explicit solvent. The accuracy has been tested 
@@ -74,8 +76,9 @@ according to what is better for your system.
 sys_name="Prot-Lig-CHARMM",
 startframe=1,
 endframe=4,
-# In gmx_MMPBSA v1.5.0 we have added a new PB radii set named charmm_radii. This radii set should be used only 
-# with systems prepared with CHARMM force fields. Uncomment the line below to use charmm_radii set
+# In gmx_MMPBSA v1.5.0 we have added a new PB radii set named charmm_radii. 
+# This radii set should be used only with systems prepared with CHARMM force fields. 
+# Uncomment the line below to use charmm_radii set
 #PBRadii=7,
 /
 &pb
