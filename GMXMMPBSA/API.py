@@ -246,26 +246,13 @@ class MMPBSA_API():
             if m not in ['mutant-normal', 'mutant', 'normal']:
                 continue
             for model, v1 in v.items():
-                if m == 'mutant-normal':
-                    # summary[m][model] = [v1.mean(), v1.std(), v1.std() /len(self.frames)]
-                    continue
-                else:
-                    summary[(m, model)] = {}
+                summary[(m, model)] = {}
                 for mol, v2 in v1.items():
-                    try:
-                        if v2:
-                            summ = v2.summary('csv')
-                            summary[(m, model, (mol,))] = pd.DataFrame(summ[2:], columns=summ[1])
-                            # summary[m][model][(mol,)] = v2.summary('csv')[1:]
-
-                        else:
-                            print(mol)
-            #             summary[m][model][mol][(mol,)] = [v2.mean(), v2.stdev(), v2.std(), v2.stdev() / len(self.frames),
-            #                                               v2.std() /len(self.frames)]
-                    except:
-                        pass
-        # df = pd.DataFrame(summary['gb']['complex'], columns=['Category', 'Name', 'Marks'])
-
+                    if v2:
+                        summ = v2.summary()
+                        summary[(m, model, (mol,))] = pd.DataFrame(summ, columns=summ[0])
+                    else:
+                        print(mol)
         return summary
 
     def get_gb_energy(self):
