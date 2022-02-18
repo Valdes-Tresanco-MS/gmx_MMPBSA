@@ -39,6 +39,7 @@ idecompString = ['idecomp = 0: No decomposition analysis',
                  'idecomp = 2: Per-residue decomp adding 1-4 interactions to EEL and VDW.',
                  'idecomp = 3: Pairwise decomp adding 1-4 interactions to Internal.',
                  'idecomp = 4: Pairwise decomp adding 1-4 interactions to EEL and VDW.']
+sep = '-------------------------------------------------------------------------------'
 
 
 class EnergyVector(np.ndarray):
@@ -209,27 +210,45 @@ class AmberOutput(dict):
             self[key] = self[key][start:end:interval]
         self._fill_composite_terms()
 
-    def summary(self, output_format: str = 'ascii'):
+    def summary_output(self, output_format: str = 'ascii'):
+        if not self.is_read:
+            raise OutputError('Cannot print summary before reading output files')
+        _output_format = 0 if output_format == 'ascii' else 1
+
+        summary = self.summary()
+
+        text = []
+        if _output_format:
+            text.append([self.mol.capitalize() + ':'])
+        else:
+            text.append(self.mol.capitalize() + ':')
+
+        for c, row in enumerate(summary, start=1):
+            # Skip terms we don't want to print
+            # Skip the composite terms, since we print those at the end
+            if _output_format:
+                text.append(row)
+            else:
+                key, avg, stdev, std, semp, sem = row
+                if key in ['GGAS', 'TOTAL']:
+                    text.append('')
+                if isinstance(avg, str):
+                    text.append(f'{key:16s} {avg:>13s} {stdev:>13s} {std:>10s} {semp:>12s} {sem:>10s}')
+                    text.append(sep)
+                else:
+                    text.append(f'{key:16s} {avg:13.2f} {stdev:13.2f} {std:10.2f} {semp:12.2f} {sem:10.2f}')
+        return text if _output_format else '\n'.join(text) + '\n\n'
+
+    def summary(self):
         """ Returns a formatted string that can be printed directly to the
             output file
         """
         if not self.is_read:
             raise OutputError('Cannot print summary before reading output files')
 
-        _output_format = 0 if output_format == 'ascii' else 1
-
-        text = []
-
-        if _output_format:
-            text.extend([[self.mol.capitalize() + ':'],
-                         ['Energy Component', 'Average', 'SD(Prop.)', 'SD', 'SEM', 'SD(Prop.)']])
-        else:
-            text.extend([self.mol.capitalize() + ':',
-                         'Energy Component       Average     SD(Prop.)         SD   SEM(Prop.)        SEM',
-                         '-------------------------------------------------------------------------------'])
+        summary_list = [['Energy Component', 'Average', 'SD(Prop.)', 'SD', 'SEM(Prop.)', 'SEM']]
 
         for key in self.data_keys:
-            # Skip terms we don't want to print
             # Skip the composite terms, since we print those at the end
             if key in self.composite_keys:
                 continue
@@ -238,27 +257,18 @@ class AmberOutput(dict):
             semp = float(stdev / sqrt(len(self[key])))
             std = float(self[key].std())
             sem = float(std / sqrt(len(self[key])))
-            if _output_format:
-                text.append([key, avg, stdev, std, semp, sem])
-            else:
-                text.append(f'{key:16s} {avg:13.2f} {stdev:13.2f} {std:10.2f} {semp:12.2f} {sem:10.2f}')
-        if not _output_format:
-            text.append('')
+            summary_list.append([key, avg, stdev, std, semp, sem])
+
         for key in self.composite_keys:
             # Now print out the composite terms
-            if key == 'TOTAL' and not _output_format:
-                text.append('')
             avg = float(self[key].mean())
             stdev = float(self[key].stdev())
             semp = float(stdev / sqrt(len(self[key])))
             std = float(self[key].std())
             sem = float(std / sqrt(len(self[key])))
-            if _output_format:
-                text.append([key, avg, stdev, std, semp, sem])
-            else:
-                text.append(f'{key:16s} {avg:13.2f} {stdev:13.2f} {std:10.2f} {semp:12.2f} {sem:10.2f}')
+            summary_list.append([key, avg, stdev, std, semp, sem])
 
-        return text if _output_format else '\n'.join(text) + '\n\n'
+        return summary_list
 
     def _read(self):
         """
@@ -299,6 +309,7 @@ class IEout(dict):
     """
     Interaction Entropy output
     """
+
     def __init__(self, INPUT, **kwargs):
         super(IEout, self).__init__(**kwargs)
         self.INPUT = INPUT
@@ -339,7 +350,7 @@ class IEout(dict):
             text.append(['Model', 'σ(Int. Energy)', 'Average', 'Std. Dev.', 'Std. Err. of Mean'])
         else:
             text.append('Model           σ(Int. Energy)      Average       Std. Dev.   Std. Err. of Mean\n' +
-                        '-------------------------------------------------------------------------------')
+                        sep)
 
         for model in self:
             avg = float(self[model]['iedata'].mean())
@@ -375,7 +386,7 @@ class C2out(dict):
             text.append(['Model', 'σ(Int. Energy)', 'C2 Value', 'Std. Dev.', 'Conf. Interv. (95%)'])
         else:
             text.append('Model           σ(Int. Energy)    C2 Value         Std. Dev.   Conf. Interv. (95%)\n' +
-                        '-------------------------------------------------------------------------------')
+                        sep)
 
         for model in self:
             if _output_format:
@@ -574,8 +585,8 @@ class NMODEout(dict):
                          ['Entropy Term', 'Average', 'Std. Dev.', 'Std. Err. of the Mean']])
         else:
             text.append(self.mol.capitalize() + ':\n'
-                        'Entropy Term                Average              Std. Dev.   Std. Err. of Mean\n' +
-                        '-------------------------------------------------------------------------------')
+                                                'Entropy Term                Average              Std. Dev.   Std. Err. of Mean\n' +
+                        sep)
 
         for key in self.data_keys:
             avg = float(self[key].mean())
@@ -590,7 +601,7 @@ class NMODEout(dict):
         """ Internal reading function to populate the data arrays """
 
         if self.is_read:
-            return   # don't read through again
+            return  # don't read through again
 
         # Loop through all filenames
         for fileno in range(self.num_files):
@@ -604,7 +615,7 @@ class NMODEout(dict):
             have to store a single line at a time in addition to the arrays of
             data)
         """
-        while rawline:= outfile.readline():
+        while rawline := outfile.readline():
             if rawline[:35] == '   |---- Entropy not Calculated---|':
                 sys.stderr.write('Not all frames minimized within tolerance')
 
@@ -639,7 +650,7 @@ class GBout(AmberOutput):
 
     def _get_energies(self, outfile):
         """ Parses the mdout files for the GB potential terms """
-        while rawline:= outfile.readline():
+        while rawline := outfile.readline():
             if rawline[:5] == ' BOND':
                 words = rawline.split()
                 self['BOND'] = self['BOND'].append(float(words[2]))
@@ -683,7 +694,7 @@ class PBout(AmberOutput):
 
     def _get_energies(self, outfile):
         """ Parses the energy values from the output files """
-        while rawline:= outfile.readline():
+        while rawline := outfile.readline():
             if rawline[:5] == ' BOND':
                 words = rawline.split()
                 self['BOND'] = self['BOND'].append(float(words[2]))
@@ -729,7 +740,7 @@ class RISMout(AmberOutput):
         # 1. Standard free energy (solvtype==0)
         # 2. GF free energy (solvtype==1)
 
-        while rawline:= outfile.readline():
+        while rawline := outfile.readline():
 
             if re.match(r'(solute_epot|solutePotentialEnergy)', rawline):
                 words = rawline.split()
@@ -878,7 +889,6 @@ class BindingStatistics(dict):
         self.data_keys = self.com.data_keys
         self.composite_keys = []
 
-
         self.print_levels = self.com.print_levels
         try:
             self._delta()
@@ -947,38 +957,57 @@ class BindingStatistics(dict):
             c += self.com.INPUT['interval']
         csvwriter.writerow([])
 
-    def summary(self, output_format: str = 'ascii'):
-        """ Returns a string printing the summary of the binding statistics """
-
+    def report_inconsistency(self, output_format: str = 'ascii'):
         _output_format = 0 if output_format == 'ascii' else 1
         text = []
+        if _output_format:
+            text.append(['WARNING: INCONSISTENCIES EXIST WITHIN INTERNAL POTENTIAL' +
+                         'TERMS. THE VALIDITY OF THESE RESULTS ARE HIGHLY QUESTIONABLE'])
+        else:
+            text.append('WARNING: INCONSISTENCIES EXIST WITHIN INTERNAL POTENTIAL' +
+                        '\nTERMS. THE VALIDITY OF THESE RESULTS ARE HIGHLY QUESTIONABLE\n')
+        text if _output_format else '\n'.join(text) + '\n'
 
-        if self.inconsistent:
+    def summary_output(self, output_format: str = 'ascii'):
+        _output_format = 0 if output_format == 'ascii' else 1
+        summary = self.summary()
+        text = []
+
+        if _output_format:
+            text.append(['Delta (Complex - Receptor - Ligand):'])
+        else:
+            text.append('Delta (Complex - Receptor - Ligand):')
+
+        for c, row in enumerate(summary, start=1):
+            # Skip the composite terms, since we print those at the end
             if _output_format:
-                text.append(['WARNING: INCONSISTENCIES EXIST WITHIN INTERNAL POTENTIAL' +
-                             'TERMS. THE VALIDITY OF THESE RESULTS ARE HIGHLY QUESTIONABLE'])
+                text.append(row)
             else:
-                text.append('WARNING: INCONSISTENCIES EXIST WITHIN INTERNAL POTENTIAL' +
-                            '\nTERMS. THE VALIDITY OF THESE RESULTS ARE HIGHLY QUESTIONABLE\n')
-        if self.com.INPUT['verbose']:
-            if _output_format:
-                text.extend(self.com.summary(output_format))
-                text.extend(self.rec.summary(output_format))
-                text.extend(self.lig.summary(output_format))
-            else:
-                text.extend((self.com.summary(), self.rec.summary(), self.lig.summary()))
+                key, avg, stdev, std, semp, sem = row
+                if key in ['GGAS', 'TOTAL']:
+                    text.append('')
+                if isinstance(avg, str):
+                    text.extend(
+                        (
+                            f'{key:16s} {avg:>13s} {stdev:>13s} {std:>10s} {semp:>12s} {sem:>10s}',
+                            sep,
+                        )
+                    )
+
+                else:
+                    text.append(f'{f"Δ{key}":16s} {avg:13.2f} {stdev:13.2f} {std:10.2f} {semp:12.2f} {sem:10.2f}')
+        return text if _output_format else '\n'.join(text) + '\n'
+
+    def summary(self):
+        """ Returns a string printing the summary of the binding statistics """
         if isinstance(self.com, NMODEout):
             col_name = '%-16s' % 'Entropy Term'
         else:
             col_name = '%-16s' % 'Energy Component'
 
-        if _output_format:
-            text.extend([['Delta (Complex - Receptor - Ligand):'],
-                         [col_name] + ['Average', 'SD(Prop.)', 'SD', 'SEM(Prop.)', 'SEM']])
-        else:
-            text.append('Delta (Complex - Receptor - Ligand):\n' + f'{col_name:16s}' +
-                        '       Average     SD(Prop.)         SD   SEM(Prop.)        SEM\n' +
-                        '-------------------------------------------------------------------------------')
+        summary_list = [
+            [col_name] + ['Average', 'SD(Prop.)', 'SD', 'SEM(Prop.)', 'SEM']
+        ]
 
         for key in self.data_keys:
             # Skip the composite terms, since we print those at the end
@@ -999,21 +1028,10 @@ class BindingStatistics(dict):
                 num_frames = min(len(self.com[key]), len(self.rec[key]), len(self.lig[key]))
             semp = float(stdev / sqrt(num_frames))
             sem = float(std / sqrt(num_frames))
+            summary_list.append([printkey, avg, stdev, std, semp, sem])
 
-            if _output_format:
-                text.append([f'Δ{printkey}', avg, stdev, std, semp, sem])
-            else:
-                text.append(
-                    f'{f"Δ{printkey}":16s} {avg:13.2f} {stdev:13.2f} {std:10.2f} {semp:12.2f} {sem:10.2f}'
-                )
-
-
-        if self.composite_keys and not _output_format:
-            text.append('')
         for key in self.composite_keys:
             # Now print out the composite terms
-            if key == 'TOTAL' and not _output_format:
-                text.append('')
             stdev = float(self[key].stdev())
             avg = float(self[key].mean())
             std = float(self[key].std())
@@ -1023,22 +1041,16 @@ class BindingStatistics(dict):
                 num_frames = min(len(self.com[key]), len(self.rec[key]), len(self.lig[key]))
             semp = float(stdev / sqrt(num_frames))
             sem = float(std / sqrt(num_frames))
-            if _output_format:
-                text.append([f'Δ{key}', avg, stdev, std, semp, sem])
-            else:
-                text.append(
-                    f'{f"Δ{key}":16s} {avg:13.2f} {stdev:13.2f} {std:10.2f} {semp:12.2f} {sem:10.2f}'
-                )
+            summary_list.append([key, avg, stdev, std, semp, sem])
 
-
-        return text if _output_format else '\n'.join(text) + '\n'
+        return summary_list
 
 
 class DeltaBindingStatistics(dict):
     """ Base class for compiling the binding statistics """
     st_null = ['BOND', 'ANGLE', 'DIHED', '1-4 VDW', '1-4 EEL']
 
-    def __init__(self,  mut: BindingStatistics, norm: BindingStatistics, **kwargs):
+    def __init__(self, mut: BindingStatistics, norm: BindingStatistics, **kwargs):
         super(DeltaBindingStatistics, self).__init__(**kwargs)
 
         self.mut = mut
@@ -1046,7 +1058,6 @@ class DeltaBindingStatistics(dict):
 
         self.data_keys = self.norm.data_keys
         self.composite_keys = ['GGAS', 'GSOLV', 'TOTAL']
-
 
         self._delta()
 
@@ -1068,8 +1079,6 @@ class DeltaBindingStatistics(dict):
             for component in self.norm.com.data_key_owner[key]:
                 self[component] = self[key] + self[component]
 
-
-
     def _print_vectors(self, csvwriter):
         """ Output all of the energy terms including the differences if we're
             doing a single trajectory simulation and there are no missing terms
@@ -1086,27 +1095,49 @@ class DeltaBindingStatistics(dict):
             c += self.norm.INPUT['interval']
         csvwriter.writerow([])
 
-    def summary(self, output_format: str = 'ascii'):
-        """ Returns a string printing the summary of the binding statistics """
-
+    def summary_output(self, output_format: str = 'ascii'):
         _output_format = 0 if output_format == 'ascii' else 1
+        summary = self.summary()
         text = []
+
+        if _output_format:
+            text.append(['Delta Delta (Mutant - Normal):'])
+        else:
+            text.append('Delta Delta (Mutant - Normal):')
+
+        for c, row in enumerate(summary, start=1):
+            # Skip the composite terms, since we print those at the end
+            if _output_format:
+                text.append(row)
+            else:
+                key, avg, stdev, std, semp, sem = row
+                if key in ['GGAS', 'TOTAL']:
+                    text.append('')
+                if isinstance(avg, str):
+                    text.extend(
+                        (
+                            f'{key:16s} {avg:>13s} {stdev:>13s} {std:>10s} {semp:>12s} {sem:>10s}',
+                            sep,
+                        )
+                    )
+
+                else:
+                    text.append(f'{f"ΔΔ{key}":16s} {avg:13.2f} {stdev:13.2f} {std:10.2f} {semp:12.2f} {sem:10.2f}')
+        return text if _output_format else '\n'.join(text) + '\n'
+
+    def summary(self):
+        """ Returns a string printing the summary of the binding statistics """
 
         if isinstance(self.norm.com, NMODEout):
             col_name = '%-16s' % 'Entropy Term'
         else:
             col_name = '%-16s' % 'Energy Component'
 
-        if _output_format:
-            text.extend([['Delta Delta (Mutant - Normal):'],
-                         [col_name] + ['Average', 'SD(Prop.)', 'SD', 'SEM(Prop.)', 'SEM']])
-        else:
-            text.append('Delta Delta (Mutant - Normal):\n' + f'{col_name:16s}' +
-                        '       Average     SD(Prop.)         SD   SEM(Prop.)        SEM\n' +
-                        '-------------------------------------------------------------------------------')
+        summary_list = [
+            [col_name] + ['Average', 'SD(Prop.)', 'SD', 'SEM(Prop.)', 'SEM']
+        ]
 
         for key in self.norm.data_keys:
-            # # Skip chamber terms if we aren't using chamber prmtops
             # Catch special case of NMODEout classes
             if isinstance(self.norm.com, NMODEout) and key == 'Total':
                 printkey = '\n-TΔΔS binding ='
@@ -1119,35 +1150,19 @@ class DeltaBindingStatistics(dict):
             num_frames = len(self[key])
             sem = float(std / sqrt(num_frames))
             semp = float(stdev / sqrt(num_frames))
-            if _output_format:
-                text.append([f'ΔΔ{printkey}', avg, stdev, std, semp, sem])
-            else:
-                text.append(
-                    f'{f"ΔΔ{printkey}":16s} {avg:13.2f} {stdev:13.2f} {std:10.2f} {semp:12.2f} {sem:10.2f}'
-                )
+            summary_list.append([printkey, avg, stdev, std, semp, sem])
 
-
-        if self.composite_keys:
-            text.append('')
         for key in self.composite_keys:
             # Now print out the composite terms
-            if key == 'TOTAL':
-                text.append('')
             stdev = float(self[key].stdev())
             avg = float(self[key].mean())
             std = float(self[key].std())
             num_frames = len(self[key])
             sem = float(std / sqrt(num_frames))
             semp = float(stdev / sqrt(num_frames))
-            if _output_format:
-                text.append([f'ΔΔ{key}', avg, stdev, std, semp, sem])
-            else:
-                text.append(
-                    f'{f"ΔΔ{key}":16s} {avg:13.2f} {stdev:13.2f} {std:10.2f} {semp:12.2f} {sem:10.2f}'
-                )
+            summary_list.append([key, avg, stdev, std, semp, sem])
 
-
-        return text if _output_format else '\n'.join(text) + '\n'
+        return summary_list
 
 
 class DecompOut(dict):
@@ -1369,6 +1384,7 @@ class DecompOut(dict):
                 text.append('')
 
         return text if _output_format else '\n'.join(text)
+
 
 class PairDecompOut(DecompOut):
     """ Same as DecompOut, but for Pairwise decomposition """

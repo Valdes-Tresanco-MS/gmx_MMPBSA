@@ -372,12 +372,17 @@ def write_outputs(app):
         if not INPUT[triggers[i]]:
             continue
         if not INPUT['mutant_only']:
+            final_output.write(headers[i])
             if stability:
                 sys_norm = app.calc_types.normal[key]['complex']
             else:
                 sys_norm = app.calc_types.normal[key]['delta']
-            final_output.write(headers[i])
-            final_output.add_section(sys_norm.summary())
+                if sys_norm.inconsistent:
+                    final_output.writeline(sys_norm.report_inconsistency())
+                final_output.add_section(app.calc_types.normal[key]['complex'].summary_output())
+                final_output.add_section(app.calc_types.normal[key]['receptor'].summary_output())
+                final_output.add_section(app.calc_types.normal[key]['ligand'].summary_output())
+            final_output.add_section(sys_norm.summary_output())
             # Dump energy vectors to a CSV
             if FILES.energyout:
                 energyvectors.writerow([headers[i].strip()])
@@ -411,12 +416,17 @@ def write_outputs(app):
                                              f'ΔG{"" if stability else " binding"} = {nm_davg:9.4f} +/- {nm_dstd:7.4f}\n')
 
         if INPUT['alarun']:
+            final_output.write('%s MUTANT:%s' % (mut_str, headers[i]))
             if stability:
                 sys_mut = app.calc_types.mutant[key]['complex']
             else:
                 sys_mut = app.calc_types.mutant[key]['delta']
-            final_output.write('%s MUTANT:%s' % (mut_str, headers[i]))
-            final_output.add_section(sys_mut.summary())
+                if sys_mut.inconsistent:
+                    final_output.writeline(sys_mut.report_inconsistency())
+                final_output.add_section(app.calc_types.mutant[key]['complex'].summary_output())
+                final_output.add_section(app.calc_types.mutant[key]['receptor'].summary_output())
+                final_output.add_section(app.calc_types.mutant[key]['ligand'].summary_output())
+            final_output.add_section(sys_mut.summary_output())
             # Dump energy vectors to a CSV
             if FILES.energyout:
                 energyvectors.writerow([mut_str + ' Mutant ' + headers[i]])
@@ -449,7 +459,7 @@ def write_outputs(app):
 
         if INPUT['alarun'] and not INPUT['mutant_only']:
             mut_norm = app.calc_types.mut_norm[key]['delta']
-            final_output.add_section(mut_norm.summary())
+            final_output.add_section(mut_norm.summary_output())
             ddh_davg = mut_norm['TOTAL'].mean()
             ddh_dstd = mut_norm['TOTAL'].std()
 
