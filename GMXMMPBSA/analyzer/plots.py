@@ -713,7 +713,7 @@ class Tables(QMdiSubWindow):
         self.table.setRowCount(rows)
         self.table.setHorizontalHeaderLabels(labels)
 
-        for r, row in enumerate(self.df_list):
+        for r, row in enumerate(self.df_list[1:]):
             for c, col in enumerate(row):
                 text = f'{float(col):.2f}' if c else col
                 item = QTableWidgetItem(text)
