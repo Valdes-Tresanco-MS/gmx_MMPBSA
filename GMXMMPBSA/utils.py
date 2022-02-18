@@ -457,7 +457,7 @@ def remove(flag, fnpre='_GMXMMPBSA_'):
     other_files = ['COM.prmtop', 'REC.prmtop', 'LIG.prmtop', 'MUT_COM.prmtop', 'MUT_REC.prmtop', 'MUT_LIG.prmtop',
                    'leap.log']
     if flag == -1:
-        result_files = ['gmx_MMPBSA.log', 'FINAL_RESULTS_MMPBSA.dat', 'FINAL_DECOMP_MMPBSA.dat']
+        result_files = ['FINAL_RESULTS_MMPBSA.dat', 'FINAL_DECOMP_MMPBSA.dat']
         for fil in allfiles:
             if (
                     fil.startswith(fnpre) or fil.startswith(f"#{fnpre}") or
