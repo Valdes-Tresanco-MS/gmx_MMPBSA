@@ -51,10 +51,9 @@ title: Changelog
 - Issue with MT approach (#78)
 - get_num_terms function run forever if TDC term not found. (#98)
 - Check if the groups defined for receptor and ligand are the same (#86)
-- **Standard deviation calculation. This error comes from the original version of MMPBSA.py** (#105)
+- Add SD and SEM calculated with [propagation formula](https://en.wikipedia.org/wiki/Propagation_of_uncertainty#Example_formulae)** (#105)
 - Structure consistency (#80, #79)
 - Now gmx_MMPBSA launches an error when there is an `OverflowError` on IE calculation (#57)
-- Improve gmx_MMPBSA .log file (#108)
 - Inconsistency with multiple trajectories (#120)
 #### `gmx_MMPBSA_ana`
 - Tick labels in line plots (#65)
@@ -69,14 +68,15 @@ title: Changelog
 - EnergyVector changed to ndarray subclass
 - Regen expression for `mutant_res`
 - Now the COM, REC and LIG trajectories must have the same length when MT approach
-- Improved verbose logging
+- Improve verbose logging in gmx_MMPBSA.log file (#108)
 - Removed `*.gro` file support in `-cs` , `-rs` and `-ls` flags
 - Added `trjconv` to avoid the PBC in the tpr file (#43)
 #### `gmx_MMPBSA_ana`
 - New set of chart buttons
 - IE plot
 #### `gmx_MMPBSA_test`
-- Improved parallel processing 
+- Improved parallel processing
+- Change command-line
 #### Documentation
 - Updated packages dependency
 
