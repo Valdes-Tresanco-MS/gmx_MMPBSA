@@ -18,7 +18,7 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from .utils import com2str, energy2pdb_pml
-from .style import file_icon
+from .style import (result_file_icon, bar_plot_icon, line_plot_icon, heatmap_plot_icon, pymol_icon, result_table_icon)
 
 
 class SpacerItem(QToolButton):
@@ -128,8 +128,7 @@ class CustomItem(QTreeWidgetItem):
         self.line_table_action.toggled.connect(self._show_line_table)
 
         self.line_chart_action = QToolButton()
-        self.line_chart_action.setIcon(QIcon(
-            '/home/mario/PycharmProjects/gmx_MMPBSA/GMXMMPBSA/analyzer/style/line-chart.svg'))
+        self.line_chart_action.setIcon(QIcon(line_plot_icon))
         self.line_chart_action.setText('Line Chart')
         self.line_chart_action.setCheckable(True)
         self.line_chart_action.setPopupMode(QToolButton.ToolButtonPopupMode.MenuButtonPopup)
@@ -161,8 +160,7 @@ class CustomItem(QTreeWidgetItem):
         self.bar_table_action.toggled.connect(self._show_bar_table)
 
         self.bar_chart_action = QToolButton()
-        self.bar_chart_action.setIcon(
-            QIcon('/home/mario/PycharmProjects/gmx_MMPBSA/GMXMMPBSA/analyzer/style/bar-chart.png'))
+        self.bar_chart_action.setIcon(QIcon(bar_plot_icon))
         self.bar_chart_action.setText('Bar Chart')
         self.bar_chart_action.setCheckable(True)
         self.bar_chart_action.setPopupMode(QToolButton.ToolButtonPopupMode.MenuButtonPopup)
@@ -195,8 +193,7 @@ class CustomItem(QTreeWidgetItem):
         self.heatmap_table_action.toggled.connect(self._show_heatmap_table)
 
         self.heatmap_chart_action = QToolButton()
-        self.heatmap_chart_action.setIcon(
-            QIcon('/home/mario/PycharmProjects/gmx_MMPBSA/GMXMMPBSA/analyzer/style/heatmap_icon.svg'))
+        self.heatmap_chart_action.setIcon(QIcon(heatmap_plot_icon))
         self.heatmap_chart_action.setText('Heatmap Chart')
         self.heatmap_chart_action.setCheckable(True)
         self.heatmap_chart_action.setPopupMode(QToolButton.ToolButtonPopupMode.MenuButtonPopup)
@@ -227,7 +224,7 @@ class CustomItem(QTreeWidgetItem):
         # self.heatmap_table_action.toggled.connect(self._show_heatmap_table)
 
         self.vis_action = QToolButton()
-        self.vis_action.setIcon(QIcon('/home/mario/PycharmProjects/gmx_MMPBSA/GMXMMPBSA/analyzer/style/molecule.svg'))
+        self.vis_action.setIcon(QIcon(pymol_icon))
         self.vis_action.setText('Visualization')
         self.vis_action.setCheckable(True)
         self.vis_action.setPopupMode(QToolButton.ToolButtonPopupMode.MenuButtonPopup)
@@ -249,7 +246,7 @@ class CustomItem(QTreeWidgetItem):
             self.decomp_output_action.toggled.connect(self._show_decomp_output_file)
 
         self.options_button = QToolButton()
-        self.options_button.setIcon(QIcon(file_icon))
+        self.options_button.setIcon(QIcon(result_file_icon))
         self.options_button.setText('Results files')
         self.options_button.setToolTip('Results files')
         self.options_button.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
@@ -291,8 +288,7 @@ class CustomItem(QTreeWidgetItem):
     def _define_result_table_btn(self):
 
         self.result_table_action = QToolButton()
-        self.result_table_action.setIcon(
-            QIcon('/home/mario/PycharmProjects/gmx_MMPBSA/GMXMMPBSA/analyzer/style/heatmap_icon.svg'))
+        self.result_table_action.setIcon(QIcon(result_table_icon))
         self.result_table_action.setText('Result Table')
         self.result_table_action.setCheckable(True)
         self.result_table_action.setContentsMargins(0, 0, 0, 0)

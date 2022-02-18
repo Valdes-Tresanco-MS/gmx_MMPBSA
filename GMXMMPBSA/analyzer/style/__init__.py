@@ -55,5 +55,15 @@ Accent = this.joinpath('Accent.png').absolute().as_posix()
 Dark2 = this.joinpath('Dark2.png').absolute().as_posix()
 Set2 = this.joinpath('Set2.png').absolute().as_posix()
 
-file_icon = this.joinpath('file-icon.png').absolute().as_posix()
+result_file_icon = this.joinpath('result_files.svg').absolute().as_posix()
+bar_plot_icon = this.joinpath('bar_plot.svg').absolute().as_posix()
+line_plot_icon = this.joinpath('line_plot.svg').absolute().as_posix()
+heatmap_plot_icon = this.joinpath('heatmap_plot.svg').absolute().as_posix()
+pymol_icon = this.joinpath('pymol_icon.svg').absolute().as_posix()
+result_table_icon = this.joinpath('result_table.svg').absolute().as_posix()
+restore_icon = this.joinpath('restore.svg').absolute().as_posix()
+config_icon = this.joinpath('cog.svg').absolute().as_posix()
+
+toc_img = this.joinpath('TOC.png').absolute().as_posix()
+logo = this.joinpath('logo.svg').absolute().as_posix()
 colors_icons = [ArmyRose_7, ArmyRose_5, Geyser_7, Geyser_5]

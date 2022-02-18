@@ -26,6 +26,7 @@ from PyQt5.QtGui import *
 from .Parameter import Parameter, registerParameterType
 from .ParameterItem import ParameterItem
 from collections import OrderedDict
+from GMXMMPBSA.analyzer.style import restore_icon
 
 
 class ColorButton(QPushButton):
@@ -156,7 +157,7 @@ class WidgetParameterItem(ParameterItem):
         self.defaultBtn.setFixedWidth(20)
         self.defaultBtn.setFixedHeight(20)
         modDir = os.path.dirname(__file__)
-        self.defaultBtn.setIcon(QIcon('/home/mario/programs/amber20/miniconda/lib/python3.8/site-packages/pyqtgraph/icons/default.png'))
+        self.defaultBtn.setIcon(QIcon(restore_icon))
         self.defaultBtn.clicked.connect(self.defaultClicked)
 
         self.displayLabel = QLabel()

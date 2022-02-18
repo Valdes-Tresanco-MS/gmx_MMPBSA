@@ -36,6 +36,7 @@ import itertools
 
 # sns.set_theme()
 from GMXMMPBSA.analyzer.chartsettings import Palettes
+from GMXMMPBSA.analyzer.style import logo
 from GMXMMPBSA.analyzer.utils import bar_label
 
 plt.rcParams["figure.autolayout"] = True
@@ -118,6 +119,7 @@ class ChartsBase(QMdiSubWindow):
         self.setMinimumSize(400, 400)
         self.options = options
         self.item_parent = item_parent
+        self.setWindowIcon(QIcon(logo))
 
         self.mainwidgetmdi = QMainWindow()  # must be QMainWindow to handle the toolbar
         sns.set_theme(style=self.options[('General', 'theme')])

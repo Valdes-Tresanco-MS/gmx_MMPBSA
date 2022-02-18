@@ -29,6 +29,7 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from GMXMMPBSA.analyzer.dialogs import InitDialog
 from GMXMMPBSA.analyzer.customitem import CustomItem, CorrelationItem
+from GMXMMPBSA.analyzer.style import config_icon, toc_img, logo
 from GMXMMPBSA.analyzer.utils import energy2pdb_pml, ki2energy, make_corr_DF, multiindex2dict
 from GMXMMPBSA.analyzer.chartsettings import ChartSettings
 from GMXMMPBSA.analyzer.parametertree import ParameterTree, Parameter
@@ -50,6 +51,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
     def __init__(self):
         super(GMX_MMPBSA_ANA, self).__init__()
         self.showMaximized()
+        self.setWindowIcon(QIcon(logo))
         self.corr_data = {'mutant': {}}
 
         self.systems = {}
@@ -205,23 +207,34 @@ class GMX_MMPBSA_ANA(QMainWindow):
 
     def _about_dialog(self):
         from GMXMMPBSA import __version__
-        QMessageBox.about(self, "About gmx_MMPBSA",
-                          "<h2>About gmx_MMPBSA</h2>"
-                          "<b>gmx_MMPBSA</b> is a new tool based on AMBER's MMPBSA.py aiming to perform end-state free "
-                          "energy calculations with GROMACS files.<br><br>"
-                          f"<b>Version:</b> {__version__}"
-                          "<h2>Cite gmx_MMPBSA</h2>"
+        b = QMessageBox.about(self, "About gmx_MMPBSA",
+                          "<html>"
+                          "<body>"
+                          "<h2 style='text-align:center'>About gmx_MMPBSA</h2>"
+                          "<div text-align:center;>"
+                          f"<a href='https://valdes-tresanco-ms.github.io/gmx_MMPBSA/'>"
+                          f"<img src={toc_img} alt='gmx_MMPBSA TOC' width='450' height='350'>"
+                          "</a>"
+                          "</div>"
+                          "<p style='text-align:center'><b>gmx_MMPBSA</b> is a new tool based on AMBER's MMPBSA.py "
+                          "aiming to perform end-state free energy calculations with GROMACS files.</p>"
+                          f"<p style='text-align:center'><b style='text-align:center'>Version:</b> {__version__}</p>"
+                          "<h2 style='text-align:center'>Cite gmx_MMPBSA</h2>"
+                          "<p style='text-align:center'> "
                           "Valdés-Tresanco, M.S., Valdés-Tresanco, M.E., Valiente, P.A. and Moreno E. "
                           "gmx_MMPBSA: A New Tool to Perform End-State Free Energy Calculations with GROMACS. "
                           "Journal of Chemical Theory and Computation, 2021 17 (10), 6281-6291. "
                           "<a href='https://pubs.acs.org/doi/10.1021/acs.jctc.1c00645'>"
-                          "https://pubs.acs.org/doi/10.1021/acs.jctc.1c00645</a>")
+                          "https://pubs.acs.org/doi/10.1021/acs.jctc.1c00645</a> </p>"
+                          "</body>"
+                          "</html>")
+
 
     def _help(self):
         QDesktopServices().openUrl(QUrl('https://valdes-tresanco-ms.github.io/gmx_MMPBSA/analyzer/'))
 
     def _doc(self):
-        QDesktopServices().openUrl(QUrl('https://valdes-tresanco-ms.github.io/gmx_MMPBSA/'))
+        QDesktopServices().openUrl(QUrl('https://valdes-tresanco-ms.github.io/gmx_MMPBSA/getting-started/'))
 
     def _bug(self):
         QDesktopServices().openUrl(QUrl('https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/issues/new/choose'))
@@ -314,7 +327,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
         self.set_user_config_action.triggered.connect(self._set_as_default)
 
         self.options_conf_btn = QToolButton()
-        self.options_conf_btn.setIcon(self.style().standardIcon(QStyle.SP_DriveFDIcon))
+        self.options_conf_btn.setIcon(QIcon(config_icon))
         self.options_conf_btn.setPopupMode(QToolButton.InstantPopup)
         self.options_conf_btn.setMenu(conf_menu)
 
