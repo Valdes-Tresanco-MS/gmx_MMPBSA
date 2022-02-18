@@ -84,11 +84,9 @@ In this section, we will go in detail about each file and what they are used for
 `Topology (top)`
 :   This file contains all the parameters corresponding to the force field selected during the system setup. When using 
     a GROMACS topology, `parmed` is used for converting the topologies. This method can be useful when studying a 
-    complex system with many elements. However, its main strength (flexibility) is its 
-    main weakness. GROMACS can parameterize your system differently than AMBER, so the conversion can result in a 
-    topology with very dissimilar parameters that AMBER does not understand. If you use Amber force field, you can 
-    consider whether to use this method or not. However, when using CHARMM (any version) force field, the topology 
-    is always required. 
+    complex systems with many elements or systems containing elements that have been parameterized independently and 
+    don't appear in standard force fields. If you use Amber force field, you can consider whether using the topology or 
+    not. However, when using CHARMM (any version) force field, the topology is always required.
 
 `Reference Structure`
 :   It corresponds to a file in *.pdb format that must contain a complete structure. That is, the user must make sure 
