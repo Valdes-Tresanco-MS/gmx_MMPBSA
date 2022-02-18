@@ -32,7 +32,6 @@ import subprocess
 from pathlib import Path
 import logging
 import string
-from copy import deepcopy
 from parmed.tools.changeradii import ChRad
 
 chains_letters = list(string.ascii_uppercase)
@@ -92,13 +91,9 @@ class CheckMakeTop:
         self.mutant_receptor_pmrtop = 'MUT_REC.prmtop'
         self.mutant_ligand_pmrtop = 'MUT_LIG.prmtop'
 
-        self.complex_temp_top = self.FILES.prefix + 'COM.top'
-        self.receptor_temp_top = self.FILES.prefix + 'COM.top'
-        self.ligand_temp_top = self.FILES.prefix + 'COM.top'
-
-        self.complex_str_file = self.FILES.prefix + 'COM.pdb'
-        self.receptor_str_file = self.FILES.prefix + 'REC.pdb'
-        self.ligand_str_file = self.FILES.prefix + 'LIG.pdb'
+        self.complex_str_file = f'{self.FILES.prefix}COM.pdb'
+        self.receptor_str_file = f'{self.FILES.prefix}REC.pdb'
+        self.ligand_str_file = f'{self.FILES.prefix}LIG.pdb'
 
         self.checkFiles()
 
@@ -140,7 +135,7 @@ class CheckMakeTop:
                     mol_terms = 12
                 energy_terms = 6
                 num_res = len(decomp_res)
-                total_items = energy_terms * mol_terms * num_res**2
+                total_items = energy_terms * mol_terms * num_res ** 2
                 if total_items > 250:
                     logging.warning(f"Using idecomp = {self.INPUT['idecomp']} and dec_verbose ="
                                     f" {self.INPUT['dec_verbose']} will generate approximately {total_items} items. "
@@ -178,7 +173,7 @@ class CheckMakeTop:
         com_ndx = self.FILES.prefix + 'COM_index.ndx'
         make_ndx_args = self.make_ndx + ['-n', self.FILES.complex_index, '-o', com_ndx]
         logging.debug('Running command: ' + (' '.join(make_ndx_echo_args).replace('\n', '\\n')) + ' | ' +
-                         ' '.join(make_ndx_args))
+                      ' '.join(make_ndx_args))
         c2 = subprocess.Popen(make_ndx_args, stdin=c1.stdout, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         if c2.wait():  # if it quits with return code != 0
             GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(self.make_ndx), self.FILES.complex_index))
@@ -196,11 +191,11 @@ class CheckMakeTop:
             comprog = self.trjconv
             # we extract the pdb from the first frame of trajs to make amber topology
             pdbcom_args = self.trjconv + ['-f', self.FILES.complex_trajs[0], '-s', self.FILES.complex_tpr, '-o',
-                                           self.complex_str_file, '-n', self.FILES.complex_index, '-dump', '0']
+                                          self.complex_str_file, '-n', self.FILES.complex_index, '-dump', '0']
         else:
             comprog = self.editconf
             pdbcom_args = self.editconf + ['-f', self.FILES.complex_tpr, '-n', self.FILES.complex_index, '-o',
-                                             self.complex_str_file]
+                                           self.complex_str_file]
         logging.debug('Running command: ' + (' '.join(pdbcom_echo_args)) + ' | ' + ' '.join(pdbcom_args))
         c4 = subprocess.Popen(pdbcom_args, stdin=c3.stdout, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         if c4.wait():  # if it quits with return code != 0
@@ -225,9 +220,9 @@ class CheckMakeTop:
 
         # check if the ligand force field is gaff or gaff2 and get if the ligand mol2 was defined
         elif "leaprc.gaff2" in self.INPUT['forcefields'] and not self.FILES.complex_top:
-                logging.warning('You must define the ligand mol2 file (-lm) if the ligand forcefield is '
-                                  '"leaprc.gaff" or "leaprc.gaff2". If the ligand is parametrized in Amber force '
-                                  'fields ignore this warning')
+            logging.warning('You must define the ligand mol2 file (-lm) if the ligand forcefield is '
+                            '"leaprc.gaff" or "leaprc.gaff2". If the ligand is parametrized in Amber force '
+                            'fields ignore this warning')
 
         # make a temp receptor pdb (even when stability) if decomp to get correct receptor residues from complex. This
         # avoid get multiples molecules from complex.split()
@@ -240,7 +235,7 @@ class CheckMakeTop:
             if str_format == 'tpr':
                 # we extract the pdb from the first frame of trajs to make amber topology
                 pdbrec_args = self.trjconv + ['-f', self.FILES.complex_trajs[0], '-s', self.FILES.complex_tpr, '-o',
-                                               'rec_temp.pdb', '-n', self.FILES.complex_index, '-dump', '0']
+                                              'rec_temp.pdb', '-n', self.FILES.complex_index, '-dump', '0']
             else:
                 pdbrec_args = self.editconf + ['-f', self.FILES.complex_tpr, '-n', self.FILES.complex_index, '-o',
                                                'rec_temp.pdb']
@@ -251,7 +246,7 @@ class CheckMakeTop:
             log_subprocess_output(cp2)
         # check if stability
         if self.FILES.stability and (
-            (self.FILES.receptor_tpr or self.FILES.ligand_tpr)
+                (self.FILES.receptor_tpr or self.FILES.ligand_tpr)
         ):
             logging.warning('When Stability calculation mode is selected, receptor and ligand files are not '
                             'needed...')
@@ -266,8 +261,8 @@ class CheckMakeTop:
             if str_format == 'tpr':
                 prog = self.trjconv
                 # we extract a pdb from structure file to make amber topology
-                pdbrec_args = self.trjconv + ['-f', self.FILES.receptor_trajs[0],'-s', self.FILES.receptor_tpr, '-o',
-                                               self.receptor_str_file, '-n', self.FILES.receptor_index, '-dump', '0']
+                pdbrec_args = self.trjconv + ['-f', self.FILES.receptor_trajs[0], '-s', self.FILES.receptor_tpr, '-o',
+                                              self.receptor_str_file, '-n', self.FILES.receptor_index, '-dump', '0']
             else:
                 prog = self.editconf
                 pdbrec_args = self.editconf + ['-f', self.FILES.receptor_tpr, '-n', self.FILES.receptor_index, '-o',
@@ -288,7 +283,7 @@ class CheckMakeTop:
             if str_format == 'tpr':
                 # we extract a pdb from structure file to make amber topology
                 pdbrec_args = self.trjconv + ['-f', self.FILES.complex_trajs[0], '-s', self.FILES.complex_tpr, '-o',
-                                               self.receptor_str_file, '-n', self.FILES.complex_index, '-dump', '0']
+                                              self.receptor_str_file, '-n', self.FILES.complex_index, '-dump', '0']
             else:
                 pdbrec_args = self.editconf + ['-f', self.FILES.complex_tpr, '-n', self.FILES.complex_index, '-o',
                                                self.receptor_str_file]
@@ -312,7 +307,7 @@ class CheckMakeTop:
                 prog = self.trjconv
                 # we extract a pdb from structure file to make amber topology
                 pdblig_args = self.trjconv + ['-f', self.FILES.ligand_trajs[0], '-s', self.FILES.ligand_tpr, '-o',
-                                               self.ligand_str_file, '-n', self.FILES.ligand_index, '-dump', '0']
+                                              self.ligand_str_file, '-n', self.FILES.ligand_index, '-dump', '0']
             else:
                 prog = self.editconf
                 pdblig_args = self.editconf + ['-f', self.FILES.ligand_tpr, '-n', self.FILES.ligand_index, '-o',
@@ -347,7 +342,7 @@ class CheckMakeTop:
         log_subprocess_output(l2)
         # check for IE variable
         if (self.FILES.receptor_tpr or self.FILES.ligand_tpr) and (
-            self.INPUT['interaction_entropy'] or self.INPUT['c2_entropy']
+                self.INPUT['interaction_entropy'] or self.INPUT['c2_entropy']
         ):
             logging.warning("The IE or C2 entropy method don't support the MTP approach...")
             self.INPUT['interaction_entropy'] = self.INPUT['c2_entropy'] = 0
@@ -366,26 +361,24 @@ class CheckMakeTop:
         self.check_structures(self.complex_str, self.receptor_str, self.ligand_str)
 
     def check4water(self):
-        counter = sum(
-            res.name
-            in [
-                'SOL',
-                'SOD',
-                'CLA',
-                'TIP3P',
-                'TIP4P',
-                'TIPS3P',
-                'TIP5P',
-                'SPC',
-                'SPC/E',
-                'SPCE',
-                'TIP3o',
-                'WAT',
-            ]
-            for res in self.complex_str
-        )
-
-        if counter:
+        if counter := sum(
+                res.name
+                in [
+                    'SOL',
+                    'SOD',
+                    'CLA',
+                    'TIP3P',
+                    'TIP4P',
+                    'TIPS3P',
+                    'TIP5P',
+                    'SPC',
+                    'SPC/E',
+                    'SPCE',
+                    'TIP3o',
+                    'WAT',
+                ]
+                for res in self.complex_str
+        ):
             GMXMMPBSA_ERROR(f'gmx_MMPBSA does not support water molecules in any structure, but we found {counter} '
                             f'molecules in the complex.')
 
@@ -643,9 +636,9 @@ class CheckMakeTop:
             for line in topf:
                 if line.startswith('#include') and 'forcefield.itp' in line:
                     if (
-                        'charmm' not in line.lower()
-                        and 'toppar' not in line.lower()
-                        and 'amber' not in line.lower()
+                            'charmm' not in line.lower()
+                            and 'toppar' not in line.lower()
+                            and 'amber' not in line.lower()
                     ):
                         GMXMMPBSA_ERROR(f'Unknown force field in GROMACS topology in line:\n {line}')
                 elif '[ molecules ]' in line:
@@ -736,7 +729,6 @@ class CheckMakeTop:
                 logging.warning("We couldn't find this residue CHAIN:{} RES_NUM:{} ICODE: "
                                 "{}".format(*res))
         return sele_res
-
 
     def fixparm2amber(self, structure, str_name=None):
 
@@ -892,8 +884,9 @@ class CheckMakeTop:
                     break
         cb_atom = None
         ca_atom = None
-        logging.info(f"Mutating {self.complex_str.residues[mut_index].chain}/{self.complex_str.residues[mut_index].number} "
-                     f"{self.complex_str.residues[mut_index].name} by {mut_aa}")
+        logging.info(
+            f"Mutating {self.complex_str.residues[mut_index].chain}/{self.complex_str.residues[mut_index].number} "
+            f"{self.complex_str.residues[mut_index].name} by {mut_aa}")
 
         mutant_resname = mut_top.residues[mut_index].name
 
@@ -927,13 +920,13 @@ class CheckMakeTop:
                          at.xz], 1.09)
                     for ref_at in h_atoms_prop:
                         setattr(at, ref_at, h_atoms_prop[ref_at])
-                elif at.name in ['HB']: # VAL, LEU and THR
+                elif at.name in ['HB']:  # VAL, LEU and THR
                     at.name = 'HB1'
                     at.type = h_atoms_prop['type']
                     at.atom_type = h_atoms_prop['atom_type']
-                elif at.name in ['CG', 'OG', 'SG',   # LEU, PHE, TRP, MET, TYR, ARG, LYS, ASN, GLN, ASP, GLU, HIS,
+                elif at.name in ['CG', 'OG', 'SG',  # LEU, PHE, TRP, MET, TYR, ARG, LYS, ASN, GLN, ASP, GLU, HIS,
                                  # PRO (EXCLUDED), CYS (EXCLUDED IF S-S), SER
-                                 'CG1', 'OG1'   # VAL, LEU and THR
+                                 'CG1', 'OG1'  # VAL, LEU and THR
                                  ]:
                     at.name = 'HB3'
                     cb_atom.xx, cb_atom.xy, cb_atom.xz, at.xx, at.xy, at.xz = _scaledistance(
@@ -1250,7 +1243,7 @@ class CheckMakeTop:
             if self.FILES.stability:
                 self.receptor_pmrtop = None
             else:
-                tif.write(f'REC_OUT = combine {{ { rec_out } }}\n')
+                tif.write(f'REC_OUT = combine {{ {rec_out} }}\n')
                 for cys1, cys2 in self.cys_bonds['REC']:
                     tif.write(f'bond REC_OUT.{cys1}.SG REC_OUT.{cys2}.SG\n')
                 tif.write(f'saveamberparm REC_OUT {self.receptor_pmrtop} {self.FILES.prefix}REC.inpcrd\n')
