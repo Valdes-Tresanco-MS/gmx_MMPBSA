@@ -46,7 +46,7 @@ removed. See the list below for more details:
     
 * :material-trash-can:{: .heart } Removed variables
     * [&general namelist](input_file.md#general-namelist-variables)
-        * `protein_forcefield` , `ligand_forcefiel` , `use_sander`
+        * `protein_forcefield` , `ligand_forcefield` , `use_sander`
     
 ### Calculations
 * :material-new-box:{: .heart } New calculations
