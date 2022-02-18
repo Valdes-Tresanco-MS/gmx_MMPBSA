@@ -6,8 +6,11 @@ title: C2 Entropy
 # C2 Entropy calculations
 
 !!! info
+    **:material-new-box:{:.heart } in gmx_MMPBSA v1.5.0!!!**
+
     This example can be found in the [docs/examples/Entropy_calculations/C2_Entropy][6] directory in the 
-     repository folder
+    repository folder. If you didn't use gmx_MMPBSA_test before, use [downgit](https://downgit.github.io/#/home) to 
+    download the specific folder from gmx_MMPBSA Github repository.
 
 
 
@@ -74,10 +77,10 @@ _See a detailed list of all the options in `gmx_MMPBSA` input file [here][2] as 
 
 ## Considerations
 In this case, a single trajectory (ST) approximation is followed, which means the receptor and ligand structures and 
-trajectories will be obtained from that of the complex. To do so, a MD Structure+mass(db) file (`com.tpr`), an index file (`index.ndx`),
-a trajectory file (`com_traj.xtc`), and both the receptor and ligand group numbers in the index file (`1 13`) are needed.
-A ligand .mol2 file is also needed for generating the ligand topology. The `mmpbsa.in` input file will contain all the 
-parameters needed for the MM/PB(GB)SA calculation. In this case, 17 frames 
+trajectories will be obtained from that of the complex. To do so, a MD Structure+mass(db) file (`com.tpr`), an 
+index file (`index.ndx`), a trajectory file (`com_traj.xtc`), and both the receptor and ligand group numbers in the 
+index file (`1 13`) are needed. A ligand .mol2 file is also needed for generating the ligand topology. The `mmpbsa.
+in` input file will contain all the parameters needed for the MM/PB(GB)SA calculation. In this case, 17 frames 
 are going to be used when performing the MM/PB(GB)SA calculation with the igb5 (GB-OBC2) model and a 
 salt concentration = 0.15M.
 

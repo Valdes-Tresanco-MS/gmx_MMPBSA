@@ -7,9 +7,11 @@ title: Alanine scanning
 # Binding free energy calculation with linear PB (NLPBE)
 
 !!! info
-    This example can be found in the [docs/examples/NonLinear_PB_solver][6] directory in the repository folder. If you didn't 
-    use gmx_MMPBSA_test before, use [downgit](https://downgit.github.io/#/home) to download the specific folder from 
-    gmx_MMPBSA Github repository
+    **:material-new-box:{:.heart } in gmx_MMPBSA v1.5.0!!!**
+
+    This example can be found in the [docs/examples/NonLinear_PB_solver][6] directory in the repository folder. If you 
+    didn't use gmx_MMPBSA_test before, use [downgit](https://downgit.github.io/#/home) to download the specific folder 
+    from gmx_MMPBSA Github repository.
 
 
 ## Requirements

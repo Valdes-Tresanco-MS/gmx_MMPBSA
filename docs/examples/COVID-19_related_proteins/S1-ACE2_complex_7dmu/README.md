@@ -11,9 +11,10 @@ title: SARS-CoV-2 spike receptor-binding domain complexed with high affinity ACE
 # SARS-CoV-2 spike receptor-binding domain complexed with high affinity ACE2 mutant 3N39 binding free energy calculations (Single Trajectory method) with CHARMMff files
 
 !!! info
-    This example can be found in the [docs/examples/COVID-19_related_proteins/S1-ACE2_complex_7dmu][6] directory in the repository folder. If you didn't 
+    This example can be found in the [docs/examples/COVID-19_related_proteins/S1-ACE2_complex_7dmu][6] directory in the 
+    repository folder. If you didn't 
     use gmx_MMPBSA_test before, use [downgit](https://downgit.github.io/#/home) to download the specific folder from 
-    gmx_MMPBSA Github repository
+    gmx_MMPBSA Github repository.
 
 ## Requirements
 

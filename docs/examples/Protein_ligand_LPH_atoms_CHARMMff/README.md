@@ -4,9 +4,23 @@ title: Protein-ligand LPH (Charmm)
 ---
 
 !!! danger "CHARMM and MM(PB/GB)SA"
-    PB model is recommended when working with CHARMMff files. Nevertheless, the combination of PB/GB models and 
-    CHARMM force field hasn't been tested extensively. Please, check this [thread][1] for more information and 
-    proceed with caution.
+    PB model is recommended when working with CHARMMff files. Nevertheless, the combination of PB/GB models with radii 
+    optimized for amber atom types (_i.e._ bondi, mbondi, mbondi2, mbondi3) and CHARMM force field hasn't been tested 
+    extensively. Please, check this [thread][1] for more information and proceed with caution.
+
+    **:material-new-box:{:.heart } in gmx_MMPBSA v1.5.0!!!**
+
+    In gmx_MMPBSA v1.5.0 we have added a new PB radii set named _charmm_radii_. **This radii set should be used only 
+    with systems prepared with CHARMM force fields**. The atomic radii set for Poisson-Boltzmann calculations has been 
+    derived from average solvent electrostatic charge distribution with explicit solvent. The accuracy has been tested 
+    with free energy perturbation with explicit solvent. Most of the values were taken from a _*radii.str_ file used in 
+    PBEQ Solver in [charmm-gui](https://www.charmm-gui.org/?doc=input/pbeqsolver).
+
+    * Radii for protein atoms in 20 standard amino acids from 
+    [Nina, Belogv, and Roux](https://pubs.acs.org/doi/10.1021/jp970736r)
+    * Radii for nucleic acid atoms (RNA and DNA) from 
+    [Banavali and Roux](https://pubs.acs.org/doi/abs/10.1021/jp025852v)
+    * Halogens and other atoms from [Fortuna and Costa](https://pubs.acs.org/doi/10.1021/acs.jcim.1c00177)
 
 # Protein-ligand with LPH atoms BFE calculations (Single Trajectory method) -- CHARMMff files
 
@@ -26,6 +40,28 @@ title: Protein-ligand LPH (Charmm)
 
     As the LPH particle is not considered during the calculations in gmx_MMPBSA, take the results with a grain of 
     salt, especially when working with systems where the halogen bond is determinant for the binding.
+
+    **:material-new-box:{:.heart } in gmx_MMPBSA v1.5.0!!!**
+
+    We have included standard radii for halogens in _charmm_radii_ set:
+
+    * Cl: 1.86
+    * Br: 1.98
+    * I: 2.24
+
+    This radii set should be used with the following PBSA setup:
+
+    ```
+    Sample input file for PB calculation with halogenated compounds
+            
+    &general
+    sys_name="PB_Halogens",
+    PBRadii=7,
+    /
+    &pb
+    inp=1, saopt=1, radiopt=0, cavity_surften=0.005, cavity_offset=0.0000
+    /
+    ```
 
 
 ## Requirements
@@ -167,12 +203,15 @@ sys_name="Prot-Lig-ST",
 startframe=5,
 endframe=9,
 solvated_trajectory=0,
+# In gmx_MMPBSA v1.5.0 we have added a new PB radii set named charmm_radii. This radii set should be used only 
+# with systems prepared with CHARMM force fields. Uncomment the line below to use charmm_radii set
+#PBRadii=7,
 /
 &pb
 # radiopt=0 is recommended which means using radii from the prmtop file
 # for both the PB calculation and for the NP calculation
 
-istrng=0.15, fillratio=1.250, radiopt=0, inp=1,
+istrng=0.15, fillratio=4, radiopt=0, inp=1,
 /
 ```
 
