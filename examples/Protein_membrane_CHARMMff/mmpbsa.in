@@ -9,6 +9,9 @@ according to what is better for your system.
 sys_name="Prot-Memb-CHARMM",
 startframe=1,
 endframe=4,
+# In gmx_MMPBSA v1.5.0 we have added a new PB radii set named charmm_radii. This radii set should be used only
+# with systems prepared with CHARMM force fields. Uncomment the line below to use charmm_radii set
+#PBRadii=7,
 /
 &pb
 memopt=1, emem=7.0, indi=1.0,
