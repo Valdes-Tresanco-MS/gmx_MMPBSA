@@ -12,6 +12,54 @@ Inspect the currently installed version with:
 
     amber.python -m pip show gmx_MMPBSA  or  gmx_MMPBSA -v    
 
+## Upgrading from 1.4.3 to 1.5.0
+**The new gmx_MMPBSA version 1.5.0 includes major changes in calculation and processing modules, making it 
+incompatible with previous versions.**
+
+New variables have been included in the input file to perform new calculations or simply provide the user with full 
+control over the ones already available in gmx_MMPBSA. A number of variables has been also updated, reworked or 
+removed. See the list below for more details:
+
+### Variables
+* :material-new-box:{: .heart } New variables
+    * [&general namelist](input_file.md#general-namelist-variables)
+        - `c2_entropy`
+    * [&gb namelist](input_file.md#gb-namelist-variables)
+        - `extdiel`
+    * [&pb namelist](input_file.md#pb-namelist-variables)
+        - `smoothopt` , `iprob` , `arcres` , `mprob` , `npbopt` , `accept` , `nbuffer` , `fscale` , `npbgrid` , 
+        `scalec` , `nsnba` , `decompopt` , `use_rmin` , `sprob` , `vprob` , `rhow_effect` , `use_sav` , `maxsph` , 
+        `npbverb` 
+    * [&rism namelist](input_file.md#rism-namelist-variables)
+        - `noasympcorr` , `ljTolerance` , `asympKSpaceTolerance` , `treeDCF` , `treeTCF` , `treeCoulomb` , `treeDCFMAC` , 
+        `treeTCFMAC` , `treeCoulombMAC` , `treeDCFOrder` , `treeTCFOrder` , `treeCoulombOrder` , `treeDCFN0` , 
+        `treeTCFN0` , `treeCoulombN0` , `mdiis_del` , `mdiis_nvec` , `mdiis_restart` , `maxstep` , `npropagate` , 
+        `entropicDecomp`
+
+* :material-update:{: .heart } Updated variables
+    * [&general namelist](input_file.md#general-namelist-variables)
+        * `PBRadii` , `interaction_entropy` , `assign_chainID` , `solvated_trajectory` , `verbose`
+
+* :material-tools:{: .heart } Reworked variables
+    * [&general namelist](input_file.md#general-namelist-variables)
+        * `temperature`
+    
+* :material-trash-can:{: .heart } Removed variables
+    * [&general namelist](input_file.md#general-namelist-variables)
+        * `protein_forcefield` , `ligand_forcefiel` , `use_sander`
+    
+### Calculations
+* :material-new-box:{: .heart } New calculations
+    * In the new version, it is possible to perform new calculations such as 
+    [C2 Entropy](examples/Entropy_calculations/C2_Entropy/README.md) and 
+    [Binding free energy calculation with non-linear PB solver](examples/NonLinear_PB_solver/README.md)
+      
+* :material-update:{: .heart } Updated calculations
+    * The addition of new variables (see above) provide more control over &pb and &rism calculations
+    
+### gmx_MMPBSA_ana
+gmx_MMPBSA_ana has been completely reworked, and it doesn't support files from previous versions. New functions for 
+customizing/exporting graphs, change number of frames and showing/exporting data have been added.
 
 ## Upgrading from 1.3.x to 1.4.x
 The differences between both versions are small, you can see them below

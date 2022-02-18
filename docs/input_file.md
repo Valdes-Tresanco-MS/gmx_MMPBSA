@@ -339,7 +339,7 @@ tested in previous `protein_forcefield` and `ligand_forcefield` variables.
             [Banavali and Roux](https://pubs.acs.org/doi/abs/10.1021/jp025852v)
             * Halogens and other atoms from [Fortuna and Costa](https://pubs.acs.org/doi/10.1021/acs.jcim.1c00177)
 
-    _Reworked in v1.5.0: New PB radii sets have been added_
+    _Updated in v1.5.0: New PB radii sets have been added_
 
 `temperature` (Default = 298.15)  
 :   Specify the temperature (in K) used in the calculations.
@@ -515,7 +515,7 @@ However, this option is incompatible with alanine scanning.
 
     _Removed in v1.5.0: Now `sander` is used in all calculations_
 
-verbose (Default = 1)
+`verbose` (Default = 1)
 :   Specifies how much output is printed in the output file.
 
     * 0: Print only difference terms
