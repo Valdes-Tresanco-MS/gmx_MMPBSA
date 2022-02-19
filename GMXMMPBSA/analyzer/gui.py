@@ -1071,7 +1071,12 @@ class GMX_MMPBSA_ANA(QMainWindow):
                                                )
                             self.items_counter['charts'] += 1
                 elif level == 'c2':
-                    titem = CustomItem(top_item, [level.upper()])
+                    titem = CustomItem(top_item,
+                                       [level.upper()],
+                                       app=self,
+                                       buttons=(-2,),
+                                       keys_path=(part, level)
+                                       )
                     str_dict = multiindex2dict(data[level].columns)
                     for level1 in str_dict:
                         item1 = CustomItem(titem,
@@ -1084,7 +1089,11 @@ class GMX_MMPBSA_ANA(QMainWindow):
                                            part=part
                                            )
                 elif level == 'ie':
-                    titem = CustomItem(top_item, [level.upper()])
+                    titem = CustomItem(top_item,
+                                       [level.upper()],
+                                       app=self,
+                                       buttons=(-2,),
+                                       keys_path=(part, level),)
                     str_dict = multiindex2dict(data[level].columns)
                     for level1 in str_dict:
                         item1 = CustomItem(titem,
