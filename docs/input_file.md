@@ -241,23 +241,29 @@ tested in previous `protein_forcefield` and `ligand_forcefield` variables.
 `ions_parameters` (Default = 1)
 :   Define ions parameters to build the Amber topology (see [§3.6](https://ambermd.org/doc12/Amber21.pdf#section.3.6)). 
 
-    * 1: frcmod.ions234lm_126_tip3p
-    * 2: frcmod.ions234lm_iod_tip4pew
-    * 3: frcmod.ions234lm_iod_spce
-    * 4: frcmod.ions234lm_hfe_spce
-    * 5: frcmod.ions234lm_126_tip4pew
-    * 6: frcmod.ions234lm_126_spce
-    * 7: frcmod.ions234lm_1264_tip4pew
-    * 8: frcmod.ions234lm_1264_tip3p
-    * 9: frcmod.ions234lm_1264_spce
-    * 10: frcmod.ions234lm_iod_tip3p
-    * 11: frcmod.ions234lm_hfe_tip4pew
-    * 12: frcmod.ions234lm_hfe_tip3p
+    * 1: _frcmod.ions234lm_126_tip3p_ (Li/Merz ion parameters for +2 to +4 ions in TIP3P water (12-6 normal usage set))
+    * 2: _frcmod.ions234lm_126_spce_ (same, but in SPC/E water)
+    * 3: _frcmod.ions234lm_126_tip4pew_ (same, but in TIP4P/EW water) 
+    * 4: _frcmod.ions234lm_hfe_tip3p_ (Li/Merz ion parameters for +2 to +4 ions in TIP3P water (12-6 HFE set))
+    * 5: _frcmod.ions234lm_hfe_spce_ (same, but in SPC/E water)
+    * 6: _frcmod.ions234lm_hfe_tip4pew_ (same, but in TIP4P/EW water)
+    * 7: _frcmod.ions234lm_iod_tip3p_ (Li/Merz ion parameters for +2 to +4 ions in TIP3P water (12-6 IOD set))
+    * 8: _frcmod.ions234lm_iod_spce_ (same, but in SPC/E water)
+    * 9: _frcmod.ions234lm_iod_tip4pew_ (same, but in TIP4P/EW water)
+    * 10: _frcmod.ionslm_126_opc_ (Li/Merz ion parameters for -1 to +4 in OPC water (12-6 normal usage set))
+    * 11: _frcmod.ionslm_hfe_opc_ (Li/Merz ion parameters for -1 to +4 in OPC water (12-6 HFE set))
+    * 12: _frcmod.ionslm_iod_opc_ (Li/Merz ion parameters for -1 to +4 in OPC water (12-6 IOD set))
+    * 13: _frcmod.ions1lm_126_tip3p_ (Li/Merz ion parameters for +1 and -1 ions in TIP3P water (12-6 normal usage set))
+    * 14: _frcmod.ions1lm_126_spce_ (same, but in SPC/E water)
+    * 15: _frcmod.ions1lm_126_tip4pew_ (same, but in TIP4P/EW water)
+    * 16: _frcmod.ions1lm_iod_ (Li/Merz ion parameters for +1/-1 ions in TIP3P, SPC/E, and TIP4P/EW waters (12-6 IOD set))
 
     !!! important "Keep in mind"
         * You don't need to define it when you use a topology. Please refer to the section 
           ["How gmx_MMPBSA works"](howworks.md#how-gmx_mmpbsa-works)   
         * This notation is simpler since these parameter files are generally the same for all systems
+
+    _Updated in v1.5.0: Add new ion parameters sets_
 
 `PBRadii` (Default = 3)
 :   PBRadii to build amber topology files:
