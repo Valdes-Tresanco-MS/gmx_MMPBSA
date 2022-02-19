@@ -13,7 +13,7 @@ title: Mycalamide A Bound to the Large Ribosomal Subunit
 !!! info
     This example can be found in the [docs/examples/Ribosomal50S_Mycalamide_A][6] directory in the repository folder. If you didn't 
     use gmx_MMPBSA_test before, use [downgit](https://downgit.github.io/#/home) to download the specific folder from 
-    gmx_MMPBSA Github repository
+    gmx_MMPBSA Github repository.
 
 ## Requirements
 

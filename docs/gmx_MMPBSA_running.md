@@ -8,7 +8,7 @@ title:
 gmx_MMPBSA requires minimum processing on the input structure and trajectory files. Before running gmx_MMPBSA, 
 please make sure:
 
-??? tip "The structure defined in `-cs`, `-rs`, or `-ls` options is inconsistent"
+??? tip "The structure defined in `-cs`, `-rs`, or `-ls` options is consistent"
         
     Visualize the structure contained in the structure input file given in the `-cs`, `-rs`, or `-ls` 
     options and make sure it is consistent (as shown in Fig 1, right panel). On the other hand, if the 

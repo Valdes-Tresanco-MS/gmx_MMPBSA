@@ -11,9 +11,10 @@ title: Papain-Like Protease of SARS CoV-2, C111S mutant, in complex with PLP_Sny
 # Papain-Like Protease of SARS CoV-2, C111S mutant, in complex with PLP_Snyder494 inhibitor binding free energy calculations (Single Trajectory method) with CHARMMff files
 
 !!! info
-    This example can be found in the [docs/examples/COVID-19_related_proteins/Papain-like_protease_7koj][6] directory in the repository folder. If you didn't 
+    This example can be found in the [docs/examples/COVID-19_related_proteins/Papain-like_protease_7koj][6] directory 
+    in the repository folder. If you didn't 
     use gmx_MMPBSA_test before, use [downgit](https://downgit.github.io/#/home) to download the specific folder from 
-    gmx_MMPBSA Github repository
+    gmx_MMPBSA Github repository.
 
 ## Requirements
 

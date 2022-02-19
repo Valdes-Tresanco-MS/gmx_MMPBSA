@@ -266,6 +266,80 @@ tested in previous `protein_forcefield` and `ligand_forcefield` variables.
     * 2: mbondi, recommended when igb = 1
     * 3: mbondi2, recommended when igb = 2 or 5
     * 4: mbondi3, recommended when igb = 8
+    * 5: mbondi_pb2
+
+        !!! note "_mbondi_pb2_ radii set"
+            This raddi set haven been added in _gmx_MMPBSA v1.5.0_. It is based on _mbondi_ radii set and contains a 
+            new optimized set of halogen PB radii for halogenated compounds (without extra point (EP) of charge) 
+            parametrized with General Amber Force Field (GAFF):
+
+            Values from Table 3 in [§3.1 Halogen Radii Optimization Without EP][300]:
+
+            * Cl: 1.76
+            * Br: 1.97
+            * I: 2.09
+    
+            This radii set should be used with the following PBSA setup:
+    
+            ```
+            Sample input file for PB calculation with halogenated compounds
+            
+            &general
+            sys_name="PB_Halogens",
+            forcefields="oldff/leaprc.ff99SB,leaprc.gaff"
+            PBRadii=5,
+            /
+            &pb
+            radiopt=0, istrng=0.150, inp=1,
+            /
+            ```
+
+    * 6: mbondi_pb3
+
+        !!! note "_mbondi_pb3_ radii set"
+            This raddi set haven been added in _gmx_MMPBSA v1.5.0_. It is based on _mbondi_ radii set and contains a 
+            new optimized set of halogen PB radii for halogenated compounds (without extra point (EP) of charge) 
+            parametrized with General Amber Force Field (GAFF):
+
+            Values from Table 3 in [§3.1 Halogen Radii Optimization Without EP][300]:
+
+            * Cl: 2.20
+            * Br: 2.04
+            * I: 2.19
+    
+            This radii set should be used with the following PBSA setup:
+    
+            ```
+            Sample input file for PB calculation with halogenated compounds
+            
+            &general
+            sys_name="PB_Halogens",
+            forcefields="oldff/leaprc.ff99SB,leaprc.gaff"
+            PBRadii=6,
+            /
+            &pb
+            radiopt=0, istrng=0.150, inp=2,
+            /
+            ```
+            
+  [300]: https://pubs.acs.org/doi/full/10.1021/acs.jctc.9b00106
+
+    * 7: charmm_radii
+        
+        !!! note "_charmm_radii_ radii set"
+            This raddi set haven been added in _gmx_MMPBSA v1.5.0_. **Use only with systems prepared with CHARMM 
+            force fields**. This atomic radii set for Poisson-Boltzmann calculations has been derived from average 
+            solvent electrostatic charge distribution with explicit solvent. The accuracy has been tested with free 
+            energy perturbation with explicit solvent. Most of the values were taken from a _*radii.str_ file used in 
+            PBEQ Solver in [charmm-gui](https://www.charmm-gui.org/?doc=input/pbeqsolver).
+
+            * Radii for protein atoms in 20 standard amino acids from 
+            [Nina, Belogv, and Roux](https://pubs.acs.org/doi/10.1021/jp970736r)
+            * Radii for nucleic acid atoms (RNA and DNA) from 
+            [Banavali and Roux](https://pubs.acs.org/doi/abs/10.1021/jp025852v)
+            * Halogens and other atoms from [Fortuna and Costa](https://pubs.acs.org/doi/10.1021/acs.jcim.1c00177)
+
+    _Updated in v1.5.0: New PB radii sets have been added_
 
 `temperature` (Default = 298.15)  
 :   Specify the temperature (in K) used in the calculations.
@@ -407,12 +481,16 @@ in the PATH variable. In this path the following executables will be searched: `
 
     _New in v1.1.1_
 
-`keep_files`
+`keep_files` (Default = 2)
 :   Specifies which files are kept.
 
     * 0: Keep only Hierarchical Data Format (h5) file
     * 1: Keep all temporary files (_prefix_*)
-    * 2: Keep all temporary files and Hierarchical Data Format (h5) file
+    * 2: Keep all temporary files (_prefix_*) and Hierarchical Data Format (h5) file
+
+    !!! danger "Keep in mind"
+        The h5 file is still experimental. It is recommended to use `keep_files = 1` or `keep_files = 2` to 
+        avoid errors when using `gmx_MMPBSA_ana`
 
 `netcdf` (Default = 0)
 :   Specifies whether to use NetCDF trajectories internally rather than writing temporary ASCII trajectory
@@ -437,7 +515,7 @@ However, this option is incompatible with alanine scanning.
 
     _Removed in v1.5.0: Now `sander` is used in all calculations_
 
-verbose (Default = 0)
+`verbose` (Default = 1)
 :   Specifies how much output is printed in the output file.
 
     * 0: Print only difference terms
