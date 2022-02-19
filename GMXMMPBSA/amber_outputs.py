@@ -172,6 +172,7 @@ class AmberOutput(dict):
     def parse_from_file(self, basename, num_files=1):
         self.num_files = num_files
         self.basename = basename
+        self.temperature = self.INPUT['temperature']
 
         for key in self.data_keys:
             self[key] = EnergyVector()
@@ -200,44 +201,35 @@ class AmberOutput(dict):
         csvwriter.writerow(['Frame #'] + print_keys)
 
         # write out each frame
-        c = self.INPUT['startframe']
+        c = self.INPUT['nmstartframe'] if self.__class__ == NMODEout else self.INPUT['startframe']
         for i in range(len(self[print_keys[0]])):
             csvwriter.writerow([c] + [round(self[key][i], 2) for key in print_keys])
-            c += self.INPUT['interval']
+            c += self.INPUT['nminterval'] if self.__class__ == NMODEout else self.INPUT['interval']
 
     def set_frame_range(self, start=0, end=None, interval=1):
         for key in self.data_keys:
             self[key] = self[key][start:end:interval]
         self._fill_composite_terms()
 
-    def summary_output(self, output_format: str = 'ascii'):
+    def summary_output(self):
         if not self.is_read:
             raise OutputError('Cannot print summary before reading output files')
-        _output_format = 0 if output_format == 'ascii' else 1
-
+        text = [self.mol.capitalize() + ':']
         summary = self.summary()
-
-        text = []
-        if _output_format:
-            text.append([self.mol.capitalize() + ':'])
-        else:
-            text.append(self.mol.capitalize() + ':')
-
         for c, row in enumerate(summary, start=1):
-            # Skip terms we don't want to print
-            # Skip the composite terms, since we print those at the end
-            if _output_format:
-                text.append(row)
+            key, avg, stdev, std, semp, sem = row
+            if key in ['GGAS', 'TOTAL']:
+                text.append('')
+            if isinstance(avg, str):
+                text.extend(
+                    (
+                        f'{key:16s} {avg:>13s} {stdev:>13s} {std:>10s} {semp:>12s} {sem:>10s}',
+                        sep,
+                    )
+                )
             else:
-                key, avg, stdev, std, semp, sem = row
-                if key in ['GGAS', 'TOTAL']:
-                    text.append('')
-                if isinstance(avg, str):
-                    text.append(f'{key:16s} {avg:>13s} {stdev:>13s} {std:>10s} {semp:>12s} {sem:>10s}')
-                    text.append(sep)
-                else:
-                    text.append(f'{key:16s} {avg:13.2f} {stdev:13.2f} {std:10.2f} {semp:12.2f} {sem:10.2f}')
-        return text if _output_format else '\n'.join(text) + '\n\n'
+                text.append(f'{key:16s} {avg:13.2f} {stdev:13.2f} {std:10.2f} {semp:12.2f} {sem:10.2f}')
+        return '\n'.join(text) + '\n\n'
 
     def summary(self):
         """ Returns a formatted string that can be printed directly to the
@@ -246,7 +238,9 @@ class AmberOutput(dict):
         if not self.is_read:
             raise OutputError('Cannot print summary before reading output files')
 
-        summary_list = [['Energy Component', 'Average', 'SD(Prop.)', 'SD', 'SEM(Prop.)', 'SEM']]
+        comp_name = 'Entropy Component' if self.__class__ in [NMODEout, QHout] else 'Energy Component'
+
+        summary_list = [[comp_name, 'Average', 'SD(Prop.)', 'SD', 'SEM(Prop.)', 'SEM']]
 
         for key in self.data_keys:
             # Skip the composite terms, since we print those at the end
@@ -271,18 +265,15 @@ class AmberOutput(dict):
         return summary_list
 
     def _read(self):
-        """
-        Internal reading function. This should be called at the end of __init__.
-        It loops through all of the output files to populate the arrays
-        """
+        """        Internal reading function. This should be called at the end of __init__"""
+
         if self.is_read:
             return None  # don't read through them twice
 
+        # Loop through all filenames
         for fileno in range(self.num_files):
             with open('%s.%d' % (self.basename, fileno)) as output_file:
                 self._get_energies(output_file)
-            # If we have to get energies elsewhere (e.g., with GB and ESURF), do
-            # that here. This is an empty function when unnecessary
             self._extra_reading(fileno)
 
         self.is_read = True
@@ -297,8 +288,9 @@ class AmberOutput(dict):
         on whether or not certain terms need to be added in)
         """
 
+        length = len(self['EEL']) if 'EEL' in self else len(self['TRANSLATIONAL'])
         for key in self.composite_keys:
-            self[key] = EnergyVector(len(self['EEL']))
+            self[key] = EnergyVector(length)
 
         for key in self.data_keys:
             for component in self.data_key_owner[key]:
@@ -341,26 +333,35 @@ class IEout(dict):
                 f += self.INPUT['interval']
             csvwriter.writerow([])
 
-    def summary(self, output_format: str = 'ascii'):
+    def summary_output(self):
+        summary = self.summary()
+        text = []
+        for row in summary:
+            key, sigma, avg, std, sem = row
+            if isinstance(avg, str):
+                text.extend((f'{key:15s} {sigma:>14s} {avg:>16s} {std:>14s} {sem:>16s}', sep))
+            else:
+                text.append(f"{key:15s} {sigma:14.2f} {avg:16.2f} {std:14.2f} {sem:16.2f}")
+        return '\n'.join(text) + '\n\n'
+
+    def summary(self):
         """ Formatted summary of Interaction Entropy results """
 
-        _output_format = 0 if output_format == 'ascii' else 1
-        text = []
-        if _output_format:
-            text.append(['Model', 'σ(Int. Energy)', 'Average', 'Std. Dev.', 'Std. Err. of Mean'])
-        else:
-            text.append('Model           σ(Int. Energy)      Average       Std. Dev.   Std. Err. of Mean\n' +
-                        sep)
+        summary_list = [
+            [
+                'Model',
+                'σ(Int. Energy)',
+                'Average',
+                'SD',
+                'SEM'
+            ]
+        ]
 
         for model in self:
             avg = float(self[model]['iedata'].mean())
             stdev = float(self[model]['iedata'].stdev())
-            if _output_format:
-                text.append([model, self[model]['sigma'], avg, stdev, stdev / sqrt(len(self[model]['iedata']))])
-            else:
-                text.append('%-14s %10.3f %16.3f %15.3f %19.3f\n' % (model, self[model]['sigma'], avg, stdev,
-                                                                     stdev / sqrt(len(self[model]['iedata']))))
-        return text if _output_format else '\n'.join(text)
+            summary_list.append([model, self[model]['sigma'], avg, stdev, stdev / sqrt(len(self[model]['iedata']))])
+        return summary_list
 
 
 class C2out(dict):
@@ -377,28 +378,42 @@ class C2out(dict):
             for term in d[model]:
                 self[model][term] = d[model][term][()]
 
-    def summary(self, output_format: str = 'ascii'):
+    def summary_output(self):
+        summary = self.summary()
+        text = []
+        for row in summary:
+            key, sigma, avg, std, ci = row
+            if isinstance(avg, str):
+                text.extend((f'{key:15s} {sigma:>14s} {avg:>16s} {std:>14s} {ci:>16s}', sep))
+            else:
+                text.append(f"{key:15s} {sigma:14.2f} {avg:16.2f} {std:14.2f} {ci:>16s}")
+        return '\n'.join(text) + '\n\n'
+
+    def summary(self):
         """ Formatted summary of C2 Entropy results """
 
-        _output_format = 0 if output_format == 'ascii' else 1
-        text = []
-        if _output_format:
-            text.append(['Model', 'σ(Int. Energy)', 'C2 Value', 'Std. Dev.', 'Conf. Interv. (95%)'])
-        else:
-            text.append('Model           σ(Int. Energy)    C2 Value         Std. Dev.   Conf. Interv. (95%)\n' +
-                        sep)
+        summary_list = [
+            [
+                'Model',
+                'σ(Int. Energy)',
+                'C2 Value',
+                'SD',
+                'C.Inter.(95%)'
+            ]
+        ]
 
-        for model in self:
-            if _output_format:
-                text.append([model, self[model]['sigma'], self[model]['c2data'], self[model]['c2_std'],
-                             f"{self[model]['c2_ci'][0]}-{self[model]['c2_ci'][1]}"])
-            else:
-                text.append('%-14s %10.3f %15.3f %15.3f %13.3f-%5.3f\n' % (model, self[model]['sigma'],
-                                                                           self[model]['c2data'],
-                                                                           self[model]['c2_std'],
-                                                                           self[model]['c2_ci'][0],
-                                                                           self[model]['c2_ci'][1]))
-        return text if _output_format else '\n'.join(text)
+        summary_list.extend(
+            [
+                model,
+                float(self[model]['sigma']),
+                float(self[model]['c2data']),
+                float(self[model]['c2_std']),
+                f"{self[model]['c2_ci'][0]:.2f}-{self[model]['c2_ci'][1]:.2f}",
+            ]
+            for model in self
+        )
+
+        return summary_list
 
 
 class QHout(dict):
@@ -421,57 +436,69 @@ class QHout(dict):
             for key1 in d[key]:
                 self[key][key1] = d[key][key1][()]
 
-    def summary(self, output_format: str = 'ascii'):
+    def summary_output(self):
+        text = list(
+            (
+                '           Translational      Rotational      Vibrational           Total',
+                'Complex   %13.4f %15.4f %16.4f %15.4f\n'
+                % (
+                    self['complex']['TRANSLATIONAL'],
+                    self['complex']['ROTATIONAL'],
+                    self['complex']['VIBRATIONAL'],
+                    self['complex']['TOTAL'],
+                ),
+            )
+        )
+
+        if not self.stability:
+            text.extend(['Receptor  %13.4f %15.4f %16.4f %15.4f\n' % (self['receptor']['TRANSLATIONAL'],
+                                                                      self['receptor']['ROTATIONAL'],
+                                                                      self['receptor']['VIBRATIONAL'],
+                                                                      self['receptor']['TOTAL']),
+                         'Ligand    %13.4f %15.4f %16.4f %15.4f\n' % (self['ligand']['TRANSLATIONAL'],
+                                                                      self['ligand']['ROTATIONAL'],
+                                                                      self['ligand']['VIBRATIONAL'],
+                                                                      self['ligand']['TOTAL']),
+                         '',
+                         '-TΔS   %13.4f %15.4f %16.4f %15.4f\n' % (self['delta']['TRANSLATIONAL'],
+                                                                   self['delta']['ROTATIONAL'],
+                                                                   self['delta']['VIBRATIONAL'],
+                                                                   self['delta']['TOTAL'])])
+        return '\n'.join(text) + '\n\n'
+
+    def summary(self):
         """ Formatted summary of quasi-harmonic results """
 
-        _output_format = 0 if output_format == 'ascii' else 1
-        text = []
-        if _output_format:
-            text.extend((['', 'Translational', 'Rotational', 'Vibrational', 'Total'],
-                         ['Complex', self['complex']['Translational'], self['complex']['Rotational'],
-                          self['complex']['Vibrational'], self['complex']['Total']]))
+        summry_list = [['', 'TRANSLATIONAL', 'ROTATIONAL', 'VIBRATIONAL', 'TOTAL'],
+                       ['Complex', self['complex']['TRANSLATIONAL'], self['complex']['ROTATIONAL'],
+                        self['complex']['VIBRATIONAL'], self['complex']['TOTAL']]]
 
-            if not self.stability:
-                text.extend([['Receptor', self['receptor']['Translational'], self['receptor']['Rotational'],
-                              self['receptor']['Vibrational'], self['receptor']['Total']],
-                             ['Ligand', self['ligand']['Translational'], self['ligand']['Rotational'],
-                              self['ligand']['Vibrational'], self['ligand']['Total']],
-                             [],
-                             ['-TΔS', self['delta']['Translational'], self['delta']['Rotational'],
-                              self['delta']['Vibrational'], self['delta']['Total']]])
+        if not self.stability:
+            summry_list.extend([['Receptor',
+                                 self['receptor']['TRANSLATIONAL'],
+                                 self['receptor']['ROTATIONAL'],
+                                 self['receptor']['VIBRATIONAL'],
+                                 self['receptor']['TOTAL']],
+                                ['Ligand',
+                                 self['ligand']['TRANSLATIONAL'],
+                                 self['ligand']['ROTATIONAL'],
+                                 self['ligand']['VIBRATIONAL'],
+                                 self['ligand']['TOTAL']],
+                                ['-TΔS',
+                                 self['delta']['TRANSLATIONAL'],
+                                 self['delta']['ROTATIONAL'],
+                                 self['delta']['VIBRATIONAL'],
+                                 self['delta']['TOTAL']]])
 
-            return text
-        else:
-            text.extend(('           Translational      Rotational      Vibrational           Total',
-                         'Complex   %13.4f %15.4f %16.4f %15.4f\n' % (self['complex']['Translational'],
-                                                                      self['complex']['Rotational'],
-                                                                      self['complex']['Vibrational'],
-                                                                      self['complex']['Total'])))
-
-            if not self.stability:
-                text.extend(['Receptor  %13.4f %15.4f %16.4f %15.4f\n' % (self['receptor']['Translational'],
-                                                                          self['receptor']['Rotational'],
-                                                                          self['receptor']['Vibrational'],
-                                                                          self['receptor']['Total']),
-                             'Ligand    %13.4f %15.4f %16.4f %15.4f\n' % (self['ligand']['Translational'],
-                                                                          self['ligand']['Rotational'],
-                                                                          self['ligand']['Vibrational'],
-                                                                          self['ligand']['Total']),
-                             '',
-                             '-TΔS   %13.4f %15.4f %16.4f %15.4f\n' % (self['delta']['Translational'],
-                                                                       self['delta']['Rotational'],
-                                                                       self['delta']['Vibrational'],
-                                                                       self['delta']['Total'])])
-
-            return '\n'.join(text) + '\n\n'
+        return summry_list
 
     def _read(self):
         """ Parses the output files and fills the data arrays """
         with open(self.filename, 'r') as output:
             rawline = output.readline()
             self['complex'] = {}
-            self['receptor'] = {'Total': 0}
-            self['ligand'] = {'Total': 0}
+            self['receptor'] = {'TOTAL': 0}
+            self['ligand'] = {'TOTAL': 0}
             self['delta'] = {}
             comdone = False  # if we've done the complex yet (filled in self.com)
             recdone = False  # if we've done the receptor yet (filled in self.rec)
@@ -481,30 +508,30 @@ class QHout(dict):
             while rawline:
                 if rawline[:6] == " Total":
                     if not comdone:
-                        self['complex']['Total'] = (float(rawline.split()[3]) * self.temperature / 1000 * -1)
-                        self['complex']['Translational'] = (
+                        self['complex']['TOTAL'] = (float(rawline.split()[3]) * self.temperature / 1000 * -1)
+                        self['complex']['TRANSLATIONAL'] = (
                                 float(output.readline().split()[3]) * self.temperature / 1000 * -1)
-                        self['complex']['Rotational'] = (
+                        self['complex']['ROTATIONAL'] = (
                                 float(output.readline().split()[3]) * self.temperature / 1000 * -1)
-                        self['complex']['Vibrational'] = (
+                        self['complex']['VIBRATIONAL'] = (
                                 float(output.readline().split()[3]) * self.temperature / 1000 * -1)
                         comdone = True
                     elif not recdone:
-                        self['receptor']['Total'] = (float(rawline.split()[3]) * self.temperature / 1000 * -1)
-                        self['receptor']['Translational'] = (
+                        self['receptor']['TOTAL'] = (float(rawline.split()[3]) * self.temperature / 1000 * -1)
+                        self['receptor']['TRANSLATIONAL'] = (
                                 float(output.readline().split()[3]) * self.temperature / 1000 * -1)
-                        self['receptor']['Rotational'] = (
+                        self['receptor']['ROTATIONAL'] = (
                                 float(output.readline().split()[3]) * self.temperature / 1000 * -1)
-                        self['receptor']['Vibrational'] = (
+                        self['receptor']['VIBRATIONAL'] = (
                                 float(output.readline().split()[3]) * self.temperature / 1000 * -1)
                         recdone = True
                     else:
-                        self['ligand']['Total'] = (float(rawline.split()[3]) * self.temperature / 1000 * -1)
-                        self['ligand']['Translational'] = (
+                        self['ligand']['TOTAL'] = (float(rawline.split()[3]) * self.temperature / 1000 * -1)
+                        self['ligand']['TRANSLATIONAL'] = (
                                 float(output.readline().split()[3]) * self.temperature / 1000 * -1)
-                        self['ligand']['Rotational'] = (
+                        self['ligand']['ROTATIONAL'] = (
                                 float(output.readline().split()[3]) * self.temperature / 1000 * -1)
-                        self['ligand']['Vibrational'] = (
+                        self['ligand']['VIBRATIONAL'] = (
                                 float(output.readline().split()[3]) * self.temperature / 1000 * -1)
                         break
                 rawline = output.readline()
@@ -513,101 +540,27 @@ class QHout(dict):
 
         # fill the delta if not stability
         if not self.stability:
-            self['delta']['Total'] = self['complex']['Total'] - self['receptor']['Total'] - self['ligand']['Total']
-            self['delta']['Translational'] = (self['complex']['Translational'] - self['receptor']['Translational'] -
-                                              self['ligand']['Translational'])
-            self['delta']['Rotational'] = (self['complex']['Rotational'] - self['receptor']['Rotational'] -
-                                           self['ligand']['Rotational'])
-            self['delta']['Vibrational'] = (self['complex']['Vibrational'] - self['receptor']['Vibrational'] -
-                                            self['ligand']['Vibrational'])
+            self['delta']['TOTAL'] = self['complex']['TOTAL'] - self['receptor']['TOTAL'] - self['ligand']['TOTAL']
+            self['delta']['TRANSLATIONAL'] = (self['complex']['TRANSLATIONAL'] - self['receptor']['TRANSLATIONAL'] -
+                                              self['ligand']['TRANSLATIONAL'])
+            self['delta']['ROTATIONAL'] = (self['complex']['ROTATIONAL'] - self['receptor']['ROTATIONAL'] -
+                                           self['ligand']['ROTATIONAL'])
+            self['delta']['VIBRATIONAL'] = (self['complex']['VIBRATIONAL'] - self['receptor']['VIBRATIONAL'] -
+                                            self['ligand']['VIBRATIONAL'])
 
 
-class NMODEout(dict):
+class NMODEout(AmberOutput):
     """ Normal mode entropy approximation output class """
     # Ordered list of keys in the data dictionary
-    data_keys = ['Translational', 'Rotational', 'Vibrational']
+    data_keys = ['TRANSLATIONAL', 'ROTATIONAL', 'VIBRATIONAL']
 
     # Other aspects of AmberOutputs, which are just blank arrays
-    composite_keys = ['Total']
-    data_key_owner = {'Translational': ['Total'], 'Rotational': ['Total'], 'Vibrational': ['Total']}
-    print_levels = {'Translational': 1, 'Rotational': 1, 'Vibrational': 1, 'Total': 1}
+    composite_keys = ['TOTAL']
+    data_key_owner = {'TRANSLATIONAL': ['TOTAL'], 'ROTATIONAL': ['TOTAL'], 'VIBRATIONAL': ['TOTAL']}
+    print_levels = {'TRANSLATIONAL': 1, 'ROTATIONAL': 1, 'VIBRATIONAL': 1, 'TOTAL': 1}
 
-    def __init__(self, mol, **kwargs):
-        super(NMODEout, self).__init__(**kwargs)
-        self.mol = mol
-        self.is_read = False
-
-    def set_frame_range(self, start=0, end=None, interval=1):
-        for key in self.data_keys:
-            self[key] = self[key][start:end:interval]
-        self._fill_composite_terms()
-
-    def parse_from_file(self, basename, INPUT, num_files=1, chamber=False):
-        self.basename = basename
-
-        for key in self.data_keys:
-            self[key] = EnergyVector()
-
-        if chamber:
-            logging.warning('nmode is incompatible with chamber topologies!')
-        self.temperature = INPUT['temperature']
-        self.num_files = num_files
-        self.is_read = False
-        self._read()
-        self._fill_composite_terms()
-
-    def parse_from_h5(self, d):
-        # key: complex, receptor, ligand, delta
-        for key in d:
-            # key1: Translational, Rotational, Vibrational, Total
-            self[key] = {}
-            for key1 in d[key]:
-                self[key][key1] = EnergyVector(d[key][key1][()])
-
-    def print_vectors(self, csvwriter):
-        """ Prints the energy vectors to a CSV file for easy viewing
-            in spreadsheets
-        """
-        # print header
-        csvwriter.writerow(['Frame #'] + self.data_keys)
-
-        # print data
-        for i in range(len(self[self.data_keys[0]])):
-            csvwriter.writerow([i] + [round(self[key][i], 2) for key in self.data_keys])
-
-    def summary(self, output_format: str = 'ascii'):
-        """ Returns the formatted string of output summary """
-
-        _output_format = 0 if output_format == 'ascii' else 1
-        text = []
-        if _output_format:
-            text.extend([[self.mol.capitalize() + ':'],
-                         ['Entropy Term', 'Average', 'Std. Dev.', 'Std. Err. of the Mean']])
-        else:
-            text.append(self.mol.capitalize() + ':\n'
-                                                'Entropy Term                Average              Std. Dev.   Std. Err. of Mean\n' +
-                        sep)
-
-        for key in self.data_keys:
-            avg = float(self[key].mean())
-            stdev = float(self[key].stdev())
-            if _output_format:
-                text.append([key, avg, stdev, stdev / sqrt(len(self[key]))])
-            else:
-                text.append('%-14s %20.4f %21.4f %19.4f\n' % (key, avg, stdev, stdev / sqrt(len(self[key]))))
-        return text if _output_format else '\n'.join(text) + '\n\n'
-
-    def _read(self):
-        """ Internal reading function to populate the data arrays """
-
-        if self.is_read:
-            return  # don't read through again
-
-        # Loop through all filenames
-        for fileno in range(self.num_files):
-            with open('%s.%d' % (self.basename, fileno), 'r') as output_file:
-                self._get_energies(output_file)
-        self.is_read = True
+    def __init__(self, mol: str, INPUT, chamber=False, **kwargs):
+        super(NMODEout, self).__init__(mol, INPUT, chamber, **kwargs)
 
     def _get_energies(self, outfile):
         """ Parses the energy terms from the output file. This will parse 1 line
@@ -620,21 +573,13 @@ class NMODEout(dict):
                 sys.stderr.write('Not all frames minimized within tolerance')
 
             if rawline[:6] == 'Total:':
-                self['Total'] = self['Total'].append(float(rawline.split()[3]) * self.temperature / 1000 * -1)
-                self['Translational'] = self['Translational'].append(
+                self['TOTAL'] = self['TOTAL'].append(float(rawline.split()[3]) * self.temperature / 1000 * -1)
+                self['TRANSLATIONAL'] = self['TRANSLATIONAL'].append(
                     float(outfile.readline().split()[3]) * self.temperature / 1000 * -1)
-                self['Rotational'] = self['Rotational'].append(
+                self['ROTATIONAL'] = self['ROTATIONAL'].append(
                     float(outfile.readline().split()[3]) * self.temperature / 1000 * -1)
-                self['Vibrational'] = self['Vibrational'].append(
+                self['VIBRATIONAL'] = self['VIBRATIONAL'].append(
                     float(outfile.readline().split()[3]) * self.temperature / 1000 * -1)
-
-    def _fill_composite_terms(self):
-        for key in self.composite_keys:
-            self[key] = EnergyVector(len(self['Translational']))
-
-        for key in self.data_keys:
-            for component in self.data_key_owner[key]:
-                self[component] = self[key] + self[component]
 
 
 class GBout(AmberOutput):
@@ -1095,35 +1040,25 @@ class DeltaBindingStatistics(dict):
             c += self.norm.INPUT['interval']
         csvwriter.writerow([])
 
-    def summary_output(self, output_format: str = 'ascii'):
-        _output_format = 0 if output_format == 'ascii' else 1
+    def summary_output(self):
         summary = self.summary()
-        text = []
-
-        if _output_format:
-            text.append(['Delta Delta (Mutant - Normal):'])
-        else:
-            text.append('Delta Delta (Mutant - Normal):')
-
+        text = ['Delta Delta (Mutant - Normal):']
         for c, row in enumerate(summary, start=1):
             # Skip the composite terms, since we print those at the end
-            if _output_format:
-                text.append(row)
-            else:
-                key, avg, stdev, std, semp, sem = row
-                if key in ['GGAS', 'TOTAL']:
-                    text.append('')
-                if isinstance(avg, str):
-                    text.extend(
-                        (
-                            f'{key:16s} {avg:>13s} {stdev:>13s} {std:>10s} {semp:>12s} {sem:>10s}',
-                            sep,
-                        )
+            key, avg, stdev, std, semp, sem = row
+            if key in ['GGAS', 'TOTAL']:
+                text.append('')
+            if isinstance(avg, str):
+                text.extend(
+                    (
+                        f'{key:16s} {avg:>13s} {stdev:>13s} {std:>10s} {semp:>12s} {sem:>10s}',
+                        sep,
                     )
+                )
 
-                else:
-                    text.append(f'{f"ΔΔ{key}":16s} {avg:13.2f} {stdev:13.2f} {std:10.2f} {semp:12.2f} {sem:10.2f}')
-        return text if _output_format else '\n'.join(text) + '\n'
+            else:
+                text.append(f'{f"ΔΔ{key}":16s} {avg:13.2f} {stdev:13.2f} {std:10.2f} {semp:12.2f} {sem:10.2f}')
+        return '\n'.join(text) + '\n'
 
     def summary(self):
         """ Returns a string printing the summary of the binding statistics """

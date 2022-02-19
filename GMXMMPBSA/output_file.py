@@ -237,7 +237,7 @@ def write_outputs(app):
             else:
                 qhnorm = app.calc_types.normal['qh']['delta']
             final_output.writeline('ENTROPY RESULTS (QUASI-HARMONIC APPROXIMATION) CALCULATED WITH CPPTRAJ:')
-            final_output.add_section(qhnorm.summary())
+            final_output.add_section(qhnorm.summary_output())
         if INPUT['alarun']:
             if stability:
                 qhnorm = app.calc_types.mutant['qh']['complex']
@@ -246,7 +246,7 @@ def write_outputs(app):
             qhmutant = app.calc_types.mutant['qh']
             final_output.writeline(mut_str + ' MUTANT')
             final_output.writeline('ENTROPY RESULTS (QUASI-HARMONIC APPROXIMATION) CALCULATED WITH CPPTRAJ:')
-            final_output.add_section(qhmutant.summary())
+            final_output.add_section(qhmutant.summary_output())
         if INPUT['alarun'] and not INPUT['mutant_only']:
             davg, dstd = _get_diff(qhmutant['Total'], qhnorm['Total'])
             final_output.add_section(f'\nRESULT OF ALANINE SCANNING ({mut_str}):\n'
@@ -259,7 +259,7 @@ def write_outputs(app):
             if not INPUT['mutant_only']:
                 ienorm = app.calc_types.normal['ie']
                 final_output.writeline('ENTROPY RESULTS (INTERACTION ENTROPY):')
-                final_output.add_section(ienorm.summary())
+                final_output.add_section(ienorm.summary_output())
                 # Now dump the energy vectors in CSV format
                 if FILES.energyout:
                     energyvectors.writerow(['Interaction entropy results'])
@@ -273,7 +273,7 @@ def write_outputs(app):
                 iemutant = app.calc_types.mutant['ie']
                 final_output.writeline(mut_str + ' MUTANT')
                 final_output.writeline('ENTROPY RESULTS (INTERACTION ENTROPY):')
-                final_output.add_section(iemutant.summary())
+                final_output.add_section(iemutant.summary_output())
                 for m in iemutant:
                     if iemutant[m]['sigma'] > 3.6:
                         ie_inconsistent = True
@@ -294,7 +294,7 @@ def write_outputs(app):
             if not INPUT['mutant_only']:
                 c2norm = app.calc_types.normal['c2']
                 final_output.writeline('ENTROPY RESULTS (C2 ENTROPY):')
-                final_output.add_section(c2norm.summary())
+                final_output.add_section(c2norm.summary_output())
                 for m in c2norm:
                     if c2norm[m]['sigma'] > 3.6:
                         c2_inconsistent = True
@@ -302,7 +302,7 @@ def write_outputs(app):
                 c2mutant = app.calc_types.mutant['c2']
                 final_output.writeline(mut_str + ' MUTANT')
                 final_output.writeline('ENTROPY RESULTS (C2 ENTROPY):')
-                final_output.add_section(c2mutant.summary())
+                final_output.add_section(c2mutant.summary_output())
                 for m in c2mutant:
                     if c2mutant[m]['sigma'] > 3.6:
                         c2_inconsistent = True
@@ -327,7 +327,7 @@ def write_outputs(app):
                 nm_sys_norm = app.calc_types.normal['nmode']['delta']
 
             final_output.write('ENTROPY RESULTS (HARMONIC APPROXIMATION) CALCULATED WITH NMODE:\n\n')
-            final_output.add_section(nm_sys_norm.summary())
+            final_output.add_section(nm_sys_norm.summary_output())
             # Now dump the energy vectors in CSV format
             if FILES.energyout:
                 energyvectors.writerow(['NMODE entropy results'])
@@ -341,7 +341,7 @@ def write_outputs(app):
                 nm_sys_mut = app.calc_types.mutant['nmode']['delta']
             final_output.writeline(mut_str + ' MUTANT')
             final_output.writeline('ENTROPY RESULTS (HARMONIC APPROXIMATION) CALCULATED WITH NMODE:')
-            final_output.add_section(nm_sys_mut.summary())
+            final_output.add_section(nm_sys_mut.summary_output())
             # Now dump the energy vectors in CSV format
             if FILES.energyout:
                 energyvectors.writerow([mut_str + ' Mutant NMODE entropy results'])
@@ -352,10 +352,10 @@ def write_outputs(app):
         if INPUT['alarun'] and not INPUT['mutant_only']:
             nm_sys_norm = app.calc_types.mut_norm['nmode']
             mut_norm = app.calc_types.mut_norm['nmode']['delta']
-            final_output.add_section(mut_norm.summary())
+            final_output.add_section(mut_norm.summary_output())
 
             final_output.write('ENTROPY RESULTS (HARMONIC APPROXIMATION) CALCULATED WITH NMODE:\n\n')
-            final_output.add_section(nm_sys_norm.summary())
+            final_output.add_section(nm_sys_norm.summary_output())
 
             davg, dstd = _get_diff(nm_sys_mut['Total'], nm_sys_norm['Total'])
             final_output.add_section(f'\nRESULT OF ALANINE SCANNING ({mut_str}):\n'
