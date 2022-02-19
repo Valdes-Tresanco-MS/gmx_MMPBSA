@@ -151,7 +151,16 @@ class CheckMakeTop:
 
             self.INPUT['print_res'] = ','.join(list2range(decomp_res)['string'])
         if self.INPUT['qm_residues']:
-            self.INPUT['qm_residues'] = ','.join(str(x) for x in self.get_selected_residues(self.INPUT['qm_residues']))
+            qm_residues = self.get_selected_residues(self.INPUT['qm_residues'])
+            if 'within' in self.INPUT['print_res']:
+                logging.info(f"Selecting residues by distance ({self.INPUT['print_res'].split()[1]} Å) between "
+                             f"receptor and ligand for QM calculation...")
+            else:
+                logging.info('User-selected residues for QM calculation...')
+
+            textwraped = textwrap.wrap('\t'.join(x.string for x in qm_residues), tabsize=4, width=120)
+            logging.info(f'Selected {len(qm_residues)} residues:\n' + '\n'.join(textwraped) + '\n')
+            self.INPUT['qm_residues'] =  ','.join(list2range(qm_residues)['string'])
 
         self.cleanup_trajs()
         return tops
