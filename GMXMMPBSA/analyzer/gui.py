@@ -58,6 +58,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
         self.all_systems_active = True
         self.current_system_index = None
         self.pymol_p_list = []
+        self.removed_items = {}
 
         self.items_counter = {'charts': 0, 'pymol': [], 'bars': 0, 'line': 0, 'heatmap': 0}
 
@@ -907,16 +908,16 @@ class GMX_MMPBSA_ANA(QMainWindow):
         for part in print_keys:
             if part not in self.systems[sys_index]['data']:
                 continue
-            self.makeItems(sys_index, part, classif_item)
             self.setting_item_data(sys_index, part)
+            self.makeItems(sys_index, part, classif_item)
 
         if self.systems[sys_index]['namespace'].INPUT['idecomp']:
             classif_item = CustomItem(sys_item, ['Decomposition'])
             for part in decomp_print_keys:
                 if part not in self.systems[sys_index]['data']:
                     continue
-                self.makedecompItems(sys_index, part, classif_item)
                 self.setting_item_data(sys_index, part)
+                self.makedecompItems(sys_index, part, classif_item)
 
         sys_item.setExpanded(True)
 
@@ -928,16 +929,18 @@ class GMX_MMPBSA_ANA(QMainWindow):
                 self.treeWidget.setItemWidget(item, 1, sb)
             itemiter += 1
 
-    def _remove_empty(self, data, options, namespace):
-        if options['remove_empty_terms'] and (
-                'UB' in data.name
-                or 'IMP' in data.name
-                or 'CMAP' in data.name
-                and not namespace.INFO['using_chamber']
-        ):
-            return True
-        elif options['remove_empty_charts'] and (all(data > -0.01) and all(data < 0.01)):
+    def _remove_empty(self, data, keys_path):
+        if self.data_options['remove_empty_terms']:
+            if isinstance(data, pd.DataFrame):
+                columns = data.columns
+                for col in columns:
+                    if (data[col] > -0.01).all() and (data[col] < 0.01).all():
+                        del data[col]
+                return data
+
+        if self.data_options['remove_empty_charts'] and (all(data > -0.01) and all(data < 0.01)):
             # FIXME: Do we need to clarify that they are not terms like GSOLV, GGAS and TOTAL?
+            del data
             return True
 
     def _itemdata_properties(self, data, decomp=False):
@@ -1011,14 +1014,9 @@ class GMX_MMPBSA_ANA(QMainWindow):
 
         return cont
 
-    def makeItems(self, sys_index, part, classif_item, mutant=0):
+    def makeItems(self, sys_index, part, classif_item):
 
         correlation_data = self.corr_data
-        mut_pre = ''
-        if mutant == 1:
-            mut_pre = 'Mut. '
-            correlation_data = self.corr_data['mutant']
-
         sys_name = self.systems[sys_index]['name']
         # correlation_data[sys_name] = {'ΔG': {
         #                                     'gb': {'ΔH': np.nan, 'ie': np.nan, 'nmode': np.nan, 'qh': np.nan},
@@ -1059,6 +1057,9 @@ class GMX_MMPBSA_ANA(QMainWindow):
                         if level == 'qh':
                             continue
                         for level2 in str_dict[level1]:
+                            keys_path = (part, level, (level1, level2))
+                            if keys_path in self.removed_items[sys_index]:
+                                continue
                             item2 = CustomItem(item1,
                                                [level2.upper()],
                                                app=self,
@@ -1066,7 +1067,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
                                                title="Energetic Components",
                                                subtitle=f"{sys_name} | {level.upper()} | "
                                                         f"{level1.upper()} | {level2.upper()}",
-                                               keys_path=(part, level, (level1, level2)),
+                                               keys_path=keys_path,
                                                part=part
                                                )
                             self.items_counter['charts'] += 1
@@ -1211,13 +1212,8 @@ class GMX_MMPBSA_ANA(QMainWindow):
                                                            part, level, (level1, level2, level3, level4, level5))
                                                            )
 
-    def setting_item_data(self, sys_index, part, comp=('all')):
+    def setting_item_data(self, sys_index, part, comp=('all',)):
         correlation_data = self.corr_data
-        mut_pre = ''
-        # if mutant == 1:
-        #     mut_pre = 'Mut. '
-        #     correlation_data = self.corr_data['mutant']
-
         # correlation_data[sys_name] = {'ΔG': {
         #                                     'gb': {'ΔH': np.nan, 'ie': np.nan, 'nmode': np.nan, 'qh': np.nan},
         #                                     'pb': {'ΔH': np.nan, 'ie': np.nan, 'nmode': np.nan, 'qh': np.nan},
@@ -1226,6 +1222,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
         #                               'Exp.Energy': ki2energy(topItem.exp_ki, topItem.temp)}
 
         data = self.systems[sys_index]['data'][part]
+        self.removed_items[sys_index] = []
         namespace = self.systems[sys_index]['namespace']
 
         parts = self.systems[sys_index]['options']['components'] + ['delta']
@@ -1236,24 +1233,25 @@ class GMX_MMPBSA_ANA(QMainWindow):
         if 'nmode' in comp:
             key_list.append('nmode')
         elif 'energy' in comp:
-            key_list.extend(['gb', 'pb', 'rism gf', 'rism std'])
+            # Include ie and c2 since they dependent of the ggas energy
+            key_list.extend(['gb', 'pb', 'rism gf', 'rism std', 'binding', 'ie', 'c2'])
         elif 'all' in comp:
-            key_list.extend(['gb', 'pb', 'rism gf', 'rism std', 'nmode', 'qh', 'c2'])
-        for level in ['gb', 'pb', 'rism gf', 'rism std', 'nmode', 'qh', 'ie', 'c2', 'binding']:
+            key_list.extend(['gb', 'pb', 'rism gf', 'rism std', 'nmode', 'qh', 'ie', 'c2', 'binding'])
+        for level in key_list:
             if level in data:
                 if level in ['gb', 'pb', 'rism gf', 'rism std', 'nmode', 'qh']:
-                    # FIXME: include the decomp
                     str_dict = multiindex2dict(data[level].columns)
                     for level1 in str_dict:
                         if level1 not in parts:
                             continue
                         if not part.startswith('decomp'):
+                            new_data = self._remove_empty(data[level][(level1,)], namespace)
                             self.systems[sys_index]['items_data'][(part, level, (level1,))] = self._setup_data(
-                                    data[level][(level1,)], level=1)
+                                    new_data, level=1)
                         for level2 in str_dict[level1]:
-                            # if self._remove_empty(data[level][(level1, level2)], options, namespace):
-                            #     del data[level][(level1, level2)]
-                            #     continue
+                            if self._remove_empty(data[level][(level1, level2)], namespace):
+                                self.removed_items[sys_index].append((part, level, (level1, level2)))
+                                continue
                             if not part.startswith('decomp'):
                                 temp_dat = data[level][(level1, level2)]
                                 temp_dat.name = level2
@@ -1268,7 +1266,6 @@ class GMX_MMPBSA_ANA(QMainWindow):
                                     self._setup_data(temp_dat, level=item_lvl)
                                 del temp_dat
                                 # residue first level
-                                btns = (2,) if namespace.INPUT['idecomp'] in [1, 2] else (1, 2, 3)
                                 for level3 in str_dict[level1][level2]:
                                     item_lvl2 = 1 if namespace.INPUT['idecomp'] in [1, 2] else 2
                                     temp_dat = data[level][(level1, level2, level3)]
@@ -1277,7 +1274,6 @@ class GMX_MMPBSA_ANA(QMainWindow):
                                         self._setup_data(temp_dat, level=item_lvl2)
                                     del temp_dat
                                     # residue first level
-                                    #             btns = (2,) if namespace.INPUT['idecomp'] in [1, 2] else (1, 2, 3)
                                     for level4 in str_dict[level1][level2][level3]:
                                         temp_dat = data[level][(level1, level2, level3, level4)]
                                         temp_dat.name = level4
@@ -1299,9 +1295,6 @@ class GMX_MMPBSA_ANA(QMainWindow):
                                                     (part, level, (level1, level2, level3, level4, level5))] = \
                                                     self._setup_data(temp_dat)
                                                 del temp_dat
-
-
-
                 elif level == 'c2':
                     str_dict = multiindex2dict(data[level].columns)
                     for level1 in str_dict:
