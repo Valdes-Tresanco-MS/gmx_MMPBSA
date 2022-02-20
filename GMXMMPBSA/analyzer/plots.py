@@ -71,9 +71,6 @@ class NavigationToolbar(NavigationToolbar2QT):
             self.save_dpi = options['dpi-save']
         if 'filename' in options:
             self.filename = options['filename'].replace(' | ', '_').replace(' ', '_')
-        from icecream import ic
-        ic(self.save_format, self.save_dpi, self.filename)
-
 
     def _init_toolbar(self):
         pass

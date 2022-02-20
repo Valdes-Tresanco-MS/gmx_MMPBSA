@@ -437,7 +437,6 @@ class MMPBSA_API():
         # get the original frames list
         self._get_frames()
 
-
         curr_frames = list(range(startframe, endframe + interval, interval))
         frames = list(self.frames.keys())
         for x in frames:

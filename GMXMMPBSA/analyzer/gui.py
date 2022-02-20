@@ -155,7 +155,6 @@ class GMX_MMPBSA_ANA(QMainWindow):
         self.aboutMenu.addAction('About gmx_MMPBSA', self._about_dialog)
         self.statusbar = self.statusBar()
 
-
         self.init_dialog = InitDialog(self)
 
     def closeEvent(self, a0: QCloseEvent) -> None:
@@ -210,27 +209,26 @@ class GMX_MMPBSA_ANA(QMainWindow):
     def _about_dialog(self):
         from GMXMMPBSA import __version__
         b = QMessageBox.about(self, "About gmx_MMPBSA",
-                          "<html>"
-                          "<body>"
-                          "<h2 style='text-align:center'>About gmx_MMPBSA</h2>"
-                          "<div text-align:center;>"
-                          f"<a href='https://valdes-tresanco-ms.github.io/gmx_MMPBSA/'>"
-                          f"<img src={toc_img} alt='gmx_MMPBSA TOC' width='450' height='350'>"
-                          "</a>"
-                          "</div>"
-                          "<p style='text-align:center'><b>gmx_MMPBSA</b> is a new tool based on AMBER's MMPBSA.py "
-                          "aiming to perform end-state free energy calculations with GROMACS files.</p>"
-                          f"<p style='text-align:center'><b style='text-align:center'>Version:</b> {__version__}</p>"
-                          "<h2 style='text-align:center'>Cite gmx_MMPBSA</h2>"
-                          "<p style='text-align:center'> "
-                          "Valdés-Tresanco, M.S., Valdés-Tresanco, M.E., Valiente, P.A. and Moreno E. "
-                          "gmx_MMPBSA: A New Tool to Perform End-State Free Energy Calculations with GROMACS. "
-                          "Journal of Chemical Theory and Computation, 2021 17 (10), 6281-6291. "
-                          "<a href='https://pubs.acs.org/doi/10.1021/acs.jctc.1c00645'>"
-                          "https://pubs.acs.org/doi/10.1021/acs.jctc.1c00645</a> </p>"
-                          "</body>"
-                          "</html>")
-
+                              "<html>"
+                              "<body>"
+                              "<h2 style='text-align:center'>About gmx_MMPBSA</h2>"
+                              "<div text-align:center;>"
+                              f"<a href='https://valdes-tresanco-ms.github.io/gmx_MMPBSA/'>"
+                              f"<img src={toc_img} alt='gmx_MMPBSA TOC' width='450' height='350'>"
+                              "</a>"
+                              "</div>"
+                              "<p style='text-align:center'><b>gmx_MMPBSA</b> is a new tool based on AMBER's MMPBSA.py "
+                              "aiming to perform end-state free energy calculations with GROMACS files.</p>"
+                              f"<p style='text-align:center'><b style='text-align:center'>Version:</b> {__version__}</p>"
+                              "<h2 style='text-align:center'>Cite gmx_MMPBSA</h2>"
+                              "<p style='text-align:center'> "
+                              "Valdés-Tresanco, M.S., Valdés-Tresanco, M.E., Valiente, P.A. and Moreno E. "
+                              "gmx_MMPBSA: A New Tool to Perform End-State Free Energy Calculations with GROMACS. "
+                              "Journal of Chemical Theory and Computation, 2021 17 (10), 6281-6291. "
+                              "<a href='https://pubs.acs.org/doi/10.1021/acs.jctc.1c00645'>"
+                              "https://pubs.acs.org/doi/10.1021/acs.jctc.1c00645</a> </p>"
+                              "</body>"
+                              "</html>")
 
     def _help(self):
         QDesktopServices().openUrl(QUrl('https://valdes-tresanco-ms.github.io/gmx_MMPBSA/analyzer/'))
@@ -255,19 +253,58 @@ class GMX_MMPBSA_ANA(QMainWindow):
         topitem = self.treeWidget.topLevelItem(0)
         topitem.setSelected(True)
 
-        f_start = self.systems[1]['namespace'].INPUT['startframe']
-        f_interval = self.systems[1]['namespace'].INPUT['interval']
-        f_end = self.systems[1]['namespace'].INPUT['endframe']
+        # energy config
+        if (
+                self.systems[1]['namespace'].INPUT['gbrun'] or
+                self.systems[1]['namespace'].INPUT['pbrun'] or
+                self.systems[1]['namespace'].INPUT['rismrun']
+        ):
+            self.eframes_group.setEnabled(True)
+            f_start = self.systems[1]['namespace'].INPUT['startframe']
+            f_interval = self.systems[1]['namespace'].INPUT['interval']
+            f_end = self.systems[1]['namespace'].INPUT['endframe']
 
-        self.eframes_start_sb.setRange(f_start, f_end)
-        self.eframes_start_sb.setSingleStep(f_interval)
-        self.eframes_start_sb.setValue(f_start)
+            self.eframes_start_sb.setRange(f_start, f_end)
+            self.eframes_start_sb.setSingleStep(f_interval)
+            self.eframes_start_sb.setValue(f_start)
 
-        self.eframes_inter_sb.setRange(1, f_end - f_start)
+            self.eframes_inter_sb.setRange(1, f_end - f_start)
+            self.eframes_inter_sb.setSingleStep(f_interval)
+            self.eframes_inter_sb.setValue(f_interval)
 
-        self.eframes_end_sb.setRange(f_start, f_end)
-        self.eframes_end_sb.setSingleStep(f_interval)
-        self.eframes_end_sb.setValue(f_end)
+            self.eframes_end_sb.setRange(f_start, f_end)
+            self.eframes_end_sb.setSingleStep(f_interval)
+            self.eframes_end_sb.setValue(f_end)
+        else:
+            self.eframes_group.setEnabled(False)
+
+        # nmode config
+        if self.systems[1]['namespace'].INPUT['nmoderun']:
+            self.nmframes_group.setEnabled(True)
+            nmf_start = self.systems[1]['namespace'].INPUT['nmstartframe']
+            nmf_interval = self.systems[1]['namespace'].INPUT['nminterval']
+            nmf_end = self.systems[1]['namespace'].INPUT['nmendframe']
+
+            self.nmframes_start_sb.setRange(nmf_start, nmf_end)
+            self.nmframes_start_sb.setSingleStep(nmf_interval)
+            self.nmframes_start_sb.setValue(nmf_start)
+
+            self.nmframes_inter_sb.setRange(1, nmf_end - nmf_start)
+            self.nmframes_inter_sb.setSingleStep(nmf_interval)
+            self.nmframes_inter_sb.setValue(nmf_interval)
+
+            self.nmframes_end_sb.setRange(nmf_start, nmf_end)
+            self.nmframes_end_sb.setSingleStep(nmf_interval)
+            self.nmframes_end_sb.setValue(nmf_end)
+        else:
+            self.nmframes_group.setEnabled(False)
+
+        # ie config
+        if self.systems[1]['namespace'].INPUT['interaction_entropy']:
+            self.ieframes_group.setEnabled(True)
+            self.iesegment_sb.setValue(self.systems[1]['namespace'].INPUT['ie_segment'])
+        else:
+            self.ieframes_group.setEnabled(False)
 
     def _set_as_default(self):
         self.systems[self.current_system_index]['chart_options'].write_system_config()
@@ -343,7 +380,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
         self.set_as_default_action = charts_opt_tb.addAction(QIcon(save_default_config), 'Set as default',
                                                              self._set_as_default)
         self.set_as_default_action.setToolTip('Save the current setting as the global default settings.')
-        self.default_action = charts_opt_tb.addAction(QIcon(default_config),'Reset to default', self._reset2default)
+        self.default_action = charts_opt_tb.addAction(QIcon(default_config), 'Reset to default', self._reset2default)
         self.default_action.setToolTip('Restores the default settings set by the developers as the settings '
                                        'for the selected systems.')
         charts_opt_tb.addSeparator()
@@ -353,13 +390,10 @@ class GMX_MMPBSA_ANA(QMainWindow):
                                                'closes, if there are configuration changes, you can decide if you '
                                                'want to save them.')
 
-        self.use_user_config_action = charts_opt_tb.addAction(QIcon(user_config),'User-config', self._set_as_default)
+        self.use_user_config_action = charts_opt_tb.addAction(QIcon(user_config), 'User-config', self._set_as_default)
         self.use_user_config_action.setToolTip('Uses the specific settings for this system if it was saved.')
 
-        # properties_w.setParameters(p, showTop=False)
-        # charts_options_w = QWidget()
         optionWidget_c.addTab(self.chart_options_w, 'Charts Options')
-
 
         frames_w = QWidget(optionWidget_c)
         optionWidget_c.addTab(frames_w, 'Frames')
@@ -593,7 +627,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
 
         if not maximum:
             return
-        maximum += 1 # close and re-open current active windows
+        maximum += 1  # close and re-open current active windows
 
         qpd = QProgressDialog('Creating systems tree', 'Abort', 0, maximum, self)
         qpd.setWindowModality(Qt.WindowModality.WindowModal)
@@ -1020,7 +1054,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
 
         # make system item
         sys_item = CustomItem(self.treeWidget, [self.systems[sys_index]['name']], app=self, system_index=sys_index,
-                                   buttons=(-1,))
+                              buttons=(-1,))
 
         # FIXME: Binding
         classif_item = CustomItem(sys_item, ['ΔH/-TΔS/ΔG'])
@@ -1156,7 +1190,6 @@ class GMX_MMPBSA_ANA(QMainWindow):
         data = self.systems[sys_index]['data'][part]
         namespace = self.systems[sys_index]['namespace']
 
-
         top_item = CustomItem(classif_item, [part.capitalize()])
         top_item.setExpanded(True)
         parts = self.systems[sys_index]['options']['components'] + ['delta']
@@ -1222,7 +1255,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
                                        [level.upper()],
                                        app=self,
                                        buttons=(-2,),
-                                       keys_path=(part, level),)
+                                       keys_path=(part, level), )
                     str_dict = multiindex2dict(data[level].columns)
                     for level1 in str_dict:
                         item1 = CustomItem(titem,
@@ -1306,11 +1339,11 @@ class GMX_MMPBSA_ANA(QMainWindow):
                                                        buttons=(1,),
                                                        title="Energetic Components [Per-residue]",
                                                        subtitle=f"{sys_name} ({part})| "
-                                                                      f"{str(level).upper()} | "
-                                                                      f"{str(level1).upper()} | "
-                                                                      f"{str(level2).upper()} | "
-                                                                      f"{str(level3).upper()} | "
-                                                                      f"{str(level4).upper()}",
+                                                                f"{str(level).upper()} | "
+                                                                f"{str(level1).upper()} | "
+                                                                f"{str(level2).upper()} | "
+                                                                f"{str(level3).upper()} | "
+                                                                f"{str(level4).upper()}",
                                                        keys_path=(part, level, (level1, level2, level3, level4))
                                                        )
                                     self.items_counter['charts'] += 1
@@ -1337,7 +1370,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
                                                                     f"{str(level4).upper()} | "
                                                                     f"{str(level5).upper()}",
                                                            keys_path=(
-                                                           part, level, (level1, level2, level3, level4, level5))
+                                                               part, level, (level1, level2, level3, level4, level5))
                                                            )
 
     def setting_item_data(self, sys_index, part, comp=('all',)):
