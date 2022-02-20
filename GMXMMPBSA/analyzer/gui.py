@@ -929,7 +929,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
                 self.treeWidget.setItemWidget(item, 1, sb)
             itemiter += 1
 
-    def _remove_empty(self, data, keys_path):
+    def _remove_empty_terms(self, data):
         if self.data_options['remove_empty_terms']:
             if isinstance(data, pd.DataFrame):
                 columns = data.columns
@@ -937,7 +937,9 @@ class GMX_MMPBSA_ANA(QMainWindow):
                     if (data[col] > -0.01).all() and (data[col] < 0.01).all():
                         del data[col]
                 return data
+        return data
 
+    def _remove_empty_charts(self, data):
         if self.data_options['remove_empty_charts'] and (all(data > -0.01) and all(data < 0.01)):
             # FIXME: Do we need to clarify that they are not terms like GSOLV, GGAS and TOTAL?
             del data
@@ -1245,11 +1247,11 @@ class GMX_MMPBSA_ANA(QMainWindow):
                         if level1 not in parts:
                             continue
                         if not part.startswith('decomp'):
-                            new_data = self._remove_empty(data[level][(level1,)], namespace)
-                            self.systems[sys_index]['items_data'][(part, level, (level1,))] = self._setup_data(
-                                    new_data, level=1)
+                            new_data = self._remove_empty_terms(data[level][(level1,)])
+                            self.systems[sys_index]['items_data'][(part, level, (level1,))] = self._setup_data(new_data,
+                                                                                                               level=1)
                         for level2 in str_dict[level1]:
-                            if self._remove_empty(data[level][(level1, level2)], namespace):
+                            if self._remove_empty_charts(data[level][(level1, level2)]):
                                 self.removed_items[sys_index].append((part, level, (level1, level2)))
                                 continue
                             if not part.startswith('decomp'):
