@@ -66,6 +66,7 @@ save_default_config = this.joinpath('save_default_config.svg').absolute().as_pos
 default_config = this.joinpath('default_config.svg').absolute().as_posix()
 save_user_config = this.joinpath('save_user_config.svg').absolute().as_posix()
 user_config = this.joinpath('user_config.svg').absolute().as_posix()
+alert = this.joinpath('alert.svg').absolute().as_posix()
 
 toc_img = this.joinpath('TOC.png').absolute().as_posix()
 logo = this.joinpath('logo.svg').absolute().as_posix()
