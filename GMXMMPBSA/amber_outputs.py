@@ -673,7 +673,6 @@ class RISMout(AmberOutput):
 
     def __init__(self, mol, INPUT, chamber=False, solvtype=0, **kwargs):
         AmberOutput.__init__(self, mol, INPUT, chamber)
-        # FIXME: deault value
         self.solvtype = solvtype
 
     def _get_energies(self, outfile):

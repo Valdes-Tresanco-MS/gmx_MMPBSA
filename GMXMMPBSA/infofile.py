@@ -105,7 +105,6 @@ class InfoFile(object):
             self.app.FILES = OptionList()
         if name is None:
             name = f'{self.app.pre}info'
-        # TODO Add checking for differences in FILES
         inputre = re.compile(r'''INPUT\['(\S+)'] = (.*)''')
         filesre = re.compile(r'''FILES\.(\S+) = (.*)''')
         otherre = re.compile(r'(\S+) = (.*)')

@@ -423,40 +423,24 @@ input_file.addNamelist('general', 'general',
 
                             # Miscellaneous options
                            ['assign_chainID', int, 0, 'Assign chains ID'],
-# FIXME: removed
-                           # ['debug_printlevel', int, 0, 'Increase debugging info printed'],
                            ['exp_ki', float, 0, 'Experimental Ki in nM'],
-# FIXME: full_traj -> parece que no afecta en nada que lo quite dado que solo genera la traj de complejo en PDB
                            ['full_traj', int, 0, 'Print a full traj. AND the thread trajectories'],
                            ['gmx_path', str, '', 'Force to use this path to get GROMACS executable'],
-# FIXME: keep_files -> con el archivo h5 se puede eliminar todo sin afectar gmx_MMPBSA_ana
+# FIXME: keep_files we need to improved the h5 file
                            ['keep_files', int, 2, 'How many files to keep after successful completion'],
 
                            ['netcdf', int, 0, 'Use NetCDF intermediate trajectories'],
-                           # ['overwrite_data', int, 0, 'Defines whether the gmxMMPBSA data will be overwritten'],
-                           # ['receptor_mask', str, None, 'Amber mask of receptor atoms in complex prmtop'],
-                           # ['search_path', str, '', 'Look for intermediate programs in all of PATH'],
                            ['solvated_trajectory', int, 1, 'Define if it is necessary to cleanup the trajectories'],
-# FIXME: strip_mask -> para GROMACS se hace con la variable solvated_trajectory
-#                            ['strip_mask', str, strip_mask, 'Amber mask to strip from solvated prmtop'],
-
                            ['verbose', int, 1, 'How many energy terms to print in the final output']
                        ], trigger=None)
 
 input_file.addNamelist('gb', 'gb',
                        [
                            ['igb', int, 5, 'GB model to use'],
-# FIXME: Remove?
-                           # ['gb_maxcyc', int, 1, 'The maximum number of cycles of minimization'],
                            ['intdiel', float, 1.0, 'Internal dielectric constant for sander'],
                            ['extdiel', float, 78.5, 'External dielectric constant for sander'],
 
                            ['saltcon', float, 0, 'Salt concentration (M)'],
-# FIXME: Remove?
-                           # ['rgbmax', float, 999.0, 'Distance cutoff in Angstroms to use when computing effective '
-                           #                          'GB radii'],
-# FIXME: offset needs revision. MMPBSA.py defined it as 'offset': -999999.0, but in the Amber manual is 0.09 Å (solved)
-# FIXME: gbsa is only defined for decomp if self.INPUT['decomprun']: self.INPUT['gbsa'] = 2. molsurf is who replaces this variable
                            ['surften', float, 0.0072, 'Surface tension'],
                            ['surfoff', float, 0.0, 'Surface tension offset'],
                            ['molsurf', int, 0, 'Use Connelly surface (\'molsurf\' program)'],
@@ -465,7 +449,6 @@ input_file.addNamelist('gb', 'gb',
 
                             # Options for QM
                            ['ifqnt', int, 0, 'Use QM on part of the system'],
-# FIXME: Use the same default value (PM3) as sqm?
                            ['qm_theory', str, '', 'Semi-empirical QM theory to use'],
                            ['qm_residues', str, '', 'Residues to treat with QM'],
                            ['qmcharge_com', int, 0, 'Charge of QM region in complex'],
@@ -479,24 +462,20 @@ input_file.addNamelist('pb', 'pb',
                             # Basic input options
                            ['ipb', int, 2, 'Dielectric model for PB'],
                            ['inp', int, 2, 'Nonpolar solvation method'],
-# FIXME: Remove?
-                           #['pb_maxcyc', int, 1, 'The maximum number of cycles of minimization'],
                            ['sander_apbs', int, 0, 'Use sander.APBS?'],
 
                            # Options to define the physical constants
                            ['indi', float, 1, 'Internal dielectric constant'],
                            ['exdi', float, 80, 'External dielectric constant'],
                            ['emem', float, 1.0, 'Membrane dielectric constant'],
-                           ['smoothopt', int, 1, 'Set up dielectric values for finite-difference '
-                                                 'grid edges that are located across the solute/solvent dielectric '
-                                                 'boundary'],
+                           ['smoothopt', int, 1, 'Set up dielectric values for finite-difference grid edges that are '
+                                                 'located across the solute/solvent dielectric boundary'],
                            ['istrng', float, 0.0, 'Ionic strength (M)'],
                            ['radiopt', int, 1, 'Use optimized radii?'],
                            ['prbrad', float, 1.4, 'Probe radius'],
                            ['iprob', float, 2.0, 'Mobile ion probe radius (Angstroms) for ion accessible surface used '
                                                  'to define the Stern layer'],
                            ['sasopt', int, 0, 'Molecular surface in PB implict model'],
-# FIXME: saopt and triopt needs revision
                            ['arcres', float, 0.25, 'The resolution (Å) to compute solvent accessible arcs'],
 
                             # Options for Implicit Membranes
@@ -546,35 +525,15 @@ input_file.addNamelist('pb', 'pb',
                            ['cavity_offset', float, -0.5692, 'Offset for nonpolar solvation calc'],
                            ['maxsph', int, 400, 'Approximate number of dots to represent the maximum atomic solvent '
                                                 'accessible surface'],
-# FIXME: need revision. It seems that it is only available for nab
                            ['maxarcdot', int, 1500, 'Number of dots used to store arc dots per atom'],
 
                            # Options for output
                            ['npbverb', int, 0, 'Option to turn on verbose mode']
-
-                           # FIXME: remove
-                           # ['ntb', int, 0, 'Apply PBC conditions?'],
-                           # ['cut', float, 999.0, 'Nonbonded cutoff in Angstroms'],
-                           # ['nsnb', int, 99999, 'Determines the frequency of nonbonded list updates when igb=0 and '
-                           #                      'nbflag=0'],
-                           # ['imin', int, 5, 'Decide whether to perform MD, Minimization, or Trajectory '
-                           #                  'Post-Processing'],
-                           # ['ioutfm', int, 0, 'The format of coordinate and velocity trajectory files (mdcrd, mdvel '
-                           #                    'and inptraj).'],
-                           # ['ntx', int, 1, 'Option to read the initial coordinates, velocities and box size from the '
-                           #                 'inpcrd file'],
-                           # ['memoptzero', int, 0, 'Used in PB optimization for ligand'],
-                           # ['pbtemp', float, 300, 'Temperature (in K) used for the PB equation'],
-                           # ['phiout', int, 0, 'output spatial distribution of electrostatic potential '
-                           #                    'for visualization?'],
-                           # ['phiform', int, 0, 'Controls the format of the electrostatic potential file'],
                        ], trigger='pbrun')
 
 input_file.addNamelist('rism', 'rism',
                        [
                            ['closure', list, 'kh', 'Closure equation to use'],
-# FIXME: deprecated
-                           # ['closureorder', int, 1, 'Order of closure if PSE'],
                            ['noasympcorr', int, 1, 'Turn off long range asymptotic corrections for thermodynamic '
                                                    'output only'],
                            ['buffer', float, 14, 'Distance between solute and edge of grid'],
