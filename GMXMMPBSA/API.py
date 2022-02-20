@@ -174,14 +174,14 @@ class MMPBSA_API():
             del self.data[k]
         return energy
 
-    def update_energy_frames(self, startframe, endframe, interval=1):
+    def update_energy(self, startframe, endframe, interval=1):
 
         self._get_frames()
         start = list(self.frames.keys()).index(startframe)
         end = list(self.frames.keys()).index(endframe) + 1
 
         # 6- get the number of frames
-        self._update_frames(startframe, endframe, interval)
+        self._update_eframes(startframe, endframe, interval)
 
         # Create a copy to recover the original data any time
         self.data = deepcopy(self._oringin)
@@ -206,10 +206,10 @@ class MMPBSA_API():
                             if self.app_namespace.INPUT['interaction_entropy']:
                                 edata = v1['delta']['GGAS']
                                 ie = InteractionEntropyCalc(edata, self.app_namespace.INPUT)
-                                ieout = IEout(self.app_namespace.INPUT)
-                                v['ie'][model] = ieout.parse_from_dict(key, {'data': ie.data, 'iedata': ie.iedata,
-                                                                                  'ieframes': ie.ieframes,
-                                                                                  'sigma': ie.ie_std})
+                                v['ie'] = IEout(self.app_namespace.INPUT)
+                                v['ie'].parse_from_dict(model, {'data': ie.data, 'iedata': ie.iedata,
+                                                                     'ieframes': ie.ieframes,
+                                                                     'sigma': ie.ie_std})
                             if self.app_namespace.INPUT['c2_entropy']:
                                 edata = v1['delta']['GGAS']
                                 c2 = C2EntropyCalc(edata, self.app_namespace.INPUT)
@@ -237,6 +237,78 @@ class MMPBSA_API():
                         self.data['mutant-normal'][model] = {'delta':
                             DeltaBindingStatistics(self.data['mutant'][model]['delta'],
                                                    self.data['normal'][model]['delta'])}
+        # Re-calculate summaries
+        self.get_summary()
+
+    def update_nmode(self, startframe, endframe, interval=1):
+
+        self._get_frames()
+        start = list(self.nmframes.keys()).index(startframe)
+        end = list(self.nmframes.keys()).index(endframe) + 1
+
+        # 6- get the number of frames
+        self._update_nmframes(startframe, endframe, interval)
+
+        # Create a copy to recover the original data any time
+        self.data = deepcopy(self._oringin)
+        # Iterate over all containing classes
+        for key, v in self.data.items():
+            # key: normal, mutant, decomp_normal, decomp_mutant
+            if key not in self.print_keys:
+                continue
+            if key in ['normal', 'mutant']:
+                # Update the frame range and re-calculate the composite terms
+                v['nmode']['complex'].set_frame_range(start, end, interval)
+                if not self.stability:
+                    v['nmode']['receptor'].set_frame_range(start, end, interval)
+                    v['nmode']['ligand'].set_frame_range(start, end, interval)
+                    # Re-calculate deltas
+                    v['nmode']['delta'] = BindingStatistics(v['complex'], v['receptor'], v['ligand'],
+                                                            self.app_namespace.INFO['using_chamber'],
+                                                            self.traj_protocol)
+        # Re-calculate delta delta if CAS
+        if 'mutant-normal' in self.print_keys:
+            if 'normal' in self.data and self.data['normal'] and 'mutant' in self.data and self.data['mutant']:
+                self.data['mutant-normal']['nmode'] = {'delta':
+                                                           DeltaBindingStatistics(self.data['mutant']['nmode']['delta'],
+                                                                                  self.data['normal']['nmode'][
+                                                                                      'delta'])}
+        # Re-calculate summaries
+        self.get_summary()
+
+    def update_ie(self, iesegment):
+
+        self._get_frames()
+
+        # Iterate over all containing classes
+        for key, v in self.data.items():
+            # key: normal, mutant, decomp_normal, decomp_mutant
+            if key not in self.print_keys:
+                continue
+            if key in ['normal', 'mutant']:
+                for model, v1 in v.items():
+                    if model in ['gb', 'pb', 'rism std', 'rism gf']:
+                        # Update the frame range and re-calculate the composite terms
+                        # Re-calculate GGAS based entropies
+                        if self.app_namespace.INPUT['interaction_entropy']:
+                            edata = v1['delta']['GGAS']
+                            ie = InteractionEntropyCalc(edata, self.app_namespace.INPUT, iesegment)
+                            v['ie'] = IEout(self.app_namespace.INPUT)
+                            v['ie'].parse_from_dict(model, {'data': ie.data, 'iedata': ie.iedata,
+                                                            'ieframes': ie.ieframes,
+                                                            'sigma': ie.ie_std})
+
+        # Re-calculate delta delta if CAS
+        if 'mutant-normal' in self.print_keys:
+            if 'normal' in self.data and self.data['normal'] and 'mutant' in self.data and self.data['mutant']:
+                for model in self.data['normal']:
+                    if model in ['gb', 'pb', 'rism std', 'rism gf']:
+                        self.data['mutant-normal'][model] = {'delta':
+                                                                 DeltaBindingStatistics(
+                                                                     self.data['mutant'][model]['delta'],
+                                                                     self.data['normal'][model]['delta'])}
+        from icecream import ic
+        ic(self.data['normal']['ie'])
         # Re-calculate summaries
         self.get_summary()
 
@@ -328,18 +400,39 @@ class MMPBSA_API():
 
     def _get_frames(self):
 
+        ts = 1 if not self.timestep else self.timestep
+
         INPUT = self.app_namespace.INPUT
         numframes = self.app_namespace.INFO['numframes']
+        nmnumframes = self.app_namespace.INFO['numframes_nmode']
 
-        frames_list = list(range(INPUT['startframe'], INPUT['startframe'] + numframes * INPUT['interval'],
+        frames_list = list(range(INPUT['startframe'],
+                                 INPUT['startframe'] + numframes * INPUT['interval'],
                                  INPUT['interval']))
         INPUT['endframe'] = frames_list[-1]
-
-        ts = 1 if not self.timestep else self.timestep
-        time_step_list = list(range(self.starttime, self.starttime + len(frames_list) * ts, ts * INPUT['interval']))
+        time_step_list = list(range(self.starttime,
+                                    self.starttime + len(frames_list) * ts,
+                                    ts * INPUT['interval']))
         self.frames = dict(zip(frames_list, time_step_list))
 
-    def _update_frames(self, startframe, endframe, interval):
+        if INPUT['nmoderun']:
+            nmframes_list = list(range(INPUT['nmstartframe'],
+                                       INPUT['nmstartframe'] + nmnumframes * INPUT['nminterval'],
+                                       INPUT['interval']))
+            from icecream import ic
+            ic(nmframes_list)
+            INPUT['nmendframe'] = nmframes_list[-1] if nmframes_list else None
+
+
+
+            nm_start = (nmframes_list[0] - frames_list[0]) * INPUT['interval']
+            nmtime_step_list = list(range(self.starttime + nm_start,
+                                          self.starttime + nm_start + len(nmframes_list) * ts,
+                                          ts * INPUT['nminterval']))
+
+            self.nmframes = dict(zip(nmframes_list, nmtime_step_list))
+
+    def _update_eframes(self, startframe, endframe, interval):
 
         # get the original frames list
         self._get_frames()
@@ -351,7 +444,16 @@ class MMPBSA_API():
             if x not in curr_frames:
                 self.frames.pop(x)
 
-        print('updated frames', self.frames)
+    def _update_nmframes(self, startframe, endframe, interval):
+
+        # get the original frames list
+        self._get_frames()
+
+        curr_frames = list(range(startframe, endframe + interval, interval))
+        frames = list(self.nmframes.keys())
+        for x in frames:
+            if x not in curr_frames:
+                self.nmframes.pop(x)
 
     def get_com(self):
         return copy(self.data['normal']['gb']['complex'])

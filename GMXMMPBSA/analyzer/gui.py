@@ -29,7 +29,8 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from GMXMMPBSA.analyzer.dialogs import InitDialog
 from GMXMMPBSA.analyzer.customitem import CustomItem, CorrelationItem
-from GMXMMPBSA.analyzer.style import save_default_config, default_config, save_user_config, user_config, toc_img, logo
+from GMXMMPBSA.analyzer.style import save_default_config, default_config, save_user_config, user_config, toc_img, logo, \
+    alert
 from GMXMMPBSA.analyzer.utils import energy2pdb_pml, ki2energy, make_corr_DF, multiindex2dict
 from GMXMMPBSA.analyzer.chartsettings import ChartSettings
 from GMXMMPBSA.analyzer.parametertree import ParameterTree, Parameter
@@ -364,20 +365,25 @@ class GMX_MMPBSA_ANA(QMainWindow):
         optionWidget_c.addTab(frames_w, 'Frames')
         frames_l = QVBoxLayout(frames_w)
 
-        frames_group = QGroupBox('Energy')
-        frames_l.addWidget(frames_group)
+        self.eframes_group = QGroupBox('Energy')
+        frames_l.addWidget(self.eframes_group)
         self.eframes_start_sb = QSpinBox()
-        # self.eframes_start_sb.setRange(1, 10000)
         self.eframes_start_sb.setAccelerated(True)
         self.eframes_start_sb.valueChanged.connect(self.frames_start_sb_update)
         self.eframes_inter_sb = QSpinBox()
         self.eframes_inter_sb.valueChanged.connect(self.frames_inter_sb_update)
         self.eframes_end_sb = QSpinBox()
-        # self.eframes_end_sb.setRange(1, 10000)
         self.eframes_end_sb.setAccelerated(True)
         self.eframes_end_sb.valueChanged.connect(self.frames_end_sb_update)
         self.numframes_le = QLineEdit()
         self.numframes_le.setReadOnly(True)
+
+        self.e_changed = QLabel()
+        self.e_changed.setToolTip('The frames range has changed. Please, press the "Update" button to recalculate the '
+                                   'energy or reset to the default frame range')
+        self.e_changed.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self.e_changed.setPixmap(QPixmap(alert))
+        self.e_changed.hide()
 
         fg_l1 = QFormLayout()
         fg_l1.addRow('Start', self.eframes_start_sb)
@@ -386,67 +392,127 @@ class GMX_MMPBSA_ANA(QMainWindow):
         fg_l2.addRow('Interval', self.eframes_inter_sb)
         fg_l2.addRow('Nr. frames', self.numframes_le)
 
-        frames_group_l = QHBoxLayout(frames_group)
-        frames_group_l.addLayout(fg_l1, 1)
-        frames_group_l.addLayout(fg_l2, 1)
+        reset_energy_btn = QPushButton('Reset')
+        reset_energy_btn.clicked.connect(self._reset_e_frames)
 
-        frames_l.addWidget(frames_group)
-        # frames_w.setTabToolTip(0, 'Frames defined for all energy calculations')
+        frames_group_l = QGridLayout(self.eframes_group)
+        frames_group_l.addLayout(fg_l1, 0, 0)
+        frames_group_l.addLayout(fg_l2, 0, 2)
+        frames_group_l.addWidget(self.e_changed, 1, 0, 1, 2, Qt.AlignmentFlag.AlignRight)
+        frames_group_l.addWidget(reset_energy_btn, 1, 2)
+        frames_group_l.setColumnStretch(0, 5)
+        frames_group_l.setColumnStretch(1, 1)
+        frames_group_l.setColumnStretch(2, 5)
 
-        nmframes_group = QGroupBox('nmode')
+        frames_l.addWidget(self.eframes_group)
+
+        self.nmframes_group = QGroupBox('NMODE')
         self.nmframes_start_sb = QSpinBox()
-        # self.eframes_start_sb.setRange(1, 10000)
         self.nmframes_start_sb.setAccelerated(True)
-        self.nmframes_start_sb.valueChanged.connect(self.frames_start_sb_update)
+        self.nmframes_start_sb.valueChanged.connect(self.nmframes_start_sb_update)
         self.nmframes_inter_sb = QSpinBox()
-        self.nmframes_inter_sb.valueChanged.connect(self.frames_inter_sb_update)
+        self.nmframes_inter_sb.valueChanged.connect(self.nmframes_inter_sb_update)
         self.nmframes_end_sb = QSpinBox()
-        # self.eframes_end_sb.setRange(1, 10000)
         self.nmframes_end_sb.setAccelerated(True)
-        self.nmframes_end_sb.valueChanged.connect(self.frames_end_sb_update)
+        self.nmframes_end_sb.valueChanged.connect(self.nmframes_end_sb_update)
         self.nmnumframes_le = QLineEdit()
         self.nmnumframes_le.setReadOnly(True)
 
+        self.nm_changed = QLabel()
+        self.nm_changed.setToolTip('The frames range has changed. Please, press the "Update" button to recalculate the '
+                                   'energy or reset to the default frame range')
+        self.nm_changed.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self.nm_changed.setPixmap(QPixmap(alert))
+        self.nm_changed.hide()
+
         nmfg_l1 = QFormLayout()
-        # nmfg_l1.setContentsMargins(5, 5, 5, 5)
-        # nmfg_l1.setSpacing(3)
         nmfg_l1.addRow('Start', self.nmframes_start_sb)
         nmfg_l1.addRow('End', self.nmframes_end_sb)
         nmfg_l2 = QFormLayout()
-        # nmfg_l2.setContentsMargins(5, 5, 5, 5)
-        # nmfg_l2.setSpacing(3)
         nmfg_l2.addRow('Interval', self.nmframes_inter_sb)
         nmfg_l2.addRow('Nr. frames', self.nmnumframes_le)
 
-        nmframes_group_l = QHBoxLayout(nmframes_group)
-        nmframes_group_l.addLayout(nmfg_l1, 1)
-        nmframes_group_l.addLayout(nmfg_l2, 1)
+        reset_nmode_btn = QPushButton('Reset')
+        reset_nmode_btn.clicked.connect(self._reset_nm_frames)
 
-        frames_l.addWidget(nmframes_group)
-        # frames_w.setTabToolTip(2, 'Frames defined for NMODE calculation')
-        #
-        ieframes_group = QGroupBox('IE')
+        nmframes_group_l = QGridLayout(self.nmframes_group)
+        nmframes_group_l.addLayout(nmfg_l1, 0, 0)
+        nmframes_group_l.addLayout(nmfg_l2, 0, 2)
+        nmframes_group_l.addWidget(self.nm_changed, 1, 0, 1, 2, Qt.AlignmentFlag.AlignRight)
+        nmframes_group_l.addWidget(reset_nmode_btn, 1, 2)
+        nmframes_group_l.setColumnStretch(0, 5)
+        nmframes_group_l.setColumnStretch(1, 1)
+        nmframes_group_l.setColumnStretch(2, 5)
 
+        frames_l.addWidget(self.nmframes_group)
+
+        self.ieframes_group = QGroupBox('IE')
+        self.ie_changed = QLabel()
+        self.ie_changed.setToolTip('The frames range has changed. Please, press the "Update" button to recalculate the '
+                                   'energy or reset to the default frame range')
+        self.ie_changed.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self.ie_changed.setPixmap(QPixmap(alert))
+        self.ie_changed.hide()
         self.iesegment_sb = QSpinBox()
         self.iesegment_sb.setRange(1, 100)
         self.iesegment_sb.setAccelerated(True)
-        # self.segment_sb.valueChanged.connect(self.frames_start_sb_update)
+        self.iesegment_sb.setSuffix('%')
+        self.iesegment_sb.valueChanged.connect(self.iesegment_sb_update)
 
         self.ienumframes_le = QLineEdit()
         self.ienumframes_le.setReadOnly(True)
 
-        ie_l = QFormLayout(ieframes_group)
-        ie_l.addRow('Segment', self.iesegment_sb)
-        ie_l.addRow('Nr. frames', self.ienumframes_le)
+        ieseg_l = QFormLayout()
+        ieseg_l.addRow('Segment', self.iesegment_sb)
+        ienf_l = QFormLayout()
+        ienf_l.addRow('Nr. frames', self.ienumframes_le)
 
-        frames_l.addWidget(ieframes_group)
+        ie_reset_btn = QPushButton('Reset')
+        ie_reset_btn.clicked.connect(self._reset_iesegment)
+
+        ieframes_group_l = QGridLayout(self.ieframes_group)
+        ieframes_group_l.addLayout(ieseg_l, 0, 0)
+        ieframes_group_l.addLayout(ienf_l, 0, 2)
+        ieframes_group_l.addWidget(self.ie_changed, 1, 0, 1, 2, Qt.AlignmentFlag.AlignRight)
+        ieframes_group_l.addWidget(ie_reset_btn, 1, 2)
+        ieframes_group_l.setColumnStretch(0, 5)
+        ieframes_group_l.setColumnStretch(1, 1)
+        ieframes_group_l.setColumnStretch(2, 5)
+        frames_l.addWidget(self.ieframes_group)
         frames_l.addStretch(1)
 
-        resetchart_btn = QPushButton('Reset')
+    def _reset_iesegment(self):
+        self.iesegment_sb.setValue(self.systems[self.current_system_index]['namespace'].INPUT['ie_segment'])
 
-        btn_l = QHBoxLayout()
-        btn_l.addWidget(resetchart_btn)
-        optionWidget_l.addLayout(btn_l)
+    def _reset_e_frames(self):
+        self.eframes_start_sb.setValue(self.systems[self.current_system_index]['namespace'].INPUT['startframe'])
+        self.eframes_end_sb.setValue(self.systems[self.current_system_index]['namespace'].INPUT['endframe'])
+        self.eframes_inter_sb.setValue(self.systems[self.current_system_index]['namespace'].INPUT['interval'])
+
+    def _reset_nm_frames(self):
+        self.nmframes_start_sb.setValue(self.systems[self.current_system_index]['namespace'].INPUT['nmstartframe'])
+        self.nmframes_end_sb.setValue(self.systems[self.current_system_index]['namespace'].INPUT['nmendframe'])
+        self.nmframes_inter_sb.setValue(self.systems[self.current_system_index]['namespace'].INPUT['nminterval'])
+
+    def iesegment_sb_update(self):
+        current_estart = self.eframes_start_sb.value()
+        current_einterval = self.eframes_inter_sb.value()
+        current_eend = self.eframes_end_sb.value()
+        ieframes = math.ceil(
+            (((current_eend - current_estart) // current_einterval) + 1) * (self.iesegment_sb.value() / 100)
+        )
+        self.ienumframes_le.setText(str(ieframes))
+        if self.current_system_index:
+            curr_eframes = [self.eframes_start_sb.value(), self.eframes_end_sb.value(), self.eframes_inter_sb.value()]
+            if (
+                    self.iesegment_sb.value() != self.systems[self.current_system_index]['current_ie_segment'] or
+                    curr_eframes != self.systems[self.current_system_index]['current_frames']
+            ):
+                self.ie_changed.show()
+            else:
+                self.ie_changed.hide()
+
+
 
     def update_system_selection(self):
         if not self.treeWidget.selectedItems():
@@ -461,11 +527,20 @@ class GMX_MMPBSA_ANA(QMainWindow):
             else:
                 break
         if not self.all_frb.isChecked():
+            # energy
             current_start, current_end, current_interval = self.systems[parent_item.system_index]['current_frames']
             self.eframes_start_sb.setValue(current_start)
             self.eframes_inter_sb.setValue(current_interval)
             self.eframes_end_sb.setValue(current_end)
-            self.numframes_le.setText(f"{int((current_end - current_start) // current_interval) + 1}")
+            # nmode
+            nmcurrent_start, nmcurrent_end, nmcurrent_interval = self.systems[parent_item.system_index][
+                'current_nmode_frames']
+            self.nmframes_start_sb.setValue(nmcurrent_start)
+            self.nmframes_inter_sb.setValue(nmcurrent_end)
+            self.nmframes_end_sb.setValue(nmcurrent_interval)
+            # IE
+            self.iesegment_sb.setValue(self.systems[parent_item.system_index]['current_ie_segment'])
+
             self.chart_options_param.restoreState(self.systems[parent_item.system_index]['chart_options'])
             self.parm_tree_w.setParameters(self.chart_options_param, showTop=False)
         self.current_system_index = parent_item.system_index
@@ -477,7 +552,9 @@ class GMX_MMPBSA_ANA(QMainWindow):
         recalc_ie = []
         repaint = []
 
-        act_frange = [self.eframes_start_sb.value(), self.eframes_end_sb.value(), self.eframes_inter_sb.value()]
+        curr_eframes = [self.eframes_start_sb.value(), self.eframes_end_sb.value(), self.eframes_inter_sb.value()]
+        curr_nmframes = [self.nmframes_start_sb.value(), self.nmframes_end_sb.value(), self.nmframes_inter_sb.value()]
+        curr_iesegment = self.iesegment_sb.value()
         act_sett = self.chart_options_param.saveState()
 
         processed_sys = []
@@ -485,16 +562,30 @@ class GMX_MMPBSA_ANA(QMainWindow):
         if self.all_frb.isChecked():
             for x in self.systems:
                 processed_sys.append(x)
-                if act_frange != self.systems[x]['current_frames']:
+                energyrun = (self.systems[x]['namespace'].INPUT['gbrun'] or
+                             self.systems[x]['namespace'].INPUT['pbrun'] or
+                             self.systems[x]['namespace'].INPUT['rismrun'])
+                if energyrun and curr_eframes != self.systems[x]['current_frames']:
                     recalc_energy.append(x)
-
+                if (self.systems[x]['namespace'].INPUT['nmoderun'] and
+                        curr_nmframes != self.systems[x]['current_nmode_frames']):
+                    recalc_nmode.append(x)
+                if curr_iesegment != self.systems[x]['current_ie_segment']:
+                    recalc_ie.append(x)
                 if self.systems[x]['chart_options'].is_changed(act_sett):
                     repaint.append(x)
         else:
             processed_sys.append(self.current_system_index)
-            if act_frange != self.systems[self.current_system_index]['current_frames']:
+            energyrun = (self.systems[self.current_system_index]['namespace'].INPUT['gbrun'] or
+                         self.systems[self.current_system_index]['namespace'].INPUT['pbrun'] or
+                         self.systems[self.current_system_index]['namespace'].INPUT['rismrun'])
+            if energyrun and curr_eframes != self.systems[self.current_system_index]['current_frames']:
                 recalc_energy.append(self.current_system_index)
-
+            if (self.systems[self.current_system_index]['namespace'].INPUT['nmoderun'] and
+                    curr_nmframes != self.systems[self.current_system_index]['current_nmode_frames']):
+                recalc_nmode.append(self.current_system_index)
+            if curr_iesegment != self.systems[self.current_system_index]['current_ie_segment']:
+                recalc_ie.append(self.current_system_index)
             if self.systems[self.current_system_index]['chart_options'].is_changed(act_sett):
                 repaint.append(self.current_system_index)
 
@@ -512,25 +603,27 @@ class GMX_MMPBSA_ANA(QMainWindow):
             qpd.setLabelText('Recalculating energies for selected frames range')
             for e in recalc_energy:
                 v += 1
-                self.systems[e]['api'].update_energy_frames(*act_frange)
-                self.systems[e]['data'] = self.systems[e]['api'].get_energy()
-                self.systems[e]['current_frames'] = act_frange
-                qpd.setValue(v)
+                self.systems[e]['api'].update_energy(*curr_eframes)
+                self.systems[e]['current_frames'] = curr_eframes
                 qpd.setValue(v)
         if recalc_nmode:
             qpd.setLabelText('Recalculating nmode for selected frames range')
             for e in recalc_nmode:
                 v += 1
-                # self.systems[e]['api'].update_energy_frames(*act_frange)
-                self.systems[e]['current_nmode_frames'] = act_frange
+                self.systems[e]['api'].update_nmode(*curr_nmframes)
+                self.systems[e]['current_nmode_frames'] = curr_nmframes
                 qpd.setValue(v)
         if recalc_ie:
             qpd.setLabelText('Recalculating Interaction Entropy for selected frames range')
             for e in recalc_ie:
                 v += 1
-                # self.systems[e]['api'].update_energy_frames(*act_frange)
-                self.systems[e]['current_frames'] = act_frange
+                self.systems[e]['api'].update_ie(curr_iesegment)
+                self.systems[e]['current_ie_segment'] = curr_iesegment
                 qpd.setValue(v)
+        if recalc_energy or recalc_nmode or recalc_ie:
+            slist = recalc_energy or recalc_nmode or recalc_ie
+            for e in slist:
+                self.systems[e]['data'] = self.systems[e]['api'].get_energy()
         if repaint:
             qpd.setLabelText('Updating charts options')
             for e in repaint:
@@ -591,8 +684,9 @@ class GMX_MMPBSA_ANA(QMainWindow):
                                                             heatmap_action=0,
                                                             visualization_action=0,
                                                             figure=0)
-
-
+        self.ie_changed.hide()
+        self.e_changed.hide()
+        self.nm_changed.hide()
         qpd.setValue(maximum)
 
     def reset_dc(self):
@@ -605,12 +699,16 @@ class GMX_MMPBSA_ANA(QMainWindow):
             self.eframes_end_sb.setValue(value)
 
         if self.current_system_index:
-            current_start = value
             current_interval = self.eframes_inter_sb.value()
             current_end = self.eframes_end_sb.value()
-            # current_start, current_interval, current_end = self.systems[self.current_system_index]['current_frames']
-            interval = self.systems[self.current_system_index]['namespace'].INPUT['interval']
             self.numframes_le.setText(f"{int((current_end - value) // current_interval) + 1}")
+
+            curr_eframes = [value, self.eframes_end_sb.value(), self.eframes_inter_sb.value()]
+            if curr_eframes != self.systems[self.current_system_index]['current_frames']:
+                self.e_changed.show()
+            else:
+                self.e_changed.hide()
+            self.iesegment_sb_update()
 
     def frames_end_sb_update(self, value):
         if value < self.eframes_start_sb.value():
@@ -618,22 +716,68 @@ class GMX_MMPBSA_ANA(QMainWindow):
         if self.current_system_index:
             current_start = self.eframes_start_sb.value()
             current_interval = self.eframes_inter_sb.value()
-            current_end = value
-            # current_start, current_interval, current_end = self.systems[self.current_system_index]['current_frames']
-            interval = self.systems[self.current_system_index]['namespace'].INPUT['interval']
-            self.numframes_le.setText(f"{int((current_end - current_start) // current_interval) + 1}")
+            self.numframes_le.setText(f"{int((value - current_start) // current_interval) + 1}")
+
+            curr_eframes = [self.eframes_start_sb.value(), value, self.eframes_inter_sb.value()]
+            if curr_eframes != self.systems[self.current_system_index]['current_frames']:
+                self.e_changed.show()
+            else:
+                self.e_changed.hide()
+            self.iesegment_sb_update()
 
     def frames_inter_sb_update(self, value):
-        # self.eframes_start_sb.setSingleStep(value)
-        # self.eframes_end_sb.setSingleStep(value)
         if self.current_system_index:
             current_start = self.eframes_start_sb.value()
-            current_interval = value
             current_end = self.eframes_end_sb.value()
+            self.numframes_le.setText(f"{int((current_end - current_start) // value) + 1}")
 
-            # current_start, current_interval, current_end = self.systems[self.current_system_index]['current_frames']
-            interval = self.systems[self.current_system_index]['namespace'].INPUT['interval']
-            self.numframes_le.setText(f"{int((current_end - current_start) // (value * interval)) + 1}")
+            curr_eframes = [self.eframes_start_sb.value(), self.eframes_end_sb.value(), value]
+            if curr_eframes != self.systems[self.current_system_index]['current_frames']:
+                self.e_changed.show()
+            else:
+                self.e_changed.hide()
+            self.iesegment_sb_update()
+
+    def nmframes_start_sb_update(self, value):
+        if value > self.nmframes_end_sb.value():
+            self.nmframes_end_sb.setValue(value)
+
+        if self.current_system_index:
+            current_interval = self.nmframes_inter_sb.value()
+            current_end = self.nmframes_end_sb.value()
+            self.numframes_le.setText(f"{int((current_end - value) // current_interval) + 1}")
+
+            curr_nmframes = [value, self.nmframes_end_sb.value(), self.nmframes_inter_sb.value()]
+            if curr_nmframes != self.systems[self.current_system_index]['current_nmode_frames']:
+                self.nm_changed.show()
+            else:
+                self.nm_changed.hide()
+
+    def nmframes_end_sb_update(self, value):
+        if value < self.nmframes_start_sb.value():
+            self.nmframes_start_sb.setValue(value)
+        if self.current_system_index:
+            current_start = self.nmframes_start_sb.value()
+            current_interval = self.nmframes_inter_sb.value()
+            self.numframes_le.setText(f"{int((value - current_start) // current_interval) + 1}")
+
+            curr_nmframes = [self.nmframes_start_sb.value(), value, self.nmframes_inter_sb.value()]
+            if curr_nmframes != self.systems[self.current_system_index]['current_nmode_frames']:
+                self.nm_changed.show()
+            else:
+                self.nm_changed.hide()
+
+    def nmframes_inter_sb_update(self, value):
+        if self.current_system_index:
+            current_start = self.nmframes_start_sb.value()
+            current_end = self.nmframes_end_sb.value()
+            self.numframes_le.setText(f"{int((current_end - current_start) // value) + 1}")
+
+            curr_nmframes = [self.nmframes_start_sb.value(), self.nmframes_end_sb.value(), value]
+            if curr_nmframes != self.systems[self.current_system_index]['current_nmode_frames']:
+                self.nm_changed.show()
+            else:
+                self.nm_changed.hide()
 
     def gettting_data(self, info_files):
 
@@ -837,8 +981,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
                                'current_nmode_frames': [namespace.INPUT['nmstartframe'],
                                                         namespace.INPUT['nmendframe'],
                                                         namespace.INPUT['nminterval']],
-                               'current_ie_frames': math.ceil(
-                                   namespace.INFO['numframes'] * (namespace.INPUT['ie_segment'] / 100)),
+                               'current_ie_segment': namespace.INPUT['ie_segment'],
                                'chart_options': ChartSettings(config),
                                'options': options,
                                'items_data': {}, 'items_summary': summary,
@@ -1217,6 +1360,8 @@ class GMX_MMPBSA_ANA(QMainWindow):
         key_list = []
         if 'nmode' in comp:
             key_list.append('nmode')
+        elif 'ie' in comp:
+            key_list.append('ie')
         elif 'energy' in comp:
             # Include ie and c2 since they dependent of the ggas energy
             key_list.extend(['gb', 'pb', 'rism gf', 'rism std', 'binding', 'ie', 'c2'])
@@ -1240,7 +1385,8 @@ class GMX_MMPBSA_ANA(QMainWindow):
                             if not part.startswith('decomp'):
                                 temp_dat = data[level][(level1, level2)]
                                 temp_dat.name = level2
-                                self.systems[sys_index]['items_data'][(part, level, (level1, level2))] = self._setup_data(
+                                self.systems[sys_index]['items_data'][
+                                    (part, level, (level1, level2))] = self._setup_data(
                                     temp_dat)
                                 del temp_dat
                             else:
