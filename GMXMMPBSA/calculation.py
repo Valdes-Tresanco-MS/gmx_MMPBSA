@@ -606,9 +606,17 @@ class InteractionEntropyCalc:
     :return {IE_key: data}
     """
 
-    def __init__(self, ggas, INPUT):
+    def __init__(self, ggas, INPUT, iesegment=None):
+        """
+
+        Args:
+            ggas: Model GGAS energy
+            INPUT: INPUT dict
+            iesegment: If not defined, iesegment = INPUT['ie_segment']
+        """
         self.ggas = ggas
         self.INPUT = INPUT
+        self.isegment = iesegment or INPUT['ie_segment']
         self.data = []
 
         self._calculate()
@@ -638,7 +646,7 @@ class InteractionEntropyCalc:
             self.data = np.append(self.data, cts)
         numframes = len(self.data)
         self.ie_std = energy_int.std()
-        self.ieframes = math.ceil(numframes * (self.INPUT['ie_segment'] / 100))
+        self.ieframes = math.ceil(numframes * (self.isegment / 100))
         self.iedata = self.data[-self.ieframes:]
         self.frames = list(
             range(
