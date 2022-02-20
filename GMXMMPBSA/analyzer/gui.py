@@ -29,7 +29,7 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from GMXMMPBSA.analyzer.dialogs import InitDialog
 from GMXMMPBSA.analyzer.customitem import CustomItem, CorrelationItem
-from GMXMMPBSA.analyzer.style import config_icon, toc_img, logo
+from GMXMMPBSA.analyzer.style import save_default_config, default_config, save_user_config, user_config, toc_img, logo
 from GMXMMPBSA.analyzer.utils import energy2pdb_pml, ki2energy, make_corr_DF, multiindex2dict
 from GMXMMPBSA.analyzer.chartsettings import ChartSettings
 from GMXMMPBSA.analyzer.parametertree import ParameterTree, Parameter
@@ -274,14 +274,14 @@ class GMX_MMPBSA_ANA(QMainWindow):
                                    f"{self.systems[self.current_system_index]['chart_options'].filename.as_posix()}...")
         self.systems[self.current_system_index]['chart_options'].set_as_default()
         self.chart_options_param.restoreState(self.systems[self.current_system_index]['chart_options'])
-        self.chart_options_w.setParameters(self.chart_options_param, showTop=False)
+        self.parm_tree_w.setParameters(self.chart_options_param, showTop=False)
         self.update_fn()
 
     def _reset2default(self):
         self.systems[self.current_system_index]['chart_options'] = ChartSettings()
         self.statusbar.showMessage("Restore default settings...")
         self.chart_options_param.restoreState(self.systems[self.current_system_index]['chart_options'])
-        self.chart_options_w.setParameters(self.chart_options_param, showTop=False)
+        self.parm_tree_w.setParameters(self.chart_options_param, showTop=False)
         self.update_fn()
 
     def _set_user_config(self):
@@ -291,7 +291,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
             self.systems[self.current_system_index]['chart_options'] = ChartSettings(fn)
             self.statusbar.showMessage(f"Setting user configuration for this system from {fn.as_posix()}...")
             self.chart_options_param.restoreState(self.systems[self.current_system_index]['chart_options'])
-            self.chart_options_w.setParameters(self.chart_options_param, showTop=False)
+            self.parm_tree_w.setParameters(self.chart_options_param, showTop=False)
             self.update_fn()
         else:
             return
@@ -305,39 +305,12 @@ class GMX_MMPBSA_ANA(QMainWindow):
     def _make_options_panel(self):
 
         self.optionWidget = QWidget(self)
+        self.optionWidget.setMinimumWidth(300)
         optionWidget_l = QVBoxLayout(self.optionWidget)
-
-        conf_menu = QMenu()
-        conf_menu.setToolTipsVisible(True)
-        conf_menu.setTitle('Option configuratio')
-        self.set_as_default_action = conf_menu.addAction('Set as default')
-        self.set_as_default_action.setToolTip('Save the current setting as the global default settings.')
-        self.set_as_default_action.triggered.connect(self._set_as_default)
-        self.default_action = conf_menu.addAction('Reset to default')
-        self.default_action.setToolTip('Restores the default settings set by the developers as the settings '
-                                              'for the selected systems.')
-        self.default_action.triggered.connect(self._reset2default)
-        conf_menu.addSeparator()
-        self.use_user_config_action = conf_menu.addAction('User-config')
-        self.use_user_config_action.setToolTip('Uses the specific settings for this system if it was saved.')
-        self.use_user_config_action.triggered.connect(self._set_as_default)
-        self.set_user_config_action = conf_menu.addAction('Save User-config')
-        self.set_user_config_action.setToolTip('Force save the current setting for this system. Before gmx_MMPBSA_ana '
-                                               'closes, if there are configuration changes, you can decide if you '
-                                               'want to save them.')
-        self.set_user_config_action.triggered.connect(self._set_as_default)
-
-        self.options_conf_btn = QToolButton()
-        self.options_conf_btn.setIcon(QIcon(config_icon))
-        self.options_conf_btn.setPopupMode(QToolButton.InstantPopup)
-        self.options_conf_btn.setMenu(conf_menu)
 
         selection_group = QGroupBox('Selection')
         selection_group_layout = QHBoxLayout(selection_group)
         selection_group_layout.setContentsMargins(10, 0, 10, 0)
-        # self.curr_frb = QRadioButton('Current chart')
-        # self.curr_frb.setEnabled(False)
-        # selection_group_layout.addWidget(self.curr_frb)
         self.curr_sys_frb = QRadioButton('Selected System')
         self.curr_sys_frb.setChecked(True)
         selection_group_layout.addWidget(self.curr_sys_frb)
@@ -347,13 +320,40 @@ class GMX_MMPBSA_ANA(QMainWindow):
 
         optionWidget_l.addWidget(selection_group)
 
+        update_btn = QPushButton('Update')
+        update_btn.clicked.connect(self.update_fn)
+
         optionWidget_c = QTabWidget(self)
         optionWidget_l.addWidget(optionWidget_c)
-        optionWidget_c.setCornerWidget(self.options_conf_btn)
+        optionWidget_c.setCornerWidget(update_btn)
 
         # Charts options
         self.chart_options_param = Parameter().create()
-        self.chart_options_w = ParameterTree()
+        self.chart_options_w = QWidget(self)
+        self.chart_options_l = QVBoxLayout(self.chart_options_w)
+        self.chart_options_l.setContentsMargins(0, 0, 0, 0)
+        charts_opt_tb = QToolBar()
+        charts_opt_tb.setMaximumHeight(25)
+        charts_opt_tb.setContentsMargins(10, 0, 10, 0)
+        self.chart_options_l.addWidget(charts_opt_tb)
+        self.parm_tree_w = ParameterTree()
+        self.chart_options_l.addWidget(self.parm_tree_w)
+
+        self.set_as_default_action = charts_opt_tb.addAction(QIcon(save_default_config), 'Set as default',
+                                                             self._set_as_default)
+        self.set_as_default_action.setToolTip('Save the current setting as the global default settings.')
+        self.default_action = charts_opt_tb.addAction(QIcon(default_config),'Reset to default', self._reset2default)
+        self.default_action.setToolTip('Restores the default settings set by the developers as the settings '
+                                       'for the selected systems.')
+        charts_opt_tb.addSeparator()
+        self.set_user_config_action = charts_opt_tb.addAction(QIcon(save_user_config), 'Save User-config',
+                                                              self._set_as_default)
+        self.set_user_config_action.setToolTip('Force save the current setting for this system. Before gmx_MMPBSA_ana '
+                                               'closes, if there are configuration changes, you can decide if you '
+                                               'want to save them.')
+
+        self.use_user_config_action = charts_opt_tb.addAction(QIcon(user_config),'User-config', self._set_as_default)
+        self.use_user_config_action.setToolTip('Uses the specific settings for this system if it was saved.')
 
         # properties_w.setParameters(p, showTop=False)
         # charts_options_w = QWidget()
@@ -442,28 +442,11 @@ class GMX_MMPBSA_ANA(QMainWindow):
         frames_l.addWidget(ieframes_group)
         frames_l.addStretch(1)
 
-
-
-        update_btn = QPushButton('Update')
-        update_btn.clicked.connect(self.update_fn)
         resetchart_btn = QPushButton('Reset')
 
         btn_l = QHBoxLayout()
         btn_l.addWidget(resetchart_btn)
-        btn_l.addWidget(update_btn)
         optionWidget_l.addLayout(btn_l)
-
-        optionWidget_c.currentChanged.connect(self._control_options_config)
-
-    def _control_options_config(self, ind):
-        if ind:
-            self.options_conf_btn.setEnabled(False)
-            if not self.all_systems_active:
-                self.all_frb.setEnabled(False)
-        else:
-            self.options_conf_btn.setEnabled(True)
-            if self.all_systems_active:
-                self.all_frb.setEnabled(True)
 
     def update_system_selection(self):
         if not self.treeWidget.selectedItems():
@@ -484,7 +467,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
             self.eframes_end_sb.setValue(current_end)
             self.numframes_le.setText(f"{int((current_end - current_start) // current_interval) + 1}")
             self.chart_options_param.restoreState(self.systems[parent_item.system_index]['chart_options'])
-            self.chart_options_w.setParameters(self.chart_options_param, showTop=False)
+            self.parm_tree_w.setParameters(self.chart_options_param, showTop=False)
         self.current_system_index = parent_item.system_index
 
     def update_fn(self):
