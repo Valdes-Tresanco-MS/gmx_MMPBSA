@@ -103,7 +103,7 @@ class NavigationToolbar(NavigationToolbar2QT):
                 matplotlib.rcParams['savefig.directory'] = (
                     os.path.dirname(fname))
             try:
-                self.canvas.figure.savefig(fname, dpi=300)
+                self.canvas.figure.savefig(fname, dpi=self.save_dpi)
             except Exception as e:
                 QMessageBox.critical(
                     self, "Error saving file", str(e),
@@ -695,12 +695,12 @@ class Tables(QMdiSubWindow):
         self._df = df.round(2)
 
         if summary:
-            self.df_list = df.values.tolist()[1:]
-            labels = list(df.columns)
-            rows = len(df.index)
-            cols = len(df.columns)
+            self.df_list = self._df.values.tolist()[1:]
+            labels = list(self._df.columns)
+            rows = len(self._df.index) - 1
+            cols = len(self._df.columns)
         else:
-            temp_df_list = [x.split(',') for x in df.to_csv().split('\n')]
+            temp_df_list = [x.split(',') for x in self._df.to_csv().split('\n')]
             self.df_list = temp_df_list[1:]
             labels = temp_df_list[0]
             rows = len(self.df_list) - 1
@@ -712,7 +712,7 @@ class Tables(QMdiSubWindow):
 
         for r, row in enumerate(self.df_list):
             for c, col in enumerate(row):
-                text = f'{float(col):.2f}' if c else col
+                text = f'{col:.2f}' if isinstance(col, float) else str(col)
                 item = QTableWidgetItem(text)
                 if c == 0:
                     if not summary:
