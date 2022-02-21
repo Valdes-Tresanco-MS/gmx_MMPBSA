@@ -152,8 +152,8 @@ class CheckMakeTop:
             self.INPUT['print_res'] = ','.join(list2range(decomp_res)['string'])
         if self.INPUT['qm_residues']:
             qm_residues = self.get_selected_residues(self.INPUT['qm_residues'])
-            if 'within' in self.INPUT['print_res']:
-                logging.info(f"Selecting residues by distance ({self.INPUT['print_res'].split()[1]} Å) between "
+            if 'within' in self.INPUT['qm_residues']:
+                logging.info(f"Selecting residues by distance ({self.INPUT['qm_residues'].split()[1]} Å) between "
                              f"receptor and ligand for QM calculation...")
             else:
                 logging.info('User-selected residues for QM calculation...')
