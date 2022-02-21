@@ -713,6 +713,10 @@ class CheckMakeTop:
         Convert string selection format to amber index list
         """
         # FIXME: Error when any residue is selected
+
+        if qm_sele:
+            com_top = parmed.load_file(self.complex_pmrtop)
+
         dist, res_selection = selector(select)
         sele_res = []
         rec_charge = 0
@@ -732,13 +736,13 @@ class CheckMakeTop:
                                 if rres not in sele_res:
                                     sele_res.append(rres)
                                     if qm_sele:
-                                        rec_charge += int(sum(atm.charge for atm in
-                                                              self.complex_str.residues[rres -1].atoms))
+                                        rec_charge += round(
+                                            sum(atm.charge for atm in com_top.residues[rres - 1].atoms), 0)
                                 if lres not in sele_res:
                                     sele_res.append(lres)
                                     if qm_sele:
-                                        lig_charge += int(sum(atm.charge for atm in
-                                                              self.complex_str.residues[lres -1].atoms))
+                                        lig_charge += round(
+                                            sum(atm.charge for atm in com_top.residues[lres - 1].atoms), 0)
                                 break
         elif res_selection:
             for i in self.resl:
@@ -747,7 +751,8 @@ class CheckMakeTop:
                 rres = self.complex_str.residues[i - 1]
                 if [rres.chain, rres.number, rres.insertion_code] in res_selection:
                     sele_res.append(i)
-                    rec_charge += int(sum(atm.charge for atm in self.complex_str.residues[i -1].atoms))
+                    if qm_sele:
+                        rec_charge += round(sum(atm.charge for atm in com_top.residues[i -1].atoms), 0)
                     res_selection.remove([rres.chain, rres.number, rres.insertion_code])
             for j in self.resl:
                 if j.is_receptor():
@@ -755,7 +760,8 @@ class CheckMakeTop:
                 lres = self.complex_str.residues[j - 1]
                 if [lres.chain, lres.number, lres.insertion_code] in res_selection:
                     sele_res.append(j)
-                    lig_charge += int(sum(atm.charge for atm in self.complex_str.residues[j - 1].atoms))
+                    if qm_sele:
+                        lig_charge += round(sum(atm.charge for atm in com_top.residues[j - 1].atoms), 0)
                     res_selection.remove([lres.chain, lres.number, lres.insertion_code])
             for res in res_selection:
                 logging.warning("We couldn't find this residue CHAIN:{} RES_NUM:{} ICODE: {}".format(*res))
