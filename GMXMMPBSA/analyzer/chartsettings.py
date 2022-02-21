@@ -704,6 +704,7 @@ class ChartSettings(dict):
             with open(self.filename, "w") as write_file:
                 json.dump(self, write_file, indent=4)
         else:
+            self.set_as_default()
             filename = syspath.joinpath('settings.json')
             with open(filename, "w") as write_file:
                 json.dump(self, write_file, indent=4)
@@ -727,7 +728,9 @@ class ChartSettings(dict):
             if x[-1] != 'value':
                 continue
             ks = list(x[:-1])
-            if v == flatten[tuple(ks + ['default'])]:
+            if v != flatten[tuple(ks + ['default'])]:
+                from icecream import ic
+                ic(v, flatten[tuple(ks + ['default'])])
                 return True
 
     def get_changes(self, osett) -> None:

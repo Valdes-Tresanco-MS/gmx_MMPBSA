@@ -30,7 +30,7 @@ from PyQt5.QtGui import *
 from GMXMMPBSA.analyzer.dialogs import InitDialog
 from GMXMMPBSA.analyzer.customitem import CustomItem, CorrelationItem
 from GMXMMPBSA.analyzer.style import save_default_config, default_config, save_user_config, user_config, toc_img, logo, \
-    alert
+    alert, config
 from GMXMMPBSA.analyzer.utils import energy2pdb_pml, ki2energy, make_corr_DF, multiindex2dict
 from GMXMMPBSA.analyzer.chartsettings import ChartSettings
 from GMXMMPBSA.analyzer.parametertree import ParameterTree, Parameter
@@ -311,28 +311,30 @@ class GMX_MMPBSA_ANA(QMainWindow):
         self.statusbar.showMessage(f"Setting this setting as default in "
                                    f"{self.systems[self.current_system_index]['chart_options'].filename.as_posix()}...")
         self.systems[self.current_system_index]['chart_options'].set_as_default()
+        self.update_fn()
         self.chart_options_param.restoreState(self.systems[self.current_system_index]['chart_options'])
         self.parm_tree_w.setParameters(self.chart_options_param, showTop=False)
-        self.update_fn()
 
     def _reset2default(self):
-        self.systems[self.current_system_index]['chart_options'] = ChartSettings()
+        new_settings = ChartSettings()
         self.statusbar.showMessage("Restore default settings...")
-        self.chart_options_param.restoreState(self.systems[self.current_system_index]['chart_options'])
-        self.parm_tree_w.setParameters(self.chart_options_param, showTop=False)
         self.update_fn()
+        self.chart_options_param.restoreState(new_settings)
+        self.parm_tree_w.setParameters(self.chart_options_param, showTop=False)
+        self.systems[self.current_system_index]['chart_options'] = new_settings
 
     def _set_user_config(self):
         p = self.systems[self.current_system_index]['path']
         fn = p.joinpath('setting.json')
         if fn.exists():
-            self.systems[self.current_system_index]['chart_options'] = ChartSettings(fn)
+            user_settings = ChartSettings(fn)
             self.statusbar.showMessage(f"Setting user configuration for this system from {fn.as_posix()}...")
+            self.update_fn()
             self.chart_options_param.restoreState(self.systems[self.current_system_index]['chart_options'])
             self.parm_tree_w.setParameters(self.chart_options_param, showTop=False)
-            self.update_fn()
+            self.systems[self.current_system_index]['chart_options'] = user_settings
         else:
-            return
+            self.statusbar.showMessage('No setting file was found for this system...')
 
     def _save_user_config(self):
         p = self.systems[self.current_system_index]['path']
@@ -370,28 +372,32 @@ class GMX_MMPBSA_ANA(QMainWindow):
         self.chart_options_w = QWidget(self)
         self.chart_options_l = QVBoxLayout(self.chart_options_w)
         self.chart_options_l.setContentsMargins(0, 0, 0, 0)
-        charts_opt_tb = QToolBar()
-        charts_opt_tb.setMaximumHeight(25)
-        charts_opt_tb.setContentsMargins(10, 0, 10, 0)
-        self.chart_options_l.addWidget(charts_opt_tb)
+        charts_opt_tb = QToolButton()
+        charts_opt_tb.setPopupMode(QToolButton.InstantPopup)
+        charts_opt_tb.setIcon(QIcon(config))
+        self.chart_options_l.addWidget(charts_opt_tb, alignment=Qt.AlignmentFlag.AlignRight)
+        charts_opt_menu = QMenu()
+        charts_opt_menu.setToolTipsVisible(True)
+
         self.parm_tree_w = ParameterTree()
         self.chart_options_l.addWidget(self.parm_tree_w)
 
-        self.set_as_default_action = charts_opt_tb.addAction(QIcon(save_default_config), 'Set as default',
+        self.set_as_default_action = charts_opt_menu.addAction(QIcon(save_default_config), 'Set as default',
                                                              self._set_as_default)
         self.set_as_default_action.setToolTip('Save the current setting as the global default settings.')
-        self.default_action = charts_opt_tb.addAction(QIcon(default_config), 'Reset to default', self._reset2default)
+        self.default_action = charts_opt_menu.addAction(QIcon(default_config), 'Reset to default', self._reset2default)
         self.default_action.setToolTip('Restores the default settings set by the developers as the settings '
                                        'for the selected systems.')
-        charts_opt_tb.addSeparator()
-        self.set_user_config_action = charts_opt_tb.addAction(QIcon(save_user_config), 'Save User-config',
+        charts_opt_menu.addSeparator()
+        self.set_user_config_action = charts_opt_menu.addAction(QIcon(save_user_config), 'Save User-config',
                                                               self._set_as_default)
         self.set_user_config_action.setToolTip('Force save the current setting for this system. Before gmx_MMPBSA_ana '
                                                'closes, if there are configuration changes, you can decide if you '
                                                'want to save them.')
 
-        self.use_user_config_action = charts_opt_tb.addAction(QIcon(user_config), 'User-config', self._set_as_default)
+        self.use_user_config_action = charts_opt_menu.addAction(QIcon(user_config), 'User-config', self._set_as_default)
         self.use_user_config_action.setToolTip('Uses the specific settings for this system if it was saved.')
+        charts_opt_tb.setMenu(charts_opt_menu)
 
         optionWidget_c.addTab(self.chart_options_w, 'Charts Options')
 
@@ -546,8 +552,6 @@ class GMX_MMPBSA_ANA(QMainWindow):
             else:
                 self.ie_changed.hide()
 
-
-
     def update_system_selection(self):
         if not self.treeWidget.selectedItems():
             return
@@ -560,27 +564,28 @@ class GMX_MMPBSA_ANA(QMainWindow):
                 parent_item = next_item
             else:
                 break
-        if not self.all_frb.isChecked():
-            # energy
-            current_start, current_end, current_interval = self.systems[parent_item.system_index]['current_frames']
-            self.eframes_start_sb.setValue(current_start)
-            self.eframes_inter_sb.setValue(current_interval)
-            self.eframes_end_sb.setValue(current_end)
-            # nmode
-            nmcurrent_start, nmcurrent_end, nmcurrent_interval = self.systems[parent_item.system_index][
-                'current_nmode_frames']
-            self.nmframes_start_sb.setValue(nmcurrent_start)
-            self.nmframes_inter_sb.setValue(nmcurrent_end)
-            self.nmframes_end_sb.setValue(nmcurrent_interval)
-            # IE
-            self.iesegment_sb.setValue(self.systems[parent_item.system_index]['current_ie_segment'])
-
-            self.chart_options_param.restoreState(self.systems[parent_item.system_index]['chart_options'])
-            self.parm_tree_w.setParameters(self.chart_options_param, showTop=False)
+        # FIXME: check if all systems are selected?
+        # if not self.all_frb.isChecked():
+        # energy
+        current_start, current_end, current_interval = self.systems[parent_item.system_index]['current_frames']
+        self.eframes_start_sb.setValue(current_start)
+        self.eframes_inter_sb.setValue(current_interval)
+        self.eframes_end_sb.setValue(current_end)
+        # nmode
+        nmcurrent_start, nmcurrent_end, nmcurrent_interval = self.systems[parent_item.system_index][
+            'current_nmode_frames']
+        self.nmframes_start_sb.setValue(nmcurrent_start)
+        self.nmframes_inter_sb.setValue(nmcurrent_end)
+        self.nmframes_end_sb.setValue(nmcurrent_interval)
+        # IE
+        self.iesegment_sb.setValue(self.systems[parent_item.system_index]['current_ie_segment'])
+        # self.systems[parent_item.system_index]['chart_options'] = self.chart_options_param.saveState()
+        self.chart_options_param.restoreState(self.systems[parent_item.system_index]['chart_options'])
+        self.parm_tree_w.setParameters(self.chart_options_param, showTop=False)
         self.current_system_index = parent_item.system_index
 
     def update_fn(self):
-
+        self.statusbar.showMessage('Updating...')
         recalc_energy = []
         recalc_nmode = []
         recalc_ie = []
@@ -722,6 +727,8 @@ class GMX_MMPBSA_ANA(QMainWindow):
         self.e_changed.hide()
         self.nm_changed.hide()
         qpd.setValue(maximum)
+        self.statusbar.showMessage('Updating... Done.')
+
 
     def reset_dc(self):
         sub = self.mdi.activeSubWindow()
