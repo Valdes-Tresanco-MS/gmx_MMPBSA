@@ -625,45 +625,62 @@ applied for `AM1-DH+` and `PM6-DH+`.
 must be treated with quantum mechanics in the receptor or ligand to obtain meaningful results. This notation is 
 the same used for `print_res` variable in `&decomp` namelist
 
-    Notation: [ `CHAIN`/(`RESNUM` or `RESNUM-RESNUM`) ]
-    :    Treat with quantum mechanics residues individual or ranges. This notation also supports insertion codes, in 
-    which case you must define them individually
+    !!! example "Selection schemes"
 
-    !!! example
-        `qm_residues="A/1,3-10,15,100"` This treat with quantum mechanic Chain A residues 1, 3 through 10, 15, and 
-        100 from the complex topology file and the corresponding residues in either the ligand and/or receptor 
-        topology files.
+        === "By Distance"
+            Notation: [ `within` `distance` ]
+            :   `within` corresponds to the keyword and `distance` to the maximum distance criterion in Å necessary to 
+                select the residues from both the receptor and the ligand.
+    
+            !!! example
+                `qm_residues="within 6"` Residues within 6 Å between receptor and ligand will be treated with quantum 
+                mechanic.
 
-        Let's suppose that we can have the following sequence: - A:LEU:5 - A:GLY:6:A - A:THR:6:B - A:SER:6:C - 
-        A:ASP:6:D - A:ILE:7
+        === "Amino acid selection"
+            Notation: [ `CHAIN`/(`RESNUM` or `RESNUM-RESNUM`) ]
+            :    Treat with quantum mechanics residues individual or ranges. This notation also supports insertion 
+            codes, in which case you must define them individually
 
-        with the format `CHAIN`:`RESNAME`:`RESNUMBER`:`INSERTION_CODE`
-        
-        === "Right notation"
+            `qm_residues="A/1,3-10,15,100"` This treat with quantum mechanic Chain A residues 1, 3 through 10, 15, and 
+            100 from the complex topology file and the corresponding residues in either the ligand and/or receptor 
+            topology files.
+    
+            Let's suppose that we can have the following sequence: - A:LEU:5 - A:GLY:6:A - A:THR:6:B - A:SER:6:C - 
+            A:ASP:6:D - A:ILE:7
+    
+            with the format `CHAIN`/`RESNUMBER`:`INSERTION_CODE`
             
-            **Ranges selection**
-            :   `qm_residues="A/5-7` Will treat with quantum mechanic all mentioned residues because all residues with 
-            insertion code are contained in the range
-            
-            **Individual selection**
-            :   `qm_residues="A/5,6:B,6:C,7` Will treat with quantum mechanic all mentioned residues except the 
-            residues A:6:A and A:6:D from chain A
-            
-            **Multiple chain selection**
-            :   `qm_residues="A/5-10,100 B/34,56` Will treat with quantum mechanic residues 5 through 10, and 100 from 
-            chain A, and residues 34 and 56 from Chain B.
-
-        === "Wrong notation"
-            `qm_residues="A/5-6B,6D-7` Will end in error.
+            === "Right notation"
+                
+                **Ranges selection**
+                :   `qm_residues="A/5-7` Will treat with quantum mechanic all mentioned residues because all residues with 
+                insertion code are contained in the range
+                
+                **Individual selection**
+                :   `qm_residues="A/5,6:B,6:C,7` Will treat with quantum mechanic all mentioned residues except the 
+                residues A:6:A and A:6:D from chain A
+                
+                **Multiple chain selection**
+                :   `qm_residues="A/5-10,100 B/34,56` Will treat with quantum mechanic residues 5 through 10, and 100 from 
+                chain A, and residues 34 and 56 from Chain B.
+    
+            === "Wrong notation"
+                `qm_residues="A/5-6B,6D-7` Will end in error.
 
 `qmcharge_com` (Default = 0)
 :   The charge of the quantum section for the complex.
 
+    _Deprecated in v1.5.0: Now, `qmcharge_com` is assigned automatically based on the selection_
+
 `qmcharge_lig` (Default = 0)
 :   The charge of the quantum section of the ligand.
 
+    _Deprecated in v1.5.0: Now, `qmcharge_lig` is assigned automatically based on the selection_
+
 `qmcharge_rec` (Default = 0)
 :   The charge of the quantum section for the receptor.
+
+    _Deprecated in v1.5.0: Now, `qmcharge_rec` is assigned automatically based on the selection_
 
 `qmcut` (Default = 9999.0)
 :   The cutoff for the qm/mm charge interactions.
@@ -1470,58 +1487,60 @@ mutated.
 :   Select residues whose information is going to be printed in the output file. The default selection should be 
 sufficient in most cases, however we have added several additional notations
     
-    === "By Distance"
-        Notation: [ `within` `distance` ]
-        :   `within` corresponds to the keyword and `distance` to the maximum distance criterion in Å necessary to 
-            select the residues from both the receptor and the ligand
+    !!! example "Selection schemes"
 
-        !!! example
-            `print_res="within 6"` Will print all residues within 6 Å between receptor and 
-            ligand including both.
-
-    === "Amino acid selection"
-        Notation: [ `CHAIN`/(`RESNUM` or `RESNUM-RESNUM`) ]
-        :   Print residues individual or ranges. This notation also supports insertion codes, in which case you must 
-            define them individually
-
-        !!! example
-            `print_res="A/1,3-10,15,100 B/25"` This will print Chain A residues 1, 3 through 10, 15, and 100 along with 
-            chain B residue 25 from the complex topology file and the corresponding residues in either the ligand and/or 
-            receptor topology files.
-
+        === "By Distance"
+            Notation: [ `within` `distance` ]
+            :   `within` corresponds to the keyword and `distance` to the maximum distance criterion in Å necessary to 
+                select the residues from both the receptor and the ligand
+    
+            !!! example
+                `print_res="within 6"` Will print all residues within 6 Å between receptor and 
+                ligand including both.
+    
+        === "Amino acid selection"
+            Notation: [ `CHAIN`/(`RESNUM` or `RESNUM-RESNUM`) ]
+            :   Print residues individual or ranges. This notation also supports insertion codes, in which case you must 
+                define them individually
+    
+            !!! example
+                `print_res="A/1,3-10,15,100 B/25"` This will print Chain A residues 1, 3 through 10, 15, and 100 along with 
+                chain B residue 25 from the complex topology file and the corresponding residues in either the ligand and/or 
+                receptor topology files.
+    
+                !!! danger
+                    make sure to include at least one residue from both the receptor and ligand in the `print_res` mask of 
+                    the `&decomp` section. Check http://archive.ambermd.org/201308/0075.html
+    
+                Suppost that we can have the following sequence where chain A is the receptor and B is the ligand: 
+                A:LEU:5, A:GLY:6:A, A:THR:6:B, A:SER:6:C A:ASP:6D, A:ILE:7 , B:25
+                
+                === "Supported notation"
+                    
+                    **Ranges selection**
+                    :   `print_res="A/5-7 B/25` Will print all mentioned residues because all residues with insertion code are 
+                        contained in the range
+                    
+                    **Individual selection**
+                    :   `print_res="A/5,6:B,6:C,7 B/25` Will print all mentioned residues except the residues A:6:A and A:6:D
+    
+                === "Wrong notation"
+                    `print_res="A/5-6B,6D-7` Will end in error.
+    
+        === "All"
+    
+            Notation: `all`
+            :   will print all residues. This option is often not recommended since most residues contribution is zero and 
+                it is just going to be a waste of time and computational resources.
+    
             !!! danger
-                make sure to include at least one residue from both the receptor and ligand in the `print_res` mask of 
-                the `&decomp` section. Check http://archive.ambermd.org/201308/0075.html
-
-            Suppost that we can have the following sequence where chain A is the receptor and B is the ligand: 
-            A:LEU:5, A:GLY:6:A, A:THR:6:B, A:SER:6:C A:ASP:6D, A:ILE:7 , B:25
-            
-            === "Supported notation"
-                
-                **Ranges selection**
-                :   `print_res="A/5-7 B/25` Will print all mentioned residues because all residues with insertion code are 
-                    contained in the range
-                
-                **Individual selection**
-                :   `print_res="A/5,6:B,6:C,7 B/25` Will print all mentioned residues except the residues A:6:A and A:6:D
-
-            === "Wrong notation"
-                `print_res="A/5-6B,6D-7` Will end in error.
-
-    === "All"
-
-        Notation: `all`
-        :   will print all residues. This option is often not recommended since most residues contribution is zero and 
-            it is just going to be a waste of time and computational resources.
-
-        !!! danger
-            Using `idecomp=3 or 4` (pairwise) with a very large number of printed residues and a large number of frames 
-            can quickly create very, very large temporary mdout files. Large print selections also demand a large amount 
-            of memory to parse the mdout files and write decomposition output file (~500 MB for just 250 residues, since 
-            that’s 62500 pairs!) It is not unusual for the output file to take a significant amount of time to print if 
-            you have a lot of data. This is most applicable to pairwise decomp, since the amount of data scales as  
-            O(N^2^).
- 
+                Using `idecomp=3 or 4` (pairwise) with a very large number of printed residues and a large number of frames 
+                can quickly create very, very large temporary mdout files. Large print selections also demand a large amount 
+                of memory to parse the mdout files and write decomposition output file (~500 MB for just 250 residues, since 
+                that’s 62500 pairs!) It is not unusual for the output file to take a significant amount of time to print if 
+                you have a lot of data. This is most applicable to pairwise decomp, since the amount of data scales as  
+                O(N^2^).
+     
     !!! important
         We recommend using the reference structure (-cr) to ensure the perfect match between the selected residue in 
         the defined structure or topology 
