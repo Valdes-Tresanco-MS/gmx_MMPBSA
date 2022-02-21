@@ -763,9 +763,11 @@ class MMPBSA_App(object):
         if self.INPUT['solvcut'] is None:
             self.INPUT['solvcut'] = self.INPUT['buffer']
         self.INPUT['rismrun_std'] = (self.INPUT['rismrun'] and
-                                     self.INPUT['thermo'] in ['std', 'both'])
+                                     self.INPUT['thermo'] in ['std', 'all'])
         self.INPUT['rismrun_gf'] = (self.INPUT['rismrun'] and
-                                    self.INPUT['thermo'] in ['gf', 'both'])
+                                    self.INPUT['thermo'] in ['gf', 'all'])
+        self.INPUT['rismrun_pc+'] = (self.INPUT['rismrun'] and
+                                     self.INPUT['thermo'] in ['pc+', 'all'])
 
         # Default temperature
         # self.INPUT['temp'] = 298.15
@@ -862,8 +864,16 @@ class MMPBSA_App(object):
                 GMXMMPBSA_ERROR('You must specify NG if BUFFER < 0!', InputError)
             if INPUT['polardecomp'] not in [0, 1]:
                 GMXMMPBSA_ERROR('POLARDECOMP must be either 0 or 1!', InputError)
-            if INPUT['thermo'] not in ['std', 'gf', 'both']:
-                GMXMMPBSA_ERROR('THERMO must be "std", "gf", or "both"!', InputError)
+            if INPUT['entropicDecomp'] not in [0, 1]:
+                GMXMMPBSA_ERROR('ENTROPICDECOMP must be either 0 or 1!', InputError)
+            if INPUT['entropicDecomp'] not in [0, 1]:
+                GMXMMPBSA_ERROR('ENTROPICDECOMP must be either 0 or 1!', InputError)
+            for i in zip(['treeDCF', 'treeTCF', 'treeCoulomb'], [INPUT['treeDCF'], INPUT['treeTCF'],
+                                                                 INPUT['treeCoulomb']]):
+                if i[1] not in [0, 1]:
+                    GMXMMPBSA_ERROR(f'{i[0]} must be either 0 or 1!', InputError)
+            if INPUT['thermo'] not in ['std', 'gf', 'pc+', 'all']:
+                GMXMMPBSA_ERROR('THERMO must be "std", "gf", "pc+" or "all"!', InputError)
         if (
             not INPUT['gbrun']
             and not INPUT['pbrun']

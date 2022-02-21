@@ -38,7 +38,7 @@ Input and Output Files:
 
   -i FILE               MM/PBSA input file. (default: None)
   -xvvfile XVVFILE      XVV file for 3D-RISM.
-                         (default: /home/mario/programs/amber20/dat/mmpbsa/spc.xvv)
+                         (default: $AMBERHOME/dat/mmpbsa/spc.xvv)
   -o FILE               Output file with MM/PBSA statistics.
                          (default: FINAL_RESULTS_MMPBSA.dat)
   -do FILE              Output file for decomposition statistics summary.
