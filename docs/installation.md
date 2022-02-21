@@ -5,167 +5,167 @@ title: Installation
 # Installing gmx_MMPBSA
 
 ## Requirements
-`gmx_MMPBSA` requires **[Gromacs](https://manual.gromacs.org/) (series `4.x.x` or `5.x.x` or `20xx.x`)** and 
+`gmx_MMPBSA` requires **[GROMACS](https://manual.gromacs.org/) (series `4.x.x` or `5.x.x` or `20xx.x`)** and 
 **[AmberTools20 or 21](https://ambermd.org/AmberTools.php)** to be installed in your machine with **Python3**.
 `gmx_MMPBSA` has been tested with GROMACS `4.6.7`, `5.1.2`, `2018.3`, `2020.4` and `2021.3`, although it should run 
 smoothly with any GROMACS present in the `PATH` and that is compatible with the files you are using.
 
-## Ways to install **gmx_MMPBSA**
-Currently, **gmx_MMPBSA** can be installed using two ways:
+## Ways to install gmx_MMPBSA
+Currently, gmx_MMPBSA can be installed using two ways:
 
 `conda environment`
-:   The conda environment provides a clean and efficient way of installing, which allows **gmx_MMPBSA** to be isolated, 
-reducing the possibility of incompatibility with other packages. Installation time is also less since it does not 
-require the compilation of AmberTools or Gromacs.
+:   The conda environment provides a clean and efficient way of installing gmx_MMPBSA. It also allows to have 
+different versions of gmx_MMPBSA in isolated environments, thus reducing the possibility of incompatibility with 
+other packages. Installation time is also less since it does not require the compilation of AmberTools or GROMACS. 
+(**Recommended, especially if you want to keep older versions of gmx_MMPBSA**)
 
 `AmberTools compilation`
 :   In this way, we assume that you have AmberTools compiled on your machine and that you want to do an installation 
-without worrying about enabling or disabling conda environments. It also involves user compilation of Gromacs, which 
-takes considerable installation time. This way also requires installed packages to be compatible and getting more 
-frequent installation errors. 
+without worrying about enabling or disabling conda environments. It also involves user compilation of GROMACS, which 
+takes considerable installation time. This way also requires installed packages to be compatible and installation 
+errors are more frequent.
 
-=== "conda environment"
-    #### Instructions
-    === "`pip`"    
-        Rolling release and development version        
-
-        ``` bash 
-        conda update conda
-        conda create -n gmxMMPBSA python=3.9 -y -q                                      # (1)
-        conda activate gmxMMPBSA                                                        # (2)
-        conda install -c conda-forge mpi4py ambertools compilers -y -q                  # (3)
-        conda install -c bioconda gromacs -y -q                                         # (4)
-        # Install PyQt5 if needed
-        python -m pip install pyqt5                                                     # (5)
-       
-        ```
-        
-        1. Create `gmxMMPBSA` environment
-        2. Activate `gmxMMPBSA` environment
-        3. Install dependencies
-        4. Install Gromacs. It is optional
-        5. Install PyQt5 only if you will use the **gmx_MMPBSA_ana**
-
-        
+!!! info "Installation"
+    === "conda environment"
+        === "`pip`"    
+            Rolling release and development version        
+    
+            ``` bash 
+            conda update conda
+            conda create -n gmxMMPBSA python=3.9 -y -q                                      # (1)
+            conda activate gmxMMPBSA                                                        # (2)
+            conda install -c conda-forge mpi4py ambertools compilers -y -q                  # (3)
+            conda install -c bioconda gromacs -y -q                                         # (4)
+            # Install PyQt5 if needed
+            python -m pip install pyqt5                                                     # (5)
+           
+            ```
+            
+            1. Create `gmxMMPBSA` environment
+            2. Activate `gmxMMPBSA` environment
+            3. Install dependencies
+            4. Install GROMACS. (Optional)
+            5. Install PyQt5 only if you will use gmx_MMPBSA_ana
+    
+            
+            === "Rolling/stable release"
+                **INSTALLATION**
+                ```bash
+                python -m pip install gmx_MMPBSA
+                ```       
+                **UPDATE**
+                ```bash
+                python -m pip install gmx_MMPBSA -U
+                ```       
+                
+                !!! info 
+                    Install/update gmx_MMPBSA from PyPi. PyPi has the latest version of *gmx_MMPBSA* including stable 
+                    and beta versions.
+            
+            === "development version" 
+                **INSTALLATION**
+                ```bash
+                python -m pip install git+https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA
+                ```
+                **UPDATE**     
+                ```bash
+                python -m pip install git+https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA -U
+                ```
+                !!! warning
+                    Install gmx_MMPBSA from the master branch of GitHub repository. This version is only recommended 
+                    to test a new version or to try temporary solutions to reported bugs.
+    
+        === "`conda`"
+            Stable version only
+            
+            ``` bash 
+            conda update conda
+            conda create -n gmxMMPBSA python=3.9 -y -q                                      # (1)        
+            conda activate gmxMMPBSA                                                        # (2)                        
+            conda install -c bioconda gromacs -y -q                                         # (3)        
+            # Install PyQt5 if needed
+            python -m pip install pyqt5                                                     # (4)                        
+            ```
+            
+            1. Create `gmxMMPBSA` environment
+            2. Activate `gmxMMPBSA` environment
+            3. Install GROMACS. It is optional
+            4. Install PyQt5 only if you will use the **gmx_MMPBSA_ana**
+    
+            **INSTALLATION**
+            ```bash        
+            conda install -c conda-forge gmx_mmpbsa                                         # (1)    
+            ```
+            
+            1. Install gmx_MMPBSA from conda-forge. This package will be install all dependencies automatically
+            
+            **UPDATE**
+            ```bash        
+            conda update gmx_mmpbsa    
+            ```
+    
+        [Miniconda]: https://docs.conda.io/en/latest/miniconda.html
+    
+    === "AmberTools compilation"
+        [Follow the oficial AmberTools installation according to your OS](https://ambermd.org/Installation.php)
+        !!! note
+            We asume that AmberTools and their shell environment are correctly configured
+    
         === "Rolling/stable release"
             **INSTALLATION**
             ```bash
-            python -m pip install gmx_MMPBSA
+            amber.python -m pip install gmx_MMPBSA
             ```       
+    
             **UPDATE**
             ```bash
-            python -m pip install gmx_MMPBSA -U
-            ```       
-            
+            amber.python -m pip install gmx_MMPBSA -U
+            ```
+    
             !!! info 
-                Install/update **gmx_MMPBSA** from PyPi. PyPi has the latest version of *gmx_MMPBSA* including stable 
-                and beta versions.
-        
+                Install gmx_MMPBSA from PyPi. PyPi has the latest version of *gmx_MMPBSA* including stable and beta
+                versions.
+            
         === "development version" 
             **INSTALLATION**
             ```bash
-            python -m pip install git+https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA
+            amber.python -m pip install git+https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA
             ```
-            **UPDATE**     
+            **UPDATE**
             ```bash
-            python -m pip install git+https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA -U
+            amber.python -m pip install git+https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA -U
             ```
             !!! warning
-                Install **gmx_MMPBSA** from the master branch of GitHub repository. This version is only recommended 
+                Install/update gmx_MMPBSA from the master branch of GitHub repository. This version is only recommended 
                 to test a new version or to try temporary solutions to reported bugs.
-
-    === "`conda`"
-        Stable version only
-        
-        ``` bash 
-        conda update conda
-        conda create -n gmxMMPBSA python=3.9 -y -q                                      # (1)        
-        conda activate gmxMMPBSA                                                        # (2)                        
-        conda install -c bioconda gromacs -y -q                                         # (3)        
-        # Install PyQt5 if needed
-        python -m pip install pyqt5                                                     # (4)                        
-        ```
-        
-        1. Create `gmxMMPBSA` environment
-        2. Activate `gmxMMPBSA` environment
-        3. Install Gromacs. It is optional
-        4. Install PyQt5 only if you will use the **gmx_MMPBSA_ana**
-
-        **INSTALLATION**
-        ```bash        
-        conda install -c conda-forge gmx_mmpbsa                                         # (1)    
-        ```
-        
-        1. Install **gmx_MMPBSA** from conda-forge. This package will be install all dependencies automatically
-        
-        **UPDATE**
-        ```bash        
-        conda update gmx_mmpbsa    
-        ```
-
-    [Miniconda]: https://docs.conda.io/en/latest/miniconda.html
-
-=== "AmberTools compilation"
-    #### Instructions
-    [Follow the oficial AmberTools installation according to your OS](https://ambermd.org/Installation.php)
-    !!! note
-        We asume that AmberTools and their shell environment are correctly configured
-
-    === "Rolling/stable release"
-        **INSTALLATION**
+    
+        !!! danger
+            If you get an error related to installing `mpi4py`, you may want to install this package manually from 
+            `conda-forge` as follows:
+    
+            ```
+            amber.conda install -c conda-forge mpi4py
+            ```
+            
+            If you get an error related to `pip`, you may want to install this package manually as follows:
+            
+            ```
+            amber.conda install pip
+            ```
+            
+    
+    === "Miniconda Installation"
+    
+        [Miniconda] installation
         ```bash
-        amber.python -m pip install gmx_MMPBSA
-        ```       
-
-        **UPDATE**
-        ```bash
-        amber.python -m pip install gmx_MMPBSA -U
+        curl -O https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+        chmod +x Miniconda3-latest-Linux-x86_64.sh
+        ./Miniconda3-latest-Linux-x86_64.sh
         ```
-
-        !!! info 
-            Install **gmx_MMPBSA** from PyPi. PyPi has the latest version of *gmx_MMPBSA* including stable and beta
-            versions.
-        
-    === "development version" 
-        **INSTALLATION**
-        ```bash
-        amber.python -m pip install git+https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA
-        ```
-        **UPDATE**
-        ```bash
-        amber.python -m pip install git+https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA -U
-        ```
-        !!! warning
-            Install/update **gmx_MMPBSA** from the master branch of GitHub repository. This version is only recommended 
-            to test a new version or to try temporary solutions to reported bugs.
-
-    !!! danger
-        If you get an error related to installing `mpi4py`, you may want to install this package manually from 
-        `conda-forge` as follows:
-
-        ```
-        amber.conda install -c conda-forge mpi4py
-        ```
-        
-        If you get an error related to `pip`, you may want to install this package manually as follows:
-        
-        ```
-        amber.conda install pip
-        ```
-        
-
-=== "Miniconda Installation"
-
-    [Miniconda] installation
-    ```bash
-    curl -O https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
-    chmod +x Miniconda3-latest-Linux-x86_64.sh
-    ./Miniconda3-latest-Linux-x86_64.sh
-    ```
 
 ### Extra Dependencies
-**gmx_MMPBSA** uses some dependencies for other functions independent of calculations or in some cases they may be 
-necessary due to the nature of your OS
+gmx_MMPBSA uses some dependencies for other functions independent of calculations or in some cases they may be 
+necessary due to the nature of your OS.
 
 `ParmEd`
 :  The current version of ParmEd implemented in AmberTools has some limitations that have been resolved in the GitHub 
@@ -190,7 +190,7 @@ repository by its author Jason Swails and others with our help.
 `pip`
 :   In some cases, the miniconda environment created in the AmberTools compilation does not have the `pip` module, so
 any installation that depends on this package will fail. Required only if you did not install 
-**gmx_MMPBSA** via `conda`
+gmx_MMPBSA via `conda`
     ```
     amber.conda install pip    
     ```
@@ -207,11 +207,11 @@ development version.
     ```
 
 !!! danger
-    Please, only install some of these dependencies if you really needed
+    Please, only install these dependencies if you really need them
 
 `mpi`
 :  In some cases it is necessary to install the MPI dependencies. Required only if you did not install 
-**gmx_MMPBSA** via `conda`
+gmx_MMPBSA via `conda`
    ```
    sudo apt install openmpi-bin libopenmpi-dev openssh-client
    ```
