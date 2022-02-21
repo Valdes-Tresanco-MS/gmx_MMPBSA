@@ -121,7 +121,7 @@ class CheckMakeTop:
             tops = self.makeToptleap()
 
         if self.INPUT['decomprun']:
-            decomp_res = self.get_selected_residues(self.INPUT['print_res'], True)
+            decomp_res = self.get_selected_residues(self.INPUT['print_res'])
             if 'within' in self.INPUT['print_res']:
                 logging.info(f"Selecting residues by distance ({self.INPUT['print_res'].split()[1]} Å) between "
                              f"receptor and ligand for decomposition analysis...")
@@ -151,7 +151,7 @@ class CheckMakeTop:
 
             self.INPUT['print_res'] = ','.join(list2range(decomp_res)['string'])
         if self.INPUT['qm_residues']:
-            qm_residues, (rec_charge, lig_charge) = self.get_selected_residues(self.INPUT['qm_residues'])
+            qm_residues, (rec_charge, lig_charge) = self.get_selected_residues(self.INPUT['qm_residues'], True)
             if self.INPUT['qmcharge_rec'] != rec_charge:
                 logging.warning(f'The defined qmcharge_rec is wrong. Reassigning to  qmcharge_rec = {rec_charge}')
                 self.INPUT['qmcharge_rec'] = rec_charge
