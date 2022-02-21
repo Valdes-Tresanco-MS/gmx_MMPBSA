@@ -108,7 +108,7 @@ In this section, we will go in detail about each file and what they are used for
 - Generates a new index and registers the groups defined by the user
 - Generates the pdb of the complex, receptor, and ligand
 - {++Topologies are cleaned (remove water and ions)++}
-- The structures or {++parameters++} for the receptor and the ligand are generated if it is a ST approximation.
+- The structures or {++parameters++} for the receptor and the ligand are generated if it is an ST approximation.
 - If Alanine scanning: the mutant of the complex, and the mutant receptor or ligand are generated
 - If decomposition: interaction residues are extracted
 - The complex is mapped. Registers the continuity of the receptor (example: Metalloprotein structure files are 

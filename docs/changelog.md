@@ -195,7 +195,7 @@ This release focuses almost entirely on `gmx_MMPBSA_ana` with minor issues fixed
     - Added indicators for the selected interval and average value in IE chart
     - Added crosshair cursor for better analysis on charts
 - Multiprocessing application for testing (`gmx_MMPBSA_test`) 
-- Embed Youtube videos for `gmx_MMPBSA_ana`
+- Embed YouTube videos for `gmx_MMPBSA_ana`
 
 **Fixes**
 
@@ -279,9 +279,9 @@ This release focuses almost entirely on `gmx_MMPBSA_ana` with minor issues fixed
 
 **Additions**
 
-* Documentation at Github pages
-* Charmm force field support
-* Amber topology generation from GROMACS topology. Work for Charmm and Amber force fields
+* Documentation at GitHub pages
+* CHARMM force field support
+* Amber topology generation from GROMACS topology. Work for CHARMM and Amber force fields
   * New flag for topologies (`-cp`, `-rp` and `-lp`) added
 * Now `gmx_MMPBSA` supports discontinuous receptor and ligand.
 * Glycine scanning
@@ -301,7 +301,7 @@ This release focuses almost entirely on `gmx_MMPBSA_ana` with minor issues fixed
 * Documentation theme. Now we use Material
 * Alanine scanning variable. Now `mutant` correspond to mutant amino acid (ALA and GLY)
 * The `gmx_MMPBSA_gui` was changed by `gmx_MMPBSA_ana` 
-* Improvement on the topologies construction process
+* Improvement on the topologies' construction process
 * Order in which the trajectories are cleaned. Now, the topology is built and finally, the trajectories are cleaned
 
 ## [gmx_MMPBSA v1.2.0](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/releases/tag/v1.2.0)

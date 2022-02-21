@@ -439,7 +439,7 @@ Interaction Entropy, _e.g._: `ie_segment = 25` means that the last quartile of t
 
 `assign_chainID` (Default = 0) 
 :   Defines the chains ID assignment mode. _It is ignored when defining a reference structure
-(recommended)_. If `assign_chainID = 1`, `gmx_MMPBSA` check if the structure has no chains ID and it is assigned 
+(recommended)_. If `assign_chainID = 1`, `gmx_MMPBSA` check if the structure has no chains ID, and it is assigned 
 according to the structure[^1]. If `assign_chainID = 2`, `gmx_MMPBSA` assign the chains ID, exist or not, 
 according to the structure[^1] (can generate inconsistencies). If a `*.gro` file was used for complex structure
 (`-cs` flag) and not reference structure was provided, `gmx_MMPBSA` assume `assign_chainID = 1`. 
@@ -450,7 +450,7 @@ according to the structure[^1] (can generate inconsistencies). If a `*.gro` file
 
   [^1]: _The chain ID is assigned according to two criteria: **terminal amino acids** and **residue numbering**. If
         both criteria or residue numbering changes are present, we assign a new chain ID. If there are terminal 
-        amino acids but the numbering of the residue continues, we do not change the ID of the chain._
+        amino acids, but the numbering of the residue continues, we do not change the ID of the chain._
 
 `exp_ki` (Default = 0.0)
 :   Specify the experimental Ki (in nM) for correlations analysis. If not defined or exp_ki = 0 then this system 
@@ -1058,7 +1058,7 @@ default to 0.557 Å in the _σ_ decomposition scheme as optimized in ([ref.][227
 TIP3P solvent and the PME treatment. Recommended values for other decomposition schemes can
 be found in Table 4 of ([ref.][227]). If `use_sav = 0` (see below), `sprob` can be used to compute SASA
 for the cavity term as well. Unfortunately, the recommended value is different from that used in the
-dispersion term calculation as documented in ([ref.][227]). Thus two separate calculations are
+dispersion term calculation as documented in ([ref.][227]). Thus, two separate calculations are
 needed when `use_sav = 0`, one for the dispersion term and one for the cavity term. Therefore,
 please carefully read ([ref.][227]) before proceeding with the option of `use_sav = 0`. Note that
 `sprob` was used for ALL three terms of solvation free energies, _i.e._, electrostatic, attractive, and
@@ -1093,13 +1093,13 @@ biomacromolecules.
     _New in v1.5.0_
 
 `cavity_surften` (Default = 0.0378)
-:   The regression coefficient for the linear relation between the total non-polar solvation free energy (`inp` = 1) or 
+:   The regression coefficient for the linear relation between the total non-polar solvation free energy (`inp` = 1), or 
 the cavity free energy (`inp = 2`) and SASA/volume enclosed by SASA. The default value is for `inp = 2` and set to the 
 best of three tested schemes as reported in ([ref.][227]), _i.e._ `decompopt = 2`, `use_rmin = 1`, and `use_sav = 1`. See 
 recommended values in Tables 1-3 for other schemes.
 
 `cavity_offset` (Default = -0.5692)
-:   The regression offset for the linear relation between the total non-polar solvation free energy (`inp`= 1) or 
+:   The regression offset for the linear relation between the total non-polar solvation free energy (`inp`= 1), or 
 the cavity free energy (`inp = 2`) and SASA/volume enclosed by SASA. The default value is for `inp` = 2 and set to 
 the best of three tested schemes as reported in ([ref.][227]), _i.e._ `decompopt = 2`, `use_rmin = 1`, and `use_sav = 1`. 
 See recommended values in Tables 1-3 for other schemes.

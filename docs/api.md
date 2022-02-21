@@ -138,10 +138,10 @@ Table 6. Same as Table 5 for the Interaction Entropy data.
 
 ### Defined operators
 
-In-place addition: It extends all of the arrays that are common to both `mmpbsa_data` instances. This is useful if, for
+In-place addition: It extends all the arrays that are common to both `mmpbsa_data` instances. This is useful if, for
 instance, you run two `gmx_MMPBSA` calculations, and you use -prefix <new_prefix> for the second simulation. Assuming
-that <new_prefix> is `_GMXMMPBSA2_` for the second `gmx_MMPBSA` calculation, the following pseudo-code will generate an
-mmpbsa_data instance with all of the data in concatenated arrays. The pseudo-code assumes GMXMMPBSA.API was imported as
+that <new_prefix> is `_GMXMMPBSA2_` for the second `gmx_MMPBSA` calculation, the following pseudo-code will generate a
+mmpbsa_data instance with all the data in concatenated arrays. The pseudo-code assumes GMXMMPBSA.API was imported as
 demonstrated below.
 
 ```python

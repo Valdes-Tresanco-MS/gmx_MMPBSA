@@ -99,10 +99,10 @@ or,
 In the above equations, ∆𝐸<sub>𝑀𝑀</sub> corresponds to the molecular mechanical energy changes in the
 gas phase. ∆𝐸<sub>𝑀𝑀</sub> includes ∆𝐸<sub>𝑏𝑜𝑛𝑑𝑒𝑑</sub>, also known as internal energy, and 
 ∆𝐸<sub>𝑛𝑜𝑛𝑏𝑜𝑛𝑑𝑒𝑑</sub>, corresponding to the van der Waals and electrostatic contributions. The solvation energy is 
-determined differently, depending on the method employed. In the 3D-RISM model, both components -polar and non polar- 
+determined differently, depending on the method employed. In the 3D-RISM model, both components -polar and non-polar- 
 of the solvation energy are calculated. However, the PB and GB models estimate only the polar component of the 
-solvation. The non polar component is usually assumed to be proportional to the molecule's total solvent accessible 
-surface area (SASA), with a proportionality constant derived from experimental solvation energies of small non polar 
+solvation. The non-polar component is usually assumed to be proportional to the molecule's total solvent accessible 
+surface area (SASA), with a proportionality constant derived from experimental solvation energies of small non-polar 
 molecules (eq. 7). Alternatively, a modern approach that separates non-polar solvation free energies into cavity and 
 dispersion terms can be used. In this approach, SASA is used to correlate the cavity term only, while a 
 surface-integration method is employed to compute the dispersion term (eq. 8).

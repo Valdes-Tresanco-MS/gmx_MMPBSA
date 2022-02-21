@@ -7,8 +7,8 @@ title: gmx_MMPBSA_ana
 
 ## Overview
 `gmx_MMPBSA_ana` is a simple but powerful analysis tool. It is mainly focused on providing a fast, easy and efficient 
-access to different graphics according to the analysis (**Figure 1**). The tool has been optimized to work with a 
-large number of charts, even more than you can review ([Check this section to learn about the potential of 
+access to different graphics according to the analysis (**Figure 1**). The tool has been optimized to work with many 
+charts, even more than you can review ([Check this section to learn about the potential of 
 `gmx_MMPBSA_ana`](#gmx_mmpbsa_ana-under-pressure)).
 
 <figure markdown="1">
@@ -139,20 +139,20 @@ contribution
 ## `gmx_MMPBSA_ana` under pressure
 
 !!! warning
-    Around 1.8 million graphs were loaded in gmx_MMPBSA_ana and it is showed only for educational purposes.
+    Around 1.8 million graphs were loaded in gmx_MMPBSA_ana, and it is showed only for educational purposes.
 
 <div class="embed-container">
     <iframe src="https://www.youtube.com/embed/xRIi3LtB7wU" frameborder="0" allowfullscreen></iframe>
 </div>
 
-In this experiment, we replicated our examples folder 9 times (differs from the one available on Github) giving us a 
+In this experiment, we replicated our examples folder 9 times (differs from the one available on GitHub) giving us a 
 total of 99 systems. As you can see in the video, gmx_MMPBSA_ana manages to deal well with the incredible amount of ~1.6 
 million items. Every item contains between 1 and 3 graphics, for a total of ~1.8 million graphics loaded. This feat is 
 accomplished in ~11 minutes. Most of this time is consumed processing the data associated with each graph. At the 
 moment, gmx_MMPBSA_ana processes this data serially, since parallelizing this process would be a bit difficult. In 
 any case, for the usual processes, this will take a maximum of 25-30 seconds, depending on your hardware. Each item has 
 associated the data of each of its graphs, which is stored in memory. In this experiment, RAM consumption reached up 
-to 14GB.
+to 14 GB.
 
 !!! danger
     Be aware that if you run out of available RAM, your OS could crash, freeze, or slow down.

@@ -6,7 +6,7 @@ title: Support
 # Support
 
 ## Report an issue and Getting help
-You can review some of the answers to the questions that we consider most common here. If you find a bug or have any 
+You can review some answers to the questions that we consider most common here. If you find a bug or have any 
 question, please consider opening an [issue][2] or post in our [Google group][3]
 
 [<img src="../assets/images/jetbrains-variant-4.png" height="100" width="178" align="right" />][4]
