@@ -311,28 +311,30 @@ class GMX_MMPBSA_ANA(QMainWindow):
         self.statusbar.showMessage(f"Setting this setting as default in "
                                    f"{self.systems[self.current_system_index]['chart_options'].filename.as_posix()}...")
         self.systems[self.current_system_index]['chart_options'].set_as_default()
+        self.update_fn()
         self.chart_options_param.restoreState(self.systems[self.current_system_index]['chart_options'])
         self.parm_tree_w.setParameters(self.chart_options_param, showTop=False)
-        self.update_fn()
 
     def _reset2default(self):
-        self.systems[self.current_system_index]['chart_options'] = ChartSettings()
+        new_settings = ChartSettings()
         self.statusbar.showMessage("Restore default settings...")
-        self.chart_options_param.restoreState(self.systems[self.current_system_index]['chart_options'])
-        self.parm_tree_w.setParameters(self.chart_options_param, showTop=False)
         self.update_fn()
+        self.chart_options_param.restoreState(new_settings)
+        self.parm_tree_w.setParameters(self.chart_options_param, showTop=False)
+        self.systems[self.current_system_index]['chart_options'] = new_settings
 
     def _set_user_config(self):
         p = self.systems[self.current_system_index]['path']
         fn = p.joinpath('setting.json')
         if fn.exists():
-            self.systems[self.current_system_index]['chart_options'] = ChartSettings(fn)
+            user_settings = ChartSettings(fn)
             self.statusbar.showMessage(f"Setting user configuration for this system from {fn.as_posix()}...")
+            self.update_fn()
             self.chart_options_param.restoreState(self.systems[self.current_system_index]['chart_options'])
             self.parm_tree_w.setParameters(self.chart_options_param, showTop=False)
-            self.update_fn()
+            self.systems[self.current_system_index]['chart_options'] = user_settings
         else:
-            return
+            self.statusbar.showMessage('No setting file was found for this system...')
 
     def _save_user_config(self):
         p = self.systems[self.current_system_index]['path']
