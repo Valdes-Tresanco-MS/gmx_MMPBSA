@@ -121,7 +121,7 @@ class CheckMakeTop:
             tops = self.makeToptleap()
 
         if self.INPUT['decomprun']:
-            decomp_res = self.get_selected_residues(self.INPUT['print_res'])
+            decomp_res = self.get_selected_residues(self.INPUT['print_res'], True)
             if 'within' in self.INPUT['print_res']:
                 logging.info(f"Selecting residues by distance ({self.INPUT['print_res'].split()[1]} Å) between "
                              f"receptor and ligand for decomposition analysis...")
