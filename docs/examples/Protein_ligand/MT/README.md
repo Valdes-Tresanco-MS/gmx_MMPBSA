@@ -8,7 +8,7 @@ title: Protein-ligand (MT)
 !!! info
     This example can be found in the [docs/examples/Protein_ligand/MT][6] directory in the repository folder. If you didn't 
     use gmx_MMPBSA_test before, use [downgit](https://downgit.github.io/#/home) to download the specific folder from 
-    gmx_MMPBSA Github repository.
+    gmx_MMPBSA GitHub repository.
 
 ## Requirements
 
@@ -78,14 +78,14 @@ _See a detailed list of all the options in `gmx_MMPBSA` input file [here][2] as 
 
 ## Considerations
 In this case, a multiple trajectory (MT) approximation is followed, which means the receptor and ligand structures and 
-trajectories are needed. For the complex, a MD Structure+mass(db) file (`com.tpr`), an index file (`index.ndx`),
+trajectories are needed. For the complex, an MD Structure+mass(db) file (`com.tpr`), an index file (`index.ndx`),
 a trajectory file (`com_traj.xtc`), and both the receptor and ligand group numbers in the index file (`1 13`) are needed.
-For the receptor, a MD Structure+mass(db) file (`rec.pdb`), an index file (`rec_index.ndx`),
+For the receptor, an MD Structure+mass(db) file (`rec.pdb`), an index file (`rec_index.ndx`),
 a trajectory file (`rec_traj.pdb`), and the receptor group number in the rec_index file (`1`) are needed. For the ligand,
-a ligand .mol2 file is needed for generating the ligand topology. Besides, a MD Structure+mass(db) file (`lig.pdb`), an 
+a ligand .mol2 file is needed for generating the ligand topology. Besides, an MD Structure+mass(db) file (`lig.pdb`), an 
 index file (`lig_index.ndx`), a trajectory file (`lig_traj.pdb`), and ligand group number in the lig_index file (`2`) are 
 needed. The `mmpbsa.in` input file will contain all the parameters needed for the MM/PB(GB)SA calculation. In this case,
-10 frames are going to be used when performing the the MM/PB(GB)SA 
+10 frames are going to be used when performing the MM/PB(GB)SA 
 calculation with the igb5 (GB-OBC2) model and a salt concentration = 0.15M.
 
 !!! note

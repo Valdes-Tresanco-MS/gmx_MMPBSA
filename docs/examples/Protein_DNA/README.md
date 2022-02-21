@@ -8,7 +8,7 @@ title: Protein-DNA
 !!! info
     This example can be found in the [docs/examples/Protein_DNA][6] directory in the repository folder. If you didn't 
     use gmx_MMPBSA_test before, use [downgit](https://downgit.github.io/#/home) to download the specific folder from 
-    gmx_MMPBSA Github repository.
+    gmx_MMPBSA GitHub repository.
 
 ## Requirements
 
@@ -69,13 +69,13 @@ _See a detailed list of all the options in `gmx_MMPBSA` input file [here][2] as 
   
 ## Considerations
 In this case, a single trajectory (ST) approximation is followed, which means the receptor and ligand (in this case, 
-the ligand is DNA) amber format topologies and trajectories will be obtained from that of the complex. To do so, a 
+the ligand is DNA) amber format topologies and trajectories will be obtained from that of the complex. To do so, an 
 MD Structure+mass(db) file (`com.tpr`), an index file (`index.ndx`), a trajectory file (`com_traj.xtc`), and both 
 the receptor and ligand group numbers in the index file (`1 12`) are needed. The `mmpbsa.in` input file will contain
 all  the parameters needed for the MM/PB(GB)SA calculation. In this case, 10 frames 
-are going to be used when performing the the MM/PB(GB)SA 
+are going to be used when performing the MM/PB(GB)SA 
 calculation with the igb8 (GB-Neck2) model and a salt concentration = 0.15M. Of note, mbondi3 radii (`PBRadii=4`) 
-will be used as recommended for GB-Neck2 solvation model. Also a high dielectric constant `intdiel=10` will be used 
+will be used as recommended for GB-Neck2 solvation model. Also, a high dielectric constant `intdiel=10` will be used 
 because of the high number of charged residues at the interface.
 !!! note
     Once the calculation is done, you can analyze the results in `gmx_MMPBSA_ana` (if you didn't define `-nogui`). 

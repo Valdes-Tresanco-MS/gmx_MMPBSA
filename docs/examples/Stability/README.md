@@ -8,7 +8,7 @@ title: Stability
 !!! info
     This example can be found in the [docs/examples/Stability/][6] directory in the repository folder. If you didn't 
     use gmx_MMPBSA_test before, use [downgit](https://downgit.github.io/#/home) to download the specific folder from 
-    gmx_MMPBSA Github repository.
+    gmx_MMPBSA GitHub repository.
 
 ## Requirements
 
@@ -72,10 +72,10 @@ _See a detailed list of all the options in `gmx_MMPBSA` input file [here][2] as 
 ## Considerations
 In this case, a single trajectory (ST) approximation is followed, which means the receptor and ligand (in this case, the 
 ligand is also another protein) amber format topologies and trajectories will be obtained from that of the complex. To 
-do so, a MD Structure+mass(db) file (`com.tpr`), an index file (`index.ndx`), a trajectory file (`com_traj.xtc`), and 
+do so, an MD Structure+mass(db) file (`com.tpr`), an index file (`index.ndx`), a trajectory file (`com_traj.xtc`), and 
 both the receptor and ligand group numbers in the index file (`19 20`) are needed. The `mmpbsa.in` input file will 
 contain all the parameters needed for the MM/PB(GB)SA calculation. In this case, 10 frames 
-are going to be used when performing the the MM/PB(GB)SA calculation with the igb2 (GB-OBC1) model and a salt 
+are going to be used when performing the MM/PB(GB)SA calculation with the igb2 (GB-OBC1) model and a salt 
 concentration = 0.15M.
 
 "Stability" calculation will be performed, and you will get statistics based on only a single system (complex). Any 

@@ -11,7 +11,7 @@ title: Alanine scanning
 
     This example can be found in the [docs/examples/NonLinear_PB_solver][6] directory in the repository folder. If you 
     didn't use gmx_MMPBSA_test before, use [downgit](https://downgit.github.io/#/home) to download the specific folder 
-    from gmx_MMPBSA Github repository.
+    from gmx_MMPBSA GitHub repository.
 
 
 ## Requirements
@@ -76,11 +76,11 @@ _See a detailed list of all the options in `gmx_MMPBSA` input file [here][2] as 
 
 ## Considerations
 In this case, a single trajectory (ST) approximation is followed, which means the receptor and ligand (in this case, 
-the ligand is DNA) amber format topologies and trajectories will be obtained from that of the complex. To do so, a 
+the ligand is DNA) amber format topologies and trajectories will be obtained from that of the complex. To do so, an 
 MD Structure+mass(db) file (`com.tpr`), an index file (`index.ndx`), a trajectory file (`com_traj.xtc`), and both 
 the receptor and ligand group numbers in the index file (`1 12`) are needed. The `mmpbsa.in` input file will contain
 all the parameters needed for the MM/PB(GB)SA calculation. In this case, 6 frames are going to be used when 
-performing the the MM/PB(GB)SA calculation with the Non Linear PB solver (`npbopt=1`). The dielectric constant 
+performing the MM/PB(GB)SA calculation with the Non-Linear PB solver (`npbopt=1`). The dielectric constant 
 (`indi`) is set = 10. 
 
 !!! warning

@@ -8,7 +8,7 @@ title: Complex receptor
 !!! info
     This example can be found in the [docs/examples/Comp_receptor][6] directory in the repository folder. If you didn't 
     use gmx_MMPBSA_test before, use [downgit](https://downgit.github.io/#/home) to download the specific folder from 
-    gmx_MMPBSA Github repository.
+    gmx_MMPBSA GitHub repository.
 
 ## Requirements
 !!! danger
@@ -74,10 +74,10 @@ _See a detailed list of all the options in `gmx_MMPBSA` input file [here][2] as 
 In this case, a single trajectory (ST) approximation is followed, which means the receptor (Protein+DNA+RNA+Ions) and 
 ligand amber format topologies and trajectories will be obtained from that of the complex. Of note, a new variable 
 "forcefields" has been added which eases the work with compound receptors with more than one type of molecule.
-To do so, a MD Structure+mass(db) file (`com.tpr`), an index file (`index.ndx`), a trajectory file (`com_traj.xtc`), and
+To do so, an MD Structure+mass(db) file (`com.tpr`), an index file (`index.ndx`), a trajectory file (`com_traj.xtc`), and
 both the receptor and ligand group numbers in the index file (`33 14`) are needed. A ligand .mol2 file is also needed 
 for generating the ligand topology.The `mmpbsa.in` input file will contain all  the parameters needed for the 
-MM/PB(GB)SA calculation. In this case, 11 frames are going to be used when performing the the MM/PB(GB)SA calculation 
+MM/PB(GB)SA calculation. In this case, 11 frames are going to be used when performing the MM/PB(GB)SA calculation 
 with the igb8 (GB-Neck2) model and a salt concentration = 0.15M. Of note, mbondi3 radii (`PBRadii=4`) will be used as 
 recommended for GB-Neck2 solvation model. Also, a high dielectric constant `intdiel=10` will be used because of the 
 high number of charged residues at the interface.

@@ -71,7 +71,7 @@ _See a detailed list of all the options in `gmx_MMPBSA` input file [here][3] as 
 
 ## Considerations
 In this case, a single trajectory (ST) approximation is followed, which means the receptor and ligand structures and 
-trajectories will be obtained from that of the complex. To do so, a MD Structure+mass(db) file (`com.tpr`), an 
+trajectories will be obtained from that of the complex. To do so, an MD Structure+mass(db) file (`com.tpr`), an 
 index file (`index.ndx`), a trajectory file (`com_traj.xtc`), and both the receptor and ligand group numbers in the 
 index file (`21 20`) are needed. The `mmpbsa.in` input file will contain all the parameters needed for the MM/PB(GB)SA 
 calculation. A topology file is also needed (mandatory) in this case to generate the topology files in amber format 

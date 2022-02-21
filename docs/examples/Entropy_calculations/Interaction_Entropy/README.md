@@ -8,7 +8,7 @@ title: Interaction Entropy
 !!! info
     This example can be found in the [docs/examples/Entropy_calculations/Interaction_Entropy][6] directory in the 
     repository folder. If you didn't use gmx_MMPBSA_test before, use [downgit](https://downgit.github.io/#/home) to 
-    download the specific folder from gmx_MMPBSA Github repository.
+    download the specific folder from gmx_MMPBSA GitHub repository.
 
 
 ## Requirements
@@ -74,10 +74,10 @@ _See a detailed list of all the options in `gmx_MMPBSA` input file [here][2] as 
 ## Considerations
 In this case, a single trajectory (ST) approximation is followed, which means the receptor and ligand (in this case, 
 the ligand is also another protein) amber format topologies and trajectories will be obtained from that of the 
-complex. To do so, a MD Structure+mass(db) file (`com.tpr`), an index file (`index.ndx`), a trajectory file 
+complex. To do so, an MD Structure+mass(db) file (`com.tpr`), an index file (`index.ndx`), a trajectory file 
 (`com_traj.xtc`), and both the receptor and ligand group numbers in the index file (`19 20`) are needed. The `mmpbsa.
 in` input file will contain all the parameters needed for the MM/PB(GB)SA calculation. In this case, 16 frames 
-are going to be used when performing the the MM/PB(GB)SA 
+are going to be used when performing the MM/PB(GB)SA 
 calculation with the igb2 (GB-OBC1) model and a salt concentration = 0.15M.
 
 [Interaction Entropy (IE)][4] will be calculated and the average for the last quartile (`entropy_seg=25`) of the 

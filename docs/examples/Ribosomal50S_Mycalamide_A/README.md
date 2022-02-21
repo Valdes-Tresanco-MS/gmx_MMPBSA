@@ -13,7 +13,7 @@ title: Mycalamide A Bound to the Large Ribosomal Subunit
 !!! info
     This example can be found in the [docs/examples/Ribosomal50S_Mycalamide_A][6] directory in the repository folder. If you didn't 
     use gmx_MMPBSA_test before, use [downgit](https://downgit.github.io/#/home) to download the specific folder from 
-    gmx_MMPBSA Github repository.
+    gmx_MMPBSA GitHub repository.
 
 ## Requirements
 
@@ -71,7 +71,7 @@ system. Of note, just a relevant part of the entire system has been considered f
 since the inclusion of the rest will increase the computation time without improving the results. You can check 
 the file _GMXMMPBSA_COM_FIXED.pdb during the calculation to see how the complex looks like. In this case, a single 
 trajectory (ST) approximation is followed, which means the receptor and ligand structures and trajectories will 
-be obtained from that of the complex. To do so, a MD Structure+mass(db) file (`com.tpr`), an index file (`index.ndx`), 
+be obtained from that of the complex. To do so, an MD Structure+mass(db) file (`com.tpr`), an index file (`index.ndx`), 
 a trajectory file (`com_traj.xtc`), and both the receptor and ligand group numbers in the index file (`41 23`) are 
 needed. The `mmpbsa.in` input file will contain all the parameters needed for the MM/PB(GB)SA calculation. A topology 
 file is also needed (mandatory) in this case to generate the topology files in amber format with all the terms for 
