@@ -564,27 +564,28 @@ class GMX_MMPBSA_ANA(QMainWindow):
                 parent_item = next_item
             else:
                 break
-        if not self.all_frb.isChecked():
-            # energy
-            current_start, current_end, current_interval = self.systems[parent_item.system_index]['current_frames']
-            self.eframes_start_sb.setValue(current_start)
-            self.eframes_inter_sb.setValue(current_interval)
-            self.eframes_end_sb.setValue(current_end)
-            # nmode
-            nmcurrent_start, nmcurrent_end, nmcurrent_interval = self.systems[parent_item.system_index][
-                'current_nmode_frames']
-            self.nmframes_start_sb.setValue(nmcurrent_start)
-            self.nmframes_inter_sb.setValue(nmcurrent_end)
-            self.nmframes_end_sb.setValue(nmcurrent_interval)
-            # IE
-            self.iesegment_sb.setValue(self.systems[parent_item.system_index]['current_ie_segment'])
-
-            self.chart_options_param.restoreState(self.systems[parent_item.system_index]['chart_options'])
-            self.parm_tree_w.setParameters(self.chart_options_param, showTop=False)
+        # FIXME: check if all systems are selected?
+        # if not self.all_frb.isChecked():
+        # energy
+        current_start, current_end, current_interval = self.systems[parent_item.system_index]['current_frames']
+        self.eframes_start_sb.setValue(current_start)
+        self.eframes_inter_sb.setValue(current_interval)
+        self.eframes_end_sb.setValue(current_end)
+        # nmode
+        nmcurrent_start, nmcurrent_end, nmcurrent_interval = self.systems[parent_item.system_index][
+            'current_nmode_frames']
+        self.nmframes_start_sb.setValue(nmcurrent_start)
+        self.nmframes_inter_sb.setValue(nmcurrent_end)
+        self.nmframes_end_sb.setValue(nmcurrent_interval)
+        # IE
+        self.iesegment_sb.setValue(self.systems[parent_item.system_index]['current_ie_segment'])
+        # self.systems[parent_item.system_index]['chart_options'] = self.chart_options_param.saveState()
+        self.chart_options_param.restoreState(self.systems[parent_item.system_index]['chart_options'])
+        self.parm_tree_w.setParameters(self.chart_options_param, showTop=False)
         self.current_system_index = parent_item.system_index
 
     def update_fn(self):
-
+        self.statusbar.showMessage('Updating...')
         recalc_energy = []
         recalc_nmode = []
         recalc_ie = []
@@ -726,6 +727,8 @@ class GMX_MMPBSA_ANA(QMainWindow):
         self.e_changed.hide()
         self.nm_changed.hide()
         qpd.setValue(maximum)
+        self.statusbar.showMessage('Updating... Done.')
+
 
     def reset_dc(self):
         sub = self.mdi.activeSubWindow()
