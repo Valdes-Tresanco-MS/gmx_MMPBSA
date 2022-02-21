@@ -151,7 +151,15 @@ class CheckMakeTop:
 
             self.INPUT['print_res'] = ','.join(list2range(decomp_res)['string'])
         if self.INPUT['qm_residues']:
-            qm_residues = self.get_selected_residues(self.INPUT['qm_residues'])
+            qm_residues, (rec_charge, lig_charge) = self.get_selected_residues(self.INPUT['qm_residues'])
+            if self.INPUT['qmcharge_rec'] != rec_charge:
+                logging.warning(f'The defined qmcharge_rec is wrong. Reassigning to  qmcharge_rec = {rec_charge}')
+                self.INPUT['qmcharge_rec'] = rec_charge
+            if self.INPUT['qmcharge_lig'] != lig_charge:
+                logging.warning(f'The defined qmcharge_lig is wrong. Reassigning to  qmcharge_lig = {lig_charge}')
+                self.INPUT['qmcharge_lig'] = lig_charge
+            self.INPUT['qmcharge_com'] = rec_charge + lig_charge
+
             if 'within' in self.INPUT['qm_residues']:
                 logging.info(f"Selecting residues by distance ({self.INPUT['qm_residues'].split()[1]} Å) between "
                              f"receptor and ligand for QM calculation...")
@@ -700,13 +708,15 @@ class CheckMakeTop:
             self.resl[self.com_mut_index].set_mut(self.INPUT['mutant'])
         return rec_mask, lig_mask, self.resl
 
-    def get_selected_residues(self, select):
+    def get_selected_residues(self, select, qm_sele=False):
         """
         Convert string selection format to amber index list
         """
         # FIXME: Error when any residue is selected
         dist, res_selection = selector(select)
         sele_res = []
+        rec_charge = 0
+        lig_charge = 0
         if dist:
             for rres in self.resl:
                 if rres.is_ligand():
@@ -721,8 +731,14 @@ class CheckMakeTop:
                             if get_dist(rat_coor, lat_coor) <= dist:
                                 if rres not in sele_res:
                                     sele_res.append(rres)
+                                    if qm_sele:
+                                        rec_charge += int(sum(atm.charge for atm in
+                                                              self.complex_str.residues[rres -1].atoms))
                                 if lres not in sele_res:
                                     sele_res.append(lres)
+                                    if qm_sele:
+                                        lig_charge += int(sum(atm.charge for atm in
+                                                              self.complex_str.residues[lres -1].atoms))
                                 break
         elif res_selection:
             for i in self.resl:
@@ -731,6 +747,7 @@ class CheckMakeTop:
                 rres = self.complex_str.residues[i - 1]
                 if [rres.chain, rres.number, rres.insertion_code] in res_selection:
                     sele_res.append(i)
+                    rec_charge += int(sum(atm.charge for atm in self.complex_str.residues[i -1].atoms))
                     res_selection.remove([rres.chain, rres.number, rres.insertion_code])
             for j in self.resl:
                 if j.is_receptor():
@@ -738,13 +755,15 @@ class CheckMakeTop:
                 lres = self.complex_str.residues[j - 1]
                 if [lres.chain, lres.number, lres.insertion_code] in res_selection:
                     sele_res.append(j)
+                    lig_charge += int(sum(atm.charge for atm in self.complex_str.residues[j - 1].atoms))
                     res_selection.remove([lres.chain, lres.number, lres.insertion_code])
-        sele_res.sort()
-        if res_selection:
             for res in res_selection:
-                logging.warning("We couldn't find this residue CHAIN:{} RES_NUM:{} ICODE: "
-                                "{}".format(*res))
-        return sele_res
+                logging.warning("We couldn't find this residue CHAIN:{} RES_NUM:{} ICODE: {}".format(*res))
+        sele_res.sort()
+        if qm_sele:
+            return sele_res, (rec_charge, lig_charge)
+        else:
+            return sele_res
 
     def fixparm2amber(self, structure, str_name=None):
 
