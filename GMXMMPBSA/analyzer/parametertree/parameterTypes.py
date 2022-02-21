@@ -354,7 +354,7 @@ class WidgetParameterItem(ParameterItem):
         """Called when the parameter's limits have changed"""
         t = self.param.opts['type']
         if t in ['int', 'float']:
-            self.widget.setOpts(bounds=limits)
+            self.param.setOpts(bounds=limits)
         else:
             return  ## don't know what to do with any other types..
 
