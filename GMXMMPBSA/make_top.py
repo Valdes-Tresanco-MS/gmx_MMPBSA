@@ -150,15 +150,8 @@ class CheckMakeTop:
                                     f"significant amount of time to print!")
 
             self.INPUT['print_res'] = ','.join(list2range(decomp_res)['string'])
-        if self.INPUT['qm_residues']:
+        if self.INPUT['ifqnt']:
             qm_residues, (rec_charge, lig_charge) = self.get_selected_residues(self.INPUT['qm_residues'], True)
-            if self.INPUT['qmcharge_rec'] != rec_charge:
-                logging.warning(f'The defined qmcharge_rec is wrong. Reassigning to  qmcharge_rec = {rec_charge}')
-                self.INPUT['qmcharge_rec'] = rec_charge
-            if self.INPUT['qmcharge_lig'] != lig_charge:
-                logging.warning(f'The defined qmcharge_lig is wrong. Reassigning to  qmcharge_lig = {lig_charge}')
-                self.INPUT['qmcharge_lig'] = lig_charge
-            self.INPUT['qmcharge_com'] = rec_charge + lig_charge
 
             if 'within' in self.INPUT['qm_residues']:
                 logging.info(f"Selecting residues by distance ({self.INPUT['qm_residues'].split()[1]} Å) between "
@@ -169,6 +162,19 @@ class CheckMakeTop:
             textwraped = textwrap.wrap('\t'.join(x.string for x in qm_residues), tabsize=4, width=120)
             logging.info(f'Selected {len(qm_residues)} residues:\n' + '\n'.join(textwraped) + '\n')
             self.INPUT['qm_residues'] =  ','.join(list2range(qm_residues)['string'])
+
+            if self.INPUT['qmcharge_com'] != rec_charge + lig_charge:
+                logging.warning('System specified with odd number of electrons. Most likely the charge of QM region '
+                                '(qmcharge_com) have been set incorrectly.')
+                self.INPUT['qmcharge_com'] = rec_charge + lig_charge
+                logging.warning(f'Setting qmcharge_com = {rec_charge + lig_charge}')
+
+            if self.INPUT['qmcharge_rec'] != rec_charge:
+                logging.warning(f'Setting qmcharge_rec = {rec_charge}')
+                self.INPUT['qmcharge_rec'] = rec_charge
+            if self.INPUT['qmcharge_lig'] != lig_charge:
+                logging.warning(f'Setting qmcharge_lig = {lig_charge}')
+                self.INPUT['qmcharge_lig'] = lig_charge
 
         self.cleanup_trajs()
         return tops

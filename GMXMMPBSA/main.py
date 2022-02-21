@@ -827,6 +827,9 @@ class MMPBSA_App(object):
             GMXMMPBSA_ERROR('SOLVATED_TRAJECTORY must be 0 or 1!', InputError)
         if INPUT['ifqnt'] not in [0, 1]:
             GMXMMPBSA_ERROR('QMMM must be 0 or 1!', InputError)
+        if not INPUT['ifqnt'] and INPUT['qm_theory'] or INPUT['qm_residues']:
+            logging.warning('qm_theory/qm_residues variable has been defined, however the potential function is '
+                            'strictly classical (ifqnt=0). Please, set ifqnt=1 if you want to use Use QM/MM')
         if INPUT['ifqnt'] == 1:
             if INPUT['qm_theory'] not in ['PM3', 'AM1', 'MNDO', 'PDDG-PM3', 'PM3PDDG',
                                           'PDDG-MNDO', 'PDDGMNDO', 'PM3-CARB1',
@@ -836,7 +839,9 @@ class MMPBSA_App(object):
                                           'MNDOD']:
                 GMXMMPBSA_ERROR('Invalid QM_THEORY (%s)! ' % INPUT['qm_theory'] +
                                 'This variable must be set to allowable options.\n' +
-                                '       See the Amber manual for allowable options.', InputError)
+                                'PM3, AM1, MNDO, PDDG-PM3, PM3PDDG, PDDG-MNDO, PDDGMNDO, \n'
+                                'PM3-CARB1, PM3CARB1, DFTB, SCC-DFTB, RM1, PM6, PM3-ZnB, \n'
+                                'PM3-MAIS, PM6-D, PM6-DH+, AM1-DH+, AM1-D*, PM3ZNB, MNDO/D, MNDOD', InputError)
             if INPUT['qm_residues'] == '':
                 GMXMMPBSA_ERROR('QM_RESIDUES must be specified for IFQNT = 1!', InputError)
             if INPUT['decomprun']:
