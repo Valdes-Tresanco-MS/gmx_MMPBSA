@@ -251,14 +251,14 @@ class CheckMakeTop:
         # check if the ligand force field is gaff or gaff2 and get if the ligand mol2 was defined
         elif "leaprc.gaff2" in self.INPUT['forcefields'] and not self.FILES.complex_top:
             logging.warning('You must define the ligand mol2 file (-lm) if the ligand forcefield is '
-                            '"leaprc.gaff" or "leaprc.gaff2". If the ligand is parametrized in Amber force '
+                            '"leaprc.gaff" or "leaprc.gaff2". If the ligand is parametrized with Amber force '
                             'fields ignore this warning')
 
         # make a temp receptor pdb (even when stability) if decomp to get correct receptor residues from complex. This
         # avoid get multiples molecules from complex.split()
         if self.INPUT['decomprun'] and self.FILES.stability:
             self.use_temp = True
-            logging.warning('When decomp is defined, we generate a receptor file in order to extract interface '
+            logging.warning('When &decomp is defined, we generate a receptor file in order to extract interface '
                             'residues')
             rec_echo_args = ['echo', '{}'.format(rec_group)]
             cp1 = subprocess.Popen(rec_echo_args, stdout=subprocess.PIPE)
