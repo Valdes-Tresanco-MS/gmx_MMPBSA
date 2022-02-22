@@ -13,12 +13,12 @@ on GROMACS *.mdp files. The input file contains sections called `namelist` where
 calculation. The allowed namelists are:
 
 - [`&general`](input_file.md#general-namelist-variables): contains variables that apply to all aspects of the 
-calculation or parameters required for building AMBER topologies from GROMACS files.
+  calculation or parameters required for building AMBER topologies from GROMACS files.
 - [`&gb`](input_file.md#gb-namelist-variables): unique variables to Generalized Born (GB) calculations
 - [`&pb`](input_file.md#pb-namelist-variables): unique variables to Poisson Boltzmann (PB) calculations
 - [`&rism`](input_file.md#rism-namelist-variables): unique variables to 3D-RISM calculations
 - [`&alanine_scanning`](input_file.md#alanine_scanning-namelist-variables): unique variables to alanine scanning calculations
-- [`&decomp`](input_file.md#decomp-namelist-variables): unique variables to the decomposition scheme  
+- [`&decomp`](input_file.md#decomp-namelist-variables): unique variables to the decomposition scheme
 - [`&nmode`](input_file.md#nmode-namelist-variables): unique variables to the normal mode (NMODE) calculations used to approximate vibrational entropies
 
   [1]: https://pubs.acs.org/doi/10.1021/ct300418h
