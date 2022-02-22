@@ -128,30 +128,6 @@ class AmberOutput(dict):
     through all of the thread-specific output files (assumed to have the suffix
     .# where # spans from 0 to num_files - 1
     """
-    # Ordered list of keys in the data dictionary
-    data_keys = ['BOND', 'ANGLE', 'DIHED', 'VDWAALS', 'EEL', '1-4 VDW', '1-4 EEL']
-    chamber_keys = ['CMAP', 'IMP', 'UB']
-    # Dictionary that maps each data key to their respective composite keys
-    data_key_owner = {'BOND': ['GGAS', 'TOTAL'], 'ANGLE': ['GGAS', 'TOTAL'], 'DIHED': ['GGAS', 'TOTAL'],
-                      'VDWAALS': ['GGAS', 'TOTAL'], 'EEL': ['GGAS', 'TOTAL'], '1-4 VDW': ['GGAS', 'TOTAL'],
-                      '1-4 EEL': ['GGAS', 'TOTAL'],
-                      # charmm
-                      'UB': ['GGAS', 'TOTAL'], 'IMP': ['GGAS', 'TOTAL'], 'CMAP': ['GGAS', 'TOTAL'],
-                      # non lineal PB
-                      'EEL+EPB': ['TOTAL'],
-                      # PB
-                      'EPB': ['GSOLV', 'TOTAL'], 'ENPOLAR': ['GSOLV', 'TOTAL'], 'EDISPER': ['GSOLV', 'TOTAL'],
-                      # GB
-                      'EGB': ['GSOLV', 'TOTAL'], 'ESURF': ['GSOLV', 'TOTAL'],
-                      # QM/GB
-                      'ESCF': ['GGAS', 'TOTAL'],
-                      # RISM
-                      'POLAR SOLV': ['GSOLV', 'TOTAL'], 'APOLAR SOLV': ['GSOLV', 'TOTAL'],
-                      'ERISM': ['GSOLV', 'TOTAL'],
-                      }
-    # Which of those keys are composite
-    composite_keys = ['GGAS', 'GSOLV', 'TOTAL']
-    # What the value of verbosity must be to print out this data
     print_levels = {'BOND': 2, 'ANGLE': 2, 'DIHED': 2, 'VDWAALS': 1, 'EEL': 1, '1-4 VDW': 2, '1-4 EEL': 2, 'EPOL': 1}
 
     def __init__(self, mol: str, INPUT, chamber=False, **kwargs):
@@ -163,6 +139,27 @@ class AmberOutput(dict):
         self.num_files = None
         self.is_read = False
         self.apbs = INPUT['sander_apbs']
+
+        self.data_keys = ['BOND', 'ANGLE', 'DIHED', 'VDWAALS', 'EEL', '1-4 VDW', '1-4 EEL']
+        self.chamber_keys = ['CMAP', 'IMP', 'UB']
+        self.data_key_owner = {'BOND': ['GGAS', 'TOTAL'], 'ANGLE': ['GGAS', 'TOTAL'], 'DIHED': ['GGAS', 'TOTAL'],
+                               'VDWAALS': ['GGAS', 'TOTAL'], 'EEL': ['GGAS', 'TOTAL'], '1-4 VDW': ['GGAS', 'TOTAL'],
+                               '1-4 EEL': ['GGAS', 'TOTAL'],
+                               # charmm
+                               'UB': ['GGAS', 'TOTAL'], 'IMP': ['GGAS', 'TOTAL'], 'CMAP': ['GGAS', 'TOTAL'],
+                               # non lineal PB
+                               'EEL+EPB': ['TOTAL'],
+                               # PB
+                               'EPB': ['GSOLV', 'TOTAL'], 'ENPOLAR': ['GSOLV', 'TOTAL'], 'EDISPER': ['GSOLV', 'TOTAL'],
+                               # GB
+                               'EGB': ['GSOLV', 'TOTAL'], 'ESURF': ['GSOLV', 'TOTAL'],
+                               # QM/GB
+                               'ESCF': ['GGAS', 'TOTAL'],
+                               # RISM
+                               'POLAR SOLV': ['GSOLV', 'TOTAL'], 'APOLAR SOLV': ['GSOLV', 'TOTAL'],
+                               'ERISM': ['GSOLV', 'TOTAL'],
+                               }
+        self.composite_keys = ['GGAS', 'GSOLV', 'TOTAL']
 
         if self.chamber:
             for key in self.chamber_keys:
@@ -551,16 +548,17 @@ class QHout(dict):
 
 class NMODEout(AmberOutput):
     """ Normal mode entropy approximation output class """
-    # Ordered list of keys in the data dictionary
-    data_keys = ['TRANSLATIONAL', 'ROTATIONAL', 'VIBRATIONAL']
-
-    # Other aspects of AmberOutputs, which are just blank arrays
-    composite_keys = ['TOTAL']
-    data_key_owner = {'TRANSLATIONAL': ['TOTAL'], 'ROTATIONAL': ['TOTAL'], 'VIBRATIONAL': ['TOTAL']}
     print_levels = {'TRANSLATIONAL': 1, 'ROTATIONAL': 1, 'VIBRATIONAL': 1, 'TOTAL': 1}
 
     def __init__(self, mol: str, INPUT, chamber=False, **kwargs):
         super(NMODEout, self).__init__(mol, INPUT, chamber, **kwargs)
+
+        # Ordered list of keys in the data dictionary
+        self.data_keys = ['TRANSLATIONAL', 'ROTATIONAL', 'VIBRATIONAL']
+
+        # Other aspects of AmberOutputs, which are just blank arrays
+        self.composite_keys = ['TOTAL']
+        self.data_key_owner = {'TRANSLATIONAL': ['TOTAL'], 'ROTATIONAL': ['TOTAL'], 'VIBRATIONAL': ['TOTAL']}
 
     def _get_energies(self, outfile):
         """ Parses the energy terms from the output file. This will parse 1 line
@@ -584,7 +582,6 @@ class NMODEout(AmberOutput):
 
 class GBout(AmberOutput):
     """ Amber output class for normal generalized Born simulations """
-    data_keys = ['BOND', 'ANGLE', 'DIHED', 'VDWAALS', 'EEL', '1-4 VDW', '1-4 EEL', 'EGB', 'ESURF']
     print_levels = {'BOND': 2, 'ANGLE': 2, 'DIHED': 2, 'VDWAALS': 1, 'EEL': 1, '1-4 VDW': 2, '1-4 EEL': 2, 'EGB': 1,
                     'ESURF': 1}
 
@@ -592,6 +589,7 @@ class GBout(AmberOutput):
 
     def __init__(self, mol, INPUT, chamber=False, **kwargs):
         AmberOutput.__init__(self, mol, INPUT, chamber, **kwargs)
+        self.data_keys.extend(['EGB', 'ESURF'])
 
     def _get_energies(self, outfile):
         """ Parses the mdout files for the GB potential terms """
@@ -623,9 +621,6 @@ class GBout(AmberOutput):
 
 
 class PBout(AmberOutput):
-    # Ordered list of keys in the data dictionary
-    # FIXME: include Non linear PB
-    data_keys = ['BOND', 'ANGLE', 'DIHED', 'VDWAALS', 'EEL', '1-4 VDW', '1-4 EEL', 'EPB', 'ENPOLAR', 'EDISPER']
 
     # What the value of verbosity must be to print out this data
     print_levels = {'BOND': 2, 'ANGLE': 2, 'DIHED': 2, 'VDWAALS': 1, 'EEL': 1,
@@ -633,9 +628,8 @@ class PBout(AmberOutput):
 
     def __init__(self, mol, INPUT, chamber=False, **kwargs):
         AmberOutput.__init__(self, mol, INPUT, chamber, **kwargs)
-
-        # if 'EDISPER' not in self.data_keys:
-        #     self.data_keys += ['EDISPER']
+        # FIXME: include Non linear PB
+        self.data_keys.extend(['EPB', 'ENPOLAR', 'EDISPER'])
 
     def _get_energies(self, outfile):
         """ Parses the energy values from the output files """
@@ -666,7 +660,6 @@ class PBout(AmberOutput):
 
 
 class RISMout(AmberOutput):
-    data_keys = ['BOND', 'ANGLE', 'DIHED', 'VDWAALS', 'EEL', '1-4 VDW', '1-4 EEL', 'ERISM']
     # Which of those keys belong to the gas phase energy contributions
     print_levels = {'BOND': 2, 'ANGLE': 2, 'DIHED': 2, 'VDWAALS': 1, 'EEL': 1,
                     '1-4 VDW': 2, '1-4 EEL': 2, 'ERISM': 1}
@@ -674,6 +667,7 @@ class RISMout(AmberOutput):
     def __init__(self, mol, INPUT, chamber=False, solvtype=0, **kwargs):
         AmberOutput.__init__(self, mol, INPUT, chamber)
         self.solvtype = solvtype
+        self.data_keys.extend(['ERISM'])
 
     def _get_energies(self, outfile):
         """ Parses the RISM output file for energy terms """
@@ -717,11 +711,14 @@ class RISM_gf_Out(RISMout):
 
 
 class PolarRISMout(RISMout):
-    # Ordered list of keys in the data dictionary
-    data_keys = ['BOND', 'ANGLE', 'DIHED', 'VDWAALS', 'EEL', '1-4 VDW', '1-4 EEL', 'ERISM', 'POLAR SOLV', 'APOLAR SOLV']
     # Which of those keys belong to the gas phase energy contributions
     print_levels = {'BOND': 2, 'ANGLE': 2, 'DIHED': 2, 'VDWAALS': 1, 'EEL': 1,
                     '1-4 VDW': 2, '1-4 EEL': 2, 'POLAR SOLV': 1, 'APOLAR SOLV': 1}
+
+    def __init__(self, mol, INPUT, chamber=False, solvtype=0, **kwargs):
+        AmberOutput.__init__(self, mol, INPUT, chamber)
+        self.solvtype = solvtype
+        self.data_keys.extend(['POLAR SOLV', 'APOLAR SOLV'])
 
     def _get_energies(self, outfile):
         """ Parses the RISM output file for energy terms """
@@ -773,10 +770,14 @@ class PolarRISM_gf_Out(PolarRISMout):
 
 class QMMMout(GBout):
     """ Class for QM/MM GBSA output files """
-    data_keys = ['BOND', 'ANGLE', 'DIHED', 'VDWAALS', 'EEL', '1-4 VDW', '1-4 EEL', 'EGB', 'ESURF', 'ESCF']
     # What the value of verbosity must be to print out this data
     print_levels = {'BOND': 2, 'ANGLE': 2, 'DIHED': 2, 'VDWAALS': 1, 'EEL': 1,
                     '1-4 VDW': 2, '1-4 EEL': 2, 'EGB': 1, 'ESURF': 1, 'ESCF': 1}
+
+    def __init__(self, mol, INPUT, chamber=False, **kwargs):
+        GBout.__init__(self, mol, INPUT, chamber, **kwargs)
+
+        self.data_keys.extend(['ESCF'])
 
     def _get_energies(self, outfile):
         """ Parses the energies from a QM/MM output file. NOTE, however, that a
@@ -833,7 +834,6 @@ class BindingStatistics(dict):
         self.data_keys = self.com.data_keys
         self.composite_keys = []
 
-        self.print_levels = self.com.print_levels
         try:
             self._delta()
             self.missing_terms = False
