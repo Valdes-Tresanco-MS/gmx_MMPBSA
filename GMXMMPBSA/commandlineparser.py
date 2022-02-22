@@ -89,6 +89,13 @@ def index(arg):
     return arg
 
 
+class GMXMMPBSA_ArgParser(ArgumentParser):
+
+    def exit(self, status=0, message=None):
+        if message:
+            GMXMMPBSA_ERROR(message)
+
+
 description = ("gmx_MMPBSA is a new tool based on AMBER's MMPBSA.py aiming to perform end-state free energy calculations"
                " with GROMACS files. This program is an adaptation of Amber's MMPBSA.py and essentially works as such. "
                "gmx_MMPBSA works with any GROMACS version. This program will calculate binding free energies using "
@@ -105,7 +112,7 @@ ligand_group_des = '''Ligand files and info that are needed to perform the calcu
 # Set up the MM/PBSA parser here. It clutters up the MMPBSA_App to do it there
 
 # noinspection PyTypeChecker
-parser = ArgumentParser(epilog=f'''gmx_MMPBSA is an effort to implement the GB/PB and others calculations in GROMACS.
+parser = GMXMMPBSA_ArgParser(epilog=f'''gmx_MMPBSA is an effort to implement the GB/PB and others calculations in GROMACS.
                                     \nBased on MMPBSA.py (version {__mmpbsa_version__}) and 
                                     AmberTools{__ambertools_version__}''',
                         description=(description + '''This is the core of gmx_MMPBSA and it will do all the 
