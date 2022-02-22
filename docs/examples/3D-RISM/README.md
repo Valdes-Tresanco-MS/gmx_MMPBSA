@@ -59,7 +59,7 @@ startframe=5,
 endframe=8,
 /
 &rism
-polardecomp=0, thermo="gf"
+polardecomp=0, thermo="std", tolerance=0.001, rism_verbose=2, closure="kh"
 /
 ```
 
@@ -71,8 +71,9 @@ the ligand is also another protein) amber format topologies and trajectories wil
 complex. To do so, an MD Structure+mass(db) file (`com.tpr`), an index file (`index.ndx`), a trajectory file 
 (`com_traj.xtc`), and both the receptor and ligand group numbers in the index file (`19 20`) are needed. The `mmpbsa.
 in` input file will contain all the parameters needed for the MM/PB(GB)SA calculation. In this case, 4 frames 
-are going to be used when performing the MM/PB(GB)SA calculation 
-with the igb2 (GB-OBC1) model and a salt concentration = 0.15M.
+are going to be used when performing the MM/PB(GB)SA calculation with the 3D-RISM model using Kovalenko-Hirata 
+clousure with a 0.001. Note that we have increased the tolerance from 0.00001 (default) to 0.001 in order to reduce the 
+computational time.
 
 !!! note
     Once the calculation is done, you can analyze the results in `gmx_MMPBSA_ana` (if you didn't define `-nogui`). 

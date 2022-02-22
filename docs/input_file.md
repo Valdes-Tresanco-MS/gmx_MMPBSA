@@ -1697,8 +1697,8 @@ startframe=5, endframe=100, interval=5,
 /
 
 &gb
-igb=5, saltcon=0.100, ifqnt=1, qmcharge_com=0,
-qm_residues="B/240-251", qm_theory="PM3"
+igb=5, saltcon=0.100, ifqnt=1,
+qm_residues="A/240-251 B/297", qm_theory="PM3"
 /
 ```
 
@@ -1709,7 +1709,7 @@ Sample input file for PB calculation building the Amber topologies
 from structures. Please refer to the section "How gmx_MMPBSA works"
 
 &general
-startframe=5, endframe=100, interval=5, verbose=2, 
+startframe=5, endframe=100, interval=5,
 forcefields="oldff/leaprc.ff99SB,leaprc.gaff"
 /
 
@@ -1758,7 +1758,7 @@ polardecomp=1, thermo="gf"
 Sample input file for Alanine scanning
 
 &general
-startframe=5, endframe=21, verbose=2, interval=1,
+startframe=5, endframe=21, interval=1,
 forcefields="oldff/leaprc.ff99SB", PBRadii=4
 /
 
@@ -1811,7 +1811,7 @@ igb=2, saltcon=0.150,
 /
 
 &nmode
-nmstartframe=5, nmendframe=21, nminterval=2,
+nmstartframe=10, nmendframe=21, nminterval=2,
 maxcyc=50000, drms=0.0001,
 /
 ```
