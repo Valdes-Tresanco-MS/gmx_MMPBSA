@@ -1127,8 +1127,9 @@ class GMX_MMPBSA_ANA(QMainWindow):
             sep_ggas_keys = []
             sep_gsolv_keys = []
             # remove empty charts? (BOND, ANGLE and DIHEDRAL for STP)
-            ggas_keys = ['BOND', 'ANGLE', 'DIHED', 'VDWAALS', 'EEL', '1-4 VDW', '1-4 EEL', 'UB', 'IMP', 'CMAP']
-            gsolv_keys = ['EGB', 'ESURF', 'EPB', 'ENPOLAR', 'POLAR SOLV', 'APOLAR SOLV']
+            # FIXME: NLPBsolver ?
+            ggas_keys = ['BOND', 'ANGLE', 'DIHED', 'VDWAALS', 'EEL', '1-4 VDW', '1-4 EEL', 'UB', 'IMP', 'CMAP', 'ESCF']
+            gsolv_keys = ['EGB', 'ESURF', 'EPB', 'ENPOLAR', 'EDISPER', 'POLAR SOLV', 'APOLAR SOLV', 'ERISM']
             for k in data.columns:
                 if k in ggas_keys:
                     sep_ggas_keys.append(k)
