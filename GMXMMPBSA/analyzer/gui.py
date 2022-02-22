@@ -1062,6 +1062,13 @@ class GMX_MMPBSA_ANA(QMainWindow):
         # make system item
         sys_item = CustomItem(self.treeWidget, [self.systems[sys_index]['name']], app=self, system_index=sys_index,
                               buttons=(-1,))
+        for c in [0, 1]:
+            sys_item.setBackground(c, QBrush(QColor(100, 100, 100)))
+            sys_item.setForeground(c, QBrush(QColor(220, 220, 255)))
+            font = sys_item.font(c)
+            font.setWeight(QFont.DemiBold)
+            font.setPointSize(font.pointSize() + 1)
+            sys_item.setFont(c, font)
 
         # FIXME: Binding
         classif_item = CustomItem(sys_item, ['ΔH/-TΔS/ΔG'])

@@ -508,13 +508,13 @@ class GroupParameterItem(ParameterItem):
                 self.setBackground(c, QBrush(QColor(100, 100, 100)))
                 self.setForeground(c, QBrush(QColor(220, 220, 255)))
                 font = self.font(c)
-                font.setBold(True)
+                font.setWeight(QFont.DemiBold)
                 font.setPointSize(font.pointSize() + 1)
             else:
                 self.setBackground(c, QBrush(QColor(220, 220, 220)))
                 self.setForeground(c, QBrush(QColor(50, 50, 50)))
                 font = self.font(c)
-                font.setBold(True)
+                font.setWeight(QFont.DemiBold)
             self.setFont(c, font)
 
     def addClicked(self):
