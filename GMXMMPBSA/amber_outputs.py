@@ -758,14 +758,14 @@ class PolarRISM_std_Out(PolarRISMout):
     """ Polar decomp RISM output file for standard free energy """
 
     def __init__(self, mol, INPUT, chamber=False):
-        RISMout.__init__(self, mol, INPUT, chamber, 0)
+        PolarRISMout.__init__(self, mol, INPUT, chamber, 0)
 
 
 class PolarRISM_gf_Out(PolarRISMout):
     """ Polar decomp RISM output file for Gaussian Fluctuation free energy """
 
     def __init__(self, mol, INPUT, chamber=False):
-        RISMout.__init__(self, mol, INPUT, chamber, 1)
+        PolarRISMout.__init__(self, mol, INPUT, chamber, 1)
 
 
 class QMMMout(GBout):
