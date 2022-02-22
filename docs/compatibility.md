@@ -61,6 +61,7 @@ removed. See the list below for more details:
 gmx_MMPBSA_ana has been completely reworked, and it doesn't support files from previous versions. New functions for 
 customizing/exporting graphs, change number of frames and showing/exporting data have been added.
 
+---
 ## Upgrading from 1.3.x to 1.4.x
 The differences between both versions are small, you can see them below
 ### Variables

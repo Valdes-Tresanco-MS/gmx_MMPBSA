@@ -7,14 +7,17 @@ title: Changelog
 
 ### Additions
 #### `gmx_MMPBSA`
-- Option to create an input file (`--create_input`)
-- New format file (h5) to store all the data result
+- Option to create an [input file](#the-input-file) (`--create_input`)
+- New format file (h5) to store all the data result (`Experimental`)
 - enabled NonLinear PB solver in `sander` (#63)
 - enabled all `pbsa` options in `sander` (#64)
 - enabled all `3D-RISM` variables (#68)
 - Improve IE output data (#91)
 - New C2 Entropy method added (#73)
+- New modified PBRadiis for GAFF (#140) and CHARMM (#141) force fields
 - New method to get the `decomp` data without the API classes
+- conda package (#55)
+- Checking structure consistency method (#44)
 #### `gmx_MMPBSA_ana`
 - Chart properties selector. The following properties can be changed:
   - Font size:
@@ -32,29 +35,36 @@ title: Changelog
   - Highlight or split components
 - Frame range and interval selection
 - Chart data can be visualized in table format and copy directly to excel
+- Summary table for complex, receptor, ligand, etc.
 - Now the outputs files can be visualized as document in their own sub-window
 - New button to launch all the graphics and functions associated to item
 - Highlighted Bar and Heatmap plot
 - User setting file per-system
+- Frames to Time conversion
 #### Documentation
 - Code block names and annotations
 - Input and Output file pages
 - 
 ### Fixes
 #### `gmx_MMPBSA`
-- Issue with protonated residues
+- Inconsistent energy between tleap and ParmEd topology (#147) 
+- Issue with protonated residues (#42)
+- Error with alphanumeric residue numbers (#134)
 - `print_res` selection
 - Error when `startframe=0` (#66)
-- parmchk2 always uses GAFF as force field (#45)
+- `parmchk2` always uses GAFF as force field (#45)
 - Now IE is calculated for PB and GB independently (#72)
 - Issue with alanine scanning CHARMM ff (#88)
 - Issue with MT approach (#78)
-- get_num_terms function run forever if TDC term not found. (#98)
+- `get_num_terms` function run forever if TDC term not found. (#98)
 - Check if the groups defined for receptor and ligand are the same (#86)
 - Add SD and SEM calculated with [propagation formula](https://en.wikipedia.org/wiki/Propagation_of_uncertainty#Example_formulae)** (#105)
 - Structure consistency (#80, #79)
 - Now gmx_MMPBSA launches an error when there is an `OverflowError` on IE calculation (#57)
+- Now **gmx_MMPBSA** launches an error when there is an `OverflowError` on IE calculation (#57)
+- Improve `gmx_MMPBSA.log` file (#108)
 - Inconsistency with multiple trajectories (#120)
+- Alanine Scanning ERROR on THR to ALA mutation (#139)
 #### `gmx_MMPBSA_ana`
 - Tick labels in line plots (#65)
 - Improved PyMOL 3D visualization (#85)
@@ -64,8 +74,10 @@ title: Changelog
 
 ### Changes
 #### `gmx_MMPBSA`
-- Removed deprecate variables
-- EnergyVector changed to ndarray subclass
+- Recalculate the PB energy with --rewrite-output changing the value of `inp` (#144)
+- Removed [deprecate variables](compatibility.md#variables)
+- Input file format. Although it kept the structure of the previous version, the current one is more like gromacs
+- `EnergyVector` changed to `ndarray` subclass
 - Regen expression for `mutant_res`
 - Now the COM, REC and LIG trajectories must have the same length when MT approach
 - Improve verbose logging in gmx_MMPBSA.log file (#108)
