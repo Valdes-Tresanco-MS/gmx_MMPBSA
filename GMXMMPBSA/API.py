@@ -307,8 +307,6 @@ class MMPBSA_API():
                                                                  DeltaBindingStatistics(
                                                                      self.data['mutant'][model]['delta'],
                                                                      self.data['normal'][model]['delta'])}
-        from icecream import ic
-        ic(self.data['normal']['ie'])
         # Re-calculate summaries
         self.get_summary()
 
@@ -419,8 +417,6 @@ class MMPBSA_API():
             nmframes_list = list(range(INPUT['nmstartframe'],
                                        INPUT['nmstartframe'] + nmnumframes * INPUT['nminterval'],
                                        INPUT['interval']))
-            from icecream import ic
-            ic(nmframes_list)
             INPUT['nmendframe'] = nmframes_list[-1] if nmframes_list else None
 
 

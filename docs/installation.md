@@ -10,7 +10,7 @@ title: Installation
 `gmx_MMPBSA` has been tested with GROMACS `4.6.7`, `5.1.2`, `2018.3`, `2020.4` and `2021.3`, although it should run 
 smoothly with any GROMACS present in the `PATH` and that is compatible with the files you are using.
 
-## Ways to install gmx_MMPBSA v1.5.0
+## Installing gmx_MMPBSA v1.5.0
 
 !!! danger
     gmx_MMPBSA v1.5.0 includes a number of new functionalities and parts of the code have been completely rewritten, 
@@ -40,17 +40,19 @@ errors are more frequent.
             conda create -n gmxMMPBSA python=3.9 -y -q                                      # (1)
             conda activate gmxMMPBSA                                                        # (2)
             conda install -c conda-forge mpi4py ambertools compilers -y -q                  # (3)
-            conda install -c bioconda gromacs -y -q                                         # (4)
-            # Install PyQt5 if needed
-            python -m pip install pyqt5                                                     # (5)
+            python -m pip install git+https://github.com/ParmEd/ParmEd.git@16fb236          # (4)
+            # Optional
+            conda install -c bioconda gromacs==2021.3 -y -q                                 # (5)
+            python -m pip install pyqt5                                                     # (6)
            
             ```
             
             1. Create `gmxMMPBSA` environment
             2. Activate `gmxMMPBSA` environment
             3. Install dependencies
-            4. Install GROMACS. (Optional)
-            5. Install PyQt5 only if you will use gmx_MMPBSA_ana
+            4. Install ParmEd
+            5. (Optional) Install GROMACS if GROMACS is not installed in your machine
+            6. (Optional) Install PyQt5 only if you will use gmx_MMPBSA_ana
     
             
             === "Rolling/stable release"
@@ -77,8 +79,8 @@ errors are more frequent.
                 python -m pip install git+https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA -U
                 ```
                 !!! warning
-                    Install gmx_MMPBSA from the master branch of GitHub repository. This version is only recommended 
-                    to test a new version or to try temporary solutions to reported bugs.
+                    Install gmx_MMPBSA from the master branch of GitHub repository. This is only recommended 
+                    for testing new versions or temporary solutions to reported bugs.
     
         === "`conda`"
             Stable version only
@@ -87,22 +89,26 @@ errors are more frequent.
             conda update conda
             conda create -n gmxMMPBSA python=3.9 -y -q                                      # (1)        
             conda activate gmxMMPBSA                                                        # (2)                        
-            conda install -c bioconda gromacs -y -q                                         # (3)        
-            # Install PyQt5 if needed
-            python -m pip install pyqt5                                                     # (4)                        
+            conda install -c conda-forge mpi4py ambertools compilers -y -q                  # (3)
+            python -m pip install git+https://github.com/ParmEd/ParmEd.git@16fb236          # (4)
+            # Optional
+            conda install -c bioconda gromacs==2021.3 -y -q                                 # (5)
+            python -m pip install pyqt5                                                     # (6)                      
             ```
             
             1. Create `gmxMMPBSA` environment
             2. Activate `gmxMMPBSA` environment
-            3. Install GROMACS. It is optional
-            4. Install PyQt5 only if you will use the **gmx_MMPBSA_ana**
+            3. Install dependencies
+            4. Install ParmEd
+            5. (Optional) Install GROMACS if GROMACS is not installed in your machine
+            6. (Optional) Install PyQt5 only if you will use gmx_MMPBSA_ana
     
             **INSTALLATION**
             ```bash        
             conda install -c conda-forge gmx_mmpbsa                                         # (1)    
             ```
             
-            1. Install gmx_MMPBSA from conda-forge. This package will be install all dependencies automatically
+            1. Install gmx_MMPBSA from conda-forge. This package will install all dependencies automatically
             
             **UPDATE**
             ```bash        
@@ -119,8 +125,12 @@ errors are more frequent.
         === "Rolling/stable release"
             **INSTALLATION**
             ```bash
-            amber.python -m pip install gmx_MMPBSA
-            ```       
+            amber.python -m pip install git+https://github.com/ParmEd/ParmEd.git@16fb236    # (1)
+            amber.python -m pip install gmx_MMPBSA                                          # (2)
+            ```
+
+            1. Install ParmEd
+            2. Install gmx_MMPBSA
     
             **UPDATE**
             ```bash
@@ -134,8 +144,13 @@ errors are more frequent.
         === "development version" 
             **INSTALLATION**
             ```bash
-            amber.python -m pip install git+https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA
+            amber.python -m pip install git+https://github.com/ParmEd/ParmEd.git@16fb236     # (1)
+            amber.python -m pip install git+https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA # (2)
             ```
+            
+            1. Install ParmEd
+            2. Install gmx_MMPBSA
+
             **UPDATE**
             ```bash
             amber.python -m pip install git+https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA -U
@@ -173,29 +188,24 @@ gmx_MMPBSA uses some dependencies for other functions independent of calculation
 necessary due to the nature of your OS.
 
 `ParmEd`
-:  The current version of ParmEd implemented in AmberTools has some limitations that have been resolved in the GitHub 
-repository by its author Jason Swails and others with our help.
+:  The current version of ParmEd implemented in AmberTools has some limitations that have been resolved in the [GitHub 
+repository](https://github.com/ParmEd/ParmEd/tree/16fb2364c284f7c1dd716ee912c5c674b5d31e46) by its author Jason 
+Swails and others with our help.
 
     Some of these limitations are:
 
     - Error reading topology when it has insertion codes
-    - Error processing topologies generated with the Amber19SB force field.
+    - Error processing topologies generated with the Amber ff19SB force field
     - New PBRadii sets for GAFF and CHARMM force fields
 
-    If your system may contain any of these features, you may want to update ParmEd.
-    === "conda environment"
-        ``` bash
-        python -m pip install git+https://github.com/ParmEd/ParmEd@v3.4
-        ```
-    === "AmberTools compilation"
-        ```
-        amber.python -m pip install git+https://github.com/ParmEd/ParmEd@v3.4
-        ```
+!!! danger
+    The gmx_MMPBSA installation process has been optimized to be as straightforward as possible. In rare cases, a 
+    few extra dependencies may be needed.
 
 `pip`
 :   In some cases, the miniconda environment created in the AmberTools compilation does not have the `pip` module, so
-any installation that depends on this package will fail. Required only if you did not install 
-gmx_MMPBSA via `conda`
+any installation that depends on this package will fail. Required only if you did not install gmx_MMPBSA via `conda`
+
     ```
     amber.conda install pip    
     ```
@@ -203,6 +213,7 @@ gmx_MMPBSA via `conda`
 `Git`
 :   Used by **gmx_MMPBSA_test** to download the GitHub repository to get the examples' folder or to install the 
 development version.
+
     ```
     conda install -c anaconda git
     ```
@@ -210,9 +221,6 @@ development version.
     ```
     sudo apt install git 
     ```
-
-!!! danger
-    Please, only install these dependencies if you really need them
 
 `mpi`
 :  In some cases it is necessary to install the MPI dependencies. Required only if you did not install 

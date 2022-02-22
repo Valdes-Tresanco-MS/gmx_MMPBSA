@@ -3,19 +3,23 @@ template: main.html
 title: Changelog
 ---
 # Changelog
-## gmx_MMPBSA v1.5.0 (coming soon...)
+## gmx_MMPBSA v1.5.0 (02/22/2022)
 
 ### Additions
 #### `gmx_MMPBSA`
-- Option to create an [input file](#the-input-file) (`--create_input`)
-- New format file (h5) to store all the data result (`Experimental`)
+- Support for all files generated with CHARMM-GUI for Amber force fields (ff14SB and ff19SB)
 - enabled NonLinear PB solver in `sander` (#63)
 - enabled all `pbsa` options in `sander` (#64)
 - enabled all `3D-RISM` variables (#68)
 - Improve IE output data (#91)
 - New C2 Entropy method added (#73)
-- New modified PBRadiis for GAFF (#140) and CHARMM (#141) force fields
+- Option to create an [input file](input_file.md#generation-of-input-files-with-gmx_mmpbsa) (`--create_input`)
+- New format file (h5) to store all the data result (`Experimental`)
 - New method to get the `decomp` data without the API classes
+- Report energy differences for every term in alanine scanning
+- Automatic calculation of charge for `com` , `rec`, and `lig` groups in QM/MMGBSA
+- Improve residue selection in QM/MMGBSA
+- New modified PB Radii sets for GAFF (#140) and CHARMM (#141) force fields
 - conda package (#55)
 - Checking structure consistency method (#44)
 #### `gmx_MMPBSA_ana`
@@ -43,25 +47,23 @@ title: Changelog
 - Frames to Time conversion
 #### Documentation
 - Code block names and annotations
-- Input and Output file pages
-- 
+
 ### Fixes
 #### `gmx_MMPBSA`
-- Inconsistent energy between tleap and ParmEd topology (#147) 
-- Issue with protonated residues (#42)
+- Protonated residues (#42)
+- Inconsistent energy between tleap and ParmEd topology (#147)
 - Error with alphanumeric residue numbers (#134)
-- `print_res` selection
+- `print_res` selection scheme
 - Error when `startframe=0` (#66)
 - `parmchk2` always uses GAFF as force field (#45)
-- Now IE is calculated for PB and GB independently (#72)
-- Issue with alanine scanning CHARMM ff (#88)
-- Issue with MT approach (#78)
+- IE is calculated for PB and GB independently (#72)
+- Alanine scanning with CHARMM ff (#88)
+- MT approach (#78)
 - `get_num_terms` function run forever if TDC term not found. (#98)
 - Check if the groups defined for receptor and ligand are the same (#86)
-- Add SD and SEM calculated with [propagation formula](https://en.wikipedia.org/wiki/Propagation_of_uncertainty#Example_formulae)** (#105)
+- Add SD and SEM calculated with [propagation formula](https://en.wikipedia.org/wiki/Propagation_of_uncertainty#Example_formulae) (#105)
 - Structure consistency (#80, #79)
-- Now gmx_MMPBSA launches an error when there is an `OverflowError` on IE calculation (#57)
-- Now **gmx_MMPBSA** launches an error when there is an `OverflowError` on IE calculation (#57)
+- gmx_MMPBSA launches an error when there is an `OverflowError` on IE calculation (#57)
 - Improve `gmx_MMPBSA.log` file (#108)
 - Inconsistency with multiple trajectories (#120)
 - Alanine Scanning ERROR on THR to ALA mutation (#139)
@@ -75,11 +77,11 @@ title: Changelog
 ### Changes
 #### `gmx_MMPBSA`
 - Recalculate the PB energy with --rewrite-output changing the value of `inp` (#144)
-- Removed [deprecate variables](compatibility.md#variables)
-- Input file format. Although it kept the structure of the previous version, the current one is more like gromacs
+- Removed [deprecated variables](compatibility.md#variables)
+- Input file format. Although it kept the structure of the previous version, the current one is more GROMACS alike
 - `EnergyVector` changed to `ndarray` subclass
 - Regen expression for `mutant_res`
-- Now the COM, REC and LIG trajectories must have the same length when MT approach
+- Now the COM, REC and LIG trajectories must have the same length when using MT approach
 - Improve verbose logging in gmx_MMPBSA.log file (#108)
 - Removed `*.gro` file support in `-cs` , `-rs` and `-ls` flags
 - Added `trjconv` to avoid the PBC in the tpr file (#43)
@@ -91,9 +93,11 @@ title: Changelog
 - Change command-line
 #### Documentation
 - Updated packages dependency
+- Input and Output file pages
 
+---
 
-## [gxm_MMPBSA v1.4.3 (26/05/2021)](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/releases/tag/v1.4.3)
+## [gxm_MMPBSA v1.4.3 (05/26/2021)](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/releases/tag/v1.4.3)
 ### Additions
 - Added two new tutorials [Protein_ligand_LPH_atoms_CHARMMff](https://valdes-tresanco-ms.github.io/gmx_MMPBSA/examples/Protein_ligand_LPH_atoms_CHARMMff/) and [QM/MMGBSA calculations](https://valdes-tresanco-ms.github.io/gmx_MMPBSA/examples/QM_MMGBSA/)
 - Now the program reports the `p-value` associated with the correlation coefficient when performing the correlation analysis
@@ -108,9 +112,11 @@ title: Changelog
 
 ### Changes
 - Now the command line used is added to the log file 
-- The `gmx_MMPBSA data` folder is exported directly rather than copied in the `$AMBERHOME` data folder. 
+- The `gmx_MMPBSA data` folder is exported directly rather than copied in the `$AMBERHOME` data folder.
 
-## [gxm_MMPBSA v1.4.2 (01/05/2021)](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/releases/tag/v1.4.2)
+---
+
+## [gxm_MMPBSA v1.4.2 (05/01/2021)](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/releases/tag/v1.4.2)
 ### Additions
 - Added Covid-19 and other complex systems as examples in the documentation
 - Added Q&A section to the documentation
@@ -132,8 +138,10 @@ title: Changelog
   and will be removed in the next major version (v1.5.0)._
 - `entropy_seg` was replaced by `ie_segment`. _The `entropy_seg` variable is deprecated and will be removed in the 
   next major version (v1.5.0)._
+  
+---
 
-## [gxm_MMPBSA v1.4.1 (08/04/2021)](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/releases/tag/v1.4.1)
+## [gxm_MMPBSA v1.4.1 (04/08/2021)](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/releases/tag/v1.4.1)
 **Additions**
 
 - New class `Residue` added to handle residues selection in Gromacs format with Amber index
@@ -167,7 +175,9 @@ title: Changelog
   - Figures caption
 - The Ambiguous name for Entropy term in output files
 
-## [gxm_MMPBSA v1.4.0 (22/03/2021)](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/releases/tag/v1.4.0)
+---
+
+## [gxm_MMPBSA v1.4.0 (03/22/2021)](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/releases/tag/v1.4.0)
 This release focuses almost entirely on `gmx_MMPBSA_ana` with minor issues fixed in `gmx_MMPBSA`
 
 **Additions**
@@ -233,8 +243,9 @@ This release focuses almost entirely on `gmx_MMPBSA_ana` with minor issues fixed
     - Separated changelog in a new header
     - Added tags to mark the history of changes of variables and functionalities
   
+---
 
-## [gxm_MMPBSA v1.3.3 (09/03/2021)](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/releases/tag/v1.3.3)
+## [gxm_MMPBSA v1.3.3 (03/09/2021)](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/releases/tag/v1.3.3)
 **Fixes**
 
 * fixed Boltzmann constant for IE
@@ -244,7 +255,9 @@ This release focuses almost entirely on `gmx_MMPBSA_ana` with minor issues fixed
 * fixed ChainID assignation when reference structure is defined
 * fixed the selection to print when decomposition
 
-## [gxm_MMPBSA v1.3.2 (01/03/2021)](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/releases/tag/v1.3.2) 
+---
+
+## [gxm_MMPBSA v1.3.2 (03/01/2021)](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/releases/tag/v1.3.2) 
 **Additions**
 
 * **Now, gmx_MMPBSA is in Zenodo 
@@ -268,6 +281,7 @@ This release focuses almost entirely on `gmx_MMPBSA_ana` with minor issues fixed
 * The method `Map` of the `system_MMPBSA` class has been restructured. Now always processes amber masks
 * Changing the IE calculation function to a class
 
+---
 
 ## [gmx_MMPBSA-v1.3.1](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/releases/tag/v1.3.1)
 **Additions**
@@ -286,6 +300,8 @@ This release focuses almost entirely on `gmx_MMPBSA_ana` with minor issues fixed
 **Changes**
 
 * Documentation banner
+
+---
 
 ## [gmx_MMPBSA-v1.3.0](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/releases/tag/v1.3.0)
 
@@ -316,6 +332,8 @@ This release focuses almost entirely on `gmx_MMPBSA_ana` with minor issues fixed
 * Improvement on the topologies' construction process
 * Order in which the trajectories are cleaned. Now, the topology is built and finally, the trajectories are cleaned
 
+---
+
 ## [gmx_MMPBSA v1.2.0](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/releases/tag/v1.2.0)
 **Additions**
 
@@ -335,6 +353,8 @@ This release focuses almost entirely on `gmx_MMPBSA_ana` with minor issues fixed
 *.gro files can be used as a MD Structure+mass(db) file
 Updated tutorial list in README (Protein_DNA_RNA_Ion_ligand BFE calculations)
 
+---
+
 ## [gmx_MMPBSA v1.1.1](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/releases/tag/v1.1.1)
 **Additions**
 
@@ -347,6 +367,8 @@ Updated tutorial list in README (Protein_DNA_RNA_Ion_ligand BFE calculations)
 **Changes**
 
 * Keep all the temporary files in the folder for debugging purposes
+
+---
 
 ## [gxm_MMPBSA v.1.1.0](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/releases/tag/v.1.1.0)
 **Additions**
@@ -364,6 +386,8 @@ Updated tutorial list in README (Protein_DNA_RNA_Ion_ligand BFE calculations)
 
 * We changed the notation of the force fields, now the user can define any force field (We have only tested Amber and 
 GLYCAM force fields) available in AmberTools. Charmm is not yet supported. See this section
+  
+---
 
 ## [gxm_MMPBSA first release](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/releases/tag/v1.0.0)
 **This version includes:**
@@ -373,3 +397,5 @@ GLYCAM force fields) available in AmberTools. Charmm is not yet supported. See t
 * Graphical user interface for results analysis (gmx_MMPBSA_ana)
 * API modified to get more information
 * Some new facilities and types of calculations
+
+---
