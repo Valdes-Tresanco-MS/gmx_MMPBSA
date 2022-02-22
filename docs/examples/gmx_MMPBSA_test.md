@@ -63,43 +63,45 @@ Based on MMPBSA.py (version 16.0) and AmberTools20
 ## Running gmx_MMPBSA_test
 gmx_MMPBSA_test is designed to run a set of samples (all or minimal) or a specific example efficiently. 
 Additionally, gmx_MMPBSA_test can run in parallel, decreasing the execution time gmx_MMPBSA_test will download the 
-most recent version of the repository in the specified folder and will perform the calculations
+most recent version of the repository in the specified folder and will perform the calculations.
 
-=== "Fast"
-    
-        gmx_MMPBSA_test -f /home/user/Documents -n 10
-    
-    Through this command-line, gmxMMPBSA_test will:
-    
-    * Download gmx_MMPBSA repository content in `/home/user/Documents`
-    * Works with `Fast` set of examples [-t 2 is the default]
-    * Perform the calculation on 9 examples sequentially, using 10 cpus each time
+!!! info "Sets in gmx_MMPBSA_test"
 
-=== "Minimal"
+    === "Fast"
+        
+            gmx_MMPBSA_test -f /home/user/Documents -n 10
+        
+        Through this command-line, gmxMMPBSA_test will:
+        
+        * Download gmx_MMPBSA repository content in `/home/user/Documents`
+        * Works with `Fast` set of examples [-t 2 is the default]
+        * Perform the calculation on 9 examples sequentially, using 10 cpus each time
     
-        gmx_MMPBSA_test -f /home/user/Documents -n 10 -t 1
+    === "Minimal"
+        
+            gmx_MMPBSA_test -f /home/user/Documents -n 10 -t 1
+        
+        Through this command-line, gmxMMPBSA_test will:
+        
+        * Download gmx_MMPBSA repository content in `/home/user/Documents`
+        * Works with `Minimal` set of examples [-t 1]
+        * Perform the calculation on 13 examples sequentially, using 10 cpus each time
     
-    Through this command-line, gmxMMPBSA_test will:
-    
-    * Download gmx_MMPBSA repository content in `/home/user/Documents`
-    * Works with `Minimal` set of examples [-t 1]
-    * Perform the calculation on 13 examples sequentially, using 10 cpus each time
-
-=== "All"
-    
-        gmx_MMPBSA_test -f /home/user/Documents -t 0 -n 10
-    
-    Through this command-line, gmxMMPBSA_test will:
-    
-    * Download gmx_MMPBSA repository content in `/home/user/Documents`
-    * Works with `All` set of examples
-    * Perform the calculation on 16 examples sequentially, using 10 cpus each time
-    
-=== "Specific"
-    
-        gmx_MMPBSA_test -f /home/user/Documents -t 3
-    
-    Through this command-line, gmxMMPBSA_test will:
-    
-    * Download gmx_MMPBSA repository content in `/home/user/Documents`
-    * Execute `3` [Protein-Ligand (Single Trajectory approach)] example
+    === "All"
+        
+            gmx_MMPBSA_test -f /home/user/Documents -t 0 -n 10
+        
+        Through this command-line, gmxMMPBSA_test will:
+        
+        * Download gmx_MMPBSA repository content in `/home/user/Documents`
+        * Works with `All` set of examples
+        * Perform the calculation on 16 examples sequentially, using 10 cpus each time
+        
+    === "Specific"
+        
+            gmx_MMPBSA_test -f /home/user/Documents -t 3
+        
+        Through this command-line, gmxMMPBSA_test will:
+        
+        * Download gmx_MMPBSA repository content in `/home/user/Documents`
+        * Execute `3` [Protein-Ligand (Single Trajectory approach)] example
