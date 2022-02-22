@@ -646,7 +646,7 @@ class MMPBSA_App(object):
             ifile = Path(self.FILES.prefix + 'info')
             if not ifile.exists():
                 ifile = Path('RESULTS_gmx_MMPBSA.h5')
-            g = subprocess.Popen(['python', '/home/mario/PycharmProjects/gmx_MMPBSA/run_ana.py', '-f', ifile.as_posix()])
+            g = subprocess.Popen(['gmx_MMPBSA_ana', '-f', ifile.as_posix()])
             if g.wait():
                 end = 1
         if end:
