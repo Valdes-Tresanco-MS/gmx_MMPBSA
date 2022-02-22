@@ -1105,13 +1105,14 @@ class GMX_MMPBSA_ANA(QMainWindow):
             itemiter += 1
 
     def _remove_empty_terms(self, data):
-        if self.data_options['remove_empty_terms']:
-            if isinstance(data, pd.DataFrame):
-                columns = data.columns
-                for col in columns:
-                    if (data[col] > -0.01).all() and (data[col] < 0.01).all():
-                        del data[col]
-                return data
+        if self.data_options['remove_empty_terms'] and isinstance(
+            data, pd.DataFrame
+        ):
+            columns = data.columns
+            for col in columns:
+                if (data[col] > -0.01).all() and (data[col] < 0.01).all():
+                    del data[col]
+            return data
         return data
 
     def _remove_empty_charts(self, data):

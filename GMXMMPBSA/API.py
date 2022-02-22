@@ -409,7 +409,7 @@ class MMPBSA_API():
                                  INPUT['interval']))
         INPUT['endframe'] = frames_list[-1]
         time_step_list = list(range(self.starttime,
-                                    self.starttime + len(frames_list) * ts,
+                                    self.starttime + len(frames_list) * ts * INPUT['interval'],
                                     ts * INPUT['interval']))
         self.frames = dict(zip(frames_list, time_step_list))
 
@@ -419,11 +419,9 @@ class MMPBSA_API():
                                        INPUT['interval']))
             INPUT['nmendframe'] = nmframes_list[-1] if nmframes_list else None
 
-
-
             nm_start = (nmframes_list[0] - frames_list[0]) * INPUT['interval']
             nmtime_step_list = list(range(self.starttime + nm_start,
-                                          self.starttime + nm_start + len(nmframes_list) * ts,
+                                          self.starttime + nm_start + len(nmframes_list) * ts * INPUT['nminterval'],
                                           ts * INPUT['nminterval']))
 
             self.nmframes = dict(zip(nmframes_list, nmtime_step_list))
