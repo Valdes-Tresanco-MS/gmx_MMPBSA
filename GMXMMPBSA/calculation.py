@@ -243,8 +243,8 @@ class RISMCalculation(Calculation):
         self.npropagate = INPUT['npropagate']
         self.centering = INPUT['centering']
         self.entropicDecomp = INPUT['entropicDecomp']
-        self.pc_plus = INPUT['pc+']
-        self.uccoeff = ','.join(map(str, INPUT['uccoeff']))
+        self.pc_plus = INPUT['rismrun_pc+']
+        # self.uccoeff = ','.join(map(str, INPUT['uccoeff']))
         self.treeDCF = INPUT['treeDCF']
         self.treeTCF = INPUT['treeTCF']
         self.treeCoulomb = INPUT['treeCoulomb']
@@ -270,6 +270,9 @@ class RISMCalculation(Calculation):
         ngflag = self.ng != "-1,-1,-1"
         solvboxflag = self.solvbox != "-1,-1,-1"
         polardecompflag = bool(self.polardecomp)
+        gfflag = bool(self.gf)
+        pc_plusflag = bool(self.pc_plus)
+
         Calculation.setup(self)
         self.command_args.extend(('--xvv', self.xvvfile,
                                   '--closure', self.closure,
@@ -287,29 +290,33 @@ class RISMCalculation(Calculation):
             self.command_args.extend(('--solvbox', self.solvbox))
         if polardecompflag:
             self.command_args.extend(['--polarDecomp'])
-        if self.gf:
+        if gfflag:
             self.command_args.extend(['--gf'])
+        if pc_plusflag:
+            self.command_args.extend(['--pc+'])
         if not os.path.exists(self.xvvfile):
             raise IOError('XVVFILE (%s) does not exist!' % self.xvvfile)
 
         # additional variables
         var_names = [self.mdiis_del, self.mdiis_restart, self.mdiis_nvec, self.maxstep, self.npropagate,
-                     self.centering, self.entropicDecomp, self.pc_plus, self.uccoeff, self.treeDCF, self.treeTCF,
+                     self.centering, self.entropicDecomp, self.treeDCF, self.treeTCF,
                      self.treeCoulomb, self.treeDCFOrder, self.treeTCFOrder, self.treeCoulombOrder, self.treeDCFN0,
                      self.treeTCFN0, self.treeCoulombN0, self.treeDCFMAC, self.treeTCFMAC, self.treeCoulombMAC,
                      self.asympKSpaceTolerance, self.ljTolerance]
 
         var_input_names = ['mdiis_del', 'mdiis_restart', 'mdiis_nvec', 'maxstep', 'npropagate',
-                           'centering', 'entropicDecomp', 'pc+', 'uccoeff', 'treeDCF', 'treeTCF', 'treeCoulomb',
+                           'centering', 'entropicDecomp', 'treeDCF', 'treeTCF', 'treeCoulomb',
                            'treeDCFOrder', 'treeTCFOrder', 'treeCoulombOrder', 'treeDCFN0', 'treeTCFN0',
                            'treeCoulombN0', 'treeDCFMAC', 'treeTCFMAC', 'treeCoulombMAC', 'asympKSpaceTolerance',
                            'ljTolerance']
 
         for i in zip(var_names, var_input_names):
-            if i[1] not in ['treeDCF', 'treeTCF', 'treeCoulomb', 'entropicDecomp', 'pc+']:
+            if i[1] not in ['treeDCF', 'treeTCF', 'treeCoulomb', 'entropicDecomp']:
                 self.command_args.extend((f'--{i[1]}', str(i[0])))
-            else:
+            elif i[0] != 0:
                 self.command_args.extend([f'--{i[1]}'])
+
+        print(self.command_args)
 
         self.calc_setup = True
 
