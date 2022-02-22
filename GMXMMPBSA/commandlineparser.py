@@ -25,6 +25,7 @@ in gmx_MMPBSA will be assigned as attributes to the returned class.
 # ##############################################################################
 
 import os
+import sys
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter, RawDescriptionHelpFormatter, RawTextHelpFormatter
 from pathlib import Path
 from GMXMMPBSA import __version__, __mmpbsa_version__, __ambertools_version__
@@ -94,6 +95,7 @@ class GMXMMPBSA_ArgParser(ArgumentParser):
     def exit(self, status=0, message=None):
         if message:
             GMXMMPBSA_ERROR(message)
+        sys.exit(status)
 
 
 description = ("gmx_MMPBSA is a new tool based on AMBER's MMPBSA.py aiming to perform end-state free energy calculations"
