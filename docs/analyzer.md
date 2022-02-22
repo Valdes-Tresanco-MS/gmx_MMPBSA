@@ -3,7 +3,14 @@ template: main.html
 title: gmx_MMPBSA_ana
 ---
 
-# `gmx_MMPBSA_ana`: The analyzer tool
+# gmx_MMPBSA_ana v1.5.0: The analyzer tool
+
+gmx_MMPBSA_ana v1.5.0 includes a number of options to customize graphs and save high-quality figures. It's also able 
+to handle and export all outputs from gmx_MMPBSA v1.5.0. It conserves the essence of v1.4.3, although the API 
+that uses in the backend is quite different, making it incompatible with files from previous versions. We will
+update this page with graphs and videos from v1.5.0 soon...
+
+# gmx_MMPBSA_ana v1.4.3: The analyzer tool
 
 ## Overview
 `gmx_MMPBSA_ana` is a simple but powerful analysis tool. It is mainly focused on providing a fast, easy and efficient 
