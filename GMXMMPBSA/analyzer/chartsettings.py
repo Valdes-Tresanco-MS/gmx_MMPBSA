@@ -531,7 +531,7 @@ class ChartSettings(dict):
                     'remove-molid': {'type': 'bool', 'enabled': True, 'expanded': True, 'name': 'remove-molid',
                                      'value': True, 'default': True, 'action_type': R},
                     'receptor-color': {'type': 'color', 'enabled': True, 'expanded': True, 'name': 'receptor-color',
-                                       'value': [0, 0, 255, 255], 'default': [0, 0, 255, 255], 'action_type': R},
+                                       'value': [255, 85, 127, 255], 'default': [255, 85, 127, 255], 'action_type': R},
                     'ligand-color': {'type': 'color', 'enabled': True, 'expanded': True, 'name': 'ligand-color',
                                      'value': [0, 255, 0, 255], 'default': [0, 255, 0, 255], 'action_type': R},
 
@@ -729,8 +729,6 @@ class ChartSettings(dict):
                 continue
             ks = list(x[:-1])
             if v != flatten[tuple(ks + ['default'])]:
-                from icecream import ic
-                ic(v, flatten[tuple(ks + ['default'])])
                 return True
 
     def get_changes(self, osett) -> None:

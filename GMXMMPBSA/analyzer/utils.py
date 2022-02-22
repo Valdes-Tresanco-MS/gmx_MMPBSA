@@ -271,6 +271,8 @@ def energy2pdb_pml(residue_list, options, pml_path: Path, pdb_path: Path):
     pymol_colors = []
     with open(pml_path, 'w') as bf:
         bf.write(f'load {pdb_path}\n')
+        # backwards compatibility
+        bf.write("hide lines\n")
         bf.write(f"set cartoon_oval_length, {options['cartoon_oval_length']}\n")
         bf.write(f"set cartoon_rect_length, {options['cartoon_rect_length']}\n")
         bf.write(f"set cartoon_rect_width, {options['cartoon_rect_width']}\n")
