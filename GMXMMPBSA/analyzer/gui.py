@@ -191,16 +191,17 @@ class GMX_MMPBSA_ANA(QMainWindow):
                     self.systems[x]['chart_options'].write_system_config(self.systems[x]['path'])
 
             if pymol_items := [
-                p for p in self.pymol_p_list if p.state() == QProcess.Running
+                p for p, _ in self.pymol_p_list if p.state() == QProcess.Running
             ]:
                 qpd = QProgressDialog('Closing PyMOL instances', 'Abort', 0, len(pymol_items), self)
                 qpd.setWindowModality(Qt.WindowModality.WindowModal)
                 qpd.setMinimumDuration(1000)
-                for i, p in enumerate(range(len(self.pymol_p_list))):
-                    if self.pymol_p_list[p].state() == QProcess.Running:
+                qpd.setRange(0, len(self.pymol_p_list))
+                for i, (p, _) in enumerate(self.pymol_p_list):
+                    if p.state() == QProcess.Running:
                         qpd.setValue(i)
-                        self.pymol_p_list[p].kill()
-                        self.pymol_p_list[p].waitForFinished()
+                        p.kill()
+                        p.waitForFinished()
                 qpd.setValue(len(self.pymol_p_list))
             a0.accept()
         else:
