@@ -241,7 +241,7 @@ class RISMCalculation(Calculation):
         self.mdiis_nvec = INPUT['mdiis_nvec']
         self.maxstep = INPUT['maxstep']
         self.npropagate = INPUT['npropagate']
-        self.centering = INPUT['centering']
+        # self.centering = INPUT['centering']
         # self.entropicDecomp = INPUT['entropicDecomp']
         # self.pc_plus = INPUT['rismrun_pc+']
         # self.uccoeff = ','.join(map(str, INPUT['uccoeff']))
@@ -299,13 +299,13 @@ class RISMCalculation(Calculation):
 
         # additional variables
         var_names = [self.mdiis_del, self.mdiis_restart, self.mdiis_nvec, self.maxstep, self.npropagate,
-                     self.centering, self.treeDCF, self.treeTCF, self.treeCoulomb,
+                     self.treeDCF, self.treeTCF, self.treeCoulomb,
                      self.treeDCFOrder, self.treeTCFOrder, self.treeCoulombOrder, self.treeDCFN0,
                      self.treeTCFN0, self.treeCoulombN0, self.treeDCFMAC, self.treeTCFMAC, self.treeCoulombMAC,
                      self.asympKSpaceTolerance, self.ljTolerance]
 
         var_input_names = ['mdiis_del', 'mdiis_restart', 'mdiis_nvec', 'maxstep', 'npropagate',
-                           'centering', 'treeDCF', 'treeTCF', 'treeCoulomb',
+                           'treeDCF', 'treeTCF', 'treeCoulomb',
                            'treeDCFOrder', 'treeTCFOrder', 'treeCoulombOrder', 'treeDCFN0', 'treeTCFN0',
                            'treeCoulombN0', 'treeDCFMAC', 'treeTCFMAC', 'treeCoulombMAC',
                            'asympKSpaceTolerance', 'ljTolerance']
