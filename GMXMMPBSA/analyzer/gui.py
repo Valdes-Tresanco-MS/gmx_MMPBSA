@@ -1115,9 +1115,11 @@ class GMX_MMPBSA_ANA(QMainWindow):
         return data
 
     def _remove_empty_charts(self, data):
-        if self.data_options['remove_empty_charts'] and (all(data > -0.01) and all(data < 0.01)):
+        if isinstance(data, pd.Series):
+            if self.data_options['remove_empty_charts'] and ((data > -0.01).all() and (data < 0.01).all()):
+                return True
+        elif self.data_options['remove_empty_charts'] and ((data > -0.01).all().all() and (data < 0.01).all().all()):
             # FIXME: Do we need to clarify that they are not terms like GSOLV, GGAS and TOTAL?
-            del data
             return True
 
     def _itemdata_properties(self, data, decomp=False):
@@ -1447,6 +1449,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
                                                                                                                level=1)
                         for level2 in str_dict[level1]:
                             if self._remove_empty_charts(data[level][(level1, level2)]):
+                                del data[level][(level1, level2)]
                                 self.removed_items[sys_index].append((part, level, (level1, level2)))
                                 continue
                             if not part.startswith('decomp'):
