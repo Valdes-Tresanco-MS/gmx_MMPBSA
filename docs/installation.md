@@ -66,7 +66,7 @@ errors are more frequent.
                 ```       
                 
                 !!! info 
-                    Install/update gmx_MMPBSA from PyPi. PyPi has the latest version of *gmx_MMPBSA* including stable 
+                    Install/update gmx_MMPBSA from PyPI. PyPI has the latest version of *gmx_MMPBSA* including stable 
                     and beta versions.
             
             === "development version" 
@@ -138,7 +138,7 @@ errors are more frequent.
             ```
     
             !!! info 
-                Install gmx_MMPBSA from PyPi. PyPi has the latest version of *gmx_MMPBSA* including stable and beta
+                Install gmx_MMPBSA from PyPI PyPI has the latest version of *gmx_MMPBSA* including stable and beta
                 versions.
             
         === "development version" 
