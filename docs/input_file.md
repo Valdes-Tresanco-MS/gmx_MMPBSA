@@ -13,12 +13,12 @@ on GROMACS *.mdp files. The input file contains sections called `namelist` where
 calculation. The allowed namelists are:
 
 - [`&general`](input_file.md#general-namelist-variables): contains variables that apply to all aspects of the 
-calculation or parameters required for building AMBER topologies from GROMACS files.
+  calculation or parameters required for building AMBER topologies from GROMACS files.
 - [`&gb`](input_file.md#gb-namelist-variables): unique variables to Generalized Born (GB) calculations
 - [`&pb`](input_file.md#pb-namelist-variables): unique variables to Poisson Boltzmann (PB) calculations
 - [`&rism`](input_file.md#rism-namelist-variables): unique variables to 3D-RISM calculations
 - [`&alanine_scanning`](input_file.md#alanine_scanning-namelist-variables): unique variables to alanine scanning calculations
-- [`&decomp`](input_file.md#decomp-namelist-variables): unique variables to the decomposition scheme  
+- [`&decomp`](input_file.md#decomp-namelist-variables): unique variables to the decomposition scheme
 - [`&nmode`](input_file.md#nmode-namelist-variables): unique variables to the normal mode (NMODE) calculations used to approximate vibrational entropies
 
   [1]: https://pubs.acs.org/doi/10.1021/ct300418h
@@ -1153,78 +1153,51 @@ summation of the atomic SASA’s. A molecular SASA is used for both PB dielectri
   [7]: https://ambermd.org/doc12/Amber21.pdf#chapter.7
   [8]: https://ambermd.org/doc12/Amber21.pdf#subsection.36.3.2
 
+#### **Closure approximations**
+
 `closure` (Default = "kh")
-:   A comma-separated list of one or more of `kh` (Kovalenko-Hirata), `hnc` (Hypernetted- chain) or `psen` (Partial 
-Series Expansion of order-n) where “n” is a positive integer (_e.g._, "pse3"). If more than one closure is provided, 
-the 3D-RISM solver will use the closures in order to obtain a solution for the last closure in the list when no previous
-solutions are available. The solution for the last closure in the list is used for all output. This can be useful for 
-difficult to converge calculations. (see [§7.3.1](https://ambermd.org/doc12/Amber21.pdf#subsection.7.3.1))
+:   Comma separate list of closure approximations. If more than one closure is provided, the 3D-RISM solver will use 
+the closures in order to obtain a solution for the last closure in the list when no previous solutions are available.
+The solution for the last closure in the list is used for all output. The use of several closures combined with 
+different tolerances can be useful to overcome convergence issues (see [§7.3.1](https://ambermd.org/doc12/Amber21.
+pdf#subsection.7.3.1))
+
+    * "kh": Kovalenko-Hirata
+    * "hnc": Hyper-netted chain equation
+    * "psen": Partial Series Expansion of order-n where “n” is a positive integer (_e.g._, "pse3")
+
+    !!! example "Examples"
+
+        === "One closure"
+                 closure="pse3"
+        === "Several closures"
+                 closure="kh, pse3"
+
+#### **Solvation free energy corrections**
+
+`thermo` (Default = "std")
+:   Which thermodynamic equation you want to use to calculate solvation properties. Options are:
+
+    * "std": uses the standard closure relation
+    * "gf": Compute the Gaussian fluctuation excess chemical potential functional
+    * "both": print out separate sections for all
+    
+    !!! note
+        Note that all data are printed out for each RISM simulation, so no choice is any more computationally demanding 
+        than another.
+
+#### **Long-range asymptotics**
+
+!!! info
+    Long-range asymptotics are used to analytically account for solvent distribution beyond the solvent box. 
+    Long-range asymptotics are always used when calculating a solution but can be omitted for
+    the subsequent thermodynamic calculations, though it is not recommended.
 
 `noasympcorr` (Default = 1) 
-:   Turn off long range asymptotic corrections for thermodynamic output only. Long range asymptotics are still used to 
-calculate the solution.
+:   Use long-range asymptotic corrections for thermodynamic calculations.
 
-    _New in v1.5.0_
-
-`buffer` (Default = 14)
-:   Minimum distance (in Å) between solute and edge of solvation box. Specify this with `grdspc` below. Mutually exclusive
-with `ng` and `solvbox`. See [§7.2.3](https://ambermd.org/doc12/Amber21.pdf#subsection.7.2.3) for details on 
-how this affects numerical accuracy and how this interacts with 
-`ljTolerance`, and `tolerance`
-
-`solvcut`  (Default = `buffer` )
-:   Cutoff used for solute-solvent interactions. The default value is that of buffer. Therefore, if you set `buffer` < 
-0 and specify `ng` and `solvbox` instead, you must set `solvcut` to a nonzero value, or the program will quit in error.
-
-`grdspc`(Default = 0.5)
-:   Grid spacing (in Å) of the solvation box. Specify this with `buffer` above. Mutually exclusive with `ng` and 
-`solvbox`.
-
-`ng` (Default = '-1,-1,-1')
-:   Comma separated number of grid points to use in the x, y, and z directions. Used only if buffer < 0. Mutually 
-exclusive with `buffer` and `grdspc` above, and paired with `solvbox` below.
-
-    !!! warning 
-        No default, this must be set if buffer < 0. Define like `ng=1000,1000,1000`
-
-`solvbox` (Default = '-1,-1,-1')
-:   Comma separated solvation box side length for x, y, and z dimensions. Used only if `buffer` < 0. Mutually exclusive 
-with `buffer` and `grdspc` above, and paired with `ng` above. 
-
-    !!! warning 
-        No default, this must be set if buffer < 0. Define like `solvbox=20,20,20`
-
-`tolerance` (Default = 0.00001)
-:   A comma-separated list of maximum residual values for solution convergence. This has a strong effect on the 
-cost of 3D-RISM calculations (smaller value for tolerance -> more computation). When used in combination with a list 
-of closures it is possible to define different tolerances for each of the closures. This can be useful for difficult 
-to converge calculations (see [§7.3.1](https://ambermd.org/doc12/Amber21.pdf#subsection.7.3.1)). For the sake of 
-efficiency, it is best to use as high a tolerance as possible for all but the last closure. 
-See [§7.2.3](https://ambermd.org/doc12/Amber21.pdf#subsection.7.2.3) for details on how this affects numerical 
-accuracy and how this interacts with `ljTolerance`, `buffer`, and `solvbox`. Three formats of list are possible:
-
-    * one tolerance: All closures but the last use a tolerance of 1. The last tolerance in the list is used
-    by the last closure. In practice this is the most efficient.
-    * two tolerances: All closures but the last use the first tolerance in the list. The last tolerance in the
-    list is used by the last closure.
-    * n tolerances: Tolerances from the list are assigned to the closure list in order.
-
-`ljTolerance` (Default = -1)
-:   Lennard-Jones accuracy (Optional.) Determines the Lennard-Jones cutoff distance based on the desired accuracy of 
-the calculation. See [§7.2.3](https://ambermd.org/doc12/Amber21.pdf#subsection.7.2.3) for details on how this affects 
-numerical accuracy and how this interacts with `tolerance`, `buffer`, and `solvbox`.
-
-    _New in v1.5.0_
-
-`asympKSpaceTolerance` (Default = -1)
-:   Tolerance reciprocal space long range asymptotics accuracy (Optional.) Determines the reciprocal space long 
-range asymptotic cutoff distance based on the desired accuracy of the calculation. 
-See [§7.2.3](https://ambermd.org/doc12/Amber21.pdf#subsection.7.2.3) for details on how this affects numerical 
-accuracy. Possible values are:
-
-    * < 0: asympKSpaceTolerance = tolerance/10
-    * 0: no cutoff
-    * > 0: given value determines the maximum error in the reciprocal-space long range asymptotics calculations
+    * 0: Do not use long-range corrections
+    * 1: Use the long-range corrections
 
     _New in v1.5.0_
 
@@ -1304,6 +1277,109 @@ sets the depth of the hierarchical octtree.
 
     _New in v1.5.0_
 
+#### **Solvation box**
+
+!!! info
+    The non-periodic solvation box super-cell can be defined as variable or fixed in size. When a
+    variable box size is used, the box size will be adjusted to maintain a minimum buffer distance between the atoms
+    of the solute and the box boundary. This has the advantage of maintaining the smallest possible box size while
+    adapting to changes of solute shape and orientation. Alternatively, the box size can be specified at run-time. This
+    box size will be used for the duration of the sander calculation. Solvent box dimensions have a strong effect on 
+    the numerical precision of 3D-RISM. See [§7.2.3](https://ambermd.org/doc12/Amber21.pdf#subsection.7.2.3) for 
+    recommendation on selecting an appropriate box size and resolution.
+
+##### **Variable box size**
+
+`buffer` (Default = 14)
+:   Minimum distance (in Å) between solute and edge of solvation box. Specify this with `grdspc` below. Mutually 
+exclusive with `ng` and `solvbox`. See [§7.2.3](https://ambermd.org/doc12/Amber21.pdf#subsection.7.2.3) for details on 
+how this affects numerical accuracy and how this interacts with `ljTolerance`, and `tolerance`
+
+    * < 0: Use fixed box size (see `ng` and `solvbox` below)
+    * >= 0: Buffer distance
+
+`grdspc`(Default = 0.5,0.5,0.5)
+:   Grid spacing (in Å) of the solvation box. Specify this with `buffer` above. Mutually exclusive with `ng` and 
+`solvbox`.
+
+##### **Fixed box size**
+
+`ng` (Default = -1,-1,-1)
+:   Comma separated number of grid points to use in the x, y, and z directions. Used only if buffer < 0. Mutually 
+exclusive with `buffer` and `grdspc` above, and paired with `solvbox` below.
+
+    !!! warning 
+        No default, this must be set if buffer < 0. Define like `ng=1000,1000,1000`
+
+`solvbox` (Default = '-1,-1,-1')
+:    Sets the size in Å of the fixed size solvation box. Used only if `buffer` < 0. Mutually exclusive with `buffer` 
+and `grdspc` above, and paired with `ng` above. 
+
+    !!! warning 
+        No default, this must be set if buffer < 0. Define like `solvbox=20,20,20`
+
+`solvcut`  (Default = 14 )
+:   Cutoff used for solute-solvent interactions. The default value is that of buffer. Therefore, if you set `buffer` < 
+0 and specify `ng` and `solvbox` instead, you must set `solvcut` to a nonzero value; otherwise the program will quit in 
+error.
+
+#### **Solution convergence**
+
+`tolerance` (Default = 0.00001)
+:   A comma-separated list of maximum residual values for solution convergence. This has a strong effect on the 
+cost of 3D-RISM calculations (smaller value for tolerance -> more computation). When used in combination with a list 
+of closures it is possible to define different tolerances for each of the closures. This can be useful for difficult 
+to converge calculations (see [§7.4.1](https://ambermd.org/doc12/Amber21.pdf#page=120&zoom=100,96,798)). For the sake of 
+efficiency, it is best to use as high a tolerance as possible for all but the last closure. 
+See [§7.2.3](https://ambermd.org/doc12/Amber21.pdf#subsection.7.2.3) for details on how this affects numerical 
+accuracy and how this interacts with `ljTolerance`, `buffer`, and `solvbox`. Three formats of list are possible:
+
+    * one tolerance: All closures but the last use a tolerance of 1. The last tolerance in the list is used
+    by the last closure. In practice this is the most efficient.
+    * two tolerances: All closures but the last use the first tolerance in the list. The last tolerance in the
+    list is used by the last closure.
+    * n tolerances: Tolerances from the list are assigned to the closure list in order.
+
+    !!! example "Examples"
+        === "One closure/One tolerance"
+                closure="pse3", tolerance=0.00001
+            
+            A tolerance of 0.00001 will be used for clousure "pse3"
+        === "Several closures/One tolerance"
+                 closure="kh,pse3", tolerance=0.00001
+
+            A tolerance of 1 will be used for clousure "kh", while 0.00001 will be used for clousure "pse3". 
+            Equivalent to `closure="kh, pse3", tolerance=1,0.00001`
+        === "Several closures/Two tolerances"
+                 closure="kh,pse2,pse3", tolerance=0.01,0.00001
+
+            A tolerance of 0.01 will be used for clousures "kh" and "pse2", while 0.00001 will be used for clousure 
+            "pse3". Equivalent to `closure="kh,pse2,pse3", tolerance=0.01,0.01,0.00001`
+        === "Several closures/Several tolerances"
+                 closure="kh,pse2,pse3", tolerance=0.1,0.01,0.00001
+
+            A tolerance of 0.1 will be used for clousure "kh", 0.01 will be used for clousure "pse2", while 0.00001 
+            will be used for clousure "pse3".
+
+`ljTolerance` (Default = -1)
+:   Lennard-Jones accuracy (Optional.) Determines the Lennard-Jones cutoff distance based on the desired accuracy of 
+the calculation. See [§7.2.3](https://ambermd.org/doc12/Amber21.pdf#subsection.7.2.3) for details on how this affects 
+numerical accuracy and how this interacts with `tolerance`, `buffer`, and `solvbox`.
+
+    _New in v1.5.0_
+
+`asympKSpaceTolerance` (Default = -1)
+:   Tolerance reciprocal space long range asymptotics accuracy (Optional.) Determines the reciprocal space long 
+range asymptotic cutoff distance based on the desired accuracy of the calculation. 
+See [§7.2.3](https://ambermd.org/doc12/Amber21.pdf#subsection.7.2.3) for details on how this affects numerical 
+accuracy. Possible values are:
+
+    * < 0: asympKSpaceTolerance = tolerance/10
+    * 0: no cutoff
+    * > 0: given value determines the maximum error in the reciprocal-space long range asymptotics calculations
+
+    _New in v1.5.0_
+
 `mdiis_del` (Default = 0.7)
 :   MDIIS step size.
 
@@ -1322,14 +1398,20 @@ help convergence.
     _New in v1.5.0_
 
 `maxstep` (Default = 10000)
-:   Maximum number of iterative steps per solution.
+:   Maximum number of iterations allowed to converge on a solution.
 
     _New in v1.5.0_
 
 `npropagate` (Default = 5)
-:   Number of previous solutions to use in predicting a new solution.
+:   Number of previous solutions propagated forward to create an initial guess for this solute atom configuration.
+
+    * =0: Do not use any previous solutions
+    * = 1..5: Values greater than 0 but less than 4 or 5 will use less system memory but may introduce artifacts to 
+    the solution (_e.g._, energy drift).
 
     _New in v1.5.0_
+
+#### **Output**
 
 `polardecomp` (Default = 0)
 :   Decomposes solvation free energy into polar and non-polar components. Note that this typically requires 80% more 
@@ -1338,17 +1420,6 @@ computation time.
     * 0: Don’t decompose solvation free energy into polar and non-polar components. 
     * 1: Decompose solvation free energy into polar and non-polar components.
 
-`entropicDecomp` (Default = 1)
-:   Decomposes solvation free energy into energy and entropy components. Also performs temperature derivatives of 
-other calculated quantities. Note that this typically requires 80% more computation time and requires a .xvv file 
-version 1.000 or higher (see [§7.1.3](https://ambermd.org/doc12/Amber21.pdf#subsection.7.1.3) and 
-[§7.3](https://ambermd.org/doc12/Amber21.pdf#section.7.3)).
-
-    * 0: Don’t decompose solvation free energy into energy and entropy components. 
-    * 1: Decompose solvation free energy into energy and entropy components.
-
-    _New in v1.5.0_
-
 `rism_verbose` (Default = 0)
 :   Level of output in temporary RISM output files. May be helpful for debugging or following convergence. 
 
@@ -1356,15 +1427,6 @@ version 1.000 or higher (see [§7.1.3](https://ambermd.org/doc12/Amber21.pdf#sub
     * 1: additionally prints the total number of iterations for each solution
     * 2: additionally prints the residual for each iteration and details of the MDIIS solver (useful for debugging 
     and convergence analyses)
-
-`thermo` (Default = "std")
-:   Which thermodynamic equation you want to use to calculate solvation properties. Options are "std", "gf", or 
-"both" (case-INsensitive). "std" uses the standard closure relation, "gf" uses the Gaussian Fluctuation approximation, 
-and "both" will print out separate sections for both.
-    
-    !!! note
-        Note that all data are printed out for each RISM simulation, so no choice is any more computationally demanding 
-        than another.
 
 ### **`&alanine_scanning` namelist variables**
 
@@ -1635,8 +1697,8 @@ startframe=5, endframe=100, interval=5,
 /
 
 &gb
-igb=5, saltcon=0.100, ifqnt=1, qmcharge_com=0,
-qm_residues="B/240-251", qm_theory="PM3"
+igb=5, saltcon=0.100, ifqnt=1,
+qm_residues="A/240-251 B/297", qm_theory="PM3"
 /
 ```
 
@@ -1647,7 +1709,7 @@ Sample input file for PB calculation building the Amber topologies
 from structures. Please refer to the section "How gmx_MMPBSA works"
 
 &general
-startframe=5, endframe=100, interval=5, verbose=2, 
+startframe=5, endframe=100, interval=5,
 forcefields="oldff/leaprc.ff99SB,leaprc.gaff"
 /
 
@@ -1696,7 +1758,7 @@ polardecomp=1, thermo="gf"
 Sample input file for Alanine scanning
 
 &general
-startframe=5, endframe=21, verbose=2, interval=1,
+startframe=5, endframe=21, interval=1,
 forcefields="oldff/leaprc.ff99SB", PBRadii=4
 /
 
@@ -1749,7 +1811,7 @@ igb=2, saltcon=0.150,
 /
 
 &nmode
-nmstartframe=5, nmendframe=21, nminterval=2,
+nmstartframe=10, nmendframe=21, nminterval=2,
 maxcyc=50000, drms=0.0001,
 /
 ```

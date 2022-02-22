@@ -871,8 +871,6 @@ class MMPBSA_App(object):
                                                                  INPUT['treeCoulomb']]):
                 if i[1] not in [0, 1]:
                     GMXMMPBSA_ERROR(f'{i[0]} must be either 0 or 1!', InputError)
-            if INPUT['centering'] not in [-4, -3, -2, -1, 0, 1, 2, 3, 4]:
-                GMXMMPBSA_ERROR('CENTERING must be either -4, -3, -2, -1, 0, 1, 2, 3, or 4!', InputError)
             if INPUT['thermo'] not in ['std', 'gf', 'both']:
                 GMXMMPBSA_ERROR('THERMO must be "std", "gf", "both"!', InputError)
             # TODO: include other corrections? pc+?
