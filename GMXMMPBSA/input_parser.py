@@ -584,8 +584,9 @@ input_file.addNamelist('rism', 'rism',
                            ['maxstep', int, 10000, 'Maximum number of iterative steps per solution'],
                            ['npropagate', int, 5, 'Number of previous solutions to use in predicting a new solution'],
                            ['polardecomp', int, 0, 'Break solv. energy into polar and nonpolar terms'],
-                           ['entropicDecomp', int, 0, 'Decomposes solvation free energy into energy and entropy '
-                                                      'components'],
+                           # TODO: work with entropicDecomp? need more tests...
+                           # ['entropicDecomp', int, 0, 'Decomposes solvation free energy into energy and entropy '
+                           #                            'components'],
                            ['centering', int, 1, 'Select how solute is centered in the solvent box'],
                            ['rism_verbose', int, 0, 'Control how much 3D-RISM info to print'],
                            ['thermo', str, 'std', 'Type of thermodynamic analysis to do']
