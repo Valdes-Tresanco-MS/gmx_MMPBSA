@@ -717,15 +717,20 @@ class Tables(QMdiSubWindow):
                 if c == 0:
                     if not summary:
                         item.setTextAlignment(Qt.AlignmentFlag.AlignRight)
-                    if col in ['BOND', 'ANGLE', 'DIHED', 'VDWAALS', 'EEL', '1-4 VDW', '1-4 EEL', 'GGAS',
-                               'ΔBOND', 'ΔANGLE', 'ΔDIHED', 'ΔVDWAALS', 'ΔEEL', 'Δ1-4 VDW', 'Δ1-4 EEL', 'ΔGGAS',
-                               'ΔΔBOND', 'ΔΔANGLE', 'ΔΔDIHED', 'ΔΔVDWAALS', 'ΔΔEEL', 'ΔΔ1-4 VDW', 'ΔΔ1-4 EEL',
-                               'ΔΔGGAS']:
-                        item.setBackground(QColor('orange'))
-                    elif col in ['EGB', 'ESURF', 'GSOLV',
-                                 'ΔEGB', 'ΔESURF', 'ΔGSOLV',
-                                 'ΔEGB', 'ΔESURF', 'ΔGSOLV']:
-                        item.setBackground(QColor('green'))
+                    if col in (['BOND', 'ANGLE', 'DIHED', 'VDWAALS', 'EEL', '1-4 VDW', '1-4 EEL', 'GGAS', 'UB', 'IMP',
+                               'CMAP', 'ESCF'] +
+                               ['ΔBOND', 'ΔANGLE', 'ΔDIHED', 'ΔVDWAALS', 'ΔEEL', 'Δ1-4 VDW', 'Δ1-4 EEL', 'ΔGGAS',
+                                'ΔUB', 'ΔIMP', 'ΔCMAP', 'ΔESCF'] +
+                               ['ΔΔBOND', 'ΔΔANGLE', 'ΔΔDIHED', 'ΔΔVDWAALS', 'ΔΔEEL', 'ΔΔ1-4 VDW', 'ΔΔ1-4 EEL',
+                                'ΔΔGGAS', 'ΔΔUB', 'ΔΔIMP', 'ΔΔCMAP', 'ΔΔESCF']):
+                        item.setBackground(QColor('#e6b8b8'))
+                    elif col in (['EGB', 'ESURF',  'EPB', 'ENPOLAR', 'EDISPER', 'POLAR SOLV', 'APOLAR SOLV', 'ERISM',
+                                 'GSOLV'] +
+                                 ['ΔEGB', 'ΔESURF',  'ΔEPB', 'ΔENPOLAR', 'ΔEDISPER', 'ΔPOLAR SOLV', 'ΔAPOLAR SOLV',
+                                  'ΔERISM', 'ΔGSOLV'] +
+                                 ['ΔΔEGB', 'ΔΔESURF',  'ΔΔEPB', 'ΔΔENPOLAR', 'ΔΔEDISPER', 'ΔΔPOLAR SOLV',
+                                  'ΔΔAPOLAR SOLV', 'ΔΔERISM', 'ΔΔGSOLV']):
+                        item.setBackground(QColor('#97c5cc'))
                     else:
                         item.setBackground(QColor('white'))
                 if c > 0:

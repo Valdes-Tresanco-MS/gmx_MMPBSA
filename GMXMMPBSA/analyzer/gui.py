@@ -1227,10 +1227,13 @@ class GMX_MMPBSA_ANA(QMainWindow):
                                            buttons=(2, -2),
                                            title="Energetic Components",
                                            subtitle=f"{sys_name} | {level.upper()} | {level1.upper()}",
+                                           system_index=sys_index,
                                            keys_path=(part, level, (level1,)),
                                            part=part
                                            )
                         if level == 'qh':
+                            print('Not implemented. Please contact to us to use your files to setup this analysis in '
+                                  'gmx_MMPBSA ')
                             continue
                         for level2 in str_dict[level1]:
                             keys_path = (part, level, (level1, level2))
@@ -1243,6 +1246,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
                                                title="Energetic Components",
                                                subtitle=f"{sys_name} | {level.upper()} | "
                                                         f"{level1.upper()} | {level2.upper()}",
+                                               system_index=sys_index,
                                                keys_path=keys_path,
                                                part=part
                                                )
@@ -1252,6 +1256,9 @@ class GMX_MMPBSA_ANA(QMainWindow):
                                        [level.upper()],
                                        app=self,
                                        buttons=(-2,),
+                                       title="C2 Entropy",
+                                       subtitle=f"{sys_name} | {level.upper()}",
+                                       system_index=sys_index,
                                        keys_path=(part, level)
                                        )
                     str_dict = multiindex2dict(data[level].columns)
@@ -1262,6 +1269,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
                                            buttons=(2,),
                                            title="C2 Entropy",
                                            subtitle=f"{sys_name} | {level.upper()} | {level1.upper()}",
+                                           system_index=sys_index,
                                            keys_path=(part, level, (level1,)),
                                            part=part
                                            )
@@ -1270,6 +1278,9 @@ class GMX_MMPBSA_ANA(QMainWindow):
                                        [level.upper()],
                                        app=self,
                                        buttons=(-2,),
+                                       title="Interaction Entropy",
+                                       subtitle=f"{sys_name} | {level.upper()}",
+                                       system_index=sys_index,
                                        keys_path=(part, level), )
                     str_dict = multiindex2dict(data[level].columns)
                     for level1 in str_dict:
@@ -1279,6 +1290,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
                                            buttons=(1,),
                                            title="Interaction Entropy",
                                            subtitle=f"{sys_name} | {level.upper()} | {level1.upper()}",
+                                           system_index=sys_index,
                                            keys_path=(part, level, (level1,)),
                                            part=part
                                            )
@@ -1291,6 +1303,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
                                            buttons=(2,),
                                            title="Binding Energy",
                                            subtitle=f"{sys_name} | ΔG | {level1.upper()}",
+                                           system_index=sys_index,
                                            keys_path=(part, level, (level1,)),
                                            part=part
                                            )
@@ -1324,6 +1337,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
                                            title=f"Energetic Components {title}",
                                            subtitle=f"{sys_name} | {level.upper()} | "
                                                     f"{level1.upper()} | {level2.upper()}",
+                                           system_index=sys_index,
                                            keys_path=(part, level, (level1, level2)),
                                            part=part
                                            )
@@ -1342,6 +1356,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
                                                #                f"{str(level1).upper()} | "
                                                #                f"{str(level2).upper()} | "
                                                #                f"{str(level3).upper()}"
+                                               system_index=sys_index,
                                                keys_path=(part, level, (level1, level2, level3))
                                                )
                             # residue first level
@@ -1359,6 +1374,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
                                                                 f"{str(level2).upper()} | "
                                                                 f"{str(level3).upper()} | "
                                                                 f"{str(level4).upper()}",
+                                                       system_index=sys_index,
                                                        keys_path=(part, level, (level1, level2, level3, level4))
                                                        )
                                     self.items_counter['charts'] += 1
@@ -1367,6 +1383,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
                                                        [level4.upper()],
                                                        app=self,
                                                        buttons=(2,),
+                                                       system_index=sys_index,
                                                        keys_path=(part, level, (level1, level2, level3, level4))
                                                        )
                                     self.items_counter['charts'] += 1
@@ -1384,6 +1401,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
                                                                     f"{str(level3).upper()} | "
                                                                     f"{str(level4).upper()} | "
                                                                     f"{str(level5).upper()}",
+                                                           system_index=sys_index,
                                                            keys_path=(
                                                                part, level, (level1, level2, level3, level4, level5))
                                                            )
