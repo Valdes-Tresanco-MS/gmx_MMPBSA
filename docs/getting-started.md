@@ -11,6 +11,8 @@ title: Getting started
 
 [<img src="../assets/TOC.png" height="120%" width="258" align="right"/>]()
 
+## gmx_MMPBSA v1.5.0 is out 😀!
+
 gmx_MMPBSA is a new tool based on AMBER's MMPBSA.py aiming to perform end-state free energy calculations with GROMACS 
 files. **_It works with all GROMACS versions along with AmberTools20 or 21 and brings improvements in compatibility, 
 versatility, analyses, and parallelization compared to existing programs (see [here](versus.md) for a detailed comparison)_**
