@@ -97,7 +97,17 @@ most recent version of the repository in the specified folder and will perform t
         * Works with `All` set of examples
         * Perform the calculation on 16 examples sequentially, using 10 cpus each time
         
-    === "Specific"
+    === "Multiple selection"
+        
+            gmx_MMPBSA_test -f /home/user/Documents -t 3 5 7
+        
+        Through this command-line, gmxMMPBSA_test will:
+        
+        * Download gmx_MMPBSA repository content in `/home/user/Documents`
+        * Execute `3` [Protein-Ligand (Single Trajectory approach)], `5` [Protein-DNA], and `7` [Protein-Glycan] 
+        examples
+
+    === "Single selection"
         
             gmx_MMPBSA_test -f /home/user/Documents -t 3
         
