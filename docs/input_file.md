@@ -199,6 +199,7 @@ tested in previous `protein_forcefield` and `ligand_forcefield` variables.
     | Name                    | Description               |
     |:------------------------|:--------------------------|
     | "leaprc.protein.ff14SB" | ff14SB only for proteins  |
+    | "leaprc.protein.ff19SB" | ff19SB only for proteins  |
 
     **Forcefields only for Nucleic Acids**
      
@@ -624,6 +625,9 @@ applied for `AM1-DH+` and `PM6-DH+`.
 :   Complex residues to treat with quantum mechanics. All residues treated with quantum mechanics in the complex 
 must be treated with quantum mechanics in the receptor or ligand to obtain meaningful results. This notation is 
 the same used for `print_res` variable in `&decomp` namelist
+
+    !!! danger
+         No `qm_residues` default, this must be specified if `ifqnt` = 1.
 
     !!! example "Selection schemes"
 
