@@ -105,8 +105,8 @@ class CheckMakeTop:
         self.checkFiles()
 
     def checkFiles(self):
-        if (not self.FILES.complex_tpr or not self.FILES.complex_index or not self.FILES.complex_trajs or not
-        self.FILES.complex_groups):
+        if (not self.FILES.complex_tpr or not self.FILES.complex_index or
+                not self.FILES.complex_trajs or not self.FILES.complex_groups):
             GMXMMPBSA_ERROR('You must define the structure, topology and index files, as well as the groups!')
 
     def buildTopology(self):
@@ -161,7 +161,7 @@ class CheckMakeTop:
 
             textwraped = textwrap.wrap('\t'.join(x.string for x in qm_residues), tabsize=4, width=120)
             logging.info(f'Selected {len(qm_residues)} residues:\n' + '\n'.join(textwraped) + '\n')
-            self.INPUT['qm_residues'] =  ','.join(list2range(qm_residues)['string'])
+            self.INPUT['qm_residues'] = ','.join(list2range(qm_residues)['string'])
 
             if self.INPUT['qmcharge_com'] != rec_charge + lig_charge:
                 logging.warning('System specified with odd number of electrons. Most likely the charge of QM region '
@@ -255,7 +255,7 @@ class CheckMakeTop:
                             'fields ignore this warning')
 
         # make a temp receptor pdb (even when stability) if decomp to get correct receptor residues from complex. This
-        # avoid get multiples molecules from complex.split()
+        # avoids get multiples molecules from complex.split()
         if self.INPUT['decomprun'] and self.FILES.stability:
             self.use_temp = True
             logging.warning('When &decomp is defined, we generate a receptor file in order to extract interface '
@@ -578,7 +578,6 @@ class CheckMakeTop:
     def _split_str(self, start, r, c, basename, struct, mut_index=0):
         end = start + (r[1] - r[0])
         mask = f'!:{start}-{end}'
-        # start += end
         str_ = self.molstr(struct)
         if mut_index:
             str_ = self.makeMutTop(str_, mut_index, True)
@@ -755,7 +754,7 @@ class CheckMakeTop:
                 if [rres.chain, rres.number, rres.insertion_code] in res_selection:
                     sele_res.append(i)
                     if qm_sele:
-                        rec_charge += round(sum(atm.charge for atm in com_top.residues[i -1].atoms), 0)
+                        rec_charge += round(sum(atm.charge for atm in com_top.residues[i - 1].atoms), 0)
                     res_selection.remove([rres.chain, rres.number, rres.insertion_code])
             for j in self.resl:
                 if j.is_receptor():
@@ -769,10 +768,7 @@ class CheckMakeTop:
             for res in res_selection:
                 logging.warning("We couldn't find this residue CHAIN:{} RES_NUM:{} ICODE: {}".format(*res))
         sele_res.sort()
-        if qm_sele:
-            return sele_res, (rec_charge, lig_charge)
-        else:
-            return sele_res
+        return (sele_res, (rec_charge, lig_charge)) if qm_sele else sele_res
 
     def fixparm2amber(self, structure, str_name=None):
 
@@ -983,7 +979,7 @@ class CheckMakeTop:
                     at.type = h_atoms_prop['type']
                     at.atom_type = h_atoms_prop['atom_type']
 
-        # change intdiel if cas_intdiel was define before end the mutation process
+        # change intdiel if cas_intdiel was defined before end the mutation process
         if self.INPUT['cas_intdiel']:
             if self.INPUT['gbrun']:
                 if self.INPUT['intdiel'] != 1.0:
@@ -1431,13 +1427,13 @@ class CheckMakeTop:
 
     def _set_com_order(self, REC, LIG):
         result = []
-        l = 0
-        r = 0
+        l_idx = 0
+        r_idx = 0
         for e in self.orderl:
             if e in ['R', 'REC']:
-                result.append(REC[r])
-                r += 1
+                result.append(REC[r_idx])
+                r_idx += 1
             else:
-                result.append(LIG[l])
-                l += 1
+                result.append(LIG[l_idx])
+                l_idx += 1
         return result
