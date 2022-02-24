@@ -664,14 +664,7 @@ class CheckMakeTop:
         # FIXME: remove minimal components, and compare with the mol_str
         with open(top_file) as topf:
             for line in topf:
-                if line.startswith('#include') and 'forcefield.itp' in line:
-                    if (
-                            'charmm' not in line.lower()
-                            and 'toppar' not in line.lower()
-                            and 'amber' not in line.lower()
-                    ):
-                        GMXMMPBSA_ERROR(f'Unknown force field in GROMACS topology in line:\n {line}')
-                elif '[ molecules ]' in line:
+                if '[ molecules ]' in line:
                     molsect = True
                 if molsect:
                     # not copy ions and solvent
