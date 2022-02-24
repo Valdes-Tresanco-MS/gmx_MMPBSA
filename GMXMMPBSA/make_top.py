@@ -661,7 +661,7 @@ class CheckMakeTop:
         ttp_file = top_file.parent.joinpath('_temp_top.top')
         temp_top = ttp_file.open(mode='w')
         # temp_top.write('; Modified by gmx_MMPBSA\n')
-        # FIXME: remove minimal components, and compare with the mol_str
+        # TODO: keep solvent when n-wat is implemented
         with open(top_file) as topf:
             for line in topf:
                 if '[ molecules ]' in line:
@@ -672,7 +672,7 @@ class CheckMakeTop:
                         # standard gmx form
                         'NA', 'CL', 'SOL',
                         # charmm-GUI form ??
-                        'SOD', 'Na+', 'CLA', 'Cl-', 'CAL', 'CA', 'MG', 'POT', 'K+',
+                        'SOD', 'Na+', 'CLA', 'Cl-', 'POT', 'K+',
                         'TIP3P', 'TIP3', 'TP3', 'TIPS3P', 'TIP3o',
                         'TIP4P', 'TIP4PEW', 'T4E', 'TIP4PD',
                         'TIP5P',
