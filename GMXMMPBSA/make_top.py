@@ -394,23 +394,19 @@ class CheckMakeTop:
         if counter := sum(
                 res.name
                 in [
-                    'SOL',
-                    'SOD',
-                    'CLA',
-                    'TIP3P',
-                    'TIP4P',
-                    'TIPS3P',
+                    'SOD', 'Na+', 'CLA', 'Cl-', 'POT', 'K+',
+                    'SOL', 'WAT',
+                    'TIP3P', 'TIP3', 'TP3', 'TIPS3P', 'TIP3o',
+                    'TIP3P', 'TIP3', 'TP3', 'TIPS3P', 'TIP3o',
+                    'TIP4P', 'TIP4PEW', 'T4E', 'TIP4PD',
                     'TIP5P',
-                    'SPC',
-                    'SPC/E',
-                    'SPCE',
-                    'TIP3o',
-                    'WAT',
+                    'SPC', 'SPCE',
+                    'OPC'
                 ]
                 for res in self.complex_str
         ):
-            GMXMMPBSA_ERROR(f'gmx_MMPBSA does not support water molecules in any structure, but we found {counter} '
-                            f'molecules in the complex.')
+            GMXMMPBSA_ERROR(f'gmx_MMPBSA does not support water/ions molecules in any structure, but we found'
+                            f' {counter} molecules in the complex.')
 
     def gmxtop2prmtop(self):
         logging.info('Using topology conversion. Setting radiopt = 0...')
