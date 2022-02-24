@@ -456,7 +456,7 @@ class CheckMakeTop:
         if self.FILES.receptor_top:
             logging.info('A Receptor topology file was defined. Using MT approach...')
             logging.info('Building AMBER Receptor Topology from GROMACS Receptor Topology...')
-            rec_top = self.cleantop(self.FILES.receptor_top, self.indexes['REC'])
+            rec_top = self.cleantop(self.FILES.receptor_top, self.indexes['REC'], 'receptor')
 
             if error_info := eq_strs(rec_top, self.receptor_str):
                 if error_info[0] == 'atoms':
@@ -498,7 +498,7 @@ class CheckMakeTop:
         if self.FILES.ligand_top:
             logging.info('A Ligand Topology file was defined. Using MT approach...')
             logging.info('Building AMBER Ligand Topology from GROMACS Ligand Topology...')
-            lig_top = self.cleantop(self.FILES.ligand_top, self.indexes['LIG'])
+            lig_top = self.cleantop(self.FILES.ligand_top, self.indexes['LIG'], 'ligand')
 
             if error_info := eq_strs(lig_top, self.ligand_str):
                 if error_info[0] == 'atoms':
@@ -648,7 +648,7 @@ class CheckMakeTop:
                     start += end
 
     @staticmethod
-    def cleantop(top_file, ndx):
+    def cleantop(top_file, ndx, id='complex'):
         """
         Create a new top file with selected groups and without SOL and IONS
         :param top_file: User-defined topology file
@@ -690,9 +690,17 @@ class CheckMakeTop:
         rtemp_top = parmed.gromacs.GromacsTopologyFile(ttp_file.as_posix())
         # get the residues in the top from the com_ndx
         res_list = []
+        if len(ndx) < len(rtemp_top.atoms):
+            GMXMMPBSA_ERROR(f"The {id} index has fewer atoms than the topology. Please check that the files are "
+                            "consistent.")
         for i in ndx:
-            if rtemp_top.atoms[i - 1].residue.number + 1 not in res_list:
-                res_list.append(rtemp_top.atoms[i - 1].residue.number + 1)
+            try:
+                idx = rtemp_top.atoms[i - 1].residue.idx + 1
+                if idx not in res_list:
+                    res_list.append(rtemp_top.atoms[i - 1].residue.number + 1)
+            except IndexError:
+                GMXMMPBSA_ERROR(f'The atom {i} in the {id} index is not found in the topology file. Please check that '
+                                'the files are consistent.')
 
         ranges = list2range(res_list)
         rtemp_top.strip(f"!:{','.join(ranges['string'])}")
