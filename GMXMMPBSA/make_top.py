@@ -105,8 +105,8 @@ class CheckMakeTop:
         self.checkFiles()
 
     def checkFiles(self):
-        if (not self.FILES.complex_tpr or not self.FILES.complex_index or not self.FILES.complex_trajs or not
-        self.FILES.complex_groups):
+        if (not self.FILES.complex_tpr or not self.FILES.complex_index or
+                not self.FILES.complex_trajs or not self.FILES.complex_groups):
             GMXMMPBSA_ERROR('You must define the structure, topology and index files, as well as the groups!')
 
     def buildTopology(self):
@@ -161,7 +161,7 @@ class CheckMakeTop:
 
             textwraped = textwrap.wrap('\t'.join(x.string for x in qm_residues), tabsize=4, width=120)
             logging.info(f'Selected {len(qm_residues)} residues:\n' + '\n'.join(textwraped) + '\n')
-            self.INPUT['qm_residues'] =  ','.join(list2range(qm_residues)['string'])
+            self.INPUT['qm_residues'] = ','.join(list2range(qm_residues)['string'])
 
             if self.INPUT['qmcharge_com'] != rec_charge + lig_charge:
                 logging.warning('System specified with odd number of electrons. Most likely the charge of QM region '
@@ -255,7 +255,7 @@ class CheckMakeTop:
                             'fields ignore this warning')
 
         # make a temp receptor pdb (even when stability) if decomp to get correct receptor residues from complex. This
-        # avoid get multiples molecules from complex.split()
+        # avoids get multiples molecules from complex.split()
         if self.INPUT['decomprun'] and self.FILES.stability:
             self.use_temp = True
             logging.warning('When &decomp is defined, we generate a receptor file in order to extract interface '
@@ -394,23 +394,19 @@ class CheckMakeTop:
         if counter := sum(
                 res.name
                 in [
-                    'SOL',
-                    'SOD',
-                    'CLA',
-                    'TIP3P',
-                    'TIP4P',
-                    'TIPS3P',
+                    'SOD', 'Na+', 'CLA', 'Cl-', 'POT', 'K+',
+                    'SOL', 'WAT',
+                    'TIP3P', 'TIP3', 'TP3', 'TIPS3P', 'TIP3o',
+                    'TIP3P', 'TIP3', 'TP3', 'TIPS3P', 'TIP3o',
+                    'TIP4P', 'TIP4PEW', 'T4E', 'TIP4PD',
                     'TIP5P',
-                    'SPC',
-                    'SPC/E',
-                    'SPCE',
-                    'TIP3o',
-                    'WAT',
+                    'SPC', 'SPCE',
+                    'OPC'
                 ]
                 for res in self.complex_str
         ):
-            GMXMMPBSA_ERROR(f'gmx_MMPBSA does not support water molecules in any structure, but we found {counter} '
-                            f'molecules in the complex.')
+            GMXMMPBSA_ERROR(f'gmx_MMPBSA does not support water/ions molecules in any structure, but we found'
+                            f' {counter} molecules in the complex.')
 
     def gmxtop2prmtop(self):
         logging.info('Using topology conversion. Setting radiopt = 0...')
@@ -456,7 +452,7 @@ class CheckMakeTop:
         if self.FILES.receptor_top:
             logging.info('A Receptor topology file was defined. Using MT approach...')
             logging.info('Building AMBER Receptor Topology from GROMACS Receptor Topology...')
-            rec_top = self.cleantop(self.FILES.receptor_top, self.indexes['REC'])
+            rec_top = self.cleantop(self.FILES.receptor_top, self.indexes['REC'], 'receptor')
 
             if error_info := eq_strs(rec_top, self.receptor_str):
                 if error_info[0] == 'atoms':
@@ -498,7 +494,7 @@ class CheckMakeTop:
         if self.FILES.ligand_top:
             logging.info('A Ligand Topology file was defined. Using MT approach...')
             logging.info('Building AMBER Ligand Topology from GROMACS Ligand Topology...')
-            lig_top = self.cleantop(self.FILES.ligand_top, self.indexes['LIG'])
+            lig_top = self.cleantop(self.FILES.ligand_top, self.indexes['LIG'], 'ligand')
 
             if error_info := eq_strs(lig_top, self.ligand_str):
                 if error_info[0] == 'atoms':
@@ -582,7 +578,6 @@ class CheckMakeTop:
     def _split_str(self, start, r, c, basename, struct, mut_index=0):
         end = start + (r[1] - r[0])
         mask = f'!:{start}-{end}'
-        # start += end
         str_ = self.molstr(struct)
         if mut_index:
             str_ = self.makeMutTop(str_, mut_index, True)
@@ -648,7 +643,7 @@ class CheckMakeTop:
                     start += end
 
     @staticmethod
-    def cleantop(top_file, ndx):
+    def cleantop(top_file, ndx, id='complex'):
         """
         Create a new top file with selected groups and without SOL and IONS
         :param top_file: User-defined topology file
@@ -661,17 +656,10 @@ class CheckMakeTop:
         ttp_file = top_file.parent.joinpath('_temp_top.top')
         temp_top = ttp_file.open(mode='w')
         # temp_top.write('; Modified by gmx_MMPBSA\n')
-        # FIXME: remove minimal components, and compare with the mol_str
+        # TODO: keep solvent when n-wat is implemented
         with open(top_file) as topf:
             for line in topf:
-                if line.startswith('#include') and 'forcefield.itp' in line:
-                    if (
-                            'charmm' not in line.lower()
-                            and 'toppar' not in line.lower()
-                            and 'amber' not in line.lower()
-                    ):
-                        GMXMMPBSA_ERROR(f'Unknown force field in GROMACS topology in line:\n {line}')
-                elif '[ molecules ]' in line:
+                if '[ molecules ]' in line:
                     molsect = True
                 if molsect:
                     # not copy ions and solvent
@@ -679,7 +667,7 @@ class CheckMakeTop:
                         # standard gmx form
                         'NA', 'CL', 'SOL',
                         # charmm-GUI form ??
-                        'SOD', 'Na+', 'CLA', 'Cl-', 'CAL', 'CA', 'MG', 'POT', 'K+',
+                        'SOD', 'Na+', 'CLA', 'Cl-', 'POT', 'K+',
                         'TIP3P', 'TIP3', 'TP3', 'TIPS3P', 'TIP3o',
                         'TIP4P', 'TIP4PEW', 'T4E', 'TIP4PD',
                         'TIP5P',
@@ -697,9 +685,17 @@ class CheckMakeTop:
         rtemp_top = parmed.gromacs.GromacsTopologyFile(ttp_file.as_posix())
         # get the residues in the top from the com_ndx
         res_list = []
+        if len(ndx) < len(rtemp_top.atoms):
+            GMXMMPBSA_ERROR(f"The {id} index has fewer atoms than the topology. Please check that the files are "
+                            "consistent.")
         for i in ndx:
-            if rtemp_top.atoms[i - 1].residue.number + 1 not in res_list:
-                res_list.append(rtemp_top.atoms[i - 1].residue.number + 1)
+            try:
+                idx = rtemp_top.atoms[i - 1].residue.idx + 1
+                if idx not in res_list:
+                    res_list.append(rtemp_top.atoms[i - 1].residue.number + 1)
+            except IndexError:
+                GMXMMPBSA_ERROR(f'The atom {i} in the {id} index is not found in the topology file. Please check that '
+                                'the files are consistent.')
 
         ranges = list2range(res_list)
         rtemp_top.strip(f"!:{','.join(ranges['string'])}")
@@ -758,7 +754,7 @@ class CheckMakeTop:
                 if [rres.chain, rres.number, rres.insertion_code] in res_selection:
                     sele_res.append(i)
                     if qm_sele:
-                        rec_charge += round(sum(atm.charge for atm in com_top.residues[i -1].atoms), 0)
+                        rec_charge += round(sum(atm.charge for atm in com_top.residues[i - 1].atoms), 0)
                     res_selection.remove([rres.chain, rres.number, rres.insertion_code])
             for j in self.resl:
                 if j.is_receptor():
@@ -772,10 +768,7 @@ class CheckMakeTop:
             for res in res_selection:
                 logging.warning("We couldn't find this residue CHAIN:{} RES_NUM:{} ICODE: {}".format(*res))
         sele_res.sort()
-        if qm_sele:
-            return sele_res, (rec_charge, lig_charge)
-        else:
-            return sele_res
+        return (sele_res, (rec_charge, lig_charge)) if qm_sele else sele_res
 
     def fixparm2amber(self, structure, str_name=None):
 
@@ -986,7 +979,7 @@ class CheckMakeTop:
                     at.type = h_atoms_prop['type']
                     at.atom_type = h_atoms_prop['atom_type']
 
-        # change intdiel if cas_intdiel was define before end the mutation process
+        # change intdiel if cas_intdiel was defined before end the mutation process
         if self.INPUT['cas_intdiel']:
             if self.INPUT['gbrun']:
                 if self.INPUT['intdiel'] != 1.0:
@@ -1434,13 +1427,13 @@ class CheckMakeTop:
 
     def _set_com_order(self, REC, LIG):
         result = []
-        l = 0
-        r = 0
+        l_idx = 0
+        r_idx = 0
         for e in self.orderl:
             if e in ['R', 'REC']:
-                result.append(REC[r])
-                r += 1
+                result.append(REC[r_idx])
+                r_idx += 1
             else:
-                result.append(LIG[l])
-                l += 1
+                result.append(LIG[l_idx])
+                l_idx += 1
         return result
