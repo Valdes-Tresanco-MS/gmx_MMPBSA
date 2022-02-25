@@ -391,10 +391,7 @@ def write_outputs(app):
 
             # Combine with the entropy(ies)
             if INPUT['qh_entropy']:
-                if stability:
-                    qh_davg, qh_dstd = _get_diff(sys_norm['TOTAL'], qhnorm['Total'])
-                else:
-                    qh_davg, qh_dstd = _get_diff(sys_norm['TOTAL'], qhnorm['Total'])
+                qh_davg, qh_dstd = _get_sum(sys_norm['TOTAL'], qhnorm['TOTAL'])
                 final_output.add_section('Using Quasi-harmonic Entropy Approximation:\n'
                                          f'ΔG{"" if stability else " binding"} = {qh_davg:9.4f} +/- {qh_dstd:7.4f}\n')
             if not stability:
@@ -408,10 +405,7 @@ def write_outputs(app):
                     final_output.add_section(f"Using C2 Entropy Approximation:\n"
                                              f"ΔG binding = {c2_davg:9.4f} +/- {c2_dstd:7.4f}\n")
             if INPUT['nmoderun']:
-                if stability:
-                    nm_davg, nm_dstd = _get_diff(sys_norm['TOTAL'], nm_sys_norm['Total'])
-                else:
-                    nm_davg, nm_dstd = _get_diff(sys_norm['TOTAL'], nm_sys_norm['Total'])
+                nm_davg, nm_dstd = _get_sum(sys_norm['TOTAL'], nm_sys_norm['TOTAL'])
                 final_output.add_section('Using Normal Mode Entropy Approximation:\n'
                                              f'ΔG{"" if stability else " binding"} = {nm_davg:9.4f} +/- {nm_dstd:7.4f}\n')
 
@@ -434,10 +428,7 @@ def write_outputs(app):
                 energyvectors.writerow([])
 
             if INPUT['qh_entropy']:
-                if stability:
-                    mqh_davg, mqh_dstd = _get_diff(sys_mut['TOTAL'], qhmutant['Total'])
-                else:
-                    mqh_davg, mqh_dstd = _get_diff(sys_mut['TOTAL'], qhmutant['Total'])
+                mqh_davg, mqh_dstd = _get_sum(sys_mut['TOTAL'], qhmutant['TOTAL'])
                 final_output.add_section('Using Quasi-harmonic Entropy Approximation:\n'
                                          f'ΔG{"" if stability else " binding"} = {mqh_davg:9.4f} +/- {mqh_dstd:7.4f}\n')
             if not stability:
@@ -450,10 +441,7 @@ def write_outputs(app):
                     final_output.add_section(f"Using C2 Entropy Approximation:\n"
                                              f"ΔG binding = {mc2_davg:9.4f} +/- {mc2_dstd:7.4f}\n")
             if INPUT['nmoderun']:
-                if stability:
-                    mnm_davg, mnm_dstd = _get_diff(sys_mut['TOTAL'], nm_sys_mut['Total'])
-                else:
-                    mnm_davg, mnm_dstd = _get_diff(sys_mut['TOTAL'], nm_sys_mut['Total'])
+                mnm_davg, mnm_dstd = _get_sum(sys_mut['TOTAL'], nm_sys_mut['TOTAL'])
                 final_output.add_section('Using Normal Mode Entropy Approximation:\n'
                                          f'ΔG{"" if stability else " binding"} = {mnm_davg:9.4f} +/- {mnm_dstd:7.4f}\n')
 
