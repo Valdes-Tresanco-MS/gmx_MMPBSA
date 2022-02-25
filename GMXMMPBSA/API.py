@@ -119,11 +119,22 @@ class MMPBSA_API():
             index = pd.Series(list(self.frames.keys()), name='Frames')
         for model, data in self.data[key].items():
             if model in ['gb', 'pb', 'rism std', 'rism gf', 'nmode', 'qh']:
-                if model in ['nmode', 'qh']:
+                if model == 'nmode':
+                    if self.timestep:
+                        nmindex = pd.Series(list(self.nmframes.values()), name=f'Time ({self.timeunit})')
+                    else:
+                        nmindex = pd.Series(list(self.nmframes.keys()), name='Frames')
+                    from icecream import ic
+                    ic(index, self._energy2flatdict(data), data)
+                    
+                    df_models[model] = pd.DataFrame(self._energy2flatdict(data), index=nmindex)
+                    terms['entropy'].append(model)
+                elif model == 'qh':
+                    df_models[model] = pd.DataFrame(self._energy2flatdict(data))
                     terms['entropy'].append(model)
                 elif model in ['gb', 'pb', 'rism std', 'rism gf']:
                     terms['energy'].append(model)
-                df_models[model] = pd.DataFrame(self._energy2flatdict(data), index=index)
+                    df_models[model] = pd.DataFrame(self._energy2flatdict(data), index=index)
             elif model == 'ie':
                 terms['entropy'].append(model)
                 temp = {}
