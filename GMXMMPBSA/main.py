@@ -477,27 +477,27 @@ class MMPBSA_App(object):
                     c = CopyCalc('%sreceptor_nm.out.%%d' % self.pre,
                                  '%sreceptor_nm.out.%%d' % prefix)
                     self.calc_list.append(c, '  no mutation found in receptor; '
-                                             'using unmutated files', timer_key='pb')
+                                             'using unmutated files', timer_key='nmode')
                 else:
                     c = NmodeCalc(progs['nmode'], parm_system.receptor_prmtop,
                                   '%sreceptor.pdb' % prefix,
                                   '%sreceptor_nm.%s.%%d' % (prefix, trj_sfx),
                                   '%sreceptor_nm.out.%%d' % prefix, self.INPUT)
                     self.calc_list.append(c, '  calculating receptor contribution...',
-                                          timer_key='rism')
+                                          timer_key='nmode')
 
                 if copy_ligand:
                     c = CopyCalc('%sligand_nm.out.%%d' % self.pre,
                                  '%sligand_nm.out.%%d' % prefix)
                     self.calc_list.append(c, '  no mutation found in ligand; '
-                                             'using unmutated files', timer_key='pb')
+                                             'using unmutated files', timer_key='nmode')
                 else:
                     c = NmodeCalc(progs['nmode'], parm_system.ligand_prmtop,
                                   '%sligand.pdb' % prefix,
                                   '%sligand_nm.%s.%%d' % (prefix, trj_sfx),
                                   '%sligand_nm.out.%%d' % prefix, self.INPUT)
                     self.calc_list.append(c, '  calculating ligand contribution...',
-                                          timer_key='rism')
+                                          timer_key='nmode')
 
         # end if self.INPUT['nmoderun']
 
