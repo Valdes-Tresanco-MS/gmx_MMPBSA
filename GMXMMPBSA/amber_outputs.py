@@ -849,13 +849,14 @@ class BindingStatistics(dict):
         """
         # First thing we do is check to make sure that all of the terms that
         # should *not* be printed actually cancel out (i.e. bonded terms)
-        if self.traj_protocol == 'STP':
-            TINY = 0.005
-            for key in self.st_null:
-                diff = self.com[key] - self.rec[key] - self.lig[key]
-                if diff.abs_gt(TINY):
-                    self.inconsistent = True
-                    break
+        if not isinstance(self.com, NMODEout):
+            if self.traj_protocol == 'STP':
+                TINY = 0.005
+                for key in self.st_null:
+                    diff = self.com[key] - self.rec[key] - self.lig[key]
+                    if diff.abs_gt(TINY):
+                        self.inconsistent = True
+                        break
 
         for key in self.com.data_keys:
             if self.traj_protocol == 'STP':
@@ -864,7 +865,11 @@ class BindingStatistics(dict):
             else:
                 self[key] = self.com[key] - self.rec[key] - self.lig[key]
         for key in self.com.composite_keys:
-            self[key] = EnergyVector(len(self.com['VDWAALS']))
+            if isinstance(self.com, NMODEout):
+                k = 'TRANSLATIONAL'
+            else:
+                k = 'VDWAALS'
+            self[key] = EnergyVector(len(self.com[k]))
             self.composite_keys.append(key)
         for key in self.com.data_keys:
             if self.traj_protocol == 'STP' and key in self.st_null:
