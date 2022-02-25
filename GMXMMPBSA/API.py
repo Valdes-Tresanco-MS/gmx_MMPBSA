@@ -147,8 +147,8 @@ class MMPBSA_API():
                     total = df_models[m]['delta']['TOTAL']
                     total.name = 'ΔH'
                     if e in ['nmode', 'qh']:
-                        df_models['binding'][f"{m}+{e}"] = pd.concat(df_models[m], axis=1)
-                        ent = df_models[e]['delta']['Total']
+                        df_models['binding'][f"{m}+{e}"] = pd.concat([df_models[m]], axis=1)
+                        ent = df_models[e]['delta']['TOTAL']
                     else:
                         k = 'iedata' if e == 'ie' else 'c2data'
                         ent = df_models[e][m][k]

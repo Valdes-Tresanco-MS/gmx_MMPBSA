@@ -963,7 +963,7 @@ class BindingStatistics(dict):
             if key in self.composite_keys:
                 continue
             # Catch special case of NMODEout classes
-            if isinstance(self.com, NMODEout) and key == 'Total':
+            if isinstance(self.com, NMODEout) and key == 'TOTAL':
                 printkey = '\n-TΔS binding ='
             else:
                 printkey = key
@@ -1078,7 +1078,7 @@ class DeltaBindingStatistics(dict):
 
         for key in self.norm.data_keys:
             # Catch special case of NMODEout classes
-            if isinstance(self.norm.com, NMODEout) and key == 'Total':
+            if isinstance(self.norm.com, NMODEout) and key == 'TOTAL':
                 printkey = '\n-TΔΔS binding ='
             else:
                 printkey = key

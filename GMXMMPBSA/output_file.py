@@ -248,7 +248,7 @@ def write_outputs(app):
             final_output.writeline('ENTROPY RESULTS (QUASI-HARMONIC APPROXIMATION) CALCULATED WITH CPPTRAJ:')
             final_output.add_section(qhmutant.summary_output())
         if INPUT['alarun'] and not INPUT['mutant_only']:
-            davg, dstd = _get_diff(qhmutant['Total'], qhnorm['Total'])
+            davg, dstd = _get_diff(qhmutant['TOTAL'], qhnorm['TOTAL'])
             final_output.add_section(f'\nRESULT OF ALANINE SCANNING ({mut_str}):\n'
                                      f'-TΔΔS{"" if stability else " binding"} = {davg:9.4f} +/ {dstd:7.4f}\n')
 
@@ -357,7 +357,7 @@ def write_outputs(app):
             final_output.write('ENTROPY RESULTS (HARMONIC APPROXIMATION) CALCULATED WITH NMODE:\n\n')
             final_output.add_section(nm_sys_norm.summary_output())
 
-            davg, dstd = _get_diff(nm_sys_mut['Total'], nm_sys_norm['Total'])
+            davg, dstd = _get_diff(nm_sys_mut['TOTAL'], nm_sys_norm['TOTAL'])
             final_output.add_section(f'\nRESULT OF ALANINE SCANNING ({mut_str}):\n'
                                       f'-TΔΔS{"" if stability else " binding"} = {davg:9.4f} +/- {dstd:9.4f}\n')
 
@@ -467,7 +467,7 @@ def write_outputs(app):
                                f"ΔΔH binding = {ddh_davg:9.4f} +/- {ddh_dstd:7.4f}\n")
 
             if INPUT['qh_entropy']:
-                ddqh_davg, _ =_get_diff(qhmutant['Total'], qhnorm['Total'])
+                ddqh_davg, _ = _get_diff(qhmutant['TOTAL'], qhnorm['TOTAL'])
                 ddgqh_davg = ddh_davg + ddqh_davg
                 # this std is the same of ΔΔH
                 # dstd = utils.get_std(mqh_dstd, qh_dstd)
@@ -490,7 +490,7 @@ def write_outputs(app):
                     final_output.write('\n   (C2 entropy)\n'
                                        f'ΔΔG binding = {ddgc2_davg:9.4f} +/- {ddgc2_dstd:7.4f}\n')
             if INPUT['nmoderun']:
-                ddnm_davg, ddnm_dstd = _get_diff(nm_sys_mut['Total'], nm_sys_norm['Total'], True)
+                ddnm_davg, ddnm_dstd = _get_diff(nm_sys_mut['TOTAL'], nm_sys_norm['TOTAL'], True)
                 ddgnm_davg = ddh_davg + ddnm_davg
                 ddgnm_dstd = utils.get_std(ddh_dstd, ddnm_dstd)
                 final_output.write('\n   (normal mode entropy)\n'

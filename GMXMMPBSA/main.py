@@ -223,7 +223,7 @@ class MMPBSA_App(object):
             self._load_calc_list(self.pre, False, self.normal_system)
         if self.INPUT['alarun']:
             self.calc_list.append(PrintCalc('Running calculations on mutant system...'), timer_key=None)
-            self._load_calc_list(self.pre + 'mutant_', True, self.mutant_system)
+            self._load_calc_list(f'{self.pre}mutant_', True, self.mutant_system)
 
     def _load_calc_list(self, prefix, mutant, parm_system):
         """
