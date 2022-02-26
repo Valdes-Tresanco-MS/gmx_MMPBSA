@@ -494,12 +494,11 @@ class NMODEout(AmberOutput):
             data)
         """
         while rawline := outfile.readline():
-            if rawline[:35] == '   |---- Entropy not Calculated---|':
+            if "|---- Entropy not Calculated---|" in rawline:
                 self['TOTAL'] = self['TOTAL'].append(np.nan)
                 self['TRANSLATIONAL'] = self['TRANSLATIONAL'].append(np.nan)
                 self['ROTATIONAL'] = self['ROTATIONAL'].append(np.nan)
                 self['VIBRATIONAL'] = self['VIBRATIONAL'].append(np.nan)
-                logging.warning('Not all frames minimized within tolerance')
 
             if rawline[:6] == 'Total:':
                 self['TOTAL'] = self['TOTAL'].append(float(rawline.split()[3]) * self.temperature / 1000 * -1)
@@ -511,20 +510,26 @@ class NMODEout(AmberOutput):
                     float(outfile.readline().split()[3]) * self.temperature / 1000 * -1)
 
     def _fill_nmode_values(self):
-        if not len(self['TOTAL']):
-            logging.warning('Convergence criteria for minimized energy gradient has not been satisfied in any of\n'
-                            'the frames selected. Increase the convergence criteria for minimized energy\n'
-                            'gradient (drms) or the maximum number of minimization cycles to use per snapshot in\n'
-                            'sander (maxcyc)\n')
+        if np.isnan(self['TOTAL']).all():
+            logging.warning(f'{self.mol.capitalize()}: Convergence criteria for minimized energy gradient in NMODE has not '
+                            f'been\n'
+                            '    satisfied in any of the frames selected. Increase the convergence criteria for\n'
+                            '    minimized energy gradient (drms) or the maximum number of minimization cycles to\n '
+                            '    useper snapshot in sander (maxcyc)...\n')
             self.no_nmode_convergence = True
+            return
 
+        filling = False
         for t in self.data_keys:
             if np.isnan(self[t]).any():
-                logging.warning('Convergence criteria for minimized energy gradient has not been satisfied for \n'
-                                'several frames. Filling "NaN" with the mean value. Please, consider to increase the\n'
-                                'convergence criteria or the maximum number of minimization cycles to use per\n'
-                                'snapshot in sander (maxcyc)...')
+                filling = True
                 self[t] = EnergyVector(np.nan_to_num(self[t], nan=float(np.nanmean(self[t]))))
+        if filling:
+            logging.warning(f'{self.mol.capitalize()}: Convergence criteria for minimized energy gradient in NMODE\n '
+                            '    has not been satisfied in several frames selected. Filling "NaN" with the mean\n'
+                            '    value. Please, consider to  increase the convergence criteria for minimized energy\n'
+                            '    gradient (drms) or the maximum number minimization cycles to use per snapshot in\n'
+                            '    sander (maxcyc)...\n')
 
 class GBout(AmberOutput):
     """ Amber output class for normal generalized Born simulations """
