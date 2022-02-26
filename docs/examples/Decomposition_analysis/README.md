@@ -59,6 +59,7 @@ according to what is better for your system.
 sys_name="Decomposition",
 startframe=1,
 endframe=10,
+forcefields="leaprc.protein.ff14SB"
 /
 &gb
 igb=5, saltcon=0.150,

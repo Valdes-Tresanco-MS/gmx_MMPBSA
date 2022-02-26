@@ -7,6 +7,7 @@ Sample input file with decomposition analysis
 sys_name="Decomposition",
 startframe=1,
 endframe=10,
+forcefields="leaprc.protein.ff14SB"
 /
 &gb
 igb=5, saltcon=0.150,
