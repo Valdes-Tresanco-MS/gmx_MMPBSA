@@ -871,6 +871,9 @@ class MMPBSA_App(object):
             for tol in INPUT['tolerance']:
                 if tol <= 0:
                     GMXMMPBSA_ERROR('TOLERANCE must be positive!', InputError)
+            if INPUT['tolerance'][-1] > 0.00001:
+                logging.warning(f"Default TOLERANCE value is 0.00001! However {INPUT['tolerance'][-1]} is been used. "
+                                f"Check documentation for more details...")
             if INPUT['buffer'] < 0 and INPUT['ng'] == '':
                 GMXMMPBSA_ERROR('You must specify NG if BUFFER < 0!', InputError)
             if INPUT['polardecomp'] not in [0, 1]:
@@ -910,7 +913,7 @@ class MMPBSA_App(object):
 
         # User warning when intdiel > 10
         if self.INPUT['intdiel'] > 10:
-            logging.warning('Intdiel is great than 10...')
+            logging.warning('Intdiel is greater than 10...')
         # check mutant definition
         if self.INPUT['mutant'].upper() not in ['ALA', 'A', 'GLY', 'G']:
             GMXMMPBSA_ERROR('The mutant most be ALA (or A) or GLY (or G)', InputError)
@@ -922,10 +925,17 @@ class MMPBSA_App(object):
             logging.warning(f"The startframe variable must be >= 1. Changing startframe from"
                             f" {self.INPUT['startframe']} to 1")
             self.INPUT['startframe'] = 1
-        if self.INPUT['nmstartframe'] < 1:
-            logging.warning(f"The nmstartframe variable must be >= 1. Changing nmstartframe from"
-                            f" {self.INPUT['nmstartframe']} to 1")
-            self.INPUT['nmstartframe'] = 1
+        if INPUT['nmoderun']:
+            if self.INPUT['nmstartframe'] < 1:
+                logging.warning(f"The nmstartframe variable must be >= 1. Changing nmstartframe from"
+                                f" {self.INPUT['nmstartframe']} to 1")
+                self.INPUT['nmstartframe'] = 1
+            if INPUT['drms'] > 0.001:
+                logging.warning(f"Default DRMS value is 0.001! However {INPUT['drms']} is been used. Check "
+                                f'documentation for more details...')
+            if INPUT['maxcyc'] < 10000:
+                logging.warning(f"Default MAXCYC value is 10000! However {INPUT['maxcyc']} is been used. Check "
+                                f'documentation for more details...')
 
         # set the pbtemp = temperature
         self.INPUT['pbtemp'] = self.INPUT['temperature']
