@@ -145,11 +145,12 @@ and the foundational papers:
 * [Kollman P. A. et al., 2000][10] 
 * [Gohlke H., Case D. A. 2004][11] 
 
-as well as some reviews:
+as well as some reviews and expert opinions:
 
 * [Genheden S., Ryde U. 2015][12] 
 * [Wang et. al., 2018][13]  
 * [Wang et. al., 2019][14]
+* [Tuccinardi, 2021][16]
 
   [1]: https://pubs.acs.org/doi/10.1021/ct300418h
   [2]: https://pubs.acs.org/doi/abs/10.1021/jacs.6b02682
@@ -167,3 +168,4 @@ as well as some reviews:
   [13]: https://www.frontiersin.org/articles/10.3389/fmolb.2017.00087/full
   [14]: https://pubs.acs.org/doi/abs/10.1021/acs.chemrev.9b00055
   [15]: https://pubs.acs.org/doi/full/10.1021/acs.jctc.8b00418
+  [16]: https://www.tandfonline.com/doi/pdf/10.1080/17460441.2021.1942836
