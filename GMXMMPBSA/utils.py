@@ -138,15 +138,13 @@ def mask2list(com_str, rec_mask, lig_mask):
     for r in rm_list:
         if '-' in r:
             s, e = r.split('-')
-            for i in range(int(s) - 1, int(e)):
-                res_list.append([i, 'R'])
+            res_list.extend([i, 'R'] for i in range(int(s) - 1, int(e)))
         else:
             res_list.append([int(r) - 1, 'R'])
     for l in lm_list:
         if '-' in l:
             s, e = l.split('-')
-            for i in range(int(s) - 1, int(e)):
-                res_list.append([i, 'L'])
+            res_list.extend([i, 'L'] for i in range(int(s) - 1, int(e)))
         else:
             res_list.append([int(l) - 1, 'L'])
     res_list = sorted(res_list, key=lambda x: x[0])
@@ -166,8 +164,7 @@ def mask2list(com_str, rec_mask, lig_mask):
 
 def log_subprocess_output(process):
     while True:
-        output = process.stdout.readline().decode()
-        if output:
+        if output := process.stdout.readline().decode():
             logging.debug(output.strip('\n'))
         else:
             break
@@ -177,6 +174,7 @@ class Residue(int):
     """
     Residue class
     """
+
     def __init__(self, index, number, chain, id, id_index, name, icode=''):
         int.__init__(index)
         self.index = index
@@ -234,8 +232,8 @@ class Residue(int):
         pass
 
     def set_mut(self, mut):
-        self.mutant_label = (f"{self.chain}/{self.number}{':' + self.icode if self.icode else ''} - {self.name}"
-                             f"x{mut}")
+        self.mutant_label = f'{self.chain}/{self.number}{f":{self.icode}" if self.icode else ""} - {self.name}x{mut}'
+
         self.mutant_string = (f"{self.id}:{self.chain}:{mut}:{self.number}:{self.icode}" if self.icode
                               else f"{self.id}:{self.chain}:{mut}:{self.number}")
 
@@ -357,18 +355,22 @@ def check_str(structure, ref=False, skip=False):
 
     for chain, resl in res_dict.items():
         res_id_list = [[x, x2] for x, x1, x2 in resl]
-        for c, x in enumerate(res_id_list):
-            if res_id_list.count(x) > 1:
-                duplicates.append(f'{chain}:{resl[c][0]}:{resl[c][1]}:{resl[c][2]}')
-    if duplicates:
-        if ref:
+        duplicates.extend(
+            f'{chain}:{resl[c][0]}:{resl[c][1]}:{resl[c][2]}'
+            for c, x in enumerate(res_id_list)
+            if res_id_list.count(x) > 1
+        )
+
+    if ref:
+        if duplicates:
             GMXMMPBSA_ERROR(f'The reference structure used is inconsistent. The following residues are duplicates:\n'
                             f' {", ".join(duplicates)}')
-        elif skip:
+    elif skip:
+        if duplicates:
             return refstr
-        else:
-            logging.warning(f'The complex structure used is inconsistent. The following residues are duplicates:\n'
-                            f' {", ".join(duplicates)}')
+    elif duplicates:
+        logging.warning(f'The complex structure used is inconsistent. The following residues are duplicates:\n'
+                        f' {", ".join(duplicates)}')
     return refstr
 
 
@@ -399,7 +401,7 @@ def res2map(indexes, com_file):
             if res != proc_res and resindex not in res_list:
                 rec_list.append(resindex)
                 res_list.append(Residue(resindex, com_str.atoms[i].residue.number,
-                                        com_str.atoms[i].residue.chain, 'R',rec_index,
+                                        com_str.atoms[i].residue.chain, 'R', rec_index,
                                         com_str.atoms[i].residue.name,
                                         com_str.atoms[i].residue.insertion_code))
                 resindex += 1
@@ -495,7 +497,7 @@ def selector(selection: str):
                     ri = [chain, int(ci[0]), ''] if len(ci) == 1 else [chain, int(ci[0]), ci[1]]
                     if ri in res_selections:
                         logging.warning('Found duplicated residue in selection: CHAIN:{} RES_NUM:{} ICODE: '
-                                          '{}'.format(*ri))
+                                        '{}'.format(*ri))
                         continue
                     res_selections.append(ri)
                 else:
@@ -508,10 +510,11 @@ def selector(selection: str):
                     for cr in range(start, end):
                         if [chain, cr, ''] in res_selections:
                             logging.warning('Found duplicated residue in selection: CHAIN:{} RES_NUM:{} ICODE: '
-                                              '{}'.format(chain, cr, ''))
+                                            '{}'.format(chain, cr, ''))
                             continue
                         res_selections.append([chain, cr, ''])
     return dist, res_selections
+
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
