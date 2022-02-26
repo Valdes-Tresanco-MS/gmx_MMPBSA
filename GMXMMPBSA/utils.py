@@ -596,8 +596,6 @@ def selector(selection: str):
     return dist, res_selections
 
 
-# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 def remove(flag, fnpre='_GMXMMPBSA_'):
     """ Removes temporary files. Allows for different levels of cleanliness """
     # Collect all of the temporary files (those starting with _GMXMMPBSA_)
@@ -702,6 +700,17 @@ def get_sys_info():
     logging.debug(f"OS SYSTEM     : {platform.system()}")
     logging.debug(f"OS VERSION    : {platform.version()}")
     logging.debug(f"OS PROCESSOR  : {platform.processor()}\n")
+
+
+def get_warnings():
+    info = {'warning': 0, 'error': 0}
+    with open('gmx_MMPBSA.log') as logfile:
+        for line in logfile:
+            if line.startswith('[ERROR  ]'):
+                info['error'] += 1
+            elif line.startswith('[WARNING]'):
+                info['warning'] += 1
+    return info
 
 
 class Unbuffered(object):

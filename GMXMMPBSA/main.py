@@ -462,8 +462,7 @@ class MMPBSA_App(object):
 
         if self.INPUT['nmoderun']:
             self.calc_list.append(
-                PrintCalc('\nBeginning nmode calculations with %s' %
-                          progs['nmode']), timer_key='nmode')
+                PrintCalc('Beginning nmode calculations with %s' % progs['nmode']), timer_key='nmode')
 
             c = NmodeCalc(progs['nmode'], parm_system.complex_prmtop,
                           '%scomplex.pdb' % prefix,
@@ -628,6 +627,11 @@ class MMPBSA_App(object):
         self.timer.print_('global', True)
 
         self.remove(self.INPUT['keep_files'])
+
+        exe_info = utils.get_warnings()
+        logging.info(f"\n   Finalizing gmx_MMPBSA: [ERROR  ] = {exe_info['error']}; [WARNING] = {exe_info['warning']}\n"
+                     f"   Check the gmx_MMPBSA.log file for more details...\n")
+
 
         logging.info(
             '\n Thank you for using gmx_MMPBSA. Please consider supporting gmx_MMPBSA by citing our publication:'
