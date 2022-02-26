@@ -605,6 +605,10 @@ class MMPBSA_App(object):
         if self.INPUT['keep_files'] in [0, 2]:
             # Store the calc_types data in a h5 file
             Data2h5(self)
+
+        info = InfoFile(self)
+        info.write_info(f'{self.pre}info')
+
         self.timer.stop_timer('output')
 
     def finalize(self):
@@ -983,6 +987,12 @@ class MMPBSA_App(object):
                 self.calc_types.normal[key] = {'complex': outclass[i]('complex', self.INPUT, self.using_chamber)}
                 self.calc_types.normal[key]['complex'].parse_from_file(self.pre + basename[i] % 'complex',
                                                                        self.mpi_size)
+                # check if the nmode output is valid
+                if self.calc_types.normal[key].no_nmode_convergence:
+                    self.INPUT['nmoderun'] = False
+                    del self.calc_types.normal[key]
+                    continue
+
                 if not self.stability:
                     self.calc_types.normal[key]['receptor'] = outclass[i]('receptor', self.INPUT, self.using_chamber)
                     self.calc_types.normal[key]['receptor'].parse_from_file(self.pre + basename[i] % 'receptor',
