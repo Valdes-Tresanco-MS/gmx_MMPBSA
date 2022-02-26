@@ -152,13 +152,13 @@ def calc_sum(vector1, vector2, mut=False) -> (float, float):
             dstd = float(d.std())
         else:
             dmean = float(vector2.mean() + vector1.mean())
-            dstd = float(get_std(vector2.stdev(), vector1.stdev()))
+            dstd = float(get_std(vector2.std(), vector1.std()))
     elif isinstance(vector2, EnergyVector) and isinstance(vector1, (int, float)):
         dmean = float(vector2.mean() + vector1)
-        dstd = vector2.stdev()
+        dstd = vector2.std()
     elif isinstance(vector2, (int, float)) and isinstance(vector1, EnergyVector):
         dmean = float(vector2 + vector1.mean())
-        dstd = vector1.stdev()
+        dstd = vector1.std()
     else:
         dmean = float(vector2 + vector1)
         dstd = 0.0
@@ -184,13 +184,13 @@ def calc_sub(vector1, vector2, mut=False) -> (float, float):
             dstd = float(d.std())
         else:
             dmean = float(vector2.mean() - vector1.mean())
-            dstd = float(get_std(vector2.stdev(), vector1.stdev()))
+            dstd = float(get_std(vector2.std(), vector1.std()))
     elif isinstance(vector2, EnergyVector) and isinstance(vector1, (int, float)):
         dmean = float(vector2.mean() - vector1)
-        dstd = vector2.stdev()
+        dstd = vector2.std()
     elif isinstance(vector2, (int, float)) and isinstance(vector1, EnergyVector):
         dmean = float(vector2 - vector1.mean())
-        dstd = vector1.stdev()
+        dstd = vector1.std()
     else:
         dmean = float(vector2 - vector1)
         dstd = 0.0

@@ -349,23 +349,25 @@ def write_outputs(app):
 
             # Combine with the entropy(ies)
             if INPUT['qh_entropy']:
-                qh_davg, qh_dstd = utils.calc_sum(sys_norm['TOTAL'], qhnorm['TOTAL'])
+                dg_qh_davg, dg_qh_dstd = utils.calc_sum(sys_norm['TOTAL'], qhnorm['TOTAL'])
                 final_output.add_section('Using Quasi-harmonic Entropy Approximation:\n'
-                                         f'ΔG{"" if stability else " binding"} = {qh_davg:9.2f} +/- {qh_dstd:7.2f}\n')
+                                         f'ΔG{"" if stability else " binding"} = {dg_qh_davg:9.2f} +'
+                                         f'/- {dg_qh_dstd:7.2f}\n')
             if not stability:
                 if INPUT['interaction_entropy']:
-                    ie_davg, ie_dstd = utils.calc_sum(sys_norm['TOTAL'], ienorm[key]['iedata'])
+                    dg_ie_davg, dg_ie_dstd = utils.calc_sum(sys_norm['TOTAL'], ienorm[key]['iedata'])
                     final_output.add_section(f"Using Interaction Entropy Approximation:\n"
-                                             f"ΔG binding = {ie_davg:9.2f} +/- {ie_dstd:7.2f}\n")
+                                             f"ΔG binding = {dg_ie_davg:9.2f} +/- {dg_ie_dstd:7.2f}\n")
                 if INPUT['c2_entropy']:
-                    c2_davg, sys_dstd = utils.calc_sum(sys_norm['TOTAL'], c2norm[key]['c2data'])
-                    c2_dstd = utils.get_std(sys_dstd, c2norm[key]['c2_std'])
+                    dg_c2_davg, dh_dstd = utils.calc_sum(sys_norm['TOTAL'], c2norm[key]['c2data'])
+                    dg_c2_dstd = utils.get_std(dh_dstd, c2norm[key]['c2_std'])
                     final_output.add_section(f"Using C2 Entropy Approximation:\n"
-                                             f"ΔG binding = {c2_davg:9.2f} +/- {c2_dstd:7.2f}\n")
+                                             f"ΔG binding = {dg_c2_davg:9.2f} +/- {dg_c2_dstd:7.2f}\n")
             if INPUT['nmoderun']:
-                nm_davg, nm_dstd = utils.calc_sum(sys_norm['TOTAL'], nm_sys_norm['TOTAL'])
+                dg_nm_davg, dg_nm_dstd = utils.calc_sum(sys_norm['TOTAL'], nm_sys_norm['TOTAL'])
                 final_output.add_section('Using Normal Mode Entropy Approximation:\n'
-                                         f'ΔG{"" if stability else " binding"} = {nm_davg:9.2f} +/- {nm_dstd:7.2f}\n')
+                                         f'ΔG{"" if stability else " binding"} = {dg_nm_davg:9.2f} +/-'
+                                         f' {dg_nm_dstd:7.2f}\n')
 
         if INPUT['alarun']:
             final_output.write('%s MUTANT:%s' % (mut_str, headers[i]))
@@ -419,7 +421,7 @@ def write_outputs(app):
                                    f'ΔΔG{"" if stability else " binding"} = {ddgqh_davg:9.2f} +/- {ddh_dstd:7.2f}\n')
             if not stability:
                 if INPUT['interaction_entropy']:
-                    ddie_davg, ddie_dstd = utils.calc_sub(iemutant[key]['iedata'], ienorm[key]['iedata'], True)
+                    ddie_davg, ddie_dstd = utils.calc_sub(iemutant[key]['iedata'], ienorm[key]['iedata'], mut=True)
                     ddgie_davg = ddh_davg + ddie_davg
                     ddgie_dstd = utils.get_std(ddh_dstd, ddie_dstd)
                     final_output.write('\n   (interaction entropy)\n'
@@ -432,7 +434,7 @@ def write_outputs(app):
                     final_output.write('\n   (C2 entropy)\n'
                                        f'ΔΔG binding = {ddgc2_davg:9.2f} +/- {ddgc2_dstd:7.2f}\n')
             if INPUT['nmoderun']:
-                ddnm_davg, ddnm_dstd = utils.calc_sub(nm_sys_mut['TOTAL'], nm_sys_norm['TOTAL'], True)
+                ddnm_davg, ddnm_dstd = utils.calc_sub(nm_sys_mut['TOTAL'], nm_sys_norm['TOTAL'], mut=True)
                 ddgnm_davg = ddh_davg + ddnm_davg
                 ddgnm_dstd = utils.get_std(ddh_dstd, ddnm_dstd)
                 final_output.write('\n   (normal mode entropy)\n'
