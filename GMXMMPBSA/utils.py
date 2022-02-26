@@ -40,6 +40,7 @@ import json
 import logging
 from string import ascii_letters
 from GMXMMPBSA.exceptions import GMXMMPBSA_ERROR
+from GMXMMPBSA.amber_outputs import EnergyVector
 from math import sqrt
 import parmed
 
@@ -47,8 +48,73 @@ import parmed
 def get_std(val1, val2):
     return sqrt(val1 ** 2 + val2 ** 2)
 
+
 def get_corrstd(val1, val2):
-    return sqrt(val1 ** 2 + val2 ** 2 - 2*val1*val2)
+    return sqrt(val1 ** 2 + val2 ** 2 - 2 * val1 * val2)
+
+
+def calc_sum(vector1, vector2, mut=False) -> (float, float):
+    """
+    Calculate the mean and std of the two vector/numbers sum
+    Args:
+        vector1: EnergyVector or float
+        vector2: EnergyVector or float
+        mut: If mutant, the SD is the standard deviation of the array
+
+    Returns:
+        dmean: Mean of the sum
+        dstd: Standard deviation
+    """
+    if isinstance(vector2, EnergyVector) and isinstance(vector1, EnergyVector):
+        if mut:
+            d = vector2 + vector1
+            dmean = float(d.mean())
+            dstd = float(d.std())
+        else:
+            dmean = float(vector2.mean() + vector1.mean())
+            dstd = float(get_std(vector2.stdev(), vector1.stdev()))
+    elif isinstance(vector2, EnergyVector) and isinstance(vector1, (int, float)):
+        dmean = float(vector2.mean() + vector1)
+        dstd = vector2.stdev()
+    elif isinstance(vector2, (int, float)) and isinstance(vector1, EnergyVector):
+        dmean = float(vector2 + vector1.mean())
+        dstd = vector1.stdev()
+    else:
+        dmean = float(vector2 + vector1)
+        dstd = 0.0
+    return dmean, dstd
+
+
+def calc_sub(vector1, vector2, mut=False) -> (float, float):
+    """
+    Calculate the mean and std of the two vector/numbers subtraction
+    Args:
+        vector1: EnergyVector or float
+        vector2: EnergyVector or float
+        mut: If mutant, the SD is the standard deviation of the array
+
+    Returns:
+        dmean: Mean of the subtraction
+        dstd: Standard deviation
+    """
+    if isinstance(vector2, EnergyVector) and isinstance(vector1, EnergyVector):
+        if mut:
+            d = vector2 - vector1
+            dmean = float(d.mean())
+            dstd = float(d.std())
+        else:
+            dmean = float(vector2.mean() - vector1.mean())
+            dstd = float(get_std(vector2.stdev(), vector1.stdev()))
+    elif isinstance(vector2, EnergyVector) and isinstance(vector1, (int, float)):
+        dmean = float(vector2.mean() - vector1)
+        dstd = vector2.stdev()
+    elif isinstance(vector2, (int, float)) and isinstance(vector1, EnergyVector):
+        dmean = float(vector2 - vector1.mean())
+        dstd = vector1.stdev()
+    else:
+        dmean = float(vector2 - vector1)
+        dstd = 0.0
+    return dmean, dstd
 
 
 def create_input_args(args: list):
