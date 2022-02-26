@@ -5,13 +5,13 @@ Sample input file for Alanine scanning
 
 &general
 sys_name="NonLinear_PB",
-startframe=5,
+startframe=1,
 endframe=10,
-forcefields="oldff/leaprc.ff99SB",
+forcefields="leaprc.protein.ff14SB",
 /
 &pb
 npbopt=1,
-indi=10.0, istrng=0.15,                                                     
+indi=1.0, istrng=0.15,
 radiopt=0,
 eneopt=1, cutnb=8.0,
 /

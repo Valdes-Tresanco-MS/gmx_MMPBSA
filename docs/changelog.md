@@ -3,6 +3,15 @@ template: main.html
 title: Changelog
 ---
 # Changelog
+
+## gmx_MMPBSA v1.5.0.1 (02/22/2022)
+### Fixes
+#### `gmx_MMPBSA`
+- Allow index group name for group selection (#157)
+
+#### `gmx_MMPBSA_ana`
+- gmx_MMPBSA_ana does not open at the end of the calculation (#158)
+
 ## gmx_MMPBSA v1.5.0 (02/22/2022)
 
 ### Additions

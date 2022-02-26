@@ -41,9 +41,9 @@ errors are more frequent.
             conda activate gmxMMPBSA                                                        # (2)
             conda install -c conda-forge mpi4py ambertools compilers -y -q                  # (3)
             python -m pip install git+https://github.com/ParmEd/ParmEd.git@16fb236          # (4)
+            python -m pip install pyqt5                                                     # (5)
             # Optional
-            conda install -c bioconda gromacs==2021.3 -y -q                                 # (5)
-            python -m pip install pyqt5                                                     # (6)
+            conda install -c bioconda gromacs==2021.3 -y -q                                 # (6)
            
             ```
             
@@ -51,8 +51,8 @@ errors are more frequent.
             2. Activate `gmxMMPBSA` environment
             3. Install dependencies
             4. Install ParmEd
-            5. (Optional) Install GROMACS if GROMACS is not installed in your machine
-            6. (Optional) Install PyQt5 only if you will use gmx_MMPBSA_ana
+            5. Install PyQt5 if you will use gmx_MMPBSA_ana
+            6. (Optional) Install GROMACS if GROMACS is not installed in your machine
     
             
             === "Rolling/stable release"
@@ -66,7 +66,7 @@ errors are more frequent.
                 ```       
                 
                 !!! info 
-                    Install/update gmx_MMPBSA from PyPi. PyPi has the latest version of *gmx_MMPBSA* including stable 
+                    Install/update gmx_MMPBSA from PyPI. PyPI has the latest version of *gmx_MMPBSA* including stable 
                     and beta versions.
             
             === "development version" 
@@ -82,38 +82,59 @@ errors are more frequent.
                     Install gmx_MMPBSA from the master branch of GitHub repository. This is only recommended 
                     for testing new versions or temporary solutions to reported bugs.
     
-        === "`conda`"
-            Stable version only
+[comment]: <> (        === "`conda`")
+
+[comment]: <> (            Stable version only)
             
-            ``` bash 
-            conda update conda
-            conda create -n gmxMMPBSA python=3.9 -y -q                                      # (1)        
-            conda activate gmxMMPBSA                                                        # (2)                        
-            conda install -c conda-forge mpi4py ambertools compilers -y -q                  # (3)
-            python -m pip install git+https://github.com/ParmEd/ParmEd.git@16fb236          # (4)
-            # Optional
-            conda install -c bioconda gromacs==2021.3 -y -q                                 # (5)
-            python -m pip install pyqt5                                                     # (6)                      
-            ```
+[comment]: <> (            ``` bash )
+
+[comment]: <> (            conda update conda)
+
+[comment]: <> (            conda create -n gmxMMPBSA python=3.9 -y -q                                      # &#40;1&#41;        )
+
+[comment]: <> (            conda activate gmxMMPBSA                                                        # &#40;2&#41;                        )
+
+[comment]: <> (            conda install -c conda-forge mpi4py ambertools compilers -y -q                  # &#40;3&#41;)
+
+[comment]: <> (            python -m pip install git+https://github.com/ParmEd/ParmEd.git@16fb236          # &#40;4&#41;)
+
+[comment]: <> (            python -m pip install pyqt5                                                     # &#40;5&#41;)
+
+[comment]: <> (            # Optional)
+
+[comment]: <> (            conda install -c bioconda gromacs==2021.3 -y -q                                 # &#40;6&#41;)
+
+[comment]: <> (            ```)
             
-            1. Create `gmxMMPBSA` environment
-            2. Activate `gmxMMPBSA` environment
-            3. Install dependencies
-            4. Install ParmEd
-            5. (Optional) Install GROMACS if GROMACS is not installed in your machine
-            6. (Optional) Install PyQt5 only if you will use gmx_MMPBSA_ana
+[comment]: <> (            1. Create `gmxMMPBSA` environment)
+
+[comment]: <> (            2. Activate `gmxMMPBSA` environment)
+
+[comment]: <> (            3. Install dependencies)
+
+[comment]: <> (            4. Install ParmEd)
+
+[comment]: <> (            5. Install PyQt5 if you will use gmx_MMPBSA_ana)
+
+[comment]: <> (            6. &#40;Optional&#41; Install GROMACS if GROMACS is not installed in your machine)
     
-            **INSTALLATION**
-            ```bash        
-            conda install -c conda-forge gmx_mmpbsa                                         # (1)    
-            ```
+[comment]: <> (            **INSTALLATION**)
+
+[comment]: <> (            ```bash        )
+
+[comment]: <> (            conda install -c conda-forge gmx_mmpbsa                                         # &#40;1&#41;    )
+
+[comment]: <> (            ```)
             
-            1. Install gmx_MMPBSA from conda-forge. This package will install all dependencies automatically
+[comment]: <> (            1. Install gmx_MMPBSA from conda-forge. This package will install all dependencies automatically)
             
-            **UPDATE**
-            ```bash        
-            conda update gmx_mmpbsa    
-            ```
+[comment]: <> (            **UPDATE**)
+
+[comment]: <> (            ```bash        )
+
+[comment]: <> (            conda update gmx_mmpbsa    )
+
+[comment]: <> (            ```)
     
         [Miniconda]: https://docs.conda.io/en/latest/miniconda.html
     
@@ -138,7 +159,7 @@ errors are more frequent.
             ```
     
             !!! info 
-                Install gmx_MMPBSA from PyPi. PyPi has the latest version of *gmx_MMPBSA* including stable and beta
+                Install gmx_MMPBSA from PyPI PyPI has the latest version of *gmx_MMPBSA* including stable and beta
                 versions.
             
         === "development version" 

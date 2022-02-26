@@ -649,8 +649,8 @@ class MMPBSA_App(object):
             ifile = Path(f'{self.FILES.prefix}info')
             if not ifile.exists():
                 ifile = Path('RESULTS_gmx_MMPBSA.h5')
-            g = subprocess.Popen(
-                ['gmx_MMPBSA_ana', '-f', ifile.as_posix()])
+
+            g = subprocess.Popen(['gmx_MMPBSA_ana', '-f', ifile.as_posix()])
             if g.wait():
                 end = 1
         if end:
@@ -786,6 +786,10 @@ class MMPBSA_App(object):
         # check force fields
         if INPUT['igb'] not in [1, 2, 5, 7, 8]:
             GMXMMPBSA_ERROR('Invalid value for IGB (%s)! ' % INPUT['igb'] + 'It must be 1, 2, 5, 7, or 8.', InputError)
+        if INPUT['intdiel'] < 0:
+            GMXMMPBSA_ERROR('INDI must be non-negative!', InputError)
+        if INPUT['extdiel'] < 0:
+            GMXMMPBSA_ERROR('EXDI must be non-negative!', InputError)
         if INPUT['saltcon'] < 0:
             GMXMMPBSA_ERROR('SALTCON must be non-negative!', InputError)
         if INPUT['surften'] < 0:
@@ -802,8 +806,8 @@ class MMPBSA_App(object):
             GMXMMPBSA_ERROR('PRBRAD (%s) must be 1.4 and 1.6!' % INPUT['prbrad'], InputError)
         if INPUT['istrng'] < 0:
             GMXMMPBSA_ERROR('ISTRNG must be non-negative!', InputError)
-        if INPUT['inp'] not in [0, 1, 2]:
-            GMXMMPBSA_ERROR('INP/NPOPT (%s) must be 0, 1, or 2!' % INPUT['inp'], InputError)
+        if INPUT['inp'] not in [1, 2]:
+            GMXMMPBSA_ERROR('INP/NPOPT (%s) must be 1, or 2!' % INPUT['inp'], InputError)
         if INPUT['cavity_surften'] < 0:
             GMXMMPBSA_ERROR('CAVITY_SURFTEN must be non-negative!', InputError)
         if INPUT['fillratio'] <= 0:
@@ -824,15 +828,15 @@ class MMPBSA_App(object):
             GMXMMPBSA_ERROR('Alanine scanning is incompatible with NETCDF != 0!', InputError)
         if INPUT['decomprun'] and INPUT['idecomp'] == 0:
             GMXMMPBSA_ERROR('IDECOMP cannot be 0 for Decomposition analysis!', InputError)
-        if INPUT['ions_parameters'] not in range(1, 13):
-            GMXMMPBSA_ERROR('Ions parameters file name must be in %s!' % range(1, 13), InputError)
+        if INPUT['ions_parameters'] not in range(1, 17):
+            GMXMMPBSA_ERROR('Ions parameters file name must be in %s!' % range(1, 17), InputError)
         if INPUT['PBRadii'] not in range(1, 8):
             GMXMMPBSA_ERROR('PBRadii must be 1, 2, 3, 4, 5, 6, or 7!', InputError)
         if INPUT['solvated_trajectory'] not in [0, 1]:
             GMXMMPBSA_ERROR('SOLVATED_TRAJECTORY must be 0 or 1!', InputError)
         if INPUT['ifqnt'] not in [0, 1]:
             GMXMMPBSA_ERROR('QMMM must be 0 or 1!', InputError)
-        if not INPUT['ifqnt'] and INPUT['qm_theory'] or INPUT['qm_residues']:
+        if INPUT['ifqnt'] == 0 and (INPUT['qm_theory'] or INPUT['qm_residues']):
             logging.warning('qm_theory/qm_residues variable has been defined, however the potential function is '
                             'strictly classical (ifqnt=0). Please, set ifqnt=1 if you want to use Use QM/MM')
         if INPUT['ifqnt'] == 1:

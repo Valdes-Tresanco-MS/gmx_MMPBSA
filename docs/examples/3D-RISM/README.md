@@ -37,11 +37,11 @@ That being said, once you are in the folder containing all files, the command-li
 
 === "Serial"
 
-        gmx_MMPBSA -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 19 20 -ct com_traj.xtc
+        gmx_MMPBSA -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 20 21 -ct com_traj.xtc
 
 === "With MPI"
 
-        mpirun -np 2 gmx_MMPBSA MPI -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 19 20 -ct com_traj.xtc
+        mpirun -np 2 gmx_MMPBSA MPI -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 20 21 -ct com_traj.xtc
 
 where the `mmpbsa.in` input file, is a text file containing the following lines:
 
@@ -69,7 +69,7 @@ _See a detailed list of all the options in `gmx_MMPBSA` input file [here][2] as 
 In this case, a single trajectory (ST) approximation is followed, which means the receptor and ligand (in this case, 
 the ligand is also another protein) amber format topologies and trajectories will be obtained from that of the 
 complex. To do so, an MD Structure+mass(db) file (`com.tpr`), an index file (`index.ndx`), a trajectory file 
-(`com_traj.xtc`), and both the receptor and ligand group numbers in the index file (`19 20`) are needed. The `mmpbsa.
+(`com_traj.xtc`), and both the receptor and ligand group numbers in the index file (`20 21`) are needed. The `mmpbsa.
 in` input file will contain all the parameters needed for the MM/PB(GB)SA calculation. In this case, 4 frames 
 are going to be used when performing the MM/PB(GB)SA calculation with the 3D-RISM model using Kovalenko-Hirata 
 clousure with a 0.001. Note that we have increased the tolerance from 0.00001 (default) to 0.001 in order to reduce the 
