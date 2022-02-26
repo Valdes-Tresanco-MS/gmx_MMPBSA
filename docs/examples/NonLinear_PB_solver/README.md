@@ -38,11 +38,11 @@ That being said, once you are in the folder containing all files, the command-li
 
 === "Serial"
 
-        gmx_MMPBSA -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 1 12 -ct com_traj.xtc
+        gmx_MMPBSA -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 20 21 -ct com_traj.xtc
 
 === "With MPI"
 
-        mpirun -np 2 gmx_MMPBSA MPI -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 1 12 -ct com_traj.xtc
+        mpirun -np 2 gmx_MMPBSA MPI -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 20 21 -ct com_traj.xtc
 
 where the `mmpbsa.in` input file, is a text file containing the following lines:
 
@@ -56,13 +56,13 @@ according to what is better for your system.
 
 &general
 sys_name="NonLinear_PB",
-startframe=5,
+startframe=1,
 endframe=10,
-forcefields="oldff/leaprc.ff99SB",
+forcefields="leaprc.protein.ff14SB",
 /
 &pb
 npbopt=1,
-indi=10.0, istrng=0.15,                                                     
+indi=1.0, istrng=0.15,                                                     
 radiopt=0,                                           
 eneopt=1, cutnb=8.0,
 /
@@ -75,13 +75,13 @@ eneopt=1, cutnb=8.0,
 _See a detailed list of all the options in `gmx_MMPBSA` input file [here][2] as well as several [examples][3]_
 
 ## Considerations
-In this case, a single trajectory (ST) approximation is followed, which means the receptor and ligand (in this case, 
-the ligand is DNA) amber format topologies and trajectories will be obtained from that of the complex. To do so, an 
+In this case, a single trajectory (ST) approximation is followed, which means the receptor and ligand 
+amber format topologies and trajectories will be obtained from that of the complex. To do so, an 
 MD Structure+mass(db) file (`com.tpr`), an index file (`index.ndx`), a trajectory file (`com_traj.xtc`), and both 
-the receptor and ligand group numbers in the index file (`1 12`) are needed. The `mmpbsa.in` input file will contain
+the receptor and ligand group numbers in the index file (`20 21`) are needed. The `mmpbsa.in` input file will contain
 all the parameters needed for the MM/PB(GB)SA calculation. In this case, 6 frames are going to be used when 
 performing the MM/PB(GB)SA calculation with the Non-Linear PB solver (`npbopt=1`). The dielectric constant 
-(`indi`) is set = 10. 
+(`indi`) is set = 1. 
 
 !!! warning
     When running a NLPB solver, `eneopt` is set = 1. That way, the total electrostatic energy and forces will be 
