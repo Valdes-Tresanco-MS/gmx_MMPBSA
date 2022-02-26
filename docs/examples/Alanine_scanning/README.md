@@ -41,11 +41,11 @@ That being said, once you are in the folder containing all files, the command-li
 
 === "Serial"
 
-        gmx_MMPBSA -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 1 12 -ct com_traj.xtc
+        gmx_MMPBSA -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 20 21 -ct com_traj.xtc
 
 === "With MPI"
 
-        mpirun -np 2 gmx_MMPBSA MPI -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 1 12 -ct com_traj.xtc
+        mpirun -np 2 gmx_MMPBSA MPI -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 20 21 -ct com_traj.xtc
 
 where the `mmpbsa.in` input file, is a text file containing the following lines:
 
@@ -59,15 +59,16 @@ according to what is better for your system.
 
 &general
 sys_name="Alanine_Scanning",
-startframe=5,
-endframe=14,
-forcefields="oldff/leaprc.ff99SB", PBRadii=4,
+startframe=1,
+endframe=10,
+forcefields="leaprc.protein.ff14SB", 
+PBRadii=4,
 /
 &gb
 igb=8, saltcon=0.150,
 /
 &alanine_scanning
-mutant='ALA', mutant_res='B:13', cas_intdiel=1
+mutant='ALA', mutant_res='A:23', cas_intdiel=1
 /
 ```
 
@@ -77,12 +78,12 @@ _See a detailed list of all the options in `gmx_MMPBSA` input file [here][2] as 
 In this case, a single trajectory (ST) approximation is followed, which means the receptor and ligand (in this case, 
 the ligand is DNA) amber format topologies and trajectories will be obtained from that of the complex. To do so, an 
 MD Structure+mass(db) file (`com.tpr`), an index file (`index.ndx`), a trajectory file (`com_traj.xtc`), and both 
-the receptor and ligand group numbers in the index file (`1 12`) are needed. The `mmpbsa.in` input file will contain
+the receptor and ligand group numbers in the index file (`20 21`) are needed. The `mmpbsa.in` input file will contain
 all the parameters needed for the MM/PB(GB)SA calculation. In this case, 10 frames are going to be used when performing 
 the MM/PB(GB)SA calculation with the igb8 (GB-Neck2) model and a salt concentration = 0.15M. Of note, mbondi3 
 radii (`PBRadii=4`) will be used as recommended for GB-Neck2 solvation model. Also, The dielectric constant 
 (`intdiel`) will be modified depending on the nature of the residue to be mutated as `cas_intdiel=1`. In this case, 
-the residue `B/13` is an Arginine which means `intdiel = 5` will be used.
+the residue `A/23` is a Tyrosine which means `intdiel = 3` will be used.
 
 !!! note
     Once the calculation is done, you can analyze the results in `gmx_MMPBSA_ana` (if you didn't define `-nogui`). 
