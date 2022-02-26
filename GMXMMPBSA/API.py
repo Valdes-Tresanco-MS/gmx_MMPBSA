@@ -124,9 +124,6 @@ class MMPBSA_API():
                         nmindex = pd.Series(list(self.nmframes.values()), name=f'Time ({self.timeunit})')
                     else:
                         nmindex = pd.Series(list(self.nmframes.keys()), name='Frames')
-                    from icecream import ic
-                    ic(index, self._energy2flatdict(data), data)
-                    
                     df_models[model] = pd.DataFrame(self._energy2flatdict(data), index=nmindex)
                     terms['entropy'].append(model)
                 elif model == 'qh':
