@@ -40,9 +40,89 @@ import json
 import logging
 from string import ascii_letters
 from GMXMMPBSA.exceptions import GMXMMPBSA_ERROR
-from GMXMMPBSA.amber_outputs import EnergyVector
 from math import sqrt
 import parmed
+import numpy as np
+
+
+class EnergyVector(np.ndarray):
+    def __new__(cls, values=None, com_std=None):
+        # Input array is an already formed ndarray instance
+        # We first cast to be our class type
+        if isinstance(values, int):
+            obj = np.zeros((values,)).view(cls)
+        elif isinstance(values, (list, tuple, np.ndarray)):
+            obj = np.array(values).view(cls)
+        else:
+            obj = np.array([]).view(cls)
+        obj.com_std = com_std
+        return obj
+
+    def __array_finalize__(self, obj):
+        # see InfoArray.__array_finalize__ for comments
+        if obj is None:
+            return
+        self.com_std = getattr(obj, 'com_stdev', None)
+
+    def stdev(self):
+        return self.com_std or self.std()
+
+    def append(self, values):
+        return EnergyVector(np.append(self, values))
+
+    def avg(self):
+        return np.average(self)
+
+    def corr_add(self, other):
+        selfstd = self.com_std or float(self.std())
+        comp_std = None
+        if isinstance(other, EnergyVector):
+            otherstd = other.com_std or float(other.std())
+            comp_std = get_corrstd(selfstd, otherstd)
+        return EnergyVector(np.add(self, other), comp_std)
+
+    def corr_sub(self, other):
+        self_std = self.com_std or float(np.asarray(self).std())
+        comp_std = None
+        if isinstance(other, EnergyVector):
+            other_std = other.com_std or float(np.asarray(other).std())
+            comp_std = get_corrstd(self_std, other_std)
+        return EnergyVector(np.subtract(self, other), comp_std)
+
+    def __add__(self, other):
+        selfstd = self.com_std or float(self.std())
+        comp_std = None
+        if isinstance(other, EnergyVector):
+            otherstd = other.com_std or float(other.std())
+            comp_std = get_std(selfstd, otherstd)
+        return EnergyVector(np.add(self, other), comp_std)
+
+    def __sub__(self, other):
+        self_std = self.com_std or float(np.asarray(self).std())
+        comp_std = None
+        if isinstance(other, EnergyVector):
+            other_std = other.com_std or float(np.asarray(other).std())
+            comp_std = get_std(self_std, other_std)
+        return EnergyVector(np.subtract(self, other), comp_std)
+
+    def __eq__(self, other):
+        return np.all(np.equal(self, other))
+
+    def __lt__(self, other):
+        return np.all(np.less(self, other))
+
+    def __le__(self, other):
+        return np.all(np.less_equal(self, other))
+
+    def __gt__(self, other):
+        return np.all(np.greater(self, other))
+
+    def __ge__(self, other):
+        return np.all(np.greater_equal(self, other))
+
+    def abs_gt(self, val):
+        """ If any element's absolute value is greater than a # """
+        return np.any(np.greater(self, val))
 
 
 def get_std(val1, val2):
