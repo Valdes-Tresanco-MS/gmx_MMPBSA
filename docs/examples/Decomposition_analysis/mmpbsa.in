@@ -5,8 +5,8 @@ Sample input file with decomposition analysis
 
 &general
 sys_name="Decomposition",
-startframe=5,
-endframe=14,
+startframe=1,
+endframe=10,
 /
 &gb
 igb=5, saltcon=0.150,
@@ -17,6 +17,4 @@ igb=5, saltcon=0.150,
 &decomp
 idecomp=2, dec_verbose=3,
 print_res="within 4"
-#check _GMXMMPBSA_COM_FIXED.pdb file to select which residues are going to be printed in the output file
-#print_res="40,41,44,47,78,81,82,85,88,115,118,122,215,218,219,220,232,241"
 /

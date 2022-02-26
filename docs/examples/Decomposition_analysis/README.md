@@ -13,9 +13,6 @@ title: Decomposition
 
 ## Requirements
 
-!!! danger
-    The ligand mol2 file must be the Antechamber output.
-
 In this case, `gmx_MMPBSA` requires:
 
 | Input File required            | Required |           Type             | Description |
@@ -32,10 +29,6 @@ In this case, `gmx_MMPBSA` requires:
 :octicons-check-circle-fill-16:{ .req } -> Must be defined -- :octicons-check-circle-fill-16:{ .req_optrec } -> 
 Optional, but recommended -- :octicons-check-circle-fill-16:{ .req_opt } -> Optional
 
-!!! tip "Remember"
-    When a topology file is defined, the ligand mol2 file is not needed. The ligand mol2 file only required when  
-    `gmx_MMPBSA` builds the amber topology from a structure  
-
 _See a detailed list of all the flags in gmx_MMPBSA command line [here][1]_
 
 That being said, once you are in the folder containing all files, the command-line will be as follows:
@@ -46,11 +39,11 @@ That being said, once you are in the folder containing all files, the command-li
 
 === "Serial"
 
-        gmx_MMPBSA -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 1 13 -ct com_traj.xtc -lm ligand.mol2
+        gmx_MMPBSA -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 20 21 -ct com_traj.xtc -lm ligand.mol2
 
 === "With MPI"
 
-        mpirun -np 2 gmx_MMPBSA MPI -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 1 13 -ct com_traj.xtc -lm ligand.mol2
+        mpirun -np 2 gmx_MMPBSA MPI -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 20 21 -ct com_traj.xtc
 
 where the `mmpbsa.in` input file, is a text file containing the following lines:
 
@@ -64,8 +57,8 @@ according to what is better for your system.
 
 &general
 sys_name="Decomposition",
-startframe=5,
-endframe=14,
+startframe=1,
+endframe=10,
 /
 &gb
 igb=5, saltcon=0.150,
@@ -76,8 +69,6 @@ igb=5, saltcon=0.150,
 &decomp
 idecomp=2, dec_verbose=3,
 print_res="within 4"
-#check _GMXMMPBSA_COM_FIXED.pdb file to select which residues are going to be printed in the output file
-#print_res="40,41,44,47,78,81,82,85,88,115,118,122,215,218,219,220,232,241"
 /
 ```
 _See a detailed list of all the options in `gmx_MMPBSA` input file [here][2] as well as several [examples][3]_
@@ -86,7 +77,7 @@ _See a detailed list of all the options in `gmx_MMPBSA` input file [here][2] as 
 In this case, a single trajectory (ST) approximation is followed, which means the receptor and ligand structures and 
 trajectories will be obtained from that of the complex. To do so, an MD Structure+mass(db) file (`com.tpr`), an index 
 file (`index.ndx`), a trajectory file (`com_traj.xtc`), and both the receptor and ligand group numbers in the index 
-file (`1 13`) are needed. A ligand .mol2 file is also needed for generating the ligand topology. The `mmpbsa.in` 
+file (`20 21`) are needed. A ligand .mol2 file is also needed for generating the ligand topology. The `mmpbsa.in` 
 input file will contain all the parameters needed for the MM/PB(GB)SA calculation. In this case, 10 frames 
 are going to be used when performing the MM/PB(GB)SA calculation 
 with the igb5 (GB-OBC2) model and a salt concentration = 0.15M.
