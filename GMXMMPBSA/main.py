@@ -988,7 +988,7 @@ class MMPBSA_App(object):
                 self.calc_types.normal[key]['complex'].parse_from_file(self.pre + basename[i] % 'complex',
                                                                        self.mpi_size)
                 # check if the nmode output is valid
-                if self.calc_types.normal[key].no_nmode_convergence:
+                if self.calc_types.normal[key]['complex'].no_nmode_convergence:
                     self.INPUT['nmoderun'] = False
                     del self.calc_types.normal[key]
                     continue
