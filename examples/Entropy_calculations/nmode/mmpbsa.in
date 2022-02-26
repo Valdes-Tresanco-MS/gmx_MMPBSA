@@ -13,10 +13,10 @@ PBRadii=2,
 &gb
 igb=1, saltcon=0.150,
 /
-#note that nmode will use only a fraction of the no. of frames selected in &general variable. This way, nmode will only process 4 frames (7th to 10th frames)
+#note that nmode will use only a fraction of the no. of frames selected in &general variable. This way, nmode will only process 8 frames (3rd to 10th frames)
 #note also that some parameters have been change to perform the calculation faster (maxcyc=5, drms=2). The typical values for these parameters are (maxcyc=50000, drms=0.001)
 &nmode
-nmstartframe=7,
+nmstartframe=3,
 nmendframe=10,
 nminterval=1,
 maxcyc=5, drms=2,
