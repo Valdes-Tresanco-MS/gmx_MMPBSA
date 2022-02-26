@@ -140,6 +140,9 @@ class AmberOutput(dict):
         self.is_read = False
         self.apbs = INPUT['sander_apbs']
 
+        # This variable is used to get if the nmode calculation hasn't at least one frame
+        self.no_nmode_convergence = False
+
         self.data_keys = ['BOND', 'ANGLE', 'DIHED', 'VDWAALS', 'EEL', '1-4 VDW', '1-4 EEL']
         self.chamber_keys = ['CMAP', 'IMP', 'UB']
         self.data_key_owner = {'BOND': ['GGAS', 'TOTAL'], 'ANGLE': ['GGAS', 'TOTAL'], 'DIHED': ['GGAS', 'TOTAL'],
@@ -211,7 +214,7 @@ class AmberOutput(dict):
     def summary_output(self):
         if not self.is_read:
             raise OutputError('Cannot print summary before reading output files')
-        text = [self.mol.capitalize() + ':']
+        text = [f'{self.mol.capitalize()}:']
         summary = self.summary()
         for c, row in enumerate(summary, start=1):
             key, avg, stdev, std, semp, sem = row
@@ -272,10 +275,14 @@ class AmberOutput(dict):
             with open('%s.%d' % (self.basename, fileno)) as output_file:
                 self._get_energies(output_file)
             self._extra_reading(fileno)
+        self._fill_nmode_values()
 
         self.is_read = True
 
     def _extra_reading(self, fileno):
+        pass
+
+    def _fill_nmode_values(self):
         pass
 
     def _fill_composite_terms(self):
@@ -568,7 +575,11 @@ class NMODEout(AmberOutput):
         """
         while rawline := outfile.readline():
             if rawline[:35] == '   |---- Entropy not Calculated---|':
-                sys.stderr.write('Not all frames minimized within tolerance')
+                self['TOTAL'] = self['TOTAL'].append(np.nan)
+                self['TRANSLATIONAL'] = self['TRANSLATIONAL'].append(np.nan)
+                self['ROTATIONAL'] = self['ROTATIONAL'].append(np.nan)
+                self['VIBRATIONAL'] = self['VIBRATIONAL'].append(np.nan)
+                logging.warning('Not all frames minimized within tolerance')
 
             if rawline[:6] == 'Total:':
                 self['TOTAL'] = self['TOTAL'].append(float(rawline.split()[3]) * self.temperature / 1000 * -1)
@@ -579,6 +590,21 @@ class NMODEout(AmberOutput):
                 self['VIBRATIONAL'] = self['VIBRATIONAL'].append(
                     float(outfile.readline().split()[3]) * self.temperature / 1000 * -1)
 
+    def _fill_nmode_values(self):
+        if not len(self['TOTAL']):
+            logging.warning('Convergence criteria for minimized energy gradient has not been satisfied in any of\n'
+                            'the frames selected. Increase the convergence criteria for minimized energy\n'
+                            'gradient (drms) or the maximum number of minimization cycles to use per snapshot in\n'
+                            'sander (maxcyc)\n')
+            self.no_nmode_convergence = True
+
+        for t in self.data_keys:
+            if np.isnan(self[t]).any():
+                logging.warning('Convergence criteria for minimized energy gradient has not been satisfied for \n'
+                                'several frames. Filling "NaN" with the mean value. Please, consider to increase the\n'
+                                'convergence criteria or the maximum number of minimization cycles to use per\n'
+                                'snapshot in sander (maxcyc)...')
+                self[t] = EnergyVector(np.nan_to_num(self[t], nan=float(np.nanmean(self[t]))))
 
 class GBout(AmberOutput):
     """ Amber output class for normal generalized Born simulations """
