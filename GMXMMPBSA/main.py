@@ -47,7 +47,6 @@ from GMXMMPBSA.parm_setup import MMPBSA_System
 from GMXMMPBSA.make_top import CheckMakeTop
 from GMXMMPBSA.timer import Timer
 
-
 # Global variables for the excepthook replacement at the bottom. Override these
 # in the MMPBSA_App constructor and input file reading
 _unbuf_stdout = utils.Unbuffered(sys.stdout)  # unbuffered stdout
@@ -98,7 +97,7 @@ class MMPBSA_App(object):
             utils.get_sys_info()
 
         # Set up timers
-        timers = [Timer() for i in range(self.mpi_size)]
+        timers = [Timer() for _ in range(self.mpi_size)]
         self.timer = timers[self.mpi_rank]
 
         # Support possible threading for those that don't use MPI. However, if
@@ -134,9 +133,10 @@ class MMPBSA_App(object):
 
         if master:
             logging.info('Preparing trajectories for simulation...\n')
-            self.numframes, rec_frames, lig_frames, self.numframes_nmode = make_trajectories(INPUT, FILES,
-                                                                                             self.mpi_size,
-                                                                     self.external_progs['cpptraj'], self.pre)
+            (self.numframes, rec_frames,
+             lig_frames, self.numframes_nmode) = make_trajectories(INPUT, FILES, self.mpi_size,
+                                                                   self.external_progs['cpptraj'],
+                                                                   self.pre)
             if self.traj_protocol == 'MTP' and not self.numframes == rec_frames == lig_frames:
                 GMXMMPBSA_ERROR('The complex, receptor, and ligand trajectories must be the same length. Since v1.5.0 '
                                 'we have simplified a few things to make the code easier to maintain. Please check the '
@@ -157,9 +157,9 @@ class MMPBSA_App(object):
         self.MPI.COMM_WORLD.Barrier()
 
         if master:
-            logging.info(('%d frames were processed by cpptraj for use in calculation.') % self.numframes)
+            logging.info('%d frames were processed by cpptraj for use in calculation.' % self.numframes)
             if INPUT['nmoderun']:
-                logging.info(('%d frames were processed by cpptraj for nmode calculations.') % self.numframes_nmode)
+                logging.info('%d frames were processed by cpptraj for nmode calculations.' % self.numframes_nmode)
 
         self.timer.stop_timer('muttraj')
 
@@ -186,7 +186,6 @@ class MMPBSA_App(object):
         if not hasattr(self, 'external_progs'):
             GMXMMPBSA_ERROR('external_progs not declared in run_mmpbsa!', InternalError)
 
-        FILES, INPUT = self.FILES, self.INPUT
         if rank is None:
             rank = self.mpi_rank
         master = rank == 0
@@ -208,7 +207,7 @@ class MMPBSA_App(object):
             self.timer.stop_timer('calc')
             # Write out the info file now
             info = InfoFile(self)
-            info.write_info(self.pre + 'info')
+            info.write_info(f'{self.pre}info')
 
     def load_calc_list(self):
         """
@@ -223,7 +222,7 @@ class MMPBSA_App(object):
             self._load_calc_list(self.pre, False, self.normal_system)
         if self.INPUT['alarun']:
             self.calc_list.append(PrintCalc('Running calculations on mutant system...'), timer_key=None)
-            self._load_calc_list(self.pre + 'mutant_', True, self.mutant_system)
+            self._load_calc_list(f'{self.pre}mutant_', True, self.mutant_system)
 
     def _load_calc_list(self, prefix, mutant, parm_system):
         """
@@ -374,7 +373,7 @@ class MMPBSA_App(object):
             c = PBEnergyCalculation(progs['pb'], parm_system.complex_prmtop,
                                     incrd % 'complex',
                                     '%scomplex.%s.%%d' % (prefix, trj_sfx),
-                                    mdin, '%scomplex_pb.mdout.%%d' % (prefix),
+                                    mdin, '%scomplex_pb.mdout.%%d' % prefix,
                                     self.pre + 'restrt.%d')
             self.calc_list.append(c, '  calculating complex contribution...', timer_key='pb')
             if not self.stability:
@@ -394,7 +393,7 @@ class MMPBSA_App(object):
                     c = PBEnergyCalculation(progs['pb'], parm_system.receptor_prmtop,
                                             incrd % 'receptor',
                                             '%sreceptor.%s.%%d' % (prefix, trj_sfx),
-                                            mdin, '%sreceptor_pb.mdout.%%d' % (prefix),
+                                            mdin, '%sreceptor_pb.mdout.%%d' % prefix,
                                             self.pre + 'restrt.%d')
                     self.calc_list.append(c, '  calculating receptor contribution...',
                                           timer_key='pb')
@@ -463,8 +462,7 @@ class MMPBSA_App(object):
 
         if self.INPUT['nmoderun']:
             self.calc_list.append(
-                PrintCalc('\nBeginning nmode calculations with %s' %
-                          progs['nmode']), timer_key='nmode')
+                PrintCalc('Beginning nmode calculations with %s' % progs['nmode']), timer_key='nmode')
 
             c = NmodeCalc(progs['nmode'], parm_system.complex_prmtop,
                           '%scomplex.pdb' % prefix,
@@ -477,27 +475,27 @@ class MMPBSA_App(object):
                     c = CopyCalc('%sreceptor_nm.out.%%d' % self.pre,
                                  '%sreceptor_nm.out.%%d' % prefix)
                     self.calc_list.append(c, '  no mutation found in receptor; '
-                                             'using unmutated files', timer_key='pb')
+                                             'using unmutated files', timer_key='nmode')
                 else:
                     c = NmodeCalc(progs['nmode'], parm_system.receptor_prmtop,
                                   '%sreceptor.pdb' % prefix,
                                   '%sreceptor_nm.%s.%%d' % (prefix, trj_sfx),
                                   '%sreceptor_nm.out.%%d' % prefix, self.INPUT)
                     self.calc_list.append(c, '  calculating receptor contribution...',
-                                          timer_key='rism')
+                                          timer_key='nmode')
 
                 if copy_ligand:
                     c = CopyCalc('%sligand_nm.out.%%d' % self.pre,
                                  '%sligand_nm.out.%%d' % prefix)
                     self.calc_list.append(c, '  no mutation found in ligand; '
-                                             'using unmutated files', timer_key='pb')
+                                             'using unmutated files', timer_key='nmode')
                 else:
                     c = NmodeCalc(progs['nmode'], parm_system.ligand_prmtop,
                                   '%sligand.pdb' % prefix,
                                   '%sligand_nm.%s.%%d' % (prefix, trj_sfx),
                                   '%sligand_nm.out.%%d' % prefix, self.INPUT)
                     self.calc_list.append(c, '  calculating ligand contribution...',
-                                          timer_key='rism')
+                                          timer_key='nmode')
 
         # end if self.INPUT['nmoderun']
 
@@ -561,7 +559,7 @@ class MMPBSA_App(object):
         if INPUT['alarun']:
             if (FILES.mutant_receptor_prmtop is None and FILES.mutant_ligand_prmtop is None and not self.stability):
                 GMXMMPBSA_ERROR('Alanine scanning requires either a mutated receptor or mutated ligand topology '
-                                   'file!')
+                                'file!')
             if FILES.mutant_receptor_prmtop is None:
                 FILES.mutant_receptor_prmtop = FILES.receptor_prmtop
             elif FILES.mutant_ligand_prmtop is None:
@@ -606,6 +604,10 @@ class MMPBSA_App(object):
         if self.INPUT['keep_files'] in [0, 2]:
             # Store the calc_types data in a h5 file
             Data2h5(self)
+
+        info = InfoFile(self)
+        info.write_info(f'{self.pre}info')
+
         self.timer.stop_timer('output')
 
     def finalize(self):
@@ -624,18 +626,23 @@ class MMPBSA_App(object):
         self.timer.print_('output')
         self.timer.print_('global', True)
 
-
         self.remove(self.INPUT['keep_files'])
 
-        logging.info('\n Thank you for using gmx_MMPBSA. Please consider supporting gmx_MMPBSA by citing our publication:'
-                     '\n    Valdés-Tresanco, M.S., Valdés-Tresanco, M.E., Valiente, P.A. and Moreno E. '
-                     '\n    gmx_MMPBSA: A New Tool to Perform End-State Free Energy Calculations with GROMACS. '
-                     '\n    J Chem Theory Comput., 2021, 17 (10):6281-6291. Epub 2021 Sep 29. PMID: 34586825.'
-                     '\n    https://pubs.acs.org/doi/10.1021/acs.jctc.1c00645'
-                     '\n\nAlso consider citing MMPBSA.py:'
-                     '\n    Miller III, B. R., McGee Jr., T. D., Swails, J. M. Homeyer, N. Gohlke, H. and Roitberg, A. E.'
-                     '\n    MMPBSA.py: An Efficient Program for End-State Free Energy Calculations.'
-                     '\n    J. Chem. Theory Comput., 2012, 8 (9) pp 3314-3321\n')
+        exe_info = utils.get_warnings()
+        logging.info(f"\n   Finalizing gmx_MMPBSA: [ERROR  ] = {exe_info['error']}; [WARNING] = {exe_info['warning']}\n"
+                     f"   Check the gmx_MMPBSA.log file for more details...\n")
+
+
+        logging.info(
+            '\n Thank you for using gmx_MMPBSA. Please consider supporting gmx_MMPBSA by citing our publication:'
+            '\n    Valdés-Tresanco, M.S., Valdés-Tresanco, M.E., Valiente, P.A. and Moreno E. '
+            '\n    gmx_MMPBSA: A New Tool to Perform End-State Free Energy Calculations with GROMACS. '
+            '\n    J Chem Theory Comput., 2021, 17 (10):6281-6291. Epub 2021 Sep 29. PMID: 34586825.'
+            '\n    https://pubs.acs.org/doi/10.1021/acs.jctc.1c00645'
+            '\n\nAlso consider citing MMPBSA.py:'
+            '\n    Miller III, B. R., McGee Jr., T. D., Swails, J. M. Homeyer, N. Gohlke, H. and Roitberg, A. E.'
+            '\n    MMPBSA.py: An Efficient Program for End-State Free Energy Calculations.'
+            '\n    J. Chem. Theory Comput., 2012, 8 (9) pp 3314-3321\n')
         self.MPI.Finalize()
 
         end = 0
@@ -643,9 +650,10 @@ class MMPBSA_App(object):
             import subprocess
             from pathlib import Path
             logging.info('Opening gmx_MMPBSA_ana to analyze results...\n')
-            ifile = Path(self.FILES.prefix + 'info')
+            ifile = Path(f'{self.FILES.prefix}info')
             if not ifile.exists():
                 ifile = Path('RESULTS_gmx_MMPBSA.h5')
+
             g = subprocess.Popen(['gmx_MMPBSA_ana', '-f', ifile.as_posix()])
             if g.wait():
                 end = 1
@@ -815,8 +823,7 @@ class MMPBSA_App(object):
         if INPUT['maxcyc'] < 1:
             GMXMMPBSA_ERROR('MAXCYC must be a positive integer!', InputError)
         if INPUT['idecomp'] not in [0, 1, 2, 3, 4]:
-            GMXMMPBSA_ERROR('IDECOMP (%s) must be 1, 2, 3, or 4!' %
-                             INPUT['idecomp'], InputError)
+            GMXMMPBSA_ERROR('IDECOMP (%s) must be 1, 2, 3, or 4!' % INPUT['idecomp'], InputError)
         if INPUT['idecomp'] != 0 and INPUT['sander_apbs'] == 1:
             GMXMMPBSA_ERROR('IDECOMP cannot be used with sander.APBS!', InputError)
         if INPUT['sander_apbs'] not in [0, 1]:
@@ -855,7 +862,7 @@ class MMPBSA_App(object):
             if (INPUT['qmcharge_lig'] + INPUT['qmcharge_rec'] !=
                     INPUT['qmcharge_com'] and not self.stability):
                 GMXMMPBSA_ERROR('The total charge of the ligand and receptor ' +
-                                 'does not equal the charge of the complex!', InputError)
+                                'does not equal the charge of the complex!', InputError)
         if INPUT['rismrun']:
             if INPUT['rism_verbose'] not in [0, 1, 2]:
                 GMXMMPBSA_ERROR('RISM_VERBOSE must be 0, 1, or 2!', InputError)
@@ -881,11 +888,11 @@ class MMPBSA_App(object):
             # if INPUT['thermo'] not in ['std', 'gf', 'pc+', 'all']:
             #     GMXMMPBSA_ERROR('THERMO must be "std", "gf", "pc+" or "all"!', InputError)
         if (
-            not INPUT['gbrun']
-            and not INPUT['pbrun']
-            and not INPUT['rismrun']
-            and not INPUT['nmoderun']
-            and not INPUT['qh_entropy']
+                not INPUT['gbrun']
+                and not INPUT['pbrun']
+                and not INPUT['rismrun']
+                and not INPUT['nmoderun']
+                and not INPUT['qh_entropy']
         ):
             GMXMMPBSA_ERROR('You did not specify any type of calculation!', InputError)
 
@@ -893,9 +900,9 @@ class MMPBSA_App(object):
             GMXMMPBSA_ERROR('DECOMP must be run with either GB or PB!', InputError)
 
         if (
-            not INPUT['molsurf']
-            and (INPUT['msoffset'] != 0 or INPUT['probe'] != 1.4)
-            and self.master
+                not INPUT['molsurf']
+                and (INPUT['msoffset'] != 0 or INPUT['probe'] != 1.4)
+                and self.master
         ):
             logging.warning('offset and probe are molsurf-only options')
         if INPUT['cas_intdiel'] not in [0, 1]:
@@ -913,11 +920,11 @@ class MMPBSA_App(object):
         if self.INPUT['startframe'] < 1:
             # GMXMMPBSA_ERROR('The startframe variable must be >= 1')
             logging.warning(f"The startframe variable must be >= 1. Changing startframe from"
-                              f" {self.INPUT['startframe']} to 1")
+                            f" {self.INPUT['startframe']} to 1")
             self.INPUT['startframe'] = 1
         if self.INPUT['nmstartframe'] < 1:
             logging.warning(f"The nmstartframe variable must be >= 1. Changing nmstartframe from"
-                              f" {self.INPUT['nmstartframe']} to 1")
+                            f" {self.INPUT['nmstartframe']} to 1")
             self.INPUT['nmstartframe'] = 1
 
         # set the pbtemp = temperature
@@ -988,6 +995,12 @@ class MMPBSA_App(object):
                 self.calc_types.normal[key] = {'complex': outclass[i]('complex', self.INPUT, self.using_chamber)}
                 self.calc_types.normal[key]['complex'].parse_from_file(self.pre + basename[i] % 'complex',
                                                                        self.mpi_size)
+                # check if the nmode output is valid
+                if self.calc_types.normal[key]['complex'].no_nmode_convergence:
+                    self.INPUT['nmoderun'] = False
+                    del self.calc_types.normal[key]
+                    continue
+
                 if not self.stability:
                     self.calc_types.normal[key]['receptor'] = outclass[i]('receptor', self.INPUT, self.using_chamber)
                     self.calc_types.normal[key]['receptor'].parse_from_file(self.pre + basename[i] % 'receptor',
@@ -1036,19 +1049,19 @@ class MMPBSA_App(object):
                         if 'ie' in self.calc_types.mutant:
                             edata = self.calc_types.mutant[key]['delta']['GGAS']
                             mie = InteractionEntropyCalc(edata, INPUT)
-                            mie.save_output(self.pre + 'mutant_' +f"{key.replace(' ', '_')}_iteraction_entropy.dat")
+                            mie.save_output(self.pre + 'mutant_' + f"{key.replace(' ', '_')}_iteraction_entropy.dat")
                             self.calc_types.mutant['ie'].parse_from_dict(key, {'data': mie.data, 'iedata': mie.iedata,
                                                                                'ieframes': mie.ieframes,
                                                                                'sigma': mie.ie_std})
                         if 'c2' in self.calc_types.mutant:
                             edata = self.calc_types.mutant[key]['delta']['GGAS']
                             c2 = C2EntropyCalc(edata, INPUT)
-                            c2.save_output(self.pre + 'mutant_' +f"{key.replace(' ', '_')}_c2_entropy.dat")
+                            c2.save_output(self.pre + 'mutant_' + f"{key.replace(' ', '_')}_c2_entropy.dat")
                             self.calc_types.mutant['c2'][key] = {'c2data': c2.c2data, 'sigma': c2.ie_std,
                                                                  'c2_std': c2.c2_std, 'c2_ci': c2.c2_ci}
             if INPUT['alarun'] and not INPUT['mutant_only']:
                 self.calc_types.mut_norm[key] = {'delta': DeltaBindingStatistics(
-                    self.calc_types.mutant[key]['delta'],self.calc_types.normal[key]['delta'])}
+                    self.calc_types.mutant[key]['delta'], self.calc_types.normal[key]['delta'])}
 
         if not hasattr(self, 'resl'):
             from GMXMMPBSA.utils import mask2list
@@ -1081,7 +1094,6 @@ class MMPBSA_App(object):
                 rec_list[x.id_index - 1] = x
             else:
                 lig_list[x.id_index - 1] = x
-
 
         for i, key in enumerate(outkey):
             if not INPUT[triggers[i]]:

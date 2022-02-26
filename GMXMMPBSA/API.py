@@ -119,11 +119,19 @@ class MMPBSA_API():
             index = pd.Series(list(self.frames.keys()), name='Frames')
         for model, data in self.data[key].items():
             if model in ['gb', 'pb', 'rism std', 'rism gf', 'nmode', 'qh']:
-                if model in ['nmode', 'qh']:
+                if model == 'nmode':
+                    if self.timestep:
+                        nmindex = pd.Series(list(self.nmframes.values()), name=f'Time ({self.timeunit})')
+                    else:
+                        nmindex = pd.Series(list(self.nmframes.keys()), name='Frames')
+                    df_models[model] = pd.DataFrame(self._energy2flatdict(data), index=nmindex)
+                    terms['entropy'].append(model)
+                elif model == 'qh':
+                    df_models[model] = pd.DataFrame(self._energy2flatdict(data))
                     terms['entropy'].append(model)
                 elif model in ['gb', 'pb', 'rism std', 'rism gf']:
                     terms['energy'].append(model)
-                df_models[model] = pd.DataFrame(self._energy2flatdict(data), index=index)
+                    df_models[model] = pd.DataFrame(self._energy2flatdict(data), index=index)
             elif model == 'ie':
                 terms['entropy'].append(model)
                 temp = {}
@@ -147,8 +155,8 @@ class MMPBSA_API():
                     total = df_models[m]['delta']['TOTAL']
                     total.name = 'ΔH'
                     if e in ['nmode', 'qh']:
-                        df_models['binding'][f"{m}+{e}"] = pd.concat(df_models[m], axis=1)
-                        ent = df_models[e]['delta']['Total']
+                        df_models['binding'][f"{m}+{e}"] = pd.concat([df_models[m]], axis=1)
+                        ent = df_models[e]['delta']['TOTAL']
                     else:
                         k = 'iedata' if e == 'ie' else 'c2data'
                         ent = df_models[e][m][k]

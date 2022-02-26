@@ -26,7 +26,7 @@ All data is stored in a special class derived from the list.
 import logging
 from math import sqrt
 from GMXMMPBSA.exceptions import (OutputError, LengthError, DecompError)
-from GMXMMPBSA.utils import get_std, get_corrstd
+from GMXMMPBSA.utils import EnergyVector
 import h5py
 from types import SimpleNamespace
 import numpy as np
@@ -40,86 +40,6 @@ idecompString = ['idecomp = 0: No decomposition analysis',
                  'idecomp = 3: Pairwise decomp adding 1-4 interactions to Internal.',
                  'idecomp = 4: Pairwise decomp adding 1-4 interactions to EEL and VDW.']
 sep = '-------------------------------------------------------------------------------'
-
-
-class EnergyVector(np.ndarray):
-    def __new__(cls, values=None, com_std=None):
-        # Input array is an already formed ndarray instance
-        # We first cast to be our class type
-        if isinstance(values, int):
-            obj = np.zeros((values,)).view(cls)
-        elif isinstance(values, (list, tuple, np.ndarray)):
-            obj = np.array(values).view(cls)
-        else:
-            obj = np.array([]).view(cls)
-        obj.com_std = com_std
-        return obj
-
-    def __array_finalize__(self, obj):
-        # see InfoArray.__array_finalize__ for comments
-        if obj is None:
-            return
-        self.com_std = getattr(obj, 'com_stdev', None)
-
-    def stdev(self):
-        return self.com_std or self.std()
-
-    def append(self, values):
-        return EnergyVector(np.append(self, values))
-
-    def avg(self):
-        return np.average(self)
-
-    def corr_add(self, other):
-        selfstd = self.com_std or float(self.std())
-        comp_std = None
-        if isinstance(other, EnergyVector):
-            otherstd = other.com_std or float(other.std())
-            comp_std = get_corrstd(selfstd, otherstd)
-        return EnergyVector(np.add(self, other), comp_std)
-
-    def corr_sub(self, other):
-        self_std = self.com_std or float(np.asarray(self).std())
-        comp_std = None
-        if isinstance(other, EnergyVector):
-            other_std = other.com_std or float(np.asarray(other).std())
-            comp_std = get_corrstd(self_std, other_std)
-        return EnergyVector(np.subtract(self, other), comp_std)
-
-    def __add__(self, other):
-        selfstd = self.com_std or float(self.std())
-        comp_std = None
-        if isinstance(other, EnergyVector):
-            otherstd = other.com_std or float(other.std())
-            comp_std = get_std(selfstd, otherstd)
-        return EnergyVector(np.add(self, other), comp_std)
-
-    def __sub__(self, other):
-        self_std = self.com_std or float(np.asarray(self).std())
-        comp_std = None
-        if isinstance(other, EnergyVector):
-            other_std = other.com_std or float(np.asarray(other).std())
-            comp_std = get_std(self_std, other_std)
-        return EnergyVector(np.subtract(self, other), comp_std)
-
-    def __eq__(self, other):
-        return np.all(np.equal(self, other))
-
-    def __lt__(self, other):
-        return np.all(np.less(self, other))
-
-    def __le__(self, other):
-        return np.all(np.less_equal(self, other))
-
-    def __gt__(self, other):
-        return np.all(np.greater(self, other))
-
-    def __ge__(self, other):
-        return np.all(np.greater_equal(self, other))
-
-    def abs_gt(self, val):
-        """ If any element's absolute value is greater than a # """
-        return np.any(np.greater(self, val))
 
 
 class AmberOutput(dict):
@@ -139,6 +59,9 @@ class AmberOutput(dict):
         self.num_files = None
         self.is_read = False
         self.apbs = INPUT['sander_apbs']
+
+        # This variable is used to get if the nmode calculation hasn't at least one frame
+        self.no_nmode_convergence = False
 
         self.data_keys = ['BOND', 'ANGLE', 'DIHED', 'VDWAALS', 'EEL', '1-4 VDW', '1-4 EEL']
         self.chamber_keys = ['CMAP', 'IMP', 'UB']
@@ -211,7 +134,7 @@ class AmberOutput(dict):
     def summary_output(self):
         if not self.is_read:
             raise OutputError('Cannot print summary before reading output files')
-        text = [self.mol.capitalize() + ':']
+        text = [f'{self.mol.capitalize()}:']
         summary = self.summary()
         for c, row in enumerate(summary, start=1):
             key, avg, stdev, std, semp, sem = row
@@ -272,10 +195,14 @@ class AmberOutput(dict):
             with open('%s.%d' % (self.basename, fileno)) as output_file:
                 self._get_energies(output_file)
             self._extra_reading(fileno)
+        self._fill_nmode_values()
 
         self.is_read = True
 
     def _extra_reading(self, fileno):
+        pass
+
+    def _fill_nmode_values(self):
         pass
 
     def _fill_composite_terms(self):
@@ -567,8 +494,11 @@ class NMODEout(AmberOutput):
             data)
         """
         while rawline := outfile.readline():
-            if rawline[:35] == '   |---- Entropy not Calculated---|':
-                sys.stderr.write('Not all frames minimized within tolerance')
+            if "|---- Entropy not Calculated---|" in rawline:
+                self['TOTAL'] = self['TOTAL'].append(np.nan)
+                self['TRANSLATIONAL'] = self['TRANSLATIONAL'].append(np.nan)
+                self['ROTATIONAL'] = self['ROTATIONAL'].append(np.nan)
+                self['VIBRATIONAL'] = self['VIBRATIONAL'].append(np.nan)
 
             if rawline[:6] == 'Total:':
                 self['TOTAL'] = self['TOTAL'].append(float(rawline.split()[3]) * self.temperature / 1000 * -1)
@@ -579,6 +509,27 @@ class NMODEout(AmberOutput):
                 self['VIBRATIONAL'] = self['VIBRATIONAL'].append(
                     float(outfile.readline().split()[3]) * self.temperature / 1000 * -1)
 
+    def _fill_nmode_values(self):
+        if np.isnan(self['TOTAL']).all():
+            logging.warning(f'{self.mol.capitalize()}: Convergence criteria for minimized energy gradient in NMODE has not '
+                            f'been\n'
+                            '    satisfied in any of the frames selected. Increase the convergence criteria for\n'
+                            '    minimized energy gradient (drms) or the maximum number of minimization cycles to\n '
+                            '    useper snapshot in sander (maxcyc)...\n')
+            self.no_nmode_convergence = True
+            return
+
+        filling = False
+        for t in self.data_keys:
+            if np.isnan(self[t]).any():
+                filling = True
+                self[t] = EnergyVector(np.nan_to_num(self[t], nan=float(np.nanmean(self[t]))))
+        if filling:
+            logging.warning(f'{self.mol.capitalize()}: Convergence criteria for minimized energy gradient in NMODE\n '
+                            '    has not been satisfied in several frames selected. Filling "NaN" with the mean\n'
+                            '    value. Please, consider to  increase the convergence criteria for minimized energy\n'
+                            '    gradient (drms) or the maximum number minimization cycles to use per snapshot in\n'
+                            '    sander (maxcyc)...\n')
 
 class GBout(AmberOutput):
     """ Amber output class for normal generalized Born simulations """
@@ -849,13 +800,14 @@ class BindingStatistics(dict):
         """
         # First thing we do is check to make sure that all of the terms that
         # should *not* be printed actually cancel out (i.e. bonded terms)
-        if self.traj_protocol == 'STP':
-            TINY = 0.005
-            for key in self.st_null:
-                diff = self.com[key] - self.rec[key] - self.lig[key]
-                if diff.abs_gt(TINY):
-                    self.inconsistent = True
-                    break
+        if not isinstance(self.com, NMODEout):
+            if self.traj_protocol == 'STP':
+                TINY = 0.005
+                for key in self.st_null:
+                    diff = self.com[key] - self.rec[key] - self.lig[key]
+                    if diff.abs_gt(TINY):
+                        self.inconsistent = True
+                        break
 
         for key in self.com.data_keys:
             if self.traj_protocol == 'STP':
@@ -864,7 +816,11 @@ class BindingStatistics(dict):
             else:
                 self[key] = self.com[key] - self.rec[key] - self.lig[key]
         for key in self.com.composite_keys:
-            self[key] = EnergyVector(len(self.com['VDWAALS']))
+            if isinstance(self.com, NMODEout):
+                k = 'TRANSLATIONAL'
+            else:
+                k = 'VDWAALS'
+            self[key] = EnergyVector(len(self.com[k]))
             self.composite_keys.append(key)
         for key in self.com.data_keys:
             if self.traj_protocol == 'STP' and key in self.st_null:
@@ -895,10 +851,10 @@ class BindingStatistics(dict):
         csvwriter.writerow(['Frame #'] + print_keys)
 
         # write out each frame
-        c = self.com.INPUT['startframe']
+        c = self.com.INPUT['nmstartframe'] if isinstance(self.com, NMODEout) else self.com.INPUT['startframe']
         for i in range(len(self[print_keys[0]])):
             csvwriter.writerow([c] + [round(self[key][i], 2) for key in print_keys])
-            c += self.com.INPUT['interval']
+            c += self.com.INPUT['nminterval'] if isinstance(self.com, NMODEout) else self.com.INPUT['interval']
         csvwriter.writerow([])
 
     def report_inconsistency(self, output_format: str = 'ascii'):
@@ -958,7 +914,7 @@ class BindingStatistics(dict):
             if key in self.composite_keys:
                 continue
             # Catch special case of NMODEout classes
-            if isinstance(self.com, NMODEout) and key == 'Total':
+            if isinstance(self.com, NMODEout) and key == 'TOTAL':
                 printkey = '\n-TΔS binding ='
             else:
                 printkey = key
@@ -1033,10 +989,10 @@ class DeltaBindingStatistics(dict):
         csvwriter.writerow(['Frame #'] + list(self.keys()))
 
         # write out each frame
-        c = self.norm.INPUT['startframe']
+        c = self.norm.INPUT['nmstartframe'] if isinstance(self.norm, NMODEout) else self.norm.INPUT['startframe']
         for i in range(len(self['VDWAALS'])):
             csvwriter.writerow([c] + [round(self[key][i], 2) for key in self])
-            c += self.norm.INPUT['interval']
+            c += self.norm.INPUT['nminterval'] if isinstance(self.norm, NMODEout) else self.norm.INPUT['interval']
         csvwriter.writerow([])
 
     def summary_output(self):
@@ -1073,7 +1029,7 @@ class DeltaBindingStatistics(dict):
 
         for key in self.norm.data_keys:
             # Catch special case of NMODEout classes
-            if isinstance(self.norm.com, NMODEout) and key == 'Total':
+            if isinstance(self.norm.com, NMODEout) and key == 'TOTAL':
                 printkey = '\n-TΔΔS binding ='
             else:
                 printkey = key

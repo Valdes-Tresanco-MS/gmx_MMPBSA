@@ -42,13 +42,159 @@ from string import ascii_letters
 from GMXMMPBSA.exceptions import GMXMMPBSA_ERROR
 from math import sqrt
 import parmed
+import numpy as np
+
+
+class EnergyVector(np.ndarray):
+    def __new__(cls, values=None, com_std=None):
+        # Input array is an already formed ndarray instance
+        # We first cast to be our class type
+        if isinstance(values, int):
+            obj = np.zeros((values,)).view(cls)
+        elif isinstance(values, (list, tuple, np.ndarray)):
+            obj = np.array(values).view(cls)
+        else:
+            obj = np.array([]).view(cls)
+        obj.com_std = com_std
+        return obj
+
+    def __array_finalize__(self, obj):
+        # see InfoArray.__array_finalize__ for comments
+        if obj is None:
+            return
+        self.com_std = getattr(obj, 'com_stdev', None)
+
+    def stdev(self):
+        return self.com_std or self.std()
+
+    def append(self, values):
+        return EnergyVector(np.append(self, values))
+
+    def avg(self):
+        return np.average(self)
+
+    def corr_add(self, other):
+        selfstd = self.com_std or float(self.std())
+        comp_std = None
+        if isinstance(other, EnergyVector):
+            otherstd = other.com_std or float(other.std())
+            comp_std = get_corrstd(selfstd, otherstd)
+        return EnergyVector(np.add(self, other), comp_std)
+
+    def corr_sub(self, other):
+        self_std = self.com_std or float(np.asarray(self).std())
+        comp_std = None
+        if isinstance(other, EnergyVector):
+            other_std = other.com_std or float(np.asarray(other).std())
+            comp_std = get_corrstd(self_std, other_std)
+        return EnergyVector(np.subtract(self, other), comp_std)
+
+    def __add__(self, other):
+        selfstd = self.com_std or float(self.std())
+        comp_std = None
+        if isinstance(other, EnergyVector):
+            otherstd = other.com_std or float(other.std())
+            comp_std = get_std(selfstd, otherstd)
+        return EnergyVector(np.add(self, other), comp_std)
+
+    def __sub__(self, other):
+        self_std = self.com_std or float(np.asarray(self).std())
+        comp_std = None
+        if isinstance(other, EnergyVector):
+            other_std = other.com_std or float(np.asarray(other).std())
+            comp_std = get_std(self_std, other_std)
+        return EnergyVector(np.subtract(self, other), comp_std)
+
+    def __eq__(self, other):
+        return np.all(np.equal(self, other))
+
+    def __lt__(self, other):
+        return np.all(np.less(self, other))
+
+    def __le__(self, other):
+        return np.all(np.less_equal(self, other))
+
+    def __gt__(self, other):
+        return np.all(np.greater(self, other))
+
+    def __ge__(self, other):
+        return np.all(np.greater_equal(self, other))
+
+    def abs_gt(self, val):
+        """ If any element's absolute value is greater than a # """
+        return np.any(np.greater(self, val))
 
 
 def get_std(val1, val2):
     return sqrt(val1 ** 2 + val2 ** 2)
 
+
 def get_corrstd(val1, val2):
-    return sqrt(val1 ** 2 + val2 ** 2 - 2*val1*val2)
+    return sqrt(val1 ** 2 + val2 ** 2 - 2 * val1 * val2)
+
+
+def calc_sum(vector1, vector2, mut=False) -> (float, float):
+    """
+    Calculate the mean and std of the two vector/numbers sum
+    Args:
+        vector1: EnergyVector or float
+        vector2: EnergyVector or float
+        mut: If mutant, the SD is the standard deviation of the array
+
+    Returns:
+        dmean: Mean of the sum
+        dstd: Standard deviation
+    """
+    if isinstance(vector2, EnergyVector) and isinstance(vector1, EnergyVector):
+        if mut:
+            d = vector2 + vector1
+            dmean = float(d.mean())
+            dstd = float(d.std())
+        else:
+            dmean = float(vector2.mean() + vector1.mean())
+            dstd = float(get_std(vector2.std(), vector1.std()))
+    elif isinstance(vector2, EnergyVector) and isinstance(vector1, (int, float)):
+        dmean = float(vector2.mean() + vector1)
+        dstd = vector2.std()
+    elif isinstance(vector2, (int, float)) and isinstance(vector1, EnergyVector):
+        dmean = float(vector2 + vector1.mean())
+        dstd = vector1.std()
+    else:
+        dmean = float(vector2 + vector1)
+        dstd = 0.0
+    return dmean, dstd
+
+
+def calc_sub(vector1, vector2, mut=False) -> (float, float):
+    """
+    Calculate the mean and std of the two vector/numbers subtraction
+    Args:
+        vector1: EnergyVector or float
+        vector2: EnergyVector or float
+        mut: If mutant, the SD is the standard deviation of the array
+
+    Returns:
+        dmean: Mean of the subtraction
+        dstd: Standard deviation
+    """
+    if isinstance(vector2, EnergyVector) and isinstance(vector1, EnergyVector):
+        if mut:
+            d = vector2 - vector1
+            dmean = float(d.mean())
+            dstd = float(d.std())
+        else:
+            dmean = float(vector2.mean() - vector1.mean())
+            dstd = float(get_std(vector2.std(), vector1.std()))
+    elif isinstance(vector2, EnergyVector) and isinstance(vector1, (int, float)):
+        dmean = float(vector2.mean() - vector1)
+        dstd = vector2.std()
+    elif isinstance(vector2, (int, float)) and isinstance(vector1, EnergyVector):
+        dmean = float(vector2 - vector1.mean())
+        dstd = vector1.std()
+    else:
+        dmean = float(vector2 - vector1)
+        dstd = 0.0
+    return dmean, dstd
 
 
 def create_input_args(args: list):
@@ -72,15 +218,13 @@ def mask2list(com_str, rec_mask, lig_mask):
     for r in rm_list:
         if '-' in r:
             s, e = r.split('-')
-            for i in range(int(s) - 1, int(e)):
-                res_list.append([i, 'R'])
+            res_list.extend([i, 'R'] for i in range(int(s) - 1, int(e)))
         else:
             res_list.append([int(r) - 1, 'R'])
     for l in lm_list:
         if '-' in l:
             s, e = l.split('-')
-            for i in range(int(s) - 1, int(e)):
-                res_list.append([i, 'L'])
+            res_list.extend([i, 'L'] for i in range(int(s) - 1, int(e)))
         else:
             res_list.append([int(l) - 1, 'L'])
     res_list = sorted(res_list, key=lambda x: x[0])
@@ -100,8 +244,7 @@ def mask2list(com_str, rec_mask, lig_mask):
 
 def log_subprocess_output(process):
     while True:
-        output = process.stdout.readline().decode()
-        if output:
+        if output := process.stdout.readline().decode():
             logging.debug(output.strip('\n'))
         else:
             break
@@ -111,6 +254,7 @@ class Residue(int):
     """
     Residue class
     """
+
     def __init__(self, index, number, chain, id, id_index, name, icode=''):
         int.__init__(index)
         self.index = index
@@ -168,8 +312,8 @@ class Residue(int):
         pass
 
     def set_mut(self, mut):
-        self.mutant_label = (f"{self.chain}/{self.number}{':' + self.icode if self.icode else ''} - {self.name}"
-                             f"x{mut}")
+        self.mutant_label = f'{self.chain}/{self.number}{f":{self.icode}" if self.icode else ""} - {self.name}x{mut}'
+
         self.mutant_string = (f"{self.id}:{self.chain}:{mut}:{self.number}:{self.icode}" if self.icode
                               else f"{self.id}:{self.chain}:{mut}:{self.number}")
 
@@ -291,18 +435,22 @@ def check_str(structure, ref=False, skip=False):
 
     for chain, resl in res_dict.items():
         res_id_list = [[x, x2] for x, x1, x2 in resl]
-        for c, x in enumerate(res_id_list):
-            if res_id_list.count(x) > 1:
-                duplicates.append(f'{chain}:{resl[c][0]}:{resl[c][1]}:{resl[c][2]}')
-    if duplicates:
-        if ref:
+        duplicates.extend(
+            f'{chain}:{resl[c][0]}:{resl[c][1]}:{resl[c][2]}'
+            for c, x in enumerate(res_id_list)
+            if res_id_list.count(x) > 1
+        )
+
+    if ref:
+        if duplicates:
             GMXMMPBSA_ERROR(f'The reference structure used is inconsistent. The following residues are duplicates:\n'
                             f' {", ".join(duplicates)}')
-        elif skip:
+    elif skip:
+        if duplicates:
             return refstr
-        else:
-            logging.warning(f'The complex structure used is inconsistent. The following residues are duplicates:\n'
-                            f' {", ".join(duplicates)}')
+    elif duplicates:
+        logging.warning(f'The complex structure used is inconsistent. The following residues are duplicates:\n'
+                        f' {", ".join(duplicates)}')
     return refstr
 
 
@@ -333,7 +481,7 @@ def res2map(indexes, com_file):
             if res != proc_res and resindex not in res_list:
                 rec_list.append(resindex)
                 res_list.append(Residue(resindex, com_str.atoms[i].residue.number,
-                                        com_str.atoms[i].residue.chain, 'R',rec_index,
+                                        com_str.atoms[i].residue.chain, 'R', rec_index,
                                         com_str.atoms[i].residue.name,
                                         com_str.atoms[i].residue.insertion_code))
                 resindex += 1
@@ -429,7 +577,7 @@ def selector(selection: str):
                     ri = [chain, int(ci[0]), ''] if len(ci) == 1 else [chain, int(ci[0]), ci[1]]
                     if ri in res_selections:
                         logging.warning('Found duplicated residue in selection: CHAIN:{} RES_NUM:{} ICODE: '
-                                          '{}'.format(*ri))
+                                        '{}'.format(*ri))
                         continue
                     res_selections.append(ri)
                 else:
@@ -442,12 +590,11 @@ def selector(selection: str):
                     for cr in range(start, end):
                         if [chain, cr, ''] in res_selections:
                             logging.warning('Found duplicated residue in selection: CHAIN:{} RES_NUM:{} ICODE: '
-                                              '{}'.format(chain, cr, ''))
+                                            '{}'.format(chain, cr, ''))
                             continue
                         res_selections.append([chain, cr, ''])
     return dist, res_selections
 
-# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 def remove(flag, fnpre='_GMXMMPBSA_'):
     """ Removes temporary files. Allows for different levels of cleanliness """
@@ -553,6 +700,17 @@ def get_sys_info():
     logging.debug(f"OS SYSTEM     : {platform.system()}")
     logging.debug(f"OS VERSION    : {platform.version()}")
     logging.debug(f"OS PROCESSOR  : {platform.processor()}\n")
+
+
+def get_warnings():
+    info = {'warning': 0, 'error': 0}
+    with open('gmx_MMPBSA.log') as logfile:
+        for line in logfile:
+            if line.startswith('[ERROR  ]'):
+                info['error'] += 1
+            elif line.startswith('[WARNING]'):
+                info['warning'] += 1
+    return info
 
 
 class Unbuffered(object):
