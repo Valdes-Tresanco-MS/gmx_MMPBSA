@@ -846,10 +846,10 @@ class BindingStatistics(dict):
         csvwriter.writerow(['Frame #'] + print_keys)
 
         # write out each frame
-        c = self.com.INPUT['startframe']
+        c = self.com.INPUT['nmstartframe'] if isinstance(self.com, NMODEout) else self.com.INPUT['startframe']
         for i in range(len(self[print_keys[0]])):
             csvwriter.writerow([c] + [round(self[key][i], 2) for key in print_keys])
-            c += self.com.INPUT['interval']
+            c += self.com.INPUT['nminterval'] if isinstance(self.com, NMODEout) else self.com.INPUT['interval']
         csvwriter.writerow([])
 
     def report_inconsistency(self, output_format: str = 'ascii'):
@@ -984,10 +984,10 @@ class DeltaBindingStatistics(dict):
         csvwriter.writerow(['Frame #'] + list(self.keys()))
 
         # write out each frame
-        c = self.norm.INPUT['startframe']
+        c = self.norm.INPUT['nmstartframe'] if isinstance(self.norm, NMODEout) else self.norm.INPUT['startframe']
         for i in range(len(self['VDWAALS'])):
             csvwriter.writerow([c] + [round(self[key][i], 2) for key in self])
-            c += self.norm.INPUT['interval']
+            c += self.norm.INPUT['nminterval'] if isinstance(self.norm, NMODEout) else self.norm.INPUT['interval']
         csvwriter.writerow([])
 
     def summary_output(self):
