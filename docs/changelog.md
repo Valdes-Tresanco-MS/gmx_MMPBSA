@@ -4,10 +4,17 @@ title: Changelog
 ---
 # Changelog
 
+## gmx_MMPBSA v1.5.0.3 (02/26/2022)
+### Fixes
+#### `gmx_MMPBSA`
+- Improved nmode and sd in the output (#169)
+- Improved autocompletion script
+- Updated 3D-RISM, NMODE, Alascan, Decomp, and Linear/Non-Linear PB solver tutorials
+
 ## gmx_MMPBSA v1.5.0.1 (02/22/2022)
 ### Fixes
 #### `gmx_MMPBSA`
-- Allow index group name for group selection (#157)
+- Allow index group name for group selection (#156)
 
 #### `gmx_MMPBSA_ana`
 - gmx_MMPBSA_ana does not open at the end of the calculation (#158)
