@@ -631,13 +631,15 @@ the same used for `print_res` variable in `&decomp` namelist
 
     !!! example "Selection schemes"
 
-        === "By Distance"
+        === "By Distance (recommended)"
             Notation: [ `within` `distance` ]
             :   `within` corresponds to the keyword and `distance` to the maximum distance criterion in Å necessary to 
-                select the residues from both the receptor and the ligand.
+                select the residues from both the receptor and the ligand. In case the cutoff used is so small that 
+                the number of qm_residues = 0, the cutoff value will be increased by 0.1 until the number of 
+                qm_residues > 0.
     
             !!! example
-                `qm_residues="within 6"` Residues within 6 Å between receptor and ligand will be treated with quantum 
+                `qm_residues="within 5"` Residues within 5 Å between receptor and ligand will be treated with quantum 
                 mechanic.
 
         === "Amino acid selection"
@@ -1175,7 +1177,7 @@ pdf#subsection.7.3.1))
         === "One closure"
                  closure="pse3"
         === "Several closures"
-                 closure="kh, pse3"
+                 closure="kh,pse3"
 
 #### **Solvation free energy corrections**
 
@@ -1378,9 +1380,9 @@ range asymptotic cutoff distance based on the desired accuracy of the calculatio
 See [§7.2.3](https://ambermd.org/doc12/Amber21.pdf#subsection.7.2.3) for details on how this affects numerical 
 accuracy. Possible values are:
 
-    * < 0: asympKSpaceTolerance = tolerance/10
-    * 0: no cutoff
-    * > 0: given value determines the maximum error in the reciprocal-space long range asymptotics calculations
+    * when < 0: asympKSpaceTolerance = tolerance/10
+    * when = 0: no cutoff
+    * when > 0: given value determines the maximum error in the reciprocal-space long range asymptotics calculations
 
     _New in v1.5.0_
 
@@ -1555,10 +1557,12 @@ sufficient in most cases, however we have added several additional notations
     
     !!! example "Selection schemes"
 
-        === "By Distance"
+        === "By Distance (recommended)"
             Notation: [ `within` `distance` ]
             :   `within` corresponds to the keyword and `distance` to the maximum distance criterion in Å necessary to 
-                select the residues from both the receptor and the ligand
+                select the residues from both the receptor and the ligand. In case the cutoff used is so small that 
+                the number of decomp residues to print < 2, the cutoff value will be increased by 0.1 until the 
+                number of decomp residues to print >= 2.
     
             !!! example
                 `print_res="within 6"` Will print all residues within 6 Å between receptor and 
