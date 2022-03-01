@@ -168,8 +168,21 @@ class CheckMakeTop:
             qm_residues, (rec_charge, lig_charge) = self.get_selected_residues(self.INPUT['qm_residues'], True)
 
             if 'within' in self.INPUT['qm_residues']:
-                logging.info(f"Selecting residues by distance ({self.INPUT['qm_residues'].split()[1]} Å) between "
-                             f"receptor and ligand for QM calculation...")
+                if len(qm_residues) == 0:
+                    logging.warning(f"Number of qm_residues using print_res = '{self.INPUT['qm_residues']}' = 0")
+                    logging.info(
+                        'Increasing cutoff value by 0.1 until number of qm_residues > 0'
+                    )
+                    cutoff = float(self.INPUT['qm_residues'].split()[1])
+                    while len(qm_residues) == 0:
+                        cutoff = round(cutoff, 1) + 0.1
+                        qm_residues, (rec_charge, lig_charge) = self.get_selected_residues(f'within {cutoff}', True)
+
+                    logging.info(f"Selecting residues by distance ({round(cutoff, 1)} Å) between "
+                                 f"receptor and ligand for QM/MM calculation...")
+                else:
+                    logging.info(f"Selecting residues by distance ({self.INPUT['qm_residues'].split()[1]} Å) between "
+                                 f"receptor and ligand for QM calculation...")
             else:
                 logging.info('User-selected residues for QM calculation...')
 
