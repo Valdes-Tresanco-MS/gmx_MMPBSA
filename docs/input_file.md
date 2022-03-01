@@ -184,7 +184,7 @@ tested in previous `protein_forcefield` and `ligand_forcefield` variables.
             /
             ```
 
-    **Forcefields for Protein/Nucleic Acids together**
+    **Forcefields for Protein/Nucleic Acids**
 
     | Name                      | Description                                                              |
     |:--------------------------|:-------------------------------------------------------------------------|
@@ -624,7 +624,7 @@ applied for `AM1-DH+` and `PM6-DH+`.
 `qm_residues`
 :   Complex residues to treat with quantum mechanics. All residues treated with quantum mechanics in the complex 
 must be treated with quantum mechanics in the receptor or ligand to obtain meaningful results. This notation is 
-the same used for `print_res` variable in `&decomp` namelist
+the same used for `print_res` variable in `&decomp` namelist.
 
     !!! danger
          No `qm_residues` default, this must be specified if `ifqnt` = 1.
@@ -754,6 +754,11 @@ method, while a level-set based algebraic method is used when `ipb > 2`.
     framework, the cavity term is still computed as a term linearly proportional to the molecular
     solvent-accessible-surface area (SASA) or the molecular volume enclosed by SASA.
 
+    !!! info "Keep in mind"
+        Sometimes, high values for the solvation energy are obtained using `inp=2`. Check 
+        this [section](https://valdes-tresanco-ms.github.io/gmx_MMPBSA/Q%26A/calculations/#possible-solutions_2) to see 
+        a workaround.
+
   [227]: https://pubs.acs.org/doi/abs/10.1021/jp073399n
   [229]: https://onlinelibrary.wiley.com/doi/10.1002/jcc.540100504
 
@@ -772,7 +777,7 @@ method, while a level-set based algebraic method is used when `ipb > 2`.
 `exdi` (Default = 80.0)
 :   External dielectric constant. This corresponds to `epsout` in [pbsa][5].
 
-`emem` (Default = 1.0)
+`emem` (Default = 4.0)
 :   Sets the membrane dielectric constant. Only used if `memopt` > 0, does nothing otherwise. Value
 used should be between `indi` and `exdi` or there may be errors. This corresponds to `epsmem` in [pbsa][5].
 

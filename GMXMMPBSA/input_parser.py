@@ -468,7 +468,7 @@ input_file.addNamelist('pb', 'pb',
                            # Options to define the physical constants
                            ['indi', float, 1, 'Internal dielectric constant'],
                            ['exdi', float, 80, 'External dielectric constant'],
-                           ['emem', float, 1.0, 'Membrane dielectric constant'],
+                           ['emem', float, 4.0, 'Membrane dielectric constant'],
                            ['smoothopt', int, 1, 'Set up dielectric values for finite-difference grid edges that are '
                                                  'located across the solute/solvent dielectric boundary'],
                            ['istrng', float, 0.0, 'Ionic strength (M)'],

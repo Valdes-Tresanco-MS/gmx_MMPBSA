@@ -802,6 +802,10 @@ class MMPBSA_App(object):
             GMXMMPBSA_ERROR('INDI must be non-negative!', InputError)
         if INPUT['exdi'] < 0:
             GMXMMPBSA_ERROR('EXDI must be non-negative!', InputError)
+        if INPUT['memopt'] > 0 and (INPUT['emem'] < INPUT['indi'] or INPUT['emem'] > INPUT['exdi']):
+            logging.warning(
+                "Membrane dielectric constant (emem) should be between indi and exdi's or there may be errors."
+            )
         if INPUT['scale'] < 0:
             GMXMMPBSA_ERROR('SCALE must be non-negative!', InputError)
         if INPUT['linit'] < 0:

@@ -110,7 +110,7 @@ Here we describe a series of frequent issues related to calculations and their p
     
         :  You may want to try inp=1 and avoid the EDISPER contribution. This way, the total non-polar solvation 
         free energy will be modeled as a single term linearly proportional to the solvent-accessible surface area. Just 
-        add `inp=1` in the &pb namelist variables in the input file. See example below:
+        add `inp=1` in the `&pb` namelist variables in the input file. See example below:
 
             ```
             &general
