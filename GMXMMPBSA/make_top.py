@@ -123,8 +123,22 @@ class CheckMakeTop:
         if self.INPUT['decomprun']:
             decomp_res = self.get_selected_residues(self.INPUT['print_res'])
             if 'within' in self.INPUT['print_res']:
-                logging.info(f"Selecting residues by distance ({self.INPUT['print_res'].split()[1]} Å) between "
-                             f"receptor and ligand for decomposition analysis...")
+                if len(decomp_res) < 2:
+                    logging.warning(f"Number of decomp residues to print using "
+                                    f"print_res = '{self.INPUT['print_res']}' < 2")
+                    logging.info(
+                        'Increasing cutoff value by 0.1 until number of decomp residues to print >= 2'
+                    )
+                    cutoff = float(self.INPUT['print_res'].split()[1])
+                    while len(decomp_res) < 2:
+                        cutoff = round(cutoff, 1) + 0.1
+                        decomp_res = self.get_selected_residues(f'within {cutoff}')
+
+                    logging.info(f"Selecting residues by distance ({round(cutoff, 1)} Å) between "
+                                 f"receptor and ligand for decomposition analysis...")
+                else:
+                    logging.info(f"Selecting residues by distance ({self.INPUT['print_res'].split()[1]} Å) between "
+                                 f"receptor and ligand for decomposition analysis...")
             else:
                 logging.info('User-selected residues for decomposition analysis...')
 

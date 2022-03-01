@@ -567,7 +567,7 @@ def selector(selection: str):
         for s in string_list:
             n = re.split(r":\s*|/\s*", s)
             if len(n) != 2 or n[0] not in ascii_letters:
-                GMXMMPBSA_ERROR(f'We expected something like this: A/2-10,35,41 but we get {s} instead')
+                GMXMMPBSA_ERROR(f'We expected something like this: A/2-10,35,41 B/104 but we get {s} instead')
             chain = n[0]
             resl = n[1].split(',')
             for r in resl:
