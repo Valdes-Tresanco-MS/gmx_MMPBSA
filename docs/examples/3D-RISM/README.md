@@ -68,7 +68,7 @@ polardecomp=0, thermo="std", tolerance=0.001, rism_verbose=2, closure="kh"
     These examples are meant only to show that gmx_MMPBSA works. It is recommended to go over these variables, even 
     the ones that are not included in this input file but are available for the calculation that it's performed and
     see the values they can take (check the [input file section](../../input_file.md)). This will allow you to 
-    tackle a number of potential problems or simply use more fancy approximations in your calculations.
+    tackle a number of potential problems or simply use fancier approximations in your calculations.
 
 ## Considerations
 In this case, a single trajectory (ST) approximation is followed, which means the receptor and ligand (in this case, 
