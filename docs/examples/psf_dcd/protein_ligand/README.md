@@ -14,7 +14,7 @@ title: Protein-ligand
     check [how gmx_MMPBSA works][9] before attempting any sort of calculations.** See below the input files 
     required for running gmx_MMPBSA.
 
-    Make sure to install gmx_MMPBSA in a dedicated conda environent as decribed [here][10]. 
+    Make sure to install gmx_MMPBSA in a dedicated conda environment as decribed [here][10].
 
 ## Requirements
 
