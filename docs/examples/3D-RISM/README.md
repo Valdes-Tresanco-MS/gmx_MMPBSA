@@ -78,7 +78,7 @@ complex. To do so, an MD Structure+mass(db) file (`com.tpr`), an index file (`in
 in` input file will contain all the parameters needed for the MM/PB(GB)SA calculation. In this case, 4 frames 
 are going to be used when performing the MM/PB(GB)SA calculation with the 3D-RISM model using Kovalenko-Hirata 
 clousure with a 0.001. Note that we have increased the tolerance from 0.00001 (default) to 0.001 in order to reduce the 
-computational time.
+computation time.
 
 !!! note
     Once the calculation is done, you can analyze the results in `gmx_MMPBSA_ana` (if you didn't define `-nogui`). 
