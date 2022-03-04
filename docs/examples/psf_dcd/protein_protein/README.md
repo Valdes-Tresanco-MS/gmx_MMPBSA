@@ -3,14 +3,14 @@ template: main.html
 title: Protein-protein
 ---
 
-# Protein-protein binding free energy calculations with NAMD files
+# Protein-protein binding free energy calculations with psf_dcd files
 
 !!! info
-    This example can be found in the [docs/examples/NAMD/protein-protein][6] directory in the repository folder. If you 
-    didn't use gmx_MMPBSA_test before, use [downgit](https://downgit.github.io/#/home) to download the specific folder 
-    from gmx_MMPBSA GitHub repository.
+    This example can be found in the [docs/examples/psf_dcd/protein-protein][6] directory in the repository folder. If 
+    you didn't use gmx_MMPBSA_test before, use [downgit](https://downgit.github.io/#/home) to download the specific 
+    folder from gmx_MMPBSA GitHub repository.
 
-    In this example we are going to generate gmx_MMPBSA input files from NAMD's files. **It is strongly recommended to 
+    In this example we are going to generate gmx_MMPBSA input files from psf_dcd files. **It is strongly recommended to 
     check [how gmx_MMPBSA works][9] before attempting any sort of calculations.** See below the input files 
     required for running gmx_MMPBSA.
 
@@ -189,7 +189,7 @@ salt concentration = 0.15M.
   [2]: ../../../input_file.md#the-input-file
   [3]: ../../../input_file.md#sample-input-files
   [5]: ../../../analyzer.md#gmx_mmpbsa_ana-the-analyzer-tool
-  [6]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/docs/examples/NAMD/protein_protein
+  [6]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/docs/examples/psf_dcd/protein_protein
   [7]: ../../gmx_MMPBSA_test.md#gmx_mmpbsa_test-command-line
   [8]: https://valdes-tresanco-ms.github.io/gmx_MMPBSA/input_file/#generation-of-input-files-with-gmx_mmpbsa
   [9]: https://valdes-tresanco-ms.github.io/gmx_MMPBSA/howworks

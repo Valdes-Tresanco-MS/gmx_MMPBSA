@@ -60,11 +60,12 @@ decomposition; PB, Interaction Entropy, and Per-residue decomposition) in the sa
 * [Stability calculations](Stability/README.md)[^1][^2][^3]
 * [QM/MMGBSA calculations](QM_MMGBSA/README.md)
 
-## NAMD support
+## Support for psf_dcd files
 
-This section focuses on how to work with systems prepared with NAMD. We plan to add more examples in the near future.
+This section focuses on how to work with psf-dcd files. These files are used for several MD simulation 
+programs such as NAMD, OpenMM or Genesis. We plan to add more examples in the near future.
 
-* [Protein-protein binding free energy calculations](NAMD/protein_protein/README.md)
+* [Protein-protein binding free energy calculations](psf_dcd/protein_protein/README.md)
 
  [^1]: It is part of the `All` set defined with `-t 0` in `gmx_MMPBSA_test`
  [^2]: It is part of the `Minimal` set defined with `-t 1` in `gmx_MMPBSA_test`

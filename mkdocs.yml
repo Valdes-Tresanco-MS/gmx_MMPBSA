@@ -199,8 +199,8 @@ nav:
             - C2 Entropy calculations: examples/Entropy_calculations/C2_Entropy/README.md
         - Stability calculations: examples/Stability/README.md
         - QM/MMGBSA: examples/QM_MMGBSA/README.md
-    - NAMD Support:
-        - Protein-protein: examples/NAMD/protein_protein/README.md
+    - Support for psf_dcd files:
+        - Protein-protein: examples/psf_dcd/protein_protein/README.md
     - gmx_MMPBSA_test: examples/gmx_MMPBSA_test.md
   - Help:
     - Help: Q&A/README.md
