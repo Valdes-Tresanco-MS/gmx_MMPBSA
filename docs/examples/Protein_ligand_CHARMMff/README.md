@@ -13,8 +13,9 @@ title: Protein-ligand (Charmm)
     In gmx_MMPBSA v1.5.0 we have added a new PB radii set named _charmm_radii_. **This radii set should be used only 
     with systems prepared with CHARMM force fields**. The atomic radii set for Poisson-Boltzmann calculations has been 
     derived from average solvent electrostatic charge distribution with explicit solvent. The accuracy has been tested 
-    with free energy perturbation with explicit solvent. Most of the values were taken from a _*radii.str_ file used in 
-    PBEQ Solver in [charmm-gui](https://www.charmm-gui.org/?doc=input/pbeqsolver).
+    with free energy perturbation with explicit solvent [ref.](https://pubs.acs.org/doi/10.1021/jp970736r). Most of 
+    the values were taken from a _*radii.str_ file used in PBEQ Solver 
+    in [charmm-gui](https://www.charmm-gui.org/?doc=input/pbeqsolver).
 
     * Radii for protein atoms in 20 standard amino acids from 
     [Nina, Belogv, and Roux](https://pubs.acs.org/doi/10.1021/jp970736r)
@@ -50,10 +51,6 @@ _See a detailed list of all the flags in gmx_MMPBSA command line [here][2]_
 ## Command-line
 That being said, once you are in the folder containing all files, the command-line will be as follows:
 
-=== "gmx_MMPBSA_test"
-
-        gmx_MMPBSA_test -t 10
-
 === "Serial"
 
         gmx_MMPBSA -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 1 13 -ct com_traj.xtc -cp topol.top
@@ -61,6 +58,10 @@ That being said, once you are in the folder containing all files, the command-li
 === "With MPI"
 
         mpirun -np 2 gmx_MMPBSA MPI -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 1 13 -ct com_traj.xtc -cp topol.top
+
+=== "gmx_MMPBSA_test"
+
+        gmx_MMPBSA_test -t 10
 
 where the `mmpbsa.in` input file, is a text file containing the following lines:
 

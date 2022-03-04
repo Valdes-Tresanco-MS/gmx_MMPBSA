@@ -39,9 +39,6 @@ _See a detailed list of all the flags in gmx_MMPBSA command line [here][1]_
 
 ## Command-line
 That being said, once you are in the folder containing all files, the command-line will be as follows:
-=== "gmx_MMPBSA_test"
-
-        gmx_MMPBSA_test -t 16
 
 === "Serial"
 
@@ -52,6 +49,10 @@ That being said, once you are in the folder containing all files, the command-li
         mpirun -np 2 gmx_MMPBSA MPI -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 1 13\
                -ct com_traj.xtc -rs rec.pdb -ri rec_index.ndx -rg 1 -rt rec_traj.pdb \
                -lm ligand.mol2 -ls lig.pdb -li lig_index.ndx -lg 2 -lt lig_traj.pdb
+
+=== "gmx_MMPBSA_test"
+
+        gmx_MMPBSA_test -t 16
 
 where the `mmpbsa.in` input file, is a text file containing the following lines:
 
@@ -74,7 +75,12 @@ igb=5, saltcon=0.150,
 /
 ```
 
-_See a detailed list of all the options in `gmx_MMPBSA` input file [here][2] as well as several [examples][3]_
+!!! info "Keep in mind"
+    See a detailed list of all the options in `gmx_MMPBSA` input file [here][2] as well as several [examples][3]. 
+    These examples are meant only to show that gmx_MMPBSA works. It is recommended to go over these variables, even 
+    the ones that are not included in this input file but are available for the calculation that it's performed and
+    see the values they can take (check the [input file section](../../input_file.md)). This will allow you to 
+    tackle a number of potential problems or simply use more fancy approximations in your calculations.
 
 ## Considerations
 In this case, a multiple trajectory (MT) approximation is followed, which means the receptor and ligand structures and 

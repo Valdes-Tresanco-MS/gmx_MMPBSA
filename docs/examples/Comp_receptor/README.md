@@ -35,10 +35,6 @@ _See a detailed list of all the flags in gmx_MMPBSA command line [here][1]_
 ## Command-line
 That being said, once you are in the folder containing all files, the command-line will be as follows:
 
-=== "gmx_MMPBSA_test"
-
-        gmx_MMPBSA_test -t 9
-
 === "Serial"
 
         gmx_MMPBSA -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 33 14 -ct com_traj.xtc -lm ligand.mol2
@@ -46,6 +42,11 @@ That being said, once you are in the folder containing all files, the command-li
 === "With MPI"
 
         mpirun -np 2 gmx_MMPBSA MPI -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 33 14 -ct com_traj.xtc -lm ligand.mol2
+
+=== "gmx_MMPBSA_test"
+
+        gmx_MMPBSA_test -t 9
+
 
 where the `mmpbsa.in` input file, is a text file containing the following lines:
 
@@ -67,7 +68,12 @@ igb=8, saltcon=0.150, intdiel=10
 /
 ```
 
-_See a detailed list of all the options in `gmx_MMPBSA` input file [here][2] as well as several [examples][3]_
+!!! info "Keep in mind"
+    See a detailed list of all the options in `gmx_MMPBSA` input file [here][2] as well as several [examples][3]. 
+    These examples are meant only to show that gmx_MMPBSA works. It is recommended to go over these variables, even 
+    the ones that are not included in this input file but are available for the calculation that it's performed and
+    see the values they can take (check the [input file section](../../input_file.md)). This will allow you to 
+    tackle a number of potential problems or simply use more fancy approximations in your calculations.
 
 
 ## Considerations

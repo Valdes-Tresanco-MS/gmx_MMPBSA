@@ -13,8 +13,9 @@ title: Protein-ligand LPH (Charmm)
     In gmx_MMPBSA v1.5.0 we have added a new PB radii set named _charmm_radii_. **This radii set should be used only 
     with systems prepared with CHARMM force fields**. The atomic radii set for Poisson-Boltzmann calculations has been 
     derived from average solvent electrostatic charge distribution with explicit solvent. The accuracy has been tested 
-    with free energy perturbation with explicit solvent. Most of the values were taken from a _*radii.str_ file used in 
-    PBEQ Solver in [charmm-gui](https://www.charmm-gui.org/?doc=input/pbeqsolver).
+    with free energy perturbation with explicit solvent [ref.](https://pubs.acs.org/doi/10.1021/jp970736r). Most of 
+    the values were taken from a _*radii.str_ file used in PBEQ Solver 
+    in [charmm-gui](https://www.charmm-gui.org/?doc=input/pbeqsolver).
 
     * Radii for protein atoms in 20 standard amino acids from 
     [Nina, Belogv, and Roux](https://pubs.acs.org/doi/10.1021/jp970736r)

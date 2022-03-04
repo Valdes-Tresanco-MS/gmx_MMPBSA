@@ -73,7 +73,12 @@ igb=5, saltcon=0.150,
 /
 ```
 
-_See a detailed list of all the options in `gmx_MMPBSA` input file [here][2] as well as several [examples][3]_
+!!! info "Keep in mind"
+    See a detailed list of all the options in `gmx_MMPBSA` input file [here][2] as well as several [examples][3]. 
+    These examples are meant only to show that gmx_MMPBSA works. It is recommended to go over these variables, even 
+    the ones that are not included in this input file but are available for the calculation that it's performed and
+    see the values they can take (check the [input file section](../../../input_file.md)). This will allow you to 
+    tackle a number of potential problems or simply use more fancy approximations in your calculations.
 
 ## Considerations
 In this case, a single trajectory (ST) approximation is followed, which means the receptor and ligand structures and 
