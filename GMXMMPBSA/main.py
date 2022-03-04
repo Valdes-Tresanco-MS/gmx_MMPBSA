@@ -788,6 +788,16 @@ class MMPBSA_App(object):
             return
         # Check deprecated variables
         # check force fields
+
+        if self.FILES.ligand_mol2:
+            if 'leaprc.gaff' in self.INPUT['forcefields'] or 'leaprc.gaff2' in self.INPUT['forcefields']:
+                pass
+            else:
+                logging.error(
+                    "When using -lm flag, leaprc.gaff or leaprc.gaff2 should be included in the forcefields "
+                    "variable. Check this tutorial for "
+                    "more details https://valdes-tresanco-ms.github.io/gmx_MMPBSA/examples/Protein_ligand/ST/")
+
         if INPUT['igb'] not in [1, 2, 5, 7, 8]:
             GMXMMPBSA_ERROR('Invalid value for IGB (%s)! ' % INPUT['igb'] + 'It must be 1, 2, 5, 7, or 8.', InputError)
         if INPUT['intdiel'] < 0:
