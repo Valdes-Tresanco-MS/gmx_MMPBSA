@@ -63,7 +63,7 @@ decomposition; PB, Interaction Entropy, and Per-residue decomposition) in the sa
 ## Support for psf_dcd files
 
 This section focuses on how to work with psf-dcd files. These files are used for several MD simulation 
-programs such as NAMD, OpenMM or Genesis. We plan to add more examples in the near future.
+programs such as NAMD, OpenMM or GENESIS. We plan to add more examples in the near future.
 
 * [Protein-protein binding free energy calculations](psf_dcd/protein_protein/README.md)
 
