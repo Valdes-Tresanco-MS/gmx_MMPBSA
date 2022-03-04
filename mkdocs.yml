@@ -179,7 +179,7 @@ nav:
           - Papain-like protease: examples/COVID-19_related_proteins/Papain-like_protease_7koj/README.md
           - S1-ACE2 complex: examples/COVID-19_related_proteins/S1-ACE2_complex_7dmu/README.md
           - S1 RBD with antibody: examples/COVID-19_related_proteins/S1_RBD_with_antibody_6zlr/README.md
-    - Charmm Support:
+    - CHARMMff Support:
         - Protein-Ligand: examples/Protein_ligand_CHARMMff/README.md
         - Protein-ligand complex embedded in membrane: examples/Protein_membrane_CHARMMff/README.md
         - Protein-Ligand with LPH particles (ST): examples/Protein_ligand_LPH_atoms_CHARMMff/README.md
@@ -199,6 +199,8 @@ nav:
             - C2 Entropy calculations: examples/Entropy_calculations/C2_Entropy/README.md
         - Stability calculations: examples/Stability/README.md
         - QM/MMGBSA: examples/QM_MMGBSA/README.md
+    - NAMD Support:
+        - Protein-protein: examples/NAMD/protein_protein/README.md
     - gmx_MMPBSA_test: examples/gmx_MMPBSA_test.md
   - Help:
     - Help: Q&A/README.md
