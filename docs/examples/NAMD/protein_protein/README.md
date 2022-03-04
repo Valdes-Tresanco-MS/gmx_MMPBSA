@@ -1,6 +1,6 @@
 ---
 template: main.html
-title: Protein-ligand (ST)
+title: Protein-protein
 ---
 
 # Protein-protein binding free energy calculations with NAMD files
