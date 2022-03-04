@@ -6,7 +6,7 @@ title: Protein-protein
 # Protein-protein binding free energy calculations with psf_dcd files
 
 !!! info
-    This example can be found in the [docs/examples/psf_dcd/protein-protein][6] directory in the repository folder. If 
+    This example can be found in the [docs/examples/psf_dcd/protein_protein][6] directory in the repository folder. If 
     you didn't use gmx_MMPBSA_test before, use [downgit](https://downgit.github.io/#/home) to download the specific 
     folder from gmx_MMPBSA GitHub repository.
 
@@ -111,13 +111,44 @@ Optional, but recommended -- :octicons-check-circle-fill-16:{ .req_opt } -> Opti
 
     === "3- The topology file"
 
+        !!! note "Keep in mind"
+            For some reason, when using charmm-gui to prepare the files, the toppar files that come inside the NAMD 
+            folder have the `ATOM` section commented with the `!` symbol:
+
+            ```
+            !ATOMS
+            !MASS  -1  H          1.00800 ! polar H
+            !MASS  -1  HC         1.00800 ! N-ter H
+            !MASS  -1  HA         1.00800 ! nonpolar H
+            !MASS  -1  HP         1.00800 ! aromatic H
+            !MASS  -1  HB1        1.00800 ! backbone H
+            !MASS  -1  HB2        1.00800 ! aliphatic backbone H, to CT2
+            !MASS  -1  HR1        1.00800 ! his he1, (+) his HG,HD2
+            ...
+            ```
+
+            This section can't be commented on for the purpose of this tutorial, thus you can either use a files with 
+            the `ATOM` section uncommented or just uncomment the section yourself:
+
+            ```
+            ATOMS
+            MASS  -1  H          1.00800 ! polar H
+            MASS  -1  HC         1.00800 ! N-ter H
+            MASS  -1  HA         1.00800 ! nonpolar H
+            MASS  -1  HP         1.00800 ! aromatic H
+            MASS  -1  HB1        1.00800 ! backbone H
+            MASS  -1  HB2        1.00800 ! aliphatic backbone H, to CT2
+            MASS  -1  HR1        1.00800 ! his he1, (+) his HG,HD2
+            ...
+            ```
+
         We are going to use `ParmEd` to convert the *.psf file into a GROMACS topology file. To do so, use the 
         ParmEd script that is already included in the tutorial folder. 
 
             python script.py
 
         Take your time to analyze step by step the process of converting *.psf/*.crd files intoa  GROMACS topology 
-        with ParmEd
+        with ParmEd.
 
         ``` python
         # import ParmEd module
