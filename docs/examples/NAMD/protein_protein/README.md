@@ -14,6 +14,8 @@ title: Protein-protein
     check [how gmx_MMPBSA works][9] before attempting any sort of calculations.** See below the input files 
     required for running gmx_MMPBSA.
 
+    Make sure to install gmx_MMPBSA in a dedicated conda environent as decribed [here][10]. 
+
 ## Requirements
 
 In this case, `gmx_MMPBSA` requires:
@@ -191,3 +193,4 @@ salt concentration = 0.15M.
   [7]: ../../gmx_MMPBSA_test.md#gmx_mmpbsa_test-command-line
   [8]: https://valdes-tresanco-ms.github.io/gmx_MMPBSA/input_file/#generation-of-input-files-with-gmx_mmpbsa
   [9]: https://valdes-tresanco-ms.github.io/gmx_MMPBSA/howworks
+  [10]: https://valdes-tresanco-ms.github.io/gmx_MMPBSA/installation
