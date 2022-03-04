@@ -14,6 +14,16 @@
 #  or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License    #
 #  for more details.                                                           #
 # ##############################################################################
+try:
+    from PyQt6.QtCore import *
+    from PyQt6.QtGui import *
+    from PyQt6.QtWidgets import *
+except:
+    from PyQt5.QtCore import *
+    from PyQt5.QtGui import *
+    from PyQt5.QtWidgets import *
+
+
 import matplotlib as mpl
 import matplotlib.backend_bases
 import matplotlib.pyplot as plt
@@ -22,9 +32,7 @@ import numpy as np
 import pandas
 import pandas as pd
 import seaborn as sns
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
-from PyQt5.QtWidgets import *
+
 from matplotlib import gridspec
 from matplotlib.backends import qt_compat
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas, NavigationToolbar2QT
@@ -140,7 +148,7 @@ class ChartsBase(QMdiSubWindow):
                                          'filename': self.options['subtitle']})
         self.mainwidgetmdi.addToolBar(Qt.ToolBarArea.BottomToolBarArea, self.mpl_toolbar)
 
-        self.fbtn = QPushButton(self.style().standardIcon(QStyle.SP_FileDialogDetailedView), '',
+        self.fbtn = QPushButton(self.style().standardIcon(QStyle.StandardPixmap.SP_FileDialogDetailedView), '',
                                 self.figure_canvas)
         self.fbtn.setToolTip('Show or Hide the Navigation Toolbar')
         self.fbtn.toggled.connect(self.mpl_toolbar.setVisible)
@@ -770,7 +778,7 @@ class Tables(QMdiSubWindow):
             self._df.to_excel(fileName)
 
     def eventFilter(self, source, event):
-        if (event.type() == QEvent.KeyPress and event.matches(QKeySequence.Copy)):
+        if (event.type() == QEvent.Type.KeyPress and event.matches(QKeySequence.StandardKey.Copy)):
             self._copySelection()
             return True
         return super(Tables, self).eventFilter(source, event)

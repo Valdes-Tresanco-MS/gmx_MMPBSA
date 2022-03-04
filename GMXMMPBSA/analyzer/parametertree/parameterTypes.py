@@ -17,12 +17,15 @@
 #  or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License    #
 #  for more details.                                                           #
 # ##############################################################################
-
-
+try:
+    from PyQt6.QtCore import *
+    from PyQt6.QtWidgets import *
+    from PyQt6.QtGui import *
+except:
+    from PyQt5.QtCore import *
+    from PyQt5.QtWidgets import *
+    from PyQt5.QtGui import *
 import os
-from PyQt5.QtCore import *
-from PyQt5.QtWidgets import *
-from PyQt5.QtGui import *
 from .Parameter import Parameter, registerParameterType
 from .ParameterItem import ParameterItem
 from collections import OrderedDict
@@ -508,13 +511,13 @@ class GroupParameterItem(ParameterItem):
                 self.setBackground(c, QBrush(QColor(100, 100, 100)))
                 self.setForeground(c, QBrush(QColor(220, 220, 255)))
                 font = self.font(c)
-                font.setWeight(QFont.DemiBold)
+                font.setWeight(QFont.Weight.DemiBold)
                 font.setPointSize(font.pointSize() + 1)
             else:
                 self.setBackground(c, QBrush(QColor(220, 220, 220)))
                 self.setForeground(c, QBrush(QColor(50, 50, 50)))
                 font = self.font(c)
-                font.setWeight(QFont.DemiBold)
+                font.setWeight(QFont.Weight.DemiBold)
             self.setFont(c, font)
 
     def addClicked(self):

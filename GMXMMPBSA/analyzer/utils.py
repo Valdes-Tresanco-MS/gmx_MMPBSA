@@ -14,6 +14,11 @@
 #  or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License    #
 #  for more details.                                                           #
 # ##############################################################################
+try:
+    from PyQt6.QtCore import *
+except:
+    from PyQt5.QtCore import *
+
 import logging
 import math
 from typing import Union
@@ -22,7 +27,6 @@ from GMXMMPBSA.exceptions import GMXMMPBSA_ERROR
 import pandas as pd
 import numpy as np
 from queue import Queue
-from PyQt5.QtCore import *
 import multiprocessing
 from pathlib import Path
 

@@ -14,6 +14,15 @@
 #  or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License    #
 #  for more details.                                                           #
 # ##############################################################################
+try:
+    from PyQt6.QtWidgets import *
+    from PyQt6.QtCore import *
+    from PyQt6.QtGui import *
+except:
+    from PyQt5.QtWidgets import *
+    from PyQt5.QtCore import *
+    from PyQt5.QtGui import *
+
 
 import sys
 import os
@@ -21,12 +30,8 @@ import os
 from queue import Queue, Empty
 from pathlib import Path
 
-import pandas
 import pandas as pd
 from GMXMMPBSA.API import load_gmxmmpbsa_info, MMPBSA_API
-from PyQt5.QtWidgets import *
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
 from GMXMMPBSA.analyzer.dialogs import InitDialog
 from GMXMMPBSA.analyzer.customitem import CustomItem, CorrelationItem
 from GMXMMPBSA.analyzer.style import save_default_config, default_config, save_user_config, user_config, toc_img, logo, \
@@ -95,8 +100,8 @@ class GMX_MMPBSA_ANA(QMainWindow):
         self.treeWidget.setColumnHidden(4, True)
         header = self.treeWidget.header()
         header.setStretchLastSection(False)
-        header.setSectionResizeMode(1, QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(0, QHeaderView.Stretch)
+        header.setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)
+        header.setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
 
         self.correlation_treeWidget = QTreeWidget(self)
         self.correlation_treeWidget.itemClicked.connect(self.update_table)
@@ -374,7 +379,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
         self.chart_options_l = QVBoxLayout(self.chart_options_w)
         self.chart_options_l.setContentsMargins(0, 0, 0, 0)
         charts_opt_tb = QToolButton()
-        charts_opt_tb.setPopupMode(QToolButton.InstantPopup)
+        charts_opt_tb.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
         charts_opt_tb.setIcon(QIcon(config))
         self.chart_options_l.addWidget(charts_opt_tb, alignment=Qt.AlignmentFlag.AlignRight)
         charts_opt_menu = QMenu()
@@ -422,7 +427,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
         self.e_changed = QLabel()
         self.e_changed.setToolTip('The frames range has changed. Please, press the "Update" button to recalculate the '
                                    'energy or reset to the default frame range')
-        self.e_changed.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self.e_changed.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         self.e_changed.setPixmap(QPixmap(alert))
         self.e_changed.hide()
 
@@ -462,7 +467,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
         self.nm_changed = QLabel()
         self.nm_changed.setToolTip('The frames range has changed. Please, press the "Update" button to recalculate the '
                                    'energy or reset to the default frame range')
-        self.nm_changed.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self.nm_changed.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         self.nm_changed.setPixmap(QPixmap(alert))
         self.nm_changed.hide()
 
@@ -491,7 +496,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
         self.ie_changed = QLabel()
         self.ie_changed.setToolTip('The frames range has changed. Please, press the "Update" button to recalculate the '
                                    'energy or reset to the default frame range')
-        self.ie_changed.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self.ie_changed.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         self.ie_changed.setPixmap(QPixmap(alert))
         self.ie_changed.hide()
         self.iesegment_sb = QSpinBox()
@@ -1067,7 +1072,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
             sys_item.setBackground(c, QBrush(QColor(100, 100, 100)))
             sys_item.setForeground(c, QBrush(QColor(220, 220, 255)))
             font = sys_item.font(c)
-            font.setWeight(QFont.DemiBold)
+            font.setWeight(QFont.Weight.DemiBold)
             font.setPointSize(font.pointSize() + 1)
             sys_item.setFont(c, font)
 

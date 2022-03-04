@@ -19,7 +19,10 @@
 #  for more details.                                                           #
 # ##############################################################################
 
-from PyQt5.QtCore import *
+try:
+    from PyQt6.QtCore import *
+except:
+    from PyQt5.QtCore import *
 import weakref, re
 from .ParameterItem import ParameterItem
 import warnings

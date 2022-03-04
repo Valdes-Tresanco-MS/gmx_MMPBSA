@@ -14,18 +14,19 @@
 #  or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License    #
 #  for more details.                                                           #
 # ##############################################################################
+try:
+    from PyQt6.QtWidgets import *
+    from PyQt6.QtCore import *
+except:
+    from PyQt5.QtWidgets import *
+    from PyQt5.QtCore import *
+
+
 import h5py
-from PyQt5.QtWidgets import (QDialog, QSpinBox, QLabel, QLineEdit, QPushButton, QHBoxLayout, QVBoxLayout, QCheckBox,
-                             QGroupBox, QButtonGroup, QGridLayout, QTreeWidget, QTreeWidgetItem, QRadioButton,
-                             QTreeWidgetItemIterator, QHeaderView, QProgressBar, QStatusBar, QMessageBox, QComboBox,
-                             QDialogButtonBox)
-from PyQt5.QtCore import Qt, QThread, pyqtSignal, pyqtSlot
 from queue import Queue, Empty
-from GMXMMPBSA import API
 from pathlib import Path
 
 from GMXMMPBSA.analyzer.chartsettings import ChartSettings
-from GMXMMPBSA.analyzer.utils import worker, ncpu
 
 
 class InitDialog(QDialog):
@@ -168,19 +169,19 @@ class InitDialog(QDialog):
         self.header_item.setTextAlignment(4, Qt.AlignmentFlag.AlignCenter)
         self.result_tree = QTreeWidget(self)
         self.result_tree.setHeaderItem(self.header_item)
-        self.result_tree.header().setSectionResizeMode(QHeaderView.ResizeToContents)
+        self.result_tree.header().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
         self.result_tree.itemChanged.connect(self.update_item_info)
         self.pb = QProgressBar()
         # self.pb.setRange(0, 0)
         # self.save_btn.clicked.connect(self.save)
 
-        btnbox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
-        accept_btn = btnbox.button(QDialogButtonBox.Ok)
+        btnbox = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
+        accept_btn = btnbox.button(QDialogButtonBox.StandardButton.Ok)
         accept_btn.setText('Accept')
         accept_btn.setDefault(True)
         accept_btn.clicked.connect(self.get_data)
 
-        cancel_btn = btnbox.button(QDialogButtonBox.Cancel)
+        cancel_btn = btnbox.button(QDialogButtonBox.StandardButton.Cancel)
         cancel_btn.setDefault(False)
         cancel_btn.clicked.connect(self.close)
 
