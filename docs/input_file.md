@@ -286,6 +286,12 @@ tested in previous `protein_forcefield` and `ligand_forcefield` variables.
             * Br: 1.97
             * I: 2.09
     
+            !!! warning 
+                Make sure that you installed the updated ParmEd
+                ```
+                python -m pip install git+https://github.com/ParmEd/ParmEd.git@16fb236
+                ```
+
             This radii set should be used with the following PBSA setup:
     
             ```
@@ -313,7 +319,13 @@ tested in previous `protein_forcefield` and `ligand_forcefield` variables.
             * Cl: 2.20
             * Br: 2.04
             * I: 2.19
-    
+                    
+            !!! warning 
+                Make sure that you installed the updated ParmEd
+                ```
+                python -m pip install git+https://github.com/ParmEd/ParmEd.git@16fb236
+                ```
+
             This radii set should be used with the following PBSA setup:
     
             ```
@@ -345,6 +357,12 @@ tested in previous `protein_forcefield` and `ligand_forcefield` variables.
             * Radii for nucleic acid atoms (RNA and DNA) from 
             [Banavali and Roux](https://pubs.acs.org/doi/abs/10.1021/jp025852v)
             * Halogens and other atoms from [Fortuna and Costa](https://pubs.acs.org/doi/10.1021/acs.jcim.1c00177)
+            
+            !!! warning 
+                Make sure that you installed the updated ParmEd
+                ```
+                python -m pip install git+https://github.com/ParmEd/ParmEd.git@16fb236
+                ```
 
     _Updated in v1.5.0: New PB radii sets have been added_
 
