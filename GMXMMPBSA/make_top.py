@@ -712,9 +712,7 @@ class CheckMakeTop:
         rtemp_top = parmed.gromacs.GromacsTopologyFile(ttp_file.as_posix())
         # get the residues in the top from the com_ndx
         res_list = []
-        if len(ndx) < len(rtemp_top.atoms):
-            GMXMMPBSA_ERROR(f"The {id} index has fewer atoms than the topology. Please check that the files are "
-                            "consistent.")
+
         for i in ndx:
             try:
                 idx = rtemp_top.atoms[i - 1].residue.idx + 1
