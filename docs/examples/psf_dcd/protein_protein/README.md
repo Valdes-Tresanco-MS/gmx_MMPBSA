@@ -189,7 +189,7 @@ Optional, but recommended -- :octicons-check-circle-fill-16:{ .req_opt } -> Opti
                 >a 3221-4124
                 >q
 
-        After this, there should be two new groups (10, 11) in teh index file that contains atoms from 1 to 3220 for 
+        After this, there should be two new groups (10, 11) in the index file that contains atoms from 1 to 3220 for 
         the receptor and atoms 3221 to 4124 for the ligand.
 
 Once the gmx_MMPBSA files have been generated, the program can be run either in serial or in parallel:

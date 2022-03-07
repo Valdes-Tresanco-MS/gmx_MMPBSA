@@ -67,6 +67,7 @@ programs such as NAMD, OpenMM or GENESIS. We plan to add more examples in the ne
 
 * [Protein-protein binding free energy calculations](psf_dcd/protein_protein/README.md)
 * [Protein-ligand binding free energy calculations](psf_dcd/protein_ligand/README.md)
+* [Binding free energy calculations in multicomponent systems](psf_dcd/multicomponent_system/README.md)
 
  [^1]: It is part of the `All` set defined with `-t 0` in `gmx_MMPBSA_test`
  [^2]: It is part of the `Minimal` set defined with `-t 1` in `gmx_MMPBSA_test`
