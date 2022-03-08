@@ -455,7 +455,11 @@ input_file.addNamelist('gb', 'gb',
                            ['qmcharge_com', int, 0, 'Charge of QM region in complex'],
                            ['qmcharge_lig', int, 0, 'Charge of QM region in ligand'],
                            ['qmcharge_rec', int, 0, 'Charge of QM region in receptor'],
-                           ['qmcut', float, 9999, 'Cutoff in the QM region']
+                           ['qmcut', float, 9999, 'Cutoff in the QM region'],
+                           ['scfconv', float, 1.0e-8, 'Convergence criteria for the SCF calculation, in kcal/mol'],
+                           ['peptide_corr', int, 0, 'Apply MM correction to peptide linkages'],
+                           ['writepdb', int, 1, 'Write a PDB file of the selected QM region'],
+                           ['verbosity', int, 0, 'Controls the verbosity of QM/MM related output']
                        ], trigger='gbrun')
 
 input_file.addNamelist('pb', 'pb',

@@ -789,6 +789,8 @@ class MMPBSA_App(object):
         # Check deprecated variables
         # check force fields
 
+        logging.info(f'Checking {self.FILES.input_file} input file...')
+
         if self.FILES.ligand_mol2:
             if 'leaprc.gaff' in self.INPUT['forcefields'] or 'leaprc.gaff2' in self.INPUT['forcefields']:
                 pass
@@ -877,6 +879,16 @@ class MMPBSA_App(object):
                     INPUT['qmcharge_com'] and not self.stability):
                 GMXMMPBSA_ERROR('The total charge of the ligand and receptor ' +
                                 'does not equal the charge of the complex!', InputError)
+            if INPUT['scfconv'] < 1.0e-11:
+                logging.warning('Values tighter than 1.0e-11 are not recommended as these can lead to oscillations in '
+                                'the SCF')
+            if INPUT['writepdb']:
+                logging.info('Writing qmmm_region.pdb PDB file of the selected QM region...')
+            if INPUT['verbosity'] not in [0, 1, 2, 3, 4, 5]:
+                GMXMMPBSA_ERROR('VERBOSITY must be 0, 1, 2, 3, 4 or 5!', InputError)
+            if INPUT['verbosity'] >= 2:
+                logging.warning('VERBOSITY values of 2 or higher will produce a lot of output')
+
         if INPUT['rismrun']:
             if INPUT['rism_verbose'] not in [0, 1, 2]:
                 GMXMMPBSA_ERROR('RISM_VERBOSE must be 0, 1, or 2!', InputError)
@@ -953,6 +965,8 @@ class MMPBSA_App(object):
 
         # set the pbtemp = temperature
         self.INPUT['pbtemp'] = self.INPUT['temperature']
+
+        logging.info(f'Checking {self.FILES.input_file} input file...Done.\n')
 
     def remove(self, flag):
         """ Removes temporary files """
