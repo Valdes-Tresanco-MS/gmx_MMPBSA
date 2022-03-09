@@ -35,7 +35,7 @@ different, making it incompatible with files from previous versions.
 This dialog allows you to select the system(s) of interest, as well as its components. In this panel you can check a 
 number of options that will define how `gmx_MMPBSA_ana` process the result file. These options are:
 
-* select whether you want to include mutants, normals, or both systems when analyzing alanine scanning results. 
+* select whether you want to include mutants, normals, or both systems when analyzing alanine scanning results
 * delete the terms whose values during the analysis were between `-0.01` and `0.01`
 * show/not-show decomposition analyses (which usually contains lots of data)
 * transform the frames range to timescale
@@ -111,7 +111,7 @@ In this panel you can find two tabs:
     Contains two windows:
 
     * `Energy` changes start, end and interval between frames.
-    * `IE` changes segment considered for calculating the Interaction Entropy
+    * `IE` changes segment considered for calculating the Interaction Entropy.
 
 ### 4- Plot area
 In this area, the graphs and tables included in each system will be displayed in the form of sub-windows 
@@ -223,16 +223,16 @@ This section contains three drop-down menus:
     useful and want to use it for a visual project, such as tutorials, examples, etc., we will gladly include it 
     in the documentation as well as in the list of acknowledgments and collaborators.
 
+### Functionalities
+
+<div class="embed-container">
+    <iframe src="https://www.youtube.com/embed/PgDnG8UgRWw" frameborder="0" allowfullscreen></iframe>
+</div>
+
 ### Binding Free Energy calculation (GB + IE) 
 
 <div class="embed-container">
     <iframe src="https://www.youtube.com/embed/k1aLlBhnkxo" frameborder="0" allowfullscreen></iframe>
-</div>
-
-### Correlation analysis
-
-<div class="embed-container">
-    <iframe src="https://www.youtube.com/embed/0xiphzA1O0w" frameborder="0" allowfullscreen></iframe>
 </div>
 
 ### Alanine scanning
@@ -247,11 +247,13 @@ This section contains three drop-down menus:
     <iframe src="https://www.youtube.com/embed/Ww7juWeWQQ8" frameborder="0" allowfullscreen></iframe>
 </div>
 
-### Functionalities
+[comment]: <> (### Correlation analysis)
 
-<div class="embed-container">
-    <iframe src="https://www.youtube.com/embed/PgDnG8UgRWw" frameborder="0" allowfullscreen></iframe>
-</div>
+[comment]: <> (<div class="embed-container">)
+
+[comment]: <> (    <iframe src="https://www.youtube.com/embed/0xiphzA1O0w" frameborder="0" allowfullscreen></iframe>)
+
+[comment]: <> (</div>)
 
 ## `gmx_MMPBSA_ana` under pressure
 
