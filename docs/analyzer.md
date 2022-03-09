@@ -155,9 +155,10 @@ organized, and fluid workspace to analyze a vast number of graphs.
     also have a solid line that represents the standard deviation.
     
     <figure markdown="1">
-    ![lineplot](assets/images/bar_plot.png){ width=75% style="display: block; margin: 0 auto"}
+    ![lineplot](assets/images/bar_plot.png){ width=65% style="display: block; margin: 0 auto"}
     ![lineplot](assets/images/bar_plot2.png){ width=30% style="display: block; margin: 0 auto"}
-      <figcaption markdown="1" style="margin-top:0;">
+    |![lineplot](assets/images/bar_plot3.png)|![lineplot](assets/images/bar_plot3.png)
+      <figcaption markdown="1">
       **Figure 3**. Bar plot examples. **Up:** Per-residue contribution, **Down:** ΔG Binding
       </figcaption>
     </figure>
@@ -181,7 +182,7 @@ organized, and fluid workspace to analyze a vast number of graphs.
     </figure>
 
 === "PyMOL visualization"
-    Show the complex per-residue energy representation in a new PyMOL instance.
+    Shows the complex per-residue energy representation in a new PyMOL instance.
 
     <figure markdown="1">
     ![lineplot](assets/images/pymol.png){ width=75% style="display: block; margin: 0 auto"}
