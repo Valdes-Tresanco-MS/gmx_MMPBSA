@@ -216,6 +216,11 @@
          <changefreq>daily</changefreq>
     </url>
     <url>
+         <loc>https://valdes-tresanco-ms.github.io/gmx_MMPBSA/examples/OPLS/protein_protein/</loc>
+         <lastmod>2022-03-09</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
          <loc>https://valdes-tresanco-ms.github.io/gmx_MMPBSA/examples/Protein_DNA/</loc>
          <lastmod>2022-03-09</lastmod>
          <changefreq>daily</changefreq>
