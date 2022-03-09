@@ -18,6 +18,14 @@ access to different graphics according to the analysis (**Figure 1**). The tool 
 charts, even more than you can review ([Check this section to learn about the potential of 
 `gmx_MMPBSA_ana`](#gmx_mmpbsa_ana-under-pressure)).
 
+**gmx_MMPBSA_ana components**
+
+1. [System selection dialog](#1--system-selection-dialog)
+2. [Plot area](#2--plot-area)
+3. [Chart selection and correlation panel](#3--chart-selection-and-correlation-panel)
+4. [Options panel](#4--options-panel)
+5. [Menus](#5--menus)
+
 <figure markdown="1">
 [![overview][2]][2]
   <figcaption markdown="1" style="margin-top:0;">
@@ -27,82 +35,140 @@ charts, even more than you can review ([Check this section to learn about the po
 
 [2]: assets/images/gmx_mmpbsa_ana_overview.png
 
-**gmx_MMPBSA_ana components**
 
-1. Start dialog
-2. Plot area
-3. Data control area
-4. Menus
+## Components
+### 1- System selection dialog
+This dialog allows you to select the desired system, as well as its components. That is, it can recursively read a 
+directory containing several systems and from them select the ones of interest to analyze. Additionally, 
+you can select whether you want to include mutants, normals, or both. This panel also contains the options to 
+eliminate the terms whose values during the analysis were between `-0.01` and `0.01`, show or not decomposition 
+analysis (which are heavy), transform the frames range to timescale, calculate the correlation between various 
+systems and select their respective settings. This allows you to take advantage of the flexibility of **gmx_MMPBSA** to 
+carry out several analysis types in the same run and to focus on the key elements for each of these analyses.
+### 2- Plot area
+In this area, the graphs and tables included in each system will be displayed in the form of sub-windows 
+(multi-document interface). This format allows you to move, resize and close each sub-window, offering a clean, 
+organized, and fluid workspace to analyze a vast number of graphs.
+### 3- Chart selection and correlation panel
+This panel is made up of two independent sub-panels: Data and Correlation with slightly different characteristics, 
+but with the same essence.
+#### Structure
+=== "Data"
+    This panel is in the form of a tree, where each system marked in gray is a top-level element that contains a set 
+    of children organized according to the type of calculation. Each upper-level element is expandable and 
+    collapsible, which allows you to take advantage of the space keeping the elements of interest in view, as well 
+    as being able to manipulate a considerable number of systems at the same time
+=== "Correlation"
+    We are working on its implementation
+#### Buttons and Actions
+Each item represents a set of data associated with a type of calculation and a part (complex, receptor, ligand, 
+delta, etc...). These, in turn, have buttons and actions depending on the data they contain. Each item can have a 
+total of 7 buttons that represent:
 
-## Types of charts
+|       Button       | Visual element             | Description                                                                                                        |
+|:------------------:|----------------------------|--------------------------------------------------------------------------------------------------------------------|
+| ![resultfiles][3]  | Result files               | Show in a new sub-window the **gmx_MMPBSA** output files: `FINAL_RESULTS_MMPBSA.dat` and `FINAL_DECOMP_MMPBSA.dat` |
+|   ![lineplot][4]   | Line plot                  | Show in a new sub-window a Line plot                                                                               |
+|   ![barplot][5]    | Bar plot                   | Show in a new sub-window a Bar plot                                                                                |
+|   ![heatmap][6]    | Heatmap                    | Show in a new sub-window a Heatmap plot                                                                            |
+|    ![pymol][7]     | PyMOL Visualization        | Show the complex per-residue energy representation in a new PyMOL instance                                         |
+| ![summarytable][8] | Summary Table              | Show the summary table of parent with multiple energetic components as childrens                                   |
+|  ![multiacti][9]   | Multiple activation button | Show/hide all items (Line, bar, heatmap plots and PyMOL) at the same time                                          |
 
-### Line plot
-Represents the evolution of a component during the simulation time. In some cases, it is the value of the calculated 
-parameter, eg: `TOTAL DELTA`, `VDWAALS`, etc., and in others, it is the sum of the elements it contains, eg: `TDC` as 
-the sum of all the per-residue energy contributions.
+[3]: assets/images/result_files_icon.svg
+[4]: assets/images/line_plot_icon.svg
+[5]: assets/images/bar_plot_icon.svg
+[6]: assets/images/heatmap_plot_icon.svg
+[7]: assets/images/pymol_icon.svg
+[8]: assets/images/summary_table_icon.svg
+[9]: assets/images/multi_button_icon.svg
 
-!!! note
-    The line plot can additionally contain the moving average (solid red line) or other elements such as other 
-    indicators (dash red and green lines).
-
-!!! warning 
-    Note that `TDC`, `SDC`, and `BDC` are calculated from the immediate items contained within themselves. This means that the 
-    results obtained for the `TDC` in a per-residue calculation will probably be different from the `TDC` of a per-wise 
-    calculation with the same residues. This is because the per-residue energy contribution is calculated taking 
-    into account the environment that surrounds each residue, so the sum of their contributions will be exactly the 
-    maximum contribution per selected residues. On the other hand, in the per-wise calculation, the `TDC` will be 
-    equal to the sum of each residue contribution, the difference being that the contribution of each residue is 
-    obtained from the contributions of the selected pairs and not with all the environment that surrounds it. Therefore, both 
-    calculations should be used for different purposes and care should be taken with the interpretation of the results.
-
+In turn, some buttons have a drop-down menu that allows you to display the content of that graph in table form. In 
+particular, the multiple activation button allows you to show/hide all the visual elements associated with a certain 
+item.
+Example:
 <figure markdown="1">
-[![lineplot][3]][3]
-[![lineplot2][4]][4]
+[![buttonexample][10]][10]
   <figcaption markdown="1" style="margin-top:0;">
-  **Figure 2**. Line plot examples. **Up:** ΔH representation, **Down:** Interaction Entropy representation
+**Figure 2.** Button representation example
   </figcaption>
 </figure>
 
-[3]: assets/images/line_plot.png
-[4]: assets/images/line_plot_ie.png
+[10]: assets/images/buttons_example.png
 
-### Bar plot
-Represents the total contribution of a component for the simulation. In some cases, it is the Average of the calculated 
-parameter, eg: `TOTAL DELTA`, `VDWAALS`, RESIDUES in per-residue calculation, etc., and in others, it is the sum of the 
-elements it contains, eg: NMODE and QH Entropy, ΔG Binding, etc. The bars that represent averages also have a solid 
-line that represents the standard deviation, while the bars representing a specific value do not.
 
-<figure markdown="1">
-[![barplot][5]][5]
-[![barplot2][6]][6]
-  <figcaption markdown="1" style="margin-top:0;">
-  **Figure 3**. Bar plot examples. **Up:** Per-residue contribution, **Down:** ΔG Binding
-  </figcaption>
-</figure>
+#### Types of charts
+=== "Line plot"
+    Represents the evolution of a component during the simulation time. In some cases, it is the value of the calculated 
+    parameter, eg: `TOTAL DELTA`, `VDWAALS`, etc., and in others, it is the sum of the elements it contains, eg: `TDC` as 
+    the sum of all the per-residue energy contributions.
+    
+    !!! note
+        The line plot can additionally contain the moving average (solid red line) or other elements such as other 
+        indicators (dash red and green lines).
+    
+    !!! warning 
+        Note that `TDC`, `SDC`, and `BDC` are calculated from the immediate items contained within themselves. This means that the 
+        results obtained for the `TDC` in a per-residue calculation will probably be different from the `TDC` of a per-wise 
+        calculation with the same residues. This is because the per-residue energy contribution is calculated taking 
+        into account the environment that surrounds each residue, so the sum of their contributions will be exactly the 
+        maximum contribution per selected residues. On the other hand, in the per-wise calculation, the `TDC` will be 
+        equal to the sum of each residue contribution, the difference being that the contribution of each residue is 
+        obtained from the contributions of the selected pairs and not with all the environment that surrounds it. Therefore, both 
+        calculations should be used for different purposes and care should be taken with the interpretation of the results.
+    
+    <figure markdown="1">
+    [![lineplot][11]][11]
+    [![lineplot2][12]][12]
+      <figcaption markdown="1" style="margin-top:0;">
+      **Figure 2**. Line plot examples. **Up:** ΔH representation, **Down:** Interaction Entropy representation
+      </figcaption>
+    </figure>
+    [11]: assets/images/line_plot.png
+    [12]: assets/images/line_plot_ie.png
 
-[5]: assets/images/bar_plot.png
-[6]: assets/images/bar_plot2.png
+=== "Bar plot"
+    Represents the total contribution of a component for the simulation. In some cases, it is the Average of the calculated 
+    parameter, eg: `TOTAL DELTA`, `VDWAALS`, RESIDUES in per-residue calculation, etc., and in others, it is the sum of the 
+    elements it contains, eg: NMODE and QH Entropy, ΔG Binding, etc. The bars that represent averages also have a solid 
+    line that represents the standard deviation, while the bars representing a specific value do not.
+    
+    <figure markdown="1">
+    [![barplot][13]][13]
+    [![barplot2][14]][14]
+      <figcaption markdown="1" style="margin-top:0;">
+      **Figure 3**. Bar plot examples. **Up:** Per-residue contribution, **Down:** ΔG Binding
+      </figcaption>
+    </figure>
 
-### Heatmap plot
-Represents the evolution of several components at the same time during the simulation. It is used to represent the 
-contribution of all residues in per-residue calculation or all pairs for each residue in the per-wise calculation. 
-It could also represent the relationship between components.This is explicit for per-wise calculations and 
-represents the contribution of each residue with its respective pairs.
+    [13]: assets/images/bar_plot.png
+    [14]: assets/images/bar_plot2.png
 
-!!! tip
-    The relational heatmap graph is the best representation in the per-wise analysis.
+=== "Heatmap plot"
+    Represents the evolution of several components at the same time during the simulation. It is used to represent the 
+    contribution of all residues in per-residue calculation or all pairs for each residue in the per-wise calculation. 
+    It could also represent the relationship between components.This is explicit for per-wise calculations and 
+    represents the contribution of each residue with its respective pairs.
+    
+    !!! tip
+        The relational heatmap graph is the best representation in the per-wise analysis.
+    
+    <figure markdown="1">
+    [![heatmapplot][15]][15]
+    [![heatmapplot2][16]][16]
+      <figcaption markdown="1" style="margin-top:0;">
+      **Figure 4**. Heatmap plot examples. **Up:** Per-residue contribution per-frame, **Down:** Inter Residue-pair 
+    contribution
+      </figcaption>
+    </figure>
+    [15]: assets/images/heatmap_plot.png
+    [16]: assets/images/heatmap_plot2.png
 
-<figure markdown="1">
-[![heatmapplot][7]][7]
-[![heatmapplot2][8]][8]
-  <figcaption markdown="1" style="margin-top:0;">
-  **Figure 4**. Heatmap plot examples. **Up:** Per-residue contribution per-frame, **Down:** Inter Residue-pair 
-contribution
-  </figcaption>
-</figure>
+#### Correlation tables
+Under development
+### 4- Options panel
 
-[7]: assets/images/heatmap_plot.png
-[8]: assets/images/heatmap_plot2.png
+### 5- Menus
 
 ---------------------------------------
 
