@@ -99,9 +99,9 @@ In the current version, gmx_MMPBSA supports a number of different systems includ
   [17]: examples/Protein_membrane/README.md
   [18]: examples/Comp_receptor/README.md
 
-!!! note "Support for Amber and CHARMM force fields"
-    In the current version, gmx_MMPBSA supports Amber and CHARMM force fields. Any system built for GROMACS with either
-    [pdb2gmx](https://manual.gromacs.org/documentation/current/onlinehelp/gmx-pdb2gmx.html) or 
+!!! note "Support for Amber, OPLS and CHARMM force fields"
+    In the current version, gmx_MMPBSA supports Amber, OPLS and CHARMM force fields. Any system built for GROMACS with 
+    either [pdb2gmx](https://manual.gromacs.org/documentation/current/onlinehelp/gmx-pdb2gmx.html) or 
     [CHARMM-GUI](https://www.charmm-gui.org/) is supported in gmx_MMPBSA. Likewise, any system built for NAMD and 
     potentially any other software that uses *.psf - *.dcd files can be processed in gmx_MMPBSA 😀. Check our 
     [example page](examples/README.md) to see a detailed list of all the examples available.
