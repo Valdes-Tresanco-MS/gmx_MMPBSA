@@ -157,7 +157,8 @@ organized, and fluid workspace to analyze a vast number of graphs.
     <figure markdown="1">
     ![lineplot](assets/images/bar_plot.png){ width=65% style="display: block; margin: 0 auto"}
     ![lineplot](assets/images/bar_plot2.png){ width=30% style="display: block; margin: 0 auto"}
-    |![lineplot](assets/images/bar_plot3.png)|![lineplot](assets/images/bar_plot3.png)
+    ![lineplot](assets/images/bar_plot3.png){ align="left" width=40% } 
+    ![lineplot](assets/images/bar_plot4.png){ align="rigth" width=40% }
       <figcaption markdown="1">
       **Figure 3**. Bar plot examples. **Up:** Per-residue contribution, **Down:** ΔG Binding
       </figcaption>
