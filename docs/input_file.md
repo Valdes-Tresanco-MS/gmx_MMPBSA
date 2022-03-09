@@ -689,6 +689,47 @@ the same used for `print_res` variable in `&decomp` namelist.
 
 `qmcut` (Default = 9999.0)
 :   The cutoff for the qm/mm charge interactions.
+
+`scfconv` (Default = 1.0e-8)
+:   Controls the convergence criteria for the SCF calculation, in kcal/mol. The tighter the 
+convergence the longer the calculation will take. Values tighter than 1.0e-11 are not recommended as these can lead 
+to oscillations in the SCF, due to limitations in machine precision, that can lead to convergence failures.
+
+`writepdb` (Default = 1)
+:   Write a PDB file of the selected QM region. This option is designed to act as an aid to the user to
+allow easy checking of what atoms were included in the QM region. Write a PDB file of the atoms in the QM region 
+on the very first step to a file named qmmm_region.pdb.
+
+    * 0: Don't
+    * 1: Write a PDB file of the selected QM region
+
+`peptide_corr` (Default = 0)
+:   Apply MM correction to peptide linkages. This correction is of the form: 
+
+    <img src="https://latex.codecogs.com/svg.
+    image?E_{scf}&space;=&space;E_{scf}&space;&plus;&space;h_{type}(i_{type})
+    *sin^{2}\phi" title="https://latex.codecogs.com/svg.image?E_{scf} = E_{scf} + h_{type}(i_{type})*sin^{2}\phi 
+    align="center""/>
+
+    where _ϕ_ is the dihedral angle of the H-N-C-O linkage and h<sub>type</sub> is a constant dependent on the 
+    Hamiltonian used. Recommended, except for DFTB/SCC-DFTB.
+
+    * 0: Don't
+    * 1: Apply a MM correction to peptide linkages
+
+`verbosity` (Default = 0)
+:   Controls the verbosity of QM/MM related output. Values of 2 or higher will produce a lot of output.
+
+    * 0: only minimal information is printed - Initial QM geometry and link atom positions as
+    well as the SCF energy at every ntpr steps.
+    * 1: Print SCF energy at every step to many more significant figures than usual. Also print the
+    number of SCF cycles needed on each step.
+    * 2: As 1 and also print info about memory reallocations, number of pairs per QM atom, QM core -
+    QM core energy, QM core - MM atom energy, and total energy.
+    * 3: As 2 and also print SCF convergence information at every step.
+    * 4: As 3 and also print forces on the QM atoms due to the SCF calculation and the coordinates of
+    the link atoms at every step.
+    * 5: As 4 and also print all of the info in kJ/mol as well as kcal/mol.
     
   [4]: https://ambermd.org/doc12/Amber21.pdf#subsection.34.11.49
 
