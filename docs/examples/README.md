@@ -34,9 +34,16 @@ be disappointed! 😀
 This section focuses more on how to work with systems prepared with CHARMM force fields. We only show few examples 
 for better clarity.
 
-* [Protein-Ligand](Protein_ligand_CHARMMff/README.md)[^1][^2]
-* [Protein-Ligand complex embedded in membrane](Protein_membrane_CHARMMff/README.md)[^1]
-* [Protein-Ligand with LPH atoms](Protein_ligand_LPH_atoms_CHARMMff/README.md)
+* [Protein-ligand](Protein_ligand_CHARMMff/README.md)[^1][^2]
+* [Protein-ligand complex embedded in membrane](Protein_membrane_CHARMMff/README.md)[^1]
+* [Protein-ligand with LPH atoms](Protein_ligand_LPH_atoms_CHARMMff/README.md)
+
+## OPLSff support
+
+This section focuses more on how to work with systems prepared with OPLS force fields. We only show few examples 
+for better clarity.
+
+* [Protein-protein](OPLS/protein_protein/README.md)
 
 ## Analysis
 

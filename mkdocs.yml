@@ -180,9 +180,11 @@ nav:
           - S1-ACE2 complex: examples/COVID-19_related_proteins/S1-ACE2_complex_7dmu/README.md
           - S1 RBD with antibody: examples/COVID-19_related_proteins/S1_RBD_with_antibody_6zlr/README.md
     - CHARMMff Support:
-        - Protein-Ligand: examples/Protein_ligand_CHARMMff/README.md
+        - Protein-ligand: examples/Protein_ligand_CHARMMff/README.md
         - Protein-ligand complex embedded in membrane: examples/Protein_membrane_CHARMMff/README.md
-        - Protein-Ligand with LPH particles (ST): examples/Protein_ligand_LPH_atoms_CHARMMff/README.md
+        - Protein-ligand with LPH particles (ST): examples/Protein_ligand_LPH_atoms_CHARMMff/README.md
+    - OPLSff Support:
+        - Protein-protein: examples/OPLS/protein_protein/README.md
     - Analysis:
         - Single Trajectory Protocol: examples/Protein_ligand/ST/README.md
         - Multiple Trajectory Protocol: examples/Protein_ligand/MT/README.md
