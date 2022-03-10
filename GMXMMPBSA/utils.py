@@ -645,15 +645,14 @@ def find_progs(INPUT, mpi_size=0):
     # The returned dictionary:
     my_progs = {}
 
-    search_parth = INPUT['gmx_path'] or os.environ['PATH']
-
     for prog, needed in used_progs.items():
-        my_progs[prog] = shutil.which(prog, path=search_parth)
+        my_progs[prog] = shutil.which(prog, path=os.environ['PATH'])
         if needed:
             if not my_progs[prog]:
                 GMXMMPBSA_ERROR('Could not find necessary program [%s]' % prog)
             logging.info('%s found! Using %s' % (prog, str(my_progs[prog])))
 
+    search_parth = INPUT['gmx_path'] or os.environ['PATH']
     g5 = False
     for gv, g_exes in gro_exe.items():
         if gv == 'gmx5':
