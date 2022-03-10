@@ -62,15 +62,15 @@ Each item represents a set of data associated with a type of calculation, and a 
 ligand, delta, etc...). These, in turn, have buttons and actions depending on the data they contain. Each item can 
 have a total of 7 buttons that represent:
 
-|       Button       | Visual element             | Description                                                                                                        |
-|:------------------:|----------------------------|--------------------------------------------------------------------------------------------------------------------|
+|       Button       | Visual element             | Description                                                                                                             |
+|:------------------:|----------------------------|-------------------------------------------------------------------------------------------------------------------------|
 | ![resultfiles][3]  | Result files               | Show/hide in a new sub-window the **gmx_MMPBSA** output files: `FINAL_RESULTS_MMPBSA.dat` and `FINAL_DECOMP_MMPBSA.dat` |
 |   ![lineplot][4]   | Line plot                  | Show/hide in a new sub-window a Line plot                                                                               |
 |   ![barplot][5]    | Bar plot                   | Show/hide in a new sub-window a Bar plot                                                                                |
 |   ![heatmap][6]    | Heatmap                    | Show/hide in a new sub-window a Heatmap plot                                                                            |
 |    ![pymol][7]     | PyMOL visualization        | Show/hide the complex per-residue energy representation in a new PyMOL instance                                         |
-| ![summarytable][8] | Summary table              | Show/hide the summary table of the parent element with multiple energetic components as 'childrens'                                   |
-|  ![multiacti][9]   | Multiple activation button | Show/hide all items (Line, bar, heatmap plots and PyMOL) at the same time   
+| ![summarytable][8] | Summary table              | Show/hide the summary table of the parent element with multiple energetic components as 'childrens'                     |
+|  ![multiacti][9]   | Multiple activation button | Show/hide all items (Line, bar, heatmap plots and PyMOL) at the same time                                               |
 
 [3]: assets/images/result_files_icon.svg
 [4]: assets/images/line_plot_icon.svg
@@ -140,8 +140,8 @@ organized, and fluid workspace to analyze a vast number of graphs.
         purposes and care should be taken with the interpretation of the results.
     
     <figure markdown="1">
-    ![lineplot](assets/images/line_plot.png){ width=75% style="display: block; margin: 0 auto"}
-    ![lineplot](assets/images/line_plot_ie.png){ width=69% style="display: block; margin: 0 auto"}
+    ![lineplot](assets/images/line_plot.png)
+    ![lineplotie](assets/images/line_plot_ie.png)
       <figcaption markdown="1" style="margin-top:0;">
       **Figure 2**. Line plot examples. **Up:** ΔH representation, **Down:** Interaction Entropy representation
       </figcaption>
@@ -154,14 +154,21 @@ organized, and fluid workspace to analyze a vast number of graphs.
     sum of the elements it contains, _e.g._: NMODE and QH Entropy, ΔG Binding, etc. The bars that represent averages 
     also have a solid line that represents the standard deviation.
     
-    <figure markdown="1">
-    ![lineplot](assets/images/bar_plot.png){ width=65% style="display: block; margin: 0 auto"}
-    ![lineplot](assets/images/bar_plot2.png){ width=30% style="display: block; margin: 0 auto"}
-    ![lineplot](assets/images/bar_plot3.png){ align="left" width=40% } 
-    ![lineplot](assets/images/bar_plot4.png){ align="rigth" width=40% }
-      <figcaption markdown="1">
-      **Figure 3**. Bar plot examples. **Up:** Per-residue contribution, **Down:** ΔG Binding
-      </figcaption>
+    <figure markdown="2">
+        ![barplot1](assets/images/bar_plot.png)
+        ![barplot2](assets/images/bar_plot2.png){ width=45%; style="display: block; margin: 0 auto"}
+        <figcaption markdown="2" style="margin-top:0;">
+        **Figure 3**. Bar plot examples. **Up:** Per-residue contribution, **Down:** ΔG Binding
+        </figcaption>
+    </figure>
+
+    <figure markdown="2">
+        ![barplot3](assets/images/bar_plot3.png){ width=75%; style="display: block; margin: 0 auto"}
+        ![barplot4](assets/images/bar_plot4.png){ width=75%; style="display: block; margin: 0 auto"}
+        <figcaption markdown="2" style="margin-top:0;">
+        **Figure 4.** Bar plot examples. **Up:** Energetic terms plotted by subcomponents, **Down:** All energetic 
+        terms in the same plot.
+        </figcaption>
     </figure>
 
 === "Heatmap plot"
@@ -174,10 +181,10 @@ organized, and fluid workspace to analyze a vast number of graphs.
         The relational heatmap graph is the best representation in the per-wise analysis.
     
     <figure markdown="1">
-    ![lineplot](assets/images/heatmap_plot.png){ width=75% style="display: block; margin: 0 auto"}
-    ![lineplot](assets/images/heatmap_plot2.png){ width=60% style="display: block; margin: 0 auto"}
+    ![heatmapplot1](assets/images/heatmap_plot.png){ width=75% style="display: block; margin: 0 auto"}
+    ![heatmapplot2](assets/images/heatmap_plot2.png){ width=60% style="display: block; margin: 0 auto"}
       <figcaption markdown="1" style="margin-top:0;">
-      **Figure 4**. Heatmap plot examples. **Up:** Per-residue contribution per-frame, **Down:** Inter Residue-pair 
+      **Figure 5**. Heatmap plot examples. **Up:** Per-residue contribution per-frame, **Down:** Inter Residue-pair 
     contribution
       </figcaption>
     </figure>
@@ -186,9 +193,9 @@ organized, and fluid workspace to analyze a vast number of graphs.
     Shows the complex per-residue energy representation in a new PyMOL instance.
 
     <figure markdown="1">
-    ![lineplot](assets/images/pymol.png){ width=75% style="display: block; margin: 0 auto"}
+    ![pymol](assets/images/pymol.png)
       <figcaption markdown="1" style="margin-top:0;">
-      **Figure 5**. PyMOL visualization
+      **Figure 6**. PyMOL visualization
       </figcaption>
     </figure>
 
