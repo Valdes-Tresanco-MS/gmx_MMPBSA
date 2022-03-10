@@ -18,8 +18,10 @@
 #  for more details.                                                           #
 # ##############################################################################
 
-
-from PyQt5.QtWidgets import *
+try:
+    from PyQt6.QtWidgets import *
+except:
+    from PyQt5.QtWidgets import *
 
 
 class ParameterItem(QTreeWidgetItem):

@@ -17,9 +17,13 @@
 #  or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License    #
 #  for more details.                                                           #
 # ##############################################################################
+try:
+    from PyQt6.QtWidgets import *
+    from PyQt6.QtCore import *
+except:
+    from PyQt5.QtWidgets import *
+    from PyQt5.QtCore import *
 
-from PyQt5.QtWidgets import *
-from PyQt5.QtCore import *
 from .ParameterItem import ParameterItem
 
 
