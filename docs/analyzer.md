@@ -140,8 +140,8 @@ organized, and fluid workspace to analyze a vast number of graphs.
         purposes and care should be taken with the interpretation of the results.
     
     <figure markdown="1">
-    ![lineplot](assets/images/line_plot.png)
-    ![lineplotie](assets/images/line_plot_ie.png)
+    ![lineplot](assets/images/line_plot.png){ width=75%; style="display: block; margin: 0 auto"}
+    ![lineplotie](assets/images/line_plot_ie.png){ width=69%; style="display: block; margin: 0 auto"}
       <figcaption markdown="1" style="margin-top:0;">
       **Figure 2**. Line plot examples. **Up:** ΔH representation, **Down:** Interaction Entropy representation
       </figcaption>
@@ -155,16 +155,16 @@ organized, and fluid workspace to analyze a vast number of graphs.
     also have a solid line that represents the standard deviation.
     
     <figure markdown="2">
-        ![barplot1](assets/images/bar_plot.png)
-        ![barplot2](assets/images/bar_plot2.png){ width=45%; style="display: block; margin: 0 auto"}
+        ![barplot1](assets/images/bar_plot.png){ width=60%; style="display: block; margin: 0 auto"}
+        ![barplot2](assets/images/bar_plot2.png){ width=40%; style="display: block; margin: 0 auto"}
         <figcaption markdown="2" style="margin-top:0;">
         **Figure 3**. Bar plot examples. **Up:** Per-residue contribution, **Down:** ΔG Binding
         </figcaption>
     </figure>
 
     <figure markdown="2">
-        ![barplot3](assets/images/bar_plot3.png){ width=75%; style="display: block; margin: 0 auto"}
-        ![barplot4](assets/images/bar_plot4.png){ width=75%; style="display: block; margin: 0 auto"}
+        ![barplot3](assets/images/bar_plot3.png){ width=40%; style="display: block; margin: 0 auto"}
+        ![barplot4](assets/images/bar_plot4.png){ width=40%; style="display: block; margin: 0 auto"}
         <figcaption markdown="2" style="margin-top:0;">
         **Figure 4.** Bar plot examples. **Up:** Energetic terms plotted by subcomponents, **Down:** All energetic 
         terms in the same plot.
