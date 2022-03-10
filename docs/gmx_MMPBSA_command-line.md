@@ -38,7 +38,7 @@ Input and Output Files:
 
   -i FILE               MM/PBSA input file. (default: None)
   -xvvfile XVVFILE      XVV file for 3D-RISM.
-                         (default: $AMBERHOME/dat/mmpbsa/spc.xvv)
+                         (default: $AMBERHOME/AmberTools/test/rism1d/tip3p-kh/tip3p.xvv.save)
   -o FILE               Output file with MM/PBSA statistics.
                          (default: FINAL_RESULTS_MMPBSA.dat)
   -do FILE              Output file for decomposition statistics summary.

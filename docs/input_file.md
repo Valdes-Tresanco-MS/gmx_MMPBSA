@@ -1208,16 +1208,25 @@ summation of the atomic SASA’s. A molecular SASA is used for both PB dielectri
         gmx_MMPBSA --create_input rism
         ```
     
-    * A sample 3drism input file is shown [here](input_file.md#mm3d-rism)
-    * A tutorial on binding free energy calculation with 3D-RISM is 
-    available [here](examples/3D-RISM/README.md)
     * `3D-RISM` calculations are performed with the `rism3d.snglpnt` program built with AmberTools, written by Tyler 
-    Luchko. It is the most expensive, yet most statistical mechanically rigorous solvation model. See [RISM chapter][7] 
-    for a thorough description of options and theory. A list of references can be found there, too.
+    Luchko. It is the most expensive, yet most statistical mechanically rigorous solvation model. See 
+        * [Introduction to RISM](https://ambermd.org/doc12/Amber21.pdf#section.7.1) for a thorough description RISM 
+        theory.
+        * [General workflow for using 3D-RISM](https://ambermd.org/doc12/Amber21.pdf#section.7.3)
+        * Practical considerations on:
+            * [Computational Requirements and Parallel Scaling of RISM](https://ambermd.org/doc12/Amber21.pdf#subsection.7.2.1)
+            * [Numerical Accuracy of RISM](https://ambermd.org/doc12/Amber21.pdf#subsection.7.2.3)
+            * [Convergence issues](https://ambermd.org/doc12/Amber21.pdf#subsection.7.3.1)
+    * A sample 3drism input file is shown [here](input_file.md#mm3d-rism)
+    * A tutorial on binding free energy calculation with 3D-RISM is available [here](examples/3D-RISM/README.md)
     * We have included more variables in 3D-RISM calculations than the ones available in the MMPBSA.py original code. 
-    That way, users can be more in control and tackle various issues (_e.g._, convergence problems).
+    That way, users can be more in control and tackle various issues (_e.g._, convergence issues).
     * One advantage of `3D-RISM` is that an arbitrary solvent can be chosen; you just need to change the `xvvfile` 
-    specified on the command line (see `-xvvfile` flag in [§34.3.2][8]).
+    specified on the command line (see `-xvvfile` flag in [gmx_MMPBSA command line](gmx_MMPBSA_command-line.md). The 
+    default solvent is `$AMBERHOME/AmberTools/test/rism1d/tip3p-kh/tip3p.xvv.save`. In case this file 
+    doesn't exist, a copy `path_to_GMXMMPBSA/data/xvv_files/tip3p.xvv` is used. You can find examples of precomputed 
+    `.xvv` files for SPC/E and TIP3P water in `$AMBERHOME/AmberTools/test/rism1d` or 
+    `path_to_GMXMMPBSA/data/xvv_files` folders.
 
   [7]: https://ambermd.org/doc12/Amber21.pdf#chapter.7
   [8]: https://ambermd.org/doc12/Amber21.pdf#subsection.36.3.2
@@ -1359,13 +1368,17 @@ sets the depth of the hierarchical octtree.
 
 ##### **Variable box size**
 
+!!! info "Keep in mind"
+    It is recommended to avoid specifying a large, prime number of processes (≥ 7) when using a variable solvation 
+    box size.
+
 `buffer` (Default = 14)
 :   Minimum distance (in Å) between solute and edge of solvation box. Specify this with `grdspc` below. Mutually 
 exclusive with `ng` and `solvbox`. See [§7.2.3](https://ambermd.org/doc12/Amber21.pdf#subsection.7.2.3) for details on 
 how this affects numerical accuracy and how this interacts with `ljTolerance`, and `tolerance`
 
-    * < 0: Use fixed box size (see `ng` and `solvbox` below)
-    * >= 0: Buffer distance
+    * when < 0: Use fixed box size (see `ng` and `solvbox` below)
+    * when >= 0: Use `buffer` distance
 
 `grdspc`(Default = 0.5,0.5,0.5)
 :   Grid spacing (in Å) of the solvation box. Specify this with `buffer` above. Mutually exclusive with `ng` and 
@@ -1378,7 +1391,18 @@ how this affects numerical accuracy and how this interacts with `ljTolerance`, a
 exclusive with `buffer` and `grdspc` above, and paired with `solvbox` below.
 
     !!! warning 
-        No default, this must be set if buffer < 0. Define like `ng=1000,1000,1000`
+        No default, this must be set if buffer < 0. As a general requirement, the number of grids points in each 
+        dimension must be divisible by two, and the number of grid points in the z-axis must be divisible by the 
+        number of processes.
+
+        As an example: define like `ng=1000,1000,1000`, where all numbers are divisible by two 
+        and you can use 1, 2, 4, 5, 8, 10... pocessors, all divisors of 1000 (value in the z-axis).
+
+        Take into account that at a certain level, running RISM in 
+        parallel may actually hurt performance, since previous solutions are used 
+        as an initial guess for the next frame, hastening convergence. Running in parallel loses this advantage. Also, 
+        due to the overhead involved in which each thread is required to load every topology file when calculating 
+        energies, parallel scaling will begin to fall off as the number of threads reaches the number of frames. 
 
 `solvbox` (Default = '-1,-1,-1')
 :    Sets the size in Å of the fixed size solvation box. Used only if `buffer` < 0. Mutually exclusive with `buffer` 

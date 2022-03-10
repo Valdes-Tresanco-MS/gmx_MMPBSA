@@ -42,9 +42,14 @@ class OptionList(SimpleNamespace):
 
 
 if os.getenv('AMBERHOME'):
-    rism = os.path.join(os.getenv('AMBERHOME'), 'dat', 'mmpbsa', 'spc.xvv')
+    # rism_xvv = os.path.join(os.getenv('AMBERHOME'), 'dat', 'mmpbsa', 'spc.xvv')
+    path_to_file = os.path.join(os.getenv('AMBERHOME'), 'AmberTools', 'test', 'rism1d', 'tip3p-kh', 'tip3p.xvv.save')
+    if os.path.exists(path_to_file):
+        rism_xvv = path_to_file
+    else:
+        rism_xvv = os.path.join(Path(__file__).parent.joinpath('data'), 'xvv_files', 'tip3p.xvv')
 else:
-    rism = None
+    rism_xvv = os.path.join(Path(__file__).parent.joinpath('data'), 'xvv_files', 'tip3p.xvv')
 
 
 def check_arg(str_suffix, path=False):
@@ -137,7 +142,7 @@ group.add_argument('-prefix', dest='prefix', default='_GMXMMPBSA_',
 group = parser.add_argument_group('Input and Output Files', '''These options specify the input files and optional 
 output files.''')
 group.add_argument('-i', dest='input_file', metavar='FILE', help='MM/PBSA input file.')
-group.add_argument('-xvvfile', dest='xvvfile', help='XVV file for 3D-RISM.', default=rism)
+group.add_argument('-xvvfile', dest='xvvfile', help='XVV file for 3D-RISM.', default=rism_xvv)
 group.add_argument('-o', dest='output_file', default='FINAL_RESULTS_MMPBSA.dat', metavar='FILE',
                    help='Output file with MM/PBSA statistics.')
 group.add_argument('-do', dest='decompout', metavar='FILE', default='FINAL_DECOMP_MMPBSA.dat',
