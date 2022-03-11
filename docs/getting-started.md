@@ -11,9 +11,11 @@ title: Getting started
 
 [<img src="../assets/TOC.png" height="120%" width="258" align="right"/>]()
 
-## gmx_MMPBSA v1.5.0 is out 😀!
+## gmx_MMPBSA v1.5.1 is out 😀!
 
-Check [changelog](changelog.md#gmx_mmpbsa-v150-02222022) to see what's new in gmx_MMPBSA v1.5.0.
+Check [changelog](changelog.md##gmx_mmpbsa-v151-03102022) to see what's new in gmx_MMPBSA v1.5.1.
+
+## [Help needed for gmx_MMPBSA! To the content creators out there...](#colaboration)
 
 gmx_MMPBSA is a new tool based on AMBER's MMPBSA.py aiming to perform end-state free energy calculations with GROMACS 
 files. **_It works with all GROMACS versions along with AmberTools20 or 21 and brings improvements in compatibility, 
@@ -152,10 +154,22 @@ If you still have doubts or cannot solve the problem, please consider opening an
 Visit [Pypi Stats](https://pypistats.org/packages/gmx-mmpbsa) or [PePy](https://pepy.tech/project/gmx-mmpbsa)
 to see how gmx_MMPBSA is doing.
 
+## **Colaboration**
+
+gmx_MMPBSA is rapidly becoming one of the main programs to perform end-point free energy calculations out there 
+(~21.5k downloads so far). We are currently focused on optimizing the program, supporting new types of calculations, 
+force fields, etc. However, the video tutorials are not that great.
+
+That being said, **and here is where we need help**, we will appreciate any collaboration in making video tutorials for 
+the documentation. The video tutorial will be included as a link to YouTube in gmx_MMPBSA documentation with full 
+acknowledgment of the person who created the video tutorial. It will be also acknowledged as a contributor of 
+gmx_MMPBSA... 😃
+
+Feel free to contact us through our google group (https://groups.google.com/g/gmx_mmpbsa) for more details...
 
 [<img src="../assets/images/jetbrains-variant-4.png" height="100" width="178" align="right" />][11]
 
 ## **Acknowledgments**
-This project is possible thanks to the Open Source license of the [JetBrains][11] programs. 
+This project is possible thanks to the Open Source license of the [JetBrains][11] programs.
 
   [11]: https://www.jetbrains.com/?from=gmx_MMPBSA
