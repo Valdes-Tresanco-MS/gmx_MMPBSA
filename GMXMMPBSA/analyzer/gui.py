@@ -1115,7 +1115,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
         ):
             columns = data.columns
             for col in columns:
-                if (data[col] > -0.01).all() and (data[col] < 0.01).all():
+                if -0.01 < data[col].mean() < 0.01 and col not in ['GSOLV', 'GGAS', 'TOTAL', 'tot']:
                     del data[col]
             return data
         return data
@@ -1125,7 +1125,6 @@ class GMX_MMPBSA_ANA(QMainWindow):
             if self.data_options['remove_empty_charts'] and ((data > -0.01).all() and (data < 0.01).all()):
                 return True
         elif self.data_options['remove_empty_charts'] and ((data > -0.01).all().all() and (data < 0.01).all().all()):
-            # FIXME: Do we need to clarify that they are not terms like GSOLV, GGAS and TOTAL?
             return True
 
     def _itemdata_properties(self, data, decomp=False):
@@ -1175,16 +1174,20 @@ class GMX_MMPBSA_ANA(QMainWindow):
             options = {'ie': True} if iec2 else {}
             cont['line_plot_data'] = [data, options, change]
         elif level == 1:
+            temp_data = self._remove_empty_terms(data)
             options = {'c2': True} if iec2 else {}
-            options.update(dict(groups=self._itemdata_properties(data)))
-            cont['bar_plot_data'] = [data, options, change]
+            options.update(dict(groups=self._itemdata_properties(temp_data)))
+            cont['bar_plot_data'] = [temp_data, options, change]
+            del temp_data
         elif level == 2:
             tempdf = data.loc[:, data.columns.get_level_values(1) == 'tot']
             bar_plot_data = tempdf.droplevel(level=1, axis=1)
-            cont['bar_plot_data'] = [bar_plot_data, dict(groups=self._itemdata_properties(bar_plot_data)), change]
             cont['line_plot_data'] = [bar_plot_data.sum(axis=1), {}, change]
             cont['heatmap_plot_data'] = [bar_plot_data.transpose(copy=True), {}, change]
+            temp_bar_data = self._remove_empty_terms(bar_plot_data)
+            cont['bar_plot_data'] = [temp_bar_data, dict(groups=self._itemdata_properties(temp_bar_data)), change]
             del bar_plot_data
+            del temp_bar_data
             del tempdf
         elif level == 3:
             # Select only the "tot" column, remove the level, change first level of columns to rows and remove the mean
@@ -1193,10 +1196,12 @@ class GMX_MMPBSA_ANA(QMainWindow):
             cont['heatmap_plot_data'] = [
                 tempdf.aggregate(["mean"]).droplevel(level=2, axis=1).stack().droplevel(level=0), {}, change]
             bar_plot_data = tempdf.groupby(axis=1, level=0, sort=False).sum()
-            cont['bar_plot_data'] = [bar_plot_data, dict(groups=self._itemdata_properties(bar_plot_data)), change]
             cont['line_plot_data'] = [bar_plot_data.sum(axis=1), {}, change]
+            temp_bar_data = self._remove_empty_terms(bar_plot_data)
+            cont['bar_plot_data'] = [temp_bar_data, dict(groups=self._itemdata_properties(temp_bar_data)), change]
             del tempdf
             del bar_plot_data
+            del temp_bar_data
 
         return cont
 
@@ -1268,7 +1273,8 @@ class GMX_MMPBSA_ANA(QMainWindow):
                                        title="C2 Entropy",
                                        subtitle=f"{sys_name} | {level.upper()}",
                                        system_index=sys_index,
-                                       keys_path=(part, level)
+                                       keys_path=(part, level),
+                                       part=part
                                        )
                     str_dict = multiindex2dict(data[level].columns)
                     for level1 in str_dict:
@@ -1290,7 +1296,8 @@ class GMX_MMPBSA_ANA(QMainWindow):
                                        title="Interaction Entropy",
                                        subtitle=f"{sys_name} | {level.upper()}",
                                        system_index=sys_index,
-                                       keys_path=(part, level), )
+                                       keys_path=(part, level),
+                                       part=part)
                     str_dict = multiindex2dict(data[level].columns)
                     for level1 in str_dict:
                         item1 = CustomItem(titem,
@@ -1354,17 +1361,16 @@ class GMX_MMPBSA_ANA(QMainWindow):
                         # residue first level
                         btns = (2,) if namespace.INPUT['idecomp'] in [1, 2] else (1, 2, 3)
                         for level3 in str_dict[level1][level2]:
-
                             item3 = CustomItem(item2,
                                                [level3.upper()],
                                                app=self,
                                                buttons=btns,
-                                               # title=f"Energetic Components {title}",
-                                               # subtitle=f"{sys_name} ({part}) | "
-                                               #                f"{str(level).upper()} | "
-                                               #                f"{str(level1).upper()} | "
-                                               #                f"{str(level2).upper()} | "
-                                               #                f"{str(level3).upper()}"
+                                               title=f"Energetic Components {title}",
+                                               subtitle=f"{sys_name} ({part}) | "
+                                                          f"{str(level).upper()} | "
+                                                          f"{str(level1).upper()} | "
+                                                          f"{str(level2).upper()} | "
+                                                          f"{str(level3).upper()}",
                                                system_index=sys_index,
                                                keys_path=(part, level, (level1, level2, level3))
                                                )
@@ -1372,7 +1378,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
                             #             btns = (2,) if namespace.INPUT['idecomp'] in [1, 2] else (1, 2, 3)
                             for level4 in str_dict[level1][level2][level3]:
                                 if namespace.INPUT['idecomp'] in [1, 2]:
-                                    item5 = CustomItem(item3,
+                                    item4 = CustomItem(item3,
                                                        [level4.upper()],
                                                        app=self,
                                                        buttons=(1,),
@@ -1392,6 +1398,13 @@ class GMX_MMPBSA_ANA(QMainWindow):
                                                        [level4.upper()],
                                                        app=self,
                                                        buttons=(2,),
+                                                       title="Energetic Components [Per-wise]",
+                                                       subtitle=f"{sys_name} ({part})| "
+                                                                f"{str(level).upper()} | "
+                                                                f"{str(level1).upper()} | "
+                                                                f"{str(level2).upper()} | "
+                                                                f"{str(level3).upper()} | "
+                                                                f"{str(level4).upper()}",
                                                        system_index=sys_index,
                                                        keys_path=(part, level, (level1, level2, level3, level4))
                                                        )
@@ -1450,8 +1463,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
                         if level1 not in parts:
                             continue
                         if not part.startswith('decomp'):
-                            new_data = self._remove_empty_terms(data[level][(level1,)])
-                            self.systems[sys_index]['items_data'][(part, level, (level1,))] = self._setup_data(new_data,
+                            self.systems[sys_index]['items_data'][(part, level, (level1,))] = self._setup_data(data[level][(level1,)],
                                                                                                                level=1)
                         for level2 in str_dict[level1]:
                             if self._remove_empty_charts(data[level][(level1, level2)]):
@@ -1482,6 +1494,14 @@ class GMX_MMPBSA_ANA(QMainWindow):
                                     del temp_dat
                                     # residue first level
                                     for level4 in str_dict[level1][level2][level3]:
+                                        if self._remove_empty_charts(
+                                                data[level][(level1, level2, level3, level4)]
+                                        ):
+                                            del data[level][(level1, level2, level3, level4)]
+                                            self.removed_items[sys_index].append(
+                                                (part, level, (level1, level2, level3, level4)))
+                                            continue
+
                                         temp_dat = data[level][(level1, level2, level3, level4)]
                                         temp_dat.name = level4
                                         if namespace.INPUT['idecomp'] in [1, 2]:
@@ -1496,6 +1516,13 @@ class GMX_MMPBSA_ANA(QMainWindow):
                                             del temp_dat
                                             # energetics terms
                                             for level5 in str_dict[level1][level2][level3][level4]:
+                                                if self._remove_empty_charts(
+                                                        data[level][(level1, level2, level3, level4, level5)]
+                                                ):
+                                                    del data[level][(level1, level2, level3, level4, level5)]
+                                                    self.removed_items[sys_index].append(
+                                                        (part, level, (level1, level2, level3, level4, level5)))
+                                                    continue
                                                 temp_dat = data[level][(level1, level2, level3, level4, level5)]
                                                 temp_dat.name = level5
                                                 self.systems[sys_index]['items_data'][
