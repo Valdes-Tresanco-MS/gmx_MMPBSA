@@ -1361,17 +1361,16 @@ class GMX_MMPBSA_ANA(QMainWindow):
                         # residue first level
                         btns = (2,) if namespace.INPUT['idecomp'] in [1, 2] else (1, 2, 3)
                         for level3 in str_dict[level1][level2]:
-
                             item3 = CustomItem(item2,
                                                [level3.upper()],
                                                app=self,
                                                buttons=btns,
-                                               # title=f"Energetic Components {title}",
-                                               # subtitle=f"{sys_name} ({part}) | "
-                                               #                f"{str(level).upper()} | "
-                                               #                f"{str(level1).upper()} | "
-                                               #                f"{str(level2).upper()} | "
-                                               #                f"{str(level3).upper()}"
+                                               title=f"Energetic Components {title}",
+                                               subtitle=f"{sys_name} ({part}) | "
+                                                          f"{str(level).upper()} | "
+                                                          f"{str(level1).upper()} | "
+                                                          f"{str(level2).upper()} | "
+                                                          f"{str(level3).upper()}",
                                                system_index=sys_index,
                                                keys_path=(part, level, (level1, level2, level3))
                                                )
@@ -1379,7 +1378,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
                             #             btns = (2,) if namespace.INPUT['idecomp'] in [1, 2] else (1, 2, 3)
                             for level4 in str_dict[level1][level2][level3]:
                                 if namespace.INPUT['idecomp'] in [1, 2]:
-                                    item5 = CustomItem(item3,
+                                    item4 = CustomItem(item3,
                                                        [level4.upper()],
                                                        app=self,
                                                        buttons=(1,),
@@ -1399,6 +1398,13 @@ class GMX_MMPBSA_ANA(QMainWindow):
                                                        [level4.upper()],
                                                        app=self,
                                                        buttons=(2,),
+                                                       title="Energetic Components [Per-wise]",
+                                                       subtitle=f"{sys_name} ({part})| "
+                                                                f"{str(level).upper()} | "
+                                                                f"{str(level1).upper()} | "
+                                                                f"{str(level2).upper()} | "
+                                                                f"{str(level3).upper()} | "
+                                                                f"{str(level4).upper()}",
                                                        system_index=sys_index,
                                                        keys_path=(part, level, (level1, level2, level3, level4))
                                                        )
