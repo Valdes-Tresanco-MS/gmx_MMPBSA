@@ -1124,8 +1124,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
         if isinstance(data, pd.Series):
             if self.data_options['remove_empty_charts'] and ((data > -0.01).all() and (data < 0.01).all()):
                 return True
-        elif (self.data_options['remove_empty_charts'] and ((data > -0.01).all().all() and (data < 0.01).all().all())
-                and data.name not in ['GSOLV', 'GGAS', 'TOTAL', 'tot']):
+        elif self.data_options['remove_empty_charts'] and ((data > -0.01).all().all() and (data < 0.01).all().all()):
             return True
 
     def _itemdata_properties(self, data, decomp=False):
@@ -1173,7 +1172,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
         cont = {'ie_plot_data': None, 'line_plot_data': None, 'bar_plot_data': None, 'heatmap_plot_data': None}
         if level == 0:
             options = {'ie': True} if iec2 else {}
-            cont['line_plot_data'] = [self._remove_empty_charts(data), options, change]
+            cont['line_plot_data'] = [data, options, change]
         elif level == 1:
             temp_data = self._remove_empty_terms(data)
             options = {'c2': True} if iec2 else {}
