@@ -4,6 +4,40 @@ title: Changelog
 ---
 # Changelog
 
+## gmx_MMPBSA v1.5.1 (03/10/2022)
+
+### Additions
+
+#### `gmx_MMPBSA`
+
+- Add new variables for QM/MM calculations (#171)
+- Improvement of "print_res" function for &decomp and QM (#150)
+- Support for OPLS force field (#160)
+- New precalculated .xvv files for 3D-RISM
+
+#### `gmx_MMPBSA_ana`
+
+- Support for PyQt6
+
+#### `Documentation`
+
+- gmx_MMPBSA_ana documentation (v1.5.0) (#152)
+- [Tutorial for psf_dcd files](https://valdes-tresanco-ms.github.io/gmx_MMPBSA/examples/#support-for-psf_dcd-files)
+- [Tutorial for OPLS ff files](https://valdes-tresanco-ms.github.io/gmx_MMPBSA/examples/#oplsff-support)
+
+### Fixes
+
+#### `gmx_MMPBSA`
+
+- Add ERROR when ligand.mol2 defined and no gaff or gaff2 in forcefields variable (#175)
+- Fixed incorrect path search when the gmx_path is defined
+- Fixed error when no ions are included in the groups defined
+
+#### `gmx_MMPBSA_ana`
+
+- Remove empty terms issue (#179)
+- Fixed chart title for decomposition
+
 ## gmx_MMPBSA v1.5.0.3 (02/26/2022)
 ### Fixes
 #### `gmx_MMPBSA`
