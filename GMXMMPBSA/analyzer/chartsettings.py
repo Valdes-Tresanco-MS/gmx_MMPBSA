@@ -417,7 +417,8 @@ class ChartSettings(dict):
                                            'name': 'subplot-components', 'value': True, 'default': True,
                                            'action_type': R, 'tip': 'Groups energy components in bar plot'},
                     'scale-yaxis': {'type': 'bool', 'enabled': True, 'expanded': True,
-                                         'name': 'scale-yaxis', 'value': False, 'default': False, 'action_type': R},
+                                    'name': 'scale-yaxis', 'value': False, 'default': False, 'action_type': R,
+                                    'tip': 'Uses exponential values in y-axis'},
                     'remove-molid': {'type': 'bool', 'enabled': True, 'expanded': True, 'name': 'remove-molid',
                                      'value': True, 'default': True, 'action_type': R},
                     'IE/C2 Entropy': {
