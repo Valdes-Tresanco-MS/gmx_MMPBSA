@@ -578,8 +578,9 @@ However, this option is incompatible with alanine scanning.
   [200]: https://pubs.acs.org/doi/10.1021/acs.jctc.5b00271
 
 `alpb` (Default = 0)
-:   Use Analytical Linearized Poisson-Boltzmann (ALPB) approximation to handle electrostatic interactions within the 
-implicit solvent model (see [§4.2](https://ambermd.org/doc12/Amber21.pdf#section.4.2)): 
+:   Use [Analytical Linearized Poisson-Boltzmann (ALPB)][209] approximation to handle electrostatic interactions 
+within the 
+implicit solvent model (see [§4.2](https://ambermd.org/doc12/Amber21.pdf#section.4.2)):
 
     <img src="../assets/images/alpb_Eqn.svg" align="center"/>
 
@@ -590,6 +591,8 @@ implicit solvent model (see [§4.2](https://ambermd.org/doc12/Amber21.pdf#sectio
 
     * 0: Don't
     * 1: Use ALPB
+
+  [209]: https://aip.scitation.org/doi/10.1063/1.1857811
 
 `arad_method` (Default = 1)
 :   Method used to estimate the effective electrostatic size/radius (`A` in ALPB equation) of the molecule 
