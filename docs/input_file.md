@@ -577,6 +577,23 @@ However, this option is incompatible with alanine scanning.
   [206]: https://pubs.acs.org/doi/10.1021/ct600085e
   [200]: https://pubs.acs.org/doi/10.1021/acs.jctc.5b00271
 
+`alpb` (Default = 0)
+:   Use Analytical Linearized Poisson-Boltzmann (ALPB) approximation to handle electrostatic interactions within the 
+implicit solvent model (see [§4.2](https://ambermd.org/doc12/Amber21.pdf#section.4.2)). The ALPB requires one of the 
+analytical GB models to be set, that is igb = 1, 2, 5, or 7, for computing the effective Born radii. It uses the 
+same sets of radii as required by the particular GB model.
+
+    * 0: Don't
+    * 1: Use ALPB
+
+`arad_method` (Default = 1)
+:   Method used to estimate the effective electrostatic size/radius (`Arad`) of the molecule 
+(See [Sigalov, Fenley, and Onufriev](https://aip.scitation.org/doi/10.1063/1.2177251)).
+
+    * 1: Use structural invariants
+    * 2: Use elementary functions
+    * 3: Use elliptic integral (numerical)
+
 `intdiel` (Default = 1.0)
 :   Define Internal dielectric constant.
 

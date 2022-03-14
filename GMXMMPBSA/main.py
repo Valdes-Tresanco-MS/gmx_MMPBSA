@@ -803,7 +803,7 @@ class MMPBSA_App(object):
                     "more details https://valdes-tresanco-ms.github.io/gmx_MMPBSA/examples/Protein_ligand/ST/")
 
         if INPUT['igb'] not in [1, 2, 5, 7, 8]:
-            GMXMMPBSA_ERROR('Invalid value for IGB (%s)! ' % INPUT['igb'] + 'It must be 1, 2, 5, 7, or 8.', InputError)
+            GMXMMPBSA_ERROR('Invalid value for IGB (%s)! ' % INPUT['igb'] + 'IGB must be 1, 2, 5, 7, or 8.', InputError)
         if INPUT['intdiel'] < 0:
             GMXMMPBSA_ERROR('INDI must be non-negative!', InputError)
         if INPUT['extdiel'] < 0:
@@ -812,6 +812,10 @@ class MMPBSA_App(object):
             GMXMMPBSA_ERROR('SALTCON must be non-negative!', InputError)
         if INPUT['surften'] < 0:
             GMXMMPBSA_ERROR('SURFTEN must be non-negative!', InputError)
+        if INPUT['alpb'] == 1 and INPUT['igb'] == 8:
+            GMXMMPBSA_ERROR('IGB=8 is incompatible with ALPB=1! IGB must be 1, 2, 5, or 7 if ALPB=1.', InputError)
+        if INPUT['arad_method'] not in [1, 2, 3]:
+            GMXMMPBSA_ERROR('ARAD_METHOD must be 1, 2, or 3!', InputError)
         if INPUT['indi'] < 0:
             GMXMMPBSA_ERROR('INDI must be non-negative!', InputError)
         if INPUT['exdi'] < 0:
@@ -881,9 +885,9 @@ class MMPBSA_App(object):
                     INPUT['qmcharge_com'] and not self.stability):
                 GMXMMPBSA_ERROR('The total charge of the ligand and receptor ' +
                                 'does not equal the charge of the complex!', InputError)
-            if INPUT['scfconv'] < 1.0e-11:
-                logging.warning('Values tighter than 1.0e-11 are not recommended as these can lead to oscillations in '
-                                'the SCF')
+            if INPUT['scfconv'] < 1.0e-12:
+                logging.warning('There is a risk of convergence problems when the requested convergence is less than '
+                                '1.0e-12 kcal/mol')
             if INPUT['writepdb']:
                 logging.info('Writing qmmm_region.pdb PDB file of the selected QM region...')
             if INPUT['verbosity'] not in [0, 1, 2, 3, 4, 5]:
