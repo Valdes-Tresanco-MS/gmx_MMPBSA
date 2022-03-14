@@ -269,6 +269,8 @@ class MMPBSA_App(object):
                 mdin_template = self.pre + 'gb_decomp_%s.mdin'
             elif self.INPUT['ifqnt']:
                 mdin_template = self.pre + 'gb_qmmm_%s.mdin'
+            elif self.INPUT['alpb']:
+                mdin_template = self.pre + 'gb_%s.mdin'
             else:
                 mdin_template = self.pre + 'gb.mdin'
 
