@@ -579,15 +579,20 @@ However, this option is incompatible with alanine scanning.
 
 `alpb` (Default = 0)
 :   Use Analytical Linearized Poisson-Boltzmann (ALPB) approximation to handle electrostatic interactions within the 
-implicit solvent model (see [§4.2](https://ambermd.org/doc12/Amber21.pdf#section.4.2)). The ALPB requires one of the 
-analytical GB models to be set, that is igb = 1, 2, 5, or 7, for computing the effective Born radii. It uses the 
-same sets of radii as required by the particular GB model.
+implicit solvent model (see [§4.2](https://ambermd.org/doc12/Amber21.pdf#section.4.2)): 
+
+    <img src="../assets/images/alpb_Eqn.svg" align="center"/>
+
+    where β = ε<sub>in</sub>/ε<sub>ex</sub> is the ratio of the internal and external dielectrics, α=0.571412, and A 
+    is the so-called effective electrostatic size of the molecule (see `arad_method` below). The ALPB requires one 
+    of the analytical GB models to be set, that is igb = 1, 2, 5, or 7, for computing the effective Born radii. It uses 
+    the same sets of radii as required by the particular GB model.
 
     * 0: Don't
     * 1: Use ALPB
 
 `arad_method` (Default = 1)
-:   Method used to estimate the effective electrostatic size/radius (`Arad`) of the molecule 
+:   Method used to estimate the effective electrostatic size/radius (`A` in ALPB equation) of the molecule 
 (See [Sigalov, Fenley, and Onufriev](https://aip.scitation.org/doi/10.1063/1.2177251)).
 
     * 1: Use structural invariants
@@ -741,10 +746,15 @@ on the very first step to a file named qmmm_region.pdb.
 `peptide_corr` (Default = 0)
 :   Apply MM correction to peptide linkages. This correction is of the form: 
 
-    <img src="https://latex.codecogs.com/svg.
-    image?E_{scf}&space;=&space;E_{scf}&space;&plus;&space;h_{type}(i_{type})
-    *sin^{2}\phi" title="https://latex.codecogs.com/svg.image?E_{scf} = E_{scf} + h_{type}(i_{type})*sin^{2}\phi 
-    align="center""/>
+[comment]: <> (    <img src="https://latex.codecogs.com/svg.)
+
+[comment]: <> (    image?E_{scf}&space;=&space;E_{scf}&space;&plus;&space;h_{type}&#40;i_{type}&#41;)
+
+[comment]: <> (    *sin^{2}\phi" title="https://latex.codecogs.com/svg.image?E_{scf} = E_{scf} + h_{type}&#40;i_{type}&#41;*sin^{2}\phi )
+
+[comment]: <> (    align="center""/>)
+
+    <img src="../assets/images/peptide_correction.svg" align="center"/>
 
     where _ϕ_ is the dihedral angle of the H-N-C-O linkage and h<sub>type</sub> is a constant dependent on the 
     Hamiltonian used. Recommended, except for DFTB/SCC-DFTB.
