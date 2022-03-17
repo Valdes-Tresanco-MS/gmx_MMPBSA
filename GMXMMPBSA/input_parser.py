@@ -547,7 +547,6 @@ input_file.addNamelist('rism', 'rism',
                            ['grdspc', list, [0.5], 'Grid spacing', float],
                            ['ng', list, [-1, -1, -1], 'Number of grid points', int],
                            ['solvbox', list, [-1, -1, -1], 'Box limits', int],
-
                            ['tolerance', list, [1.0e-5], 'Convergence tolerance', float],
                            ['ljTolerance', float, -1.0, 'Determines the Lennard-Jones cutoff distance based on the '
                                                         'desired accuracy of the calculation'],
@@ -590,8 +589,8 @@ input_file.addNamelist('rism', 'rism',
                            ['npropagate', int, 5, 'Number of previous solutions to use in predicting a new solution'],
                            ['polardecomp', int, 0, 'Break solv. energy into polar and nonpolar terms'],
                            # TODO: work with entropicDecomp? need more tests...
-                           # ['entropicDecomp', int, 0, 'Decomposes solvation free energy into energy and entropy '
-                           #                            'components'],
+                           ['entropicdecomp', int, 0, 'Decomposes solvation free energy into energy and entropy '
+                                                      'components'],
                            # ['centering', int, 1, 'Select how solute is centered in the solvent box'],
                            ['rism_verbose', int, 0, 'Control how much 3D-RISM info to print']
                        ], trigger='rismrun')
