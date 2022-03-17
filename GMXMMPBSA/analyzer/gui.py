@@ -942,7 +942,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
 
         df = make_corr_DF(self.corr_data)  # FIXME:
         # get df for each model
-        models = ['gb', 'pb', 'rism std', 'rism gf']
+        models = ['gb', 'pb', 'rism std', 'rism gf', 'rism pcplus']
         columns = ['ΔH', 'ΔH+IE', 'ΔH+NMODE', 'ΔH+QH']
         hide_col = []
         c = 1
@@ -1225,9 +1225,9 @@ class GMX_MMPBSA_ANA(QMainWindow):
         if namespace.FILES.stability:
             parts.append('complex')
 
-        for level in ['gb', 'pb', 'rism gf', 'rism std', 'nmode', 'qh', 'ie', 'c2', 'binding']:
+        for level in ['gb', 'pb', 'rism gf', 'rism std', 'rism pcplus', 'nmode', 'qh', 'ie', 'c2', 'binding']:
             if level in data:
-                if level in ['gb', 'pb', 'rism gf', 'rism std', 'nmode', 'qh']:
+                if level in ['gb', 'pb', 'rism gf', 'rism std', 'rism pcplus', 'nmode', 'qh']:
                     titem = CustomItem(top_item, [level.upper()])
                     titem.setExpanded(True)
 
@@ -1452,12 +1452,12 @@ class GMX_MMPBSA_ANA(QMainWindow):
             key_list.append('ie')
         elif 'energy' in comp:
             # Include ie and c2 since they dependent of the ggas energy
-            key_list.extend(['gb', 'pb', 'rism gf', 'rism std', 'binding', 'ie', 'c2'])
+            key_list.extend(['gb', 'pb', 'rism gf', 'rism std', 'rism pcplus', 'binding', 'ie', 'c2'])
         elif 'all' in comp:
-            key_list.extend(['gb', 'pb', 'rism gf', 'rism std', 'nmode', 'qh', 'ie', 'c2', 'binding'])
+            key_list.extend(['gb', 'pb', 'rism gf', 'rism std', 'rism pcplus', 'nmode', 'qh', 'ie', 'c2', 'binding'])
         for level in key_list:
             if level in data:
-                if level in ['gb', 'pb', 'rism gf', 'rism std', 'nmode', 'qh']:
+                if level in ['gb', 'pb', 'rism gf', 'rism std', 'rism pcplus', 'nmode', 'qh']:
                     str_dict = multiindex2dict(data[level].columns)
                     for level1 in str_dict:
                         if level1 not in parts:

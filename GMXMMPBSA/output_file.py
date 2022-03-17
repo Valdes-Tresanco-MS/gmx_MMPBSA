@@ -321,10 +321,10 @@ def write_outputs(app):
 
     # end if INPUT['nmoderun']
 
-    triggers = ('gbrun', 'pbrun', 'rismrun_std', 'rismrun_gf')
-    outkeys = ('gb', 'pb', 'rism std', 'rism gf')
+    triggers = ('gbrun', 'pbrun', 'rismrun_std', 'rismrun_gf', 'rismrun_pcplus')
+    outkeys = ('gb', 'pb', 'rism std', 'rism gf', 'rism pcplus')
     headers = ('\nGENERALIZED BORN:\n\n', '\nPOISSON BOLTZMANN:\n\n',
-               '\n3D-RISM:\n\n', '\n3D-RISM (Gauss. Fluct.):\n\n')
+               '\n3D-RISM:\n\n', '\n3D-RISM (Gauss. Fluct.):\n\n', '\n3D-RISM (PC+):\n\n')
     # Now print out the Free Energy results
     for i, key in enumerate(outkeys):
         if not INPUT[triggers[i]]:

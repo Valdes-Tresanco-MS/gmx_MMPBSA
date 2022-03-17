@@ -628,6 +628,7 @@ class RISMout(AmberOutput):
         #
         # 1. Standard free energy (solvtype==0)
         # 2. GF free energy (solvtype==1)
+        # 3. PC+ GF free energy (solvtype==2)
 
         while rawline := outfile.readline():
 
@@ -645,6 +646,8 @@ class RISMout(AmberOutput):
                 self['ERISM'] = self['ERISM'].append(float(rawline.split()[1]))
             elif self.solvtype == 1 and re.match(r'(rism_exchGF|rism_excessChemicalPotentialGF)\s', rawline):
                 self['ERISM'] = self['ERISM'].append(float(rawline.split()[1]))
+            elif self.solvtype == 2 and re.match(r'(rism_exchPCPLUS|rism_excessChemicalPotentialPCPLUS)\s', rawline):
+                self['ERISM'] = self['ERISM'].append(float(rawline.split()[1]))
 
 
 class RISM_std_Out(RISMout):
@@ -659,6 +662,12 @@ class RISM_gf_Out(RISMout):
 
     def __init__(self, mol, INPUT, chamber=False):
         RISMout.__init__(self, mol, INPUT, chamber, 1)
+
+class RISM_pcplus_Out(RISMout):
+    """ No polar decomp RISM output file for PC+ free energy """
+
+    def __init__(self, mol, INPUT, chamber=False):
+        RISMout.__init__(self, mol, INPUT, chamber, 2)
 
 
 class PolarRISMout(RISMout):
@@ -703,6 +712,12 @@ class PolarRISMout(RISMout):
             elif self.solvtype == 1 and re.match(
                     r'(rism_apolGF|rism_apolarExcessChemicalPotentialGF)\s', rawline):
                 self['APOLAR SOLV'] = self['APOLAR SOLV'].append(float(rawline.split()[1]))
+            elif self.solvtype == 2 and re.match(
+                    r'(rism_polPCPLUS|rism_polarExcessChemicalPotentialPCPLUS)\s', rawline):
+                self['POLAR SOLV'] = self['POLAR SOLV'].append(float(rawline.split()[1]))
+            elif self.solvtype == 2 and re.match(
+                    r'(rism_apolPCPLUS|rism_apolarExcessChemicalPotentialPCPLUS)\s', rawline):
+                self['APOLAR SOLV'] = self['APOLAR SOLV'].append(float(rawline.split()[1]))
 
 
 class PolarRISM_std_Out(PolarRISMout):
@@ -717,6 +732,12 @@ class PolarRISM_gf_Out(PolarRISMout):
 
     def __init__(self, mol, INPUT, chamber=False):
         PolarRISMout.__init__(self, mol, INPUT, chamber, 1)
+
+class PolarRISM_pcplus_Out(PolarRISMout):
+    """ Polar decomp RISM output file for PC+ free energy """
+
+    def __init__(self, mol, INPUT, chamber=False):
+        PolarRISMout.__init__(self, mol, INPUT, chamber, 2)
 
 
 class QMMMout(GBout):
@@ -1689,10 +1710,13 @@ class H5Output:
         if self.app_namespace.INPUT['polardecomp']:
             RISM_GF = PolarRISM_gf_Out
             RISM_Std = PolarRISM_std_Out
+            RISM_PCplus = PolarRISM_pcplus_Out
         else:
             RISM_GF = RISM_gf_Out
             RISM_Std = RISM_std_Out
-        energy_outkeys = {'nmode': NMODEout, 'gb': GBClass, 'pb': PBout, 'rism std': RISM_Std, 'rism gf': RISM_GF}
+            RISM_PCplus = RISM_pcplus_Out
+        energy_outkeys = {'nmode': NMODEout, 'gb': GBClass, 'pb': PBout, 'rism std': RISM_Std, 'rism gf': RISM_GF,
+                          'rism pcplus': RISM_PCplus}
         ent_outkeys = {'ie': IEout, 'c2': C2out}
         # key: normal or mutant
         calc_types = getattr(self.calc_types, key)

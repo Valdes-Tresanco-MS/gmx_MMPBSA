@@ -539,7 +539,9 @@ input_file.addNamelist('pb', 'pb',
 input_file.addNamelist('rism', 'rism',
                        [
                            ['closure', list, ['kh'], 'Closure equation to use'],
-                           ['thermo', str, 'std', 'Type of thermodynamic analysis to do'],
+                           ['thermo', list, ['std'], 'Type of thermodynamic analysis to do'],
+                           ['gfcorrection', int, 0, 'Type of thermodynamic analysis to do'],
+                           ['pcpluscorrection', int, 0, 'Type of thermodynamic analysis to do'],
                            ['noasympcorr', int, 1, 'Turn off long range asymptotic corrections for thermodynamic '
                                                    'output only'],
                            ['buffer', float, 14, 'Distance between solute and edge of grid'],
