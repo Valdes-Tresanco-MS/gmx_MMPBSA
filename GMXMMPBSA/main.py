@@ -32,11 +32,11 @@ from GMXMMPBSA import utils, __version__
 from GMXMMPBSA.amber_outputs import (QHout, NMODEout, QMMMout, GBout, PBout, PolarRISM_std_Out, RISM_std_Out,
                                      PolarRISM_gf_Out, RISM_gf_Out, BindingStatistics, IEout, C2out,
                                      DeltaBindingStatistics)
-from GMXMMPBSA.calculation import (CalculationList, EnergyCalculation, PBEnergyCalculation, RISMCalculation,
+from GMXMMPBSA.calculation import (CalculationList, EnergyCalculation, PBEnergyCalculation,
                                    NmodeCalc, QuasiHarmCalc, CopyCalc, PrintCalc, LcpoCalc, MolsurfCalc,
                                    InteractionEntropyCalc, C2EntropyCalc)
 from GMXMMPBSA.commandlineparser import parser
-from GMXMMPBSA.createinput import create_inputs
+from GMXMMPBSA.createinput import create_inputs, SanderRISMInput
 from GMXMMPBSA.exceptions import (MMPBSA_Error, InternalError, InputError, GMXMMPBSA_ERROR)
 from GMXMMPBSA.infofile import InfoFile
 from GMXMMPBSA.fake_mpi import MPI as FakeMPI
@@ -233,7 +233,7 @@ class MMPBSA_App(object):
         progs = {'gb': self.external_progs['sander'],
                  'sa': self.external_progs['cpptraj'],
                  'pb': self.external_progs['sander'],
-                 'rism': self.external_progs['rism3d.snglpnt'],
+                 'rism': self.external_progs['sander'],
                  'qh': self.external_progs['cpptraj'],
                  'nmode': self.external_progs['mmpbsa_py_nabnmode']
                  }
@@ -424,7 +424,7 @@ class MMPBSA_App(object):
             self.calc_list.append(
                 PrintCalc('Beginning 3D-RISM calculations with %s' % progs['rism']), timer_key='rism')
 
-            c = RISMCalculation(progs['rism'], parm_system.complex_prmtop,
+            c = EnergyCalculation(progs['rism'], parm_system.complex_prmtop,
                                 '%scomplex.pdb' % prefix, '%scomplex.%s.%%d' %
                                 (prefix, trj_sfx), self.FILES.xvvfile,
                                 '%scomplex_rism.mdout.%%d' % prefix, self.INPUT)
@@ -437,7 +437,7 @@ class MMPBSA_App(object):
                     self.calc_list.append(c, '  no mutation found in receptor; '
                                              'using unmutated files', timer_key='pb')
                 else:
-                    c = RISMCalculation(progs['rism'], parm_system.receptor_prmtop,
+                    c = EnergyCalculation(progs['rism'], parm_system.receptor_prmtop,
                                         '%sreceptor.pdb' % prefix,
                                         '%sreceptor.%s.%%d' % (prefix, trj_sfx),
                                         self.FILES.xvvfile,
@@ -451,7 +451,7 @@ class MMPBSA_App(object):
                     self.calc_list.append(c, '  no mutation found in ligand; '
                                              'using unmutated files', timer_key='pb')
                 else:
-                    c = RISMCalculation(progs['rism'], parm_system.ligand_prmtop,
+                    c = EnergyCalculation(progs['rism'], parm_system.ligand_prmtop,
                                         '%sligand.pdb' % prefix,
                                         '%sligand.%s.%%d' % (prefix, trj_sfx),
                                         self.FILES.xvvfile,

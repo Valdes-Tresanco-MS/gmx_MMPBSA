@@ -98,13 +98,14 @@ class Calculation(object):
 
     # -#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
 
-    def __init__(self, prog, prmtop, incrd, inptraj, input_file, output):
+    def __init__(self, prog, prmtop, incrd, inptraj, input_file, output, xvv=None):
         self.prmtop = str(prmtop)
         self.incrd = incrd
         self.input_file = input_file
         self.inptraj = inptraj
         self.output = output
         self.program = prog
+        self.xvv = xvv
 
         self.calc_setup = False  # This means that the setup has run successfully
 
@@ -179,9 +180,9 @@ class Calculation(object):
 class EnergyCalculation(Calculation):
     """ Uses mmpbsa_py_energy to evaluate energies """
 
-    def __init__(self, prog, prmtop, incrd, inptraj, input_file, output, restrt):
+    def __init__(self, prog, prmtop, incrd, inptraj, input_file, output, restrt, xvv=None):
         Calculation.__init__(self, prog, prmtop, incrd, inptraj,
-                             input_file, output)
+                             input_file, output, xvv)
         self.restrt = restrt
 
     def setup(self):
@@ -198,6 +199,8 @@ class EnergyCalculation(Calculation):
         self.command_args.extend(('-o', self.output))  # output file flag
         if self.restrt is not None:
             self.command_args.extend(('-r', self.restrt))  # restart file flag
+        if self.xvv is not None:
+            self.command_args.extend(('-xvv', self.xvv))  # xvv file flag
 
         # Now test to make sure that the input file exists, since that's the only
         # one that may be absent (due to the use of -use-mdins)
