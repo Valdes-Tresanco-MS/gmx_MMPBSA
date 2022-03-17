@@ -776,9 +776,13 @@ class MMPBSA_App(object):
 
         # self.INPUT['rismrun_std'] = (self.INPUT['rismrun'] and
         #                             'std' in self.INPUT['thermo'])
-        print(self.INPUT['gfcorrection'])
+        # self.INPUT['rismrun_gf'] = (self.INPUT['rismrun'] and
+        #                             self.INPUT['thermo'] in ['gf', 'both'])
 
+        # always shows rism std results
         self.INPUT['rismrun_std'] = True
+
+        # shows rism gf/rism pcplus results depending on the gfcorrection/pcpluscorrection variables
         if self.INPUT['gfcorrection'] == 0:
             self.INPUT['rismrun_gf'] = False
         elif self.INPUT['gfcorrection'] == 1:
@@ -787,13 +791,6 @@ class MMPBSA_App(object):
             self.INPUT['rismrun_pcplus'] = False
         elif self.INPUT['pcpluscorrection'] == 1:
             self.INPUT['rismrun_pcplus'] = True
-
-
-
-        # self.INPUT['rismrun_gf'] = (self.INPUT['rismrun'] and
-        #                             self.INPUT['thermo'] in ['gf', 'both'])
-        # self.INPUT['rismrun_pcplus'] = (self.INPUT['rismrun'] and
-        #                                 self.INPUT['thermo'] in ['pc+', 'all'])
 
         # Default temperature
         # self.INPUT['temp'] = 298.15
@@ -1070,7 +1067,7 @@ class MMPBSA_App(object):
                                                                              self.calc_types.normal[key]['ligand'],
                                                                              self.using_chamber, self.traj_protocol)
 
-                    if key in ['gb', 'pb', 'rism std', 'rism gf']:
+                    if key in ['gb', 'pb', 'rism std', 'rism gf', 'rism pcplus']:
                         if 'ie' in self.calc_types.normal:
                             edata = self.calc_types.normal[key]['delta']['GGAS']
                             ie = InteractionEntropyCalc(edata, INPUT)
@@ -1102,7 +1099,7 @@ class MMPBSA_App(object):
                                                                              self.calc_types.mutant[key]['receptor'],
                                                                              self.calc_types.mutant[key]['ligand'],
                                                                              self.using_chamber, self.traj_protocol)
-                    if key in ['gb', 'pb', 'rism std', 'rism gf']:
+                    if key in ['gb', 'pb', 'rism std', 'rism gf', 'rism pcplus']:
                         if 'ie' in self.calc_types.mutant:
                             edata = self.calc_types.mutant[key]['delta']['GGAS']
                             mie = InteractionEntropyCalc(edata, INPUT)

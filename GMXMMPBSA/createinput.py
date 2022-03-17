@@ -238,7 +238,7 @@ class SanderRISMInput(SanderInput):
                    # Closure approximations
                    'closure': "kh",
                    # Solvation free energy corrections
-                   'thermo': "std", 'gfcorrection': 0, 'pcpluscorrection': 0,
+                   'gfcorrection': 0, 'pcpluscorrection': 0,
                    # Long-range asymptotics
                    'noasympcorr': 1, 'treedcf': 1, 'treetcf': 1, 'treecoulomb': 0, 'treedcfmac': 0.1,
                    'treetcfmac': 0.1, 'treecoulombmac': 0.1, 'treedcforder': 2, 'treetcforder': 2,
@@ -257,7 +257,7 @@ class SanderRISMInput(SanderInput):
                        # Closure approximations
                        'closure': 'rism',
                        # Solvation free energy corrections
-                       'thermo': 'rism', 'gfcorrection': 'rism', 'pcpluscorrection': 'rism',
+                       'gfcorrection': 'rism', 'pcpluscorrection': 'rism',
                        # Long-range asymptotics
                        'noasympcorr': 'rism', 'treedcf': 'rism', 'treetcf': 'rism', 'treecoulomb': 'rism',
                        'treedcfmac': 'rism', 'treetcfmac': 'rism', 'treecoulombmac': 'rism', 'treedcforder': 'rism',
@@ -278,7 +278,7 @@ class SanderRISMInput(SanderInput):
                 # Closure approximations
                 'closure': 'closure',
                 # Solvation free energy corrections
-                'thermo': 'thermo', 'gfcorrection': 'gfcorrection', 'pcpluscorrection': 'pcpluscorrection',
+                'gfcorrection': 'gfcorrection', 'pcpluscorrection': 'pcpluscorrection',
                 # Long-range asymptotics
                 'noasympcorr': 'noasympcorr', 'treedcf': 'treedcf',
                 'treetcf': 'treetcf', 'treecoulomb': 'treecoulomb', 'treedcfmac': 'treedcfmac',

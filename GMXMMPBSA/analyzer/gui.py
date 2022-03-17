@@ -1246,8 +1246,8 @@ class GMX_MMPBSA_ANA(QMainWindow):
                                            part=part
                                            )
                         if level == 'qh':
-                            print('Not implemented. Please contact to us to use your files to setup this analysis in '
-                                  'gmx_MMPBSA ')
+                            print('Currently not implemented. Please contact us to use your files to setup this analysis'
+                                  ' in gmx_MMPBSA ')
                             continue
                         for level2 in str_dict[level1]:
                             keys_path = (part, level, (level1, level2))
