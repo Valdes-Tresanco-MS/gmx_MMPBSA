@@ -421,13 +421,15 @@ class MMPBSA_App(object):
         # end if self.INPUT['pbrun']
 
         if self.INPUT['rismrun']:
+            mdin = self.pre + 'rism.mdin'
             self.calc_list.append(
                 PrintCalc('Beginning 3D-RISM calculations with %s' % progs['rism']), timer_key='rism')
 
             c = EnergyCalculation(progs['rism'], parm_system.complex_prmtop,
-                                '%scomplex.pdb' % prefix, '%scomplex.%s.%%d' %
-                                (prefix, trj_sfx), self.FILES.xvvfile,
-                                '%scomplex_rism.mdout.%%d' % prefix, self.INPUT)
+                                  '%sdummycomplex.inpcrd' % prefix,
+                                  '%scomplex.%s.%%d' % (prefix, trj_sfx), mdin,
+                                  '%scomplex_rism.mdout.%%d' % prefix,
+                                  self.pre + 'restrt.%d', self.FILES.xvvfile)
             self.calc_list.append(c, '  calculating complex contribution...', timer_key='rism')
 
             if not self.stability:
@@ -438,10 +440,10 @@ class MMPBSA_App(object):
                                              'using unmutated files', timer_key='pb')
                 else:
                     c = EnergyCalculation(progs['rism'], parm_system.receptor_prmtop,
-                                        '%sreceptor.pdb' % prefix,
-                                        '%sreceptor.%s.%%d' % (prefix, trj_sfx),
-                                        self.FILES.xvvfile,
-                                        '%sreceptor_rism.mdout.%%d' % prefix, self.INPUT)
+                                          '%sdummyreceptor.inpcrd' % prefix,
+                                          '%sreceptor.%s.%%d' % (prefix, trj_sfx), mdin,
+                                          '%sreceptor_rism.mdout.%%d' % prefix,
+                                          self.pre + 'restrt.%d', self.FILES.xvvfile)
                     self.calc_list.append(c, '  calculating receptor contribution...',
                                           timer_key='rism')
 
@@ -452,10 +454,10 @@ class MMPBSA_App(object):
                                              'using unmutated files', timer_key='pb')
                 else:
                     c = EnergyCalculation(progs['rism'], parm_system.ligand_prmtop,
-                                        '%sligand.pdb' % prefix,
-                                        '%sligand.%s.%%d' % (prefix, trj_sfx),
-                                        self.FILES.xvvfile,
-                                        '%sligand_rism.mdout.%%d' % prefix, self.INPUT)
+                                          '%sdummyligand.inpcrd' % prefix,
+                                          '%sligand.%s.%%d' % (prefix, trj_sfx), mdin,
+                                          '%sligand_rism.mdout.%%d' % prefix,
+                                          self.pre + 'restrt.%d', self.FILES.xvvfile)
                     self.calc_list.append(c, '  calculating ligand contribution...', timer_key='rism')
 
         # end if self.INPUT['rismrun']
