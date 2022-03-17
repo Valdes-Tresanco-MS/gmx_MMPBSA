@@ -54,7 +54,7 @@ class Variable(object):
             if isinstance(default, str):
                 self.value = [self.int_datatype(x.strip()) for x in re.split(';\s*|,\s*', default.replace('"',''))]
             else:
-                self.value = [default]
+                self.value = default
         else:
             self.value = self.datatype(default)
         self.description = description
@@ -538,17 +538,17 @@ input_file.addNamelist('pb', 'pb',
 
 input_file.addNamelist('rism', 'rism',
                        [
-                           ['closure', list, 'kh', 'Closure equation to use'],
+                           ['closure', list, ['kh'], 'Closure equation to use'],
                            ['thermo', str, 'std', 'Type of thermodynamic analysis to do'],
                            ['noasympcorr', int, 1, 'Turn off long range asymptotic corrections for thermodynamic '
                                                    'output only'],
                            ['buffer', float, 14, 'Distance between solute and edge of grid'],
                            ['solvcut', float, -1, 'Cutoff of the box'],
-                           ['grdspc', list, 0.5, 'Grid spacing', float],
-                           ['ng', list, '-1,-1,-1', 'Number of grid points', int],
-                           ['solvbox', list, '-1,-1,-1', 'Box limits', int],
+                           ['grdspc', list, [0.5], 'Grid spacing', float],
+                           ['ng', list, [-1, -1, -1], 'Number of grid points', int],
+                           ['solvbox', list, [-1, -1, -1], 'Box limits', int],
 
-                           ['tolerance', list, 1.0e-5, 'Convergence tolerance', float],
+                           ['tolerance', list, [1.0e-5], 'Convergence tolerance', float],
                            ['ljTolerance', float, -1.0, 'Determines the Lennard-Jones cutoff distance based on the '
                                                         'desired accuracy of the calculation'],
                            ['asympKSpaceTolerance', float, -1.0, 'Determines the reciprocal space long range '
