@@ -266,7 +266,7 @@ class CheckMakeTop:
             self.ligand_frcmod = self.FILES.prefix + lig_name + '.frcmod'
             # run parmchk2
             parmchk2 = self.external_progs['parmchk2']
-            lig_ff = '2' if "gaff2" in self.INPUT['forcefields'] else '1'
+            lig_ff = '2' if "leaprc.gaff2" in self.INPUT['forcefields'] else '1'
             parmchk2_args = [parmchk2, '-i', self.FILES.ligand_mol2, '-f', 'mol2', '-o', self.ligand_frcmod, '-s',
                              lig_ff]
             logging.debug('Running command: ' + ' '.join(parmchk2_args))

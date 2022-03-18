@@ -632,8 +632,9 @@ def find_progs(INPUT, mpi_size=0):
                   'sander': True,
                   'sander.APBS': INPUT['sander_apbs'] == 1,
                   'mmpbsa_py_nabnmode': INPUT['nmoderun'],
-                  'rism3d.snglpnt': INPUT['rismrun'],
+                  # 'rism3d.snglpnt': INPUT['rismrun']
                   'elsize': INPUT['alpb']
+
                   }
     gro_exe = {
         'gmx5': [

@@ -54,7 +54,7 @@ class Variable(object):
             if isinstance(default, str):
                 self.value = [self.int_datatype(x.strip()) for x in re.split(';\s*|,\s*', default.replace('"',''))]
             else:
-                self.value = [default]
+                self.value = default
         else:
             self.value = self.datatype(default)
         self.description = description
@@ -408,6 +408,7 @@ input_file.addNamelist('general', 'general',
                            ['startframe', int, 1, 'First frame to analyze'],
                            ['endframe', int, 9999999, 'Last frame to analyze'],
                            ['interval', int, 1, 'Number of frames between adjacent frames analyzed'],
+
                             # Parameters options
                            ['forcefields', list, 'oldff/leaprc.ff99SB, leaprc.gaff', 'Define the force field to build '
                                                                                      'the Amber topology'],
@@ -426,7 +427,7 @@ input_file.addNamelist('general', 'general',
                            ['exp_ki', float, 0, 'Experimental Ki in nM'],
                            ['full_traj', int, 0, 'Print a full traj. AND the thread trajectories'],
                            ['gmx_path', str, '', 'Force to use this path to get GROMACS executable'],
-# FIXME: keep_files we need to improved the h5 file
+                           # FIXME: keep_files we need to improved the h5 file
                            ['keep_files', int, 2, 'How many files to keep after successful completion'],
 
                            ['netcdf', int, 0, 'Use NetCDF intermediate trajectories'],
@@ -451,6 +452,7 @@ input_file.addNamelist('gb', 'gb',
                            ['ifqnt', int, 0, 'Use QM on part of the system'],
                            ['qm_theory', str, '', 'Semi-empirical QM theory to use'],
                            ['qm_residues', str, '', 'Residues to treat with QM'],
+
                            # TODO: deprecated since 1.5.0. Automatic charge assignment
                            ['qmcharge_com', int, 0, 'Charge of QM region in complex'],
                            ['qmcharge_lig', int, 0, 'Charge of QM region in ligand'],
@@ -487,7 +489,7 @@ input_file.addNamelist('pb', 'pb',
                            ['sasopt', int, 0, 'Molecular surface in PB implict model'],
                            ['arcres', float, 0.25, 'The resolution (Å) to compute solvent accessible arcs'],
 
-                            # Options for Implicit Membranes
+                           # Options for Implicit Membranes
                            ['memopt', int, 0, 'Use PB optimization for membrane'],
                            ['mprob', float, 2.70, 'Membrane probe radius in Å'],
                            ['mthick', float, 40.0, 'Membrane thickness'],
@@ -500,7 +502,8 @@ input_file.addNamelist('pb', 'pb',
                            ['accept', float, 0.001, 'Sets the iteration convergence criterion (relative to the initial '
                                                     'residue)'],
                            ['linit', int, 1000, 'Number of SCF iterations'],
-                           ['fillratio', float, 4, 'See "fillratio" in AmberTools/PBSA manual'],
+                           ['fillratio', float, 4, 'Ratio between the longest dimension of the rectangular '
+                                                   'finite-difference grid and that of the solute'],
                            ['scale', float, 2.0, '1/scale = grid spacing for the finite difference solver (default = '
                                                  '1/2 Å)'],
                            ['nbuffer', float, 0, 'Sets how far away (in grid units) the boundary of the finite '
@@ -522,14 +525,13 @@ input_file.addNamelist('pb', 'pb',
                             # Options to select a non-polar solvation treatment
                            ['decompopt', int, 2, 'Option to select different decomposition schemes when INP = 2'],
                            ['use_rmin', int, 1, 'The option to set up van der Waals radii'],
-                           ['sprob', float, 0.557, 'Solvent probe radius for solvent accessible surface area (SASA) '
-                                                   'used to compute the dispersion term'],
+                           ['sprob', float, 0.557, 'Solvent probe radius for SASA used to compute the dispersion term'],
                            ['vprob', float, 1.300, 'Solvent probe radius for molecular volume (the volume enclosed by '
-                                                   'SASA) used to compute nonpolar cavity solvation free energy'],
+                                                   'SASA)'],
                            ['rhow_effect', float, 1.129, 'Effective water density used in the non-polar dispersion '
                                                          'term calculation'],
-                           ['use_sav', int, 1, 'The option to use molecular volume (the volume enclosed by SASA) or '
-                                               'to use molecular surface (SASA) for cavity term calculation'],
+                           ['use_sav', int, 1, 'Use molecular volume (the volume enclosed by SASA) for cavity term '
+                                               'calculation'],
                            ['cavity_surften', float, 0.0378, 'Surface tension'],
                            ['cavity_offset', float, -0.5692, 'Offset for nonpolar solvation calc'],
                            ['maxsph', int, 400, 'Approximate number of dots to represent the maximum atomic solvent '
@@ -542,60 +544,58 @@ input_file.addNamelist('pb', 'pb',
 
 input_file.addNamelist('rism', 'rism',
                        [
-                           ['closure', list, 'kh', 'Closure equation to use'],
-                           ['thermo', str, 'std', 'Type of thermodynamic analysis to do'],
+                           ['closure', list, ['kh'], 'Closure equation to use'],
+                           ['gfcorrection', int, 0, 'Compute the Gaussian fluctuation excess chemical potential '
+                                                    'functional'],
+                           ['pcpluscorrection', int, 0, 'Compute the PC+/3D-RISM excess chemical potential functional'],
                            ['noasympcorr', int, 1, 'Turn off long range asymptotic corrections for thermodynamic '
                                                    'output only'],
                            ['buffer', float, 14, 'Distance between solute and edge of grid'],
                            ['solvcut', float, -1, 'Cutoff of the box'],
-                           ['grdspc', list, 0.5, 'Grid spacing', float],
-                           ['ng', list, '-1,-1,-1', 'Number of grid points', int],
-                           ['solvbox', list, '-1,-1,-1', 'Box limits', int],
-
-                           ['tolerance', list, 1.0e-5, 'Convergence tolerance', float],
+                           ['grdspc', list, [0.5, 0.5, 0.5], 'Grid spacing', float],
+                           ['ng', list, [-1, -1, -1], 'Number of grid points', int],
+                           ['solvbox', list, [-1, -1, -1], 'Box limits', int],
+                           ['tolerance', list, [1.0e-5], 'Convergence tolerance', float],
                            ['ljTolerance', float, -1.0, 'Determines the Lennard-Jones cutoff distance based on the '
                                                         'desired accuracy of the calculation'],
                            ['asympKSpaceTolerance', float, -1.0, 'Determines the reciprocal space long range '
                                                                  'asymptotics cutoff distance based on the desired '
                                                                  'accuracy of the calculation'],
-                           ['treeDCF', int, 1, 'Use direct sum or the treecode approximation to calculate the direct '
-                                               'correlation function long-range asymptotic correction'],
-                           ['treeTCF', int, 1, 'Use direct sum or the treecode approximation to calculate the total '
-                                               'correlation function long-range asymptotic correction'],
+                           ['treeDCF', int, 1, 'Use the treecode approximation to calculate the direct '
+                                               'correlation function (DCF) long-range asymptotic correction'],
+                           ['treeTCF', int, 1, 'Use the treecode approximation to calculate the total '
+                                               'correlation function (TCF) long-range asymptotic correction'],
                            ['treeCoulomb', int, 0, 'Use direct sum or the treecode approximation to calculate the '
                                                    'Coulomb potential energy'],
-                           ['treeDCFMAC', float, 0.1, 'Treecode multipole acceptance criterion for the direct '
-                                                      'correlation function long-range asymptotic correction'],
-                           ['treeTCFMAC', float, 0.1, 'Treecode multipole acceptance criterion for the total '
-                                                      'correlation function long-range asymptotic correction'],
+                           ['treeDCFMAC', float, 0.1, 'Treecode multipole acceptance criterion for the DCF long-range '
+                                                      'asymptotic correction'],
+                           ['treeTCFMAC', float, 0.1, 'Treecode multipole acceptance criterion for the TCF long-range '
+                                                      'asymptotic correction'],
                            ['treeCoulombMAC', float, 0.1, 'Treecode multipole acceptance criterion for the Coulomb '
                                                           'potential energy'],
-                           ['treeDCFOrder', int, 2, 'Treecode Taylor series order for the direct correlation function '
-                                                    'long-range asymptotic correction'],
-                           ['treeTCFOrder', int, 2, 'Treecode Taylor series order for the total correlation function '
-                                                    'long-range asymptotic correction'],
-                           ['treeCoulombOrder', int, 2,
-                            'Treecode Taylor series order for the Coulomb potential energy'],
+                           ['treeDCFOrder', int, 2, 'Treecode Taylor series order for the DCF long-range asymptotic '
+                                                    'correction'],
+                           ['treeTCFOrder', int, 2, 'Treecode Taylor series order for the TCF long-range asymptotic '
+                                                    'correction'],
+                           ['treeCoulombOrder', int, 2, 'Treecode Taylor series order for the Coulomb potential '
+                                                        'energy'],
                            ['treeDCFN0', int, 500, 'Maximum number of grid points contained within the treecode leaf '
-                                                   'clusters for the direct correlation function long-range asymptotic '
-                                                   'correction'],
+                                                   'clusters for the DCF'],
                            ['treeTCFN0', int, 500, 'Maximum number of grid points contained within the treecode leaf '
-                                                   'clusters for the total correlation function long-range asymptotic '
-                                                   'correction'],
+                                                   'clusters for the  TCF'],
                            ['treeCoulombN0', int, 500, 'Maximum number of grid points contained within the treecode '
                                                        'leaf clusters for the Coulomb potential energy'],
                            ['mdiis_del', float, 0.7, 'MDIIS step size'],
                            ['mdiis_nvec', int, 5, 'Number of previous iterations MDIIS uses to predict a new solution'],
-                           ['mdiis_restart', float, 10.0, 'If the current residual is mdiis_restart times larger than '
-                                                          'the smallest residual in memory, then the MDIIS procedure '
-                                                          'is restarted using the lowest residual solution stored in '
-                                                          'memory'],
+                           ['mdiis_restart', float, 10.0, 'Use lowest residual solution in memory if '
+                                                          'current residual is mdiis_restart times larger than '
+                                                          'the smallest residual in memory'],
                            ['maxstep', int, 10000, 'Maximum number of iterative steps per solution'],
                            ['npropagate', int, 5, 'Number of previous solutions to use in predicting a new solution'],
                            ['polardecomp', int, 0, 'Break solv. energy into polar and nonpolar terms'],
                            # TODO: work with entropicDecomp? need more tests...
-                           # ['entropicDecomp', int, 0, 'Decomposes solvation free energy into energy and entropy '
-                           #                            'components'],
+                           ['entropicdecomp', int, 0, 'Decomposes solvation free energy into energy and entropy '
+                                                      'components'],
                            # ['centering', int, 1, 'Select how solute is centered in the solvent box'],
                            ['rism_verbose', int, 0, 'Control how much 3D-RISM info to print']
                        ], trigger='rismrun')

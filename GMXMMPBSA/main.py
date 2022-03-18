@@ -30,13 +30,14 @@ import logging
 # Import gmx_MMPBSA modules
 from GMXMMPBSA import utils, __version__
 from GMXMMPBSA.amber_outputs import (QHout, NMODEout, QMMMout, GBout, PBout, PolarRISM_std_Out, RISM_std_Out,
-                                     PolarRISM_gf_Out, RISM_gf_Out, BindingStatistics, IEout, C2out,
+                                     PolarRISM_gf_Out, RISM_gf_Out, PolarRISM_pcplus_Out, RISM_pcplus_Out,
+                                     BindingStatistics, IEout, C2out,
                                      DeltaBindingStatistics)
-from GMXMMPBSA.calculation import (CalculationList, EnergyCalculation, PBEnergyCalculation, RISMCalculation,
+from GMXMMPBSA.calculation import (CalculationList, EnergyCalculation, PBEnergyCalculation,
                                    NmodeCalc, QuasiHarmCalc, CopyCalc, PrintCalc, LcpoCalc, MolsurfCalc,
                                    InteractionEntropyCalc, C2EntropyCalc)
 from GMXMMPBSA.commandlineparser import parser
-from GMXMMPBSA.createinput import create_inputs
+from GMXMMPBSA.createinput import create_inputs, SanderRISMInput
 from GMXMMPBSA.exceptions import (MMPBSA_Error, InternalError, InputError, GMXMMPBSA_ERROR)
 from GMXMMPBSA.infofile import InfoFile
 from GMXMMPBSA.fake_mpi import MPI as FakeMPI
@@ -233,7 +234,7 @@ class MMPBSA_App(object):
         progs = {'gb': self.external_progs['sander'],
                  'sa': self.external_progs['cpptraj'],
                  'pb': self.external_progs['sander'],
-                 'rism': self.external_progs['rism3d.snglpnt'],
+                 'rism': self.external_progs['sander'],
                  'qh': self.external_progs['cpptraj'],
                  'nmode': self.external_progs['mmpbsa_py_nabnmode']
                  }
@@ -423,13 +424,15 @@ class MMPBSA_App(object):
         # end if self.INPUT['pbrun']
 
         if self.INPUT['rismrun']:
+            mdin = self.pre + 'rism.mdin'
             self.calc_list.append(
                 PrintCalc('Beginning 3D-RISM calculations with %s' % progs['rism']), timer_key='rism')
 
-            c = RISMCalculation(progs['rism'], parm_system.complex_prmtop,
-                                '%scomplex.pdb' % prefix, '%scomplex.%s.%%d' %
-                                (prefix, trj_sfx), self.FILES.xvvfile,
-                                '%scomplex_rism.mdout.%%d' % prefix, self.INPUT)
+            c = EnergyCalculation(progs['rism'], parm_system.complex_prmtop,
+                                  '%sdummycomplex.inpcrd' % prefix,
+                                  '%scomplex.%s.%%d' % (prefix, trj_sfx), mdin,
+                                  '%scomplex_rism.mdout.%%d' % prefix,
+                                  self.pre + 'restrt.%d', self.FILES.xvvfile)
             self.calc_list.append(c, '  calculating complex contribution...', timer_key='rism')
 
             if not self.stability:
@@ -439,11 +442,11 @@ class MMPBSA_App(object):
                     self.calc_list.append(c, '  no mutation found in receptor; '
                                              'using unmutated files', timer_key='pb')
                 else:
-                    c = RISMCalculation(progs['rism'], parm_system.receptor_prmtop,
-                                        '%sreceptor.pdb' % prefix,
-                                        '%sreceptor.%s.%%d' % (prefix, trj_sfx),
-                                        self.FILES.xvvfile,
-                                        '%sreceptor_rism.mdout.%%d' % prefix, self.INPUT)
+                    c = EnergyCalculation(progs['rism'], parm_system.receptor_prmtop,
+                                          '%sdummyreceptor.inpcrd' % prefix,
+                                          '%sreceptor.%s.%%d' % (prefix, trj_sfx), mdin,
+                                          '%sreceptor_rism.mdout.%%d' % prefix,
+                                          self.pre + 'restrt.%d', self.FILES.xvvfile)
                     self.calc_list.append(c, '  calculating receptor contribution...',
                                           timer_key='rism')
 
@@ -453,11 +456,11 @@ class MMPBSA_App(object):
                     self.calc_list.append(c, '  no mutation found in ligand; '
                                              'using unmutated files', timer_key='pb')
                 else:
-                    c = RISMCalculation(progs['rism'], parm_system.ligand_prmtop,
-                                        '%sligand.pdb' % prefix,
-                                        '%sligand.%s.%%d' % (prefix, trj_sfx),
-                                        self.FILES.xvvfile,
-                                        '%sligand_rism.mdout.%%d' % prefix, self.INPUT)
+                    c = EnergyCalculation(progs['rism'], parm_system.ligand_prmtop,
+                                          '%sdummyligand.inpcrd' % prefix,
+                                          '%sligand.%s.%%d' % (prefix, trj_sfx), mdin,
+                                          '%sligand_rism.mdout.%%d' % prefix,
+                                          self.pre + 'restrt.%d', self.FILES.xvvfile)
                     self.calc_list.append(c, '  calculating ligand contribution...', timer_key='rism')
 
         # end if self.INPUT['rismrun']
@@ -769,15 +772,27 @@ class MMPBSA_App(object):
         #     self.INPUT['verbose'] = 2
 
         # 3D-RISM stuff (keywords are case-insensitive)
-        self.INPUT['thermo'] = self.INPUT['thermo'].lower()
+        # self.INPUT['thermo'] = self.INPUT['thermo'].lower()
         if self.INPUT['solvcut'] is None:
             self.INPUT['solvcut'] = self.INPUT['buffer']
-        self.INPUT['rismrun_std'] = (self.INPUT['rismrun'] and
-                                     self.INPUT['thermo'] in ['std', 'both'])
-        self.INPUT['rismrun_gf'] = (self.INPUT['rismrun'] and
-                                    self.INPUT['thermo'] in ['gf', 'both'])
-        # self.INPUT['rismrun_pc+'] = (self.INPUT['rismrun'] and
-        #                              self.INPUT['thermo'] in ['pc+', 'all'])
+
+        # self.INPUT['rismrun_std'] = (self.INPUT['rismrun'] and
+        #                             'std' in self.INPUT['thermo'])
+        # self.INPUT['rismrun_gf'] = (self.INPUT['rismrun'] and
+        #                             self.INPUT['thermo'] in ['gf', 'both'])
+
+        # always shows rism std results
+        self.INPUT['rismrun_std'] = True
+
+        # shows rism gf/rism pcplus results depending on the gfcorrection/pcpluscorrection variables
+        if self.INPUT['gfcorrection'] == 0:
+            self.INPUT['rismrun_gf'] = False
+        elif self.INPUT['gfcorrection'] == 1:
+            self.INPUT['rismrun_gf'] = True
+        if self.INPUT['pcpluscorrection'] == 0:
+            self.INPUT['rismrun_pcplus'] = False
+        elif self.INPUT['pcpluscorrection'] == 1:
+            self.INPUT['rismrun_pcplus'] = True
 
         # Default temperature
         # self.INPUT['temp'] = 298.15
@@ -910,15 +925,14 @@ class MMPBSA_App(object):
                 GMXMMPBSA_ERROR('You must specify NG if BUFFER < 0!', InputError)
             if INPUT['polardecomp'] not in [0, 1]:
                 GMXMMPBSA_ERROR('POLARDECOMP must be either 0 or 1!', InputError)
-            # TODO: include entropicDecomp? needs more tests...
-            # if INPUT['entropicDecomp'] not in [0, 1]:
-            #     GMXMMPBSA_ERROR('ENTROPICDECOMP must be either 0 or 1!', InputError)
+            if INPUT['entropicdecomp'] not in [0, 1]:
+                GMXMMPBSA_ERROR('ENTROPICDECOMP must be either 0 or 1!', InputError)
             for i in zip(['treeDCF', 'treeTCF', 'treeCoulomb'], [INPUT['treeDCF'], INPUT['treeTCF'],
                                                                  INPUT['treeCoulomb']]):
                 if i[1] not in [0, 1]:
                     GMXMMPBSA_ERROR(f'{i[0]} must be either 0 or 1!', InputError)
-            if INPUT['thermo'] not in ['std', 'gf', 'both']:
-                GMXMMPBSA_ERROR('THERMO must be "std", "gf", "both"!', InputError)
+            # if INPUT['thermo'] not in ['std', 'gf', 'both']:
+            #     GMXMMPBSA_ERROR('THERMO must be "std", "gf", "both"!', InputError)
             # TODO: include other corrections? pc+?
             # if INPUT['thermo'] not in ['std', 'gf', 'pc+', 'all']:
             #     GMXMMPBSA_ERROR('THERMO must be "std", "gf", "pc+" or "all"!', InputError)
@@ -1008,17 +1022,19 @@ class MMPBSA_App(object):
         if INPUT['polardecomp']:
             RISM_GF = PolarRISM_gf_Out
             RISM_Std = PolarRISM_std_Out
+            RISM_PCplus = PolarRISM_pcplus_Out
         else:
             RISM_GF = RISM_gf_Out
             RISM_Std = RISM_std_Out
+            RISM_PCplus = RISM_pcplus_Out
         # Now we make a list of the other calculation types, their INPUT triggers,
         # their key in the calc_types dict, the base name of their output files
         # without the prefix (with %s-substitution for complex, receptor, or
         # ligand), and the class for their output
-        triggers = ('nmoderun', 'gbrun', 'pbrun', 'rismrun_std', 'rismrun_gf')
-        outclass = (NMODEout, GBClass, PBout, RISM_Std, RISM_GF)
-        outkey = ('nmode', 'gb', 'pb', 'rism std', 'rism gf')
-        basename = ('%s_nm.out', '%s_gb.mdout', '%s_pb.mdout', '%s_rism.mdout', '%s_rism.mdout')
+        triggers = ('nmoderun', 'gbrun', 'pbrun', 'rismrun_std', 'rismrun_gf', 'rismrun_pcplus')
+        outclass = (NMODEout, GBClass, PBout, RISM_Std, RISM_GF, RISM_PCplus)
+        outkey = ('nmode', 'gb', 'pb', 'rism std', 'rism gf', 'rism pcplus')
+        basename = ('%s_nm.out', '%s_gb.mdout', '%s_pb.mdout', '%s_rism.mdout', '%s_rism.mdout', '%s_rism.mdout')
 
         if self.INPUT['interaction_entropy']:
             if not INPUT['mutant_only']:
@@ -1057,7 +1073,7 @@ class MMPBSA_App(object):
                                                                              self.calc_types.normal[key]['ligand'],
                                                                              self.using_chamber, self.traj_protocol)
 
-                    if key in ['gb', 'pb', 'rism std', 'rism gf']:
+                    if key in ['gb', 'pb', 'rism std', 'rism gf', 'rism pcplus']:
                         if 'ie' in self.calc_types.normal:
                             edata = self.calc_types.normal[key]['delta']['GGAS']
                             ie = InteractionEntropyCalc(edata, INPUT)
@@ -1089,7 +1105,7 @@ class MMPBSA_App(object):
                                                                              self.calc_types.mutant[key]['receptor'],
                                                                              self.calc_types.mutant[key]['ligand'],
                                                                              self.using_chamber, self.traj_protocol)
-                    if key in ['gb', 'pb', 'rism std', 'rism gf']:
+                    if key in ['gb', 'pb', 'rism std', 'rism gf', 'rism pcplus']:
                         if 'ie' in self.calc_types.mutant:
                             edata = self.calc_types.mutant[key]['delta']['GGAS']
                             mie = InteractionEntropyCalc(edata, INPUT)

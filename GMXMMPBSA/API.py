@@ -118,7 +118,7 @@ class MMPBSA_API():
         else:
             index = pd.Series(list(self.frames.keys()), name='Frames')
         for model, data in self.data[key].items():
-            if model in ['gb', 'pb', 'rism std', 'rism gf', 'nmode', 'qh']:
+            if model in ['gb', 'pb', 'rism std', 'rism gf', 'rism pcplus', 'nmode', 'qh']:
                 if model == 'nmode':
                     if self.timestep:
                         nmindex = pd.Series(list(self.nmframes.values()), name=f'Time ({self.timeunit})')
@@ -129,7 +129,7 @@ class MMPBSA_API():
                 elif model == 'qh':
                     df_models[model] = pd.DataFrame(self._energy2flatdict(data))
                     terms['entropy'].append(model)
-                elif model in ['gb', 'pb', 'rism std', 'rism gf']:
+                elif model in ['gb', 'pb', 'rism std', 'rism gf', 'rism pcplus']:
                     terms['energy'].append(model)
                     df_models[model] = pd.DataFrame(self._energy2flatdict(data), index=index)
             elif model == 'ie':
@@ -200,7 +200,7 @@ class MMPBSA_API():
                 continue
             if key in ['normal', 'mutant']:
                 for model, v1 in v.items():
-                    if model in ['gb', 'pb', 'rism std', 'rism gf']:
+                    if model in ['gb', 'pb', 'rism std', 'rism gf', 'rism pcplus']:
                         # Update the frame range and re-calculate the composite terms
                         v1['complex'].set_frame_range(start, end, interval)
                         if not self.stability:
@@ -241,7 +241,7 @@ class MMPBSA_API():
         if 'mutant-normal' in self.print_keys:
             if 'normal' in self.data and self.data['normal'] and 'mutant' in self.data and self.data['mutant']:
                 for model in self.data['normal']:
-                    if model in ['gb', 'pb', 'rism std', 'rism gf']:
+                    if model in ['gb', 'pb', 'rism std', 'rism gf', 'rism pcplus']:
                         self.data['mutant-normal'][model] = {'delta':
                             DeltaBindingStatistics(self.data['mutant'][model]['delta'],
                                                    self.data['normal'][model]['delta'])}
@@ -295,7 +295,7 @@ class MMPBSA_API():
                 continue
             if key in ['normal', 'mutant']:
                 for model, v1 in v.items():
-                    if model in ['gb', 'pb', 'rism std', 'rism gf']:
+                    if model in ['gb', 'pb', 'rism std', 'rism gf', 'rism pcplus']:
                         # Update the frame range and re-calculate the composite terms
                         # Re-calculate GGAS based entropies
                         if self.app_namespace.INPUT['interaction_entropy']:
@@ -310,7 +310,7 @@ class MMPBSA_API():
         if 'mutant-normal' in self.print_keys:
             if 'normal' in self.data and self.data['normal'] and 'mutant' in self.data and self.data['mutant']:
                 for model in self.data['normal']:
-                    if model in ['gb', 'pb', 'rism std', 'rism gf']:
+                    if model in ['gb', 'pb', 'rism std', 'rism gf', 'rism pcplus']:
                         self.data['mutant-normal'][model] = {'delta':
                                                                  DeltaBindingStatistics(
                                                                      self.data['mutant'][model]['delta'],
@@ -609,6 +609,7 @@ def load_gmxmmpbsa_info(fname: Union[Path, str]):
        Poisson-Boltzmann   | 'pb'        |  EPB, EDISPER, ECAVITY, *
        3D-RISM (GF)        | 'rism gf'   |  POLAR SOLV, APOLAR SOLV, *
        3D-RISM (Standard)  | 'rism std'  |
+       3D-RISM (PCPLUS)    |'rism pcplus'|
        Normal Mode         | 'nmode'     |
        Quasi-harmonic      | 'qh'        |
        Interaction entropy | 'ie'        |
