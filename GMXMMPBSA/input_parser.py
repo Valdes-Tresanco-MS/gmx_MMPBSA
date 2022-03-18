@@ -461,7 +461,11 @@ input_file.addNamelist('gb', 'gb',
                            ['scfconv', float, 1.0e-8, 'Convergence criteria for the SCF calculation, in kcal/mol'],
                            ['peptide_corr', int, 0, 'Apply MM correction to peptide linkages'],
                            ['writepdb', int, 1, 'Write a PDB file of the selected QM region'],
-                           ['verbosity', int, 0, 'Controls the verbosity of QM/MM related output']
+                           ['verbosity', int, 0, 'Controls the verbosity of QM/MM related output'],
+
+                           # Options for alpb
+                           ['alpb', int, 0, 'Use Analytical Linearized Poisson-Boltzmann (ALPB)'],
+                           ['arad_method', int, 1, 'Selected method to estimate the effective electrostatic size']
                        ], trigger='gbrun')
 
 input_file.addNamelist('pb', 'pb',
