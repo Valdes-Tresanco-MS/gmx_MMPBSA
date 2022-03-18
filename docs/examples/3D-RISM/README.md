@@ -59,7 +59,7 @@ startframe=5,
 endframe=8,
 /
 &rism
-polardecomp=0, thermo="std", tolerance=0.001, rism_verbose=2, closure="kh"
+polardecomp=0, tolerance=0.001, rism_verbose=2, closure="kh"
 /
 ```
 
