@@ -76,9 +76,10 @@ index file (`index.ndx`), a trajectory file (`com_traj.xtc`), and both the recep
 index file (`18 13`) are needed. The `mmpbsa.in` input file will contain all the parameters needed for the MM/PB(GB)SA 
 calculation. A topology file is also needed (mandatory) in this case to generate the topology files in amber format 
 with all the terms for CHARMM force field.
+
 !!! note
-    Once the calculation is done, you can analyze the results in `gmx_MMPBSA_ana` (if you didn't define `-nogui`). 
-    Please see the [gmx_MMPBSA_ana][5] section for more information
+    Once the calculation is done, the results can be analyzed in `gmx_MMPBSA_ana` (if `-nogui` flag was not used in the command-line). 
+    Please, check the [gmx_MMPBSA_ana][5] section for more information
 
 
   [1]: http://archive.ambermd.org/201508/0382.html 

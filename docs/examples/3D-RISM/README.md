@@ -81,7 +81,7 @@ clousure with a 0.001. Note that we have increased the tolerance from 0.00001 (d
 computation time.
 
 !!! note
-    Once the calculation is done, you can analyze the results in `gmx_MMPBSA_ana` (if you didn't define `-nogui`). 
+    Once the calculation is done, the results can be analyzed in `gmx_MMPBSA_ana` (if `-nogui` flag was not used in the command-line). 
     Please refer to the [gmx_MMPBSA_ana][4] section for more information
 
   [1]: ../../gmx_MMPBSA_command-line.md#gmx_mmpbsa-command-line

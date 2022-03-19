@@ -96,8 +96,8 @@ a salt concentration = 0.15M.
 with IE or C2 methods. Note that in this case we have "relaxed" the convergence criteria to speed up the calculation.
 
 !!! note
-    Once the calculation is done, you can analyze the results in `gmx_MMPBSA_ana` (if you didn't define `-nogui`). 
-    Please see the [gmx_MMPBSA_ana][4] section for more information
+    Once the calculation is done, the results can be analyzed in `gmx_MMPBSA_ana` (if `-nogui` flag was not used in the command-line). 
+    Please, check the [gmx_MMPBSA_ana][4] section for more information
   
   [1]: ../../../gmx_MMPBSA_command-line.md#gmx_mmpbsa-command-line
   [2]: ../../../input_file.md#the-input-file

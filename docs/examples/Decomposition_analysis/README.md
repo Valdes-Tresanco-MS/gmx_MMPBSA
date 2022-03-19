@@ -93,8 +93,8 @@ performed and residues within 4Å in both receptor and ligand will be printed in
 `print_res` variable in [`&decomp namelist variables`][4] section 
 
 !!! note
-    Once the calculation is done, you can analyze the results in `gmx_MMPBSA_ana` (if you didn't define `-nogui`). 
-    Please see the [gmx_MMPBSA_ana][5] section for more information
+    Once the calculation is done, the results can be analyzed in `gmx_MMPBSA_ana` (if `-nogui` flag was not used in the command-line). 
+    Please, check the [gmx_MMPBSA_ana][5] section for more information
 
 ### Alternatives for per-residue energy contribution visualization
 You can also use [VMD][8] and [Chimera][9] to view the modified pdb file with the per-residue energy contributions

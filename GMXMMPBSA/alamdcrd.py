@@ -202,9 +202,9 @@ class MutantMdcrd(object):
                 mutres = i + 1
 
         if diffs == 0:
-            raise MutateError('Your mutant prmtop (%s) has the same sequence as the original!' % self.new_prm.prm_name)
+            raise MutateError('Mutant prmtop (%s) has the same sequence as the original!' % self.new_prm.prm_name)
         elif diffs > 1:
-            raise MutateError('Your mutant prmtop (%s) can only have one mutation!' % self.new_prm.prm_name)
+            raise MutateError('Mutant prmtop (%s) can only have one mutation!' % self.new_prm.prm_name)
 
         return mutres
 
@@ -238,8 +238,7 @@ class MutantMdcrd(object):
         location = 0
 
         if orig_resname == 'GLY':
-            raise MutateError('You are trying to mutate GLY to ALA! ' +
-                              'Not currently supported.')
+            raise MutateError('Trying to mutate GLY to ALA! ' + 'Not currently supported.')
 
         new_mdcrd = open(newname, 'w')
         mdcrd = open(self.traj, 'r')

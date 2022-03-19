@@ -91,8 +91,8 @@ radii (`PBRadii=4`) will be used as recommended for GB-Neck2 solvation model. Al
 the residue `A/23` is a Tyrosine which means `intdiel = 3` will be used.
 
 !!! note
-    Once the calculation is done, you can analyze the results in `gmx_MMPBSA_ana` (if you didn't define `-nogui`). 
-    Please see the [gmx_MMPBSA_ana][4] section for more information
+    Once the calculation is done, the results can be analyzed in `gmx_MMPBSA_ana` (if `-nogui` flag was not used in the command-line). 
+    Please, check the [gmx_MMPBSA_ana][4] section for more information
 
 ### How to define properly which residue is going to be mutated?
 The generated PDB files must keep the original numbering, so selection based on residue number is reliable. However, 
