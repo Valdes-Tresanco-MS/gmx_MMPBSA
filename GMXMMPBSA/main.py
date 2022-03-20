@@ -948,6 +948,9 @@ class MMPBSA_App(object):
         if INPUT['decomprun'] and not INPUT['gbrun'] and not INPUT['pbrun']:
             GMXMMPBSA_ERROR('DECOMP must be run with either GB or PB!', InputError)
 
+        if '-deo' in sys.argv and not INPUT['decomprun']:
+            logging.warning("&decomp namelist has not been defined in the input file. Ignoring '-deo' flag... ")
+
         if (
                 not INPUT['molsurf']
                 and (INPUT['msoffset'] != 0 or INPUT['probe'] != 1.4)
