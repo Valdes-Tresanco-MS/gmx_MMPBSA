@@ -866,7 +866,7 @@ class BindingStatistics(dict):
         else:
             text.append('WARNING: INCONSISTENCIES EXIST WITHIN INTERNAL POTENTIAL' +
                         '\nTERMS. THE VALIDITY OF THESE RESULTS ARE HIGHLY QUESTIONABLE\n')
-        text if _output_format else '\n'.join(text) + '\n'
+        return text if _output_format else '\n'.join(text) + '\n'
 
     def summary_output(self, output_format: str = 'ascii'):
         _output_format = 0 if output_format == 'ascii' else 1
