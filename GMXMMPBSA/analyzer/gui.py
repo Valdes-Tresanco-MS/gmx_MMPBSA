@@ -325,10 +325,10 @@ class GMX_MMPBSA_ANA(QMainWindow):
     def _reset2default(self):
         new_settings = ChartSettings()
         self.statusbar.showMessage("Restore default settings...")
-        self.update_fn()
         self.chart_options_param.restoreState(new_settings)
         self.parm_tree_w.setParameters(self.chart_options_param, showTop=False)
         self.systems[self.current_system_index]['chart_options'] = new_settings
+        self.update_fn(repaint_arg=True)
 
     def _set_user_config(self):
         p = self.systems[self.current_system_index]['path']
@@ -591,7 +591,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
         self.parm_tree_w.setParameters(self.chart_options_param, showTop=False)
         self.current_system_index = parent_item.system_index
 
-    def update_fn(self):
+    def update_fn(self, repaint_arg=False):
         self.statusbar.showMessage('Updating...')
         recalc_energy = []
         recalc_nmode = []
@@ -618,7 +618,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
                     recalc_nmode.append(x)
                 if curr_iesegment != self.systems[x]['current_ie_segment']:
                     recalc_ie.append(x)
-                if self.systems[x]['chart_options'].is_changed(act_sett):
+                if self.systems[x]['chart_options'].is_changed(act_sett) or repaint_arg:
                     repaint.append(x)
         else:
             processed_sys.append(self.current_system_index)
@@ -632,7 +632,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
                 recalc_nmode.append(self.current_system_index)
             if curr_iesegment != self.systems[self.current_system_index]['current_ie_segment']:
                 recalc_ie.append(self.current_system_index)
-            if self.systems[self.current_system_index]['chart_options'].is_changed(act_sett):
+            if self.systems[self.current_system_index]['chart_options'].is_changed(act_sett) or repaint_arg:
                 repaint.append(self.current_system_index)
 
         maximum = len(recalc_energy) + len(recalc_ie) + len(recalc_nmode) + len(repaint)
@@ -674,7 +674,17 @@ class GMX_MMPBSA_ANA(QMainWindow):
             qpd.setLabelText('Updating charts options')
             for e in repaint:
                 v += 1
-                self.systems[e]['chart_options'].get_changes(act_sett)
+                if repaint_arg:
+                    self.systems[e]['chart_options'].changes = dict(
+                        line_action=3,
+                        line_ie_action=3,
+                        bar_action=3,
+                        heatmap_action=3,
+                        visualization_action=3,
+                        figure=3
+                    )
+                else:
+                    self.systems[e]['chart_options'].get_changes(act_sett)
                 qpd.setValue(v)
 
         comp = []
