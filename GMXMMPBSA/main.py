@@ -772,27 +772,12 @@ class MMPBSA_App(object):
         #     self.INPUT['verbose'] = 2
 
         # 3D-RISM stuff (keywords are case-insensitive)
-        # self.INPUT['thermo'] = self.INPUT['thermo'].lower()
         if self.INPUT['solvcut'] is None:
             self.INPUT['solvcut'] = self.INPUT['buffer']
 
-        # self.INPUT['rismrun_std'] = (self.INPUT['rismrun'] and
-        #                             'std' in self.INPUT['thermo'])
-        # self.INPUT['rismrun_gf'] = (self.INPUT['rismrun'] and
-        #                             self.INPUT['thermo'] in ['gf', 'both'])
-
-        # always shows rism std results
-        self.INPUT['rismrun_std'] = True
-
-        # shows rism gf/rism pcplus results depending on the gfcorrection/pcpluscorrection variables
-        if self.INPUT['gfcorrection'] == 0:
-            self.INPUT['rismrun_gf'] = False
-        elif self.INPUT['gfcorrection'] == 1:
-            self.INPUT['rismrun_gf'] = True
-        if self.INPUT['pcpluscorrection'] == 0:
-            self.INPUT['rismrun_pcplus'] = False
-        elif self.INPUT['pcpluscorrection'] == 1:
-            self.INPUT['rismrun_pcplus'] = True
+        self.INPUT['rismrun_std'] = bool(self.INPUT['rismrun'])
+        self.INPUT['rismrun_gf'] = self.INPUT['rismrun'] and self.INPUT['gfcorrection']
+        self.INPUT['rismrun_pcplus'] = self.INPUT['rismrun'] and self.INPUT['pcpluscorrection']
 
         # Default temperature
         # self.INPUT['temp'] = 298.15
@@ -1051,6 +1036,8 @@ class MMPBSA_App(object):
                 self.calc_types.mutant['c2'] = C2out()
 
         for i, key in enumerate(outkey):
+            from icecream import ic
+            ic(key, triggers[i], INPUT[triggers[i]])
             if not INPUT[triggers[i]]:
                 continue
             # Non-mutant
