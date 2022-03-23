@@ -422,10 +422,12 @@ class CustomItem(QTreeWidgetItem):
 
         pymol_options = {'colors': Palettes.get_palette(palette).colors}
         for o in options:
-            if o[0] != 'Visualization' or o == ('Visualization', 'palette'):
+            if o[0] != 'Visualization' or o == ('Visualization', 'palette') or o[-1] == 'default':
                 continue
             if o[1] == 'background':
                 pymol_options['bg_rgb'] = options[o]
+            elif o[1] == 'cartoon_side_chain_helper':
+                pymol_options[o[1]] = int(options[o])
             else:
                 pymol_options[o[1]] = options[o]
 
@@ -443,26 +445,29 @@ class CustomItem(QTreeWidgetItem):
                 pymol = pymol_path[0]
 
             else:
-                QMessageBox.critical(self, 'PyMOL not found!', 'PyMOL not found!. Make sure PyMOL is in the '
-                                                               'PATH.', QMessageBox.Ok)
+                QMessageBox.critical(self.app, 'PyMOL not found!', 'PyMOL not found!. Make sure PyMOL is in the PATH.',
+                                     QMessageBox.StandardButton.Ok, QMessageBox.StandardButton.Ok )
                 self.vis_action.setChecked(False)
                 return
             if not self.pymol_process:
                 self.pymol_process = QProcess()
                 self.app.pymol_p_list.append([self.pymol_process, self])
-            elif self.pymol_process.state() == QProcess.Running:
+            elif self.pymol_process.state() == QProcess.ProcessState.Running:
                 QMessageBox.critical(self.app, 'This PyMOL instance already running!',
                                      'This PyMOL instance already running! Please, close it to open a new PyMOL '
-                                     'instance', QMessageBox.Ok)
+                                     'instance', QMessageBox.StandardButton.Ok)
                 return
             self.bfactor_pml = self._e2pdb(pymol_options)
 
             self.pymol_process.start(pymol, [self.bfactor_pml.as_posix()])
-            self.pymol_process.finished.connect(lambda: self.vis_action.setChecked(False))
+            self.pymol_process.finished.connect(self.pymol_finished)
             self.pymol_data_change = False
-        elif self.pymol_process.state() == QProcess.Running:
-            self.pymol_process.kill()
+        elif self.pymol_process.state() == QProcess.ProcessState.Running:
+            self.pymol_process.terminate()
             self.pymol_process.waitForFinished(3000)
+
+    def pymol_finished(self):
+        self.vis_action.setChecked(False)
 
     def _e2pdb(self, options):
         com_pdb = self.app.systems[self.system_index]['namespace'].INFO['COM_PDB']

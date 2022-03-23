@@ -828,6 +828,8 @@ class BindingStatistics(dict):
                     diff = self.com[key] - self.rec[key] - self.lig[key]
                     if diff.abs_gt(TINY):
                         self.inconsistent = True
+                        logging.warning(f"{key} component is reported as inconsistent. Please, check the output file "
+                                        f"for more details")
                         break
 
         for key in self.com.data_keys:
@@ -882,12 +884,24 @@ class BindingStatistics(dict):
         _output_format = 0 if output_format == 'ascii' else 1
         text = []
         if _output_format:
-            text.append(['WARNING: INCONSISTENCIES EXIST WITHIN INTERNAL POTENTIAL' +
-                         'TERMS. THE VALIDITY OF THESE RESULTS ARE HIGHLY QUESTIONABLE'])
+            text.append(['WARNING: INCONSISTENCIES EXIST WITHIN INTERNAL POTENTIAL TERMS AND\n'
+                         'THE VALIDITY OF THESE RESULTS ARE HIGHLY QUESTIONABLE!\n'
+                         '\n'
+                         'Some absolute differences in the internal potential terms are greater than 0.005.\n'
+                         'This should not happen when using Single Trajectory Protocol!\n'
+                         '\n'
+                         'You can generate a detailed *.csv file with all the terms and differences as follows:\n'
+                         'gmx_MMPBSA --rewrite-output -eo energy_terms_differences.csv'])
         else:
-            text.append('WARNING: INCONSISTENCIES EXIST WITHIN INTERNAL POTENTIAL' +
-                        '\nTERMS. THE VALIDITY OF THESE RESULTS ARE HIGHLY QUESTIONABLE\n')
-        text if _output_format else '\n'.join(text) + '\n'
+            text.append('WARNING: INCONSISTENCIES EXIST WITHIN INTERNAL POTENTIAL TERMS AND\n'
+                         'THE VALIDITY OF THESE RESULTS ARE HIGHLY QUESTIONABLE!\n'
+                         '\n'
+                         'Some absolute differences in the internal potential terms are greater than 0.005.\n'
+                         'This should not happen when using Single Trajectory Protocol!\n'
+                         '\n'
+                         'You can generate a detailed *.csv file with all the terms and differences as follows:\n'
+                         'gmx_MMPBSA --rewrite-output -eo energy_terms_differences.csv')
+        return text if _output_format else '\n'.join(text) + '\n'
 
     def summary_output(self, output_format: str = 'ascii'):
         _output_format = 0 if output_format == 'ascii' else 1
