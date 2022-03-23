@@ -462,9 +462,6 @@ class ChartSettings(dict):
                                        'width': {'type': 'float', 'enabled': True, 'expanded': True, 'name': 'width',
                                                  'value': 0.7,
                                                  'step': 0.1, 'limits': (0.1, 1.5), 'accelerated': True, 'default': 0.7,
-                                                 'action_type': R},
-                                       'color': {'type': 'color', 'enabled': True, 'expanded': True, 'name': 'color',
-                                                 'value': [0, 0, 0, 255], 'default': [0, 0, 0, 255],
                                                  'action_type': R}}},
                     'bar-label': {
                         'type': 'group', 'enabled': True, 'expanded': True, 'name': 'bar-label', 'value': None,

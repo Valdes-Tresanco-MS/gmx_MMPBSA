@@ -293,7 +293,8 @@ class BarChart(ChartsBase):
                 bar_plot_ax = sns.barplot(data=data[options['groups'][g]], ci="sd",
                                           palette=palette[s: s + len(options['groups'][g])] if palette else palette,
                                           color=rgb2rgbf(options[('Bar Plot', 'color')]),
-                                          errwidth=1, ax=self.axes[c])
+                                          errwidth=options[('Bar Plot', 'error-line', 'width')],
+                                          ax=self.axes[c])
                 s += len(options['groups'][g])
                 if options[('Bar Plot', 'scale-yaxis')]: # and options['scalable']:
                     bar_plot_ax.set_yscale('symlog')
