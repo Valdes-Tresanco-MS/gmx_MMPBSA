@@ -60,18 +60,18 @@ class InitDialog(QDialog):
         self.check_l.addWidget(self.remove_empty_charts_btn)
         self.check_l.addWidget(self.remove_empty_terms_btn)
         self.warn_label_empty = QLabel('Note: Remove empty charts and terms options will hide the charts and empty '
-                                       'terms respectively. This does not change your results at all, it only changes '
+                                       'terms respectively. This does not change the results at all, it only changes '
                                        'the representation of the data.')
         self.warn_label_empty.setStyleSheet("border:3px solid green")
         self.warn_label_empty.setWordWrap(True)
 
         self.corr_sys_btn = QCheckBox('Calculate correlation between systems')
-        self.corr_sys_btn.setToolTip('Make correlation between systems. Only works if you define more than 3 systems')
+        self.corr_sys_btn.setToolTip('Make correlation between systems. Only works when defining more than 3 systems')
         self.corr_sys_btn.setChecked(False)
 
         # mutants correlation
         self.corr_mut_btn = QCheckBox('Calculate correlation between mutants')
-        self.corr_mut_btn.setToolTip('Make correlation between mutants systems. Only works if you define more than 3 '
+        self.corr_mut_btn.setToolTip('Make correlation between mutants systems. Only works when defining more than 3 '
                                      'mutants')
         self.corr_mut_btn.setChecked(False)
 

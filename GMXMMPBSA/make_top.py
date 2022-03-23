@@ -266,7 +266,7 @@ class CheckMakeTop:
             self.ligand_frcmod = self.FILES.prefix + lig_name + '.frcmod'
             # run parmchk2
             parmchk2 = self.external_progs['parmchk2']
-            lig_ff = '2' if "gaff2" in self.INPUT['forcefields'] else '1'
+            lig_ff = '2' if "leaprc.gaff2" in self.INPUT['forcefields'] else '1'
             parmchk2_args = [parmchk2, '-i', self.FILES.ligand_mol2, '-f', 'mol2', '-o', self.ligand_frcmod, '-s',
                              lig_ff]
             logging.debug('Running command: ' + ' '.join(parmchk2_args))
@@ -451,6 +451,7 @@ class CheckMakeTop:
                                 f"correct. Otherwise report the error...")
 
         com_top.coordinates = self.complex_str.coordinates
+        com_top.save(f"{self.FILES.prefix}COM.inpcrd", format='inpcrd', overwrite=True)
         # try:
         if com_top.impropers or com_top.urey_bradleys:
             com_amb_prm = parmed.amber.ChamberParm.from_structure(com_top)
@@ -493,6 +494,7 @@ class CheckMakeTop:
                                     f"that they are correct. Otherwise report the error...")
 
             rec_top.coordinates = self.receptor_str.coordinates
+            rec_top.save(f"{self.FILES.prefix}REC.inpcrd", format='inpcrd', overwrite=True)
             if rec_top.impropers or rec_top.urey_bradleys:
                 if com_top_parm == 'amber':
                     GMXMMPBSA_ERROR('Inconsistent parameter format. The defined Complex is Amber/OPLS type while the '
@@ -535,6 +537,7 @@ class CheckMakeTop:
                                     f"that they are correct. Otherwise report the error...")
 
             lig_top.coordinates = self.ligand_str.coordinates
+            lig_top.save(f"{self.FILES.prefix}LIG.inpcrd", format='inpcrd', overwrite=True)
             if lig_top.impropers or lig_top.urey_bradleys:
                 if com_top_parm == 'amber':
                     GMXMMPBSA_ERROR('Inconsistent parameter format. The defined Complex is Amber/OPLS type while the '

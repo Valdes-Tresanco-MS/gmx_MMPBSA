@@ -154,8 +154,8 @@ input file will contain all the parameters needed for the MM/PB(GB)SA calculatio
         parameter as its increase may lead to a considerable RAM usage (specially when running the program in parralel).
 
 !!! note
-    Once the calculation is done, you can analyze the results in `gmx_MMPBSA_ana` (if you didn't define `-nogui`). 
-    Please see the [gmx_MMPBSA_ana][5] section for more information
+    Once the calculation is done, the results can be analyzed in `gmx_MMPBSA_ana` (if `-nogui` flag was not used in the command-line). 
+    Please, check the [gmx_MMPBSA_ana][5] section for more information
 
 
   [1]: http://archive.ambermd.org/201508/0382.html 

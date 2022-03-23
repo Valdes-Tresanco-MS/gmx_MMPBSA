@@ -96,8 +96,8 @@ high number of charged residues at the interface.
 In this case, Li/Merz ion parameters (12-6 normal usage set) for Mg ions were used. Check 
 [Amber manual](https://ambermd.org/doc12/Amber20.pdf#section.3.6) for more info on ion parameters.
 !!! note
-    Once the calculation is done, you can analyze the results in `gmx_MMPBSA_ana` (if you didn't define `-nogui`). 
-    Please see the [gmx_MMPBSA_ana][4] section for more information
+    Once the calculation is done, the results can be analyzed in `gmx_MMPBSA_ana` (if `-nogui` flag was not used in the command-line). 
+    Please, check the [gmx_MMPBSA_ana][4] section for more information
   
   [1]: ../../gmx_MMPBSA_command-line.md#gmx_mmpbsa-command-line
   [2]: ../../input_file.md#the-input-file

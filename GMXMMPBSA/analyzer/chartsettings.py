@@ -310,24 +310,24 @@ class ChartSettings(dict):
                     'theme': {
                         'type': 'list', 'enabled': True, 'expanded': True, 'name': 'theme', 'value': 'darkgrid',
                         'values': ['darkgrid', '---0', 'whitegrid', 'dark', 'white', 'ticks'], 'default': 'darkgrid',
-                        'tip': tooltip1, 'action_type': R},
+                        'action_type': R, 'tip': 'changes visual theme for all plots'},
                     'toolbar': {'type': 'bool', 'enabled': True, 'expanded': True, 'name': 'toolbar', 'value': False,
-                                'default': False, 'action_type': U},
+                                'default': False, 'action_type': U, 'tip': 'shows toolbar in all graphs'},
                     'figure-format': {
                         'type': 'group', 'enabled': True, 'expanded': True, 'name': 'figure-format', 'value': None,
                         'default': None,
                         'children': {
                             'dpi-plot': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'dpi-plot',
                                          'value': 100, 'step': 10, 'accelerated': True, 'limits': (50, 300),
-                                         'default': 100, 'action_type': R},
+                                         'default': 100, 'action_type': R, 'tip': 'set dpi for all plots'},
                             'dpi-save': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'dpi-save',
                                          'value': 300, 'step': 10, 'accelerated': True, 'limits': (50, 1200),
-                                         'default': 300, 'action_type': U},
+                                         'default': 300, 'action_type': U, 'tip': 'dpi used for saved figures'},
                             'save-format': {
                                 'type': 'list', 'enabled': True, 'expanded': True, 'name': 'save-format',
                                 'value': 'svg', 'values': ['svg', 'png', 'tiff', 'pdf', 'eps', 'jpg', 'jpeg', 'pgf',
                                                            'ps', 'raw', 'rgba', 'svgz', 'tif'],
-                                'default': 'svg', 'tip': 'Esto es un tip', 'action_type': U},
+                                'default': 'svg', 'action_type': U},
                         }}}},
             'Line Plot': {
                 'type': 'group', 'enabled': True, 'expanded': False, 'name': 'Line Plot', 'value': None, 'default':
@@ -356,10 +356,10 @@ class ChartSettings(dict):
                                        'value': 50, 'step': 1, 'default': 50, 'action_type': R},
                             'first_obs': {'type': 'list', 'enabled': True, 'expanded': True, 'name': 'first_obs',
                                           'value': 'window', 'values': ['window', 'start'], 'default': 'window',
-                                          'action_type': R, 'tip': 'Defines where the moving average is plotted from. '
-                                                                   'For window, the moving average will be plotted '
-                                                                   'from the defined window size, and for start, '
-                                                                   'the plot will start at the first value.'}}},
+                                          'action_type': R, 'tip': 'Defines the start value of the moving average. '
+                                                                   'Window: set start according to'
+                                                                   'the defined window size. Start: '
+                                                                   'set start at the first value.'}}},
                     'fontsize': {
                         'type': 'group', 'enabled': True, 'expanded': True, 'name': 'fontsize', 'value': None,
                         'default': None,
@@ -415,9 +415,10 @@ class ChartSettings(dict):
                               'value': [44, 105, 176, 255], 'default': [44, 105, 176, 255], 'action_type': R},
                     'subplot-components': {'type': 'bool', 'enabled': True, 'expanded': True,
                                            'name': 'subplot-components', 'value': True, 'default': True,
-                                           'action_type': R},
+                                           'action_type': R, 'tip': 'Groups energy components in bar plot'},
                     'scale-yaxis': {'type': 'bool', 'enabled': True, 'expanded': True,
-                                         'name': 'scale-yaxis', 'value': False, 'default': False, 'action_type': R},
+                                    'name': 'scale-yaxis', 'value': False, 'default': False, 'action_type': R,
+                                    'tip': 'Uses exponential values in y-axis'},
                     'remove-molid': {'type': 'bool', 'enabled': True, 'expanded': True, 'name': 'remove-molid',
                                      'value': True, 'default': True, 'action_type': R},
                     'IE/C2 Entropy': {
@@ -432,10 +433,11 @@ class ChartSettings(dict):
                                 'children': {
                                     'reliable': {'type': 'color', 'enabled': True, 'expanded': True, 'name': 'reliable',
                                                  'value': [0, 255, 0, 255], 'default': [0, 255, 0, 255],
-                                                 'action_type': R},
+                                                 'action_type': R, 'tip': 'Color if sigma < 3.6kcal/mol'},
                                     'non-reliable': {'type': 'color', 'enabled': True, 'expanded': True,
                                                      'name': 'non-reliable', 'value': [255, 0, 0, 255],
-                                                     'default': [255, 0, 0, 255], 'action_type': R}}},
+                                                     'default': [255, 0, 0, 255], 'action_type': R,
+                                                     'tip': 'Color if sigma > 3.6kcal/mol'}}},
                             'bar-plot': {
                                 'type': 'group', 'enabled': True, 'expanded': True, 'name': 'bar-plot', 'value': None,
                                 'default': None,
@@ -522,11 +524,12 @@ class ChartSettings(dict):
                 'children': {
                     'highlight-components': {'type': 'bool', 'enabled': True, 'expanded': True,
                                              'name': 'highlight-components', 'value': True, 'default': True,
-                                             'action_type': R},
+                                             'action_type': R, 'tip': 'Highlights receptor/ligand residues'},
                     'legend': {'type': 'bool', 'enabled': True, 'expanded': True, 'name': 'legend', 'value': True,
                                'default': True, 'action_type': R},
                     'remove-molid': {'type': 'bool', 'enabled': True, 'expanded': True, 'name': 'remove-molid',
-                                     'value': True, 'default': True, 'action_type': R},
+                                     'value': True, 'default': True, 'action_type': R,
+                                     'tip': 'Removes R/L labels from residue names'},
                     'receptor-color': {'type': 'color', 'enabled': True, 'expanded': True, 'name': 'receptor-color',
                                        'value': [255, 85, 127, 255], 'default': [255, 85, 127, 255], 'action_type': R},
                     'ligand-color': {'type': 'color', 'enabled': True, 'expanded': True, 'name': 'ligand-color',
@@ -631,6 +634,7 @@ class ChartSettings(dict):
                                                             'RdGy_7', 'RdGy_5'
                                                             ], 'default': 'auto', 'action_type': R, 'tip': tooltip1},
                     'cartoon_oval_length': {'type': 'float', 'enabled': True, 'expanded': True,
+
                                             'name': 'cartoon_oval_length', 'value': 1.0, 'step': 0.1, 'default': 1.0,
                                             'action_type': R},
                     'cartoon_rect_length': {'type': 'float', 'enabled': True, 'expanded': True,
@@ -644,7 +648,7 @@ class ChartSettings(dict):
                                                   'action_type': R},
                     'light_count': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'light_count',
                                     'value': 1, 'step': 1, 'accelerated': False, 'limits': (1, 10),
-                                    'default': 1, 'action_type': R},
+                                    'default': 1, 'action_type': R, 'tip': 'Defines the number of light sources'},
                     'background': {'type': 'list', 'enabled': True, 'expanded': True, 'name': 'background',
                                    'value': 'gray50', 'values': ['gray50', '---0', 'black',
                                                                  'gray10', 'gray20', 'gray30', 'gray40',

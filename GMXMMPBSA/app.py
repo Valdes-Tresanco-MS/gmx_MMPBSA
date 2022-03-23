@@ -126,7 +126,8 @@ def gmxmmpbsa_ana():
             pyqt = False
     finally:
         if not pyqt:
-            GMXMMPBSA_ERROR('Could not import PyQt5/PyQt6. gmx_MMPBSA_ana will be disabled until you install it')
+            GMXMMPBSA_ERROR('Could not import PyQt5/PyQt6. gmx_MMPBSA_ana will be disabled until PyQt5/PyQt6 is '
+                            'installed')
 
     from GMXMMPBSA.analyzer.gui import GMX_MMPBSA_ANA
     from GMXMMPBSA.analyzer.utils import get_files

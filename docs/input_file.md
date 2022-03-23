@@ -577,6 +577,30 @@ However, this option is incompatible with alanine scanning.
   [206]: https://pubs.acs.org/doi/10.1021/ct600085e
   [200]: https://pubs.acs.org/doi/10.1021/acs.jctc.5b00271
 
+`alpb` (Default = 0)
+:   Use [Analytical Linearized Poisson-Boltzmann (ALPB)][209] approximation to handle electrostatic interactions 
+within the implicit solvent model (see [§4.2](https://ambermd.org/doc12/Amber21.pdf#section.4.2)):
+
+    <img src="../assets/images/alpb_Eqn.svg" align="center"/>
+
+    where β = ε<sub>in</sub>/ε<sub>ex</sub> is the ratio of the internal and external dielectrics, α=0.571412, and A 
+    is the so-called effective electrostatic size of the molecule (see `arad_method` below). The ALPB requires one 
+    of the analytical GB models to be set, that is igb = 1, 2, 5, or 7, for computing the effective Born radii. It uses 
+    the same sets of radii as required by the particular GB model.
+
+    * 0: Don't
+    * 1: Use ALPB
+
+  [209]: https://aip.scitation.org/doi/10.1063/1.1857811
+
+`arad_method` (Default = 1)
+:   Method used to estimate the effective electrostatic size/radius (`A` in ALPB equation) of the molecule 
+(See [Sigalov, Fenley, and Onufriev](https://aip.scitation.org/doi/10.1063/1.2177251)).
+
+    * 1: Use structural invariants
+    * 2: Use elementary functions
+    * 3: Use elliptic integral (numerical)
+
 `intdiel` (Default = 1.0)
 :   Define Internal dielectric constant.
 
@@ -724,10 +748,15 @@ on the very first step to a file named qmmm_region.pdb.
 `peptide_corr` (Default = 0)
 :   Apply MM correction to peptide linkages. This correction is of the form: 
 
-    <img src="https://latex.codecogs.com/svg.
-    image?E_{scf}&space;=&space;E_{scf}&space;&plus;&space;h_{type}(i_{type})
-    *sin^{2}\phi" title="https://latex.codecogs.com/svg.image?E_{scf} = E_{scf} + h_{type}(i_{type})*sin^{2}\phi 
-    align="center""/>
+[comment]: <> (    <img src="https://latex.codecogs.com/svg.)
+
+[comment]: <> (    image?E_{scf}&space;=&space;E_{scf}&space;&plus;&space;h_{type}&#40;i_{type}&#41;)
+
+[comment]: <> (    *sin^{2}\phi" title="https://latex.codecogs.com/svg.image?E_{scf} = E_{scf} + h_{type}&#40;i_{type}&#41;*sin^{2}\phi )
+
+[comment]: <> (    align="center""/>)
+
+    <img src="../assets/images/peptide_correction.svg" align="center"/>
 
     where _ϕ_ is the dihedral angle of the H-N-C-O linkage and h<sub>type</sub> is a constant dependent on the 
     Hamiltonian used. Recommended, except for DFTB/SCC-DFTB.
@@ -1246,23 +1275,50 @@ pdf#subsection.7.3.1))
 
     !!! example "Examples"
 
-        === "One closure"
-                 closure="pse3"
-        === "Several closures"
-                 closure="kh,pse3"
+            === "v1.5.2"
+                === "One closure"
+                         closure="pse3"
+                === "Several closures"
+                         closure="kh","pse3"
+            === "< v1.5.2"
+                === "One closure"
+                         closure="pse3"
+                === "Several closures"
+                         closure="kh,pse3"
 
 #### **Solvation free energy corrections**
 
-`thermo` (Default = "std")
-:   Which thermodynamic equation you want to use to calculate solvation properties. Options are:
-
-    * "std": uses the standard closure relation
-    * "gf": Compute the Gaussian fluctuation excess chemical potential functional
-    * "both": print out separate sections for all
+=== "v1.5.2"
     
-    !!! note
-        Note that all data are printed out for each RISM simulation, so no choice is any more computationally demanding 
-        than another.
+    !!! info
+        The `thermo` variable has been removed in v1.5.2. Now the standard closure relation is always reported. Use 
+        `gfcorrection` and/or `pcpluscorrection` variables to compute additional excess chemical potential functionals.
+
+    `gfcorrection` (Default = 0)
+    :    Compute the Gaussian fluctuation excess chemical potential functional. 
+    See [§7.1.2](https://ambermd.org/doc12/Amber21.pdf#subsection.7.1.2)
+
+        * 0: Off
+        * 1: On
+
+    `pcpluscorrection` (Default = 0)
+    :    Compute the PC+/3D-RISM excess chemical potential functional.
+    See [§7.2.4](https://ambermd.org/doc12/Amber21.pdf#subsection.7.2.4)
+
+        * 0: Off
+        * 1: On
+
+=== "< v1.5.2"
+    `thermo` (Default = "std")
+    :   Which thermodynamic equation you want to use to calculate solvation properties. Options are:
+    
+        * "std": uses the standard closure relation
+        * "gf": Compute the Gaussian fluctuation excess chemical potential functional
+        * "both": print out separate sections for all
+        
+        !!! note
+            Note that all data are printed out for each RISM simulation, so no choice is any more computationally 
+            demanding than another.
 
 #### **Long-range asymptotics**
 
@@ -1361,7 +1417,7 @@ sets the depth of the hierarchical octtree.
     The non-periodic solvation box super-cell can be defined as variable or fixed in size. When a
     variable box size is used, the box size will be adjusted to maintain a minimum buffer distance between the atoms
     of the solute and the box boundary. This has the advantage of maintaining the smallest possible box size while
-    adapting to changes of solute shape and orientation. Alternatively, the box size can be specified at run-time. This
+    adapting to change of solute shape and orientation. Alternatively, the box size can be specified at run-time. This
     box size will be used for the duration of the sander calculation. Solvent box dimensions have a strong effect on 
     the numerical precision of 3D-RISM. See [§7.2.3](https://ambermd.org/doc12/Amber21.pdf#subsection.7.2.3) for 
     recommendation on selecting an appropriate box size and resolution.
@@ -1404,14 +1460,14 @@ exclusive with `buffer` and `grdspc` above, and paired with `solvbox` below.
         due to the overhead involved in which each thread is required to load every topology file when calculating 
         energies, parallel scaling will begin to fall off as the number of threads reaches the number of frames. 
 
-`solvbox` (Default = '-1,-1,-1')
+`solvbox` (Default = -1,-1,-1)
 :    Sets the size in Å of the fixed size solvation box. Used only if `buffer` < 0. Mutually exclusive with `buffer` 
 and `grdspc` above, and paired with `ng` above. 
 
     !!! warning 
         No default, this must be set if buffer < 0. Define like `solvbox=20,20,20`
 
-`solvcut`  (Default = 14 )
+`solvcut`  (Default = 14)
 :   Cutoff used for solute-solvent interactions. The default value is that of buffer. Therefore, if you set `buffer` < 
 0 and specify `ng` and `solvbox` instead, you must set `solvcut` to a nonzero value; otherwise the program will quit in 
 error.
@@ -1434,25 +1490,47 @@ accuracy and how this interacts with `ljTolerance`, `buffer`, and `solvbox`. Thr
     * n tolerances: Tolerances from the list are assigned to the closure list in order.
 
     !!! example "Examples"
-        === "One closure/One tolerance"
-                closure="pse3", tolerance=0.00001
-            
-            A tolerance of 0.00001 will be used for clousure "pse3"
-        === "Several closures/One tolerance"
-                 closure="kh,pse3", tolerance=0.00001
+        === "v1.5.2"
+            === "One closure/One tolerance"
+                    closure="pse3", tolerance=0.00001
+                
+                A tolerance of 0.00001 will be used for clousure "pse3"
+            === "Several closures/One tolerance"
+                     closure="kh","pse3", tolerance=0.00001
+    
+                A tolerance of 1 will be used for clousure "kh", while 0.00001 will be used for clousure "pse3". 
+                Equivalent to `closure="kh", "pse3", tolerance=1,0.00001`
+            === "Several closures/Two tolerances"
+                     closure="kh","pse2","pse3", tolerance=0.01,0.00001
+    
+                A tolerance of 0.01 will be used for clousures "kh" and "pse2", while 0.00001 will be used for clousure 
+                "pse3". Equivalent to `closure="kh","pse2","pse3", tolerance=0.01,0.01,0.00001`
+            === "Several closures/Several tolerances"
+                     closure="kh","pse2","pse3", tolerance=0.1,0.01,0.00001
+    
+                A tolerance of 0.1 will be used for clousure "kh", 0.01 will be used for clousure "pse2", while 0.00001 
+                will be used for clousure "pse3".
 
-            A tolerance of 1 will be used for clousure "kh", while 0.00001 will be used for clousure "pse3". 
-            Equivalent to `closure="kh, pse3", tolerance=1,0.00001`
-        === "Several closures/Two tolerances"
-                 closure="kh,pse2,pse3", tolerance=0.01,0.00001
-
-            A tolerance of 0.01 will be used for clousures "kh" and "pse2", while 0.00001 will be used for clousure 
-            "pse3". Equivalent to `closure="kh,pse2,pse3", tolerance=0.01,0.01,0.00001`
-        === "Several closures/Several tolerances"
-                 closure="kh,pse2,pse3", tolerance=0.1,0.01,0.00001
-
-            A tolerance of 0.1 will be used for clousure "kh", 0.01 will be used for clousure "pse2", while 0.00001 
-            will be used for clousure "pse3".
+        === "<v1.5.2"
+            === "One closure/One tolerance"
+                    closure="pse3", tolerance=0.00001
+                
+                A tolerance of 0.00001 will be used for clousure "pse3"
+            === "Several closures/One tolerance"
+                     closure="kh,pse3", tolerance=0.00001
+    
+                A tolerance of 1 will be used for clousure "kh", while 0.00001 will be used for clousure "pse3". 
+                Equivalent to `closure="kh, pse3", tolerance=1,0.00001`
+            === "Several closures/Two tolerances"
+                     closure="kh,pse2,pse3", tolerance=0.01,0.00001
+    
+                A tolerance of 0.01 will be used for clousures "kh" and "pse2", while 0.00001 will be used for clousure 
+                "pse3". Equivalent to `closure="kh,pse2,pse3", tolerance=0.01,0.01,0.00001`
+            === "Several closures/Several tolerances"
+                     closure="kh,pse2,pse3", tolerance=0.1,0.01,0.00001
+    
+                A tolerance of 0.1 will be used for clousure "kh", 0.01 will be used for clousure "pse2", while 0.00001 
+                will be used for clousure "pse3".
 
 `ljTolerance` (Default = -1)
 :   Lennard-Jones accuracy (Optional.) Determines the Lennard-Jones cutoff distance based on the desired accuracy of 
@@ -1512,6 +1590,16 @@ computation time.
 
     * 0: Don’t decompose solvation free energy into polar and non-polar components. 
     * 1: Decompose solvation free energy into polar and non-polar components.
+
+`entropicdecomp` (Default = 0)
+:   Decomposes solvation free energy into energy and entropy components. Also performs temperature derivatives of other 
+calculated quantities. Note that this typically requires 80% more computation time and requires a `.xvv` file version 
+1.000 or higher (available within `GMXMMPBSA` data folder). 
+See [§7.1.3](https://ambermd.org/doc12/Amber21.pdf#subsection.7.1.3) and 
+[§7.3](https://ambermd.org/doc12/Amber21.pdf#section.7.3)
+
+    * 0: No entropic decomposition
+    * 1: Entropic decomposition
 
 `rism_verbose` (Default = 0)
 :   Level of output in temporary RISM output files. May be helpful for debugging or following convergence. 

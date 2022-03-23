@@ -37,6 +37,7 @@ Classes:
 
 from __future__ import division
 
+import parmed
 from parmed.amber.mdin import Mdin
 from parmed.exceptions import AmberError
 from copy import deepcopy
@@ -60,30 +61,63 @@ def create_inputs(INPUT, prmtop_system, pre):
         # Convert the strings into card objects
         # Now create the mdin objects
         if INPUT['gbrun']:
+            com_arad = None
+            rec_arad = None
+            lig_arad = None
+            if INPUT['alpb']:
+                import subprocess
+                com_top = parmed.load_file('COM.prmtop', xyz=f"{pre}COM.inpcrd")
+                com_top.save('COM.pqr', format='pqr', overwrite=True)
+                stdoutdata = subprocess.getoutput("elsize COM.pqr -hea")
+                com_arad = stdoutdata.split()[INPUT['arad_method'] * -1]
+                if not stability:
+                    rec_top = parmed.load_file('REC.prmtop', xyz=f"{pre}REC.inpcrd")
+                    rec_top.save('REC.pqr', format='pqr', overwrite=True)
+                    stdoutdata = subprocess.getoutput("elsize REC.pqr -hea")
+                    rec_arad = stdoutdata.split()[INPUT['arad_method'] * -1]
+
+                    lig_top = parmed.load_file('LIG.prmtop', xyz=f"{pre}LIG.inpcrd")
+                    lig_top.save('LIG.pqr', format='pqr', overwrite=True)
+                    stdoutdata = subprocess.getoutput("elsize LIG.pqr -hea")
+                    lig_arad = stdoutdata.split()[INPUT['arad_method'] * -1]
+
             rec_res = ['Residues considered as REC', full_rc]
             if stability:
                 pri_res = ['Residues to print', com_card]
-                com_mdin = SanderGBDecomp(INPUT, rec_res, pri_res)
-                com_mdin.write_input(pre + 'gb_decomp_com.mdin')
+                com_input = deepcopy(INPUT)
+                if com_arad:
+                    com_input['arad'] = com_arad
+                com_mdin = SanderGBDecomp(com_input, rec_res, pri_res)
+                com_mdin.write_input(f"{pre}gb_decomp_com.mdin")
             else:
                 lig_res = ['Residues considered as LIG', full_lc]
                 pri_res = ['Residues to print', com_card]
-                com_mdin = SanderGBDecomp(INPUT, rec_res, lig_res, pri_res)
+                com_input = deepcopy(INPUT)
+                if com_arad:
+                    com_input['arad'] = com_arad
+                com_mdin = SanderGBDecomp(com_input, rec_res, lig_res, pri_res)
                 rec_res = ['Residues considered as REC', full_rec]
                 pri_res = ['Residues to print', rec_card]
-                rec_mdin = SanderGBDecomp(INPUT, rec_res, pri_res)
+                rec_input = deepcopy(INPUT)
+                if rec_arad:
+                    rec_input['arad'] = rec_arad
+                rec_mdin = SanderGBDecomp(rec_input, rec_res, pri_res)
                 lig_res = ['Residues considered as LIG', full_lig]
                 pri_res = ['Residues to print', lig_card]
-                lig_mdin = SanderGBDecomp(INPUT, lig_res, pri_res)
-                com_mdin.write_input(pre + 'gb_decomp_com.mdin')
-                rec_mdin.write_input(pre + 'gb_decomp_rec.mdin')
-                lig_mdin.write_input(pre + 'gb_decomp_lig.mdin')
+                lig_input = deepcopy(INPUT)
+                if lig_arad:
+                    lig_input['arad'] = lig_arad
+                lig_mdin = SanderGBDecomp(lig_input, lig_res, pri_res)
+                com_mdin.write_input(f"{pre}gb_decomp_com.mdin")
+                rec_mdin.write_input(f"{pre}gb_decomp_rec.mdin")
+                lig_mdin.write_input(f"{pre}gb_decomp_lig.mdin")
+
         if INPUT['pbrun']:
             rec_res = ['Residues considered as REC', full_rc]
             if stability:
                 pri_res = ['Residues to print', com_card]
                 com_mdin = SanderPBDecomp(INPUT, rec_res, pri_res)
-                com_mdin.write_input(pre + 'pb_decomp_com.mdin')
+                com_mdin.write_input(f"{pre}pb_decomp_com.mdin")
             else:
                 lig_res = ['Residues considered as LIG', full_lc]
                 pri_res = ['Residues to print', com_card]
@@ -94,14 +128,34 @@ def create_inputs(INPUT, prmtop_system, pre):
                 lig_res = ['Residues considered as LIG', full_lig]
                 pri_res = ['Residues to print', lig_card]
                 lig_mdin = SanderPBDecomp(INPUT, lig_res, pri_res)
-                com_mdin.write_input(pre + 'pb_decomp_com.mdin')
-                rec_mdin.write_input(pre + 'pb_decomp_rec.mdin')
-                lig_mdin.write_input(pre + 'pb_decomp_lig.mdin')
+                com_mdin.write_input(f"{pre}pb_decomp_com.mdin")
+                rec_mdin.write_input(f"{pre}pb_decomp_rec.mdin")
+                lig_mdin.write_input(f"{pre}pb_decomp_lig.mdin")
 
     else:  # not decomp
 
         if INPUT['gbrun']:
             # We need separate input files for QM/gmx_MMPBSA
+            com_arad = None
+            rec_arad = None
+            lig_arad = None
+            if INPUT['alpb']:
+                import subprocess
+                com_top = parmed.load_file('COM.prmtop', xyz=f"{pre}COM.inpcrd")
+                com_top.save('COM.pqr', format='pqr', overwrite=True)
+                stdoutdata = subprocess.getoutput("elsize COM.pqr -hea")
+                com_arad = stdoutdata.split()[INPUT['arad_method'] * -1]
+                if not stability:
+                    rec_top = parmed.load_file('REC.prmtop', xyz=f"{pre}REC.inpcrd")
+                    rec_top.save('REC.pqr', format='pqr', overwrite=True)
+                    stdoutdata = subprocess.getoutput("elsize REC.pqr -hea")
+                    rec_arad = stdoutdata.split()[INPUT['arad_method'] * -1]
+
+                    lig_top = parmed.load_file('LIG.prmtop', xyz=f"{pre}LIG.inpcrd")
+                    lig_top.save('LIG.pqr', format='pqr', overwrite=True)
+                    stdoutdata = subprocess.getoutput("elsize LIG.pqr -hea")
+                    lig_arad = stdoutdata.split()[INPUT['arad_method'] * -1]
+
             if INPUT['ifqnt']:
                 com_input = deepcopy(INPUT)
                 rec_input = deepcopy(INPUT)
@@ -113,8 +167,11 @@ def create_inputs(INPUT, prmtop_system, pre):
                 com_input['qm_theory'] = "'%s'" % com_input['qm_theory']
                 com_input['qmmask'] = "'%s'" % com_input['qmmask']
                 com_input['qmcharge'] = com_input['qmcharge_com']
+                # check if alpb
+                if com_arad:
+                    com_input['arad'] = com_arad
                 gb_mdin = SanderGBInput(com_input)
-                gb_mdin.write_input(pre + 'gb_qmmm_com.mdin')
+                gb_mdin.write_input(f'{pre}gb_qmmm_com.mdin')
                 if not stability:
                     if not rec_input['qmmask']:
                         rec_input['ifqnt'] = 0
@@ -122,19 +179,39 @@ def create_inputs(INPUT, prmtop_system, pre):
                         rec_input['qmmask'] = "'%s'" % rec_input['qmmask']
                     rec_input['qm_theory'] = "'%s'" % rec_input['qm_theory']
                     rec_input['qmcharge'] = rec_input['qmcharge_rec']
+                    # check if alpb
+                    if rec_arad:
+                        rec_input['arad'] = rec_arad
                     gb_mdin = SanderGBInput(rec_input)
-                    gb_mdin.write_input(pre + 'gb_qmmm_rec.mdin')
+                    gb_mdin.write_input(f'{pre}gb_qmmm_rec.mdin')
                     if not lig_input['qmmask']:
                         lig_input['ifqnt'] = 0
                     else:
                         lig_input['qmmask'] = "'%s'" % lig_input['qmmask']
                     lig_input['qm_theory'] = "'%s'" % lig_input['qm_theory']
                     lig_input['qmcharge'] = lig_input['qmcharge_lig']
+                    # check if alpb
+                    if lig_arad:
+                        lig_input['arad'] = lig_arad
                     gb_mdin = SanderGBInput(lig_input)
-                    gb_mdin.write_input(pre + 'gb_qmmm_lig.mdin')
+                    gb_mdin.write_input(f'{pre}gb_qmmm_lig.mdin')
+
+            elif INPUT['alpb']:
+                com_input = deepcopy(INPUT)
+                rec_input = deepcopy(INPUT)
+                lig_input = deepcopy(INPUT)
+                com_input['arad'] = com_arad
+                gb_mdin = SanderGBInput(com_input)
+                gb_mdin.write_input(f'{pre}gb_com.mdin')
+                rec_input['arad'] = rec_arad
+                gb_mdin = SanderGBInput(rec_input)
+                gb_mdin.write_input(f'{pre}gb_rec.mdin')
+                lig_input['arad'] = lig_arad
+                gb_mdin = SanderGBInput(lig_input)
+                gb_mdin.write_input(f'{pre}gb_lig.mdin')
             else:
                 gb_mdin = SanderGBInput(INPUT)
-                gb_mdin.write_input(pre + 'gb.mdin')
+                gb_mdin.write_input(f'{pre}gb.mdin')
 
         if INPUT['pbrun']:
             pb_prog = 'sander.APBS' if INPUT['sander_apbs'] else 'sander'
@@ -145,8 +222,12 @@ def create_inputs(INPUT, prmtop_system, pre):
                 pb_mdin = SanderPBSAInput(INPUT)
                 pb_mdin2 = SanderPBSA2Input(INPUT)
 
-            pb_mdin.write_input(pre + 'pb.mdin')
-            pb_mdin2.write_input(pre + 'pb.mdin2')
+            pb_mdin.write_input(f'{pre}pb.mdin')
+            pb_mdin2.write_input(f'{pre}pb.mdin2')
+
+        if INPUT['rismrun']:
+            rism_mdin = SanderRISMInput(INPUT)
+            rism_mdin.write_input(pre + 'rism.mdin')
 
     # end if decomprun
 
@@ -156,11 +237,11 @@ def create_inputs(INPUT, prmtop_system, pre):
         if not INPUT['mutant_only']:
             qh_in = QuasiHarmonicInput(com_mask, rec_mask, lig_mask, temperature=INPUT['temperature'],
                                        stability=stability, prefix=pre, trj_suffix=trj_suffix)
-            qh_in.write_input(pre + 'cpptrajentropy.in')
+            qh_in.write_input(f'{pre}cpptrajentropy.in')
         if INPUT['alarun']:
             qh_in = QuasiHarmonicInput(com_mask, rec_mask, lig_mask, temperature=INPUT['temperature'],
                                        stability=stability, prefix=pre + 'mutant_', trj_suffix=trj_suffix)
-            qh_in.write_input(pre + 'mutant_cpptrajentropy.in')
+            qh_in.write_input(f'{pre}mutant_cpptrajentropy.in')
 
 
 class SanderInput(object):
@@ -173,7 +254,7 @@ class SanderInput(object):
     def __init__(self, INPUT):
         self.mdin = Mdin(self.program)
         self.mdin.title = 'File generated by gmx_MMPBSA'
-        for key in list(self.input_items.keys()):
+        for key in self.input_items:
             # Skip ioutfm since it is handled explicitly later
             if key == 'ioutfm':
                 continue
@@ -181,6 +262,7 @@ class SanderInput(object):
                 self.mdin.change(self.parent_namelist[key], key, INPUT[self.name_map[key]])
             except KeyError:
                 self.mdin.change(self.parent_namelist[key], key, self.input_items[key])
+
         self.mdin.change('cntrl', 'ioutfm', int(bool(INPUT['netcdf'])))
 
     def write_input(self, filename):
@@ -199,14 +281,14 @@ class SanderGBInput(SanderInput):
                    # QM options
                    'ifqnt': 0, 'qmmask': '', 'qm_theory': '', 'qmcharge': 0,
                    'qmgb': 2, 'qmcut': 999.0,
-                   'scfconv': 1.0e-8, 'peptide_corr': 0, 'writepdb': 1, 'verbosity': 0}
+                   'scfconv': 1.0e-8, 'peptide_corr': 0, 'writepdb': 1, 'verbosity': 0, 'alpb': 0, 'arad': 15}
 
     parent_namelist = {'ntb': 'cntrl', 'cut': 'cntrl', 'nsnb': 'cntrl', 'idecomp': 'cntrl', 'offset': 'cntrl',
                        'imin': 'cntrl', 'maxcyc': 'cntrl', 'ncyc': 'cntrl', 'gbsa': 'cntrl', 'ioutfm': 'cntrl',
                        'dec_verbose': 'cntrl',
                        # Basic options
                        'igb': 'cntrl', 'intdiel': 'cntrl', 'extdiel': 'cntrl', 'saltcon': 'cntrl',
-                       'surften': 'cntrl',
+                       'surften': 'cntrl', 'alpb': 'cntrl', 'arad': 'cntrl',
                        # QM options
                        'ifqnt': 'cntrl', 'qmmask': 'qmmm', 'qm_theory': 'qmmm', 'qmcharge': 'qmmm',
                        'qmgb': 'qmmm', 'qmcut': 'qmmm',
@@ -217,11 +299,77 @@ class SanderGBInput(SanderInput):
                 'maxcyc': 'gb_maxcyc', 'ncyc': 'ncyc',
                 # Basic options
                 'igb': 'igb', 'intdiel': 'intdiel', 'extdiel': 'extdiel', 'saltcon': 'saltcon',
-                'surften': 'surften',
+                'surften': 'surften', 'alpb': 'alpb', 'arad': 'arad',
                 # QM options
                 'ifqnt': 'ifqnt',  'qmmask': 'qmmask', 'qm_theory': 'qm_theory',
                 'qmcharge': 'qmcharge', 'qmgb': 'qmgb', 'qmcut': 'qmcut',
                 'scfconv': 'scfconv', 'peptide_corr': 'peptide_corr', 'writepdb': 'writepdb', 'verbosity': 'verbosity'}
+
+
+# +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+class SanderRISMInput(SanderInput):
+    """ RISM sander input file """
+    input_items = {'ntb': 0, 'cut': 999.0, 'nsnb': 99999, 'idecomp': 0, 'offset': -999999.0,
+                   'imin': 5, 'maxcyc': 1, 'ncyc': 0, 'gbsa': 0, 'ioutfm': 0, 'dec_verbose': 0, 'irism': 1,
+                   # Closure approximations
+                   'closure': "kh",
+                   # Solvation free energy corrections
+                   'gfcorrection': 0, 'pcpluscorrection': 0,
+                   # Long-range asymptotics
+                   'noasympcorr': 1, 'treedcf': 1, 'treetcf': 1, 'treecoulomb': 0, 'treedcfmac': 0.1,
+                   'treetcfmac': 0.1, 'treecoulombmac': 0.1, 'treedcforder': 2, 'treetcforder': 2,
+                   'treecoulomborder': 2, 'treedcfn0': 500, 'treetcfn0': 500, 'treecoulombn0': 500,
+                   # Solvation box
+                   'buffer': 14.0, 'grdspc': 0.5, 'ng3': '-1,-1,-1', 'solvbox': '-1,-1,-1', 'solvcut': -1.0,
+                   # Solution convergence
+                   'tolerance': 1e-05, 'ljtolerance': -1.0, 'asympkspacetolerance': -1.0, 'mdiis_del': 0.7,
+                   'mdiis_nvec': 5, 'mdiis_restart': 10.0, 'maxstep': 10000, 'npropagate': 5,
+                   # Output
+                   'polardecomp': 0, 'entropicdecomp': 0, 'verbose': 0}
+
+    parent_namelist = {'ntb': 'cntrl', 'cut': 'cntrl', 'nsnb': 'cntrl', 'idecomp': 'cntrl', 'offset': 'cntrl',
+                       'imin': 'cntrl', 'maxcyc': 'cntrl', 'ncyc': 'cntrl', 'gbsa': 'cntrl', 'ioutfm': 'cntrl',
+                       'dec_verbose': 'cntrl', 'irism': 'cntrl',
+                       # Closure approximations
+                       'closure': 'rism',
+                       # Solvation free energy corrections
+                       'gfcorrection': 'rism', 'pcpluscorrection': 'rism',
+                       # Long-range asymptotics
+                       'noasympcorr': 'rism', 'treedcf': 'rism', 'treetcf': 'rism', 'treecoulomb': 'rism',
+                       'treedcfmac': 'rism', 'treetcfmac': 'rism', 'treecoulombmac': 'rism', 'treedcforder': 'rism',
+                       'treetcforder': 'rism', 'treecoulomborder': 'rism', 'treedcfn0': 'rism', 'treetcfn0': 'rism',
+                       'treecoulombn0': 'rism',
+                       # Solvation box
+                       'buffer': 'rism', 'grdspc': 'rism', 'ng3': 'rism', 'solvbox': 'rism', 'solvcut': 'rism',
+                       # Solution convergence
+                       'tolerance': 'rism', 'ljtolerance': 'rism', 'asympkspacetolerance': 'rism',  'mdiis_del':
+                       'rism', 'mdiis_nvec': 'rism', 'mdiis_restart': 'rism', 'maxstep': 'rism',
+                       'npropagate': 'rism',
+                       # Output
+                       'polardecomp': 'rism', 'entropicdecomp': 'rism', 'verbose': 'rism'}
+
+    name_map = {'ntb': 'ntb', 'cut': 'cut', 'nsnb': 'nsnb', 'idecomp': 'idecomp', 'offset': 'offset',
+                'imin': 'imin', 'gbsa': 'gbsa', 'ioutfm': 'netcdf', 'dec_verbose': 'dec_verbose',
+                'maxcyc': 'rism_maxcyc', 'ncyc': 'ncyc',
+                # Closure approximations
+                'closure': 'closure',
+                # Solvation free energy corrections
+                'gfcorrection': 'gfcorrection', 'pcpluscorrection': 'pcpluscorrection',
+                # Long-range asymptotics
+                'noasympcorr': 'noasympcorr', 'treedcf': 'treedcf',
+                'treetcf': 'treetcf', 'treecoulomb': 'treecoulomb', 'treedcfmac': 'treedcfmac',
+                'treetcfmac': 'treetcfmac', 'treecoulombmac': 'treecoulombmac', 'treedcforder': 'treedcforder',
+                'treetcforder': 'treetcforder', 'treecoulomborder': 'treecoulomborder', 'treedcfn0': 'treedcfn0',
+                'treetcfn0': 'treetcfn0', 'treecoulombn0': 'treecoulombn0',
+                # Solvation box
+                'buffer': 'buffer', 'grdspc': 'grdspc', 'ng3': 'ng', 'solvbox': 'solvbox', 'solvcut': 'solvcut',
+                # Solution convergence
+                'tolerance': 'tolerance', 'ljtolerance': 'ljtolerance', 'asympkspacetolerance': 'asympkspacetolerance',
+                'mdiis_del': 'mdiis_del', 'mdiis_nvec': 'mdiis_nvec', 'mdiis_restart': 'mdiis_restart',
+                'maxstep': 'maxstep', 'npropagate': 'npropagate',
+                # Output
+                'polardecomp': 'polardecomp', 'entropicdecomp': 'entropicdecomp', 'verbose': 'rism_verbose'}
 
 
 # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+

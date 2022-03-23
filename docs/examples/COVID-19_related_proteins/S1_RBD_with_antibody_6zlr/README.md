@@ -77,8 +77,8 @@ index file (`21 20`) are needed. The `mmpbsa.in` input file will contain all the
 calculation. A topology file is also needed (mandatory) in this case to generate the topology files in amber format 
 with all the terms for CHARMM force field.
 !!! note
-    Once the calculation is done, you can analyze the results in `gmx_MMPBSA_ana` (if you didn't define `-nogui`). 
-    Please see the [gmx_MMPBSA_ana][5] section for more information
+    Once the calculation is done, the results can be analyzed in `gmx_MMPBSA_ana` (if `-nogui` flag was not used in the command-line). 
+    Please, check the [gmx_MMPBSA_ana][5] section for more information
 
 
   [1]: http://archive.ambermd.org/201508/0382.html 
