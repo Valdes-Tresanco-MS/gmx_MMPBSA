@@ -392,6 +392,8 @@ class HeatmapChart(ChartsBase):
         nxticks = (1 if self.heatmap_type == 1 or data.columns.size < options[('Heatmap Plot', 'Per-residue', 'num-xticks')]
                    else data.columns.size // options[('Heatmap Plot', 'Per-residue', 'num-xticks')])
 
+        annotation = options[('Heatmap Plot', 'Per-wise', 'annotation')] if self.heatmap_type == 1 else False
+
         if options[('Heatmap Plot', 'highlight-components')]:
             mheatmap = MHeatmap(data=data,
                                 figsize=(fig_width, fig_height),
@@ -411,7 +413,8 @@ class HeatmapChart(ChartsBase):
                                 colorbar_label_fontsize=options[('Heatmap Plot', 'fontsize', 'colorbar-label')],
                                 colorbar_ticks_fontsize=options[('Heatmap Plot', 'fontsize', 'colorbar-ticks')],
                                 cmap=cmap,
-                                annot=options[('Heatmap Plot', 'Per-wise', 'annotation')]
+                                annot=annotation,
+                                annot_fs=options[('Heatmap Plot', 'fontsize', 'annotation')]
                                 )
 
             # figure canvas definition
@@ -425,10 +428,13 @@ class HeatmapChart(ChartsBase):
                                      xticklabels=nxticks, #cbar_ax=self.ax_cbar,
                                      yticklabels=1, #cbar_ax=self.ax_cbar,
                                      # cbar_kws=colorbar_kws,
-                                     cmap=cmap, annot=options[('Heatmap Plot', 'Per-wise', 'annotation')], fmt=".2f",
+                                     cmap=cmap, annot=annotation, fmt=".2f",
+                                     annot_kws={'size': options[('Heatmap Plot', 'fontsize', 'annotation')]},
                                      # yticklabels=data.index.tolist(),
                                      # xticklabels=window,
-                                     cbar_kws={'label': 'Energy (kcal/mol)'})
+                                     cbar_kws={'label': 'Energy (kcal/mol)',
+                                               'ticks': mticker.MaxNLocator(
+                                                   nbins=options[('Heatmap Plot', 'Per-residue', 'num-xticks')])})
             ytl = heatmap_ax.get_yticklabels()
             for ylabel in ytl:
                 ylabel.set_fontsize(options[('Heatmap Plot', 'fontsize', 'y-ticks')])
@@ -489,7 +495,7 @@ class MHeatmap:
     def __init__(self, data: pd.DataFrame, figsize=None, dpi=100, heatmap_type=1, rec_color=None, lig_color=None,
                  show_legend=True, remove_molid=True, leg_fontsize=10, xticks_fontsize=10, xlabel_fontsize=11,
                  x_rotation=0, num_xticks=10, yticks_fontsize=10, y_rotation=0, colorbar_ticks_fontsize=9,
-                 colorbar_label_fontsize=10, cmap='seismic', annot=False):
+                 colorbar_label_fontsize=10, cmap='seismic', annot=False, annot_fs=8):
         """
         This class is based on the seaborn clustermap. We created it to have more control over the components and
         especially for the management and support of the tight_layout
@@ -513,6 +519,7 @@ class MHeatmap:
         @param colorbar_label_fontsize: colorbar label font-size
         @param cmap: color map
         @param annot: show annotations
+        @param annot_fs: annotations fontsize
         """
         super(MHeatmap, self).__init__()
         ratios = {'legend': 0.025, 'colorbar': 0.025, 'ws1': 0.03, 'color_row_col': 0.015, 'ws2': 0.002}
@@ -528,6 +535,7 @@ class MHeatmap:
         self.y_rotation = y_rotation
         self.cmap = cmap
         self.annot = annot
+        self.annot_fs = annot_fs
 
         leg_ratios = [ratios['legend'], ratios['ws1']]
         row_color_ratios = [ratios['color_row_col'], ratios['ws2']]
@@ -643,8 +651,9 @@ class MHeatmap:
 
     def plot_matrix(self, colorbar_kws, **kws):
 
-        h = sns.heatmap(self.data, ax=self.ax_heatmap, xticklabels=self.num_xticks, cbar_ax=self.ax_cbar, cbar_kws=colorbar_kws,
-                        cmap=self.cmap, center=0, annot=self.annot, fmt=".2f", **kws)
+        h = sns.heatmap(self.data, ax=self.ax_heatmap, xticklabels=self.num_xticks, cbar_ax=self.ax_cbar,
+                        cbar_kws=colorbar_kws, cmap=self.cmap, center=0, annot=self.annot, fmt=".2f",
+                        annot_kws={'size': self.annot_fs},**kws)
         ytl = self.ax_heatmap.get_yticklabels()
         for ylabel in ytl:
             ylabel.set_fontsize(self.yticks_fontsize)

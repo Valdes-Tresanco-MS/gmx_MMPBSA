@@ -602,7 +602,7 @@ class ChartSettings(dict):
                             'colorbar-label': {'type': 'int', 'enabled': True, 'expanded': True,
                                                'name': 'colorbar-label', 'value': 11, 'default': 11, 'action_type': D},
                             'annotation': {'type': 'int', 'enabled': True, 'expanded': True,
-                                           'name': 'annotation', 'value': 8, 'default': 8, 'action_type': D}
+                                           'name': 'annotation', 'value': 8, 'default': 8, 'action_type': R}
                         }},
                     'figure': {
                         'type': 'group', 'enabled': True, 'expanded': True, 'name': 'figure', 'value': None,
