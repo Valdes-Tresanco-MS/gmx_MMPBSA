@@ -451,7 +451,7 @@ class CheckMakeTop:
                                 f"correct. Otherwise report the error...")
 
         com_top.coordinates = self.complex_str.coordinates
-        com_top.save(f"{self.FILES.prefix}COM.inpcrd", format='inpcrd', overwrite=True)
+        com_top.save(f"{self.FILES.prefix}COM.inpcrd", format='rst7', overwrite=True)
         # try:
         if com_top.impropers or com_top.urey_bradleys:
             com_amb_prm = parmed.amber.ChamberParm.from_structure(com_top)
@@ -494,7 +494,7 @@ class CheckMakeTop:
                                     f"that they are correct. Otherwise report the error...")
 
             rec_top.coordinates = self.receptor_str.coordinates
-            rec_top.save(f"{self.FILES.prefix}REC.inpcrd", format='inpcrd', overwrite=True)
+            rec_top.save(f"{self.FILES.prefix}REC.inpcrd", format='rst7', overwrite=True)
             if rec_top.impropers or rec_top.urey_bradleys:
                 if com_top_parm == 'amber':
                     GMXMMPBSA_ERROR('Inconsistent parameter format. The defined Complex is Amber/OPLS type while the '
@@ -537,7 +537,7 @@ class CheckMakeTop:
                                     f"that they are correct. Otherwise report the error...")
 
             lig_top.coordinates = self.ligand_str.coordinates
-            lig_top.save(f"{self.FILES.prefix}LIG.inpcrd", format='inpcrd', overwrite=True)
+            lig_top.save(f"{self.FILES.prefix}LIG.inpcrd", format='rst7', overwrite=True)
             if lig_top.impropers or lig_top.urey_bradleys:
                 if com_top_parm == 'amber':
                     GMXMMPBSA_ERROR('Inconsistent parameter format. The defined Complex is Amber/OPLS type while the '
