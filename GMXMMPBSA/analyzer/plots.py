@@ -162,6 +162,8 @@ class ChartsBase(QMdiSubWindow):
     def setup_text(self, ax, options, key='', title='', xlabel='', ylabel='Energy (kcal/mol)'):
         key_list = [key] if isinstance(key, str) else key
         ax.set_title(title, fontdict={'fontsize': options[tuple(key_list + ['fontsize', 'suptitle'])]})
+        if 'Line Plot' in key_list:
+            ax.legend(prop={'size': options[tuple(key_list + ['fontsize', 'legend'])]})
         if xlabel:
             ax.set_xlabel(xlabel, fontdict={'fontsize': options[tuple(key_list + ['fontsize', 'x-label'])]})
         if ylabel:
