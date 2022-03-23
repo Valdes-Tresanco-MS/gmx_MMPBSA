@@ -39,6 +39,6 @@ Authors:
 Acknowledgements:
 - First of all, to Amber and GROMACS developers. Without their incredible and hard work, gmx_MMPBSA would not exist.
 - Jason Swails (Amber developer and [ParmEd](https://github.com/ParmEd/ParmEd) principal developer) for his continuos support on ParmEd issues.
-- To all researchers who helped improve gmx_MMPBSA with comments, feedback, and bug reports.
+- To all researchers that help improving gmx_MMPBSA with comments, feedback, and bug reports.
 
 ---------------------------------------
