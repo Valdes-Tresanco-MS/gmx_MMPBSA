@@ -445,25 +445,25 @@ class CustomItem(QTreeWidgetItem):
                 pymol = pymol_path[0]
 
             else:
-                QMessageBox.critical(self, 'PyMOL not found!', 'PyMOL not found!. Make sure PyMOL is in the '
-                                                               'PATH.', QMessageBox.Ok)
+                QMessageBox.critical(self, 'PyMOL not found!', 'PyMOL not found!. Make sure PyMOL is in the PATH.',
+                                     QMessageBox.StandardButton.Ok, QMessageBox.StandardButton.Ok )
                 self.vis_action.setChecked(False)
                 return
             if not self.pymol_process:
                 self.pymol_process = QProcess()
                 self.app.pymol_p_list.append([self.pymol_process, self])
-            elif self.pymol_process.state() == QProcess.Running:
+            elif self.pymol_process.state() == QProcess.ProcessState.Running:
                 QMessageBox.critical(self.app, 'This PyMOL instance already running!',
                                      'This PyMOL instance already running! Please, close it to open a new PyMOL '
-                                     'instance', QMessageBox.Ok)
+                                     'instance', QMessageBox.StandardButton.Ok)
                 return
             self.bfactor_pml = self._e2pdb(pymol_options)
 
             self.pymol_process.start(pymol, [self.bfactor_pml.as_posix()])
             self.pymol_process.finished.connect(self.pymol_finished)
             self.pymol_data_change = False
-        elif self.pymol_process.state() == QProcess.Running:
-            self.pymol_process.kill()
+        elif self.pymol_process.state() == QProcess.ProcessState.Running:
+            self.pymol_process.terminate()
             self.pymol_process.waitForFinished(3000)
 
     def pymol_finished(self):

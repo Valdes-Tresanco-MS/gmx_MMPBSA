@@ -179,31 +179,32 @@ class GMX_MMPBSA_ANA(QMainWindow):
             msgBox.setInformativeText("Some graphics settings were modified. Do you want to save your changes?")
             msgBox.setDetailedText("The systems below have chances:\n - " +
                                    '\n - '.join([self.systems[x]['name'] for x in changes]))
-            savequitbtn = msgBox.addButton("Save and Quit", QMessageBox.AcceptRole)
-            abortbtn = msgBox.addButton(QMessageBox.Cancel)
-            quitbtn = msgBox.addButton("Quit", QMessageBox.AcceptRole)
+            savequitbtn = msgBox.addButton("Save and Quit", QMessageBox.ButtonRole.AcceptRole)
+            abortbtn = msgBox.addButton(QMessageBox.StandardButton.Cancel)
+            quitbtn = msgBox.addButton("Quit", QMessageBox.ButtonRole.AcceptRole)
             msgBox.setDefaultButton(savequitbtn)
             msgBox.exec()
             action = msgBox.clickedButton()
 
         else:
-            action = QMessageBox.question(self, 'Message', "Are you sure to quit?", QMessageBox.Yes, QMessageBox.No)
+            action = QMessageBox.question(self, 'Message', "Are you sure to quit?", QMessageBox.StandardButton.Yes,
+                                          QMessageBox.StandardButton.No)
 
-        if action in [QMessageBox.Yes, quitbtn, savequitbtn]:
+        if action in [QMessageBox.StandardButton.Yes, quitbtn, savequitbtn]:
 
             if action == savequitbtn:
                 for x in changes:
                     self.systems[x]['chart_options'].write_system_config(self.systems[x]['path'])
 
             if pymol_items := [
-                p for p, _ in self.pymol_p_list if p.state() == QProcess.Running
+                p for p, _ in self.pymol_p_list if p.state() == QProcess.ProcessState.Running
             ]:
                 qpd = QProgressDialog('Closing PyMOL instances', 'Abort', 0, len(pymol_items), self)
                 qpd.setWindowModality(Qt.WindowModality.WindowModal)
                 qpd.setMinimumDuration(1000)
                 qpd.setRange(0, len(self.pymol_p_list))
                 for i, (p, _) in enumerate(self.pymol_p_list):
-                    if p.state() == QProcess.Running:
+                    if p.state() == QProcess.ProcessState.Running:
                         qpd.setValue(i)
                         p.kill()
                         p.waitForFinished()
@@ -715,7 +716,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
                                }
                     sub.mpl_toolbar.update_options(options)
                     sub.fbtn.setChecked(chart_sett[('General', 'toolbar')])
-            pymol_items = [[p, item] for p, item in self.pymol_p_list if p.state() == QProcess.Running]
+            pymol_items = [[p, item] for p, item in self.pymol_p_list if p.state() == QProcess.ProcessState.Running]
             for p, item in pymol_items:
                 p.kill()
                 p.waitForFinished()
@@ -935,7 +936,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
         if sys_with_ki < 3:
             m = QMessageBox.critical(self, 'Unable to calculate correlation',
                                      'Three or more systems are needed to calculate the correlation.',
-                                     QMessageBox.Ok)
+                                     QMessageBox.StandardButton.Ok, QMessageBox.StandardButton.Ok)
             self.correlation_DockWidget.setEnabled(False)
             self.correlation_DockWidget.hide()
             return
