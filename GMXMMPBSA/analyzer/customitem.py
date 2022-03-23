@@ -445,7 +445,7 @@ class CustomItem(QTreeWidgetItem):
                 pymol = pymol_path[0]
 
             else:
-                QMessageBox.critical(self, 'PyMOL not found!', 'PyMOL not found!. Make sure PyMOL is in the PATH.',
+                QMessageBox.critical(self.app, 'PyMOL not found!', 'PyMOL not found!. Make sure PyMOL is in the PATH.',
                                      QMessageBox.StandardButton.Ok, QMessageBox.StandardButton.Ok )
                 self.vis_action.setChecked(False)
                 return

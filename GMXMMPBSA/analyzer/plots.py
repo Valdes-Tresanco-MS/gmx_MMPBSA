@@ -95,8 +95,8 @@ class NavigationToolbar(NavigationToolbar2QT):
         filters = []
         selectedFilter = None
         for name, exts in sorted_filetypes:
-            exts_list = " ".join('*.%s' % ext for ext in exts)
-            filter = '%s (%s)' % (name, exts_list)
+            exts_list = " ".join(f'*.{ext}' for ext in exts)
+            filter = f'{name} ({exts_list})'
             if self.save_format in exts:
                 selectedFilter = filter
             filters.append(filter)
@@ -134,9 +134,9 @@ class ChartsBase(QMdiSubWindow):
         self.setWidget(self.mainwidgetmdi)
 
     def set_cw(self, fig=None):
-        # we create the figure canvas here because the fig parameter must be defined and depende of what kind of
+        # we create the figure canvas here because the fig parameter must be defined and depend on what kind of
         # chart want to make
-        fig = Figure(dpi=self.options[('General', 'figure-format', 'dpi-plot')]) if not fig else fig
+        fig = fig or Figure(dpi=self.options[('General', 'figure-format', 'dpi-plot')])
         self.figure_canvas = FigureCanvas(fig)
         self.fig = self.figure_canvas.figure
         self.mainwidgetmdi.setCentralWidget(self.figure_canvas)

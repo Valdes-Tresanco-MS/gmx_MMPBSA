@@ -187,7 +187,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
             action = msgBox.clickedButton()
 
         else:
-            action = QMessageBox.question(self, 'Message', "Are you sure to quit?", QMessageBox.StandardButton.Yes,
+            action = QMessageBox.question(self.mdi, 'Message', "Are you sure to quit?", QMessageBox.StandardButton.Yes,
                                           QMessageBox.StandardButton.No)
 
         if action in [QMessageBox.StandardButton.Yes, quitbtn, savequitbtn]:
@@ -215,7 +215,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
 
     def _about_dialog(self):
         from GMXMMPBSA import __version__
-        b = QMessageBox.about(self, "About gmx_MMPBSA",
+        QMessageBox.about(self.mdi, "About gmx_MMPBSA",
                               "<html>"
                               "<body>"
                               "<h2 style='text-align:center'>About gmx_MMPBSA</h2>"
@@ -934,7 +934,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
             self.data_table_widget.setItem(sys_with_ki, 1, item_e)
             sys_with_ki += 1
         if sys_with_ki < 3:
-            m = QMessageBox.critical(self, 'Unable to calculate correlation',
+            QMessageBox.critical(self.mdi, 'Unable to calculate correlation',
                                      'Three or more systems are needed to calculate the correlation.',
                                      QMessageBox.StandardButton.Ok, QMessageBox.StandardButton.Ok)
             self.correlation_DockWidget.setEnabled(False)
@@ -945,26 +945,18 @@ class GMX_MMPBSA_ANA(QMainWindow):
         # get df for each model
         models = ['gb', 'pb', 'rism std', 'rism gf']
         columns = ['ΔH', 'ΔH+IE', 'ΔH+NMODE', 'ΔH+QH']
-        hide_col = []
-        c = 1
-        for x in columns:
-            if df[x].isnull().all():
-                hide_col.append(c)
-            c += 1
-
+        hide_col = [c for c, x in enumerate(columns, start=1) if df[x].isnull().all()]
         for m in models:
             model_df = df[df['MODEL'].isin([m])]
             m_col_box = []
             model_data = []
-            c = 1
-            for col in columns:
+            for c, col in enumerate(columns, start=1):
                 item_col_df = model_df[['System', col, 'Exp.Energy']]
                 if not item_col_df[col].isnull().all():
                     m_col_box.append(c)
                     model_data.append(item_col_df)
                 else:
                     model_data.append(None)
-                c += 1
             if m_col_box:
                 item = CorrelationItem(self.correlation_treeWidget, [m.upper()], model=model_df, enthalpy=model_data[0],
                                        dgie=model_data[1], dgnmode=model_data[2], dgqh=model_data[3], col_box=m_col_box)
