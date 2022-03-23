@@ -422,10 +422,12 @@ class CustomItem(QTreeWidgetItem):
 
         pymol_options = {'colors': Palettes.get_palette(palette).colors}
         for o in options:
-            if o[0] != 'Visualization' or o == ('Visualization', 'palette'):
+            if o[0] != 'Visualization' or o == ('Visualization', 'palette') or o[-1] == 'default':
                 continue
             if o[1] == 'background':
                 pymol_options['bg_rgb'] = options[o]
+            elif o[1] == 'cartoon_side_chain_helper':
+                pymol_options[o[1]] = int(options[o])
             else:
                 pymol_options[o[1]] = options[o]
 
@@ -458,11 +460,14 @@ class CustomItem(QTreeWidgetItem):
             self.bfactor_pml = self._e2pdb(pymol_options)
 
             self.pymol_process.start(pymol, [self.bfactor_pml.as_posix()])
-            self.pymol_process.finished.connect(lambda: self.vis_action.setChecked(False))
+            self.pymol_process.finished.connect(self.pymol_finished)
             self.pymol_data_change = False
         elif self.pymol_process.state() == QProcess.Running:
             self.pymol_process.kill()
             self.pymol_process.waitForFinished(3000)
+
+    def pymol_finished(self):
+        self.vis_action.setChecked(False)
 
     def _e2pdb(self, options):
         com_pdb = self.app.systems[self.system_index]['namespace'].INFO['COM_PDB']
