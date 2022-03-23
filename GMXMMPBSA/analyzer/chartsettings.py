@@ -397,9 +397,9 @@ class ChartSettings(dict):
                         'default': None,
                         'children': {
                             'width': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'width', 'value': 8,
-                                      'default': 8, 'action_type': D},
+                                      'default': 8, 'action_type': R},
                             'height': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'height',
-                                       'value': 4, 'default': 4, 'action_type': D}}}}},
+                                       'value': 4, 'default': 4, 'action_type': R}}}}},
             'Bar Plot': {
                 'type': 'group', 'enabled': True, 'expanded': False, 'name': 'Bar Plot', 'value': None, 'default': None,
                 'children': {
@@ -516,9 +516,9 @@ class ChartSettings(dict):
                         'default': None,
                         'children': {
                             'width': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'width',
-                                      'value': 5, 'default': 5, 'action_type': D},
+                                      'value': 5, 'default': 5, 'action_type': R},
                             'height': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'height',
-                                       'value': 4, 'default': 4, 'action_type': D}}}}},
+                                       'value': 4, 'default': 4, 'action_type': R}}}}},
             'Heatmap Plot': {
                 'type': 'group', 'enabled': True, 'expanded': False, 'name': 'Heatmap Plot', 'value': None,
                 'default': None,
@@ -613,11 +613,11 @@ class ChartSettings(dict):
                         'children': {
                             'width-per-residue': {'type': 'int', 'enabled': True, 'expanded': True,
                                                   'name': 'width-per-residue', 'value': 10, 'default': 10,
-                                                  'action_type': D},
+                                                  'action_type': R},
                             'width-per-wise': {'type': 'int', 'enabled': True, 'expanded': True,
-                                               'name': 'width-per-wise', 'value': 8, 'default': 8, 'action_type': D},
+                                               'name': 'width-per-wise', 'value': 8, 'default': 8, 'action_type': R},
                             'height': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'height',
-                                       'value': 7, 'default': 7, 'action_type': D}}}}},
+                                       'value': 7, 'default': 7, 'action_type': R}}}}},
             'Visualization': {
                 'type': 'group', 'enabled': True, 'expanded': False, 'name': 'Visualization', 'value': None,
                 'default': None,
