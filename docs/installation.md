@@ -39,7 +39,7 @@ errors are more frequent.
             conda update conda
             conda create -n gmxMMPBSA python=3.9 -y -q                                      # (1)
             conda activate gmxMMPBSA                                                        # (2)
-            conda install -c conda-forge mpi4py ambertools compilers -y -q                  # (3)
+            conda install -c conda-forge mpi4py=3.1.3 ambertools=21.12 compilers -y -q      # (3)
             python -m pip install git+https://github.com/ParmEd/ParmEd.git@16fb236          # (4)
             python -m pip install pyqt5                                                     # (5)
             # Optional
@@ -94,7 +94,7 @@ errors are more frequent.
 
 [comment]: <> (            conda activate gmxMMPBSA                                                        # &#40;2&#41;                        )
 
-[comment]: <> (            conda install -c conda-forge mpi4py ambertools compilers -y -q                  # &#40;3&#41;)
+[comment]: <> (            conda install -c conda-forge mpi4py=3.1.3 ambertools=21.12 compilers -y -q                  # &#40;3&#41;)
 
 [comment]: <> (            python -m pip install git+https://github.com/ParmEd/ParmEd.git@16fb236          # &#40;4&#41;)
 
@@ -185,7 +185,7 @@ errors are more frequent.
             `conda-forge` as follows:
     
             ```
-            amber.conda install -c conda-forge mpi4py
+            amber.conda install -c conda-forge mpi4py=3.1.3
             ```
             
             If you get an error related to `pip`, you may want to install this package manually as follows:
