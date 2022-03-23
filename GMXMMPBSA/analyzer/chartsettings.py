@@ -397,9 +397,9 @@ class ChartSettings(dict):
                         'default': None,
                         'children': {
                             'width': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'width', 'value': 8,
-                                      'default': 8, 'action_type': D},
+                                      'default': 8, 'action_type': R},
                             'height': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'height',
-                                       'value': 4, 'default': 4, 'action_type': D}}}}},
+                                       'value': 4, 'default': 4, 'action_type': R}}}}},
             'Bar Plot': {
                 'type': 'group', 'enabled': True, 'expanded': False, 'name': 'Bar Plot', 'value': None, 'default': None,
                 'children': {
@@ -462,9 +462,6 @@ class ChartSettings(dict):
                                        'width': {'type': 'float', 'enabled': True, 'expanded': True, 'name': 'width',
                                                  'value': 0.7,
                                                  'step': 0.1, 'limits': (0.1, 1.5), 'accelerated': True, 'default': 0.7,
-                                                 'action_type': R},
-                                       'color': {'type': 'color', 'enabled': True, 'expanded': True, 'name': 'color',
-                                                 'value': [0, 0, 0, 255], 'default': [0, 0, 0, 255],
                                                  'action_type': R}}},
                     'bar-label': {
                         'type': 'group', 'enabled': True, 'expanded': True, 'name': 'bar-label', 'value': None,
@@ -516,9 +513,9 @@ class ChartSettings(dict):
                         'default': None,
                         'children': {
                             'width': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'width',
-                                      'value': 5, 'default': 5, 'action_type': D},
+                                      'value': 5, 'default': 5, 'action_type': R},
                             'height': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'height',
-                                       'value': 4, 'default': 4, 'action_type': D}}}}},
+                                       'value': 4, 'default': 4, 'action_type': R}}}}},
             'Heatmap Plot': {
                 'type': 'group', 'enabled': True, 'expanded': False, 'name': 'Heatmap Plot', 'value': None,
                 'default': None,
@@ -599,13 +596,13 @@ class ChartSettings(dict):
                             'suptitle': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'suptitle',
                                          'value': 12, 'default': 12, 'action_type': D},
                             'legend': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'legend',
-                                       'value': 9, 'default': 9, 'action_type': D},
+                                       'value': 9, 'default': 9, 'action_type': R},
                             'colorbar-ticks': {'type': 'int', 'enabled': True, 'expanded': True,
-                                               'name': 'colorbar-ticks', 'value': 9, 'default': 9, 'action_type': D},
+                                               'name': 'colorbar-ticks', 'value': 9, 'default': 9, 'action_type': R},
                             'colorbar-label': {'type': 'int', 'enabled': True, 'expanded': True,
-                                               'name': 'colorbar-label', 'value': 11, 'default': 11, 'action_type': D},
+                                               'name': 'colorbar-label', 'value': 11, 'default': 11, 'action_type': R},
                             'annotation': {'type': 'int', 'enabled': True, 'expanded': True,
-                                           'name': 'annotation', 'value': 8, 'default': 8, 'action_type': D}
+                                           'name': 'annotation', 'value': 8, 'default': 8, 'action_type': R}
                         }},
                     'figure': {
                         'type': 'group', 'enabled': True, 'expanded': True, 'name': 'figure', 'value': None,
@@ -613,11 +610,11 @@ class ChartSettings(dict):
                         'children': {
                             'width-per-residue': {'type': 'int', 'enabled': True, 'expanded': True,
                                                   'name': 'width-per-residue', 'value': 10, 'default': 10,
-                                                  'action_type': D},
+                                                  'action_type': R},
                             'width-per-wise': {'type': 'int', 'enabled': True, 'expanded': True,
-                                               'name': 'width-per-wise', 'value': 8, 'default': 8, 'action_type': D},
+                                               'name': 'width-per-wise', 'value': 8, 'default': 8, 'action_type': R},
                             'height': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'height',
-                                       'value': 7, 'default': 7, 'action_type': D}}}}},
+                                       'value': 7, 'default': 7, 'action_type': R}}}}},
             'Visualization': {
                 'type': 'group', 'enabled': True, 'expanded': False, 'name': 'Visualization', 'value': None,
                 'default': None,
@@ -634,17 +631,17 @@ class ChartSettings(dict):
                                                             'RdGy_7', 'RdGy_5'
                                                             ], 'default': 'auto', 'action_type': R, 'tip': tooltip1},
                     'cartoon_oval_length': {'type': 'float', 'enabled': True, 'expanded': True,
-                                            'name': 'cartoon_oval_length', 'value': 1.0, 'default': 1.0,
+                                            'name': 'cartoon_oval_length', 'value': 1.0, 'step': 0.1, 'default': 1.0,
                                             'action_type': R},
                     'cartoon_rect_length': {'type': 'float', 'enabled': True, 'expanded': True,
-                                            'name': 'cartoon_rect_length', 'value': 1.2, 'default': 1.2,
+                                            'name': 'cartoon_rect_length', 'value': 1.2, 'step': 0.1, 'default': 1.2,
                                             'action_type': R},
                     'cartoon_rect_width': {'type': 'float', 'enabled': True, 'expanded': True,
-                                           'name': 'cartoon_rect_width', 'value': 0.3, 'default': 0.3,
+                                           'name': 'cartoon_rect_width', 'value': 0.3, 'step': 0.1, 'default': 0.3,
                                            'action_type': R},
                     'cartoon_side_chain_helper': {'type': 'bool', 'enabled': True, 'expanded': True,
-                                          'name': 'cartoon_side_chain_helper', 'value': True, 'default': True,
-                                          'action_type': R},
+                                                  'name': 'cartoon_side_chain_helper', 'value': True, 'default': True,
+                                                  'action_type': R},
                     'light_count': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'light_count',
                                     'value': 1, 'step': 1, 'accelerated': False, 'limits': (1, 10),
                                     'default': 1, 'action_type': R},

@@ -179,31 +179,32 @@ class GMX_MMPBSA_ANA(QMainWindow):
             msgBox.setInformativeText("Some graphics settings were modified. Do you want to save your changes?")
             msgBox.setDetailedText("The systems below have chances:\n - " +
                                    '\n - '.join([self.systems[x]['name'] for x in changes]))
-            savequitbtn = msgBox.addButton("Save and Quit", QMessageBox.AcceptRole)
-            abortbtn = msgBox.addButton(QMessageBox.Cancel)
-            quitbtn = msgBox.addButton("Quit", QMessageBox.AcceptRole)
+            savequitbtn = msgBox.addButton("Save and Quit", QMessageBox.ButtonRole.AcceptRole)
+            abortbtn = msgBox.addButton(QMessageBox.StandardButton.Cancel)
+            quitbtn = msgBox.addButton("Quit", QMessageBox.ButtonRole.AcceptRole)
             msgBox.setDefaultButton(savequitbtn)
             msgBox.exec()
             action = msgBox.clickedButton()
 
         else:
-            action = QMessageBox.question(self, 'Message', "Are you sure to quit?", QMessageBox.Yes, QMessageBox.No)
+            action = QMessageBox.question(self.mdi, 'Message', "Are you sure to quit?", QMessageBox.StandardButton.Yes,
+                                          QMessageBox.StandardButton.No)
 
-        if action in [QMessageBox.Yes, quitbtn, savequitbtn]:
+        if action in [QMessageBox.StandardButton.Yes, quitbtn, savequitbtn]:
 
             if action == savequitbtn:
                 for x in changes:
                     self.systems[x]['chart_options'].write_system_config(self.systems[x]['path'])
 
             if pymol_items := [
-                p for p, _ in self.pymol_p_list if p.state() == QProcess.Running
+                p for p, _ in self.pymol_p_list if p.state() == QProcess.ProcessState.Running
             ]:
                 qpd = QProgressDialog('Closing PyMOL instances', 'Abort', 0, len(pymol_items), self)
                 qpd.setWindowModality(Qt.WindowModality.WindowModal)
                 qpd.setMinimumDuration(1000)
                 qpd.setRange(0, len(self.pymol_p_list))
                 for i, (p, _) in enumerate(self.pymol_p_list):
-                    if p.state() == QProcess.Running:
+                    if p.state() == QProcess.ProcessState.Running:
                         qpd.setValue(i)
                         p.kill()
                         p.waitForFinished()
@@ -214,7 +215,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
 
     def _about_dialog(self):
         from GMXMMPBSA import __version__
-        b = QMessageBox.about(self, "About gmx_MMPBSA",
+        QMessageBox.about(self.mdi, "About gmx_MMPBSA",
                               "<html>"
                               "<body>"
                               "<h2 style='text-align:center'>About gmx_MMPBSA</h2>"
@@ -324,10 +325,10 @@ class GMX_MMPBSA_ANA(QMainWindow):
     def _reset2default(self):
         new_settings = ChartSettings()
         self.statusbar.showMessage("Restore default settings...")
-        self.update_fn()
         self.chart_options_param.restoreState(new_settings)
         self.parm_tree_w.setParameters(self.chart_options_param, showTop=False)
         self.systems[self.current_system_index]['chart_options'] = new_settings
+        self.update_fn(repaint_arg=True)
 
     def _set_user_config(self):
         p = self.systems[self.current_system_index]['path']
@@ -590,7 +591,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
         self.parm_tree_w.setParameters(self.chart_options_param, showTop=False)
         self.current_system_index = parent_item.system_index
 
-    def update_fn(self):
+    def update_fn(self, repaint_arg=False):
         self.statusbar.showMessage('Updating...')
         recalc_energy = []
         recalc_nmode = []
@@ -617,7 +618,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
                     recalc_nmode.append(x)
                 if curr_iesegment != self.systems[x]['current_ie_segment']:
                     recalc_ie.append(x)
-                if self.systems[x]['chart_options'].is_changed(act_sett):
+                if self.systems[x]['chart_options'].is_changed(act_sett) or repaint_arg:
                     repaint.append(x)
         else:
             processed_sys.append(self.current_system_index)
@@ -631,7 +632,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
                 recalc_nmode.append(self.current_system_index)
             if curr_iesegment != self.systems[self.current_system_index]['current_ie_segment']:
                 recalc_ie.append(self.current_system_index)
-            if self.systems[self.current_system_index]['chart_options'].is_changed(act_sett):
+            if self.systems[self.current_system_index]['chart_options'].is_changed(act_sett) or repaint_arg:
                 repaint.append(self.current_system_index)
 
         maximum = len(recalc_energy) + len(recalc_ie) + len(recalc_nmode) + len(repaint)
@@ -673,7 +674,17 @@ class GMX_MMPBSA_ANA(QMainWindow):
             qpd.setLabelText('Updating charts options')
             for e in repaint:
                 v += 1
-                self.systems[e]['chart_options'].get_changes(act_sett)
+                if repaint_arg:
+                    self.systems[e]['chart_options'].changes = dict(
+                        line_action=3,
+                        line_ie_action=3,
+                        bar_action=3,
+                        heatmap_action=3,
+                        visualization_action=3,
+                        figure=3
+                    )
+                else:
+                    self.systems[e]['chart_options'].get_changes(act_sett)
                 qpd.setValue(v)
 
         comp = []
@@ -715,7 +726,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
                                }
                     sub.mpl_toolbar.update_options(options)
                     sub.fbtn.setChecked(chart_sett[('General', 'toolbar')])
-            pymol_items = [[p, item] for p, item in self.pymol_p_list if p.state() == QProcess.Running]
+            pymol_items = [[p, item] for p, item in self.pymol_p_list if p.state() == QProcess.ProcessState.Running]
             for p, item in pymol_items:
                 p.kill()
                 p.waitForFinished()
@@ -933,9 +944,9 @@ class GMX_MMPBSA_ANA(QMainWindow):
             self.data_table_widget.setItem(sys_with_ki, 1, item_e)
             sys_with_ki += 1
         if sys_with_ki < 3:
-            m = QMessageBox.critical(self, 'Unable to calculate correlation',
+            QMessageBox.critical(self.mdi, 'Unable to calculate correlation',
                                      'Three or more systems are needed to calculate the correlation.',
-                                     QMessageBox.Ok)
+                                     QMessageBox.StandardButton.Ok, QMessageBox.StandardButton.Ok)
             self.correlation_DockWidget.setEnabled(False)
             self.correlation_DockWidget.hide()
             return
@@ -944,26 +955,18 @@ class GMX_MMPBSA_ANA(QMainWindow):
         # get df for each model
         models = ['gb', 'pb', 'rism std', 'rism gf']
         columns = ['ΔH', 'ΔH+IE', 'ΔH+NMODE', 'ΔH+QH']
-        hide_col = []
-        c = 1
-        for x in columns:
-            if df[x].isnull().all():
-                hide_col.append(c)
-            c += 1
-
+        hide_col = [c for c, x in enumerate(columns, start=1) if df[x].isnull().all()]
         for m in models:
             model_df = df[df['MODEL'].isin([m])]
             m_col_box = []
             model_data = []
-            c = 1
-            for col in columns:
+            for c, col in enumerate(columns, start=1):
                 item_col_df = model_df[['System', col, 'Exp.Energy']]
                 if not item_col_df[col].isnull().all():
                     m_col_box.append(c)
                     model_data.append(item_col_df)
                 else:
                     model_data.append(None)
-                c += 1
             if m_col_box:
                 item = CorrelationItem(self.correlation_treeWidget, [m.upper()], model=model_df, enthalpy=model_data[0],
                                        dgie=model_data[1], dgnmode=model_data[2], dgqh=model_data[3], col_box=m_col_box)
