@@ -35,3 +35,10 @@ Authors:
 - [Ernesto Moreno Frías](https://www.researchgate.net/profile/Ernesto-Moreno-Frias), PhD. _University of Medellin, Colombia_
 
 ---------------------------------------
+
+Acknowledgements:
+- First of all, to Amber and GROMACS developers. Without their incredible and hard work, gmx_MMPBSA would not exist.
+- Jason Swails (Amber developer and [ParmEd](https://github.com/ParmEd/ParmEd) principal developer) for his continuos support on ParmEd issues.
+- To all researchers who helped improve gmx_MMPBSA with comments, feedback, and bug reports.
+
+---------------------------------------
