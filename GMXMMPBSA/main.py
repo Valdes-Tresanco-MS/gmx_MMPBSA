@@ -1036,8 +1036,6 @@ class MMPBSA_App(object):
                 self.calc_types.mutant['c2'] = C2out()
 
         for i, key in enumerate(outkey):
-            from icecream import ic
-            ic(key, triggers[i], INPUT[triggers[i]])
             if not INPUT[triggers[i]]:
                 continue
             # Non-mutant
