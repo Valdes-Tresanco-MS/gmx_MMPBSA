@@ -412,6 +412,7 @@ class HeatmapChart(ChartsBase):
                                 y_rotation=options[('Heatmap Plot', 'y-rotation')],
                                 colorbar_label_fontsize=options[('Heatmap Plot', 'fontsize', 'colorbar-label')],
                                 colorbar_ticks_fontsize=options[('Heatmap Plot', 'fontsize', 'colorbar-ticks')],
+                                # colorbar_num_ticks=options[('Heatmap Plot', 'fontsize', 'colorbar-ticks')],
                                 cmap=cmap,
                                 annot=annotation,
                                 annot_fs=options[('Heatmap Plot', 'fontsize', 'annotation')]
@@ -495,7 +496,7 @@ class MHeatmap:
     def __init__(self, data: pd.DataFrame, figsize=None, dpi=100, heatmap_type=1, rec_color=None, lig_color=None,
                  show_legend=True, remove_molid=True, leg_fontsize=10, xticks_fontsize=10, xlabel_fontsize=11,
                  x_rotation=0, num_xticks=10, yticks_fontsize=10, y_rotation=0, colorbar_ticks_fontsize=9,
-                 colorbar_label_fontsize=10, cmap='seismic', annot=False, annot_fs=8):
+                 colorbar_label_fontsize=10, colorbar_num_ticks='auto', cmap='seismic', annot=False, annot_fs=8):
         """
         This class is based on the seaborn clustermap. We created it to have more control over the components and
         especially for the management and support of the tight_layout
@@ -517,6 +518,7 @@ class MHeatmap:
         @param y_rotation: ylabels rotation
         @param colorbar_ticks_fontsize: colorbar ticks font-size
         @param colorbar_label_fontsize: colorbar label font-size
+        @param colorbar_num_ticks: num of ticks
         @param cmap: color map
         @param annot: show annotations
         @param annot_fs: annotations fontsize
@@ -586,7 +588,8 @@ class MHeatmap:
         self.ax_heatmap.yaxis.tick_right()
 
         self.plot_colors()
-        self.plot_matrix({'ticklocation': 'left', 'label': 'Energy (kcal/mol)'})
+        self.plot_matrix({'ticklocation': 'left', 'label': 'Energy (kcal/mol)',
+                          'ticks': mticker.MaxNLocator(nbins=colorbar_num_ticks)})
 
     @staticmethod
     def _index_color(x, rec_color, lig_color):
