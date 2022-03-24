@@ -51,8 +51,8 @@ versatility, analyses, and parallelization compared to existing programs (see [h
 
     Download | [*.bib](MMPBSA_py_citation.bib) | [*.ris](MMPBSA_py_citation.ris) | [*.xml](MMPBSA_py_citation.xml)
 
-    Visit [Cite us page](cite_us.md#example) for more information on how to cite `gmx_MMPBSA` and the programs/methods 
-    implemented in it.
+    Please, visit [Cite gmx_MMPBSA](cite_us.md#example) page for more information on how to cite gmx_MMPBSA and the 
+    programs/methods implemented in it.
 
 ## **Installation**
 Ready to use gmx_MMPBSA 😀? Check the [installation page](installation.md)
