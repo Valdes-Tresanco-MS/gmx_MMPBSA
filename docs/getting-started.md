@@ -13,7 +13,7 @@ title: Getting started
 
 ## gmx_MMPBSA v1.5.2 is out 😀!
 
-Check [changelog](changelog.md##gmx_mmpbsa-v151-03102022) to see what's new in gmx_MMPBSA v1.5.2.
+Check [changelog](changelog.md##gmx_mmpbsa-v152-03232022) to see what's new in gmx_MMPBSA v1.5.2.
 
 ## [Help needed for gmx_MMPBSA! To the content creators out there...](#colaboration)
 
