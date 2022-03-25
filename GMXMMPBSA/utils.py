@@ -630,10 +630,10 @@ def find_progs(INPUT, mpi_size=0):
                   'tleap': True,
                   'parmchk2': True,
                   'sander': True,
-                  'sander.APBS': INPUT['sander_apbs'] == 1,
-                  'mmpbsa_py_nabnmode': INPUT['nmoderun'],
-                  # 'rism3d.snglpnt': INPUT['rismrun']
-                  'elsize': INPUT['alpb']
+                  'sander.APBS': INPUT['pb']['sander_apbs'] == 1,
+                  'mmpbsa_py_nabnmode': INPUT['nmode']['nmoderun'],
+                  # 'rism3d.snglpnt': INPUT['rism']['rismrun']
+                  'elsize': INPUT['gb']['alpb']
 
                   }
     gro_exe = {
@@ -654,7 +654,7 @@ def find_progs(INPUT, mpi_size=0):
                 GMXMMPBSA_ERROR('Could not find necessary program [%s]' % prog)
             logging.info('%s found! Using %s' % (prog, str(my_progs[prog])))
 
-    search_parth = INPUT['gmx_path'] or os.environ['PATH']
+    search_parth = INPUT['general']['gmx_path'] or os.environ['PATH']
     g5 = False
     for gv, g_exes in gro_exe.items():
         if gv == 'gmx5':

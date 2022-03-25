@@ -36,12 +36,13 @@ class InfoFile(object):
     """
 
     # Make a list about which INPUT variables are editable
-    EDITABLE_INFO_VARS = ['csv_format', 'dec_verbose', 'exp_ki', 'sys_name', 'ie_segment', 'interaction_entropy',
-                          'c2_entropy', 'verbose']
+    EDITABLE_INFO_VARS = {'general': ['exp_ki', 'sys_name', 'ie_segment', 'interaction_entropy', 'c2_entropy',
+                                      'verbose'],
+                          'decomp': ['csv_format', 'dec_verbose']}
 
-    EDIT_WITH_CARE_VARS = ['inp']
+    EDIT_WITH_CARE_VARS = {'pb': ['inp']}
 
-    DEPRECATED_VARS = []
+    DEPRECATED_VARS = {'general': ['forcefields']}
 
     def __init__(self, app):
         """ Instantiate me """
@@ -59,24 +60,29 @@ class InfoFile(object):
         # Start with INPUT (and the editable vars). Allow this to recognize INFO
         # files from the last version of gmx_MMPBSA
         outfile.write('# You can alter the variables below\n')
-        for var in InfoFile.EDITABLE_INFO_VARS:
-            outfile.write("INPUT['%s'] = %s\n" % (var, self.write_var(self.app.INPUT[var])))
+        for nml, nml_value in InfoFile.EDITABLE_INFO_VARS.items():
+            for var in nml_value:
+                outfile.write(f"INPUT['{nml}']['{var}'] = {self.write_var(self.app.INPUT[nml][var])}\n")
 
         outfile.write('#\n# You can alter the variables below with care\n')
-        for var in InfoFile.EDIT_WITH_CARE_VARS:
-            if var:
-                outfile.write("INPUT['%s'] = %s\n" % (var, self.write_var(self.app.INPUT[var])))
+        for nml, nml_value in InfoFile.EDIT_WITH_CARE_VARS.items():
+            for var in nml_value:
+                outfile.write(f"INPUT['{nml}']['{var}'] = {self.write_var(self.app.INPUT[nml][var])}\n")
 
-        outfile.write('#\n# These variables are deprecated and will be remove in next versions\n')
-        for var in InfoFile.DEPRECATED_VARS:
-            outfile.write("INPUT['%s'] = %s\n" % (var, self.write_var(self.app.INPUT[var])))
+        if InfoFile.DEPRECATED_VARS:
+            outfile.write('#\n# These variables are deprecated and will be remove in next versions\n')
+            for nml, nml_value in InfoFile.DEPRECATED_VARS.items():
+                for var in nml_value:
+                    outfile.write(f"INPUT['{nml}']['{var}'] = {self.write_var(self.app.INPUT[nml][var])}\n")
 
         outfile.write('#\n# MODIFY NOTHING BELOW HERE, OR GET WHAT YOU DESERVE\n')
-        for var in list(self.app.INPUT.keys()):
-            if (var in InfoFile.EDITABLE_INFO_VARS or var in InfoFile.EDIT_WITH_CARE_VARS or
-                    var in InfoFile.DEPRECATED_VARS):
-                continue
-            outfile.write("INPUT['%s'] = %s\n" % (var, self.write_var(self.app.INPUT[var])))
+        for nml, nml_value in self.app.INPUT.items():
+            for var in nml_value:
+                if (nml in InfoFile.EDITABLE_INFO_VARS and var in InfoFile.EDITABLE_INFO_VARS[nml] or
+                        nml in InfoFile.EDIT_WITH_CARE_VARS and var in InfoFile.EDIT_WITH_CARE_VARS[nml] or
+                nml in InfoFile.DEPRECATED_VARS and var in InfoFile.DEPRECATED_VARS[nml]):
+                    continue
+                outfile.write(f"INPUT['{nml}']['{var}'] = {self.write_var(self.app.INPUT[nml][var])}\n")
 
         # Now print out the FILES
         for var in dir(self.app.FILES):

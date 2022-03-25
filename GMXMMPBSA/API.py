@@ -211,14 +211,14 @@ class MMPBSA_API():
                                                                self.app_namespace.INFO['using_chamber'],
                                                                self.traj_protocol)
                             # Re-calculate GGAS based entropies
-                            if self.app_namespace.INPUT['interaction_entropy']:
+                            if self.app_namespace.INPUT['general']['interaction_entropy']:
                                 edata = v1['delta']['GGAS']
                                 ie = InteractionEntropyCalc(edata, self.app_namespace.INPUT)
                                 v['ie'] = IEout(self.app_namespace.INPUT)
                                 v['ie'].parse_from_dict(model, {'data': ie.data, 'iedata': ie.iedata,
                                                                      'ieframes': ie.ieframes,
                                                                      'sigma': ie.ie_std})
-                            if self.app_namespace.INPUT['c2_entropy']:
+                            if self.app_namespace.INPUT['general']['c2_entropy']:
                                 edata = v1['delta']['GGAS']
                                 c2 = C2EntropyCalc(edata, self.app_namespace.INPUT)
                                 v['c2'][model] = {'c2data': c2.c2data, 'sigma': c2.ie_std, 'c2_std': c2.c2_std,
@@ -230,7 +230,7 @@ class MMPBSA_API():
                         v1['receptor'].set_frame_range(start, end, interval)
                         v1['ligand'].set_frame_range(start, end, interval)
                         # Recalculate decomp delta
-                        if self.app_namespace.INPUT['idecomp'] in [1, 2]:
+                        if self.app_namespace.INPUT['decomp']['idecomp'] in [1, 2]:
                             Decomp_Delta = DecompBinding
                         else:
                             Decomp_Delta = PairDecompBinding
@@ -295,26 +295,33 @@ class MMPBSA_API():
                 continue
             if key in ['normal', 'mutant']:
                 for model, v1 in v.items():
-                    if model in ['gb', 'pb', 'rism std', 'rism gf', 'rism pcplus']:
-                        # Update the frame range and re-calculate the composite terms
-                        # Re-calculate GGAS based entropies
-                        if self.app_namespace.INPUT['interaction_entropy']:
-                            edata = v1['delta']['GGAS']
-                            ie = InteractionEntropyCalc(edata, self.app_namespace.INPUT, iesegment)
-                            v['ie'] = IEout(self.app_namespace.INPUT)
-                            v['ie'].parse_from_dict(model, {'data': ie.data, 'iedata': ie.iedata,
-                                                            'ieframes': ie.ieframes,
-                                                            'sigma': ie.ie_std})
+                    if (
+                        model in ['gb', 'pb', 'rism std', 'rism gf', 'rism pcplus']
+                        and self.app_namespace.INPUT['general'][
+                            'interaction_entropy'
+                        ]
+                    ):
+                        edata = v1['delta']['GGAS']
+                        ie = InteractionEntropyCalc(edata, self.app_namespace.INPUT, iesegment)
+                        v['ie'] = IEout(self.app_namespace.INPUT)
+                        v['ie'].parse_from_dict(model, {'data': ie.data, 'iedata': ie.iedata,
+                                                        'ieframes': ie.ieframes,
+                                                        'sigma': ie.ie_std})
 
         # Re-calculate delta delta if CAS
-        if 'mutant-normal' in self.print_keys:
-            if 'normal' in self.data and self.data['normal'] and 'mutant' in self.data and self.data['mutant']:
-                for model in self.data['normal']:
-                    if model in ['gb', 'pb', 'rism std', 'rism gf', 'rism pcplus']:
-                        self.data['mutant-normal'][model] = {'delta':
-                                                                 DeltaBindingStatistics(
-                                                                     self.data['mutant'][model]['delta'],
-                                                                     self.data['normal'][model]['delta'])}
+        if (
+            'mutant-normal' in self.print_keys
+            and 'normal' in self.data
+            and self.data['normal']
+            and 'mutant' in self.data
+            and self.data['mutant']
+        ):
+            for model in self.data['normal']:
+                if model in ['gb', 'pb', 'rism std', 'rism gf', 'rism pcplus']:
+                    self.data['mutant-normal'][model] = {'delta':
+                                                             DeltaBindingStatistics(
+                                                                 self.data['mutant'][model]['delta'],
+                                                                 self.data['normal'][model]['delta'])}
         # Re-calculate summaries
         self.get_summary()
 
@@ -399,7 +406,7 @@ class MMPBSA_API():
                 'output_file': ''.join(open(app.FILES.output_file).readlines()),
                 'size': app.mpi_size,
                 'using_chamber': app.using_chamber}
-        if app.INPUT['decomprun']:
+        if app.INPUT['decomp']['decomprun']:
             INFO['decomp_output_file'] = ''.join(open(app.FILES.decompout).readlines())
 
         return SimpleNamespace(FILES=app.FILES, INPUT=app.INPUT, INFO=INFO)
@@ -421,7 +428,7 @@ class MMPBSA_API():
                                     ts * INPUT['interval']))
         self.frames = dict(zip(frames_list, time_step_list))
 
-        if INPUT['nmoderun']:
+        if INPUT['nmode']['nmoderun']:
             nmframes_list = list(range(INPUT['nmstartframe'],
                                        INPUT['nmstartframe'] + nmnumframes * INPUT['nminterval'],
                                        INPUT['interval']))
@@ -474,13 +481,13 @@ class MMPBSA_API():
         numframes_nmode = self.app_namespace.INFO['numframes_nmode']
         # See if we are doing stability
         self.stability = self.app_namespace.FILES.stability
-        self.mutant_only = self.app_namespace.INPUT['mutant_only']
+        self.mutant_only = self.app_namespace.INPUT['ala']['mutant_only']
         self.traj_protocol = ('MTP' if self.app_namespace.FILES.receptor_trajs or
                                        self.app_namespace.FILES.ligand_trajs else 'STP')
 
 
         # Now load the data
-        # if not INPUT['mutant_only']:
+        # if not INPUT['ala']['mutant_only']:
         #     self._get_edata(calc_types.normal)
 
     # def _get_edata(self, calc_type_data):

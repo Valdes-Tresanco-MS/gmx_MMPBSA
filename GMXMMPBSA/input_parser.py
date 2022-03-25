@@ -379,16 +379,17 @@ class InputFile(object):
         # Now it's time to fill the INPUT dictionary
         INPUT = {}
         for nml in self.ordered_namelist_keys:
+            INPUT[nml] = {}
             for var in list(self.namelists[nml].variables.keys()):
                 # Here, the triggers are just bool types, so protect from accessing
                 # an attribute that doesn't exist! We only allow Variable types and
                 # bool types
                 var_object = self.namelists[nml].variables[var]
                 try:
-                    INPUT[var] = self.namelists[nml].variables[var].value
+                    INPUT[nml][var] = self.namelists[nml].variables[var].value
                 except AttributeError:
                     if isinstance(var_object, bool):
-                        INPUT[var] = var_object
+                        INPUT[nml][var] = var_object
                     else:
                         raise InputError('Disallowed namelist variable type')
         return INPUT

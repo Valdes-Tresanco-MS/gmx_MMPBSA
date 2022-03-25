@@ -46,6 +46,7 @@ nonpolar_aa = ['PHE', 'TRP', 'VAL', 'ILE', 'LEU', 'MET', 'PRO', 'CYX', 'ALA', 'G
 polar_aa = ['TYR', 'SER', 'THR', 'CYM', 'CYS', 'HIE', 'HID', 'GLN', 'ASN', 'ASH', 'GLH', 'LYN']
 
 PBRadii = {1: 'bondi', 2: 'mbondi', 3: 'mbondi2', 4: 'mbondi3', 5: 'mbondi_pb2', 6: 'mbondi_pb3', 7: 'charmm_radii'}
+ROH = {1: 0.586, 2: 0.699, 3: 0.734, 4: 0.183}
 
 # ions_para_files = {1: 'frcmod.ions234lm_126_tip3p', 2: 'frcmod.ions234lm_iod_tip4pew', 3: 'frcmod.ions234lm_iod_spce',
 #                    4: 'frcmod.ions234lm_hfe_spce', 5: 'frcmod.ions234lm_126_tip4pew', 6: 'frcmod.ions234lm_126_spce',
@@ -120,16 +121,16 @@ class CheckMakeTop:
             self.pdb2prmtop()
             tops = self.makeToptleap()
 
-        if self.INPUT['decomprun']:
-            decomp_res = self.get_selected_residues(self.INPUT['print_res'])
-            if 'within' in self.INPUT['print_res']:
+        if self.INPUT['decomp']['decomprun']:
+            decomp_res = self.get_selected_residues(self.INPUT['decomp']['print_res'])
+            if 'within' in self.INPUT['decomp']['print_res']:
                 if len(decomp_res) < 2:
                     logging.warning(f"Number of decomp residues to print using "
-                                    f"print_res = '{self.INPUT['print_res']}' < 2")
+                                    f"print_res = '{self.INPUT['decomp']['print_res']}' < 2")
                     logging.info(
                         'Increasing cutoff value by 0.1 until number of decomp residues to print >= 2'
                     )
-                    cutoff = float(self.INPUT['print_res'].split()[1])
+                    cutoff = float(self.INPUT['decomp']['print_res'].split()[1])
                     while len(decomp_res) < 2:
                         cutoff = round(cutoff, 1) + 0.1
                         decomp_res = self.get_selected_residues(f'within {cutoff}')
@@ -137,7 +138,7 @@ class CheckMakeTop:
                     logging.info(f"Selecting residues by distance ({round(cutoff, 1)} Å) between "
                                  f"receptor and ligand for decomposition analysis...")
                 else:
-                    logging.info(f"Selecting residues by distance ({self.INPUT['print_res'].split()[1]} Å) between "
+                    logging.info(f"Selecting residues by distance ({self.INPUT['decomp']['print_res'].split()[1]} Å) between "
                                  f"receptor and ligand for decomposition analysis...")
             else:
                 logging.info('User-selected residues for decomposition analysis...')
@@ -145,12 +146,12 @@ class CheckMakeTop:
             textwraped = textwrap.wrap('\t'.join(x.string for x in decomp_res), tabsize=4, width=120)
             logging.info(f'Selected {len(decomp_res)} residues:\n' + '\n'.join(textwraped) + '\n')
 
-            if self.INPUT['idecomp'] in [3, 4]:
-                if self.INPUT['dec_verbose'] == 0:
+            if self.INPUT['decomp']['idecomp'] in [3, 4]:
+                if self.INPUT['decomp']['dec_verbose'] == 0:
                     mol_terms = 1
-                elif self.INPUT['dec_verbose'] == 1:
+                elif self.INPUT['decomp']['dec_verbose'] == 1:
                     mol_terms = 3
-                elif self.INPUT['dec_verbose'] == 2:
+                elif self.INPUT['decomp']['dec_verbose'] == 2:
                     mol_terms = 4
                 else:
                     mol_terms = 12
@@ -158,22 +159,22 @@ class CheckMakeTop:
                 num_res = len(decomp_res)
                 total_items = energy_terms * mol_terms * num_res ** 2
                 if total_items > 250:
-                    logging.warning(f"Using idecomp = {self.INPUT['idecomp']} and dec_verbose ="
-                                    f" {self.INPUT['dec_verbose']} will generate approximately {total_items} items. "
+                    logging.warning(f"Using idecomp = {self.INPUT['decomp']['idecomp']} and dec_verbose ="
+                                    f" {self.INPUT['decomp']['dec_verbose']} will generate approximately {total_items} items. "
                                     f"Large print selections can demand a large amount of memory and take a "
                                     f"significant amount of time to print!")
 
-            self.INPUT['print_res'] = ','.join(list2range(decomp_res)['string'])
-        if self.INPUT['ifqnt']:
-            qm_residues, (rec_charge, lig_charge) = self.get_selected_residues(self.INPUT['qm_residues'], True)
+            self.INPUT['decomp']['print_res'] = ','.join(list2range(decomp_res)['string'])
+        if self.INPUT['gb']['ifqnt']:
+            qm_residues, (rec_charge, lig_charge) = self.get_selected_residues(self.INPUT['gb']['qm_residues'], True)
 
-            if 'within' in self.INPUT['qm_residues']:
+            if 'within' in self.INPUT['gb']['qm_residues']:
                 if len(qm_residues) == 0:
-                    logging.warning(f"Number of qm_residues using print_res = '{self.INPUT['qm_residues']}' = 0")
+                    logging.warning(f"Number of qm_residues using print_res = '{self.INPUT['gb']['qm_residues']}' = 0")
                     logging.info(
                         'Increasing cutoff value by 0.1 until number of qm_residues > 0'
                     )
-                    cutoff = float(self.INPUT['qm_residues'].split()[1])
+                    cutoff = float(self.INPUT['gb']['qm_residues'].split()[1])
                     while len(qm_residues) == 0:
                         cutoff = round(cutoff, 1) + 0.1
                         qm_residues, (rec_charge, lig_charge) = self.get_selected_residues(f'within {cutoff}', True)
@@ -181,27 +182,27 @@ class CheckMakeTop:
                     logging.info(f"Selecting residues by distance ({round(cutoff, 1)} Å) between "
                                  f"receptor and ligand for QM/MM calculation...")
                 else:
-                    logging.info(f"Selecting residues by distance ({self.INPUT['qm_residues'].split()[1]} Å) between "
+                    logging.info(f"Selecting residues by distance ({self.INPUT['gb']['qm_residues'].split()[1]} Å) between "
                                  f"receptor and ligand for QM calculation...")
             else:
                 logging.info('User-selected residues for QM calculation...')
 
             textwraped = textwrap.wrap('\t'.join(x.string for x in qm_residues), tabsize=4, width=120)
             logging.info(f'Selected {len(qm_residues)} residues:\n' + '\n'.join(textwraped) + '\n')
-            self.INPUT['qm_residues'] = ','.join(list2range(qm_residues)['string'])
+            self.INPUT['gb']['qm_residues'] = ','.join(list2range(qm_residues)['string'])
 
-            if self.INPUT['qmcharge_com'] != rec_charge + lig_charge:
+            if self.INPUT['gb']['qmcharge_com'] != rec_charge + lig_charge:
                 logging.warning('System specified with odd number of electrons. Most likely the charge of QM region '
                                 '(qmcharge_com) have been set incorrectly.')
-                self.INPUT['qmcharge_com'] = rec_charge + lig_charge
+                self.INPUT['gb']['qmcharge_com'] = rec_charge + lig_charge
                 logging.warning(f'Setting qmcharge_com = {rec_charge + lig_charge}')
 
-            if self.INPUT['qmcharge_rec'] != rec_charge:
+            if self.INPUT['gb']['qmcharge_rec'] != rec_charge:
                 logging.warning(f'Setting qmcharge_rec = {rec_charge}')
-                self.INPUT['qmcharge_rec'] = rec_charge
-            if self.INPUT['qmcharge_lig'] != lig_charge:
+                self.INPUT['gb']['qmcharge_rec'] = rec_charge
+            if self.INPUT['gb']['qmcharge_lig'] != lig_charge:
                 logging.warning(f'Setting qmcharge_lig = {lig_charge}')
-                self.INPUT['qmcharge_lig'] = lig_charge
+                self.INPUT['gb']['qmcharge_lig'] = lig_charge
 
         self.cleanup_trajs()
         return tops
@@ -266,7 +267,7 @@ class CheckMakeTop:
             self.ligand_frcmod = self.FILES.prefix + lig_name + '.frcmod'
             # run parmchk2
             parmchk2 = self.external_progs['parmchk2']
-            lig_ff = '2' if "leaprc.gaff2" in self.INPUT['forcefields'] else '1'
+            lig_ff = '2' if "leaprc.gaff2" in self.INPUT['general']['forcefields'] else '1'
             parmchk2_args = [parmchk2, '-i', self.FILES.ligand_mol2, '-f', 'mol2', '-o', self.ligand_frcmod, '-s',
                              lig_ff]
             logging.debug('Running command: ' + ' '.join(parmchk2_args))
@@ -276,14 +277,14 @@ class CheckMakeTop:
             log_subprocess_output(l3)
 
         # check if the ligand force field is gaff or gaff2 and get if the ligand mol2 was defined
-        elif "leaprc.gaff2" in self.INPUT['forcefields'] and not self.FILES.complex_top:
+        elif "leaprc.gaff2" in self.INPUT['general']['forcefields'] and not self.FILES.complex_top:
             logging.warning('You must define the ligand mol2 file (-lm) if the ligand forcefield is '
                             '"leaprc.gaff" or "leaprc.gaff2". If the ligand is parametrized with Amber force '
                             'fields ignore this warning')
 
         # make a temp receptor pdb (even when stability) if decomp to get correct receptor residues from complex. This
         # avoids get multiples molecules from complex.split()
-        if self.INPUT['decomprun'] and self.FILES.stability:
+        if self.INPUT['decomp']['decomprun'] and self.FILES.stability:
             self.use_temp = True
             logging.warning('When &decomp is defined, we generate a receptor file in order to extract interface '
                             'residues')
@@ -399,10 +400,10 @@ class CheckMakeTop:
         log_subprocess_output(l2)
         # check for IE variable
         if (self.FILES.receptor_tpr or self.FILES.ligand_tpr) and (
-                self.INPUT['interaction_entropy'] or self.INPUT['c2_entropy']
+                self.INPUT['general']['interaction_entropy'] or self.INPUT['general']['c2_entropy']
         ):
             logging.warning("The IE or C2 entropy method don't support the MTP approach...")
-            self.INPUT['interaction_entropy'] = self.INPUT['c2_entropy'] = 0
+            self.INPUT['general']['interaction_entropy'] = self.INPUT['general']['c2_entropy'] = 0
 
         # initialize receptor and ligand structures. Needed to get residues map
         self.complex_str = self.molstr(self.complex_str_file)
@@ -467,11 +468,11 @@ class CheckMakeTop:
 
         self.fixparm2amber(com_amb_prm)
 
-        logging.info(f"Assigning PBRadii {PBRadii[self.INPUT['PBRadii']]} to Complex...")
-        if com_top_parm == 'amber' and self.INPUT['PBRadii'] == 7:
-            GMXMMPBSA_ERROR(f"The PBRadii {PBRadii[self.INPUT['PBRadii']]} is not compatible with Amber/OPLS "
+        logging.info(f"Assigning PBRadii {PBRadii[self.INPUT['general']['PBRadii']]} to Complex...")
+        if com_top_parm == 'amber' and self.INPUT['general']['PBRadii'] == 7:
+            GMXMMPBSA_ERROR(f"The PBRadii {PBRadii[self.INPUT['general']['PBRadii']]} is not compatible with Amber/OPLS "
                             f"topologies...")
-        action = ChRad(com_amb_prm, PBRadii[self.INPUT['PBRadii']])
+        action = ChRad(com_amb_prm, PBRadii[self.INPUT['general']['PBRadii']])
         logging.info('Writing Normal Complex AMBER topology...')
         com_amb_prm.write_parm(self.complex_pmrtop)
 
@@ -515,8 +516,8 @@ class CheckMakeTop:
             rec_amb_prm.strip(f'!:{rec_indexes_string}')
             rec_hastop = False
 
-        logging.info(f"Assigning PBRadii {PBRadii[self.INPUT['PBRadii']]} to Receptor...")
-        action = ChRad(rec_amb_prm, PBRadii[self.INPUT['PBRadii']])
+        logging.info(f"Assigning PBRadii {PBRadii[self.INPUT['general']['PBRadii']]} to Receptor...")
+        action = ChRad(rec_amb_prm, PBRadii[self.INPUT['general']['PBRadii']])
         logging.info('Writing Normal Receptor AMBER topology...')
         rec_amb_prm.write_parm(self.receptor_pmrtop)
 
@@ -557,18 +558,18 @@ class CheckMakeTop:
             lig_amb_prm = self.molstr(com_amb_prm)
             lig_amb_prm.strip(f':{rec_indexes_string}')
             lig_hastop = False
-        logging.info(f"Assigning PBRadii {PBRadii[self.INPUT['PBRadii']]} to Ligand...")
-        action = ChRad(lig_amb_prm, PBRadii[self.INPUT['PBRadii']])
+        logging.info(f"Assigning PBRadii {PBRadii[self.INPUT['general']['PBRadii']]} to Ligand...")
+        action = ChRad(lig_amb_prm, PBRadii[self.INPUT['general']['PBRadii']])
         logging.info('Writing Normal Ligand AMBER topology...')
         lig_amb_prm.write_parm(self.ligand_pmrtop)
 
-        if self.INPUT['alarun']:
+        if self.INPUT['ala']['alarun']:
             logging.info('Building Mutant Complex Topology...')
             # get mutation index in complex
             self.com_mut_index, self.part_mut, self.part_index = self.getMutationInfo()
             mut_com_amb_prm = self.makeMutTop(com_amb_prm, self.com_mut_index)
-            logging.info(f"Assigning PBRadii {PBRadii[self.INPUT['PBRadii']]} to Mutant Complex...")
-            action = ChRad(mut_com_amb_prm, PBRadii[self.INPUT['PBRadii']])
+            logging.info(f"Assigning PBRadii {PBRadii[self.INPUT['general']['PBRadii']]} to Mutant Complex...")
+            action = ChRad(mut_com_amb_prm, PBRadii[self.INPUT['general']['PBRadii']])
             logging.info('Writing Mutant Complex AMBER topology...')
             mut_com_amb_prm.write_parm(self.mutant_complex_pmrtop)
 
@@ -595,9 +596,9 @@ class CheckMakeTop:
                 mut_prot_amb_prm = parmed.amber.ChamberParm.from_structure(mtop)
             else:
                 mut_prot_amb_prm = parmed.amber.AmberParm.from_structure(mtop)
-            logging.info(f"Assigning PBRadii {PBRadii[self.INPUT['PBRadii']]} to Mutant "
+            logging.info(f"Assigning PBRadii {PBRadii[self.INPUT['general']['PBRadii']]} to Mutant "
                          f"{'Receptor' if self.part_mut == 'REC' else 'Ligand'}...")
-            action = ChRad(mut_prot_amb_prm, PBRadii[self.INPUT['PBRadii']])
+            action = ChRad(mut_prot_amb_prm, PBRadii[self.INPUT['general']['PBRadii']])
             logging.info(f"Writing Mutant {'Receptor' if self.part_mut == 'REC' else 'Ligand'} AMBER topology...")
             mut_prot_amb_prm.write_parm(out_prmtop)
         else:
@@ -622,8 +623,8 @@ class CheckMakeTop:
         Generate parmed structure object for complex, receptor and ligand ( if it is protein-like)
         :return:
         """
-        if self.INPUT['PBRadii'] == 7:
-            GMXMMPBSA_ERROR(f"The PBRadii {PBRadii[self.INPUT['PBRadii']]} is not compatible with Amber topologies...")
+        if self.INPUT['general']['PBRadii'] == 7:
+            GMXMMPBSA_ERROR(f"The PBRadii {PBRadii[self.INPUT['general']['PBRadii']]} is not compatible with Amber topologies...")
 
         logging.info('Generating AMBER Compatible PDB Files...')
         # fix receptor and structures
@@ -651,7 +652,7 @@ class CheckMakeTop:
 
         self.mut_receptor_list = {}
         self.mut_ligand_list = {}
-        if self.INPUT['alarun']:
+        if self.INPUT['ala']['alarun']:
             self.com_mut_index, self.part_mut, self.part_index = self.getMutationInfo()
             start = 1
             if self.part_mut == 'REC':
@@ -735,8 +736,8 @@ class CheckMakeTop:
         rec_mask = ':' + ','.join(self.resi['REC']['string'])
         lig_mask = ':' + ','.join(self.resi['LIG']['string'])
 
-        if self.INPUT['alarun']:
-            self.resl[self.com_mut_index].set_mut(self.INPUT['mutant'])
+        if self.INPUT['ala']['alarun']:
+            self.resl[self.com_mut_index].set_mut(self.INPUT['ala']['mutant'])
         return rec_mask, lig_mask, self.resl
 
     def get_selected_residues(self, select, qm_sele=False):
@@ -877,7 +878,7 @@ class CheckMakeTop:
         res = self.complex_str.residues[r - 1]
         icode = f':{res.insertion_code}' if res.insertion_code else ''
         if (not parmed.residue.AminoAcidResidue.has(res.name) or res.name in ['CYX', 'PRO', 'GLY'] or
-                res.name == 'ALA' and self.INPUT['mutant'] == 'ALA'):
+                res.name == 'ALA' and self.INPUT['ala']['mutant'] == 'ALA'):
             GMXMMPBSA_ERROR(f"Selecting residue {res.chain}:{res.name}:{res.number}{icode} can't be mutated. Please, "
                             f"define a valid residue...")
 
@@ -906,7 +907,7 @@ class CheckMakeTop:
         :return: Mutant AmberParm
         """
         mut_top = self.molstr(wt_top)
-        mut_aa = self.INPUT['mutant']
+        mut_aa = self.INPUT['ala']['mutant']
 
         bb_atoms = 'N,H,CA,HA,C,O,HN'
         nterm_atoms = 'H1,H2,H3'
@@ -1010,7 +1011,7 @@ class CheckMakeTop:
 
         # change intdiel if cas_intdiel was defined before end the mutation process
         if self.INPUT['cas_intdiel']:
-            if self.INPUT['gbrun']:
+            if self.INPUT['gb']['gbrun']:
                 if self.INPUT['intdiel'] != 1.0:
                     logging.warning('Both cas_intdiel and intdiel were defined. The dielectric constants associated '
                                     'with cas_intdiel will be ignored and intdiel will be used instead')
@@ -1033,7 +1034,7 @@ class CheckMakeTop:
                 else:
                     logging.warning(f"Unclassified mutant residue {mutant_resname}. The default "
                                     f"intdiel will be used")
-            if self.INPUT['pbrun']:
+            if self.INPUT['pb']['pbrun']:
                 if self.INPUT['indi'] != 1.0:
                     logging.warning('Both cas_intdiel and indi were defined. The dielectric constants associated with '
                                     'cas_intdiel will be ignored and indi will be used instead')
@@ -1058,7 +1059,7 @@ class CheckMakeTop:
 
     def cleanup_trajs(self):
         # clear trajectory
-        if not self.INPUT['solvated_trajectory']:
+        if not self.INPUT['general']['solvated_trajectory']:
             return
         logging.info('Cleaning normal complex trajectories...')
         new_trajs = []
@@ -1141,19 +1142,19 @@ class CheckMakeTop:
                     lig_str.residues[i].chain = res.chain
         else:
             assign = False
-            if self.INPUT['assign_chainID'] == 1:
+            if self.INPUT['general']['assign_chainID'] == 1:
                 assign = not com_str.residues[0].chain  # pretty simple
                 if assign:
                     logging.info('Chains ID not found. Assigning chains IDs...')
                 else:
                     logging.info('Chains ID found. Ignoring chains ID assignation...')
-            elif self.INPUT['assign_chainID'] == 2:
+            elif self.INPUT['general']['assign_chainID'] == 2:
                 assign = True
                 if com_str.residues[0].chain:
                     logging.warning('Assigning chains ID...')
                 else:
                     logging.warning('Already have chain ID. Re-assigning ID...')
-            elif self.INPUT['assign_chainID'] == 0 and not com_str.residues[0].chain:
+            elif self.INPUT['general']['assign_chainID'] == 0 and not com_str.residues[0].chain:
                 assign = True
                 logging.warning('No reference structure was found and the complex structure not contain any chain ID. '
                                 'Assigning chains ID automatically...')
@@ -1264,15 +1265,15 @@ class CheckMakeTop:
         return structure
 
     def _write_ff(self, ofile):
-        for ff in self.INPUT['forcefields']:
+        for ff in self.INPUT['general']['forcefields']:
             ofile.write(f'source {ff}\n')
         ofile.write('loadOff atomic_ions.lib\n')
-        ofile.write('loadamberparams {}\n'.format(ions_para_files[self.INPUT['ions_parameters']]))
+        ofile.write('loadamberparams {}\n'.format(ions_para_files[self.INPUT['general']['ions_parameters']]))
         # check if it is a modified PBRadii
-        if self.INPUT['PBRadii'] in [5, 6]:
+        if self.INPUT['general']['PBRadii'] in [5, 6]:
             ofile.write('set default PBRadii {}\n'.format(PBRadii[1]))
         else:
-            ofile.write('set default PBRadii {}\n'.format(PBRadii[self.INPUT['PBRadii']]))
+            ofile.write('set default PBRadii {}\n'.format(PBRadii[self.INPUT['general']['PBRadii']]))
 
     def makeToptleap(self):
         logging.info('Building tleap input files...')
@@ -1328,29 +1329,29 @@ class CheckMakeTop:
         self._run_tleap(tleap, 'leap.in', data_path)
 
         # check if it is a modified PBRadii
-        if self.INPUT['PBRadii'] in [5, 6]:
+        if self.INPUT['general']['PBRadii'] in [5, 6]:
             com_prmtop = parmed.load_file(self.complex_pmrtop)
             com_amb_parm = parmed.amber.AmberParm.from_structure(com_prmtop)
-            action = ChRad(com_amb_parm, PBRadii[self.INPUT['PBRadii']])
-            logging.info(f"Assigning modified PBRadii {PBRadii[self.INPUT['PBRadii']]} to Normal Complex AMBER "
+            action = ChRad(com_amb_parm, PBRadii[self.INPUT['general']['PBRadii']])
+            logging.info(f"Assigning modified PBRadii {PBRadii[self.INPUT['general']['PBRadii']]} to Normal Complex AMBER "
                          f"topology...")
             com_amb_parm.write_parm(self.complex_pmrtop)
             if not self.FILES.stability:
                 rec_prmtop = parmed.load_file(self.receptor_pmrtop)
                 rec_amb_parm = parmed.amber.AmberParm.from_structure(rec_prmtop)
-                action = ChRad(rec_amb_parm, PBRadii[self.INPUT['PBRadii']])
-                logging.info(f"Assigning modified PBRadii {PBRadii[self.INPUT['PBRadii']]} to Normal Receptor AMBER "
+                action = ChRad(rec_amb_parm, PBRadii[self.INPUT['general']['PBRadii']])
+                logging.info(f"Assigning modified PBRadii {PBRadii[self.INPUT['general']['PBRadii']]} to Normal Receptor AMBER "
                              f"topology...")
                 rec_amb_parm.write_parm(self.receptor_pmrtop)
 
                 lig_prmtop = parmed.load_file(self.ligand_pmrtop)
                 lig_amb_parm = parmed.amber.AmberParm.from_structure(lig_prmtop)
-                action = ChRad(lig_amb_parm, PBRadii[self.INPUT['PBRadii']])
-                logging.info(f"Assigning modified PBRadii {PBRadii[self.INPUT['PBRadii']]} to Normal Ligand AMBER "
+                action = ChRad(lig_amb_parm, PBRadii[self.INPUT['general']['PBRadii']])
+                logging.info(f"Assigning modified PBRadii {PBRadii[self.INPUT['general']['PBRadii']]} to Normal Ligand AMBER "
                              f"topology...")
                 lig_amb_parm.write_parm(self.ligand_pmrtop)
 
-        if self.INPUT['alarun']:
+        if self.INPUT['ala']['alarun']:
             with open(f'{self.FILES.prefix}mut_leap.in', 'w') as mtif:
                 self._write_ff(mtif)
 
@@ -1412,25 +1413,25 @@ class CheckMakeTop:
             self._run_tleap(tleap, 'mut_leap.in', data_path)
 
             # check if it is a modified PBRadii
-            if self.INPUT['PBRadii'] in [5, 6]:
+            if self.INPUT['general']['PBRadii'] in [5, 6]:
                 mcom_prmtop = parmed.load_file(self.mutant_complex_pmrtop)
                 mcom_amb_parm = parmed.amber.AmberParm.from_structure(mcom_prmtop)
-                action = ChRad(mcom_amb_parm, PBRadii[self.INPUT['PBRadii']])
-                logging.info(f"Assigning modified PBRadii {PBRadii[self.INPUT['PBRadii']]} to Mutant Complex AMBER "
+                action = ChRad(mcom_amb_parm, PBRadii[self.INPUT['general']['PBRadii']])
+                logging.info(f"Assigning modified PBRadii {PBRadii[self.INPUT['general']['PBRadii']]} to Mutant Complex AMBER "
                              f"topology...")
                 mcom_amb_parm.write_parm(self.mutant_complex_pmrtop)
                 if not self.FILES.stability:
                     mrec_prmtop = parmed.load_file(self.mutant_receptor_pmrtop)
                     mrec_amb_parm = parmed.amber.AmberParm.from_structure(mrec_prmtop)
-                    action = ChRad(rec_amb_parm, PBRadii[self.INPUT['PBRadii']])
-                    logging.info(f"Assigning modified PBRadii {PBRadii[self.INPUT['PBRadii']]} to Mutant Receptor "
+                    action = ChRad(rec_amb_parm, PBRadii[self.INPUT['general']['PBRadii']])
+                    logging.info(f"Assigning modified PBRadii {PBRadii[self.INPUT['general']['PBRadii']]} to Mutant Receptor "
                                  f"AMBER topology...")
                     mrec_amb_parm.write_parm(self.mutant_receptor_pmrtop)
 
                     mlig_prmtop = parmed.load_file(self.mutant_ligand_pmrtop)
                     mlig_amb_parm = parmed.amber.AmberParm.from_structure(mlig_prmtop)
-                    action = ChRad(mlig_amb_parm, PBRadii[self.INPUT['PBRadii']])
-                    logging.info(f"Assigning modified PBRadii {PBRadii[self.INPUT['PBRadii']]} to Mutant Ligand AMBER "
+                    action = ChRad(mlig_amb_parm, PBRadii[self.INPUT['general']['PBRadii']])
+                    logging.info(f"Assigning modified PBRadii {PBRadii[self.INPUT['general']['PBRadii']]} to Mutant Ligand AMBER "
                                  f"topology...")
                     mlig_amb_parm.write_parm(self.mutant_ligand_pmrtop)
 

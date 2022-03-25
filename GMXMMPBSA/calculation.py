@@ -648,7 +648,7 @@ class InteractionEntropyCalc:
                                 'possible to continue with the calculations. Please, make sure your system is '
                                 'consistent')
                 logging.info('The Interaction Entropy will be skipped...')
-                self.INPUT['interaction_entropy'] = 0
+                self.INPUT['general']['interaction_entropy'] = 0
                 break
             eceint = math.exp(deint / (k * temperature))
             exp_energy_int = np.append(exp_energy_int, eceint)

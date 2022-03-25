@@ -58,7 +58,7 @@ class AmberOutput(dict):
         self.basename = None
         self.num_files = None
         self.is_read = False
-        self.apbs = INPUT['sander_apbs']
+        self.apbs = INPUT['pb']['sander_apbs']
 
         # This variable is used to get if the nmode calculation hasn't at least one frame
         self.no_nmode_convergence = False
@@ -92,7 +92,7 @@ class AmberOutput(dict):
     def parse_from_file(self, basename, num_files=1):
         self.num_files = num_files
         self.basename = basename
-        self.temperature = self.INPUT['temperature']
+        self.temperature = self.INPUT['general']['temperature']
 
         for key in self.data_keys:
             self[key] = EnergyVector()
@@ -121,10 +121,10 @@ class AmberOutput(dict):
         csvwriter.writerow(['Frame #'] + print_keys)
 
         # write out each frame
-        c = self.INPUT['nmstartframe'] if self.__class__ == NMODEout else self.INPUT['startframe']
+        c = self.INPUT['nmode']['nmstartframe'] if self.__class__ == NMODEout else self.INPUT['general']['startframe']
         for i in range(len(self[print_keys[0]])):
             csvwriter.writerow([c] + [round(self[key][i], 2) for key in print_keys])
-            c += self.INPUT['nminterval'] if self.__class__ == NMODEout else self.INPUT['interval']
+            c += self.INPUT['nmode']['nminterval'] if self.__class__ == NMODEout else self.INPUT['general']['interval']
 
     def set_frame_range(self, start=0, end=None, interval=1):
         for key in self.data_keys:
@@ -568,7 +568,7 @@ class GBout(AmberOutput):
         fname = '%s.%d' % (self.basename, fileno)
         fname = fname.replace('gb.mdout', 'gb_surf.dat')
         surf_data = _get_cpptraj_surf(fname)
-        self['ESURF'] = self['ESURF'].append((surf_data * self.INPUT['surften']) + self.INPUT['surfoff'])
+        self['ESURF'] = self['ESURF'].append((surf_data * self.INPUT['gb']['surften']) + self.INPUT['gb']['surfoff'])
 
 
 class PBout(AmberOutput):
@@ -1131,11 +1131,11 @@ class DecompOut(dict):
 
         self.num_files = num_files  # how many MPI files we created
         self.INPUT = INPUT
-        self.verbose = INPUT['dec_verbose']
+        self.verbose = INPUT['decomp']['dec_verbose']
         self.surften = surften  # explicitly defined since is for GB and PB models
 
         if self.verbose in [1, 3]:
-            self.allowed_tokens = tuple(['TDC', 'SDC', 'BDC'])
+            self.allowed_tokens = 'TDC', 'SDC', 'BDC'
 
         try:
             self.num_terms = int(self._get_num_terms())
@@ -1176,7 +1176,7 @@ class DecompOut(dict):
             # We've now gotten to the end of the Total Decomp Contribution,
             # so we know how many terms we have
         if not flag:
-            raise TypeError("{}.{} have 0 TDC starts".format(self.basename, 0))
+            raise TypeError(f"{self.basename}.0 have 0 TDC starts")
         return num_terms
 
     def _read(self):
@@ -1452,7 +1452,7 @@ class DecompBinding(dict):
         self.num_terms = self.com.num_terms
         self.desc = desc  # Description
         self.INPUT = INPUT
-        self.idecomp = INPUT['idecomp']
+        self.idecomp = INPUT['decomp']['idecomp']
         self.verbose = INPUT['dec_verbose']
         # Set up the data for the DELTAs
         if self.verbose in [1, 3]:
@@ -1718,7 +1718,7 @@ class H5Output:
 
     def _h52e(self, key):
 
-        GBClass = QMMMout if self.app_namespace.INPUT['ifqnt'] else GBout
+        GBClass = QMMMout if self.app_namespace.INPUT['gb']['ifqnt'] else GBout
         # Determine which kind of RISM output class we are based on std/gf and
         # polardecomp
         if self.app_namespace.INPUT['polardecomp']:
@@ -1756,7 +1756,7 @@ class H5Output:
                 calc_types[key1][key2].parse_from_h5(self.h5f[key][key1][key2])
 
     def _h52decomp(self, key):
-        DecompClass = DecompOut if self.app_namespace.INPUT['idecomp'] in [1, 2] else PairDecompOut
+        DecompClass = DecompOut if self.app_namespace.INPUT['decomp']['idecomp'] in [1, 2] else PairDecompOut
         calc_types = getattr(self.calc_types, key)
         for key1 in self.h5f[key]:
             # model

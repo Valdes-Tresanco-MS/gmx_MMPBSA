@@ -79,7 +79,7 @@ class Data2h5:
         # get output files
         outfile = ''.join(open(self.app.FILES.output_file).readlines())
         dset = grp.create_dataset('output_file', data=outfile)
-        if self.app.INPUT['decomprun']:
+        if self.app.INPUT['decomp']['decomprun']:
             doutfile = ''.join(open(self.app.FILES.decompout).readlines())
             dset = grp.create_dataset('decomp_output_file', data=doutfile)
 
@@ -143,38 +143,38 @@ def write_outputs(app):
     final_output.print_file_info(FILES, INPUT)
     if not stability:
         final_output.add_comment('')
-        final_output.add_comment('Receptor mask:                  "%s"' % INPUT['receptor_mask'])
-        final_output.add_comment('Ligand mask:                    "%s"' % INPUT['ligand_mask'])
+        final_output.add_comment('Receptor mask:                  "%s"' % INPUT['general']['receptor_mask'])
+        final_output.add_comment('Ligand mask:                    "%s"' % INPUT['general']['ligand_mask'])
         if prmtop_system.ligand_prmtop.ptr('nres') == 1:
             final_output.add_comment('Ligand residue name is:         "%s"' %
                                      prmtop_system.ligand_prmtop.parm_data['RESIDUE_LABEL'][0])
     final_output.add_comment('')
     final_output.add_comment('Calculations performed using %s complex frames' % app.numframes)
-    if INPUT['nmoderun']:
+    if INPUT['nmode']['nmoderun']:
         final_output.add_comment('NMODE calculations performed using %s frames' % app.numframes_nmode)
     if not stability:
-        if INPUT['interaction_entropy']:
+        if INPUT['general']['interaction_entropy']:
             final_output.add_comment('Interaction Entropy calculations performed using last %s frames' %
-                                     ceil(app.numframes * (INPUT['ie_segment'] / 100)))
-        if INPUT['c2_entropy']:
+                                     ceil(app.numframes * (INPUT['general']['ie_segment'] / 100)))
+        if INPUT['general']['c2_entropy']:
             final_output.add_comment('C2 Entropy Std. Dev. and Conf. Interv. (95%) have been obtained by '
                                      'bootstrapping with number of re-samplings = 2000')
-    if INPUT['pbrun']:
-        if INPUT['sander_apbs']:
+    if INPUT['pb']['pbrun']:
+        if INPUT['pb']['sander_apbs']:
             final_output.add_comment('Poisson Boltzmann calculations performed using iAPBS interface to sander '
                                      '(sander.APBS)')
         else:
             final_output.add_comment('Poisson Boltzmann calculations performed using internal PBSA solver in sander')
     final_output.add_comment('')
 
-    if INPUT['gbrun']:
-        if INPUT['molsurf']:
+    if INPUT['gb']['gbrun']:
+        if INPUT['gb']['molsurf']:
             final_output.add_comment('Generalized Born ESURF calculated using \'molsurf\' surface areas')
         else:
             final_output.add_comment('Generalized Born ESURF calculated using \'LCPO\' surface areas')
         final_output.add_comment('')
 
-    final_output.add_comment('Using temperature = %.2f K)' % INPUT['temperature'])
+    final_output.add_comment('Using temperature = %.2f K' % INPUT['general']['temperature'])
     final_output.add_comment('All units are reported in kcal/mol')
     final_output.add_comment('')
     final_output.add_comment('SD - Sample standard deviation, SEM - Sample standard error of the mean')
@@ -182,21 +182,21 @@ def write_outputs(app):
     final_output.add_comment('https://en.wikipedia.org/wiki/Propagation_of_uncertainty#Example_formulae')
     final_output.add_comment('')
 
-    if INPUT['ifqnt']:
+    if INPUT['gb']['ifqnt']:
         final_output.add_comment(('QM/MM: Residues %s are treated with the ' +
-                                  'Quantum Hamiltonian %s') % (INPUT['qm_residues'], INPUT['qm_theory']))
+                                  'Quantum Hamiltonian %s') % (INPUT['gb']['qm_residues'], INPUT['gb']['qm_theory']))
     final_output.separate()
 
     # First do the entropies
-    if INPUT['qh_entropy']:
-        if not INPUT['mutant_only']:
+    if INPUT['general']['qh_entropy']:
+        if not INPUT['ala']['mutant_only']:
             if stability:
                 qhnorm = app.calc_types.normal['qh']['complex']
             else:
                 qhnorm = app.calc_types.normal['qh']['delta']
             final_output.writeline('ENTROPY RESULTS (QUASI-HARMONIC APPROXIMATION) CALCULATED WITH CPPTRAJ:')
             final_output.add_section(qhnorm.summary_output())
-        if INPUT['alarun']:
+        if INPUT['ala']['alarun']:
             if stability:
                 qhnorm = app.calc_types.mutant['qh']['complex']
             else:
@@ -205,16 +205,16 @@ def write_outputs(app):
             final_output.writeline(mut_str + ' MUTANT')
             final_output.writeline('ENTROPY RESULTS (QUASI-HARMONIC APPROXIMATION) CALCULATED WITH CPPTRAJ:')
             final_output.add_section(qhmutant.summary_output())
-        if INPUT['alarun'] and not INPUT['mutant_only']:
+        if INPUT['ala']['alarun'] and not INPUT['ala']['mutant_only']:
             ddqh_davg, ddqh_dstd = utils.calc_sub(qhmutant['TOTAL'], qhnorm['TOTAL'], mut=True)
             final_output.add_section(f'\nRESULT OF ALANINE SCANNING ({mut_str}):\n'
                                      f'-TΔΔS{"" if stability else " binding"} = {ddqh_davg:9.2f} +/ {ddqh_dstd:7.2f}\n')
 
     if not stability:
         # end if INPUT['entropy']
-        if INPUT['interaction_entropy']:
+        if INPUT['general']['interaction_entropy']:
             ie_inconsistent = False
-            if not INPUT['mutant_only']:
+            if not INPUT['ala']['mutant_only']:
                 ienorm = app.calc_types.normal['ie']
                 final_output.writeline('ENTROPY RESULTS (INTERACTION ENTROPY):')
                 final_output.add_section(ienorm.summary_output())
@@ -227,7 +227,7 @@ def write_outputs(app):
                 for m in ienorm:
                     if ienorm[m]['sigma'] > 3.6:
                         ie_inconsistent = True
-            if INPUT['alarun']:
+            if INPUT['ala']['alarun']:
                 iemutant = app.calc_types.mutant['ie']
                 final_output.writeline(mut_str + ' MUTANT')
                 final_output.writeline('ENTROPY RESULTS (INTERACTION ENTROPY):')
@@ -235,7 +235,7 @@ def write_outputs(app):
                 for m in iemutant:
                     if iemutant[m]['sigma'] > 3.6:
                         ie_inconsistent = True
-            if INPUT['alarun'] and not INPUT['mutant_only']:
+            if INPUT['ala']['alarun'] and not INPUT['ala']['mutant_only']:
                 text = f'\nRESULT OF ALANINE SCANNING ({mut_str}):\n'
                 for model in ienorm:
                     davg, dstd = utils.calc_sub(iemutant[model]['iedata'], ienorm[model]['iedata'], mut=True)
@@ -247,16 +247,16 @@ def write_outputs(app):
                     'IS GREATER THAN 3.6 kcal/mol (~15 kJ/mol). THUS, THE INTERACTION ENTROPY VALUES ARE\n'
                     'NOT RELIABLE. CHECK THIS PAPER FOR MORE INFO (https://doi.org/10.1021/acs.jctc.1c00374)\n\n')
 
-        if INPUT['c2_entropy']:
+        if INPUT['general']['c2_entropy']:
             c2_inconsistent = False
-            if not INPUT['mutant_only']:
+            if not INPUT['ala']['mutant_only']:
                 c2norm = app.calc_types.normal['c2']
                 final_output.writeline('ENTROPY RESULTS (C2 ENTROPY):')
                 final_output.add_section(c2norm.summary_output())
                 for m in c2norm:
                     if c2norm[m]['sigma'] > 3.6:
                         c2_inconsistent = True
-            if INPUT['alarun']:
+            if INPUT['ala']['alarun']:
                 c2mutant = app.calc_types.mutant['c2']
                 final_output.writeline(mut_str + ' MUTANT')
                 final_output.writeline('ENTROPY RESULTS (C2 ENTROPY):')
@@ -264,7 +264,7 @@ def write_outputs(app):
                 for m in c2mutant:
                     if c2mutant[m]['sigma'] > 3.6:
                         c2_inconsistent = True
-            if INPUT['alarun'] and not INPUT['mutant_only']:
+            if INPUT['ala']['alarun'] and not INPUT['ala']['mutant_only']:
                 text = '\nRESULT OF ALANINE SCANNING (%s):\n' % mut_str
                 for model in c2norm:
                     davg, dstd = utils.calc_sub(c2mutant[model]['c2data'], c2norm[model]['c2data'], mut=True)
@@ -277,8 +277,8 @@ def write_outputs(app):
                     'RELIABLE. CHECK THIS PAPER FOR MORE INFO (https://doi.org/10.1021/acs.jctc.1c00374)\n')
 
     # Now print out the normal mode results
-    if INPUT['nmoderun']:
-        if not INPUT['mutant_only']:
+    if INPUT['nmode']['nmoderun']:
+        if not INPUT['ala']['mutant_only']:
             if stability:
                 nm_sys_norm = app.calc_types.normal['nmode']['complex']
             else:
@@ -292,7 +292,7 @@ def write_outputs(app):
                 nm_sys_norm._print_vectors(energyvectors)
                 energyvectors.writerow([])
 
-        if INPUT['alarun']:
+        if INPUT['ala']['alarun']:
             if stability:
                 nm_sys_mut = app.calc_types.mutant['nmode']['complex']
             else:
@@ -307,7 +307,7 @@ def write_outputs(app):
                 energyvectors.writerow([])
 
         # Now calculate the effect of alanine scanning
-        if INPUT['alarun'] and not INPUT['mutant_only']:
+        if INPUT['ala']['alarun'] and not INPUT['ala']['mutant_only']:
             nm_sys_norm = app.calc_types.mut_norm['nmode']
             mut_norm = app.calc_types.mut_norm['nmode']['delta']
             final_output.add_section(mut_norm.summary_output())
@@ -319,17 +319,17 @@ def write_outputs(app):
             final_output.add_section(f'\nRESULT OF ALANINE SCANNING ({mut_str}):\n'
                                      f'-TΔΔS{"" if stability else " binding"} = {davg:9.2f} +/- {dstd:9.2f}\n')
 
-    # end if INPUT['nmoderun']
-
+    # end if INPUT['nmode']['nmoderun']
+    nmls = ('gb', 'pb', 'rism', 'rism', 'rism')
     triggers = ('gbrun', 'pbrun', 'rismrun_std', 'rismrun_gf', 'rismrun_pcplus')
     outkeys = ('gb', 'pb', 'rism std', 'rism gf', 'rism pcplus')
     headers = ('\nGENERALIZED BORN:\n\n', '\nPOISSON BOLTZMANN:\n\n',
                '\n3D-RISM:\n\n', '\n3D-RISM (Gauss. Fluct.):\n\n', '\n3D-RISM (PC+):\n\n')
     # Now print out the Free Energy results
     for i, key in enumerate(outkeys):
-        if not INPUT[triggers[i]]:
+        if not INPUT[nmls[i]][triggers[i]]:
             continue
-        if not INPUT['mutant_only']:
+        if not INPUT['ala']['mutant_only']:
             final_output.write(headers[i])
             if stability:
                 sys_norm = app.calc_types.normal[key]['complex']
@@ -348,28 +348,28 @@ def write_outputs(app):
                 energyvectors.writerow([])
 
             # Combine with the entropy(ies)
-            if INPUT['qh_entropy']:
+            if INPUT['general']['qh_entropy']:
                 dg_qh_davg, dg_qh_dstd = utils.calc_sum(sys_norm['TOTAL'], qhnorm['TOTAL'])
                 final_output.add_section('Using Quasi-harmonic Entropy Approximation:\n'
                                          f'ΔG{"" if stability else " binding"} = {dg_qh_davg:9.2f} +'
                                          f'/- {dg_qh_dstd:7.2f}\n')
             if not stability:
-                if INPUT['interaction_entropy']:
+                if INPUT['general']['interaction_entropy']:
                     dg_ie_davg, dg_ie_dstd = utils.calc_sum(sys_norm['TOTAL'], ienorm[key]['iedata'])
                     final_output.add_section(f"Using Interaction Entropy Approximation:\n"
                                              f"ΔG binding = {dg_ie_davg:9.2f} +/- {dg_ie_dstd:7.2f}\n")
-                if INPUT['c2_entropy']:
+                if INPUT['general']['c2_entropy']:
                     dg_c2_davg, dh_dstd = utils.calc_sum(sys_norm['TOTAL'], c2norm[key]['c2data'])
                     dg_c2_dstd = utils.get_std(dh_dstd, c2norm[key]['c2_std'])
                     final_output.add_section(f"Using C2 Entropy Approximation:\n"
                                              f"ΔG binding = {dg_c2_davg:9.2f} +/- {dg_c2_dstd:7.2f}\n")
-            if INPUT['nmoderun']:
+            if INPUT['nmode']['nmoderun']:
                 dg_nm_davg, dg_nm_dstd = utils.calc_sum(sys_norm['TOTAL'], nm_sys_norm['TOTAL'])
                 final_output.add_section('Using Normal Mode Entropy Approximation:\n'
                                          f'ΔG{"" if stability else " binding"} = {dg_nm_davg:9.2f} +/-'
                                          f' {dg_nm_dstd:7.2f}\n')
 
-        if INPUT['alarun']:
+        if INPUT['ala']['alarun']:
             final_output.write('%s MUTANT:%s' % (mut_str, headers[i]))
             if stability:
                 sys_mut = app.calc_types.mutant[key]['complex']
@@ -387,25 +387,25 @@ def write_outputs(app):
                 sys_mut._print_vectors(energyvectors)
                 energyvectors.writerow([])
 
-            if INPUT['qh_entropy']:
+            if INPUT['general']['qh_entropy']:
                 mqh_davg, mqh_dstd = utils.calc_sum(sys_mut['TOTAL'], qhmutant['TOTAL'])
                 final_output.add_section('Using Quasi-harmonic Entropy Approximation:\n'
                                          f'ΔG{"" if stability else " binding"} = {mqh_davg:9.2f} +/- {mqh_dstd:7.2f}\n')
             if not stability:
-                if INPUT['interaction_entropy']:
+                if INPUT['general']['interaction_entropy']:
                     mie_davg, mie_dstd = utils.calc_sum(sys_mut['TOTAL'], iemutant[key]['iedata'])
                     final_output.add_section(f"Using Interaction Entropy Approximation:\n"
                                              f"ΔG binding = {mie_davg:9.2f} +/- {mie_dstd:7.2f}\n")
-                if INPUT['c2_entropy']:
+                if INPUT['general']['c2_entropy']:
                     mc2_davg, mc2_dstd = utils.calc_sum(sys_mut['TOTAL'], c2mutant[key]['c2data'])
                     final_output.add_section(f"Using C2 Entropy Approximation:\n"
                                              f"ΔG binding = {mc2_davg:9.2f} +/- {mc2_dstd:7.2f}\n")
-            if INPUT['nmoderun']:
+            if INPUT['nmode']['nmoderun']:
                 mnm_davg, mnm_dstd = utils.calc_sum(sys_mut['TOTAL'], nm_sys_mut['TOTAL'])
                 final_output.add_section('Using Normal Mode Entropy Approximation:\n'
                                          f'ΔG{"" if stability else " binding"} = {mnm_davg:9.2f} +/- {mnm_dstd:7.2f}\n')
 
-        if INPUT['alarun'] and not INPUT['mutant_only']:
+        if INPUT['ala']['alarun'] and not INPUT['ala']['mutant_only']:
             mut_norm = app.calc_types.mut_norm[key]['delta']
             final_output.add_section(mut_norm.summary_output())
             ddh_davg = mut_norm['TOTAL'].mean()
@@ -414,26 +414,26 @@ def write_outputs(app):
             final_output.write(f'\nRESULT OF ALANINE SCANNING ({mut_str}):\n' 
                                f"ΔΔH binding = {ddh_davg:9.2f} +/- {ddh_dstd:7.2f}\n")
 
-            if INPUT['qh_entropy']:
+            if INPUT['general']['qh_entropy']:
                 ddgqh_davg = ddh_davg + ddqh_davg
                 # this std is the same of ΔΔH
                 final_output.write('\n   (quasi-harmonic entropy)\n'
                                    f'ΔΔG{"" if stability else " binding"} = {ddgqh_davg:9.2f} +/- {ddh_dstd:7.2f}\n')
             if not stability:
-                if INPUT['interaction_entropy']:
+                if INPUT['general']['interaction_entropy']:
                     ddie_davg, ddie_dstd = utils.calc_sub(iemutant[key]['iedata'], ienorm[key]['iedata'], mut=True)
                     ddgie_davg = ddh_davg + ddie_davg
                     ddgie_dstd = utils.get_std(ddh_dstd, ddie_dstd)
                     final_output.write('\n   (interaction entropy)\n'
                                        f'ΔΔG binding = {ddgie_davg:9.2f} +/- {ddgie_dstd:7.2f}\n')
-                if INPUT['c2_entropy']:
+                if INPUT['general']['c2_entropy']:
                     ddc2_davg = c2mutant[key]['c2data'] - c2norm[key]['c2data']
                     ddc2_dstd = c2mutant[key]['c2_std'] - c2norm[key]['c2_std']
                     ddgc2_davg = ddh_davg + ddc2_davg
                     ddgc2_dstd = utils.get_std(ddh_dstd, ddc2_dstd)
                     final_output.write('\n   (C2 entropy)\n'
                                        f'ΔΔG binding = {ddgc2_davg:9.2f} +/- {ddgc2_dstd:7.2f}\n')
-            if INPUT['nmoderun']:
+            if INPUT['nmode']['nmoderun']:
                 ddnm_davg, ddnm_dstd = utils.calc_sub(nm_sys_mut['TOTAL'], nm_sys_norm['TOTAL'], mut=True)
                 ddgnm_davg = ddh_davg + ddnm_davg
                 ddgnm_dstd = utils.get_std(ddh_dstd, ddnm_dstd)
@@ -465,13 +465,13 @@ def write_decomp_output(app):
         dec_out_file = OutputFile(FILES.decompout, 'wb', 0)
         decompout = writer(dec_out_file)
         decompout.writerow(['| Run on %s' % datetime.now().ctime()])
-        if INPUT['gbrun']:
+        if INPUT['gb']['gbrun']:
             decompout.writerow(['| GB non-polar solvation energies calculated with gbsa=2'])
     else:
         dec_out_file = OutputFile(FILES.decompout, 'w', 0)
         decompout = dec_out_file
         decompout.write_date()
-        if INPUT['gbrun']:
+        if INPUT['gb']['gbrun']:
             decompout.add_comment('| GB non-polar solvation energies calculated with gbsa=2')
 
     # Open up the CSV energy vector file
@@ -482,7 +482,7 @@ def write_decomp_output(app):
     for i, key in enumerate(outkeys):
         if not INPUT[triggers[i]]:
             continue
-        if not INPUT['mutant_only']:
+        if not INPUT['ala']['mutant_only']:
             if stability:
                 decomp_norm = app.calc_types.decomp_normal[key]['complex']
             else:
@@ -508,7 +508,7 @@ def write_decomp_output(app):
                     app.calc_types.decomp_normal[key]['delta']._print_vectors(dec_energies)
                 dec_energies.writerow('\n')
         # Mutant system
-        if INPUT['alarun']:
+        if INPUT['ala']['alarun']:
             if stability:
                 decomp_mut = app.calc_types.decomp_mutant[key]['complex']
             else:
@@ -626,7 +626,7 @@ class OutputFile(object):
                 self.writeline(f'{"|Ligand (GROMACS) topology file:":40}{FILES.ligand_top:>40}')
             self.writeline(f'{"|Ligand (AMBER) topology file:":40}{FILES.ligand_prmtop:>40}')
 
-        if INPUT['alarun']:
+        if INPUT['ala']['alarun']:
             self.writeline(f'{"|Mutant (AMBER) complex topology file:":40}{FILES.mutant_complex_prmtop:>40}')
             if not stability:
                 self.writeline(f'{"|Mutant (AMBER) receptor topology file:":40}{FILES.mutant_receptor_prmtop:>40}')

@@ -50,43 +50,43 @@ def create_inputs(INPUT, prmtop_system, pre):
     stability = prmtop_system.stability
 
     # First check if we are running decomp
-    if INPUT['decomprun']:
+    if INPUT['decomp']['decomprun']:
         # Get the cards that will go in the complex mdin file
-        com_card, rc_card, lc_card = prmtop_system.Group(INPUT['print_res'], True)
-        junk, rec_card, lig_card = prmtop_system.Group(INPUT['print_res'], False,
+        com_card, rc_card, lc_card = prmtop_system.Group(INPUT['decomp']['print_res'], True)
+        junk, rec_card, lig_card = prmtop_system.Group(INPUT['decomp']['print_res'], False,
                                                        rec_group_type='RES', lig_group_type='RES')
         full_com, full_rc, full_lc = prmtop_system.Group('all', True)
         junk, full_rec, full_lig = prmtop_system.Group('all', False)
 
         # Convert the strings into card objects
         # Now create the mdin objects
-        if INPUT['gbrun']:
+        if INPUT['gb']['gbrun']:
             com_arad = None
             rec_arad = None
             lig_arad = None
-            if INPUT['alpb']:
+            if INPUT['gb']['alpb']:
                 import subprocess
                 com_top = parmed.load_file('COM.prmtop', xyz=f"{pre}COM.inpcrd")
                 com_top.save('COM.pqr', format='pqr', overwrite=True)
                 stdoutdata = subprocess.getoutput("elsize COM.pqr -hea")
-                com_arad = stdoutdata.split()[INPUT['arad_method'] * -1]
+                com_arad = stdoutdata.split()[INPUT['gb']['arad_method'] * -1]
                 if not stability:
                     rec_top = parmed.load_file('REC.prmtop', xyz=f"{pre}REC.inpcrd")
                     rec_top.save('REC.pqr', format='pqr', overwrite=True)
                     stdoutdata = subprocess.getoutput("elsize REC.pqr -hea")
-                    rec_arad = stdoutdata.split()[INPUT['arad_method'] * -1]
+                    rec_arad = stdoutdata.split()[INPUT['gb']['arad_method'] * -1]
 
                     lig_top = parmed.load_file('LIG.prmtop', xyz=f"{pre}LIG.inpcrd")
                     lig_top.save('LIG.pqr', format='pqr', overwrite=True)
                     stdoutdata = subprocess.getoutput("elsize LIG.pqr -hea")
-                    lig_arad = stdoutdata.split()[INPUT['arad_method'] * -1]
+                    lig_arad = stdoutdata.split()[INPUT['gb']['arad_method'] * -1]
 
             rec_res = ['Residues considered as REC', full_rc]
             if stability:
                 pri_res = ['Residues to print', com_card]
                 com_input = deepcopy(INPUT)
                 if com_arad:
-                    com_input['arad'] = com_arad
+                    com_input['gb']['arad'] = com_arad
                 com_mdin = SanderGBDecomp(com_input, rec_res, pri_res)
                 com_mdin.write_input(f"{pre}gb_decomp_com.mdin")
             else:
@@ -94,25 +94,25 @@ def create_inputs(INPUT, prmtop_system, pre):
                 pri_res = ['Residues to print', com_card]
                 com_input = deepcopy(INPUT)
                 if com_arad:
-                    com_input['arad'] = com_arad
+                    com_input['gb']['arad'] = com_arad
                 com_mdin = SanderGBDecomp(com_input, rec_res, lig_res, pri_res)
                 rec_res = ['Residues considered as REC', full_rec]
                 pri_res = ['Residues to print', rec_card]
                 rec_input = deepcopy(INPUT)
                 if rec_arad:
-                    rec_input['arad'] = rec_arad
+                    rec_input['gb']['arad'] = rec_arad
                 rec_mdin = SanderGBDecomp(rec_input, rec_res, pri_res)
                 lig_res = ['Residues considered as LIG', full_lig]
                 pri_res = ['Residues to print', lig_card]
                 lig_input = deepcopy(INPUT)
                 if lig_arad:
-                    lig_input['arad'] = lig_arad
+                    lig_input['gb']['arad'] = lig_arad
                 lig_mdin = SanderGBDecomp(lig_input, lig_res, pri_res)
                 com_mdin.write_input(f"{pre}gb_decomp_com.mdin")
                 rec_mdin.write_input(f"{pre}gb_decomp_rec.mdin")
                 lig_mdin.write_input(f"{pre}gb_decomp_lig.mdin")
 
-        if INPUT['pbrun']:
+        if INPUT['pb']['pbrun']:
             rec_res = ['Residues considered as REC', full_rc]
             if stability:
                 pri_res = ['Residues to print', com_card]
@@ -134,29 +134,29 @@ def create_inputs(INPUT, prmtop_system, pre):
 
     else:  # not decomp
 
-        if INPUT['gbrun']:
+        if INPUT['gb']['gbrun']:
             # We need separate input files for QM/gmx_MMPBSA
             com_arad = None
             rec_arad = None
             lig_arad = None
-            if INPUT['alpb']:
+            if INPUT['gb']['alpb']:
                 import subprocess
                 com_top = parmed.load_file('COM.prmtop', xyz=f"{pre}COM.inpcrd")
                 com_top.save('COM.pqr', format='pqr', overwrite=True)
                 stdoutdata = subprocess.getoutput("elsize COM.pqr -hea")
-                com_arad = stdoutdata.split()[INPUT['arad_method'] * -1]
+                com_arad = stdoutdata.split()[INPUT['gb']['arad_method'] * -1]
                 if not stability:
                     rec_top = parmed.load_file('REC.prmtop', xyz=f"{pre}REC.inpcrd")
                     rec_top.save('REC.pqr', format='pqr', overwrite=True)
                     stdoutdata = subprocess.getoutput("elsize REC.pqr -hea")
-                    rec_arad = stdoutdata.split()[INPUT['arad_method'] * -1]
+                    rec_arad = stdoutdata.split()[INPUT['gb']['arad_method'] * -1]
 
                     lig_top = parmed.load_file('LIG.prmtop', xyz=f"{pre}LIG.inpcrd")
                     lig_top.save('LIG.pqr', format='pqr', overwrite=True)
                     stdoutdata = subprocess.getoutput("elsize LIG.pqr -hea")
-                    lig_arad = stdoutdata.split()[INPUT['arad_method'] * -1]
+                    lig_arad = stdoutdata.split()[INPUT['gb']['arad_method'] * -1]
 
-            if INPUT['ifqnt']:
+            if INPUT['gb']['ifqnt']:
                 com_input = deepcopy(INPUT)
                 rec_input = deepcopy(INPUT)
                 lig_input = deepcopy(INPUT)
@@ -169,7 +169,7 @@ def create_inputs(INPUT, prmtop_system, pre):
                 com_input['qmcharge'] = com_input['qmcharge_com']
                 # check if alpb
                 if com_arad:
-                    com_input['arad'] = com_arad
+                    com_input['gb']['arad'] = com_arad
                 gb_mdin = SanderGBInput(com_input)
                 gb_mdin.write_input(f'{pre}gb_qmmm_com.mdin')
                 if not stability:
@@ -181,7 +181,7 @@ def create_inputs(INPUT, prmtop_system, pre):
                     rec_input['qmcharge'] = rec_input['qmcharge_rec']
                     # check if alpb
                     if rec_arad:
-                        rec_input['arad'] = rec_arad
+                        rec_input['gb']['arad'] = rec_arad
                     gb_mdin = SanderGBInput(rec_input)
                     gb_mdin.write_input(f'{pre}gb_qmmm_rec.mdin')
                     if not lig_input['qmmask']:
@@ -192,28 +192,28 @@ def create_inputs(INPUT, prmtop_system, pre):
                     lig_input['qmcharge'] = lig_input['qmcharge_lig']
                     # check if alpb
                     if lig_arad:
-                        lig_input['arad'] = lig_arad
+                        lig_input['gb']['arad'] = lig_arad
                     gb_mdin = SanderGBInput(lig_input)
                     gb_mdin.write_input(f'{pre}gb_qmmm_lig.mdin')
 
-            elif INPUT['alpb']:
+            elif INPUT['gb']['alpb']:
                 com_input = deepcopy(INPUT)
                 rec_input = deepcopy(INPUT)
                 lig_input = deepcopy(INPUT)
-                com_input['arad'] = com_arad
+                com_input['gb']['arad'] = com_arad
                 gb_mdin = SanderGBInput(com_input)
                 gb_mdin.write_input(f'{pre}gb_com.mdin')
-                rec_input['arad'] = rec_arad
+                rec_input['gb']['arad'] = rec_arad
                 gb_mdin = SanderGBInput(rec_input)
                 gb_mdin.write_input(f'{pre}gb_rec.mdin')
-                lig_input['arad'] = lig_arad
+                lig_input['gb']['arad'] = lig_arad
                 gb_mdin = SanderGBInput(lig_input)
                 gb_mdin.write_input(f'{pre}gb_lig.mdin')
             else:
                 gb_mdin = SanderGBInput(INPUT)
                 gb_mdin.write_input(f'{pre}gb.mdin')
 
-        if INPUT['pbrun']:
+        if INPUT['pb']['pbrun']:
             pb_prog = 'sander.APBS' if INPUT['sander_apbs'] else 'sander'
             if pb_prog == 'sander.APBS':
                 pb_mdin = SanderAPBSInput(INPUT)
@@ -225,20 +225,20 @@ def create_inputs(INPUT, prmtop_system, pre):
             pb_mdin.write_input(f'{pre}pb.mdin')
             pb_mdin2.write_input(f'{pre}pb.mdin2')
 
-        if INPUT['rismrun']:
+        if INPUT['rism']['rismrun']:
             rism_mdin = SanderRISMInput(INPUT)
-            rism_mdin.write_input(pre + 'rism.mdin')
+            rism_mdin.write_input(f'{pre}rism.mdin')
 
     # end if decomprun
 
-    if INPUT['qh_entropy']:  # quasi-harmonic approximation input file
-        trj_suffix = 'nc' if INPUT['netcdf'] else 'mdcrd'
+    if INPUT['general']['qh_entropy']:  # quasi-harmonic approximation input file
+        trj_suffix = 'nc' if INPUT['general']['netcdf'] else 'mdcrd'
         com_mask, rec_mask, lig_mask = prmtop_system.Mask('all', True)
-        if not INPUT['mutant_only']:
+        if not INPUT['ala']['mutant_only']:
             qh_in = QuasiHarmonicInput(com_mask, rec_mask, lig_mask, temperature=INPUT['temperature'],
                                        stability=stability, prefix=pre, trj_suffix=trj_suffix)
             qh_in.write_input(f'{pre}cpptrajentropy.in')
-        if INPUT['alarun']:
+        if INPUT['ala']['alarun']:
             qh_in = QuasiHarmonicInput(com_mask, rec_mask, lig_mask, temperature=INPUT['temperature'],
                                        stability=stability, prefix=pre + 'mutant_', trj_suffix=trj_suffix)
             qh_in.write_input(f'{pre}mutant_cpptrajentropy.in')
@@ -250,6 +250,7 @@ class SanderInput(object):
     input_items = {'foo': 'bar'}  # replace this in derived classes
     name_map = {'foo': 'orig'}  # replace this in derived classes
     parent_namelist = {'foo': 'foo_namelist'}  # replace this in derived classes
+    namelist = ['foo']
 
     def __init__(self, INPUT):
         self.mdin = Mdin(self.program)
@@ -258,12 +259,25 @@ class SanderInput(object):
             # Skip ioutfm since it is handled explicitly later
             if key == 'ioutfm':
                 continue
-            try:
-                self.mdin.change(self.parent_namelist[key], key, INPUT[self.name_map[key]])
-            except KeyError:
+            vunchanged = True
+            for nml in self.namelist:
+                if self.name_map[key] in INPUT[nml]:
+                    self.mdin.change(self.parent_namelist[key], key, INPUT[nml][self.name_map[key]])
+                    vunchanged = False
+            if vunchanged:
                 self.mdin.change(self.parent_namelist[key], key, self.input_items[key])
-
-        self.mdin.change('cntrl', 'ioutfm', int(bool(INPUT['netcdf'])))
+            # try:
+            #     # FIXME:
+            #     for nml in self.namelist:
+            #         if self.name_map[key] in INPUT[nml]:
+            #             self.mdin.change(self.parent_namelist[key], key, INPUT[nml][self.name_map[key]])
+            #
+            #             # self.mdin.change(self.parent_namelist[key], key, INPUT[self.namelist][self.name_map[key]])
+            #             ic(key, nml, INPUT[nml][self.name_map[key]])
+            # except KeyError:
+            #     self.mdin.change(self.parent_namelist[key], key, self.input_items[key])
+            #     ic(key, self.input_items[key])
+        self.mdin.change('cntrl', 'ioutfm', int(bool(INPUT['general']['netcdf'])))
 
     def write_input(self, filename):
         """ Write the mdin file """
@@ -274,6 +288,7 @@ class SanderInput(object):
 
 class SanderGBInput(SanderInput):
     """ GB sander input file """
+    namelist = ['gb', 'decomp']
     input_items = {'ntb': 0, 'cut': 999.0, 'nsnb': 99999, 'idecomp': 0, 'offset': -999999.0,
                    'imin': 5, 'maxcyc': 1, 'ncyc': 0, 'gbsa': 0, 'ioutfm': 0, 'dec_verbose': 0,
                    # Basic options
