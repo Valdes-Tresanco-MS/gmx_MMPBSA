@@ -562,6 +562,63 @@ class GBout(AmberOutput):
         self['ESURF'] = self['ESURF'].append((surf_data * self.INPUT['gb']['surften']) + self.INPUT['gb']['surfoff'])
 
 
+class GBNSR6out(AmberOutput):
+    """ Amber output class for normal generalized Born simulations """
+    print_levels = {'BOND': 2, 'ANGLE': 2, 'DIHED': 2, 'VDWAALS': 1, 'EEL': 1, '1-4 VDW': 2, '1-4 EEL': 2, 'EGB': 1,
+                    'ESURF': 1}
+
+    # Ordered list of keys in the data dictionary
+
+    def __init__(self, mol, INPUT, chamber=False, **kwargs):
+        AmberOutput.__init__(self, mol, INPUT, chamber, **kwargs)
+        # As the MM terms will be updated, in order to maintain order, we need to initialize these keys
+        for k in self.data_keys:
+            self[k] = None
+        self.data_keys.extend(['EGB', 'ESURF'])
+
+    def _get_energies(self, outfile):
+        """ Parses the mdout files for the GB potential terms """
+        store = False
+        while rawline := outfile.readline():
+            if "FINAL RESULTS" in rawline:
+                store = True
+            if store and rawline[:6] == ' EELEC':
+                words = rawline.split()
+                self['EGB'] = self['EGB'].append(float(words[5]))
+                words = outfile.readline().split()
+                self['ESURF'] = self['ESURF'].append(float(words[2]))
+                store = False
+
+
+class MMout(AmberOutput):
+    """ Amber output class for normal MM simulations """
+    print_levels = {'BOND': 2, 'ANGLE': 2, 'DIHED': 2, 'VDWAALS': 1, 'EEL': 1, '1-4 VDW': 2, '1-4 EEL': 2}
+
+    # Ordered list of keys in the data dictionary
+
+    def __init__(self, mol, INPUT, chamber=False, **kwargs):
+        AmberOutput.__init__(self, mol, INPUT, chamber, **kwargs)
+
+    def _get_energies(self, outfile):
+        """ Parses the mdout files for the GB potential terms """
+        while rawline := outfile.readline():
+            if rawline[:5] == ' BOND':
+                words = rawline.split()
+                self['BOND'] = self['BOND'].append(float(words[2]))
+                self['ANGLE'] = self['ANGLE'].append(float(words[5]))
+                self['DIHED'] = self['DIHED'].append(float(words[8]))
+                words = outfile.readline().split()
+                if self.chamber:
+                    self['UB'] = self['UB'].append(float(words[2]))
+                    self['IMP'] = self['IMP'].append(float(words[5]))
+                    self['CMAP'] = self['CMAP'].append(float(words[8]))
+                    words = outfile.readline().split()
+                self['VDWAALS'] = self['VDWAALS'].append(float(words[2]))
+                self['EEL'] = self['EEL'].append(float(words[5]))
+                words = outfile.readline().split()
+                self['1-4 VDW'] = self['1-4 VDW'].append(float(words[3]))
+                self['1-4 EEL'] = self['1-4 EEL'].append(float(words[7]))
+
 class PBout(AmberOutput):
 
     # What the value of verbosity must be to print out this data
