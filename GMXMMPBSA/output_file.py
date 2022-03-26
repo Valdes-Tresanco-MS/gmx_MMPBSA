@@ -320,11 +320,12 @@ def write_outputs(app):
                                      f'-TΔΔS{"" if stability else " binding"} = {davg:9.2f} +/- {dstd:9.2f}\n')
 
     # end if INPUT['nmode']['nmoderun']
-    nmls = ('gb', 'pb', 'rism', 'rism', 'rism')
-    triggers = ('gbrun', 'pbrun', 'rismrun_std', 'rismrun_gf', 'rismrun_pcplus')
-    outkeys = ('gb', 'pb', 'rism std', 'rism gf', 'rism pcplus')
+    nmls = ('gb', 'pb', 'rism', 'rism', 'rism', 'gbnsr6')
+    triggers = ('gbrun', 'pbrun', 'rismrun_std', 'rismrun_gf', 'rismrun_pcplus', 'gbnsr6run')
+    outkeys = ('gb', 'pb', 'rism std', 'rism gf', 'rism pcplus', 'gbnsr6')
     headers = ('\nGENERALIZED BORN:\n\n', '\nPOISSON BOLTZMANN:\n\n',
-               '\n3D-RISM:\n\n', '\n3D-RISM (Gauss. Fluct.):\n\n', '\n3D-RISM (PC+):\n\n')
+               '\n3D-RISM:\n\n', '\n3D-RISM (Gauss. Fluct.):\n\n', '\n3D-RISM (PC+):\n\n',
+               '\nGENERALIZED BORN (GBNSR6):\n\n')
     # Now print out the Free Energy results
     for i, key in enumerate(outkeys):
         if not INPUT[nmls[i]][triggers[i]]:

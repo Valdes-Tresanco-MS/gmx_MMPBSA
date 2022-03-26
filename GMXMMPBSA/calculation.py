@@ -120,8 +120,7 @@ class Calculation(object):
         # If this has not been set up yet
         # then raise a stink
         if not self.calc_setup:
-            raise CalcError('Cannot run a calculation without calling its' +
-                            ' its setup() function!')
+            raise CalcError('Cannot run a calculation without calling its its setup() function!')
 
             # Here, make sure that we could pass a file *OR* a string as stdout/stderr.
         # If they are strings, then open files up with that name, and make sure to
