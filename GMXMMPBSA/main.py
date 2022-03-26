@@ -1331,15 +1331,18 @@ class MMPBSA_App(object):
                 self.calc_types.decomp_normal[key] = {'complex': DecompClass('complex')}
                 self.calc_types.decomp_normal[key]['complex'].parse_from_file(self.pre + basename[i] % 'complex',
                                                                               self.resl, INPUT, surften, self.mpi_size)
+                self.calc_types.decomp_normal[key]['complex'].fill_composite_terms()
                 if not self.stability:
                     self.calc_types.decomp_normal[key]['receptor'] = DecompClass('receptor')
                     self.calc_types.decomp_normal[key]['receptor'].parse_from_file(self.pre + basename[i] % 'receptor',
                                                                                    rec_list, INPUT, surften,
                                                                                    self.mpi_size)
+                    self.calc_types.decomp_normal[key]['receptor'].fill_composite_terms()
                     self.calc_types.decomp_normal[key]['ligand'] = DecompClass('ligand')
                     self.calc_types.decomp_normal[key]['ligand'].parse_from_file(self.pre + basename[i] % 'ligand',
                                                                                  lig_list, INPUT, surften,
                                                                                  self.mpi_size)
+                    self.calc_types.decomp_normal[key]['ligand'].fill_composite_terms()
                     self.calc_types.decomp_normal[key]['delta'] = DecompBindingClass(
                         self.calc_types.decomp_normal[key]['complex'], self.calc_types.decomp_normal[key]['receptor'],
                         self.calc_types.decomp_normal[key]['ligand'], INPUT,
@@ -1355,6 +1358,7 @@ class MMPBSA_App(object):
                     surften,
                     self.mpi_size,
                 )
+                self.calc_types.decomp_mutant[key]['complex'].fill_composite_terms()
 
                 if not self.stability:
                     self.calc_types.decomp_mutant[key]['receptor'] = DecompClass('Mutant-Receptor')
@@ -1365,6 +1369,7 @@ class MMPBSA_App(object):
                         surften,
                         self.mpi_size,
                     )
+                    self.calc_types.decomp_mutant[key]['receptor'].fill_composite_terms()
 
                     self.calc_types.decomp_mutant[key]['ligand'] = DecompClass('Mutant-Ligand')
                     self.calc_types.decomp_mutant[key]['ligand'].parse_from_file(
@@ -1374,6 +1379,7 @@ class MMPBSA_App(object):
                         surften,
                         self.mpi_size,
                     )
+                    self.calc_types.decomp_mutant[key]['ligand'].fill_composite_terms()
 
                     self.calc_types.decomp_mutant[key]['delta'] = DecompBindingClass(
                         self.calc_types.decomp_mutant[key]['complex'], self.calc_types.decomp_mutant[key]['receptor'],
