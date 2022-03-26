@@ -232,10 +232,9 @@ class IEout(dict):
         super(IEout, self).__init__(**kwargs)
         self.INPUT = INPUT
 
-    def parse_from_dict(self, model, d: dict):
-        self[model] = {}
+    def parse_from_dict(self, d: dict):
         for term, dat in d.items():
-            self[model][term] = EnergyVector(dat) if term in ['data', 'iedata'] else dat
+            self[term] = EnergyVector(dat) if term in ['data', 'iedata'] else dat
 
     def parse_from_h5(self, d):
         for model in d:
@@ -250,14 +249,12 @@ class IEout(dict):
         """ Prints the energy vectors to a CSV file for easy viewing
             in spreadsheets
         """
-        for model in self:
-            csvwriter.writerow([f'Model {model}'])
-            csvwriter.writerow(['Frame #', 'Interaction Entropy'])
-            f = self.INPUT['startframe']
-            for d in self[model]['data']:
-                csvwriter.writerow([f] + [round(d, 2)])
-                f += self.INPUT['interval']
-            csvwriter.writerow([])
+        csvwriter.writerow(['Frame #', 'Interaction Entropy'])
+        f = self.INPUT['general']['startframe']
+        for d in self['data']:
+            csvwriter.writerow([f] + [round(d, 2)])
+            f += self.INPUT['general']['interval']
+        csvwriter.writerow([])
 
     def summary_output(self):
         summary = self.summary()
@@ -273,21 +270,12 @@ class IEout(dict):
     def summary(self):
         """ Formatted summary of Interaction Entropy results """
 
-        summary_list = [
-            [
-                'Model',
-                'σ(Int. Energy)',
-                'Average',
-                'SD',
-                'SEM'
-            ]
+        avg = float(self['iedata'].mean())
+        stdev = float(self['iedata'].stdev())
+        return [
+            ['Method', 'σ(Int. Energy)', 'Average', 'SD', 'SEM'],
+            ['IE', self['sigma'], avg, stdev, stdev / sqrt(len(self['iedata']))],
         ]
-
-        for model in self:
-            avg = float(self[model]['iedata'].mean())
-            stdev = float(self[model]['iedata'].stdev())
-            summary_list.append([model, self[model]['sigma'], avg, stdev, stdev / sqrt(len(self[model]['iedata']))])
-        return summary_list
 
 
 class C2out(dict):
@@ -320,7 +308,7 @@ class C2out(dict):
 
         summary_list = [
             [
-                'Model',
+                'Method',
                 'σ(Int. Energy)',
                 'C2 Value',
                 'SD',
@@ -331,10 +319,10 @@ class C2out(dict):
         summary_list.extend(
             [
                 model,
-                float(self[model]['sigma']),
-                float(self[model]['c2data']),
-                float(self[model]['c2_std']),
-                f"{self[model]['c2_ci'][0]:.2f}-{self[model]['c2_ci'][1]:.2f}",
+                float(self['sigma']),
+                float(self['c2data']),
+                float(self['c2_std']),
+                f"{self['c2_ci'][0]:.2f}-{self['c2_ci'][1]:.2f}",
             ]
             for model in self
         )
