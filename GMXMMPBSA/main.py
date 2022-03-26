@@ -1099,11 +1099,15 @@ class MMPBSA_App(object):
         # their key in the calc_types dict, the base name of their output files
         # without the prefix (with %s-substitution for complex, receptor, or
         # ligand), and the class for their output
-        nmls = ('nmode', 'gb', 'pb', 'rism', 'rism', 'rism')
-        triggers = ('nmoderun', 'gbrun', 'pbrun', 'rismrun_std', 'rismrun_gf', 'rismrun_pcplus')
-        outclass = (NMODEout, GBClass, PBout, RISM_Std, RISM_GF, RISM_PCplus)
-        outkey = ('nmode', 'gb', 'pb', 'rism std', 'rism gf', 'rism pcplus')
-        basename = ('%s_nm.out', '%s_gb.mdout', '%s_pb.mdout', '%s_rism.mdout', '%s_rism.mdout', '%s_rism.mdout')
+        nmls = ('nmode', 'gb', 'pb', 'rism', 'rism', 'rism', 'gbnsr6')
+        triggers = ('nmoderun', 'gbrun', 'pbrun', 'rismrun_std', 'rismrun_gf', 'rismrun_pcplus', 'gbnsr6run')
+        outclass = (NMODEout, GBClass, PBout, RISM_Std, RISM_GF, RISM_PCplus, GBNSR6out)
+        outkey = ('nmode', 'gb', 'pb', 'rism std', 'rism gf', 'rism pcplus', 'gbnsr6')
+        basename = ('%s_nm.out', '%s_gb.mdout', '%s_pb.mdout', '%s_rism.mdout', '%s_rism.mdout', '%s_rism.mdout',
+                    '%s_gbnsr6.mdout')
+
+        comp_energy = ('gbnsr6')
+        mm_data = self._get_mm_data()
 
         if self.INPUT['general']['interaction_entropy']:
             if not INPUT['ala']['mutant_only']:
@@ -1124,6 +1128,10 @@ class MMPBSA_App(object):
                 self.calc_types.normal[key] = {'complex': outclass[i]('complex', self.INPUT, self.using_chamber)}
                 self.calc_types.normal[key]['complex'].parse_from_file(self.pre + basename[i] % 'complex',
                                                                        self.mpi_size)
+                if key in comp_energy:
+                    self.calc_types.normal[key]['complex'].update(mm_data['normal']['complex'])
+                self.calc_types.normal[key]['complex'].fill_composite_terms()
+
                 # check if the nmode output is valid
                 if self.calc_types.normal[key]['complex'].no_nmode_convergence:
                     self.INPUT['nmode']['nmoderun'] = False
@@ -1134,9 +1142,17 @@ class MMPBSA_App(object):
                     self.calc_types.normal[key]['receptor'] = outclass[i]('receptor', self.INPUT, self.using_chamber)
                     self.calc_types.normal[key]['receptor'].parse_from_file(self.pre + basename[i] % 'receptor',
                                                                             self.mpi_size)
+                    if key in comp_energy:
+                        self.calc_types.normal[key]['receptor'].update(mm_data['normal']['receptor'])
+                    self.calc_types.normal[key]['receptor'].fill_composite_terms()
+
                     self.calc_types.normal[key]['ligand'] = outclass[i]('ligand', self.INPUT, self.using_chamber)
                     self.calc_types.normal[key]['ligand'].parse_from_file(self.pre + basename[i] % 'ligand',
                                                                           self.mpi_size)
+                    if key in comp_energy:
+                        self.calc_types.normal[key]['ligand'].update(mm_data['normal']['ligand'])
+                    self.calc_types.normal[key]['ligand'].fill_composite_terms()
+
                     self.calc_types.normal[key]['delta'] = BindingStatistics(self.calc_types.normal[key]['complex'],
                                                                              self.calc_types.normal[key]['receptor'],
                                                                              self.calc_types.normal[key]['ligand'],
@@ -1161,15 +1177,24 @@ class MMPBSA_App(object):
                 self.calc_types.mutant[key] = {'complex': outclass[i]('Mutant-Complex', self.INPUT, self.using_chamber)}
                 self.calc_types.mutant[key]['complex'].parse_from_file(self.pre + 'mutant_' + basename[i] % 'complex',
                                                                        self.mpi_size)
+                if key in comp_energy:
+                    self.calc_types.mutant[key]['complex'].update(mm_data['mutant']['complex'])
+                self.calc_types.mutant[key]['complex'].fill_composite_terms()
                 if not self.stability:
                     self.calc_types.mutant[key]['receptor'] = outclass[i]('Mutant-Receptor', self.INPUT,
                                                                           self.using_chamber)
                     self.calc_types.mutant[key]['receptor'].parse_from_file(self.pre + 'mutant_' + basename[i] %
                                                                             'receptor', self.mpi_size)
+                    if key in comp_energy:
+                        self.calc_types.mutant[key]['receptor'].update(mm_data['mutant']['receptor'])
+                    self.calc_types.mutant[key]['receptor'].fill_composite_terms()
                     self.calc_types.mutant[key]['ligand'] = outclass[i]('Mutant-Ligand', self.INPUT,
                                                                         self.using_chamber)
                     self.calc_types.mutant[key]['ligand'].parse_from_file(self.pre + 'mutant_' + basename[i] % 'ligand',
                                                                           self.mpi_size)
+                    if key in comp_energy:
+                        self.calc_types.mutant[key]['ligand'].update(mm_data['mutant']['ligand'])
+                    self.calc_types.mutant[key]['ligand'].fill_composite_terms()
                     self.calc_types.mutant[key]['delta'] = BindingStatistics(self.calc_types.mutant[key]['complex'],
                                                                              self.calc_types.mutant[key]['receptor'],
                                                                              self.calc_types.mutant[key]['ligand'],
@@ -1200,6 +1225,34 @@ class MMPBSA_App(object):
 
         if INPUT['decomp']['decomprun']:
             self._get_decomp()
+
+    def _get_mm_data(self):
+
+        # # FIXME: add pbsa.cuda, APBS and PBDelphi
+        # if not self.INPUT['gbnsr6']['gbnsr6run']:
+        #     return
+
+        mm_data = {}
+
+        if not self.INPUT['ala']['mutant_only']:
+            mm_data['normal'] = {'complex': MMout('complex', self.INPUT, self.using_chamber)}
+            mm_data['normal']['complex'].parse_from_file(f"{self.pre}complex_mm.mdout", self.mpi_size)
+            if not self.stability:
+                mm_data['normal']['receptor'] = MMout('receptor', self.INPUT, self.using_chamber)
+                mm_data['normal']['receptor'].parse_from_file(f"{self.pre}receptor_mm.mdout", self.mpi_size)
+                mm_data['normal']['ligand'] = MMout('ligand', self.INPUT, self.using_chamber)
+                mm_data['normal']['ligand'].parse_from_file(f"{self.pre}ligand_mm.mdout", self.mpi_size)
+
+        # Time for mutant
+        if self.INPUT['ala']['alarun']:
+            mm_data['mutant'] = {'complex': MMout('mutant-complex', self.INPUT, self.using_chamber)}
+            mm_data['mutant']['complex'].parse_from_file(f"{self.pre}mutant_complex_mm.mdout", self.mpi_size)
+            if not self.stability:
+                mm_data['mutant']['receptor'] = MMout('mutant-receptor', self.INPUT, self.using_chamber)
+                mm_data['mutant']['receptor'].parse_from_file(f"{self.pre}mutant_receptor_mm.mdout", self.mpi_size)
+                mm_data['mutant']['ligand'] = MMout('mutant-ligand', self.INPUT, self.using_chamber)
+                mm_data['mutant']['ligand'].parse_from_file(f"{self.pre}mutant_ligand_mm.mdout", self.mpi_size)
+        return mm_data
 
     def _get_decomp(self):
         from GMXMMPBSA.amber_outputs import (DecompOut, PairDecompOut, DecompBinding, PairDecompBinding)
