@@ -1108,17 +1108,17 @@ class MMPBSA_App(object):
 
         comp_energy = ('gbnsr6')
         mm_data = self._get_mm_data()
-
-        if self.INPUT['general']['interaction_entropy']:
-            if not INPUT['ala']['mutant_only']:
-                self.calc_types.normal['ie'] = IEout(INPUT)
-            if INPUT['ala']['alarun']:
-                self.calc_types.mutant['ie'] = IEout(INPUT)
-        if self.INPUT['general']['c2_entropy']:
-            if not INPUT['ala']['mutant_only']:
-                self.calc_types.normal['c2'] = C2out()
-            if INPUT['ala']['alarun']:
-                self.calc_types.mutant['c2'] = C2out()
+        #
+        # if self.INPUT['general']['interaction_entropy']:
+        #     if not INPUT['ala']['mutant_only']:
+        #         self.calc_types.normal['ie'] = IEout(INPUT)
+        #     if INPUT['ala']['alarun']:
+        #         self.calc_types.mutant['ie'] = IEout(INPUT)
+        # if self.INPUT['general']['c2_entropy']:
+        #     if not INPUT['ala']['mutant_only']:
+        #         self.calc_types.normal['c2'] = C2out()
+        #     if INPUT['ala']['alarun']:
+        #         self.calc_types.mutant['c2'] = C2out()
 
         for i, key in enumerate(outkey):
             if not INPUT[nmls[i]][triggers[i]]:
