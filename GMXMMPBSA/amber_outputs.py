@@ -99,7 +99,9 @@ class AmberOutput(dict):
         for key in self.composite_keys:
             self[key] = EnergyVector()
         AmberOutput._read(self)
-        self._fill_composite_terms()
+
+        # Now we need call this method explicitly
+        # self.fill_composite_terms()
 
     def parse_from_h5(self, d: dict):
         for key in d:
@@ -107,7 +109,7 @@ class AmberOutput(dict):
                 continue
             self[key] = EnergyVector(d[key][()])
         self.is_read = True
-        self._fill_composite_terms()
+        # self.fill_composite_terms()
 
     def _print_vectors(self, csvwriter):
         """ Prints the energy vectors to a CSV file for easy viewing
@@ -129,7 +131,7 @@ class AmberOutput(dict):
     def set_frame_range(self, start=0, end=None, interval=1):
         for key in self.data_keys:
             self[key] = self[key][start:end:interval]
-        self._fill_composite_terms()
+        self.fill_composite_terms()
 
     def summary_output(self):
         if not self.is_read:
@@ -205,7 +207,7 @@ class AmberOutput(dict):
     def _fill_nmode_values(self):
         pass
 
-    def _fill_composite_terms(self):
+    def fill_composite_terms(self):
         """
         Fills in the composite terms WITHOUT adding in terms we're not printing.
         This should be called after the final verbosity level has been set (based
@@ -530,6 +532,7 @@ class NMODEout(AmberOutput):
                             '    value. Please, consider to  increase the convergence criteria for minimized energy\n'
                             '    gradient (drms) or the maximum number minimization cycles to use per snapshot in\n'
                             '    sander (maxcyc)...\n')
+
 
 class GBout(AmberOutput):
     """ Amber output class for normal generalized Born simulations """
@@ -1122,7 +1125,7 @@ class DecompOut(dict):
                     if not frames_updated:
                         self.numframes = len(self[term][res][et])
                         frames_updated = True
-        self._fill_composite_terms()
+        self.fill_composite_terms()
 
     def parse_from_file(self, basename, resl, INPUT, surften, num_files=1, mut=False):
         self.basename = basename  # base name of output files
@@ -1145,7 +1148,9 @@ class DecompOut(dict):
             self[token] = {}
 
         self._read()
-        self._fill_composite_terms()
+
+        # Now we need to call this method explicitly
+        # self.fill_composite_terms()
 
     def parse_from_h5(self, d):
         for term in d:
@@ -1159,7 +1164,7 @@ class DecompOut(dict):
                         self[term][res][res_e] = {}
                         for res2 in d[term][res][res_e]:
                             self[term][res][res_e][res2] = EnergyVector(d[term][res][res_e][res2][()])
-        self._fill_composite_terms()
+        # self.fill_composite_terms()
 
     def _get_num_terms(self):
         """ Gets the number of terms in the output file """
@@ -1231,7 +1236,7 @@ class DecompOut(dict):
                     csvwriter.writerow([c, res] + [round(self[term][res][key][i], 2) for key in self[term][res]])
                 c += self.INPUT['interval']
 
-    def _fill_composite_terms(self):
+    def fill_composite_terms(self):
         for term in self:
             for res in self[term]:
                 item = self[term][res][list(self[term][res].keys())[0]]
@@ -1325,7 +1330,7 @@ class PairDecompOut(DecompOut):
                         if not frames_updated:
                             self.numframes = len(self[term][res][res2][et])
                             frames_updated = True
-        self._fill_composite_terms()
+        self.fill_composite_terms()
 
     def _get_decomp_energies(self, outfile):
         self.numframes = 0
