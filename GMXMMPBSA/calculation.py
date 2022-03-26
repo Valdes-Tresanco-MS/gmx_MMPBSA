@@ -98,7 +98,7 @@ class Calculation(object):
 
     # -#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
 
-    def __init__(self, prog, prmtop, incrd, inptraj, input_file, output, xvv=None):
+    def __init__(self, prog, prmtop, incrd, input_file, output, inptraj, xvv=None):
         self.prmtop = str(prmtop)
         self.incrd = incrd
         self.input_file = input_file
@@ -150,16 +150,14 @@ class Calculation(object):
             for i in range(len(self.command_args)):
                 self.command_args[i] = str(self.command_args[i])
                 if '%d' in self.command_args[i]:
-                    self.command_args[i] = self.command_args[i] % rank
+                    self.command_args[i] %= rank
 
-            process = Popen(self.command_args, stdin=None, stdout=process_stdout,
-                            stderr=process_stderr)
+            process = Popen(self.command_args, stdin=None, stdout=process_stdout, stderr=process_stderr)
 
             calc_failed = bool(process.wait())
 
             if calc_failed:
-                raise CalcError('%s failed with prmtop %s!' % (self.program,
-                                                               self.prmtop))
+                raise CalcError(f'{self.program} failed with prmtop {self.prmtop}!')
         finally:
             if own_handleo: process_stdout.close()
             if own_handlee: process_stdout.close()
@@ -180,9 +178,8 @@ class Calculation(object):
 class EnergyCalculation(Calculation):
     """ Uses mmpbsa_py_energy to evaluate energies """
 
-    def __init__(self, prog, prmtop, incrd, inptraj, input_file, output, restrt, xvv=None):
-        Calculation.__init__(self, prog, prmtop, incrd, inptraj,
-                             input_file, output, xvv)
+    def __init__(self, prog, prmtop, incrd, input_file, output, restrt=None, inptraj=None, xvv=None):
+        Calculation.__init__(self, prog, prmtop, incrd, input_file, output, inptraj, xvv)
         self.restrt = restrt
 
     def setup(self):
@@ -195,8 +192,9 @@ class EnergyCalculation(Calculation):
         self.command_args.extend(('-i', self.input_file))  # input file flag
         self.command_args.extend(('-p', self.prmtop))  # prmtop flag
         self.command_args.extend(('-c', self.incrd))  # input coordinate flag
-        self.command_args.extend(('-y', self.inptraj))  # input trajectory flag
         self.command_args.extend(('-o', self.output))  # output file flag
+        if self.inptraj:
+            self.command_args.extend(('-y', self.inptraj))  # input trajectory flag
         if self.restrt is not None:
             self.command_args.extend(('-r', self.restrt))  # restart file flag
         if self.xvv is not None:
@@ -222,7 +220,7 @@ class RISMCalculation(Calculation):
             other calculation classes are, but it still inherits useful methods
         """
         # rism3d.snglpnt dumps its output to stdout
-        Calculation.__init__(self, prog, prmtop, incrd, inptraj, None, output)
+        Calculation.__init__(self, prog, prmtop, incrd, None, output, inptraj)
 
         # Set up instance variables
         self.xvvfile = xvvfile
@@ -337,7 +335,7 @@ class NmodeCalc(Calculation):
     def __init__(self, prog, prmtop, incrd, inptraj, output, INPUT):
         """ Initializes the nmode calculation. Need to set the options string """
         from math import sqrt
-        Calculation.__init__(self, prog, prmtop, incrd, inptraj, None, output)
+        Calculation.__init__(self, prog, prmtop, incrd, None, output, inptraj)
 
         kappa = sqrt(0.10806 * INPUT['nmode_istrng'])
         if INPUT['nmode_igb']:
@@ -374,8 +372,7 @@ class QuasiHarmCalc(Calculation):
     def __init__(self, prog, prmtop, inptraj, input_file, output,
                  receptor_mask, ligand_mask, fnpre):
         """ Initializes the Quasi-harmonic calculation class """
-        Calculation.__init__(self, prog, prmtop, None, inptraj,
-                             input_file, output)
+        Calculation.__init__(self, prog, prmtop, None, input_file, output, inptraj)
         self.stability = not bool(receptor_mask) and not bool(ligand_mask)
         self.receptor_mask, self.ligand_mask = receptor_mask, ligand_mask
         self.calc_setup = False
@@ -525,8 +522,7 @@ class SurfCalc(Calculation):
         calc_failed = bool(process.wait())
 
         if calc_failed:
-            raise CalcError('%s failed with prmtop %s!' % (self.program,
-                                                           self.prmtop))
+            raise CalcError('%s failed with prmtop %s!' % (self.program, self.prmtop))
 
 
 # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -588,6 +584,21 @@ class CopyCalc(Calculation):
 
         copy(orig_name, final_name)
 
+
+class MergeOut(Calculation):
+    def __init__(self, filename, mdouts):
+        self.filename = filename
+        self.mdouts = mdouts
+
+    def run(self, rank, stdout=None, stderr=None):
+        # Do rank-substitution if necessary
+        filename = self.filename % rank if '%d' in self.filename else self.filename
+        with open(filename, 'w') as ofile:
+            for file in sorted(self.mdouts, key=lambda x: f"{int(x.split('.')[1]):08d}"):
+                with open(file % rank) as rf:
+                    for line in rf.readlines():
+                        ofile.write(line)
+                ofile.write('\n')
 
 # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 

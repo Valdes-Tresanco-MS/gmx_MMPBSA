@@ -34,8 +34,8 @@ Classes:
 # ##############################################################################
 
 from warnings import warn
-from GMXMMPBSA.exceptions import (TrajError, MMPBSA_Error, InternalError,
-                                  MutantResError)
+from GMXMMPBSA.exceptions import (TrajError, MMPBSA_Error, InternalError, MutantResError)
+from pathlib import Path
 
 strip_mask = ':WAT,Cl*,CIO,Cs+,IB,K*,Li+,MG*,Na+,Rb+,CS,RB,NA,F,CL'
 
@@ -99,6 +99,14 @@ def make_trajectories(INPUT, FILES, size, cpptraj, pre):
         frame_string = '%d-%d' % (last_frame, last_frame + frame_count[i] - 1)
         traj.Outtraj(pre + 'complex.%s.%d' % (trj_suffix, i),
                      frames=frame_string, filetype=INPUT['general']['netcdf'])
+        # FIXME: include pbsa.cuda. For APBS and PBDelphi we need to generate pqr instead
+        from icecream import ic
+        ic(INPUT['gbnsr6'])
+        if INPUT['gbnsr6']['gbnsr6run']:
+            temp_dir = Path(f"{pre}inpcrd_{i}")
+            temp_dir.mkdir()
+            traj.Outtraj(f"{pre}inpcrd_{i}/{pre}complex.inpcrd", frames=frame_string, filetype='restart',
+                         options=['keepext'])
         last_frame += frame_count[i]
 
     # Now create the receptor/ligand trajectories if we're taking them from
@@ -115,6 +123,11 @@ def make_trajectories(INPUT, FILES, size, cpptraj, pre):
             frame_string = '%d-%d' % (last_frame, last_frame + frame_count[i] - 1)
             traj.Outtraj(pre + 'receptor.%s.%d' % (trj_suffix, i),
                          frames=frame_string, filetype=INPUT['general']['netcdf'])
+            # FIXME: include pbsa.cuda. For APBS and PBDelphi we need to generate pqr instead
+            if INPUT['gbnsr6']['gbnsr6run']:
+                traj.Outtraj(f"{pre}inpcrd_{i}/{pre}receptor.inpcrd", frames=frame_string, filetype='restart',
+                             options=['keepext'])
+
             last_frame += frame_count[i]
         traj.Unstrip(restrip_solvent=True)
         traj.rms('!(%s)' % strip_mask)
@@ -130,6 +143,11 @@ def make_trajectories(INPUT, FILES, size, cpptraj, pre):
             frame_string = '%d-%d' % (last_frame, last_frame + frame_count[i] - 1)
             traj.Outtraj(pre + 'ligand.%s.%d' % (trj_suffix, i),
                          frames=frame_string, filetype=INPUT['general']['netcdf'])
+            # FIXME: include pbsa.cuda. For APBS and PBDelphi we need to generate pqr instead
+            if INPUT['gbnsr6']['gbnsr6run']:
+                traj.Outtraj(f"{pre}inpcrd_{i}/{pre}ligand.inpcrd", frames=frame_string, filetype='restart',
+                             options=['keepext'])
+
             last_frame += frame_count[i]
         traj.Unstrip(restrip_solvent=True)
         traj.rms('!(%s)' % strip_mask)
@@ -172,6 +190,10 @@ def make_trajectories(INPUT, FILES, size, cpptraj, pre):
             frame_string = '%d-%d' % (last_frame, last_frame + frame_count[i] - 1)
             rectraj.Outtraj(pre + 'receptor.%s.%d' % (trj_suffix, i),
                             frames=frame_string, filetype=INPUT['netcdf'])
+            # FIXME: include pbsa.cuda. For APBS and PBDelphi we need to generate pqr instead
+            if INPUT['gbnsr6']['gbnsr6run']:
+                traj.Outtraj(f"{pre}inpcrd_{i}/{pre}receptor.inpcrd", frames=frame_string, filetype='restart',
+                             options=['keepext'])
             last_frame += frame_count[i]
 
         rectraj.Run(pre + 'receptor_traj_cpptraj.out')
@@ -209,6 +231,10 @@ def make_trajectories(INPUT, FILES, size, cpptraj, pre):
             frame_string = '%d-%d' % (last_frame, last_frame + frame_count[i] - 1)
             ligtraj.Outtraj(pre + 'ligand.%s.%d' % (trj_suffix, i),
                             frames=frame_string, filetype=INPUT['netcdf'])
+            # FIXME: include pbsa.cuda. For APBS and PBDelphi we need to generate pqr instead
+            if INPUT['gbnsr6']['gbnsr6run']:
+                traj.Outtraj(f"{pre}inpcrd_{i}/{pre}ligand.inpcrd", frames=frame_string, filetype='restart',
+                             options=['keepext'])
             last_frame += frame_count[i]
 
         ligtraj.Run(pre + 'ligand_traj_cpptraj.out')
@@ -323,6 +349,7 @@ def make_mutant_trajectories(INPUT, FILES, rank, cpptraj,
                            'both')
 
     master = rank == 0
+    # FIXME: create folders for mutants
 
     # Have each rank mutate our rank's normal complex trajectory
     try:
@@ -697,13 +724,19 @@ class Trajectory(object):
 
     # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-    def Outtraj(self, filename, frames=None, filetype='', nobox='nobox'):
+    def Outtraj(self, filename, frames=None, filetype='', nobox='nobox', options=None):
         """ This adds an outtraj command to the action stack, and you can specify
             the type of trajectory file to output (such as restart/pdb for input
             files, etc.)
         """
         if not frames: frames = '1-%d' % self.total_frames
-        self.actions.append('outtraj %s onlyframes %s %s %s' % (filename, frames,
-                                                                nobox, filetype))
+        if options:
+            self.actions.append(
+                f"outtraj {filename} {filetype} onlyframes {frames} {nobox} {' '.join(options)}"
+            )
+        else:
+            self.actions.append(
+                f"outtraj {filename} {filetype} onlyframes {frames} {nobox}"
+            )
 
 # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+

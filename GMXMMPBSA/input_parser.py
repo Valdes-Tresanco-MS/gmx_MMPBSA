@@ -206,6 +206,7 @@ class InputFile(object):
         # section description
         sd = {'general': '# General namelist variables',
               'gb': '# (AMBER) Generalized-Born namelist variables',
+              'gbnsr6': '# GBNSR6 namelist variables',
               'pb': '# (AMBER) Possion-Boltzmann namelist variables',
               'rism': '# 3D-RISM namelist variables',
               'decomp': '# Decomposition namelist variables',
@@ -472,13 +473,13 @@ input_file.addNamelist('gb', 'gb',
 input_file.addNamelist('gbnsr6', 'gbnsr6',
                        [
                            ['inp', int, 1, 'Compute nonpolar solvation energies'],
-                           ['B', float, 0.028, 'Specifies the value of uniform offset to the (inverse) effective '
+                           ['b', float, 0.028, 'Specifies the value of uniform offset to the (inverse) effective '
                                                'radii'],
                            ['epsin', float, 1.0, 'Sets the dielectric constant of the solute region'],
                            ['epsout', float, 78.5, 'Sets the implicit solvent dielectric constant for the solvent'],
                             # FIXME: convert to M
                            ['istrng', float, 0.0, 'Sets the ionic strength (in mM) for the GB equation'],
-                           ['Rs', float, 0.52, 'Sets the value of the dielectric boundary shift compared to the '
+                           ['rs', float, 0.52, 'Sets the value of the dielectric boundary shift compared to the '
                                                'molecular surface (only relevant for the -chagb option)'],
                            ['dprob', float, 1.4, 'Sets the radius of the solvent robe'],
                            ['space', float, 0.5, 'Sets the grid spacing that determines the resolution of the solute '
@@ -491,11 +492,11 @@ input_file.addNamelist('gbnsr6', 'gbnsr6',
                            ['radiopt', int, 0, 'Specifies the set of intrinsic atomic radii to be used with the chagb'
                                                'option.'],
                            ['chagb', int, 0, 'Define if CHAGB is used'],
-                           ['ROH', int, 1, 'Sets the value of RzOH for CHA GB model'],
+                           ['roh', int, 1, 'Sets the value of RzOH for CHA GB model'],
                            ['tau', float, 1.47, 'Sets the value of τ in the CHAGB model'],
                            ['cavity_surften', float, 0.005, 'Sets the surface tension parameter for nonpolar solvation'
                                                             'calculation'],
-                       ], trigger='gbr6run')
+                       ], trigger='gbnsr6run')
 
 input_file.addNamelist('pb', 'pb',
                        [

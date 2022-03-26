@@ -27,15 +27,15 @@ import os
 import signal
 import sys
 import logging
-# Import gmx_MMPBSA modules
+from pathlib import Path
 from GMXMMPBSA import utils, __version__
 from GMXMMPBSA.amber_outputs import (QHout, NMODEout, QMMMout, GBout, PBout, PolarRISM_std_Out, RISM_std_Out,
                                      PolarRISM_gf_Out, RISM_gf_Out, PolarRISM_pcplus_Out, RISM_pcplus_Out,
                                      BindingStatistics, IEout, C2out,
-                                     DeltaBindingStatistics)
+                                     DeltaBindingStatistics, GBNSR6out)
 from GMXMMPBSA.calculation import (CalculationList, EnergyCalculation, PBEnergyCalculation,
                                    NmodeCalc, QuasiHarmCalc, CopyCalc, PrintCalc, LcpoCalc, MolsurfCalc,
-                                   InteractionEntropyCalc, C2EntropyCalc)
+                                   InteractionEntropyCalc, C2EntropyCalc, MergeOut)
 from GMXMMPBSA.commandlineparser import parser
 from GMXMMPBSA.createinput import create_inputs, SanderRISMInput
 from GMXMMPBSA.exceptions import (MMPBSA_Error, InternalError, InputError, GMXMMPBSA_ERROR)
@@ -168,7 +168,8 @@ class MMPBSA_App(object):
         self.timer.add_timer('calc', 'Total calculation time:')
         if INPUT['gb']['gbrun']:
             self.timer.add_timer('gb', 'Total GB calculation time:')
-        # TODO: add GBNSAR6 timer
+        if INPUT['gbnsr6']['gbnsr6run']:
+            self.timer.add_timer('gbnsr6', 'Total GBNSR6 calculation time:')
         if INPUT['pb']['pbrun']:
             self.timer.add_timer('pb', 'Total PB calculation time:')
         if INPUT['rism']['rismrun']:
@@ -232,6 +233,7 @@ class MMPBSA_App(object):
         """
         # Set up a dictionary of external programs to use based one external progs
         progs = {'gb': self.external_progs['sander'],
+                 'gbnsr6': self.external_progs['gbnsr6'],
                  'sa': self.external_progs['cpptraj'],
                  'pb': self.external_progs['sander'],
                  'rism': self.external_progs['sander'],
@@ -251,6 +253,10 @@ class MMPBSA_App(object):
                          self.FILES.receptor_prmtop == self.FILES.mutant_receptor_prmtop)
         copy_ligand = (mutant and not self.INPUT['ala']['mutant_only'] and
                        self.FILES.ligand_prmtop == self.FILES.mutant_ligand_prmtop)
+
+        mm_com_calculated = False
+        mm_rec_calculated = False
+        mm_lig_calculated = False
 
         # First load the GB calculations
         if self.INPUT['gb']['gbrun']:
@@ -283,11 +289,9 @@ class MMPBSA_App(object):
 
             self.calc_list.append(PrintCalc(f"Beginning GB calculations with {progs['gb']}"), timer_key='gb')
 
-            c = EnergyCalculation(progs['gb'], parm_system.complex_prmtop,
-                                  incrd % 'complex',
-                                  '%scomplex.%s.%%d' % (prefix, trj_sfx),
-                                  mdin, '%scomplex_gb.mdout.%%d' % (prefix),
-                                  self.pre + 'restrt.%d')
+            c = EnergyCalculation(progs['gb'], parm_system.complex_prmtop, incrd % 'complex', mdin,
+                                  '%scomplex_gb.mdout.%%d' % (prefix), self.pre + 'restrt.%d',
+                                  '%scomplex.%s.%%d' % (prefix, trj_sfx))
             self.calc_list.append(c, '  calculating complex contribution...', timer_key='gb')
             c = SAClass(parm_system.complex_prmtop,
                         '%scomplex.%s.%%d' % (prefix, trj_sfx),
@@ -311,11 +315,9 @@ class MMPBSA_App(object):
                                  '%sreceptor_gb_surf.dat.%%d' % prefix)
                     self.calc_list.append(c, '', timer_key='gb')
                 else:
-                    c = EnergyCalculation(progs['gb'], parm_system.receptor_prmtop,
-                                          incrd % 'receptor',
-                                          '%sreceptor.%s.%%d' % (prefix, trj_sfx),
-                                          mdin, '%sreceptor_gb.mdout.%%d' % (prefix),
-                                          self.pre + 'restrt.%d')
+                    c = EnergyCalculation(progs['gb'], parm_system.receptor_prmtop, incrd % 'receptor', mdin,
+                                          '%sreceptor_gb.mdout.%%d' % (prefix), self.pre + 'restrt.%d',
+                                          '%sreceptor.%s.%%d' % (prefix, trj_sfx))
                     self.calc_list.append(c, '  calculating receptor contribution...',
                                           timer_key='gb')
                 c = SAClass(parm_system.receptor_prmtop,
@@ -339,18 +341,96 @@ class MMPBSA_App(object):
                                  '%sligand_gb_surf.dat.%%d' % prefix)
                     self.calc_list.append(c, '', timer_key='gb')
                 else:
-                    c = EnergyCalculation(progs['gb'], parm_system.ligand_prmtop,
-                                          incrd % 'ligand',
-                                          '%sligand.%s.%%d' % (prefix, trj_sfx),
-                                          mdin, '%sligand_gb.mdout.%%d' % (prefix),
-                                          self.pre + 'restrt.%d')
+                    c = EnergyCalculation(progs['gb'], parm_system.ligand_prmtop, incrd % 'ligand', mdin,
+                                          '%sligand_gb.mdout.%%d' % (prefix), self.pre + 'restrt.%d',
+                                          '%sligand.%s.%%d' % (prefix, trj_sfx))
                     self.calc_list.append(c, '  calculating ligand contribution...',
                                           timer_key='gb')
                 c = SAClass(parm_system.ligand_prmtop,
                             '%sligand.%s.%%d' % (prefix, trj_sfx),
                             '%sligand_gb_surf.dat.%%d' % prefix)
                 self.calc_list.append(c, '', timer_key='gb')
+        # end if self.INPUT['gb']['gbrun']
 
+        # GBNSR6 calculation
+        if self.INPUT['gbnsr6']['gbnsr6run']:
+            incrd = '%sdummy%%s.inpcrd' % prefix
+            mdin = self.pre + 'gbnsr6.mdin'
+            mm_mdin = self.pre + 'mm.mdin'
+            self.calc_list.append(PrintCalc(f"Beginning GBNSR6 calculations with {progs['gbnsr6']}"),
+                                  timer_key='gbnsr6')
+            if not mm_com_calculated:
+                c = EnergyCalculation(progs['gb'], parm_system.complex_prmtop, incrd % 'complex', mm_mdin,
+                                      f'{prefix}complex_mm.mdout.%d', self.pre + 'restrt.%d',
+                                      f'{prefix}complex.{trj_sfx}.%d')
+                self.calc_list.append(c, '  calculating complex contribution...', timer_key='gbnsr6')
+
+            files = Path(f"{prefix}inpcrd_{self.mpi_rank}").glob(f"{prefix}complex*")
+            mdouts = []
+            for i, file in enumerate(files, start=1):
+                mdout = file.parent.joinpath(f"{file.name.split('.')[0]}_gbnsr6{file.suffixes[0]}.mdout.%d").as_posix()
+                mdouts.append(mdout)
+                c = EnergyCalculation(progs['gbnsr6'], parm_system.complex_prmtop, file, mdin, mdout)
+                self.calc_list.append(c, '', timer_key='gbnsr6')
+            c = MergeOut(f"{prefix}complex_gbnsr6.mdout.%d",mdouts)
+            self.calc_list.append(c, '', timer_key='gbnsr6')
+
+            if not self.stability:
+                # Either copy the existing receptor if the mutation is in the ligand
+                # or perform a receptor calculation
+                if copy_receptor:
+                    c = CopyCalc(f'{self.pre}receptor_mm.mdout.%d',
+                                 f'{prefix}receptor_mm.mdout.%d')
+                    self.calc_list.append(c, '  no mutation found in receptor; '
+                                             'using unmutated files', timer_key='gbnsr6')
+                    c = CopyCalc(f'{self.pre}receptor_gbnsr6.mdout.%d',
+                                 f'{prefix}receptor_gbnsr6.mdout.%d')
+                    self.calc_list.append(c, '', timer_key='gbnsr6')
+                else:
+                    if not mm_rec_calculated:
+                        c = EnergyCalculation(progs['gb'], parm_system.receptor_prmtop, incrd % 'receptor', mm_mdin,
+                                              f'{prefix}receptor_mm.mdout.%d', self.pre + 'restrt.%d',
+                                              f'{prefix}receptor.{trj_sfx}.%d')
+                        self.calc_list.append(c, '  calculating receptor contribution...', timer_key='gbnsr6')
+
+                    files = Path(f"{prefix}inpcrd_{self.mpi_rank}").glob(f"{prefix}receptor*")
+                    mdouts = []
+                    for i, file in enumerate(files, start=1):
+                        mdout = file.parent.joinpath(
+                            f"{file.name.split('.')[0]}_gbnsr6{file.suffixes[0]}.mdout.%d").as_posix()
+                        mdouts.append(mdout)
+                        c = EnergyCalculation(progs['gbnsr6'], parm_system.receptor_prmtop, file, mdin, mdout)
+                        self.calc_list.append(c, '', timer_key='gbnsr6')
+                    c = MergeOut(f"{prefix}receptor_gbnsr6.mdout.%d", mdouts)
+                    self.calc_list.append(c, '', timer_key='gbnsr6')
+
+                # Either copy the existing ligand if the mutation is in the receptor
+                # or perform a ligand calculation
+                if copy_ligand:
+                    c = CopyCalc(f'{self.pre}ligand_mm.mdout.%d',
+                                 f'{prefix}ligand_mm.mdout.%d')
+                    self.calc_list.append(c, '  no mutation found in ligand; '
+                                             'using unmutated files', timer_key='gbnsr6')
+                    c = CopyCalc(f'{self.pre}ligand_gbnsr6.mdout.%d',
+                                 f'{prefix}ligand_gbnsr6.mdout.%d')
+                    self.calc_list.append(c, '', timer_key='gbnsr6')
+                else:
+                    if not mm_lig_calculated:
+                        c = EnergyCalculation(progs['gb'], parm_system.ligand_prmtop, incrd % 'ligand', mm_mdin,
+                                              f'{prefix}ligand_mm.mdout.%d', self.pre + 'restrt.%d',
+                                              f'{prefix}ligand.{trj_sfx}.%d')
+                        self.calc_list.append(c, '  calculating ligand contribution...', timer_key='gbnsr6')
+
+                    files = Path(f"{prefix}inpcrd_{self.mpi_rank}").glob(f"{prefix}ligand*")
+                    mdouts = []
+                    for i, file in enumerate(files, start=1):
+                        mdout = file.parent.joinpath(
+                            f"{file.name.split('.')[0]}_gbnsr6{file.suffixes[0]}.mdout.%d").as_posix()
+                        mdouts.append(mdout)
+                        c = EnergyCalculation(progs['gbnsr6'], parm_system.ligand_prmtop, file, mdin, mdout)
+                        self.calc_list.append(c, '', timer_key='gbnsr6')
+                    c = MergeOut(f"{prefix}ligand_gbnsr6.mdout.%d", mdouts)
+                    self.calc_list.append(c, '', timer_key='gbnsr6')
         # end if self.INPUT['gb']['gbrun']
 
         # Next load the PB calculations
@@ -428,11 +508,9 @@ class MMPBSA_App(object):
             self.calc_list.append(
                 PrintCalc('Beginning 3D-RISM calculations with %s' % progs['rism']), timer_key='rism')
 
-            c = EnergyCalculation(progs['rism'], parm_system.complex_prmtop,
-                                  '%sdummycomplex.inpcrd' % prefix,
-                                  '%scomplex.%s.%%d' % (prefix, trj_sfx), mdin,
-                                  '%scomplex_rism.mdout.%%d' % prefix,
-                                  self.pre + 'restrt.%d', self.FILES.xvvfile)
+            c = EnergyCalculation(progs['rism'], parm_system.complex_prmtop, '%sdummycomplex.inpcrd' % prefix, mdin,
+                                  '%scomplex_rism.mdout.%%d' % prefix, self.pre + 'restrt.%d',
+                                  '%scomplex.%s.%%d' % (prefix, trj_sfx), self.FILES.xvvfile)
             self.calc_list.append(c, '  calculating complex contribution...', timer_key='rism')
 
             if not self.stability:
@@ -442,11 +520,9 @@ class MMPBSA_App(object):
                     self.calc_list.append(c, '  no mutation found in receptor; '
                                              'using unmutated files', timer_key='pb')
                 else:
-                    c = EnergyCalculation(progs['rism'], parm_system.receptor_prmtop,
-                                          '%sdummyreceptor.inpcrd' % prefix,
-                                          '%sreceptor.%s.%%d' % (prefix, trj_sfx), mdin,
-                                          '%sreceptor_rism.mdout.%%d' % prefix,
-                                          self.pre + 'restrt.%d', self.FILES.xvvfile)
+                    c = EnergyCalculation(progs['rism'], parm_system.receptor_prmtop, '%sdummyreceptor.inpcrd' % prefix,
+                                          mdin, '%sreceptor_rism.mdout.%%d' % prefix, self.pre + 'restrt.%d',
+                                          '%sreceptor.%s.%%d' % (prefix, trj_sfx), self.FILES.xvvfile)
                     self.calc_list.append(c, '  calculating receptor contribution...',
                                           timer_key='rism')
 
@@ -456,11 +532,9 @@ class MMPBSA_App(object):
                     self.calc_list.append(c, '  no mutation found in ligand; '
                                              'using unmutated files', timer_key='pb')
                 else:
-                    c = EnergyCalculation(progs['rism'], parm_system.ligand_prmtop,
-                                          '%sdummyligand.inpcrd' % prefix,
-                                          '%sligand.%s.%%d' % (prefix, trj_sfx), mdin,
-                                          '%sligand_rism.mdout.%%d' % prefix,
-                                          self.pre + 'restrt.%d', self.FILES.xvvfile)
+                    c = EnergyCalculation(progs['rism'], parm_system.ligand_prmtop, '%sdummyligand.inpcrd' % prefix,
+                                          mdin, '%sligand_rism.mdout.%%d' % prefix, self.pre + 'restrt.%d',
+                                          '%sligand.%s.%%d' % (prefix, trj_sfx), self.FILES.xvvfile)
                     self.calc_list.append(c, '  calculating ligand contribution...', timer_key='rism')
 
         # end if self.INPUT['rism']['rismrun']
@@ -679,6 +753,9 @@ class MMPBSA_App(object):
 
         if self.INPUT['gb']['gbrun']:
             self.timer.print_('gb')
+
+        if self.INPUT['gbnsr6']['gbnsr6run']:
+            self.timer.print_('gbnsr6')
 
         if self.INPUT['pb']['pbrun']:
             self.timer.print_('pb')

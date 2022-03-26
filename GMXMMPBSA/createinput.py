@@ -42,7 +42,7 @@ from parmed.amber.mdin import Mdin
 from parmed.exceptions import AmberError
 from copy import deepcopy
 
-
+ROH = {1: 0.586, 2: 0.699, 3: 0.734, 4: 0.183}
 # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 def create_inputs(INPUT, prmtop_system, pre):
@@ -160,36 +160,36 @@ def create_inputs(INPUT, prmtop_system, pre):
                 com_input = deepcopy(INPUT)
                 rec_input = deepcopy(INPUT)
                 lig_input = deepcopy(INPUT)
-                (com_input['qmmask'], rec_input['qmmask'],
-                 lig_input['qmmask']) = prmtop_system.Mask(INPUT['qm_residues'], in_complex=False)
-                if not com_input['qmmask']:
+                (com_input['gb']['qmmask'], rec_input['gb']['qmmask'],
+                 lig_input['gb']['qmmask']) = prmtop_system.Mask(INPUT['gb']['qm_residues'], in_complex=False)
+                if not com_input['gb']['qmmask']:
                     raise AmberError('No valid QM residues chosen!')
-                com_input['qm_theory'] = "'%s'" % com_input['qm_theory']
-                com_input['qmmask'] = "'%s'" % com_input['qmmask']
-                com_input['qmcharge'] = com_input['qmcharge_com']
+                com_input['gb']['qm_theory'] = "'%s'" % com_input['gb']['qm_theory']
+                com_input['gb']['qmmask'] = "'%s'" % com_input['gb']['qmmask']
+                com_input['gb']['qmcharge'] = com_input['gb']['qmcharge_com']
                 # check if alpb
                 if com_arad:
                     com_input['gb']['arad'] = com_arad
                 gb_mdin = SanderGBInput(com_input)
                 gb_mdin.write_input(f'{pre}gb_qmmm_com.mdin')
                 if not stability:
-                    if not rec_input['qmmask']:
-                        rec_input['ifqnt'] = 0
+                    if not rec_input['gb']['qmmask']:
+                        rec_input['gb']['ifqnt'] = 0
                     else:
-                        rec_input['qmmask'] = "'%s'" % rec_input['qmmask']
-                    rec_input['qm_theory'] = "'%s'" % rec_input['qm_theory']
-                    rec_input['qmcharge'] = rec_input['qmcharge_rec']
+                        rec_input['gb']['qmmask'] = "'%s'" % rec_input['gb']['qmmask']
+                    rec_input['gb']['qm_theory'] = "'%s'" % rec_input['gb']['qm_theory']
+                    rec_input['gb']['qmcharge'] = rec_input['gb']['qmcharge_rec']
                     # check if alpb
                     if rec_arad:
                         rec_input['gb']['arad'] = rec_arad
                     gb_mdin = SanderGBInput(rec_input)
                     gb_mdin.write_input(f'{pre}gb_qmmm_rec.mdin')
-                    if not lig_input['qmmask']:
-                        lig_input['ifqnt'] = 0
+                    if not lig_input['gb']['qmmask']:
+                        lig_input['gb']['ifqnt'] = 0
                     else:
-                        lig_input['qmmask'] = "'%s'" % lig_input['qmmask']
-                    lig_input['qm_theory'] = "'%s'" % lig_input['qm_theory']
-                    lig_input['qmcharge'] = lig_input['qmcharge_lig']
+                        lig_input['gb']['qmmask'] = "'%s'" % lig_input['gb']['qmmask']
+                    lig_input['gb']['qm_theory'] = "'%s'" % lig_input['gb']['qm_theory']
+                    lig_input['gb']['qmcharge'] = lig_input['gb']['qmcharge_lig']
                     # check if alpb
                     if lig_arad:
                         lig_input['gb']['arad'] = lig_arad
@@ -212,6 +212,17 @@ def create_inputs(INPUT, prmtop_system, pre):
             else:
                 gb_mdin = SanderGBInput(INPUT)
                 gb_mdin.write_input(f'{pre}gb.mdin')
+
+        if INPUT['gbnsr6']['gbnsr6run']:
+            temp_input = deepcopy(INPUT)
+            temp_input['gbnsr6']['roh'] = ROH[INPUT['gbnsr6']['roh']]
+            gbnsr6_mdin = GBNSR6Input(temp_input)
+            gbnsr6_mdin.write_input(f'{pre}gbnsr6.mdin')
+
+        # We only need to run it once for the GBNSR6, pbsa.cuda and APBS calculations.
+        if INPUT['gbnsr6']['gbnsr6run']:
+            mm_mdin = SanderMMInput(INPUT)
+            mm_mdin.write_input(f'{pre}mm.mdin')
 
         if INPUT['pb']['pbrun']:
             pb_prog = 'sander.APBS' if INPUT['sander_apbs'] else 'sander'
@@ -258,6 +269,7 @@ class SanderInput(object):
         for key in self.input_items:
             # Skip ioutfm since it is handled explicitly later
             if key == 'ioutfm':
+                self.mdin.change('cntrl', 'ioutfm', int(bool(INPUT['general']['netcdf'])))
                 continue
             vunchanged = True
             for nml in self.namelist:
@@ -277,7 +289,7 @@ class SanderInput(object):
             # except KeyError:
             #     self.mdin.change(self.parent_namelist[key], key, self.input_items[key])
             #     ic(key, self.input_items[key])
-        self.mdin.change('cntrl', 'ioutfm', int(bool(INPUT['general']['netcdf'])))
+
 
     def write_input(self, filename):
         """ Write the mdin file """
@@ -321,6 +333,35 @@ class SanderGBInput(SanderInput):
                 'scfconv': 'scfconv', 'peptide_corr': 'peptide_corr', 'writepdb': 'writepdb', 'verbosity': 'verbosity'}
 
 
+class GBNSR6Input(SanderInput):
+    """ GB sander input file """
+    program = 'gbnsr6'
+    namelist = ['gbnsr6']
+    input_items = {'inp': 1,
+                   'b': 0.028, 'epsin': 1.0, 'epsout': 78.5, 'istrng': 0.0, 'rs': 0.52, 'dprob': 1.4, 'space': 0.5,
+                   'arcres': 0.2, 'rbornstat': 0, 'dgij': 0, 'radiopt': 0, 'chagb': 0, 'roh': 1, 'tau': 1.47,
+                   'cavity_surften': 0.005}
+
+    parent_namelist = {'inp': 'cntrl',
+                       'b': 'gb', 'epsin': 'gb', 'epsout': 'gb', 'istrng': 'gb', 'rs': 'gb', 'dprob': 'gb',
+                       'space': 'gb', 'arcres': 'gb', 'rbornstat': 'gb', 'dgij': 'gb', 'radiopt': 'gb',
+                       'chagb': 'gb', 'roh': 'gb', 'tau': 'gb', 'cavity_surften': 'gb'}
+
+    name_map = {'inp': 'inp',
+                'b': 'b', 'epsin': 'epsin', 'epsout': 'epsout', 'istrng': 'istrng', 'rs': 'rs',
+                'dprob': 'dprob', 'space': 'space', 'arcres': 'arcres', 'rbornstat': 'rbornstat', 'dgij': 'dgij',
+                'radiopt': 'radiopt', 'chagb': 'chagb', 'roh': 'roh', 'tau': 'tau', 'cavity_surften': 'cavity_surften'}
+
+
+class SanderMMInput(SanderInput):
+    """ GB sander input file """
+    namelist = ['gbnsr6']
+    input_items = {'ntb': 0, 'cut': 999.0, 'nsnb': 99999, 'imin': 5, 'dec_verbose': 0, 'igb': 0}
+
+    parent_namelist = {'ntb': 'cntrl', 'cut': 'cntrl', 'nsnb': 'cntrl', 'imin': 'cntrl', 'dec_verbose': 'cntrl',
+                       'igb': 'cntrl'}
+
+    name_map = {'ntb': 'ntb', 'cut': 'cut', 'nsnb': 'nsnb', 'imin': 'imin', 'dec_verbose': 'dec_verbose','igb': 'igb'}
 # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 class SanderRISMInput(SanderInput):

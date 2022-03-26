@@ -199,10 +199,10 @@ def calc_sub(vector1, vector2, mut=False) -> (float, float):
 
 def create_input_args(args: list):
     if not args or 'all' in args:
-        return 'general', 'gb', 'pb', 'ala', 'nmode', 'decomp', 'rism'
-    elif 'gb' not in args and 'pb' not in args and 'rism' not in args and 'nmode' not in 'args':
+        return 'general', 'gb', 'gbnsr6', 'pb', 'ala', 'nmode', 'decomp', 'rism'
+    elif 'gb' not in args and 'pb' not in args and 'rism' not in args and 'nmode' not in args and 'gbnsr6' not in args:
         GMXMMPBSA_ERROR('You did not specify any type of calculation!')
-    elif 'gb' not in args and 'pb' not in args and 'decomp' in args:
+    elif 'gb' not in args and 'pb' not in args and 'decomp' in args: # FIXME: gbnsr6?
         logging.warning('&decomp calculation is only compatible with &gb and &pb calculations. Will be ignored!')
         args.remove('decomp')
         return ['general'] + args
@@ -612,7 +612,10 @@ def remove(flag, fnpre='_GMXMMPBSA_'):
                     fil == 'RESULTS_gmx_MMPBSA.h5' or
                     fil in other_files or
                     fil in result_files):
-                os.remove(fil)
+                if os.path.isdir(fil):
+                    shutil.rmtree(fil)
+                else:
+                    os.remove(fil)
 
     elif flag == 0:  # remove all temporary files
         for fil in allfiles:
@@ -633,8 +636,8 @@ def find_progs(INPUT, mpi_size=0):
                   'sander.APBS': INPUT['pb']['sander_apbs'] == 1,
                   'mmpbsa_py_nabnmode': INPUT['nmode']['nmoderun'],
                   # 'rism3d.snglpnt': INPUT['rism']['rismrun']
-                  'elsize': INPUT['gb']['alpb']
-
+                  'elsize': INPUT['gb']['alpb'],
+                  'gbnsr6': INPUT['gbnsr6']['gbnsr6run']
                   }
     gro_exe = {
         'gmx5': [
@@ -651,8 +654,8 @@ def find_progs(INPUT, mpi_size=0):
         my_progs[prog] = shutil.which(prog, path=os.environ['PATH'])
         if needed:
             if not my_progs[prog]:
-                GMXMMPBSA_ERROR('Could not find necessary program [%s]' % prog)
-            logging.info('%s found! Using %s' % (prog, str(my_progs[prog])))
+                GMXMMPBSA_ERROR(f'Could not find necessary program [{prog}]')
+            logging.info(f'{prog} found! Using {str(my_progs[prog])}')
 
     search_parth = INPUT['general']['gmx_path'] or os.environ['PATH']
     g5 = False
@@ -670,7 +673,7 @@ def find_progs(INPUT, mpi_size=0):
                                         'due to incompatibility between the mpi libraries used to compile GROMACS and '
                                         'mpi4py respectively. You can still use gmx_mpi or gmx_mpi_d to run gmx_MMPBSA '
                                         'serial. For parallel calculations use gmx instead')
-                    logging.info('%s found! Using %s' % (prog, exe))
+                    logging.info(f'{prog} found! Using {exe}')
                     break
             if g5:
                 break
@@ -679,7 +682,7 @@ def find_progs(INPUT, mpi_size=0):
             for prog in g_exes:
                 if exe := shutil.which(prog, path=search_parth):
                     my_progs[prog] = [exe]
-                    logging.info('%s found! Using %s' % (prog, str(my_progs[prog])))
+                    logging.info(f'{prog} found! Using {str(my_progs[prog])}')
 
     if 'make_ndx' not in my_progs or 'editconf' not in my_progs or 'trjconv' not in my_progs:
         GMXMMPBSA_ERROR('Could not find necessary program [ GROMACS ]')
