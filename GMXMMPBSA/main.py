@@ -872,6 +872,16 @@ class MMPBSA_App(object):
 
         logging.info(f'Checking {self.FILES.input_file} input file...')
 
+        if (
+                not INPUT['gb']['gbrun']
+                and not INPUT['pb']['pbrun']
+                and not INPUT['rism']['rismrun']
+                and not INPUT['nmode']['nmoderun']
+                and not INPUT['general']['qh_entropy']
+        ):
+            GMXMMPBSA_ERROR('You did not specify any type of calculation!', InputError)
+
+        # checking &general namelist
         if self.FILES.ligand_mol2:
             if ('leaprc.gaff' in self.INPUT['general']['forcefields'] or
                     'leaprc.gaff2' in self.INPUT['general']['forcefields']):
@@ -882,6 +892,21 @@ class MMPBSA_App(object):
                     "variable. Check this tutorial for "
                     "more details https://valdes-tresanco-ms.github.io/gmx_MMPBSA/examples/Protein_ligand/ST/")
 
+        if INPUT['general']['ions_parameters'] not in range(1, 17):
+            GMXMMPBSA_ERROR('Ions parameters file name must be in %s!' % range(1, 17), InputError)
+        if INPUT['general']['PBRadii'] not in range(1, 8):
+            GMXMMPBSA_ERROR('PBRadii must be 1, 2, 3, 4, 5, 6, or 7!', InputError)
+        if INPUT['general']['solvated_trajectory'] not in [0, 1]:
+            GMXMMPBSA_ERROR('SOLVATED_TRAJECTORY must be 0 or 1!', InputError)
+        # fixed the error when try to open gmx_MMPBSA_ana in the issue
+        # https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/issues/33
+        if self.INPUT['general']['startframe'] < 1:
+            # GMXMMPBSA_ERROR('The startframe variable must be >= 1')
+            logging.warning(f"The startframe variable must be >= 1. Changing startframe from"
+                            f" {self.INPUT['general']['startframe']} to 1")
+            self.INPUT['general']['startframe'] = 1
+
+        # checking &gb namelist
         if INPUT['gb']['igb'] not in [1, 2, 5, 7, 8]:
             GMXMMPBSA_ERROR('Invalid value for IGB (%s)! ' % INPUT['gb']['igb'] + 'IGB must be 1, 2, 5, 7, or 8.', InputError)
         if INPUT['gb']['intdiel'] < 0:
@@ -896,163 +921,145 @@ class MMPBSA_App(object):
             GMXMMPBSA_ERROR('IGB=8 is incompatible with ALPB=1! IGB must be 1, 2, 5, or 7 if ALPB=1.', InputError)
         if INPUT['gb']['arad_method'] not in [1, 2, 3]:
             GMXMMPBSA_ERROR('ARAD_METHOD must be 1, 2, or 3!', InputError)
-        if INPUT['indi'] < 0:
-            GMXMMPBSA_ERROR('INDI must be non-negative!', InputError)
-        if INPUT['exdi'] < 0:
-            GMXMMPBSA_ERROR('EXDI must be non-negative!', InputError)
-        if INPUT['memopt'] > 0 and (INPUT['emem'] < INPUT['indi'] or INPUT['emem'] > INPUT['exdi']):
-            logging.warning(
-                "Membrane dielectric constant (emem) should be between indi and exdi's or there may be errors."
-            )
-        if INPUT['scale'] < 0:
-            GMXMMPBSA_ERROR('SCALE must be non-negative!', InputError)
-        if INPUT['linit'] < 0:
-            GMXMMPBSA_ERROR('LINIT must be a positive integer!', InputError)
-        if INPUT['prbrad'] not in [1.4, 1.6]:
-            GMXMMPBSA_ERROR('PRBRAD (%s) must be 1.4 and 1.6!' % INPUT['prbrad'], InputError)
-        if INPUT['istrng'] < 0:
-            GMXMMPBSA_ERROR('ISTRNG must be non-negative!', InputError)
-        if INPUT['inp'] not in [1, 2]:
-            GMXMMPBSA_ERROR('INP/NPOPT (%s) must be 1, or 2!' % INPUT['inp'], InputError)
-        if INPUT['cavity_surften'] < 0:
-            GMXMMPBSA_ERROR('CAVITY_SURFTEN must be non-negative!', InputError)
-        if INPUT['fillratio'] <= 0:
-            GMXMMPBSA_ERROR('FILL_RATIO must be positive!', InputError)
-        if INPUT['radiopt'] not in [0, 1]:
-            GMXMMPBSA_ERROR('RADIOPT (%s) must be 0 or 1!' % INPUT['radiopt'], InputError)
-        if INPUT['dielc'] <= 0:
-            GMXMMPBSA_ERROR('DIELC must be positive!', InputError)
-        if INPUT['maxcyc'] < 1:
-            GMXMMPBSA_ERROR('MAXCYC must be a positive integer!', InputError)
-        if INPUT['decomp']['idecomp'] not in [0, 1, 2, 3, 4]:
-            GMXMMPBSA_ERROR('IDECOMP (%s) must be 1, 2, 3, or 4!' % INPUT['decomp']['idecomp'], InputError)
-        if INPUT['decomp']['idecomp'] != 0 and INPUT['sander_apbs'] == 1:
-            GMXMMPBSA_ERROR('IDECOMP cannot be used with sander.APBS!', InputError)
-        if INPUT['sander_apbs'] not in [0, 1]:
-            GMXMMPBSA_ERROR('SANDER_APBS must be 0 or 1!', InputError)
-        if INPUT['ala']['alarun'] and INPUT['netcdf'] != '':
-            GMXMMPBSA_ERROR('Alanine scanning is incompatible with NETCDF != 0!', InputError)
-        if INPUT['decomp']['decomprun'] and INPUT['decomp']['idecomp'] == 0:
-            GMXMMPBSA_ERROR('IDECOMP cannot be 0 for Decomposition analysis!', InputError)
-        if INPUT['ions_parameters'] not in range(1, 17):
-            GMXMMPBSA_ERROR('Ions parameters file name must be in %s!' % range(1, 17), InputError)
-        if INPUT['PBRadii'] not in range(1, 8):
-            GMXMMPBSA_ERROR('PBRadii must be 1, 2, 3, 4, 5, 6, or 7!', InputError)
-        if INPUT['solvated_trajectory'] not in [0, 1]:
-            GMXMMPBSA_ERROR('SOLVATED_TRAJECTORY must be 0 or 1!', InputError)
         if INPUT['gb']['ifqnt'] not in [0, 1]:
             GMXMMPBSA_ERROR('QMMM must be 0 or 1!', InputError)
-        if INPUT['gb']['ifqnt'] == 0 and (INPUT['qm_theory'] or INPUT['qm_residues']):
+        if INPUT['gb']['ifqnt'] == 0 and (INPUT['gb']['qm_theory'] or INPUT['gb']['qm_residues']):
             logging.warning('qm_theory/qm_residues variable has been defined, however the potential function is '
                             'strictly classical (ifqnt=0). Please, set ifqnt=1 if you want to use Use QM/MM')
+        if (
+                not INPUT['gb']['molsurf']
+                and (INPUT['gb']['msoffset'] != 0 or INPUT['gb']['probe'] != 1.4)
+                and self.master
+        ):
+            logging.warning('offset and probe are molsurf-only options')
         if INPUT['gb']['ifqnt'] == 1:
-            if INPUT['qm_theory'] not in ['PM3', 'AM1', 'MNDO', 'PDDG-PM3', 'PM3PDDG',
-                                          'PDDG-MNDO', 'PDDGMNDO', 'PM3-CARB1',
-                                          'PM3CARB1', 'DFTB', 'SCC-DFTB', 'RM1', 'PM6',
-                                          'PM3-ZnB', 'PM3-MAIS', 'PM6-D', 'PM6-DH+',
-                                          'AM1-DH+', 'AM1-D*', 'PM3ZNB', 'MNDO/D',
-                                          'MNDOD']:
-                GMXMMPBSA_ERROR('Invalid QM_THEORY (%s)! ' % INPUT['qm_theory'] +
+            if INPUT['gb']['qm_theory'] not in ['PM3', 'AM1', 'MNDO', 'PDDG-PM3', 'PM3PDDG',
+                                                'PDDG-MNDO', 'PDDGMNDO', 'PM3-CARB1',
+                                                'PM3CARB1', 'DFTB', 'SCC-DFTB', 'RM1', 'PM6',
+                                                'PM3-ZnB', 'PM3-MAIS', 'PM6-D', 'PM6-DH+',
+                                                'AM1-DH+', 'AM1-D*', 'PM3ZNB', 'MNDO/D',
+                                                'MNDOD']:
+                GMXMMPBSA_ERROR('Invalid QM_THEORY (%s)! ' % INPUT['gb']['qm_theory'] +
                                 'This variable must be set to allowable options.\n' +
                                 'PM3, AM1, MNDO, PDDG-PM3, PM3PDDG, PDDG-MNDO, PDDGMNDO, \n'
                                 'PM3-CARB1, PM3CARB1, DFTB, SCC-DFTB, RM1, PM6, PM3-ZnB, \n'
                                 'PM3-MAIS, PM6-D, PM6-DH+, AM1-DH+, AM1-D*, PM3ZNB, MNDO/D, MNDOD', InputError)
-            if INPUT['qm_residues'] == '':
+            if INPUT['gb']['qm_residues'] == '':
                 GMXMMPBSA_ERROR('QM_RESIDUES must be specified for IFQNT = 1!', InputError)
             if INPUT['decomp']['decomprun']:
                 GMXMMPBSA_ERROR('QM/MM and decomposition are incompatible!', InputError)
-            if (INPUT['qmcharge_lig'] + INPUT['qmcharge_rec'] !=
-                    INPUT['qmcharge_com'] and not self.stability):
+            if (INPUT['gb']['qmcharge_lig'] + INPUT['gb']['qmcharge_rec'] !=
+                    INPUT['gb']['qmcharge_com'] and not self.stability):
                 GMXMMPBSA_ERROR('The total charge of the ligand and receptor ' +
                                 'does not equal the charge of the complex!', InputError)
-            if INPUT['scfconv'] < 1.0e-12:
+            if INPUT['gb']['scfconv'] < 1.0e-12:
                 logging.warning('There is a risk of convergence problems when the requested convergence is less than '
                                 '1.0e-12 kcal/mol')
-            if INPUT['writepdb']:
+            if INPUT['gb']['writepdb']:
                 logging.info('Writing qmmm_region.pdb PDB file of the selected QM region...')
-            if INPUT['verbosity'] not in [0, 1, 2, 3, 4, 5]:
+            if INPUT['gb']['verbosity'] not in [0, 1, 2, 3, 4, 5]:
                 GMXMMPBSA_ERROR('VERBOSITY must be 0, 1, 2, 3, 4 or 5!', InputError)
-            if INPUT['verbosity'] >= 2:
+            if INPUT['gb']['verbosity'] >= 2:
                 logging.warning('VERBOSITY values of 2 or higher will produce a lot of output')
 
+        # cheking &pb namelist
+        if INPUT['pb']['indi'] < 0:
+            GMXMMPBSA_ERROR('INDI must be non-negative!', InputError)
+        if INPUT['pb']['exdi'] < 0:
+            GMXMMPBSA_ERROR('EXDI must be non-negative!', InputError)
+        if INPUT['pb']['memopt'] > 0 and \
+                (INPUT['pb']['emem'] < INPUT['pb']['indi'] or INPUT['pb']['emem'] > INPUT['pb']['exdi']):
+            logging.warning(
+                "Membrane dielectric constant (emem) should be between indi and exdi's or there may be errors."
+            )
+        if INPUT['pb']['scale'] < 0:
+            GMXMMPBSA_ERROR('SCALE must be non-negative!', InputError)
+        if INPUT['pb']['linit'] < 0:
+            GMXMMPBSA_ERROR('LINIT must be a positive integer!', InputError)
+        if INPUT['pb']['prbrad'] not in [1.4, 1.6]:
+            GMXMMPBSA_ERROR('PRBRAD (%s) must be 1.4 and 1.6!' % INPUT['pb']['prbrad'], InputError)
+        if INPUT['pb']['istrng'] < 0:
+            GMXMMPBSA_ERROR('ISTRNG must be non-negative!', InputError)
+        if INPUT['pb']['inp'] not in [1, 2]:
+            GMXMMPBSA_ERROR('INP/NPOPT (%s) must be 1, or 2!' % INPUT['pb']['inp'], InputError)
+        if INPUT['pb']['cavity_surften'] < 0:
+            GMXMMPBSA_ERROR('CAVITY_SURFTEN must be non-negative!', InputError)
+        if INPUT['pb']['fillratio'] <= 0:
+            GMXMMPBSA_ERROR('FILL_RATIO must be positive!', InputError)
+        if INPUT['pb']['radiopt'] not in [0, 1]:
+            GMXMMPBSA_ERROR('RADIOPT (%s) must be 0 or 1!' % INPUT['pb']['radiopt'], InputError)
+
+        # checking &rism namelist
         if INPUT['rism']['rismrun']:
-            if INPUT['rism_verbose'] not in [0, 1, 2]:
+            if INPUT['rism']['rism_verbose'] not in [0, 1, 2]:
                 GMXMMPBSA_ERROR('RISM_VERBOSE must be 0, 1, or 2!', InputError)
-            if INPUT['buffer'] < 0 and INPUT['solvcut'] < 0:
+            if INPUT['rism']['buffer'] < 0 and INPUT['rism']['solvcut'] < 0:
                 GMXMMPBSA_ERROR('If BUFFER < 0, SOLVCUT must be > 0!', InputError)
-            for tol in INPUT['tolerance']:
+            for tol in INPUT['rism']['tolerance']:
                 if tol <= 0:
                     GMXMMPBSA_ERROR('TOLERANCE must be positive!', InputError)
-            if INPUT['tolerance'][-1] > 0.00001:
-                logging.warning(f"Default TOLERANCE value is 0.00001! However {INPUT['tolerance'][-1]} is been used. "
-                                f"Check documentation for more details...")
-            if INPUT['buffer'] < 0 and INPUT['ng'] == '':
+            if INPUT['rism']['tolerance'][-1] > 0.00001:
+                logging.warning(
+                    f"Default TOLERANCE value is 0.00001! However {INPUT['rism']['tolerance'][-1]} is been used. "
+                    f"Check documentation for more details...")
+            if INPUT['rism']['buffer'] < 0 and INPUT['rism']['ng'] == '':
                 GMXMMPBSA_ERROR('You must specify NG if BUFFER < 0!', InputError)
-            if INPUT['polardecomp'] not in [0, 1]:
+            if INPUT['rism']['polardecomp'] not in [0, 1]:
                 GMXMMPBSA_ERROR('POLARDECOMP must be either 0 or 1!', InputError)
-            if INPUT['entropicdecomp'] not in [0, 1]:
+            if INPUT['rism']['entropicdecomp'] not in [0, 1]:
                 GMXMMPBSA_ERROR('ENTROPICDECOMP must be either 0 or 1!', InputError)
-            for i in zip(['treeDCF', 'treeTCF', 'treeCoulomb'], [INPUT['treeDCF'], INPUT['treeTCF'],
-                                                                 INPUT['treeCoulomb']]):
+            for i in zip(['treeDCF', 'treeTCF', 'treeCoulomb'], [INPUT['rism']['treeDCF'], INPUT['rism']['treeTCF'],
+                                                                 INPUT['rism']['treeCoulomb']]):
                 if i[1] not in [0, 1]:
                     GMXMMPBSA_ERROR(f'{i[0]} must be either 0 or 1!', InputError)
-            # if INPUT['thermo'] not in ['std', 'gf', 'both']:
-            #     GMXMMPBSA_ERROR('THERMO must be "std", "gf", "both"!', InputError)
-            # TODO: include other corrections? pc+?
-            # if INPUT['thermo'] not in ['std', 'gf', 'pc+', 'all']:
-            #     GMXMMPBSA_ERROR('THERMO must be "std", "gf", "pc+" or "all"!', InputError)
-        if (
-                not INPUT['gb']['gbrun']
-                and not INPUT['pb']['pbrun']
-                and not INPUT['rism']['rismrun']
-                and not INPUT['nmode']['nmoderun']
-                and not INPUT['general']['qh_entropy']
-        ):
-            GMXMMPBSA_ERROR('You did not specify any type of calculation!', InputError)
 
-        if INPUT['decomp']['decomprun'] and not INPUT['gb']['gbrun'] and not INPUT['pb']['pbrun']:
-            GMXMMPBSA_ERROR('DECOMP must be run with either GB or PB!', InputError)
-
-        if '-deo' in sys.argv and not INPUT['decomp']['decomprun']:
-            logging.warning("&decomp namelist has not been defined in the input file. Ignoring '-deo' flag... ")
-
-        if (
-                not INPUT['molsurf']
-                and (INPUT['msoffset'] != 0 or INPUT['probe'] != 1.4)
-                and self.master
-        ):
-            logging.warning('offset and probe are molsurf-only options')
-        if INPUT['cas_intdiel'] not in [0, 1]:
+        # checking &ala namelist
+        if INPUT['ala']['cas_intdiel'] not in [0, 1]:
             GMXMMPBSA_ERROR('cas_intdiel must be set to 0 or 1!', InputError)
-
         # User warning when intdiel > 10
-        if self.INPUT['intdiel'] > 10:
+        if self.INPUT['ala']['intdiel'] > 10:
             logging.warning('Intdiel is greater than 10...')
         # check mutant definition
         if self.INPUT['ala']['mutant'].upper() not in ['ALA', 'A', 'GLY', 'G']:
             GMXMMPBSA_ERROR('The mutant most be ALA (or A) or GLY (or G)', InputError)
 
-        # fixed the error when try to open gmx_MMPBSA_ana in the issue
-        # https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/issues/33
-        if self.INPUT['startframe'] < 1:
-            # GMXMMPBSA_ERROR('The startframe variable must be >= 1')
-            logging.warning(f"The startframe variable must be >= 1. Changing startframe from"
-                            f" {self.INPUT['startframe']} to 1")
-            self.INPUT['startframe'] = 1
-        if INPUT['nmode']['nmoderun']:
-            if self.INPUT['nmstartframe'] < 1:
-                logging.warning(f"The nmstartframe variable must be >= 1. Changing nmstartframe from"
-                                f" {self.INPUT['nmstartframe']} to 1")
-                self.INPUT['nmstartframe'] = 1
-            if INPUT['drms'] > 0.001:
-                logging.warning(f"Default DRMS value is 0.001! However {INPUT['drms']} is been used. Check "
-                                f'documentation for more details...')
-            if INPUT['maxcyc'] < 10000:
-                logging.warning(f"Default MAXCYC value is 10000! However {INPUT['maxcyc']} is been used. Check "
-                                f'documentation for more details...')
+        # checking &decomp namelist
+        if INPUT['decomp']['idecomp'] not in [0, 1, 2, 3, 4]:
+            GMXMMPBSA_ERROR('IDECOMP (%s) must be 1, 2, 3, or 4!' % INPUT['decomp']['idecomp'], InputError)
+        if INPUT['decomp']['idecomp'] != 0 and INPUT['pb']['sander_apbs'] == 1:
+            GMXMMPBSA_ERROR('IDECOMP cannot be used with sander.APBS!', InputError)
+        if INPUT['pb']['sander_apbs'] not in [0, 1]:
+            GMXMMPBSA_ERROR('SANDER_APBS must be 0 or 1!', InputError)
+        if INPUT['ala']['alarun'] and INPUT['general']['netcdf'] != '':
+            GMXMMPBSA_ERROR('Alanine scanning is incompatible with NETCDF != 0!', InputError)
+        if INPUT['decomp']['decomprun'] and INPUT['decomp']['idecomp'] == 0:
+            GMXMMPBSA_ERROR('IDECOMP cannot be 0 for Decomposition analysis!', InputError)
+        if INPUT['decomp']['decomprun'] and not INPUT['gb']['gbrun'] and not INPUT['pb']['pbrun']:
+            GMXMMPBSA_ERROR('DECOMP must be run with either GB or PB!', InputError)
+        if '-deo' in sys.argv and not INPUT['decomp']['decomprun']:
+            logging.warning("&decomp namelist has not been defined in the input file. Ignoring '-deo' flag... ")
 
+        # checking &nmode namelist
+        if INPUT['nmode']['dielc'] <= 0:
+            GMXMMPBSA_ERROR('DIELC must be positive!', InputError)
+        if INPUT['nmode']['maxcyc'] < 1:
+            GMXMMPBSA_ERROR('MAXCYC must be a positive integer!', InputError)
+        if INPUT['nmode']['nmoderun']:
+            if self.INPUT['nmode']['nmstartframe'] < 1:
+                logging.warning(f"The nmstartframe variable must be >= 1. Changing nmstartframe from"
+                                f" {self.INPUT['nmode']['nmstartframe']} to 1")
+                self.INPUT['nmode']['nmstartframe'] = 1
+            if INPUT['nmode']['drms'] > 0.001:
+                logging.warning(
+                    f"Default DRMS value is 0.001! However {INPUT['nmode']['drms']} is being used. Check "
+                    f'documentation for more details...')
+            if INPUT['nmode']['maxcyc'] < 10000:
+                logging.warning(f"Default MAXCYC value is 10000! However {INPUT['nmode']['maxcyc']} is being used. "
+                                f"Check documentation for more details...")
+
+        # Assigning variables
         # set the pbtemp = temperature
-        self.INPUT['pb']['pbtemp'] = self.INPUT['temperature']
+        self.INPUT['pb']['pbtemp'] = self.INPUT['general']['temperature']
 
         logging.info(f'Checking {self.FILES.input_file} input file...Done.\n')
 
