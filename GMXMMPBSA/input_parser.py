@@ -478,7 +478,7 @@ input_file.addNamelist('gbnsr6', 'gbnsr6',
                            ['epsin', float, 1.0, 'Sets the dielectric constant of the solute region'],
                            ['epsout', float, 78.5, 'Sets the implicit solvent dielectric constant for the solvent'],
                             # FIXME: convert to M
-                           ['istrng', float, 0.0, 'Sets the ionic strength (in mM) for the GB equation'],
+                           ['istrng', float, 0.0, 'Sets the ionic strength in M for the GB equation'],
                            ['rs', float, 0.52, 'Sets the value of the dielectric boundary shift compared to the '
                                                'molecular surface (only relevant for the -chagb option)'],
                            ['dprob', float, 1.4, 'Sets the radius of the solvent robe'],

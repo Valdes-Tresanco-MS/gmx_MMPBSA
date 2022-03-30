@@ -131,7 +131,8 @@ parser.add_argument('-v', '--version', action='version',
 parser.add_argument('--input-file-help', dest='infilehelp', action='store_true',
                     help='Print all available options in the input file.',
                     default=False)
-parser.add_argument('--create_input', dest='createinput', choices=['gb', 'pb', 'rism', 'ala', 'decomp', 'nmode', 'all'],
+parser.add_argument('--create_input', dest='createinput', choices=['gb', 'pb', 'rism', 'ala', 'decomp', 'nmode',
+                                                                   'gbnsr6', 'all'],
                     nargs='*', help='Create an new input file with selected calculation type.')
 group = parser.add_argument_group('Miscellaneous Options')
 group.add_argument('-O', '--overwrite', default=False, action='store_true',

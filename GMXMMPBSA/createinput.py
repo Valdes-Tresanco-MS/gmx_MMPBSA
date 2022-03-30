@@ -66,6 +66,7 @@ def create_inputs(INPUT, prmtop_system, pre):
             lig_arad = None
             if INPUT['gb']['alpb']:
                 import subprocess
+                # FIXME: save pqr file from prmtop_system
                 com_top = parmed.load_file('COM.prmtop', xyz=f"{pre}COM.inpcrd")
                 com_top.save('COM.pqr', format='pqr', overwrite=True)
                 stdoutdata = subprocess.getoutput("elsize COM.pqr -hea")
