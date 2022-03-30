@@ -980,7 +980,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
             self.correlation_treeWidget.hideColumn(x)
 
     def read_data(self, queue: Queue, options):
-        self.init_dialog.close()
+        self.init_dialog.accept()
         max_sixe = queue.qsize()
         qpd = QProgressDialog('Reading output files', 'Abort', 0, max_sixe, self)
         qpd.setWindowModality(Qt.WindowModality.WindowModal)
