@@ -183,7 +183,7 @@ class InitDialog(QDialog):
 
         cancel_btn = btnbox.button(QDialogButtonBox.StandardButton.Cancel)
         cancel_btn.setDefault(False)
-        cancel_btn.clicked.connect(self.close)
+        cancel_btn.clicked.connect(self.reject)
 
         self.btn_layout = QHBoxLayout()
         self.btn_layout.addWidget(self.pb, 10)
@@ -217,8 +217,6 @@ class InitDialog(QDialog):
             self.warn_label_config.show()
         else:
             self.warn_label_config.hide()
-
-
 
     def update_item_info(self, item: QTreeWidgetItem, col):
         if item.text(0) == 'All':

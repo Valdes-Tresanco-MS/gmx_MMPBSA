@@ -54,11 +54,13 @@ def run(infofile):
 
 
 class GMX_MMPBSA_ANA(QMainWindow):
-    def __init__(self):
+    def __init__(self, ifiles):
         super(GMX_MMPBSA_ANA, self).__init__()
         self.showMaximized()
         self.setWindowIcon(QIcon(logo))
         self.corr_data = {'mutant': {}}
+
+        self.ifiles = ifiles
 
         self.systems = {}
         self.all_systems_active = True
@@ -161,6 +163,8 @@ class GMX_MMPBSA_ANA(QMainWindow):
         self.statusbar = self.statusBar()
 
         self.init_dialog = InitDialog(self)
+        self.init_dialog.rejected.connect(self.close)
+        self.gettting_data()
 
     def closeEvent(self, a0: QCloseEvent) -> None:
 
@@ -212,6 +216,8 @@ class GMX_MMPBSA_ANA(QMainWindow):
             a0.accept()
         else:
             a0.ignore()
+            if self.in_init_dialog:
+                self.init_dialog.show()
 
     def _about_dialog(self):
         from GMXMMPBSA import __version__
@@ -837,9 +843,9 @@ class GMX_MMPBSA_ANA(QMainWindow):
             else:
                 self.nm_changed.hide()
 
-    def gettting_data(self, info_files):
-
-        self.init_dialog.get_files_info(info_files)
+    def gettting_data(self):
+        self.in_init_dialog = True
+        self.init_dialog.get_files_info(self.ifiles)
         self.init_dialog.show()
 
     # def showcorr(self, item: CorrelationItem, col):
