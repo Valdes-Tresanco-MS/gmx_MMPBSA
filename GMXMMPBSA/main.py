@@ -1038,11 +1038,12 @@ class MMPBSA_App(object):
         for i, key in enumerate(outkey):
             if not INPUT[triggers[i]]:
                 continue
+            numframes = self.numframes_nmode if key == 'nmode' else self.numframes
             # Non-mutant
             if not INPUT['mutant_only']:
                 self.calc_types.normal[key] = {'complex': outclass[i]('complex', self.INPUT, self.using_chamber)}
                 self.calc_types.normal[key]['complex'].parse_from_file(self.pre + basename[i] % 'complex',
-                                                                       self.mpi_size)
+                                                                       self.mpi_size, numframes)
                 # check if the nmode output is valid
                 if self.calc_types.normal[key]['complex'].no_nmode_convergence:
                     self.INPUT['nmoderun'] = False
@@ -1052,10 +1053,10 @@ class MMPBSA_App(object):
                 if not self.stability:
                     self.calc_types.normal[key]['receptor'] = outclass[i]('receptor', self.INPUT, self.using_chamber)
                     self.calc_types.normal[key]['receptor'].parse_from_file(self.pre + basename[i] % 'receptor',
-                                                                            self.mpi_size)
+                                                                            self.mpi_size, numframes)
                     self.calc_types.normal[key]['ligand'] = outclass[i]('ligand', self.INPUT, self.using_chamber)
                     self.calc_types.normal[key]['ligand'].parse_from_file(self.pre + basename[i] % 'ligand',
-                                                                          self.mpi_size)
+                                                                          self.mpi_size, numframes)
                     self.calc_types.normal[key]['delta'] = BindingStatistics(self.calc_types.normal[key]['complex'],
                                                                              self.calc_types.normal[key]['receptor'],
                                                                              self.calc_types.normal[key]['ligand'],
@@ -1079,16 +1080,16 @@ class MMPBSA_App(object):
             if INPUT['alarun']:
                 self.calc_types.mutant[key] = {'complex': outclass[i]('Mutant-Complex', self.INPUT, self.using_chamber)}
                 self.calc_types.mutant[key]['complex'].parse_from_file(self.pre + 'mutant_' + basename[i] % 'complex',
-                                                                       self.mpi_size)
+                                                                       self.mpi_size, numframes)
                 if not self.stability:
                     self.calc_types.mutant[key]['receptor'] = outclass[i]('Mutant-Receptor', self.INPUT,
                                                                           self.using_chamber)
                     self.calc_types.mutant[key]['receptor'].parse_from_file(self.pre + 'mutant_' + basename[i] %
-                                                                            'receptor', self.mpi_size)
+                                                                            'receptor', self.mpi_size, numframes)
                     self.calc_types.mutant[key]['ligand'] = outclass[i]('Mutant-Ligand', self.INPUT,
                                                                         self.using_chamber)
                     self.calc_types.mutant[key]['ligand'].parse_from_file(self.pre + 'mutant_' + basename[i] % 'ligand',
-                                                                          self.mpi_size)
+                                                                          self.mpi_size, numframes)
                     self.calc_types.mutant[key]['delta'] = BindingStatistics(self.calc_types.mutant[key]['complex'],
                                                                              self.calc_types.mutant[key]['receptor'],
                                                                              self.calc_types.mutant[key]['ligand'],
@@ -1151,16 +1152,17 @@ class MMPBSA_App(object):
             if not self.INPUT['mutant_only']:
                 self.calc_types.decomp_normal[key] = {'complex': DecompClass('complex')}
                 self.calc_types.decomp_normal[key]['complex'].parse_from_file(self.pre + basename[i] % 'complex',
-                                                                              self.resl, INPUT, surften, self.mpi_size)
+                                                                              self.resl, INPUT, surften,
+                                                                              self.mpi_size, self.numframes)
                 if not self.stability:
                     self.calc_types.decomp_normal[key]['receptor'] = DecompClass('receptor')
                     self.calc_types.decomp_normal[key]['receptor'].parse_from_file(self.pre + basename[i] % 'receptor',
                                                                                    rec_list, INPUT, surften,
-                                                                                   self.mpi_size)
+                                                                                   self.mpi_size, self.numframes)
                     self.calc_types.decomp_normal[key]['ligand'] = DecompClass('ligand')
                     self.calc_types.decomp_normal[key]['ligand'].parse_from_file(self.pre + basename[i] % 'ligand',
                                                                                  lig_list, INPUT, surften,
-                                                                                 self.mpi_size)
+                                                                                 self.mpi_size, self.numframes)
                     self.calc_types.decomp_normal[key]['delta'] = DecompBindingClass(
                         self.calc_types.decomp_normal[key]['complex'], self.calc_types.decomp_normal[key]['receptor'],
                         self.calc_types.decomp_normal[key]['ligand'], INPUT,
@@ -1175,6 +1177,7 @@ class MMPBSA_App(object):
                     INPUT,
                     surften,
                     self.mpi_size,
+                    self.numframes
                 )
 
                 if not self.stability:
@@ -1185,6 +1188,7 @@ class MMPBSA_App(object):
                         INPUT,
                         surften,
                         self.mpi_size,
+                        self.numframes
                     )
 
                     self.calc_types.decomp_mutant[key]['ligand'] = DecompClass('Mutant-Ligand')
@@ -1194,6 +1198,7 @@ class MMPBSA_App(object):
                         INPUT,
                         surften,
                         self.mpi_size,
+                        self.numframes
                     )
 
                     self.calc_types.decomp_mutant[key]['delta'] = DecompBindingClass(
