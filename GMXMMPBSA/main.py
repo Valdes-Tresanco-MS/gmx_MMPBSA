@@ -1036,7 +1036,7 @@ class MMPBSA_App(object):
                 self.calc_types.mutant['c2'] = C2out()
 
         for i, key in enumerate(outkey):
-            if not INPUT[triggers[i]]:
+            if triggers[i] not in INPUT or not INPUT[triggers[i]]:
                 continue
             # Non-mutant
             if not INPUT['mutant_only']:
@@ -1144,7 +1144,7 @@ class MMPBSA_App(object):
                 lig_list[x.id_index - 1] = x
 
         for i, key in enumerate(outkey):
-            if not INPUT[triggers[i]]:
+            if triggers[i] not in INPUT or not INPUT[triggers[i]]:
                 continue
             surften = INPUT['surften'] if key == 'gb' else INPUT['cavity_surften']
 

@@ -1470,7 +1470,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
                                                                                                                level=1)
                         for level2 in str_dict[level1]:
                             if self._remove_empty_charts(data[level][(level1, level2)]):
-                                del data[level][(level1, level2)]
+                                # del data[level][(level1, level2)]
                                 self.removed_items[sys_index].append((part, level, (level1, level2)))
                                 continue
                             if not part.startswith('decomp'):
@@ -1479,14 +1479,14 @@ class GMX_MMPBSA_ANA(QMainWindow):
                                 self.systems[sys_index]['items_data'][
                                     (part, level, (level1, level2))] = self._setup_data(
                                     temp_dat)
-                                del temp_dat
+                                # del temp_dat
                             else:
                                 item_lvl = 2 if namespace.INPUT['idecomp'] in [1, 2] else 3
                                 temp_dat = data[level][(level1, level2)]
                                 temp_dat.name = level2
                                 self.systems[sys_index]['items_data'][(part, level, (level1, level2))] = \
                                     self._setup_data(temp_dat, level=item_lvl)
-                                del temp_dat
+                                # del temp_dat
                                 # residue first level
                                 for level3 in str_dict[level1][level2]:
                                     item_lvl2 = 1 if namespace.INPUT['idecomp'] in [1, 2] else 2
@@ -1494,13 +1494,13 @@ class GMX_MMPBSA_ANA(QMainWindow):
                                     temp_dat.name = level3
                                     self.systems[sys_index]['items_data'][(part, level, (level1, level2, level3))] = \
                                         self._setup_data(temp_dat, level=item_lvl2)
-                                    del temp_dat
+                                    # del temp_dat
                                     # residue first level
                                     for level4 in str_dict[level1][level2][level3]:
                                         if self._remove_empty_charts(
                                                 data[level][(level1, level2, level3, level4)]
                                         ):
-                                            del data[level][(level1, level2, level3, level4)]
+                                            # del data[level][(level1, level2, level3, level4)]
                                             self.removed_items[sys_index].append(
                                                 (part, level, (level1, level2, level3, level4)))
                                             continue
@@ -1511,18 +1511,18 @@ class GMX_MMPBSA_ANA(QMainWindow):
                                             self.systems[sys_index]['items_data'][
                                                 (part, level, (level1, level2, level3, level4))] = \
                                                 self._setup_data(temp_dat)
-                                            del temp_dat
+                                            # del temp_dat
                                         else:
                                             self.systems[sys_index]['items_data'][
                                                 (part, level, (level1, level2, level3, level4))] = \
                                                 self._setup_data(temp_dat, level=1)
-                                            del temp_dat
+                                            # del temp_dat
                                             # energetics terms
                                             for level5 in str_dict[level1][level2][level3][level4]:
                                                 if self._remove_empty_charts(
                                                         data[level][(level1, level2, level3, level4, level5)]
                                                 ):
-                                                    del data[level][(level1, level2, level3, level4, level5)]
+                                                    # del data[level][(level1, level2, level3, level4, level5)]
                                                     self.removed_items[sys_index].append(
                                                         (part, level, (level1, level2, level3, level4, level5)))
                                                     continue
@@ -1531,7 +1531,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
                                                 self.systems[sys_index]['items_data'][
                                                     (part, level, (level1, level2, level3, level4, level5))] = \
                                                     self._setup_data(temp_dat)
-                                                del temp_dat
+                                                # del temp_dat
                 elif level == 'c2':
                     str_dict = multiindex2dict(data[level].columns)
                     for level1 in str_dict:
