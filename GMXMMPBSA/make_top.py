@@ -435,6 +435,23 @@ class CheckMakeTop:
             GMXMMPBSA_ERROR(f'gmx_MMPBSA does not support water/ions molecules in any structure, but we found'
                             f' {counter} molecules in the complex.')
 
+    def _check_periodicity(self, parm, system):
+        """
+        check for periodicities == 0 and change them to 1. This is required especially for nmode calculations
+        """
+        invalid_per = 0
+
+        for dt in parm.dihedral_types:
+            if dt.per == 0:
+                invalid_per += 1
+                dt.per = 1
+
+        if invalid_per:
+            logging.warning(f'{invalid_per} invalid DIHEDRAL_PERIODICITY = 0 found in {system.capitalize()} '
+                            f'topology... Setting DIHEDRAL_PERIODICITY = 1')
+
+        return parm
+
     def gmxtop2prmtop(self):
         logging.info('Using topology conversion. Setting radiopt = 0...')
         self.INPUT['radiopt'] = 0
@@ -464,6 +481,9 @@ class CheckMakeTop:
 
         # IMPORTANT: make_trajs ends in error if the box is defined
         com_amb_prm.box = None
+
+        # check periodicity
+        com_amb_prm = self._check_periodicity(com_amb_prm, 'complex')
 
         self.fixparm2amber(com_amb_prm)
 
@@ -506,6 +526,10 @@ class CheckMakeTop:
                                     'Receptor is Amber/OPLS type!')
                 rec_amb_prm = parmed.amber.AmberParm.from_structure(rec_top)
             logging.info('Changing the Receptor residues name format from GROMACS to AMBER...')
+
+            # check periodicity
+            rec_amb_prm = self._check_periodicity(rec_amb_prm, 'receptor')
+
             self.fixparm2amber(rec_amb_prm)
         else:
             logging.info('No Receptor topology file was defined. Using ST approach...')
@@ -549,6 +573,10 @@ class CheckMakeTop:
                                     'Ligand is Amber/OPLS type!')
                 lig_amb_prm = parmed.amber.AmberParm.from_structure(lig_top)
             logging.info('Changing the Ligand residues name format from GROMACS to AMBER...')
+
+            # check periodicity
+            lig_amb_prm = self._check_periodicity(lig_amb_prm, 'ligand')
+
             self.fixparm2amber(lig_amb_prm)
         else:
             logging.info('No Ligand topology file was defined. Using ST approach...')
