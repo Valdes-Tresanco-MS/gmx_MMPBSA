@@ -174,6 +174,8 @@ Feel free to contact us through our google group (https://groups.google.com/g/gm
 - Jason Swails (Amber developer and [ParmEd](https://github.com/ParmEd/ParmEd) principal developer) for his continuous 
   support on ParmEd issues.
 - To the Open Source license of the [JetBrains](https://www.jetbrains.com) programs.
+- To the [Sourcery](https://sourcery.ai/invite/gndRrjlo) team for supporting us 
+  with the [Pro version](https://sourcery.ai/pro/).
 - To all researchers that help improving gmx_MMPBSA with comments, feedback, and bug reports.
 
   [11]: https://www.jetbrains.com/?from=gmx_MMPBSA
