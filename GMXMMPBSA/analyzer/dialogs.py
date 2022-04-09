@@ -354,5 +354,78 @@ class InitDialog(QDialog):
         # Store the global default graphics settings if not exits
         if not self.chart_default_setting.config_created() or self.reset_default_config.isChecked():
             self.chart_default_setting.write_system_config()
+        self.accept()
 
         self.parent.read_data(queue, self.options)
+
+
+class worker(QThread):
+    job_finished = pyqtSignal()
+
+    def __init__(self, queue: Queue, result_q: Queue, jobs: int = 1):
+        super(worker, self).__init__()
+        self.queue = queue
+        self.result_queue = result_q
+        self.jobs = jobs
+
+    @staticmethod
+    def run_process(input_args: dict):
+        ident, struct_dict = input_args
+        obj_class = None
+        obj_function = None
+        for k, v in struct_dict.items():
+            print(k, v)
+            if v['object'] == 'class':
+                obj_class = k(*v['args']) if v['args'] else k()
+            elif v['object'] == 'function':
+                obj_function = k(*v['args']) if v['args'] else k()
+            else:
+                obj_method = getattr(obj_class, k)
+                obj_method(*v['args']) if v['args'] else obj_method()
+
+        return ident, obj_function or obj_class, obj_class.get_energy2()
+
+    def run(self):
+        size = self.queue.qsize()
+        TASKS = []
+        for _ in range(size):
+            i, d = self.queue.get_nowait()
+            TASKS.append((i, d))
+        self.jobs = min(self.jobs, len(TASKS))
+        with multiprocessing.Pool(self.jobs) as pool:
+            imap_unordered_it = pool.imap_unordered(self.run_process, TASKS)
+            for result in imap_unordered_it:
+                self.job_finished.emit()
+                self.result_queue.put(result)
+
+
+class ProcessingProgressBar(QDialog):
+    def __init__(self, parent, input_queue, output_queue, jobs, text):
+        super(ProcessingProgressBar, self).__init__(parent)
+        self.setWindowFlags(Qt.WindowType.Dialog|Qt.WindowType.FramelessWindowHint)
+        self.output_queue = output_queue
+        self.content_layout = QVBoxLayout(self)
+        self.counter = 0
+        self.action_title = QLabel(text)
+        self.content_layout.addWidget(self.action_title)
+
+        self.pb = QProgressBar(self)
+        size = input_queue.qsize()
+        if size in [1, jobs]:
+            self.pb.setRange(0, 0)
+        else:
+            self.pb.setRange(0, size)
+        self.content_layout.addWidget(self.pb)
+
+        self.w = worker(input_queue, output_queue, jobs)
+        self.w.job_finished.connect(self.update_progress)
+        self.w.finished.connect(self.all_finished)
+        self.w.start()
+
+    def update_progress(self):
+        self.counter += 1
+        self.pb.setValue(self.counter)
+
+    def all_finished(self):
+        self.accept()
+        self.close()
