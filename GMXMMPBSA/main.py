@@ -600,15 +600,16 @@ class MMPBSA_App(object):
         if not self.master:
             return
         # If we haven't already parsed our output files, do that now
+        # FIXME: does this make sense?
         if not hasattr(self, 'calc_types'):
             self.parse_output_files()
         # Do the output files now
         write_outputs(self)
         if self.INPUT['decomprun']:
             write_decomp_output(self)
-        if self.INPUT['keep_files'] in [0, 2]:
-            # Store the calc_types data in a h5 file
-            Data2h5(self)
+        # if self.INPUT['keep_files'] in [0, 2]:
+        #     # Store the calc_types data in a h5 file
+        #     Data2h5(self)
 
         info = InfoFile(self)
         info.write_info(f'{self.pre}info')
