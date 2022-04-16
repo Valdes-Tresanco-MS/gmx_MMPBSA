@@ -82,6 +82,12 @@ class EnergyVector(np.ndarray):
     def stdev(self):
         return self.com_std or self.std()
 
+    def sem(self):
+        return float(self.std() / sqrt(len(self)))
+
+    def semp(self):
+        return float(self.stdev() / sqrt(len(self)))
+
     def append(self, values):
         return EnergyVector(np.append(self, values))
 
