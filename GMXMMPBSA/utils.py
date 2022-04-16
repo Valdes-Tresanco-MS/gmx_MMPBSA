@@ -271,47 +271,21 @@ def log_subprocess_output(process):
             break
 
 
-class Residue(int):
-    """
-    Residue class
-    """
-
-    def __init__(self, index, number, chain, id, id_index, name, icode=''):
-        int.__init__(index)
-        self.index = index
+class Residue(object):
+    def __init__(self, index, number, chain, mol_id, id_index, name, icode=''):
+        self.index = int(index)
         self.number = number
         self.chain = chain
-        self.id = id
+        self.mol_id = mol_id
         self.id_index = id_index
         self.name = name
         self.icode = icode
         self.mutant_label = None
-        self.string = f"{id}:{chain}:{name}:{number}:{icode}" if icode else f"{id}:{chain}:{name}:{number}"
+        self.string = f"{mol_id}:{chain}:{name}:{number}:{icode}" if icode else f"{mol_id}:{chain}:{name}:{number}"
         self.mutant_string = None
 
-    def __new__(cls, index, number, chain, id, id_index, name, icode=''):
-        i = int.__new__(cls, index)
-        i.index = index
-        i.number = number
-        i.chain = chain
-        i.id = id
-        i.id_index = id_index
-        i.name = name
-        i.icode = icode
-        i.mutant_label = None
-        i.mutant_string = None
-        i.string = f"{id}:{chain}:{name}:{number}:{icode}" if icode else f"{id}:{chain}:{name}:{number}"
-        return i
-
-    def __copy__(self):
-        return Residue(self.index, self.number, self.chain, self.id, self.id_index, self.name, self.icode)
-
-    def __deepcopy__(self, memo):
-        cls = self.__class__
-        return cls.__new__(cls, self.index, self.number, self.chain, self.id, self.id_index, self.name, self.icode)
-
     def __repr__(self):
-        text = f"{type(self).__name__}(index: {self.index}, {self.id}:{self.chain}:{self.name}:{self.number}"
+        text = f"{type(self).__name__}(index: {self.index}, {self.mol_id}:{self.chain}:{self.name}:{self.number}"
         if self.icode:
             text += f":{self.icode}"
         text += ')'
@@ -320,20 +294,35 @@ class Residue(int):
     def __str__(self):
         return f"{self.index}"
 
+    def __add__(self, other):
+        if isinstance(other, Residue):
+            return int(self.index + other.index)
+        return int(self.index + other)
+
+    def __sub__(self, other):
+        if isinstance(other, Residue):
+            return int(self.index - other.index)
+        return int(self.index - other)
+
+    def __int__(self):
+        return self.index
+
     def is_mutant(self):
         return bool(self.mutant_label)
 
     def is_receptor(self):
-        return self.id == 'R'
+        return self.mol_id == 'R'
 
     def is_ligand(self):
-        return self.id == 'L'
+        return self.mol_id == 'L'
 
     def issame(self, other):
         pass
 
     def set_mut(self, mut):
         self.mutant_label = f'{self.chain}/{self.number}{f":{self.icode}" if self.icode else ""} - {self.name}x{mut}'
+        self.mutant_string = (f"{self.mol_id}:{self.chain}:{mut}:{self.number}:{self.icode}" if self.icode
+                              else f"{self.mol_id}:{self.chain}:{mut}:{self.number}")
 
         self.mutant_string = (f"{self.id}:{self.chain}:{mut}:{self.number}:{self.icode}" if self.icode
                               else f"{self.id}:{self.chain}:{mut}:{self.number}")
