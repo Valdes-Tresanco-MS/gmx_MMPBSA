@@ -700,9 +700,10 @@ class C2EntropyCalc:
         self.ie_std = self.ggas.std()
         self.c2data = (self.ie_std ** 2) / (2 * temperature * R)
 
+        size = self.ggas.size
         array_of_c2 = np.zeros(2000)
         for i in range(2000):
-            idxs = np.random.randint(0, len(self.ggas), len(self.ggas))
+            idxs = np.random.randint(0, size, size)
             ie_std = self.ggas[idxs].std()
             c2data = (ie_std ** 2) / (2 * temperature * R)
             array_of_c2[i] = c2data
@@ -712,7 +713,12 @@ class C2EntropyCalc:
 
     def save_output(self, filename):
         with open(filename, 'w') as out:
-            out.write(f'C2 Entropy (-TΔS): {self.c2data:.4f}\n\n')
+            out.write('| C2 Entropy results\n')
+            out.write(f'Internal Energy SD (sigma): {self.ie_std:9.2f}\n')
+            out.write(f'C2 Entropy (-TΔS): {self.c2data:.4f}\n')
+            out.write(f'C2 Entropy SD: {self.c2_std:.4f}\n')
+            out.write(f'C2 Entropy CI: {self.c2_ci[0]:.4f} {self.c2_ci[1]:.4f}\n')
+
 
 
 # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
