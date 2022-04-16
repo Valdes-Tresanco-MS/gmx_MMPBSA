@@ -320,7 +320,7 @@ def write_outputs(app):
                '\n3D-RISM:\n\n', '\n3D-RISM (Gauss. Fluct.):\n\n', '\n3D-RISM (PC+):\n\n')
     # Now print out the Free Energy results
     for i, key in enumerate(outkeys):
-        if not INPUT[triggers[i]]:
+        if triggers[i] not in INPUT or not INPUT[triggers[i]]:
             continue
         if not INPUT['mutant_only']:
             final_output.write(headers[i])
@@ -473,7 +473,7 @@ def write_decomp_output(app):
         dec_energies = writer(dec_energies_f)
 
     for i, key in enumerate(outkeys):
-        if not INPUT[triggers[i]]:
+        if triggers[i] not in INPUT or not INPUT[triggers[i]]:
             continue
         if not INPUT['mutant_only']:
             if stability:
