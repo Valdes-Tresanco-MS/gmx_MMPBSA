@@ -39,10 +39,14 @@ from pathlib import Path
 import json
 import logging
 from string import ascii_letters
+
+import pandas as pd
+
 from GMXMMPBSA.exceptions import GMXMMPBSA_ERROR
 from math import sqrt
 import parmed
 import numpy as np
+from typing import Union
 
 
 class EnergyVector(np.ndarray):
@@ -324,8 +328,80 @@ class Residue(object):
         self.mutant_string = (f"{self.mol_id}:{self.chain}:{mut}:{self.number}:{self.icode}" if self.icode
                               else f"{self.mol_id}:{self.chain}:{mut}:{self.number}")
 
-        self.mutant_string = (f"{self.id}:{self.chain}:{mut}:{self.number}:{self.icode}" if self.icode
-                              else f"{self.id}:{self.chain}:{mut}:{self.number}")
+
+def multiindex2dict(p: Union[pd.MultiIndex, pd.Index, dict]) -> dict:
+    """
+    Converts a pandas Multiindex to a nested dict
+    :parm p: As this is a recursive function, initially p is a pd.MultiIndex, but after the first iteration it takes
+    the internal_dict value, so it becomes to a dictionary
+    """
+    internal_dict = {}
+    end = False
+    for x in p:
+        # Since multi-indexes have a descending hierarchical structure, it is convenient to start from the last
+        # element of each tuple. That is, we start by generating the lower level to the upper one. See the example
+        if isinstance(p, pd.MultiIndex):
+            # This checks if the tuple x without the last element has len = 1. If so, the unique value of the
+            # remaining tuple works as key in the new dict, otherwise the remaining tuple is used. Only for 2 levels
+            # pd.MultiIndex
+            if len(x[:-1]) == 1:
+                t = x[:-1][0]
+                end = True
+            else:
+                t = x[:-1]
+            if t not in internal_dict:
+                internal_dict[t] = [x[-1]]
+            else:
+                internal_dict[t].append(x[-1])
+        elif isinstance(x, tuple):
+            # This checks if the tuple x without the last element has len = 1. If so, the unique value of the
+            # remaining tuple works as key in the new dict, otherwise the remaining tuple is used
+            if len(x[:-1]) == 1:
+                t = x[:-1][0]
+                end = True
+            else:
+                t = x[:-1]
+            if t not in internal_dict:
+                internal_dict[t] = {x[-1]: p[x]}
+            else:
+                internal_dict[t][x[-1]] = p[x]
+    if end:
+        return internal_dict
+    return multiindex2dict(internal_dict)
+
+
+def flatten(dictionary, parent_key: list = False):
+    """
+    Turn a nested dictionary into a flattened dictionary
+    :param dictionary: The dictionary to flatten
+    :param parent_key:The accumulated list of keys
+    :return: A flattened dictionary with key as tuples of nested keys
+    """
+
+    items = []
+    for key, value in dictionary.items():
+        new_key = parent_key + [key] if parent_key else [key]
+        if isinstance(value, dict):
+            items.extend(flatten(value, new_key).items())
+        else:
+            items.append((tuple(new_key), value))
+    return dict(items)
+
+
+def emapping(d):
+    internal_dict = {}
+    for k, v in d.items():
+        if isinstance(v, dict):
+            if v.values():
+                if isinstance(list(v.values())[0], (dict, pd.DataFrame)):
+                    internal_dict[k] = emapping(v)
+                else:
+                    internal_dict[k] = list(v.keys())
+        elif isinstance(v, pd.DataFrame):
+            internal_dict[k] = multiindex2dict(v.columns)
+        else:
+            internal_dict[k] = v
+    return internal_dict
 
 
 def get_indexes(com_ndx, rec_ndx=None, rec_group=1, lig_ndx=None, lig_group=1):
