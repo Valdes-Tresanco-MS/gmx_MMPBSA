@@ -232,10 +232,33 @@ class IEout(dict):
         super(IEout, self).__init__(**kwargs)
         self.INPUT = INPUT
 
-    def parse_from_dict(self, model, d: dict):
-        self[model] = {}
-        for term, dat in d.items():
-            self[model][term] = EnergyVector(dat) if term in ['data', 'iedata'] else dat
+    def parse_from_dict(self, d: dict):
+        self.update(d)
+
+    def parse_from_file(self, filename, numframes=1):
+        self['data'] = EnergyVector(numframes)
+        self['frames'] = []
+        with open(filename) as of:
+            c = 0
+            f = 0
+            while line := of.readline():
+                f += 1
+                print(line.strip('\n'))
+                if line.startswith('|') or not line.split():
+                    continue
+                if line.startswith('IE-frames:'):
+                    self['ieframes'] = int(line.strip('\n').split()[-1])
+                elif line.startswith('Internal Energy SD (sigma):'):
+                    self['sigma'] = float(line.strip('\n').split()[-1])
+                elif line.startswith('Frame'):
+                    continue
+                else:
+                    frame, value = line.strip('\n').split()
+                    self['frames'].append(frame)
+                    self['data'][c] = float(value)
+                    c += 1
+                f += 1
+        self['iedata'] = self['data'][-self['ieframes']:]
 
     def parse_from_h5(self, d):
         for model in d:
@@ -273,21 +296,20 @@ class IEout(dict):
     def summary(self):
         """ Formatted summary of Interaction Entropy results """
 
-        summary_list = [
+        avg = float(self['data'][-self['ieframes']:].mean())
+        stdev = float(self['data'][-self['ieframes']:].stdev())
+        sem = float(self['data'][-self['ieframes']:].sem())
+
+        return [
             [
-                'Model',
+                'Method',
                 'σ(Int. Energy)',
                 'Average',
                 'SD',
                 'SEM'
-            ]
+            ],
+            ['IE', self['sigma'], avg, stdev, sem]
         ]
-
-        for model in self:
-            avg = float(self[model]['iedata'].mean())
-            stdev = float(self[model]['iedata'].stdev())
-            summary_list.append([model, self[model]['sigma'], avg, stdev, stdev / sqrt(len(self[model]['iedata']))])
-        return summary_list
 
 
 class C2out(dict):
@@ -297,6 +319,20 @@ class C2out(dict):
 
     def __init__(self, **kwargs):
         super(C2out, self).__init__(**kwargs)
+
+    def parse_from_file(self, filename):
+        with open(filename) as of:
+            while line := of.readline():
+                if line.startswith('|') or not line:
+                    continue
+                if line.startswith('C2 Entropy (-TΔS):'):
+                    self['c2data'] = float(line.strip('\n').split()[-1])
+                elif line.startswith('Internal Energy SD (sigma):'):
+                    self['sigma'] = float(line.strip('\n').split()[-1])
+                elif line.startswith('C2 Entropy SD:'):
+                    self['c2_std'] = float(line.strip('\n').split()[-1])
+                elif line.startswith('C2 Entropy CI:'):
+                    self['c2_ci'] = [float(line.strip('\n').split()[-2]), float(line.strip('\n').split()[-1])]
 
     def parse_from_h5(self, d):
         for model in d:
@@ -318,28 +354,17 @@ class C2out(dict):
     def summary(self):
         """ Formatted summary of C2 Entropy results """
 
-        summary_list = [
+        return [
             [
-                'Model',
+                'Method',
                 'σ(Int. Energy)',
                 'C2 Value',
                 'SD',
                 'C.Inter.(95%)'
-            ]
+            ],
+            ['C2', float(self['sigma']), float(self['c2data']), float(self['c2_std']),
+             f"{self['c2_ci'][0]:.2f}-{self['c2_ci'][1]:.2f}",]
         ]
-
-        summary_list.extend(
-            [
-                model,
-                float(self[model]['sigma']),
-                float(self[model]['c2data']),
-                float(self[model]['c2_std']),
-                f"{self[model]['c2_ci'][0]:.2f}-{self[model]['c2_ci'][1]:.2f}",
-            ]
-            for model in self
-        )
-
-        return summary_list
 
 
 class QHout(dict):
@@ -497,19 +522,22 @@ class NMODEout(AmberOutput):
         """
         while rawline := outfile.readline():
             if "|---- Entropy not Calculated---|" in rawline:
-                self['TOTAL'] = self['TOTAL'].append(np.nan)
-                self['TRANSLATIONAL'] = self['TRANSLATIONAL'].append(np.nan)
-                self['ROTATIONAL'] = self['ROTATIONAL'].append(np.nan)
-                self['VIBRATIONAL'] = self['VIBRATIONAL'].append(np.nan)
+                self['TOTAL'][self.frame_idx] = np.nan
+                self['TRANSLATIONAL'][self.frame_idx] = np.nan
+                self['ROTATIONAL'][self.frame_idx] = np.nan
+                self['VIBRATIONAL'][self.frame_idx] = np.nan
+                self.frame_idx += 1
 
             if rawline[:6] == 'Total:':
-                self['TOTAL'] = self['TOTAL'].append(float(rawline.split()[3]) * self.temperature / 1000 * -1)
-                self['TRANSLATIONAL'] = self['TRANSLATIONAL'].append(
-                    float(outfile.readline().split()[3]) * self.temperature / 1000 * -1)
-                self['ROTATIONAL'] = self['ROTATIONAL'].append(
-                    float(outfile.readline().split()[3]) * self.temperature / 1000 * -1)
-                self['VIBRATIONAL'] = self['VIBRATIONAL'].append(
-                    float(outfile.readline().split()[3]) * self.temperature / 1000 * -1)
+                self['TOTAL'][self.frame_idx] = float(rawline.split()[3]) * self.temperature / 1000 * -1
+                self['TRANSLATIONAL'][self.frame_idx] = (float(outfile.readline().split()[3]) * self.temperature /
+                                                         1000 * -1)
+                self['ROTATIONAL'][self.frame_idx] = (float(outfile.readline().split()[3]) * self.temperature / 1000
+                                                      * -1)
+                self['VIBRATIONAL'][self.frame_idx] = (float(outfile.readline().split()[3]) * self.temperature / 1000
+                                                       * -1)
+                self.frame_idx += 1
+
 
     def _fill_nmode_values(self):
         if np.isnan(self['TOTAL']).all():
