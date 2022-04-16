@@ -62,7 +62,22 @@ class EnergyVector(np.ndarray):
         # see InfoArray.__array_finalize__ for comments
         if obj is None:
             return
-        self.com_std = getattr(obj, 'com_stdev', None)
+        self.com_std = getattr(obj, 'com_std', None)
+
+    # This fix the pickle problem. Taken from
+    # https://stackoverflow.com/questions/26598109/preserve-custom-attributes-when-pickling-subclass-of-numpy-array
+    def __reduce__(self):
+        # Get the parent's __reduce__ tuple
+        pickled_state = super(EnergyVector, self).__reduce__()
+        # Create our own tuple to pass to __setstate__
+        new_state = pickled_state[2] + (self.__dict__,)
+        # Return a tuple that replaces the parent's __setstate__ tuple with our own
+        return (pickled_state[0], pickled_state[1], new_state)
+
+    def __setstate__(self, state):
+        self.__dict__.update(state[-1])  # Update the internal dict from state
+        # Call the parent's __setstate__ with the other tuple elements.
+        super(EnergyVector, self).__setstate__(state[:-1])
 
     def stdev(self):
         return self.com_std or self.std()
