@@ -237,7 +237,6 @@ class IEout(dict):
 
     def parse_from_file(self, filename, numframes=1):
         self['data'] = EnergyVector(numframes)
-        self['frames'] = []
         with open(filename) as of:
             c = 0
             f = 0
@@ -254,7 +253,6 @@ class IEout(dict):
                     continue
                 else:
                     frame, value = line.strip('\n').split()
-                    self['frames'].append(frame)
                     self['data'][c] = float(value)
                     c += 1
                 f += 1
@@ -327,10 +325,10 @@ class C2out(dict):
                     continue
                 if line.startswith('C2 Entropy (-TΔS):'):
                     self['c2data'] = float(line.strip('\n').split()[-1])
-                elif line.startswith('Internal Energy SD (sigma):'):
-                    self['sigma'] = float(line.strip('\n').split()[-1])
                 elif line.startswith('C2 Entropy SD:'):
                     self['c2_std'] = float(line.strip('\n').split()[-1])
+                elif line.startswith('Internal Energy SD (sigma):'):
+                    self['sigma'] = float(line.strip('\n').split()[-1])
                 elif line.startswith('C2 Entropy CI:'):
                     self['c2_ci'] = [float(line.strip('\n').split()[-2]), float(line.strip('\n').split()[-1])]
 
