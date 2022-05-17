@@ -39,6 +39,112 @@ import numpy as np
 import h5py
 from types import SimpleNamespace
 
+from GMXMMPBSA.utils import emapping, flatten
+
+
+def _remove_empty_charts(data):
+    if isinstance(data, pd.Series):
+        if (data.abs() < 0.01).all():
+            return True
+    elif (data.abs() < 0.01).all().all():
+        return True
+
+
+def _itemdata_properties(data, decomp=False):
+    """
+    Pre-processing the items data.
+    Get the following properties:
+    - separable: if contains subcategories (DH [energetics components], Per-residue[receptor and ligand])
+
+    Also, remove empty terms and charts according to selected options
+    @param data:
+    @return:
+    """
+    groups = {}
+    if not decomp:
+        _extracted_from__itemdata_properties_5(data, groups)
+    else:
+        groups['Receptor'] = []
+        groups['Ligand'] = []
+        for k in data.columns:
+            if k[0].startswith('R:') and k[0] not in groups['Receptor']:
+                groups['Receptor'].append(k[0])
+            elif k[0].startswith('L:') and k[0] not in groups['Ligand']:
+                groups['Ligand'].append(k[0])
+    return groups
+
+
+# TODO Rename this here and in `_itemdata_properties`
+def _extracted_from__itemdata_properties_5(data, groups):
+    sep_ggas_keys = []
+    sep_gsolv_keys = []
+    # remove empty charts? (BOND, ANGLE and DIHEDRAL for STP)
+    # FIXME: NLPBsolver ?
+    ggas_keys = ['BOND', 'ANGLE', 'DIHED', 'VDWAALS', 'EEL', '1-4 VDW', '1-4 EEL', 'UB', 'IMP', 'CMAP', 'ESCF']
+    gsolv_keys = ['EGB', 'ESURF', 'EPB', 'ENPOLAR', 'EDISPER', 'POLAR SOLV', 'APOLAR SOLV', 'ERISM']
+    for k in data.columns:
+        if k in ggas_keys:
+            sep_ggas_keys.append(k)
+        elif k in gsolv_keys:
+            sep_gsolv_keys.append(k)
+    if sep_ggas_keys:
+        groups['GGAS'] = sep_ggas_keys
+        groups['GSOLV'] = sep_gsolv_keys
+        groups['TOTAL'] = ['GGAS', 'GSOLV', 'TOTAL']
+
+
+def _setup_data(data, level=0, iec2=False, name=None, index=None):
+    # this variable show if the data changed or not. At first time, it is true, then when plotting become in false
+    change = True
+
+    cont = {'ie_plot_data': None, 'line_plot_data': None, 'bar_plot_data': None, 'heatmap_plot_data': None}
+    if level == 0:
+        options = {'iec2': iec2}
+        # if isinstance(data, pd.Series):
+        data.name = data.name[-1]
+        cont['line_plot_data'] = [data[:-2], options, change]
+    elif level == 1:
+        options = ({'iec2': True} if iec2 else {}) | dict(groups=_itemdata_properties(data))
+        cont['bar_plot_data'] = [data[-2:].reindex(columns=index), options, change]
+    elif level == 1.5:
+        options = {'iec2': True}
+        cont['line_plot_data'] = [data[['AccIntEnergy', 'ie']][:-2], options, change]
+        cont['bar_plot_data'] = [data[['ie', 'sigma']][-2:], options, change]
+    elif level == 2:
+        tempdf = data.loc[:, data.columns.get_level_values(1) == 'tot']
+        bar_plot_data = tempdf.droplevel(level=1, axis=1).reindex(columns=index)
+
+        cont['line_plot_data'] = [bar_plot_data[:-2].sum(axis=1).rename(name), {}, change]
+        cont['bar_plot_data'] = [bar_plot_data[-2:], dict(groups=_itemdata_properties(bar_plot_data)), change]
+        cont['heatmap_plot_data'] = [bar_plot_data[:-2].T, {}, change]
+    elif level == 3:
+        # Select only the "tot" column, remove the level, change first level of columns to rows and remove the mean
+        # index
+        from icecream import ic
+
+        tempdf = data.loc[:, data.columns.get_level_values(2) == 'tot']
+        cont['heatmap_plot_data'] = [
+            tempdf.loc[["Average"]].droplevel(level=2, axis=1).stack().droplevel(level=0).reindex(columns=index[0],
+                                                                                                  index=index[1]),
+            {}, change]
+        bar_plot_data = tempdf.groupby(axis=1, level=0, sort=False).sum().reindex(columns=index[0])
+        cont['line_plot_data'] = [bar_plot_data[:-2].sum(axis=1).rename(name), {}, change]
+        cont['bar_plot_data'] = [bar_plot_data[-2:], dict(groups=_itemdata_properties(bar_plot_data)), change]
+        # del tempdf
+        # del bar_plot_data
+        # del temp_bar_data
+
+    return cont
+
+def calculatestar(arg):
+    func, args, id, t = arg
+    data = args.get('data')
+    level = args.get('level', 0)
+    iec2 = args.get('iec2', False)
+    name = args.get('name')
+    index = args.get('index')
+    return t, id, func(data, level, iec2, name, index)
+
 
 class MMPBSA_API():
     """ Main class that holds all the Free Energy data """
