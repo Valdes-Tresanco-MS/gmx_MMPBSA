@@ -273,14 +273,12 @@ class IEout(dict):
         """ Prints the energy vectors to a CSV file for easy viewing
             in spreadsheets
         """
-        for model in self:
-            csvwriter.writerow([f'Model {model}'])
-            csvwriter.writerow(['Frame #', 'Interaction Entropy'])
-            f = self.INPUT['startframe']
-            for d in self[model]['data']:
-                csvwriter.writerow([f] + [round(d, 2)])
-                f += self.INPUT['interval']
-            csvwriter.writerow([])
+        csvwriter.writerow(['Frame #', 'Interaction Entropy'])
+        f = self.INPUT['startframe']
+        for d in self['data']:
+            csvwriter.writerow([f] + [round(d, 2)])
+            f += self.INPUT['interval']
+        csvwriter.writerow([])
 
     def summary_output(self):
         summary = self.summary()
@@ -319,6 +317,9 @@ class C2out(dict):
 
     def __init__(self, **kwargs):
         super(C2out, self).__init__(**kwargs)
+
+    def parse_from_dict(self, d):
+        self.update(d)
 
     def parse_from_file(self, filename):
         with open(filename) as of:
@@ -560,6 +561,7 @@ class NMODEout(AmberOutput):
                             '    value. Please, consider to  increase the convergence criteria for minimized energy\n'
                             '    gradient (drms) or the maximum number minimization cycles to use per snapshot in\n'
                             '    sander (maxcyc)...\n')
+
 
 class GBout(AmberOutput):
     """ Amber output class for normal generalized Born simulations """
