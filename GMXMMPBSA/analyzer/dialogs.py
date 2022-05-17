@@ -30,7 +30,7 @@ from GMXMMPBSA.analyzer.chartsettings import ChartSettings
 
 
 class InitDialog(QDialog):
-    def __init__(self, parent=None):
+    def __init__(self, parent):
         super(InitDialog, self).__init__(parent)
         self.parent = parent
         self.setWindowModality(Qt.WindowModality.WindowModal)
@@ -41,123 +41,159 @@ class InitDialog(QDialog):
         self.chart_default_setting = ChartSettings()
         self.processing_label = QLabel()
 
-        self.show_decomp_btn = QCheckBox('Show decomposition data')
-        self.show_decomp_btn.setToolTip('Defines whether the decomposition graphs will be available during the '
-                                        'session. Useful when defining a system for correlation analysis.')
-        self.show_decomp_btn.setChecked(True)
-        self.remove_empty_charts_btn = QCheckBox('Remove empty charts')
-        self.remove_empty_charts_btn.setToolTip('Does not show charts in which all trajectory is zero')
-        self.remove_empty_charts_btn.setChecked(True)
-        self.remove_empty_charts_btn.clicked.connect(self.show_warn)
+
+
+        self.energy_group = QGroupBox('Energy Options')
+        self.energy_group_layout = QGridLayout(self.energy_group)
+
+        self.energy_load_com = QCheckBox('Load COM data')
+        self.energy_group_layout.addWidget(self.energy_load_com, 0, 0)
+        self.energy_load_rec = QCheckBox('Load REC data')
+        self.energy_group_layout.addWidget(self.energy_load_rec, 0, 1)
+        self.energy_load_lig = QCheckBox('Load LIG data')
+        self.energy_group_layout.addWidget(self.energy_load_lig, 0, 2)
 
         self.remove_empty_terms_btn = QCheckBox('Remove empty terms')
         self.remove_empty_terms_btn.setToolTip('Does not show null terms in graphics')
         self.remove_empty_terms_btn.setChecked(True)
-        self.remove_empty_terms_btn.clicked.connect(self.show_warn)
+        self.energy_group_layout.addWidget(self.remove_empty_terms_btn, 1, 0)
 
-        self.check_l = QHBoxLayout()
-        self.check_l.addWidget(self.show_decomp_btn)
-        self.check_l.addWidget(self.remove_empty_charts_btn)
-        self.check_l.addWidget(self.remove_empty_terms_btn)
-        self.warn_label_empty = QLabel('Note: Remove empty charts and terms options will hide the charts and empty '
-                                       'terms respectively. This does not change the results at all, it only changes '
-                                       'the representation of the data.')
-        self.warn_label_empty.setStyleSheet("border:3px solid green")
-        self.warn_label_empty.setWordWrap(True)
+        self.empty_threshold = QDoubleSpinBox()
+        self.empty_threshold.setRange(0.0001, 1.0)
+        self.empty_threshold.setValue(0.0100)
+        self.empty_threshold.setSingleStep(0.0001)
+        self.empty_threshold.setDecimals(4)
+        self.empty_threshold.setAccelerated(True)
+        self.empty_threshold.setSuffix(' kcal/mol')
 
+        self.empty_threshold_layout = QFormLayout()
+        self.empty_threshold_layout.addRow('Term threshold:', self.empty_threshold)
+        self.energy_group_layout.addLayout(self.empty_threshold_layout, 1, 1)
+
+        self.decomp_group = QGroupBox('Decomposition Options')
+        self.decomp_group.setCheckable(True)
+        self.decomp_group.setChecked(False)
+        self.decomp_group.setStyleSheet(
+            '''QGroupBox:checked {
+            border:3px solid orange;
+            }
+            '''
+        )
+        self.decomp_group_layout = QGridLayout(self.decomp_group)
+
+        self.decomp_load_com = QCheckBox('Load COM data')
+        self.decomp_group_layout.addWidget(self.decomp_load_com, 0, 0)
+        self.decomp_load_rec = QCheckBox('Load REC data')
+        self.decomp_group_layout.addWidget(self.decomp_load_rec, 0, 1)
+        self.decomp_load_lig = QCheckBox('Load LIG data')
+        self.decomp_group_layout.addWidget(self.decomp_load_lig, 0, 2)
+
+        self.decomp_non_contrib_res = QCheckBox('Remove non-contributing residues')
+        self.decomp_group_layout.addWidget(self.decomp_non_contrib_res, 1, 0)
+        self.decomp_res_threshold = QDoubleSpinBox()
+        self.decomp_res_threshold.setRange(0.01, 2.0)
+        self.decomp_res_threshold.setSingleStep(0.01)
+        self.decomp_res_threshold.setDecimals(2)
+        self.decomp_res_threshold.setValue(0.5)
+        self.decomp_res_threshold.setSuffix(' kcal/mol')
+        self.decomp_res_threshold_layout = QFormLayout()
+        self.decomp_res_threshold_layout.addRow('Per-residue threshold:', self.decomp_res_threshold)
+        self.decomp_group_layout.addLayout(self.decomp_res_threshold_layout, 1, 1)
+
+        self.corr_group = QGroupBox('Correlation')
+        self.corr_group_layout = QGridLayout(self.corr_group)
         self.corr_sys_btn = QCheckBox('Calculate correlation between systems')
         self.corr_sys_btn.setToolTip('Make correlation between systems. Only works when defining more than 3 systems')
         self.corr_sys_btn.setChecked(False)
+        self.corr_group_layout.addWidget(self.corr_sys_btn, 0, 0)
 
-        # mutants correlation
         self.corr_mut_btn = QCheckBox('Calculate correlation between mutants')
         self.corr_mut_btn.setToolTip('Make correlation between mutants systems. Only works when defining more than 3 '
                                      'mutants')
         self.corr_mut_btn.setChecked(False)
-
-        self.corr_group = QGroupBox('Correlation')
-        self.corr_group_layout = QGridLayout(self.corr_group)
-        self.corr_group_layout.addWidget(self.corr_sys_btn, 0, 0)
         self.corr_group_layout.addWidget(self.corr_mut_btn, 0, 1)
 
-        self.delta_btn = QCheckBox('delta')
-        self.delta_btn.setChecked(True)
-        self.delta_btn.setEnabled(False)
-        self.com_btn = QCheckBox('complex')
-        self.com_btn.clicked.connect(self.show_warn)
-        self.rec_btn = QCheckBox('receptor')
-        self.rec_btn.clicked.connect(self.show_warn)
-        self.lig_btn = QCheckBox('ligand')
-        self.lig_btn.clicked.connect(self.show_warn)
-        self.warn_label_big = QLabel('Warning: This can generate a huge amount of graphics which can crash the '
-                                     'application!. So far, we have not registered this issue, but be cautious')
-        self.warn_label_big.setStyleSheet("border:3px solid orange")
-        self.warn_label_big.setWordWrap(True)
-        self.warn_label_big.hide()
-
-        self.comp_group = QGroupBox('Computation of Components Charts')
-        self.comp_group_layout = QGridLayout(self.comp_group)
-        self.comp_group_layout.addWidget(self.delta_btn, 0, 0)
-        self.comp_group_layout.addWidget(self.com_btn, 0, 1)
-        self.comp_group_layout.addWidget(self.rec_btn, 0, 2)
-        self.comp_group_layout.addWidget(self.lig_btn, 0, 3)
-        self.comp_group_layout.addWidget(self.warn_label_big, 1, 0, 1, 4)
-
+        self.chart_group = QGroupBox('Charts options')
+        self.chart_group_layout = QGridLayout(self.chart_group)
         self.hide_tb_btn = QCheckBox('Hide ToolBar')
         self.hide_tb_btn.setChecked(True)
-        self.reset_default_config = QCheckBox('Reset Default Configuration')
-        self.reset_default_config.clicked.connect(self.show_warn)
+        self.chart_group_layout.addWidget(self.hide_tb_btn, 0, 0)
 
-        self.other_options = QHBoxLayout()
-        self.chart_group = QGroupBox('Charts options')
-        self.other_options.addWidget(self.chart_group)
-        self.chart_group_layout = QHBoxLayout(self.chart_group)
-        self.chart_group_layout.addWidget(self.hide_tb_btn)
-        self.chart_group_layout.addWidget(self.reset_default_config)
+        self.reset_default_config = QCheckBox('Reset Configuration')
+        self.chart_group_layout.addWidget(self.reset_default_config, 0, 1)
 
         self.frame2time = QGroupBox('Convert frames to time')
         self.frame2time.setCheckable(True)
         self.frame2time.setChecked(False)
-        self.frame2time_layout = QHBoxLayout(self.frame2time)
-        self.time_start_label = QLabel('Start:')
-        self.frame2time_layout.addWidget(self.time_start_label)
+        self.frame2time_layout = QFormLayout(self.frame2time)
         self.time_start = QSpinBox()
         self.time_start.setRange(0, 10000)
         self.time_start.setAccelerated(True)
-        self.frame2time_layout.addWidget(self.time_start)
-
-        self.time_step_label = QLabel('Scale:')
-        self.frame2time_layout.addWidget(self.time_step_label)
+        self.frame2time_layout.addRow('Start:', self.time_start)
         self.time_step = QSpinBox()
         self.time_step.setRange(1, 1000)
         self.time_step.setValue(10)
         self.time_step.setAccelerated(True)
-        self.frame2time_layout.addWidget(self.time_step)
-        # self.frame2time_layout.addStretch(1)
-        self.time_unit_label = QLabel('Unit:')
-        self.frame2time_layout.addWidget(self.time_unit_label)
+        self.frame2time_layout.addRow('Scale:', self.time_step)
         self.time_unit = QComboBox()
         self.time_unit.addItems(['ps', 'ns'])
-        self.frame2time_layout.addWidget(self.time_unit)
+        self.frame2time_layout.addRow('Unit:', self.time_unit)
 
-        self.other_options.addWidget(self.frame2time)
+        self.performance_group = QGroupBox('Performance Options')
+        self.performance_group_layout = QGridLayout(self.performance_group)
 
-        self.warn_label_config = QLabel(f'The global default graphics settings will be stored in:\n'
-                                        f'{self.chart_default_setting.filename.as_posix()}')
-        self.warn_label_config.setStyleSheet("border:3px solid orange")
-        self.warn_label_config.setWordWrap(True)
-        self.warn_label_config.show()
-        if self.chart_default_setting.config_created():
-            self.warn_label_config.hide()
+        self.performance_slider = QSlider(Qt.Orientation.Horizontal)
+        self.performance_slider.setTickPosition(QSlider.TickPosition.TicksBelow)
+        self.performance_slider.setTickInterval(1)
+        self.performance_slider.setRange(1, 4)
+        self.performance_slider.setValue(2)
 
+        self.basic_sett_group = QGroupBox('Basic settings')
+        self.basic_sett_group.toggled.connect(self.configure_basic_settings)
+        self.slider_layout = QGridLayout(self.basic_sett_group)
+        self.basic_sett_group.setCheckable(True)
+        self.basic_sett_group.setChecked(True)
+        self.slider_layout.addWidget(self.performance_slider, 0, 0, 1, 3)
+        self.slider_layout.addWidget(QLabel('High'), 1, 2, Qt.AlignmentFlag.AlignRight)
+        self.slider_layout.addWidget(QLabel('Low'), 1, 0)
+        self.performance_group_layout.addWidget(self.basic_sett_group, 0, 0, 1, 1)
 
+        self.advanced_group = QGroupBox('Advanced settings')
+        self.performance_group_layout.addWidget(self.advanced_group, 0, 1, 1, 2)
+        self.advanced_group.setCheckable(True)
+        self.advanced_group.setChecked(False)
+        self.advanced_group.toggled.connect(lambda x: self.basic_sett_group.setChecked(not x))
+        self.advanced_group_layout = QGridLayout(self.advanced_group)
 
-        self.sys_group = QGroupBox('Systems options')
-        self.sys_group_layout = QVBoxLayout(self.sys_group)
-        self.sys_group_layout.addLayout(self.check_l)
-        self.sys_group_layout.addWidget(self.warn_label_empty)
-        self.sys_group_layout.addWidget(self.corr_group)
-        self.sys_group_layout.addWidget(self.comp_group)
+        self.energy_memory = QCheckBox('Load energy in memory')
+        self.energy_memory.setChecked(True)
+        self.advanced_group_layout.addWidget(self.energy_memory, 0, 0)
+        self.energy_memory.setStyleSheet('''
+                                QCheckBox:checked {
+                                   background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 #ffa200, stop:1 #fedb6f);
+                        }''')
+
+        self.decomp_memory = QCheckBox('Load decomp in memory')
+        self.advanced_group_layout.addWidget(self.decomp_memory, 0, 1)
+        self.decomp_memory.setStyleSheet('''
+                        QCheckBox:checked {
+                           background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 #ffa200, stop:0.5 #fff, stop:1 #fedb6f);
+                }''')
+        self.multiprocessing = QCheckBox('Multiprocessing')
+        self.advanced_group_layout.addWidget(self.multiprocessing, 1, 1)
+        self.precomp_charts = QCheckBox('Pre-compute charts')
+        self.advanced_group_layout.addWidget(self.precomp_charts, 1, 0)
+        self.remove_charts = QCheckBox('Clean up charts data')
+        self.advanced_group_layout.addWidget(self.remove_charts, 0, 2)
+
+        self.njobs = QSpinBox()
+        self.njobs.setRange(1, multiprocessing.cpu_count())
+        self.njobs.setValue(2)
+        self.njobs_layout = QFormLayout()
+        self.njobs_layout.addRow('Jobs:', self.njobs)
+        self.advanced_group_layout.addLayout(self.njobs_layout, 1, 2)
+
+        self.performance_slider.valueChanged.connect(self.slider_changed)
 
         self.header_item = QTreeWidgetItem(['Folder name', 'Select', 'Name', 'Exp.Ki (nM)', 'Chart Settings', 'Path'])
         self.header_item.setToolTip(0, 'Container')
@@ -193,14 +229,48 @@ class InitDialog(QDialog):
 
         self.statusbar = QStatusBar(self)
 
-        self.content_layout = QVBoxLayout(self)
-        self.content_layout.addWidget(self.processing_label)
-        self.content_layout.addWidget(self.sys_group)
-        self.content_layout.addLayout(self.other_options)
-        self.content_layout.addWidget(self.result_tree)
-        self.content_layout.addWidget(self.warn_label_config)
-        self.content_layout.addWidget(self.statusbar)
-        self.content_layout.addLayout(self.btn_layout)
+        self.content_layout = QGridLayout(self)
+        self.content_layout.addWidget(self.energy_group, 0, 0, 1, 3)
+        self.content_layout.addWidget(self.decomp_group, 1, 0, 1, 3)
+        self.content_layout.addWidget(self.corr_group, 2, 0, 1, 2)
+        self.content_layout.addWidget(self.chart_group, 3, 0, 1, 2)
+        self.content_layout.addWidget(self.frame2time, 2, 2, 2, 1)
+        self.content_layout.addWidget(self.performance_group, 4, 0, 1, 3)
+
+        self.content_layout.addWidget(self.result_tree, 5, 0, 1, 3)
+        self.content_layout.addWidget(btnbox, 6, 2, 1, 1, Qt.AlignmentFlag.AlignRight)
+        self.content_layout.addWidget(self.statusbar, 6, 0, 1, 2)
+
+    def configure_basic_settings(self, checked):
+        self.advanced_group.setChecked(not checked)
+        if checked:
+            self.slider_changed(self.performance_slider.value())
+
+    def slider_changed(self, value):
+        self.energy_memory.setChecked(False)
+        self.decomp_memory.setChecked(False)
+        self.precomp_charts.setChecked(False)
+        self.remove_charts.setChecked(False)
+        self.multiprocessing.setChecked(False)
+        self.njobs.setValue(1)
+
+        if value == 1:
+            self.remove_charts.setChecked(True)
+        elif value == 2:
+            self.energy_memory.setChecked(True)
+            self.multiprocessing.setChecked(True)
+            self.njobs.setValue(multiprocessing.cpu_count() // 4)
+        elif value == 3:
+            self.energy_memory.setChecked(True)
+            self.precomp_charts.setChecked(True)
+            self.multiprocessing.setChecked(True)
+            self.njobs.setValue(multiprocessing.cpu_count() // 2)
+        else:
+            self.energy_memory.setChecked(True)
+            self.decomp_memory.setChecked(True)
+            self.precomp_charts.setChecked(True)
+            self.multiprocessing.setChecked(True)
+            self.njobs.setValue(multiprocessing.cpu_count())
 
     def show_warn(self):
         if self.com_btn.isChecked() or self.rec_btn.isChecked() or self.lig_btn.isChecked():
