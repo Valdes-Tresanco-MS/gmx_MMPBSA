@@ -1188,7 +1188,8 @@ class MMPBSA_App(object):
                     INPUT,
                     surften,
                     self.mpi_size,
-                    self.numframes
+                    self.numframes,
+                    True
                 )
 
                 if not self.stability:
@@ -1199,7 +1200,8 @@ class MMPBSA_App(object):
                         INPUT,
                         surften,
                         self.mpi_size,
-                        self.numframes
+                        self.numframes,
+                        True
                     )
 
                     self.calc_types.decomp_mutant[key]['ligand'] = DecompClass('Mutant-Ligand')
@@ -1209,7 +1211,8 @@ class MMPBSA_App(object):
                         INPUT,
                         surften,
                         self.mpi_size,
-                        self.numframes
+                        self.numframes,
+                        True
                     )
 
                     self.calc_types.decomp_mutant[key]['delta'] = DecompBindingClass(
