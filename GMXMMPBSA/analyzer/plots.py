@@ -207,33 +207,20 @@ class LineChart(ChartsBase):
         height1 = 100 - options[('Bar Plot', 'IE/C2 Entropy', 'bar-plot', 'height')]
         height2 = options[('Bar Plot', 'IE/C2 Entropy', 'bar-plot', 'height')]
 
-        if 'ie' in options:
-            gs = gridspec.GridSpec(2, 2, height_ratios=[height1, height2], width_ratios=[width1, width2])
-            axes = self.fig.add_subplot(gs[:, 0])
-            self.line_plot_ax = sns.lineplot(data=data['data'],
+        self.axes = self.fig.subplots(1, 1)
+        if options.get('iec2'):
+            self.line_plot_ax = sns.lineplot(data=data['AccIntEnergy'],
                                              color=rgb2rgbf(options[('Line Plot', 'line-color')]),
-                                             linewidth=options[('Line Plot', 'line-width')], ax=axes)
+                                             linewidth=options[('Line Plot', 'line-width')],
+                                             ax=self.axes,
+                                             label='IE(all)')
             # plot the ie segment
             ie_color = rgb2rgbf(options[('Bar Plot', 'IE/C2 Entropy', 'ie-color')])
-            sns.lineplot(data=data['iedata'], color=ie_color, ax=axes)
-            ax2 = self.fig.add_subplot(gs[1, 1])
-            r_sigma = rgb2rgbf(options[('Bar Plot', 'IE/C2 Entropy', 'sigma-color', 'reliable')])
-            nr_sigma = rgb2rgbf(options[('Bar Plot', 'IE/C2 Entropy', 'sigma-color', 'non-reliable')])
-            colors = [ie_color, r_sigma if np.all(data.loc[:, ['sigma']].mean() < 3.6) else nr_sigma]
-            self.ie_bar = sns.barplot(data=data[['iedata', 'sigma']], ax=ax2, palette=colors)
-            numf = data['iedata'].count()
-            self.ie_bar.set(xticklabels=[f"ie\n(last\n {numf} frames)", "σ(Int.\nEnergy)"])
-            self.ie_barlabel = bar_label(self.ie_bar, self.ie_bar.containers[0],
-                                         size=options[('Bar Plot', 'IE/C2 Entropy', 'bar-plot', 'bar-label-fontsize')],
-                                         fmt='%.2f',
-                                         padding=options[('Bar Plot', 'IE/C2 Entropy', 'bar-plot',
-                                                          'bar-label-padding')]
-                                         )
-            sns.despine(ax=self.ie_bar)
+            sns.lineplot(data=data['ie'], color=ie_color, ax=self.axes, label='IE(selected)')
         else:
-            axes = self.fig.subplots(1, 1)
             self.line_plot_ax = sns.lineplot(data=data, color=rgb2rgbf(options[('Line Plot', 'line-color')]),
-                                             linewidth=options[('Line Plot', 'line-width')], label=data.name, ax=axes)
+                                             linewidth=options[('Line Plot', 'line-width')], label=data.name,
+                                             ax=self.axes)
             if options[('Line Plot', 'Rolling average', 'show')]:
                 min_periods = 1 if options[('Line Plot', 'Rolling average', 'first_obs')] == 'start' else None
                 window = options[('Line Plot', 'Rolling average', 'window')]
@@ -242,8 +229,8 @@ class LineChart(ChartsBase):
                                           linewidth=options[('Line Plot', 'Rolling average', 'width')],
                                           label='Mov. Av.',
                                           ls=options[('Line Plot', 'Rolling average', 'style')],
-                                          ax=axes)
-        self.cursor = Cursor(axes, useblit=True, color='black', linewidth=0.5, ls='--')
+                                          ax=self.axes)
+        self.cursor = Cursor(self.axes, useblit=True, color='black', linewidth=0.5, ls='--')
 
         self.setWindowTitle(options['subtitle'])
         self.update_config(options)
