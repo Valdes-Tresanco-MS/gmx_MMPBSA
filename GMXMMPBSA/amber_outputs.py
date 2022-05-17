@@ -1161,7 +1161,7 @@ class DecompOut(dict):
                         frames_updated = True
         self._fill_composite_terms()
 
-    def parse_from_file(self, basename, resl, INPUT, surften, num_files=1, mut=False, numframes=1):
+    def parse_from_file(self, basename, resl, INPUT, surften, num_files=1, numframes=1, mut=False):
         self.basename = basename  # base name of output files
         self.resl = resl
         self.mut = mut
@@ -1228,6 +1228,8 @@ class DecompOut(dict):
 
     def _get_decomp_energies(self, outfile):
         while line := outfile.readline():
+            if self.frame_idx == self.numframes:
+                self.frame_idx = 0
             if line[:3] in self.allowed_tokens:
                 if self.mut and self.resl[int(line[4:10]) - 1].is_mutant():
                     resnum = self.resl[int(line[4:10]) - 1].mutant_string
@@ -1364,6 +1366,8 @@ class PairDecompOut(DecompOut):
 
     def _get_decomp_energies(self, outfile):
         while line := outfile.readline():
+            if self.frame_idx == self.numframes:
+                self.frame_idx = 0
             if line[:3] in self.allowed_tokens:
                 if self.mut and self.resl[int(line[4:11]) - 1].is_mutant():
                     resnum = self.resl[int(line[4:11]) - 1].mutant_string
