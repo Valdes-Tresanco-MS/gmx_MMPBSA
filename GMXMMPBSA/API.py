@@ -748,7 +748,7 @@ class MMPBSA_API():
 
     def _get_frames(self):
 
-        ts = 1 if not self.timestep else self.timestep
+        ts = self.timestep or 1
 
         INPUT = self.app_namespace.INPUT
         numframes = self.app_namespace.INFO['numframes']
@@ -757,6 +757,7 @@ class MMPBSA_API():
         frames_list = list(range(INPUT['startframe'],
                                  INPUT['startframe'] + numframes * INPUT['interval'],
                                  INPUT['interval']))
+        self.frames_list = frames_list
         INPUT['endframe'] = frames_list[-1]
         time_step_list = list(range(self.starttime,
                                     self.starttime + len(frames_list) * ts * INPUT['interval'],
@@ -767,13 +768,13 @@ class MMPBSA_API():
             nmframes_list = list(range(INPUT['nmstartframe'],
                                        INPUT['nmstartframe'] + nmnumframes * INPUT['nminterval'],
                                        INPUT['interval']))
-            INPUT['nmendframe'] = nmframes_list[-1] if nmframes_list else None
+            INPUT['nmendframe'] = nmframes_list[-1]
 
             nm_start = (nmframes_list[0] - frames_list[0]) * INPUT['interval']
             nmtime_step_list = list(range(self.starttime + nm_start,
                                           self.starttime + nm_start + len(nmframes_list) * ts * INPUT['nminterval'],
                                           ts * INPUT['nminterval']))
-
+            self.nmframes_list = nmframes_list
             self.nmframes = dict(zip(nmframes_list, nmtime_step_list))
 
     def _update_eframes(self, startframe, endframe, interval):
