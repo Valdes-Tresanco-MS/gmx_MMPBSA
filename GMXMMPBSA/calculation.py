@@ -658,16 +658,15 @@ class InteractionEntropyCalc:
         self.ie_std = self.ggas.std()
         self.ieframes = math.ceil(numframes * (self.isegment / 100))
         self.iedata = self.data[-self.ieframes:]
-        self.frames = list(
-            range(
-                self.INPUT['startframe'],
-                self.INPUT['startframe']
-                + numframes * self.INPUT['interval'],
-                self.INPUT['interval'],
-            )
-        )
 
     def save_output(self, filename):
+        frames = list(
+            range(
+                self.INPUT['startframe'],
+                self.INPUT['startframe'] + len(self.data) * self.INPUT['interval'],
+                self.INPUT['interval']
+            )
+        )
         with open(filename, 'w') as out:
             out.write('| Interaction Entropy results\n')
             out.write(f'IE-frames: last {self.ieframes}\n')
@@ -676,7 +675,7 @@ class InteractionEntropyCalc:
             out.write('| Interaction Entropy per-frame:\n')
 
             out.write('Frame # | IE value\n')
-            for f, d in zip(self.frames, self.data):
+            for f, d in zip(frames, self.data):
                 out.write('{:d}  {:.2f}\n'.format(f, d))
 
 # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -714,9 +713,9 @@ class C2EntropyCalc:
     def save_output(self, filename):
         with open(filename, 'w') as out:
             out.write('| C2 Entropy results\n')
-            out.write(f'Internal Energy SD (sigma): {self.ie_std:9.2f}\n')
             out.write(f'C2 Entropy (-TΔS): {self.c2data:.4f}\n')
             out.write(f'C2 Entropy SD: {self.c2_std:.4f}\n')
+            out.write(f'Internal Energy SD (sigma): {self.ie_std:9.2f}\n')
             out.write(f'C2 Entropy CI: {self.c2_ci[0]:.4f} {self.c2_ci[1]:.4f}\n')
 
 
