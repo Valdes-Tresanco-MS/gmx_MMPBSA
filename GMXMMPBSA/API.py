@@ -22,12 +22,15 @@ the full power of Python's extensions, if they want (e.g., numpy, scipy, etc.)
 #  or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License    #
 #  for more details.                                                           #
 # ##############################################################################
+import logging
+import math
+from multiprocessing.pool import ThreadPool
 from copy import copy, deepcopy
 from typing import Union
 
 from GMXMMPBSA.calculation import InteractionEntropyCalc, C2EntropyCalc
 
-from GMXMMPBSA import infofile, main
+from GMXMMPBSA import infofile, main, utils
 from GMXMMPBSA.exceptions import NoFileExists
 from GMXMMPBSA.fake_mpi import MPI
 from GMXMMPBSA.amber_outputs import (H5Output, BindingStatistics, IEout, C2out, DeltaBindingStatistics,
@@ -35,8 +38,6 @@ from GMXMMPBSA.amber_outputs import (H5Output, BindingStatistics, IEout, C2out, 
 import pandas as pd
 from pathlib import Path
 import os
-import numpy as np
-import h5py
 from types import SimpleNamespace
 
 from GMXMMPBSA.utils import emapping, flatten
@@ -149,20 +150,39 @@ def calculatestar(arg):
 class MMPBSA_API():
     """ Main class that holds all the Free Energy data """
 
-    def __init__(self):
+    def __init__(self, settings: dict = None, t=None):
         self.print_keys = None
-        self.app_namespace = SimpleNamespace()
+        self.app_namespace = None
         self.raw_energy = None
         self.data = {}
+        self.fname = None
+        self.settings = settings
 
-        self.set_config()
+        self._settings = {'create_temporal_data': True, 'use_temporal_data': True, 'overwrite_temp': True}
+        if settings:
+            not_keys = []
+            for k, v in settings.items():
+                if k not in self._settings:
+                    not_keys.append(k)
+                    continue
+                self._settings[k] = v
+            if not_keys:
+                logging.warning(f'Not keys {not_keys}. Will be ignored')
 
-    def set_config(self, starttime=0, timestep=0, timeunit='ps'):
+        self.setting_time()
+
+    def setting_time(self, starttime=0, timestep=0, timeunit='ps'):
         self.starttime = starttime
         self.timestep = timestep
         self.timeunit = timeunit
 
-    def load_file(self, fname: Union[Path, str]):
+    def setup_file(self, fname: Union[Path, str]):
+        self.fname = fname if isinstance(fname, Path) else Path(fname)
+        if not self.fname.exists():
+            raise NoFileExists(f"cannot find {self.fname}!")
+        os.chdir(self.fname.parent)
+
+    def load_file(self, fname: Union[Path, str] = None):
         """
         Load the info or h5 file and extract the info
 
@@ -715,13 +735,21 @@ class MMPBSA_API():
         info = infofile.InfoFile(app)
         info.read_info(ifile)
         app.normal_system = app.mutant_system = None
-        app.parse_output_files()
+        app.parse_output_files(from_calc=False)
         self.app_namespace = self._get_namespace(app)
         self._oringin = {'normal': app.calc_types.normal, 'mutant': app.calc_types.mutant,
                          'decomp_normal': app.calc_types.decomp_normal, 'decomp_mutant': app.calc_types.decomp_mutant,
                          'mutant-normal': app.calc_types.mut_norm,
                          # 'decomp_mutant-normal': app.calc_types.decomp_mut_norm
                          }
+        # if self._settings['create_temporal_data']:
+        #     temp_folder = ifile.parent.joinpath('.gmx_mmpbsa_temp')
+        #     if temp_folder.exists():
+        #         shutil.rmtree(temp_folder)
+        #     temp_folder.mkdir()
+        #     with temp_folder.joinpath('energy.pkl').open('wb') as of:
+        #         pickle.dump(self._oringin, of, pickle.HIGHEST_PROTOCOL)
+
         self.data = copy(self._oringin)
         self._get_frames()
         self._get_data(None)
