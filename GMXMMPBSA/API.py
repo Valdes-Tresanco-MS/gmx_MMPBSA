@@ -172,16 +172,20 @@ class MMPBSA_API():
         Returns:
 
         """
-        if not isinstance(fname, Path):
-            fname = Path(fname)
-        if not fname.exists():
-            raise NoFileExists("cannot find %s!" % fname)
-        os.chdir(fname.parent)
+        if not fname and not self.fname:
+            raise
 
-        if fname.suffix == '.h5':
-            self._get_fromH5(fname)
-        else:
-            self._get_fromApp(fname)
+        if not self.fname:
+            self.fname = fname if isinstance(fname, Path) else Path(fname)
+            if not self.fname.exists():
+                raise NoFileExists(f"cannot find {self.fname}!")
+            os.chdir(self.fname.parent)
+
+        # if self.fname.suffix == '.h5':
+        #     self._get_fromH5(fname)
+        # else:
+        self._get_fromApp(self.fname)
+        # print('API', self.app_namespace)
 
     def get_info(self):
         """
