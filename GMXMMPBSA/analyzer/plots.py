@@ -270,18 +270,26 @@ class BarChart(ChartsBase):
         self.bar_frames = False
         palette = (sns.color_palette(options[('Bar Plot', 'palette')], n_colors=data.columns.size)
                    if options[('Bar Plot', 'use-palette')] else None)
-        if options['groups'] and options[('Bar Plot', 'subplot-components')]:
+        if options.get('groups') and options[('Bar Plot', 'subplot-components')]:
             self.axes = self.fig.subplots(1, len(options['groups']), sharey=True,
                                           gridspec_kw={'width_ratios': [len(x) for x in options['groups'].values()]})
             if options[('Bar Plot', 'axes', 'y-inverted')]:
                 self.axes[0].invert_yaxis()
             s = 0
             for c, g in enumerate(options['groups']):
-                bar_plot_ax = sns.barplot(data=data[options['groups'][g]], ci="sd",
+                df = data[options['groups'][g]]
+                bar_plot_ax = sns.barplot(x=df.columns,
+                                          y=df.loc['Average'],
+                                          yerr=df.loc['SD'],
                                           palette=palette[s: s + len(options['groups'][g])] if palette else palette,
                                           color=rgb2rgbf(options[('Bar Plot', 'color')]),
-                                          errwidth=options[('Bar Plot', 'error-line', 'width')],
-                                          ax=self.axes[c])
+                                          error_kw=dict(
+                                              ecolor='black',
+                                              capsize=0,
+                                              elinewidth=options[('Bar Plot', 'error-line', 'width')]
+                                          ),
+                                          ax=self.axes[c]
+                                          )
                 s += len(options['groups'][g])
                 if options[('Bar Plot', 'scale-yaxis')]: # and options['scalable']:
                     bar_plot_ax.set_yscale('symlog')
@@ -298,15 +306,25 @@ class BarChart(ChartsBase):
                 bar_plot_ax.set_xticklabels(self._set_xticks(bar_plot_ax, options[('Bar Plot', 'remove-molid')]))
         else:
             self.axes = self.fig.subplots(1, 1)
-            if 'c2' in options:
+            if options.get('iec2'):
                 ie_color = rgb2rgbf(options[('Bar Plot', 'IE/C2 Entropy', 'ie-color')])
                 r_sigma = rgb2rgbf(options[('Bar Plot', 'IE/C2 Entropy', 'sigma-color', 'reliable')])
                 nr_sigma = rgb2rgbf(options[('Bar Plot', 'IE/C2 Entropy', 'sigma-color', 'non-reliable')])
-                palette = [ie_color, r_sigma if np.all(data.loc[:, ['sigma']].mean() < 3.6) else nr_sigma]
+                palette = [ie_color, r_sigma if data['sigma'].loc[['Average']].values[0] < 3.6 else nr_sigma]
 
-            bar_plot_ax = sns.barplot(data=data, ci="sd", errwidth=1, ax=self.axes, palette=palette,
-                                      color=rgb2rgbf(options[('Bar Plot', 'color')]),)
-            if options[('Bar Plot', 'axes', 'y-inverted')] and 'c2' not in options:
+            bar_plot_ax = sns.barplot(x=data.columns,
+                                      y=data.loc['Average'],
+                                      yerr=data.loc['SD'],
+                                      error_kw=dict(
+                                          ecolor='black',
+                                          capsize=0,
+                                          elinewidth=options[('Bar Plot', 'error-line', 'width')]
+                                      ),
+                                      ax=self.axes,
+                                      palette=palette,
+                                      color=rgb2rgbf(options[('Bar Plot', 'color')]),
+                                      )
+            if options[('Bar Plot', 'axes', 'y-inverted')] and not options.get('iec2'):
                 bar_plot_ax.invert_yaxis()
             if options[('Bar Plot', 'bar-label', 'show')]:
                 bl = bar_label(bar_plot_ax, bar_plot_ax.containers[0],
