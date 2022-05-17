@@ -24,6 +24,7 @@ All data is stored in a special class derived from the list.
 #  for more details.                                                           #
 # ##############################################################################
 import logging
+from copy import deepcopy
 from math import sqrt
 from GMXMMPBSA.exceptions import (OutputError, LengthError, DecompError)
 from GMXMMPBSA.utils import EnergyVector
@@ -128,10 +129,12 @@ class AmberOutput(dict):
             csvwriter.writerow([c] + [round(self[key][i], 2) for key in print_keys])
             c += self.INPUT['nminterval'] if self.__class__ == NMODEout else self.INPUT['interval']
 
-    def set_frame_range(self, start=0, end=None, interval=1):
-        for key in self.data_keys:
-            self[key] = self[key][start:end:interval]
-        self._fill_composite_terms()
+    def set_frame_range(self, start=None, end=None, interval=None):
+        d = deepcopy(self)
+        for key in d.data_keys:
+            d[key] = d[key][start:end:interval]
+        d._fill_composite_terms()
+        return d
 
     def summary_output(self):
         if not self.is_read:
@@ -242,7 +245,6 @@ class IEout(dict):
             f = 0
             while line := of.readline():
                 f += 1
-                print(line.strip('\n'))
                 if line.startswith('|') or not line.split():
                     continue
                 if line.startswith('IE-frames:'):
