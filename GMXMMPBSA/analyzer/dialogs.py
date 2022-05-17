@@ -25,7 +25,7 @@ except:
 import h5py
 from queue import Queue, Empty
 from pathlib import Path
-
+import multiprocessing
 from GMXMMPBSA.analyzer.chartsettings import ChartSettings
 
 
@@ -221,11 +221,6 @@ class InitDialog(QDialog):
         cancel_btn.setDefault(False)
         cancel_btn.clicked.connect(self.reject)
 
-        self.btn_layout = QHBoxLayout()
-        self.btn_layout.addWidget(self.pb, 10)
-        self.btn_layout.addStretch(1)
-        self.btn_layout.addWidget(btnbox)
-
 
         self.statusbar = QStatusBar(self)
 
@@ -314,6 +309,7 @@ class InitDialog(QDialog):
             exp_ki = None
             mut_only = False
             mutant = None
+            stability = False
             if fname.suffix == '.h5':
                 with h5py.File(fname) as fi:
                     basename = fi['INPUT']['sys_name'][()].decode('utf-8')
@@ -339,6 +335,8 @@ class InitDialog(QDialog):
                             mut_only = int(line.split()[2])
                         if line.startswith("mut_str"):
                             mutant = line.strip('\n').split('=')[1].strip(" '")
+                        if line.startswith("FILES.stability"):
+                            stability = eval(line.split()[2])
             # check for custom settings
             custom_settings = fname.parent.joinpath('settings.json').exists()
 
@@ -370,7 +368,7 @@ class InitDialog(QDialog):
                 self._set_item_properties(mitem)
                 item.addChild(mitem)
 
-            item.info = [basename, Path(fname)]
+            item.info = [basename, Path(fname), stability]
 
             item.setExpanded(True)
             self.result_tree.setItemWidget(item, 4, cb)
@@ -389,17 +387,43 @@ class InitDialog(QDialog):
         queue = Queue()
         self.result_queue = Queue()
         self.systems_list = []
-        self.options = {'corr_sys': self.corr_sys_btn.isChecked(),
-                        'corr_mut': self.corr_mut_btn.isChecked(),
-                        'decomposition': self.show_decomp_btn.isChecked(),
-                        'components': [x.text() for x in [self.com_btn, self.rec_btn, self.lig_btn] if x.isChecked()],
-                        'remove_empty_charts': self.remove_empty_charts_btn.isChecked(),
-                        'remove_empty_terms': self.remove_empty_terms_btn.isChecked(),
-                        'timestep': self.time_step.value() if self.frame2time.isChecked() else 0,
-                        'timeunit': self.time_unit.currentText(),
-                        'timestart': self.time_start.value()
-                        # 'default_chart_options': self.default_settings_btn.isChecked()
-                        }
+        emols = ['delta']
+        emols += ['ligand'] if self.energy_load_lig.isChecked() else []
+        emols += ['receptor'] if self.energy_load_rec.isChecked() else []
+        emols += ['complex'] if self.energy_load_com.isChecked() else []
+        emols.reverse()
+        dmols = ['delta']
+        dmols += ['ligand'] if self.decomp_load_lig.isChecked() else []
+        dmols += ['receptor'] if self.decomp_load_rec.isChecked() else []
+        dmols += ['complex'] if self.decomp_load_com.isChecked() else []
+        dmols.reverse()
+        self.options = {
+            'energy': {
+                'mols': emols,
+                'remove_empty_terms': self.remove_empty_terms_btn.isChecked(),
+                'threshold': self.empty_threshold.value()
+            },
+            'decomposition': {
+                'mols': dmols,
+                'remove_noncontrib_res': self.decomp_non_contrib_res.isChecked(),
+                'res_threshold': self.decomp_res_threshold.value()
+            },
+            'correlation': {
+                'normal': self.corr_sys_btn.isChecked(),
+                'mutant': self.corr_mut_btn.isChecked()
+            },
+            'performance': {
+            }
+            # 'default_chart_options': self.default_settings_btn.isChecked()
+        }
+
+        if self.frame2time.isChecked():
+            self.options['frames2time'] = {
+                'timestart': self.time_start.value(),
+                'timestep': self.time_step.value(),
+                'timeunit': self.time_unit.currentText()
+            }
+
         counter = 0
         for c in range(self.f_item.childCount()):
             child = self.f_item.child(c)
@@ -443,17 +467,18 @@ class worker(QThread):
         ident, struct_dict = input_args
         obj_class = None
         obj_function = None
+        obj = None
         for k, v in struct_dict.items():
             print(k, v)
             if v['object'] == 'class':
-                obj_class = k(*v['args']) if v['args'] else k()
+                obj_class = k(**v['args']) if v['args'] else k()
             elif v['object'] == 'function':
-                obj_function = k(*v['args']) if v['args'] else k()
+                obj_function = k(**v['args']) if v['args'] else k()
             else:
                 obj_method = getattr(obj_class, k)
-                obj_method(*v['args']) if v['args'] else obj_method()
+                obj = obj_method(**v['args']) if v['args'] else obj_method()
 
-        return ident, obj_function or obj_class, obj_class.get_energy2()
+        return ident, obj_function or obj_class, obj
 
     def run(self):
         size = self.queue.qsize()
