@@ -655,7 +655,7 @@ class InteractionEntropyCalc:
             self.data[i] = cts
 
         numframes = len(self.data)
-        self.ie_std = self.ggas.std()
+        self.ie_std = float(self.ggas.std())
         self.ieframes = math.ceil(numframes * (self.isegment / 100))
         self.iedata = self.data[-self.ieframes:]
 
@@ -696,7 +696,7 @@ class C2EntropyCalc:
         # gas constant in kcal/(mol⋅K)
         R = 0.001987
         temperature = self.INPUT['temperature']
-        self.ie_std = self.ggas.std()
+        self.ie_std = float(self.ggas.std())
         self.c2data = (self.ie_std ** 2) / (2 * temperature * R)
 
         size = self.ggas.size
@@ -707,7 +707,7 @@ class C2EntropyCalc:
             c2data = (ie_std ** 2) / (2 * temperature * R)
             array_of_c2[i] = c2data
 
-        self.c2_std = np.sort(array_of_c2)[100:1900].std()
+        self.c2_std = float(np.sort(array_of_c2)[100:1900].std())
         self.c2_ci = np.percentile(np.sort(array_of_c2)[100:1900], [2.5, 97.5])
 
     def save_output(self, filename):
