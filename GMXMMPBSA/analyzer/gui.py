@@ -31,7 +31,7 @@ from queue import Queue, Empty
 from pathlib import Path
 
 import pandas as pd
-from GMXMMPBSA.API import load_gmxmmpbsa_info, MMPBSA_API
+from GMXMMPBSA.API import MMPBSA_API
 from GMXMMPBSA.analyzer.dialogs import InitDialog
 from GMXMMPBSA.analyzer.customitem import CustomItem, CorrelationItem
 from GMXMMPBSA.analyzer.style import save_default_config, default_config, save_user_config, user_config, toc_img, logo, \
@@ -556,7 +556,11 @@ class GMX_MMPBSA_ANA(QMainWindow):
         )
         self.ienumframes_le.setText(str(ieframes))
         if self.current_system_index:
-            curr_eframes = [self.eframes_start_sb.value(), self.eframes_end_sb.value(), self.eframes_inter_sb.value()]
+            curr_eframes = dict(
+                startframe=self.eframes_start_sb.value(),
+                endframe=self.eframes_end_sb.value(),
+                interval=self.eframes_inter_sb.value()
+            )
             if (
                     self.iesegment_sb.value() != self.systems[self.current_system_index]['current_ie_segment'] or
                     curr_eframes != self.systems[self.current_system_index]['current_frames']
@@ -580,13 +584,13 @@ class GMX_MMPBSA_ANA(QMainWindow):
         # FIXME: check if all systems are selected?
         # if not self.all_frb.isChecked():
         # energy
-        current_start, current_end, current_interval = self.systems[parent_item.system_index]['current_frames']
+        current_start, current_end, current_interval = self.systems[parent_item.system_index]['current_frames'].values()
         self.eframes_start_sb.setValue(current_start)
         self.eframes_inter_sb.setValue(current_interval)
         self.eframes_end_sb.setValue(current_end)
         # nmode
         nmcurrent_start, nmcurrent_end, nmcurrent_interval = self.systems[parent_item.system_index][
-            'current_nmode_frames']
+            'current_nmode_frames'].values()
         self.nmframes_start_sb.setValue(nmcurrent_start)
         self.nmframes_inter_sb.setValue(nmcurrent_end)
         self.nmframes_end_sb.setValue(nmcurrent_interval)
@@ -598,148 +602,98 @@ class GMX_MMPBSA_ANA(QMainWindow):
         self.current_system_index = parent_item.system_index
 
     def update_fn(self, repaint_arg=False):
-        self.statusbar.showMessage('Updating...')
-        recalc_energy = []
-        recalc_nmode = []
-        recalc_ie = []
-        repaint = []
 
-        curr_eframes = [self.eframes_start_sb.value(), self.eframes_end_sb.value(), self.eframes_inter_sb.value()]
-        curr_nmframes = [self.nmframes_start_sb.value(), self.nmframes_end_sb.value(), self.nmframes_inter_sb.value()]
-        curr_iesegment = self.iesegment_sb.value()
-        act_sett = self.chart_options_param.saveState()
+        replot_energy = False
+        sys_list = self.systems if self.all_frb.isChecked() else [self.current_system_index]
+        if self.optionWidget_c.currentIndex() == 0:  # Chart Options
+            self.statusbar.showMessage('Updating Charts...')
+            act_sett = self.chart_options_param.saveState()
 
-        processed_sys = []
+            if repaint := [x for x in sys_list if self.systems[x]['chart_options'].is_changed(act_sett) or repaint_arg]:
+                for e in repaint:
+                    if repaint_arg:
+                        self.systems[e]['chart_options'].changes = dict(
+                            line_action=3,
+                            line_ie_action=3,
+                            bar_action=3,
+                            heatmap_action=3,
+                            visualization_action=3,
+                            figure=3
+                        )
+                    else:
+                        self.systems[e]['chart_options'].get_changes(act_sett)
+        else:  # Frames Options
+            self.statusbar.showMessage('Updating Energy for selected Frame range...')
+            curr_eframes = dict(
+                startframe=self.eframes_start_sb.value(),
+                endframe=self.eframes_end_sb.value(),
+                interval=self.eframes_inter_sb.value()
+            )
 
-        if self.all_frb.isChecked():
-            for x in self.systems:
-                processed_sys.append(x)
+            curr_nmframes = dict(
+                nmstartframe=self.nmframes_start_sb.value(),
+                nmendframe=self.nmframes_end_sb.value(),
+                nminterval=self.nmframes_inter_sb.value()
+            )
+            curr_iesegment = self.iesegment_sb.value()
+            iq = Queue()
+            rq = Queue()
+
+            for x in sys_list:
                 energyrun = (self.systems[x]['namespace'].INPUT['gbrun'] or
                              self.systems[x]['namespace'].INPUT['pbrun'] or
                              self.systems[x]['namespace'].INPUT['rismrun'])
-                if energyrun and curr_eframes != self.systems[x]['current_frames']:
-                    recalc_energy.append(x)
-                if (self.systems[x]['namespace'].INPUT['nmoderun'] and
-                        curr_nmframes != self.systems[x]['current_nmode_frames']):
-                    recalc_nmode.append(x)
-                if curr_iesegment != self.systems[x]['current_ie_segment']:
-                    recalc_ie.append(x)
-                if self.systems[x]['chart_options'].is_changed(act_sett) or repaint_arg:
-                    repaint.append(x)
-        else:
-            processed_sys.append(self.current_system_index)
-            energyrun = (self.systems[self.current_system_index]['namespace'].INPUT['gbrun'] or
-                         self.systems[self.current_system_index]['namespace'].INPUT['pbrun'] or
-                         self.systems[self.current_system_index]['namespace'].INPUT['rismrun'])
-            if energyrun and curr_eframes != self.systems[self.current_system_index]['current_frames']:
-                recalc_energy.append(self.current_system_index)
-            if (self.systems[self.current_system_index]['namespace'].INPUT['nmoderun'] and
-                    curr_nmframes != self.systems[self.current_system_index]['current_nmode_frames']):
-                recalc_nmode.append(self.current_system_index)
-            if curr_iesegment != self.systems[self.current_system_index]['current_ie_segment']:
-                recalc_ie.append(self.current_system_index)
-            if self.systems[self.current_system_index]['chart_options'].is_changed(act_sett) or repaint_arg:
-                repaint.append(self.current_system_index)
+                if (energyrun and curr_eframes != self.systems[x]['current_frames'] or
+                        self.systems[x]['namespace'].INPUT['nmoderun'] and
+                        curr_nmframes != self.systems[x]['current_nmode_frames'] or
+                        curr_iesegment != self.systems[x]['current_ie_segment']
+                ):
+                    if not self.systems[x]['namespace'].INPUT['nmoderun']:
+                        curr_nmframes = {}
+                    self._extracted_from_update_fn_69(x, curr_eframes, curr_nmframes, curr_iesegment, iq)
+                    self.systems[x]['current_frames'] = curr_eframes
+                    self.systems[x]['current_nmode_frames'] = curr_nmframes
+                    self.systems[x]['current_ie_segment'] = curr_iesegment
 
-        maximum = len(recalc_energy) + len(recalc_ie) + len(recalc_nmode) + len(repaint)
+            if iq.qsize():
+                replot_energy = True
+                from GMXMMPBSA.analyzer.dialogs import ProcessingProgressBar
+                pbd = ProcessingProgressBar(self, iq, rq, 5, 'Updating...')
+                pbd.rejected.connect(lambda z: print(f'rejected> exit code: {z}'))
+                pbd.accepted.connect(lambda: self._update_itemdata_repaint(rq))
+                # qpd.setValue(max_sixe)
+                pbd.exec()
 
-        if not maximum:
-            return
-        maximum += 1  # close and re-open current active windows
-
-        qpd = QProgressDialog('Creating systems tree', 'Abort', 0, maximum, self)
+        maximum = len(sys_list)
+        qpd = QProgressDialog('Updating charts options...', 'Abort', 0, maximum, self)
         qpd.setWindowModality(Qt.WindowModality.WindowModal)
         qpd.setMinimumDuration(0)
-        v = 0
-        if recalc_energy:
-            qpd.setLabelText('Recalculating energies for selected frames range')
-            for e in recalc_energy:
-                v += 1
-                self.systems[e]['api'].update_energy(*curr_eframes)
-                self.systems[e]['current_frames'] = curr_eframes
-                qpd.setValue(v)
-        if recalc_nmode:
-            qpd.setLabelText('Recalculating nmode for selected frames range')
-            for e in recalc_nmode:
-                v += 1
-                self.systems[e]['api'].update_nmode(*curr_nmframes)
-                self.systems[e]['current_nmode_frames'] = curr_nmframes
-                qpd.setValue(v)
-        if recalc_ie:
-            qpd.setLabelText('Recalculating Interaction Entropy for selected frames range')
-            for e in recalc_ie:
-                v += 1
-                self.systems[e]['api'].update_ie(curr_iesegment)
-                self.systems[e]['current_ie_segment'] = curr_iesegment
-                qpd.setValue(v)
-        if recalc_energy or recalc_nmode or recalc_ie:
-            slist = recalc_energy or recalc_nmode or recalc_ie
-            for e in slist:
-                self.systems[e]['data'] = self.systems[e]['api'].get_energy()
-        if repaint:
-            qpd.setLabelText('Updating charts options')
-            for e in repaint:
-                v += 1
-                if repaint_arg:
-                    self.systems[e]['chart_options'].changes = dict(
-                        line_action=3,
-                        line_ie_action=3,
-                        bar_action=3,
-                        heatmap_action=3,
-                        visualization_action=3,
-                        figure=3
-                    )
-                else:
-                    self.systems[e]['chart_options'].get_changes(act_sett)
-                qpd.setValue(v)
-
-        comp = []
-        if recalc_energy and recalc_ie and recalc_nmode:
-            comp.append('all')
-        else:
-            if recalc_energy:
-                comp.append('energy')
-            if recalc_ie:
-                comp.append('ie')
-            if recalc_nmode:
-                comp.append('nmode')
-
-        qpd.setLabelText('Setting data...')
-        for s in processed_sys:
-            parts = list(self.systems[s]['data'].keys())
-            for p in parts:
-                self.setting_item_data(s, p, comp=tuple(comp))
-            self.systems[s]['items_summary'] = self.systems[s]['api'].get_summary()
-
-        qpd.setLabelText('Updating open charts')
-
+        qpd.setLabelText('Updating open charts...')
         subwindows = self.mdi.subWindowList()
-        for s in processed_sys:
+        for c, s in enumerate(sys_list):
+            qpd.setValue(c)
             changes = self.systems[s]['chart_options'].changes
             for sub in subwindows:
                 if not sub.item_parent or sub.item_parent.system_index != s:
                     continue
                 if not sub.isVisible():
                     continue
-                if (changes['bar_action'] or changes['line_ie_action'] or
-                        changes['line_action'] or changes['heatmap_action']):
-                    sub.button.setChecked(False)
-                    sub.button.setChecked(True)
-                elif changes['figure']:
+                if changes['figure']:
                     chart_sett = self.systems[s]['chart_options'].get_settings()
                     options = {'save-format': chart_sett[('General', 'figure-format', 'save-format')],
                                'dpi-save': chart_sett[('General', 'figure-format', 'dpi-save')]
                                }
                     sub.mpl_toolbar.update_options(options)
                     sub.fbtn.setChecked(chart_sett[('General', 'toolbar')])
+                elif any(changes.values()) or replot_energy:
+                    sub.button.setChecked(False)
+                    sub.button.setChecked(True)
             pymol_items = [[p, item] for p, item in self.pymol_p_list if p.state() == QProcess.ProcessState.Running]
             for p, item in pymol_items:
                 p.kill()
                 p.waitForFinished()
                 item.vis_action.setChecked(True)
-
-        # re-assign changes to native state after replot all open charts
-        for s in processed_sys:
+            # re-assign changes to native state after replot all open charts
             self.systems[s]['chart_options'].changes = dict(line_action=0,
                                                             line_ie_action=0,
                                                             bar_action=0,
@@ -752,6 +706,27 @@ class GMX_MMPBSA_ANA(QMainWindow):
         qpd.setValue(maximum)
         self.statusbar.showMessage('Updating... Done.')
 
+
+    def _update_itemdata_repaint(self, r):
+        maximum = r.qsize()
+        for i, c in enumerate(range(maximum), start=1):
+            sys_id, data, _ = r.get()
+            self.systems[sys_id]['items_data'] = {k:v1 for x, v in data.items() if v for k, v1 in v['keys'].items()}
+
+
+
+    # TODO Rename this here and in `update_fn`
+    def _extracted_from_update_fn_69(self, sys_index, curr_eframes, curr_nmframes, curr_iesegment, iq):
+        o = self.systems[sys_index]['anaoptions']
+        o['energy_options'].update(curr_eframes)
+        for d in [curr_eframes, curr_nmframes, dict(ie_segment=curr_iesegment)]:
+            o['entropy_options'].update(d)
+        o['decomp_options'].update(curr_eframes)
+        d = {self.systems[sys_index]['api'].get_ana_data: {
+            'object': 'function',
+            'args': o}
+        }
+        iq.put((sys_index, d))
 
     def reset_dc(self):
         sub = self.mdi.activeSubWindow()
@@ -767,7 +742,8 @@ class GMX_MMPBSA_ANA(QMainWindow):
             current_end = self.eframes_end_sb.value()
             self.numframes_le.setText(f"{int((current_end - value) // current_interval) + 1}")
 
-            curr_eframes = [value, self.eframes_end_sb.value(), self.eframes_inter_sb.value()]
+            curr_eframes = dict(startframe=value, endframe=self.eframes_end_sb.value(),
+                                interval=self.eframes_inter_sb.value())
             if curr_eframes != self.systems[self.current_system_index]['current_frames']:
                 self.e_changed.show()
             else:
@@ -782,7 +758,8 @@ class GMX_MMPBSA_ANA(QMainWindow):
             current_interval = self.eframes_inter_sb.value()
             self.numframes_le.setText(f"{int((value - current_start) // current_interval) + 1}")
 
-            curr_eframes = [self.eframes_start_sb.value(), value, self.eframes_inter_sb.value()]
+            curr_eframes = dict(startframe=self.eframes_start_sb.value(), endframe=value,
+                                interval=self.eframes_inter_sb.value())
             if curr_eframes != self.systems[self.current_system_index]['current_frames']:
                 self.e_changed.show()
             else:
@@ -795,7 +772,8 @@ class GMX_MMPBSA_ANA(QMainWindow):
             current_end = self.eframes_end_sb.value()
             self.numframes_le.setText(f"{int((current_end - current_start) // value) + 1}")
 
-            curr_eframes = [self.eframes_start_sb.value(), self.eframes_end_sb.value(), value]
+            curr_eframes = dict(startframe=self.eframes_start_sb.value(), endframe=self.eframes_end_sb.value(),
+                                interval=value)
             if curr_eframes != self.systems[self.current_system_index]['current_frames']:
                 self.e_changed.show()
             else:
