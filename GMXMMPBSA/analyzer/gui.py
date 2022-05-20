@@ -84,6 +84,8 @@ class GMX_MMPBSA_ANA(QMainWindow):
         self.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.optionDockWidget)
 
         self.treeWidget = QTreeWidget(self)
+        self.treeWidget.setIndentation(12)
+        self.treeWidget.setUniformRowHeights(True)
         self.treeWidget.setMinimumWidth(380)
         self.treeWidget.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         # self.treeWidget.customContextMenuRequested.connect(self.data_context_menu)
@@ -373,12 +375,8 @@ class GMX_MMPBSA_ANA(QMainWindow):
 
         optionWidget_l.addWidget(selection_group)
 
-        update_btn = QPushButton('Update')
-        update_btn.clicked.connect(self.update_fn)
-
-        optionWidget_c = QTabWidget(self)
-        optionWidget_l.addWidget(optionWidget_c)
-        optionWidget_c.setCornerWidget(update_btn)
+        self.optionWidget_c = QTabWidget(self)
+        optionWidget_l.addWidget(self.optionWidget_c)
 
         # Charts options
         self.chart_options_param = Parameter().create()
@@ -412,10 +410,10 @@ class GMX_MMPBSA_ANA(QMainWindow):
         self.use_user_config_action.setToolTip('Uses the specific settings for this system if it was saved.')
         charts_opt_tb.setMenu(charts_opt_menu)
 
-        optionWidget_c.addTab(self.chart_options_w, 'Charts Options')
+        self.optionWidget_c.addTab(self.chart_options_w, 'Charts')
 
-        frames_w = QWidget(optionWidget_c)
-        optionWidget_c.addTab(frames_w, 'Frames')
+        frames_w = QWidget(self.optionWidget_c)
+        self.optionWidget_c.addTab(frames_w, 'Frames')
         frames_l = QVBoxLayout(frames_w)
 
         self.eframes_group = QGroupBox('Energy')
@@ -533,6 +531,20 @@ class GMX_MMPBSA_ANA(QMainWindow):
         ieframes_group_l.setColumnStretch(2, 5)
         frames_l.addWidget(self.ieframes_group)
         frames_l.addStretch(1)
+
+        # correlation_w = QWidget(self.optionWidget_c)
+        # self.optionWidget_c.addTab(correlation_w, 'Correlation')
+        self.update_btn = QPushButton(f'Update {self.optionWidget_c.tabText(0)}')
+        self.update_btn.clicked.connect(self.update_fn)
+
+        self.optionWidget_c.setCornerWidget(self.update_btn)
+
+        #
+        self.optionWidget_c.currentChanged.connect(self._change_update_btn)
+
+    def _change_update_btn(self, i):
+        text = self.optionWidget_c.tabText(i)
+        self.update_btn.setText(f"Update {text}")
 
     def _reset_iesegment(self):
         self.iesegment_sb.setValue(self.systems[self.current_system_index]['namespace'].INPUT['ie_segment'])
