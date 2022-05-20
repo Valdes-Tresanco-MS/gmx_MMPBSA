@@ -1012,11 +1012,10 @@ class GMX_MMPBSA_ANA(QMainWindow):
         pbd.accepted.connect(lambda: self.process_data(self.rq, options))
         pbd.exec()
 
-        self.process_data(results, options)
-
-    def process_data(self, results: list, options):
+    def process_data(self, results: Queue, options):
         self.data_options = options
-        maximum = len(results) + 3
+        size = results.qsize()
+        maximum = size
         qpd = QProgressDialog('Creating systems tree', 'Abort', 0, maximum, self)
         qpd.setWindowModality(Qt.WindowModality.WindowModal)
         qpd.setMinimumDuration(0)
@@ -1024,37 +1023,30 @@ class GMX_MMPBSA_ANA(QMainWindow):
         # check if all systems have the same frames range
         frange_base = []
 
-        for i, c in enumerate(range(len(results)), start=1):
+        for i, c in enumerate(range(maximum), start=1):
             qpd.setValue(i)
             if qpd.wasCanceled():
                 break
-            system, api = results[c]
-            name, path, exp_ki, settings = system
-            energy = api.get_energy()
-            namespace = api.app_namespace
-            summary = api.get_summary()
+            sys_id, api, data = results.get()
+            namemap = {}
 
-            if settings == 'User-Default':
-                config = 'User-Default'
-            elif settings == 'Custom':
-                config = path.parent
-            else:
-                config = None
-
-            self.systems[i] = {'name': name, 'path': path.parent, 'api': api,
-                               'namespace': namespace, 'data': energy,
-                               'current_frames': [namespace.INPUT['startframe'],
-                                                  namespace.INPUT['endframe'],
-                                                  namespace.INPUT['interval']],
-                               'current_nmode_frames': [namespace.INPUT['nmstartframe'],
-                                                        namespace.INPUT['nmendframe'],
-                                                        namespace.INPUT['nminterval']],
-                               'current_ie_segment': namespace.INPUT['ie_segment'],
-                               'chart_options': ChartSettings(config),
-                               'options': options,
-                               'items_data': {}, 'items_summary': summary,
-                               'exp_ki': exp_ki
-                               }
+            self.systems[sys_id].update({
+                'api': api,
+                'namespace': api.app_namespace,
+                'map': {x:v['map'] for x, v in data.items() if v},
+                'current_frames': dict(startframe=api.app_namespace.INPUT['startframe'],
+                                       endframe=api.app_namespace.INPUT['endframe'],
+                                       interval=api.app_namespace.INPUT['interval']),
+                'current_nmode_frames': dict(nmstartframe=api.app_namespace.INPUT['nmstartframe'],
+                                             nmendframe=api.app_namespace.INPUT['nmendframe'],
+                                             nminterval=api.app_namespace.INPUT['nminterval']),
+                'current_ie_segment': api.app_namespace.INPUT['ie_segment'],
+                'chart_options': ChartSettings(config),
+                'options': options,
+                'items_data': {k:v1 for x, v in data.items() if v for k, v1 in v['keys'].items()},
+                # 'items_summary': summary,
+                # 'exp_ki': exp_ki
+            })
             self.makeTree(i)
             if not frange_base:
                 frange_base = [namespace.INPUT['startframe'], namespace.INPUT['endframe'],
