@@ -98,7 +98,7 @@ def _setup_data(data, level=0, iec2=False, name=None, index=None):
     # this variable show if the data changed or not. At first time, it is true, then when plotting become in false
     change = True
 
-    cont = {'ie_plot_data': None, 'line_plot_data': None, 'bar_plot_data': None, 'heatmap_plot_data': None}
+    cont = {'line_plot_data': None, 'bar_plot_data': None, 'heatmap_plot_data': None}
     if level == 0:
         options = {'iec2': iec2}
         # if isinstance(data, pd.Series):
@@ -358,8 +358,7 @@ class MMPBSA_API():
                             else:
                                 model_energy[m1][t] = self.data[et]['nmode'][m1][t][s:e:interval]
                                 valid_terms.append(t)
-                energy[et]['nmode'], summ_df[et]['nmode'] = self._model2df('entropy', startframe, endframe, interval,
-                                                                           model_energy)
+                energy[et]['nmode'], summ_df[et]['nmode'] = self._model2df(model_energy, index)
 
         return {'map': emapping(energy), 'data': energy, 'summary': summ_df}
 
@@ -400,17 +399,14 @@ class MMPBSA_API():
         for et in temp_print_keys:
             if et not in self.data:
                 print(f'Not c2type {et} in data')
-            elif recalc:
+            if recalc:
                 d = self._recalc_iec2('c2', et, startframe, endframe, interval)
-                entropy[et] = {'c2': {x: None for x in ['c2', 'sigma']}}
-                entropy_df[et] = {'c2': pd.DataFrame({'c2': [d['c2data'], d['c2_std']], 'sigma': [d['sigma'], 0]},
-                                                     index=['Average', 'SD'])}
             else:
-                entropy[et] = {'c2': {x: None for x in ['c2', 'sigma']}}
-                entropy_df[et] = {'c2': pd.DataFrame({'c2': [self.data[et]['c2']['c2data'],
-                                                                self.data[et]['c2']['c2_std']],
-                                                      'sigma': [self.data[et]['c2']['sigma'], 0]},
-                                                     index=['Average', 'SD'])}
+                d = self.data[et]['c2']
+            entropy[et] = {'c2': {x: None for x in ['c2', 'sigma']}}
+            entropy_df[et] = {'c2': pd.DataFrame({'c2': [d['c2data'], d['c2_std']], 'sigma': [d['sigma'], 0]},
+                                                 index=['Average', 'SD'])}
+
         return {'map': emapping(entropy), 'data': entropy_df, 'summary': entropy_df}
 
     def get_ie_entropy(self, ietype: tuple = None, startframe=None, endframe=None, interval=None,
@@ -438,9 +434,9 @@ class MMPBSA_API():
             df = pd.DataFrame({'AccIntEnergy': d['data']}, index=index)
             df1 = pd.DataFrame({'ie': d['data'][-ieframes:]}, index=index[-ieframes:])
             df2 = pd.concat([df, df1], axis=1)
-            df3 = pd.DataFrame({'ie': [float(self.data[et]['ie']['iedata'].mean()),
-                                       float(self.data[et]['ie']['iedata'].std())],
-                                'sigma': [self.data[et]['ie']['sigma'], 0]}, index=['Average', 'SD'])
+            df3 = pd.DataFrame({'ie': [float(d['iedata'].mean()),
+                                       float(d['iedata'].std())],
+                                'sigma': [d['sigma'], 0]}, index=['Average', 'SD'])
             summ_df[et] = {'ie': df3}
             df4 = pd.concat([df2, df3])
             df4.index.name = df.index.name
@@ -652,75 +648,78 @@ class MMPBSA_API():
                      performance_options=None):
         TASKs = []
         d = {}
-        if energy_options is None:
-            energy_options = {}
-        if entropy_options is None:
-            entropy_options = {}
-        if decomp_options is None:
-            decomp_options = {}
+        if energy_options:
 
-        energy_map, energy, energy_summary = self.get_energy(**energy_options).values()
-        if energy_map:
-            d['enthalpy'] = {'map': energy_map, 'keys': {}, 'summary': energy_summary}
-            for level, value in energy_map.items():
-                for level1, value1 in value.items():
-                    for level2, value2 in value1.items():
-                        TASKs.append([_setup_data, dict(data=energy[level][level1][level2][value2], level=1),
-                                      (level, level1, level2), 'enthalpy'])
-                        TASKs.extend([_setup_data, dict(data=energy[level][level1][(level2, level3)], level=0),
-                                      (level, level1, level2,level3), 'enthalpy'] for level3 in value2)
-        entropy_map, entropy, entropy_summary = self.get_entropy(**entropy_options).values()
-        if entropy_map:
-            d['entropy'] = {'map': entropy_map, 'keys': {}, 'summary': entropy_summary}
-            for level, value in entropy_map.items():
-                for level1, value1 in value.items():
-                    if level1 in ['nmode', 'qh']:
+            energy_map, energy, energy_summary = self.get_energy(**energy_options).values()
+            if energy_map:
+                d['enthalpy'] = {'map': energy_map, 'keys': {}, 'summary': energy_summary}
+                for level, value in energy_map.items():
+                    for level1, value1 in value.items():
                         for level2, value2 in value1.items():
-                            TASKs.append([_setup_data, dict(data=entropy[level][level1][level2], level=1),
-                                          (level, level1, level2), 'entropy'])
-                            TASKs.extend([_setup_data, dict(data=entropy[level][level1][(level2, level3)], level=0),
-                                          (level, level1, level2, level3), 'entropy'] for level3 in value2)
-                    elif level1 == 'c2':
-                        TASKs.append([_setup_data, dict(data=entropy[level][level1], level=1, iec2=True),
-                                      (level, level1), 'entropy'])
-                    elif level1 == 'ie':
-                        TASKs.append([_setup_data, dict(data=entropy[level][level1], level=1.5),
-                                      (level, level1), 'entropy'])
+                            TASKs.append([_setup_data, dict(data=energy[level][level1][level2][value2], level=1),
+                                          (level, level1, level2), 'enthalpy'])
+                            TASKs.extend([_setup_data, dict(data=energy[level][level1][(level2, level3)], level=0),
+                                          (level, level1, level2,level3), 'enthalpy'] for level3 in value2)
 
-        bind_map, binding = self.get_binding(energy_summary, entropy_summary).values()
-        if bind_map:
-            d['binding'] = {'map': bind_map, 'keys': {}, 'summary': binding}
-            for level, value in bind_map.items():
-                for level1, value1 in value.items():
-                    TASKs.extend([_setup_data, dict(data=binding[level][level1][level2], level=1), (level, level1, level2), 'binding'] for level2 in value1)
-
-        decomp_map, decomp = self.get_decomp_energy(**decomp_options).values()
-        if decomp_map:
-            d['decomposition'] = {'map': decomp_map, 'keys': {}}
-            for level, value in decomp_map.items():
-                for level1, value1 in value.items():
-                    for level2, value2 in value1.items():
-                        for level3, value3 in value2.items():
-                            item_lvl = 2 if self.app_namespace.INPUT['idecomp'] in [1, 2] else 3
-                            index = [list(value3.keys())]
-                            for level4, value4 in value3.items():
-                                if item_lvl == 3 and len(index) == 1:
-                                    index.append(list(value4.keys()))
-                                item_lvl2 = 1 if self.app_namespace.INPUT['idecomp'] in [1, 2] else 2
-                                TASKs.append(
-                                    [_setup_data, dict(data=decomp[level][level1][level2][level3][level4],
-                                                       level=item_lvl2, name=level4, index=list(value4.keys())),
-                                     (level, level1, level2, level3, level4), 'decomposition'])
-                                if self.app_namespace.INPUT['idecomp'] in [1, 2]:
-                                    TASKs.extend([_setup_data,
-                                                  dict(data=decomp[level][level1][level2][level3][level4][level5]),
-                                          (level, level1, level2, level3, level4, level5), 'decomposition'] for level5 in
-                                                 value4)
-                                else:
-                                    TASKs.extend([_setup_data, dict(data=decomp[level][level1][level2][level3][level4][level5], level=1, index=value5), (level, level1, level2, level3, level4, level5), 'decomposition'] for level5, value5 in value4.items())
-                            TASKs.append([_setup_data, dict(data=decomp[level][level1][(level2, level3)], level=item_lvl,
-                                                            name=level3, index=index),
-                                      (level, level1, level2, level3), 'decomposition'])
+        if entropy_options:
+            entropy_map, entropy, entropy_summary = self.get_entropy(**entropy_options).values()
+            if entropy_map:
+                d['entropy'] = {'map': entropy_map, 'keys': {}, 'summary': entropy_summary}
+                for level, value in entropy_map.items():
+                    for level1, value1 in value.items():
+                        if level1 in ['nmode', 'qh']:
+                            for level2, value2 in value1.items():
+                                TASKs.append([_setup_data, dict(data=entropy[level][level1][level2], level=1),
+                                              (level, level1, level2), 'entropy'])
+                                TASKs.extend([_setup_data, dict(data=entropy[level][level1][(level2, level3)], level=0),
+                                              (level, level1, level2, level3), 'entropy'] for level3 in value2)
+                        elif level1 == 'c2':
+                            TASKs.append([_setup_data, dict(data=entropy[level][level1], level=1, iec2=True),
+                                          (level, level1), 'entropy'])
+                        elif level1 == 'ie':
+                            TASKs.append([_setup_data, dict(data=entropy[level][level1], level=1.5),
+                                          (level, level1), 'entropy'])
+        if energy_options and entropy_options:
+            bind_map, binding = self.get_binding(energy_summary, entropy_summary).values()
+            if bind_map:
+                d['binding'] = {'map': bind_map, 'keys': {}, 'summary': binding}
+                for level, value in bind_map.items():
+                    for level1, value1 in value.items():
+                        TASKs.extend([_setup_data, dict(data=binding[level][level1][level2], level=1),
+                                      (level, level1, level2), 'binding'] for level2 in value1)
+        if decomp_options:
+            decomp_map, decomp = self.get_decomp_energy(**decomp_options).values()
+            if decomp_map:
+                d['decomposition'] = {'map': decomp_map, 'keys': {}}
+                for level, value in decomp_map.items():
+                    for level1, value1 in value.items():
+                        for level2, value2 in value1.items():
+                            for level3, value3 in value2.items():
+                                item_lvl = 2 if self.app_namespace.INPUT['idecomp'] in [1, 2] else 3
+                                index = [list(value3.keys())]
+                                for level4, value4 in value3.items():
+                                    if item_lvl == 3 and len(index) == 1:
+                                        index.append(list(value4.keys()))
+                                    item_lvl2 = 1 if self.app_namespace.INPUT['idecomp'] in [1, 2] else 2
+                                    TASKs.append(
+                                        [_setup_data, dict(data=decomp[level][level1][level2][level3][level4],
+                                                           level=item_lvl2, name=level4, index=list(value4.keys())),
+                                         (level, level1, level2, level3, level4), 'decomposition'])
+                                    if self.app_namespace.INPUT['idecomp'] in [1, 2]:
+                                        TASKs.extend([_setup_data,
+                                                      dict(data=decomp[level][level1][level2][level3][level4][level5]),
+                                                    (level, level1, level2, level3, level4, level5), 'decomposition']
+                                                     for level5 in value4)
+                                    else:
+                                        TASKs.extend([_setup_data,
+                                                      dict(data=decomp[level][level1][level2][level3][level4][level5],
+                                                           level=1, index=value5),
+                                                      (level, level1, level2, level3, level4, level5), 'decomposition']
+                                                     for level5, value5 in value4.items())
+                                TASKs.append([_setup_data,
+                                              dict(data=decomp[level][level1][(level2, level3)], level=item_lvl,
+                                                   name=level3, index=index),
+                                          (level, level1, level2, level3), 'decomposition'])
 
         with ThreadPool() as pool:
             imap_unordered_it = pool.imap_unordered(calculatestar, TASKs)
