@@ -960,23 +960,57 @@ class GMX_MMPBSA_ANA(QMainWindow):
     def read_data(self, queue: Queue, options):
         self.init_dialog.accept()
         max_sixe = queue.qsize()
-        qpd = QProgressDialog('Reading output files', 'Abort', 0, max_sixe, self)
-        qpd.setWindowModality(Qt.WindowModality.WindowModal)
-        qpd.setMinimumDuration(0)
-        # qpd.setRange(0, queue.qsize())
-        results = []
+        from GMXMMPBSA.analyzer.dialogs import ProcessingProgressBar
 
-        for x in range(max_sixe):
-            sys_name, path, exp_ki, options_file = queue.get()
-            gmx_mmpbsa_api = MMPBSA_API()
-            gmx_mmpbsa_api.set_config(options['timestart'], options['timestep'], options['timeunit'])
-            gmx_mmpbsa_api.load_file(path)
-            results.append([(sys_name, path, exp_ki, options_file), gmx_mmpbsa_api])
-            qpd.setValue(x)
+        iq = Queue()
+        self.rq = Queue()
+
+        opts4ana = {'energy_options': {}, 'entropy_options': {}, 'decomp_options': {}}
+
+        for i, _ in enumerate(range(max_sixe), start=1):
+            sys_name, path, stability, exp_ki, options_file = queue.get()
+            ic(sys_name, path, stability, exp_ki, options_file)
+            opts4ana['energy_options']['etype'] = opts4ana['entropy_options']['etype'] = (None if len(exp_ki) == 2 else
+                                                                                          tuple(exp_ki.keys()))
+            opts4ana['decomp_options']['etype'] = None if len(exp_ki) == 2 else tuple(f"decomp_{x}" for x in exp_ki)
+            opts4ana['energy_options']['mol'] = opts4ana['entropy_options']['mol'] = (['complex'] if stability else
+                tuple(options.get('energy').get('mols')))
+            opts4ana['decomp_options']['mol'] = (['complex'] if stability else
+                                                        tuple(options.get('decomposition').get('mols')))
+
+            ic(opts4ana)
+
+            d = {MMPBSA_API: {'object': 'class',
+                              'args': None},
+                 'setting_time': {'object': 'method',
+                                  'args': options.get('frames2time', {})},
+                 'load_file': {'object': 'method',
+                               'args': dict(fname=path)},
+                 'get_ana_data': {'object': 'method',
+                                  'args': opts4ana}
+                 }
+            iq.put((i, d))
+
+            if options_file == 'User-Default':
+                config = 'User-Default'
+            elif options_file == 'Custom':
+                config = path.parent
+            else:
+                config = None
+
+            self.systems[i] = {'name': sys_name, 'path': path.parent,
+                               'chart_options': ChartSettings(config),
+                               'options': options,
+                               'anaoptions': opts4ana,
+                               'items_data': {},
+                               'exp_ki': exp_ki
+                               }
+
             queue.task_done()
-            if qpd.wasCanceled():
-                break
-        qpd.setValue(max_sixe)
+        pbd = ProcessingProgressBar(self, iq, self.rq, 5, 'Reading files...')
+        pbd.rejected.connect(lambda x: print(f'rejected> exit code: {x}'))
+        pbd.accepted.connect(lambda: self.process_data(self.rq, options))
+        pbd.exec()
 
         self.process_data(results, options)
 
