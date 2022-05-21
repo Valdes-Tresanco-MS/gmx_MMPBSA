@@ -17,9 +17,11 @@
 try:
     from PyQt6.QtWidgets import *
     from PyQt6.QtCore import *
+    from PyQt6.QtGui import *
 except:
     from PyQt5.QtWidgets import *
     from PyQt5.QtCore import *
+    from PyQt6.QtGui import *
 
 
 import h5py
@@ -47,15 +49,19 @@ class InitDialog(QDialog):
         self.energy_group_layout = QGridLayout(self.energy_group)
 
         self.energy_load_com = QCheckBox('Load COM data')
+        self.energy_load_com.toggled.connect(lambda x: self._update_ram_indicator(x, 'Load COM data'))
         self.energy_group_layout.addWidget(self.energy_load_com, 0, 0)
         self.energy_load_rec = QCheckBox('Load REC data')
+        self.energy_load_rec.toggled.connect(lambda x: self._update_ram_indicator(x, 'Load REC data'))
         self.energy_group_layout.addWidget(self.energy_load_rec, 0, 1)
         self.energy_load_lig = QCheckBox('Load LIG data')
+        self.energy_load_lig.toggled.connect(lambda x: self._update_ram_indicator(x, 'Load LIG data'))
         self.energy_group_layout.addWidget(self.energy_load_lig, 0, 2)
 
         self.remove_empty_terms_btn = QCheckBox('Remove empty terms')
         self.remove_empty_terms_btn.setToolTip('Does not show null terms in graphics')
         self.remove_empty_terms_btn.setChecked(True)
+        self.remove_empty_terms_btn.toggled.connect(lambda x: self._update_ram_indicator(x, 'Remove empty terms'))
         self.energy_group_layout.addWidget(self.remove_empty_terms_btn, 1, 0)
 
         self.empty_threshold = QDoubleSpinBox()
@@ -72,23 +78,25 @@ class InitDialog(QDialog):
 
         self.decomp_group = QGroupBox('Decomposition Options')
         self.decomp_group.setCheckable(True)
-        self.decomp_group.setChecked(False)
-        self.decomp_group.setStyleSheet(
-            '''QGroupBox:checked {
-            border:3px solid orange;
-            }
-            '''
-        )
+        self.decomp_group.setChecked(True)
+        self.decomp_group.toggled.connect(lambda x: self._update_ram_indicator(x, 'Decomposition Options'))
+
         self.decomp_group_layout = QGridLayout(self.decomp_group)
 
         self.decomp_load_com = QCheckBox('Load COM data')
+        self.decomp_load_com.toggled.connect(lambda x: self._update_ram_indicator(x, 'Load decomp COM data'))
         self.decomp_group_layout.addWidget(self.decomp_load_com, 0, 0)
         self.decomp_load_rec = QCheckBox('Load REC data')
+        self.decomp_load_rec.toggled.connect(lambda x: self._update_ram_indicator(x, 'Load decomp REC data'))
         self.decomp_group_layout.addWidget(self.decomp_load_rec, 0, 1)
         self.decomp_load_lig = QCheckBox('Load LIG data')
+        self.decomp_load_lig.toggled.connect(lambda x: self._update_ram_indicator(x, 'Load decomp LIG data'))
         self.decomp_group_layout.addWidget(self.decomp_load_lig, 0, 2)
 
         self.decomp_non_contrib_res = QCheckBox('Remove non-contributing residues')
+        self.decomp_non_contrib_res.setChecked(True)
+        self.decomp_non_contrib_res.toggled.connect(lambda x:
+                                                    self._update_ram_indicator(x, 'Remove non-contributing residues'))
         self.decomp_group_layout.addWidget(self.decomp_non_contrib_res, 1, 0)
         self.decomp_res_threshold = QDoubleSpinBox()
         self.decomp_res_threshold.setRange(0.01, 2.0)
@@ -103,14 +111,13 @@ class InitDialog(QDialog):
         self.corr_group = QGroupBox('Correlation')
         self.corr_group_layout = QGridLayout(self.corr_group)
         self.corr_sys_btn = QCheckBox('Calculate correlation between systems')
+        self.corr_sys_btn.toggled.connect(lambda x: self._update_ram_indicator(x, 'correlation'))
         self.corr_sys_btn.setToolTip('Make correlation between systems. Only works when defining more than 3 systems')
-        self.corr_sys_btn.setChecked(False)
         self.corr_group_layout.addWidget(self.corr_sys_btn, 0, 0)
 
         self.corr_mut_btn = QCheckBox('Calculate correlation between mutants')
         self.corr_mut_btn.setToolTip('Make correlation between mutants systems. Only works when defining more than 3 '
                                      'mutants')
-        self.corr_mut_btn.setChecked(False)
         self.corr_group_layout.addWidget(self.corr_mut_btn, 0, 1)
 
         self.chart_group = QGroupBox('Charts options')
@@ -146,7 +153,6 @@ class InitDialog(QDialog):
         self.performance_slider.setTickPosition(QSlider.TickPosition.TicksBelow)
         self.performance_slider.setTickInterval(1)
         self.performance_slider.setRange(1, 4)
-        self.performance_slider.setValue(2)
 
         self.basic_sett_group = QGroupBox('Basic settings')
         self.basic_sett_group.toggled.connect(self.configure_basic_settings)
@@ -166,19 +172,13 @@ class InitDialog(QDialog):
         self.advanced_group_layout = QGridLayout(self.advanced_group)
 
         self.energy_memory = QCheckBox('Load energy in memory')
-        self.energy_memory.setChecked(True)
+        self.energy_memory.toggled.connect(lambda x: self._update_ram_indicator(x, 'Load energy in memory'))
         self.advanced_group_layout.addWidget(self.energy_memory, 0, 0)
-        self.energy_memory.setStyleSheet('''
-                                QCheckBox:checked {
-                                   background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 #ffa200, stop:1 #fedb6f);
-                        }''')
 
         self.decomp_memory = QCheckBox('Load decomp in memory')
+        self.decomp_memory.toggled.connect(lambda x: self._update_ram_indicator(x, 'Load decomp in memory'))
         self.advanced_group_layout.addWidget(self.decomp_memory, 0, 1)
-        self.decomp_memory.setStyleSheet('''
-                        QCheckBox:checked {
-                           background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 #ffa200, stop:0.5 #fff, stop:1 #fedb6f);
-                }''')
+
         self.multiprocessing = QCheckBox('Multiprocessing')
         self.advanced_group_layout.addWidget(self.multiprocessing, 1, 1)
         self.precomp_charts = QCheckBox('Pre-compute charts')
@@ -193,7 +193,10 @@ class InitDialog(QDialog):
         self.njobs_layout.addRow('Jobs:', self.njobs)
         self.advanced_group_layout.addLayout(self.njobs_layout, 1, 2)
 
+        self.ram_pb = CustomPB(self)
+
         self.performance_slider.valueChanged.connect(self.slider_changed)
+        self.performance_slider.setValue(2)
 
         self.header_item = QTreeWidgetItem(['Folder name', 'Select', 'Name', 'Exp.Ki (nM)', 'Chart Settings', 'Path'])
         self.header_item.setToolTip(0, 'Container')
@@ -231,10 +234,55 @@ class InitDialog(QDialog):
         self.content_layout.addWidget(self.chart_group, 3, 0, 1, 2)
         self.content_layout.addWidget(self.frame2time, 2, 2, 2, 1)
         self.content_layout.addWidget(self.performance_group, 4, 0, 1, 3)
+        self.content_layout.addWidget(self.ram_pb, 5, 0, 1, 3)
 
-        self.content_layout.addWidget(self.result_tree, 5, 0, 1, 3)
-        self.content_layout.addWidget(btnbox, 6, 2, 1, 1, Qt.AlignmentFlag.AlignRight)
-        self.content_layout.addWidget(self.statusbar, 6, 0, 1, 2)
+        self.content_layout.addWidget(self.result_tree, 6, 0, 1, 3)
+        self.content_layout.addWidget(self.statusbar, 7, 0, 1, 2)
+        self.content_layout.addWidget(btnbox, 7, 2, 1, 1, Qt.AlignmentFlag.AlignRight)
+
+    def _update_ram_indicator(self, check, obj_name):
+
+        ram_vaues = {'Remove empty terms': [False, 1], 'Load COM data': [True, 3], 'Load REC data': [True, 3],
+                     'Load LIG data': [True, 3], 'Load energy in memory': [True, 3], 'Decomposition Options': [True, 5],
+                     'Load decomp COM data': [True, 5], 'Load decomp REC data': [True, 5],
+                     'Load decomp LIG data': [True, 5], 'Remove non-contributing residues': [False, 2],
+                     'correlation': [True, 1], 'Load decomp in memory': [True, 5]}
+
+        dgroup = ['Decomposition Options', 'Load decomp COM data', 'Load decomp REC data', 'Load decomp LIG data',
+                  'Remove non-contributing residues']
+        egroup = ['Load COM data', 'Load REC data', 'Load LIG data', 'Remove empty terms']
+        load_emem = 3 + sum(
+            3 for x in [self.energy_load_com, self.energy_load_rec, self.energy_load_lig] if x.isChecked())
+        if not self.remove_empty_terms_btn.isChecked():
+            load_emem += 1
+
+        load_dmem = 5 + sum(5 for x in [self.decomp_load_com, self.decomp_load_rec, self.decomp_load_lig]
+                            if x.isChecked())
+        if load_dmem and not self.decomp_non_contrib_res.isChecked():
+            load_dmem += 2
+
+        mult = int(ram_vaues[obj_name][0] == check) or -1
+        if obj_name == 'Load energy in memory':
+            self.ram_pb.setValue(self.ram_pb.value() + load_emem * mult)
+        elif obj_name == 'Load decomp in memory' and self.decomp_group.isChecked():
+            self.ram_pb.setValue(self.ram_pb.value() + load_dmem * mult)
+        elif obj_name in egroup and self.energy_memory.isChecked():
+            self.ram_pb.setValue(self.ram_pb.value() + ram_vaues[obj_name][1] * mult)
+        elif obj_name == 'Decomposition Options' and self.decomp_memory.isChecked():
+            self.ram_pb.setValue(self.ram_pb.value() + load_dmem * mult)
+        elif obj_name in dgroup and self.decomp_memory.isChecked():
+            self.ram_pb.setValue(self.ram_pb.value() + ram_vaues[obj_name][1] * mult)
+        elif obj_name == 'correlation':
+            self.ram_pb.setValue(self.ram_pb.value() + ram_vaues[obj_name][1] * mult)
+
+    def _change_decomp_opts_color(self, check):
+        if check:
+            self.decomp_group.setStyleSheet('''
+                                                    QGroupBox::title {
+                                                       background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 #ffa200, stop:1 #fedb6f);
+                                            }''')
+        else:
+            self.decomp_group.setStyleSheet('')
 
     def configure_basic_settings(self, checked):
         self.advanced_group.setChecked(not checked)
@@ -524,3 +572,40 @@ class ProcessingProgressBar(QDialog):
     def all_finished(self):
         self.accept()
         self.close()
+
+
+class CustomPB(QProgressBar):
+    def __init__(self, parent=None):
+        super(CustomPB, self).__init__(parent)
+        self.setRange(0, 37)
+        self.setValue(1)
+        self.setFormat("Maximum RAM -- %p%")
+
+    def paintEvent(self, event:QPaintEvent):
+
+        painter = QStylePainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
+
+        option = QStyleOptionProgressBar()
+        self.initStyleOption(option)
+
+        opt1 = option
+        opt1.rect = self.style().subElementRect(QStyle.SubElement.SE_ProgressBarContents, opt1, self)
+
+        opt2 = option
+        rect = QRect(opt1.rect.topLeft().x(),
+                     opt1.rect.topLeft().y(),
+                     int(opt1.rect.width() * opt1.progress / opt1.maximum),
+                     int(opt1.rect.height()))
+
+        eventRect = event.rect()
+        linearGradient = QLinearGradient(eventRect.topLeft().x(), eventRect.topLeft().y(),
+                                         eventRect.topRight().x(), eventRect.topRight().y())
+        linearGradient.setColorAt(0.0, QColor('#ffdde1'))
+        linearGradient.setColorAt(1.0, QColor('#6f0000'))
+
+        painter.fillRect(rect, linearGradient)
+
+        if option.textVisible:
+            opt2.rect = self.style().subElementRect(QStyle.SubElement.SE_ProgressBarLabel, opt2, self)
+            painter.drawControl(QStyle.ControlElement.CE_ProgressBarLabel, opt2)
