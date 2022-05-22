@@ -270,8 +270,8 @@ class BarChart(ChartsBase):
                                           palette=palette[s: s + len(options['groups'][g])] if palette else palette,
                                           color=rgb2rgbf(options[('Bar Plot', 'color')]),
                                           error_kw=dict(
-                                              ecolor='black',
-                                              capsize=0,
+                                              ecolor=rgb2rgbf(options[('Bar Plot', 'error-line', 'color')]),
+                                              capsize=options[('Bar Plot', 'error-line', 'cap-size')],
                                               elinewidth=options[('Bar Plot', 'error-line', 'width')]
                                           ),
                                           ax=self.axes[c]
@@ -280,7 +280,7 @@ class BarChart(ChartsBase):
                 if options[('Bar Plot', 'scale-yaxis')]: # and options['scalable']:
                     bar_plot_ax.set_yscale('symlog')
                 if options[('Bar Plot', 'bar-label', 'show')]:
-                    bl = bar_label(bar_plot_ax, bar_plot_ax.containers[0],
+                    bl = bar_label(bar_plot_ax, bar_plot_ax.containers[1],
                                    size=options[('Bar Plot', 'bar-label', 'fontsize')],
                                    fmt='%.2f',
                                    padding=options[('Bar Plot', 'bar-label', 'padding')],
@@ -302,8 +302,8 @@ class BarChart(ChartsBase):
                                       y=data.loc['Average'],
                                       yerr=data.loc['SD'],
                                       error_kw=dict(
-                                          ecolor='black',
-                                          capsize=0,
+                                          ecolor=rgb2rgbf(options[('Bar Plot', 'error-line', 'color')]),
+                                          capsize=options[('Bar Plot', 'error-line', 'cap-size')],
                                           elinewidth=options[('Bar Plot', 'error-line', 'width')]
                                       ),
                                       ax=self.axes,
@@ -313,7 +313,7 @@ class BarChart(ChartsBase):
             if options[('Bar Plot', 'axes', 'y-inverted')] and not options.get('iec2'):
                 bar_plot_ax.invert_yaxis()
             if options[('Bar Plot', 'bar-label', 'show')]:
-                bl = bar_label(bar_plot_ax, bar_plot_ax.containers[0],
+                bl = bar_label(bar_plot_ax, bar_plot_ax.containers[1],
                                size=options[('Bar Plot', 'bar-label', 'fontsize')],
                                fmt='%.2f',
                                padding=options[('Bar Plot', 'bar-label', 'padding')],
