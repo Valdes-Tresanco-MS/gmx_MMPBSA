@@ -87,7 +87,6 @@ class CustomItem(QTreeWidgetItem):
         self.line_table_subw = None
         self.bar_table_subw = None
         self.heatmap_table_subw = None
-        self.ie_plot_data = None
 
         # changes
         self.frange = []
@@ -142,7 +141,7 @@ class CustomItem(QTreeWidgetItem):
         self.line_chart_action.setMenu(line_menu)
         self.btn_group.addButton(self.line_chart_action, 1)
 
-        self.tb.addWidget(self.line_chart_action)
+        return self.line_chart_action
 
     def _show_line_table(self, state):
         from GMXMMPBSA.analyzer.plots import Tables
@@ -174,7 +173,7 @@ class CustomItem(QTreeWidgetItem):
         self.bar_chart_action.setMenu(bar_menu)
         self.btn_group.addButton(self.bar_chart_action, 2)
 
-        self.tb.addWidget(self.bar_chart_action)
+        return self.bar_chart_action
 
     def _show_bar_table(self, state):
         from GMXMMPBSA.analyzer.plots import Tables
@@ -207,7 +206,7 @@ class CustomItem(QTreeWidgetItem):
         self.heatmap_chart_action.setMenu(heatmap_menu)
         self.btn_group.addButton(self.heatmap_chart_action, 3)
 
-        self.tb.addWidget(self.heatmap_chart_action)
+        return self.heatmap_chart_action
 
     def _show_heatmap_table(self, state):
         from GMXMMPBSA.analyzer.plots import Tables
@@ -238,7 +237,7 @@ class CustomItem(QTreeWidgetItem):
         # self.vis_action.setMenu(heatmap_menu)
         self.btn_group.addButton(self.vis_action, 4)
 
-        self.tb.addWidget(self.vis_action)
+        return self.vis_action
 
     def _define_option_button(self):
         options_menu = QMenu()
@@ -259,7 +258,7 @@ class CustomItem(QTreeWidgetItem):
         self.options_button.setContentsMargins(0, 0, 0, 0)
         self.options_button.setMenu(options_menu)
 
-        self.tb.addWidget(self.options_button)
+        return self.options_button
 
     def _show_output_file(self, state):
         from GMXMMPBSA.analyzer.plots import OutputFiles
@@ -300,7 +299,7 @@ class CustomItem(QTreeWidgetItem):
         self.result_table_action.setContentsMargins(0, 0, 0, 0)
         self.btn_group.addButton(self.result_table_action, 5)
 
-        self.tb.addWidget(self.result_table_action)
+        return self.result_table_action
 
     def fn_mark_all(self, state):
         if state == Qt.CheckState.PartiallyChecked:
@@ -522,7 +521,7 @@ class CustomItem(QTreeWidgetItem):
             if b not in self.buttons:
                 self.tb.addWidget(SpacerItem())
             else:
-                self.charts_action[b]()
+                self.tb.addWidget(self.charts_action[b]())
 
         if -1 in self.buttons:
             self._define_option_button()
