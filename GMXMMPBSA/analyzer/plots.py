@@ -158,6 +158,7 @@ class ChartsBase(QMdiSubWindow):
     def draw(self):
         self.fig.tight_layout()
         self.figure_canvas.draw()
+        QGuiApplication.restoreOverrideCursor()
 
     def setup_text(self, ax, options, key='', title='', xlabel='', ylabel='Energy (kcal/mol)'):
         key_list = [key] if isinstance(key, str) else key

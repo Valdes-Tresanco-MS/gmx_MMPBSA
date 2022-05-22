@@ -343,8 +343,6 @@ class CustomItem(QTreeWidgetItem):
         changes = self.app.systems[self.system_index]['chart_options'].changes
         line_plot_data = self.app.systems[self.system_index]['items_data'][self.keys_path]['line_plot_data'][0]
         datachange = self.app.systems[self.system_index]['items_data'][self.keys_path]['line_plot_data'][2]
-        # temp_ie = self.app.systems[self.system_index]['items_data'][self.keys_path]['ie_plot_data']
-        # ie_plot_data =  temp_ie[0] if temp_ie else temp_ie
         options.update(self.app.systems[self.system_index]['items_data'][self.keys_path]['line_plot_data'][1])
         if state:
             self.setSelected(True)
@@ -352,6 +350,7 @@ class CustomItem(QTreeWidgetItem):
             line_change1 = (changes['line_action'] == 1 or changes['line_ie_action'] == 1)
 
             if not self.lp_subw or datachange or line_change3:
+                QGuiApplication.setOverrideCursor(QCursor(Qt.CursorShape.WaitCursor))
                 self.lp_subw = LineChart(line_plot_data, self.line_chart_action, options=options, item_parent=self)
                 self.app.systems[self.system_index]['items_data'][self.keys_path]['line_plot_data'][2] = False
                 self.app.mdi.addSubWindow(self.lp_subw)
@@ -376,6 +375,7 @@ class CustomItem(QTreeWidgetItem):
         if state:
             self.setSelected(True)
             if not self.bp_subw or datachange or changes['bar_action'] == 3:
+                QGuiApplication.setOverrideCursor(QCursor(Qt.CursorShape.WaitCursor))
                 self.bp_subw = BarChart(bar_plot_data, self.bar_chart_action, options=options, item_parent=self)
                 self.app.systems[self.system_index]['items_data'][self.keys_path]['bar_plot_data'][2] = False
                 self.app.mdi.addSubWindow(self.bp_subw)
@@ -397,6 +397,7 @@ class CustomItem(QTreeWidgetItem):
         if state:
             self.setSelected(True)
             if not self.hmp_subw or datachange or changes['heatmap_action'] == 3:
+                QGuiApplication.setOverrideCursor(QCursor(Qt.CursorShape.WaitCursor))
                 self.hmp_subw = HeatmapChart(heatmap_plot_data, self.heatmap_chart_action, options=options,
                                              item_parent=self)
                 self.app.systems[self.system_index]['items_data'][self.keys_path]['heatmap_plot_data'][2] = False
@@ -411,6 +412,7 @@ class CustomItem(QTreeWidgetItem):
     def visualizing(self, checked):
         from GMXMMPBSA.analyzer.chartsettings import Palettes
         self.app.treeWidget.clearSelection()
+        QGuiApplication.setOverrideCursor(QCursor(Qt.CursorShape.WaitCursor))
         import os
         changes = self.app.systems[self.system_index]['chart_options'].changes
         options = self.app.systems[self.system_index]['chart_options'].get_settings()
@@ -460,6 +462,7 @@ class CustomItem(QTreeWidgetItem):
 
             self.pymol_process.start(pymol, [self.bfactor_pml.as_posix()])
             self.pymol_process.finished.connect(self.pymol_finished)
+            self.pymol_process.started.connect(QGuiApplication.restoreOverrideCursor)
             self.pymol_data_change = False
         elif self.pymol_process.state() == QProcess.ProcessState.Running:
             self.pymol_process.terminate()
