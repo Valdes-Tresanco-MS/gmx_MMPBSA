@@ -169,10 +169,8 @@ class MMPBSA_API():
             if not_keys:
                 logging.warning(f'Not keys {not_keys}. Will be ignored')
 
-        self.setting_time()
-
-    def setting_time(self, starttime=0, timestep=0, timeunit='ps'):
-        self.starttime = starttime
+    def setting_time(self, timestart=0, timestep=0, timeunit='ps'):
+        self.starttime = timestart
         self.timestep = timestep
         self.timeunit = timeunit
 
@@ -325,6 +323,7 @@ class MMPBSA_API():
         s.columns = ['Average', 'SD']
         summary_df = s.T
         df = pd.concat([energy_df, summary_df])
+        df.index.name = index.name
         return df, summary_df
 
     def get_nmode_entropy(self, nmtype: tuple = None, mol: tuple = None, term: tuple = None,
