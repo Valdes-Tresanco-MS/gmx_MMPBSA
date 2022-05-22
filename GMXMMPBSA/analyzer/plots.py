@@ -191,21 +191,12 @@ class LineChart(ChartsBase):
     def __init__(self, data: pandas.DataFrame, button: QToolButton, options: dict = None, item_parent=None):
         super(LineChart, self).__init__(button, options, item_parent)
 
-        self.ie_bar = None
-        self.ie_barlabel = None
-        self.axins4 = None
-
         self.data = data
 
         # figure canvas definition
         self.set_cw()
         self.fig.set_size_inches(options[('Line Plot', 'figure', 'width')],
                                  options[('Line Plot', 'figure', 'height')])
-
-        width1 = 100 - options[('Bar Plot', 'IE/C2 Entropy', 'bar-plot', 'width')]
-        width2 = options[('Bar Plot', 'IE/C2 Entropy', 'bar-plot', 'width')]
-        height1 = 100 - options[('Bar Plot', 'IE/C2 Entropy', 'bar-plot', 'height')]
-        height2 = options[('Bar Plot', 'IE/C2 Entropy', 'bar-plot', 'height')]
 
         self.axes = self.fig.subplots(1, 1)
         if options.get('iec2'):
@@ -250,11 +241,6 @@ class LineChart(ChartsBase):
 
         self.setup_text(self.line_plot_ax, options, key='Line Plot', xlabel=self.data.index.name)
 
-        if self.ie_bar:
-            for label in self.ie_barlabel:
-                label.set_fontsize(options[('Bar Plot', 'IE/C2 Entropy', 'bar-plot', 'bar-label-fontsize')])
-            self.ie_bar.tick_params(labelsize=options[('Bar Plot', 'IE/C2 Entropy', 'bar-plot',
-                                                       'axes-fontsize')])
         self.draw()
 
 
