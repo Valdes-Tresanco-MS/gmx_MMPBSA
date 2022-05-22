@@ -127,6 +127,8 @@ class InitDialog(QDialog):
         self.chart_group_layout.addWidget(self.hide_tb_btn, 0, 0)
 
         self.reset_default_config = QCheckBox('Reset Configuration')
+        self.reset_default_config.setToolTip('Reset the current configuration')
+        self.reset_default_config.clicked.connect(self._reset_config)
         self.chart_group_layout.addWidget(self.reset_default_config, 0, 1)
 
         self.frame2time = QGroupBox('Convert frames to time')
@@ -315,21 +317,26 @@ class InitDialog(QDialog):
             self.multiprocessing.setChecked(True)
             self.njobs.setValue(multiprocessing.cpu_count())
 
-    def show_warn(self):
-        if self.com_btn.isChecked() or self.rec_btn.isChecked() or self.lig_btn.isChecked():
-            self.warn_label_big.show()
+    def _reset_config(self, check):
+        if check:
+            self.reset_default_config.setStyleSheet(
+                '''
+                QCheckBox:checked {
+                    background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 #ffa200, stop:1 #fedb6f);
+                }''')
+            self.reset_default_config.setToolTip(f'''
+            <html>
+                <spam>Reset the current configuration<spam>
+            
+                <h3><strong>Warning!</strong></h3>
+                <p>The global default graphics settings will be stored in:</p>
+                <p><strong>{self.chart_default_setting.filename.as_posix()}</strong></p>
+               
+            </html>
+            ''')
         else:
-            self.warn_label_big.hide()
-
-        if self.remove_empty_terms_btn.isChecked() or self.remove_empty_charts_btn.isChecked():
-            self.warn_label_empty.show()
-        else:
-            self.warn_label_empty.hide()
-
-        if not self.chart_default_setting.config_created() or self.reset_default_config.isChecked():
-            self.warn_label_config.show()
-        else:
-            self.warn_label_config.hide()
+            self.reset_default_config.setStyleSheet("")
+            self.reset_default_config.setToolTip('Reset the current configuration')
 
     def update_item_info(self, item: QTreeWidgetItem, col):
         if item.text(0) == 'All':
