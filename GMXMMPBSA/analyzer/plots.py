@@ -164,11 +164,10 @@ class ChartsBase(QMdiSubWindow):
         key_list = [key] if isinstance(key, str) else key
         ax.set_title(title, fontdict={'fontsize': options[tuple(key_list + ['fontsize', 'suptitle'])]})
         if 'Line Plot' in key_list:
-            ax.legend(prop={'size': options[tuple(key_list + ['fontsize', 'legend'])]})
+            ax.legend(loc="lower right", prop={'size': options[tuple(key_list + ['fontsize', 'legend'])]})
         if xlabel:
             ax.set_xlabel(xlabel, fontdict={'fontsize': options[tuple(key_list + ['fontsize', 'x-label'])]})
-        if ylabel:
-            ax.set_ylabel(ylabel, fontdict={'fontsize': options[tuple(key_list + ['fontsize', 'y-label'])]})
+        ax.set_ylabel(ylabel, fontdict={'fontsize': options[tuple(key_list + ['fontsize', 'y-label'])]})
         for label in ax.get_xticklabels():
             label.set_rotation(options[tuple(key_list + ['axes', 'x-rotation'])])
             if options[tuple(key_list + ['axes', 'x-rotation'])] < 0:
