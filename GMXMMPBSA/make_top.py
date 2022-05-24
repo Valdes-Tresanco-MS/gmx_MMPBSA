@@ -423,7 +423,7 @@ class CheckMakeTop:
         if counter := sum(
                 res.name
                 in [
-                    'SOD', 'Na+', 'CLA', 'Cl-', 'POT', 'K+',
+                    'SOD', 'Na+', 'NA', 'Na', 'CLA', 'Cl-', 'CL', 'Cl', 'POT', 'K+', 'K',
                     'SOL', 'WAT',
                     'TIP3P', 'TIP3', 'TP3', 'TIPS3P', 'TIP3o',
                     'TIP3P', 'TIP3', 'TP3', 'TIPS3P', 'TIP3o',
