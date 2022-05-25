@@ -1370,8 +1370,6 @@ class PairDecompOut(DecompOut):
 
     def _get_decomp_energies(self, outfile):
         while line := outfile.readline():
-            if self.frame_idx == self.numframes:
-                self.frame_idx = 0
             if line[:3] in self.allowed_tokens:
                 if self.mut and self.resl[int(line[4:11]) - 1].is_mutant():
                     resnum = self.resl[int(line[4:11]) - 1].mutant_string
@@ -1401,7 +1399,8 @@ class PairDecompOut(DecompOut):
                 self[line[:3]][resnum][resnum2]['eel'][self.frame_idx] = eel
                 self[line[:3]][resnum][resnum2]['pol'][self.frame_idx] = pol
                 self[line[:3]][resnum][resnum2]['sas'][self.frame_idx] = sas
-                self.frame_idx += 1
+                if resnum == list(self.resl.values())[-1].string == resnum2:
+                    self.frame_idx += 1
 
     def _print_vectors(self, csvwriter):
         tokens = {'TDC': 'Total Decomposition Contribution (TDC)',
