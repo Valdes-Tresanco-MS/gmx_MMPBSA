@@ -27,10 +27,8 @@ except:
 import sys
 import os
 
-from queue import Queue, Empty
-from pathlib import Path
+from queue import Queue
 
-import pandas as pd
 from GMXMMPBSA.API import MMPBSA_API
 from GMXMMPBSA.analyzer.dialogs import InitDialog
 from GMXMMPBSA.analyzer.customitem import CustomItem, CorrelationItem
@@ -41,16 +39,6 @@ from GMXMMPBSA.analyzer.chartsettings import ChartSettings
 from GMXMMPBSA.analyzer.parametertree import ParameterTree, Parameter
 import math
 import numpy as np
-
-
-def run(infofile):
-    info = Path(infofile)
-    app = QApplication(sys.argv)
-    app.setApplicationName('GMX-MMPBSA Analyzer Tool')
-    w = GMX_MMPBSA_ANA()
-    w.gettting_data([info])
-    w.show()
-    sys.exit(app.exec())
 
 
 class GMX_MMPBSA_ANA(QMainWindow):
@@ -421,11 +409,15 @@ class GMX_MMPBSA_ANA(QMainWindow):
         self.eframes_start_sb = QSpinBox()
         self.eframes_start_sb.setAccelerated(True)
         self.eframes_start_sb.valueChanged.connect(self.frames_start_sb_update)
+
         self.eframes_inter_sb = QSpinBox()
+        self.eframes_inter_sb.setAccelerated(True)
         self.eframes_inter_sb.valueChanged.connect(self.frames_inter_sb_update)
+
         self.eframes_end_sb = QSpinBox()
         self.eframes_end_sb.setAccelerated(True)
         self.eframes_end_sb.valueChanged.connect(self.frames_end_sb_update)
+
         self.numframes_le = QLineEdit()
         self.numframes_le.setReadOnly(True)
 
@@ -441,7 +433,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
         fg_l1.addRow('End', self.eframes_end_sb)
         fg_l2 = QFormLayout()
         fg_l2.addRow('Interval', self.eframes_inter_sb)
-        fg_l2.addRow('Nr. frames', self.numframes_le)
+        fg_l2.addRow('Nº frames', self.numframes_le)
 
         reset_energy_btn = QPushButton('Reset')
         reset_energy_btn.clicked.connect(self._reset_e_frames)
@@ -461,11 +453,15 @@ class GMX_MMPBSA_ANA(QMainWindow):
         self.nmframes_start_sb = QSpinBox()
         self.nmframes_start_sb.setAccelerated(True)
         self.nmframes_start_sb.valueChanged.connect(self.nmframes_start_sb_update)
+
         self.nmframes_inter_sb = QSpinBox()
+        self.nmframes_inter_sb.setAccelerated(True)
         self.nmframes_inter_sb.valueChanged.connect(self.nmframes_inter_sb_update)
+
         self.nmframes_end_sb = QSpinBox()
         self.nmframes_end_sb.setAccelerated(True)
         self.nmframes_end_sb.valueChanged.connect(self.nmframes_end_sb_update)
+
         self.nmnumframes_le = QLineEdit()
         self.nmnumframes_le.setReadOnly(True)
 
@@ -481,7 +477,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
         nmfg_l1.addRow('End', self.nmframes_end_sb)
         nmfg_l2 = QFormLayout()
         nmfg_l2.addRow('Interval', self.nmframes_inter_sb)
-        nmfg_l2.addRow('Nr. frames', self.nmnumframes_le)
+        nmfg_l2.addRow('Nº frames', self.nmnumframes_le)
 
         reset_nmode_btn = QPushButton('Reset')
         reset_nmode_btn.clicked.connect(self._reset_nm_frames)
@@ -516,7 +512,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
         ieseg_l = QFormLayout()
         ieseg_l.addRow('Segment', self.iesegment_sb)
         ienf_l = QFormLayout()
-        ienf_l.addRow('Nr. frames', self.ienumframes_le)
+        ienf_l.addRow('Nº frames', self.ienumframes_le)
 
         ie_reset_btn = QPushButton('Reset')
         ie_reset_btn.clicked.connect(self._reset_iesegment)
@@ -676,14 +672,8 @@ class GMX_MMPBSA_ANA(QMainWindow):
                 # qpd.setValue(max_sixe)
                 pbd.exec()
 
-        maximum = len(sys_list)
-        qpd = QProgressDialog('Updating charts options...', 'Abort', 0, maximum, self)
-        qpd.setWindowModality(Qt.WindowModality.WindowModal)
-        qpd.setMinimumDuration(0)
-        qpd.setLabelText('Updating open charts...')
         subwindows = self.mdi.subWindowList()
         for c, s in enumerate(sys_list):
-            qpd.setValue(c)
             changes = self.systems[s]['chart_options'].changes
             for sub in subwindows:
                 if not sub.item_parent or sub.item_parent.system_index != s:
@@ -715,8 +705,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
         self.ie_changed.hide()
         self.e_changed.hide()
         self.nm_changed.hide()
-        qpd.setValue(maximum)
-        self.statusbar.showMessage('Updating... Done.')
+        self.statusbar.showMessage('Updating... Done.', 2000)
 
 
     def _update_itemdata_repaint(self, r):
@@ -981,7 +970,6 @@ class GMX_MMPBSA_ANA(QMainWindow):
 
         for i, _ in enumerate(range(max_sixe), start=1):
             sys_name, path, stability, exp_ki, options_file = queue.get()
-            ic(sys_name, path, stability, exp_ki, options_file)
             opts4ana['energy_options']['etype'] = opts4ana['entropy_options']['etype'] = (None if len(exp_ki) == 2 else
                                                                                           tuple(exp_ki.keys()))
             opts4ana['decomp_options']['etype'] = None if len(exp_ki) == 2 else tuple(f"decomp_{x}" for x in exp_ki)
@@ -1105,7 +1093,8 @@ class GMX_MMPBSA_ANA(QMainWindow):
         s = {'enthalpy': 'ΔH', 'entropy': '-TΔS','binding': 'ΔG'}
 
         for level, v in self.systems[sys_index]['map'].items():
-            item = CustomItem(sys_item, [f'{level.capitalize()} ({s[level]})'])
+            t = f' ({s[level]})' if s.get(level) else ''
+            item = CustomItem(sys_item, [f'{level.capitalize()}{t}'])
             for level1, v1 in v.items():
 
                 item1 = CustomItem(item, [f'{level1.capitalize()}'])
