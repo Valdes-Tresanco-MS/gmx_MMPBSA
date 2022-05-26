@@ -677,7 +677,13 @@ class GMX_MMPBSA_ANA(QMainWindow):
                 if not sub.item_parent or sub.item_parent.system_index != s:
                     continue
                 if not sub.isVisible():
-                    continue
+                    if self.systems[s]['chart_options'].changes.get('line_action'):
+                        sub.item_parent.lp_subw = None
+                    elif self.systems[s]['chart_options'].changes.get('bar_action'):
+                        sub.item_parent.bp_subw = None
+                    elif self.systems[s]['chart_options'].changes.get('heatmap_action'):
+                        sub.item_parent.hmp_subw = None
+
                 if changes['figure']:
                     chart_sett = self.systems[s]['chart_options'].get_settings()
                     options = {'save-format': chart_sett[('General', 'figure-format', 'save-format')],
@@ -685,8 +691,8 @@ class GMX_MMPBSA_ANA(QMainWindow):
                                }
                     sub.mpl_toolbar.update_options(options)
                     sub.fbtn.setChecked(chart_sett[('General', 'toolbar')])
-                elif any(changes.values()) or replot_energy:
-                    sub.button.setChecked(False)
+                elif sub.isVisible() and any(changes.values()) or replot_energy:
+                    sub.close()
                     sub.button.setChecked(True)
             pymol_items = [[p, item] for p, item in self.pymol_p_list if p.state() == QProcess.ProcessState.Running]
             for p, item in pymol_items:
@@ -958,6 +964,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
 
     def read_data(self, queue: Queue, options):
         self.init_dialog.accept()
+        self.in_init_dialog = False
         max_sixe = queue.qsize()
         from GMXMMPBSA.analyzer.dialogs import ProcessingProgressBar
 
@@ -975,7 +982,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
                 tuple(options.get('energy').get('mols')))
             opts4ana['decomp_options']['mol'] = (['complex'] if stability else
                                                         tuple(options.get('decomposition').get('mols')))
-
+            opts4ana['decomp_options']['res_threshold'] = options.get('decomposition').get('res_threshold')
             ic(opts4ana)
 
             d = {MMPBSA_API: {'object': 'class',
