@@ -203,21 +203,29 @@ class InitDialog(QDialog):
         self.performance_slider.valueChanged.connect(self.slider_changed)
         self.performance_slider.setValue(2)
 
-        self.header_item = QTreeWidgetItem(['Folder name', 'Select', 'Name', 'Exp.Ki (nM)', 'Chart Settings', 'Path'])
-        self.header_item.setToolTip(0, 'Container')
-        self.header_item.setToolTip(1, 'Name')
+        self.header_item = QTreeWidgetItem(['System', 'Show', 'Name', 'Exp.Ki (nM)', 'Corr.', 'Chart Settings', 'Path'])
+        self.header_item.setToolTip(0, 'System number')
+        self.header_item.setToolTip(1, 'Selection to analyze.')
+        self.header_item.setToolTip(2, 'System name defined in the input file')
+        self.header_item.setToolTip(3, 'Experimental Ki in NanoMolar')
+        self.header_item.setToolTip(4, 'Systems selection for correlation. Each box corresponds to the part of the'
+                                       'system according to the correlation to be calculated.')
+        self.header_item.setToolTip(5, 'Setting selection for each system')
+        self.header_item.setToolTip(6, 'Reference system path')
         self.header_item.setTextAlignment(0, Qt.AlignmentFlag.AlignCenter)
         self.header_item.setTextAlignment(1, Qt.AlignmentFlag.AlignCenter)
         self.header_item.setTextAlignment(2, Qt.AlignmentFlag.AlignCenter)
         self.header_item.setTextAlignment(3, Qt.AlignmentFlag.AlignCenter)
         self.header_item.setTextAlignment(4, Qt.AlignmentFlag.AlignCenter)
+        self.header_item.setTextAlignment(5, Qt.AlignmentFlag.AlignCenter)
         self.result_tree = QTreeWidget(self)
         self.result_tree.setHeaderItem(self.header_item)
         self.result_tree.header().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
+        self.result_tree.hideColumn(4)
         self.result_tree.itemChanged.connect(self.update_item_info)
-        self.pb = QProgressBar()
-        # self.pb.setRange(0, 0)
-        # self.save_btn.clicked.connect(self.save)
+
+        self.corr_sys_btn.toggled.connect(self._show_corr_column)
+
 
         btnbox = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
         accept_btn = btnbox.button(QDialogButtonBox.StandardButton.Ok)
@@ -244,6 +252,12 @@ class InitDialog(QDialog):
         self.content_layout.addWidget(self.result_tree, 6, 0, 1, 3)
         self.content_layout.addWidget(self.statusbar, 7, 0, 1, 2)
         self.content_layout.addWidget(btnbox, 7, 2, 1, 1, Qt.AlignmentFlag.AlignRight)
+
+    def _show_corr_column(self, check):
+        if check:
+            self.result_tree.showColumn(4)
+        else:
+            self.result_tree.hideColumn(4)
 
     def _update_ram_indicator(self, check, obj_name):
 
@@ -408,32 +422,31 @@ class InitDialog(QDialog):
             if not exp_ki:
                 exp_ki = 0.0
 
-            item = QTreeWidgetItem([f'{fname.parent.name}', '', f'{basename}', '', '', f'{fname.parent.absolute()}'])
+            item = QTreeWidgetItem([f'{c}', '', f'{basename}', '', '', '', f'{fname.parent.absolute()}'])
             item.setFlags(item.flags() | Qt.ItemFlag.ItemIsAutoTristate)
 
             self._set_item_properties(item)
             self.f_item.addChild(item)
 
             if not mut_only:
-                witem = QTreeWidgetItem(['', '', 'normal', f'{exp_ki}', '', ''])
-                # witem.info = [basename, Path(fname)]
+                witem = QTreeWidgetItem(['', '', 'normal', f'{exp_ki}', '', '', ''])
                 self._set_item_properties(witem)
                 item.addChild(witem)
 
             if mutant:
-                mitem = QTreeWidgetItem(['', '', f'{mutant}', f'{exp_ki}', '', ''])
-                # mitem.info = [basename, Path(fname)]
+                mitem = QTreeWidgetItem(['', '', f'{mutant}', f'{exp_ki}', '', '', ''])
                 self._set_item_properties(mitem)
                 item.addChild(mitem)
 
             item.info = [basename, Path(fname), stability]
 
             item.setExpanded(True)
-            self.result_tree.setItemWidget(item, 4, cb)
+            self.result_tree.setItemWidget(item, 5, cb)
         self.f_item.setExpanded(True)
 
     def _set_item_properties(self, item: QTreeWidgetItem):
         item.setCheckState(1, Qt.CheckState.Checked)
+        item.setCheckState(4, Qt.CheckState.Checked)
         item.setFlags(item.flags() | Qt.ItemFlag.ItemIsEditable)
         item.setTextAlignment(2, Qt.AlignmentFlag.AlignCenter)
         item.setTextAlignment(3, Qt.AlignmentFlag.AlignRight)
@@ -441,7 +454,6 @@ class InitDialog(QDialog):
 
     def get_data(self):
 
-        self.pb.setValue(0)
         queue = Queue()
         self.result_queue = Queue()
         self.systems_list = []
@@ -463,12 +475,11 @@ class InitDialog(QDialog):
             },
             'decomposition': {
                 'mols': dmols,
-                'remove_noncontrib_res': self.decomp_non_contrib_res.isChecked(),
-                'res_threshold': self.decomp_res_threshold.value()
+                'res_threshold': self.decomp_res_threshold.value() if self.decomp_non_contrib_res.isChecked() else 0
             },
             'correlation': {
-                'normal': self.corr_sys_btn.isChecked(),
-                'mutant': self.corr_mut_btn.isChecked()
+                'corr': self.corr_sys_btn.isChecked(),
+                'type': self.energy_type.currentText()
             },
             'performance': {
             }
@@ -495,14 +506,13 @@ class InitDialog(QDialog):
                             t['normal'] = float(child.child(c1).text(3))
                         else:
                             t['mutant'] = float(child.child(c1).text(3))
-            child.info += [t, self.result_tree.itemWidget(child, 4).currentText()]
+            child.info += [t, self.result_tree.itemWidget(child, 5).currentText()]
             queue.put(child.info)
             counter += 1
         if not counter:
             QMessageBox.critical(self, 'Error processing systems', 'You must select at least one system.',
                                  QMessageBox.Ok)
             return
-        self.pb.setRange(0, counter)
         # Store the global default graphics settings if not exits
         if not self.chart_default_setting.config_created() or self.reset_default_config.isChecked():
             self.chart_default_setting.write_system_config()
@@ -564,7 +574,7 @@ class ProcessingProgressBar(QDialog):
 
         self.pb = QProgressBar(self)
         size = input_queue.qsize()
-        if size in [1, jobs]:
+        if size < jobs:
             self.pb.setRange(0, 0)
         else:
             self.pb.setRange(0, size)
