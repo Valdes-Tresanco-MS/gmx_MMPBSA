@@ -372,7 +372,8 @@ class HeatmapChart(ChartsBase):
 
         self.data = data
 
-        self.heatmap_type = int(all(data.columns == data.index)) if data.columns.size == data.index.size else 2
+        self.heatmap_type = 2 if data.columns.is_numeric() else 1
+
         fig_width = (options[('Heatmap Plot', 'figure', 'width-per-wise')] if self.heatmap_type == 1 else
                      options[('Heatmap Plot', 'figure', 'width-per-residue')])
         fig_height = options[('Heatmap Plot', 'figure', 'height')]
@@ -380,7 +381,8 @@ class HeatmapChart(ChartsBase):
                       options[('Heatmap Plot', 'Per-residue', 'x-rotation')])
         cmap = (Palettes.get_colormap(options[('Heatmap Plot', 'Per-wise', 'palette')]) if self.heatmap_type == 1 else
                 Palettes.get_colormap(options[('Heatmap Plot', 'Per-residue', 'palette')]))
-        nxticks = (1 if self.heatmap_type == 1 or data.columns.size < options[('Heatmap Plot', 'Per-residue', 'num-xticks')]
+        nxticks = (1 if self.heatmap_type == 1 or
+                        data.columns.size < options[('Heatmap Plot', 'Per-residue', 'num-xticks')]
                    else data.columns.size // options[('Heatmap Plot', 'Per-residue', 'num-xticks')])
 
         annotation = options[('Heatmap Plot', 'Per-wise', 'annotation')] if self.heatmap_type == 1 else False
@@ -644,27 +646,21 @@ class MHeatmap:
                         **kws)
 
     def plot_matrix(self, colorbar_kws, **kws):
+        h = sns.heatmap(self.data, ax=self.ax_heatmap, xticklabels=self.num_xticks, yticklabels=1,
+                        cbar_ax=self.ax_cbar, cbar_kws=colorbar_kws, cmap=self.cmap, center=0, annot=self.annot,
+                        fmt=".2f", annot_kws={'size': self.annot_fs},**kws)
+        yticks = [x[2:] for x in self.data.index] if self.remove_molid else self.data.index
+        self.ax_heatmap.set_yticklabels(yticks, fontdict=dict(fontsize=self.yticks_fontsize),
+                                        rotation=self.y_rotation)
 
-        h = sns.heatmap(self.data, ax=self.ax_heatmap, xticklabels=self.num_xticks, cbar_ax=self.ax_cbar,
-                        cbar_kws=colorbar_kws, cmap=self.cmap, center=0, annot=self.annot, fmt=".2f",
-                        annot_kws={'size': self.annot_fs},**kws)
-        ytl = self.ax_heatmap.get_yticklabels()
-        for ylabel in ytl:
-            ylabel.set_fontsize(self.yticks_fontsize)
-            ylabel.set_rotation(self.y_rotation)
-            if self.remove_molid:
-                ylabel.set_text(ylabel.get_text()[2:])
-        xtl = self.ax_heatmap.get_xticklabels()
-        for xlabel in xtl:
-            xlabel.set_fontsize(self.xticks_fontsize)
-            xlabel.set_rotation(self.x_rotation)
-            if self.remove_molid and self.heatmap_type == 1:
-                xlabel.set_text(xlabel.get_text()[2:])
-
-        if self.remove_molid:
-            self.ax_heatmap.set_yticklabels(ytl)
-            if self.heatmap_type == 1:
-                self.ax_heatmap.set_xticklabels(xtl)
+        if self.remove_molid and self.heatmap_type == 1:
+            xtl = self.ax_heatmap.get_xticklabels()
+            for xlabel in xtl:
+                xlabel.set_fontsize(self.xticks_fontsize)
+                xlabel.set_rotation(self.x_rotation)
+                if self.remove_molid and self.heatmap_type == 1:
+                    xlabel.set_text(xlabel.get_text()[2:])
+            self.ax_heatmap.set_xticklabels(xtl)
         self.ax_heatmap.yaxis.set_ticks_position('right')
         self.ax_heatmap.yaxis.set_label_position('right')
         if self.heatmap_type == 2:
