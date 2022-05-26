@@ -247,9 +247,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
 
     def _initialize_systems(self):
 
-        if len(self.systems):
-            self.all_systems_active = False
-        if self.all_systems_active:
+        if self.all_systems_active and len(self.systems) > 1:
             self.all_frb.setEnabled(True)
 
         # Select automatically the first item to update the option panel
@@ -589,19 +587,19 @@ class GMX_MMPBSA_ANA(QMainWindow):
                 parent_item = next_item
             else:
                 break
-        # FIXME: check if all systems are selected?
-        # if not self.all_frb.isChecked():
         # energy
-        current_start, current_end, current_interval = self.systems[parent_item.system_index]['current_frames'].values()
-        self.eframes_start_sb.setValue(current_start)
-        self.eframes_inter_sb.setValue(current_interval)
-        self.eframes_end_sb.setValue(current_end)
+        if self.systems[parent_item.system_index].get('current_frames'):
+            current_start, current_end, current_interval = self.systems[parent_item.system_index]['current_frames'].values()
+            self.eframes_start_sb.setValue(current_start)
+            self.eframes_inter_sb.setValue(current_interval)
+            self.eframes_end_sb.setValue(current_end)
         # nmode
-        nmcurrent_start, nmcurrent_end, nmcurrent_interval = self.systems[parent_item.system_index][
-            'current_nmode_frames'].values()
-        self.nmframes_start_sb.setValue(nmcurrent_start)
-        self.nmframes_inter_sb.setValue(nmcurrent_end)
-        self.nmframes_end_sb.setValue(nmcurrent_interval)
+        if self.systems[parent_item.system_index].get('current_nmode_frames'):
+            nmcurrent_start, nmcurrent_end, nmcurrent_interval = self.systems[parent_item.system_index][
+                'current_nmode_frames'].values()
+            self.nmframes_start_sb.setValue(nmcurrent_start)
+            self.nmframes_inter_sb.setValue(nmcurrent_end)
+            self.nmframes_end_sb.setValue(nmcurrent_interval)
         # IE
         self.iesegment_sb.setValue(self.systems[parent_item.system_index]['current_ie_segment'])
         # self.systems[parent_item.system_index]['chart_options'] = self.chart_options_param.saveState()
