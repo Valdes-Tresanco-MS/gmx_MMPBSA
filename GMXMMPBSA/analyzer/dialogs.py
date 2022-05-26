@@ -110,15 +110,18 @@ class InitDialog(QDialog):
 
         self.corr_group = QGroupBox('Correlation')
         self.corr_group_layout = QGridLayout(self.corr_group)
-        self.corr_sys_btn = QCheckBox('Calculate correlation between systems')
+        self.corr_sys_btn = QCheckBox('Between systems')
         self.corr_sys_btn.toggled.connect(lambda x: self._update_ram_indicator(x, 'correlation'))
+
         self.corr_sys_btn.setToolTip('Make correlation between systems. Only works when defining more than 3 systems')
         self.corr_group_layout.addWidget(self.corr_sys_btn, 0, 0)
 
-        self.corr_mut_btn = QCheckBox('Calculate correlation between mutants')
-        self.corr_mut_btn.setToolTip('Make correlation between mutants systems. Only works when defining more than 3 '
-                                     'mutants')
-        self.corr_group_layout.addWidget(self.corr_mut_btn, 0, 1)
+        self.energy_type = QComboBox()
+        self.energy_type.addItems(['ΔG', 'ΔΔG'])
+
+        self.energy_corr_layout = QFormLayout()
+        self.energy_corr_layout.addRow('Energy:', self.energy_type)
+        self.corr_group_layout.addLayout(self.energy_corr_layout, 0, 1)
 
         self.chart_group = QGroupBox('Charts options')
         self.chart_group_layout = QGridLayout(self.chart_group)
@@ -136,11 +139,11 @@ class InitDialog(QDialog):
         self.frame2time.setChecked(False)
         self.frame2time_layout = QFormLayout(self.frame2time)
         self.time_start = QSpinBox()
-        self.time_start.setRange(0, 10000)
+        self.time_start.setRange(0, 1000000)
         self.time_start.setAccelerated(True)
         self.frame2time_layout.addRow('Start:', self.time_start)
         self.time_step = QSpinBox()
-        self.time_step.setRange(1, 1000)
+        self.time_step.setRange(1, 10000)
         self.time_step.setValue(10)
         self.time_step.setAccelerated(True)
         self.frame2time_layout.addRow('Scale:', self.time_step)
