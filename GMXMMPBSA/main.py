@@ -1147,9 +1147,11 @@ class MMPBSA_App(object):
             DecompBindingClass = PairDecompBinding
             DecompClass = PairDecompOut
 
+        com_list = {}
         rec_list = {}
         lig_list = {}
         for x in self.resl:
+            com_list[x.index - 1] = x
             if x.is_receptor():
                 rec_list[x.id_index - 1] = x
             else:
@@ -1163,7 +1165,7 @@ class MMPBSA_App(object):
             if not self.INPUT['mutant_only']:
                 self.calc_types.decomp_normal[key] = {'complex': DecompClass('complex')}
                 self.calc_types.decomp_normal[key]['complex'].parse_from_file(self.pre + basename[i] % 'complex',
-                                                                              self.resl, INPUT, surften,
+                                                                              com_list, INPUT, surften,
                                                                               self.mpi_size, self.numframes)
                 if not self.stability:
                     self.calc_types.decomp_normal[key]['receptor'] = DecompClass('receptor')
