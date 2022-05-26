@@ -1020,21 +1020,19 @@ class GMX_MMPBSA_ANA(QMainWindow):
     def process_data(self, results: Queue, options):
         self.data_options = options
         size = results.qsize()
-        maximum = size
-        qpd = QProgressDialog('Creating systems tree', 'Abort', 0, maximum, self)
+        maximum = size * 2
+        qpd = QProgressDialog('Creating systems tree', 'Abort', 0, maximum + 1, self)
         qpd.setWindowModality(Qt.WindowModality.WindowModal)
         qpd.setMinimumDuration(0)
 
         # check if all systems have the same frames range
         frange_base = []
-
-        for i, c in enumerate(range(maximum), start=1):
-            qpd.setValue(i)
+        c = 0
+        for i, _ in enumerate(range(size), start=1):
+            qpd.setValue(c)
             if qpd.wasCanceled():
                 break
             sys_id, api, data = results.get()
-            namemap = {}
-
             self.systems[sys_id].update({
                 'api': api,
                 'namespace': api.app_namespace,
@@ -1047,35 +1045,40 @@ class GMX_MMPBSA_ANA(QMainWindow):
                                              nminterval=api.app_namespace.INPUT['nminterval']),
                 'current_ie_segment': api.app_namespace.INPUT['ie_segment'],
                 'chart_options': ChartSettings(config),
-                'options': options,
                 'items_data': {k:v1 for x, v in data.items() if v for k, v1 in v['keys'].items()},
                 # 'items_summary': summary,
                 # 'exp_ki': exp_ki
             })
-            self.makeTree(i)
-            if not frange_base:
-                frange_base = [namespace.INPUT['startframe'], namespace.INPUT['endframe'],
-                               namespace.INPUT['interval'], namespace.INPUT['nmstartframe'],
-                               namespace.INPUT['nmendframe'], namespace.INPUT['nminterval']]
+            c += 1
+            if not self.all_systems_active:
                 continue
-            if frange_base != [namespace.INPUT['startframe'], namespace.INPUT['endframe'],
-                               namespace.INPUT['interval'], namespace.INPUT['nmstartframe'],
-                               namespace.INPUT['nmendframe'], namespace.INPUT['nminterval']]:
+            if not frange_base:
+                frange_base = [api.app_namespace.INPUT['startframe'], api.app_namespace.INPUT['endframe'],
+                               api.app_namespace.INPUT['interval'], api.app_namespace.INPUT['nmstartframe'],
+                               api.app_namespace.INPUT['nmendframe'], api.app_namespace.INPUT['nminterval']]
+                continue
+            if frange_base != [api.app_namespace.INPUT['startframe'], api.app_namespace.INPUT['endframe'],
+                               api.app_namespace.INPUT['interval'], api.app_namespace.INPUT['nmstartframe'],
+                               api.app_namespace.INPUT['nmendframe'], api.app_namespace.INPUT['nminterval']]:
                 self.all_systems_active = False
 
-        qpd.setLabelText('Initializing first system...')
-        self._initialize_systems()
-        qpd.setValue(i + 1)
+        for s in sorted(self.systems.keys()):
+            qpd.setValue(c)
+            if qpd.wasCanceled():
+                break
+            self.makeTree(s)
+            c += 1
 
-        if not options['corr_sys']:  # FIXME:
+
+        self._initialize_systems()
+        qpd.setValue(c)
+
+        if not options.get('correlation')['corr']:  # FIXME:
             self.correlation_DockWidget.setEnabled(False)
             self.correlation_DockWidget.hide()
         else:
-            qpd.setLabelText('Calculating correlation...')
             self.make_correlation()
-            qpd.setValue(i + 2)
-
-        qpd.setValue(maximum)
+        qpd.setValue(maximum + 1)
 
         # some late signal/slot connections
         # self.treeWidget.itemChanged.connect(self.showdata)
@@ -1087,6 +1090,8 @@ class GMX_MMPBSA_ANA(QMainWindow):
         sys_name = self.systems[sys_index]['name']
         sys_item = CustomItem(self.treeWidget, [sys_name], app=self, system_index=sys_index,
                               buttons=(-1,))
+        sys_item.setExpanded(True)
+
         for c in [0, 1]:
             sys_item.setBackground(c, QBrush(QColor(100, 100, 100)))
             sys_item.setForeground(c, QBrush(QColor(220, 220, 255)))
@@ -1099,10 +1104,10 @@ class GMX_MMPBSA_ANA(QMainWindow):
 
         for level, v in self.systems[sys_index]['map'].items():
             t = f' ({s[level]})' if s.get(level) else ''
-            item = CustomItem(sys_item, [f'{level.capitalize()}{t}'])
+            item = CustomItem(sys_item, [f'{level.capitalize()}{t}'], system_index=sys_index)
             for level1, v1 in v.items():
 
-                item1 = CustomItem(item, [f'{level1.capitalize()}'])
+                item1 = CustomItem(item, [f'{level1.capitalize()}'], system_index=sys_index)
                 item1.setExpanded(True)
                 if level == 'enthalpy':
                     self._make_enthalpy_nmodeqh_items(sys_name, sys_index, item1, level1, v1)
@@ -1118,11 +1123,11 @@ class GMX_MMPBSA_ANA(QMainWindow):
         namespace = self.systems[sys_index]['namespace']
         # model
         for level2, v2 in v1.items():
-            item2 = CustomItem(item1, [f'{level2.upper()}'])
+            item2 = CustomItem(item1, [f'{level2.upper()}'], system_index=sys_index)
             item2.setExpanded(True)
             # mols
             for level3, v3 in v2.items():
-                item3 = CustomItem(item2, [f'{level3.capitalize()}'])
+                item3 = CustomItem(item2, [f'{level3.capitalize()}'], system_index=sys_index)
                 item3.setExpanded(True)
 
                 # TDC, BDC, SDC
@@ -1213,7 +1218,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
         for level2, v2 in v1.items():
             if level2 in ['c2', 'ie']:
                 continue
-            item2 = CustomItem(item1, [f'{level2.upper()}'])
+            item2 = CustomItem(item1, [f'{level2.upper()}'], system_index=sys_index)
             item2.setExpanded(True)
             for level3, v3 in v2.items():
                 item3 = CustomItem(item2, [f'{level3.capitalize()}'],
