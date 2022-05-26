@@ -103,37 +103,37 @@ def _setup_data(data, level=0, iec2=False, name=None, index=None):
         options = {'iec2': iec2}
         # if isinstance(data, pd.Series):
         data.name = data.name[-1]
-        cont['line_plot_data'] = [data[:-2], options, change]
+        cont['line_plot_data'] = [data[:-3], options, change]
     elif level == 1:
         options = ({'iec2': True} if iec2 else {}) | dict(groups=_itemdata_properties(data))
-        cont['bar_plot_data'] = [data[-2:].reindex(columns=index), options, change]
+        cont['bar_plot_data'] = [data[-3:].reindex(columns=index), options, change]
     elif level == 1.5:
         options = {'iec2': True}
-        cont['line_plot_data'] = [data[['AccIntEnergy', 'ie']][:-2], options, change]
-        cont['bar_plot_data'] = [data[['ie', 'sigma']][-2:], options, change]
+        cont['line_plot_data'] = [data[['AccIntEnergy', 'ie']][:-3], options, change]
+        cont['bar_plot_data'] = [data[['ie', 'sigma']][-3:], options, change]
     elif level == 2:
         tempdf = data.loc[:, data.columns.get_level_values(1) == 'tot']
         bar_plot_data = tempdf.droplevel(level=1, axis=1).reindex(columns=index)
 
-        cont['line_plot_data'] = [bar_plot_data[:-2].sum(axis=1).rename(name), {}, change]
-        cont['bar_plot_data'] = [bar_plot_data[-2:], dict(groups=_itemdata_properties(bar_plot_data)), change]
-        cont['heatmap_plot_data'] = [bar_plot_data[:-2].T, {}, change]
+        cont['line_plot_data'] = [bar_plot_data[:-3].sum(axis=1).rename(name), {}, change]
+        cont['bar_plot_data'] = [bar_plot_data[-3:], dict(groups=_itemdata_properties(bar_plot_data)), change]
+        cont['heatmap_plot_data'] = [bar_plot_data[:-3].T, {}, change]
     elif level == 3:
         # Select only the "tot" column, remove the level, change first level of columns to rows and remove the mean
         # index
-        from icecream import ic
-
         tempdf = data.loc[:, data.columns.get_level_values(2) == 'tot']
         cont['heatmap_plot_data'] = [
             tempdf.loc[["Average"]].droplevel(level=2, axis=1).stack().droplevel(level=0).reindex(columns=index[0],
                                                                                                   index=index[1]),
             {}, change]
-        bar_plot_data = tempdf.groupby(axis=1, level=0, sort=False).sum().reindex(columns=index[0])
-        cont['line_plot_data'] = [bar_plot_data[:-2].sum(axis=1).rename(name), {}, change]
-        cont['bar_plot_data'] = [bar_plot_data[-2:], dict(groups=_itemdata_properties(bar_plot_data)), change]
-        # del tempdf
-        # del bar_plot_data
-        # del temp_bar_data
+        temp_line_plot_data = tempdf[:-3].groupby(axis=1, level=0, sort=False).sum().reindex(columns=index[0])
+        bar_plot_data = tempdf[:-3].groupby(axis=1, level=0, sort=False).sum().agg(
+            [lambda x: x.mean(), lambda x: x.std(ddof=0), lambda x: x.std(ddof=0)/ math.sqrt(len(x))]
+            ).reindex(columns=index[0])
+        bar_plot_data.index = ['Average', 'SD', 'SEM']
+
+        cont['line_plot_data'] = [temp_line_plot_data.sum(axis=1).rename(name), {}, change]
+        cont['bar_plot_data'] = [bar_plot_data, dict(groups=_itemdata_properties(bar_plot_data)), change]
 
     return cont
 
@@ -319,8 +319,8 @@ class MMPBSA_API():
 
     def _model2df(self, energy, index):
         energy_df = pd.DataFrame(flatten(energy), index=index)
-        s = pd.concat([energy_df.mean(), energy_df.std(ddof=0)], axis=1)
-        s.columns = ['Average', 'SD']
+        s = pd.concat([energy_df.mean(), energy_df.std(ddof=0), energy_df.std(ddof=0) / math.sqrt(len(index))], axis=1)
+        s.columns = ['Average', 'SD', 'SEM']
         summary_df = s.T
         df = pd.concat([energy_df, summary_df])
         df.index.name = index.name
@@ -403,8 +403,8 @@ class MMPBSA_API():
             else:
                 d = self.data[et]['c2']
             entropy[et] = {'c2': {x: None for x in ['c2', 'sigma']}}
-            entropy_df[et] = {'c2': pd.DataFrame({'c2': [d['c2data'], d['c2_std']], 'sigma': [d['sigma'], 0]},
-                                                 index=['Average', 'SD'])}
+            entropy_df[et] = {'c2': pd.DataFrame({'c2': [d['c2data'], d['c2_std'], d['c2_std']], 'sigma': [d['sigma'], 0, 0]},
+                                                 index=['Average', 'SD', 'SEM'])}
 
         return {'map': emapping(entropy), 'data': entropy_df, 'summary': entropy_df}
 
@@ -434,8 +434,9 @@ class MMPBSA_API():
             df1 = pd.DataFrame({'ie': d['data'][-ieframes:]}, index=index[-ieframes:])
             df2 = pd.concat([df, df1], axis=1)
             df3 = pd.DataFrame({'ie': [float(d['iedata'].mean()),
-                                       float(d['iedata'].std())],
-                                'sigma': [d['sigma'], 0]}, index=['Average', 'SD'])
+                                       float(d['iedata'].std()),
+                                       float(d['iedata'].std() / math.sqrt(ieframes))],
+                                'sigma': [d['sigma'], 0, 0]}, index=['Average', 'SD', 'SEM'])
             summ_df[et] = {'ie': df3}
             df4 = pd.concat([df2, df3])
             df4.index.name = df.index.name
@@ -529,8 +530,9 @@ class MMPBSA_API():
                                 entdata = etv['c2']
 
                             entdata.name = '-TΔS'
-                            dgdata = pd.Series([edata[0] + entdata[0], utils.get_std(edata[1], entdata[1])],
-                                               index=['Average', 'SD'], name='ΔG')
+                            std = utils.get_std(edata[1], entdata[1])
+                            dgdata = pd.Series([edata[0] + entdata[0], std, std],
+                                               index=['Average', 'SD', 'SEM'], name='ΔG')
                             binding[et][em][ent] = pd.concat([edata, entdata, dgdata], axis=1)
         return {'map': b_map, 'data': binding}
 
@@ -540,7 +542,7 @@ class MMPBSA_API():
 
         s, e, index = self._get_frames_index('energy', startframe, endframe, interval)
         name = index.name
-        index = pd.concat([index, pd.Series(['Average', 'SD'])])
+        index = pd.concat([index, pd.Series(['Average', 'SD', 'SEM'])])
         index.name = name
 
         temp_print_keys = etype or tuple(x for x in ['decomp_normal', 'decomp_mutant'] if self.data.get(x))
@@ -601,8 +603,10 @@ class MMPBSA_API():
                                                             temp_emap.append(t)
                                                             mean = temp_energy[t].mean()
                                                             std = temp_energy[t].std()
-                                                            temp_energy[t] = temp_energy[t].append([mean, std])
-                                                            if t == 'tot' and mean < res_threshold:
+                                                            sem = std / math.sqrt(len(temp_energy[t]))
+                                                            temp_energy[t] = temp_energy[t].append([mean, std, sem])
+                                                            if (t == 'tot' and res_threshold > 0 and
+                                                                    mean < res_threshold):
                                                                 remove = True
                                                 else:
                                                     temp_emap = {}
@@ -629,12 +633,14 @@ class MMPBSA_API():
                                                                                             r2][t][s:e:interval]
                                                                     mean = temp_energy_r2[t].mean()
                                                                     std = temp_energy_r2[t].std()
-                                                                    temp_energy_r2[t] = temp_energy_r2[t].append([mean, std])
-                                                                    if t == 'tot' and r2 != r1:
+                                                                    sem = std / math.sqrt(len(temp_energy_r2[t]))
+                                                                    temp_energy_r2[t] = temp_energy_r2[t].append([
+                                                                        mean, std, sem])
+                                                                    if t == 'tot':
                                                                         res1_contrib += mean
                                                             if temp_energy_r2:
                                                                 temp_energy[r2] = temp_energy_r2
-                                                    if float(abs(res1_contrib)) < res_threshold:
+                                                    if res_threshold > 0 and float(abs(res1_contrib)) < res_threshold:
                                                         remove = True
                                                 if not remove:
                                                     model_decomp_energy[m1][c][r1] = temp_energy
