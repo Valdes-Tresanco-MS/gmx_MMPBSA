@@ -450,7 +450,17 @@ class ChartSettings(dict):
                                                  'default': [0, 0, 0, 255], 'action_type': R},
                                        'cap-size': {'type': 'int', 'enabled': True, 'expanded': True,
                                                     'name': 'cap-size', 'value': 0, 'step': 1, 'limits': (0, 50),
-                                                    'accelerated': True, 'default': 0, 'action_type': R}
+                                                    'accelerated': True, 'default': 0, 'action_type': R},
+                                       'representation': {'type': 'list', 'enabled': True, 'expanded': True,
+                                                          'name': 'representation', 'value': 'SD',
+                                                          'values': ['SD', 'SEM'], 'default': 'SD', 'action_type': R,
+                                                          'tip': "The metric representing the error line. SD, the "
+                                                                 "Standard Deviation, describes the data distribution "
+                                                                 "around the mean, while SEM, the Standard Error of "
+                                                                 "the Mean, describes how representative the mean is "
+                                                                 "of the population."},
+
+
                                    }},
                     'bar-label': {
                         'type': 'group', 'enabled': True, 'expanded': True, 'name': 'bar-label', 'value': None,

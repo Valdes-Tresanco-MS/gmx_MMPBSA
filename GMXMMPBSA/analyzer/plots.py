@@ -266,7 +266,7 @@ class BarChart(ChartsBase):
                 df = data[options['groups'][g]]
                 bar_plot_ax = sns.barplot(x=df.columns,
                                           y=df.loc['Average'],
-                                          yerr=df.loc['SD'],
+                                          yerr=df.loc[options[('Bar Plot', 'error-line', 'representation')]],
                                           palette=palette[s: s + len(options['groups'][g])] if palette else palette,
                                           color=rgb2rgbf(options[('Bar Plot', 'color')]),
                                           error_kw=dict(
@@ -300,7 +300,7 @@ class BarChart(ChartsBase):
 
             bar_plot_ax = sns.barplot(x=data.columns,
                                       y=data.loc['Average'],
-                                      yerr=data.loc['SD'],
+                                      yerr=data.loc[options[('Bar Plot', 'error-line', 'representation')]],
                                       error_kw=dict(
                                           ecolor=rgb2rgbf(options[('Bar Plot', 'error-line', 'color')]),
                                           capsize=options[('Bar Plot', 'error-line', 'cap-size')],
