@@ -46,7 +46,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
         super(GMX_MMPBSA_ANA, self).__init__()
         self.showMaximized()
         self.setWindowIcon(QIcon(logo))
-        self.corr_data = {'mutant': {}}
+        self.corr_data = {}
 
         self.ifiles = ifiles
 
@@ -974,7 +974,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
         opts4ana = {'energy_options': {}, 'entropy_options': {}, 'decomp_options': {}}
 
         for i, _ in enumerate(range(max_sixe), start=1):
-            sys_name, path, stability, exp_ki, options_file = queue.get()
+            sys_name, path, stability, exp_ki, corr, ref, options_file = queue.get()
             opts4ana['energy_options']['etype'] = opts4ana['entropy_options']['etype'] = (None if len(exp_ki) == 2 else
                                                                                           tuple(exp_ki.keys()))
             opts4ana['decomp_options']['etype'] = None if len(exp_ki) == 2 else tuple(f"decomp_{x}" for x in exp_ki)
@@ -983,6 +983,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
             opts4ana['decomp_options']['mol'] = (['complex'] if stability else
                                                         tuple(options.get('decomposition').get('mols')))
             opts4ana['decomp_options']['res_threshold'] = options.get('decomposition').get('res_threshold')
+            opts4ana['correlation'] = options.get('correlation').get('corr')
             ic(opts4ana)
 
             d = {MMPBSA_API: {'object': 'class',
@@ -1008,7 +1009,9 @@ class GMX_MMPBSA_ANA(QMainWindow):
                                'options': options,
                                'anaoptions': opts4ana,
                                'items_data': {},
-                               'exp_ki': exp_ki
+                               'exp_ki': exp_ki,
+                               'correlation': corr,
+                               'reference': ref
                                }
 
             queue.task_done()
@@ -1018,7 +1021,6 @@ class GMX_MMPBSA_ANA(QMainWindow):
         pbd.exec()
 
     def process_data(self, results: Queue, options):
-        self.data_options = options
         size = results.qsize()
         maximum = size * 2
         qpd = QProgressDialog('Creating systems tree', 'Abort', 0, maximum + 1, self)
@@ -1036,7 +1038,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
             self.systems[sys_id].update({
                 'api': api,
                 'namespace': api.app_namespace,
-                'map': {x:v['map'] for x, v in data.items() if v},
+                'map': {x:v['map'] for x, v in data.items() if v and x != 'correlation'},
                 'current_frames': dict(startframe=api.app_namespace.INPUT['startframe'],
                                        endframe=api.app_namespace.INPUT['endframe'],
                                        interval=api.app_namespace.INPUT['interval']),
@@ -1045,11 +1047,31 @@ class GMX_MMPBSA_ANA(QMainWindow):
                                              nminterval=api.app_namespace.INPUT['nminterval']),
                 'current_ie_segment': api.app_namespace.INPUT['ie_segment'],
                 'chart_options': ChartSettings(config),
-                'items_data': {k:v1 for x, v in data.items() if v for k, v1 in v['keys'].items()},
+                'items_data': {k:v1 for x, v in data.items() if v and x != 'correlation' for k, v1 in v['keys'].items()},
                 # 'items_summary': summary,
                 # 'exp_ki': exp_ki
             })
             c += 1
+
+            if options.get('correlation')['corr']:
+
+                ts = [x[0].upper() for x in self.systems[sys_id].get('correlation')]
+                g = pd.DataFrame({('System', 'Number'): [sys_id] * len(ts),
+                     ('System', 'Type'): ts,
+                     ('System', 'Reference'): self.systems[sys_id].get('reference'),
+                     ('System', 'ExpΔG'): [ki2energy(x, self.systems[sys_id]['namespace'].INPUT['temperature'])
+                                           for x in self.systems[sys_id].get('exp_ki').values()]
+                }, index=[0])
+                for et, v in data['correlation'].items():
+                    for m, v1 in v.items():
+                        cdf = pd.concat([g, v1], axis=1)
+                        d = self.corr_data.setdefault(m, cdf)
+                        if d.equals(cdf):
+                            continue
+                        self.corr_data[m] = pd.concat([d, cdf], ignore_index=True).sort_values(
+                            by=[('System', 'Number'), ('System', 'Type')])
+
+
             if not self.all_systems_active:
                 continue
             if not frange_base:
@@ -1072,6 +1094,30 @@ class GMX_MMPBSA_ANA(QMainWindow):
 
         self._initialize_systems()
         qpd.setValue(c)
+
+        def subtract_custom_value(x, custom_value):
+            return x - custom_value
+
+        ic(self.corr_data)
+        for m, v in self.corr_data.items():
+            ref = v.loc[v[('System', 'Reference')] == True].loc[:, ~v.columns.get_level_values(1).isin(['Number',
+                                                                                                        'Type',
+                                                                                                        'Reference'])]
+            ic(ref)
+            ref.columns = ref.columns.to_flat_index()
+            ic(ref)
+            for k in ref:
+                if k[-1] == 'SEM':
+                    continue
+                elif k[-1] == 'SD':
+                    v[k] = v[k].apply(utils.get_corrstd, args=(ref[k].values[0],))
+                    v[(k[0], 'SEM')] = v[k]
+                else:
+                    v[k] = v[k].apply(subtract_custom_value, args=(ref[k].values[0],))
+            ic(v)
+            ic(v.subtract(ref, level='System'))
+
+
 
         if not options.get('correlation')['corr']:  # FIXME:
             self.correlation_DockWidget.setEnabled(False)

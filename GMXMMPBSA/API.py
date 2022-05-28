@@ -315,7 +315,14 @@ class MMPBSA_API():
                                         valid_terms.append(t)
                         energy[et][m], summ_df[et][m] = self._model2df(model_energy, index)
 
-        return {'map': e_map, 'data': energy, 'summary': summ_df}
+        corr = {}
+        for et, v in summ_df.items():
+            corr[et] = {}
+            for m, v2 in v.items():
+                if 'delta' in v2:
+                    corr[et][m] = pd.DataFrame(
+                        {('ΔGeff', t): v for t, v in v2['delta']['TOTAL'].to_dict().items()}, index=[0])
+        return {'map': e_map, 'data': energy, 'summary': summ_df, 'correlation': corr}
 
     def _model2df(self, energy, index):
         energy_df = pd.DataFrame(flatten(energy), index=index)
@@ -507,34 +514,42 @@ class MMPBSA_API():
     def get_binding(self, energy_summary=None, entropy_summary=None):
         binding  = {}
         b_map = {}
+        corr = {}
         if energy_summary and entropy_summary:
+            dg_string = {'ie': 'ΔGie', 'c2': 'ΔGc2', 'nmode': 'ΔGnm', 'qh': 'ΔGqh'}
             for et, ev in energy_summary.items():
                 binding[et] = {}
                 b_map[et] = {}
                 for em, emv in ev.items():
                     binding[et][em] = {}
                     b_map[et][em] = []
-                    # FIXME: check for stability
-                    if not self.app_namespace.FILES.stability:
-                        print(True)
-                    edata = emv[('delta', 'TOTAL')]
+                    mol = 'complex' if self.app_namespace.FILES.stability else 'delta'
+                    edata = emv[mol]['TOTAL']
                     edata.name = 'ΔH'
                     if et in entropy_summary:
+                        if mol == 'delta':
+                            corr[et][em] = {}
+                        c = {}
                         for ent, etv in entropy_summary[et].items():
                             b_map[et][em].append(ent)
-                            if ent in ['nmode', 'qh']:
-                                entdata = etv[('delta', 'TOTAL')]
-                            elif ent == 'ie':
+                            if ent == 'ie' and not self.app_namespace.FILES.stability:
                                 entdata = etv['ie']
-                            else:
+                            elif not self.app_namespace.FILES.stability:
                                 entdata = etv['c2']
-
+                            else:
+                                entdata = etv[mol]['TOTAL']
                             entdata.name = '-TΔS'
-                            std = utils.get_std(edata[1], entdata[1])
-                            dgdata = pd.Series([edata[0] + entdata[0], std, std],
-                                               index=['Average', 'SD', 'SEM'], name='ΔG')
+                            dg = edata.loc['Average'] + entdata.loc['Average']
+                            std = utils.get_std(edata.loc['SD'], entdata.loc['SD'])
+                            dgdata = pd.Series([dg, std, std], index=['Average', 'SD', 'SEM'], name='ΔG')
                             binding[et][em][ent] = pd.concat([edata, entdata, dgdata], axis=1)
-        return {'map': b_map, 'data': binding}
+                            if mol == 'delta':
+                                c[(dg_string[ent], 'Average')] = dg
+                                c[(dg_string[ent], 'SD')] = std
+                                c[(dg_string[ent], 'SEM')] = std
+                        if mol == 'delta':
+                            corr[et][em] = pd.DataFrame(c, index=[0])
+        return {'map': b_map, 'data': binding, 'correlation': corr}
 
     def get_decomp_energy(self, etype: tuple = None, model: tuple=None, mol: tuple = None, contribution: tuple = None,
                           res1: tuple = None, res2: tuple = None, term: tuple = None, res_threshold=0.5,
@@ -649,14 +664,17 @@ class MMPBSA_API():
                         decomp_energy[etkey][m] = tdf.reindex(sorted(tdf.columns), axis=1)
         return {'map': e_map, 'data': decomp_energy}
 
-    def get_ana_data(self, energy_options=None, entropy_options=None, decomp_options=None, basic_options=None,
-                     performance_options=None):
+    def get_ana_data(self, energy_options=None, entropy_options=None, decomp_options=None, performance_options=None,
+                     correlation=False):
         TASKs = []
         d = {}
+        corr = {}
+        ecorr = None
         if energy_options:
-
-            energy_map, energy, energy_summary = self.get_energy(**energy_options).values()
+            energy_map, energy, energy_summary, ecorr = self.get_energy(**energy_options).values()
             if energy_map:
+                for et, v in ecorr.items():
+                    corr[et] = v
                 d['enthalpy'] = {'map': energy_map, 'keys': {}, 'summary': energy_summary}
                 for level, value in energy_map.items():
                     for level1, value1 in value.items():
@@ -684,9 +702,15 @@ class MMPBSA_API():
                         elif level1 == 'ie':
                             TASKs.append([_setup_data, dict(data=entropy[level][level1], level=1.5),
                                           (level, level1), 'entropy'])
+
         if energy_options and entropy_options:
-            bind_map, binding = self.get_binding(energy_summary, entropy_summary).values()
+            bind_map, binding, bcorr = self.get_binding(energy_summary, entropy_summary).values()
             if bind_map:
+                for et, v in bcorr.items():
+                    for m, v1 in v.items():
+                        if ecorr:
+                            corr[et][m] = pd.concat([ecorr[et][m], v1], axis=1)
+                    
                 d['binding'] = {'map': bind_map, 'keys': {}, 'summary': binding}
                 for level, value in bind_map.items():
                     for level1, value1 in value.items():
@@ -730,6 +754,9 @@ class MMPBSA_API():
             imap_unordered_it = pool.imap_unordered(calculatestar, TASKs)
             for t, id, result in imap_unordered_it:
                 d[t]['keys'][id] = result
+
+        if correlation:
+            d['correlation'] = corr
 
         return d
 
