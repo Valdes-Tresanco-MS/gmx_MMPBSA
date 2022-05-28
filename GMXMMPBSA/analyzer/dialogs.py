@@ -39,7 +39,7 @@ class InitDialog(QDialog):
         self.setWindowTitle('Initialization gmx_MMPBSA_ana')
         self.setMinimumWidth(650)
         self.curr_progress = 0
-        self.data = []
+        self.systems_list = {}
         self.chart_default_setting = ChartSettings()
         self.processing_label = QLabel()
 
@@ -109,6 +109,7 @@ class InitDialog(QDialog):
         self.decomp_group_layout.addLayout(self.decomp_res_threshold_layout, 1, 1)
 
         self.corr_group = QGroupBox('Correlation')
+        self.corr_group.setEnabled(False)
         self.corr_group_layout = QGridLayout(self.corr_group)
         self.corr_sys_btn = QCheckBox('Between systems')
         self.corr_sys_btn.toggled.connect(lambda x: self._update_ram_indicator(x, 'correlation'))
@@ -118,6 +119,7 @@ class InitDialog(QDialog):
 
         self.energy_type = QComboBox()
         self.energy_type.addItems(['ΔG', 'ΔΔG'])
+        self.energy_type.setEnabled(False)
 
         self.energy_corr_layout = QFormLayout()
         self.energy_corr_layout.addRow('Energy:', self.energy_type)
@@ -203,29 +205,33 @@ class InitDialog(QDialog):
         self.performance_slider.valueChanged.connect(self.slider_changed)
         self.performance_slider.setValue(2)
 
-        self.header_item = QTreeWidgetItem(['System', 'Show', 'Name', 'Exp.Ki (nM)', 'Corr.', 'Chart Settings', 'Path'])
+        self.header_item = QTreeWidgetItem(['System', 'Show', 'Name', 'Exp.Ki (nM)', 'Corr.', 'Ref.', 'Chart Settings',
+                                           'Path'])
         self.header_item.setToolTip(0, 'System number')
         self.header_item.setToolTip(1, 'Selection to analyze.')
         self.header_item.setToolTip(2, 'System name defined in the input file')
         self.header_item.setToolTip(3, 'Experimental Ki in NanoMolar')
         self.header_item.setToolTip(4, 'Systems selection for correlation. Each box corresponds to the part of the'
                                        'system according to the correlation to be calculated.')
-        self.header_item.setToolTip(5, 'Setting selection for each system')
-        self.header_item.setToolTip(6, 'Reference system path')
+        self.header_item.setToolTip(5, 'Select system as reference when the ΔΔG correlation is selected')
+        self.header_item.setToolTip(6, 'Setting selection for each system')
+        self.header_item.setToolTip(7, 'Reference system path')
         self.header_item.setTextAlignment(0, Qt.AlignmentFlag.AlignCenter)
         self.header_item.setTextAlignment(1, Qt.AlignmentFlag.AlignCenter)
         self.header_item.setTextAlignment(2, Qt.AlignmentFlag.AlignCenter)
         self.header_item.setTextAlignment(3, Qt.AlignmentFlag.AlignCenter)
         self.header_item.setTextAlignment(4, Qt.AlignmentFlag.AlignCenter)
         self.header_item.setTextAlignment(5, Qt.AlignmentFlag.AlignCenter)
+        self.header_item.setTextAlignment(6, Qt.AlignmentFlag.AlignCenter)
         self.result_tree = QTreeWidget(self)
         self.result_tree.setHeaderItem(self.header_item)
         self.result_tree.header().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
         self.result_tree.hideColumn(4)
+        self.result_tree.hideColumn(5)
         self.result_tree.itemChanged.connect(self.update_item_info)
 
         self.corr_sys_btn.toggled.connect(self._show_corr_column)
-
+        self.energy_type.currentTextChanged.connect(self._show_corr_column)
 
         btnbox = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
         accept_btn = btnbox.button(QDialogButtonBox.StandardButton.Ok)
@@ -252,12 +258,22 @@ class InitDialog(QDialog):
         self.content_layout.addWidget(self.result_tree, 6, 0, 1, 3)
         self.content_layout.addWidget(self.statusbar, 7, 0, 1, 2)
         self.content_layout.addWidget(btnbox, 7, 2, 1, 1, Qt.AlignmentFlag.AlignRight)
+        self.content_layout.setRowStretch(6, 10)
 
     def _show_corr_column(self, check):
-        if check:
+        if check == 'ΔG':
+            self.result_tree.hideColumn(5)
+        elif check == 'ΔΔG':
+            self.result_tree.showColumn(5)
+        elif check:
             self.result_tree.showColumn(4)
+            if self.energy_type.currentText() == 'ΔΔG':
+                self.result_tree.showColumn(5)
+            self.energy_type.setEnabled(True)
         else:
             self.result_tree.hideColumn(4)
+            self.result_tree.hideColumn(5)
+            self.energy_type.setEnabled(False)
 
     def _update_ram_indicator(self, check, obj_name):
 
@@ -293,15 +309,6 @@ class InitDialog(QDialog):
             self.ram_pb.setValue(self.ram_pb.value() + ram_vaues[obj_name][1] * mult)
         elif obj_name == 'correlation':
             self.ram_pb.setValue(self.ram_pb.value() + ram_vaues[obj_name][1] * mult)
-
-    def _change_decomp_opts_color(self, check):
-        if check:
-            self.decomp_group.setStyleSheet('''
-                                                    QGroupBox::title {
-                                                       background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 #ffa200, stop:1 #fedb6f);
-                                            }''')
-        else:
-            self.decomp_group.setStyleSheet('')
 
     def configure_basic_settings(self, checked):
         self.advanced_group.setChecked(not checked)
@@ -374,8 +381,12 @@ class InitDialog(QDialog):
 
         self.processing_label.setText(f'Processing {self.nfiles} systems...')
 
+        if len(info_files) > 3:
+            self.corr_group.setEnabled(True)
+
         files_list = info_files
         names = []
+        btns = []
         for c, fname in enumerate(files_list, start=1):
             basename = None
             exp_ki = None
@@ -422,27 +433,38 @@ class InitDialog(QDialog):
             if not exp_ki:
                 exp_ki = 0.0
 
-            item = QTreeWidgetItem([f'{c}', '', f'{basename}', '', '', '', f'{fname.parent.absolute()}'])
+            item = QTreeWidgetItem([f'{c}', '', f'{basename}', '', '', '', '', f'{fname.parent.absolute()}'])
             item.setFlags(item.flags() | Qt.ItemFlag.ItemIsAutoTristate)
 
             self._set_item_properties(item)
             self.f_item.addChild(item)
 
             if not mut_only:
-                witem = QTreeWidgetItem(['', '', 'normal', f'{exp_ki}', '', '', ''])
+                witem = QTreeWidgetItem(['', '', 'normal', f'{exp_ki}', '', '','', ''])
                 self._set_item_properties(witem)
                 item.addChild(witem)
+                ref_btn = QRadioButton('')
+
+                # FIXME: reference selection require item selection for analysis and define Ki value
+                # self._select_item_as_ref(witem, )
+                if c == 1:
+                    ref_btn.setChecked(True)
+                btns.append(ref_btn)
+                self.result_tree.setItemWidget(witem, 5, ref_btn)
 
             if mutant:
-                mitem = QTreeWidgetItem(['', '', f'{mutant}', f'{exp_ki}', '', '', ''])
+                mitem = QTreeWidgetItem(['', '', f'{mutant}', f'{exp_ki}', '', '','', ''])
                 self._set_item_properties(mitem)
                 item.addChild(mitem)
 
-            item.info = [basename, Path(fname), stability]
+            self.systems_list[c] = [basename, Path(fname), stability]
 
             item.setExpanded(True)
-            self.result_tree.setItemWidget(item, 5, cb)
+            self.result_tree.setItemWidget(item, 6, cb)
         self.f_item.setExpanded(True)
+        self.ref_btn_group = QButtonGroup(self)
+        for i, x in enumerate(btns):
+            self.ref_btn_group.addButton(x, i)
 
     def _set_item_properties(self, item: QTreeWidgetItem):
         item.setCheckState(1, Qt.CheckState.Checked)
@@ -451,12 +473,12 @@ class InitDialog(QDialog):
         item.setTextAlignment(2, Qt.AlignmentFlag.AlignCenter)
         item.setTextAlignment(3, Qt.AlignmentFlag.AlignRight)
         item.setTextAlignment(4, Qt.AlignmentFlag.AlignCenter)
+        item.setTextAlignment(5, Qt.AlignmentFlag.AlignCenter)
 
     def get_data(self):
 
         queue = Queue()
         self.result_queue = Queue()
-        self.systems_list = []
         emols = ['delta']
         emols += ['ligand'] if self.energy_load_lig.isChecked() else []
         emols += ['receptor'] if self.energy_load_rec.isChecked() else []
@@ -499,6 +521,8 @@ class InitDialog(QDialog):
             if not child.checkState(1):
                 continue
             t = {}
+            corr = {}
+            ref = False
             if child.childCount():
                 for c1 in range(child.childCount()):
                     if child.child(c1).checkState(1) == Qt.CheckState.Checked:
@@ -506,8 +530,19 @@ class InitDialog(QDialog):
                             t['normal'] = float(child.child(c1).text(3))
                         else:
                             t['mutant'] = float(child.child(c1).text(3))
-            child.info += [t, self.result_tree.itemWidget(child, 5).currentText()]
-            queue.put(child.info)
+                        if self.corr_sys_btn.isChecked():
+                            if child.child(c1).text(2) == 'normal':
+                                corr['normal'] = child.child(c1).checkState(4) == Qt.CheckState.Checked
+                            else:
+                                corr['mutant'] = child.child(c1).checkState(4) == Qt.CheckState.Checked
+                            if self.energy_type.currentIndex() == 1:
+                                ref = self.result_tree.itemWidget(child.child(c1), 5).isChecked()
+            # child.info += [t, self.result_tree.itemWidget(child, 5).currentText()]
+            ic(child,
+               self.systems_list[eval(child.text(0))] + [t, corr, ref,
+                                                         self.result_tree.itemWidget(child, 6).currentText()])
+            queue.put(self.systems_list[eval(child.text(0))] +
+                      [t, corr, ref,self.result_tree.itemWidget(child, 6).currentText()])
             counter += 1
         if not counter:
             QMessageBox.critical(self, 'Error processing systems', 'You must select at least one system.',
