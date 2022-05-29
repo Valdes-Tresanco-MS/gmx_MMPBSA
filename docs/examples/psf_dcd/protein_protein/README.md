@@ -99,7 +99,7 @@ Optional, but recommended -- :octicons-check-circle-fill-16:{ .req_opt } -> Opti
             
                 cpptraj -p step3_input.psf
                 >trajin traj.dcd
-                >strip :POT,CLA,TIP3
+                >strip :POT,CLA,TIP3,SOD
                 >trajout gromacs.pdb onlyframes 1
                 >trajout traj.xtc
                 >run
