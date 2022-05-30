@@ -194,11 +194,11 @@ Once the gmx_MMPBSA files have been generated, the program can be run either in 
 
 === "Serial"
 
-        gmx_MMPBSA -O -i mmpbsa.in -cs gromacs.pdb -ct traj.xtc -ci index.ndx -cg 1 13 -cp gromacs.top
+        gmx_MMPBSA -O -i mmpbsa.in -cs gromacs.pdb -ct traj.xtc -ci index.ndx -cg 1 13 -cp gromacs.top -o FINAL_RESULTS_MMPBSA.dat -eo FINAL_RESULTS_MMPBSA.csv
 
 === "With MPI"
 
-        mpirun -np 2 gmx_MMPBSA MPI -O -i mmpbsa.in -cs gromacs.pdb -ct traj.xtc -ci index.ndx -cg 1 13 -cp gromacs.top
+        mpirun -np 2 gmx_MMPBSA MPI -O -i mmpbsa.in -cs gromacs.pdb -ct traj.xtc -ci index.ndx -cg 1 13 -cp gromacs.top -o FINAL_RESULTS_MMPBSA.dat -eo FINAL_RESULTS_MMPBSA.csv
 
 ## Considerations
 In this case, a single trajectory (ST) approximation is followed, which means the receptor and ligand structures and 
@@ -209,6 +209,11 @@ The `mmpbsa.in` input file will contain all the
 parameters needed for the MM/PB(GB)SA calculation. In this case, 11 frames 
 are going to be used when performing the MM/PB(GB)SA calculation with the igb5 (GB-OBC2) model and a 
 salt concentration = 0.15M.
+
+A plain text output file with all the statistics (default: `FINAL_RESULTS_MMPBSA.dat`) and a CSV-format 
+output file containing all energy terms for every frame in every calculation will be saved. The file name in 
+'-eo' flag will be forced to end in [.csv] (`FINAL_RESULTS_MMPBSA.csv` in this case). This file is only written when 
+specified on the command-line.
 
 !!! note
     Once the calculation is done, the results can be analyzed in `gmx_MMPBSA_ana` (if `-nogui` flag was not used in the command-line). 
