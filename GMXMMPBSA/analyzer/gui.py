@@ -38,7 +38,7 @@ from queue import Queue
 
 from GMXMMPBSA.API import MMPBSA_API
 from GMXMMPBSA.analyzer.dialogs import InitDialog
-from GMXMMPBSA.analyzer.customitem import CustomItem, CorrelationItem
+from GMXMMPBSA.analyzer.customitem import CustomItem, CustomCorrItem
 from GMXMMPBSA.analyzer.style import save_default_config, default_config, save_user_config, user_config, toc_img, logo, \
     alert, config
 from GMXMMPBSA.analyzer.utils import energy2pdb_pml, ki2energy, make_corr_DF, multiindex2dict
@@ -74,6 +74,8 @@ class GMX_MMPBSA_ANA(QMainWindow):
 
         self.correlation_DockWidget = QDockWidget('Correlations', self)
         self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.correlation_DockWidget)
+        self.tabifyDockWidget(self.treeDockWidget, self.correlation_DockWidget)
+
 
         self.optionDockWidget = QDockWidget('Options', self)
         self.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.optionDockWidget)
@@ -102,40 +104,72 @@ class GMX_MMPBSA_ANA(QMainWindow):
         header.setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)
         header.setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
 
-        self.correlation_treeWidget = QTreeWidget(self)
-        self.correlation_treeWidget.itemClicked.connect(self.update_table)
-        self.correlation_treeWidget.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
-        # self.correlation_treeWidget.customContextMenuRequested.connect(self.corr_context_menu)
-        model_label = QTreeWidgetItem(['MODEL', 'ΔGeff', 'ΔGie', 'ΔGc2', 'ΔGnm', 'ΔGqh'])
-        model_label.setToolTip(0, 'Selected Model')
-        model_label.setToolTip(1, '''<html>Correlation plot for ΔG<sub>effective</sub>. Energy 
-        when entropy contribution is neglected. Calculated as ΔG<sub>effective</sub> = ΔH</html>''')
-        model_label.setToolTip(2, '''<html>Correlation plot for ΔG<sub>ie</sub>. Energy 
+        self.correlation_tableWidget = QTableWidget(self)
+
+        self.correlation_tableWidget.itemClicked.connect(self.update_table)
+        self.correlation_tableWidget.setColumnCount(6)
+        self.correlation_tableWidget.verticalHeader().hide()
+        header_tt = {'MODEL': 'Selected Model',
+                     'ΔGeff': '''<html>Correlation plot for ΔG<sub>effective</sub>. Energy when entropy contribution is 
+        neglected. Calculated as ΔG<sub>effective</sub> = ΔH</html>''',
+                     'ΔGie': '''<html>Correlation plot for ΔG<sub>ie</sub>. Energy 
         when entropy contribution is calculated using the Interaction Entropy method. Calculated as 
-        ΔG<sub>ie</sub> = ΔH + -TΔS<sub>IE</sub></html>''')
-        model_label.setToolTip(3, '''<html>Correlation plot for ΔG<sub>c2</sub>. Energy 
+        ΔG<sub>ie</sub> = ΔH + -TΔS<sub>IE</sub></html>''',
+                     'ΔGc2': '''<html>Correlation plot for ΔG<sub>c2</sub>. Energy 
         when entropy contribution is calculated using the C2 Entropy method. Calculated as 
-        ΔG<sub>c2</sub> = ΔH + -TΔS<sub>C2</sub></html>''')
-        model_label.setToolTip(4, '''<html>Correlation plot for ΔG<sub>nm</sub>. Energy 
+        ΔG<sub>c2</sub> = ΔH + -TΔS<sub>C2</sub></html>''',
+                     'ΔGnm': '''<html>Correlation plot for ΔG<sub>nm</sub>. Energy 
         when entropy contribution is calculated using the Normal Modes Entropy method. Calculated as 
-        ΔG<sub>nm</sub> = ΔH + -TΔS<sub>NMODE</sub></html>''')
-        model_label.setToolTip(5, '''<html>Correlation plot for ΔG<sub>ie</sub>. Energy 
+        ΔG<sub>nm</sub> = ΔH + -TΔS<sub>NMODE</sub></html>''',
+                     'ΔGqh': '''<html>Correlation plot for ΔG<sub>ie</sub>. Energy 
         when entropy contribution is calculated using the Quasi-Harmonic Entropy method. Calculated as 
-        ΔG<sub>qh</sub> = ΔH + -TΔS<sub>QH</sub></html>''')
-        self.correlation_treeWidget.setHeaderItem(model_label)
-        cheader = self.correlation_treeWidget.header()
-        cheader.setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
+        ΔG<sub>qh</sub> = ΔH + -TΔS<sub>QH</sub></html>'''}
 
-        self.data_table_widget = QTableWidget(0, 3)
-        self.data_table_widget.setHorizontalHeaderLabels(['System', 'Exp.ΔG'])
-        self.data_table_energy_col = QTableWidgetItem('None')
-        self.data_table_widget.setHorizontalHeaderItem(2, self.data_table_energy_col)
-        self.data_table_widget.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
-        self.data_table_widget.horizontalHeader().setStretchLastSection(True)
+        for c, (i, t) in enumerate(header_tt.items()):
+            hitem = QTableWidgetItem(i)
+            hitem.setToolTip(t)
+            self.correlation_tableWidget.setHorizontalHeaderItem(c, hitem)
+            if c !=0:
+                self.correlation_tableWidget.setColumnHidden(c, True)
+        cheader = self.correlation_tableWidget.horizontalHeader()
+        cheader.setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
 
-        self.corr_container_widget = QSplitter(Qt.Orientation.Vertical)
-        self.corr_container_widget.addWidget(self.correlation_treeWidget)
-        self.corr_container_widget.addWidget(self.data_table_widget)
+        self.data_table_widget = QTableWidget(0, 6)
+        self.data_table_widget.setHorizontalHeaderLabels(['Sys.', 'Type', 'Exp.ΔG', 'Avg.', 'SD', 'SEM'])
+        self.data_table_widget.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        self.data_table_widget.verticalHeader().hide()
+        self.data_table_widget.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+
+        self.corr_parm_tree_w = ParameterTree()
+        self.corr_parms = Parameter().create()
+        self.corr_parms.restoreState(CorrChartSettings())
+        self.corr_parm_tree_w.setParameters(self.corr_parms, showTop=False)
+
+        self.corr_sys_sel_w = QTableWidget()
+        self.corr_sys_sel_w.verticalHeader().hide()
+        self.corr_sys_sel_w.setColumnCount(6)
+        self.corr_sys_sel_w.setHorizontalHeaderLabels(['Id', 'Sel.', 'Ref.', 'Type', '  Exp.Ki  ', 'Name'])
+        self.corr_sys_sel_w.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
+        self.corr_sys_sel_w.horizontalHeader().setStretchLastSection(True)
+        delegate = KiTableDelegate(self.corr_sys_sel_w)
+        self.corr_sys_sel_w.setItemDelegateForColumn(4, delegate)
+
+        self.corr_options_widget = QTabWidget()
+        self.corr_options_widget.addTab(self.corr_parm_tree_w, 'Charts')
+        self.corr_options_widget.addTab(self.corr_sys_sel_w, 'Selections')
+
+        self.update_corr_btn = QPushButton(f'Update {self.corr_options_widget.tabText(0)}')
+        # self.update_corr_btn.clicked.connect(self.update_fn)
+        self.corr_options_widget.setCornerWidget(self.update_corr_btn)
+
+        self.corr_options_widget.currentChanged.connect(partial(self._change_update_btn, tw='corr'))
+
+        self.corr_container_widget = QWidget()
+        self.corr_container_widget_layout = QVBoxLayout(self.corr_container_widget)
+        # self.corr_container_widget.addWidget(self.correlation_treeWidget)
+        self.corr_container_widget_layout.addWidget(self.correlation_tableWidget, 1)
+        self.corr_container_widget_layout.addWidget(self.data_table_widget, 5)
+        self.corr_container_widget_layout.addWidget(self.corr_options_widget, 5)
         self.correlation_DockWidget.setWidget(self.corr_container_widget)
 
         self.menubar = self.menuBar()
@@ -543,9 +577,13 @@ class GMX_MMPBSA_ANA(QMainWindow):
         #
         self.optionWidget_c.currentChanged.connect(self._change_update_btn)
 
-    def _change_update_btn(self, i):
-        text = self.optionWidget_c.tabText(i)
-        self.update_btn.setText(f"Update {text}")
+    def _change_update_btn(self, i, tw=None):
+        if tw == 'corr':
+            text = self.corr_options_widget.tabText(i)
+            self.update_corr_btn.setText(f"Update {text}")
+        else:
+            text = self.optionWidget_c.tabText(i)
+            self.update_btn.setText(f"Update {text}")
 
     def _reset_iesegment(self):
         self.iesegment_sb.setValue(self.systems[self.current_system_index]['namespace'].INPUT['ie_segment'])
@@ -906,68 +944,152 @@ class GMX_MMPBSA_ANA(QMainWindow):
     #                 self.mdi.activatePreviousSubWindow()
     #                 s.close()
 
-    def update_table(self, item: CorrelationItem, col):
-
-        if col == 1:
-            data = item.enthalpy
-        elif col == 2:
-            data = item.dgie
-        elif col == 3:
-            data = item.dgnmode
-        elif col == 4:
-            data = item.dgqh
-        else:
+    def update_table(self, item: CustomCorrItem):
+        if not item.keys_path:
             return
-        col_label = self.correlation_treeWidget.headerItem().text(col)
-        self.data_table_energy_col.setText(f"{item.text(0)}({col_label})")
-
-        for row, v in enumerate(data[col_label]):
-            titem = QTableWidgetItem(f'{v:.2f}')
-            self.data_table_widget.setItem(row, 2, titem)
+        df = self.correlation['items_data'][item.keys_path][0]
+        data = df.loc[df['Selection'] == True][['Number', 'Type', 'ExpΔG', 'Average', 'SD', 'SEM']]
+        ic(data)
+        for i, c in enumerate(data):
+            for j, r in enumerate(data[c]):
+                it = QTableWidgetItem(f'{r:.2f}' if isinstance(r, float) else str(r))
+                it.setFlags(it.flags() ^ Qt.ItemFlag.ItemIsEditable)
+                it.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                self.data_table_widget.setItem(j, i, it)
 
     def make_correlation(self):
 
-        self.data_table_widget.setRowCount(len(self.corr_data) - 1)
-        sys_with_ki = 0
-        for x in self.corr_data:
-            if x == 'mutant':
-                continue
-            if np.isnan(self.corr_data[x]['Exp.Energy']):
-                continue
-            item_s = QTableWidgetItem(x)
-            self.data_table_widget.setItem(sys_with_ki, 0, item_s)
-            item_e = QTableWidgetItem(f"{self.corr_data[x]['Exp.Energy']:.2f}")
-            self.data_table_widget.setItem(sys_with_ki, 1, item_e)
-            sys_with_ki += 1
-        if sys_with_ki < 3:
-            QMessageBox.critical(self.mdi, 'Unable to calculate correlation',
-                                     'Three or more systems are needed to calculate the correlation.',
-                                     QMessageBox.StandardButton.Ok, QMessageBox.StandardButton.Ok)
-            self.correlation_DockWidget.setEnabled(False)
-            self.correlation_DockWidget.hide()
-            return
+        self.corr_sys_sel_w.setRowCount(len(self.systems))
 
-        df = make_corr_DF(self.corr_data)  # FIXME:
-        # get df for each model
-        models = ['gb', 'pb', 'rism std', 'rism gf', 'rism pcplus']
-        columns = ['ΔH', 'ΔH+IE', 'ΔH+NMODE', 'ΔH+QH']
-        hide_col = [c for c, x in enumerate(columns, start=1) if df[x].isnull().all()]
-        for m in models:
-            model_df = df[df['MODEL'].isin([m])]
-            m_col_box = []
-            model_data = []
-            for c, col in enumerate(columns, start=1):
-                item_col_df = model_df[['System', col, 'Exp.Energy']]
-                if not item_col_df[col].isnull().all():
-                    m_col_box.append(c)
-                    model_data.append(item_col_df)
+        ref_group = QButtonGroup()
+        ref = False
+        r = 0
+        num_sel_sys = 0
+        for s, sys_id in enumerate(self.systems):
+            ic(self.systems[sys_id]['map'].get('enthalpy').keys())
+
+            # if self.systems[sys_id]['options'].get('correlation')['corr']:
+            dta = {('System', 'Number'): [], ('System', 'Type'): [], ('System', 'Reference'): [],
+                   ('System', 'ExpΔG'): [], ('System', 'Selection'): []}
+            for ct, cv in self.systems[sys_id].get('correlation').items():
+                dta[('System', 'Number')].append(sys_id)
+                dta[('System', 'Type')].append(ct[0].upper())
+                if ct == 'normal':
+                    dta[('System', 'Reference')].append(self.systems[sys_id].get('reference'))
                 else:
-                    model_data.append(None)
-            if m_col_box:
-                item = CorrelationItem(self.correlation_treeWidget, [m.upper()], model=model_df, enthalpy=model_data[0],
-                                       dgie=model_data[1], dgnmode=model_data[2], dgqh=model_data[3], col_box=m_col_box)
-        for x in hide_col:
-            self.correlation_treeWidget.hideColumn(x)
+                    dta[('System', 'Reference')].append(False)
+                dta[('System', 'ExpΔG')].append(
+                    ki2energy(self.systems[sys_id]['exp_ki'][ct],
+                              self.systems[sys_id]['namespace'].INPUT['temperature']))
+                dta[('System', 'Selection')].append(cv)
+
+                self.corr_sys_sel_w.setItem(r, 0, QTableWidgetItem(str(sys_id)))
+                ti = QTableWidgetItem()
+                ti.setCheckState(Qt.CheckState.Checked if cv else Qt.CheckState.Unchecked)
+                self.corr_sys_sel_w.setItem(r, 1, ti)
+                if self.systems[sys_id].get('reference'):
+                    ref = True
+                ri = QRadioButton()
+                ri.setChecked(self.systems[sys_id].get('reference'))
+                ref_group.addButton(ri, r)
+                self.corr_sys_sel_w.setCellWidget(r, 2, ri)
+
+                self.corr_sys_sel_w.setItem(r, 3, QTableWidgetItem(ct[0].upper()))
+                ki = QTableWidgetItem(str(self.systems[sys_id]['exp_ki'][ct]))
+                ki.setFlags(ki.flags() | Qt.ItemFlag.ItemIsEditable)
+                ic(self.systems[sys_id]['exp_ki'][ct])
+                self.corr_sys_sel_w.setItem(r, 4, ki)
+                self.corr_sys_sel_w.setItem(r, 5, QTableWidgetItem(self.systems[sys_id]['name']))
+
+                if cv:
+                    num_sel_sys += 1
+                r += 1
+
+
+            # ts = [x[0].upper() for x in self.systems[sys_id].get('correlation')]
+            g = pd.DataFrame(dta, index=range(len(self.systems[sys_id].get('correlation'))))
+
+            for et, v in self.systems[sys_id]['correlation_data'].items():
+                for m, v1 in v.items():
+                    cdf = pd.concat([g, v1], axis=1)
+                    d = self.corr_data.setdefault(m, cdf)
+                    if d.equals(cdf):
+                        continue
+                    self.corr_data[m] = pd.concat([d, cdf], ignore_index=True).sort_values(
+                        by=[('System', 'Number'), ('System', 'Type')])
+        if not ref:
+            self.corr_sys_sel_w.hideColumn(2)
+        self.data_table_widget.setRowCount(num_sel_sys)
+
+
+        def subtract_custom_value(x, custom_value):
+            ic(x, custom_value)
+            return x - custom_value
+
+        self.correlation_tableWidget.setRowCount(len(self.corr_data))
+
+        met_col = {'ΔGeff': 1, 'ΔGie': 2, 'ΔGc2': 3, 'ΔGnm': 4, 'ΔGqh': 5}
+
+        for r, (m, v) in enumerate(self.corr_data.items()):
+            citem = CustomCorrItem(text=True, model=m)
+            citem.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+            self.correlation_tableWidget.setItem(r, 0, citem)
+            ref = v.loc[v[('System', 'Reference')] == True].loc[:, ~v.columns.get_level_values(1).isin(
+                ['Number', 'Type', 'Reference'])]
+
+            if len(ref.index):
+                # FIXME: separate to a new method to avoid overwrite items when the recalculate the corr.
+                for k in ref:
+                    if k[-1] == 'SEM':
+                        continue
+                    elif k[-1] == 'SD':
+                        v[k] = v[k].apply(utils.get_corrstd, args=(ref[k].values[0],))
+                        v[(k[0], 'SEM')] = v[k]
+                    else:
+                        v[k] = v[k].apply(subtract_custom_value, args=(ref[k].values[0],))
+
+            met = v.columns.get_level_values(0).unique().to_list()[1:]
+            for m1 in met:
+                self.correlation_tableWidget.setColumnHidden(met_col[m1], False)
+
+                self.correlation['items_data'][(m, m1)] = [v.loc[ # FIXME: user option to show the ref in reg plot ???
+                                                      v[('System', 'Reference')] == False
+                                                  ].loc[:,
+                                                        v.columns.get_level_values(0).isin(['System', m1])
+                                                    ].droplevel(0, axis=1), True]
+                item = CustomCorrItem(app=self, model=m, keys_path=(m, m1))
+                self.correlation_tableWidget.setItem(r, met_col[m1], item)
+                item.define_button(r, met_col[m1])
+
+                # it.setCheckState(Qt.CheckState.Checked)
+            ic(self.correlation['items_data'])
+
+            # citem.define_button(r, 0)
+            # item = CorrelationItem(self.correlation_treeWidget, [m.upper()], )
+            # p
+
+
+            # item_s = QTableWidgetItem(m)
+            # self.data_table_widget.setItem(r, 0, item_s)
+
+        # sys_with_ki = 0
+        # for x in self.corr_data:
+        #     if x == 'mutant':
+        #         continue
+        #     if np.isnan(self.corr_data[x]['Exp.Energy']):
+        #         continue
+        #     item_s = QTableWidgetItem(x)
+        #     self.data_table_widget.setItem(sys_with_ki, 0, item_s)
+        #     item_e = QTableWidgetItem(f"{self.corr_data[x]['Exp.Energy']:.2f}")
+        #     self.data_table_widget.setItem(sys_with_ki, 1, item_e)
+        #     sys_with_ki += 1
+        # if sys_with_ki < 3:
+        #     QMessageBox.critical(self.mdi, 'Unable to calculate correlation',
+        #                              'Three or more systems are needed to calculate the correlation.',
+        #                              QMessageBox.StandardButton.Ok, QMessageBox.StandardButton.Ok)
+        #     self.correlation_DockWidget.setEnabled(False)
+        #     self.correlation_DockWidget.hide()
+        #     return
 
     def read_data(self, queue: Queue, options):
         self.init_dialog.accept()
@@ -1053,31 +1175,12 @@ class GMX_MMPBSA_ANA(QMainWindow):
                                              nmendframe=api.app_namespace.INPUT['nmendframe'],
                                              nminterval=api.app_namespace.INPUT['nminterval']),
                 'current_ie_segment': api.app_namespace.INPUT['ie_segment'],
-                'chart_options': ChartSettings(config),
                 'items_data': {k:v1 for x, v in data.items() if v and x != 'correlation' for k, v1 in v['keys'].items()},
+                'correlation_data': data.get('correlation')  # FIXME: fail when decomp
                 # 'items_summary': summary,
                 # 'exp_ki': exp_ki
             })
             c += 1
-
-            if options.get('correlation')['corr']:
-
-                ts = [x[0].upper() for x in self.systems[sys_id].get('correlation')]
-                g = pd.DataFrame({('System', 'Number'): [sys_id] * len(ts),
-                     ('System', 'Type'): ts,
-                     ('System', 'Reference'): self.systems[sys_id].get('reference'),
-                     ('System', 'ExpΔG'): [ki2energy(x, self.systems[sys_id]['namespace'].INPUT['temperature'])
-                                           for x in self.systems[sys_id].get('exp_ki').values()]
-                }, index=[0])
-                for et, v in data['correlation'].items():
-                    for m, v1 in v.items():
-                        cdf = pd.concat([g, v1], axis=1)
-                        d = self.corr_data.setdefault(m, cdf)
-                        if d.equals(cdf):
-                            continue
-                        self.corr_data[m] = pd.concat([d, cdf], ignore_index=True).sort_values(
-                            by=[('System', 'Number'), ('System', 'Type')])
-
 
             if not self.all_systems_active:
                 continue
@@ -1101,30 +1204,6 @@ class GMX_MMPBSA_ANA(QMainWindow):
 
         self._initialize_systems()
         qpd.setValue(c)
-
-        def subtract_custom_value(x, custom_value):
-            return x - custom_value
-
-        ic(self.corr_data)
-        for m, v in self.corr_data.items():
-            ref = v.loc[v[('System', 'Reference')] == True].loc[:, ~v.columns.get_level_values(1).isin(['Number',
-                                                                                                        'Type',
-                                                                                                        'Reference'])]
-            ic(ref)
-            ref.columns = ref.columns.to_flat_index()
-            ic(ref)
-            for k in ref:
-                if k[-1] == 'SEM':
-                    continue
-                elif k[-1] == 'SD':
-                    v[k] = v[k].apply(utils.get_corrstd, args=(ref[k].values[0],))
-                    v[(k[0], 'SEM')] = v[k]
-                else:
-                    v[k] = v[k].apply(subtract_custom_value, args=(ref[k].values[0],))
-            ic(v)
-            ic(v.subtract(ref, level='System'))
-
-
 
         if not options.get('correlation')['corr']:  # FIXME:
             self.correlation_DockWidget.setEnabled(False)
