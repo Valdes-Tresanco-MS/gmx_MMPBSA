@@ -14,6 +14,9 @@
 #  or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License    #
 #  for more details.                                                           #
 # ##############################################################################
+
+from GMXMMPBSA.analyzer.items_delegate import KiTreeDelegate
+
 try:
     from PyQt6.QtWidgets import *
     from PyQt6.QtCore import *
@@ -228,6 +231,9 @@ class InitDialog(QDialog):
         self.result_tree.header().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
         self.result_tree.hideColumn(4)
         self.result_tree.hideColumn(5)
+        # self.result_tree.colum
+        delegate = KiTreeDelegate(self.result_tree)
+        self.result_tree.setItemDelegate(delegate)
         self.result_tree.itemChanged.connect(self.update_item_info)
 
         self.corr_sys_btn.toggled.connect(self._show_corr_column)
@@ -441,7 +447,7 @@ class InitDialog(QDialog):
 
             if not mut_only:
                 witem = QTreeWidgetItem(['', '', 'normal', f'{exp_ki}', '', '','', ''])
-                self._set_item_properties(witem)
+                self._set_item_properties(witem, True)
                 item.addChild(witem)
                 ref_btn = QRadioButton('')
 
@@ -454,7 +460,7 @@ class InitDialog(QDialog):
 
             if mutant:
                 mitem = QTreeWidgetItem(['', '', f'{mutant}', f'{exp_ki}', '', '','', ''])
-                self._set_item_properties(mitem)
+                self._set_item_properties(mitem, True)
                 item.addChild(mitem)
 
             self.systems_list[c] = [basename, Path(fname), stability]
@@ -466,12 +472,13 @@ class InitDialog(QDialog):
         for i, x in enumerate(btns):
             self.ref_btn_group.addButton(x, i)
 
-    def _set_item_properties(self, item: QTreeWidgetItem):
+    def _set_item_properties(self, item: QTreeWidgetItem, editable=False):
         item.setCheckState(1, Qt.CheckState.Checked)
         item.setCheckState(4, Qt.CheckState.Checked)
-        item.setFlags(item.flags() | Qt.ItemFlag.ItemIsEditable)
+        if editable:
+            item.setFlags(item.flags() | Qt.ItemFlag.ItemIsEditable)
         item.setTextAlignment(2, Qt.AlignmentFlag.AlignCenter)
-        item.setTextAlignment(3, Qt.AlignmentFlag.AlignRight)
+        item.setTextAlignment(3, Qt.AlignmentFlag.AlignCenter)
         item.setTextAlignment(4, Qt.AlignmentFlag.AlignCenter)
         item.setTextAlignment(5, Qt.AlignmentFlag.AlignCenter)
 
@@ -518,7 +525,7 @@ class InitDialog(QDialog):
         counter = 0
         for c in range(self.f_item.childCount()):
             child = self.f_item.child(c)
-            if not child.checkState(1):
+            if child.checkState(1) != Qt.CheckState.Checked:
                 continue
             t = {}
             corr = {}

@@ -14,6 +14,13 @@
 #  or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License    #
 #  for more details.                                                           #
 # ##############################################################################
+from functools import partial
+
+import pandas as pd
+
+from GMXMMPBSA import utils
+from GMXMMPBSA.analyzer.items_delegate import KiTableDelegate
+
 try:
     from PyQt6.QtWidgets import *
     from PyQt6.QtCore import *
@@ -35,7 +42,7 @@ from GMXMMPBSA.analyzer.customitem import CustomItem, CorrelationItem
 from GMXMMPBSA.analyzer.style import save_default_config, default_config, save_user_config, user_config, toc_img, logo, \
     alert, config
 from GMXMMPBSA.analyzer.utils import energy2pdb_pml, ki2energy, make_corr_DF, multiindex2dict
-from GMXMMPBSA.analyzer.chartsettings import ChartSettings
+from GMXMMPBSA.analyzer.chartsettings import ChartSettings, CorrChartSettings
 from GMXMMPBSA.analyzer.parametertree import ParameterTree, Parameter
 import math
 import numpy as np
