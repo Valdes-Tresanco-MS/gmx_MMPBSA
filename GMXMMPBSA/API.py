@@ -520,6 +520,7 @@ class MMPBSA_API():
             for et, ev in energy_summary.items():
                 binding[et] = {}
                 b_map[et] = {}
+                corr[et] = {}
                 for em, emv in ev.items():
                     binding[et][em] = {}
                     b_map[et][em] = []
