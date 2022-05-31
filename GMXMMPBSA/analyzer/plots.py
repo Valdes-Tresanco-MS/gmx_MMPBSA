@@ -667,6 +667,49 @@ class MHeatmap:
             self.ax_heatmap.set_xlabel('Frames', fontdict={'fontsize': self.xlabel_fontsize})
 
 
+class RegChart(ChartsBase):
+    def __init__(self, data: pandas.DataFrame, energy, button: QToolButton, options: dict = None, item_parent=None):
+        super(RegChart, self).__init__(button, options, item_parent)
+
+        ci = options[('Regression Plot', 'Conf. Interval')] or None
+        dist_type = {'violin': sns.violinplot, 'hist': sns.histplot, 'box': sns.boxplot, 'kde': sns.kdeplot}
+
+        reg_options = dict(
+            ci=ci,
+            scatter_kws={'s': options[('Regression Plot', 'Scatter', 'marker-size')],
+                         'color': rgb2rgbf(options[('Regression Plot', 'Scatter', 'color')])},
+            line_kws={'lw': options[('Regression Plot', 'line-width')],
+                      'color': rgb2rgbf(options[('Regression Plot', 'line-color')])}
+        )
+
+        if options[('Regression Plot', 'Distribution', 'show')]:
+            args = {}
+            if options[('Regression Plot', 'Distribution', 'type')] == 'hist':
+                args = {'kde': options[('Regression Plot', 'Distribution', 'Histogram', 'kde')],
+                        'fill': options[('Regression Plot', 'Distribution', 'Histogram', 'fill-bars')],
+                        'element': options[('Regression Plot', 'Distribution', 'Histogram', 'element')]
+                        }
+            
+            from icecream import ic
+            ic(data)
+            regplot = sns.JointGrid(data=data, x="ExpΔG",
+                                    # y=energy
+                                    y='Average'
+                                    )
+            regplot.plot_joint(sns.regplot, **reg_options)
+            regplot.plot_marginals(dist_type[options[('Regression Plot', 'Distribution', 'type')]],
+                                   color=rgb2rgbf(options[('Regression Plot', 'Scatter', 'color')]), **args)
+
+            # figure canvas definition
+            self.set_cw(regplot.fig)
+            self.axes = regplot.ax_joint
+        else:
+            # figure canvas definition
+            self.set_cw()
+            self.axes = self.fig.subplots(1, 1)
+            regplot_ax = sns.regplot(data=data, x="ExpΔG", y=energy, ax=self.axes, **reg_options)
+
+
 class OutputFiles(QMdiSubWindow):
     def __init__(self, text, button):
         super(OutputFiles, self).__init__()
