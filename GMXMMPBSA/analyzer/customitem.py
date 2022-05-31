@@ -36,27 +36,62 @@ class SpacerItem(QToolButton):
                            "padding-right: 15px; /* make way for the popup button */}")
 
 
-class CorrelationItem(QTreeWidgetItem):
-    def __init__(self, parent, stringlist, model=None, enthalpy=None, dgie=None, dgnmode=None, dgqh=None, col_box=None):
-        super(CorrelationItem, self).__init__(parent, stringlist)
+class CustomCorrItem(QTableWidgetItem):
+    def __init__(self, text=False, app=None, model=None, keys_path=None):
+        super(CustomCorrItem, self).__init__()
 
+        self.app = app
         self.model = model
-        self.enthalpy = enthalpy
-        self.dgie = dgie
-        self.dgnmode = dgnmode
-        self.dgqh = dgqh
-        self.title = f'Correlation Using {stringlist[0].upper()} model'
-        self.subtitle = ['Exp. Energy vs Enthalpy (ΔH)', 'Exp. Energy vs Pred. Energy (ΔH+IE)',
-                               'Exp. Energy vs Pred. Energy (ΔH+NMODE)', 'Exp. Energy vs Pred. Energy (ΔH+QH)']
-        self.item_name = stringlist[0]
-        if col_box:
-            for col in col_box:
-                self.setCheckState(col, Qt.CheckState.Unchecked)
+        self.keys_path = keys_path
 
-        self.dh_sw = None
-        self.dgie_sw = None
-        self.dgnmode_sw = None
-        self.dgqh_sw = None
+        self.reg_sw = None
+
+        if text:
+            self.setText(model.upper())
+        self.title = f'Correlation Using {model.upper()} model'
+        self.subtitle = "$ΔG_{Experimental} vs ΔG_{Calculated}$"
+            # ['Exp. Energy vs Enthalpy (ΔH)', 'Exp. Energy vs Pred. Energy (ΔH+IE)',
+            #              'Exp. Energy vs Pred. Energy (ΔH+NMODE)', 'Exp. Energy vs Pred. Energy (ΔH+QH)']
+
+
+        self.c_widget = QWidget()
+        self.c_widget_layout = QHBoxLayout(self.c_widget)
+        self.c_widget_layout.setContentsMargins(0, 0, 0, 0)
+        self.reg_chart_action = QToolButton()
+        self.c_widget_layout.addWidget(self.reg_chart_action)
+        self.reg_chart_action.setIcon(QIcon(line_plot_icon))
+        self.reg_chart_action.setText('Line Chart')
+        self.reg_chart_action.setCheckable(True)
+        self.reg_chart_action.setMinimumSize(20, 20)
+        self.reg_chart_action.setContentsMargins(0, 0, 0, 0)
+        self.reg_chart_action.toggled.connect(self.plotting_reg)
+
+    def define_button(self, row, col):
+        self.tableWidget().setCellWidget(row, col, self.c_widget)
+
+    def plotting_reg(self, state):
+        from GMXMMPBSA.analyzer.plots import RegChart
+        self.app.treeWidget.clearSelection()
+
+        options = self.app.correlation['chart_options'].get_settings()
+
+        options.update({'title': self.title, 'subtitle': self.subtitle})
+        changes = self.app.correlation['chart_options'].changes
+        plot_data = self.app.correlation['items_data'][self.keys_path][0]
+        datachange = self.app.correlation['items_data'][self.keys_path][1]
+
+        if state:
+            self.setSelected(True)
+            if not self.reg_sw or datachange or changes:
+                QGuiApplication.setOverrideCursor(QCursor(Qt.CursorShape.WaitCursor))
+                self.reg_sw = RegChart(plot_data, energy=self.keys_path[-1], button=self.reg_chart_action,
+                                         options=options, item_parent=self)
+                self.app.correlation['items_data'][self.keys_path][1] = False
+                self.app.mdi.addSubWindow(self.reg_sw)
+            self.reg_sw.show()
+        elif self.reg_sw:
+            self.app.mdi.activatePreviousSubWindow()
+            self.reg_sw.close()
 
 
 class CustomItem(QTreeWidgetItem):
