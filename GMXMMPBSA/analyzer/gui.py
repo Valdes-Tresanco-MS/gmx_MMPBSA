@@ -827,10 +827,14 @@ class GMX_MMPBSA_ANA(QMainWindow):
     def _update_itemdata_repaint(self, r):
         maximum = r.qsize()
         for i, c in enumerate(range(maximum), start=1):
-            sys_id, data, _ = r.get()
-            self.systems[sys_id]['items_data'] = {k:v1 for x, v in data.items() if v for k, v1 in v['keys'].items()}
-
-
+            sys_id, data, a = r.get()
+            ic(sys_id, data, a)
+            self.systems[sys_id]['items_data'] = {k:v1 for x, v in data.items()
+                                                  if x != 'correlation' and v
+                                                  for k, v1 in v['keys'].items()}
+            self.systems[sys_id]['correlation_data'] = data.get('correlation')
+        if self.options.get('correlation')['corr']:
+            self.get_corr_data()
 
     # TODO Rename this here and in `update_fn`
     def _extracted_from_update_fn_69(self, sys_index, curr_eframes, curr_nmframes, curr_iesegment, iq):
