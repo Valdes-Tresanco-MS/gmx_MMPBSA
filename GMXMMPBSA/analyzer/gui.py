@@ -14,13 +14,6 @@
 #  or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License    #
 #  for more details.                                                           #
 # ##############################################################################
-from functools import partial
-
-import pandas as pd
-
-from GMXMMPBSA import utils
-from GMXMMPBSA.analyzer.items_delegate import KiTableDelegate
-
 try:
     from PyQt6.QtWidgets import *
     from PyQt6.QtCore import *
@@ -35,7 +28,12 @@ import sys
 import os
 
 from queue import Queue
+from functools import partial
+import pandas as pd
 
+from GMXMMPBSA import utils
+from GMXMMPBSA.analyzer.items_delegate import KiTableDelegate
+from GMXMMPBSA.analyzer.plots import Tables
 from GMXMMPBSA.API import MMPBSA_API
 from GMXMMPBSA.analyzer.dialogs import InitDialog
 from GMXMMPBSA.analyzer.customitem import CustomItem, CustomCorrItem
@@ -739,6 +737,9 @@ class GMX_MMPBSA_ANA(QMainWindow):
             changes = self.systems[s]['chart_options'].changes
             for sub in subwindows:
                 if not sub.item_parent or sub.item_parent.system_index != s:
+                    if isinstance(sub, Tables):
+                        sub.close()
+                        sub.button.setChecked(True)
                     continue
                 if not sub.isVisible():
                     if self.systems[s]['chart_options'].changes.get('line_action'):
