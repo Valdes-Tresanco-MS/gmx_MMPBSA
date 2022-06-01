@@ -879,8 +879,8 @@ class CorrChartSettings(dict):
                                     'kde': {'type': 'bool', 'enabled': True, 'expanded': True, 'name': 'kde',
                                             'value': True, 'default': True, 'action_type': R},
                                     'element': {'type': 'list', 'enabled': True, 'expanded': True,
-                                                'name': 'element', 'value': 'step', 'values': ['step', 'bars', 'poly'],
-                                                'default': 'step', 'action_type': R}}}}},
+                                                'name': 'element', 'value': 'bars', 'values': ['step', 'bars', 'poly'],
+                                                'default': 'bars', 'action_type': R}}}}},
                     'fontsize': {
                         'type': 'group', 'enabled': True, 'expanded': True, 'name': 'fontsize', 'value': None,
                         'default': None,
