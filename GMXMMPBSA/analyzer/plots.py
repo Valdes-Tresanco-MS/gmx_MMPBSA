@@ -674,38 +674,36 @@ class MHeatmap:
 
 
 class RegChart(ChartsBase):
-    def __init__(self, data: pandas.DataFrame, energy, button: QToolButton, options: dict = None, item_parent=None):
+    def __init__(self, data: pandas.DataFrame, button: QToolButton, options: dict = None, item_parent=None):
         super(RegChart, self).__init__(button, options, item_parent)
 
         ci = options[('Regression Plot', 'Conf. Interval')] or None
         dist_type = {'violin': sns.violinplot, 'hist': sns.histplot, 'box': sns.boxplot, 'kde': sns.kdeplot}
 
-        reg_options = dict(
-            ci=ci,
-            scatter_kws={'s': options[('Regression Plot', 'Scatter', 'marker-size')],
-                         'color': rgb2rgbf(options[('Regression Plot', 'Scatter', 'color')])},
-            line_kws={'lw': options[('Regression Plot', 'line-width')],
-                      'color': rgb2rgbf(options[('Regression Plot', 'line-color')])}
-        )
+        line_kws = {'lw': options[('Regression Plot', 'line-width')],
+                    'color': rgb2rgbf(options[('Regression Plot', 'line-color')])}
+
+        reg_options = dict(ci=ci,
+                           scatter_kws={'s': options[('Regression Plot', 'Scatter', 'marker-size')],
+                                        'color': rgb2rgbf(options[('Regression Plot', 'Scatter', 'color')])},
+                           line_kws=line_kws)
+
+        # get correlation coefficients
+        pearson, ppvalue = stats.pearsonr(data['ExpΔG'], data['Average'])
+        slope, intercept, r_value, p_value, std_err = linregress(data['ExpΔG'], data['Average'])
+        spearman, spvalue = stats.spearmanr(data['ExpΔG'], data['Average'])
 
         if options[('Regression Plot', 'Distribution', 'show')]:
             args = {}
             if options[('Regression Plot', 'Distribution', 'type')] == 'hist':
                 args = {'kde': options[('Regression Plot', 'Distribution', 'Histogram', 'kde')],
                         'fill': options[('Regression Plot', 'Distribution', 'Histogram', 'fill-bars')],
-                        'element': options[('Regression Plot', 'Distribution', 'Histogram', 'element')]
-                        }
-            
-            from icecream import ic
-            ic(data)
-            regplot = sns.JointGrid(data=data, x="ExpΔG",
-                                    # y=energy
-                                    y='Average'
-                                    )
+                        'element': options[('Regression Plot', 'Distribution', 'Histogram', 'element')]}
+
+            regplot = sns.JointGrid(data=data, x="ExpΔG", y='Average')
             regplot.plot_joint(sns.regplot, **reg_options)
             regplot.plot_marginals(dist_type[options[('Regression Plot', 'Distribution', 'type')]],
                                    color=rgb2rgbf(options[('Regression Plot', 'Scatter', 'color')]), **args)
-
             # figure canvas definition
             self.set_cw(regplot.fig)
             self.axes = regplot.ax_joint
@@ -713,7 +711,43 @@ class RegChart(ChartsBase):
             # figure canvas definition
             self.set_cw()
             self.axes = self.fig.subplots(1, 1)
-            regplot_ax = sns.regplot(data=data, x="ExpΔG", y=energy, ax=self.axes, **reg_options)
+            sns.regplot(data=data, x="ExpΔG", y='Average', ax=self.axes, **reg_options)
+
+        if options[('Regression Plot', 'Scatter', 'error-line', 'show')]:
+            error = options[('Regression Plot', 'Scatter', 'error-line', 'representation')]
+            self.axes.errorbar(x=data["ExpΔG"], y=data['Average'], yerr=data[error],
+                               fmt='none',
+                               # zorder=1,
+                               elinewidth=options[('Regression Plot', 'Scatter', 'error-line', 'width')],
+                               capsize=options[('Regression Plot', 'Scatter', 'error-line', 'cap-size')],
+                               color=rgb2rgbf(options[('Regression Plot', 'Scatter', 'error-line', 'color')]))
+
+        pearson_leg = mpatches.Patch(color='white', label=f'Pearson  = {pearson:.2f}  p-value = {ppvalue:.3f}')
+        spearman_leg = mpatches.Patch(color='gray', label=f'Spearman = {spearman:.2f}  p-value = {spvalue:.3f}')
+        sign = '+' if intercept > 0 else '-'
+        equation = Line2D([0], [0], **line_kws, label=f'y = {slope:.2f}x {sign} {abs(intercept):.2f}')
+        handles = []
+        if options[('Regression Plot', 'pearson')]:
+            handles.append(pearson_leg)
+        if options[('Regression Plot', 'spearman')]:
+            handles.append(spearman_leg)
+        if options[('Regression Plot', 'equation')]:
+            handles.append(equation)
+        if handles:
+            self.axes.legend(handles=handles, handlelength=0, handletextpad=0, fancybox=True, frameon=True,
+                             prop={'weight': 'bold', 'size': options[('Regression Plot', 'fontsize', 'legend')],
+                                   'family': 'monospace'})
+        self.cursor = Cursor(self.axes, useblit=True, color='black', linewidth=0.5, ls='--')
+        self.setWindowTitle(options['subtitle'])
+        self.update_config(options)
+
+
+    def update_config(self, options):
+        self.fig.suptitle(f"{options['title']}\n{options['subtitle']}",
+                          fontsize=options[('Regression Plot', 'fontsize', 'title')])
+        self.setup_text(self.axes, options, key='Regression Plot', xlabel=r'$ΔG_{Experimental} (kcal/mol)$',
+                        ylabel=r'$ΔG_{Calculated} (kcal/mol)$')
+        self.draw()
 
 
 class OutputFiles(QMdiSubWindow):
