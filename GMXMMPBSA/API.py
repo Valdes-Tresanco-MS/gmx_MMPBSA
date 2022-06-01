@@ -24,6 +24,7 @@ the full power of Python's extensions, if they want (e.g., numpy, scipy, etc.)
 # ##############################################################################
 import logging
 import math
+import shutil
 from multiprocessing.pool import ThreadPool
 from copy import copy, deepcopy
 from typing import Union
@@ -94,46 +95,86 @@ def _extracted_from__itemdata_properties_5(data, groups):
         groups['TOTAL'] = ['GGAS', 'GSOLV', 'TOTAL']
 
 
-def _setup_data(data, level=0, iec2=False, name=None, index=None):
+def _setup_data(data: pd.DataFrame, level=0, iec2=False, name=None, index=None,
+                memory: dict = None, id=None):
     # this variable show if the data changed or not. At first time, it is true, then when plotting become in false
     change = True
+
+    inmemory: bool = memory.get('inmemory', False)
+    temp_path: Path = memory.get('temp_path')
+    parquet_file = temp_path.joinpath('_'.join(id) + '_%s').as_posix()
 
     cont = {'line_plot_data': None, 'bar_plot_data': None, 'heatmap_plot_data': None}
     if level == 0:
         options = {'iec2': iec2}
-        # if isinstance(data, pd.Series):
         data.name = data.name[-1]
-        cont['line_plot_data'] = [data[:-3], options, change]
+        line_plot_data = data[:-3].to_frame()
+        if inmemory:
+            cont['line_plot_data'] = [line_plot_data, options, change]
+        else:
+            line_plot_data.to_parquet(parquet_file % 'lp', compression=None)
+            cont['line_plot_data'] = [parquet_file % 'lp', options, change]
     elif level == 1:
         options = ({'iec2': True} if iec2 else {}) | dict(groups=_itemdata_properties(data))
-        cont['bar_plot_data'] = [data[-3:].reindex(columns=index), options, change]
+        bar_plot_data = data[-3:].reindex(columns=index)
+        if inmemory:
+            cont['bar_plot_data'] = [bar_plot_data, options, change]
+        else:
+            bar_plot_data.to_parquet(parquet_file % 'bp', compression=None)
+            cont['bar_plot_data'] = [parquet_file % 'bp', options, change]
     elif level == 1.5:
         options = {'iec2': True}
-        cont['line_plot_data'] = [data[['AccIntEnergy', 'ie']][:-3], options, change]
-        cont['bar_plot_data'] = [data[['ie', 'sigma']][-3:], options, change]
+        line_plot_data = data[['AccIntEnergy', 'ie']][:-3]
+        bar_plot_data = data[['ie', 'sigma']][-3:]
+        if inmemory:
+            cont['line_plot_data'] = [line_plot_data, options, change]
+            cont['bar_plot_data'] = [bar_plot_data, options, change]
+        else:
+            line_plot_data.to_parquet(parquet_file % 'lp', compression=None)
+            bar_plot_data.to_parquet(parquet_file % 'bp', compression=None)
+            cont['line_plot_data'] = [parquet_file % 'lp', options, change]
+            cont['bar_plot_data'] = [parquet_file % 'bp', options, change]
+
     elif level == 2:
         tempdf = data.loc[:, data.columns.get_level_values(1) == 'tot']
-        bar_plot_data = tempdf.droplevel(level=1, axis=1).reindex(columns=index)
-
-        cont['line_plot_data'] = [bar_plot_data[:-3].sum(axis=1).rename(name), {}, change]
-        cont['bar_plot_data'] = [bar_plot_data[-3:], dict(groups=_itemdata_properties(bar_plot_data)), change]
-        cont['heatmap_plot_data'] = [bar_plot_data[:-3].T, {}, change]
+        temp_data = tempdf.droplevel(level=1, axis=1).reindex(columns=index)
+        line_plot_data = temp_data[:-3].sum(axis=1).rename(name).to_frame()
+        bar_plot_data = tempdf[-3:]
+        heatmap_plot_data = tempdf[:-3].T
+        if memory:
+            cont['line_plot_data'] = [line_plot_data, {}, change]
+            cont['bar_plot_data'] = [bar_plot_data, dict(groups=_itemdata_properties(bar_plot_data)), change]
+            cont['heatmap_plot_data'] = [heatmap_plot_data, {}, change]
+        else:
+            line_plot_data.to_parquet(parquet_file % 'lp', compression=None)
+            bar_plot_data.to_parquet(parquet_file % 'bp', compression=None)
+            heatmap_plot_data.to_parquet(parquet_file % 'hp', compression=None)
+            cont['line_plot_data'] = [parquet_file % 'lp', {}, change]
+            cont['bar_plot_data'] = [parquet_file % 'bp', dict(groups=_itemdata_properties(bar_plot_data)), change]
+            cont['heatmap_plot_data'] = [parquet_file % 'hp', {}, change]
     elif level == 3:
         # Select only the "tot" column, remove the level, change first level of columns to rows and remove the mean
         # index
         tempdf = data.loc[:, data.columns.get_level_values(2) == 'tot']
-        cont['heatmap_plot_data'] = [
-            tempdf.loc[["Average"]].droplevel(level=2, axis=1).stack().droplevel(level=0).reindex(columns=index[0],
-                                                                                                  index=index[1]),
-            {}, change]
-        temp_line_plot_data = tempdf[:-3].groupby(axis=1, level=0, sort=False).sum().reindex(columns=index[0])
+        line_plot_data = tempdf[:-3].groupby(axis=1, level=0, sort=False).sum().reindex(
+            columns=index[0]).sum(axis=1).rename(name).to_frame()
         bar_plot_data = tempdf[:-3].groupby(axis=1, level=0, sort=False).sum().agg(
             [lambda x: x.mean(), lambda x: x.std(ddof=0), lambda x: x.std(ddof=0)/ math.sqrt(len(x))]
             ).reindex(columns=index[0])
         bar_plot_data.index = ['Average', 'SD', 'SEM']
-
-        cont['line_plot_data'] = [temp_line_plot_data.sum(axis=1).rename(name), {}, change]
-        cont['bar_plot_data'] = [bar_plot_data, dict(groups=_itemdata_properties(bar_plot_data)), change]
+        heatmap_plot_data = tempdf.loc[["Average"]].droplevel(level=2, axis=1).stack().droplevel(level=0).reindex(
+            columns=index[0], index=index[1])
+        if memory:
+            cont['line_plot_data'] = [line_plot_data, {}, change]
+            cont['bar_plot_data'] = [bar_plot_data, dict(groups=_itemdata_properties(bar_plot_data)), change]
+            cont['heatmap_plot_data'] = [heatmap_plot_data, {}, change]
+        else:
+            line_plot_data.to_parquet(parquet_file % 'lp', compression=None)
+            bar_plot_data.to_parquet(parquet_file % 'bp', compression=None)
+            heatmap_plot_data.to_parquet(parquet_file % 'hp', compression=None)
+            cont['line_plot_data'] = [parquet_file % 'lp', {}, change]
+            cont['bar_plot_data'] = [parquet_file % 'bp', dict(groups=_itemdata_properties(bar_plot_data)), change]
+            cont['heatmap_plot_data'] = [parquet_file % 'hp', {}, change]
 
     return cont
 
@@ -144,7 +185,8 @@ def calculatestar(arg):
     iec2 = args.get('iec2', False)
     name = args.get('name')
     index = args.get('index')
-    return t, id, func(data, level, iec2, name, index)
+    memory = args.get('memory')
+    return t, id, func(data, level, iec2, name, index, memory, id)
 
 
 class MMPBSA_API():
@@ -157,8 +199,10 @@ class MMPBSA_API():
         self.data = {}
         self.fname = None
         self.settings = settings
+        self.temp_folder = None
 
-        self._settings = {'create_temporal_data': True, 'use_temporal_data': True, 'overwrite_temp': True}
+        self._settings = {'data_on_disk': False, 'create_temporal_data': True, 'use_temporal_data': True, 
+                          'overwrite_temp': True}
         if settings:
             not_keys = []
             for k, v in settings.items():
@@ -671,37 +715,46 @@ class MMPBSA_API():
         d = {}
         corr = {}
         ecorr = None
+        memory_args = dict(temp_path=self.temp_folder)
         if energy_options:
             energy_map, energy, energy_summary, ecorr = self.get_energy(**energy_options).values()
             if energy_map:
                 for et, v in ecorr.items():
                     corr[et] = v
                 d['enthalpy'] = {'map': energy_map, 'keys': {}, 'summary': energy_summary}
+                memory_args['inmemory'] = performance_options.get('energy_memory')
                 for level, value in energy_map.items():
                     for level1, value1 in value.items():
                         for level2, value2 in value1.items():
-                            TASKs.append([_setup_data, dict(data=energy[level][level1][level2][value2], level=1),
+                            TASKs.append([_setup_data, dict(data=energy[level][level1][level2][value2], level=1,
+                                                            memory=memory_args),
                                           (level, level1, level2), 'enthalpy'])
-                            TASKs.extend([_setup_data, dict(data=energy[level][level1][(level2, level3)], level=0),
+                            TASKs.extend([_setup_data, dict(data=energy[level][level1][(level2, level3)], level=0,
+                                                            memory=memory_args),
                                           (level, level1, level2,level3), 'enthalpy'] for level3 in value2)
 
         if entropy_options:
             entropy_map, entropy, entropy_summary = self.get_entropy(**entropy_options).values()
             if entropy_map:
                 d['entropy'] = {'map': entropy_map, 'keys': {}, 'summary': entropy_summary}
+                memory_args['inmemory'] = performance_options.get('energy_memory')
                 for level, value in entropy_map.items():
                     for level1, value1 in value.items():
                         if level1 in ['nmode', 'qh']:
                             for level2, value2 in value1.items():
-                                TASKs.append([_setup_data, dict(data=entropy[level][level1][level2], level=1),
+                                TASKs.append([_setup_data, dict(data=entropy[level][level1][level2], level=1,
+                                                                memory=memory_args),
                                               (level, level1, level2), 'entropy'])
-                                TASKs.extend([_setup_data, dict(data=entropy[level][level1][(level2, level3)], level=0),
+                                TASKs.extend([_setup_data, dict(data=entropy[level][level1][(level2, level3)],
+                                                                level=0, memory=memory_args),
                                               (level, level1, level2, level3), 'entropy'] for level3 in value2)
                         elif level1 == 'c2':
-                            TASKs.append([_setup_data, dict(data=entropy[level][level1], level=1, iec2=True),
+                            TASKs.append([_setup_data, dict(data=entropy[level][level1], level=1, iec2=True,
+                                                            memory=memory_args),
                                           (level, level1), 'entropy'])
                         elif level1 == 'ie':
-                            TASKs.append([_setup_data, dict(data=entropy[level][level1], level=1.5),
+                            TASKs.append([_setup_data, dict(data=entropy[level][level1], level=1.5,
+                                                            memory=memory_args),
                                           (level, level1), 'entropy'])
 
         if energy_options and entropy_options:
@@ -713,14 +766,17 @@ class MMPBSA_API():
                             corr[et][m] = pd.concat([ecorr[et][m], v1], axis=1)
                     
                 d['binding'] = {'map': bind_map, 'keys': {}, 'summary': binding}
+                memory_args['inmemory'] = performance_options.get('energy_memory')
                 for level, value in bind_map.items():
                     for level1, value1 in value.items():
-                        TASKs.extend([_setup_data, dict(data=binding[level][level1][level2], level=1),
+                        TASKs.extend([_setup_data, dict(data=binding[level][level1][level2], level=1,
+                                                        memory=memory_args),
                                       (level, level1, level2), 'binding'] for level2 in value1)
         if decomp_options:
             decomp_map, decomp = self.get_decomp_energy(**decomp_options).values()
             if decomp_map:
                 d['decomposition'] = {'map': decomp_map, 'keys': {}}
+                memory_args['inmemory'] = performance_options.get('decomp_memory')
                 for level, value in decomp_map.items():
                     for level1, value1 in value.items():
                         for level2, value2 in value1.items():
@@ -733,25 +789,27 @@ class MMPBSA_API():
                                     item_lvl2 = 1 if self.app_namespace.INPUT['idecomp'] in [1, 2] else 2
                                     TASKs.append(
                                         [_setup_data, dict(data=decomp[level][level1][level2][level3][level4],
-                                                           level=item_lvl2, name=level4, index=list(value4.keys())),
+                                                           level=item_lvl2, name=level4, index=list(value4.keys()),
+                                                           memory=memory_args),
                                          (level, level1, level2, level3, level4), 'decomposition'])
                                     if self.app_namespace.INPUT['idecomp'] in [1, 2]:
                                         TASKs.extend([_setup_data,
-                                                      dict(data=decomp[level][level1][level2][level3][level4][level5]),
+                                                      dict(data=decomp[level][level1][level2][level3][level4][level5],
+                                                           memory=memory_args),
                                                     (level, level1, level2, level3, level4, level5), 'decomposition']
                                                      for level5 in value4)
                                     else:
                                         TASKs.extend([_setup_data,
                                                       dict(data=decomp[level][level1][level2][level3][level4][level5],
-                                                           level=1, index=value5),
+                                                           level=1, index=value5, memory=memory_args),
                                                       (level, level1, level2, level3, level4, level5), 'decomposition']
                                                      for level5, value5 in value4.items())
                                 TASKs.append([_setup_data,
                                               dict(data=decomp[level][level1][(level2, level3)], level=item_lvl,
-                                                   name=level3, index=index),
+                                                   name=level3, index=index, memory=memory_args),
                                           (level, level1, level2, level3), 'decomposition'])
 
-        with ThreadPool() as pool:
+        with ThreadPool(performance_options.get('jobs')) as pool:
             imap_unordered_it = pool.imap_unordered(calculatestar, TASKs)
             for t, id, result in imap_unordered_it:
                 d[t]['keys'][id] = result
@@ -772,16 +830,11 @@ class MMPBSA_API():
         self._oringin = {'normal': app.calc_types.normal, 'mutant': app.calc_types.mutant,
                          'decomp_normal': app.calc_types.decomp_normal, 'decomp_mutant': app.calc_types.decomp_mutant,
                          'mutant-normal': app.calc_types.mut_norm,
-                         # 'decomp_mutant-normal': app.calc_types.decomp_mut_norm
                          }
-        # if self._settings['create_temporal_data']:
-        #     temp_folder = ifile.parent.joinpath('.gmx_mmpbsa_temp')
-        #     if temp_folder.exists():
-        #         shutil.rmtree(temp_folder)
-        #     temp_folder.mkdir()
-        #     with temp_folder.joinpath('energy.pkl').open('wb') as of:
-        #         pickle.dump(self._oringin, of, pickle.HIGHEST_PROTOCOL)
-
+        self.temp_folder = ifile.parent.joinpath('.gmx_mmpbsa_temp')
+        if self.temp_folder.exists():
+            shutil.rmtree(self.temp_folder)
+        self.temp_folder.mkdir()
         self.data = copy(self._oringin)
         self._get_frames()
         self._get_data(None)

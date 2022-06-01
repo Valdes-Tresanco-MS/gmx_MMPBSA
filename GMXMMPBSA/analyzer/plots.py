@@ -194,10 +194,11 @@ class ChartsBase(QMdiSubWindow):
 
 
 class LineChart(ChartsBase):
-    def __init__(self, data: pandas.DataFrame, button: QToolButton, options: dict = None, item_parent=None):
+    def __init__(self, data, button: QToolButton, options: dict = None, item_parent=None):
         super(LineChart, self).__init__(button, options, item_parent)
 
-        self.data = data
+        self.data = pd.read_parquet(data) if isinstance(data, str) else data
+        self.data = self.data.iloc[:,0]
 
         # figure canvas definition
         self.set_cw()
@@ -206,22 +207,23 @@ class LineChart(ChartsBase):
 
         self.axes = self.fig.subplots(1, 1)
         if options.get('iec2'):
-            self.line_plot_ax = sns.lineplot(data=data['AccIntEnergy'],
+            self.line_plot_ax = sns.lineplot(data=self.data['AccIntEnergy'],
                                              color=rgb2rgbf(options[('Line Plot', 'line-color')]),
                                              linewidth=options[('Line Plot', 'line-width')],
                                              ax=self.axes,
                                              label='IE(all)')
             # plot the ie segment
             ie_color = rgb2rgbf(options[('Bar Plot', 'IE/C2 Entropy', 'ie-color')])
-            sns.lineplot(data=data['ie'], color=ie_color, ax=self.axes, label='IE(selected)')
+            sns.lineplot(data=self.data['ie'], color=ie_color, ax=self.axes, label='IE(selected)')
         else:
-            self.line_plot_ax = sns.lineplot(data=data, color=rgb2rgbf(options[('Line Plot', 'line-color')]),
-                                             linewidth=options[('Line Plot', 'line-width')], label=data.name,
+            self.line_plot_ax = sns.lineplot(data=self.data, color=rgb2rgbf(options[('Line Plot', 'line-color')]),
+                                             linewidth=options[('Line Plot', 'line-width')],
+                                             label=self.data.name,
                                              ax=self.axes)
             if options[('Line Plot', 'Rolling average', 'show')]:
                 min_periods = 1 if options[('Line Plot', 'Rolling average', 'first_obs')] == 'start' else None
                 window = options[('Line Plot', 'Rolling average', 'window')]
-                moving_avg = sns.lineplot(data=data.rolling(window, min_periods=min_periods).mean(),
+                moving_avg = sns.lineplot(data=self.data.rolling(window, min_periods=min_periods).mean(),
                                           color=rgb2rgbf(options[('Line Plot', 'Rolling average', 'color')]),
                                           linewidth=options[('Line Plot', 'Rolling average', 'width')],
                                           label='Mov. Av.',
@@ -251,16 +253,17 @@ class LineChart(ChartsBase):
 
 
 class BarChart(ChartsBase):
-    def __init__(self, data: pandas.DataFrame, button: QToolButton, options: dict = None, item_parent=None):
+    def __init__(self, data, button: QToolButton, options: dict = None, item_parent=None):
         super(BarChart, self).__init__(button, options, item_parent)
 
+        self.data = pd.read_parquet(data) if isinstance(data, str) else data
         self.bar_labels = []
         # figure canvas definition
         self.set_cw()
         self.fig.set_size_inches(options[('Bar Plot', 'figure', 'width')],
                                  options[('Bar Plot', 'figure', 'height')])
         self.bar_frames = False
-        palette = (sns.color_palette(options[('Bar Plot', 'palette')], n_colors=data.columns.size)
+        palette = (sns.color_palette(options[('Bar Plot', 'palette')], n_colors=self.data.columns.size)
                    if options[('Bar Plot', 'use-palette')] else None)
         if options.get('groups') and options[('Bar Plot', 'subplot-components')]:
             self.axes = self.fig.subplots(1, len(options['groups']), sharey=True,
@@ -269,7 +272,7 @@ class BarChart(ChartsBase):
                 self.axes[0].invert_yaxis()
             s = 0
             for c, g in enumerate(options['groups']):
-                df = data[options['groups'][g]]
+                df = self.data[options['groups'][g]]
                 bar_plot_ax = sns.barplot(x=df.columns,
                                           y=df.loc['Average'],
                                           yerr=df.loc[options[('Bar Plot', 'error-line', 'representation')]],
@@ -302,11 +305,11 @@ class BarChart(ChartsBase):
                 ie_color = rgb2rgbf(options[('Bar Plot', 'IE/C2 Entropy', 'ie-color')])
                 r_sigma = rgb2rgbf(options[('Bar Plot', 'IE/C2 Entropy', 'sigma-color', 'reliable')])
                 nr_sigma = rgb2rgbf(options[('Bar Plot', 'IE/C2 Entropy', 'sigma-color', 'non-reliable')])
-                palette = [ie_color, r_sigma if data['sigma'].loc[['Average']].values[0] < 3.6 else nr_sigma]
+                palette = [ie_color, r_sigma if self.data['sigma'].loc[['Average']].values[0] < 3.6 else nr_sigma]
 
-            bar_plot_ax = sns.barplot(x=data.columns,
-                                      y=data.loc['Average'],
-                                      yerr=data.loc[options[('Bar Plot', 'error-line', 'representation')]],
+            bar_plot_ax = sns.barplot(x=self.data.columns,
+                                      y=self.data.loc['Average'],
+                                      yerr=self.data.loc[options[('Bar Plot', 'error-line', 'representation')]],
                                       error_kw=dict(
                                           ecolor=rgb2rgbf(options[('Bar Plot', 'error-line', 'color')]),
                                           capsize=options[('Bar Plot', 'error-line', 'cap-size')],
@@ -328,7 +331,7 @@ class BarChart(ChartsBase):
             self.setup_text(bar_plot_ax, options, key='Bar Plot')
             self.cursor = Cursor(bar_plot_ax, useblit=True, color='black', linewidth=0.5, ls='--')
             bar_plot_ax.set_xticklabels(self._set_xticks(bar_plot_ax, options[('Bar Plot', 'remove-molid')]))
-            self.bar_frames = 'frames' in data
+            self.bar_frames = 'frames' in self.data
         self.setWindowTitle(options['subtitle'])
         self.update_config(options)
         self.draw()
@@ -370,10 +373,10 @@ class BarChart(ChartsBase):
 
 
 class HeatmapChart(ChartsBase):
-    def __init__(self, data: pandas.DataFrame, button: QToolButton, options: dict = None, item_parent=None):
+    def __init__(self, data, button: QToolButton, options: dict = None, item_parent=None):
         super(HeatmapChart, self).__init__(button, options, item_parent)
 
-        self.data = data
+        self.data = pd.read_parquet(data) if isinstance(data, str) else data
 
         self.heatmap_type = 2 if data.columns.is_numeric() else 1
 
@@ -385,13 +388,13 @@ class HeatmapChart(ChartsBase):
         cmap = (Palettes.get_colormap(options[('Heatmap Plot', 'Per-wise', 'palette')]) if self.heatmap_type == 1 else
                 Palettes.get_colormap(options[('Heatmap Plot', 'Per-residue', 'palette')]))
         nxticks = (1 if self.heatmap_type == 1 or
-                        data.columns.size < options[('Heatmap Plot', 'Per-residue', 'num-xticks')]
-                   else data.columns.size // options[('Heatmap Plot', 'Per-residue', 'num-xticks')])
+                        self.data.columns.size < options[('Heatmap Plot', 'Per-residue', 'num-xticks')]
+                   else self.data.columns.size // options[('Heatmap Plot', 'Per-residue', 'num-xticks')])
 
         annotation = options[('Heatmap Plot', 'Per-wise', 'annotation')] if self.heatmap_type == 1 else False
 
         if options[('Heatmap Plot', 'highlight-components')]:
-            mheatmap = MHeatmap(data=data,
+            mheatmap = MHeatmap(data=self.data,
                                 figsize=(fig_width, fig_height),
                                 dpi=options[('General', 'figure-format', 'dpi-plot')],
                                 heatmap_type=self.heatmap_type,
@@ -421,7 +424,7 @@ class HeatmapChart(ChartsBase):
             # figure canvas definition
             self.set_cw()
             self.axes = self.fig.subplots(1, 1)
-            heatmap_ax = sns.heatmap(data, ax=self.axes, center=0,
+            heatmap_ax = sns.heatmap(self.data, ax=self.axes, center=0,
                                      xticklabels=nxticks, #cbar_ax=self.ax_cbar,
                                      yticklabels=1, #cbar_ax=self.ax_cbar,
                                      # cbar_kws=colorbar_kws,
@@ -453,8 +456,8 @@ class HeatmapChart(ChartsBase):
             # heatmap_ax.yaxis.set_ticks_position('right')
             # heatmap_ax.yaxis.set_label_position('right')
             if self.heatmap_type == 2:
-                heatmap_ax.set_xlabel(data.columns.name, fontdict={'fontsize': options[('Heatmap Plot', 'fontsize',
-                                                                                  'x-label')]})
+                heatmap_ax.set_xlabel(self.data.columns.name,
+                                      fontdict={'fontsize': options[('Heatmap Plot', 'fontsize', 'x-label')]})
 
         self.cursor = Cursor(self.axes, useblit=True, color='black', linewidth=0.5, ls='--')
 
