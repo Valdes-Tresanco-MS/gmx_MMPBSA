@@ -188,24 +188,24 @@ class InitDialog(QDialog):
         self.decomp_memory.toggled.connect(lambda x: self._update_ram_indicator(x, 'Load decomp in memory'))
         self.advanced_group_layout.addWidget(self.decomp_memory, 0, 1)
 
-        self.multiprocessing = QCheckBox('Multiprocessing')
-        self.advanced_group_layout.addWidget(self.multiprocessing, 1, 1)
         self.precomp_charts = QCheckBox('Pre-compute charts')
+        self.precomp_charts.setEnabled(False)
         self.advanced_group_layout.addWidget(self.precomp_charts, 1, 0)
         self.remove_charts = QCheckBox('Clean up charts data')
+        self.remove_charts.setEnabled(False)
         self.advanced_group_layout.addWidget(self.remove_charts, 0, 2)
 
         self.njobs = QSpinBox()
         self.njobs.setRange(1, multiprocessing.cpu_count())
         self.njobs.setValue(2)
         self.njobs_layout = QFormLayout()
-        self.njobs_layout.addRow('Jobs:', self.njobs)
-        self.advanced_group_layout.addLayout(self.njobs_layout, 1, 2)
+        self.njobs_layout.addRow('Multiprocessing Jobs:', self.njobs)
+        self.advanced_group_layout.addLayout(self.njobs_layout, 1, 1, 1, 2)
 
         self.ram_pb = CustomPB(self)
 
         self.performance_slider.valueChanged.connect(self.slider_changed)
-        self.performance_slider.setValue(2)
+        self.performance_slider.setValue(4)
 
         self.header_item = QTreeWidgetItem(['System', 'Show', 'Name', 'Exp.Ki (nM)', 'Corr.', 'Ref.', 'Chart Settings',
                                            'Path'])
@@ -323,27 +323,21 @@ class InitDialog(QDialog):
     def slider_changed(self, value):
         self.energy_memory.setChecked(False)
         self.decomp_memory.setChecked(False)
-        self.precomp_charts.setChecked(False)
-        self.remove_charts.setChecked(False)
-        self.multiprocessing.setChecked(False)
+        # self.precomp_charts.setChecked(False)
+        # self.remove_charts.setChecked(False)
         self.njobs.setValue(1)
 
-        if value == 1:
-            self.remove_charts.setChecked(True)
-        elif value == 2:
+        if value == 2:
             self.energy_memory.setChecked(True)
-            self.multiprocessing.setChecked(True)
             self.njobs.setValue(multiprocessing.cpu_count() // 4)
         elif value == 3:
             self.energy_memory.setChecked(True)
-            self.precomp_charts.setChecked(True)
-            self.multiprocessing.setChecked(True)
+            # self.precomp_charts.setChecked(True)
             self.njobs.setValue(multiprocessing.cpu_count() // 2)
         else:
             self.energy_memory.setChecked(True)
             self.decomp_memory.setChecked(True)
-            self.precomp_charts.setChecked(True)
-            self.multiprocessing.setChecked(True)
+            # self.precomp_charts.setChecked(True)
             self.njobs.setValue(multiprocessing.cpu_count())
 
     def _reset_config(self, check):
@@ -510,6 +504,9 @@ class InitDialog(QDialog):
                 'type': self.energy_type.currentText()
             },
             'performance': {
+                'energy_memory': self.energy_memory.isChecked(),
+                'decomp_memory': self.decomp_memory.isChecked(),
+                'jobs': self.njobs.value()
             }
             # 'default_chart_options': self.default_settings_btn.isChecked()
         }

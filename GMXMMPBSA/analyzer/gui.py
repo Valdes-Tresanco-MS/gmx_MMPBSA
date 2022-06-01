@@ -31,11 +31,11 @@ from GMXMMPBSA import utils
 from GMXMMPBSA.analyzer.items_delegate import KiTableDelegate
 from GMXMMPBSA.analyzer.plots import Tables
 from GMXMMPBSA.API import MMPBSA_API
-from GMXMMPBSA.analyzer.dialogs import InitDialog
+from GMXMMPBSA.analyzer.dialogs import InitDialog, ProcessingProgressBar
 from GMXMMPBSA.analyzer.customitem import CustomItem, CustomCorrItem
 from GMXMMPBSA.analyzer.style import save_default_config, default_config, save_user_config, user_config, toc_img, logo, \
     alert, config
-from GMXMMPBSA.analyzer.utils import energy2pdb_pml, ki2energy, make_corr_DF, multiindex2dict
+from GMXMMPBSA.analyzer.utils import ki2energy
 from GMXMMPBSA.analyzer.chartsettings import ChartSettings, CorrChartSettings
 from GMXMMPBSA.analyzer.parametertree import ParameterTree, Parameter
 import math
@@ -721,10 +721,9 @@ class GMX_MMPBSA_ANA(QMainWindow):
             if iq.qsize():
                 replot_energy = True
                 from GMXMMPBSA.analyzer.dialogs import ProcessingProgressBar
-                pbd = ProcessingProgressBar(self, iq, rq, 5, 'Updating...')
+                pbd = ProcessingProgressBar(self, iq, rq, self.options['performance']['jobs'], 'Updating...')
                 pbd.rejected.connect(lambda z: print(f'rejected> exit code: {z}'))
                 pbd.accepted.connect(lambda: self._update_itemdata_repaint(rq))
-                # qpd.setValue(max_sixe)
                 pbd.exec()
 
         subwindows = self.mdi.subWindowList()
@@ -1075,14 +1074,17 @@ class GMX_MMPBSA_ANA(QMainWindow):
     def read_data(self, queue: Queue, options):
         self.init_dialog.accept()
         self.in_init_dialog = False
+        self.options = options
         max_sixe = queue.qsize()
-        from GMXMMPBSA.analyzer.dialogs import ProcessingProgressBar
 
         iq = Queue()
         self.rq = Queue()
 
-        opts4ana = {'energy_options': {}, 'entropy_options': {}, 'decomp_options': {}}
-
+        opts4ana = {'energy_options': {},
+                    'entropy_options': {},
+                    'decomp_options': {'res_threshold': options.get('decomposition').get('res_threshold')},
+                    'correlation': options.get('correlation').get('corr'),
+                    'performance_options': options.get('performance')}
         for i, _ in enumerate(range(max_sixe), start=1):
             sys_name, path, stability, exp_ki, corr, ref, options_file = queue.get()
             opts4ana['energy_options']['etype'] = opts4ana['entropy_options']['etype'] = (None if len(exp_ki) == 2 else
@@ -1092,8 +1094,6 @@ class GMX_MMPBSA_ANA(QMainWindow):
                 tuple(options.get('energy').get('mols')))
             opts4ana['decomp_options']['mol'] = (['complex'] if stability else
                                                         tuple(options.get('decomposition').get('mols')))
-            opts4ana['decomp_options']['res_threshold'] = options.get('decomposition').get('res_threshold')
-            opts4ana['correlation'] = options.get('correlation').get('corr')
 
             d = {MMPBSA_API: {'object': 'class',
                               'args': None},
@@ -1124,13 +1124,12 @@ class GMX_MMPBSA_ANA(QMainWindow):
                                }
 
             queue.task_done()
-        pbd = ProcessingProgressBar(self, iq, self.rq, 5, 'Reading files...')
+        pbd = ProcessingProgressBar(self, iq, self.rq, options['performance']['jobs'], 'Reading files...')
         pbd.rejected.connect(lambda x: print(f'rejected> exit code: {x}'))
-        pbd.accepted.connect(lambda: self.process_data(self.rq, options))
+        pbd.accepted.connect(lambda: self.process_data(self.rq))
         pbd.exec()
 
-    def process_data(self, results: Queue, options):
-        self.options = options
+    def process_data(self, results: Queue):
         size = results.qsize()
         maximum = size * 2
         qpd = QProgressDialog('Creating systems tree', 'Abort', 0, maximum + 1, self)
@@ -1186,7 +1185,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
         self._initialize_systems()
         qpd.setValue(c)
 
-        if not options.get('correlation')['corr']:  # FIXME:
+        if not self.options.get('correlation')['corr']:
             self.correlation_DockWidget.setEnabled(False)
             self.correlation_DockWidget.hide()
         else:
