@@ -908,9 +908,9 @@ class GMX_MMPBSA_ANA(QMainWindow):
         if self.current_system_index:
             current_interval = self.nmframes_inter_sb.value()
             current_end = self.nmframes_end_sb.value()
-            self.numframes_le.setText(f"{int((current_end - value) // current_interval) + 1}")
-
-            curr_nmframes = [value, self.nmframes_end_sb.value(), self.nmframes_inter_sb.value()]
+            self.nmnumframes_le.setText(f"{int((current_end - value) // current_interval) + 1}")
+            curr_nmframes = dict(nmstartframe=value, nmendframe=self.nmframes_end_sb.value(),
+                                 nminterval=self.nmframes_inter_sb.value())
             if curr_nmframes != self.systems[self.current_system_index]['current_nmode_frames']:
                 self.nm_changed.show()
             else:
@@ -922,9 +922,10 @@ class GMX_MMPBSA_ANA(QMainWindow):
         if self.current_system_index:
             current_start = self.nmframes_start_sb.value()
             current_interval = self.nmframes_inter_sb.value()
-            self.numframes_le.setText(f"{int((value - current_start) // current_interval) + 1}")
+            self.nmnumframes_le.setText(f"{int((value - current_start) // current_interval) + 1}")
 
-            curr_nmframes = [self.nmframes_start_sb.value(), value, self.nmframes_inter_sb.value()]
+            curr_nmframes = dict(nmstartframe=self.nmframes_start_sb.value(), nmendframe=value,
+                                 nminterval=self.nmframes_inter_sb.value())
             if curr_nmframes != self.systems[self.current_system_index]['current_nmode_frames']:
                 self.nm_changed.show()
             else:
@@ -934,9 +935,10 @@ class GMX_MMPBSA_ANA(QMainWindow):
         if self.current_system_index:
             current_start = self.nmframes_start_sb.value()
             current_end = self.nmframes_end_sb.value()
-            self.numframes_le.setText(f"{int((current_end - current_start) // value) + 1}")
+            self.nmnumframes_le.setText(f"{int((current_end - current_start) // value) + 1}")
 
-            curr_nmframes = [self.nmframes_start_sb.value(), self.nmframes_end_sb.value(), value]
+            curr_nmframes = dict(nmstartframe=self.nmframes_start_sb.value(), nmendframe=self.nmframes_end_sb.value(),
+                                 nminterval=value)
             if curr_nmframes != self.systems[self.current_system_index]['current_nmode_frames']:
                 self.nm_changed.show()
             else:
