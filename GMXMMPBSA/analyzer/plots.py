@@ -28,6 +28,10 @@ import matplotlib as mpl
 import matplotlib.backend_bases
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
+import matplotlib.patches as mpatches
+from matplotlib.lines import Line2D
+from scipy.stats import linregress
+
 import numpy as np
 import pandas
 import pandas as pd
@@ -169,18 +173,20 @@ class ChartsBase(QMdiSubWindow):
             ax.set_xlabel(xlabel, fontdict={'fontsize': options[tuple(key_list + ['fontsize', 'x-label'])]})
         ax.set_ylabel(ylabel, fontdict={'fontsize': options[tuple(key_list + ['fontsize', 'y-label'])]})
         for label in ax.get_xticklabels():
-            label.set_rotation(options[tuple(key_list + ['axes', 'x-rotation'])])
-            if options[tuple(key_list + ['axes', 'x-rotation'])] < 0:
-                label.set_horizontalalignment('left')
-            else:
-                label.set_horizontalalignment('right')
+            if options.get(tuple(key_list + ['axes', 'x-rotation'])):
+                label.set_rotation(options[tuple(key_list + ['axes', 'x-rotation'])])
+                if options[tuple(key_list + ['axes', 'x-rotation'])] < 0:
+                    label.set_horizontalalignment('left')
+                else:
+                    label.set_horizontalalignment('right')
             label.set_fontsize(options[tuple(key_list + ['fontsize', 'x-ticks'])])
         for label in ax.get_yticklabels():
-            label.set_rotation(options[tuple(key_list + ['axes', 'y-rotation'])])
-            if options[tuple(key_list + ['axes', 'y-rotation'])] < 0:
-                label.set_horizontalalignment('left')
-            else:
-                label.set_horizontalalignment('right')
+            if options.get(tuple(key_list + ['axes', 'y-rotation'])):
+                label.set_rotation(options[tuple(key_list + ['axes', 'y-rotation'])])
+                if options[tuple(key_list + ['axes', 'y-rotation'])] < 0:
+                    label.set_horizontalalignment('left')
+                else:
+                    label.set_horizontalalignment('right')
             label.set_fontsize(options[tuple(key_list + ['fontsize', 'y-ticks'])])
 
     def closeEvent(self, closeEvent: QCloseEvent) -> None:
