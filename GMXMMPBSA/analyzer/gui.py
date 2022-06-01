@@ -23,10 +23,6 @@ except:
     from PyQt5.QtCore import *
     from PyQt5.QtGui import *
 
-
-import sys
-import os
-
 from queue import Queue
 from functools import partial
 import pandas as pd
@@ -819,7 +815,6 @@ class GMX_MMPBSA_ANA(QMainWindow):
         for c in range(self.correlation_tableWidget.columnCount()):
             for r in range(self.correlation_tableWidget.rowCount()):
                 itemw = self.correlation_tableWidget.cellWidget(r, c)
-                ic(itemw)
                 if itemw and itemw.reg_chart_action.isChecked():
                     itemw.reg_chart_action.setChecked(False)
                     itemw.reg_chart_action.setChecked(True)
@@ -828,7 +823,6 @@ class GMX_MMPBSA_ANA(QMainWindow):
         maximum = r.qsize()
         for i, c in enumerate(range(maximum), start=1):
             sys_id, data, a = r.get()
-            ic(sys_id, data, a)
             self.systems[sys_id]['items_data'] = {k:v1 for x, v in data.items()
                                                   if x != 'correlation' and v
                                                   for k, v1 in v['keys'].items()}
@@ -1045,7 +1039,6 @@ class GMX_MMPBSA_ANA(QMainWindow):
                 dta[('System', 'Selection')].append(cv)
 
             g = pd.DataFrame(dta, index=range(len(self.systems[sys_id].get('correlation'))))
-            ic(self.systems[sys_id]['correlation_data'])
             for et, v in self.systems[sys_id]['correlation_data'].items():
                 for m, v1 in v.items():
                     cdf = pd.concat([g, v1], axis=1)
@@ -1101,7 +1094,6 @@ class GMX_MMPBSA_ANA(QMainWindow):
                                                         tuple(options.get('decomposition').get('mols')))
             opts4ana['decomp_options']['res_threshold'] = options.get('decomposition').get('res_threshold')
             opts4ana['correlation'] = options.get('correlation').get('corr')
-            ic(opts4ana)
 
             d = {MMPBSA_API: {'object': 'class',
                               'args': None},

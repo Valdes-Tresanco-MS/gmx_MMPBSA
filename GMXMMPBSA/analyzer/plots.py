@@ -357,10 +357,7 @@ class BarChart(ChartsBase):
                 self.setup_text(bar_plot_ax, options, key='Bar Plot', title=g, ylabel=ylabel)
         else:
             bar_plot_ax = self.axes
-            if options[('Bar Plot', 'scale-yaxis')]: # and options['scalable']:
-                # self.formatter.set_scientific(True)
-                # bar_plot_ax.yaxis.set_major_formatter(self.formatter)
-                # plt.ticklabel_format(style='sci', scilimits=(-3, 2))
+            if options[('Bar Plot', 'scale-yaxis')]:
                 bar_plot_ax.set_yscale('symlog')
             else:
                 bar_plot_ax.set_yscale('linear')
