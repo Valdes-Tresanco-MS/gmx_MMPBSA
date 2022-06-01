@@ -55,9 +55,7 @@ class CustomCorrItem(QTableWidgetItem):
         self.app = app
         self.model = model
         self.keys_path = keys_path
-
         self.reg_sw = None
-
         if text:
             self.setText(model.upper())
         self.title = f'Correlation Using {model.upper()} model'
@@ -82,6 +80,13 @@ class CustomCorrItem(QTableWidgetItem):
         if state:
             self.setSelected(True)
             if not self.reg_sw or datachange or changes:
+                if len(plot_data.index) < 4:
+                    QMessageBox.critical(self.tableWidget(),
+                                         'Unable to calculate correlation',
+                                         'More than three systems are needed to calculate the correlation.',
+                                         QMessageBox.StandardButton.Ok, QMessageBox.StandardButton.Ok)
+                    self.c_widget.reg_chart_action.setChecked(False)
+                    return
                 QGuiApplication.setOverrideCursor(QCursor(Qt.CursorShape.WaitCursor))
                 self.reg_sw = RegChart(plot_data, button=self.c_widget.reg_chart_action, options=options,
                                        item_parent=self)
