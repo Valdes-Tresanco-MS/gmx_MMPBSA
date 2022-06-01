@@ -822,7 +822,7 @@ class CorrChartSettings(dict):
                         'default': None,
                         'children': {
                             'color': {'type': 'color', 'enabled': True, 'expanded': True, 'name': 'color',
-                                      'value': [255, 0, 0, 255], 'default': [255, 0, 0, 255], 'action_type': R},
+                                      'value': [44, 105, 176, 255], 'default': [44, 105, 176, 255], 'action_type': R},
                             'alpha': {'type': 'float', 'enabled': True, 'expanded': True, 'name': 'alpha',
                                       'value': 0.15, 'step': 0.01, 'default': 0.15, 'limits': (0, 1), 'action_type': R},
                             'marker-size': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'marker-size',
