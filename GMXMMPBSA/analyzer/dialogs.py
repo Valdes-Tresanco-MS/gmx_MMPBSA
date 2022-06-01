@@ -26,7 +26,6 @@ except:
     from PyQt5.QtCore import *
     from PyQt6.QtGui import *
 
-
 import h5py
 from queue import Queue, Empty
 from pathlib import Path
@@ -544,16 +543,12 @@ class InitDialog(QDialog):
                                 corr['mutant'] = child.child(c1).checkState(4) == Qt.CheckState.Checked
                             if self.energy_type.currentIndex() == 1:
                                 ref = self.result_tree.itemWidget(child.child(c1), 5).isChecked()
-            # child.info += [t, self.result_tree.itemWidget(child, 5).currentText()]
-            ic(child,
-               self.systems_list[eval(child.text(0))] + [t, corr, ref,
-                                                         self.result_tree.itemWidget(child, 6).currentText()])
             queue.put(self.systems_list[eval(child.text(0))] +
                       [t, corr, ref,self.result_tree.itemWidget(child, 6).currentText()])
             counter += 1
         if not counter:
             QMessageBox.critical(self, 'Error processing systems', 'You must select at least one system.',
-                                 QMessageBox.Ok)
+                                 QMessageBox.StandardButton.Ok)
             return
         # Store the global default graphics settings if not exits
         if not self.chart_default_setting.config_created() or self.reset_default_config.isChecked():
