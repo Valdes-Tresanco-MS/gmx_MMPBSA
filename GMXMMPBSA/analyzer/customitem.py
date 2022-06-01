@@ -62,8 +62,6 @@ class CustomCorrItem(QTableWidgetItem):
             self.setText(model.upper())
         self.title = f'Correlation Using {model.upper()} model'
         self.subtitle = "$ΔG_{Experimental} vs ΔG_{Calculated}$"
-            # ['Exp. Energy vs Enthalpy (ΔH)', 'Exp. Energy vs Pred. Energy (ΔH+IE)',
-            #              'Exp. Energy vs Pred. Energy (ΔH+NMODE)', 'Exp. Energy vs Pred. Energy (ΔH+QH)']
         self.c_widget = TableActionBtn()
         self.c_widget.reg_chart_action.toggled.connect(self.plotting_reg)
 
@@ -72,7 +70,7 @@ class CustomCorrItem(QTableWidgetItem):
 
     def plotting_reg(self, state):
         from GMXMMPBSA.analyzer.plots import RegChart
-        self.app.treeWidget.clearSelection()
+        self.app.correlation_tableWidget.clearSelection()
 
         options = self.app.correlation['chart_options'].get_settings()
 
@@ -85,8 +83,8 @@ class CustomCorrItem(QTableWidgetItem):
             self.setSelected(True)
             if not self.reg_sw or datachange or changes:
                 QGuiApplication.setOverrideCursor(QCursor(Qt.CursorShape.WaitCursor))
-                self.reg_sw = RegChart(plot_data, energy=self.keys_path[-1], button=self.c_widget.reg_chart_action,
-                                         options=options, item_parent=self)
+                self.reg_sw = RegChart(plot_data, button=self.c_widget.reg_chart_action, options=options,
+                                       item_parent=self)
                 self.app.correlation['items_data'][self.keys_path][1] = False
                 self.app.mdi.addSubWindow(self.reg_sw)
             self.reg_sw.show()
