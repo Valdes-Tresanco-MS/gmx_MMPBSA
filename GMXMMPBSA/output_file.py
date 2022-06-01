@@ -223,23 +223,19 @@ def write_outputs(app):
                     energyvectors.writerow(['Interaction entropy results'])
                     ienorm._print_vectors(energyvectors)
                     energyvectors.writerow([])
+                ie_inconsistent = ienorm['sigma'] > 3.6
 
-                for m in ienorm:
-                    if ienorm[m]['sigma'] > 3.6:
-                        ie_inconsistent = True
             if INPUT['alarun']:
                 iemutant = app.calc_types.mutant['ie']
                 final_output.writeline(mut_str + ' MUTANT')
                 final_output.writeline('ENTROPY RESULTS (INTERACTION ENTROPY):')
                 final_output.add_section(iemutant.summary_output())
-                for m in iemutant:
-                    if iemutant[m]['sigma'] > 3.6:
-                        ie_inconsistent = True
+                ie_inconsistent = iemutant['sigma'] > 3.6
+
             if INPUT['alarun'] and not INPUT['mutant_only']:
                 text = f'\nRESULT OF ALANINE SCANNING ({mut_str}):\n'
-                for model in ienorm:
-                    davg, dstd = utils.calc_sub(iemutant[model]['iedata'], ienorm[model]['iedata'], mut=True)
-                    text += f'-TΔΔS binding ({model.upper()}) = {davg:9.2f} +/- {dstd:9.2f}\n'
+                davg, dstd = utils.calc_sub(iemutant['iedata'], ienorm['iedata'], mut=True)
+                text += f'-TΔΔS binding = {davg:9.2f} +/- {dstd:9.2f}\n'
                 final_output.add_section(text)
             if ie_inconsistent:
                 final_output.writeline(
@@ -253,22 +249,19 @@ def write_outputs(app):
                 c2norm = app.calc_types.normal['c2']
                 final_output.writeline('ENTROPY RESULTS (C2 ENTROPY):')
                 final_output.add_section(c2norm.summary_output())
-                for m in c2norm:
-                    if c2norm[m]['sigma'] > 3.6:
-                        c2_inconsistent = True
+                c2_inconsistent = c2norm['sigma'] > 3.6
+
             if INPUT['alarun']:
                 c2mutant = app.calc_types.mutant['c2']
                 final_output.writeline(mut_str + ' MUTANT')
                 final_output.writeline('ENTROPY RESULTS (C2 ENTROPY):')
                 final_output.add_section(c2mutant.summary_output())
-                for m in c2mutant:
-                    if c2mutant[m]['sigma'] > 3.6:
-                        c2_inconsistent = True
+                c2_inconsistent = c2mutant['sigma'] > 3.6
+
             if INPUT['alarun'] and not INPUT['mutant_only']:
                 text = '\nRESULT OF ALANINE SCANNING (%s):\n' % mut_str
-                for model in c2norm:
-                    davg, dstd = utils.calc_sub(c2mutant[model]['c2data'], c2norm[model]['c2data'], mut=True)
-                    text += f'-TΔΔS binding ({model.upper()}) = {davg:9.2f} +/- {dstd:9.2f}\n'
+                davg, dstd = utils.calc_sub(c2mutant['c2data'], c2norm['c2data'], mut=True)
+                text += f'-TΔΔS binding = {davg:9.2f} +/- {dstd:9.2f}\n'
                 final_output.add_section(text)
             if c2_inconsistent:
                 final_output.writeline(
@@ -327,7 +320,7 @@ def write_outputs(app):
                '\n3D-RISM:\n\n', '\n3D-RISM (Gauss. Fluct.):\n\n', '\n3D-RISM (PC+):\n\n')
     # Now print out the Free Energy results
     for i, key in enumerate(outkeys):
-        if not INPUT[triggers[i]]:
+        if triggers[i] not in INPUT or not INPUT[triggers[i]]:
             continue
         if not INPUT['mutant_only']:
             final_output.write(headers[i])
@@ -355,12 +348,12 @@ def write_outputs(app):
                                          f'/- {dg_qh_dstd:7.2f}\n')
             if not stability:
                 if INPUT['interaction_entropy']:
-                    dg_ie_davg, dg_ie_dstd = utils.calc_sum(sys_norm['TOTAL'], ienorm[key]['iedata'])
+                    dg_ie_davg, dg_ie_dstd = utils.calc_sum(sys_norm['TOTAL'], ienorm['iedata'])
                     final_output.add_section(f"Using Interaction Entropy Approximation:\n"
                                              f"ΔG binding = {dg_ie_davg:9.2f} +/- {dg_ie_dstd:7.2f}\n")
                 if INPUT['c2_entropy']:
-                    dg_c2_davg, dh_dstd = utils.calc_sum(sys_norm['TOTAL'], c2norm[key]['c2data'])
-                    dg_c2_dstd = utils.get_std(dh_dstd, c2norm[key]['c2_std'])
+                    dg_c2_davg, dh_dstd = utils.calc_sum(sys_norm['TOTAL'], c2norm['c2data'])
+                    dg_c2_dstd = utils.get_std(dh_dstd, c2norm['c2_std'])
                     final_output.add_section(f"Using C2 Entropy Approximation:\n"
                                              f"ΔG binding = {dg_c2_davg:9.2f} +/- {dg_c2_dstd:7.2f}\n")
             if INPUT['nmoderun']:
@@ -421,14 +414,14 @@ def write_outputs(app):
                                    f'ΔΔG{"" if stability else " binding"} = {ddgqh_davg:9.2f} +/- {ddh_dstd:7.2f}\n')
             if not stability:
                 if INPUT['interaction_entropy']:
-                    ddie_davg, ddie_dstd = utils.calc_sub(iemutant[key]['iedata'], ienorm[key]['iedata'], mut=True)
+                    ddie_davg, ddie_dstd = utils.calc_sub(iemutant[key]['iedata'], ienorm['iedata'], mut=True)
                     ddgie_davg = ddh_davg + ddie_davg
                     ddgie_dstd = utils.get_std(ddh_dstd, ddie_dstd)
                     final_output.write('\n   (interaction entropy)\n'
                                        f'ΔΔG binding = {ddgie_davg:9.2f} +/- {ddgie_dstd:7.2f}\n')
                 if INPUT['c2_entropy']:
-                    ddc2_davg = c2mutant[key]['c2data'] - c2norm[key]['c2data']
-                    ddc2_dstd = c2mutant[key]['c2_std'] - c2norm[key]['c2_std']
+                    ddc2_davg = c2mutant[key]['c2data'] - c2norm['c2data']
+                    ddc2_dstd = c2mutant[key]['c2_std'] - c2norm['c2_std']
                     ddgc2_davg = ddh_davg + ddc2_davg
                     ddgc2_dstd = utils.get_std(ddh_dstd, ddc2_dstd)
                     final_output.write('\n   (C2 entropy)\n'
@@ -480,7 +473,7 @@ def write_decomp_output(app):
         dec_energies = writer(dec_energies_f)
 
     for i, key in enumerate(outkeys):
-        if not INPUT[triggers[i]]:
+        if triggers[i] not in INPUT or not INPUT[triggers[i]]:
             continue
         if not INPUT['mutant_only']:
             if stability:

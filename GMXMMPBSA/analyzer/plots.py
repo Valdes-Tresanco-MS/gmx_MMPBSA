@@ -28,6 +28,10 @@ import matplotlib as mpl
 import matplotlib.backend_bases
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
+import matplotlib.patches as mpatches
+from matplotlib.lines import Line2D
+from scipy.stats import linregress
+
 import numpy as np
 import pandas
 import pandas as pd
@@ -158,29 +162,31 @@ class ChartsBase(QMdiSubWindow):
     def draw(self):
         self.fig.tight_layout()
         self.figure_canvas.draw()
+        QGuiApplication.restoreOverrideCursor()
 
     def setup_text(self, ax, options, key='', title='', xlabel='', ylabel='Energy (kcal/mol)'):
         key_list = [key] if isinstance(key, str) else key
         ax.set_title(title, fontdict={'fontsize': options[tuple(key_list + ['fontsize', 'suptitle'])]})
         if 'Line Plot' in key_list:
-            ax.legend(prop={'size': options[tuple(key_list + ['fontsize', 'legend'])]})
+            ax.legend(loc="lower right", prop={'size': options[tuple(key_list + ['fontsize', 'legend'])]})
         if xlabel:
             ax.set_xlabel(xlabel, fontdict={'fontsize': options[tuple(key_list + ['fontsize', 'x-label'])]})
-        if ylabel:
-            ax.set_ylabel(ylabel, fontdict={'fontsize': options[tuple(key_list + ['fontsize', 'y-label'])]})
+        ax.set_ylabel(ylabel, fontdict={'fontsize': options[tuple(key_list + ['fontsize', 'y-label'])]})
         for label in ax.get_xticklabels():
-            label.set_rotation(options[tuple(key_list + ['axes', 'x-rotation'])])
-            if options[tuple(key_list + ['axes', 'x-rotation'])] < 0:
-                label.set_horizontalalignment('left')
-            else:
-                label.set_horizontalalignment('right')
+            if options.get(tuple(key_list + ['axes', 'x-rotation'])):
+                label.set_rotation(options[tuple(key_list + ['axes', 'x-rotation'])])
+                if options[tuple(key_list + ['axes', 'x-rotation'])] < 0:
+                    label.set_horizontalalignment('left')
+                else:
+                    label.set_horizontalalignment('right')
             label.set_fontsize(options[tuple(key_list + ['fontsize', 'x-ticks'])])
         for label in ax.get_yticklabels():
-            label.set_rotation(options[tuple(key_list + ['axes', 'y-rotation'])])
-            if options[tuple(key_list + ['axes', 'y-rotation'])] < 0:
-                label.set_horizontalalignment('left')
-            else:
-                label.set_horizontalalignment('right')
+            if options.get(tuple(key_list + ['axes', 'y-rotation'])):
+                label.set_rotation(options[tuple(key_list + ['axes', 'y-rotation'])])
+                if options[tuple(key_list + ['axes', 'y-rotation'])] < 0:
+                    label.set_horizontalalignment('left')
+                else:
+                    label.set_horizontalalignment('right')
             label.set_fontsize(options[tuple(key_list + ['fontsize', 'y-ticks'])])
 
     def closeEvent(self, closeEvent: QCloseEvent) -> None:
@@ -188,62 +194,42 @@ class ChartsBase(QMdiSubWindow):
 
 
 class LineChart(ChartsBase):
-    def __init__(self, data: pandas.DataFrame, button: QToolButton, options: dict = None, item_parent=None):
+    def __init__(self, data, button: QToolButton, options: dict = None, item_parent=None):
         super(LineChart, self).__init__(button, options, item_parent)
 
-        self.ie_bar = None
-        self.ie_barlabel = None
-        self.axins4 = None
-
-        self.data = data
+        self.data = pd.read_parquet(data) if isinstance(data, str) else data
+        self.data = self.data.iloc[:,0]
 
         # figure canvas definition
         self.set_cw()
         self.fig.set_size_inches(options[('Line Plot', 'figure', 'width')],
                                  options[('Line Plot', 'figure', 'height')])
 
-        width1 = 100 - options[('Bar Plot', 'IE/C2 Entropy', 'bar-plot', 'width')]
-        width2 = options[('Bar Plot', 'IE/C2 Entropy', 'bar-plot', 'width')]
-        height1 = 100 - options[('Bar Plot', 'IE/C2 Entropy', 'bar-plot', 'height')]
-        height2 = options[('Bar Plot', 'IE/C2 Entropy', 'bar-plot', 'height')]
-
-        if 'ie' in options:
-            gs = gridspec.GridSpec(2, 2, height_ratios=[height1, height2], width_ratios=[width1, width2])
-            axes = self.fig.add_subplot(gs[:, 0])
-            self.line_plot_ax = sns.lineplot(data=data['data'],
+        self.axes = self.fig.subplots(1, 1)
+        if options.get('iec2'):
+            self.line_plot_ax = sns.lineplot(data=self.data['AccIntEnergy'],
                                              color=rgb2rgbf(options[('Line Plot', 'line-color')]),
-                                             linewidth=options[('Line Plot', 'line-width')], ax=axes)
+                                             linewidth=options[('Line Plot', 'line-width')],
+                                             ax=self.axes,
+                                             label='IE(all)')
             # plot the ie segment
             ie_color = rgb2rgbf(options[('Bar Plot', 'IE/C2 Entropy', 'ie-color')])
-            sns.lineplot(data=data['iedata'], color=ie_color, ax=axes)
-            ax2 = self.fig.add_subplot(gs[1, 1])
-            r_sigma = rgb2rgbf(options[('Bar Plot', 'IE/C2 Entropy', 'sigma-color', 'reliable')])
-            nr_sigma = rgb2rgbf(options[('Bar Plot', 'IE/C2 Entropy', 'sigma-color', 'non-reliable')])
-            colors = [ie_color, r_sigma if np.all(data.loc[:, ['sigma']].mean() < 3.6) else nr_sigma]
-            self.ie_bar = sns.barplot(data=data[['iedata', 'sigma']], ax=ax2, palette=colors)
-            numf = data['iedata'].count()
-            self.ie_bar.set(xticklabels=[f"ie\n(last\n {numf} frames)", "σ(Int.\nEnergy)"])
-            self.ie_barlabel = bar_label(self.ie_bar, self.ie_bar.containers[0],
-                                         size=options[('Bar Plot', 'IE/C2 Entropy', 'bar-plot', 'bar-label-fontsize')],
-                                         fmt='%.2f',
-                                         padding=options[('Bar Plot', 'IE/C2 Entropy', 'bar-plot',
-                                                          'bar-label-padding')]
-                                         )
-            sns.despine(ax=self.ie_bar)
+            sns.lineplot(data=self.data['ie'], color=ie_color, ax=self.axes, label='IE(selected)')
         else:
-            axes = self.fig.subplots(1, 1)
-            self.line_plot_ax = sns.lineplot(data=data, color=rgb2rgbf(options[('Line Plot', 'line-color')]),
-                                             linewidth=options[('Line Plot', 'line-width')], label=data.name, ax=axes)
+            self.line_plot_ax = sns.lineplot(data=self.data, color=rgb2rgbf(options[('Line Plot', 'line-color')]),
+                                             linewidth=options[('Line Plot', 'line-width')],
+                                             label=self.data.name,
+                                             ax=self.axes)
             if options[('Line Plot', 'Rolling average', 'show')]:
                 min_periods = 1 if options[('Line Plot', 'Rolling average', 'first_obs')] == 'start' else None
                 window = options[('Line Plot', 'Rolling average', 'window')]
-                moving_avg = sns.lineplot(data=data.rolling(window, min_periods=min_periods).mean(),
+                moving_avg = sns.lineplot(data=self.data.rolling(window, min_periods=min_periods).mean(),
                                           color=rgb2rgbf(options[('Line Plot', 'Rolling average', 'color')]),
                                           linewidth=options[('Line Plot', 'Rolling average', 'width')],
                                           label='Mov. Av.',
                                           ls=options[('Line Plot', 'Rolling average', 'style')],
-                                          ax=axes)
-        self.cursor = Cursor(axes, useblit=True, color='black', linewidth=0.5, ls='--')
+                                          ax=self.axes)
+        self.cursor = Cursor(self.axes, useblit=True, color='black', linewidth=0.5, ls='--')
 
         self.setWindowTitle(options['subtitle'])
         self.update_config(options)
@@ -263,43 +249,47 @@ class LineChart(ChartsBase):
 
         self.setup_text(self.line_plot_ax, options, key='Line Plot', xlabel=self.data.index.name)
 
-        if self.ie_bar:
-            for label in self.ie_barlabel:
-                label.set_fontsize(options[('Bar Plot', 'IE/C2 Entropy', 'bar-plot', 'bar-label-fontsize')])
-            self.ie_bar.tick_params(labelsize=options[('Bar Plot', 'IE/C2 Entropy', 'bar-plot',
-                                                       'axes-fontsize')])
         self.draw()
 
 
 class BarChart(ChartsBase):
-    def __init__(self, data: pandas.DataFrame, button: QToolButton, options: dict = None, item_parent=None):
+    def __init__(self, data, button: QToolButton, options: dict = None, item_parent=None):
         super(BarChart, self).__init__(button, options, item_parent)
 
+        self.data = pd.read_parquet(data) if isinstance(data, str) else data
         self.bar_labels = []
         # figure canvas definition
         self.set_cw()
         self.fig.set_size_inches(options[('Bar Plot', 'figure', 'width')],
                                  options[('Bar Plot', 'figure', 'height')])
         self.bar_frames = False
-        palette = (sns.color_palette(options[('Bar Plot', 'palette')], n_colors=data.columns.size)
+        palette = (sns.color_palette(options[('Bar Plot', 'palette')], n_colors=self.data.columns.size)
                    if options[('Bar Plot', 'use-palette')] else None)
-        if options['groups'] and options[('Bar Plot', 'subplot-components')]:
+        if options.get('groups') and options[('Bar Plot', 'subplot-components')]:
             self.axes = self.fig.subplots(1, len(options['groups']), sharey=True,
                                           gridspec_kw={'width_ratios': [len(x) for x in options['groups'].values()]})
             if options[('Bar Plot', 'axes', 'y-inverted')]:
                 self.axes[0].invert_yaxis()
             s = 0
             for c, g in enumerate(options['groups']):
-                bar_plot_ax = sns.barplot(data=data[options['groups'][g]], ci="sd",
+                df = self.data[options['groups'][g]]
+                bar_plot_ax = sns.barplot(x=df.columns,
+                                          y=df.loc['Average'],
+                                          yerr=df.loc[options[('Bar Plot', 'error-line', 'representation')]],
                                           palette=palette[s: s + len(options['groups'][g])] if palette else palette,
                                           color=rgb2rgbf(options[('Bar Plot', 'color')]),
-                                          errwidth=options[('Bar Plot', 'error-line', 'width')],
-                                          ax=self.axes[c])
+                                          error_kw=dict(
+                                              ecolor=rgb2rgbf(options[('Bar Plot', 'error-line', 'color')]),
+                                              capsize=options[('Bar Plot', 'error-line', 'cap-size')],
+                                              elinewidth=options[('Bar Plot', 'error-line', 'width')]
+                                          ),
+                                          ax=self.axes[c]
+                                          )
                 s += len(options['groups'][g])
                 if options[('Bar Plot', 'scale-yaxis')]: # and options['scalable']:
                     bar_plot_ax.set_yscale('symlog')
                 if options[('Bar Plot', 'bar-label', 'show')]:
-                    bl = bar_label(bar_plot_ax, bar_plot_ax.containers[0],
+                    bl = bar_label(bar_plot_ax, bar_plot_ax.containers[1],
                                    size=options[('Bar Plot', 'bar-label', 'fontsize')],
                                    fmt='%.2f',
                                    padding=options[('Bar Plot', 'bar-label', 'padding')],
@@ -311,18 +301,28 @@ class BarChart(ChartsBase):
                 bar_plot_ax.set_xticklabels(self._set_xticks(bar_plot_ax, options[('Bar Plot', 'remove-molid')]))
         else:
             self.axes = self.fig.subplots(1, 1)
-            if 'c2' in options:
+            if options.get('iec2'):
                 ie_color = rgb2rgbf(options[('Bar Plot', 'IE/C2 Entropy', 'ie-color')])
                 r_sigma = rgb2rgbf(options[('Bar Plot', 'IE/C2 Entropy', 'sigma-color', 'reliable')])
                 nr_sigma = rgb2rgbf(options[('Bar Plot', 'IE/C2 Entropy', 'sigma-color', 'non-reliable')])
-                palette = [ie_color, r_sigma if np.all(data.loc[:, ['sigma']].mean() < 3.6) else nr_sigma]
+                palette = [ie_color, r_sigma if self.data['sigma'].loc[['Average']].values[0] < 3.6 else nr_sigma]
 
-            bar_plot_ax = sns.barplot(data=data, ci="sd", errwidth=1, ax=self.axes, palette=palette,
-                                      color=rgb2rgbf(options[('Bar Plot', 'color')]),)
-            if options[('Bar Plot', 'axes', 'y-inverted')] and 'c2' not in options:
+            bar_plot_ax = sns.barplot(x=self.data.columns,
+                                      y=self.data.loc['Average'],
+                                      yerr=self.data.loc[options[('Bar Plot', 'error-line', 'representation')]],
+                                      error_kw=dict(
+                                          ecolor=rgb2rgbf(options[('Bar Plot', 'error-line', 'color')]),
+                                          capsize=options[('Bar Plot', 'error-line', 'cap-size')],
+                                          elinewidth=options[('Bar Plot', 'error-line', 'width')]
+                                      ),
+                                      ax=self.axes,
+                                      palette=palette,
+                                      color=rgb2rgbf(options[('Bar Plot', 'color')]),
+                                      )
+            if options[('Bar Plot', 'axes', 'y-inverted')] and not options.get('iec2'):
                 bar_plot_ax.invert_yaxis()
             if options[('Bar Plot', 'bar-label', 'show')]:
-                bl = bar_label(bar_plot_ax, bar_plot_ax.containers[0],
+                bl = bar_label(bar_plot_ax, bar_plot_ax.containers[1],
                                size=options[('Bar Plot', 'bar-label', 'fontsize')],
                                fmt='%.2f',
                                padding=options[('Bar Plot', 'bar-label', 'padding')],
@@ -331,7 +331,7 @@ class BarChart(ChartsBase):
             self.setup_text(bar_plot_ax, options, key='Bar Plot')
             self.cursor = Cursor(bar_plot_ax, useblit=True, color='black', linewidth=0.5, ls='--')
             bar_plot_ax.set_xticklabels(self._set_xticks(bar_plot_ax, options[('Bar Plot', 'remove-molid')]))
-            self.bar_frames = 'frames' in data
+            self.bar_frames = 'frames' in self.data
         self.setWindowTitle(options['subtitle'])
         self.update_config(options)
         self.draw()
@@ -360,10 +360,7 @@ class BarChart(ChartsBase):
                 self.setup_text(bar_plot_ax, options, key='Bar Plot', title=g, ylabel=ylabel)
         else:
             bar_plot_ax = self.axes
-            if options[('Bar Plot', 'scale-yaxis')]: # and options['scalable']:
-                # self.formatter.set_scientific(True)
-                # bar_plot_ax.yaxis.set_major_formatter(self.formatter)
-                # plt.ticklabel_format(style='sci', scilimits=(-3, 2))
+            if options[('Bar Plot', 'scale-yaxis')]:
                 bar_plot_ax.set_yscale('symlog')
             else:
                 bar_plot_ax.set_yscale('linear')
@@ -376,12 +373,13 @@ class BarChart(ChartsBase):
 
 
 class HeatmapChart(ChartsBase):
-    def __init__(self, data: pandas.DataFrame, button: QToolButton, options: dict = None, item_parent=None):
+    def __init__(self, data, button: QToolButton, options: dict = None, item_parent=None):
         super(HeatmapChart, self).__init__(button, options, item_parent)
 
-        self.data = data
+        self.data = pd.read_parquet(data) if isinstance(data, str) else data
 
-        self.heatmap_type = int(all(data.columns == data.index)) if data.columns.size == data.index.size else 2
+        self.heatmap_type = 2 if data.columns.is_numeric() else 1
+
         fig_width = (options[('Heatmap Plot', 'figure', 'width-per-wise')] if self.heatmap_type == 1 else
                      options[('Heatmap Plot', 'figure', 'width-per-residue')])
         fig_height = options[('Heatmap Plot', 'figure', 'height')]
@@ -389,13 +387,14 @@ class HeatmapChart(ChartsBase):
                       options[('Heatmap Plot', 'Per-residue', 'x-rotation')])
         cmap = (Palettes.get_colormap(options[('Heatmap Plot', 'Per-wise', 'palette')]) if self.heatmap_type == 1 else
                 Palettes.get_colormap(options[('Heatmap Plot', 'Per-residue', 'palette')]))
-        nxticks = (1 if self.heatmap_type == 1 or data.columns.size < options[('Heatmap Plot', 'Per-residue', 'num-xticks')]
-                   else data.columns.size // options[('Heatmap Plot', 'Per-residue', 'num-xticks')])
+        nxticks = (1 if self.heatmap_type == 1 or
+                        self.data.columns.size < options[('Heatmap Plot', 'Per-residue', 'num-xticks')]
+                   else self.data.columns.size // options[('Heatmap Plot', 'Per-residue', 'num-xticks')])
 
         annotation = options[('Heatmap Plot', 'Per-wise', 'annotation')] if self.heatmap_type == 1 else False
 
         if options[('Heatmap Plot', 'highlight-components')]:
-            mheatmap = MHeatmap(data=data,
+            mheatmap = MHeatmap(data=self.data,
                                 figsize=(fig_width, fig_height),
                                 dpi=options[('General', 'figure-format', 'dpi-plot')],
                                 heatmap_type=self.heatmap_type,
@@ -425,7 +424,7 @@ class HeatmapChart(ChartsBase):
             # figure canvas definition
             self.set_cw()
             self.axes = self.fig.subplots(1, 1)
-            heatmap_ax = sns.heatmap(data, ax=self.axes, center=0,
+            heatmap_ax = sns.heatmap(self.data, ax=self.axes, center=0,
                                      xticklabels=nxticks, #cbar_ax=self.ax_cbar,
                                      yticklabels=1, #cbar_ax=self.ax_cbar,
                                      # cbar_kws=colorbar_kws,
@@ -457,8 +456,8 @@ class HeatmapChart(ChartsBase):
             # heatmap_ax.yaxis.set_ticks_position('right')
             # heatmap_ax.yaxis.set_label_position('right')
             if self.heatmap_type == 2:
-                heatmap_ax.set_xlabel(data.columns.name, fontdict={'fontsize': options[('Heatmap Plot', 'fontsize',
-                                                                                  'x-label')]})
+                heatmap_ax.set_xlabel(self.data.columns.name,
+                                      fontdict={'fontsize': options[('Heatmap Plot', 'fontsize', 'x-label')]})
 
         self.cursor = Cursor(self.axes, useblit=True, color='black', linewidth=0.5, ls='--')
 
@@ -653,31 +652,102 @@ class MHeatmap:
                         **kws)
 
     def plot_matrix(self, colorbar_kws, **kws):
+        h = sns.heatmap(self.data, ax=self.ax_heatmap, xticklabels=self.num_xticks, yticklabels=1,
+                        cbar_ax=self.ax_cbar, cbar_kws=colorbar_kws, cmap=self.cmap, center=0, annot=self.annot,
+                        fmt=".2f", annot_kws={'size': self.annot_fs},**kws)
+        yticks = [x[2:] for x in self.data.index] if self.remove_molid else self.data.index
+        self.ax_heatmap.set_yticklabels(yticks, fontdict=dict(fontsize=self.yticks_fontsize),
+                                        rotation=self.y_rotation)
 
-        h = sns.heatmap(self.data, ax=self.ax_heatmap, xticklabels=self.num_xticks, cbar_ax=self.ax_cbar,
-                        cbar_kws=colorbar_kws, cmap=self.cmap, center=0, annot=self.annot, fmt=".2f",
-                        annot_kws={'size': self.annot_fs},**kws)
-        ytl = self.ax_heatmap.get_yticklabels()
-        for ylabel in ytl:
-            ylabel.set_fontsize(self.yticks_fontsize)
-            ylabel.set_rotation(self.y_rotation)
-            if self.remove_molid:
-                ylabel.set_text(ylabel.get_text()[2:])
-        xtl = self.ax_heatmap.get_xticklabels()
-        for xlabel in xtl:
-            xlabel.set_fontsize(self.xticks_fontsize)
-            xlabel.set_rotation(self.x_rotation)
-            if self.remove_molid and self.heatmap_type == 1:
-                xlabel.set_text(xlabel.get_text()[2:])
-
-        if self.remove_molid:
-            self.ax_heatmap.set_yticklabels(ytl)
-            if self.heatmap_type == 1:
-                self.ax_heatmap.set_xticklabels(xtl)
+        if self.remove_molid and self.heatmap_type == 1:
+            xtl = self.ax_heatmap.get_xticklabels()
+            for xlabel in xtl:
+                xlabel.set_fontsize(self.xticks_fontsize)
+                xlabel.set_rotation(self.x_rotation)
+                if self.remove_molid and self.heatmap_type == 1:
+                    xlabel.set_text(xlabel.get_text()[2:])
+            self.ax_heatmap.set_xticklabels(xtl)
         self.ax_heatmap.yaxis.set_ticks_position('right')
         self.ax_heatmap.yaxis.set_label_position('right')
         if self.heatmap_type == 2:
             self.ax_heatmap.set_xlabel('Frames', fontdict={'fontsize': self.xlabel_fontsize})
+
+
+class RegChart(ChartsBase):
+    def __init__(self, data: pandas.DataFrame, button: QToolButton, options: dict = None, item_parent=None):
+        super(RegChart, self).__init__(button, options, item_parent)
+
+        ci = options[('Regression Plot', 'Conf. Interval')] or None
+        dist_type = {'violin': sns.violinplot, 'hist': sns.histplot, 'box': sns.boxplot, 'kde': sns.kdeplot}
+
+        line_kws = {'lw': options[('Regression Plot', 'line-width')],
+                    'color': rgb2rgbf(options[('Regression Plot', 'line-color')])}
+
+        reg_options = dict(ci=ci,
+                           scatter_kws={'s': options[('Regression Plot', 'Scatter', 'marker-size')],
+                                        'color': rgb2rgbf(options[('Regression Plot', 'Scatter', 'color')])},
+                           line_kws=line_kws)
+
+        # get correlation coefficients
+        pearson, ppvalue = stats.pearsonr(data['ExpΔG'], data['Average'])
+        slope, intercept, r_value, p_value, std_err = linregress(data['ExpΔG'], data['Average'])
+        spearman, spvalue = stats.spearmanr(data['ExpΔG'], data['Average'])
+
+        if options[('Regression Plot', 'Distribution', 'show')]:
+            args = {}
+            if options[('Regression Plot', 'Distribution', 'type')] == 'hist':
+                args = {'kde': options[('Regression Plot', 'Distribution', 'Histogram', 'kde')],
+                        'fill': options[('Regression Plot', 'Distribution', 'Histogram', 'fill-bars')],
+                        'element': options[('Regression Plot', 'Distribution', 'Histogram', 'element')]}
+
+            regplot = sns.JointGrid(data=data, x="ExpΔG", y='Average')
+            regplot.plot_joint(sns.regplot, **reg_options)
+            regplot.plot_marginals(dist_type[options[('Regression Plot', 'Distribution', 'type')]],
+                                   color=rgb2rgbf(options[('Regression Plot', 'Scatter', 'color')]), **args)
+            # figure canvas definition
+            self.set_cw(regplot.fig)
+            self.axes = regplot.ax_joint
+        else:
+            # figure canvas definition
+            self.set_cw()
+            self.axes = self.fig.subplots(1, 1)
+            sns.regplot(data=data, x="ExpΔG", y='Average', ax=self.axes, **reg_options)
+
+        if options[('Regression Plot', 'Scatter', 'error-line', 'show')]:
+            error = options[('Regression Plot', 'Scatter', 'error-line', 'representation')]
+            self.axes.errorbar(x=data["ExpΔG"], y=data['Average'], yerr=data[error],
+                               fmt='none',
+                               # zorder=1,
+                               elinewidth=options[('Regression Plot', 'Scatter', 'error-line', 'width')],
+                               capsize=options[('Regression Plot', 'Scatter', 'error-line', 'cap-size')],
+                               color=rgb2rgbf(options[('Regression Plot', 'Scatter', 'error-line', 'color')]))
+
+        pearson_leg = mpatches.Patch(color='white', label=f'Pearson  = {pearson:.2f}  p-value = {ppvalue:.3f}')
+        spearman_leg = mpatches.Patch(color='gray', label=f'Spearman = {spearman:.2f}  p-value = {spvalue:.3f}')
+        sign = '+' if intercept > 0 else '-'
+        equation = Line2D([0], [0], **line_kws, label=f'y = {slope:.2f}x {sign} {abs(intercept):.2f}')
+        handles = []
+        if options[('Regression Plot', 'pearson')]:
+            handles.append(pearson_leg)
+        if options[('Regression Plot', 'spearman')]:
+            handles.append(spearman_leg)
+        if options[('Regression Plot', 'equation')]:
+            handles.append(equation)
+        if handles:
+            self.axes.legend(handles=handles, handlelength=0, handletextpad=0, fancybox=True, frameon=True,
+                             prop={'weight': 'bold', 'size': options[('Regression Plot', 'fontsize', 'legend')],
+                                   'family': 'monospace'})
+        self.cursor = Cursor(self.axes, useblit=True, color='black', linewidth=0.5, ls='--')
+        self.setWindowTitle(options['subtitle'])
+        self.update_config(options)
+
+
+    def update_config(self, options):
+        self.fig.suptitle(f"{options['title']}\n{options['subtitle']}",
+                          fontsize=options[('Regression Plot', 'fontsize', 'title')])
+        self.setup_text(self.axes, options, key='Regression Plot', xlabel=r'$ΔG_{Experimental} (kcal/mol)$',
+                        ylabel=r'$ΔG_{Calculated} (kcal/mol)$')
+        self.draw()
 
 
 class OutputFiles(QMdiSubWindow):
@@ -707,7 +777,7 @@ class Tables(QMdiSubWindow):
         self.setWidget(self.container)
         self.container_layout = QVBoxLayout(self.container)
         self.container_layout.setContentsMargins(0, 0, 0, 0)
-
+        self.item_parent = None
         self.options = options
         self.setWindowTitle(self.options['table_name'])
         self.table_name = self.options['table_name'].replace(' | ', '_')

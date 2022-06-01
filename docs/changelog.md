@@ -4,6 +4,36 @@ title: Changelog
 ---
 # Changelog
 
+## gmx_MMPBSA v1.5.2 (03/23/2022)
+
+### Additions
+
+#### gmx_MMPBSA
+
+- ALPB (Analytical Linearized Poisson-Boltzmann) approximation (#170)
+- PC+ correction in 3D-RISM (#187)
+- Warning when using -deo option without &decomp namelist in the input file (#191)
+
+#### gmx_MMPBSA_ana
+
+- Tooltips for different options (#151)
+
+### Fix
+
+####  gmx_MMPBSA_ana
+
+- Chart options (#185)
+
+### Changes
+
+#### gmx_MMPBSA
+
+- 3D-RISM calculated with sander instead of rism3d.snglpnt (#153)
+
+#### Documentation
+
+- Update 3D-RISM doc (#190)
+
 ## gmx_MMPBSA v1.5.1 (03/10/2022)
 
 ### Additions

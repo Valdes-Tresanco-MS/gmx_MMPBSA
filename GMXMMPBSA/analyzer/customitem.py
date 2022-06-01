@@ -36,27 +36,66 @@ class SpacerItem(QToolButton):
                            "padding-right: 15px; /* make way for the popup button */}")
 
 
-class CorrelationItem(QTreeWidgetItem):
-    def __init__(self, parent, stringlist, model=None, enthalpy=None, dgie=None, dgnmode=None, dgqh=None, col_box=None):
-        super(CorrelationItem, self).__init__(parent, stringlist)
+class TableActionBtn(QWidget):
+    def __init__(self, parent=None):
+        super(TableActionBtn, self).__init__(parent)
+        self.c_widget_layout = QHBoxLayout(self)
+        self.c_widget_layout.setContentsMargins(0, 0, 0, 0)
+        self.reg_chart_action = QToolButton(self)
+        self.c_widget_layout.addWidget(self.reg_chart_action)
+        self.reg_chart_action.setIcon(QIcon(line_plot_icon))
+        self.reg_chart_action.setText('Regression Chart')
+        self.reg_chart_action.setCheckable(True)
+        self.reg_chart_action.setContentsMargins(0, 0, 0, 0)
 
+class CustomCorrItem(QTableWidgetItem):
+    def __init__(self, text=False, app=None, model=None, keys_path=None):
+        super(CustomCorrItem, self).__init__()
+
+        self.app = app
         self.model = model
-        self.enthalpy = enthalpy
-        self.dgie = dgie
-        self.dgnmode = dgnmode
-        self.dgqh = dgqh
-        self.title = f'Correlation Using {stringlist[0].upper()} model'
-        self.subtitle = ['Exp. Energy vs Enthalpy (ΔH)', 'Exp. Energy vs Pred. Energy (ΔH+IE)',
-                               'Exp. Energy vs Pred. Energy (ΔH+NMODE)', 'Exp. Energy vs Pred. Energy (ΔH+QH)']
-        self.item_name = stringlist[0]
-        if col_box:
-            for col in col_box:
-                self.setCheckState(col, Qt.CheckState.Unchecked)
+        self.keys_path = keys_path
+        self.reg_sw = None
+        if text:
+            self.setText(model.upper())
+        self.title = f'Correlation Using {model.upper()} model'
+        self.subtitle = "$ΔG_{Experimental} vs ΔG_{Calculated}$"
+        self.c_widget = TableActionBtn()
+        self.c_widget.reg_chart_action.toggled.connect(self.plotting_reg)
 
-        self.dh_sw = None
-        self.dgie_sw = None
-        self.dgnmode_sw = None
-        self.dgqh_sw = None
+    def define_button(self, row, col):
+        self.tableWidget().setCellWidget(row, col, self.c_widget)
+
+    def plotting_reg(self, state):
+        from GMXMMPBSA.analyzer.plots import RegChart
+        self.app.correlation_tableWidget.clearSelection()
+
+        options = self.app.correlation['chart_options'].get_settings()
+
+        options.update({'title': self.title, 'subtitle': self.subtitle})
+        changes = self.app.correlation['chart_options'].changes
+        plot_data = self.app.correlation['items_data'][self.keys_path][0]
+        datachange = self.app.correlation['items_data'][self.keys_path][1]
+
+        if state:
+            self.setSelected(True)
+            if not self.reg_sw or datachange or changes:
+                if len(plot_data.index) < 4:
+                    QMessageBox.critical(self.tableWidget(),
+                                         'Unable to calculate correlation',
+                                         'More than three systems are needed to calculate the correlation.',
+                                         QMessageBox.StandardButton.Ok, QMessageBox.StandardButton.Ok)
+                    self.c_widget.reg_chart_action.setChecked(False)
+                    return
+                QGuiApplication.setOverrideCursor(QCursor(Qt.CursorShape.WaitCursor))
+                self.reg_sw = RegChart(plot_data, button=self.c_widget.reg_chart_action, options=options,
+                                       item_parent=self)
+                self.app.correlation['items_data'][self.keys_path][1] = False
+                self.app.mdi.addSubWindow(self.reg_sw)
+            self.reg_sw.show()
+        elif self.reg_sw:
+            self.app.mdi.activatePreviousSubWindow()
+            self.reg_sw.close()
 
 
 class CustomItem(QTreeWidgetItem):
@@ -87,7 +126,6 @@ class CustomItem(QTreeWidgetItem):
         self.line_table_subw = None
         self.bar_table_subw = None
         self.heatmap_table_subw = None
-        self.ie_plot_data = None
 
         # changes
         self.frange = []
@@ -142,7 +180,7 @@ class CustomItem(QTreeWidgetItem):
         self.line_chart_action.setMenu(line_menu)
         self.btn_group.addButton(self.line_chart_action, 1)
 
-        self.tb.addWidget(self.line_chart_action)
+        return self.line_chart_action
 
     def _show_line_table(self, state):
         from GMXMMPBSA.analyzer.plots import Tables
@@ -174,7 +212,7 @@ class CustomItem(QTreeWidgetItem):
         self.bar_chart_action.setMenu(bar_menu)
         self.btn_group.addButton(self.bar_chart_action, 2)
 
-        self.tb.addWidget(self.bar_chart_action)
+        return self.bar_chart_action
 
     def _show_bar_table(self, state):
         from GMXMMPBSA.analyzer.plots import Tables
@@ -207,7 +245,7 @@ class CustomItem(QTreeWidgetItem):
         self.heatmap_chart_action.setMenu(heatmap_menu)
         self.btn_group.addButton(self.heatmap_chart_action, 3)
 
-        self.tb.addWidget(self.heatmap_chart_action)
+        return self.heatmap_chart_action
 
     def _show_heatmap_table(self, state):
         from GMXMMPBSA.analyzer.plots import Tables
@@ -238,7 +276,7 @@ class CustomItem(QTreeWidgetItem):
         # self.vis_action.setMenu(heatmap_menu)
         self.btn_group.addButton(self.vis_action, 4)
 
-        self.tb.addWidget(self.vis_action)
+        return self.vis_action
 
     def _define_option_button(self):
         options_menu = QMenu()
@@ -259,7 +297,7 @@ class CustomItem(QTreeWidgetItem):
         self.options_button.setContentsMargins(0, 0, 0, 0)
         self.options_button.setMenu(options_menu)
 
-        self.tb.addWidget(self.options_button)
+        return self.options_button
 
     def _show_output_file(self, state):
         from GMXMMPBSA.analyzer.plots import OutputFiles
@@ -300,7 +338,7 @@ class CustomItem(QTreeWidgetItem):
         self.result_table_action.setContentsMargins(0, 0, 0, 0)
         self.btn_group.addButton(self.result_table_action, 5)
 
-        self.tb.addWidget(self.result_table_action)
+        return self.result_table_action
 
     def fn_mark_all(self, state):
         if state == Qt.CheckState.PartiallyChecked:
@@ -344,8 +382,6 @@ class CustomItem(QTreeWidgetItem):
         changes = self.app.systems[self.system_index]['chart_options'].changes
         line_plot_data = self.app.systems[self.system_index]['items_data'][self.keys_path]['line_plot_data'][0]
         datachange = self.app.systems[self.system_index]['items_data'][self.keys_path]['line_plot_data'][2]
-        # temp_ie = self.app.systems[self.system_index]['items_data'][self.keys_path]['ie_plot_data']
-        # ie_plot_data =  temp_ie[0] if temp_ie else temp_ie
         options.update(self.app.systems[self.system_index]['items_data'][self.keys_path]['line_plot_data'][1])
         if state:
             self.setSelected(True)
@@ -353,6 +389,7 @@ class CustomItem(QTreeWidgetItem):
             line_change1 = (changes['line_action'] == 1 or changes['line_ie_action'] == 1)
 
             if not self.lp_subw or datachange or line_change3:
+                QGuiApplication.setOverrideCursor(QCursor(Qt.CursorShape.WaitCursor))
                 self.lp_subw = LineChart(line_plot_data, self.line_chart_action, options=options, item_parent=self)
                 self.app.systems[self.system_index]['items_data'][self.keys_path]['line_plot_data'][2] = False
                 self.app.mdi.addSubWindow(self.lp_subw)
@@ -377,6 +414,7 @@ class CustomItem(QTreeWidgetItem):
         if state:
             self.setSelected(True)
             if not self.bp_subw or datachange or changes['bar_action'] == 3:
+                QGuiApplication.setOverrideCursor(QCursor(Qt.CursorShape.WaitCursor))
                 self.bp_subw = BarChart(bar_plot_data, self.bar_chart_action, options=options, item_parent=self)
                 self.app.systems[self.system_index]['items_data'][self.keys_path]['bar_plot_data'][2] = False
                 self.app.mdi.addSubWindow(self.bp_subw)
@@ -398,6 +436,7 @@ class CustomItem(QTreeWidgetItem):
         if state:
             self.setSelected(True)
             if not self.hmp_subw or datachange or changes['heatmap_action'] == 3:
+                QGuiApplication.setOverrideCursor(QCursor(Qt.CursorShape.WaitCursor))
                 self.hmp_subw = HeatmapChart(heatmap_plot_data, self.heatmap_chart_action, options=options,
                                              item_parent=self)
                 self.app.systems[self.system_index]['items_data'][self.keys_path]['heatmap_plot_data'][2] = False
@@ -412,6 +451,7 @@ class CustomItem(QTreeWidgetItem):
     def visualizing(self, checked):
         from GMXMMPBSA.analyzer.chartsettings import Palettes
         self.app.treeWidget.clearSelection()
+        QGuiApplication.setOverrideCursor(QCursor(Qt.CursorShape.WaitCursor))
         import os
         changes = self.app.systems[self.system_index]['chart_options'].changes
         options = self.app.systems[self.system_index]['chart_options'].get_settings()
@@ -461,6 +501,7 @@ class CustomItem(QTreeWidgetItem):
 
             self.pymol_process.start(pymol, [self.bfactor_pml.as_posix()])
             self.pymol_process.finished.connect(self.pymol_finished)
+            self.pymol_process.started.connect(QGuiApplication.restoreOverrideCursor)
             self.pymol_data_change = False
         elif self.pymol_process.state() == QProcess.ProcessState.Running:
             self.pymol_process.terminate()
@@ -522,7 +563,7 @@ class CustomItem(QTreeWidgetItem):
             if b not in self.buttons:
                 self.tb.addWidget(SpacerItem())
             else:
-                self.charts_action[b]()
+                self.tb.addWidget(self.charts_action[b]())
 
         if -1 in self.buttons:
             self._define_option_button()

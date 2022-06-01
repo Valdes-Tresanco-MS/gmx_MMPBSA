@@ -40,7 +40,7 @@ errors are more frequent.
             conda create -n gmxMMPBSA python=3.9 -y -q                                      # (1)
             conda activate gmxMMPBSA                                                        # (2)
             conda install -c conda-forge mpi4py=3.1.3 ambertools=21.12 compilers -y -q      # (3)
-            python -m pip install git+https://github.com/ParmEd/ParmEd.git@16fb236          # (4)
+            python -m pip install git+https://github.com/Valdes-Tresanco-MS/ParmEd.git@v3.4 # (4)
             python -m pip install pyqt5                                                     # (5)
             # Optional
             conda install -c bioconda gromacs==2021.3 -y -q                                 # (6)
@@ -74,10 +74,12 @@ errors are more frequent.
                 ```bash
                 python -m pip install git+https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA
                 ```
+
                 **UPDATE**     
                 ```bash
                 python -m pip install git+https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA -U
                 ```
+
                 !!! warning
                     Install gmx_MMPBSA from the master branch of GitHub repository. This is only recommended 
                     for testing new versions or temporary solutions to reported bugs.
@@ -146,8 +148,9 @@ errors are more frequent.
         === "Rolling/stable release"
             **INSTALLATION**
             ```bash
-            amber.python -m pip install git+https://github.com/ParmEd/ParmEd.git@16fb236    # (1)
-            amber.python -m pip install gmx_MMPBSA                                          # (2)
+
+            amber.python -m pip install git+https://github.com/Valdes-Tresanco-MS/ParmEd.git@v3.4 # (1)
+            amber.python -m pip install gmx_MMPBSA                                                # (2)
             ```
 
             1. Install ParmEd
@@ -165,8 +168,8 @@ errors are more frequent.
         === "development version" 
             **INSTALLATION**
             ```bash
-            amber.python -m pip install git+https://github.com/ParmEd/ParmEd.git@16fb236     # (1)
-            amber.python -m pip install git+https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA # (2)
+            amber.python -m pip install git+https://github.com/Valdes-Tresanco-MS/ParmEd.git@v3.4 # (1)
+            amber.python -m pip install git+https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA      # (2)
             ```
             
             1. Install ParmEd
@@ -176,6 +179,7 @@ errors are more frequent.
             ```bash
             amber.python -m pip install git+https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA -U
             ```
+
             !!! warning
                 Install/update gmx_MMPBSA from the master branch of GitHub repository. This version is only recommended 
                 to test a new version or to try temporary solutions to reported bugs.

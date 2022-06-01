@@ -26,6 +26,8 @@ Bill R. Miller, T. Dwight McGee, Jason M. Swails, Nadine Homeyer, Holger Gohlke,
 An Efficient Program for End-State Free Energy Calculations**. _Journal of Chemical Theory and Computation_, 2012 8 
 (9), 3314-3321. https://pubs.acs.org/doi/10.1021/ct300418h
 
+Please, visit [Cite gmx_MMPBSA](https://valdes-tresanco-ms.github.io/gmx_MMPBSA/cite_us/) page for more information on how to cite gmx_MMPBSA and the programs/methods implemented in it.
+
 ---------------------------------------
 
 Authors:
@@ -38,7 +40,8 @@ Authors:
 
 Acknowledgements:
 - First of all, to Amber and GROMACS developers. Without their incredible and hard work, gmx_MMPBSA would not exist.
-- Jason Swails (Amber developer and [ParmEd](https://github.com/ParmEd/ParmEd) principal developer) for his continuos support on ParmEd issues.
+- Jason Swails (Amber developer and [ParmEd](https://github.com/ParmEd/ParmEd) principal developer) for his continuous support on ParmEd issues.
+- To the Open Source license of the [JetBrains](https://www.jetbrains.com) programs.
 - To all researchers that help improving gmx_MMPBSA with comments, feedback, and bug reports.
 
 ---------------------------------------

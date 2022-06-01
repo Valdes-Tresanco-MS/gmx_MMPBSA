@@ -11,9 +11,9 @@ title: Getting started
 
 [<img src="../assets/TOC.png" height="120%" width="258" align="right"/>]()
 
-## gmx_MMPBSA v1.5.1 is out 😀!
+## gmx_MMPBSA v1.5.2 is out 😀!
 
-Check [changelog](changelog.md##gmx_mmpbsa-v151-03102022) to see what's new in gmx_MMPBSA v1.5.1.
+Check [changelog](changelog.md##gmx_mmpbsa-v152-03232022) to see what's new in gmx_MMPBSA v1.5.2.
 
 ## [Help needed for gmx_MMPBSA! To the content creators out there...](#colaboration)
 
@@ -51,8 +51,8 @@ versatility, analyses, and parallelization compared to existing programs (see [h
 
     Download | [*.bib](MMPBSA_py_citation.bib) | [*.ris](MMPBSA_py_citation.ris) | [*.xml](MMPBSA_py_citation.xml)
 
-    Visit [Cite us page](cite_us.md#example) for more information on how to cite `gmx_MMPBSA` and the programs/methods 
-    implemented in it.
+    Please, visit [Cite gmx_MMPBSA](cite_us.md#example) page for more information on how to cite gmx_MMPBSA and the 
+    programs/methods implemented in it.
 
 ## **Installation**
 Ready to use gmx_MMPBSA 😀? Check the [installation page](installation.md)
@@ -170,6 +170,10 @@ Feel free to contact us through our google group (https://groups.google.com/g/gm
 [<img src="../assets/images/jetbrains-variant-4.png" height="100" width="178" align="right" />][11]
 
 ## **Acknowledgments**
-This project is possible thanks to the Open Source license of the [JetBrains][11] programs.
+- First of all, to Amber and GROMACS developers. Without their incredible and hard work, gmx_MMPBSA would not exist.
+- Jason Swails (Amber developer and [ParmEd](https://github.com/ParmEd/ParmEd) principal developer) for his continuous 
+  support on ParmEd issues.
+- To the Open Source license of the [JetBrains](https://www.jetbrains.com) programs.
+- To all researchers that help improving gmx_MMPBSA with comments, feedback, and bug reports.
 
   [11]: https://www.jetbrains.com/?from=gmx_MMPBSA
