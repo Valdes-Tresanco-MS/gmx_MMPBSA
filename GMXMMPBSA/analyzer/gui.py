@@ -43,7 +43,6 @@ from GMXMMPBSA.analyzer.utils import energy2pdb_pml, ki2energy, make_corr_DF, mu
 from GMXMMPBSA.analyzer.chartsettings import ChartSettings, CorrChartSettings
 from GMXMMPBSA.analyzer.parametertree import ParameterTree, Parameter
 import math
-import numpy as np
 
 
 class GMX_MMPBSA_ANA(QMainWindow):
@@ -765,12 +764,8 @@ class GMX_MMPBSA_ANA(QMainWindow):
                 p.waitForFinished()
                 item.vis_action.setChecked(True)
             # re-assign changes to native state after replot all open charts
-            self.systems[s]['chart_options'].changes = dict(line_action=0,
-                                                            line_ie_action=0,
-                                                            bar_action=0,
-                                                            heatmap_action=0,
-                                                            visualization_action=0,
-                                                            figure=0)
+            self.systems[s]['chart_options'].changes = dict(line_action=0, line_ie_action=0, bar_action=0,
+                                                            heatmap_action=0, visualization_action=0, figure=0)
         self.ie_changed.hide()
         self.e_changed.hide()
         self.nm_changed.hide()
@@ -950,74 +945,6 @@ class GMX_MMPBSA_ANA(QMainWindow):
         self.init_dialog.get_files_info(self.ifiles)
         self.init_dialog.show()
 
-    # def showcorr(self, item: CorrelationItem, col):
-    #     self.treeWidget.clearSelection()
-    #     # self.update_options(item)   # FIXME: only when we able the options
-    #     if col == 1:
-    #         s = item.dh_sw
-    #         if item.checkState(col) == Qt.Checked:
-    #             item.setSelected(True)
-    #             if s:
-    #                 s.show()
-    #             else:
-    #                 sub = Charts(item=item, col=col, options={'chart_type': [Charts.SCATTER], 'hide_toolbar':
-    #                     self.data_options['hide_toolbar']})
-    #                 sub.make_chart()
-    #                 self.mdi.addSubWindow(sub)
-    #                 sub.show()
-    #         else:
-    #             if s:
-    #                 self.mdi.activatePreviousSubWindow()
-    #                 s.close()
-    #     elif col == 2:
-    #         s = item.dgie_sw
-    #         if item.checkState(col) == Qt.Checked:
-    #             item.setSelected(True)
-    #             if s:  # check if any subwindow has been store
-    #                 s.show()
-    #             else:
-    #                 sub = Charts(item=item, col=col, options={'chart_type': [Charts.SCATTER], 'hide_toolbar':
-    #                     self.data_options['hide_toolbar']})
-    #                 sub.make_chart()
-    #                 self.mdi.addSubWindow(sub)
-    #                 sub.show()
-    #         else:
-    #             if s:
-    #                 self.mdi.activatePreviousSubWindow()
-    #                 s.close()
-    #     elif col == 3:
-    #         s = item.dgnmode_sw
-    #         if item.checkState(col) == Qt.Checked:
-    #             item.setSelected(True)
-    #             if s:  # check if any subwindow has been store
-    #                 s.show()
-    #             else:
-    #                 sub = Charts(item=item, col=col, options={'chart_type': [Charts.SCATTER], 'hide_toolbar':
-    #                     self.data_options['hide_toolbar']})
-    #                 sub.make_chart()
-    #                 self.mdi.addSubWindow(sub)
-    #                 sub.show()
-    #         else:
-    #             if s:
-    #                 self.mdi.activatePreviousSubWindow()
-    #                 s.close()
-    #     elif col == 4:
-    #         s = item.dgqh_sw
-    #         if item.checkState(col) == Qt.Checked:
-    #             item.setSelected(True)
-    #             if s:  # check if any subwindow has been store
-    #                 s.show()
-    #             else:
-    #                 sub = Charts(item=item, col=col, options={'chart_type': [Charts.SCATTER], 'hide_toolbar':
-    #                     self.data_options['hide_toolbar']})
-    #                 sub.make_chart()
-    #                 self.mdi.addSubWindow(sub)
-    #                 sub.show()
-    #         else:
-    #             if s:
-    #                 self.mdi.activatePreviousSubWindow()
-    #                 s.close()
-
     def update_table(self):
 
         items = self.correlation_tableWidget.selectedItems()
@@ -1038,30 +965,14 @@ class GMX_MMPBSA_ANA(QMainWindow):
 
     def make_correlation(self):
 
+        self.get_corr_data()
         self.corr_sys_sel_w.setRowCount(len(self.systems))
-
         ref_group = QButtonGroup()
         ref = False
         r = 0
         num_sel_sys = 0
-        for s, sys_id in enumerate(self.systems):
-            ic(self.systems[sys_id]['map'].get('enthalpy').keys())
-
-            # if self.systems[sys_id]['options'].get('correlation')['corr']:
-            dta = {('System', 'Number'): [], ('System', 'Type'): [], ('System', 'Reference'): [],
-                   ('System', 'ExpΔG'): [], ('System', 'Selection'): []}
+        for sys_id in self.systems:
             for ct, cv in self.systems[sys_id].get('correlation').items():
-                dta[('System', 'Number')].append(sys_id)
-                dta[('System', 'Type')].append(ct[0].upper())
-                if ct == 'normal':
-                    dta[('System', 'Reference')].append(self.systems[sys_id].get('reference'))
-                else:
-                    dta[('System', 'Reference')].append(False)
-                dta[('System', 'ExpΔG')].append(
-                    ki2energy(self.systems[sys_id]['exp_ki'][ct],
-                              self.systems[sys_id]['namespace'].INPUT['temperature']))
-                dta[('System', 'Selection')].append(cv)
-
                 idi = QTableWidgetItem(str(sys_id))
                 idi.setFlags(idi.flags() ^ Qt.ItemFlag.ItemIsEditable)
                 self.corr_sys_sel_w.setItem(r, 0, idi)
@@ -1088,23 +999,9 @@ class GMX_MMPBSA_ANA(QMainWindow):
                 if cv:
                     num_sel_sys += 1
                 r += 1
-
-            g = pd.DataFrame(dta, index=range(len(self.systems[sys_id].get('correlation'))))
-            for et, v in self.systems[sys_id]['correlation_data'].items():
-                for m, v1 in v.items():
-                    cdf = pd.concat([g, v1], axis=1)
-                    d = self.correlation['data'].setdefault(m, cdf)
-                    if d.equals(cdf):
-                        continue
-                    self.correlation['data'][m] = pd.concat([d, cdf], ignore_index=True).sort_values(
-                        by=[('System', 'Number'), ('System', 'Type')])
         if not ref:
             self.corr_sys_sel_w.hideColumn(2)
         self.data_table_widget.setRowCount(num_sel_sys)
-
-
-        def subtract_custom_value(x, custom_value):
-            return x - custom_value
 
         self.correlation_tableWidget.setRowCount(len(self.correlation['data']))
         height = ((self.correlation_tableWidget.model().rowCount() - 1) +
@@ -1118,9 +1015,48 @@ class GMX_MMPBSA_ANA(QMainWindow):
             citem = CustomCorrItem(text=True, model=m)
             citem.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
             self.correlation_tableWidget.setItem(r, 0, citem)
+
+            met = v.columns.get_level_values(0).unique().to_list()[1:]
+            for m1 in met:
+                self.correlation_tableWidget.setColumnHidden(met_col[m1], False)
+                item = CustomCorrItem(app=self, model=m, keys_path=(m, m1))
+                self.correlation_tableWidget.setItem(r, met_col[m1], item)
+                item.define_button(r, met_col[m1])
+
+    def get_corr_data(self):
+        self.correlation['data'] = {}
+        for s, sys_id in enumerate(self.systems):
+            dta = {('System', 'Number'): [], ('System', 'Type'): [], ('System', 'Reference'): [],
+                   ('System', 'ExpΔG'): [], ('System', 'Selection'): []}
+            for ct, cv in self.systems[sys_id].get('correlation').items():
+                dta[('System', 'Number')].append(sys_id)
+                dta[('System', 'Type')].append(ct[0].upper())
+                if ct == 'normal':
+                    dta[('System', 'Reference')].append(self.systems[sys_id].get('reference'))
+                else:
+                    dta[('System', 'Reference')].append(False)
+                dta[('System', 'ExpΔG')].append(
+                    ki2energy(self.systems[sys_id]['exp_ki'][ct],
+                              self.systems[sys_id]['namespace'].INPUT['temperature']))
+                dta[('System', 'Selection')].append(cv)
+
+            g = pd.DataFrame(dta, index=range(len(self.systems[sys_id].get('correlation'))))
+            ic(self.systems[sys_id]['correlation_data'])
+            for et, v in self.systems[sys_id]['correlation_data'].items():
+                for m, v1 in v.items():
+                    cdf = pd.concat([g, v1], axis=1)
+                    d = self.correlation['data'].setdefault(m, cdf)
+                    if d.equals(cdf):
+                        continue
+                    self.correlation['data'][m] = pd.concat([d, cdf], ignore_index=True).sort_values(
+                        by=[('System', 'Number'), ('System', 'Type')])
+
+        def subtract_custom_value(x, custom_value):
+            return x - custom_value
+
+        for r, (m, v) in enumerate(self.correlation['data'].items()):
             ref = v.loc[v[('System', 'Reference')] == True].loc[:, ~v.columns.get_level_values(1).isin(
                 ['Number', 'Type', 'Reference', 'Selection'])]
-
             if len(ref.index):
                 for k in ref:
                     if k[-1] == 'SEM':
@@ -1133,16 +1069,11 @@ class GMX_MMPBSA_ANA(QMainWindow):
 
             met = v.columns.get_level_values(0).unique().to_list()[1:]
             for m1 in met:
-                self.correlation_tableWidget.setColumnHidden(met_col[m1], False)
-
-                self.correlation['items_data'][(m, m1)] = [v.loc[ # FIXME: user option to show the ref in reg plot ???
-                                                      v[('System', 'Reference')] == False
-                                                  ].loc[v[('System', 'Selection')] == True].loc[:,
-                                                        v.columns.get_level_values(0).isin(['System', m1])
-                                                    ].droplevel(0, axis=1), True]
-                item = CustomCorrItem(app=self, model=m, keys_path=(m, m1))
-                self.correlation_tableWidget.setItem(r, met_col[m1], item)
-                item.define_button(r, met_col[m1])
+                self.correlation['items_data'][(m, m1)] = [v.loc[  # FIXME: user option to show the ref in reg plot ???
+                                                               v[('System', 'Reference')] == False
+                                                               ].loc[v[('System', 'Selection')] == True].loc[:,
+                                                           v.columns.get_level_values(0).isin(['System', m1])
+                                                           ].droplevel(0, axis=1), True]
 
     def read_data(self, queue: Queue, options):
         self.init_dialog.accept()
@@ -1203,6 +1134,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
         pbd.exec()
 
     def process_data(self, results: Queue, options):
+        self.options = options
         size = results.qsize()
         maximum = size * 2
         qpd = QProgressDialog('Creating systems tree', 'Abort', 0, maximum + 1, self)
