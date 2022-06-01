@@ -777,7 +777,7 @@ class Tables(QMdiSubWindow):
         self.setWidget(self.container)
         self.container_layout = QVBoxLayout(self.container)
         self.container_layout.setContentsMargins(0, 0, 0, 0)
-
+        self.item_parent = None
         self.options = options
         self.setWindowTitle(self.options['table_name'])
         self.table_name = self.options['table_name'].replace(' | ', '_')
