@@ -53,7 +53,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
         super(GMX_MMPBSA_ANA, self).__init__()
         self.showMaximized()
         self.setWindowIcon(QIcon(logo))
-        self.corr_data = {}
+        self.correlation = {'chart_options': CorrChartSettings(), 'items_data': {}, 'data': {}}
 
         self.ifiles = ifiles
 
@@ -106,7 +106,9 @@ class GMX_MMPBSA_ANA(QMainWindow):
 
         self.correlation_tableWidget = QTableWidget(self)
 
-        self.correlation_tableWidget.itemClicked.connect(self.update_table)
+        self.correlation_tableWidget.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
+        self.correlation_tableWidget.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.correlation_tableWidget.itemSelectionChanged.connect(self.update_table)
         self.correlation_tableWidget.setColumnCount(6)
         self.correlation_tableWidget.verticalHeader().hide()
         header_tt = {'MODEL': 'Selected Model',
@@ -138,7 +140,6 @@ class GMX_MMPBSA_ANA(QMainWindow):
         self.data_table_widget.setHorizontalHeaderLabels(['Sys.', 'Type', 'Exp.ΔG', 'Avg.', 'SD', 'SEM'])
         self.data_table_widget.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         self.data_table_widget.verticalHeader().hide()
-        self.data_table_widget.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
 
         self.corr_parm_tree_w = ParameterTree()
         self.corr_parms = Parameter().create()
@@ -153,13 +154,14 @@ class GMX_MMPBSA_ANA(QMainWindow):
         self.corr_sys_sel_w.horizontalHeader().setStretchLastSection(True)
         delegate = KiTableDelegate(self.corr_sys_sel_w)
         self.corr_sys_sel_w.setItemDelegateForColumn(4, delegate)
+        self.corr_sys_sel_w.cellChanged.connect(self.corr_sys_sel_itemchange)
 
         self.corr_options_widget = QTabWidget()
         self.corr_options_widget.addTab(self.corr_parm_tree_w, 'Charts')
         self.corr_options_widget.addTab(self.corr_sys_sel_w, 'Selections')
 
         self.update_corr_btn = QPushButton(f'Update {self.corr_options_widget.tabText(0)}')
-        # self.update_corr_btn.clicked.connect(self.update_fn)
+        self.update_corr_btn.clicked.connect(self.update_corr_fn)
         self.corr_options_widget.setCornerWidget(self.update_corr_btn)
 
         self.corr_options_widget.currentChanged.connect(partial(self._change_update_btn, tw='corr'))
@@ -249,6 +251,23 @@ class GMX_MMPBSA_ANA(QMainWindow):
             a0.ignore()
             if self.in_init_dialog:
                 self.init_dialog.show()
+
+    def corr_sys_sel_itemchange(self, row, col):
+        citem = self.corr_sys_sel_w.item(row, col)
+        if col == 1:
+            if ritemw := self.corr_sys_sel_w.cellWidget(row, 2):
+                if citem.checkState() == Qt.CheckState.Unchecked:
+                    if ritemw.isChecked():
+                        selected = {i: abs(row - i) for i in range(self.corr_sys_sel_w.rowCount())
+                                    if self.corr_sys_sel_w.item(i, 1).checkState() == Qt.CheckState.Checked}
+                        if not selected:
+                            citem.setCheckState(Qt.CheckState.Checked)
+                            return
+                        nr = list(selected.keys())[list(selected.values()).index(min(selected.values()))]
+                        self.corr_sys_sel_w.cellWidget(nr, 2).setChecked(True)
+                    ritemw.setEnabled(False)
+                else:
+                    ritemw.setEnabled(True)
 
     def _about_dialog(self):
         from GMXMMPBSA import __version__
@@ -756,6 +775,58 @@ class GMX_MMPBSA_ANA(QMainWindow):
         self.nm_changed.hide()
         self.statusbar.showMessage('Updating... Done.', 2000)
 
+    def update_corr_fn(self, repaint_arg=False):
+
+        if self.corr_options_widget.currentIndex() == 0: # Chart Options
+            self.statusbar.showMessage('Updating Charts...')
+            act_sett = self.corr_parms.saveState()
+            if repaint := self.correlation['chart_options'].is_changed(act_sett) or repaint_arg:
+                if repaint_arg:
+                    self.correlation['chart_options'].changes = True
+                else:
+                    self.correlation['chart_options'].get_changes(act_sett)
+        else:   # calculate correlation
+            self.statusbar.showMessage('Calculating correlation...')
+            # Get any modification in selection systems table
+            cols = {1: ('System', 'Selection'), 2: ('System', 'Reference'), 4: ('System', 'ExpΔG')}
+            for c in range(self.corr_sys_sel_w.columnCount()):
+                col_values = []
+                for r in range(self.corr_sys_sel_w.rowCount()):
+                    if c == 1:
+                        col_values.append(self.corr_sys_sel_w.item(r, c).checkState() == Qt.CheckState.Checked)
+                    elif c == 2:
+                        col_values.append(self.corr_sys_sel_w.cellWidget(r, c).isChecked())
+                    elif c == 4:
+                        col_values.append(
+                            ki2energy(float(self.corr_sys_sel_w.item(r, c).text()),
+                                      self.systems[int(self.corr_sys_sel_w.item(r, 0).text())]['namespace'].INPUT[
+                                          'temperature']))
+                if col_values:
+                    for m, v in self.correlation['data'].items():
+                        v[cols[c]] = col_values
+            self.data_table_widget.clearContents()
+            item_list = self.correlation_tableWidget.selectedItems()
+            self.correlation_tableWidget.clearSelection()
+
+            for m, v in self.correlation['data'].items():
+                met = v.columns.get_level_values(0).unique().to_list()[1:]
+                for m1 in met:
+                    self.correlation['items_data'][(m, m1)] = [v.loc[  # FIXME: user option to show the ref in reg plot ???
+                                                           v[('System', 'Reference')] == False
+                                                           ].loc[v[('System', 'Selection')] == True].loc[:,
+                                                       v.columns.get_level_values(0).isin(['System', m1])
+                                                       ].droplevel(0, axis=1), True]
+            if item_list:
+                item_list[0].setSelected(True)
+            self.statusbar.showMessage('Calculating correlation... Done.', 2000)
+
+        for c in range(self.correlation_tableWidget.columnCount()):
+            for r in range(self.correlation_tableWidget.rowCount()):
+                itemw = self.correlation_tableWidget.cellWidget(r, c)
+                ic(itemw)
+                if itemw and itemw.reg_chart_action.isChecked():
+                    itemw.reg_chart_action.setChecked(False)
+                    itemw.reg_chart_action.setChecked(True)
 
     def _update_itemdata_repaint(self, r):
         maximum = r.qsize()
@@ -944,12 +1015,17 @@ class GMX_MMPBSA_ANA(QMainWindow):
     #                 self.mdi.activatePreviousSubWindow()
     #                 s.close()
 
-    def update_table(self, item: CustomCorrItem):
+    def update_table(self):
+
+        items = self.correlation_tableWidget.selectedItems()
+        if not items:
+            return
+        item = items[0]
         if not item.keys_path:
             return
         df = self.correlation['items_data'][item.keys_path][0]
         data = df.loc[df['Selection'] == True][['Number', 'Type', 'ExpΔG', 'Average', 'SD', 'SEM']]
-        ic(data)
+        self.data_table_widget.setRowCount(len(data.index))
         for i, c in enumerate(data):
             for j, r in enumerate(data[c]):
                 it = QTableWidgetItem(f'{r:.2f}' if isinstance(r, float) else str(r))
@@ -983,39 +1059,41 @@ class GMX_MMPBSA_ANA(QMainWindow):
                               self.systems[sys_id]['namespace'].INPUT['temperature']))
                 dta[('System', 'Selection')].append(cv)
 
-                self.corr_sys_sel_w.setItem(r, 0, QTableWidgetItem(str(sys_id)))
+                idi = QTableWidgetItem(str(sys_id))
+                idi.setFlags(idi.flags() ^ Qt.ItemFlag.ItemIsEditable)
+                self.corr_sys_sel_w.setItem(r, 0, idi)
                 ti = QTableWidgetItem()
                 ti.setCheckState(Qt.CheckState.Checked if cv else Qt.CheckState.Unchecked)
+                ti.setFlags(ti.flags() ^ Qt.ItemFlag.ItemIsEditable)
                 self.corr_sys_sel_w.setItem(r, 1, ti)
                 if self.systems[sys_id].get('reference'):
                     ref = True
                 ri = QRadioButton()
                 ri.setChecked(self.systems[sys_id].get('reference'))
+                if not cv:
+                    ri.setEnabled(False)
                 ref_group.addButton(ri, r)
                 self.corr_sys_sel_w.setCellWidget(r, 2, ri)
 
-                self.corr_sys_sel_w.setItem(r, 3, QTableWidgetItem(ct[0].upper()))
-                ki = QTableWidgetItem(str(self.systems[sys_id]['exp_ki'][ct]))
-                ki.setFlags(ki.flags() | Qt.ItemFlag.ItemIsEditable)
-                ic(self.systems[sys_id]['exp_ki'][ct])
-                self.corr_sys_sel_w.setItem(r, 4, ki)
-                self.corr_sys_sel_w.setItem(r, 5, QTableWidgetItem(self.systems[sys_id]['name']))
-
+                tyi = QTableWidgetItem(ct[0].upper())
+                tyi.setFlags(tyi.flags() ^ Qt.ItemFlag.ItemIsEditable)
+                self.corr_sys_sel_w.setItem(r, 3, tyi)
+                self.corr_sys_sel_w.setItem(r, 4, QTableWidgetItem(str(self.systems[sys_id]['exp_ki'][ct])))
+                ni = QTableWidgetItem(self.systems[sys_id]['name'])
+                ni.setFlags(ni.flags() ^ Qt.ItemFlag.ItemIsEditable)
+                self.corr_sys_sel_w.setItem(r, 5, ni)
                 if cv:
                     num_sel_sys += 1
                 r += 1
 
-
-            # ts = [x[0].upper() for x in self.systems[sys_id].get('correlation')]
             g = pd.DataFrame(dta, index=range(len(self.systems[sys_id].get('correlation'))))
-
             for et, v in self.systems[sys_id]['correlation_data'].items():
                 for m, v1 in v.items():
                     cdf = pd.concat([g, v1], axis=1)
-                    d = self.corr_data.setdefault(m, cdf)
+                    d = self.correlation['data'].setdefault(m, cdf)
                     if d.equals(cdf):
                         continue
-                    self.corr_data[m] = pd.concat([d, cdf], ignore_index=True).sort_values(
+                    self.correlation['data'][m] = pd.concat([d, cdf], ignore_index=True).sort_values(
                         by=[('System', 'Number'), ('System', 'Type')])
         if not ref:
             self.corr_sys_sel_w.hideColumn(2)
@@ -1023,22 +1101,24 @@ class GMX_MMPBSA_ANA(QMainWindow):
 
 
         def subtract_custom_value(x, custom_value):
-            ic(x, custom_value)
             return x - custom_value
 
-        self.correlation_tableWidget.setRowCount(len(self.corr_data))
+        self.correlation_tableWidget.setRowCount(len(self.correlation['data']))
+        height = ((self.correlation_tableWidget.model().rowCount() - 1) +
+                 self.correlation_tableWidget.horizontalHeader().height())
+        for row in range(self.correlation_tableWidget.model().rowCount()):
+            height += self.correlation_tableWidget.rowHeight(row)
+        self.correlation_tableWidget.setMinimumHeight(height + 5)
 
         met_col = {'ΔGeff': 1, 'ΔGie': 2, 'ΔGc2': 3, 'ΔGnm': 4, 'ΔGqh': 5}
-
-        for r, (m, v) in enumerate(self.corr_data.items()):
+        for r, (m, v) in enumerate(self.correlation['data'].items()):
             citem = CustomCorrItem(text=True, model=m)
             citem.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
             self.correlation_tableWidget.setItem(r, 0, citem)
             ref = v.loc[v[('System', 'Reference')] == True].loc[:, ~v.columns.get_level_values(1).isin(
-                ['Number', 'Type', 'Reference'])]
+                ['Number', 'Type', 'Reference', 'Selection'])]
 
             if len(ref.index):
-                # FIXME: separate to a new method to avoid overwrite items when the recalculate the corr.
                 for k in ref:
                     if k[-1] == 'SEM':
                         continue
@@ -1054,42 +1134,12 @@ class GMX_MMPBSA_ANA(QMainWindow):
 
                 self.correlation['items_data'][(m, m1)] = [v.loc[ # FIXME: user option to show the ref in reg plot ???
                                                       v[('System', 'Reference')] == False
-                                                  ].loc[:,
+                                                  ].loc[v[('System', 'Selection')] == True].loc[:,
                                                         v.columns.get_level_values(0).isin(['System', m1])
                                                     ].droplevel(0, axis=1), True]
                 item = CustomCorrItem(app=self, model=m, keys_path=(m, m1))
                 self.correlation_tableWidget.setItem(r, met_col[m1], item)
                 item.define_button(r, met_col[m1])
-
-                # it.setCheckState(Qt.CheckState.Checked)
-            ic(self.correlation['items_data'])
-
-            # citem.define_button(r, 0)
-            # item = CorrelationItem(self.correlation_treeWidget, [m.upper()], )
-            # p
-
-
-            # item_s = QTableWidgetItem(m)
-            # self.data_table_widget.setItem(r, 0, item_s)
-
-        # sys_with_ki = 0
-        # for x in self.corr_data:
-        #     if x == 'mutant':
-        #         continue
-        #     if np.isnan(self.corr_data[x]['Exp.Energy']):
-        #         continue
-        #     item_s = QTableWidgetItem(x)
-        #     self.data_table_widget.setItem(sys_with_ki, 0, item_s)
-        #     item_e = QTableWidgetItem(f"{self.corr_data[x]['Exp.Energy']:.2f}")
-        #     self.data_table_widget.setItem(sys_with_ki, 1, item_e)
-        #     sys_with_ki += 1
-        # if sys_with_ki < 3:
-        #     QMessageBox.critical(self.mdi, 'Unable to calculate correlation',
-        #                              'Three or more systems are needed to calculate the correlation.',
-        #                              QMessageBox.StandardButton.Ok, QMessageBox.StandardButton.Ok)
-        #     self.correlation_DockWidget.setEnabled(False)
-        #     self.correlation_DockWidget.hide()
-        #     return
 
     def read_data(self, queue: Queue, options):
         self.init_dialog.accept()
