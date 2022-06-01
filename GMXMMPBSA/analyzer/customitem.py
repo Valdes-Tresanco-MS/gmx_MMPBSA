@@ -36,6 +36,18 @@ class SpacerItem(QToolButton):
                            "padding-right: 15px; /* make way for the popup button */}")
 
 
+class TableActionBtn(QWidget):
+    def __init__(self, parent=None):
+        super(TableActionBtn, self).__init__(parent)
+        self.c_widget_layout = QHBoxLayout(self)
+        self.c_widget_layout.setContentsMargins(0, 0, 0, 0)
+        self.reg_chart_action = QToolButton(self)
+        self.c_widget_layout.addWidget(self.reg_chart_action)
+        self.reg_chart_action.setIcon(QIcon(line_plot_icon))
+        self.reg_chart_action.setText('Regression Chart')
+        self.reg_chart_action.setCheckable(True)
+        self.reg_chart_action.setContentsMargins(0, 0, 0, 0)
+
 class CustomCorrItem(QTableWidgetItem):
     def __init__(self, text=False, app=None, model=None, keys_path=None):
         super(CustomCorrItem, self).__init__()
@@ -52,19 +64,8 @@ class CustomCorrItem(QTableWidgetItem):
         self.subtitle = "$ΔG_{Experimental} vs ΔG_{Calculated}$"
             # ['Exp. Energy vs Enthalpy (ΔH)', 'Exp. Energy vs Pred. Energy (ΔH+IE)',
             #              'Exp. Energy vs Pred. Energy (ΔH+NMODE)', 'Exp. Energy vs Pred. Energy (ΔH+QH)']
-
-
-        self.c_widget = QWidget()
-        self.c_widget_layout = QHBoxLayout(self.c_widget)
-        self.c_widget_layout.setContentsMargins(0, 0, 0, 0)
-        self.reg_chart_action = QToolButton()
-        self.c_widget_layout.addWidget(self.reg_chart_action)
-        self.reg_chart_action.setIcon(QIcon(line_plot_icon))
-        self.reg_chart_action.setText('Line Chart')
-        self.reg_chart_action.setCheckable(True)
-        self.reg_chart_action.setMinimumSize(20, 20)
-        self.reg_chart_action.setContentsMargins(0, 0, 0, 0)
-        self.reg_chart_action.toggled.connect(self.plotting_reg)
+        self.c_widget = TableActionBtn()
+        self.c_widget.reg_chart_action.toggled.connect(self.plotting_reg)
 
     def define_button(self, row, col):
         self.tableWidget().setCellWidget(row, col, self.c_widget)
@@ -84,7 +85,7 @@ class CustomCorrItem(QTableWidgetItem):
             self.setSelected(True)
             if not self.reg_sw or datachange or changes:
                 QGuiApplication.setOverrideCursor(QCursor(Qt.CursorShape.WaitCursor))
-                self.reg_sw = RegChart(plot_data, energy=self.keys_path[-1], button=self.reg_chart_action,
+                self.reg_sw = RegChart(plot_data, energy=self.keys_path[-1], button=self.c_widget.reg_chart_action,
                                          options=options, item_parent=self)
                 self.app.correlation['items_data'][self.keys_path][1] = False
                 self.app.mdi.addSubWindow(self.reg_sw)
