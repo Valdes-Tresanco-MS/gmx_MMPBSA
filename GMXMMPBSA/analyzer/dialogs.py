@@ -334,7 +334,7 @@ class InitDialog(QDialog):
             self.energy_memory.setChecked(True)
             # self.precomp_charts.setChecked(True)
             self.njobs.setValue(multiprocessing.cpu_count() // 2)
-        else:
+        elif value == 4:
             self.energy_memory.setChecked(True)
             self.decomp_memory.setChecked(True)
             # self.precomp_charts.setChecked(True)
