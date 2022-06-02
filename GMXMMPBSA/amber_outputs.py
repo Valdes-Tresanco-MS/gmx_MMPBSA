@@ -1255,7 +1255,9 @@ class DecompOut(dict):
                 self[line[:3]][resnum]['eel'][self.frame_idx] = eel
                 self[line[:3]][resnum]['pol'][self.frame_idx] = pol
                 self[line[:3]][resnum]['sas'][self.frame_idx] = sas
-                self.frame_idx += 1
+
+                if resnum == list(self.resl.values())[-1].string:
+                    self.frame_idx += 1
 
     def _print_vectors(self, csvwriter):
         tokens = {'TDC': 'Total Decomposition Contribution (TDC)',
