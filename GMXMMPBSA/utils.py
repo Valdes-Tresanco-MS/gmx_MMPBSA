@@ -622,9 +622,9 @@ def list2range(input_list):
     temp = []
     previous = None
 
-    input_list.sort()
+    ilist = sorted(input_list, key=lambda x: x.index if isinstance(x, Residue) else x)
 
-    for x in input_list:
+    for x in ilist:
         if not previous:
             temp.append(x)
         elif x == previous + 1:
@@ -632,7 +632,7 @@ def list2range(input_list):
         else:
             _add(temp)
             temp = [x]
-        if x == input_list[-1]:
+        if x == ilist[-1]:
             _add(temp)
         previous = x
     return {'num': ranges, 'string': ranges_str}
