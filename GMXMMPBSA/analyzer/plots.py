@@ -198,8 +198,7 @@ class LineChart(ChartsBase):
         super(LineChart, self).__init__(button, options, item_parent)
 
         self.data = pd.read_parquet(data) if isinstance(data, str) else data
-        self.data = self.data.iloc[:,0]
-
+        self.data = self.data.iloc[:,0] if self.data.columns.size == 1 else self.data
         # figure canvas definition
         self.set_cw()
         self.fig.set_size_inches(options[('Line Plot', 'figure', 'width')],
