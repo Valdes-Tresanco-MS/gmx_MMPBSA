@@ -787,18 +787,28 @@ class MMPBSA_API():
                                     if item_lvl == 3 and len(index) == 1:
                                         index.append(list(value4.keys()))
                                     item_lvl2 = 1 if self.app_namespace.INPUT['idecomp'] in [1, 2] else 2
-                                    TASKs.append(
-                                        [_setup_data, dict(data=decomp[level][level1][level2][level3][level4],
-                                                           level=item_lvl2, name=level4, index=list(value4.keys()),
-                                                           memory=memory_args),
-                                         (level, level1, level2, level3, level4), 'decomposition'])
+                                    # TASKs.append(
+                                    #     [_setup_data, dict(data=decomp[level][level1][level2][level3][level4],
+                                    #                        level=item_lvl2, name=level4, index=list(value4.keys()),
+                                    #                        memory=memory_args),
+                                    #      (level, level1, level2, level3, level4), 'decomposition'])
                                     if self.app_namespace.INPUT['idecomp'] in [1, 2]:
+                                        TASKs.append(
+                                            [_setup_data, dict(data=decomp[level][level1][level2][level3][level4],
+                                                               level=item_lvl2, name=level4, index=value4,
+                                                               memory=memory_args),
+                                             (level, level1, level2, level3, level4), 'decomposition'])
                                         TASKs.extend([_setup_data,
                                                       dict(data=decomp[level][level1][level2][level3][level4][level5],
                                                            memory=memory_args),
                                                     (level, level1, level2, level3, level4, level5), 'decomposition']
                                                      for level5 in value4)
                                     else:
+                                        TASKs.append(
+                                            [_setup_data, dict(data=decomp[level][level1][level2][level3][level4],
+                                                               level=item_lvl2, name=level4, index=list(value4.keys()),
+                                                               memory=memory_args),
+                                             (level, level1, level2, level3, level4), 'decomposition'])
                                         TASKs.extend([_setup_data,
                                                       dict(data=decomp[level][level1][level2][level3][level4][level5],
                                                            level=1, index=value5, memory=memory_args),

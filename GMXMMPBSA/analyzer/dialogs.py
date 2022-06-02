@@ -24,7 +24,7 @@ try:
 except:
     from PyQt5.QtWidgets import *
     from PyQt5.QtCore import *
-    from PyQt6.QtGui import *
+    from PyQt5.QtGui import *
 
 import h5py
 from queue import Queue, Empty
