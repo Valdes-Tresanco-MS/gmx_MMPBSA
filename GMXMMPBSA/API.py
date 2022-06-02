@@ -136,8 +136,8 @@ def _setup_data(data: pd.DataFrame, level=0, iec2=False, name=None, index=None,
             cont['bar_plot_data'] = [parquet_file % 'bp', options, change]
 
     elif level == 2:
-        tempdf = data.loc[:, data.columns.get_level_values(1) == 'tot']
-        temp_data = tempdf.droplevel(level=1, axis=1).reindex(columns=index)
+        tempdf = data.loc[:, data.columns.get_level_values(1) == 'tot'].droplevel(level=1, axis=1)
+        temp_data = tempdf.reindex(columns=index)
         line_plot_data = temp_data[:-3].sum(axis=1).rename(name).to_frame()
         bar_plot_data = tempdf[-3:]
         heatmap_plot_data = tempdf[:-3].T
@@ -666,7 +666,7 @@ class MMPBSA_API():
                                                             sem = std / math.sqrt(len(temp_energy[t]))
                                                             temp_energy[t] = temp_energy[t].append([mean, std, sem])
                                                             if (t == 'tot' and res_threshold > 0 and
-                                                                    mean < res_threshold):
+                                                                    abs(mean) < res_threshold):
                                                                 remove = True
                                                 else:
                                                     temp_emap = {}
@@ -705,8 +705,7 @@ class MMPBSA_API():
                                                 if not remove:
                                                     model_decomp_energy[m1][c][r1] = temp_energy
                                                     e_map[etkey][m][m1][c][r1] = temp_emap
-                        tdf = pd.DataFrame(flatten(model_decomp_energy), index=index)
-                        decomp_energy[etkey][m] = tdf.reindex(sorted(tdf.columns), axis=1)
+                        decomp_energy[etkey][m] = pd.DataFrame(flatten(model_decomp_energy), index=index)
         return {'map': e_map, 'data': decomp_energy}
 
     def get_ana_data(self, energy_options=None, entropy_options=None, decomp_options=None, performance_options=None,
