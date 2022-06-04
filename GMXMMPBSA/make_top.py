@@ -780,20 +780,20 @@ class CheckMakeTop:
             for i in self.resl:
                 if i.is_ligand():
                     continue
-                rres = self.complex_str.residues[i - 1]
+                rres = self.complex_str.residues[i.index - 1]
                 if [rres.chain, rres.number, rres.insertion_code] in res_selection:
                     sele_res.append(i)
                     if qm_sele:
-                        rec_charge += round(sum(atm.charge for atm in com_top.residues[i - 1].atoms), 0)
+                        rec_charge += round(sum(atm.charge for atm in com_top.residues[i.index - 1].atoms), 0)
                     res_selection.remove([rres.chain, rres.number, rres.insertion_code])
             for j in self.resl:
                 if j.is_receptor():
                     continue
-                lres = self.complex_str.residues[j - 1]
+                lres = self.complex_str.residues[j.index - 1]
                 if [lres.chain, lres.number, lres.insertion_code] in res_selection:
                     sele_res.append(j)
                     if qm_sele:
-                        lig_charge += round(sum(atm.charge for atm in com_top.residues[j - 1].atoms), 0)
+                        lig_charge += round(sum(atm.charge for atm in com_top.residues[j.index - 1].atoms), 0)
                     res_selection.remove([lres.chain, lres.number, lres.insertion_code])
             for res in res_selection:
                 logging.warning("We couldn't find this residue CHAIN:{} RES_NUM:{} ICODE: {}".format(*res))
