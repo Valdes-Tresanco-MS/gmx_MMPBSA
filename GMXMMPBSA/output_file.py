@@ -328,6 +328,8 @@ def write_outputs(app):
                '\nGENERALIZED BORN (GBNSR6):\n\n')
     # Now print out the Free Energy results
     for i, key in enumerate(outkeys):
+        # if triggers[i] not in INPUT or not INPUT[triggers[i]]:
+        #     continue
         if not INPUT[nmls[i]][triggers[i]]:
             continue
         if not INPUT['ala']['mutant_only']:
@@ -457,12 +459,14 @@ def write_decomp_output(app):
     INPUT = app.INPUT
 
     stability = app.stability
-    outkeys = ('gb', 'pb')
-    triggers = ('gbrun', 'pbrun')
-    headers = ('Generalized Born Decomposition Energies', 'Poisson Boltzmann Decomposition Energies')
+    nmls = ('gb', 'pb', 'gbnsr6')
+    outkeys = ('gb', 'pb', 'gbnsr6')
+    triggers = ('gbrun', 'pbrun', 'gbnsr6run')
+    headers = ('Generalized Born Decomposition Energies', 'Poisson Boltzmann Decomposition Energies',
+               'Generalized Born (R6) Decomposition Energies')
 
 # First open up our output file and turn it into a CSV writer if necessary
-    if INPUT['csv_format']:
+    if INPUT['decomp']['csv_format']:
         dec_out_file = OutputFile(FILES.decompout, 'wb', 0)
         decompout = writer(dec_out_file)
         decompout.writerow(['| Run on %s' % datetime.now().ctime()])
@@ -481,7 +485,9 @@ def write_decomp_output(app):
         dec_energies = writer(dec_energies_f)
 
     for i, key in enumerate(outkeys):
-        if not INPUT[triggers[i]]:
+        # if triggers[i] not in INPUT or not INPUT[triggers[i]]:
+        #     continue
+        if not INPUT[nmls[i]][triggers[i]]:
             continue
         if not INPUT['ala']['mutant_only']:
             if stability:
@@ -489,7 +495,7 @@ def write_decomp_output(app):
             else:
                 decomp_norm = app.calc_types.decomp_normal[key]['delta']
 
-            if INPUT['csv_format']:
+            if INPUT['decomp']['csv_format']:
                 decompout.writerows(decomp_norm.summary('csv'))
             else:
                 decompout.writeline(decomp_norm.summary())

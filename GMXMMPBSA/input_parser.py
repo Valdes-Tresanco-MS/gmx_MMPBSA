@@ -144,7 +144,7 @@ class Namelist(object):
         """ Adds a variable to this namelist. It checks to make sure that it's
           going to create a conflict with an existing variable.
         """
-        if varname in list(self.variables.keys()):
+        if varname in self.variables:
             raise InternalError('Duplicated variable %s in Namelist' % varname)
         self.variables[varname] = Variable(varname, datatype, default, description, int_dat_type)
 
@@ -165,7 +165,7 @@ class Namelist(object):
         for variable in self.variables:
             if variable is self.trigger: continue
             retstr += '  %s\n' % self.variables[variable].help_str()
-        return retstr + '/'
+        return f'{retstr}/'
 
 
 class InputFile(object):
@@ -308,7 +308,7 @@ class InputFile(object):
                 continue
 
             # Catch some errors
-            if innml and line.strip().startswith('&'):
+            if innml and line.strip().startswith('&') and line.strip() != '&end':
                 raise InputError('Invalid input. Terminate each namelist prior to starting another one.')
 
             # End of a namelist
@@ -322,8 +322,7 @@ class InputFile(object):
                 namelist = self._full_namelist_name(namelist)
 
                 if namelist in declared_namelists:
-                    raise InputError('Namelist %s specified multiple times' %
-                                     namelist)
+                    raise InputError('Namelist %s specified multiple times' % namelist)
 
                 self.namelists[namelist].Open()
                 declared_namelists.append(namelist)
@@ -331,7 +330,7 @@ class InputFile(object):
 
             # We are in a namelist here, now fill in the fields
             elif innml:
-                line = line[:line.strip().index('#')] if '#' in line else line
+                line = line[:line.strip().index('#')] if '#' in line else line.strip('\n')
                 items = line.strip().split(',')
                 # Screen any blank fields
                 j = 0
@@ -342,19 +341,16 @@ class InputFile(object):
                     else:
                         j += 1
                 namelist_fields[-1].extend(items)
-            # end if [elif innml]
-        # # end for line in lines
-
         # # Combine any multi-element fields into the last field that has a = in it
         begin_field = -1
-        for i in range(len(namelist_fields)):
-            for j in range(len(namelist_fields[i])):
+        for i, _ in enumerate(namelist_fields):
+            for j, _ in enumerate(namelist_fields[i]):
                 if '=' in namelist_fields[i][j]:
                     begin_field = j
                 elif begin_field == -1:
-                    raise ('Invalid input file! Error reading namelist %s' % declared_namelists[i])
+                    raise f'Invalid input file! Error reading namelist {declared_namelists[i]}'
                 else:
-                    namelist_fields[i][begin_field] += ',%s' % namelist_fields[i][j]
+                    namelist_fields[i][begin_field] += f',{namelist_fields[i][j]}'
         # Now parse through the items to add them to the master dictionary. Note
         # that thanks to the last step, all data in namelist_fields will be
         # contained within fields that have a '='. All others can be ignored
@@ -369,7 +365,7 @@ class InputFile(object):
                 # Now we have to loop through all variables in that namelist to
                 # see if this is the variable we want.
                 found = False
-                for key in list(self.namelists[declared_namelists[i]].variables.keys()):
+                for key in self.namelists[declared_namelists[i]].variables:
                     if self.namelists[declared_namelists[i]].variables[key] == var[0]:
                         self.namelists[declared_namelists[i]].variables[key].SetValue(var[1])
                         found = True
@@ -381,7 +377,7 @@ class InputFile(object):
         INPUT = {}
         for nml in self.ordered_namelist_keys:
             INPUT[nml] = {}
-            for var in list(self.namelists[nml].variables.keys()):
+            for var in self.namelists[nml].variables:
                 # Here, the triggers are just bool types, so protect from accessing
                 # an attribute that doesn't exist! We only allow Variable types and
                 # bool types
@@ -472,7 +468,6 @@ input_file.addNamelist('gb', 'gb',
 
 input_file.addNamelist('gbnsr6', 'gbnsr6',
                        [
-                           ['inp', int, 1, 'Compute nonpolar solvation energies'],
                            ['b', float, 0.028, 'Specifies the value of uniform offset to the (inverse) effective '
                                                'radii'],
                            ['epsin', float, 1.0, 'Sets the dielectric constant of the solute region'],
@@ -485,9 +480,7 @@ input_file.addNamelist('gbnsr6', 'gbnsr6',
                            ['space', float, 0.5, 'Sets the grid spacing that determines the resolution of the solute '
                                                  'molecular surface'],
                            ['arcres', float, 0.2, 'Sets the arc resolution used for numerical integration over '
-                                                 'molecular '
-                                              'surface'],
-                           ['rbornstat', int, 0, 'Define if the inverse effective Born radii is printed'],
+                                                  'molecular surface'],
                            ['dgij', int, 0, 'Printing interatomic pairwise electrostatic energies'],
                            ['radiopt', int, 0, 'Specifies the set of intrinsic atomic radii to be used with the chagb'
                                                'option.'],
