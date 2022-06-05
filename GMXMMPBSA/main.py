@@ -1141,20 +1141,6 @@ class MMPBSA_App(object):
         basename = ('%s_nm.out', '%s_gb.mdout', '%s_pb.mdout', '%s_rism.mdout', '%s_rism.mdout', '%s_rism.mdout',
                     '%s_gbnsr6.mdout')
 
-        comp_energy = ('gbnsr6')
-        mm_data = self._get_mm_data()
-        #
-        # if self.INPUT['general']['interaction_entropy']:
-        #     if not INPUT['ala']['mutant_only']:
-        #         self.calc_types.normal['ie'] = IEout(INPUT)
-        #     if INPUT['ala']['alarun']:
-        #         self.calc_types.mutant['ie'] = IEout(INPUT)
-        # if self.INPUT['general']['c2_entropy']:
-        #     if not INPUT['ala']['mutant_only']:
-        #         self.calc_types.normal['c2'] = C2out()
-        #     if INPUT['ala']['alarun']:
-        #         self.calc_types.mutant['c2'] = C2out()
-
         for i, key in enumerate(outkey):
             if not INPUT[nmls[i]][triggers[i]]:
                 continue
@@ -1163,10 +1149,6 @@ class MMPBSA_App(object):
                 self.calc_types.normal[key] = {'complex': outclass[i]('complex', self.INPUT, self.using_chamber)}
                 self.calc_types.normal[key]['complex'].parse_from_file(self.pre + basename[i] % 'complex',
                                                                        self.mpi_size)
-                if key in comp_energy:
-                    self.calc_types.normal[key]['complex'].update(mm_data['normal']['complex'])
-                self.calc_types.normal[key]['complex'].fill_composite_terms()
-
                 # check if the nmode output is valid
                 if self.calc_types.normal[key]['complex'].no_nmode_convergence:
                     self.INPUT['nmode']['nmoderun'] = False
@@ -1177,77 +1159,31 @@ class MMPBSA_App(object):
                     self.calc_types.normal[key]['receptor'] = outclass[i]('receptor', self.INPUT, self.using_chamber)
                     self.calc_types.normal[key]['receptor'].parse_from_file(self.pre + basename[i] % 'receptor',
                                                                             self.mpi_size)
-                    if key in comp_energy:
-                        self.calc_types.normal[key]['receptor'].update(mm_data['normal']['receptor'])
-                    self.calc_types.normal[key]['receptor'].fill_composite_terms()
-
                     self.calc_types.normal[key]['ligand'] = outclass[i]('ligand', self.INPUT, self.using_chamber)
                     self.calc_types.normal[key]['ligand'].parse_from_file(self.pre + basename[i] % 'ligand',
                                                                           self.mpi_size)
-                    if key in comp_energy:
-                        self.calc_types.normal[key]['ligand'].update(mm_data['normal']['ligand'])
-                    self.calc_types.normal[key]['ligand'].fill_composite_terms()
-
                     self.calc_types.normal[key]['delta'] = BindingStatistics(self.calc_types.normal[key]['complex'],
                                                                              self.calc_types.normal[key]['receptor'],
                                                                              self.calc_types.normal[key]['ligand'],
                                                                              self.using_chamber, self.traj_protocol)
-
-                    # if key in ['gb', 'pb', 'rism std', 'rism gf', 'rism pcplus']:
-                    #     if 'ie' in self.calc_types.normal:
-                    #         edata = self.calc_types.normal[key]['delta']['GGAS']
-                    #         ie = InteractionEntropyCalc(edata, INPUT)
-                    #         ie.save_output(self.pre + f"{key.replace(' ', '_')}_interaction_entropy.dat")
-                    #         self.calc_types.normal['ie'].parse_from_dict(key, {'data': ie.data, 'iedata': ie.iedata,
-                    #                                                            'ieframes': ie.ieframes,
-                    #                                                            'sigma': ie.ie_std})
-                    #     if 'c2' in self.calc_types.normal:
-                    #         edata = self.calc_types.normal[key]['delta']['GGAS']
-                    #         c2 = C2EntropyCalc(edata, INPUT)
-                    #         c2.save_output(self.pre + f"{key.replace(' ', '_')}_c2_entropy.dat")
-                    #         self.calc_types.normal['c2'][key] = {'c2data': c2.c2data, 'sigma': c2.ie_std,
-                    #                                              'c2_std': c2.c2_std, 'c2_ci': c2.c2_ci}
             # Time for mutant
             if INPUT['ala']['alarun']:
                 self.calc_types.mutant[key] = {'complex': outclass[i]('Mutant-Complex', self.INPUT, self.using_chamber)}
                 self.calc_types.mutant[key]['complex'].parse_from_file(self.pre + 'mutant_' + basename[i] % 'complex',
                                                                        self.mpi_size)
-                if key in comp_energy:
-                    self.calc_types.mutant[key]['complex'].update(mm_data['mutant']['complex'])
-                self.calc_types.mutant[key]['complex'].fill_composite_terms()
                 if not self.stability:
                     self.calc_types.mutant[key]['receptor'] = outclass[i]('Mutant-Receptor', self.INPUT,
                                                                           self.using_chamber)
                     self.calc_types.mutant[key]['receptor'].parse_from_file(self.pre + 'mutant_' + basename[i] %
                                                                             'receptor', self.mpi_size)
-                    if key in comp_energy:
-                        self.calc_types.mutant[key]['receptor'].update(mm_data['mutant']['receptor'])
-                    self.calc_types.mutant[key]['receptor'].fill_composite_terms()
                     self.calc_types.mutant[key]['ligand'] = outclass[i]('Mutant-Ligand', self.INPUT,
                                                                         self.using_chamber)
                     self.calc_types.mutant[key]['ligand'].parse_from_file(self.pre + 'mutant_' + basename[i] % 'ligand',
                                                                           self.mpi_size)
-                    if key in comp_energy:
-                        self.calc_types.mutant[key]['ligand'].update(mm_data['mutant']['ligand'])
-                    self.calc_types.mutant[key]['ligand'].fill_composite_terms()
                     self.calc_types.mutant[key]['delta'] = BindingStatistics(self.calc_types.mutant[key]['complex'],
                                                                              self.calc_types.mutant[key]['receptor'],
                                                                              self.calc_types.mutant[key]['ligand'],
                                                                              self.using_chamber, self.traj_protocol)
-                    # if key in ['gb', 'pb', 'rism std', 'rism gf', 'rism pcplus']:
-                    #     if 'ie' in self.calc_types.mutant:
-                    #         edata = self.calc_types.mutant[key]['delta']['GGAS']
-                    #         mie = InteractionEntropyCalc(edata, INPUT)
-                    #         mie.save_output(self.pre + 'mutant_' + f"{key.replace(' ', '_')}_iteraction_entropy.dat")
-                    #         self.calc_types.mutant['ie'].parse_from_dict(key, {'data': mie.data, 'iedata': mie.iedata,
-                    #                                                            'ieframes': mie.ieframes,
-                    #                                                            'sigma': mie.ie_std})
-                    #     if 'c2' in self.calc_types.mutant:
-                    #         edata = self.calc_types.mutant[key]['delta']['GGAS']
-                    #         c2 = C2EntropyCalc(edata, INPUT)
-                    #         c2.save_output(self.pre + 'mutant_' + f"{key.replace(' ', '_')}_c2_entropy.dat")
-                    #         self.calc_types.mutant['c2'][key] = {'c2data': c2.c2data, 'sigma': c2.ie_std,
-                    #                                              'c2_std': c2.c2_std, 'c2_ci': c2.c2_ci}
             self.get_iec2entropy()
 
             if INPUT['ala']['alarun'] and not INPUT['ala']['mutant_only']:
@@ -1335,11 +1271,11 @@ class MMPBSA_App(object):
 
     def _get_decomp(self):
         from GMXMMPBSA.amber_outputs import (DecompOut, PairDecompOut, DecompBinding, PairDecompBinding)
-        outkey = ('gb', 'pb')
-        triggers = ('gbrun', 'pbrun')
-        basename = ('%s_gb.mdout', '%s_pb.mdout')
+        outkey = ('gb', 'pb', 'gbnsr6')
+        triggers = ('gbrun', 'pbrun', 'gbnsr6run')
+        basename = ('%s_gb.mdout', '%s_pb.mdout', '%s_gbnsr6.mdout')
         INPUT, FILES = self.INPUT, self.FILES
-        headers = {'gb': 'Generalized Born', 'pb': 'Poisson Boltzmann'}
+        headers = {'gb': 'Generalized Born', 'pb': 'Poisson Boltzmann', 'gbnsr6': 'Generalized Born (R6)'}
         if INPUT['decomp']['idecomp'] in [1, 2]:
             DecompBindingClass = DecompBinding
             DecompClass = DecompOut
