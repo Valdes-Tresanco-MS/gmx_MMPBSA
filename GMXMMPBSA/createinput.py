@@ -370,14 +370,27 @@ class GBNSR6Input(SanderInput):
 
 class SanderMMInput(SanderInput):
     """ GB sander input file """
-    namelist = ['gbnsr6']
-    input_items = {'ntb': 0, 'cut': 999.0, 'nsnb': 99999, 'imin': 5, 'dec_verbose': 0, 'igb': 0}
+    namelist = ['gbnsr6', 'decomp']
+    input_items = {'ntb': 0, 'cut': 999.0, 'nsnb': 99999, 'imin': 5, 'idecomp': 0, 'dec_verbose': 0, 'igb': 0,
+                   'gbsa': 0}
 
-    parent_namelist = {'ntb': 'cntrl', 'cut': 'cntrl', 'nsnb': 'cntrl', 'imin': 'cntrl', 'dec_verbose': 'cntrl',
-                       'igb': 'cntrl'}
+    parent_namelist = {'ntb': 'cntrl', 'cut': 'cntrl', 'nsnb': 'cntrl', 'imin': 'cntrl', 'idecomp': 'cntrl',
+                       'dec_verbose': 'cntrl', 'igb': 'cntrl', 'gbsa': 'cntrl'}
 
-    name_map = {'ntb': 'ntb', 'cut': 'cut', 'nsnb': 'nsnb', 'imin': 'imin', 'dec_verbose': 'dec_verbose','igb': 'igb'}
-# +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    name_map = {'ntb': 'ntb', 'cut': 'cut', 'nsnb': 'nsnb', 'imin': 'imin', 'idecomp': 'idecomp',
+                'dec_verbose': 'dec_verbose', 'igb': 'igb', 'gbsa': 'gbsa'}
+
+
+class SanderMMDecomp(SanderMMInput):
+    """ MM decomposition input file for sander. In addition to the INPUT dictionary,
+       this class also needs several GROUP cards to define the
+   """
+
+    def __init__(self, INPUT, *cards):
+        SanderMMInput.__init__(self, INPUT)
+        for card in cards:
+            self.mdin.AddCard(card[0], card[1])
+
 
 class SanderRISMInput(SanderInput):
     """ RISM sander input file """
