@@ -101,7 +101,7 @@ class AmberOutput(dict):
         AmberOutput._read(self)
 
         # Now we need call this method explicitly
-        # self.fill_composite_terms()
+        self.fill_composite_terms()
 
     def parse_from_h5(self, d: dict):
         for key in d:
@@ -572,22 +572,30 @@ class GBNSR6out(AmberOutput):
     def __init__(self, mol, INPUT, chamber=False, **kwargs):
         AmberOutput.__init__(self, mol, INPUT, chamber, **kwargs)
         # As the MM terms will be updated, in order to maintain order, we need to initialize these keys
-        for k in self.data_keys:
-            self[k] = None
         self.data_keys.extend(['EGB', 'ESURF'])
 
     def _get_energies(self, outfile):
         """ Parses the mdout files for the GB potential terms """
-        store = False
         while rawline := outfile.readline():
-            if "FINAL RESULTS" in rawline:
-                store = True
-            if store and rawline[:6] == ' EELEC':
+            if rawline[:5] == ' BOND':
                 words = rawline.split()
-                self['EGB'] = self['EGB'].append(float(words[5]))
+                self['BOND'] = self['BOND'].append(float(words[2]))
+                self['ANGLE'] = self['ANGLE'].append(float(words[5]))
+                self['DIHED'] = self['DIHED'].append(float(words[8]))
+                words = outfile.readline().split()
+                if self.chamber:
+                    self['UB'] = self['UB'].append(float(words[2]))
+                    self['IMP'] = self['IMP'].append(float(words[5]))
+                    self['CMAP'] = self['CMAP'].append(float(words[8]))
+                    words = outfile.readline().split()
+                self['VDWAALS'] = self['VDWAALS'].append(float(words[2]))
+                self['EEL'] = self['EEL'].append(float(words[5]))
+                self['EGB'] = self['EGB'].append(float(words[8]))
+                words = outfile.readline().split()
+                self['1-4 VDW'] = self['1-4 VDW'].append(float(words[3]))
+                self['1-4 EEL'] = self['1-4 EEL'].append(float(words[7]))
                 words = outfile.readline().split()
                 self['ESURF'] = self['ESURF'].append(float(words[2]))
-                store = False
 
 
 class MMout(AmberOutput):
