@@ -356,7 +356,20 @@ class MMPBSA_App(object):
         if self.INPUT['gbnsr6']['gbnsr6run']:
             incrd = '%sdummy%%s.inpcrd' % prefix
             mdin = self.pre + 'gbnsr6.mdin'
-            mm_mdin = self.pre + 'mm.mdin'
+
+            # Mdin depends on decomp or not
+            if self.INPUT['decomp']['decomprun']:
+                mdin_template = self.pre + 'mm_decomp_%s.mdin'
+            else:
+                mdin_template = self.pre + 'mm.mdin'
+
+            # Now do complex-specific stuff
+            try:
+                mm_mdin = mdin_template % 'com'
+            except TypeError:
+                mm_mdin = mdin_template
+
+
             self.calc_list.append(PrintCalc(f"Beginning GBNSR6 calculations with {progs['gbnsr6']}"),
                                   timer_key='gbnsr6')
             if not mm_com_calculated:
@@ -376,6 +389,10 @@ class MMPBSA_App(object):
             self.calc_list.append(c, '', timer_key='gbnsr6')
 
             if not self.stability:
+                try:
+                    mm_mdin = mdin_template % 'rec'
+                except TypeError:
+                    mm_mdin = mdin_template
                 # Either copy the existing receptor if the mutation is in the ligand
                 # or perform a receptor calculation
                 if copy_receptor:
@@ -404,6 +421,10 @@ class MMPBSA_App(object):
                     c = MergeOut(f"{prefix}receptor_gbnsr6.mdout.%d", mdouts)
                     self.calc_list.append(c, '', timer_key='gbnsr6')
 
+                try:
+                    mm_mdin = mdin_template % 'lig'
+                except TypeError:
+                    mm_mdin = mdin_template
                 # Either copy the existing ligand if the mutation is in the receptor
                 # or perform a ligand calculation
                 if copy_ligand:

@@ -49,6 +49,16 @@ def create_inputs(INPUT, prmtop_system, pre):
     """ Creates the input files for all necessary calculations """
     stability = prmtop_system.stability
 
+    # since gbnsr6 is independent of sander MM calculation is the same input when decomp or not
+    if INPUT['gbnsr6']['gbnsr6run']:
+        temp_input = deepcopy(INPUT)
+        temp_input['gbnsr6']['roh'] = ROH[INPUT['gbnsr6']['roh']]
+        if INPUT['decomp']['decomprun']:
+            temp_input['gbnsr6']['dgij'] = 1
+        temp_input['gbnsr6']['istrng'] = INPUT['gbnsr6']['istrng'] / 1000
+        gbnsr6_mdin = GBNSR6Input(temp_input)
+        gbnsr6_mdin.write_input(f'{pre}gbnsr6.mdin')
+
     # First check if we are running decomp
     if INPUT['decomp']['decomprun']:
         # Get the cards that will go in the complex mdin file
@@ -133,6 +143,28 @@ def create_inputs(INPUT, prmtop_system, pre):
                 rec_mdin.write_input(f"{pre}pb_decomp_rec.mdin")
                 lig_mdin.write_input(f"{pre}pb_decomp_lig.mdin")
 
+        # We only need to run it once for the GBNSR6, pbsa.cuda and APBS calculations.
+        if INPUT['gbnsr6']['gbnsr6run']:
+            rec_res = ['Residues considered as REC', full_rc]
+            SanderMMInput.input_items['igb'] = 2
+            SanderMMInput.input_items['gbsa'] = 2
+            if stability:
+                pri_res = ['Residues to print', com_card]
+                com_mdin = SanderMMDecomp(INPUT, rec_res, pri_res)
+                com_mdin.write_input(f"{pre}mm_decomp_com.mdin")
+            else:
+                lig_res = ['Residues considered as LIG', full_lc]
+                pri_res = ['Residues to print', com_card]
+                com_mdin = SanderMMDecomp(INPUT, rec_res, lig_res, pri_res)
+                rec_res = ['Residues considered as REC', full_rec]
+                pri_res = ['Residues to print', rec_card]
+                rec_mdin = SanderMMDecomp(INPUT, rec_res, pri_res)
+                lig_res = ['Residues considered as LIG', full_lig]
+                pri_res = ['Residues to print', lig_card]
+                lig_mdin = SanderMMDecomp(INPUT, lig_res, pri_res)
+                com_mdin.write_input(f"{pre}mm_decomp_com.mdin")
+                rec_mdin.write_input(f"{pre}mm_decomp_rec.mdin")
+                lig_mdin.write_input(f"{pre}mm_decomp_lig.mdin")
     else:  # not decomp
 
         if INPUT['gb']['gbrun']:
@@ -214,12 +246,6 @@ def create_inputs(INPUT, prmtop_system, pre):
                 gb_mdin = SanderGBInput(INPUT)
                 gb_mdin.write_input(f'{pre}gb.mdin')
 
-        if INPUT['gbnsr6']['gbnsr6run']:
-            temp_input = deepcopy(INPUT)
-            temp_input['gbnsr6']['roh'] = ROH[INPUT['gbnsr6']['roh']]
-            gbnsr6_mdin = GBNSR6Input(temp_input)
-            gbnsr6_mdin.write_input(f'{pre}gbnsr6.mdin')
-
         # We only need to run it once for the GBNSR6, pbsa.cuda and APBS calculations.
         if INPUT['gbnsr6']['gbnsr6run']:
             mm_mdin = SanderMMInput(INPUT)
@@ -279,18 +305,6 @@ class SanderInput(object):
                     vunchanged = False
             if vunchanged:
                 self.mdin.change(self.parent_namelist[key], key, self.input_items[key])
-            # try:
-            #     # FIXME:
-            #     for nml in self.namelist:
-            #         if self.name_map[key] in INPUT[nml]:
-            #             self.mdin.change(self.parent_namelist[key], key, INPUT[nml][self.name_map[key]])
-            #
-            #             # self.mdin.change(self.parent_namelist[key], key, INPUT[self.namelist][self.name_map[key]])
-            #             ic(key, nml, INPUT[nml][self.name_map[key]])
-            # except KeyError:
-            #     self.mdin.change(self.parent_namelist[key], key, self.input_items[key])
-            #     ic(key, self.input_items[key])
-
 
     def write_input(self, filename):
         """ Write the mdin file """
