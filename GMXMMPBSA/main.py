@@ -385,7 +385,9 @@ class MMPBSA_App(object):
                 mdouts.append(mdout)
                 c = EnergyCalculation(progs['gbnsr6'], parm_system.complex_prmtop, file, mdin, mdout)
                 self.calc_list.append(c, '', timer_key='gbnsr6')
-            c = MergeOut(f"{prefix}complex_gbnsr6.mdout.%d",mdouts)
+            c = MergeOut(self.FILES.complex_prmtop, f"{prefix}complex_gbnsr6.mdout.%d",
+                         f'{prefix}complex_mm.mdout.%d', mdouts, self.INPUT['decomp']['idecomp'],
+                         self.INPUT['decomp']['dec_verbose'])
             self.calc_list.append(c, '', timer_key='gbnsr6')
 
             if not self.stability:
@@ -418,7 +420,9 @@ class MMPBSA_App(object):
                         mdouts.append(mdout)
                         c = EnergyCalculation(progs['gbnsr6'], parm_system.receptor_prmtop, file, mdin, mdout)
                         self.calc_list.append(c, '', timer_key='gbnsr6')
-                    c = MergeOut(f"{prefix}receptor_gbnsr6.mdout.%d", mdouts)
+                    c = MergeOut(self.FILES.receptor_prmtop, f"{prefix}receptor_gbnsr6.mdout.%d",
+                                 f'{prefix}receptor_mm.mdout.%d', mdouts, self.INPUT['decomp']['idecomp'],
+                                 self.INPUT['decomp']['dec_verbose'])
                     self.calc_list.append(c, '', timer_key='gbnsr6')
 
                 try:
@@ -450,7 +454,9 @@ class MMPBSA_App(object):
                         mdouts.append(mdout)
                         c = EnergyCalculation(progs['gbnsr6'], parm_system.ligand_prmtop, file, mdin, mdout)
                         self.calc_list.append(c, '', timer_key='gbnsr6')
-                    c = MergeOut(f"{prefix}ligand_gbnsr6.mdout.%d", mdouts)
+                    c = MergeOut(self.FILES.ligand_prmtop, f"{prefix}ligand_gbnsr6.mdout.%d",
+                                 f'{prefix}ligand_mm.mdout.%d', mdouts, self.INPUT['decomp']['idecomp'],
+                                 self.INPUT['decomp']['dec_verbose'])
                     self.calc_list.append(c, '', timer_key='gbnsr6')
         # end if self.INPUT['gb']['gbrun']
 
