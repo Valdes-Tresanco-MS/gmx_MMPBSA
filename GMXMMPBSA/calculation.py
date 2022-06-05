@@ -223,42 +223,42 @@ class RISMCalculation(Calculation):
 
         # Set up instance variables
         self.xvvfile = xvvfile
-        self.closure = ','.join(map(str, INPUT['closure']))
-        self.polardecomp = INPUT['polardecomp']
-        self.ng = ','.join(map(str, INPUT['ng']))
-        self.solvbox = ','.join(map(str, INPUT['solvbox']))
-        self.buffer = INPUT['buffer']
-        self.grdspc = ','.join(map(str, INPUT['grdspc']))
-        self.solvcut = INPUT['solvcut']
-        self.tolerance = ','.join(map(str, INPUT['tolerance']))
-        self.verbose = INPUT['rism_verbose']
-        self.solvbox = ','.join(map(str, INPUT['solvbox']))
-        self.gf = INPUT['rismrun_gf']
+        self.closure = ','.join(map(str, INPUT['rism']['closure']))
+        self.polardecomp = INPUT['rism']['polardecomp']
+        self.ng = ','.join(map(str, INPUT['rism']['ng']))
+        self.solvbox = ','.join(map(str, INPUT['rism']['solvbox']))
+        self.buffer = INPUT['rism']['buffer']
+        self.grdspc = ','.join(map(str, INPUT['rism']['grdspc']))
+        self.solvcut = INPUT['rism']['solvcut']
+        self.tolerance = ','.join(map(str, INPUT['rism']['tolerance']))
+        self.verbose = INPUT['rism']['rism_verbose']
+        self.solvbox = ','.join(map(str, INPUT['rism']['solvbox']))
+        self.gf = INPUT['rism']['rismrun_gf']
 
-        self.noasympcorr = INPUT['noasympcorr']
-        self.mdiis_del = INPUT['mdiis_del']
-        self.mdiis_restart = INPUT['mdiis_restart']
-        self.mdiis_nvec = INPUT['mdiis_nvec']
-        self.maxstep = INPUT['maxstep']
-        self.npropagate = INPUT['npropagate']
-        # self.centering = INPUT['centering']
-        # self.entropicDecomp = INPUT['entropicDecomp']
-        # self.pc_plus = INPUT['rismrun_pc+']
-        # self.uccoeff = ','.join(map(str, INPUT['uccoeff']))
-        self.treeDCF = INPUT['treeDCF']
-        self.treeTCF = INPUT['treeTCF']
-        self.treeCoulomb = INPUT['treeCoulomb']
-        self.treeDCFOrder = INPUT['treeDCFOrder']
-        self.treeTCFOrder = INPUT['treeTCFOrder']
-        self.treeCoulombOrder = INPUT['treeCoulombOrder']
-        self.treeDCFN0 = INPUT['treeDCFN0']
-        self.treeTCFN0 = INPUT['treeTCFN0']
-        self.treeCoulombN0 = INPUT['treeCoulombN0']
-        self.treeDCFMAC = INPUT['treeDCFMAC']
-        self.treeTCFMAC = INPUT['treeTCFMAC']
-        self.treeCoulombMAC = INPUT['treeCoulombMAC']
-        self.asympKSpaceTolerance = INPUT['asympKSpaceTolerance']
-        self.ljTolerance = INPUT['ljTolerance']
+        self.noasympcorr = INPUT['rism']['noasympcorr']
+        self.mdiis_del = INPUT['rism']['mdiis_del']
+        self.mdiis_restart = INPUT['rism']['mdiis_restart']
+        self.mdiis_nvec = INPUT['rism']['mdiis_nvec']
+        self.maxstep = INPUT['rism']['maxstep']
+        self.npropagate = INPUT['rism']['npropagate']
+        # self.centering = INPUT['rism']['centering']
+        # self.entropicDecomp = INPUT['rism']['entropicDecomp']
+        # self.pc_plus = INPUT['rism']['rismrun_pc+']
+        # self.uccoeff = ','.join(map(str, INPUT['rism']['uccoeff']))
+        self.treeDCF = INPUT['rism']['treeDCF']
+        self.treeTCF = INPUT['rism']['treeTCF']
+        self.treeCoulomb = INPUT['rism']['treeCoulomb']
+        self.treeDCFOrder = INPUT['rism']['treeDCFOrder']
+        self.treeTCFOrder = INPUT['rism']['treeTCFOrder']
+        self.treeCoulombOrder = INPUT['rism']['treeCoulombOrder']
+        self.treeDCFN0 = INPUT['rism']['treeDCFN0']
+        self.treeTCFN0 = INPUT['rism']['treeTCFN0']
+        self.treeCoulombN0 = INPUT['rism']['treeCoulombN0']
+        self.treeDCFMAC = INPUT['rism']['treeDCFMAC']
+        self.treeTCFMAC = INPUT['rism']['treeTCFMAC']
+        self.treeCoulombMAC = INPUT['rism']['treeCoulombMAC']
+        self.asympKSpaceTolerance = INPUT['rism']['asympKSpaceTolerance']
+        self.ljTolerance = INPUT['rism']['ljTolerance']
 
     # -#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
 
@@ -336,17 +336,17 @@ class NmodeCalc(Calculation):
         from math import sqrt
         Calculation.__init__(self, prog, prmtop, incrd, None, output, inptraj)
 
-        kappa = sqrt(0.10806 * INPUT['nmode_istrng'])
-        if INPUT['nmode_igb']:
+        kappa = sqrt(0.10806 * INPUT['nmode']['nmode_istrng'])
+        if INPUT['nmode']['nmode_igb']:
             option_string = ('ntpr=10000, diel=C, kappa=%f, cut=1000, gb=1, ' +
-                             'dielc=%f, temp0=%f') % (kappa, INPUT['dielc'], INPUT['temperature'])
+                             'dielc=%f, temp0=%f') % (kappa, INPUT['nmode']['dielc'], INPUT['general']['temperature'])
         else:
             option_string = ('ntpr=10000, diel=R, kappa=%f, cut=1000, gb=0, ' +
-                             'dielc=%f, temp0=%f') % (kappa, INPUT['dielc'], INPUT['temperature'])
+                             'dielc=%f, temp0=%f') % (kappa, INPUT['nmode']['dielc'], INPUT['general']['temperature'])
 
         self.option_string = option_string
-        self.drms = INPUT['drms']
-        self.maxcyc = INPUT['maxcyc']
+        self.drms = INPUT['nmode']['drms']
+        self.maxcyc = INPUT['nmode']['maxcyc']
 
     # -#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
 
@@ -637,7 +637,7 @@ class InteractionEntropyCalc:
         """
         self.ggas = ggas
         self.INPUT = INPUT
-        self.isegment = iesegment or INPUT['ie_segment']
+        self.isegment = iesegment or INPUT['general']['ie_segment']
         self.data = []
 
         self._calculate()
@@ -645,7 +645,7 @@ class InteractionEntropyCalc:
     def _calculate(self):
         # boltzmann constant in kcal/(mol⋅K)
         k = 0.001985875
-        temperature = self.INPUT['temperature']
+        temperature = self.INPUT['general']['temperature']
 
         energy_int = np.array([], dtype=np.float)
         a_energy_int = np.array([], dtype=np.float)
@@ -674,10 +674,10 @@ class InteractionEntropyCalc:
         self.iedata = self.data[-self.ieframes:]
         self.frames = list(
             range(
-                self.INPUT['startframe'],
-                self.INPUT['startframe']
-                + numframes * self.INPUT['interval'],
-                self.INPUT['interval'],
+                self.INPUT['general']['startframe'],
+                self.INPUT['general']['startframe']
+                + numframes * self.INPUT['general']['interval'],
+                self.INPUT['general']['interval'],
             )
         )
 
@@ -708,7 +708,7 @@ class C2EntropyCalc:
     def _calculate(self):
         # gas constant in kcal/(mol⋅K)
         R = 0.001987
-        temperature = self.INPUT['temperature']
+        temperature = self.INPUT['general']['temperature']
         self.ie_std = self.ggas.std()
         self.c2data = (self.ie_std ** 2) / (2 * temperature * R)
 

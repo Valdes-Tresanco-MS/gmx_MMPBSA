@@ -99,9 +99,7 @@ def make_trajectories(INPUT, FILES, size, cpptraj, pre):
         frame_string = '%d-%d' % (last_frame, last_frame + frame_count[i] - 1)
         traj.Outtraj(pre + 'complex.%s.%d' % (trj_suffix, i),
                      frames=frame_string, filetype=INPUT['general']['netcdf'])
-        # FIXME: include pbsa.cuda. For APBS and PBDelphi we need to generate pqr instead
-        from icecream import ic
-        ic(INPUT['gbnsr6'])
+        # TODO: include pbsa.cuda. For APBS and PBDelphi we need to generate pqr instead
         if INPUT['gbnsr6']['gbnsr6run']:
             temp_dir = Path(f"{pre}inpcrd_{i}")
             temp_dir.mkdir()

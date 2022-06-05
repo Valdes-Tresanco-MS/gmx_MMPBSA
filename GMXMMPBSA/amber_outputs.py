@@ -1511,7 +1511,7 @@ class DecompBinding(dict):
         self.desc = desc  # Description
         self.INPUT = INPUT
         self.idecomp = INPUT['decomp']['idecomp']
-        self.verbose = INPUT['dec_verbose']
+        self.verbose = INPUT['decomp']['dec_verbose']
         # Set up the data for the DELTAs
         if self.verbose in [1, 3]:
             self.allowed_tokens = tuple(['TDC', 'SDC', 'BDC'])
