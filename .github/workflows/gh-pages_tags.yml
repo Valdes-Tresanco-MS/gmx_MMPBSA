@@ -1,0 +1,38 @@
+name: Documentation from version release
+on:
+  release:
+    types: [ published ]
+env:
+  PYTHON_VERSION: 3.x
+
+jobs:
+  documentation-tags:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release' && github.event.action == 'published'
+    steps:
+      - name: Set new version doc
+        uses: actions/checkout@v2
+        with:
+          # Number of commits to fetch. 0 indicates all history. For mkdocs-git-revision-date-localized-plugin
+          # Default: 1
+          fetch-depth: 0
+      - name: Set up Python runtime
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Install Python dependencies
+        run: |
+          pip install -r ./docs/requirements.txt
+      - name: Set release notes tag
+        run: |
+          export RELEASE_TAG_VERSION=${{ github.event.release.tag_name }}
+          echo "RELEASE_TAG_VERSION=${RELEASE_TAG_VERSION:v:6}" >> $GITHUB_ENV
+      - name: Setup git config
+        run: |
+          git config user.name test
+          git config user.email bot@bot.com
+      - name: Deploy documentation
+        #        env:
+        #          GOOGLE_ANALYTICS_KEY: ${{ secrets.GOOGLE_ANALYTICS_KEY }}
+        run: |
+          mike deploy --push --update-aliases ${RELEASE_TAG_VERSION}
