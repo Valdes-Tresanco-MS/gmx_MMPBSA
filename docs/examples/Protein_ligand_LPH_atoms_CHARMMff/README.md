@@ -8,7 +8,7 @@ title: Protein-ligand LPH (Charmm)
     optimized for amber atom types (_i.e._ bondi, mbondi, mbondi2, mbondi3) and CHARMM force field hasn't been tested 
     extensively. Please, check this [thread][1] for more information and proceed with caution.
 
-    **:material-new-box:{:.heart } in gmx_MMPBSA v1.5.0!!!**
+    **:material-new-box:{:.heart } in gmx_MMPBSA v1.5.x series!!!**
 
     In gmx_MMPBSA v1.5.0 we have added a new PB radii set named _charmm_radii_. **This radii set should be used only 
     with systems prepared with CHARMM force fields**. The atomic radii set for Poisson-Boltzmann calculations has been 
@@ -42,7 +42,7 @@ title: Protein-ligand LPH (Charmm)
     As the LPH particle is not considered during the calculations in gmx_MMPBSA, take the results with a grain of 
     salt, especially when working with systems where the halogen bond is determinant for the binding.
 
-    **:material-new-box:{:.heart } in gmx_MMPBSA v1.5.0!!!**
+    **:material-new-box:{:.heart } in gmx_MMPBSA v1.5.x series!!!**
 
     We have included standard radii for halogens in _charmm_radii_ set:
 

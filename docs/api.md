@@ -3,7 +3,7 @@ template: main.html
 title: Python API
 ---
 
-# Python API for gmx_MMPBSA v1.5.0 coming soon...
+# Python API for gmx_MMPBSA v1.5.x coming soon...
 
 # Python API for gmx_MMPBSA v1.4.3
 

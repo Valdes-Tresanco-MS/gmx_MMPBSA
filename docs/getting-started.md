@@ -11,9 +11,9 @@ title: Getting started
 
 [<img src="../assets/TOC.png" height="120%" width="258" align="right"/>]()
 
-## gmx_MMPBSA v1.5.2 is out 😀!
+## gmx_MMPBSA v1.5.5 is out 😀!
 
-Check [changelog](changelog.md##gmx_mmpbsa-v152-03232022) to see what's new in gmx_MMPBSA v1.5.2.
+Check [changelog](changelog.md##gmx_mmpbsa-v152-03232022) to see what's new in gmx_MMPBSA v1.5.5.
 
 ## [Help needed for gmx_MMPBSA! To the content creators out there...](#colaboration)
 
