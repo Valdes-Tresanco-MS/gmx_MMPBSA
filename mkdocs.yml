@@ -167,6 +167,7 @@ nav:
     - Running gmx_MMPBSA_ana: gmx_MMPBSA_ana_running.md
   - Examples:
     - Examples: examples/README.md
+    - gmx_MMPBSA_test: examples/gmx_MMPBSA_test.md
     - Systems:
       - Protein-protein: examples/Protein_protein/README.md
       - Protein-ligand: examples/Protein_ligand/ST/README.md
@@ -207,7 +208,7 @@ nav:
         - Protein-protein: examples/psf_dcd/protein_protein/README.md
         - Protein-ligand: examples/psf_dcd/protein_ligand/README.md
         - Multicomponent system: examples/psf_dcd/multicomponent_system/README.md
-    - gmx_MMPBSA_test: examples/gmx_MMPBSA_test.md
+
   - Help:
     - Help: Q&A/README.md
     - Installation: Q&A/installation.md
