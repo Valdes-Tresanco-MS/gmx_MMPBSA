@@ -189,19 +189,22 @@ errors are more frequent.
     
         === "Rolling/stable release"
             **INSTALLATION**
-            ```bash
-
-            amber.python -m pip install git+https://github.com/Valdes-Tresanco-MS/ParmEd.git@v3.4 # (1)
-            amber.python -m pip install gmx_MMPBSA                                                # (2)
+            <div class="termy">
+            ```console
+            // Install uodated ParmEd
+            $ amber.python -m pip install git+https://github.com/Valdes-Tresanco-MS/ParmEd.git@v3.4
+            // Install gmx_MMPBSA
+            $ amber.python -m pip install gmx_MMPBSA                                               
             ```
+            </div>
 
-            1. Install ParmEd
-            2. Install gmx_MMPBSA
-    
             **UPDATE**
-            ```bash
-            amber.python -m pip install gmx_MMPBSA -U
+            <div class="termy">
+            ```console
+            // Update gmx_MMPBSA
+            $ amber.python -m pip install gmx_MMPBSA -U
             ```
+            </div>
     
             !!! info 
                 Install gmx_MMPBSA from PyPI PyPI has the latest version of *gmx_MMPBSA* including stable and beta
@@ -209,18 +212,21 @@ errors are more frequent.
             
         === "development version" 
             **INSTALLATION**
+            <div class="termy">
             ```bash
-            amber.python -m pip install git+https://github.com/Valdes-Tresanco-MS/ParmEd.git@v3.4 # (1)
-            amber.python -m pip install git+https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA      # (2)
+            // Install updated ParmEd
+            $ amber.python -m pip install git+https://github.com/Valdes-Tresanco-MS/ParmEd.git@v3.4
+            // Install gmx_MMPBSA
+            $ amber.python -m pip install git+https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA     
             ```
-            
-            1. Install ParmEd
-            2. Install gmx_MMPBSA
+            </div>
 
             **UPDATE**
+            <div class="termy">
             ```bash
             amber.python -m pip install git+https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA -U
             ```
+            </div>
 
             !!! warning
                 Install/update gmx_MMPBSA from the master branch of GitHub repository. This version is only recommended 
@@ -244,11 +250,16 @@ errors are more frequent.
     === "Miniconda Installation"
     
         [Miniconda] installation
+        <div class="termy">
         ```bash
-        curl -O https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
-        chmod +x Miniconda3-latest-Linux-x86_64.sh
-        ./Miniconda3-latest-Linux-x86_64.sh
+        $ curl -O https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+        ---> 100%
+        $ chmod +x Miniconda3-latest-Linux-x86_64.sh
+        $ ./Miniconda3-latest-Linux-x86_64.sh
+        ---> 100%
+        Successful miniconda intallation
         ```
+        </div>
 
 ### Extra Dependencies
 gmx_MMPBSA uses some dependencies for other functions independent of calculations or in some cases they may be 
