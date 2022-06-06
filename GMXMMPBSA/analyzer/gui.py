@@ -779,7 +779,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
         else:   # calculate correlation
             self.statusbar.showMessage('Calculating correlation...')
             # Get any modification in selection systems table
-            cols = {1: ('System', 'Selection'), 2: ('System', 'Reference'), 4: ('System', 'Exp.ΔG')}
+            cols = {1: ('System', 'Selection'), 2: ('System', 'Reference'), 4: ('System', 'ExpΔG')}
             for c in range(self.corr_sys_sel_w.columnCount()):
                 col_values = []
                 for r in range(self.corr_sys_sel_w.rowCount()):
@@ -951,7 +951,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
         if not item.keys_path:
             return
         df = self.correlation['items_data'][item.keys_path][0]
-        data = df.loc[df['Selection'] == True][['Number', 'Type', 'Exp.ΔG', 'Average', 'SD', 'SEM']]
+        data = df.loc[df['Selection'] == True][['Number', 'Type', 'ExpΔG', 'Average', 'SD', 'SEM']]
         self.data_table_widget.setRowCount(len(data.index))
         for i, c in enumerate(data):
             for j, r in enumerate(data[c]):
@@ -1024,7 +1024,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
         self.correlation['data'] = {}
         for s, sys_id in enumerate(self.systems):
             dta = {('System', 'Number'): [], ('System', 'Type'): [], ('System', 'Reference'): [],
-                   ('System', 'Exp.ΔG'): [], ('System', 'Selection'): []}
+                   ('System', 'ExpΔG'): [], ('System', 'Selection'): []}
             for ct, cv in self.systems[sys_id].get('correlation').items():
                 dta[('System', 'Number')].append(sys_id)
                 dta[('System', 'Type')].append(ct[0].upper())
@@ -1032,7 +1032,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
                     dta[('System', 'Reference')].append(self.systems[sys_id].get('reference'))
                 else:
                     dta[('System', 'Reference')].append(False)
-                dta[('System', 'Exp.ΔG')].append(
+                dta[('System', 'ExpΔG')].append(
                     ki2energy(self.systems[sys_id]['exp_ki'][ct],
                               self.systems[sys_id]['namespace'].INPUT['temperature']))
                 dta[('System', 'Selection')].append(cv)
