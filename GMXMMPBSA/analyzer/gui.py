@@ -207,7 +207,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
             msgBox.setWindowTitle('Quit...')
             msgBox.setText("Are you sure to quit?")
             msgBox.setInformativeText("Some graphics settings were modified. Do you want to save your changes?")
-            msgBox.setDetailedText("The systems below have chances:\n - " +
+            msgBox.setDetailedText("The systems below has some changes:\n - " +
                                    '\n - '.join([self.systems[x]['name'] for x in changes]))
             savequitbtn = msgBox.addButton("Save and Quit", QMessageBox.ButtonRole.AcceptRole)
             abortbtn = msgBox.addButton(QMessageBox.StandardButton.Cancel)
@@ -362,7 +362,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
 
     def _set_as_default(self):
         self.systems[self.current_system_index]['chart_options'].write_system_config()
-        self.statusbar.showMessage(f"Setting this setting as default in "
+        self.statusbar.showMessage(f"Using this setting as default in "
                                    f"{self.systems[self.current_system_index]['chart_options'].filename.as_posix()}...")
         self.systems[self.current_system_index]['chart_options'].set_as_default()
         self.update_fn()
@@ -437,16 +437,16 @@ class GMX_MMPBSA_ANA(QMainWindow):
         self.set_as_default_action.setToolTip('Save the current setting as the global default settings.')
         self.default_action = charts_opt_menu.addAction(QIcon(default_config), 'Reset to default', self._reset2default)
         self.default_action.setToolTip('Restores the default settings set by the developers as the settings '
-                                       'for the selected systems.')
+                                       'for the selected systems')
         charts_opt_menu.addSeparator()
         self.set_user_config_action = charts_opt_menu.addAction(QIcon(save_user_config), 'Save User-config',
                                                               self._set_as_default)
         self.set_user_config_action.setToolTip('Force save the current setting for this system. Before gmx_MMPBSA_ana '
                                                'closes, if there are configuration changes, you can decide if you '
-                                               'want to save them.')
+                                               'want to save them')
 
         self.use_user_config_action = charts_opt_menu.addAction(QIcon(user_config), 'User-config', self._set_as_default)
-        self.use_user_config_action.setToolTip('Uses the specific settings for this system if it was saved.')
+        self.use_user_config_action.setToolTip('Use the specific settings for this system if it was saved')
         charts_opt_tb.setMenu(charts_opt_menu)
 
         self.optionWidget_c.addTab(self.chart_options_w, 'Charts')
@@ -779,7 +779,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
         else:   # calculate correlation
             self.statusbar.showMessage('Calculating correlation...')
             # Get any modification in selection systems table
-            cols = {1: ('System', 'Selection'), 2: ('System', 'Reference'), 4: ('System', 'ExpΔG')}
+            cols = {1: ('System', 'Selection'), 2: ('System', 'Reference'), 4: ('System', 'Exp.ΔG')}
             for c in range(self.corr_sys_sel_w.columnCount()):
                 col_values = []
                 for r in range(self.corr_sys_sel_w.rowCount()):
@@ -951,7 +951,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
         if not item.keys_path:
             return
         df = self.correlation['items_data'][item.keys_path][0]
-        data = df.loc[df['Selection'] == True][['Number', 'Type', 'ExpΔG', 'Average', 'SD', 'SEM']]
+        data = df.loc[df['Selection'] == True][['Number', 'Type', 'Exp.ΔG', 'Average', 'SD', 'SEM']]
         self.data_table_widget.setRowCount(len(data.index))
         for i, c in enumerate(data):
             for j, r in enumerate(data[c]):
@@ -1024,7 +1024,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
         self.correlation['data'] = {}
         for s, sys_id in enumerate(self.systems):
             dta = {('System', 'Number'): [], ('System', 'Type'): [], ('System', 'Reference'): [],
-                   ('System', 'ExpΔG'): [], ('System', 'Selection'): []}
+                   ('System', 'Exp.ΔG'): [], ('System', 'Selection'): []}
             for ct, cv in self.systems[sys_id].get('correlation').items():
                 dta[('System', 'Number')].append(sys_id)
                 dta[('System', 'Type')].append(ct[0].upper())
@@ -1032,7 +1032,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
                     dta[('System', 'Reference')].append(self.systems[sys_id].get('reference'))
                 else:
                     dta[('System', 'Reference')].append(False)
-                dta[('System', 'ExpΔG')].append(
+                dta[('System', 'Exp.ΔG')].append(
                     ki2energy(self.systems[sys_id]['exp_ki'][ct],
                               self.systems[sys_id]['namespace'].INPUT['temperature']))
                 dta[('System', 'Selection')].append(cv)

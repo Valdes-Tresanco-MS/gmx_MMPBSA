@@ -210,11 +210,10 @@ class InitDialog(QDialog):
         self.header_item = QTreeWidgetItem(['System', 'Show', 'Name', 'Exp.Ki (nM)', 'Corr.', 'Ref.', 'Chart Settings',
                                            'Path'])
         self.header_item.setToolTip(0, 'System number')
-        self.header_item.setToolTip(1, 'Selection to analyze.')
+        self.header_item.setToolTip(1, 'Selection to analyze')
         self.header_item.setToolTip(2, 'System name defined in the input file')
-        self.header_item.setToolTip(3, 'Experimental Ki in NanoMolar')
-        self.header_item.setToolTip(4, 'Systems selection for correlation. Each box corresponds to the part of the'
-                                       'system according to the correlation to be calculated.')
+        self.header_item.setToolTip(3, 'Experimental Ki in nanoMolar (nM)')
+        self.header_item.setToolTip(4, 'Select for correlation')
         self.header_item.setToolTip(5, 'Select system as reference when the ΔΔG correlation is selected')
         self.header_item.setToolTip(6, 'Setting selection for each system')
         self.header_item.setToolTip(7, 'Reference system path')
@@ -571,7 +570,6 @@ class worker(QThread):
         obj_function = None
         obj = None
         for k, v in struct_dict.items():
-            print(k, v)
             if v['object'] == 'class':
                 obj_class = k(**v['args']) if v['args'] else k()
             elif v['object'] == 'function':
