@@ -2,6 +2,11 @@ function loadNews(file) {
         fetch(file)
           .then(response => response.json())
           .then(data => {
+              if (data.length === 0) {
+                  const element = document.querySelector('[data-md-component="announce"]');
+                  element.style.display = 'none'
+                  return
+              }
               const new_container = document.getElementById("news-container")
               data.forEach((item) => {
                 let a = document.createElement('a');
@@ -25,13 +30,11 @@ function loadNews(file) {
               }
               let viewportWidth = window.innerWidth;
               root.style.setProperty("--marquee-traslation", width/viewportWidth * 100);
-              console.log(width/viewportWidth * 100)
               if (width > viewportWidth) {
                 root.style.setProperty("--marquee-animation-duration", 15 * width / viewportWidth);
               } else {
                 root.style.setProperty("--marquee-animation-duration", 20 );
               }
-              console.log('am', getComputedStyle(root).getPropertyValue("--marquee-animation-duration"))
           })
 
       }
