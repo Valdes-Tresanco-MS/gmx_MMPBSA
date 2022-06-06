@@ -17,23 +17,12 @@
 {% endblock %}
 {% block announce %}
   <span class="title">NEWS</span>
-  <div id="news-section">
-
+  <div class="marquee">
+    <ul class="marquee-content" id="news-container">
+    </ul>
   </div>
-  <script type="text/javascript">
-    function loadNews(file) {
-      fetch(file)
-        .then(response => response.json())
-        .then(data => {
-            let list = "<p class='moving-text'>"
-            data.forEach((item) => {
-                list += `<span class="bullet">&bull;</span>`
-                list += `<a href=${item.url}>${item.new}</a>`
-            })
-            list += "</p>";
-            document.getElementById("news-section").innerHTML = list;
-        })
-    }
-    loadNews("{{ 'news.json' | url }}")
-  </script>
+      <script src="{{ 'assets/js/news.js' | url }}"></script>
+      <script type="text/javascript">
+        loadNews("{{ 'news.json' | url }}")
+      </script>
 {% endblock %}
