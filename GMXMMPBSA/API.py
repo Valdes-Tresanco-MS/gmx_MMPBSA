@@ -579,7 +579,7 @@ class MMPBSA_API():
                             b_map[et][em].append(ent)
                             if ent == 'ie' and not self.app_namespace.FILES.stability:
                                 entdata = etv['ie']
-                            elif not self.app_namespace.FILES.stability:
+                            elif ent == 'c2' and not self.app_namespace.FILES.stability:
                                 entdata = etv['c2']
                             else:
                                 entdata = etv[mol]['TOTAL']
