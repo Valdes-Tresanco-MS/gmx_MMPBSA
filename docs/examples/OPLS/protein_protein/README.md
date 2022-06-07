@@ -11,7 +11,7 @@ title: Protein-protein (OPLS)
 # Protein-protein binding free energy calculations (Single Trajectory method) with OPLSff files
 
 !!! info
-    This example can be found in the [docs/examples/OPLS/protein_protein][6] directory in the repository folder. If you 
+    This example can be found in the [examples/OPLS/protein_protein][6] directory in the repository folder. If you 
     didn't 
     use gmx_MMPBSA_test before, use [downgit](https://downgit.github.io/#/home) to download the specific folder from 
     gmx_MMPBSA GitHub repository.

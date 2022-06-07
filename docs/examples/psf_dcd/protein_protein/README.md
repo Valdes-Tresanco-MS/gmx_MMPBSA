@@ -6,7 +6,7 @@ title: Protein-protein
 # Protein-protein binding free energy calculations with psf_dcd files
 
 !!! info
-    This example can be found in the [docs/examples/psf_dcd/protein_protein][6] directory in the repository folder. If 
+    This example can be found in the [examples/psf_dcd/protein_protein][6] directory in the repository folder. If 
     you didn't use gmx_MMPBSA_test before, use [downgit](https://downgit.github.io/#/home) to download the specific 
     folder from gmx_MMPBSA GitHub repository.
 

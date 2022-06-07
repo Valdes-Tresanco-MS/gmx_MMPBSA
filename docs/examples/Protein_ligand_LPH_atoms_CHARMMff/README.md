@@ -27,7 +27,7 @@ title: Protein-ligand LPH (Charmm)
 
 !!! info
 
-    This example can be found in the [docs/examples/Protein_ligand_LPH_atoms_CHARMMff][6] directory in the repository
+    This example can be found in the [examples/Protein_ligand_LPH_atoms_CHARMMff][6] directory in the repository
     folder
 
     LPH is a positively charged virtual particle attached to halogen atoms. This strategy aims to get a better 

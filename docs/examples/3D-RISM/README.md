@@ -6,7 +6,7 @@ title: 3D-RISM
 # Protein-protein binding free energy calculations with MM/3D-RISM
 
 !!! info
-    This example can be found in the [docs/examples/3D-RISM][5] directory in the repository folder. If you didn't 
+    This example can be found in the [examples/3D-RISM][5] directory in the repository folder. If you didn't 
     use gmx_MMPBSA_test before, use [downgit](https://downgit.github.io/#/home) to download the specific folder from 
     gmx_MMPBSA GitHub repository.
 

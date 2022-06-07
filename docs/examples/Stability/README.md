@@ -6,7 +6,7 @@ title: Stability
 # Stability calculations
 
 !!! info
-    This example can be found in the [docs/examples/Stability/][6] directory in the repository folder. If you didn't 
+    This example can be found in the [examples/Stability/][6] directory in the repository folder. If you didn't 
     use gmx_MMPBSA_test before, use [downgit](https://downgit.github.io/#/home) to download the specific folder from 
     gmx_MMPBSA GitHub repository.
 

@@ -26,7 +26,7 @@ title: Protein-ligand embedded in membrane (Charmm)
 # Protein-ligand embedded in membrane binding free energy calculations (Single Trajectory method) with CHARMMff files
 
 !!! info
-    This example can be found in the [docs/examples/Protein_membrane_CHARMMff][6] directory in the repository folder. If you didn't 
+    This example can be found in the [examples/Protein_membrane_CHARMMff][6] directory in the repository folder. If you didn't 
     use gmx_MMPBSA_test before, use [downgit](https://downgit.github.io/#/home) to download the specific folder from 
     gmx_MMPBSA GitHub repository.
 
