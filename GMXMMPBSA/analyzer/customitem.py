@@ -18,7 +18,7 @@ try:
     from PyQt6.QtWidgets import *
     from PyQt6.QtCore import *
     from PyQt6.QtGui import *
-except:
+except Exception:
     from PyQt5.QtWidgets import *
     from PyQt5.QtCore import *
     from PyQt5.QtGui import *
@@ -47,6 +47,7 @@ class TableActionBtn(QWidget):
         self.reg_chart_action.setText('Regression Chart')
         self.reg_chart_action.setCheckable(True)
         self.reg_chart_action.setContentsMargins(0, 0, 0, 0)
+
 
 class CustomCorrItem(QTableWidgetItem):
     def __init__(self, text=False, app=None, model=None, keys_path=None):
@@ -80,15 +81,15 @@ class CustomCorrItem(QTableWidgetItem):
         if state:
             self.setSelected(True)
             if not self.reg_sw or datachange or changes:
-                if len(plot_data.index) < 4:
+                if len(plot_data.index) < 4 or plot_data['Average'].count() < 4:
                     QMessageBox.critical(self.tableWidget(),
                                          'Unable to calculate correlation',
-                                         'More than three systems are needed to calculate the correlation.',
+                                         'More than three valid systems are needed to calculate the correlation.',
                                          QMessageBox.StandardButton.Ok, QMessageBox.StandardButton.Ok)
                     self.c_widget.reg_chart_action.setChecked(False)
                     return
                 QGuiApplication.setOverrideCursor(QCursor(Qt.CursorShape.WaitCursor))
-                self.reg_sw = RegChart(plot_data, button=self.c_widget.reg_chart_action, options=options,
+                self.reg_sw = RegChart(plot_data.dropna(), button=self.c_widget.reg_chart_action, options=options,
                                        item_parent=self)
                 self.app.correlation['items_data'][self.keys_path][1] = False
                 self.app.mdi.addSubWindow(self.reg_sw)
