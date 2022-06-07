@@ -251,10 +251,12 @@ class CustomItem(QTreeWidgetItem):
     def _show_heatmap_table(self, state):
         from GMXMMPBSA.analyzer.plots import Tables
         self.app.treeWidget.clearSelection()
+        options = {'table_name': self.subtitle}
+        heatmap_plot_data = self.app.systems[self.system_index]['items_data'][self.keys_path]['heatmap_plot_data'][0]
         if state:
             self.setSelected(True)
             if not self.heatmap_table_subw:
-                self.heatmap_table_subw = Tables(self.heatmap_plot_data, self.heatmap_table_action)
+                self.heatmap_table_subw = Tables(heatmap_plot_data.T, self.heatmap_table_action, options)
                 self.app.mdi.addSubWindow(self.heatmap_table_subw)
             self.heatmap_table_subw.show()
         elif self.heatmap_table_subw:
@@ -481,13 +483,13 @@ class CustomItem(QTreeWidgetItem):
                 os.path.join(path, 'pymol')
                 for path in os.environ["PATH"].split(os.pathsep)
                 if os.path.exists(os.path.join(path, 'pymol'))
-                and os.access(os.path.join(path, 'pymol'), os.X_OK)
+                   and os.access(os.path.join(path, 'pymol'), os.X_OK)
             ]:
                 pymol = pymol_path[0]
 
             else:
                 QMessageBox.critical(self.app, 'PyMOL not found!', 'PyMOL not found!. Make sure PyMOL is in the PATH.',
-                                     QMessageBox.StandardButton.Ok, QMessageBox.StandardButton.Ok )
+                                     QMessageBox.StandardButton.Ok, QMessageBox.StandardButton.Ok)
                 self.vis_action.setChecked(False)
                 return
             if not self.pymol_process:
@@ -572,13 +574,5 @@ class CustomItem(QTreeWidgetItem):
             self._define_result_table_btn()
         elif len(self.buttons) > 1:
             self.tb.addWidget(self.mark_all)
-
-
-        # if len(self.buttons) > 1 and -1 not in self.buttons:
-        #     self.tb.addWidget(self.mark_all)
-        # if -1 in self.buttons:
-        #     self._define_option_button()
-        #     self.tb.addWidget(self.options_button)
-
 
         return self.tb
