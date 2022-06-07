@@ -96,7 +96,7 @@ def run_test(parser):
 
         logging.info('Cloning gmx_MMPBSA repository...Done.')
 
-    examples = gmx_mmpbsa_test_folder.joinpath('docs', 'examples')
+    examples = gmx_mmpbsa_test_folder.joinpath('examples')
     test_sys = {
         3: [examples.joinpath('Protein_ligand', 'ST'), 'Protein-Ligand (Single trajectory approximation)'],
         4: [examples.joinpath('Protein_protein'), 'Protein-Protein'],
