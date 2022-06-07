@@ -81,10 +81,12 @@ class CustomCorrItem(QTableWidgetItem):
         if state:
             self.setSelected(True)
             if not self.reg_sw or datachange or changes:
-                if len(plot_data.index) < 4 or plot_data['Average'].count() < 4:
+                if len(plot_data.index) < 4 or plot_data['Average'].count() < 4 or plot_data['ExpΔG'].count() < 4:
                     QMessageBox.critical(self.tableWidget(),
                                          'Unable to calculate correlation',
-                                         'More than three valid systems are needed to calculate the correlation.',
+                                         'More than three valid systems are needed to calculate the correlation.'
+                                         'Please check that the selected systems contain both experimental and '
+                                         'calculated valid ΔG.',
                                          QMessageBox.StandardButton.Ok, QMessageBox.StandardButton.Ok)
                     self.c_widget.reg_chart_action.setChecked(False)
                     return
