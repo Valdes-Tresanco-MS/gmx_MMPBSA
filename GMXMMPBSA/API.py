@@ -157,13 +157,13 @@ def _setup_data(data: pd.DataFrame, level=0, iec2=False, name=None, index=None,
         # index
         tempdf = data.loc[:, data.columns.get_level_values(2) == 'tot']
         line_plot_data = tempdf[:-3].groupby(axis=1, level=0, sort=False).sum().reindex(
-            columns=index[0]).sum(axis=1).rename(name).to_frame()
+            columns=index).sum(axis=1).rename(name).to_frame()
         bar_plot_data = tempdf[:-3].groupby(axis=1, level=0, sort=False).sum().agg(
             [lambda x: x.mean(), lambda x: x.std(ddof=0), lambda x: x.std(ddof=0)/ math.sqrt(len(x))]
-            ).reindex(columns=index[0])
+            ).reindex(columns=index)
         bar_plot_data.index = ['Average', 'SD', 'SEM']
         heatmap_plot_data = tempdf.loc[["Average"]].droplevel(level=2, axis=1).stack().droplevel(level=0).reindex(
-            columns=index[0], index=index[1])
+            columns=index, index=index)
         if memory:
             cont['line_plot_data'] = [line_plot_data, {}, change]
             cont['bar_plot_data'] = [bar_plot_data, dict(groups=_itemdata_properties(bar_plot_data)), change]
@@ -781,16 +781,11 @@ class MMPBSA_API():
                         for level2, value2 in value1.items():
                             for level3, value3 in value2.items():
                                 item_lvl = 2 if self.app_namespace.INPUT['idecomp'] in [1, 2] else 3
-                                index = [list(value3.keys())]
+                                index = list(value3.keys())
                                 for level4, value4 in value3.items():
                                     if item_lvl == 3 and len(index) == 1:
                                         index.append(list(value4.keys()))
                                     item_lvl2 = 1 if self.app_namespace.INPUT['idecomp'] in [1, 2] else 2
-                                    # TASKs.append(
-                                    #     [_setup_data, dict(data=decomp[level][level1][level2][level3][level4],
-                                    #                        level=item_lvl2, name=level4, index=list(value4.keys()),
-                                    #                        memory=memory_args),
-                                    #      (level, level1, level2, level3, level4), 'decomposition'])
                                     if self.app_namespace.INPUT['idecomp'] in [1, 2]:
                                         TASKs.append(
                                             [_setup_data, dict(data=decomp[level][level1][level2][level3][level4],
@@ -814,7 +809,7 @@ class MMPBSA_API():
                                                       (level, level1, level2, level3, level4, level5), 'decomposition']
                                                      for level5, value5 in value4.items())
                                 TASKs.append([_setup_data,
-                                              dict(data=decomp[level][level1][(level2, level3)], level=item_lvl,
+                                              dict(data=decomp[level][level1][level2][level3], level=item_lvl,
                                                    name=level3, index=index, memory=memory_args),
                                           (level, level1, level2, level3), 'decomposition'])
 
