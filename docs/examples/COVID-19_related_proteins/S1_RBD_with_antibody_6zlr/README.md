@@ -11,7 +11,7 @@ title: SARS-CoV-2 Receptor Binding Domain (RBD):CR3022 antibody complex
 # SARS-CoV-2 Receptor Binding Domain (RBD):CR3022 antibody complex binding free energy calculations (Single Trajectory method) with CHARMMff files
 
 !!! info
-    This example can be found in the [docs/examples/COVID-19_related_proteins/S1_RBD_with_antibody_6zlr][6] directory 
+    This example can be found in the [examples/COVID-19_related_proteins/S1_RBD_with_antibody_6zlr][6] directory 
     in the repository folder. If you didn't 
     use gmx_MMPBSA_test before, use [downgit](https://downgit.github.io/#/home) to download the specific folder from 
     gmx_MMPBSA Github repository.

@@ -1387,3 +1387,4 @@ class GMX_MMPBSA_ANA(QMainWindow):
                                    # part=part
                                    )
                 self.treeWidget.setItemWidget(titem, 1, titem.setup_buttons())
+                

@@ -5,6 +5,7 @@ title: Getting started
 
 [![pypi](https://img.shields.io/pypi/v/gmx-MMPBSA)](https://pypi.org/project/gmx-MMPBSA/)
 [![support](https://img.shields.io/badge/support-JetBrains-brightgreen)](https://www.jetbrains.com/?from=gmx_MMPBSA)
+[![support](https://img.shields.io/badge/support-Sourcery-orange)](https://sourcery.ai/invite/gndRrjlo)
 [![python](https://img.shields.io/badge/python-v3.x-blue)]()
 [![Downloads](https://pepy.tech/badge/gmx-mmpbsa)](https://pepy.tech/project/gmx-mmpbsa)
 [![DOI](https://img.shields.io/badge/DOI-10.1021%2Facs.jctc.1c00645-blue)](https://pubs.acs.org/doi/10.1021/acs.jctc.1c00645)
@@ -168,13 +169,20 @@ gmx_MMPBSA... 😃
 
 Feel free to contact us through our google group (https://groups.google.com/g/gmx_mmpbsa) for more details...
 
-[<img src="../assets/images/jetbrains-variant-4.png" height="100" width="178" align="right" />][11]
-
 ## **Acknowledgments**
 - First of all, to Amber and GROMACS developers. Without their incredible and hard work, gmx_MMPBSA would not exist.
 - Jason Swails (Amber developer and [ParmEd](https://github.com/ParmEd/ParmEd) principal developer) for his continuous 
   support on ParmEd issues.
+
+[<img src="../assets/images/jetbrains-variant-4.png" height="100" width="178" align="right" />][11]
+
 - To the Open Source license of the [JetBrains](https://www.jetbrains.com) programs.
+
+[<img src="../assets/images/sourcery.png" height="40" width="108" align="right" />][12]
+
+- To the [Sourcery](https://sourcery.ai/invite/gndRrjlo) team for supporting us 
+  with the [Pro version](https://sourcery.ai/pro/).
 - To all researchers that help improving gmx_MMPBSA with comments, feedback, and bug reports.
 
   [11]: https://www.jetbrains.com/?from=gmx_MMPBSA
+  [12]: https://sourcery.ai/?from=gmx_MMPBSA

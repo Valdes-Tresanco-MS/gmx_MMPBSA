@@ -1,5 +1,6 @@
 [![pypi](https://img.shields.io/pypi/v/gmx-MMPBSA)](https://pypi.org/project/gmx-MMPBSA/)
 [![support](https://img.shields.io/badge/support-JetBrains-brightgreen)](https://www.jetbrains.com/?from=gmx_MMPBSA)
+[![support](https://img.shields.io/badge/support-Sourcery-orange)](https://sourcery.ai/invite/gndRrjlo)
 [![python](https://img.shields.io/badge/python-v3.x-blue)]()
 [![Downloads](https://pepy.tech/badge/gmx-mmpbsa)](https://pepy.tech/project/gmx-mmpbsa)
 [![DOI](https://img.shields.io/badge/DOI-10.1021%2Facs.jctc.1c00645-blue)](https://pubs.acs.org/doi/10.1021/acs.jctc.1c00645)
@@ -8,7 +9,7 @@
 gmx_MMPBSA is a new tool based on AMBER's MMPBSA.py aiming to perform end-state free energy calculations with GROMACS 
 files. It works with all GROMACS versions along with AmberTools20 or 21.
 
-**Please see the documentation [here](https://valdes-tresanco-ms.github.io/gmx_MMPBSA/getting-started/)**
+**Please see the documentation [here](https://valdes-tresanco-ms.github.io/gmx_MMPBSA/dev/getting-started/)**
 
 ## Cite us
 
@@ -26,7 +27,7 @@ Bill R. Miller, T. Dwight McGee, Jason M. Swails, Nadine Homeyer, Holger Gohlke,
 An Efficient Program for End-State Free Energy Calculations**. _Journal of Chemical Theory and Computation_, 2012 8 
 (9), 3314-3321. https://pubs.acs.org/doi/10.1021/ct300418h
 
-Please, visit [Cite gmx_MMPBSA](https://valdes-tresanco-ms.github.io/gmx_MMPBSA/cite_us/) page for more information on how to cite gmx_MMPBSA and the programs/methods implemented in it.
+Please, visit [Cite gmx_MMPBSA](https://valdes-tresanco-ms.github.io/gmx_MMPBSA/dev/cite_us/) page for more information on how to cite gmx_MMPBSA and the programs/methods implemented in it.
 
 ---------------------------------------
 
@@ -42,6 +43,7 @@ Acknowledgements:
 - First of all, to Amber and GROMACS developers. Without their incredible and hard work, gmx_MMPBSA would not exist.
 - Jason Swails (Amber developer and [ParmEd](https://github.com/ParmEd/ParmEd) principal developer) for his continuous support on ParmEd issues.
 - To the Open Source license of the [JetBrains](https://www.jetbrains.com) programs.
+- To the [Sourcery](https://sourcery.ai/invite/gndRrjlo) team for supporting us with the [Pro version](https://sourcery.ai/pro/).
 - To all researchers that help improving gmx_MMPBSA with comments, feedback, and bug reports.
 
 ---------------------------------------
