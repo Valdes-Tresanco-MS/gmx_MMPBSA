@@ -100,6 +100,7 @@ def bar_label(ax, container, labels=None, *, fmt="%g", label_type="edge", paddin
     y_inverted = a > b
     c, d = ax.xaxis.get_view_interval()
     x_inverted = c > d
+
     def sign(x):
         return 1 if x >= 0 else -1
 
@@ -183,11 +184,12 @@ def bar_label(ax, container, labels=None, *, fmt="%g", label_type="edge", paddin
             lbl = ''
 
         annotation = ax.annotate(fmt % value if lbl is None else lbl,
-                                   xy, xytext, textcoords="offset points",
-                                   ha=ha, va=va, **kwargs)
+                                 xy, xytext, textcoords="offset points",
+                                 ha=ha, va=va, **kwargs)
         annotations.append(annotation)
 
     return annotations
+
 
 def com2str(com_pdb_str):
     import parmed
@@ -339,7 +341,7 @@ def energy2pdb_pml(residue_list, options, pml_path: Path, pdb_path: Path):
 
 def ki2energy(ki, temp):
     # deltaG (inhibition) = R * T * ln ( Ki )
-    return np.nan if not ki else R * temp * math.log(ki * 1e-9)
+    return R * temp * math.log(ki * 1e-9) if ki else np.nan
 
 
 def make_corr_DF(corr_data: dict) -> pd.DataFrame:
@@ -376,17 +378,14 @@ def get_files(parser_args):
         if cf.is_dir():
             recursive_files = []
             if parser_args.recursive:
-                files = list(cf.absolute().glob('*/*_info'))
-                if files:
+                if files := list(cf.absolute().glob('*/*_info')):
                     recursive_files.extend(files)
                 else:
                     recursive_files.extend(cf.absolute().glob('*/RESULTS_gmx_MMPBSA.h5'))
+            elif files := list(cf.absolute().glob('*_info')):
+                recursive_files.extend(files)
             else:
-                files = list(cf.absolute().glob('*_info'))
-                if files:
-                    recursive_files.extend(files)
-                else:
-                    recursive_files.extend(cf.absolute().glob('RESULTS_gmx_MMPBSA.h5'))
+                recursive_files.extend(cf.absolute().glob('RESULTS_gmx_MMPBSA.h5'))
             for rf in recursive_files:
                 if rf in info_files:
                     logging.warning(f'{rf} is duplicated and will be ignored')

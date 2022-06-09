@@ -353,7 +353,8 @@ class ChartSettings(dict):
                             'width': {'type': 'float', 'enabled': True, 'expanded': True, 'name': 'width',
                                       'value': 0.8, 'step': 0.1, 'default': 0.8, 'action_type': R},
                             'window': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'window',
-                                       'value': 50, 'step': 1, 'default': 50, 'action_type': R},
+                                       'value': 50, 'step': 1, 'limits': (2, 100000), 'accelerated': True,
+                                       'default': 50, 'action_type': R},
                             'first_obs': {'type': 'list', 'enabled': True, 'expanded': True, 'name': 'first_obs',
                                           'value': 'window', 'values': ['window', 'start'], 'default': 'window',
                                           'action_type': R, 'tip': 'Defines the start value of the moving average. '
@@ -383,9 +384,9 @@ class ChartSettings(dict):
                         'default': None,
                         'children': {
                             'num-xticks': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'num-xticks',
-                                           'value': 10, 'default': 10, 'action_type': D},
+                                           'value': 10, 'default': 10, 'action_type': R},
                             'num-yticks': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'num-yticks',
-                                           'value': 10, 'default': 10, 'action_type': D},
+                                           'value': 10, 'default': 10, 'action_type': R},
                             'x-rotation': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'x-rotation',
                                            'value': 0, 'step': 1, 'limits': (-90, 90), 'accelerated': True,
                                            'default': 0, 'action_type': D},
@@ -437,34 +438,30 @@ class ChartSettings(dict):
                                     'non-reliable': {'type': 'color', 'enabled': True, 'expanded': True,
                                                      'name': 'non-reliable', 'value': [255, 0, 0, 255],
                                                      'default': [255, 0, 0, 255], 'action_type': R,
-                                                     'tip': 'Color if sigma > 3.6kcal/mol'}}},
-                            'bar-plot': {
-                                'type': 'group', 'enabled': True, 'expanded': True, 'name': 'bar-plot', 'value': None,
-                                'default': None,
-                                'children': {
-                                    'bar-label-fontsize': {'type': 'int', 'enabled': True, 'expanded': True,
-                                                           'name': 'bar-label-fontsize', 'value': 8, 'default': 8,
-                                                           'action_type': D},
-                                    'bar-label-padding': {'type': 'int', 'enabled': True, 'expanded': True,
-                                                          'name': 'bar-label-padding', 'value': 4, 'default': 4,
-                                                          'action_type': R},
-                                    'axes-fontsize': {'type': 'int', 'enabled': True, 'expanded': True,
-                                                      'name': 'axes-fontsize', 'value': 8, 'default': 8,
-                                                      'action_type': D},
-                                    'width': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'width',
-                                              'value': 15, 'siPrefix': True, 'suffix': '%', 'default': 15,
-                                              'action_type': R},
-                                    'height': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'height',
-                                               'value': 50, 'siPrefix': True, 'suffix': '%', 'default': 50,
-                                               'action_type': R},
-                                }}}},
+                                                     'tip': 'Color if sigma > 3.6kcal/mol'}}}}},
                     'error-line': {'type': 'group', 'enabled': True, 'expanded': True, 'name': 'error-line',
                                    'value': None, 'default': None,
                                    'children': {
                                        'width': {'type': 'float', 'enabled': True, 'expanded': True, 'name': 'width',
-                                                 'value': 0.7,
-                                                 'step': 0.1, 'limits': (0.1, 1.5), 'accelerated': True, 'default': 0.7,
-                                                 'action_type': R}}},
+                                                 'value': 0.7, 'step': 0.1, 'limits': (0.1, 1.5),
+                                                 'accelerated': True, 'default': 0.7, 'action_type': R},
+                                       'color': {'type': 'color', 'enabled': True, 'expanded': True,
+                                                 'name': 'color', 'value': [0, 0, 0, 255],
+                                                 'default': [0, 0, 0, 255], 'action_type': R},
+                                       'cap-size': {'type': 'int', 'enabled': True, 'expanded': True,
+                                                    'name': 'cap-size', 'value': 0, 'step': 1, 'limits': (0, 50),
+                                                    'accelerated': True, 'default': 0, 'action_type': R},
+                                       'representation': {'type': 'list', 'enabled': True, 'expanded': True,
+                                                          'name': 'representation', 'value': 'SD',
+                                                          'values': ['SD', 'SEM'], 'default': 'SD', 'action_type': R,
+                                                          'tip': "The metric representing the error line. SD, the "
+                                                                 "Standard Deviation, describes the data distribution "
+                                                                 "around the mean, while SEM, the Standard Error of "
+                                                                 "the Mean, describes how representative the mean is "
+                                                                 "of the population."},
+
+
+                                   }},
                     'bar-label': {
                         'type': 'group', 'enabled': True, 'expanded': True, 'name': 'bar-label', 'value': None,
                         'default': None,
@@ -578,7 +575,7 @@ class ChartSettings(dict):
                                                                        ], 'default': 'seismic', 'action_type': R,
                                         'tip': tooltip1},
                             'num-xticks': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'num-xticks',
-                                           'value': 10, 'default': 10, 'action_type': D},
+                                           'value': 10, 'default': 10, 'action_type': R},
                             'x-rotation': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'x-rotation',
                                            'value': 0, 'step': 1, 'limits': (-90, 90), 'accelerated': True,
                                            'default': 0, 'action_type': D}}},
@@ -774,6 +771,189 @@ class ChartSettings(dict):
     def set_as_default(self):
         value2deafult(self)
 
+
+class CorrChartSettings(dict):
+    D = 1  # Drawable
+    U = 2  # Updatable
+    R = 3  # re-plot
+    default = {
+        'type': 'group', 'enabled': True, 'expanded': True, 'name': 'parameters', 'value': None, 'default': None,
+        'children': {
+            'General': {
+                'type': 'group', 'enabled': True, 'expanded': True, 'name': 'General', 'value': None, 'default':
+                    None,
+                'children': {
+                    'theme': {
+                        'type': 'list', 'enabled': True, 'expanded': True, 'name': 'theme', 'value': 'darkgrid',
+                        'values': ['darkgrid', '---0', 'whitegrid', 'dark', 'white', 'ticks'], 'default': 'darkgrid',
+                        'action_type': R, 'tip': 'changes visual theme for all plots'},
+                    'toolbar': {'type': 'bool', 'enabled': True, 'expanded': True, 'name': 'toolbar', 'value': False,
+                                'default': False, 'action_type': U, 'tip': 'shows toolbar in all graphs'},
+                    'figure-format': {
+                        'type': 'group', 'enabled': True, 'expanded': True, 'name': 'figure-format', 'value': None,
+                        'default': None,
+                        'children': {
+                            'dpi-plot': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'dpi-plot',
+                                         'value': 100, 'step': 10, 'accelerated': True, 'limits': (50, 300),
+                                         'default': 100, 'action_type': R, 'tip': 'set dpi for all plots'},
+                            'dpi-save': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'dpi-save',
+                                         'value': 300, 'step': 10, 'accelerated': True, 'limits': (50, 1200),
+                                         'default': 300, 'action_type': U, 'tip': 'dpi used for saved figures'},
+                            'save-format': {
+                                'type': 'list', 'enabled': True, 'expanded': True, 'name': 'save-format',
+                                'value': 'svg', 'values': ['svg', 'png', 'tiff', 'pdf', 'eps', 'jpg', 'jpeg', 'pgf',
+                                                           'ps', 'raw', 'rgba', 'svgz', 'tif'],
+                                'default': 'svg', 'action_type': U},
+                        }}}},
+            'Regression Plot': {
+                'type': 'group', 'enabled': True, 'expanded': False, 'name': 'Regression Plot', 'value': None,
+                'default': None,
+                'children': {
+                    'line-width': {'type': 'float', 'enabled': True, 'expanded': True, 'name': 'line-width',
+                                   'value': 1.0, 'step': 0.1, 'limits': (0.1, 1.5), 'accelerated': True,
+                                   'default': 1.0, 'action_type': R},
+                    'line-color': {'type': 'color', 'enabled': True, 'expanded': True, 'name': 'line-color',
+                                   'value': [0, 0, 0, 255], 'default': [0, 0, 0, 255], 'action_type': R},
+                    'Conf. Interval': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'Conf. Interval',
+                                       'value': 95, 'step': 1, 'limits': (0, 100), 'accelerated': True,
+                                       'default': 95, 'action_type': R},
+                    'pearson': {'type': 'bool', 'enabled': True, 'expanded': True, 'name': 'pearson', 'value': True,
+                                'default': True, 'action_type': R},
+                    'spearman': {'type': 'bool', 'enabled': True, 'expanded': True, 'name': 'spearman', 'value': True,
+                                 'default': True, 'action_type': R},
+                    'equation': {'type': 'bool', 'enabled': True, 'expanded': True, 'name': 'equation', 'value': True,
+                                 'default': True, 'action_type': R},
+                    'Scatter': {
+                        'type': 'group', 'enabled': True, 'expanded': True, 'name': 'Scatter', 'value': None,
+                        'default': None,
+                        'children': {
+                            'color': {'type': 'color', 'enabled': True, 'expanded': True, 'name': 'color',
+                                      'value': [44, 105, 176, 255], 'default': [44, 105, 176, 255], 'action_type': R},
+                            'alpha': {'type': 'float', 'enabled': True, 'expanded': True, 'name': 'alpha',
+                                      'value': 0.15, 'step': 0.01, 'default': 0.15, 'limits': (0, 1), 'action_type': R},
+                            'marker-size': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'marker-size',
+                                            'value': 10, 'step': 1, 'default': 10, 'limits': (2, 100),
+                                            'accelerated': True, 'action_type': R},
+                            'error-line': {'type': 'group', 'enabled': True, 'expanded': True, 'name': 'error-line',
+                                           'value': None, 'default': None,
+                                           'children': {
+                                               'show': {'type': 'bool', 'enabled': True, 'expanded': True,
+                                                        'name': 'show', 'value': False, 'default': False,
+                                                        'action_type': R},
+                                               'width': {'type': 'float', 'enabled': True, 'expanded': True,
+                                                         'name': 'width',
+                                                         'value': 0.7, 'step': 0.1, 'limits': (0.1, 1.5),
+                                                         'accelerated': True, 'default': 0.7, 'action_type': R},
+                                               'color': {'type': 'color', 'enabled': True, 'expanded': True,
+                                                         'name': 'color', 'value': [0, 0, 0, 255],
+                                                         'default': [0, 0, 0, 255], 'action_type': R},
+                                               'cap-size': {'type': 'int', 'enabled': True, 'expanded': True,
+                                                            'name': 'cap-size', 'value': 0, 'step': 1,
+                                                            'limits': (0, 50),
+                                                            'accelerated': True, 'default': 0, 'action_type': R},
+                                               'representation': {'type': 'list', 'enabled': True, 'expanded': True,
+                                                                  'name': 'representation', 'value': 'SD',
+                                                                  'values': ['SD', 'SEM'], 'default': 'SD',
+                                                                  'action_type': R,
+                                                                  'tip': "The metric representing the error line. SD, the "
+                                                                         "Standard Deviation, describes the data distribution "
+                                                                         "around the mean, while SEM, the Standard Error of "
+                                                                         "the Mean, describes how representative the mean is "
+                                                                         "of the population."}}}}},
+                    'Distribution': {
+                        'type': 'group', 'enabled': True, 'expanded': True, 'name': 'Distribution', 'value': None,
+                        'default': None,
+                        'children': {
+                            'show': {'type': 'bool', 'enabled': True, 'expanded': True, 'name': 'show', 'value': True,
+                                     'default': True, 'action_type': R},
+                            'type': {'type': 'list', 'enabled': True, 'expanded': True, 'name': 'type',
+                                      'value': 'hist', 'values': ['hist', 'kde', 'violin', 'box'],
+                                      'default': 'hist', 'action_type': R},
+                            'Histogram': {
+                                'type': 'group', 'enabled': True, 'expanded': True, 'name': 'Histogram',
+                                'value': None, 'default': None,
+                                'children': {
+                                    'fill-bars': {'type': 'bool', 'enabled': True, 'expanded': True,
+                                                  'name': 'fill-bars', 'value': False, 'default': False,
+                                                  'action_type': R},
+                                    'kde': {'type': 'bool', 'enabled': True, 'expanded': True, 'name': 'kde',
+                                            'value': True, 'default': True, 'action_type': R},
+                                    'element': {'type': 'list', 'enabled': True, 'expanded': True,
+                                                'name': 'element', 'value': 'bars', 'values': ['step', 'bars', 'poly'],
+                                                'default': 'bars', 'action_type': R}}}}},
+                    'fontsize': {
+                        'type': 'group', 'enabled': True, 'expanded': True, 'name': 'fontsize', 'value': None,
+                        'default': None,
+                        'children': {
+                            'x-ticks': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'x-ticks',
+                                        'value': 10, 'default': 10, 'action_type': D},
+                            'y-ticks': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'y-ticks',
+                                        'value': 10, 'default': 10, 'action_type': D},
+                            'x-label': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'x-label',
+                                        'value': 12, 'default': 12, 'action_type': D},
+                            'y-label': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'y-label',
+                                        'value': 12, 'default': 12, 'action_type': D},
+                            'title': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'title',
+                                      'value': 14, 'default': 14, 'action_type': D},
+                            'suptitle': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'suptitle',
+                                         'value': 12, 'default': 12, 'action_type': D},
+                            'legend': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'legend',
+                                       'value': 9, 'default': 9, 'action_type': D}}},
+                    'axes': {
+                        'type': 'group', 'enabled': True, 'expanded': True, 'name': 'axes', 'value': None,
+                        'default': None,
+                        'children': {
+                            'num-xticks': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'num-xticks',
+                                           'value': 10, 'default': 10, 'action_type': R},
+                            'num-yticks': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'num-yticks',
+                                           'value': 10, 'default': 10, 'action_type': R}}},
+                    'figure': {
+                        'type': 'group', 'enabled': True, 'expanded': True, 'name': 'figure', 'value': None,
+                        'default': None,
+                        'children': {
+                            'width': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'width', 'value': 6,
+                                      'default': 6, 'action_type': R},
+                            'height': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'height',
+                                       'value': 6, 'default': 6, 'action_type': R}}}}
+            },
+        }}
+
+    def __init__(self):
+        super(CorrChartSettings, self).__init__()
+
+        self.update(self.default)
+
+        self.changes = 0
+
+    def return_default(self):
+        self.update(self.default)
+
+    def is_changed(self, osett) -> bool:
+        flatten = flatten_dict(self)
+        f_osett = flatten_dict(osett)
+        return flatten != f_osett
+
+    def get_changes(self, osett) -> None:
+
+        flatten = flatten_dict(self)
+        f_osett = flatten_dict(osett)
+        if flatten == f_osett:
+            return
+        for k, v in flatten.items():
+            if k[-1] == 'value' and v != f_osett[k]:
+                at = tuple(list(k[:-1]) + ['action_type'])
+                self.changes = flatten[at]
+        self.update(osett)
+
+    def get_settings(self):
+        flatten = flatten_dict(self)
+
+        items = [
+            (tuple(ik for ik in k if ik not in ['children', 'value']), v)
+            for k, v in flatten.items()
+            if 'action_type' not in k
+        ]
+        return dict(items)
 
 
 class Palette(LinearSegmentedColormap):

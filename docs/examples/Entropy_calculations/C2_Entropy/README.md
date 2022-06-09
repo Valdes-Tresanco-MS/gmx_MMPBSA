@@ -6,7 +6,7 @@ title: C2 Entropy
 # C2 Entropy calculations
 
 !!! info
-    **:material-new-box:{:.heart } in gmx_MMPBSA v1.5.0!!!**
+    **:material-new-box:{:.heart } in gmx_MMPBSA v1.5.x series!!!**
 
     This example can be found in the [examples/Entropy_calculations/C2_Entropy][6] directory in the 
     repository folder. If you didn't use gmx_MMPBSA_test before, use [downgit](https://downgit.github.io/#/home) to 

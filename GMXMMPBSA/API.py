@@ -22,12 +22,16 @@ the full power of Python's extensions, if they want (e.g., numpy, scipy, etc.)
 #  or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License    #
 #  for more details.                                                           #
 # ##############################################################################
+import logging
+import math
+import shutil
+from multiprocessing.pool import ThreadPool
 from copy import copy, deepcopy
 from typing import Union
 
 from GMXMMPBSA.calculation import InteractionEntropyCalc, C2EntropyCalc
 
-from GMXMMPBSA import infofile, main
+from GMXMMPBSA import infofile, main, utils
 from GMXMMPBSA.exceptions import NoFileExists
 from GMXMMPBSA.fake_mpi import MPI
 from GMXMMPBSA.amber_outputs import (H5Output, BindingStatistics, IEout, C2out, DeltaBindingStatistics,
@@ -35,28 +39,192 @@ from GMXMMPBSA.amber_outputs import (H5Output, BindingStatistics, IEout, C2out, 
 import pandas as pd
 from pathlib import Path
 import os
-import numpy as np
-import h5py
 from types import SimpleNamespace
+
+from GMXMMPBSA.utils import emapping, flatten
+
+
+def _remove_empty_charts(data):
+    if isinstance(data, pd.Series):
+        if (data.abs() < 0.01).all():
+            return True
+    elif (data.abs() < 0.01).all().all():
+        return True
+
+
+def _itemdata_properties(data, decomp=False):
+    """
+    Pre-processing the items data.
+    Get the following properties:
+    - separable: if contains subcategories (DH [energetics components], Per-residue[receptor and ligand])
+
+    Also, remove empty terms and charts according to selected options
+    @param data:
+    @return:
+    """
+    groups = {}
+    if not decomp:
+        _extracted_from__itemdata_properties_5(data, groups)
+    else:
+        groups['Receptor'] = []
+        groups['Ligand'] = []
+        for k in data.columns:
+            if k[0].startswith('R:') and k[0] not in groups['Receptor']:
+                groups['Receptor'].append(k[0])
+            elif k[0].startswith('L:') and k[0] not in groups['Ligand']:
+                groups['Ligand'].append(k[0])
+    return groups
+
+
+# TODO Rename this here and in `_itemdata_properties`
+def _extracted_from__itemdata_properties_5(data, groups):
+    sep_ggas_keys = []
+    sep_gsolv_keys = []
+    # remove empty charts? (BOND, ANGLE and DIHEDRAL for STP)
+    # FIXME: NLPBsolver ?
+    ggas_keys = ['BOND', 'ANGLE', 'DIHED', 'VDWAALS', 'EEL', '1-4 VDW', '1-4 EEL', 'UB', 'IMP', 'CMAP', 'ESCF']
+    gsolv_keys = ['EGB', 'ESURF', 'EPB', 'ENPOLAR', 'EDISPER', 'POLAR SOLV', 'APOLAR SOLV', 'ERISM']
+    for k in data.columns:
+        if k in ggas_keys:
+            sep_ggas_keys.append(k)
+        elif k in gsolv_keys:
+            sep_gsolv_keys.append(k)
+    if sep_ggas_keys:
+        groups['GGAS'] = sep_ggas_keys
+        groups['GSOLV'] = sep_gsolv_keys
+        groups['TOTAL'] = ['GGAS', 'GSOLV', 'TOTAL']
+
+
+def _setup_data(data: pd.DataFrame, level=0, iec2=False, name=None, index=None,
+                memory: dict = None, id=None):
+    # this variable show if the data changed or not. At first time, it is true, then when plotting become in false
+    change = True
+
+    inmemory: bool = memory.get('inmemory', False)
+    temp_path: Path = memory.get('temp_path')
+    parquet_file = temp_path.joinpath('_'.join(id) + '_%s').as_posix()
+
+    cont = {'line_plot_data': None, 'bar_plot_data': None, 'heatmap_plot_data': None}
+    if level == 0:
+        options = {'iec2': iec2}
+        data.name = data.name[-1]
+        line_plot_data = data[:-3].to_frame()
+        if inmemory:
+            cont['line_plot_data'] = [line_plot_data, options, change]
+        else:
+            line_plot_data.to_parquet(parquet_file % 'lp', compression=None)
+            cont['line_plot_data'] = [parquet_file % 'lp', options, change]
+    elif level == 1:
+        options = ({'iec2': True} if iec2 else {}) | dict(groups=_itemdata_properties(data))
+        bar_plot_data = data[-3:].reindex(columns=index)
+        if inmemory:
+            cont['bar_plot_data'] = [bar_plot_data, options, change]
+        else:
+            bar_plot_data.to_parquet(parquet_file % 'bp', compression=None)
+            cont['bar_plot_data'] = [parquet_file % 'bp', options, change]
+    elif level == 1.5:
+        options = {'iec2': True}
+        line_plot_data = data[['AccIntEnergy', 'ie']][:-3]
+        bar_plot_data = data[['ie', 'sigma']][-3:]
+        if inmemory:
+            cont['line_plot_data'] = [line_plot_data, options, change]
+            cont['bar_plot_data'] = [bar_plot_data, options, change]
+        else:
+            line_plot_data.to_parquet(parquet_file % 'lp', compression=None)
+            bar_plot_data.to_parquet(parquet_file % 'bp', compression=None)
+            cont['line_plot_data'] = [parquet_file % 'lp', options, change]
+            cont['bar_plot_data'] = [parquet_file % 'bp', options, change]
+
+    elif level == 2:
+        tempdf = data.loc[:, data.columns.get_level_values(1) == 'tot'].droplevel(level=1, axis=1)
+        temp_data = tempdf.reindex(columns=index)
+        line_plot_data = temp_data[:-3].sum(axis=1).rename(name).to_frame()
+        bar_plot_data = tempdf[-3:]
+        heatmap_plot_data = tempdf[:-3].T
+        if memory:
+            cont['line_plot_data'] = [line_plot_data, {}, change]
+            cont['bar_plot_data'] = [bar_plot_data, dict(groups=_itemdata_properties(bar_plot_data)), change]
+            cont['heatmap_plot_data'] = [heatmap_plot_data, {}, change]
+        else:
+            line_plot_data.to_parquet(parquet_file % 'lp', compression=None)
+            bar_plot_data.to_parquet(parquet_file % 'bp', compression=None)
+            heatmap_plot_data.to_parquet(parquet_file % 'hp', compression=None)
+            cont['line_plot_data'] = [parquet_file % 'lp', {}, change]
+            cont['bar_plot_data'] = [parquet_file % 'bp', dict(groups=_itemdata_properties(bar_plot_data)), change]
+            cont['heatmap_plot_data'] = [parquet_file % 'hp', {}, change]
+    elif level == 3:
+        # Select only the "tot" column, remove the level, change first level of columns to rows and remove the mean
+        # index
+        tempdf = data.loc[:, data.columns.get_level_values(2) == 'tot']
+        line_plot_data = tempdf[:-3].groupby(axis=1, level=0, sort=False).sum().reindex(
+            columns=index).sum(axis=1).rename(name).to_frame()
+        bar_plot_data = tempdf[:-3].groupby(axis=1, level=0, sort=False).sum().agg(
+            [lambda x: x.mean(), lambda x: x.std(ddof=0), lambda x: x.std(ddof=0)/ math.sqrt(len(x))]
+            ).reindex(columns=index)
+        bar_plot_data.index = ['Average', 'SD', 'SEM']
+        heatmap_plot_data = tempdf.loc[["Average"]].droplevel(level=2, axis=1).stack().droplevel(level=0).reindex(
+            columns=index, index=index)
+        if memory:
+            cont['line_plot_data'] = [line_plot_data, {}, change]
+            cont['bar_plot_data'] = [bar_plot_data, dict(groups=_itemdata_properties(bar_plot_data)), change]
+            cont['heatmap_plot_data'] = [heatmap_plot_data, {}, change]
+        else:
+            line_plot_data.to_parquet(parquet_file % 'lp', compression=None)
+            bar_plot_data.to_parquet(parquet_file % 'bp', compression=None)
+            heatmap_plot_data.to_parquet(parquet_file % 'hp', compression=None)
+            cont['line_plot_data'] = [parquet_file % 'lp', {}, change]
+            cont['bar_plot_data'] = [parquet_file % 'bp', dict(groups=_itemdata_properties(bar_plot_data)), change]
+            cont['heatmap_plot_data'] = [parquet_file % 'hp', {}, change]
+
+    return cont
+
+def calculatestar(arg):
+    func, args, id, t = arg
+    data = args.get('data')
+    level = args.get('level', 0)
+    iec2 = args.get('iec2', False)
+    name = args.get('name')
+    index = args.get('index')
+    memory = args.get('memory')
+    return t, id, func(data, level, iec2, name, index, memory, id)
 
 
 class MMPBSA_API():
     """ Main class that holds all the Free Energy data """
 
-    def __init__(self):
+    def __init__(self, settings: dict = None, t=None):
         self.print_keys = None
-        self.app_namespace = SimpleNamespace()
+        self.app_namespace = None
         self.raw_energy = None
         self.data = {}
+        self.fname = None
+        self.settings = settings
+        self.temp_folder = None
 
-        self.set_config()
+        self._settings = {'data_on_disk': False, 'create_temporal_data': True, 'use_temporal_data': True, 
+                          'overwrite_temp': True}
+        if settings:
+            not_keys = []
+            for k, v in settings.items():
+                if k not in self._settings:
+                    not_keys.append(k)
+                    continue
+                self._settings[k] = v
+            if not_keys:
+                logging.warning(f'Not keys {not_keys}. Will be ignored')
 
-    def set_config(self, starttime=0, timestep=0, timeunit='ps'):
-        self.starttime = starttime
+    def setting_time(self, timestart=0, timestep=0, timeunit='ps'):
+        self.starttime = timestart
         self.timestep = timestep
         self.timeunit = timeunit
 
-    def load_file(self, fname: Union[Path, str]):
+    def setup_file(self, fname: Union[Path, str]):
+        self.fname = fname if isinstance(fname, Path) else Path(fname)
+        if not self.fname.exists():
+            raise NoFileExists(f"cannot find {self.fname}!")
+        os.chdir(self.fname.parent)
+
+    def load_file(self, fname: Union[Path, str] = None):
         """
         Load the info or h5 file and extract the info
 
@@ -66,16 +234,20 @@ class MMPBSA_API():
         Returns:
 
         """
-        if not isinstance(fname, Path):
-            fname = Path(fname)
-        if not fname.exists():
-            raise NoFileExists("cannot find %s!" % fname)
-        os.chdir(fname.parent)
+        if not fname and not self.fname:
+            raise
 
-        if fname.suffix == '.h5':
-            self._get_fromH5(fname)
-        else:
-            self._get_fromApp(fname)
+        if not self.fname:
+            self.fname = fname if isinstance(fname, Path) else Path(fname)
+            if not self.fname.exists():
+                raise NoFileExists(f"cannot find {self.fname}!")
+            os.chdir(self.fname.parent)
+
+        # if self.fname.suffix == '.h5':
+        #     self._get_fromH5(fname)
+        # else:
+        self._get_fromApp(self.fname)
+        # print('API', self.app_namespace)
 
     def get_info(self):
         """
@@ -101,271 +273,555 @@ class MMPBSA_API():
         """
         return self.app_namespace.FILES
 
-    def get_raw_energy(self):
-        """
-        Get the energy data for normal and mutant in structured dict
-        Returns:
+    def _get_frames_index(self, framestype, startframe, endframe, interval):
 
-        """
-        self.data = deepcopy(self._oringin)
-        return self.data
-
-    def _get_df(self, key):
-        df_models = {}
-        terms = {'energy': [], 'entropy': []}
-        if self.timestep:
-            index = pd.Series(list(self.frames.values()), name=f'Time ({self.timeunit})')
+        if framestype == 'energy':
+            start = list(self.frames.keys()).index(startframe) if startframe else startframe
+            end = list(self.frames.keys()).index(endframe) + 1 if endframe else endframe
+            index_frames = {f: self.frames[f] for f in list(self.frames.keys())[start:end:interval]}
         else:
-            index = pd.Series(list(self.frames.keys()), name='Frames')
-        for model, data in self.data[key].items():
-            if model in ['gb', 'pb', 'rism std', 'rism gf', 'rism pcplus', 'nmode', 'qh']:
-                if model == 'nmode':
-                    if self.timestep:
-                        nmindex = pd.Series(list(self.nmframes.values()), name=f'Time ({self.timeunit})')
-                    else:
-                        nmindex = pd.Series(list(self.nmframes.keys()), name='Frames')
-                    df_models[model] = pd.DataFrame(self._energy2flatdict(data), index=nmindex)
-                    terms['entropy'].append(model)
-                elif model == 'qh':
-                    df_models[model] = pd.DataFrame(self._energy2flatdict(data))
-                    terms['entropy'].append(model)
-                elif model in ['gb', 'pb', 'rism std', 'rism gf', 'rism pcplus']:
-                    terms['energy'].append(model)
-                    df_models[model] = pd.DataFrame(self._energy2flatdict(data), index=index)
-            elif model == 'ie':
-                terms['entropy'].append(model)
-                temp = {}
-                for m, iedata in data.items():
-                    df = pd.DataFrame({'data': iedata['data']}, index=index)
-                    df1 = pd.DataFrame({'iedata': iedata['iedata'], 'sigma': iedata['sigma']},
-                                       index=index[-iedata['ieframes']:])
-                    temp[m] = pd.concat([df, df1], axis=1)
-                df_models[model] = pd.concat(temp.values(), axis=1, keys=temp.keys())
-            elif model == 'c2':
-                terms['entropy'].append(model)
-                temp = {m: pd.DataFrame({'c2data': c2data['c2data'], 'sigma': c2data['sigma']}, index=[0])
-                        for m, c2data in data.items()}
-                df_models[model] = pd.concat(temp.values(), axis=1, keys=temp.keys())
+            start = list(self.nmframes.keys()).index(startframe) if startframe else startframe
+            end = list(self.nmframes.keys()).index(endframe) + 1 if endframe else endframe
+            index_frames = {f: self.nmframes[f] for f in list(self.nmframes.keys())[start:end:interval]}
+        return (start, end, pd.Series(index_frames.values(), name=f'Time ({self.timeunit})') if self.timestep
+                else pd.Series(index_frames.keys(), name='Frames'))
 
-        # Calculate binding
-        if terms['energy'] and terms['entropy']:
-            df_models['binding'] = {}
-            for m in terms['energy']:
-                for e in terms['entropy']:
-                    total = df_models[m]['delta']['TOTAL']
-                    total.name = 'ΔH'
-                    if e in ['nmode', 'qh']:
-                        df_models['binding'][f"{m}+{e}"] = pd.concat([df_models[m]], axis=1)
-                        ent = df_models[e]['delta']['TOTAL']
-                    else:
-                        k = 'iedata' if e == 'ie' else 'c2data'
-                        ent = df_models[e][m][k]
-                    ent.name = '-TΔS'
-                    temp = pd.concat([total, ent], axis=1)
-                    dg = pd.Series(total.mean() + ent.mean(), index=[total.index.tolist()[-1]], name='ΔG')
-                    df_models['binding'][f"{m}+{e}"] = pd.concat([temp, dg], axis=1)
-        return df_models
+    @staticmethod
+    def arg2tuple(arg):
+        return arg if isinstance(arg, tuple) else tuple(arg)
 
-    def get_energy(self, keys: list = None):
+    def get_energy(self, etype: tuple = None, model: tuple = None, mol: tuple = None, term: tuple = None,
+                    remove_empty_terms=True, threshold=0.01, startframe=None, endframe=None, interval=1):
+        """
+        Get energy
+        Args:
+            keys: Energy levels
+
+        Returns: Energy pd.Dataframe
+
+        """
+        # get start and end for frames range
+        if etype:
+            etype = self.arg2tuple(etype)
+        if model:
+            model = self.arg2tuple(model)
+        if mol:
+            mol = self.arg2tuple(mol)
+        if term:
+            term = self.arg2tuple(term)
+        s, e, index = self._get_frames_index('energy', startframe, endframe, interval)
+        e_map = {}
         energy = {}
-        temp_print_keys = keys or list(self.data.keys())
-        self.print_keys = []
-        to_remove_keys = [x for x in self.data.keys() if x not in keys] if keys else []
+        summ_df = {}
+        comp_summary = {}
+        temp_print_keys = etype or tuple(x for x in ['normal', 'mutant', 'mutant-normal'] if x in self.data)
 
-        for key in temp_print_keys:
-            if key not in self.data:
-                print(f'Not key {key} in the data')
+        for et in temp_print_keys:
+            if et not in self.data:
+                print(f'Not etype {et} in data')
+            elif not self.data[et]:
+                continue
             else:
-                self.print_keys.append(key)
-                energy[key] = self._get_df(key)
-        for k in to_remove_keys:
-            del self.data[k]
-        return energy
+                e_map[et] = {}
+                energy[et] = {}
+                summ_df[et] = {}
+                comp_summary[et] = {}
+                temp_model_keys = model or tuple(x for x in self.data[et].keys() if x not in ['nmode', 'qh', 'ie','c2'])
 
-    def update_energy(self, startframe, endframe, interval=1):
+                for m in temp_model_keys:
+                    if m not in self.data[et]:
+                        print(f'Not model {m} in etype {et}')
+                    else:
+                        e_map[et][m] = {}
+                        model_energy = {}
+                        temp_mol_keys = mol or tuple(self.data[et][m].keys())
 
-        self._get_frames()
-        start = list(self.frames.keys()).index(startframe)
-        end = list(self.frames.keys()).index(endframe) + 1
+                        for m1 in temp_mol_keys:
+                            if m1 not in self.data[et][m]:
+                                print(f'Not mol {m1} in etype {et} > model {m}')
+                            else:
+                                e_map[et][m][m1] = []
+                                model_energy[m1] = {}
+                                temp_terms_keys = ([x for x in self.data[et][m][m1].keys() if x in term] if term
+                                                   else tuple(self.data[et][m][m1].keys()))
+                                valid_terms = []
 
-        # 6- get the number of frames
-        self._update_eframes(startframe, endframe, interval)
+                                for t in temp_terms_keys:
+                                    if t not in self.data[et][m][m1]:
+                                        print(f'Not term {t} in etype {et} > model {m} > mol {m1}')
+                                    elif (
+                                        not remove_empty_terms
+                                        or abs(self.data[et][m][m1][t].mean())
+                                        >= threshold or t in ['GSOLV', 'GGAS', 'TOTAL']
+                                    ):
+                                        e_map[et][m][m1].append(t)
+                                        model_energy[m1][t] = self.data[et][m][m1][t][s:e:interval]
+                                        valid_terms.append(t)
+                        energy[et][m], summ_df[et][m] = self._model2df(model_energy, index)
 
-        # Create a copy to recover the original data any time
-        self.data = deepcopy(self._oringin)
-        # Iterate over all containing classes
-        for key, v in self.data.items():
-            # key: normal, mutant, decomp_normal, decomp_mutant
-            if key not in self.print_keys:
+        corr = {}
+        for et, v in summ_df.items():
+            corr[et] = {}
+            for m, v2 in v.items():
+                if 'delta' in v2:
+                    corr[et][m] = pd.DataFrame(
+                        {('ΔGeff', t): v for t, v in v2['delta']['TOTAL'].to_dict().items()}, index=[0])
+        return {'map': e_map, 'data': energy, 'summary': summ_df, 'correlation': corr}
+
+    def _model2df(self, energy, index):
+        energy_df = pd.DataFrame(flatten(energy), index=index)
+        s = pd.concat([energy_df.mean(), energy_df.std(ddof=0), energy_df.std(ddof=0) / math.sqrt(len(index))], axis=1)
+        s.columns = ['Average', 'SD', 'SEM']
+        summary_df = s.T
+        df = pd.concat([energy_df, summary_df])
+        df.index.name = index.name
+        return df, summary_df
+
+    def get_nmode_entropy(self, nmtype: tuple = None, mol: tuple = None, term: tuple = None,
+                          startframe=None, endframe=None, interval=None):
+
+        s, e, index = self._get_frames_index('entropy', startframe, endframe, interval)
+
+        energy = {}
+        summ_df = {}
+        temp_print_keys = nmtype or tuple(x for x in ['normal', 'mutant', 'mutant-normal'] if x in self.data and
+                                          self.data[x])
+        for et in temp_print_keys:
+            if et not in self.data:
+                print(f'Not nmtype {et} in data')
+            else:
+                energy[et] = {'nmode': {}}
+                summ_df[et] = {'nmode': {}}
+                model_energy = {}
+                temp_mol_keys = mol or tuple(self.data[et]['nmode'].keys())
+                for m1 in temp_mol_keys:
+                    if m1 not in self.data[et]['nmode']:
+                        print(f'Not mol {m1} in etype {et}')
+                    else:
+                        model_energy[m1] = {}
+                        temp_terms_keys = ([x for x in self.data[et]['nmode'][m1].keys() if x in term] if term
+                                           else tuple(self.data[et]['nmode'][m1].keys()))
+                        valid_terms = []
+                        for t in temp_terms_keys:
+                            if t not in self.data[et]['nmode'][m1]:
+                                print(f'Not term {t} in etype {et} > mol {m1}')
+                            else:
+                                model_energy[m1][t] = self.data[et]['nmode'][m1][t][s:e:interval]
+                                valid_terms.append(t)
+                energy[et]['nmode'], summ_df[et]['nmode'] = self._model2df(model_energy, index)
+
+        return {'map': emapping(energy), 'data': energy, 'summary': summ_df}
+
+    def get_qh_entropy(self, qhtype: tuple = None, mol: tuple = None, term: tuple = None):
+        temp_print_keys = qhtype or tuple(x for x in ['normal', 'mutant', 'mutant-normal'] if x in self.data)
+        entropy = {}
+        for et in temp_print_keys:
+            if et not in self.data:
+                print(f'Not qhtype {et} in data')
+            else:
+                entropy[et] = {'qh': {}}
+                temp_mol_keys = mol or tuple(self.data[et]['qh'].keys())
+                for m1 in temp_mol_keys:
+                    if m1 not in self.data[et]['qh']:
+                        print(f'Not mol {m1} in qhtype {et}')
+                    else:
+                        entropy[et]['qh'][m1] = {}
+                        temp_terms_keys = ([x for x in self.data[et]['qh'][m1].keys() if x in term] if term
+                                           else tuple(self.data[et]['qh'][m1].keys()))
+                        for t in temp_terms_keys:
+                            if t not in self.data[et]['qh'][m1]:
+                                print(f'Not term {t} in etype {et} > mol {m1}')
+                            else:
+                                entropy[et]['qh'][m1][t] = self.data[et]['qh'][m1][t]
+
+        df = pd.DataFrame(flatten(entropy))
+        return {'map': emapping(entropy), 'data': df, 'summary': df.xs(('delta', 'TOTAL'), level=[1, 2], axis=1)}
+
+    def get_c2_entropy(self, c2type: tuple = None, startframe=None, endframe=None, interval=None):
+        temp_print_keys = c2type or tuple(x for x in ['normal', 'mutant', 'mutant-normal'] if x in self.data and
+                                          self.data[x])
+        entropy = {}
+        entropy_df = {}
+        recalc = bool((startframe and startframe != self.app_namespace.INPUT['startframe'] or
+                       endframe and endframe != self.app_namespace.INPUT['endframe'] or
+                       interval and interval != self.app_namespace.INPUT['interval']))
+
+        for et in temp_print_keys:
+            if et not in self.data:
+                print(f'Not c2type {et} in data')
+            if recalc:
+                d = self._recalc_iec2('c2', et, startframe, endframe, interval)
+            else:
+                d = self.data[et]['c2']
+            entropy[et] = {'c2': {x: None for x in ['c2', 'sigma']}}
+            entropy_df[et] = {'c2': pd.DataFrame({'c2': [d['c2data'], d['c2_std'], d['c2_std']], 'sigma': [d['sigma'], 0, 0]},
+                                                 index=['Average', 'SD', 'SEM'])}
+
+        return {'map': emapping(entropy), 'data': entropy_df, 'summary': entropy_df}
+
+    def get_ie_entropy(self, ietype: tuple = None, startframe=None, endframe=None, interval=None,
+                       ie_segment = 25):
+        temp_print_keys = ietype or tuple(x for x in ['normal', 'mutant', 'mutant-normal'] if x in self.data and
+                                          self.data[x])
+        entropy = {}
+        summ_df = {}
+        entropy_df = {}
+        recalc = bool((startframe and startframe != self.app_namespace.INPUT['startframe'] or
+                       endframe and endframe != self.app_namespace.INPUT['endframe'] or
+                       interval and interval != self.app_namespace.INPUT['interval']))
+
+        s, e, index = self._get_frames_index('energy', startframe, endframe, interval)
+        for et in temp_print_keys:
+            if et not in self.data:
+                print(f'Not ietype {et} in data')
                 continue
-            if key in ['normal', 'mutant']:
-                for model, v1 in v.items():
-                    if model in ['gb', 'pb', 'rism std', 'rism gf', 'rism pcplus']:
-                        # Update the frame range and re-calculate the composite terms
-                        v1['complex'].set_frame_range(start, end, interval)
-                        if not self.stability:
-                            v1['receptor'].set_frame_range(start, end, interval)
-                            v1['ligand'].set_frame_range(start, end, interval)
-                            # Re-calculate deltas
-                            v1['delta'] = BindingStatistics(v1['complex'], v1['receptor'], v1['ligand'],
-                                                               self.app_namespace.INFO['using_chamber'],
-                                                               self.traj_protocol)
-                            # Re-calculate GGAS based entropies
-                            if self.app_namespace.INPUT['interaction_entropy']:
-                                edata = v1['delta']['GGAS']
-                                ie = InteractionEntropyCalc(edata, self.app_namespace.INPUT)
-                                v['ie'] = IEout(self.app_namespace.INPUT)
-                                v['ie'].parse_from_dict(model, {'data': ie.data, 'iedata': ie.iedata,
-                                                                     'ieframes': ie.ieframes,
-                                                                     'sigma': ie.ie_std})
-                            if self.app_namespace.INPUT['c2_entropy']:
-                                edata = v1['delta']['GGAS']
-                                c2 = C2EntropyCalc(edata, self.app_namespace.INPUT)
-                                v['c2'][model] = {'c2data': c2.c2data, 'sigma': c2.ie_std, 'c2_std': c2.c2_std,
-                                                  'c2_ci': c2.c2_ci}
-            elif key in ['decomp_normal', 'decomp_mutant']:
-                for model, v1 in v.items():
-                    v1['complex'].set_frame_range(start, end, interval)
-                    if not self.stability:
-                        v1['receptor'].set_frame_range(start, end, interval)
-                        v1['ligand'].set_frame_range(start, end, interval)
-                        # Recalculate decomp delta
-                        if self.app_namespace.INPUT['idecomp'] in [1, 2]:
-                            Decomp_Delta = DecompBinding
-                        else:
-                            Decomp_Delta = PairDecompBinding
-                        v1['delta'] = Decomp_Delta(v1['complex'], v1['receptor'], v1['ligand'],
-                                                   self.app_namespace.INPUT)
+            if recalc:
+                d = self._recalc_iec2('ie', et, startframe, endframe, interval, ie_segment)
+            else:
+                d = self.data[et]['ie']
+            ieframes = math.ceil(len(d['data']) * ie_segment / 100)
+            entropy[et] = {'ie': {x: None for x in ['AccIntEnergy', 'ie', 'sigma']}}
+            df = pd.DataFrame({'AccIntEnergy': d['data']}, index=index)
+            df1 = pd.DataFrame({'ie': d['data'][-ieframes:]}, index=index[-ieframes:])
+            df2 = pd.concat([df, df1], axis=1)
+            df3 = pd.DataFrame({'ie': [float(d['iedata'].mean()),
+                                       float(d['iedata'].std()),
+                                       float(d['iedata'].std() / math.sqrt(ieframes))],
+                                'sigma': [d['sigma'], 0, 0]}, index=['Average', 'SD', 'SEM'])
+            summ_df[et] = {'ie': df3}
+            df4 = pd.concat([df2, df3])
+            df4.index.name = df.index.name
+            entropy_df[et] = {'ie': df4}
+        return {'map': emapping(entropy), 'data': entropy_df, 'summary': summ_df}
 
-        # Re-calculate delta delta if CAS
-        if 'mutant-normal' in self.print_keys:
-            if 'normal' in self.data and self.data['normal'] and 'mutant' in self.data and self.data['mutant']:
-                for model in self.data['normal']:
-                    if model in ['gb', 'pb', 'rism std', 'rism gf', 'rism pcplus']:
-                        self.data['mutant-normal'][model] = {'delta':
-                            DeltaBindingStatistics(self.data['mutant'][model]['delta'],
-                                                   self.data['normal'][model]['delta'])}
-        # Re-calculate summaries
-        self.get_summary()
+    @staticmethod
+    def _merge_ent(res_dict: dict, d: dict):
+        for e1, v1 in d.items():
+            if e1 not in res_dict:
+                res_dict[e1] = v1
+            else:
+                res_dict[e1].update(v1)
 
-    def update_nmode(self, startframe, endframe, interval=1):
+    def get_entropy(self, etype: tuple = None, model: tuple = None, mol: tuple = None, term: tuple = None,
+                    nmstartframe=None, nmendframe=None, nminterval=1, startframe=None, endframe=None, interval=None,
+                    ie_segment=25):
+        temp_print_keys = etype or tuple(x for x in ['normal', 'mutant', 'mutant-normal'] if x in self.data)
+        entropy_keys = []
 
-        self._get_frames()
-        start = list(self.nmframes.keys()).index(startframe)
-        end = list(self.nmframes.keys()).index(endframe) + 1
+        for et in temp_print_keys:
+            if et not in self.data:
+                print(f'Not etype {et} in data')
+            else:
+                entropy_keys.extend(x for x in self.data[et].keys() if x in ['nmode', 'qh', 'ie','c2'])
+        temp_model_keys = tuple(x for x in entropy_keys if x in model) if model else tuple(entropy_keys)
 
-        # 6- get the number of frames
-        self._update_nmframes(startframe, endframe, interval)
+        ent_summ = {}
+        ent_map = {}
+        ent_data = {}
+        for m in temp_model_keys:
+            if m == 'nmode':
+                _m, _d, _s = self.get_nmode_entropy(etype, mol, term, nmstartframe, nmendframe, nminterval).values()
+            elif m == 'qh':
+                _m, _d, _s = self.get_qh_entropy(etype, mol, term).values()
+            elif m == 'ie':
+                _m, _d, _s = self.get_ie_entropy(etype, startframe, endframe, interval, ie_segment).values()
+            else:
+                _m, _d, _s = self.get_c2_entropy(etype, startframe, endframe, interval).values()
+            self._merge_ent(ent_map, _m)
+            self._merge_ent(ent_data, _d)
+            self._merge_ent(ent_summ, _s)
 
-        # Create a copy to recover the original data any time
-        self.data = deepcopy(self._oringin)
-        # Iterate over all containing classes
-        for key, v in self.data.items():
-            # key: normal, mutant, decomp_normal, decomp_mutant
-            if key not in self.print_keys:
-                continue
-            if key in ['normal', 'mutant']:
-                # Update the frame range and re-calculate the composite terms
-                v['nmode']['complex'].set_frame_range(start, end, interval)
-                if not self.stability:
-                    v['nmode']['receptor'].set_frame_range(start, end, interval)
-                    v['nmode']['ligand'].set_frame_range(start, end, interval)
-                    # Re-calculate deltas
-                    v['nmode']['delta'] = BindingStatistics(v['complex'], v['receptor'], v['ligand'],
-                                                            self.app_namespace.INFO['using_chamber'],
-                                                            self.traj_protocol)
-        # Re-calculate delta delta if CAS
-        if 'mutant-normal' in self.print_keys:
-            if 'normal' in self.data and self.data['normal'] and 'mutant' in self.data and self.data['mutant']:
-                self.data['mutant-normal']['nmode'] = {'delta':
-                                                           DeltaBindingStatistics(self.data['mutant']['nmode']['delta'],
-                                                                                  self.data['normal']['nmode'][
-                                                                                      'delta'])}
-        # Re-calculate summaries
-        self.get_summary()
+        return {'map': ent_map, 'data': ent_data, 'summary': ent_summ}
 
-    def update_ie(self, iesegment):
-
-        self._get_frames()
-
-        # Iterate over all containing classes
-        for key, v in self.data.items():
-            # key: normal, mutant, decomp_normal, decomp_mutant
-            if key not in self.print_keys:
-                continue
-            if key in ['normal', 'mutant']:
-                for model, v1 in v.items():
-                    if model in ['gb', 'pb', 'rism std', 'rism gf', 'rism pcplus']:
-                        # Update the frame range and re-calculate the composite terms
-                        # Re-calculate GGAS based entropies
-                        if self.app_namespace.INPUT['interaction_entropy']:
-                            edata = v1['delta']['GGAS']
-                            ie = InteractionEntropyCalc(edata, self.app_namespace.INPUT, iesegment)
-                            v['ie'] = IEout(self.app_namespace.INPUT)
-                            v['ie'].parse_from_dict(model, {'data': ie.data, 'iedata': ie.iedata,
-                                                            'ieframes': ie.ieframes,
-                                                            'sigma': ie.ie_std})
-
-        # Re-calculate delta delta if CAS
-        if 'mutant-normal' in self.print_keys:
-            if 'normal' in self.data and self.data['normal'] and 'mutant' in self.data and self.data['mutant']:
-                for model in self.data['normal']:
-                    if model in ['gb', 'pb', 'rism std', 'rism gf', 'rism pcplus']:
-                        self.data['mutant-normal'][model] = {'delta':
-                                                                 DeltaBindingStatistics(
-                                                                     self.data['mutant'][model]['delta'],
-                                                                     self.data['normal'][model]['delta'])}
-        # Re-calculate summaries
-        self.get_summary()
-
-    def get_summary(self):
-        summary = {}
-        for m, v in self.data.items():
-            if m not in ['mutant-normal', 'mutant', 'normal']:
-                continue
-            for model, v1 in v.items():
-                if model not in ['ie', 'c2', 'qh']:
-                    summary[(m, model)] = {}
-
-                    for mol, v2 in v1.items():
-                        if v2:
-                            summ = v2.summary()
-                            summary[(m, model, (mol,))] = pd.DataFrame(summ, columns=summ[0])
-                        else:
-                            print(mol)
+    def _recalc_iec2(self, method, etype, startframe=None, endframe=None, interval=None, ie_segment=25):
+        allowed_met = ['gb', 'pb', 'rism std', 'rism gf', 'rism pcplus', 'gbnsr6']
+        result = None
+        start = list(self.frames.keys()).index(startframe) if startframe else startframe
+        end = list(self.frames.keys()).index(endframe) + 1 if endframe else endframe
+        for key in allowed_met:
+            if key in self.data[etype]:
+                edata = self.data[etype][key]['delta']['GGAS'][start:end:interval]
+                if method == 'ie':
+                    ie = InteractionEntropyCalc(edata,
+                                                dict(temperature=self.app_namespace.INPUT['temperature'],
+                                                     startframe=startframe, endframe=endframe, interval=interval),
+                                                iesegment=ie_segment)
+                    result = IEout({})
+                    result.parse_from_dict(dict(data=ie.data, sigma=ie.ie_std, iedata=ie.iedata))
                 else:
-                    summ = v1.summary()
-                    summary[(m, model)] = pd.DataFrame(summ, columns=summ[0])
-        return summary
+                    c2 = C2EntropyCalc(edata, dict(temperature=self.app_namespace.INPUT['temperature']))
+                    result = C2out()
+                    result.parse_from_dict(dict(c2data=c2.c2data, c2_std=c2.c2_std, sigma=c2.ie_std, c2_ci=c2.c2_ci))
+                break
+        return result
 
-    def get_gb_energy(self):
-        energy = self.get_energy()
-        gb_energy = {}
-        if 'normal' in energy and 'gb' in energy['normal']:
-            gb_energy['normal'] = energy['normal']['gb']
-        if 'mutant' in energy and 'gb' in energy['mutant']:
-            gb_energy['mutant'] = energy['mutant']['gb']
-        return gb_energy
+    def get_binding(self, energy_summary=None, entropy_summary=None):
+        binding  = {}
+        b_map = {}
+        corr = {}
+        if energy_summary and entropy_summary:
+            dg_string = {'ie': 'ΔGie', 'c2': 'ΔGc2', 'nmode': 'ΔGnm', 'qh': 'ΔGqh'}
+            for et, ev in energy_summary.items():
+                binding[et] = {}
+                b_map[et] = {}
+                corr[et] = {}
+                for em, emv in ev.items():
+                    binding[et][em] = {}
+                    b_map[et][em] = []
+                    mol = 'complex' if self.app_namespace.FILES.stability else 'delta'
+                    edata = emv[mol]['TOTAL']
+                    edata.name = 'ΔH'
+                    if et in entropy_summary:
+                        if mol == 'delta':
+                            corr[et][em] = {}
+                        c = {}
+                        for ent, etv in entropy_summary[et].items():
+                            b_map[et][em].append(ent)
+                            if ent == 'ie' and not self.app_namespace.FILES.stability:
+                                entdata = etv['ie']
+                            elif ent == 'c2' and not self.app_namespace.FILES.stability:
+                                entdata = etv['c2']
+                            else:
+                                entdata = etv[mol]['TOTAL']
+                            entdata.name = '-TΔS'
+                            dg = edata.loc['Average'] + entdata.loc['Average']
+                            std = utils.get_std(edata.loc['SD'], entdata.loc['SD'])
+                            dgdata = pd.Series([dg, std, std], index=['Average', 'SD', 'SEM'], name='ΔG')
+                            binding[et][em][ent] = pd.concat([edata, entdata, dgdata], axis=1)
+                            if mol == 'delta':
+                                c[(dg_string[ent], 'Average')] = dg
+                                c[(dg_string[ent], 'SD')] = std
+                                c[(dg_string[ent], 'SEM')] = std
+                        if mol == 'delta':
+                            corr[et][em] = pd.DataFrame(c, index=[0])
+        return {'map': b_map, 'data': binding, 'correlation': corr}
 
-    def get_normal_gb_energy(self):
-        energy = self.get_gb_energy()
-        if 'normal' in energy:
-            return energy['normal']
+    def get_decomp_energy(self, etype: tuple = None, model: tuple=None, mol: tuple = None, contribution: tuple = None,
+                          res1: tuple = None, res2: tuple = None, term: tuple = None, res_threshold=0.5,
+                          startframe=None, endframe=None, interval=None):
 
-    def get_mutant_gb_energy(self):
-        energy = self.get_gb_energy()
-        if 'mutant' in energy:
-            return energy['mutant']
+        s, e, index = self._get_frames_index('energy', startframe, endframe, interval)
+        name = index.name
+        index = pd.concat([index, pd.Series(['Average', 'SD', 'SEM'])])
+        index.name = name
 
-    def _get_fromH5(self, h5file):
-        h5file = H5Output(h5file)
-        self.app_namespace = h5file.app_namespace
-        self._oringin = {'normal': h5file.calc_types.normal, 'mutant': h5file.calc_types.mutant,
-                         'decomp_normal': h5file.calc_types.decomp_normal, 'decomp_mutant': h5file.calc_types.decomp_mutant,
-                         'mutant-normal': h5file.calc_types.mut_norm,
-                         'decomp_mutant-normal': h5file.calc_types.decomp_mut_norm}
-        self.data = copy(self._oringin)
-        self._get_frames()
+        temp_print_keys = etype or tuple(x for x in ['decomp_normal', 'decomp_mutant'] if self.data.get(x))
+        self.print_keys = []
+
+        decomp_energy = {}
+        e_map = {}
+        for et in temp_print_keys:
+            if not self.data.get(et):
+                print(f'Not etype {et} in data')
+            else:
+                etkey = et.split('_')[1]
+                decomp_energy[etkey] = {}
+                e_map[etkey] = {}
+                temp_model_keys = model or tuple(self.data[et].keys())
+
+                for m in temp_model_keys:
+                    if m not in self.data[et]:
+                        print(f'Not model {m} in etype {et}')
+                    else:
+                        model_decomp_energy = {}
+
+                        e_map[etkey][m] = {}
+                        temp_mol_keys = mol or tuple(self.data[et][m].keys())
+
+                        for m1 in temp_mol_keys:
+                            if m1 not in self.data[et][m]:
+                                print(f'Not mol {m1} in etype {et} > model {m}')
+                            else:
+                                model_decomp_energy[m1] = {}
+                                e_map[etkey][m][m1] = {}
+                                temp_comp_keys = contribution or tuple(self.data[et][m][m1].keys())
+                                for c in temp_comp_keys:
+                                    if c not in self.data[et][m][m1]:
+                                        print(f'Not component {c} in etype {et} > model {m} > mol {m1}')
+                                    else:
+                                        model_decomp_energy[m1][c] = {}
+                                        e_map[etkey][m][m1][c] = {}
+                                        temp_res1_keys = res1 or tuple(self.data[et][m][m1][c].keys())
+
+                                        for r1 in temp_res1_keys:
+                                            remove = False
+                                            if r1 not in self.data[et][m][m1][c]:
+                                                print(f'Not res {r1} in etype {et} > model {m} > mol {m1} > comp {c} ')
+                                            else:
+                                                temp_energy = {}
+
+                                                if self.app_namespace.INPUT['idecomp'] in [1, 2]:
+                                                    temp_emap = []
+                                                    temp_terms_keys = term or tuple(self.data[et][m][m1][c][r1].keys())
+
+                                                    for t in temp_terms_keys:
+                                                        if t not in self.data[et][m][m1][c][r1]:
+                                                            print(f'Not term {t} in etype {et} > model {m} > mol {m1} '
+                                                                  f'> comp {c} > res {r1}')
+                                                        else:
+                                                            temp_energy[t] = self.data[et][m][m1][c][r1][t][s:e:interval]
+                                                            temp_emap.append(t)
+                                                            mean = temp_energy[t].mean()
+                                                            std = temp_energy[t].std()
+                                                            sem = std / math.sqrt(len(temp_energy[t]))
+                                                            temp_energy[t] = temp_energy[t].append([mean, std, sem])
+                                                            if (t == 'tot' and res_threshold > 0 and
+                                                                    abs(mean) < res_threshold):
+                                                                remove = True
+                                                else:
+                                                    temp_emap = {}
+                                                    temp_res2_keys = res2 or tuple(self.data[et][m][m1][c][r1].keys())
+                                                    # for per-wise only since for per-residue we get the tot value
+                                                    res1_contrib = 0
+                                                    for r2 in temp_res2_keys:
+                                                        if r2 not in self.data[et][m][m1][c][r1]:
+                                                            print(f'Not res {r2} in etype {et} > model {m} > mol {m1} '
+                                                                  f'> comp {c} > res {r1}')
+                                                        else:
+                                                            temp_energy_r2 = {}
+                                                            temp_emap[r2] = []
+                                                            # energy[et][m][m1][c][r1][r2] = {}
+                                                            temp_terms_keys = term or tuple(self.data[et][m][m1][c][r1][r2].keys())
+                                                            for t in temp_terms_keys:
+                                                                if t not in self.data[et][m][m1][c][r1][r2]:
+                                                                    print(
+                                                                        f'Not term {t} in etype {et} > model {m} '
+                                                                        f'> mol {m1} > comp {c} > res {r1} > res {r2}')
+                                                                else:
+                                                                    temp_emap[r2].append(t)
+                                                                    temp_energy_r2[t] = self.data[et][m][m1][c][r1][
+                                                                                            r2][t][s:e:interval]
+                                                                    mean = temp_energy_r2[t].mean()
+                                                                    std = temp_energy_r2[t].std()
+                                                                    sem = std / math.sqrt(len(temp_energy_r2[t]))
+                                                                    temp_energy_r2[t] = temp_energy_r2[t].append([
+                                                                        mean, std, sem])
+                                                                    if t == 'tot':
+                                                                        res1_contrib += mean
+                                                            if temp_energy_r2:
+                                                                temp_energy[r2] = temp_energy_r2
+                                                    if res_threshold > 0 and float(abs(res1_contrib)) < res_threshold:
+                                                        remove = True
+                                                if not remove:
+                                                    model_decomp_energy[m1][c][r1] = temp_energy
+                                                    e_map[etkey][m][m1][c][r1] = temp_emap
+                        decomp_energy[etkey][m] = pd.DataFrame(flatten(model_decomp_energy), index=index)
+        return {'map': e_map, 'data': decomp_energy}
+
+    def get_ana_data(self, energy_options=None, entropy_options=None, decomp_options=None, performance_options=None,
+                     correlation=False):
+        TASKs = []
+        d = {}
+        corr = {}
+        ecorr = None
+        memory_args = dict(temp_path=self.temp_folder)
+        if energy_options:
+            energy_map, energy, energy_summary, ecorr = self.get_energy(**energy_options).values()
+            if energy_map:
+                for et, v in ecorr.items():
+                    corr[et] = v
+                d['enthalpy'] = {'map': energy_map, 'keys': {}, 'summary': energy_summary}
+                memory_args['inmemory'] = performance_options.get('energy_memory')
+                for level, value in energy_map.items():
+                    for level1, value1 in value.items():
+                        for level2, value2 in value1.items():
+                            TASKs.append([_setup_data, dict(data=energy[level][level1][level2][value2], level=1,
+                                                            memory=memory_args),
+                                          (level, level1, level2), 'enthalpy'])
+                            TASKs.extend([_setup_data, dict(data=energy[level][level1][(level2, level3)], level=0,
+                                                            memory=memory_args),
+                                          (level, level1, level2,level3), 'enthalpy'] for level3 in value2)
+
+        if entropy_options:
+            entropy_map, entropy, entropy_summary = self.get_entropy(**entropy_options).values()
+            if entropy_map:
+                d['entropy'] = {'map': entropy_map, 'keys': {}, 'summary': entropy_summary}
+                memory_args['inmemory'] = performance_options.get('energy_memory')
+                for level, value in entropy_map.items():
+                    for level1, value1 in value.items():
+                        if level1 in ['nmode', 'qh']:
+                            for level2, value2 in value1.items():
+                                TASKs.append([_setup_data, dict(data=entropy[level][level1][level2], level=1,
+                                                                memory=memory_args),
+                                              (level, level1, level2), 'entropy'])
+                                TASKs.extend([_setup_data, dict(data=entropy[level][level1][(level2, level3)],
+                                                                level=0, memory=memory_args),
+                                              (level, level1, level2, level3), 'entropy'] for level3 in value2)
+                        elif level1 == 'c2':
+                            TASKs.append([_setup_data, dict(data=entropy[level][level1], level=1, iec2=True,
+                                                            memory=memory_args),
+                                          (level, level1), 'entropy'])
+                        elif level1 == 'ie':
+                            TASKs.append([_setup_data, dict(data=entropy[level][level1], level=1.5,
+                                                            memory=memory_args),
+                                          (level, level1), 'entropy'])
+
+        if energy_options and entropy_options:
+            bind_map, binding, bcorr = self.get_binding(energy_summary, entropy_summary).values()
+            if bind_map:
+                for et, v in bcorr.items():
+                    for m, v1 in v.items():
+                        if ecorr:
+                            corr[et][m] = pd.concat([ecorr[et][m], v1], axis=1)
+                    
+                d['binding'] = {'map': bind_map, 'keys': {}, 'summary': binding}
+                memory_args['inmemory'] = performance_options.get('energy_memory')
+                for level, value in bind_map.items():
+                    for level1, value1 in value.items():
+                        TASKs.extend([_setup_data, dict(data=binding[level][level1][level2], level=1,
+                                                        memory=memory_args),
+                                      (level, level1, level2), 'binding'] for level2 in value1)
+        if decomp_options:
+            decomp_map, decomp = self.get_decomp_energy(**decomp_options).values()
+            if decomp_map:
+                d['decomposition'] = {'map': decomp_map, 'keys': {}}
+                memory_args['inmemory'] = performance_options.get('decomp_memory')
+                for level, value in decomp_map.items():
+                    for level1, value1 in value.items():
+                        for level2, value2 in value1.items():
+                            for level3, value3 in value2.items():
+                                item_lvl = 2 if self.app_namespace.INPUT['idecomp'] in [1, 2] else 3
+                                index = list(value3.keys())
+                                for level4, value4 in value3.items():
+                                    if item_lvl == 3 and len(index) == 1:
+                                        index.append(list(value4.keys()))
+                                    item_lvl2 = 1 if self.app_namespace.INPUT['idecomp'] in [1, 2] else 2
+                                    if self.app_namespace.INPUT['idecomp'] in [1, 2]:
+                                        TASKs.append(
+                                            [_setup_data, dict(data=decomp[level][level1][level2][level3][level4],
+                                                               level=item_lvl2, name=level4, index=value4,
+                                                               memory=memory_args),
+                                             (level, level1, level2, level3, level4), 'decomposition'])
+                                        TASKs.extend([_setup_data,
+                                                      dict(data=decomp[level][level1][level2][level3][level4][level5],
+                                                           memory=memory_args),
+                                                    (level, level1, level2, level3, level4, level5), 'decomposition']
+                                                     for level5 in value4)
+                                    else:
+                                        TASKs.append(
+                                            [_setup_data, dict(data=decomp[level][level1][level2][level3][level4],
+                                                               level=item_lvl2, name=level4, index=list(value4.keys()),
+                                                               memory=memory_args),
+                                             (level, level1, level2, level3, level4), 'decomposition'])
+                                        TASKs.extend([_setup_data,
+                                                      dict(data=decomp[level][level1][level2][level3][level4][level5],
+                                                           level=1, index=value5, memory=memory_args),
+                                                      (level, level1, level2, level3, level4, level5), 'decomposition']
+                                                     for level5, value5 in value4.items())
+                                TASKs.append([_setup_data,
+                                              dict(data=decomp[level][level1][level2][level3], level=item_lvl,
+                                                   name=level3, index=index, memory=memory_args),
+                                          (level, level1, level2, level3), 'decomposition'])
+
+        with ThreadPool(performance_options.get('jobs')) as pool:
+            imap_unordered_it = pool.imap_unordered(calculatestar, TASKs)
+            for t, id, result in imap_unordered_it:
+                d[t]['keys'][id] = result
+
+        if correlation:
+            d['correlation'] = corr
+
+        return d
 
     def _get_fromApp(self, ifile):
 
@@ -373,13 +829,16 @@ class MMPBSA_API():
         info = infofile.InfoFile(app)
         info.read_info(ifile)
         app.normal_system = app.mutant_system = None
-        app.parse_output_files()
+        app.parse_output_files(from_calc=False)
         self.app_namespace = self._get_namespace(app)
         self._oringin = {'normal': app.calc_types.normal, 'mutant': app.calc_types.mutant,
                          'decomp_normal': app.calc_types.decomp_normal, 'decomp_mutant': app.calc_types.decomp_mutant,
                          'mutant-normal': app.calc_types.mut_norm,
-                         # 'decomp_mutant-normal': app.calc_types.decomp_mut_norm
                          }
+        self.temp_folder = ifile.parent.joinpath('.gmx_mmpbsa_temp')
+        if self.temp_folder.exists():
+            shutil.rmtree(self.temp_folder)
+        self.temp_folder.mkdir()
         self.data = copy(self._oringin)
         self._get_frames()
         self._get_data(None)
@@ -406,7 +865,7 @@ class MMPBSA_API():
 
     def _get_frames(self):
 
-        ts = 1 if not self.timestep else self.timestep
+        ts = self.timestep or 1
 
         INPUT = self.app_namespace.INPUT
         numframes = self.app_namespace.INFO['numframes']
@@ -415,6 +874,7 @@ class MMPBSA_API():
         frames_list = list(range(INPUT['startframe'],
                                  INPUT['startframe'] + numframes * INPUT['interval'],
                                  INPUT['interval']))
+        self.frames_list = frames_list
         INPUT['endframe'] = frames_list[-1]
         time_step_list = list(range(self.starttime,
                                     self.starttime + len(frames_list) * ts * INPUT['interval'],
@@ -425,39 +885,14 @@ class MMPBSA_API():
             nmframes_list = list(range(INPUT['nmstartframe'],
                                        INPUT['nmstartframe'] + nmnumframes * INPUT['nminterval'],
                                        INPUT['interval']))
-            INPUT['nmendframe'] = nmframes_list[-1] if nmframes_list else None
+            INPUT['nmendframe'] = nmframes_list[-1]
 
             nm_start = (nmframes_list[0] - frames_list[0]) * INPUT['interval']
             nmtime_step_list = list(range(self.starttime + nm_start,
                                           self.starttime + nm_start + len(nmframes_list) * ts * INPUT['nminterval'],
                                           ts * INPUT['nminterval']))
-
+            self.nmframes_list = nmframes_list
             self.nmframes = dict(zip(nmframes_list, nmtime_step_list))
-
-    def _update_eframes(self, startframe, endframe, interval):
-
-        # get the original frames list
-        self._get_frames()
-
-        curr_frames = list(range(startframe, endframe + interval, interval))
-        frames = list(self.frames.keys())
-        for x in frames:
-            if x not in curr_frames:
-                self.frames.pop(x)
-
-    def _update_nmframes(self, startframe, endframe, interval):
-
-        # get the original frames list
-        self._get_frames()
-
-        curr_frames = list(range(startframe, endframe + interval, interval))
-        frames = list(self.nmframes.keys())
-        for x in frames:
-            if x not in curr_frames:
-                self.nmframes.pop(x)
-
-    def get_com(self):
-        return copy(self.data['normal']['gb']['complex'])
 
     def _get_data(self, calc_types):
         """
@@ -477,112 +912,6 @@ class MMPBSA_API():
         self.mutant_only = self.app_namespace.INPUT['mutant_only']
         self.traj_protocol = ('MTP' if self.app_namespace.FILES.receptor_trajs or
                                        self.app_namespace.FILES.ligand_trajs else 'STP')
-
-
-        # Now load the data
-        # if not INPUT['mutant_only']:
-        #     self._get_edata(calc_types.normal)
-
-    # def _get_edata(self, calc_type_data):
-    #     from GMXMMPBSA.amber_outputs import GBout
-    #     for key in calc_type_data:
-    #
-    #         if key == 'gb':
-    #             com = GBout(None, self.app_namespace.INPUT, read=False)
-    #             com.parse_from_h5(calc_type_data[key]['complex'])
-    #             # com.get_energies_fromdict(calc_type_data[key]['complex'])
-    #         # if key in ['ie', 'c2']:
-    #         #     data[key] = {}
-    #         #     if key == 'ie':
-    #         #         for iekey in calc_type_data:
-    #         #             data[key][iekey] = {
-    #         #                 'data': pd.DataFrame(calc_type_data[iekey]['data'], columns=['data'],
-    #         #                                      index=pd.Index(self.frames, names='frames')),
-    #         #                 'iedata': pd.DataFrame(calc_type_data[iekey]['iedata'], columns=['iedata'],
-    #         #                                        index=self.frames[-calc_type_data[iekey]['ieframes']:]),
-    #         #                 'ieframes': calc_type_data[iekey]['ieframes'],
-    #         #                 'sigma': calc_type_data[iekey]['sigma']}
-    #         #     else:
-    #         #         for c2key in calc_type_data:
-    #         #             data[key][c2key] = {'c2data': calc_type_data[c2key]['c2data'],
-    #         #                                 'sigma': calc_type_data[c2key]['sigma'],
-    #         #                                 'c2_std': calc_type_data[c2key]['c2_std'],
-    #         #                                 'c2_ci': calc_type_data[c2key]['c2_ci']}
-    #         # else:
-    #     #         # Since the energy models have the same structure as nmode and qh, we only need to worry about
-    #     #         # correctly defining the Dataframe index, that is, the frames
-    #     #         if key == 'nmode':
-    #     #             cframes = self.nmode_frames
-    #     #         elif key == 'qh':
-    #     #             cframes = [0]
-    #     #         else:
-    #     #             cframes = self.frames
-    #     #         # since the model data object in MMPBSA_App contain the data in the attribute data and H5 not,
-    #     #         # we need to define a conditional object
-    #     #         com_calc_type_data = (calc_types[key]['complex'] if h5
-    #     #                               else calc_types[key]['complex'].data)
-    #     #         df = complex = pd.DataFrame({dkey: com_calc_type_data[dkey] for dkey in com_calc_type_data},
-    #     #                                     index=pd.Series(cframes, name='frames'))
-    #     #         if not self.stability:
-    #     #             rec_calc_type_data = (calc_types[key]['receptor'] if h5
-    #     #                                   else calc_types[key]['receptor'].data)
-    #     #             receptor = pd.DataFrame({dkey: rec_calc_type_data[dkey] for dkey in rec_calc_type_data},
-    #     #                                     index=pd.Series(cframes, name='frames'))
-    #     #             lig_calc_type_data = (calc_types[key]['ligand'] if h5
-    #     #                                   else calc_types[key]['ligand'].data)
-    #     #             ligand = pd.DataFrame({dkey: lig_calc_type_data[dkey] for dkey in lig_calc_type_data},
-    #     #                                   index=pd.Series(cframes, name='frames'))
-    #     #             delta = complex - receptor - ligand
-    #     #             df = pd.concat([complex, receptor, ligand, delta], axis=1,
-    #     #                            keys=['complex', 'receptor', 'ligand', 'delta'])
-    #     #         data[key] = df
-    #
-    # def _get_ddata(self, calc_types, h5=False):
-    #     data = {}
-    #     # Take the decomp data
-    #     for key in calc_types:
-    #         # since the model data object in MMPBSA_App contain the data in the attribute data and H5 not,
-    #         # we need to define a conditional object. Also, the decomp data must be re-structured for multiindex
-    #         # Dataframe
-    #         com_calc_type_data = (calc_types[key]['complex'] if h5
-    #                               else self._transform_from_lvl_decomp(calc_types[key]['complex']))
-    #         df = complex = pd.DataFrame(com_calc_type_data, index=self.frames)
-    #         if not self.stability:
-    #             rec_calc_type_data = (calc_types[key]['receptor'] if h5
-    #                                   else self._transform_from_lvl_decomp(calc_types[key]['receptor']))
-    #             receptor = pd.DataFrame(rec_calc_type_data, index=self.frames)
-    #
-    #             lig_calc_type_data = (calc_types[key]['ligand'] if h5
-    #                                   else self._transform_from_lvl_decomp(calc_types[key]['ligand']))
-    #             ligand = pd.DataFrame(lig_calc_type_data, index=self.frames)
-    #
-    #             delta = complex.subtract(pd.concat([receptor, ligand], axis=1)).combine_first(
-    #                 complex).reindex_like(df)
-    #             df = pd.concat([complex, receptor, ligand, delta], axis=1,
-    #                            keys=['complex', 'receptor', 'ligand', 'delta'])
-    #         data[key] = df
-    #     return data
-
-    @staticmethod
-    def _energy2flatdict(nd, omit=None):
-        if not omit:
-            omit = []
-        data = {}
-        for k1, v1 in nd.items():  # Complex, receptor, ligand and delta
-            if k1 in omit:
-                continue
-            for k2, v2 in v1.items():  # TDC, SDC, BDC or terms
-                if isinstance(v2, dict):  # per-wise
-                    for k3, v3 in v2.items():  # residue
-                        for k4, v4 in v3.items():  # residue in per-wise or terms in per-res
-                            if isinstance(v4, dict):  # per-wise
-                                for k5, v5 in v4.items():
-                                    data[(k1, k2, k3, k4, k5)] = v5
-                            else:
-                                data[(k1, k2, k3, k4)] = v4
-                else:
-                    data[(k1, k2)] = v2
-        return data
 
 def load_gmxmmpbsa_info(fname: Union[Path, str]):
     """

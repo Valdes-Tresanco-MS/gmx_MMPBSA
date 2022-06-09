@@ -10,10 +10,10 @@ title: Installation
 `gmx_MMPBSA` has been tested with GROMACS `4.6.7`, `5.1.2`, `2018.3`, `2020.4` and `2021.3`, although it should run 
 smoothly with any GROMACS present in the `PATH` and that is compatible with the files you are using.
 
-## Installing gmx_MMPBSA v1.5.0
+## Installing gmx_MMPBSA v1.5.x
 
 !!! danger
-    gmx_MMPBSA v1.5.0 includes a number of new functionalities and parts of the code have been completely rewritten, 
+    gmx_MMPBSA v1.5.x includes a number of new functionalities and parts of the code have been completely rewritten, 
     hence is incompatible with previous versions.
 
 Currently, gmx_MMPBSA can be installed using two ways:

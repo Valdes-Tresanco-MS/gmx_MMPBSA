@@ -61,7 +61,7 @@ with versions higher than 2016.x one, but still with limitations
   [^7]: It is not clear whether it does support GROMACS versions 20xx.x or not, but we assume that it does since 
 it is script-based
   [^8]: It is not clear whether it does support APBS versions 3.x.x
-  [^9]: gmx_MMPBSA is compatible with AmberTools20 or AmberTools21
+  [^9]: gmx_MMPBSA is compatible with AmberTools20, AmberTools21, and AmberTools22
   [^0]: gmx_MMPBSA supports Linear and Non-Linear PB equations. [MMPBSA.py][4] on the other hand, requires the user to 
 modify manually the *.mdin input files 
   

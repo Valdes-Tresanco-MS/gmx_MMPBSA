@@ -826,7 +826,7 @@ class CheckMakeTop:
                     res_selection.remove([lres.chain, lres.number, lres.insertion_code])
             for res in res_selection:
                 logging.warning("We couldn't find this residue CHAIN:{} RES_NUM:{} ICODE: {}".format(*res))
-        sele_res.sort()
+        sele_res = sorted(sele_res, key=lambda x: x.index)
         return (sele_res, (rec_charge, lig_charge)) if qm_sele else sele_res
 
     def fixparm2amber(self, structure, str_name=None):

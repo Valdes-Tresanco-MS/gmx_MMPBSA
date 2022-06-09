@@ -12,15 +12,16 @@ title: Getting started
 
 [<img src="../assets/TOC.png" height="120%" width="258" align="right"/>]()
 
-## gmx_MMPBSA v1.5.2 is out 😀!
+## gmx_MMPBSA v1.5.5 is out 😀!
 
-Check [changelog](changelog.md##gmx_mmpbsa-v152-03232022) to see what's new in gmx_MMPBSA v1.5.2.
+Check [changelog](changelog.md##gmx_mmpbsa-v152-03232022) to see what's new in gmx_MMPBSA v1.5.5.
 
 ## [Help needed for gmx_MMPBSA! To the content creators out there...](#colaboration)
 
 gmx_MMPBSA is a new tool based on AMBER's MMPBSA.py aiming to perform end-state free energy calculations with GROMACS 
-files. **_It works with all GROMACS versions along with AmberTools20 or 21 and brings improvements in compatibility, 
-versatility, analyses, and parallelization compared to existing programs (see [here](versus.md) for a detailed comparison)_**
+files. **_It works with all GROMACS versions along with AmberTools20, 21 or 22 and brings improvements in 
+compatibility, versatility, analyses, and parallelization compared to existing programs (see [here](versus.md) for a 
+detailed comparison)_**
 
 [comment]: <> (<div style="text-align:center">)
 
@@ -158,7 +159,7 @@ to see how gmx_MMPBSA is doing.
 ## **Colaboration**
 
 gmx_MMPBSA is rapidly becoming one of the main programs to perform end-point free energy calculations out there 
-(~21.5k downloads so far). We are currently focused on optimizing the program, supporting new types of calculations, 
+(~27.5k downloads so far). We are currently focused on optimizing the program, supporting new types of calculations, 
 force fields, etc. However, the video tutorials are not that great.
 
 That being said, **and here is where we need help**, we will appreciate any collaboration in making video tutorials for 
