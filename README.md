@@ -9,7 +9,7 @@
 gmx_MMPBSA is a new tool based on AMBER's MMPBSA.py aiming to perform end-state free energy calculations with GROMACS 
 files. It works with all GROMACS versions along with AmberTools20 or 21.
 
-**Please see the documentation [here](https://valdes-tresanco-ms.github.io/gmx_MMPBSA/getting-started/)**
+**Please see the documentation [here](getting-started.md)**
 
 ## Cite us
 
@@ -27,7 +27,7 @@ Bill R. Miller, T. Dwight McGee, Jason M. Swails, Nadine Homeyer, Holger Gohlke,
 An Efficient Program for End-State Free Energy Calculations**. _Journal of Chemical Theory and Computation_, 2012 8 
 (9), 3314-3321. https://pubs.acs.org/doi/10.1021/ct300418h
 
-Please, visit [Cite gmx_MMPBSA](https://valdes-tresanco-ms.github.io/gmx_MMPBSA/cite_us/) page for more information on how to cite gmx_MMPBSA and the programs/methods implemented in it.
+Please, visit [Cite gmx_MMPBSA](cite_us.md) page for more information on how to cite gmx_MMPBSA and the programs/methods implemented in it.
 
 ---------------------------------------
 
