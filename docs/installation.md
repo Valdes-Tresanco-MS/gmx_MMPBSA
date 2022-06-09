@@ -32,6 +32,30 @@ errors are more frequent.
 
 !!! info "Installation"
     === "conda environment"
+
+        === "`*.yml file`"    
+            Installing gmx_MMPBSA using a *.yml file. Download the [env.yml](env.yml) file and use it to install all 
+            the dependencies
+    
+            <div class="termy">
+
+            ```console
+            // Create a new environment and use the *.yml file to install dependencies
+            $ conda env create -n gmxMMPBSA --file env.yml
+            ```
+                
+            </div>
+
+            ??? note "Copy described intructions"     
+
+                ``` bash 
+                conda env create -n gmxMMPBSA --file env.yml                                    # (1)
+               
+                ```
+            
+                1. Create the `gmxMMPBSA` environment and use the *.yml file to install dependencies
+
+
         === "`pip`"    
             Installing dependencies
     
@@ -80,8 +104,7 @@ errors are more frequent.
                 4. Install ParmEd
                 5. Install PyQt5 if you will use gmx_MMPBSA_ana
                 6. (Optional) Install GROMACS if GROMACS is not installed in your machine
-        
-            
+
             === "Rolling/stable release"
                 
                 **INSTALLATION**
