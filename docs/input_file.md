@@ -310,7 +310,7 @@ tested in previous `protein_forcefield` and `ligand_forcefield` variables.
     * 6: mbondi_pb3
 
         !!! note "_mbondi_pb3_ radii set"
-            This raddi set haven been added in _gmx_MMPBSA v1.5.0_. It is based on _mbondi_ radii set and contains a 
+            This raddi set haven been added in _gmx_MMPBSA v1.5.x_. It is based on _mbondi_ radii set and contains a 
             new optimized set of halogen PB radii for halogenated compounds (without extra point (EP) of charge) 
             parametrized with General Amber Force Field (GAFF):
 

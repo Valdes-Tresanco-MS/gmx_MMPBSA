@@ -39,10 +39,14 @@ from pathlib import Path
 import json
 import logging
 from string import ascii_letters
+
+import pandas as pd
+
 from GMXMMPBSA.exceptions import GMXMMPBSA_ERROR
 from math import sqrt
 import parmed
 import numpy as np
+from typing import Union
 
 
 class EnergyVector(np.ndarray):
@@ -62,10 +66,31 @@ class EnergyVector(np.ndarray):
         # see InfoArray.__array_finalize__ for comments
         if obj is None:
             return
-        self.com_std = getattr(obj, 'com_stdev', None)
+        self.com_std = getattr(obj, 'com_std', None)
+
+    # This fix the pickle problem. Taken from
+    # https://stackoverflow.com/questions/26598109/preserve-custom-attributes-when-pickling-subclass-of-numpy-array
+    def __reduce__(self):
+        # Get the parent's __reduce__ tuple
+        pickled_state = super(EnergyVector, self).__reduce__()
+        # Create our own tuple to pass to __setstate__
+        new_state = pickled_state[2] + (self.__dict__,)
+        # Return a tuple that replaces the parent's __setstate__ tuple with our own
+        return (pickled_state[0], pickled_state[1], new_state)
+
+    def __setstate__(self, state):
+        self.__dict__.update(state[-1])  # Update the internal dict from state
+        # Call the parent's __setstate__ with the other tuple elements.
+        super(EnergyVector, self).__setstate__(state[:-1])
 
     def stdev(self):
         return self.com_std or self.std()
+
+    def sem(self):
+        return float(self.std() / sqrt(len(self)))
+
+    def semp(self):
+        return float(self.stdev() / sqrt(len(self)))
 
     def append(self, values):
         return EnergyVector(np.append(self, values))
@@ -252,47 +277,21 @@ def log_subprocess_output(process):
             break
 
 
-class Residue(int):
-    """
-    Residue class
-    """
-
-    def __init__(self, index, number, chain, id, id_index, name, icode=''):
-        int.__init__(index)
-        self.index = index
+class Residue(object):
+    def __init__(self, index, number, chain, mol_id, id_index, name, icode=''):
+        self.index = int(index)
         self.number = number
         self.chain = chain
-        self.id = id
+        self.mol_id = mol_id
         self.id_index = id_index
         self.name = name
         self.icode = icode
         self.mutant_label = None
-        self.string = f"{id}:{chain}:{name}:{number}:{icode}" if icode else f"{id}:{chain}:{name}:{number}"
+        self.string = f"{mol_id}:{chain}:{name}:{number}:{icode}" if icode else f"{mol_id}:{chain}:{name}:{number}"
         self.mutant_string = None
 
-    def __new__(cls, index, number, chain, id, id_index, name, icode=''):
-        i = int.__new__(cls, index)
-        i.index = index
-        i.number = number
-        i.chain = chain
-        i.id = id
-        i.id_index = id_index
-        i.name = name
-        i.icode = icode
-        i.mutant_label = None
-        i.mutant_string = None
-        i.string = f"{id}:{chain}:{name}:{number}:{icode}" if icode else f"{id}:{chain}:{name}:{number}"
-        return i
-
-    def __copy__(self):
-        return Residue(self.index, self.number, self.chain, self.id, self.id_index, self.name, self.icode)
-
-    def __deepcopy__(self, memo):
-        cls = self.__class__
-        return cls.__new__(cls, self.index, self.number, self.chain, self.id, self.id_index, self.name, self.icode)
-
     def __repr__(self):
-        text = f"{type(self).__name__}(index: {self.index}, {self.id}:{self.chain}:{self.name}:{self.number}"
+        text = f"{type(self).__name__}(index: {self.index}, {self.mol_id}:{self.chain}:{self.name}:{self.number}"
         if self.icode:
             text += f":{self.icode}"
         text += ')'
@@ -301,23 +300,110 @@ class Residue(int):
     def __str__(self):
         return f"{self.index}"
 
+    def __add__(self, other):
+        if isinstance(other, Residue):
+            return int(self.index + other.index)
+        return int(self.index + other)
+
+    def __sub__(self, other):
+        if isinstance(other, Residue):
+            return int(self.index - other.index)
+        return int(self.index - other)
+
+    def __int__(self):
+        return self.index
+
     def is_mutant(self):
         return bool(self.mutant_label)
 
     def is_receptor(self):
-        return self.id == 'R'
+        return self.mol_id == 'R'
 
     def is_ligand(self):
-        return self.id == 'L'
+        return self.mol_id == 'L'
 
     def issame(self, other):
         pass
 
     def set_mut(self, mut):
         self.mutant_label = f'{self.chain}/{self.number}{f":{self.icode}" if self.icode else ""} - {self.name}x{mut}'
+        self.mutant_string = (f"{self.mol_id}:{self.chain}:{mut}:{self.number}:{self.icode}" if self.icode
+                              else f"{self.mol_id}:{self.chain}:{mut}:{self.number}")
 
-        self.mutant_string = (f"{self.id}:{self.chain}:{mut}:{self.number}:{self.icode}" if self.icode
-                              else f"{self.id}:{self.chain}:{mut}:{self.number}")
+
+def multiindex2dict(p: Union[pd.MultiIndex, pd.Index, dict]) -> dict:
+    """
+    Converts a pandas Multiindex to a nested dict
+    :parm p: As this is a recursive function, initially p is a pd.MultiIndex, but after the first iteration it takes
+    the internal_dict value, so it becomes to a dictionary
+    """
+    internal_dict = {}
+    end = False
+    for x in p:
+        # Since multi-indexes have a descending hierarchical structure, it is convenient to start from the last
+        # element of each tuple. That is, we start by generating the lower level to the upper one. See the example
+        if isinstance(p, pd.MultiIndex):
+            # This checks if the tuple x without the last element has len = 1. If so, the unique value of the
+            # remaining tuple works as key in the new dict, otherwise the remaining tuple is used. Only for 2 levels
+            # pd.MultiIndex
+            if len(x[:-1]) == 1:
+                t = x[:-1][0]
+                end = True
+            else:
+                t = x[:-1]
+            if t not in internal_dict:
+                internal_dict[t] = [x[-1]]
+            else:
+                internal_dict[t].append(x[-1])
+        elif isinstance(x, tuple):
+            # This checks if the tuple x without the last element has len = 1. If so, the unique value of the
+            # remaining tuple works as key in the new dict, otherwise the remaining tuple is used
+            if len(x[:-1]) == 1:
+                t = x[:-1][0]
+                end = True
+            else:
+                t = x[:-1]
+            if t not in internal_dict:
+                internal_dict[t] = {x[-1]: p[x]}
+            else:
+                internal_dict[t][x[-1]] = p[x]
+    if end:
+        return internal_dict
+    return multiindex2dict(internal_dict)
+
+
+def flatten(dictionary, parent_key: list = False):
+    """
+    Turn a nested dictionary into a flattened dictionary
+    :param dictionary: The dictionary to flatten
+    :param parent_key:The accumulated list of keys
+    :return: A flattened dictionary with key as tuples of nested keys
+    """
+
+    items = []
+    for key, value in dictionary.items():
+        new_key = parent_key + [key] if parent_key else [key]
+        if isinstance(value, dict):
+            items.extend(flatten(value, new_key).items())
+        else:
+            items.append((tuple(new_key), value))
+    return dict(items)
+
+
+def emapping(d):
+    internal_dict = {}
+    for k, v in d.items():
+        if isinstance(v, dict):
+            if v.values():
+                if isinstance(list(v.values())[0], (dict, pd.DataFrame)):
+                    internal_dict[k] = emapping(v)
+                else:
+                    internal_dict[k] = list(v.keys())
+        elif isinstance(v, pd.DataFrame):
+            internal_dict[k] = multiindex2dict(v.columns)
+        else:
+            internal_dict[k] = v
+    return internal_dict
 
 
 def get_indexes(com_ndx, rec_ndx=None, rec_group=1, lig_ndx=None, lig_group=1):
@@ -538,9 +624,9 @@ def list2range(input_list):
     temp = []
     previous = None
 
-    input_list.sort()
+    ilist = sorted(input_list, key=lambda x: x.index if isinstance(x, Residue) else x)
 
-    for x in input_list:
+    for x in ilist:
         if not previous:
             temp.append(x)
         elif x == previous + 1:
@@ -548,7 +634,7 @@ def list2range(input_list):
         else:
             _add(temp)
             temp = [x]
-        if x == input_list[-1]:
+        if x == ilist[-1]:
             _add(temp)
         previous = x
     return {'num': ranges, 'string': ranges_str}

@@ -233,14 +233,10 @@ class WidgetParameterItem(ParameterItem):
             w = QSpinBox()
             if 'limits' in opts:
                 w.setRange(opts['limits'][0], opts['limits'][1])
-            if 'step' in opts:
-                w.setSingleStep(opts['step'])
-            if 'accelerated' in opts:
-                w.setAccelerated(opts['accelerated'])
-            if 'suffix' in opts:
-                w.setSuffix(opts['suffix'])
-            if 'prefix' in opts:
-                w.setPrefix(opts['prefix'])
+            w.setSingleStep(opts.get('step', 1))
+            w.setAccelerated(opts.get('accelerated', False))
+            w.setSuffix(opts.get('suffix', ''))
+            w.setPrefix(opts.get('prefix', ''))
             w.sigChanged = w.valueChanged
         elif t == 'float':
             w = QDoubleSpinBox()

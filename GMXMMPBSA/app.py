@@ -140,8 +140,7 @@ def gmxmmpbsa_ana():
         GMXMMPBSA_ERROR('%s: %s' % (type(e).__name__, e))
         sys.exit(1)
     ifiles = get_files(parser)
-    w = GMX_MMPBSA_ANA()
-    w.gettting_data(ifiles)
+    w = GMX_MMPBSA_ANA(ifiles)
     w.show()
     sys.exit(app.exec())
 

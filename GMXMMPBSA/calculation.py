@@ -634,48 +634,48 @@ class InteractionEntropyCalc:
         k = 0.001985875
         temperature = self.INPUT['temperature']
 
-        energy_int = np.array([], dtype=np.float)
-        a_energy_int = np.array([], dtype=np.float)
         exp_energy_int = np.array([], dtype=np.float)
-        self.data = np.array([], dtype=np.float)
-        for eint in self.ggas:
-            energy_int = np.append(energy_int, eint)
-            aeint = energy_int.mean()
-            a_energy_int = np.append(a_energy_int, aeint)
-            deint = eint - aeint
-            if deint > 425:
+        self.data = np.zeros(self.ggas.size, dtype=np.float)
+
+        for i in range(self.ggas.size):
+            aeint = self.ggas[:i+1].mean()
+            deint = self.ggas[i] - aeint
+            try:
+                eceint = math.exp(deint / (k * temperature))
+            except CalcError:
                 logging.warning('The internal energy of your system has very large energy fluctuation so it is not '
                                 'possible to continue with the calculations. Please, make sure your system is '
                                 'consistent')
                 logging.info('The Interaction Entropy will be skipped...')
                 self.INPUT['interaction_entropy'] = 0
                 break
-            eceint = math.exp(deint / (k * temperature))
             exp_energy_int = np.append(exp_energy_int, eceint)
             aeceint = exp_energy_int.mean()
             cts = k * temperature * math.log(aeceint)
-            self.data = np.append(self.data, cts)
+            self.data[i] = cts
+
         numframes = len(self.data)
-        self.ie_std = energy_int.std()
+        self.ie_std = float(self.ggas.std())
         self.ieframes = math.ceil(numframes * (self.isegment / 100))
         self.iedata = self.data[-self.ieframes:]
-        self.frames = list(
-            range(
-                self.INPUT['startframe'],
-                self.INPUT['startframe']
-                + numframes * self.INPUT['interval'],
-                self.INPUT['interval'],
-            )
-        )
 
     def save_output(self, filename):
+        frames = list(
+            range(
+                self.INPUT['startframe'],
+                self.INPUT['startframe'] + len(self.data) * self.INPUT['interval'],
+                self.INPUT['interval']
+            )
+        )
         with open(filename, 'w') as out:
-            out.write(f'Calculation for last {self.ieframes} frames:\n')
-            out.write(f'Interaction Entropy (-TΔS): {self.iedata.mean():9.4f} +/- {self.iedata.std():7.4f}\n\n')
-            out.write('Interaction Entropy per-frame:\n')
+            out.write('| Interaction Entropy results\n')
+            out.write(f'IE-frames: last {self.ieframes}\n')
+            out.write(f'Internal Energy SD (sigma): {self.ie_std:9.2f}\n')
+            out.write(f'| Interaction Entropy (-TΔS): {self.iedata.mean():9.2f} +/- {self.iedata.std():7.2f}\n\n')
+            out.write('| Interaction Entropy per-frame:\n')
 
             out.write('Frame # | IE value\n')
-            for f, d in zip(self.frames, self.data):
+            for f, d in zip(frames, self.data):
                 out.write('{:d}  {:.2f}\n'.format(f, d))
 
 # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -696,22 +696,28 @@ class C2EntropyCalc:
         # gas constant in kcal/(mol⋅K)
         R = 0.001987
         temperature = self.INPUT['temperature']
-        self.ie_std = self.ggas.std()
+        self.ie_std = float(self.ggas.std())
         self.c2data = (self.ie_std ** 2) / (2 * temperature * R)
 
+        size = self.ggas.size
         array_of_c2 = np.zeros(2000)
         for i in range(2000):
-            idxs = np.random.randint(0, len(self.ggas), len(self.ggas))
+            idxs = np.random.randint(0, size, size)
             ie_std = self.ggas[idxs].std()
             c2data = (ie_std ** 2) / (2 * temperature * R)
             array_of_c2[i] = c2data
 
-        self.c2_std = np.sort(array_of_c2)[100:1900].std()
+        self.c2_std = float(np.sort(array_of_c2)[100:1900].std())
         self.c2_ci = np.percentile(np.sort(array_of_c2)[100:1900], [2.5, 97.5])
 
     def save_output(self, filename):
         with open(filename, 'w') as out:
-            out.write(f'C2 Entropy (-TΔS): {self.c2data:.4f}\n\n')
+            out.write('| C2 Entropy results\n')
+            out.write(f'C2 Entropy (-TΔS): {self.c2data:.4f}\n')
+            out.write(f'C2 Entropy SD: {self.c2_std:.4f}\n')
+            out.write(f'Internal Energy SD (sigma): {self.ie_std:9.2f}\n')
+            out.write(f'C2 Entropy CI: {self.c2_ci[0]:.4f} {self.c2_ci[1]:.4f}\n')
+
 
 
 # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
