@@ -34,14 +34,18 @@ errors are more frequent.
     === "conda environment"
 
         === "`*.yml file`"    
-            Installing gmx_MMPBSA using a *.yml file. Download the [env.yml](env.yml) file and use it to install all 
-            the dependencies
+            Installing gmx_MMPBSA using a yml file. 
+
+            :material-file-download-outline:{:.heart } Download **[env.yml](env.yml)** file
     
             <div class="termy">
 
             ```console
             // Create a new environment and use the *.yml file to install dependencies
             $ conda env create -n gmxMMPBSA --file env.yml
+
+            // To use gmx_MMPBSA, just activate the environment
+            $ conda activate gmxMMPBSA
             ```
                 
             </div>
