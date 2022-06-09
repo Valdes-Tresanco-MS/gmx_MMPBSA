@@ -220,7 +220,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
                               "<body>"
                               "<h2 style='text-align:center'>About gmx_MMPBSA</h2>"
                               "<div text-align:center;>"
-                              f"<a href='https://valdes-tresanco-ms.github.io/gmx_MMPBSA/'>"
+                              f"<a href='https://valdes-tresanco-ms.github.io/gmx_MMPBSA/dev/'>"
                               f"<img src={toc_img} alt='gmx_MMPBSA TOC' width='450' height='350'>"
                               "</a>"
                               "</div>"
@@ -238,10 +238,10 @@ class GMX_MMPBSA_ANA(QMainWindow):
                               "</html>")
 
     def _help(self):
-        QDesktopServices().openUrl(QUrl('https://valdes-tresanco-ms.github.io/gmx_MMPBSA/analyzer/'))
+        QDesktopServices().openUrl(QUrl('https://valdes-tresanco-ms.github.io/gmx_MMPBSA/dev/analyzer/'))
 
     def _doc(self):
-        QDesktopServices().openUrl(QUrl('https://valdes-tresanco-ms.github.io/gmx_MMPBSA/getting-started/'))
+        QDesktopServices().openUrl(QUrl('https://valdes-tresanco-ms.github.io/gmx_MMPBSA/dev/getting-started/'))
 
     def _bug(self):
         QDesktopServices().openUrl(QUrl('https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/issues/new/choose'))

@@ -417,7 +417,7 @@ def check_str(structure, ref=False, skip=False):
     for res in refstr.residues:
         if 'LP' in res.name:
             GMXMMPBSA_ERROR('The LP pseudo-atom is not supported. Please remove them following this instructions: '
-                            'https://valdes-tresanco-ms.github.io/gmx_MMPBSA/examples/Protein_ligand_LPH_atoms_CHARMMff/')
+                            'https://valdes-tresanco-ms.github.io/gmx_MMPBSA/dev/examples/Protein_ligand_LPH_atoms_CHARMMff/')
         if res.chain == '':
             if ref:
                 GMXMMPBSA_ERROR('The reference structure used is inconsistent. The following residue does not have a '
