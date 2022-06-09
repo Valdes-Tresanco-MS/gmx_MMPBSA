@@ -54,10 +54,12 @@ errors are more frequent.
 
                 ``` bash 
                 conda env create -n gmxMMPBSA --file env.yml                                    # (1)
+                conda activate gmxMMPBSA                                                        # (2)
                
                 ```
             
                 1. Create the `gmxMMPBSA` environment and use the *.yml file to install dependencies
+                2. Activate `gmxMMPBSA` environment
 
 
         === "`pip`"    
