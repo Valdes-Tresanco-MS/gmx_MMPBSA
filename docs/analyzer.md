@@ -14,6 +14,35 @@ charts ([check this section to learn about the potential of `gmx_MMPBSA_ana`](#g
 conserves the essence of its predecesor `gmx_MMPBSA_ana v1.4.3`, although the API that uses in the backend is quite 
 different, making it incompatible with files from previous versions.
 
+## Fast like a rocket
+After version 1.5.2 gmx_MMPBSA_ana presented serious performance problems. We set ourselves the task of improving it 
+from the ground up and these are the results:
+
+This version = v1.5.5
+
+| Number of systems/CPUs | Type                    | Frames | v1.5.2 | v1.5.2+20 | This version | Improvement |
+|:----------------------:|-------------------------|:------:|:------:|:---------:|:------------:|:-----------:|
+|           1            | Energy                  | 200000 |  fail  |   960s    |     17s      |   **56x**   |
+|           4            | Energy                  | 200000 |  fail  |   4515s   |     17s      |  **265x**   |
+|           1            | Energy+Decomp(per-wise) |   11   |  fail  |   192s    |      9s      |   **21x**   |
+|           4            | Energy+Decomp(per-wise) |   11   |  fail  |   960s    |     14s      |   **69x**   |
+
+To this end, we made the following changes:
+- Reimplemented multiprocessing for reading systems.
+- Implemented multithreading for data processing.
+- Improved the reading of output files and optimized data storage. 
+- Eliminated the recalculation of IE and C2 entropies before opening the GUI. Now read from outputs files
+- Optimized data storage and access to subsets in panda's Dataframes
+- Now file processing and graphics generation does not freeze the GUI.
+- Removed redundant steps and data
+- Removed line graphs for components in the per-wise decomposition schema
+- Data access, processing, and storage are done in the API.
+- Added the option to temporarily store data on the hard disk instead of memory
+- Removed several pop-up windows
+- Added wait indicators
+- Added multiple systems, subsystems, and component selection options.
+
+
 ## gmx_MMPBSA_ana components
 
 1. [System selection window](#1-system-selection-window)

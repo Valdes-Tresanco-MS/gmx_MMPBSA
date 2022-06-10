@@ -3,6 +3,90 @@ template: main.html
 title: Changelog
 ---
 # Changelog
+## gmx_MMPBSA v1.5.5 (06/12/2022)
+
+### Additions
+
+#### gmx_MMPBSA
+
+- Improved the API (#209)
+    - Added a new method to get the Enthalpy 
+    - Added a new method to get the Entropy
+    - Added a new method to get the Binding
+    - Added a new method to get the Decomposition energy
+    - Added a new method to get the gmx_MMPBSA_ana data
+
+#### gmx_MMPBSA_ana
+- Added multiprocessing and multithreading (#209)
+- Wait indicator
+- Added Error line cap size
+- Systems, subsystems and component selection options
+- Added threshold to remove energetic terms or residues
+- Correlation (#137)
+    - Normal correlation using ΔG
+    - Mutant correlation using ΔΔG
+    - Energy values table
+    - Interactive systems selection and Experimental Ki editor
+    - New regression plot with bivariate and univariate graphs
+    - Chart options panel
+        - General options
+        - Regression options
+            - Scatter
+            - Distribution
+
+#### Documentation
+- News section
+- Animated command-line code block with termynal
+- Added versioning 
+- Added installation using *.yml configuration file (#221)
+
+### Fix
+#### gmx_MMPBSA_ana
+- Close gmx_MMPBSA_ana properly when the selection dialog is rejected
+- Compatibility with previous versions (`< v1.5.2`)
+- Added several tooltips
+- Improved general performance. See the [benchmark](analyzer.md#fast-like-a-rocket) (#209, #230, #243)
+    - Improved the reading of output files and optimized data storage. (#228)
+    - Eliminated the recalculation of IE and C2 entropies before opening the GUI. Now read from outputs files
+    - Optimized data storage and access to subsets in panda's Dataframes
+    - Now file processing and graphics generation does not freeze the GUI.
+    - Removed redundant steps and data
+    - Removed line graphs for components in the per-wise decomposition schema
+    - Data access, processing, and storage are done in the API.
+    - Added the option to temporarily store data on the hard disk instead of memory
+    - Removed several pop-up windows
+    - Decreased RAM consumption
+
+- Removed H5 support 
+- Invalid periodicity in the prmtop (#211)
+- Buffer saturation (#213)
+
+
+### Changes
+#### gmx_MMPBSA
+- Improved IE and C2 calculation
+
+#### gmx_MMPBSA_ana
+
+- Change the IE representation
+- Removed summary widget
+- Now the bar plot data contain the Average, SD, and SEM instead of all frames
+- Chart Options
+    - Error line color
+    - Error line representation (SD or SEM)
+
+- Restructured the init (system selection) dialog
+    - Improved energy and decomposition options selection
+    - Improved the correlation options
+    - Added new section for performance configuration
+    - Added RAM consumption estimator
+    - Improved the systems' tree representation and edition options
+
+
+#### gmx_MMPBSA_test
+- The examples' folder moved up to root directory
+
+---
 
 ## gmx_MMPBSA v1.5.2 (03/23/2022)
 
