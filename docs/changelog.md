@@ -3,7 +3,7 @@ template: main.html
 title: Changelog
 ---
 # Changelog
-## gmx_MMPBSA v1.5.5 (06/12/2022)
+## gmx_MMPBSA v1.5.5 (06/10/2022)
 
 ### Additions
 
