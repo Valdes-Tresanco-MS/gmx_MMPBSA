@@ -1,7 +1,7 @@
 
 # Project information
 site_name: gmx_MMPBSA Documentation
-site_url: https://valdes-tresanco-ms.github.io/gmx_MMPBSA/
+site_url: https://valdes-tresanco-ms.github.io/gmx_MMPBSA/dev/
 site_author: Mario S. and Mario E. Valdés Tresanco
 site_description: >-
   gmx_MMPBSA is a new tool based on AMBER's MMPBSA.py aiming to perform end-state free energy calculations with GROMACS

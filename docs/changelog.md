@@ -52,8 +52,8 @@ title: Changelog
 #### `Documentation`
 
 - gmx_MMPBSA_ana documentation (v1.5.0) (#152)
-- [Tutorial for psf_dcd files](https://valdes-tresanco-ms.github.io/gmx_MMPBSA/examples/#support-for-psf_dcd-files)
-- [Tutorial for OPLS ff files](https://valdes-tresanco-ms.github.io/gmx_MMPBSA/examples/#oplsff-support)
+- [Tutorial for psf_dcd files](https://valdes-tresanco-ms.github.io/gmx_MMPBSA/dev/examples/#support-for-psf_dcd-files)
+- [Tutorial for OPLS ff files](https://valdes-tresanco-ms.github.io/gmx_MMPBSA/dev/examples/#oplsff-support)
 
 ### Fixes
 
@@ -179,9 +179,9 @@ title: Changelog
 
 ## [gxm_MMPBSA v1.4.3 (05/26/2021)](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/releases/tag/v1.4.3)
 ### Additions
-- Added two new tutorials [Protein_ligand_LPH_atoms_CHARMMff](https://valdes-tresanco-ms.github.io/gmx_MMPBSA/examples/Protein_ligand_LPH_atoms_CHARMMff/) and [QM/MMGBSA calculations](https://valdes-tresanco-ms.github.io/gmx_MMPBSA/examples/QM_MMGBSA/)
+- Added two new tutorials [Protein_ligand_LPH_atoms_CHARMMff](https://valdes-tresanco-ms.github.io/gmx_MMPBSA/dev/examples/Protein_ligand_LPH_atoms_CHARMMff/) and [QM/MMGBSA calculations](https://valdes-tresanco-ms.github.io/gmx_MMPBSA/examples/QM_MMGBSA/)
 - Now the program reports the `p-value` associated with the correlation coefficient when performing the correlation analysis
-- Google Analytics is used as a third-party tracking service to improve documentation. Check our [Private Policy](https://valdes-tresanco-ms.github.io/gmx_MMPBSA/private_policy/) for more details
+- Google Analytics is used as a third-party tracking service to improve documentation. Check our [Private Policy](https://valdes-tresanco-ms.github.io/gmx_MMPBSA/dev/private_policy/) for more details
 
 ### Fixes
 - Minor fixes in the documentation
@@ -281,7 +281,7 @@ This release focuses almost entirely on `gmx_MMPBSA_ana` with minor issues fixed
     - Multiple models at the same time
     - Graphs and correlation data for each calculated energy term (ΔH, ΔH+IE, ΔH+NMODE and ΔH+QH)  
     - Table with the experimental energy of the systems, and the data of the selected model
-- New arguments flags for gmx_MMPBSA_ana (See the [gmx_MMPBSA_ana documentation](https://valdes-tresanco-ms.github.io/gmx_MMPBSA/analyzer/))
+- New arguments flags for gmx_MMPBSA_ana (See the [gmx_MMPBSA_ana documentation](https://valdes-tresanco-ms.github.io/gmx_MMPBSA/dev/analyzer/))
     - replaced `-p` by `-f`
     - `-f` accept a folder, single info file or a list of them
     - New flag `-r`. This flag allows to load all the systems inside a selected folder

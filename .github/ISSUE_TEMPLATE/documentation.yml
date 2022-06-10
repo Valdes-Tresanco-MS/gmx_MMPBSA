@@ -9,7 +9,7 @@ body:
       label: Documentation Link
       description: |
         Link to any documentation or examples that you are referencing.
-      placeholder: https://valdes-tresanco-ms.github.io/gmx_MMPBSA/...
+      placeholder: https://valdes-tresanco-ms.github.io/gmx_MMPBSA/dev/...
   - type: textarea
     id: problem
     attributes:

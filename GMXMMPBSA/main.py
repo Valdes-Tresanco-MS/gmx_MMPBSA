@@ -801,7 +801,7 @@ class MMPBSA_App(object):
                 logging.error(
                     "When using -lm flag, leaprc.gaff or leaprc.gaff2 should be included in the forcefields "
                     "variable. Check this tutorial for "
-                    "more details https://valdes-tresanco-ms.github.io/gmx_MMPBSA/examples/Protein_ligand/ST/")
+                    "more details https://valdes-tresanco-ms.github.io/gmx_MMPBSA/dev/examples/Protein_ligand/ST/")
 
         if INPUT['igb'] not in [1, 2, 5, 7, 8]:
             GMXMMPBSA_ERROR('Invalid value for IGB (%s)! ' % INPUT['igb'] + 'IGB must be 1, 2, 5, 7, or 8.', InputError)

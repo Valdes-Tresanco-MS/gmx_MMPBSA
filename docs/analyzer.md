@@ -211,8 +211,8 @@ This section contains three drop-down menus:
     * Tile SubWindows -- organizes graphs as tile
     * Cascade SubWindows -- organizes graphs as cascade
 === "About"
-    * Help -- shows [gmx_MMPBSA_ana page](https://valdes-tresanco-ms.github.io/gmx_MMPBSA/analyzer)
-    * Documentation -- shows [gmx_MMPBSA page](https://valdes-tresanco-ms.github.io/gmx_MMPBSA/getting-started)
+    * Help -- shows [gmx_MMPBSA_ana page](analyzer.md)
+    * Documentation -- shows [gmx_MMPBSA page](getting-started.md)
     * Report a bug -- opens issue and report a bug on [GitHub](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/issues/new/choose)
     * Google group -- opens [gmx_MMPBSA Google Group](https://groups.google.com/g/gmx_mmpbsa)
     * About gmx_MMPBSA_ana -- shows gmx_MMPBSA citation
