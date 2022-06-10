@@ -39,7 +39,7 @@ title: Changelog
 - Animated command-line code block with terminal
 - Added versioning
 - Added installation using *.yml configuration file (#221)
-- Added new tutorial for correlation analysis (#194)
+- Added a new tutorial for correlation analysis (#194)
 
 ### Fix
 #### gmx_MMPBSA_ana
@@ -79,13 +79,13 @@ title: Changelog
 - Restructured the init (system selection) dialog
     - Improved energy and decomposition options selection
     - Improved the correlation options
-    - Added new section for performance configuration
+    - Added a new section for performance configuration
     - Added RAM consumption estimator
     - Improved the systems' tree representation and edition options
 
 
 #### gmx_MMPBSA_test
-- The examples' folder moved up to root directory
+- The examples folder moved up to the root directory
 
 ---
 
