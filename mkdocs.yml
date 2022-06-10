@@ -2,7 +2,7 @@
 # Project information
 site_name: gmx_MMPBSA Documentation
 site_url: https://valdes-tresanco-ms.github.io/gmx_MMPBSA/dev/
-site_author: Mario S. and Mario E. Valdés Tresanco
+site_author: Mario S. and Mario E. Valdés-Tresanco
 site_description: >-
   gmx_MMPBSA is a new tool based on AMBER's MMPBSA.py aiming to perform end-state free energy calculations with GROMACS
   files
@@ -13,7 +13,7 @@ repo_url: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA
 edit_uri: ""
 
 # Copyright
-copyright: Copyright &copy; 2020 - 2022 MS. and ME. Valdes Tresanco
+copyright: Copyright &copy; 2020 - 2022 MS. and ME. Valdés-Tresanco
 
 # Configuration
 theme:
@@ -204,6 +204,7 @@ nav:
             - C2 Entropy calculations: examples/Entropy_calculations/C2_Entropy/README.md
         - Stability calculations: examples/Stability/README.md
         - QM/MMGBSA: examples/QM_MMGBSA/README.md
+        - Correlation: examples/Correlation/README.md
     - Support for psf_dcd files:
         - Protein-protein: examples/psf_dcd/protein_protein/README.md
         - Protein-ligand: examples/psf_dcd/protein_ligand/README.md

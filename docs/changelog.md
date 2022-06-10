@@ -36,7 +36,7 @@ title: Changelog
 
 #### Documentation
 - News section
-- Animated command-line code block with termynal
+- Animated command-line code block with terminal
 - Added versioning 
 - Added installation using *.yml configuration file (#221)
 
