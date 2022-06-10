@@ -1,15 +1,11 @@
 [
     {
-        "new": "gmx_MMPBSA v1.5.5 coming soon! \uD83D\uDE0E",
-        "url": "/gmx_MMPBSA/dev/changelog/#gmx_mmpbsa-v155-06122022"
+        "new": "gmx_MMPBSA v1.5.5 is out! \uD83D\uDE0E",
+        "url": "/gmx_MMPBSA/dev/changelog/#gmx_mmpbsa-v155-06102022"
     },
     {
         "new": "gmx_MMPBSA_ana is now faster than ever \uD83D\uDE80",
         "url": "/gmx_MMPBSA/dev/analyzer/#fast-like-a-rocket"
-    },
-    {
-        "new": "gmx_MMPBSA v1.5.2 is out \uD83D\uDE00!",
-        "url": "/gmx_MMPBSA/dev/getting-started/#gmx_mmpbsa-v152-is-out"
     },
     {
         "new": "Recent papers citing gmx_MMPBSA \uD83E\uDD13!",
