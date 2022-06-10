@@ -181,6 +181,11 @@
          <changefreq>daily</changefreq>
     </url>
     <url>
+         <loc>https://valdes-tresanco-ms.github.io/gmx_MMPBSA/dev/dev/examples/Correlation/</loc>
+         <lastmod>2022-06-10</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
          <loc>https://valdes-tresanco-ms.github.io/gmx_MMPBSA/dev/dev/examples/Decomposition_analysis/</loc>
          <lastmod>2022-06-10</lastmod>
          <changefreq>daily</changefreq>
