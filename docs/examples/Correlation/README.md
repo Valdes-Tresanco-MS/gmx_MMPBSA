@@ -90,5 +90,5 @@ The following video shows how to perform correlation analysis in gmx_MMPBSA_ana.
   [3]: ../../input_file.md#sample-input-files
   [4]: ../../analyzer.md#gmx_mmpbsa_ana-the-analyzer-tool  
   [5]: ../../input_file.md#general-namelist-variables
-  [6]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/docs/examples/Alanine_scanning
+  [6]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/examples/Correlation
   [7]: ../gmx_MMPBSA_test.md#gmx_mmpbsa_test-command-line

@@ -108,5 +108,5 @@ specified on the command-line.
   [3]: ../../../input_file.md#sample-input-files
   [4]: https://pubs.acs.org/doi/full/10.1021/acs.jctc.8b00418
   [5]: ../../../analyzer.md#gmx_mmpbsa_ana-the-analyzer-tool
-  [6]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/docs/examples/Entropy_calculations/C2_Entropy
+  [6]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/examples/Entropy_calculations/C2_Entropy
   [7]: ../../gmx_MMPBSA_test.md#gmx_mmpbsa_test-command-line

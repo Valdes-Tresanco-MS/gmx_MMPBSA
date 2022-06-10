@@ -223,7 +223,7 @@ specified on the command-line.
   [2]: ../../../input_file.md#the-input-file
   [3]: ../../../input_file.md#sample-input-files
   [5]: ../../../analyzer.md#gmx_mmpbsa_ana-the-analyzer-tool
-  [6]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/docs/examples/psf_dcd/protein_ligand
+  [6]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/examples/psf_dcd/protein_ligand
   [7]: ../../gmx_MMPBSA_test.md#gmx_mmpbsa_test-command-line
   [8]: ../../../input_file.md#generation-of-input-files-with-gmx_mmpbsa
   [9]: ../../../howworks.md

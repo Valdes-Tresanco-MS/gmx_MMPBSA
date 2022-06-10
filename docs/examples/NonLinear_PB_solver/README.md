@@ -115,6 +115,6 @@ specified on the command-line.
   [3]: ../../input_file.md#sample-input-files
   [4]: ../../analyzer.md#gmx_mmpbsa_ana-the-analyzer-tool  
   [5]: ../../input_file.md#general-namelist-variables
-  [6]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/docs/examples/NonLinear_PB_solver
+  [6]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/examples/NonLinear_PB_solver
   [7]: ../gmx_MMPBSA_test.md#gmx_mmpbsa_test-command-line
   [8]: https://aip.scitation.org/doi/10.1063/1.1622376

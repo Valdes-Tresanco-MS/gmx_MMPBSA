@@ -93,5 +93,5 @@ specified on the command-line.
   [2]: ../../input_file.md#the-input-file
   [3]: ../../input_file.md#sample-input-files
   [4]: ../../analyzer.md#gmx_mmpbsa_ana-the-analyzer-tool
-  [5]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/docs/examples/3D-RISM
+  [5]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/examples/3D-RISM
   [6]: ../gmx_MMPBSA_test.md#gmx_mmpbsa_test-command-line

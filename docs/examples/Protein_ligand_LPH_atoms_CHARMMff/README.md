@@ -245,6 +245,6 @@ specified on the command-line.
   [3]: ../../input_file.md#the-input-file
   [4]: ../../input_file.md#sample-input-files
   [5]: ../../analyzer.md#gmx_mmpbsa_ana-the-analyzer-tool
-  [6]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/docs/examples/Protein_ligand_LPH_atoms_CHARMMff
+  [6]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/examples/Protein_ligand_LPH_atoms_CHARMMff
   [7]: ../gmx_MMPBSA_test.md#gmx_mmpbsa_test-command-line
   [8]: https://www.sciencedirect.com/science/article/abs/pii/S0968089616304576?via%3Dihub
