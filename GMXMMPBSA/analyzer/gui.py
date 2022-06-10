@@ -1080,13 +1080,13 @@ class GMX_MMPBSA_ANA(QMainWindow):
         iq = Queue()
         self.rq = Queue()
 
-        opts4ana = {'energy_options': {},
-                    'entropy_options': {},
-                    'decomp_options': {'res_threshold': options.get('decomposition').get('res_threshold')},
-                    'correlation': options.get('correlation').get('corr'),
-                    'performance_options': options.get('performance')}
         for i, _ in enumerate(range(max_sixe), start=1):
             sys_name, path, stability, exp_ki, corr, ref, options_file = queue.get()
+            opts4ana = {'energy_options': {},
+                        'entropy_options': {},
+                        'decomp_options': {'res_threshold': options.get('decomposition').get('res_threshold')},
+                        'correlation': options.get('correlation').get('corr'),
+                        'performance_options': options.get('performance')}
             opts4ana['energy_options']['etype'] = opts4ana['entropy_options']['etype'] = (None if len(exp_ki) == 2 else
                                                                                           tuple(exp_ki.keys()))
             opts4ana['decomp_options']['etype'] = None if len(exp_ki) == 2 else tuple(f"decomp_{x}" for x in exp_ki)
@@ -1094,7 +1094,6 @@ class GMX_MMPBSA_ANA(QMainWindow):
                 tuple(options.get('energy').get('mols')))
             opts4ana['decomp_options']['mol'] = (['complex'] if stability else
                                                         tuple(options.get('decomposition').get('mols')))
-
             d = {MMPBSA_API: {'object': 'class',
                               'args': None},
                  'setting_time': {'object': 'method',
