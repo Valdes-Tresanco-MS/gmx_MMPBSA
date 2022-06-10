@@ -385,9 +385,10 @@ class InitDialog(QDialog):
         files_list = info_files
         names = []
         btns = []
+        ref_checked = False
         for c, fname in enumerate(files_list, start=1):
             basename = None
-            exp_ki = None
+            temp_ki = None
             mut_only = False
             mutant = None
             stability = False
@@ -404,6 +405,7 @@ class InitDialog(QDialog):
             else:
                 with open(fname) as fi:
                     for line in fi:
+                        line = line.strip('\n')
                         if line.startswith("INPUT['sys_name']"):
                             basename = str(line.split()[2]).strip('"\'')
                             if basename in names:
@@ -411,11 +413,11 @@ class InitDialog(QDialog):
                                     basename = f"{basename}-{names.count(basename) + 1}"
                                 names.append(basename)
                         if line.startswith("INPUT['exp_ki']"):
-                            exp_ki = float(line.split()[2])
+                            temp_ki = [float(x.strip()) for x in line.split('=')[1].strip(' []').split(',')]
                         if line.startswith("INPUT['mutant_only']"):
                             mut_only = int(line.split()[2])
                         if line.startswith("mut_str"):
-                            mutant = line.strip('\n').split('=')[1].strip(" '")
+                            mutant = line.split('=')[1].strip(" '")
                         if line.startswith("FILES.stability"):
                             stability = eval(line.split()[2])
             # check for custom settings
@@ -428,8 +430,6 @@ class InitDialog(QDialog):
 
             if not basename:
                 basename = f'System-{c}'
-            if not exp_ki:
-                exp_ki = 0.0
 
             item = QTreeWidgetItem([f'{c}', '', f'{basename}', '', '', '', '', f'{fname.parent.absolute()}'])
             item.setFlags(item.flags() | Qt.ItemFlag.ItemIsAutoTristate)
@@ -438,19 +438,23 @@ class InitDialog(QDialog):
             self.f_item.addChild(item)
 
             if not mut_only:
-                witem = QTreeWidgetItem(['', '', 'normal', f'{exp_ki}', '', '','', ''])
+                witem = QTreeWidgetItem(['', '', 'normal', f'{temp_ki[0]}', '', '','', ''])
                 self._set_item_properties(witem, True)
                 item.addChild(witem)
                 ref_btn = QRadioButton('')
 
-                # FIXME: reference selection require item selection for analysis and define Ki value
-                # self._select_item_as_ref(witem, )
-                if c == 1:
+                if not ref_checked:
                     ref_btn.setChecked(True)
                 btns.append(ref_btn)
                 self.result_tree.setItemWidget(witem, 5, ref_btn)
 
             if mutant:
+                exp_ki = 0.0
+                if len(temp_ki) == 2:
+                    exp_ki = temp_ki[1]
+                elif mut_only:
+                    exp_ki = temp_ki[0]
+
                 mitem = QTreeWidgetItem(['', '', f'{mutant}', f'{exp_ki}', '', '','', ''])
                 self._set_item_properties(mitem, True)
                 item.addChild(mitem)
@@ -584,8 +588,8 @@ class worker(QThread):
         size = self.queue.qsize()
         TASKS = []
         for _ in range(size):
-            i, d = self.queue.get_nowait()
-            TASKS.append((i, d))
+            c = self.queue.get()
+            TASKS.append(c)
         self.jobs = min(self.jobs, len(TASKS))
         with multiprocessing.Pool(self.jobs) as pool:
             imap_unordered_it = pool.imap_unordered(self.run_process, TASKS)

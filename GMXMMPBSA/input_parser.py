@@ -424,7 +424,7 @@ input_file.addNamelist('general', 'general',
 
                             # Miscellaneous options
                            ['assign_chainID', int, 0, 'Assign chains ID'],
-                           ['exp_ki', float, 0, 'Experimental Ki in nM'],
+                           ['exp_ki', list, [0.0], 'Experimental Ki in nM', float],
                            ['full_traj', int, 0, 'Print a full traj. AND the thread trajectories'],
                            ['gmx_path', str, '', 'Force to use this path to get GROMACS executable'],
                            # FIXME: keep_files we need to improved the h5 file
