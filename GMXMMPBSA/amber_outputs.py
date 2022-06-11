@@ -24,6 +24,7 @@ All data is stored in a special class derived from the list.
 #  for more details.                                                           #
 # ##############################################################################
 import logging
+from copy import deepcopy
 from math import sqrt
 from GMXMMPBSA.exceptions import (OutputError, LengthError, DecompError)
 from GMXMMPBSA.utils import EnergyVector
@@ -57,8 +58,10 @@ class AmberOutput(dict):
         self.chamber = chamber
         self.basename = None
         self.num_files = None
+        self.frame_idx = 0
+        self.extraframe_idx = 0
         self.is_read = False
-        self.apbs = INPUT['pb']['sander_apbs']
+        self.apbs = INPUT['sander_apbs']
 
         # This variable is used to get if the nmode calculation hasn't at least one frame
         self.no_nmode_convergence = False
@@ -89,19 +92,17 @@ class AmberOutput(dict):
                 if key not in self.data_keys:
                     self.data_keys.insert(3, key)
 
-    def parse_from_file(self, basename, num_files=1):
+    def parse_from_file(self, basename, num_files=1, numframes=1):
         self.num_files = num_files
         self.basename = basename
-        self.temperature = self.INPUT['general']['temperature']
+        self.temperature = self.INPUT['temperature']
 
         for key in self.data_keys:
-            self[key] = EnergyVector()
+            self[key] = EnergyVector(numframes)
         for key in self.composite_keys:
-            self[key] = EnergyVector()
+            self[key] = EnergyVector(numframes)
         AmberOutput._read(self)
-
-        # Now we need call this method explicitly
-        self.fill_composite_terms()
+        self._fill_composite_terms()
 
     def parse_from_h5(self, d: dict):
         for key in d:
@@ -109,7 +110,7 @@ class AmberOutput(dict):
                 continue
             self[key] = EnergyVector(d[key][()])
         self.is_read = True
-        # self.fill_composite_terms()
+        self._fill_composite_terms()
 
     def _print_vectors(self, csvwriter):
         """ Prints the energy vectors to a CSV file for easy viewing
@@ -123,15 +124,17 @@ class AmberOutput(dict):
         csvwriter.writerow(['Frame #'] + print_keys)
 
         # write out each frame
-        c = self.INPUT['nmode']['nmstartframe'] if self.__class__ == NMODEout else self.INPUT['general']['startframe']
+        c = self.INPUT['nmstartframe'] if self.__class__ == NMODEout else self.INPUT['startframe']
         for i in range(len(self[print_keys[0]])):
             csvwriter.writerow([c] + [round(self[key][i], 2) for key in print_keys])
-            c += self.INPUT['nmode']['nminterval'] if self.__class__ == NMODEout else self.INPUT['general']['interval']
+            c += self.INPUT['nminterval'] if self.__class__ == NMODEout else self.INPUT['interval']
 
-    def set_frame_range(self, start=0, end=None, interval=1):
-        for key in self.data_keys:
-            self[key] = self[key][start:end:interval]
-        self.fill_composite_terms()
+    def set_frame_range(self, start=None, end=None, interval=None):
+        d = deepcopy(self)
+        for key in d.data_keys:
+            d[key] = d[key][start:end:interval]
+        d._fill_composite_terms()
+        return d
 
     def summary_output(self):
         if not self.is_read:
@@ -207,7 +210,7 @@ class AmberOutput(dict):
     def _fill_nmode_values(self):
         pass
 
-    def fill_composite_terms(self):
+    def _fill_composite_terms(self):
         """
         Fills in the composite terms WITHOUT adding in terms we're not printing.
         This should be called after the final verbosity level has been set (based
@@ -233,8 +236,29 @@ class IEout(dict):
         self.INPUT = INPUT
 
     def parse_from_dict(self, d: dict):
-        for term, dat in d.items():
-            self[term] = EnergyVector(dat) if term in ['data', 'iedata'] else dat
+        self.update(d)
+
+    def parse_from_file(self, filename, numframes=1):
+        self['data'] = EnergyVector(numframes)
+        with open(filename) as of:
+            c = 0
+            f = 0
+            while line := of.readline():
+                f += 1
+                if line.startswith('|') or not line.split():
+                    continue
+                if line.startswith('IE-frames:'):
+                    self['ieframes'] = int(line.strip('\n').split()[-1])
+                elif line.startswith('Internal Energy SD (sigma):'):
+                    self['sigma'] = float(line.strip('\n').split()[-1])
+                elif line.startswith('Frame'):
+                    continue
+                else:
+                    frame, value = line.strip('\n').split()
+                    self['data'][c] = float(value)
+                    c += 1
+                f += 1
+        self['iedata'] = self['data'][-self['ieframes']:]
 
     def parse_from_h5(self, d):
         for model in d:
@@ -270,11 +294,19 @@ class IEout(dict):
     def summary(self):
         """ Formatted summary of Interaction Entropy results """
 
-        avg = float(self['iedata'].mean())
-        stdev = float(self['iedata'].stdev())
+        avg = float(self['data'][-self['ieframes']:].mean())
+        stdev = float(self['data'][-self['ieframes']:].stdev())
+        sem = float(self['data'][-self['ieframes']:].sem())
+
         return [
-            ['Method', 'σ(Int. Energy)', 'Average', 'SD', 'SEM'],
-            ['IE', self['sigma'], avg, stdev, stdev / sqrt(len(self['iedata']))],
+            [
+                'Method',
+                'σ(Int. Energy)',
+                'Average',
+                'SD',
+                'SEM'
+            ],
+            ['IE', self['sigma'], avg, stdev, sem]
         ]
 
 
@@ -285,6 +317,23 @@ class C2out(dict):
 
     def __init__(self, **kwargs):
         super(C2out, self).__init__(**kwargs)
+
+    def parse_from_dict(self, d):
+        self.update(d)
+
+    def parse_from_file(self, filename):
+        with open(filename) as of:
+            while line := of.readline():
+                if line.startswith('|') or not line:
+                    continue
+                if line.startswith('C2 Entropy (-TΔS):'):
+                    self['c2data'] = float(line.strip('\n').split()[-1])
+                elif line.startswith('C2 Entropy SD:'):
+                    self['c2_std'] = float(line.strip('\n').split()[-1])
+                elif line.startswith('Internal Energy SD (sigma):'):
+                    self['sigma'] = float(line.strip('\n').split()[-1])
+                elif line.startswith('C2 Entropy CI:'):
+                    self['c2_ci'] = [float(line.strip('\n').split()[-2]), float(line.strip('\n').split()[-1])]
 
     def parse_from_h5(self, d):
         for model in d:
@@ -306,28 +355,17 @@ class C2out(dict):
     def summary(self):
         """ Formatted summary of C2 Entropy results """
 
-        summary_list = [
+        return [
             [
                 'Method',
                 'σ(Int. Energy)',
                 'C2 Value',
                 'SD',
                 'C.Inter.(95%)'
-            ]
+            ],
+            ['C2', float(self['sigma']), float(self['c2data']), float(self['c2_std']),
+             f"{self['c2_ci'][0]:.2f}-{self['c2_ci'][1]:.2f}",]
         ]
-
-        summary_list.extend(
-            [
-                model,
-                float(self['sigma']),
-                float(self['c2data']),
-                float(self['c2_std']),
-                f"{self['c2_ci'][0]:.2f}-{self['c2_ci'][1]:.2f}",
-            ]
-            for model in self
-        )
-
-        return summary_list
 
 
 class QHout(dict):
@@ -485,19 +523,22 @@ class NMODEout(AmberOutput):
         """
         while rawline := outfile.readline():
             if "|---- Entropy not Calculated---|" in rawline:
-                self['TOTAL'] = self['TOTAL'].append(np.nan)
-                self['TRANSLATIONAL'] = self['TRANSLATIONAL'].append(np.nan)
-                self['ROTATIONAL'] = self['ROTATIONAL'].append(np.nan)
-                self['VIBRATIONAL'] = self['VIBRATIONAL'].append(np.nan)
+                self['TOTAL'][self.frame_idx] = np.nan
+                self['TRANSLATIONAL'][self.frame_idx] = np.nan
+                self['ROTATIONAL'][self.frame_idx] = np.nan
+                self['VIBRATIONAL'][self.frame_idx] = np.nan
+                self.frame_idx += 1
 
             if rawline[:6] == 'Total:':
-                self['TOTAL'] = self['TOTAL'].append(float(rawline.split()[3]) * self.temperature / 1000 * -1)
-                self['TRANSLATIONAL'] = self['TRANSLATIONAL'].append(
-                    float(outfile.readline().split()[3]) * self.temperature / 1000 * -1)
-                self['ROTATIONAL'] = self['ROTATIONAL'].append(
-                    float(outfile.readline().split()[3]) * self.temperature / 1000 * -1)
-                self['VIBRATIONAL'] = self['VIBRATIONAL'].append(
-                    float(outfile.readline().split()[3]) * self.temperature / 1000 * -1)
+                self['TOTAL'][self.frame_idx] = float(rawline.split()[3]) * self.temperature / 1000 * -1
+                self['TRANSLATIONAL'][self.frame_idx] = (float(outfile.readline().split()[3]) * self.temperature /
+                                                         1000 * -1)
+                self['ROTATIONAL'][self.frame_idx] = (float(outfile.readline().split()[3]) * self.temperature / 1000
+                                                      * -1)
+                self['VIBRATIONAL'][self.frame_idx] = (float(outfile.readline().split()[3]) * self.temperature / 1000
+                                                       * -1)
+                self.frame_idx += 1
+
 
     def _fill_nmode_values(self):
         if np.isnan(self['TOTAL']).all():
@@ -538,29 +579,31 @@ class GBout(AmberOutput):
         while rawline := outfile.readline():
             if rawline[:5] == ' BOND':
                 words = rawline.split()
-                self['BOND'] = self['BOND'].append(float(words[2]))
-                self['ANGLE'] = self['ANGLE'].append(float(words[5]))
-                self['DIHED'] = self['DIHED'].append(float(words[8]))
+                self['BOND'][self.frame_idx] = float(words[2])
+                self['ANGLE'][self.frame_idx] = float(words[5])
+                self['DIHED'][self.frame_idx] = float(words[8])
                 words = outfile.readline().split()
                 if self.chamber:
-                    self['UB'] = self['UB'].append(float(words[2]))
-                    self['IMP'] = self['IMP'].append(float(words[5]))
-                    self['CMAP'] = self['CMAP'].append(float(words[8]))
+                    self['UB'][self.frame_idx] = float(words[2])
+                    self['IMP'][self.frame_idx] = float(words[5])
+                    self['CMAP'][self.frame_idx] = float(words[8])
                     words = outfile.readline().split()
-                self['VDWAALS'] = self['VDWAALS'].append(float(words[2]))
-                self['EEL'] = self['EEL'].append(float(words[5]))
-                self['EGB'] = self['EGB'].append(float(words[8]))
+                self['VDWAALS'][self.frame_idx] = float(words[2])
+                self['EEL'][self.frame_idx] = float(words[5])
+                self['EGB'][self.frame_idx] = float(words[8])
                 words = outfile.readline().split()
-                self['1-4 VDW'] = self['1-4 VDW'].append(float(words[3]))
-                self['1-4 EEL'] = self['1-4 EEL'].append(float(words[7]))
+                self['1-4 VDW'][self.frame_idx] = float(words[3])
+                self['1-4 EEL'][self.frame_idx] = float(words[7])
+                self.frame_idx += 1
 
     def _extra_reading(self, fileno):
         # Load the ESURF data from the cpptraj output
         fname = '%s.%d' % (self.basename, fileno)
         fname = fname.replace('gb.mdout', 'gb_surf.dat')
         surf_data = _get_cpptraj_surf(fname)
-        self['ESURF'] = self['ESURF'].append((surf_data * self.INPUT['gb']['surften']) + self.INPUT['gb']['surfoff'])
-
+        for sd in surf_data:
+            self['ESURF'][self.extraframe_idx] = sd * self.INPUT['gb']['surften'] + self.INPUT['gb']['surfoff']
+            self.extraframe_idx += 1
 
 class GBNSR6out(AmberOutput):
     """ Amber output class for normal generalized Born simulations """
@@ -579,23 +622,23 @@ class GBNSR6out(AmberOutput):
         while rawline := outfile.readline():
             if rawline[:5] == ' BOND':
                 words = rawline.split()
-                self['BOND'] = self['BOND'].append(float(words[2]))
-                self['ANGLE'] = self['ANGLE'].append(float(words[5]))
-                self['DIHED'] = self['DIHED'].append(float(words[8]))
+                self['BOND'][self.frame_idx] = float(words[2])
+                self['ANGLE'][self.frame_idx] = float(words[5])
+                self['DIHED'][self.frame_idx] = float(words[8])
                 words = outfile.readline().split()
                 if self.chamber:
-                    self['UB'] = self['UB'].append(float(words[2]))
-                    self['IMP'] = self['IMP'].append(float(words[5]))
-                    self['CMAP'] = self['CMAP'].append(float(words[8]))
+                    self['UB'][self.frame_idx] = float(words[2])
+                    self['IMP'][self.frame_idx] = float(words[5])
+                    self['CMAP'][self.frame_idx] = float(words[8])
                     words = outfile.readline().split()
-                self['VDWAALS'] = self['VDWAALS'].append(float(words[2]))
-                self['EEL'] = self['EEL'].append(float(words[5]))
-                self['EGB'] = self['EGB'].append(float(words[8]))
+                self['VDWAALS'][self.frame_idx] = float(words[2])
+                self['EEL'][self.frame_idx] = float(words[5])
+                self['EGB'][self.frame_idx] = float(words[8])
                 words = outfile.readline().split()
-                self['1-4 VDW'] = self['1-4 VDW'].append(float(words[3]))
-                self['1-4 EEL'] = self['1-4 EEL'].append(float(words[7]))
+                self['1-4 VDW'][self.frame_idx] = float(words[3])
+                self['1-4 EEL'][self.frame_idx] = float(words[7])
                 words = outfile.readline().split()
-                self['ESURF'] = self['ESURF'].append(float(words[2]))
+                self['ESURF'][self.frame_idx] = float(words[2])
 
 
 class MMout(AmberOutput):
@@ -612,20 +655,20 @@ class MMout(AmberOutput):
         while rawline := outfile.readline():
             if rawline[:5] == ' BOND':
                 words = rawline.split()
-                self['BOND'] = self['BOND'].append(float(words[2]))
-                self['ANGLE'] = self['ANGLE'].append(float(words[5]))
-                self['DIHED'] = self['DIHED'].append(float(words[8]))
+                self['BOND'][self.frame_idx] = float(words[2])
+                self['ANGLE'][self.frame_idx] = float(words[5])
+                self['DIHED'][self.frame_idx] = float(words[8])
                 words = outfile.readline().split()
                 if self.chamber:
-                    self['UB'] = self['UB'].append(float(words[2]))
-                    self['IMP'] = self['IMP'].append(float(words[5]))
-                    self['CMAP'] = self['CMAP'].append(float(words[8]))
+                    self['UB'][self.frame_idx] = float(words[2])
+                    self['IMP'][self.frame_idx] = float(words[5])
+                    self['CMAP'][self.frame_idx] = float(words[8])
                     words = outfile.readline().split()
-                self['VDWAALS'] = self['VDWAALS'].append(float(words[2]))
-                self['EEL'] = self['EEL'].append(float(words[5]))
+                self['VDWAALS'][self.frame_idx] = float(words[2])
+                self['EEL'][self.frame_idx] = float(words[5])
                 words = outfile.readline().split()
-                self['1-4 VDW'] = self['1-4 VDW'].append(float(words[3]))
-                self['1-4 EEL'] = self['1-4 EEL'].append(float(words[7]))
+                self['1-4 VDW'][self.frame_idx] = float(words[3])
+                self['1-4 EEL'][self.frame_idx] = float(words[7])
 
 class PBout(AmberOutput):
 
@@ -643,28 +686,26 @@ class PBout(AmberOutput):
         while rawline := outfile.readline():
             if rawline[:5] == ' BOND':
                 words = rawline.split()
-                self['BOND'] = self['BOND'].append(float(words[2]))
-                self['ANGLE'] = self['ANGLE'].append(float(words[5]))
-                self['DIHED'] = self['DIHED'].append(float(words[8]))
+                self['BOND'][self.frame_idx] = float(words[2])
+                self['ANGLE'][self.frame_idx] = float(words[5])
+                self['DIHED'][self.frame_idx] = float(words[8])
                 words = outfile.readline().split()
                 if self.chamber:
-                    self['UB'] = self['UB'].append(float(words[2]))
-                    self['IMP'] = self['IMP'].append(float(words[5]))
-                    self['CMAP'] = self['CMAP'].append(float(words[8]))
+                    self['UB'][self.frame_idx] = float(words[2])
+                    self['IMP'][self.frame_idx] = float(words[5])
+                    self['CMAP'][self.frame_idx] = float(words[8])
                     words = outfile.readline().split()
-                self['VDWAALS'] = self['VDWAALS'].append(float(words[2]))
-                self['EEL'] = self['EEL'].append(float(words[5]))
-                self['EPB'] = self['EPB'].append(float(words[8]))
+                self['VDWAALS'][self.frame_idx] = float(words[2])
+                self['EEL'][self.frame_idx] = float(words[5])
+                self['EPB'][self.frame_idx] = float(words[8])
                 words = outfile.readline().split()
-                self['1-4 VDW'] = self['1-4 VDW'].append(float(words[3]))
-                self['1-4 EEL'] = self['1-4 EEL'].append(float(words[7]))
+                self['1-4 VDW'][self.frame_idx] = float(words[3])
+                self['1-4 EEL'][self.frame_idx] = float(words[7])
                 words = outfile.readline().split()
-                self['ENPOLAR'] = self['ENPOLAR'].append(float(words[2]))
+                self['ENPOLAR'][self.frame_idx] = float(words[2])
                 if self.INPUT['inp'] == 2 and not self.apbs:
-                    self['EDISPER'] = self['EDISPER'].append(float(words[5]))
-                else:
-                    self['EDISPER'] = self['EDISPER'].append(0.00)
-
+                    self['EDISPER'][self.frame_idx] = float(words[5])
+                self.frame_idx += 1
 
 class RISMout(AmberOutput):
     # Which of those keys belong to the gas phase energy contributions
@@ -690,20 +731,23 @@ class RISMout(AmberOutput):
 
             if re.match(r'(solute_epot|solutePotentialEnergy)', rawline):
                 words = rawline.split()
-                self['VDWAALS'] = self['VDWAALS'].append(float(words[2]))
-                self['EEL'] = self['EEL'].append(float(words[3]))
-                self['BOND'] = self['BOND'].append(float(words[4]))
-                self['ANGLE'] = self['ANGLE'].append(float(words[5]))
-                self['DIHED'] = self['DIHED'].append(float(words[6]))
-                self['1-4 VDW'] = self['1-4 VDW'].append(float(words[7]))
-                self['1-4 EEL'] = self['1-4 EEL'].append(float(words[8]))
+                self['VDWAALS'][self.frame_idx] = float(words[2])
+                self['EEL'][self.frame_idx] = float(words[3])
+                self['BOND'][self.frame_idx] = float(words[4])
+                self['ANGLE'][self.frame_idx] = float(words[5])
+                self['DIHED'][self.frame_idx] = float(words[6])
+                self['1-4 VDW'][self.frame_idx] = float(words[7])
+                self['1-4 EEL'][self.frame_idx] = float(words[8])
 
             elif self.solvtype == 0 and re.match(r'(rism_exchem|rism_excessChemicalPotential)\s', rawline):
-                self['ERISM'] = self['ERISM'].append(float(rawline.split()[1]))
+                self['ERISM'][self.frame_idx] = float(rawline.split()[1])
+                self.frame_idx += 1
             elif self.solvtype == 1 and re.match(r'(rism_exchGF|rism_excessChemicalPotentialGF)\s', rawline):
-                self['ERISM'] = self['ERISM'].append(float(rawline.split()[1]))
+                self['ERISM'][self.frame_idx] = float(rawline.split()[1])
+                self.frame_idx += 1
             elif self.solvtype == 2 and re.match(r'(rism_exchPCPLUS|rism_excessChemicalPotentialPCPLUS)\s', rawline):
-                self['ERISM'] = self['ERISM'].append(float(rawline.split()[1]))
+                self['ERISM'][self.frame_idx] = float(rawline.split()[1])
+                self.frame_idx += 1
 
 
 class RISM_std_Out(RISMout):
@@ -748,32 +792,35 @@ class PolarRISMout(RISMout):
 
             if re.match(r'(solute_epot|solutePotentialEnergy)', rawline):
                 words = rawline.split()
-                self['VDWAALS'] = self['VDWAALS'].append(float(words[2]))
-                self['EEL'] = self['EEL'].append(float(words[3]))
-                self['BOND'] = self['BOND'].append(float(words[4]))
-                self['ANGLE'] = self['ANGLE'].append(float(words[5]))
-                self['DIHED'] = self['DIHED'].append(float(words[6]))
-                self['1-4 VDW'] = self['1-4 VDW'].append(float(words[8]))
-                self['1-4 EEL'] = self['1-4 EEL'].append(float(words[8]))
+                self['VDWAALS'][self.frame_idx] = float(words[2])
+                self['EEL'][self.frame_idx] = float(words[3])
+                self['BOND'][self.frame_idx] = float(words[4])
+                self['ANGLE'][self.frame_idx] = float(words[5])
+                self['DIHED'][self.frame_idx] = float(words[6])
+                self['1-4 VDW'][self.frame_idx] = float(words[8])
+                self['1-4 EEL'][self.frame_idx] = float(words[8])
 
             elif self.solvtype == 0 and re.match(
                     r'(rism_polar|rism_polarExcessChemicalPotential)\s', rawline):
-                self['POLAR SOLV'] = self['POLAR SOLV'].append(float(rawline.split()[1]))
+                self['POLAR SOLV'][self.frame_idx] = float(rawline.split()[1])
             elif self.solvtype == 0 and re.match(
                     r'(rism_apolar|rism_apolarExcessChemicalPotential)\s', rawline):
-                self['APOLAR SOLV'] = self['APOLAR SOLV'].append(float(rawline.split()[1]))
+                self['APOLAR SOLV'][self.frame_idx] = float(rawline.split()[1])
+                self.frame_idx += 1
             elif self.solvtype == 1 and re.match(
                     r'(rism_polGF|rism_polarExcessChemicalPotentialGF)\s', rawline):
-                self['POLAR SOLV'] = self['POLAR SOLV'].append(float(rawline.split()[1]))
+                self['POLAR SOLV'][self.frame_idx] = float(rawline.split()[1])
             elif self.solvtype == 1 and re.match(
                     r'(rism_apolGF|rism_apolarExcessChemicalPotentialGF)\s', rawline):
-                self['APOLAR SOLV'] = self['APOLAR SOLV'].append(float(rawline.split()[1]))
+                self['APOLAR SOLV'][self.frame_idx] = float(rawline.split()[1])
+                self.frame_idx += 1
             elif self.solvtype == 2 and re.match(
                     r'(rism_polPCPLUS|rism_polarExcessChemicalPotentialPCPLUS)\s', rawline):
-                self['POLAR SOLV'] = self['POLAR SOLV'].append(float(rawline.split()[1]))
+                self['POLAR SOLV'][self.frame_idx] = float(rawline.split()[1])
             elif self.solvtype == 2 and re.match(
                     r'(rism_apolPCPLUS|rism_apolarExcessChemicalPotentialPCPLUS)\s', rawline):
-                self['APOLAR SOLV'] = self['APOLAR SOLV'].append(float(rawline.split()[1]))
+                self['APOLAR SOLV'][self.frame_idx] = float(rawline.split()[1])
+                self.frame_idx += 1
 
 
 class PolarRISM_std_Out(PolarRISMout):
@@ -816,32 +863,33 @@ class QMMMout(GBout):
         while rawline := outfile.readline():
             if rawline[:5] == ' BOND':
                 words = rawline.split()
-                self['BOND'] = self['BOND'].append(float(words[2]))
-                self['ANGLE'] = self['ANGLE'].append(float(words[5]))
-                self['DIHED'] = self['DIHED'].append(float(words[8]))
+                self['BOND'][self.frame_idx] = float(words[2])
+                self['ANGLE'][self.frame_idx] = float(words[5])
+                self['DIHED'][self.frame_idx] = float(words[8])
                 words = outfile.readline().split()
 
                 if self.chamber:
-                    self['UB'] = self['UB'].append(float(words[2]))
-                    self['IMP'] = self['IMP'].append(float(words[5]))
-                    self['CMAP'] = self['CMAP'].append(float(words[8]))
+                    self['UB'][self.frame_idx] = float(words[2])
+                    self['IMP'][self.frame_idx] = float(words[5])
+                    self['CMAP'][self.frame_idx] = float(words[8])
                     words = outfile.readline().split()
 
-                self['VDWAALS'] = self['VDWAALS'].append(float(words[2]))
-                self['EEL'] = self['EEL'].append(float(words[5]))
-                self['EGB'] = self['EGB'].append(float(words[8]))
+                self['VDWAALS'][self.frame_idx] = float(words[2])
+                self['EEL'][self.frame_idx] = float(words[5])
+                self['EGB'][self.frame_idx] = float(words[8])
                 words = outfile.readline().split()
-                self['1-4 VDW'] = self['1-4 VDW'].append(float(words[3]))
-                self['1-4 EEL'] = self['1-4 EEL'].append(float(words[7]))
+                self['1-4 VDW'][self.frame_idx] = float(words[3])
+                self['1-4 EEL'][self.frame_idx] = float(words[7])
                 words = outfile.readline().split()
                 # This is where ESCF will be. Since ESCF can differ based on which
                 # qmtheory was chosen, we just check to see if it's != ESURF:
                 if words[0] == 'minimization':
-                    self['ESCF'] = self['ESCF'].append(0.0)
+                    continue
                 elif words[0].endswith('='):
-                    self['ESCF'] = self['ESCF'].append(float(words[1]))
+                    self['ESCF'][self.frame_idx] = float(words[1])
                 else:
-                    self['ESCF'] = self['ESCF'].append(float(words[2]))
+                    self['ESCF'][self.frame_idx] = float(words[2])
+                self.frame_idx += 1
 
 
 class BindingStatistics(dict):
@@ -1160,13 +1208,14 @@ class DecompOut(dict):
         self.mol = mol
         self.decfile = None
         self.num_terms = None
-        self.allowed_tokens = tuple(['TDC'])
+        self.allowed_tokens = ('TDC',)
         self.verbose = None
         self.num_files = None
         self.resl = None
         self.basename = None
         self.csvwriter = None
         self.surften = None
+        self.frame_idx = 0
         self.current_file = 0  # File counter
 
     def set_frame_range(self, start=0, end=None, interval=1):
@@ -1178,12 +1227,13 @@ class DecompOut(dict):
                     if not frames_updated:
                         self.numframes = len(self[term][res][et])
                         frames_updated = True
-        self.fill_composite_terms()
+        self._fill_composite_terms()
 
-    def parse_from_file(self, basename, resl, INPUT, surften, num_files=1, mut=False):
+    def parse_from_file(self, basename, resl, INPUT, surften, num_files=1, numframes=1, mut=False):
         self.basename = basename  # base name of output files
         self.resl = resl
         self.mut = mut
+        self.numframes = numframes
 
         self.num_files = num_files  # how many MPI files we created
         self.INPUT = INPUT
@@ -1201,9 +1251,7 @@ class DecompOut(dict):
             self[token] = {}
 
         self._read()
-
-        # Now we need to call this method explicitly
-        # self.fill_composite_terms()
+        self._fill_composite_terms()
 
     def parse_from_h5(self, d):
         for term in d:
@@ -1217,7 +1265,7 @@ class DecompOut(dict):
                         self[term][res][res_e] = {}
                         for res2 in d[term][res][res_e]:
                             self[term][res][res_e][res2] = EnergyVector(d[term][res][res_e][res2][()])
-        # self.fill_composite_terms()
+        self._fill_composite_terms()
 
     def _get_num_terms(self):
         """ Gets the number of terms in the output file """
@@ -1247,8 +1295,9 @@ class DecompOut(dict):
                 self._get_decomp_energies(output_file)
 
     def _get_decomp_energies(self, outfile):
-        self.numframes = 0
         while line := outfile.readline():
+            if self.frame_idx == self.numframes:
+                self.frame_idx = 0
             if line[:3] in self.allowed_tokens:
                 if self.mut and self.resl[int(line[4:10]) - 1].is_mutant():
                     resnum = self.resl[int(line[4:10]) - 1].mutant_string
@@ -1261,19 +1310,18 @@ class DecompOut(dict):
                 sas = float(line[51:60]) * self.surften
 
                 if resnum not in self[line[:3]]:
-                    self[line[:3]][resnum] = {
-                        'int': EnergyVector(),
-                        'vdw': EnergyVector(),
-                        'eel': EnergyVector(),
-                        'pol': EnergyVector(),
-                        'sas': EnergyVector()
-                    }
-                self[line[:3]][resnum]['int'] = self[line[:3]][resnum]['int'].append(internal)
-                self[line[:3]][resnum]['vdw'] = self[line[:3]][resnum]['vdw'].append(vdw)
-                self[line[:3]][resnum]['eel'] = self[line[:3]][resnum]['eel'].append(eel)
-                self[line[:3]][resnum]['pol'] = self[line[:3]][resnum]['pol'].append(pol)
-                self[line[:3]][resnum]['sas'] = self[line[:3]][resnum]['sas'].append(sas)
-                self.numframes = len(self[line[:3]][resnum]['int'])
+                    self[line[:3]][resnum] = {}
+                    for term in ['int', 'vdw', 'eel', 'pol', 'sas']:
+                        self[line[:3]][resnum][term] = EnergyVector(self.numframes)
+
+                self[line[:3]][resnum]['int'][self.frame_idx] = internal
+                self[line[:3]][resnum]['vdw'][self.frame_idx] = vdw
+                self[line[:3]][resnum]['eel'][self.frame_idx] = eel
+                self[line[:3]][resnum]['pol'][self.frame_idx] = pol
+                self[line[:3]][resnum]['sas'][self.frame_idx] = sas
+
+                if resnum == list(self.resl.values())[-1].string:
+                    self.frame_idx += 1
 
     def _print_vectors(self, csvwriter):
         tokens = {'TDC': 'Total Decomposition Contribution (TDC)',
@@ -1289,7 +1337,7 @@ class DecompOut(dict):
                     csvwriter.writerow([c, res] + [round(self[term][res][key][i], 2) for key in self[term][res]])
                 c += self.INPUT['interval']
 
-    def fill_composite_terms(self):
+    def _fill_composite_terms(self):
         for term in self:
             for res in self[term]:
                 item = self[term][res][list(self[term][res].keys())[0]]
@@ -1313,9 +1361,9 @@ class DecompOut(dict):
 
         text = []
         if _output_format:
-            text.append([self.mol.capitalize() + ':'])
+            text.append([f'{self.mol.capitalize()}:'])
         else:
-            text.append(self.mol.capitalize() + ':')
+            text.append(f'{self.mol.capitalize()}:')
 
         for term in self:
             if _output_format:
@@ -1346,6 +1394,7 @@ class DecompOut(dict):
                 sqrt_frames = sqrt(self.numframes)
 
                 if _output_format:
+                    # FIXME: use EnergyVector.sem or EnergyVector.semp
                     text.append([res,
                                  int_avg, int_std, int_std / sqrt_frames,
                                  vdw_avg, vdw_std, vdw_std / sqrt_frames,
@@ -1383,10 +1432,9 @@ class PairDecompOut(DecompOut):
                         if not frames_updated:
                             self.numframes = len(self[term][res][res2][et])
                             frames_updated = True
-        self.fill_composite_terms()
+        self._fill_composite_terms()
 
     def _get_decomp_energies(self, outfile):
-        self.numframes = 0
         while line := outfile.readline():
             if line[:3] in self.allowed_tokens:
                 if self.mut and self.resl[int(line[4:11]) - 1].is_mutant():
@@ -1408,19 +1456,17 @@ class PairDecompOut(DecompOut):
                     self[line[:3]][resnum] = {}
 
                 if resnum2 not in self[line[:3]][resnum]:
-                    self[line[:3]][resnum][resnum2] = {
-                        'int': EnergyVector(),
-                        'vdw': EnergyVector(),
-                        'eel': EnergyVector(),
-                        'pol': EnergyVector(),
-                        'sas': EnergyVector()}
+                    self[line[:3]][resnum][resnum2] = {}
+                    for term in ['int', 'vdw', 'eel', 'pol', 'sas']:
+                        self[line[:3]][resnum][resnum2][term] = EnergyVector(self.numframes)
 
-                self[line[:3]][resnum][resnum2]['int'] = self[line[:3]][resnum][resnum2]['int'].append(internal)
-                self[line[:3]][resnum][resnum2]['vdw'] = self[line[:3]][resnum][resnum2]['vdw'].append(vdw)
-                self[line[:3]][resnum][resnum2]['eel'] = self[line[:3]][resnum][resnum2]['eel'].append(eel)
-                self[line[:3]][resnum][resnum2]['pol'] = self[line[:3]][resnum][resnum2]['pol'].append(pol)
-                self[line[:3]][resnum][resnum2]['sas'] = self[line[:3]][resnum][resnum2]['sas'].append(sas)
-                self.numframes = len(self[line[:3]][resnum][resnum2]['int'])
+                self[line[:3]][resnum][resnum2]['int'][self.frame_idx] = internal
+                self[line[:3]][resnum][resnum2]['vdw'][self.frame_idx] = vdw
+                self[line[:3]][resnum][resnum2]['eel'][self.frame_idx] = eel
+                self[line[:3]][resnum][resnum2]['pol'][self.frame_idx] = pol
+                self[line[:3]][resnum][resnum2]['sas'][self.frame_idx] = sas
+                if resnum == list(self.resl.values())[-1].string == resnum2:
+                    self.frame_idx += 1
 
     def _print_vectors(self, csvwriter):
         tokens = {'TDC': 'Total Decomposition Contribution (TDC)',
@@ -1474,6 +1520,7 @@ class PairDecompOut(DecompOut):
                     tot_std = self[term][res][res2]['tot'].stdev()
                     sqrt_frames = sqrt(len(self[term][res][res2]['int']))
                     if _output_format:
+                        # FIXME: use EnergyVector.sem or EnergyVector.semp
                         text.append([res, res2,
                                      int_avg, int_std, int_std / sqrt_frames,
                                      vdw_avg, vdw_std, vdw_std / sqrt_frames,
@@ -1514,9 +1561,9 @@ class DecompBinding(dict):
         self.verbose = INPUT['decomp']['dec_verbose']
         # Set up the data for the DELTAs
         if self.verbose in [1, 3]:
-            self.allowed_tokens = tuple(['TDC', 'SDC', 'BDC'])
+            self.allowed_tokens = 'TDC', 'SDC', 'BDC'
         else:
-            self.allowed_tokens = tuple(['TDC'])
+            self.allowed_tokens = ('TDC',)
         for token in self.allowed_tokens:
             self[token] = {}
 
@@ -1599,6 +1646,7 @@ class DecompBinding(dict):
                 tot_std = self[term][res]['tot'].stdev()
                 sqrt_frames = sqrt(len(self[term][res]['int']))
                 if _output_format:
+                    # FIXME: use EnergyVector.sem or EnergyVector.semp
                     text.append([res,
                                  int_avg, int_std, int_std / sqrt_frames,
                                  vdw_avg, vdw_std, vdw_std / sqrt_frames,
@@ -1718,6 +1766,7 @@ class PairDecompBinding(DecompBinding):
                     sqrt_frames = sqrt(len(self[term][res][res2]['int']))
 
                     if _output_format:
+                        # FIXME: use EnergyVector.sem or EnergyVector.semp
                         text.append([res, res2,
                                      int_avg, int_std, int_std / sqrt_frames,
                                      vdw_avg, vdw_std, vdw_std / sqrt_frames,

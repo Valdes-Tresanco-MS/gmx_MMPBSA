@@ -145,7 +145,7 @@ class Namelist(object):
           going to create a conflict with an existing variable.
         """
         if varname in self.variables:
-            raise InternalError('Duplicated variable %s in Namelist' % varname)
+            raise InternalError(f'Duplicated variable {varname} in Namelist')
         self.variables[varname] = Variable(varname, datatype, default, description, int_dat_type)
 
     def Open(self):
@@ -372,7 +372,7 @@ class InputFile(object):
                         break
 
                 if not found:
-                    raise InputError('Unknown variable %s in &%s' % (var[0], declared_namelists[i]))
+                    raise InputError(f'Unknown variable {var[0]} in &{declared_namelists[i]}')
         # Now it's time to fill the INPUT dictionary
         INPUT = {}
         for nml in self.ordered_namelist_keys:
@@ -422,7 +422,7 @@ input_file.addNamelist('general', 'general',
 
                             # Miscellaneous options
                            ['assign_chainID', int, 0, 'Assign chains ID'],
-                           ['exp_ki', float, 0, 'Experimental Ki in nM'],
+                           ['exp_ki', list, [0.0], 'Experimental Ki in nM', float],
                            ['full_traj', int, 0, 'Print a full traj. AND the thread trajectories'],
                            ['gmx_path', str, '', 'Force to use this path to get GROMACS executable'],
                            # FIXME: keep_files we need to improved the h5 file

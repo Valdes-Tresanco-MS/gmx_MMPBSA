@@ -47,7 +47,6 @@ polar_aa = ['TYR', 'SER', 'THR', 'CYM', 'CYS', 'HIE', 'HID', 'GLN', 'ASN', 'ASH'
 
 PBRadii = {1: 'bondi', 2: 'mbondi', 3: 'mbondi2', 4: 'mbondi3', 5: 'mbondi_pb2', 6: 'mbondi_pb3', 7: 'charmm_radii'}
 
-
 # ions_para_files = {1: 'frcmod.ions234lm_126_tip3p', 2: 'frcmod.ions234lm_iod_tip4pew', 3: 'frcmod.ions234lm_iod_spce',
 #                    4: 'frcmod.ions234lm_hfe_spce', 5: 'frcmod.ions234lm_126_tip4pew', 6: 'frcmod.ions234lm_126_spce',
 #                    7: 'frcmod.ions234lm_1264_tip4pew', 8: 'frcmod.ions234lm_1264_tip3p',
@@ -233,9 +232,9 @@ class CheckMakeTop:
         logging.debug('Running command: ' + (' '.join(make_ndx_echo_args).replace('\n', '\\n')) + ' | ' +
                       ' '.join(make_ndx_args))
         c2 = subprocess.Popen(make_ndx_args, stdin=c1.stdout, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        log_subprocess_output(c2)
         if c2.wait():  # if it quits with return code != 0
             GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(self.make_ndx), self.FILES.complex_index))
-        log_subprocess_output(c2)
         self.FILES.complex_index = com_ndx
 
         logging.info(f'Normal Complex: Saving group {rec_group}_{lig_group} in {self.FILES.complex_index} file as '
@@ -256,9 +255,9 @@ class CheckMakeTop:
                                            self.complex_str_file]
         logging.debug('Running command: ' + (' '.join(pdbcom_echo_args)) + ' | ' + ' '.join(pdbcom_args))
         c4 = subprocess.Popen(pdbcom_args, stdin=c3.stdout, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        log_subprocess_output(c4)
         if c4.wait():  # if it quits with return code != 0
             GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(comprog), self.FILES.complex_trajs[0]))
-        log_subprocess_output(c4)
         # Put receptor and ligand (explicitly defined) to avoid overwrite them
         # check if ligand is not protein. In any case, non-protein ligand always most be processed
         if self.FILES.ligand_mol2:
@@ -272,9 +271,9 @@ class CheckMakeTop:
                              lig_ff]
             logging.debug('Running command: ' + ' '.join(parmchk2_args))
             l3 = subprocess.Popen(parmchk2_args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            log_subprocess_output(l3)
             if l3.wait():
                 GMXMMPBSA_ERROR('%s failed when querying %s' % (parmchk2, self.FILES.ligand_mol2))
-            log_subprocess_output(l3)
 
         # check if the ligand force field is gaff or gaff2 and get if the ligand mol2 was defined
         elif "leaprc.gaff2" in self.INPUT['general']['forcefields'] and not self.FILES.complex_top:
@@ -299,9 +298,9 @@ class CheckMakeTop:
                                                'rec_temp.pdb']
             logging.debug('Running command: ' + (' '.join(rec_echo_args)) + ' | ' + ' '.join(pdbrec_args))
             cp2 = subprocess.Popen(pdbrec_args, stdin=cp1.stdout, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            log_subprocess_output(cp2)
             if cp2.wait():  # if it quits with return code != 0
                 GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(comprog), self.FILES.complex_trajs[0]))
-            log_subprocess_output(cp2)
         # check if stability
         if self.FILES.stability and (
                 (self.FILES.receptor_tpr or self.FILES.ligand_tpr)
@@ -328,6 +327,7 @@ class CheckMakeTop:
 
             logging.debug('Running command: ' + (' '.join(pdbrec_echo_args)) + ' | ' + ' '.join(pdbrec_args))
             cp2 = subprocess.Popen(pdbrec_args, stdin=p1.stdout, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            log_subprocess_output(cp2)
             if cp2.wait():  # if it quits with return code != 0
                 GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(prog), self.FILES.receptor_trajs[0]))
         else:
@@ -347,9 +347,9 @@ class CheckMakeTop:
                                                self.receptor_str_file]
             logging.debug('Running command: ' + (' '.join(pdbrec_echo_args)) + ' | ' + ' '.join(pdbrec_args))
             cp2 = subprocess.Popen(pdbrec_args, stdin=cp1.stdout, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            log_subprocess_output(cp2)
             if cp2.wait():  # if it quits with return code != 0
                 GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(comprog), self.FILES.complex_trajs[0]))
-        log_subprocess_output(cp2)
         # ligand
         # # check consistence
         if self.FILES.ligand_tpr:  # ligand is protein
@@ -372,6 +372,7 @@ class CheckMakeTop:
                                                self.ligand_str_file]
             logging.debug('Running command: ' + (' '.join(pdblig_echo_args)) + ' | ' + ' '.join(pdblig_args))
             l2 = subprocess.Popen(pdblig_args, stdin=l1.stdout, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            log_subprocess_output(l2)
             if l2.wait():  # if it quits with return code != 0
                 GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(prog), self.FILES.ligand_trajs[0]))
         else:
@@ -395,9 +396,9 @@ class CheckMakeTop:
             # we extract a pdb from structure file to make amber topology
             logging.debug('Running command: ' + (' '.join(pdblig_echo_args)) + ' | ' + ' '.join(pdblig_args))
             l2 = subprocess.Popen(pdblig_args, stdin=l1.stdout, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            log_subprocess_output(l2)
             if l2.wait():  # if it quits with return code != 0
                 GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(comprog), self.FILES.complex_trajs[0]))
-        log_subprocess_output(l2)
         # check for IE variable
         if (self.FILES.receptor_tpr or self.FILES.ligand_tpr) and (
                 self.INPUT['general']['interaction_entropy'] or self.INPUT['general']['c2_entropy']
@@ -422,7 +423,7 @@ class CheckMakeTop:
         if counter := sum(
                 res.name
                 in [
-                    'SOD', 'Na+', 'CLA', 'Cl-', 'POT', 'K+',
+                    'SOD', 'Na+', 'NA', 'Na', 'CLA', 'Cl-', 'CL', 'Cl', 'POT', 'K+', 'K',
                     'SOL', 'WAT',
                     'TIP3P', 'TIP3', 'TP3', 'TIPS3P', 'TIP3o',
                     'TIP3P', 'TIP3', 'TP3', 'TIPS3P', 'TIP3o',
@@ -435,6 +436,23 @@ class CheckMakeTop:
         ):
             GMXMMPBSA_ERROR(f'gmx_MMPBSA does not support water/ions molecules in any structure, but we found'
                             f' {counter} molecules in the complex.')
+
+    def _check_periodicity(self, parm, system):
+        """
+        check for periodicities == 0 and change them to 1. This is required especially for nmode calculations
+        """
+        invalid_per = 0
+
+        for dt in parm.dihedral_types:
+            if dt.per == 0:
+                invalid_per += 1
+                dt.per = 1
+
+        if invalid_per:
+            logging.warning(f'{invalid_per} invalid DIHEDRAL_PERIODICITY = 0 found in {system.capitalize()} '
+                            f'topology... Setting DIHEDRAL_PERIODICITY = 1')
+
+        return parm
 
     def gmxtop2prmtop(self):
         logging.info('Using topology conversion. Setting radiopt = 0...')
@@ -465,6 +483,9 @@ class CheckMakeTop:
 
         # IMPORTANT: make_trajs ends in error if the box is defined
         com_amb_prm.box = None
+
+        # check periodicity
+        com_amb_prm = self._check_periodicity(com_amb_prm, 'complex')
 
         self.fixparm2amber(com_amb_prm)
 
@@ -797,7 +818,7 @@ class CheckMakeTop:
                     res_selection.remove([lres.chain, lres.number, lres.insertion_code])
             for res in res_selection:
                 logging.warning("We couldn't find this residue CHAIN:{} RES_NUM:{} ICODE: {}".format(*res))
-        sele_res.sort()
+        sele_res = sorted(sele_res, key=lambda x: x.index)
         return (sele_res, (rec_charge, lig_charge)) if qm_sele else sele_res
 
     def fixparm2amber(self, structure, str_name=None):
@@ -1071,10 +1092,10 @@ class CheckMakeTop:
                                            'COM_traj_{}.xtc'.format(i), '-n', self.FILES.complex_index]
             logging.debug('Running command: ' + (' '.join(trjconv_echo_args)) + ' | ' + ' '.join(trjconv_args))
             c6 = subprocess.Popen(trjconv_args, stdin=c5.stdout, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            log_subprocess_output(c6)
             if c6.wait():  # if it quits with return code != 0
                 GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(self.trjconv), self.FILES.complex_trajs[i]))
             new_trajs.append('COM_traj_{}.xtc'.format(i))
-            log_subprocess_output(c6)
         self.FILES.complex_trajs = new_trajs
 
         # clear trajectory
@@ -1089,11 +1110,11 @@ class CheckMakeTop:
                                                '-o', 'REC_traj_{}.xtc'.format(i), '-n', self.FILES.receptor_index]
                 logging.debug('Running command: ' + (' '.join(trjconv_echo_args)) + ' | ' + ' '.join(trjconv_args))
                 c6 = subprocess.Popen(trjconv_args, stdin=c5.stdout, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                log_subprocess_output(c6)
                 if c6.wait():  # if it quits with return code != 0
                     GMXMMPBSA_ERROR(
                         '%s failed when querying %s' % (' '.join(self.trjconv), self.FILES.receptor_trajs[i]))
                 new_trajs.append('REC_traj_{}.xtc'.format(i))
-                log_subprocess_output(c6)
             self.FILES.receptor_trajs = new_trajs
 
         if self.FILES.ligand_tpr:
@@ -1107,10 +1128,10 @@ class CheckMakeTop:
                                                'LIG_traj_{}.xtc'.format(i), '-n', self.FILES.ligand_index]
                 logging.debug('Running command: ' + (' '.join(trjconv_echo_args)) + ' | ' + ' '.join(trjconv_args))
                 c6 = subprocess.Popen(trjconv_args, stdin=c5.stdout, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                log_subprocess_output(c6)
                 if c6.wait():  # if it quits with return code != 0
                     GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(self.trjconv), self.FILES.ligand_trajs[i]))
                 new_trajs.append('LIG_traj_{}.xtc'.format(i))
-                log_subprocess_output(c6)
             self.FILES.ligand_trajs = new_trajs
 
     def check_structures(self, com_str, rec_str=None, lig_str=None):
@@ -1451,9 +1472,9 @@ class CheckMakeTop:
         ]
 
         p1 = subprocess.Popen(tleap_args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        log_subprocess_output(p1)
         if p1.wait():
             GMXMMPBSA_ERROR('%s failed when querying %s' % (tleap, self.FILES.prefix + arg1))
-        log_subprocess_output(p1)
 
     def _set_com_order(self, REC, LIG):
         result = []

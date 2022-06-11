@@ -888,7 +888,6 @@ class MMPBSA_App(object):
         # self.INPUT['temp'] = 298.15
 
     def check_for_bad_input(self, INPUT=None):
-        return
         """ Checks for bad user input """
         if INPUT is None:
             INPUT = self.INPUT
@@ -1101,7 +1100,7 @@ class MMPBSA_App(object):
         """ Throws up a barrier """
         self.MPI.COMM_WORLD.Barrier()
 
-    def parse_output_files(self):
+    def parse_output_files(self, from_calc=True):
         """
         This parses the output files and loads them into dicts for easy access
         """
@@ -1142,13 +1141,14 @@ class MMPBSA_App(object):
                     '%s_gbnsr6.mdout')
 
         for i, key in enumerate(outkey):
-            if not INPUT[nmls[i]][triggers[i]]:
+            if not INPUT.get(nmls[i]) or not INPUT[nmls[i]].get([triggers[i]]) or not INPUT[nmls[i]][triggers[i]]:
                 continue
+            numframes = self.numframes_nmode if key == 'nmode' else self.numframes
             # Non-mutant
             if not INPUT['ala']['mutant_only']:
                 self.calc_types.normal[key] = {'complex': outclass[i]('complex', self.INPUT, self.using_chamber)}
                 self.calc_types.normal[key]['complex'].parse_from_file(self.pre + basename[i] % 'complex',
-                                                                       self.mpi_size)
+                                                                       self.mpi_size, numframes)
                 # check if the nmode output is valid
                 if self.calc_types.normal[key]['complex'].no_nmode_convergence:
                     self.INPUT['nmode']['nmoderun'] = False
@@ -1158,10 +1158,10 @@ class MMPBSA_App(object):
                 if not self.stability:
                     self.calc_types.normal[key]['receptor'] = outclass[i]('receptor', self.INPUT, self.using_chamber)
                     self.calc_types.normal[key]['receptor'].parse_from_file(self.pre + basename[i] % 'receptor',
-                                                                            self.mpi_size)
+                                                                            self.mpi_size, numframes)
                     self.calc_types.normal[key]['ligand'] = outclass[i]('ligand', self.INPUT, self.using_chamber)
                     self.calc_types.normal[key]['ligand'].parse_from_file(self.pre + basename[i] % 'ligand',
-                                                                          self.mpi_size)
+                                                                          self.mpi_size, numframes)
                     self.calc_types.normal[key]['delta'] = BindingStatistics(self.calc_types.normal[key]['complex'],
                                                                              self.calc_types.normal[key]['receptor'],
                                                                              self.calc_types.normal[key]['ligand'],
@@ -1170,25 +1170,25 @@ class MMPBSA_App(object):
             if INPUT['ala']['alarun']:
                 self.calc_types.mutant[key] = {'complex': outclass[i]('Mutant-Complex', self.INPUT, self.using_chamber)}
                 self.calc_types.mutant[key]['complex'].parse_from_file(self.pre + 'mutant_' + basename[i] % 'complex',
-                                                                       self.mpi_size)
+                                                                       self.mpi_size, numframes)
                 if not self.stability:
                     self.calc_types.mutant[key]['receptor'] = outclass[i]('Mutant-Receptor', self.INPUT,
                                                                           self.using_chamber)
                     self.calc_types.mutant[key]['receptor'].parse_from_file(self.pre + 'mutant_' + basename[i] %
-                                                                            'receptor', self.mpi_size)
+                                                                            'receptor', self.mpi_size, numframes)
                     self.calc_types.mutant[key]['ligand'] = outclass[i]('Mutant-Ligand', self.INPUT,
                                                                         self.using_chamber)
                     self.calc_types.mutant[key]['ligand'].parse_from_file(self.pre + 'mutant_' + basename[i] % 'ligand',
-                                                                          self.mpi_size)
+                                                                          self.mpi_size, numframes)
                     self.calc_types.mutant[key]['delta'] = BindingStatistics(self.calc_types.mutant[key]['complex'],
                                                                              self.calc_types.mutant[key]['receptor'],
                                                                              self.calc_types.mutant[key]['ligand'],
                                                                              self.using_chamber, self.traj_protocol)
-            self.get_iec2entropy()
-
             if INPUT['ala']['alarun'] and not INPUT['ala']['mutant_only']:
                 self.calc_types.mut_norm[key] = {'delta': DeltaBindingStatistics(
                     self.calc_types.mutant[key]['delta'], self.calc_types.normal[key]['delta'])}
+
+            self.get_iec2entropy(from_calc)
 
         if not hasattr(self, 'resl'):
             from GMXMMPBSA.utils import mask2list
@@ -1199,44 +1199,50 @@ class MMPBSA_App(object):
         if INPUT['decomp']['decomprun']:
             self._get_decomp()
 
-    def get_iec2entropy(self):
+    def get_iec2entropy(self, from_calc):
         allowed_met = ['gb', 'pb', 'rism std', 'rism gf', 'rism pcplus', 'gbnsr6']
         calculated = False
         for key in allowed_met:
             if self.INPUT['general']['interaction_entropy']:
                 if key in self.calc_types.normal:
+                    if from_calc:
+                        edata = self.calc_types.normal[key]['delta']['GGAS']
+                        ie = InteractionEntropyCalc(edata, self.INPUT)
+                        ie.save_output(f'{self.pre}normal_interaction_entropy.dat')
+
                     self.calc_types.normal['ie'] = IEout(self.INPUT)
-                    edata = self.calc_types.normal[key]['delta']['GGAS']
-                    ie = InteractionEntropyCalc(edata, self.INPUT)
-                    ie.save_output(f'{self.pre}normal_interaction_entropy.dat')
-                    self.calc_types.normal['ie'].parse_from_dict({'data': ie.data, 'iedata': ie.iedata,
-                                                                  'ieframes': ie.ieframes, 'sigma': ie.ie_std})
+                    self.calc_types.normal['ie'].parse_from_file(f'{self.pre}normal_interaction_entropy.dat',
+                                                                 self.numframes)
                     calculated = True
                 if key in self.calc_types.mutant:
+                    if from_calc:
+                        edata = self.calc_types.mutant[key]['delta']['GGAS']
+                        mie = InteractionEntropyCalc(edata, self.INPUT)
+                        mie.save_output(f'{self.pre}mutant_interaction_entropy.dat')
+
                     self.calc_types.mutant['ie'] = IEout(self.INPUT)
-                    edata = self.calc_types.mutant[key]['delta']['GGAS']
-                    mie = InteractionEntropyCalc(edata, self.INPUT)
-                    mie.save_output(f'{self.pre}mutant_interaction_entropy.dat')
-                    self.calc_types.mutant['ie'].parse_from_dict({'data': mie.data, 'iedata': mie.iedata,
-                                                                  'ieframes': mie.ieframes, 'sigma': mie.ie_std})
+                    self.calc_types.mutant['ie'].parse_from_file(f'{self.pre}mutant_interaction_entropy.dat',
+                                                                 self.numframes)
                     calculated = True
 
             if self.INPUT['general']['c2_entropy']:
                 if key in self.calc_types.normal:
+                    if from_calc:
+                        edata = self.calc_types.normal[key]['delta']['GGAS']
+                        c2 = C2EntropyCalc(edata, self.INPUT)
+                        c2.save_output(f'{self.pre}normal_c2_entropy.dat')
+
                     self.calc_types.normal['c2'] = C2out()
-                    edata = self.calc_types.normal[key]['delta']['GGAS']
-                    c2 = C2EntropyCalc(edata, self.INPUT)
-                    c2.save_output(f'{self.pre}normal_c2_entropy.dat')
-                    self.calc_types.normal['c2'] = {'c2data': c2.c2data, 'sigma': c2.ie_std, 'c2_std': c2.c2_std,
-                                                    'c2_ci': c2.c2_ci}
+                    self.calc_types.normal['c2'].parse_from_file(f'{self.pre}normal_c2_entropy.dat')
                     calculated = True
                 if key in self.calc_types.mutant:
+                    if from_calc:
+                        edata = self.calc_types.mutant[key]['delta']['GGAS']
+                        c2 = C2EntropyCalc(edata, self.INPUT)
+                        c2.save_output(f'{self.pre}mutant_c2_entropy.dat')
+
                     self.calc_types.mutant['c2'] = C2out()
-                    edata = self.calc_types.mutant[key]['delta']['GGAS']
-                    c2 = C2EntropyCalc(edata, self.INPUT)
-                    c2.save_output(f'{self.pre}mutant_c2_entropy.dat')
-                    self.calc_types.mutant['c2'] = {'c2data': c2.c2data, 'sigma': c2.ie_std, 'c2_std': c2.c2_std,
-                                                    'c2_ci': c2.c2_ci}
+                    self.calc_types.mutant['c2'].parse_from_file(f'{self.pre}mutant_c2_entropy.dat')
                     calculated = True
             if calculated:
                 break
@@ -1251,26 +1257,31 @@ class MMPBSA_App(object):
 
         if not self.INPUT['ala']['mutant_only']:
             mm_data['normal'] = {'complex': MMout('complex', self.INPUT, self.using_chamber)}
-            mm_data['normal']['complex'].parse_from_file(f"{self.pre}complex_mm.mdout", self.mpi_size)
+            mm_data['normal']['complex'].parse_from_file(f"{self.pre}complex_mm.mdout", self.mpi_size, self.numframes)
             if not self.stability:
                 mm_data['normal']['receptor'] = MMout('receptor', self.INPUT, self.using_chamber)
-                mm_data['normal']['receptor'].parse_from_file(f"{self.pre}receptor_mm.mdout", self.mpi_size)
+                mm_data['normal']['receptor'].parse_from_file(f"{self.pre}receptor_mm.mdout", self.mpi_size,
+                                                              self.numframes)
                 mm_data['normal']['ligand'] = MMout('ligand', self.INPUT, self.using_chamber)
-                mm_data['normal']['ligand'].parse_from_file(f"{self.pre}ligand_mm.mdout", self.mpi_size)
+                mm_data['normal']['ligand'].parse_from_file(f"{self.pre}ligand_mm.mdout", self.mpi_size, self.numframes)
 
         # Time for mutant
         if self.INPUT['ala']['alarun']:
             mm_data['mutant'] = {'complex': MMout('mutant-complex', self.INPUT, self.using_chamber)}
-            mm_data['mutant']['complex'].parse_from_file(f"{self.pre}mutant_complex_mm.mdout", self.mpi_size)
+            mm_data['mutant']['complex'].parse_from_file(f"{self.pre}mutant_complex_mm.mdout", self.mpi_size,
+                                                         self.numframes)
             if not self.stability:
                 mm_data['mutant']['receptor'] = MMout('mutant-receptor', self.INPUT, self.using_chamber)
-                mm_data['mutant']['receptor'].parse_from_file(f"{self.pre}mutant_receptor_mm.mdout", self.mpi_size)
+                mm_data['mutant']['receptor'].parse_from_file(f"{self.pre}mutant_receptor_mm.mdout", self.mpi_size,
+                                                              self.numframes)
                 mm_data['mutant']['ligand'] = MMout('mutant-ligand', self.INPUT, self.using_chamber)
-                mm_data['mutant']['ligand'].parse_from_file(f"{self.pre}mutant_ligand_mm.mdout", self.mpi_size)
+                mm_data['mutant']['ligand'].parse_from_file(f"{self.pre}mutant_ligand_mm.mdout", self.mpi_size,
+                                                            self.numframes)
         return mm_data
 
     def _get_decomp(self):
         from GMXMMPBSA.amber_outputs import (DecompOut, PairDecompOut, DecompBinding, PairDecompBinding)
+        nmls = ('gb', 'pb', 'gbnsr6')
         outkey = ('gb', 'pb', 'gbnsr6')
         triggers = ('gbrun', 'pbrun', 'gbnsr6run')
         basename = ('%s_gb.mdout', '%s_pb.mdout', '%s_gbnsr6.mdout')
@@ -1284,16 +1295,18 @@ class MMPBSA_App(object):
             DecompBindingClass = PairDecompBinding
             DecompClass = PairDecompOut
 
+        com_list = {}
         rec_list = {}
         lig_list = {}
         for x in self.resl:
+            com_list[x.index - 1] = x
             if x.is_receptor():
                 rec_list[x.id_index - 1] = x
             else:
                 lig_list[x.id_index - 1] = x
 
         for i, key in enumerate(outkey):
-            if not INPUT[key][triggers[i]]:
+            if not INPUT.get(nmls[i]) or not INPUT[nmls[i]].get([triggers[i]]) or not INPUT[nmls[i]][triggers[i]]:
                 continue
             # FIXME
             surften = INPUT['gb']['surften'] if key == 'gb' else INPUT['pb']['cavity_surften']
@@ -1301,19 +1314,17 @@ class MMPBSA_App(object):
             if not self.INPUT['ala']['mutant_only']:
                 self.calc_types.decomp_normal[key] = {'complex': DecompClass('complex')}
                 self.calc_types.decomp_normal[key]['complex'].parse_from_file(self.pre + basename[i] % 'complex',
-                                                                              self.resl, INPUT, surften, self.mpi_size)
-                self.calc_types.decomp_normal[key]['complex'].fill_composite_terms()
+                                                                              com_list, INPUT, surften,
+                                                                              self.mpi_size, self.numframes)
                 if not self.stability:
                     self.calc_types.decomp_normal[key]['receptor'] = DecompClass('receptor')
                     self.calc_types.decomp_normal[key]['receptor'].parse_from_file(self.pre + basename[i] % 'receptor',
                                                                                    rec_list, INPUT, surften,
-                                                                                   self.mpi_size)
-                    self.calc_types.decomp_normal[key]['receptor'].fill_composite_terms()
+                                                                                   self.mpi_size, self.numframes)
                     self.calc_types.decomp_normal[key]['ligand'] = DecompClass('ligand')
                     self.calc_types.decomp_normal[key]['ligand'].parse_from_file(self.pre + basename[i] % 'ligand',
                                                                                  lig_list, INPUT, surften,
-                                                                                 self.mpi_size)
-                    self.calc_types.decomp_normal[key]['ligand'].fill_composite_terms()
+                                                                                 self.mpi_size, self.numframes)
                     self.calc_types.decomp_normal[key]['delta'] = DecompBindingClass(
                         self.calc_types.decomp_normal[key]['complex'], self.calc_types.decomp_normal[key]['receptor'],
                         self.calc_types.decomp_normal[key]['ligand'], INPUT,
@@ -1328,8 +1339,9 @@ class MMPBSA_App(object):
                     INPUT,
                     surften,
                     self.mpi_size,
+                    self.numframes,
+                    True
                 )
-                self.calc_types.decomp_mutant[key]['complex'].fill_composite_terms()
 
                 if not self.stability:
                     self.calc_types.decomp_mutant[key]['receptor'] = DecompClass('Mutant-Receptor')
@@ -1339,8 +1351,9 @@ class MMPBSA_App(object):
                         INPUT,
                         surften,
                         self.mpi_size,
+                        self.numframes,
+                        True
                     )
-                    self.calc_types.decomp_mutant[key]['receptor'].fill_composite_terms()
 
                     self.calc_types.decomp_mutant[key]['ligand'] = DecompClass('Mutant-Ligand')
                     self.calc_types.decomp_mutant[key]['ligand'].parse_from_file(
@@ -1349,8 +1362,9 @@ class MMPBSA_App(object):
                         INPUT,
                         surften,
                         self.mpi_size,
+                        self.numframes,
+                        True
                     )
-                    self.calc_types.decomp_mutant[key]['ligand'].fill_composite_terms()
 
                     self.calc_types.decomp_mutant[key]['delta'] = DecompBindingClass(
                         self.calc_types.decomp_mutant[key]['complex'], self.calc_types.decomp_mutant[key]['receptor'],

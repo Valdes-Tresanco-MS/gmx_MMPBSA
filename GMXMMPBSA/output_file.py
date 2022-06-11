@@ -223,23 +223,19 @@ def write_outputs(app):
                     energyvectors.writerow(['Interaction entropy results'])
                     ienorm._print_vectors(energyvectors)
                     energyvectors.writerow([])
+                ie_inconsistent = ienorm['sigma'] > 3.6
 
-                for m in ienorm:
-                    if ienorm[m]['sigma'] > 3.6:
-                        ie_inconsistent = True
-            if INPUT['ala']['alarun']:
+            if INPUT['alarun']:
                 iemutant = app.calc_types.mutant['ie']
                 final_output.writeline(mut_str + ' MUTANT')
                 final_output.writeline('ENTROPY RESULTS (INTERACTION ENTROPY):')
                 final_output.add_section(iemutant.summary_output())
-                for m in iemutant:
-                    if iemutant[m]['sigma'] > 3.6:
-                        ie_inconsistent = True
-            if INPUT['ala']['alarun'] and not INPUT['ala']['mutant_only']:
+                ie_inconsistent = iemutant['sigma'] > 3.6
+
+            if INPUT['alarun'] and not INPUT['mutant_only']:
                 text = f'\nRESULT OF ALANINE SCANNING ({mut_str}):\n'
-                for model in ienorm:
-                    davg, dstd = utils.calc_sub(iemutant[model]['iedata'], ienorm[model]['iedata'], mut=True)
-                    text += f'-TΔΔS binding ({model.upper()}) = {davg:9.2f} +/- {dstd:9.2f}\n'
+                davg, dstd = utils.calc_sub(iemutant['iedata'], ienorm['iedata'], mut=True)
+                text += f'-TΔΔS binding = {davg:9.2f} +/- {dstd:9.2f}\n'
                 final_output.add_section(text)
             if ie_inconsistent:
                 final_output.writeline(
@@ -253,22 +249,19 @@ def write_outputs(app):
                 c2norm = app.calc_types.normal['c2']
                 final_output.writeline('ENTROPY RESULTS (C2 ENTROPY):')
                 final_output.add_section(c2norm.summary_output())
-                for m in c2norm:
-                    if c2norm[m]['sigma'] > 3.6:
-                        c2_inconsistent = True
-            if INPUT['ala']['alarun']:
+                c2_inconsistent = c2norm['sigma'] > 3.6
+
+            if INPUT['alarun']:
                 c2mutant = app.calc_types.mutant['c2']
                 final_output.writeline(mut_str + ' MUTANT')
                 final_output.writeline('ENTROPY RESULTS (C2 ENTROPY):')
                 final_output.add_section(c2mutant.summary_output())
-                for m in c2mutant:
-                    if c2mutant[m]['sigma'] > 3.6:
-                        c2_inconsistent = True
-            if INPUT['ala']['alarun'] and not INPUT['ala']['mutant_only']:
+                c2_inconsistent = c2mutant['sigma'] > 3.6
+
+            if INPUT['alarun'] and not INPUT['mutant_only']:
                 text = '\nRESULT OF ALANINE SCANNING (%s):\n' % mut_str
-                for model in c2norm:
-                    davg, dstd = utils.calc_sub(c2mutant[model]['c2data'], c2norm[model]['c2data'], mut=True)
-                    text += f'-TΔΔS binding ({model.upper()}) = {davg:9.2f} +/- {dstd:9.2f}\n'
+                davg, dstd = utils.calc_sub(c2mutant['c2data'], c2norm['c2data'], mut=True)
+                text += f'-TΔΔS binding = {davg:9.2f} +/- {dstd:9.2f}\n'
                 final_output.add_section(text)
             if c2_inconsistent:
                 final_output.writeline(
@@ -328,9 +321,7 @@ def write_outputs(app):
                '\nGENERALIZED BORN (GBNSR6):\n\n')
     # Now print out the Free Energy results
     for i, key in enumerate(outkeys):
-        # if triggers[i] not in INPUT or not INPUT[triggers[i]]:
-        #     continue
-        if not INPUT[nmls[i]][triggers[i]]:
+        if not INPUT.get(nmls[i]) or not INPUT[nmls[i]].get([triggers[i]]) or not INPUT[nmls[i]][triggers[i]]:
             continue
         if not INPUT['ala']['mutant_only']:
             final_output.write(headers[i])
@@ -487,7 +478,7 @@ def write_decomp_output(app):
     for i, key in enumerate(outkeys):
         # if triggers[i] not in INPUT or not INPUT[triggers[i]]:
         #     continue
-        if not INPUT[nmls[i]][triggers[i]]:
+        if not INPUT.get(nmls[i]) or not INPUT[nmls[i]].get([triggers[i]]) or not INPUT[nmls[i]][triggers[i]]:
             continue
         if not INPUT['ala']['mutant_only']:
             if stability:

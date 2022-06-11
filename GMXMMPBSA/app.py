@@ -137,11 +137,10 @@ def gmxmmpbsa_ana():
     try:
         parser = anaparser.parse_args(sys.argv[1:])
     except CommandlineError as e:
-        GMXMMPBSA_ERROR('%s: %s' % (type(e).__name__, e))
+        GMXMMPBSA_ERROR(f'{type(e).__name__}: {e}')
         sys.exit(1)
     ifiles = get_files(parser)
-    w = GMX_MMPBSA_ANA()
-    w.gettting_data(ifiles)
+    w = GMX_MMPBSA_ANA(ifiles)
     w.show()
     sys.exit(app.exec())
 

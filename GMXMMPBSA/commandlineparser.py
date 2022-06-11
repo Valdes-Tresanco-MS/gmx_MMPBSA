@@ -297,5 +297,5 @@ group.add_argument('-ng', '--nogui', help='No open gmx_MMPBSA_ana after all calc
                    action='store_true',  default=False)
 group.add_argument('-n', '--num_processors', type=int, default=4,
                    help='Defines the number of processor cores you want to use with MPI per calculation. If the number '
-                        'of frames is less than the number of cpus defined, the calculation will be performed with'
+                        'of frames is less than the number of cpus defined, the calculation will be performed with '
                         'the number of processors = number of frames')
