@@ -23,42 +23,32 @@ except:
     from PyQt5.QtCore import *
     from PyQt5.QtGui import *
 
-
-import sys
-import os
-
-from queue import Queue, Empty
-from pathlib import Path
-
+from queue import Queue
+from functools import partial
 import pandas as pd
-from GMXMMPBSA.API import load_gmxmmpbsa_info, MMPBSA_API
-from GMXMMPBSA.analyzer.dialogs import InitDialog
-from GMXMMPBSA.analyzer.customitem import CustomItem, CorrelationItem
+
+from GMXMMPBSA import utils
+from GMXMMPBSA.analyzer.items_delegate import KiTableDelegate
+from GMXMMPBSA.analyzer.plots import Tables
+from GMXMMPBSA.API import MMPBSA_API
+from GMXMMPBSA.analyzer.dialogs import InitDialog, ProcessingProgressBar
+from GMXMMPBSA.analyzer.customitem import CustomItem, CustomCorrItem
 from GMXMMPBSA.analyzer.style import save_default_config, default_config, save_user_config, user_config, toc_img, logo, \
     alert, config
-from GMXMMPBSA.analyzer.utils import energy2pdb_pml, ki2energy, make_corr_DF, multiindex2dict
-from GMXMMPBSA.analyzer.chartsettings import ChartSettings
+from GMXMMPBSA.analyzer.utils import ki2energy
+from GMXMMPBSA.analyzer.chartsettings import ChartSettings, CorrChartSettings
 from GMXMMPBSA.analyzer.parametertree import ParameterTree, Parameter
 import math
-import numpy as np
-
-
-def run(infofile):
-    info = Path(infofile)
-    app = QApplication(sys.argv)
-    app.setApplicationName('GMX-MMPBSA Analyzer Tool')
-    w = GMX_MMPBSA_ANA()
-    w.gettting_data([info])
-    w.show()
-    sys.exit(app.exec())
 
 
 class GMX_MMPBSA_ANA(QMainWindow):
-    def __init__(self):
+    def __init__(self, ifiles):
         super(GMX_MMPBSA_ANA, self).__init__()
         self.showMaximized()
         self.setWindowIcon(QIcon(logo))
-        self.corr_data = {'mutant': {}}
+        self.correlation = {'chart_options': CorrChartSettings(), 'items_data': {}, 'data': {}}
+
+        self.ifiles = ifiles
 
         self.systems = {}
         self.all_systems_active = True
@@ -77,11 +67,15 @@ class GMX_MMPBSA_ANA(QMainWindow):
 
         self.correlation_DockWidget = QDockWidget('Correlations', self)
         self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.correlation_DockWidget)
+        self.tabifyDockWidget(self.treeDockWidget, self.correlation_DockWidget)
+
 
         self.optionDockWidget = QDockWidget('Options', self)
         self.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.optionDockWidget)
 
         self.treeWidget = QTreeWidget(self)
+        self.treeWidget.setIndentation(12)
+        self.treeWidget.setUniformRowHeights(True)
         self.treeWidget.setMinimumWidth(380)
         self.treeWidget.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         # self.treeWidget.customContextMenuRequested.connect(self.data_context_menu)
@@ -103,40 +97,74 @@ class GMX_MMPBSA_ANA(QMainWindow):
         header.setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)
         header.setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
 
-        self.correlation_treeWidget = QTreeWidget(self)
-        self.correlation_treeWidget.itemClicked.connect(self.update_table)
-        self.correlation_treeWidget.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
-        # self.correlation_treeWidget.customContextMenuRequested.connect(self.corr_context_menu)
-        model_label = QTreeWidgetItem(['MODEL', 'ΔGeff', 'ΔGie', 'ΔGc2', 'ΔGnm', 'ΔGqh'])
-        model_label.setToolTip(0, 'Selected Model')
-        model_label.setToolTip(1, '''<html>Correlation plot for ΔG<sub>effective</sub>. Energy 
-        when entropy contribution is neglected. Calculated as ΔG<sub>effective</sub> = ΔH</html>''')
-        model_label.setToolTip(2, '''<html>Correlation plot for ΔG<sub>ie</sub>. Energy 
+        self.correlation_tableWidget = QTableWidget(self)
+
+        self.correlation_tableWidget.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
+        self.correlation_tableWidget.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.correlation_tableWidget.itemSelectionChanged.connect(self.update_table)
+        self.correlation_tableWidget.setColumnCount(6)
+        self.correlation_tableWidget.verticalHeader().hide()
+        header_tt = {'MODEL': 'Selected Model',
+                     'ΔGeff': '''<html>Correlation plot for ΔG<sub>effective</sub>. Energy when entropy contribution is 
+        neglected. Calculated as ΔG<sub>effective</sub> = ΔH</html>''',
+                     'ΔGie': '''<html>Correlation plot for ΔG<sub>ie</sub>. Energy 
         when entropy contribution is calculated using the Interaction Entropy method. Calculated as 
-        ΔG<sub>ie</sub> = ΔH + -TΔS<sub>IE</sub></html>''')
-        model_label.setToolTip(3, '''<html>Correlation plot for ΔG<sub>c2</sub>. Energy 
+        ΔG<sub>ie</sub> = ΔH + -TΔS<sub>IE</sub></html>''',
+                     'ΔGc2': '''<html>Correlation plot for ΔG<sub>c2</sub>. Energy 
         when entropy contribution is calculated using the C2 Entropy method. Calculated as 
-        ΔG<sub>c2</sub> = ΔH + -TΔS<sub>C2</sub></html>''')
-        model_label.setToolTip(4, '''<html>Correlation plot for ΔG<sub>nm</sub>. Energy 
+        ΔG<sub>c2</sub> = ΔH + -TΔS<sub>C2</sub></html>''',
+                     'ΔGnm': '''<html>Correlation plot for ΔG<sub>nm</sub>. Energy 
         when entropy contribution is calculated using the Normal Modes Entropy method. Calculated as 
-        ΔG<sub>nm</sub> = ΔH + -TΔS<sub>NMODE</sub></html>''')
-        model_label.setToolTip(5, '''<html>Correlation plot for ΔG<sub>ie</sub>. Energy 
+        ΔG<sub>nm</sub> = ΔH + -TΔS<sub>NMODE</sub></html>''',
+                     'ΔGqh': '''<html>Correlation plot for ΔG<sub>ie</sub>. Energy 
         when entropy contribution is calculated using the Quasi-Harmonic Entropy method. Calculated as 
-        ΔG<sub>qh</sub> = ΔH + -TΔS<sub>QH</sub></html>''')
-        self.correlation_treeWidget.setHeaderItem(model_label)
-        cheader = self.correlation_treeWidget.header()
-        cheader.setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
+        ΔG<sub>qh</sub> = ΔH + -TΔS<sub>QH</sub></html>'''}
 
-        self.data_table_widget = QTableWidget(0, 3)
-        self.data_table_widget.setHorizontalHeaderLabels(['System', 'Exp.ΔG'])
-        self.data_table_energy_col = QTableWidgetItem('None')
-        self.data_table_widget.setHorizontalHeaderItem(2, self.data_table_energy_col)
-        self.data_table_widget.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
-        self.data_table_widget.horizontalHeader().setStretchLastSection(True)
+        for c, (i, t) in enumerate(header_tt.items()):
+            hitem = QTableWidgetItem(i)
+            hitem.setToolTip(t)
+            self.correlation_tableWidget.setHorizontalHeaderItem(c, hitem)
+            if c !=0:
+                self.correlation_tableWidget.setColumnHidden(c, True)
+        cheader = self.correlation_tableWidget.horizontalHeader()
+        cheader.setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
 
-        self.corr_container_widget = QSplitter(Qt.Orientation.Vertical)
-        self.corr_container_widget.addWidget(self.correlation_treeWidget)
-        self.corr_container_widget.addWidget(self.data_table_widget)
+        self.data_table_widget = QTableWidget(0, 6)
+        self.data_table_widget.setHorizontalHeaderLabels(['Sys.', 'Type', 'Exp.ΔG', 'Avg.', 'SD', 'SEM'])
+        self.data_table_widget.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        self.data_table_widget.verticalHeader().hide()
+
+        self.corr_parm_tree_w = ParameterTree()
+        self.corr_parms = Parameter().create()
+        self.corr_parms.restoreState(CorrChartSettings())
+        self.corr_parm_tree_w.setParameters(self.corr_parms, showTop=False)
+
+        self.corr_sys_sel_w = QTableWidget()
+        self.corr_sys_sel_w.verticalHeader().hide()
+        self.corr_sys_sel_w.setColumnCount(6)
+        self.corr_sys_sel_w.setHorizontalHeaderLabels(['Id', 'Sel.', 'Ref.', 'Type', '  Exp.Ki  ', 'Name'])
+        self.corr_sys_sel_w.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
+        self.corr_sys_sel_w.horizontalHeader().setStretchLastSection(True)
+        delegate = KiTableDelegate(self.corr_sys_sel_w)
+        self.corr_sys_sel_w.setItemDelegateForColumn(4, delegate)
+        self.corr_sys_sel_w.cellChanged.connect(self.corr_sys_sel_itemchange)
+
+        self.corr_options_widget = QTabWidget()
+        self.corr_options_widget.addTab(self.corr_parm_tree_w, 'Charts')
+        self.corr_options_widget.addTab(self.corr_sys_sel_w, 'Selections')
+
+        self.update_corr_btn = QPushButton(f'Update {self.corr_options_widget.tabText(0)}')
+        self.update_corr_btn.clicked.connect(self.update_corr_fn)
+        self.corr_options_widget.setCornerWidget(self.update_corr_btn)
+
+        self.corr_options_widget.currentChanged.connect(partial(self._change_update_btn, tw='corr'))
+
+        self.corr_container_widget = QWidget()
+        self.corr_container_widget_layout = QVBoxLayout(self.corr_container_widget)
+        # self.corr_container_widget.addWidget(self.correlation_treeWidget)
+        self.corr_container_widget_layout.addWidget(self.correlation_tableWidget, 1)
+        self.corr_container_widget_layout.addWidget(self.data_table_widget, 5)
+        self.corr_container_widget_layout.addWidget(self.corr_options_widget, 5)
         self.correlation_DockWidget.setWidget(self.corr_container_widget)
 
         self.menubar = self.menuBar()
@@ -161,6 +189,8 @@ class GMX_MMPBSA_ANA(QMainWindow):
         self.statusbar = self.statusBar()
 
         self.init_dialog = InitDialog(self)
+        self.init_dialog.rejected.connect(self.close)
+        self.gettting_data()
 
     def closeEvent(self, a0: QCloseEvent) -> None:
 
@@ -177,7 +207,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
             msgBox.setWindowTitle('Quit...')
             msgBox.setText("Are you sure to quit?")
             msgBox.setInformativeText("Some graphics settings were modified. Do you want to save your changes?")
-            msgBox.setDetailedText("The systems below have chances:\n - " +
+            msgBox.setDetailedText("The systems below has some changes:\n - " +
                                    '\n - '.join([self.systems[x]['name'] for x in changes]))
             savequitbtn = msgBox.addButton("Save and Quit", QMessageBox.ButtonRole.AcceptRole)
             abortbtn = msgBox.addButton(QMessageBox.StandardButton.Cancel)
@@ -212,6 +242,25 @@ class GMX_MMPBSA_ANA(QMainWindow):
             a0.accept()
         else:
             a0.ignore()
+            if self.in_init_dialog:
+                self.init_dialog.show()
+
+    def corr_sys_sel_itemchange(self, row, col):
+        citem = self.corr_sys_sel_w.item(row, col)
+        if col == 1:
+            if ritemw := self.corr_sys_sel_w.cellWidget(row, 2):
+                if citem.checkState() == Qt.CheckState.Unchecked:
+                    if ritemw.isChecked():
+                        selected = {i: abs(row - i) for i in range(self.corr_sys_sel_w.rowCount())
+                                    if self.corr_sys_sel_w.item(i, 1).checkState() == Qt.CheckState.Checked}
+                        if not selected:
+                            citem.setCheckState(Qt.CheckState.Checked)
+                            return
+                        nr = list(selected.keys())[list(selected.values()).index(min(selected.values()))]
+                        self.corr_sys_sel_w.cellWidget(nr, 2).setChecked(True)
+                    ritemw.setEnabled(False)
+                else:
+                    ritemw.setEnabled(True)
 
     def _about_dialog(self):
         from GMXMMPBSA import __version__
@@ -220,7 +269,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
                               "<body>"
                               "<h2 style='text-align:center'>About gmx_MMPBSA</h2>"
                               "<div text-align:center;>"
-                              f"<a href='https://valdes-tresanco-ms.github.io/gmx_MMPBSA/'>"
+                              f"<a href='https://valdes-tresanco-ms.github.io/gmx_MMPBSA/dev/'>"
                               f"<img src={toc_img} alt='gmx_MMPBSA TOC' width='450' height='350'>"
                               "</a>"
                               "</div>"
@@ -238,10 +287,10 @@ class GMX_MMPBSA_ANA(QMainWindow):
                               "</html>")
 
     def _help(self):
-        QDesktopServices().openUrl(QUrl('https://valdes-tresanco-ms.github.io/gmx_MMPBSA/analyzer/'))
+        QDesktopServices().openUrl(QUrl('https://valdes-tresanco-ms.github.io/gmx_MMPBSA/dev/analyzer/'))
 
     def _doc(self):
-        QDesktopServices().openUrl(QUrl('https://valdes-tresanco-ms.github.io/gmx_MMPBSA/getting-started/'))
+        QDesktopServices().openUrl(QUrl('https://valdes-tresanco-ms.github.io/gmx_MMPBSA/dev/getting-started/'))
 
     def _bug(self):
         QDesktopServices().openUrl(QUrl('https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/issues/new/choose'))
@@ -251,9 +300,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
 
     def _initialize_systems(self):
 
-        if len(self.systems):
-            self.all_systems_active = False
-        if self.all_systems_active:
+        if self.all_systems_active and len(self.systems) > 1:
             self.all_frb.setEnabled(True)
 
         # Select automatically the first item to update the option panel
@@ -315,7 +362,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
 
     def _set_as_default(self):
         self.systems[self.current_system_index]['chart_options'].write_system_config()
-        self.statusbar.showMessage(f"Setting this setting as default in "
+        self.statusbar.showMessage(f"Using this setting as default in "
                                    f"{self.systems[self.current_system_index]['chart_options'].filename.as_posix()}...")
         self.systems[self.current_system_index]['chart_options'].set_as_default()
         self.update_fn()
@@ -367,12 +414,8 @@ class GMX_MMPBSA_ANA(QMainWindow):
 
         optionWidget_l.addWidget(selection_group)
 
-        update_btn = QPushButton('Update')
-        update_btn.clicked.connect(self.update_fn)
-
-        optionWidget_c = QTabWidget(self)
-        optionWidget_l.addWidget(optionWidget_c)
-        optionWidget_c.setCornerWidget(update_btn)
+        self.optionWidget_c = QTabWidget(self)
+        optionWidget_l.addWidget(self.optionWidget_c)
 
         # Charts options
         self.chart_options_param = Parameter().create()
@@ -394,22 +437,22 @@ class GMX_MMPBSA_ANA(QMainWindow):
         self.set_as_default_action.setToolTip('Save the current setting as the global default settings.')
         self.default_action = charts_opt_menu.addAction(QIcon(default_config), 'Reset to default', self._reset2default)
         self.default_action.setToolTip('Restores the default settings set by the developers as the settings '
-                                       'for the selected systems.')
+                                       'for the selected systems')
         charts_opt_menu.addSeparator()
         self.set_user_config_action = charts_opt_menu.addAction(QIcon(save_user_config), 'Save User-config',
                                                               self._set_as_default)
         self.set_user_config_action.setToolTip('Force save the current setting for this system. Before gmx_MMPBSA_ana '
                                                'closes, if there are configuration changes, you can decide if you '
-                                               'want to save them.')
+                                               'want to save them')
 
         self.use_user_config_action = charts_opt_menu.addAction(QIcon(user_config), 'User-config', self._set_as_default)
-        self.use_user_config_action.setToolTip('Uses the specific settings for this system if it was saved.')
+        self.use_user_config_action.setToolTip('Use the specific settings for this system if it was saved')
         charts_opt_tb.setMenu(charts_opt_menu)
 
-        optionWidget_c.addTab(self.chart_options_w, 'Charts Options')
+        self.optionWidget_c.addTab(self.chart_options_w, 'Charts')
 
-        frames_w = QWidget(optionWidget_c)
-        optionWidget_c.addTab(frames_w, 'Frames')
+        frames_w = QWidget(self.optionWidget_c)
+        self.optionWidget_c.addTab(frames_w, 'Frames')
         frames_l = QVBoxLayout(frames_w)
 
         self.eframes_group = QGroupBox('Energy')
@@ -417,11 +460,15 @@ class GMX_MMPBSA_ANA(QMainWindow):
         self.eframes_start_sb = QSpinBox()
         self.eframes_start_sb.setAccelerated(True)
         self.eframes_start_sb.valueChanged.connect(self.frames_start_sb_update)
+
         self.eframes_inter_sb = QSpinBox()
+        self.eframes_inter_sb.setAccelerated(True)
         self.eframes_inter_sb.valueChanged.connect(self.frames_inter_sb_update)
+
         self.eframes_end_sb = QSpinBox()
         self.eframes_end_sb.setAccelerated(True)
         self.eframes_end_sb.valueChanged.connect(self.frames_end_sb_update)
+
         self.numframes_le = QLineEdit()
         self.numframes_le.setReadOnly(True)
 
@@ -437,7 +484,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
         fg_l1.addRow('End', self.eframes_end_sb)
         fg_l2 = QFormLayout()
         fg_l2.addRow('Interval', self.eframes_inter_sb)
-        fg_l2.addRow('Nr. frames', self.numframes_le)
+        fg_l2.addRow('Nº frames', self.numframes_le)
 
         reset_energy_btn = QPushButton('Reset')
         reset_energy_btn.clicked.connect(self._reset_e_frames)
@@ -457,11 +504,15 @@ class GMX_MMPBSA_ANA(QMainWindow):
         self.nmframes_start_sb = QSpinBox()
         self.nmframes_start_sb.setAccelerated(True)
         self.nmframes_start_sb.valueChanged.connect(self.nmframes_start_sb_update)
+
         self.nmframes_inter_sb = QSpinBox()
+        self.nmframes_inter_sb.setAccelerated(True)
         self.nmframes_inter_sb.valueChanged.connect(self.nmframes_inter_sb_update)
+
         self.nmframes_end_sb = QSpinBox()
         self.nmframes_end_sb.setAccelerated(True)
         self.nmframes_end_sb.valueChanged.connect(self.nmframes_end_sb_update)
+
         self.nmnumframes_le = QLineEdit()
         self.nmnumframes_le.setReadOnly(True)
 
@@ -477,7 +528,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
         nmfg_l1.addRow('End', self.nmframes_end_sb)
         nmfg_l2 = QFormLayout()
         nmfg_l2.addRow('Interval', self.nmframes_inter_sb)
-        nmfg_l2.addRow('Nr. frames', self.nmnumframes_le)
+        nmfg_l2.addRow('Nº frames', self.nmnumframes_le)
 
         reset_nmode_btn = QPushButton('Reset')
         reset_nmode_btn.clicked.connect(self._reset_nm_frames)
@@ -512,7 +563,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
         ieseg_l = QFormLayout()
         ieseg_l.addRow('Segment', self.iesegment_sb)
         ienf_l = QFormLayout()
-        ienf_l.addRow('Nr. frames', self.ienumframes_le)
+        ienf_l.addRow('Nº frames', self.ienumframes_le)
 
         ie_reset_btn = QPushButton('Reset')
         ie_reset_btn.clicked.connect(self._reset_iesegment)
@@ -527,6 +578,24 @@ class GMX_MMPBSA_ANA(QMainWindow):
         ieframes_group_l.setColumnStretch(2, 5)
         frames_l.addWidget(self.ieframes_group)
         frames_l.addStretch(1)
+
+        # correlation_w = QWidget(self.optionWidget_c)
+        # self.optionWidget_c.addTab(correlation_w, 'Correlation')
+        self.update_btn = QPushButton(f'Update {self.optionWidget_c.tabText(0)}')
+        self.update_btn.clicked.connect(self.update_fn)
+
+        self.optionWidget_c.setCornerWidget(self.update_btn)
+
+        #
+        self.optionWidget_c.currentChanged.connect(self._change_update_btn)
+
+    def _change_update_btn(self, i, tw=None):
+        if tw == 'corr':
+            text = self.corr_options_widget.tabText(i)
+            self.update_corr_btn.setText(f"Update {text}")
+        else:
+            text = self.optionWidget_c.tabText(i)
+            self.update_btn.setText(f"Update {text}")
 
     def _reset_iesegment(self):
         self.iesegment_sb.setValue(self.systems[self.current_system_index]['namespace'].INPUT['ie_segment'])
@@ -550,7 +619,11 @@ class GMX_MMPBSA_ANA(QMainWindow):
         )
         self.ienumframes_le.setText(str(ieframes))
         if self.current_system_index:
-            curr_eframes = [self.eframes_start_sb.value(), self.eframes_end_sb.value(), self.eframes_inter_sb.value()]
+            curr_eframes = dict(
+                startframe=self.eframes_start_sb.value(),
+                endframe=self.eframes_end_sb.value(),
+                interval=self.eframes_inter_sb.value()
+            )
             if (
                     self.iesegment_sb.value() != self.systems[self.current_system_index]['current_ie_segment'] or
                     curr_eframes != self.systems[self.current_system_index]['current_frames']
@@ -571,19 +644,19 @@ class GMX_MMPBSA_ANA(QMainWindow):
                 parent_item = next_item
             else:
                 break
-        # FIXME: check if all systems are selected?
-        # if not self.all_frb.isChecked():
         # energy
-        current_start, current_end, current_interval = self.systems[parent_item.system_index]['current_frames']
-        self.eframes_start_sb.setValue(current_start)
-        self.eframes_inter_sb.setValue(current_interval)
-        self.eframes_end_sb.setValue(current_end)
+        if self.systems[parent_item.system_index].get('current_frames'):
+            current_start, current_end, current_interval = self.systems[parent_item.system_index]['current_frames'].values()
+            self.eframes_start_sb.setValue(current_start)
+            self.eframes_inter_sb.setValue(current_interval)
+            self.eframes_end_sb.setValue(current_end)
         # nmode
-        nmcurrent_start, nmcurrent_end, nmcurrent_interval = self.systems[parent_item.system_index][
-            'current_nmode_frames']
-        self.nmframes_start_sb.setValue(nmcurrent_start)
-        self.nmframes_inter_sb.setValue(nmcurrent_end)
-        self.nmframes_end_sb.setValue(nmcurrent_interval)
+        if self.systems[parent_item.system_index].get('current_nmode_frames'):
+            nmcurrent_start, nmcurrent_end, nmcurrent_interval = self.systems[parent_item.system_index][
+                'current_nmode_frames'].values()
+            self.nmframes_start_sb.setValue(nmcurrent_start)
+            self.nmframes_inter_sb.setValue(nmcurrent_end)
+            self.nmframes_end_sb.setValue(nmcurrent_interval)
         # IE
         self.iesegment_sb.setValue(self.systems[parent_item.system_index]['current_ie_segment'])
         # self.systems[parent_item.system_index]['chart_options'] = self.chart_options_param.saveState()
@@ -592,160 +665,182 @@ class GMX_MMPBSA_ANA(QMainWindow):
         self.current_system_index = parent_item.system_index
 
     def update_fn(self, repaint_arg=False):
-        self.statusbar.showMessage('Updating...')
-        recalc_energy = []
-        recalc_nmode = []
-        recalc_ie = []
-        repaint = []
 
-        curr_eframes = [self.eframes_start_sb.value(), self.eframes_end_sb.value(), self.eframes_inter_sb.value()]
-        curr_nmframes = [self.nmframes_start_sb.value(), self.nmframes_end_sb.value(), self.nmframes_inter_sb.value()]
-        curr_iesegment = self.iesegment_sb.value()
-        act_sett = self.chart_options_param.saveState()
+        replot_energy = False
+        sys_list = self.systems if self.all_frb.isChecked() else [self.current_system_index]
+        if self.optionWidget_c.currentIndex() == 0:  # Chart Options
+            self.statusbar.showMessage('Updating Charts...')
+            act_sett = self.chart_options_param.saveState()
 
-        processed_sys = []
+            if repaint := [x for x in sys_list if self.systems[x]['chart_options'].is_changed(act_sett) or repaint_arg]:
+                for e in repaint:
+                    if repaint_arg:
+                        self.systems[e]['chart_options'].changes = dict(
+                            line_action=3,
+                            line_ie_action=3,
+                            bar_action=3,
+                            heatmap_action=3,
+                            visualization_action=3,
+                            figure=3
+                        )
+                    else:
+                        self.systems[e]['chart_options'].get_changes(act_sett)
+        else:  # Frames Options
+            self.statusbar.showMessage('Updating Energy for selected Frame range...')
+            curr_eframes = dict(
+                startframe=self.eframes_start_sb.value(),
+                endframe=self.eframes_end_sb.value(),
+                interval=self.eframes_inter_sb.value()
+            )
 
-        if self.all_frb.isChecked():
-            for x in self.systems:
-                processed_sys.append(x)
+            curr_nmframes = dict(
+                nmstartframe=self.nmframes_start_sb.value(),
+                nmendframe=self.nmframes_end_sb.value(),
+                nminterval=self.nmframes_inter_sb.value()
+            )
+            curr_iesegment = self.iesegment_sb.value()
+            iq = Queue()
+            rq = Queue()
+
+            for x in sys_list:
                 energyrun = (self.systems[x]['namespace'].INPUT['gbrun'] or
                              self.systems[x]['namespace'].INPUT['pbrun'] or
                              self.systems[x]['namespace'].INPUT['rismrun'])
-                if energyrun and curr_eframes != self.systems[x]['current_frames']:
-                    recalc_energy.append(x)
-                if (self.systems[x]['namespace'].INPUT['nmoderun'] and
-                        curr_nmframes != self.systems[x]['current_nmode_frames']):
-                    recalc_nmode.append(x)
-                if curr_iesegment != self.systems[x]['current_ie_segment']:
-                    recalc_ie.append(x)
-                if self.systems[x]['chart_options'].is_changed(act_sett) or repaint_arg:
-                    repaint.append(x)
-        else:
-            processed_sys.append(self.current_system_index)
-            energyrun = (self.systems[self.current_system_index]['namespace'].INPUT['gbrun'] or
-                         self.systems[self.current_system_index]['namespace'].INPUT['pbrun'] or
-                         self.systems[self.current_system_index]['namespace'].INPUT['rismrun'])
-            if energyrun and curr_eframes != self.systems[self.current_system_index]['current_frames']:
-                recalc_energy.append(self.current_system_index)
-            if (self.systems[self.current_system_index]['namespace'].INPUT['nmoderun'] and
-                    curr_nmframes != self.systems[self.current_system_index]['current_nmode_frames']):
-                recalc_nmode.append(self.current_system_index)
-            if curr_iesegment != self.systems[self.current_system_index]['current_ie_segment']:
-                recalc_ie.append(self.current_system_index)
-            if self.systems[self.current_system_index]['chart_options'].is_changed(act_sett) or repaint_arg:
-                repaint.append(self.current_system_index)
+                if (energyrun and curr_eframes != self.systems[x]['current_frames'] or
+                        self.systems[x]['namespace'].INPUT['nmoderun'] and
+                        curr_nmframes != self.systems[x]['current_nmode_frames'] or
+                        curr_iesegment != self.systems[x]['current_ie_segment']
+                ):
+                    if not self.systems[x]['namespace'].INPUT['nmoderun']:
+                        curr_nmframes = {}
+                    self._extracted_from_update_fn_69(x, curr_eframes, curr_nmframes, curr_iesegment, iq)
+                    self.systems[x]['current_frames'] = curr_eframes
+                    self.systems[x]['current_nmode_frames'] = curr_nmframes
+                    self.systems[x]['current_ie_segment'] = curr_iesegment
 
-        maximum = len(recalc_energy) + len(recalc_ie) + len(recalc_nmode) + len(repaint)
-
-        if not maximum:
-            return
-        maximum += 1  # close and re-open current active windows
-
-        qpd = QProgressDialog('Creating systems tree', 'Abort', 0, maximum, self)
-        qpd.setWindowModality(Qt.WindowModality.WindowModal)
-        qpd.setMinimumDuration(0)
-        v = 0
-        if recalc_energy:
-            qpd.setLabelText('Recalculating energies for selected frames range')
-            for e in recalc_energy:
-                v += 1
-                self.systems[e]['api'].update_energy(*curr_eframes)
-                self.systems[e]['current_frames'] = curr_eframes
-                qpd.setValue(v)
-        if recalc_nmode:
-            qpd.setLabelText('Recalculating nmode for selected frames range')
-            for e in recalc_nmode:
-                v += 1
-                self.systems[e]['api'].update_nmode(*curr_nmframes)
-                self.systems[e]['current_nmode_frames'] = curr_nmframes
-                qpd.setValue(v)
-        if recalc_ie:
-            qpd.setLabelText('Recalculating Interaction Entropy for selected frames range')
-            for e in recalc_ie:
-                v += 1
-                self.systems[e]['api'].update_ie(curr_iesegment)
-                self.systems[e]['current_ie_segment'] = curr_iesegment
-                qpd.setValue(v)
-        if recalc_energy or recalc_nmode or recalc_ie:
-            slist = recalc_energy or recalc_nmode or recalc_ie
-            for e in slist:
-                self.systems[e]['data'] = self.systems[e]['api'].get_energy()
-        if repaint:
-            qpd.setLabelText('Updating charts options')
-            for e in repaint:
-                v += 1
-                if repaint_arg:
-                    self.systems[e]['chart_options'].changes = dict(
-                        line_action=3,
-                        line_ie_action=3,
-                        bar_action=3,
-                        heatmap_action=3,
-                        visualization_action=3,
-                        figure=3
-                    )
-                else:
-                    self.systems[e]['chart_options'].get_changes(act_sett)
-                qpd.setValue(v)
-
-        comp = []
-        if recalc_energy and recalc_ie and recalc_nmode:
-            comp.append('all')
-        else:
-            if recalc_energy:
-                comp.append('energy')
-            if recalc_ie:
-                comp.append('ie')
-            if recalc_nmode:
-                comp.append('nmode')
-
-        qpd.setLabelText('Setting data...')
-        for s in processed_sys:
-            parts = list(self.systems[s]['data'].keys())
-            for p in parts:
-                self.setting_item_data(s, p, comp=tuple(comp))
-            self.systems[s]['items_summary'] = self.systems[s]['api'].get_summary()
-
-        qpd.setLabelText('Updating open charts')
+            if iq.qsize():
+                replot_energy = True
+                from GMXMMPBSA.analyzer.dialogs import ProcessingProgressBar
+                pbd = ProcessingProgressBar(self, iq, rq, self.options['performance']['jobs'], 'Updating...')
+                pbd.rejected.connect(lambda z: print(f'rejected> exit code: {z}'))
+                pbd.accepted.connect(lambda: self._update_itemdata_repaint(rq))
+                pbd.exec()
 
         subwindows = self.mdi.subWindowList()
-        for s in processed_sys:
+        for c, s in enumerate(sys_list):
             changes = self.systems[s]['chart_options'].changes
             for sub in subwindows:
                 if not sub.item_parent or sub.item_parent.system_index != s:
+                    if isinstance(sub, Tables):
+                        sub.close()
+                        sub.button.setChecked(True)
                     continue
                 if not sub.isVisible():
-                    continue
-                if (changes['bar_action'] or changes['line_ie_action'] or
-                        changes['line_action'] or changes['heatmap_action']):
-                    sub.button.setChecked(False)
-                    sub.button.setChecked(True)
-                elif changes['figure']:
+                    if self.systems[s]['chart_options'].changes.get('line_action'):
+                        sub.item_parent.lp_subw = None
+                    elif self.systems[s]['chart_options'].changes.get('bar_action'):
+                        sub.item_parent.bp_subw = None
+                    elif self.systems[s]['chart_options'].changes.get('heatmap_action'):
+                        sub.item_parent.hmp_subw = None
+
+                if changes['figure']:
                     chart_sett = self.systems[s]['chart_options'].get_settings()
                     options = {'save-format': chart_sett[('General', 'figure-format', 'save-format')],
                                'dpi-save': chart_sett[('General', 'figure-format', 'dpi-save')]
                                }
                     sub.mpl_toolbar.update_options(options)
                     sub.fbtn.setChecked(chart_sett[('General', 'toolbar')])
+                elif sub.isVisible() and any(changes.values()) or replot_energy:
+                    sub.close()
+                    sub.button.setChecked(True)
             pymol_items = [[p, item] for p, item in self.pymol_p_list if p.state() == QProcess.ProcessState.Running]
             for p, item in pymol_items:
                 p.kill()
                 p.waitForFinished()
                 item.vis_action.setChecked(True)
-
-        # re-assign changes to native state after replot all open charts
-        for s in processed_sys:
-            self.systems[s]['chart_options'].changes = dict(line_action=0,
-                                                            line_ie_action=0,
-                                                            bar_action=0,
-                                                            heatmap_action=0,
-                                                            visualization_action=0,
-                                                            figure=0)
+            # re-assign changes to native state after replot all open charts
+            self.systems[s]['chart_options'].changes = dict(line_action=0, line_ie_action=0, bar_action=0,
+                                                            heatmap_action=0, visualization_action=0, figure=0)
         self.ie_changed.hide()
         self.e_changed.hide()
         self.nm_changed.hide()
-        qpd.setValue(maximum)
-        self.statusbar.showMessage('Updating... Done.')
+        self.statusbar.showMessage('Updating... Done.', 2000)
 
+    def update_corr_fn(self, repaint_arg=False):
+
+        if self.corr_options_widget.currentIndex() == 0: # Chart Options
+            self.statusbar.showMessage('Updating Charts...')
+            act_sett = self.corr_parms.saveState()
+            if repaint := self.correlation['chart_options'].is_changed(act_sett) or repaint_arg:
+                if repaint_arg:
+                    self.correlation['chart_options'].changes = True
+                else:
+                    self.correlation['chart_options'].get_changes(act_sett)
+        else:   # calculate correlation
+            self.statusbar.showMessage('Calculating correlation...')
+            # Get any modification in selection systems table
+            cols = {1: ('System', 'Selection'), 2: ('System', 'Reference'), 4: ('System', 'ExpΔG')}
+            for c in range(self.corr_sys_sel_w.columnCount()):
+                col_values = []
+                for r in range(self.corr_sys_sel_w.rowCount()):
+                    if c == 1:
+                        col_values.append(self.corr_sys_sel_w.item(r, c).checkState() == Qt.CheckState.Checked)
+                    elif c == 2:
+                        col_values.append(self.corr_sys_sel_w.cellWidget(r, c).isChecked())
+                    elif c == 4:
+                        col_values.append(
+                            ki2energy(float(self.corr_sys_sel_w.item(r, c).text()),
+                                      self.systems[int(self.corr_sys_sel_w.item(r, 0).text())]['namespace'].INPUT[
+                                          'temperature']))
+                if col_values:
+                    for m, v in self.correlation['data'].items():
+                        v[cols[c]] = col_values
+            self.data_table_widget.clearContents()
+            item_list = self.correlation_tableWidget.selectedItems()
+            self.correlation_tableWidget.clearSelection()
+
+            for m, v in self.correlation['data'].items():
+                met = v.columns.get_level_values(0).unique().to_list()[1:]
+                for m1 in met:
+                    self.correlation['items_data'][(m, m1)] = [v.loc[  # FIXME: user option to show the ref in reg plot ???
+                                                           v[('System', 'Reference')] == False
+                                                           ].loc[v[('System', 'Selection')] == True].loc[:,
+                                                       v.columns.get_level_values(0).isin(['System', m1])
+                                                       ].droplevel(0, axis=1), True]
+            if item_list:
+                item_list[0].setSelected(True)
+            self.statusbar.showMessage('Calculating correlation... Done.', 2000)
+
+        for c in range(self.correlation_tableWidget.columnCount()):
+            for r in range(self.correlation_tableWidget.rowCount()):
+                itemw = self.correlation_tableWidget.cellWidget(r, c)
+                if itemw and itemw.reg_chart_action.isChecked():
+                    itemw.reg_chart_action.setChecked(False)
+                    itemw.reg_chart_action.setChecked(True)
+
+    def _update_itemdata_repaint(self, r):
+        maximum = r.qsize()
+        for i, c in enumerate(range(maximum), start=1):
+            sys_id, data, a = r.get()
+            self.systems[sys_id]['items_data'] = {k:v1 for x, v in data.items()
+                                                  if x != 'correlation' and v
+                                                  for k, v1 in v['keys'].items()}
+            self.systems[sys_id]['correlation_data'] = data.get('correlation')
+        if self.options.get('correlation')['corr']:
+            self.get_corr_data()
+
+    # TODO Rename this here and in `update_fn`
+    def _extracted_from_update_fn_69(self, sys_index, curr_eframes, curr_nmframes, curr_iesegment, iq):
+        o = self.systems[sys_index]['anaoptions']
+        o['energy_options'].update(curr_eframes)
+        for d in [curr_eframes, curr_nmframes, dict(ie_segment=curr_iesegment)]:
+            o['entropy_options'].update(d)
+        o['decomp_options'].update(curr_eframes)
+        d = {self.systems[sys_index]['api'].get_ana_data: {
+            'object': 'function',
+            'args': o}
+        }
+        iq.put((sys_index, d))
 
     def reset_dc(self):
         sub = self.mdi.activeSubWindow()
@@ -761,7 +856,8 @@ class GMX_MMPBSA_ANA(QMainWindow):
             current_end = self.eframes_end_sb.value()
             self.numframes_le.setText(f"{int((current_end - value) // current_interval) + 1}")
 
-            curr_eframes = [value, self.eframes_end_sb.value(), self.eframes_inter_sb.value()]
+            curr_eframes = dict(startframe=value, endframe=self.eframes_end_sb.value(),
+                                interval=self.eframes_inter_sb.value())
             if curr_eframes != self.systems[self.current_system_index]['current_frames']:
                 self.e_changed.show()
             else:
@@ -776,7 +872,8 @@ class GMX_MMPBSA_ANA(QMainWindow):
             current_interval = self.eframes_inter_sb.value()
             self.numframes_le.setText(f"{int((value - current_start) // current_interval) + 1}")
 
-            curr_eframes = [self.eframes_start_sb.value(), value, self.eframes_inter_sb.value()]
+            curr_eframes = dict(startframe=self.eframes_start_sb.value(), endframe=value,
+                                interval=self.eframes_inter_sb.value())
             if curr_eframes != self.systems[self.current_system_index]['current_frames']:
                 self.e_changed.show()
             else:
@@ -789,7 +886,8 @@ class GMX_MMPBSA_ANA(QMainWindow):
             current_end = self.eframes_end_sb.value()
             self.numframes_le.setText(f"{int((current_end - current_start) // value) + 1}")
 
-            curr_eframes = [self.eframes_start_sb.value(), self.eframes_end_sb.value(), value]
+            curr_eframes = dict(startframe=self.eframes_start_sb.value(), endframe=self.eframes_end_sb.value(),
+                                interval=value)
             if curr_eframes != self.systems[self.current_system_index]['current_frames']:
                 self.e_changed.show()
             else:
@@ -803,9 +901,9 @@ class GMX_MMPBSA_ANA(QMainWindow):
         if self.current_system_index:
             current_interval = self.nmframes_inter_sb.value()
             current_end = self.nmframes_end_sb.value()
-            self.numframes_le.setText(f"{int((current_end - value) // current_interval) + 1}")
-
-            curr_nmframes = [value, self.nmframes_end_sb.value(), self.nmframes_inter_sb.value()]
+            self.nmnumframes_le.setText(f"{int((current_end - value) // current_interval) + 1}")
+            curr_nmframes = dict(nmstartframe=value, nmendframe=self.nmframes_end_sb.value(),
+                                 nminterval=self.nmframes_inter_sb.value())
             if curr_nmframes != self.systems[self.current_system_index]['current_nmode_frames']:
                 self.nm_changed.show()
             else:
@@ -817,9 +915,10 @@ class GMX_MMPBSA_ANA(QMainWindow):
         if self.current_system_index:
             current_start = self.nmframes_start_sb.value()
             current_interval = self.nmframes_inter_sb.value()
-            self.numframes_le.setText(f"{int((value - current_start) // current_interval) + 1}")
+            self.nmnumframes_le.setText(f"{int((value - current_start) // current_interval) + 1}")
 
-            curr_nmframes = [self.nmframes_start_sb.value(), value, self.nmframes_inter_sb.value()]
+            curr_nmframes = dict(nmstartframe=self.nmframes_start_sb.value(), nmendframe=value,
+                                 nminterval=self.nmframes_inter_sb.value())
             if curr_nmframes != self.systems[self.current_system_index]['current_nmode_frames']:
                 self.nm_changed.show()
             else:
@@ -829,238 +928,268 @@ class GMX_MMPBSA_ANA(QMainWindow):
         if self.current_system_index:
             current_start = self.nmframes_start_sb.value()
             current_end = self.nmframes_end_sb.value()
-            self.numframes_le.setText(f"{int((current_end - current_start) // value) + 1}")
+            self.nmnumframes_le.setText(f"{int((current_end - current_start) // value) + 1}")
 
-            curr_nmframes = [self.nmframes_start_sb.value(), self.nmframes_end_sb.value(), value]
+            curr_nmframes = dict(nmstartframe=self.nmframes_start_sb.value(), nmendframe=self.nmframes_end_sb.value(),
+                                 nminterval=value)
             if curr_nmframes != self.systems[self.current_system_index]['current_nmode_frames']:
                 self.nm_changed.show()
             else:
                 self.nm_changed.hide()
 
-    def gettting_data(self, info_files):
-
-        self.init_dialog.get_files_info(info_files)
+    def gettting_data(self):
+        self.in_init_dialog = True
+        self.init_dialog.get_files_info(self.ifiles)
         self.init_dialog.show()
 
-    # def showcorr(self, item: CorrelationItem, col):
-    #     self.treeWidget.clearSelection()
-    #     # self.update_options(item)   # FIXME: only when we able the options
-    #     if col == 1:
-    #         s = item.dh_sw
-    #         if item.checkState(col) == Qt.Checked:
-    #             item.setSelected(True)
-    #             if s:
-    #                 s.show()
-    #             else:
-    #                 sub = Charts(item=item, col=col, options={'chart_type': [Charts.SCATTER], 'hide_toolbar':
-    #                     self.data_options['hide_toolbar']})
-    #                 sub.make_chart()
-    #                 self.mdi.addSubWindow(sub)
-    #                 sub.show()
-    #         else:
-    #             if s:
-    #                 self.mdi.activatePreviousSubWindow()
-    #                 s.close()
-    #     elif col == 2:
-    #         s = item.dgie_sw
-    #         if item.checkState(col) == Qt.Checked:
-    #             item.setSelected(True)
-    #             if s:  # check if any subwindow has been store
-    #                 s.show()
-    #             else:
-    #                 sub = Charts(item=item, col=col, options={'chart_type': [Charts.SCATTER], 'hide_toolbar':
-    #                     self.data_options['hide_toolbar']})
-    #                 sub.make_chart()
-    #                 self.mdi.addSubWindow(sub)
-    #                 sub.show()
-    #         else:
-    #             if s:
-    #                 self.mdi.activatePreviousSubWindow()
-    #                 s.close()
-    #     elif col == 3:
-    #         s = item.dgnmode_sw
-    #         if item.checkState(col) == Qt.Checked:
-    #             item.setSelected(True)
-    #             if s:  # check if any subwindow has been store
-    #                 s.show()
-    #             else:
-    #                 sub = Charts(item=item, col=col, options={'chart_type': [Charts.SCATTER], 'hide_toolbar':
-    #                     self.data_options['hide_toolbar']})
-    #                 sub.make_chart()
-    #                 self.mdi.addSubWindow(sub)
-    #                 sub.show()
-    #         else:
-    #             if s:
-    #                 self.mdi.activatePreviousSubWindow()
-    #                 s.close()
-    #     elif col == 4:
-    #         s = item.dgqh_sw
-    #         if item.checkState(col) == Qt.Checked:
-    #             item.setSelected(True)
-    #             if s:  # check if any subwindow has been store
-    #                 s.show()
-    #             else:
-    #                 sub = Charts(item=item, col=col, options={'chart_type': [Charts.SCATTER], 'hide_toolbar':
-    #                     self.data_options['hide_toolbar']})
-    #                 sub.make_chart()
-    #                 self.mdi.addSubWindow(sub)
-    #                 sub.show()
-    #         else:
-    #             if s:
-    #                 self.mdi.activatePreviousSubWindow()
-    #                 s.close()
+    def update_table(self):
 
-    def update_table(self, item: CorrelationItem, col):
-
-        if col == 1:
-            data = item.enthalpy
-        elif col == 2:
-            data = item.dgie
-        elif col == 3:
-            data = item.dgnmode
-        elif col == 4:
-            data = item.dgqh
-        else:
+        items = self.correlation_tableWidget.selectedItems()
+        if not items:
             return
-        col_label = self.correlation_treeWidget.headerItem().text(col)
-        self.data_table_energy_col.setText(f"{item.text(0)}({col_label})")
-
-        for row, v in enumerate(data[col_label]):
-            titem = QTableWidgetItem(f'{v:.2f}')
-            self.data_table_widget.setItem(row, 2, titem)
+        item = items[0]
+        if not item.keys_path:
+            return
+        df = self.correlation['items_data'][item.keys_path][0]
+        data = df.loc[df['Selection'] == True][['Number', 'Type', 'ExpΔG', 'Average', 'SD', 'SEM']]
+        self.data_table_widget.setRowCount(len(data.index))
+        for i, c in enumerate(data):
+            for j, r in enumerate(data[c]):
+                it = QTableWidgetItem(f'{r:.2f}' if isinstance(r, float) else str(r))
+                it.setFlags(it.flags() ^ Qt.ItemFlag.ItemIsEditable)
+                it.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                self.data_table_widget.setItem(j, i, it)
 
     def make_correlation(self):
 
-        self.data_table_widget.setRowCount(len(self.corr_data) - 1)
-        sys_with_ki = 0
-        for x in self.corr_data:
-            if x == 'mutant':
-                continue
-            if np.isnan(self.corr_data[x]['Exp.Energy']):
-                continue
-            item_s = QTableWidgetItem(x)
-            self.data_table_widget.setItem(sys_with_ki, 0, item_s)
-            item_e = QTableWidgetItem(f"{self.corr_data[x]['Exp.Energy']:.2f}")
-            self.data_table_widget.setItem(sys_with_ki, 1, item_e)
-            sys_with_ki += 1
-        if sys_with_ki < 3:
-            QMessageBox.critical(self.mdi, 'Unable to calculate correlation',
-                                     'Three or more systems are needed to calculate the correlation.',
-                                     QMessageBox.StandardButton.Ok, QMessageBox.StandardButton.Ok)
-            self.correlation_DockWidget.setEnabled(False)
-            self.correlation_DockWidget.hide()
-            return
+        self.get_corr_data()
+        self.corr_sys_sel_w.setRowCount(len(self.systems))
+        ref_group = QButtonGroup()
+        ref = False
+        r = 0
+        num_sel_sys = 0
+        for sys_id in self.systems:
+            for ct, cv in self.systems[sys_id].get('correlation').items():
+                idi = QTableWidgetItem(str(sys_id))
+                idi.setFlags(idi.flags() ^ Qt.ItemFlag.ItemIsEditable)
+                self.corr_sys_sel_w.setItem(r, 0, idi)
+                ti = QTableWidgetItem()
+                ti.setCheckState(Qt.CheckState.Checked if cv else Qt.CheckState.Unchecked)
+                ti.setFlags(ti.flags() ^ Qt.ItemFlag.ItemIsEditable)
+                self.corr_sys_sel_w.setItem(r, 1, ti)
+                if self.systems[sys_id].get('reference'):
+                    ref = True
+                ri = QRadioButton()
+                ri.setChecked(self.systems[sys_id].get('reference'))
+                if not cv:
+                    ri.setEnabled(False)
+                ref_group.addButton(ri, r)
+                self.corr_sys_sel_w.setCellWidget(r, 2, ri)
 
-        df = make_corr_DF(self.corr_data)  # FIXME:
-        # get df for each model
-        models = ['gb', 'pb', 'rism std', 'rism gf', 'rism pcplus']
-        columns = ['ΔH', 'ΔH+IE', 'ΔH+NMODE', 'ΔH+QH']
-        hide_col = [c for c, x in enumerate(columns, start=1) if df[x].isnull().all()]
-        for m in models:
-            model_df = df[df['MODEL'].isin([m])]
-            m_col_box = []
-            model_data = []
-            for c, col in enumerate(columns, start=1):
-                item_col_df = model_df[['System', col, 'Exp.Energy']]
-                if not item_col_df[col].isnull().all():
-                    m_col_box.append(c)
-                    model_data.append(item_col_df)
+                tyi = QTableWidgetItem(ct[0].upper())
+                tyi.setFlags(tyi.flags() ^ Qt.ItemFlag.ItemIsEditable)
+                self.corr_sys_sel_w.setItem(r, 3, tyi)
+                self.corr_sys_sel_w.setItem(r, 4, QTableWidgetItem(str(self.systems[sys_id]['exp_ki'][ct])))
+                ni = QTableWidgetItem(self.systems[sys_id]['name'])
+                ni.setFlags(ni.flags() ^ Qt.ItemFlag.ItemIsEditable)
+                self.corr_sys_sel_w.setItem(r, 5, ni)
+                if cv:
+                    num_sel_sys += 1
+                r += 1
+        if not ref:
+            self.corr_sys_sel_w.hideColumn(2)
+        self.data_table_widget.setRowCount(num_sel_sys)
+
+        self.correlation_tableWidget.setRowCount(len(self.correlation['data']))
+        height = ((self.correlation_tableWidget.model().rowCount() - 1) +
+                 self.correlation_tableWidget.horizontalHeader().height())
+        for row in range(self.correlation_tableWidget.model().rowCount()):
+            height += self.correlation_tableWidget.rowHeight(row)
+        self.correlation_tableWidget.setMinimumHeight(height + 5)
+
+        met_col = {'ΔGeff': 1, 'ΔGie': 2, 'ΔGc2': 3, 'ΔGnm': 4, 'ΔGqh': 5}
+        for r, (m, v) in enumerate(self.correlation['data'].items()):
+            citem = CustomCorrItem(text=True, model=m)
+            citem.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+            self.correlation_tableWidget.setItem(r, 0, citem)
+
+            met = v.columns.get_level_values(0).unique().to_list()[1:]
+            for m1 in met:
+                self.correlation_tableWidget.setColumnHidden(met_col[m1], False)
+                item = CustomCorrItem(app=self, model=m, keys_path=(m, m1))
+                self.correlation_tableWidget.setItem(r, met_col[m1], item)
+                item.define_button(r, met_col[m1])
+
+    def get_corr_data(self):
+        self.correlation['data'] = {}
+        for s, sys_id in enumerate(self.systems):
+            dta = {('System', 'Number'): [], ('System', 'Type'): [], ('System', 'Reference'): [],
+                   ('System', 'ExpΔG'): [], ('System', 'Selection'): []}
+            for ct, cv in self.systems[sys_id].get('correlation').items():
+                dta[('System', 'Number')].append(sys_id)
+                dta[('System', 'Type')].append(ct[0].upper())
+                if ct == 'normal':
+                    dta[('System', 'Reference')].append(self.systems[sys_id].get('reference'))
                 else:
-                    model_data.append(None)
-            if m_col_box:
-                item = CorrelationItem(self.correlation_treeWidget, [m.upper()], model=model_df, enthalpy=model_data[0],
-                                       dgie=model_data[1], dgnmode=model_data[2], dgqh=model_data[3], col_box=m_col_box)
-        for x in hide_col:
-            self.correlation_treeWidget.hideColumn(x)
+                    dta[('System', 'Reference')].append(False)
+                dta[('System', 'ExpΔG')].append(
+                    ki2energy(self.systems[sys_id]['exp_ki'][ct],
+                              self.systems[sys_id]['namespace'].INPUT['temperature']))
+                dta[('System', 'Selection')].append(cv)
+
+            g = pd.DataFrame(dta, index=range(len(self.systems[sys_id].get('correlation'))))
+            for et, v in self.systems[sys_id]['correlation_data'].items():
+                for m, v1 in v.items():
+                    cdf = pd.concat([g, v1], axis=1)
+                    d = self.correlation['data'].setdefault(m, cdf)
+                    if d.equals(cdf):
+                        continue
+                    self.correlation['data'][m] = pd.concat([d, cdf], ignore_index=True).sort_values(
+                        by=[('System', 'Number'), ('System', 'Type')])
+
+        def subtract_custom_value(x, custom_value):
+            return x - custom_value
+
+        for r, (m, v) in enumerate(self.correlation['data'].items()):
+            ref = v.loc[v[('System', 'Reference')] == True].loc[:, ~v.columns.get_level_values(1).isin(
+                ['Number', 'Type', 'Reference', 'Selection'])]
+            if len(ref.index):
+                for k in ref:
+                    if k[-1] == 'SEM':
+                        continue
+                    elif k[-1] == 'SD':
+                        v[k] = v[k].apply(utils.get_corrstd, args=(ref[k].values[0],))
+                        v[(k[0], 'SEM')] = v[k]
+                    else:
+                        v[k] = v[k].apply(subtract_custom_value, args=(ref[k].values[0],))
+
+            met = v.columns.get_level_values(0).unique().to_list()[1:]
+            for m1 in met:
+                self.correlation['items_data'][(m, m1)] = [v.loc[  # FIXME: user option to show the ref in reg plot ???
+                                                               v[('System', 'Reference')] == False
+                                                               ].loc[v[('System', 'Selection')] == True].loc[:,
+                                                           v.columns.get_level_values(0).isin(['System', m1])
+                                                           ].droplevel(0, axis=1), True]
 
     def read_data(self, queue: Queue, options):
-        self.init_dialog.close()
+        self.init_dialog.accept()
+        self.in_init_dialog = False
+        self.options = options
         max_sixe = queue.qsize()
-        qpd = QProgressDialog('Reading output files', 'Abort', 0, max_sixe, self)
-        qpd.setWindowModality(Qt.WindowModality.WindowModal)
-        qpd.setMinimumDuration(0)
-        # qpd.setRange(0, queue.qsize())
-        results = []
 
-        for x in range(max_sixe):
-            sys_name, path, exp_ki, options_file = queue.get()
-            gmx_mmpbsa_api = MMPBSA_API()
-            gmx_mmpbsa_api.set_config(options['timestart'], options['timestep'], options['timeunit'])
-            gmx_mmpbsa_api.load_file(path)
-            results.append([(sys_name, path, exp_ki, options_file), gmx_mmpbsa_api])
-            qpd.setValue(x)
+        iq = Queue()
+        self.rq = Queue()
+
+        for i, _ in enumerate(range(max_sixe), start=1):
+            sys_name, path, stability, exp_ki, corr, ref, options_file = queue.get()
+            opts4ana = {'energy_options': {},
+                        'entropy_options': {},
+                        'decomp_options': {'res_threshold': options.get('decomposition').get('res_threshold')},
+                        'correlation': options.get('correlation').get('corr'),
+                        'performance_options': options.get('performance')}
+            opts4ana['energy_options']['etype'] = opts4ana['entropy_options']['etype'] = (None if len(exp_ki) == 2 else
+                                                                                          tuple(exp_ki.keys()))
+            opts4ana['decomp_options']['etype'] = None if len(exp_ki) == 2 else tuple(f"decomp_{x}" for x in exp_ki)
+            opts4ana['energy_options']['mol'] = opts4ana['entropy_options']['mol'] = (['complex'] if stability else
+                tuple(options.get('energy').get('mols')))
+            opts4ana['decomp_options']['mol'] = (['complex'] if stability else
+                                                        tuple(options.get('decomposition').get('mols')))
+            d = {MMPBSA_API: {'object': 'class',
+                              'args': None},
+                 'setting_time': {'object': 'method',
+                                  'args': options.get('frames2time', {})},
+                 'load_file': {'object': 'method',
+                               'args': dict(fname=path)},
+                 'get_ana_data': {'object': 'method',
+                                  'args': opts4ana}
+                 }
+            iq.put((i, d))
+
+            if options_file == 'User-Default':
+                config = 'User-Default'
+            elif options_file == 'Custom':
+                config = path.parent
+            else:
+                config = None
+
+            self.systems[i] = {'name': sys_name, 'path': path.parent,
+                               'chart_options': ChartSettings(config),
+                               'options': options,
+                               'anaoptions': opts4ana,
+                               'items_data': {},
+                               'exp_ki': exp_ki,
+                               'correlation': corr,
+                               'reference': ref
+                               }
+
             queue.task_done()
-            if qpd.wasCanceled():
-                break
-        qpd.setValue(max_sixe)
+        pbd = ProcessingProgressBar(self, iq, self.rq, options['performance']['jobs'], 'Reading files...')
+        pbd.rejected.connect(lambda x: print(f'rejected> exit code: {x}'))
+        pbd.accepted.connect(lambda: self.process_data(self.rq))
+        pbd.exec()
 
-        self.process_data(results, options)
-
-    def process_data(self, results: list, options):
-        self.data_options = options
-        maximum = len(results) + 3
-        qpd = QProgressDialog('Creating systems tree', 'Abort', 0, maximum, self)
+    def process_data(self, results: Queue):
+        size = results.qsize()
+        maximum = size * 2
+        qpd = QProgressDialog('Creating systems tree', 'Abort', 0, maximum + 1, self)
         qpd.setWindowModality(Qt.WindowModality.WindowModal)
         qpd.setMinimumDuration(0)
 
         # check if all systems have the same frames range
         frange_base = []
-
-        for i, c in enumerate(range(len(results)), start=1):
-            qpd.setValue(i)
+        c = 0
+        for i, _ in enumerate(range(size), start=1):
+            qpd.setValue(c)
             if qpd.wasCanceled():
                 break
-            system, api = results[c]
-            name, path, exp_ki, settings = system
-            energy = api.get_energy()
-            namespace = api.app_namespace
-            summary = api.get_summary()
+            sys_id, api, data = results.get()
+            self.systems[sys_id].update({
+                'api': api,
+                'namespace': api.app_namespace,
+                'map': {x:v['map'] for x, v in data.items() if v and x != 'correlation'},
+                'current_frames': dict(startframe=api.app_namespace.INPUT['startframe'],
+                                       endframe=api.app_namespace.INPUT['endframe'],
+                                       interval=api.app_namespace.INPUT['interval']),
+                'current_nmode_frames': dict(nmstartframe=api.app_namespace.INPUT['nmstartframe'],
+                                             nmendframe=api.app_namespace.INPUT['nmendframe'],
+                                             nminterval=api.app_namespace.INPUT['nminterval']),
+                'current_ie_segment': api.app_namespace.INPUT['ie_segment'],
+                'items_data': {k:v1 for x, v in data.items() if v and x != 'correlation' for k, v1 in v['keys'].items()},
+                'correlation_data': data.get('correlation')  # FIXME: fail when decomp
+                # 'items_summary': summary,
+                # 'exp_ki': exp_ki
+            })
+            c += 1
 
-            if settings == 'User-Default':
-                config = 'User-Default'
-            elif settings == 'Custom':
-                config = path.parent
-            else:
-                config = None
-
-            self.systems[i] = {'name': name, 'path': path.parent, 'api': api,
-                               'namespace': namespace, 'data': energy,
-                               'current_frames': [namespace.INPUT['startframe'],
-                                                  namespace.INPUT['endframe'],
-                                                  namespace.INPUT['interval']],
-                               'current_nmode_frames': [namespace.INPUT['nmstartframe'],
-                                                        namespace.INPUT['nmendframe'],
-                                                        namespace.INPUT['nminterval']],
-                               'current_ie_segment': namespace.INPUT['ie_segment'],
-                               'chart_options': ChartSettings(config),
-                               'options': options,
-                               'items_data': {}, 'items_summary': summary,
-                               'exp_ki': exp_ki
-                               }
-            self.makeTree(i)
-            if not frange_base:
-                frange_base = [namespace.INPUT['startframe'], namespace.INPUT['endframe'],
-                               namespace.INPUT['interval'], namespace.INPUT['nmstartframe'],
-                               namespace.INPUT['nmendframe'], namespace.INPUT['nminterval']]
+            if not self.all_systems_active:
                 continue
-            if frange_base != [namespace.INPUT['startframe'], namespace.INPUT['endframe'],
-                               namespace.INPUT['interval'], namespace.INPUT['nmstartframe'],
-                               namespace.INPUT['nmendframe'], namespace.INPUT['nminterval']]:
+            if not frange_base:
+                frange_base = [api.app_namespace.INPUT['startframe'], api.app_namespace.INPUT['endframe'],
+                               api.app_namespace.INPUT['interval'], api.app_namespace.INPUT['nmstartframe'],
+                               api.app_namespace.INPUT['nmendframe'], api.app_namespace.INPUT['nminterval']]
+                continue
+            if frange_base != [api.app_namespace.INPUT['startframe'], api.app_namespace.INPUT['endframe'],
+                               api.app_namespace.INPUT['interval'], api.app_namespace.INPUT['nmstartframe'],
+                               api.app_namespace.INPUT['nmendframe'], api.app_namespace.INPUT['nminterval']]:
                 self.all_systems_active = False
 
-        qpd.setLabelText('Initializing first system...')
-        self._initialize_systems()
-        qpd.setValue(i + 1)
+        for s in sorted(self.systems.keys()):
+            qpd.setValue(c)
+            if qpd.wasCanceled():
+                break
+            self.makeTree(s)
+            c += 1
 
-        if not options['corr_sys']:  # FIXME:
+
+        self._initialize_systems()
+        qpd.setValue(c)
+
+        if not self.options.get('correlation')['corr']:
             self.correlation_DockWidget.setEnabled(False)
             self.correlation_DockWidget.hide()
         else:
-            qpd.setLabelText('Calculating correlation...')
             self.make_correlation()
-            qpd.setValue(i + 2)
-
-        qpd.setValue(maximum)
+        qpd.setValue(maximum + 1)
 
         # some late signal/slot connections
         # self.treeWidget.itemChanged.connect(self.showdata)
@@ -1069,8 +1198,11 @@ class GMX_MMPBSA_ANA(QMainWindow):
     def makeTree(self, sys_index):
 
         # make system item
-        sys_item = CustomItem(self.treeWidget, [self.systems[sys_index]['name']], app=self, system_index=sys_index,
+        sys_name = self.systems[sys_index]['name']
+        sys_item = CustomItem(self.treeWidget, [sys_name], app=self, system_index=sys_index,
                               buttons=(-1,))
+        sys_item.setExpanded(True)
+
         for c in [0, 1]:
             sys_item.setBackground(c, QBrush(QColor(100, 100, 100)))
             sys_item.setForeground(c, QBrush(QColor(220, 220, 255)))
@@ -1079,470 +1211,178 @@ class GMX_MMPBSA_ANA(QMainWindow):
             font.setPointSize(font.pointSize() + 1)
             sys_item.setFont(c, font)
 
-        # FIXME: Binding
-        classif_item = CustomItem(sys_item, ['ΔH/-TΔS/ΔG'])
-        classif_item.setExpanded(True)
+        s = {'enthalpy': 'ΔH', 'entropy': '-TΔS','binding': 'ΔG'}
 
-        print_keys = list(self.systems[sys_index]['exp_ki'].keys())
-        decomp_print_keys = [f"decomp_{x}" for x in self.systems[sys_index]['exp_ki'].keys()]
-        if 'normal' in print_keys and 'mutant' in print_keys:
-            print_keys.append('mutant-normal')
+        for level, v in self.systems[sys_index]['map'].items():
+            t = f' ({s[level]})' if s.get(level) else ''
+            item = CustomItem(sys_item, [f'{level.capitalize()}{t}'], system_index=sys_index)
+            for level1, v1 in v.items():
 
-        for part in print_keys:
-            if part not in self.systems[sys_index]['data']:
-                continue
-            self.setting_item_data(sys_index, part)
-            self.makeItems(sys_index, part, classif_item)
+                item1 = CustomItem(item, [f'{level1.capitalize()}'], system_index=sys_index)
+                item1.setExpanded(True)
+                if level == 'enthalpy':
+                    self._make_enthalpy_nmodeqh_items(sys_name, sys_index, item1, level1, v1)
+                elif level == 'entropy':
+                    self._make_enthalpy_nmodeqh_items(sys_name, sys_index, item1, level1, v1, 'Entropic')
+                    self._make_iec2_items(sys_name, sys_index, item1, level1, v1)
+                elif level == 'binding':
+                    self._make_binding_items(sys_name, sys_index, item1, level1, v1)
+                elif level == 'decomposition':
+                    self._make_decomp_items(sys_name, sys_index, item1, level1, v1)
 
-        if self.systems[sys_index]['namespace'].INPUT['idecomp']:
-            classif_item = CustomItem(sys_item, ['Decomposition'])
-            for part in decomp_print_keys:
-                if part not in self.systems[sys_index]['data']:
-                    continue
-                self.setting_item_data(sys_index, part)
-                self.makedecompItems(sys_index, part, classif_item)
-
-        sys_item.setExpanded(True)
-
-        # setup items to qtreewidget
-        itemiter = QTreeWidgetItemIterator(sys_item)
-        while itemiter.value():
-            item = itemiter.value()
-            if sb := item.setup_buttons():
-                self.treeWidget.setItemWidget(item, 1, sb)
-            itemiter += 1
-
-    def _remove_empty_terms(self, data):
-        if self.data_options['remove_empty_terms'] and isinstance(
-            data, pd.DataFrame
-        ):
-            columns = data.columns
-            for col in columns:
-                if -0.01 < data[col].mean() < 0.01 and col not in ['GSOLV', 'GGAS', 'TOTAL', 'tot']:
-                    del data[col]
-            return data
-        return data
-
-    def _remove_empty_charts(self, data):
-        if isinstance(data, pd.Series):
-            if self.data_options['remove_empty_charts'] and ((data > -0.01).all() and (data < 0.01).all()):
-                return True
-        elif self.data_options['remove_empty_charts'] and ((data > -0.01).all().all() and (data < 0.01).all().all()):
-            return True
-
-    def _itemdata_properties(self, data, decomp=False):
-        """
-        Pre-processing the items data.
-        Get the following properties:
-        - separable: if contains subcategories (DH [energetics components], Per-residue[receptor and ligand])
-
-        Also, remove empty terms and charts according to selected options
-        @param data:
-        @return:
-        """
-        groups = {}
-        if not decomp:
-            sep_ggas_keys = []
-            sep_gsolv_keys = []
-            # remove empty charts? (BOND, ANGLE and DIHEDRAL for STP)
-            # FIXME: NLPBsolver ?
-            ggas_keys = ['BOND', 'ANGLE', 'DIHED', 'VDWAALS', 'EEL', '1-4 VDW', '1-4 EEL', 'UB', 'IMP', 'CMAP', 'ESCF']
-            gsolv_keys = ['EGB', 'ESURF', 'EPB', 'ENPOLAR', 'EDISPER', 'POLAR SOLV', 'APOLAR SOLV', 'ERISM']
-            for k in data.columns:
-                if k in ggas_keys:
-                    sep_ggas_keys.append(k)
-                elif k in gsolv_keys:
-                    sep_gsolv_keys.append(k)
-            if sep_ggas_keys:
-                groups['GGAS'] = sep_ggas_keys
-                groups['GSOLV'] = sep_gsolv_keys
-                groups['TOTAL'] = ['GGAS', 'GSOLV', 'TOTAL']
-        else:
-            groups['Receptor'] = []
-            groups['Ligand'] = []
-            for k in data.columns:
-                if k[0].startswith('R:') and k[0] not in groups['Receptor']:
-                    groups['Receptor'].append(k[0])
-                elif k[0].startswith('L:') and k[0] not in groups['Ligand']:
-                    groups['Ligand'].append(k[0])
-        return groups
-
-    def _setup_data(self, data, iec2=False, level=0):
-
-        # this variable show if the data changed or not. At first time, it is true, then when plotting become in false
-        change = True
-
-        cont = {'ie_plot_data': None, 'line_plot_data': None, 'bar_plot_data': None, 'heatmap_plot_data': None}
-        if level == 0:
-            options = {'ie': True} if iec2 else {}
-            cont['line_plot_data'] = [data, options, change]
-        elif level == 1:
-            temp_data = self._remove_empty_terms(data)
-            options = {'c2': True} if iec2 else {}
-            options.update(dict(groups=self._itemdata_properties(temp_data)))
-            cont['bar_plot_data'] = [temp_data, options, change]
-            del temp_data
-        elif level == 2:
-            tempdf = data.loc[:, data.columns.get_level_values(1) == 'tot']
-            bar_plot_data = tempdf.droplevel(level=1, axis=1)
-            cont['line_plot_data'] = [bar_plot_data.sum(axis=1), {}, change]
-            cont['heatmap_plot_data'] = [bar_plot_data.transpose(copy=True), {}, change]
-            temp_bar_data = self._remove_empty_terms(bar_plot_data)
-            cont['bar_plot_data'] = [temp_bar_data, dict(groups=self._itemdata_properties(temp_bar_data)), change]
-            del bar_plot_data
-            del temp_bar_data
-            del tempdf
-        elif level == 3:
-            # Select only the "tot" column, remove the level, change first level of columns to rows and remove the mean
-            # index
-            tempdf = data.loc[:, data.columns.get_level_values(2) == 'tot']
-            cont['heatmap_plot_data'] = [
-                tempdf.aggregate(["mean"]).droplevel(level=2, axis=1).stack().droplevel(level=0), {}, change]
-            bar_plot_data = tempdf.groupby(axis=1, level=0, sort=False).sum()
-            cont['line_plot_data'] = [bar_plot_data.sum(axis=1), {}, change]
-            temp_bar_data = self._remove_empty_terms(bar_plot_data)
-            cont['bar_plot_data'] = [temp_bar_data, dict(groups=self._itemdata_properties(temp_bar_data)), change]
-            del tempdf
-            del bar_plot_data
-            del temp_bar_data
-
-        return cont
-
-    def makeItems(self, sys_index, part, classif_item):
-
-        correlation_data = self.corr_data
-        sys_name = self.systems[sys_index]['name']
-        # correlation_data[sys_name] = {'ΔG': {
-        #                                     'gb': {'ΔH': np.nan, 'ie': np.nan, 'nmode': np.nan, 'qh': np.nan},
-        #                                     'pb': {'ΔH': np.nan, 'ie': np.nan, 'nmode': np.nan, 'qh': np.nan},
-        #                                     'rism std': {'ΔH': np.nan, 'ie': np.nan, 'nmode': np.nan, 'qh': np.nan},
-        #                                     'rism gf': {'ΔH': np.nan, 'ie': np.nan, 'nmode': np.nan, 'qh': np.nan}},
-        #                               'Exp.Energy': ki2energy(sys_item.exp_ki, sys_item.temp)}
-
-        data = self.systems[sys_index]['data'][part]
+    def _make_decomp_items(self, sys_name, sys_index, item1, level1, v1):
         namespace = self.systems[sys_index]['namespace']
+        # model
+        for level2, v2 in v1.items():
+            item2 = CustomItem(item1, [f'{level2.upper()}'], system_index=sys_index)
+            item2.setExpanded(True)
+            # mols
+            for level3, v3 in v2.items():
+                item3 = CustomItem(item2, [f'{level3.capitalize()}'], system_index=sys_index)
+                item3.setExpanded(True)
 
-        top_item = CustomItem(classif_item, [part.capitalize()])
-        top_item.setExpanded(True)
-        parts = self.systems[sys_index]['options']['components'] + ['delta']
-        if namespace.FILES.stability:
-            parts.append('complex')
-
-        for level in ['gb', 'pb', 'rism gf', 'rism std', 'rism pcplus', 'nmode', 'qh', 'ie', 'c2', 'binding']:
-            if level in data:
-                if level in ['gb', 'pb', 'rism gf', 'rism std', 'rism pcplus', 'nmode', 'qh']:
-                    titem = CustomItem(top_item, [level.upper()])
-                    titem.setExpanded(True)
-
-                    str_dict = multiindex2dict(data[level].columns)
-                    for level1 in str_dict:
-                        if level1 not in parts:
-                            continue
-                        item1 = CustomItem(titem,
-                                           [level1.upper()],
-                                           app=self,
-                                           buttons=(2, -2),
-                                           title="Energetic Components",
-                                           subtitle=f"{sys_name} | {level.upper()} | {level1.upper()}",
-                                           system_index=sys_index,
-                                           keys_path=(part, level, (level1,)),
-                                           part=part
-                                           )
-                        if level == 'qh':
-                            print('Currently not implemented. Please contact us to use your files to setup this analysis'
-                                  ' in gmx_MMPBSA ')
-                            continue
-                        for level2 in str_dict[level1]:
-                            keys_path = (part, level, (level1, level2))
-                            if keys_path in self.removed_items[sys_index]:
-                                continue
-                            item2 = CustomItem(item1,
-                                               [level2.upper()],
-                                               app=self,
-                                               buttons=(1,),
-                                               title="Energetic Components",
-                                               subtitle=f"{sys_name} | {level.upper()} | "
-                                                        f"{level1.upper()} | {level2.upper()}",
-                                               system_index=sys_index,
-                                               keys_path=keys_path,
-                                               part=part
-                                               )
-                            self.items_counter['charts'] += 1
-                elif level == 'c2':
-                    titem = CustomItem(top_item,
-                                       [level.upper()],
+                # TDC, BDC, SDC
+                for level4, v4 in v3.items():
+                    title = '[Per-residue]' if namespace.INPUT['idecomp'] in [1, 2] else '[Per-wise]'
+                    item4 = CustomItem(item3,
+                                       [level4.upper()],
                                        app=self,
-                                       buttons=(-2,),
-                                       title="C2 Entropy",
-                                       subtitle=f"{sys_name} | {level.upper()}",
+                                       buttons=(1, 2, 3, 4),
+                                       title=f"Energetic Components {title}",
+                                       subtitle=f"{sys_name} | {level1.upper()} | "
+                                                f"{level2.upper()} | {level3.capitalize()} | {level4.upper()}",
                                        system_index=sys_index,
-                                       keys_path=(part, level),
-                                       part=part
+                                       keys_path=(level1, level2, level3, level4),
+                                       # part=part
                                        )
-                    str_dict = multiindex2dict(data[level].columns)
-                    for level1 in str_dict:
-                        item1 = CustomItem(titem,
-                                           [level1.upper()],
+                    self.treeWidget.setItemWidget(item4, 1, item4.setup_buttons())
+                    btns = (2,) if namespace.INPUT['idecomp'] in [1, 2] else (1, 2, 3)
+                    for level5, v5 in v4.items():
+                        item5 = CustomItem(item4,
+                                           [level5.upper()],
                                            app=self,
-                                           buttons=(2,),
-                                           title="C2 Entropy",
-                                           subtitle=f"{sys_name} | {level.upper()} | {level1.upper()}",
-                                           system_index=sys_index,
-                                           keys_path=(part, level, (level1,)),
-                                           part=part
-                                           )
-                elif level == 'ie':
-                    titem = CustomItem(top_item,
-                                       [level.upper()],
-                                       app=self,
-                                       buttons=(-2,),
-                                       title="Interaction Entropy",
-                                       subtitle=f"{sys_name} | {level.upper()}",
-                                       system_index=sys_index,
-                                       keys_path=(part, level),
-                                       part=part)
-                    str_dict = multiindex2dict(data[level].columns)
-                    for level1 in str_dict:
-                        item1 = CustomItem(titem,
-                                           [level1.upper()],
-                                           app=self,
-                                           buttons=(1,),
-                                           title="Interaction Entropy",
-                                           subtitle=f"{sys_name} | {level.upper()} | {level1.upper()}",
-                                           system_index=sys_index,
-                                           keys_path=(part, level, (level1,)),
-                                           part=part
-                                           )
-                elif level == 'binding':
-                    titem = CustomItem(top_item, ['Binding Energy'])
-                    for level1 in data[level]:
-                        item1 = CustomItem(titem,
-                                           [level1.upper()],
-                                           app=self,
-                                           buttons=(2,),
-                                           title="Binding Energy",
-                                           subtitle=f"{sys_name} | ΔG | {level1.upper()}",
-                                           system_index=sys_index,
-                                           keys_path=(part, level, (level1,)),
-                                           part=part
-                                           )
-
-    def makedecompItems(self, sys_index, part, classif_item):
-        sys_name = self.systems[sys_index]['name']
-        data = self.systems[sys_index]['data'][part]
-        namespace = self.systems[sys_index]['namespace']
-        top_item = CustomItem(classif_item, [part.capitalize()])
-        top_item.setExpanded(True)
-        parts = self.systems[sys_index]['options']['components'] + ['delta']
-        if namespace.FILES.stability:
-            parts.append('complex')
-
-        for level in ['gb', 'pb']:
-            if level in data:
-                titem = CustomItem(top_item, [level.upper()])
-                titem.setExpanded(True)
-
-                str_dict = multiindex2dict(data[level].columns)
-                for level1 in str_dict:
-                    if level1 not in parts:
-                        continue
-                    item1 = CustomItem(titem, [level1.upper()])
-                    for level2 in str_dict[level1]:
-                        title = '[Per-residue]' if namespace.INPUT['idecomp'] in [1, 2] else '[Per-wise]'
-                        item2 = CustomItem(item1,
-                                           [level2.upper()],
-                                           app=self,
-                                           buttons=(1, 2, 3, 4),
+                                           buttons=btns,
                                            title=f"Energetic Components {title}",
-                                           subtitle=f"{sys_name} | {level.upper()} | "
-                                                    f"{level1.upper()} | {level2.upper()}",
+                                           subtitle=f"{sys_name} | "
+                                                    f"{str(level1).upper()} | "
+                                                    f"{str(level2).upper()} | "
+                                                    f"{str(level3).upper()} | "
+                                                    f"{str(level4).upper()} | "
+                                                    f"{str(level5).upper()} | ",
                                            system_index=sys_index,
-                                           keys_path=(part, level, (level1, level2)),
-                                           part=part
+                                           keys_path=(level1, level2, level3, level4, level5)
                                            )
-                        self.items_counter['charts'] += 1
-                        # residue first level
-                        btns = (2,) if namespace.INPUT['idecomp'] in [1, 2] else (1, 2, 3)
-                        for level3 in str_dict[level1][level2]:
-                            item3 = CustomItem(item2,
-                                               [level3.upper()],
-                                               app=self,
-                                               buttons=btns,
-                                               title=f"Energetic Components {title}",
-                                               subtitle=f"{sys_name} ({part}) | "
-                                                          f"{str(level).upper()} | "
-                                                          f"{str(level1).upper()} | "
-                                                          f"{str(level2).upper()} | "
-                                                          f"{str(level3).upper()}",
-                                               system_index=sys_index,
-                                               keys_path=(part, level, (level1, level2, level3))
-                                               )
-                            # residue first level
-                            #             btns = (2,) if namespace.INPUT['idecomp'] in [1, 2] else (1, 2, 3)
-                            for level4 in str_dict[level1][level2][level3]:
-                                if namespace.INPUT['idecomp'] in [1, 2]:
-                                    item4 = CustomItem(item3,
-                                                       [level4.upper()],
-                                                       app=self,
-                                                       buttons=(1,),
-                                                       title="Energetic Components [Per-residue]",
-                                                       subtitle=f"{sys_name} ({part})| "
-                                                                f"{str(level).upper()} | "
-                                                                f"{str(level1).upper()} | "
-                                                                f"{str(level2).upper()} | "
-                                                                f"{str(level3).upper()} | "
-                                                                f"{str(level4).upper()}",
-                                                       system_index=sys_index,
-                                                       keys_path=(part, level, (level1, level2, level3, level4))
-                                                       )
-                                    self.items_counter['charts'] += 1
-                                else:
-                                    item4 = CustomItem(item3,
-                                                       [level4.upper()],
-                                                       app=self,
-                                                       buttons=(2,),
-                                                       title="Energetic Components [Per-wise]",
-                                                       subtitle=f"{sys_name} ({part})| "
-                                                                f"{str(level).upper()} | "
-                                                                f"{str(level1).upper()} | "
-                                                                f"{str(level2).upper()} | "
-                                                                f"{str(level3).upper()} | "
-                                                                f"{str(level4).upper()}",
-                                                       system_index=sys_index,
-                                                       keys_path=(part, level, (level1, level2, level3, level4))
-                                                       )
-                                    self.items_counter['charts'] += 1
-                                    # energetics terms
-                                    for level5 in str_dict[level1][level2][level3][level4]:
-                                        item5 = CustomItem(item4,
-                                                           [level5.upper()],
-                                                           app=self,
-                                                           buttons=(1,),
-                                                           title="Energetic Components [Per-wise]",
-                                                           subtitle=f"{sys_name} ({part}) | "
-                                                                    f"{str(level).upper()} | "
-                                                                    f"{str(level1).upper()} | "
-                                                                    f"{str(level2).upper()} | "
-                                                                    f"{str(level3).upper()} | "
-                                                                    f"{str(level4).upper()} | "
-                                                                    f"{str(level5).upper()}",
-                                                           system_index=sys_index,
-                                                           keys_path=(
-                                                               part, level, (level1, level2, level3, level4, level5))
-                                                           )
+                        self.treeWidget.setItemWidget(item5, 1, item5.setup_buttons())
+                        if namespace.INPUT['idecomp'] in [1, 2]:
+                            for level6 in v5:
+                                item6 = CustomItem(item5,
+                                                   [level6.upper()],
+                                                   app=self,
+                                                   buttons=(1,),
+                                                   title="Energetic Components [Per-residue]",
+                                                   subtitle=f"{sys_name} | "
+                                                            f"{str(level1).upper()} | "
+                                                            f"{str(level2).upper()} | "
+                                                            f"{str(level3).upper()} | "
+                                                            f"{str(level4).upper()} | "
+                                                            f"{str(level5).upper()} | "
+                                                            f"{str(level6).upper()}",
+                                                   system_index=sys_index,
+                                                   keys_path=(level1, level2, level3, level4, level5, level6)
+                                                   )
+                                self.treeWidget.setItemWidget(item6, 1, item6.setup_buttons())
+                        else:
+                            for level6, v6 in v5.items():
+                                item6 = CustomItem(item5,
+                                                   [level6.upper()],
+                                                   app=self,
+                                                   buttons=(2,),
+                                                   title="Energetic Components [Per-wise]",
+                                                   subtitle=f"{sys_name}| "
+                                                            f"{str(level1).upper()} | "
+                                                            f"{str(level2).upper()} | "
+                                                            f"{str(level3).upper()} | "
+                                                            f"{str(level4).upper()} | "
+                                                            f"{str(level5).upper()} | "
+                                                            f"{str(level6).upper()}",
+                                                   system_index=sys_index,
+                                                   keys_path=(level1, level2, level3, level4, level5, level6)
+                                                   )
+                                self.treeWidget.setItemWidget(item6, 1, item6.setup_buttons())
 
-    def setting_item_data(self, sys_index, part, comp=('all',)):
-        correlation_data = self.corr_data
-        # correlation_data[sys_name] = {'ΔG': {
-        #                                     'gb': {'ΔH': np.nan, 'ie': np.nan, 'nmode': np.nan, 'qh': np.nan},
-        #                                     'pb': {'ΔH': np.nan, 'ie': np.nan, 'nmode': np.nan, 'qh': np.nan},
-        #                                     'rism std': {'ΔH': np.nan, 'ie': np.nan, 'nmode': np.nan, 'qh': np.nan},
-        #                                     'rism gf': {'ΔH': np.nan, 'ie': np.nan, 'nmode': np.nan, 'qh': np.nan}},
-        #                               'Exp.Energy': ki2energy(topItem.exp_ki, topItem.temp)}
+    def _make_binding_items(self, sys_name, sys_index, item1, level1, v1):
+        for level2, v2 in v1.items():
+            for level3 in v2:
+                item3 = CustomItem(item1, [f'{level2.upper()}+{level3.upper()}'],
+                                   app=self,
+                                   buttons=(2, -2),
+                                   title="Binding Energy",
+                                   subtitle=f"{sys_name} | {level1.capitalize()} | {level2.upper()}+{level3.upper()}",
+                                   system_index=sys_index,
+                                   keys_path=(level1, level2, level3),
+                                   # part=part
+                                   )
+                item3.setExpanded(True)
+                self.treeWidget.setItemWidget(item3, 1, item3.setup_buttons())
 
-        data = self.systems[sys_index]['data'][part]
-        self.removed_items[sys_index] = []
-        namespace = self.systems[sys_index]['namespace']
+    def _make_enthalpy_nmodeqh_items(self, sys_name, sys_index, item1, level1, v1, comp_type='Energetic'):
+        for level2, v2 in v1.items():
+            if level2 in ['c2', 'ie']:
+                continue
+            item2 = CustomItem(item1, [f'{level2.upper()}'], system_index=sys_index)
+            item2.setExpanded(True)
+            for level3, v3 in v2.items():
+                item3 = CustomItem(item2, [f'{level3.capitalize()}'],
+                                   app=self,
+                                   buttons=(2, -2),
+                                   title=f"{comp_type} Components",
+                                   subtitle=f"{sys_name} | {level1.capitalize()} | {level2.upper()} | "
+                                            f"{level3.capitalize()}",
+                                   system_index=sys_index,
+                                   keys_path=(level1, level2, level3),
+                                   # part=part
+                                   )
+                item3.setExpanded(True)
+                self.treeWidget.setItemWidget(item3, 1, item3.setup_buttons())
+                if level2 == 'qh':
+                    continue
+                for level4 in v3:
+                    item4 = CustomItem(item3, [f'{level4.upper()}'],
+                                       app=self,
+                                       buttons=(1,),
+                                       title=f"{comp_type} Components",
+                                       subtitle=f"{sys_name} | {level1.capitalize()} | {level2.upper()} | "
+                                                f"{level3.capitalize()} | {level4.upper()}",
+                                       system_index=sys_index,
+                                       keys_path=(level1, level2, level3, level4),
+                                       # part=part
+                                       )
+                    item4.setExpanded(True)
+                    self.treeWidget.setItemWidget(item4, 1, item4.setup_buttons())
 
-        parts = self.systems[sys_index]['options']['components'] + ['delta']
-        if namespace.FILES.stability:
-            parts.append('complex')
-
-        key_list = []
-        if 'nmode' in comp:
-            key_list.append('nmode')
-        elif 'ie' in comp:
-            key_list.append('ie')
-        elif 'energy' in comp:
-            # Include ie and c2 since they dependent of the ggas energy
-            key_list.extend(['gb', 'pb', 'rism gf', 'rism std', 'rism pcplus', 'binding', 'ie', 'c2'])
-        elif 'all' in comp:
-            key_list.extend(['gb', 'pb', 'rism gf', 'rism std', 'rism pcplus', 'nmode', 'qh', 'ie', 'c2', 'binding'])
-        for level in key_list:
-            if level in data:
-                if level in ['gb', 'pb', 'rism gf', 'rism std', 'rism pcplus', 'nmode', 'qh']:
-                    str_dict = multiindex2dict(data[level].columns)
-                    for level1 in str_dict:
-                        if level1 not in parts:
-                            continue
-                        if not part.startswith('decomp'):
-                            self.systems[sys_index]['items_data'][(part, level, (level1,))] = self._setup_data(data[level][(level1,)],
-                                                                                                               level=1)
-                        for level2 in str_dict[level1]:
-                            if self._remove_empty_charts(data[level][(level1, level2)]):
-                                del data[level][(level1, level2)]
-                                self.removed_items[sys_index].append((part, level, (level1, level2)))
-                                continue
-                            if not part.startswith('decomp'):
-                                temp_dat = data[level][(level1, level2)]
-                                temp_dat.name = level2
-                                self.systems[sys_index]['items_data'][
-                                    (part, level, (level1, level2))] = self._setup_data(
-                                    temp_dat)
-                                del temp_dat
-                            else:
-                                item_lvl = 2 if namespace.INPUT['idecomp'] in [1, 2] else 3
-                                temp_dat = data[level][(level1, level2)]
-                                temp_dat.name = level2
-                                self.systems[sys_index]['items_data'][(part, level, (level1, level2))] = \
-                                    self._setup_data(temp_dat, level=item_lvl)
-                                del temp_dat
-                                # residue first level
-                                for level3 in str_dict[level1][level2]:
-                                    item_lvl2 = 1 if namespace.INPUT['idecomp'] in [1, 2] else 2
-                                    temp_dat = data[level][(level1, level2, level3)]
-                                    temp_dat.name = level3
-                                    self.systems[sys_index]['items_data'][(part, level, (level1, level2, level3))] = \
-                                        self._setup_data(temp_dat, level=item_lvl2)
-                                    del temp_dat
-                                    # residue first level
-                                    for level4 in str_dict[level1][level2][level3]:
-                                        if self._remove_empty_charts(
-                                                data[level][(level1, level2, level3, level4)]
-                                        ):
-                                            del data[level][(level1, level2, level3, level4)]
-                                            self.removed_items[sys_index].append(
-                                                (part, level, (level1, level2, level3, level4)))
-                                            continue
-
-                                        temp_dat = data[level][(level1, level2, level3, level4)]
-                                        temp_dat.name = level4
-                                        if namespace.INPUT['idecomp'] in [1, 2]:
-                                            self.systems[sys_index]['items_data'][
-                                                (part, level, (level1, level2, level3, level4))] = \
-                                                self._setup_data(temp_dat)
-                                            del temp_dat
-                                        else:
-                                            self.systems[sys_index]['items_data'][
-                                                (part, level, (level1, level2, level3, level4))] = \
-                                                self._setup_data(temp_dat, level=1)
-                                            del temp_dat
-                                            # energetics terms
-                                            for level5 in str_dict[level1][level2][level3][level4]:
-                                                if self._remove_empty_charts(
-                                                        data[level][(level1, level2, level3, level4, level5)]
-                                                ):
-                                                    del data[level][(level1, level2, level3, level4, level5)]
-                                                    self.removed_items[sys_index].append(
-                                                        (part, level, (level1, level2, level3, level4, level5)))
-                                                    continue
-                                                temp_dat = data[level][(level1, level2, level3, level4, level5)]
-                                                temp_dat.name = level5
-                                                self.systems[sys_index]['items_data'][
-                                                    (part, level, (level1, level2, level3, level4, level5))] = \
-                                                    self._setup_data(temp_dat)
-                                                del temp_dat
-                elif level == 'c2':
-                    str_dict = multiindex2dict(data[level].columns)
-                    for level1 in str_dict:
-                        self.systems[sys_index]['items_data'][(part, level, (level1,))] = self._setup_data(
-                            data[level][(level1,)], iec2=True, level=1)
-                elif level == 'ie':
-                    str_dict = multiindex2dict(data[level].columns)
-                    for level1 in str_dict:
-                        self.systems[sys_index]['items_data'][(part, level, (level1,))] = self._setup_data(
-                            data[level][(level1,)], iec2=True, level=0)
-                elif level == 'binding':
-                    for level1 in data[level]:
-                        self.systems[sys_index]['items_data'][(part, level, (level1,))] = self._setup_data(
-                            data[level][level1], level=1)
+    def _make_iec2_items(self, sys_name, sys_index, item1, level1, v1):
+        for level2, v2 in v1.items():
+            if level2 == 'ie':
+                titem = CustomItem(item1,
+                                   [level2.upper()],
+                                   app=self,
+                                   buttons=(1, 2),
+                                   title="Interaction Entropy",
+                                   subtitle=f"{sys_name} | {level1.capitalize()} | {level2.upper()}",
+                                   system_index=sys_index,
+                                   keys_path=(level1, level2),
+                                   # part=part
+                                   )
+                self.treeWidget.setItemWidget(titem, 1, titem.setup_buttons())
+            elif level2 == 'c2':
+                titem = CustomItem(item1,
+                                   [level2.upper()],
+                                   app=self,
+                                   buttons=(2,),
+                                   title="C2 Entropy",
+                                   subtitle=f"{sys_name} | {level1.capitalize()} | {level2.upper()}",
+                                   system_index=sys_index,
+                                   keys_path=(level1, level2),
+                                   # part=part
+                                   )
+                self.treeWidget.setItemWidget(titem, 1, titem.setup_buttons())
