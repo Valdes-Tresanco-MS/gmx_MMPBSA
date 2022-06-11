@@ -6,7 +6,7 @@ title: Protein-DNA_RNA_ION-Ligand
 # Protein-DNA_RNA_ION-Ligand binding free energy calculations
 
 !!! info
-    This example can be found in the [docs/examples/Protein_DNA_RNA_Ion_ligand][6] directory in the repository folder. If you didn't 
+    This example can be found in the [examples/Protein_DNA_RNA_Ion_ligand][6] directory in the repository folder. If you didn't 
     use gmx_MMPBSA_test before, use [downgit](https://downgit.github.io/#/home) to download the specific folder from 
     gmx_MMPBSA GitHub repository.
 

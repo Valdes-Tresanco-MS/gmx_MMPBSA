@@ -7,7 +7,7 @@ title: Correlation
 # Correlation
 
 !!! info
-    This example can be found in the [docs/examples/Correlation][6] directory in the repository folder. If you 
+    This example can be found in the [examples/Correlation][6] directory in the repository folder. If you 
     didn't 
     use gmx_MMPBSA_test before, use [downgit](https://downgit.github.io/#/home) to download the specific folder from 
     gmx_MMPBSA GitHub repository.
@@ -33,7 +33,7 @@ Optional, but recommended -- :octicons-check-circle-fill-16:{ .req_opt } -> Opti
 _See a detailed list of all the flags in gmx_MMPBSA command line [here][1]_
 
 ## Command-line
-That being said, once you are in the folder containing all files, use `bash` to loop over the folder and run the 
+That being said, once you are in the folder containing all files, use `bash` to loop over the folders and run the 
 calculation in each one of them:
 
 ``` bash
@@ -57,7 +57,8 @@ for i in */
 In this case, a single trajectory (ST) approximation is followed, which means the receptor and ligand 
 amber format topologies and trajectories will be obtained from that of the complex. To do so, an 
 MD Structure+mass(db) file (`com.tpr`), an index file (`index.ndx`), a trajectory file (`com_traj.xtc`), and both 
-the receptor and ligand group numbers in the index file (`20 21`) are needed. . As we are running a GB calculation for the wild-type and 
+the receptor and ligand group numbers in the index file (`20 21`) are needed. As we are running a GB calculation for 
+the wild-type and 
 the mutants, we can use the same MD Structure+mass(db) (`../com.tpr`), index (`../index.ndx`), and the
 trajectory file (`../com_traj.xtc`) for all systems. The `mmpbsa.in` input file will contain
 all the parameters needed for the MM/PB(GB)SA calculation and will be specific for each mutant, indicating the 
