@@ -289,7 +289,7 @@ class CustomItem(QTreeWidgetItem):
         self.output_action = options_menu.addAction('Show Output file')
         self.output_action.setCheckable(True)
         self.output_action.toggled.connect(self._show_output_file)
-        if self.app.systems[self.system_index]['namespace'].INPUT['decomprun']:
+        if self.app.systems[self.system_index]['namespace'].INPUT['decomp']['decomprun']:
             self.decomp_output_action = options_menu.addAction('Show Decomp Output file')
             self.decomp_output_action.setCheckable(True)
             self.decomp_output_action.toggled.connect(self._show_decomp_output_file)

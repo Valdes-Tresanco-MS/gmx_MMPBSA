@@ -309,14 +309,15 @@ class GMX_MMPBSA_ANA(QMainWindow):
 
         # energy config
         if (
-                self.systems[1]['namespace'].INPUT['gbrun'] or
-                self.systems[1]['namespace'].INPUT['pbrun'] or
-                self.systems[1]['namespace'].INPUT['rismrun']
+                self.systems[1]['namespace'].INPUT['gb']['gbrun'] or
+                self.systems[1]['namespace'].INPUT['gbnsr6']['gbnsr6run'] or
+                self.systems[1]['namespace'].INPUT['pb']['pbrun'] or
+                self.systems[1]['namespace'].INPUT['rism']['rismrun']
         ):
             self.eframes_group.setEnabled(True)
-            f_start = self.systems[1]['namespace'].INPUT['startframe']
-            f_interval = self.systems[1]['namespace'].INPUT['interval']
-            f_end = self.systems[1]['namespace'].INPUT['endframe']
+            f_start = self.systems[1]['namespace'].INPUT['general']['startframe']
+            f_interval = self.systems[1]['namespace'].INPUT['general']['interval']
+            f_end = self.systems[1]['namespace'].INPUT['general']['endframe']
 
             self.eframes_start_sb.setRange(f_start, f_end)
             self.eframes_start_sb.setSingleStep(f_interval)
@@ -333,11 +334,11 @@ class GMX_MMPBSA_ANA(QMainWindow):
             self.eframes_group.setEnabled(False)
 
         # nmode config
-        if self.systems[1]['namespace'].INPUT['nmoderun']:
+        if self.systems[1]['namespace'].INPUT['nmode']['nmoderun']:
             self.nmframes_group.setEnabled(True)
-            nmf_start = self.systems[1]['namespace'].INPUT['nmstartframe']
-            nmf_interval = self.systems[1]['namespace'].INPUT['nminterval']
-            nmf_end = self.systems[1]['namespace'].INPUT['nmendframe']
+            nmf_start = self.systems[1]['namespace'].INPUT['nmode']['nmstartframe']
+            nmf_interval = self.systems[1]['namespace'].INPUT['nmode']['nminterval']
+            nmf_end = self.systems[1]['namespace'].INPUT['nmode']['nmendframe']
 
             self.nmframes_start_sb.setRange(nmf_start, nmf_end)
             self.nmframes_start_sb.setSingleStep(nmf_interval)
@@ -354,9 +355,9 @@ class GMX_MMPBSA_ANA(QMainWindow):
             self.nmframes_group.setEnabled(False)
 
         # ie config
-        if self.systems[1]['namespace'].INPUT['interaction_entropy']:
+        if self.systems[1]['namespace'].INPUT['general']['interaction_entropy']:
             self.ieframes_group.setEnabled(True)
-            self.iesegment_sb.setValue(self.systems[1]['namespace'].INPUT['ie_segment'])
+            self.iesegment_sb.setValue(self.systems[1]['namespace'].INPUT['general']['ie_segment'])
         else:
             self.ieframes_group.setEnabled(False)
 
@@ -598,17 +599,19 @@ class GMX_MMPBSA_ANA(QMainWindow):
             self.update_btn.setText(f"Update {text}")
 
     def _reset_iesegment(self):
-        self.iesegment_sb.setValue(self.systems[self.current_system_index]['namespace'].INPUT['ie_segment'])
+        self.iesegment_sb.setValue(self.systems[self.current_system_index]['namespace'].INPUT['general']['ie_segment'])
 
     def _reset_e_frames(self):
-        self.eframes_start_sb.setValue(self.systems[self.current_system_index]['namespace'].INPUT['startframe'])
-        self.eframes_end_sb.setValue(self.systems[self.current_system_index]['namespace'].INPUT['endframe'])
-        self.eframes_inter_sb.setValue(self.systems[self.current_system_index]['namespace'].INPUT['interval'])
+        self.eframes_start_sb.setValue(self.systems[self.current_system_index]['namespace'].INPUT['general']['startframe'])
+        self.eframes_end_sb.setValue(self.systems[self.current_system_index]['namespace'].INPUT['general']['endframe'])
+        self.eframes_inter_sb.setValue(self.systems[self.current_system_index]['namespace'].INPUT['general']['interval'])
 
     def _reset_nm_frames(self):
-        self.nmframes_start_sb.setValue(self.systems[self.current_system_index]['namespace'].INPUT['nmstartframe'])
-        self.nmframes_end_sb.setValue(self.systems[self.current_system_index]['namespace'].INPUT['nmendframe'])
-        self.nmframes_inter_sb.setValue(self.systems[self.current_system_index]['namespace'].INPUT['nminterval'])
+        self.nmframes_start_sb.setValue(self.systems[self.current_system_index]['namespace'].INPUT['nmode'][
+                                            'nmstartframe'])
+        self.nmframes_end_sb.setValue(self.systems[self.current_system_index]['namespace'].INPUT['nmode']['nmendframe'])
+        self.nmframes_inter_sb.setValue(self.systems[self.current_system_index]['namespace'].INPUT['nmode'][
+                                            'nminterval'])
 
     def iesegment_sb_update(self):
         current_estart = self.eframes_start_sb.value()
@@ -703,15 +706,16 @@ class GMX_MMPBSA_ANA(QMainWindow):
             rq = Queue()
 
             for x in sys_list:
-                energyrun = (self.systems[x]['namespace'].INPUT['gbrun'] or
-                             self.systems[x]['namespace'].INPUT['pbrun'] or
-                             self.systems[x]['namespace'].INPUT['rismrun'])
+                energyrun = (self.systems[x]['namespace'].INPUT['gb']['gbrun'] or
+                             self.systems[x]['namespace'].INPUT['gbnsr6']['gbrun'] or
+                             self.systems[x]['namespace'].INPUT['pb']['pbrun'] or
+                             self.systems[x]['namespace'].INPUT['rism']['rismrun'])
                 if (energyrun and curr_eframes != self.systems[x]['current_frames'] or
-                        self.systems[x]['namespace'].INPUT['nmoderun'] and
+                        self.systems[x]['namespace'].INPUT['nmode']['nmoderun'] and
                         curr_nmframes != self.systems[x]['current_nmode_frames'] or
                         curr_iesegment != self.systems[x]['current_ie_segment']
                 ):
-                    if not self.systems[x]['namespace'].INPUT['nmoderun']:
+                    if not self.systems[x]['namespace'].INPUT['nmode']['nmoderun']:
                         curr_nmframes = {}
                     self._extracted_from_update_fn_69(x, curr_eframes, curr_nmframes, curr_iesegment, iq)
                     self.systems[x]['current_frames'] = curr_eframes
@@ -1034,7 +1038,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
                     dta[('System', 'Reference')].append(False)
                 dta[('System', 'ExpΔG')].append(
                     ki2energy(self.systems[sys_id]['exp_ki'][ct],
-                              self.systems[sys_id]['namespace'].INPUT['temperature']))
+                              self.systems[sys_id]['namespace'].INPUT['general']['temperature']))
                 dta[('System', 'Selection')].append(cv)
 
             g = pd.DataFrame(dta, index=range(len(self.systems[sys_id].get('correlation'))))
@@ -1147,13 +1151,13 @@ class GMX_MMPBSA_ANA(QMainWindow):
                 'api': api,
                 'namespace': api.app_namespace,
                 'map': {x:v['map'] for x, v in data.items() if v and x != 'correlation'},
-                'current_frames': dict(startframe=api.app_namespace.INPUT['startframe'],
-                                       endframe=api.app_namespace.INPUT['endframe'],
-                                       interval=api.app_namespace.INPUT['interval']),
-                'current_nmode_frames': dict(nmstartframe=api.app_namespace.INPUT['nmstartframe'],
-                                             nmendframe=api.app_namespace.INPUT['nmendframe'],
-                                             nminterval=api.app_namespace.INPUT['nminterval']),
-                'current_ie_segment': api.app_namespace.INPUT['ie_segment'],
+                'current_frames': dict(startframe=api.app_namespace.INPUT['general']['startframe'],
+                                       endframe=api.app_namespace.INPUT['general']['endframe'],
+                                       interval=api.app_namespace.INPUT['general']['interval']),
+                'current_nmode_frames': dict(nmstartframe=api.app_namespace.INPUT['nmode']['nmstartframe'],
+                                             nmendframe=api.app_namespace.INPUT['nmode']['nmendframe'],
+                                             nminterval=api.app_namespace.INPUT['nmode']['nminterval']),
+                'current_ie_segment': api.app_namespace.INPUT['general']['ie_segment'],
                 'items_data': {k:v1 for x, v in data.items() if v and x != 'correlation' for k, v1 in v['keys'].items()},
                 'correlation_data': data.get('correlation')  # FIXME: fail when decomp
                 # 'items_summary': summary,
@@ -1164,13 +1168,19 @@ class GMX_MMPBSA_ANA(QMainWindow):
             if not self.all_systems_active:
                 continue
             if not frange_base:
-                frange_base = [api.app_namespace.INPUT['startframe'], api.app_namespace.INPUT['endframe'],
-                               api.app_namespace.INPUT['interval'], api.app_namespace.INPUT['nmstartframe'],
-                               api.app_namespace.INPUT['nmendframe'], api.app_namespace.INPUT['nminterval']]
+                frange_base = [api.app_namespace.INPUT['general']['startframe'],
+                               api.app_namespace.INPUT['general']['endframe'],
+                               api.app_namespace.INPUT['general']['interval'],
+                               api.app_namespace.INPUT['nmode']['nmstartframe'],
+                               api.app_namespace.INPUT['nmode']['nmendframe'],
+                               api.app_namespace.INPUT['nmode']['nminterval']]
                 continue
-            if frange_base != [api.app_namespace.INPUT['startframe'], api.app_namespace.INPUT['endframe'],
-                               api.app_namespace.INPUT['interval'], api.app_namespace.INPUT['nmstartframe'],
-                               api.app_namespace.INPUT['nmendframe'], api.app_namespace.INPUT['nminterval']]:
+            if frange_base != [api.app_namespace.INPUT['general']['startframe'],
+                               api.app_namespace.INPUT['general']['endframe'],
+                               api.app_namespace.INPUT['general']['interval'],
+                               api.app_namespace.INPUT['nmode']['nmstartframe'],
+                               api.app_namespace.INPUT['nmode']['nmendframe'],
+                               api.app_namespace.INPUT['nmode']['nminterval']]:
                 self.all_systems_active = False
 
         for s in sorted(self.systems.keys()):
@@ -1243,7 +1253,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
 
                 # TDC, BDC, SDC
                 for level4, v4 in v3.items():
-                    title = '[Per-residue]' if namespace.INPUT['idecomp'] in [1, 2] else '[Per-wise]'
+                    title = '[Per-residue]' if namespace.INPUT['decomp']['idecomp'] in [1, 2] else '[Per-wise]'
                     item4 = CustomItem(item3,
                                        [level4.upper()],
                                        app=self,
@@ -1256,7 +1266,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
                                        # part=part
                                        )
                     self.treeWidget.setItemWidget(item4, 1, item4.setup_buttons())
-                    btns = (2,) if namespace.INPUT['idecomp'] in [1, 2] else (1, 2, 3)
+                    btns = (2,) if namespace.INPUT['decomp']['idecomp'] in [1, 2] else (1, 2, 3)
                     for level5, v5 in v4.items():
                         item5 = CustomItem(item4,
                                            [level5.upper()],
@@ -1273,7 +1283,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
                                            keys_path=(level1, level2, level3, level4, level5)
                                            )
                         self.treeWidget.setItemWidget(item5, 1, item5.setup_buttons())
-                        if namespace.INPUT['idecomp'] in [1, 2]:
+                        if namespace.INPUT['decomp']['idecomp'] in [1, 2]:
                             for level6 in v5:
                                 item6 = CustomItem(item5,
                                                    [level6.upper()],

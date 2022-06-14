@@ -321,7 +321,7 @@ def write_outputs(app):
                '\nGENERALIZED BORN (GBNSR6):\n\n')
     # Now print out the Free Energy results
     for i, key in enumerate(outkeys):
-        if not INPUT.get(nmls[i]) or not INPUT[nmls[i]].get([triggers[i]]) or not INPUT[nmls[i]][triggers[i]]:
+        if not INPUT.get(nmls[i]) or not INPUT[nmls[i]].get(triggers[i]) or not INPUT[nmls[i]][triggers[i]]:
             continue
         if not INPUT['ala']['mutant_only']:
             final_output.write(headers[i])
@@ -478,7 +478,7 @@ def write_decomp_output(app):
     for i, key in enumerate(outkeys):
         # if triggers[i] not in INPUT or not INPUT[triggers[i]]:
         #     continue
-        if not INPUT.get(nmls[i]) or not INPUT[nmls[i]].get([triggers[i]]) or not INPUT[nmls[i]][triggers[i]]:
+        if not INPUT.get(nmls[i]) or not INPUT[nmls[i]].get(triggers[i]) or not INPUT[nmls[i]][triggers[i]]:
             continue
         if not INPUT['ala']['mutant_only']:
             if stability:

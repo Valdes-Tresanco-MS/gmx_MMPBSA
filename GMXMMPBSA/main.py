@@ -900,6 +900,7 @@ class MMPBSA_App(object):
 
         if (
                 not INPUT['gb']['gbrun']
+                and not INPUT['gbnsr6']['gbnsr6run']
                 and not INPUT['pb']['pbrun']
                 and not INPUT['rism']['rismrun']
                 and not INPUT['nmode']['nmoderun']
@@ -1043,7 +1044,7 @@ class MMPBSA_App(object):
         if INPUT['ala']['cas_intdiel'] not in [0, 1]:
             GMXMMPBSA_ERROR('cas_intdiel must be set to 0 or 1!', InputError)
         # User warning when intdiel > 10
-        if self.INPUT['ala']['intdiel'] > 10:
+        if self.INPUT['gb']['intdiel'] > 10:
             logging.warning('Intdiel is greater than 10...')
         # check mutant definition
         if self.INPUT['ala']['mutant'].upper() not in ['ALA', 'A', 'GLY', 'G']:
@@ -1060,8 +1061,11 @@ class MMPBSA_App(object):
             GMXMMPBSA_ERROR('Alanine scanning is incompatible with NETCDF != 0!', InputError)
         if INPUT['decomp']['decomprun'] and INPUT['decomp']['idecomp'] == 0:
             GMXMMPBSA_ERROR('IDECOMP cannot be 0 for Decomposition analysis!', InputError)
-        if INPUT['decomp']['decomprun'] and not INPUT['gb']['gbrun'] and not INPUT['pb']['pbrun']:
-            GMXMMPBSA_ERROR('DECOMP must be run with either GB or PB!', InputError)
+        if (INPUT['decomp']['decomprun']
+                and not INPUT['gb']['gbrun']
+                and not INPUT['pb']['pbrun']
+                and not INPUT['gbnsr6']['gbnsr6run']):
+            GMXMMPBSA_ERROR('DECOMP must be run with either GB, GBNSR6 or PB!', InputError)
         if '-deo' in sys.argv and not INPUT['decomp']['decomprun']:
             logging.warning("&decomp namelist has not been defined in the input file. Ignoring '-deo' flag... ")
 
@@ -1141,7 +1145,8 @@ class MMPBSA_App(object):
                     '%s_gbnsr6.mdout')
 
         for i, key in enumerate(outkey):
-            if not INPUT.get(nmls[i]) or not INPUT[nmls[i]].get([triggers[i]]) or not INPUT[nmls[i]][triggers[i]]:
+            from icecream import ic
+            if not INPUT.get(nmls[i]) or not INPUT[nmls[i]].get(triggers[i]) or not INPUT[nmls[i]][triggers[i]]:
                 continue
             numframes = self.numframes_nmode if key == 'nmode' else self.numframes
             # Non-mutant
@@ -1306,7 +1311,7 @@ class MMPBSA_App(object):
                 lig_list[x.id_index - 1] = x
 
         for i, key in enumerate(outkey):
-            if not INPUT.get(nmls[i]) or not INPUT[nmls[i]].get([triggers[i]]) or not INPUT[nmls[i]][triggers[i]]:
+            if not INPUT.get(nmls[i]) or not INPUT[nmls[i]].get(triggers[i]) or not INPUT[nmls[i]][triggers[i]]:
                 continue
             # FIXME
             surften = INPUT['gb']['surften'] if key == 'gb' else INPUT['pb']['cavity_surften']

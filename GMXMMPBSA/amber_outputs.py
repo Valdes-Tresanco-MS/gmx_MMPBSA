@@ -61,7 +61,7 @@ class AmberOutput(dict):
         self.frame_idx = 0
         self.extraframe_idx = 0
         self.is_read = False
-        self.apbs = INPUT['sander_apbs']
+        self.apbs = INPUT['pb']['sander_apbs']
 
         # This variable is used to get if the nmode calculation hasn't at least one frame
         self.no_nmode_convergence = False
@@ -95,7 +95,7 @@ class AmberOutput(dict):
     def parse_from_file(self, basename, num_files=1, numframes=1):
         self.num_files = num_files
         self.basename = basename
-        self.temperature = self.INPUT['temperature']
+        self.temperature = self.INPUT['general']['temperature']
 
         for key in self.data_keys:
             self[key] = EnergyVector(numframes)
@@ -124,10 +124,10 @@ class AmberOutput(dict):
         csvwriter.writerow(['Frame #'] + print_keys)
 
         # write out each frame
-        c = self.INPUT['nmstartframe'] if self.__class__ == NMODEout else self.INPUT['startframe']
+        c = self.INPUT['nmode']['nmstartframe'] if self.__class__ == NMODEout else self.INPUT['nmode']['startframe']
         for i in range(len(self[print_keys[0]])):
             csvwriter.writerow([c] + [round(self[key][i], 2) for key in print_keys])
-            c += self.INPUT['nminterval'] if self.__class__ == NMODEout else self.INPUT['interval']
+            c += self.INPUT['nmode']['nminterval'] if self.__class__ == NMODEout else self.INPUT['nmode']['interval']
 
     def set_frame_range(self, start=None, end=None, interval=None):
         d = deepcopy(self)
@@ -703,7 +703,7 @@ class PBout(AmberOutput):
                 self['1-4 EEL'][self.frame_idx] = float(words[7])
                 words = outfile.readline().split()
                 self['ENPOLAR'][self.frame_idx] = float(words[2])
-                if self.INPUT['inp'] == 2 and not self.apbs:
+                if self.INPUT['pb']['inp'] == 2 and not self.apbs:
                     self['EDISPER'][self.frame_idx] = float(words[5])
                 self.frame_idx += 1
 

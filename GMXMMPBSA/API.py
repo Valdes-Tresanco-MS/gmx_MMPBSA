@@ -442,9 +442,9 @@ class MMPBSA_API():
                                           self.data[x])
         entropy = {}
         entropy_df = {}
-        recalc = bool((startframe and startframe != self.app_namespace.INPUT['startframe'] or
-                       endframe and endframe != self.app_namespace.INPUT['endframe'] or
-                       interval and interval != self.app_namespace.INPUT['interval']))
+        recalc = bool((startframe and startframe != self.app_namespace.INPUT['general']['startframe'] or
+                       endframe and endframe != self.app_namespace.INPUT['general']['endframe'] or
+                       interval and interval != self.app_namespace.INPUT['general']['interval']))
 
         for et in temp_print_keys:
             if et not in self.data:
@@ -466,9 +466,9 @@ class MMPBSA_API():
         entropy = {}
         summ_df = {}
         entropy_df = {}
-        recalc = bool((startframe and startframe != self.app_namespace.INPUT['startframe'] or
-                       endframe and endframe != self.app_namespace.INPUT['endframe'] or
-                       interval and interval != self.app_namespace.INPUT['interval']))
+        recalc = bool((startframe and startframe != self.app_namespace.INPUT['general']['startframe'] or
+                       endframe and endframe != self.app_namespace.INPUT['general']['endframe'] or
+                       interval and interval != self.app_namespace.INPUT['general']['interval']))
 
         s, e, index = self._get_frames_index('energy', startframe, endframe, interval)
         for et in temp_print_keys:
@@ -543,13 +543,13 @@ class MMPBSA_API():
                 edata = self.data[etype][key]['delta']['GGAS'][start:end:interval]
                 if method == 'ie':
                     ie = InteractionEntropyCalc(edata,
-                                                dict(temperature=self.app_namespace.INPUT['temperature'],
+                                                dict(temperature=self.app_namespace.INPUT['general']['temperature'],
                                                      startframe=startframe, endframe=endframe, interval=interval),
                                                 iesegment=ie_segment)
                     result = IEout({})
                     result.parse_from_dict(dict(data=ie.data, sigma=ie.ie_std, iedata=ie.iedata))
                 else:
-                    c2 = C2EntropyCalc(edata, dict(temperature=self.app_namespace.INPUT['temperature']))
+                    c2 = C2EntropyCalc(edata, dict(temperature=self.app_namespace.INPUT['general']['temperature']))
                     result = C2out()
                     result.parse_from_dict(dict(c2data=c2.c2data, c2_std=c2.c2_std, sigma=c2.ie_std, c2_ci=c2.c2_ci))
                 break
@@ -650,7 +650,7 @@ class MMPBSA_API():
                                             else:
                                                 temp_energy = {}
 
-                                                if self.app_namespace.INPUT['idecomp'] in [1, 2]:
+                                                if self.app_namespace.INPUT['decomp']['idecomp'] in [1, 2]:
                                                     temp_emap = []
                                                     temp_terms_keys = term or tuple(self.data[et][m][m1][c][r1].keys())
 
@@ -780,13 +780,13 @@ class MMPBSA_API():
                     for level1, value1 in value.items():
                         for level2, value2 in value1.items():
                             for level3, value3 in value2.items():
-                                item_lvl = 2 if self.app_namespace.INPUT['idecomp'] in [1, 2] else 3
+                                item_lvl = 2 if self.app_namespace.INPUT['decomp']['idecomp'] in [1, 2] else 3
                                 index = list(value3.keys())
                                 for level4, value4 in value3.items():
                                     if item_lvl == 3 and len(index) == 1:
                                         index.append(list(value4.keys()))
-                                    item_lvl2 = 1 if self.app_namespace.INPUT['idecomp'] in [1, 2] else 2
-                                    if self.app_namespace.INPUT['idecomp'] in [1, 2]:
+                                    item_lvl2 = 1 if self.app_namespace.INPUT['decomp']['idecomp'] in [1, 2] else 2
+                                    if self.app_namespace.INPUT['decomp']['idecomp'] in [1, 2]:
                                         TASKs.append(
                                             [_setup_data, dict(data=decomp[level][level1][level2][level3][level4],
                                                                level=item_lvl2, name=level4, index=value4,
@@ -858,7 +858,7 @@ class MMPBSA_API():
                 'output_file': ''.join(open(app.FILES.output_file).readlines()),
                 'size': app.mpi_size,
                 'using_chamber': app.using_chamber}
-        if app.INPUT['decomprun']:
+        if app.INPUT['decomp']['decomprun']:
             INFO['decomp_output_file'] = ''.join(open(app.FILES.decompout).readlines())
 
         return SimpleNamespace(FILES=app.FILES, INPUT=app.INPUT, INFO=INFO)
@@ -871,26 +871,27 @@ class MMPBSA_API():
         numframes = self.app_namespace.INFO['numframes']
         nmnumframes = self.app_namespace.INFO['numframes_nmode']
 
-        frames_list = list(range(INPUT['startframe'],
-                                 INPUT['startframe'] + numframes * INPUT['interval'],
-                                 INPUT['interval']))
+        frames_list = list(range(INPUT['general']['startframe'],
+                                 INPUT['general']['startframe'] + numframes * INPUT['general']['interval'],
+                                 INPUT['general']['interval']))
         self.frames_list = frames_list
-        INPUT['endframe'] = frames_list[-1]
+        INPUT['general']['endframe'] = frames_list[-1]
         time_step_list = list(range(self.starttime,
-                                    self.starttime + len(frames_list) * ts * INPUT['interval'],
-                                    ts * INPUT['interval']))
+                                    self.starttime + len(frames_list) * ts * INPUT['general']['interval'],
+                                    ts * INPUT['general']['interval']))
         self.frames = dict(zip(frames_list, time_step_list))
 
-        if INPUT['nmoderun']:
-            nmframes_list = list(range(INPUT['nmstartframe'],
-                                       INPUT['nmstartframe'] + nmnumframes * INPUT['nminterval'],
-                                       INPUT['interval']))
-            INPUT['nmendframe'] = nmframes_list[-1]
+        if INPUT['nmode']['nmoderun']:
+            nmframes_list = list(range(INPUT['nmode']['nmstartframe'],
+                                       INPUT['nmode']['nmstartframe'] + nmnumframes * INPUT['nmode']['nminterval'],
+                                       INPUT['nmode']['interval']))
+            INPUT['nmode']['nmendframe'] = nmframes_list[-1]
 
-            nm_start = (nmframes_list[0] - frames_list[0]) * INPUT['interval']
+            nm_start = (nmframes_list[0] - frames_list[0]) * INPUT['general']['interval']
             nmtime_step_list = list(range(self.starttime + nm_start,
-                                          self.starttime + nm_start + len(nmframes_list) * ts * INPUT['nminterval'],
-                                          ts * INPUT['nminterval']))
+                                          self.starttime + nm_start + len(nmframes_list) * ts * INPUT['nmode'][
+                                              'nminterval'],
+                                          ts * INPUT['nmode']['nminterval']))
             self.nmframes_list = nmframes_list
             self.nmframes = dict(zip(nmframes_list, nmtime_step_list))
 
@@ -909,7 +910,7 @@ class MMPBSA_API():
         numframes_nmode = self.app_namespace.INFO['numframes_nmode']
         # See if we are doing stability
         self.stability = self.app_namespace.FILES.stability
-        self.mutant_only = self.app_namespace.INPUT['mutant_only']
+        self.mutant_only = self.app_namespace.INPUT['ala']['mutant_only']
         self.traj_protocol = ('MTP' if self.app_namespace.FILES.receptor_trajs or
                                        self.app_namespace.FILES.ligand_trajs else 'STP')
 
