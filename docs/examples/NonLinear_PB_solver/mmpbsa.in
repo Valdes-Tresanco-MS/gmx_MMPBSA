@@ -4,19 +4,16 @@ Sample input file for Alanine scanning
 #according to what is better for your system.
 
 &general
-sys_name="NonLinear_PB",
+sys_name="Y23",
+exp_ki=50,
 startframe=1,
 endframe=10,
 forcefields="leaprc.protein.ff14SB",
+PBRadii=4,
 /
-&pb
-npbopt=1,
-indi=1.0, istrng=0.15,
-radiopt=0,
-eneopt=1, cutnb=8.0,
+&gb
+igb=8, saltcon=0.150,
 /
-# check these threads 
-# http://archive.ambermd.org/201203/0191.html
-# http://archive.ambermd.org/201610/0114.html
-# for more info on NLPB
-
+&alanine_scanning
+mutant='ALA', mutant_res='A:23', mutant_only=1
+/

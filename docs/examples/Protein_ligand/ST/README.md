@@ -42,11 +42,11 @@ That being said, once you are in the folder containing all files, the command-li
 
 === "Serial"
 
-        gmx_MMPBSA -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 1 13 -ct com_traj.xtc -lm ligand.mol2
+        gmx_MMPBSA -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 1 13 -ct com_traj.xtc -lm ligand.mol2 -o FINAL_RESULTS_MMPBSA.dat -eo FINAL_RESULTS_MMPBSA.csv
 
 === "With MPI"
 
-        mpirun -np 2 gmx_MMPBSA MPI -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 1 13 -ct com_traj.xtc -lm ligand.mol2
+        mpirun -np 2 gmx_MMPBSA MPI -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 1 13 -ct com_traj.xtc -lm ligand.mol2 -o FINAL_RESULTS_MMPBSA.dat -eo FINAL_RESULTS_MMPBSA.csv
 
 === "gmx_MMPBSA_test"
 
@@ -89,6 +89,12 @@ A ligand .mol2 file is also needed for generating the ligand topology. The `mmpb
 parameters needed for the MM/PB(GB)SA calculation. In this case, 10 frames 
 are going to be used when performing the MM/PB(GB)SA calculation with the igb5 (GB-OBC2) model and a 
 salt concentration = 0.15M.
+
+A plain text output file with all the statistics (default: `FINAL_RESULTS_MMPBSA.dat`) and a CSV-format 
+output file containing all energy terms for every frame in every calculation will be saved. The file name in 
+'-eo' flag will be forced to end in [.csv] (`FINAL_RESULTS_MMPBSA.csv` in this case). This file is only written when 
+specified on the command-line.
+
 !!! note
     Once the calculation is done, the results can be analyzed in `gmx_MMPBSA_ana` (if `-nogui` flag was not used in the command-line). 
     Please, check the [gmx_MMPBSA_ana][5] section for more information
@@ -97,5 +103,5 @@ salt concentration = 0.15M.
   [2]: ../../../input_file.md#the-input-file
   [3]: ../../../input_file.md#sample-input-files
   [5]: ../../../analyzer.md#gmx_mmpbsa_ana-the-analyzer-tool
-  [6]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/docs/examples/Protein_ligand/ST
+  [6]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/examples/Protein_ligand/ST
   [7]: ../../gmx_MMPBSA_test.md#gmx_mmpbsa_test-command-line

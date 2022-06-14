@@ -5,21 +5,23 @@ title: Getting started
 
 [![pypi](https://img.shields.io/pypi/v/gmx-MMPBSA)](https://pypi.org/project/gmx-MMPBSA/)
 [![support](https://img.shields.io/badge/support-JetBrains-brightgreen)](https://www.jetbrains.com/?from=gmx_MMPBSA)
+[![support](https://img.shields.io/badge/support-Sourcery-orange)](https://sourcery.ai/invite/gndRrjlo)
 [![python](https://img.shields.io/badge/python-v3.x-blue)]()
 [![Downloads](https://pepy.tech/badge/gmx-mmpbsa)](https://pepy.tech/project/gmx-mmpbsa)
 [![DOI](https://img.shields.io/badge/DOI-10.1021%2Facs.jctc.1c00645-blue)](https://pubs.acs.org/doi/10.1021/acs.jctc.1c00645)
 
 [<img src="../assets/TOC.png" height="120%" width="258" align="right"/>]()
 
-## gmx_MMPBSA v1.5.2 is out 😀!
+## gmx_MMPBSA v1.5.5 is out 😀!
 
-Check [changelog](changelog.md##gmx_mmpbsa-v152-03232022) to see what's new in gmx_MMPBSA v1.5.2.
+Check [changelog](changelog.md##gmx_mmpbsa-v152-03232022) to see what's new in gmx_MMPBSA v1.5.5.
 
 ## [Help needed for gmx_MMPBSA! To the content creators out there...](#colaboration)
 
 gmx_MMPBSA is a new tool based on AMBER's MMPBSA.py aiming to perform end-state free energy calculations with GROMACS 
-files. **_It works with all GROMACS versions along with AmberTools20 or 21 and brings improvements in compatibility, 
-versatility, analyses, and parallelization compared to existing programs (see [here](versus.md) for a detailed comparison)_**
+files. **_It works with all GROMACS versions along with AmberTools20, 21 or 22 and brings improvements in 
+compatibility, versatility, analyses, and parallelization compared to existing programs (see [here](versus.md) for a 
+detailed comparison)_**
 
 [comment]: <> (<div style="text-align:center">)
 
@@ -157,7 +159,7 @@ to see how gmx_MMPBSA is doing.
 ## **Colaboration**
 
 gmx_MMPBSA is rapidly becoming one of the main programs to perform end-point free energy calculations out there 
-(~21.5k downloads so far). We are currently focused on optimizing the program, supporting new types of calculations, 
+(~27.5k downloads so far). We are currently focused on optimizing the program, supporting new types of calculations, 
 force fields, etc. However, the video tutorials are not that great.
 
 That being said, **and here is where we need help**, we will appreciate any collaboration in making video tutorials for 
@@ -167,13 +169,20 @@ gmx_MMPBSA... 😃
 
 Feel free to contact us through our google group (https://groups.google.com/g/gmx_mmpbsa) for more details...
 
-[<img src="../assets/images/jetbrains-variant-4.png" height="100" width="178" align="right" />][11]
-
 ## **Acknowledgments**
 - First of all, to Amber and GROMACS developers. Without their incredible and hard work, gmx_MMPBSA would not exist.
 - Jason Swails (Amber developer and [ParmEd](https://github.com/ParmEd/ParmEd) principal developer) for his continuous 
   support on ParmEd issues.
+
+[<img src="../assets/images/jetbrains-variant-4.png" height="100" width="178" align="right" />][11]
+
 - To the Open Source license of the [JetBrains](https://www.jetbrains.com) programs.
+
+[<img src="../assets/images/sourcery.png" height="40" width="108" align="right" />][12]
+
+- To the [Sourcery](https://sourcery.ai/invite/gndRrjlo) team for supporting us 
+  with the [Pro version](https://sourcery.ai/pro/).
 - To all researchers that help improving gmx_MMPBSA with comments, feedback, and bug reports.
 
   [11]: https://www.jetbrains.com/?from=gmx_MMPBSA
+  [12]: https://sourcery.ai/?from=gmx_MMPBSA

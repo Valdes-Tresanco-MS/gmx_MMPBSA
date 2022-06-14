@@ -6,7 +6,7 @@ title: C2 Entropy
 # C2 Entropy calculations
 
 !!! info
-    **:material-new-box:{:.heart } in gmx_MMPBSA v1.5.0!!!**
+    **:material-new-box:{:.heart } in gmx_MMPBSA v1.5.x series!!!**
 
     This example can be found in the [docs/examples/Entropy_calculations/C2_Entropy][6] directory in the 
     repository folder. If you didn't use gmx_MMPBSA_test before, use [downgit](https://downgit.github.io/#/home) to 
@@ -45,11 +45,11 @@ That being said, once you are in the folder containing all files, the command-li
 
 === "Serial"
 
-        gmx_MMPBSA -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 1 13 -ct com_traj.xtc -lm ligand.mol2
+        gmx_MMPBSA -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 1 13 -ct com_traj.xtc -lm ligand.mol2 -o FINAL_RESULTS_MMPBSA.dat -eo FINAL_RESULTS_MMPBSA.csv
 
 === "With MPI"
 
-        mpirun -np 2 gmx_MMPBSA MPI -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 1 13 -ct com_traj.xtc -lm ligand.mol2
+        mpirun -np 2 gmx_MMPBSA MPI -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 1 13 -ct com_traj.xtc -lm ligand.mol2 -o FINAL_RESULTS_MMPBSA.dat -eo FINAL_RESULTS_MMPBSA.csv
 
 where the `mmpbsa.in` input file, is a text file containing the following lines:
 
@@ -94,6 +94,11 @@ unrealistically large entropies when the standard deviation of the interaction e
 methods (`QH` and `nmode`) can be used for estimating the entropic contribution, though they are way more expensive in 
 computation as compared with C2 method.
 
+A plain text output file with all the statistics (default: `FINAL_RESULTS_MMPBSA.dat`) and a CSV-format 
+output file containing all energy terms for every frame in every calculation will be saved. The file name in 
+'-eo' flag will be forced to end in [.csv] (`FINAL_RESULTS_MMPBSA.csv` in this case). This file is only written when 
+specified on the command-line.
+
 !!! note
     Once the calculation is done, the results can be analyzed in `gmx_MMPBSA_ana` (if `-nogui` flag was not used in the command-line). 
     Please, check the [gmx_MMPBSA_ana][5] section for more information
@@ -103,5 +108,5 @@ computation as compared with C2 method.
   [3]: ../../../input_file.md#sample-input-files
   [4]: https://pubs.acs.org/doi/full/10.1021/acs.jctc.8b00418
   [5]: ../../../analyzer.md#gmx_mmpbsa_ana-the-analyzer-tool
-  [6]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/docs/examples/Entropy_calculations/C2_Entropy
+  [6]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/examples/Entropy_calculations/C2_Entropy
   [7]: ../../gmx_MMPBSA_test.md#gmx_mmpbsa_test-command-line

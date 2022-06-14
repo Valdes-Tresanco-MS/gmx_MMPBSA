@@ -10,10 +10,10 @@ title: Installation
 `gmx_MMPBSA` has been tested with GROMACS `4.6.7`, `5.1.2`, `2018.3`, `2020.4` and `2021.3`, although it should run 
 smoothly with any GROMACS present in the `PATH` and that is compatible with the files you are using.
 
-## Installing gmx_MMPBSA v1.5.0
+## Installing gmx_MMPBSA v1.5.x
 
 !!! danger
-    gmx_MMPBSA v1.5.0 includes a number of new functionalities and parts of the code have been completely rewritten, 
+    gmx_MMPBSA v1.5.x includes a number of new functionalities and parts of the code have been completely rewritten, 
     hence is incompatible with previous versions.
 
 Currently, gmx_MMPBSA can be installed using two ways:
@@ -32,53 +32,124 @@ errors are more frequent.
 
 !!! info "Installation"
     === "conda environment"
-        === "`pip`"    
-            Rolling release and development version        
+
+        === "`*.yml file`"    
+            Installing gmx_MMPBSA using a yml file. <a class="headerlink" id="installing-gmx_mmpbsa-using-a-yml-file" href="#installing-gmx_mmpbsa-using-a-yml-file" title="Permanent link">¶</a>
+
+            :material-file-download-outline:{:.heart } Download **[env.yml](env.yml)** file
     
-            ``` bash 
-            conda update conda
-            conda create -n gmxMMPBSA python=3.9 -y -q                                      # (1)
-            conda activate gmxMMPBSA                                                        # (2)
-            conda install -c conda-forge mpi4py=3.1.3 ambertools=21.12 compilers -y -q      # (3)
-            python -m pip install git+https://github.com/Valdes-Tresanco-MS/ParmEd.git@v3.4 # (4)
-            python -m pip install pyqt5                                                     # (5)
-            # Optional
-            conda install -c bioconda gromacs==2021.3 -y -q                                 # (6)
-           
+            <div class="termy">
+
+            ```console
+            // Create a new environment and use the *.yml file to install dependencies
+            $ conda env create -n gmxMMPBSA --file env.yml
+
+            // To use gmx_MMPBSA, just activate the environment
+            $ conda activate gmxMMPBSA
             ```
-            
-            1. Create `gmxMMPBSA` environment
-            2. Activate `gmxMMPBSA` environment
-            3. Install dependencies
-            4. Install ParmEd
-            5. Install PyQt5 if you will use gmx_MMPBSA_ana
-            6. (Optional) Install GROMACS if GROMACS is not installed in your machine
-    
-            
-            === "Rolling/stable release"
-                **INSTALLATION**
-                ```bash
-                python -m pip install gmx_MMPBSA
-                ```       
-                **UPDATE**
-                ```bash
-                python -m pip install gmx_MMPBSA -U
-                ```       
                 
+            </div>
+
+            ??? note "Copy described intructions"     
+
+                ``` bash 
+                conda env create -n gmxMMPBSA --file env.yml                                    # (1)
+                conda activate gmxMMPBSA                                                        # (2)
+               
+                ```
+            
+                1. Create the `gmxMMPBSA` environment and use the *.yml file to install dependencies
+                2. Activate `gmxMMPBSA` environment
+
+
+        === "`pip`"    
+            Installing dependencies
+    
+            <div class="termy">
+
+            ```console
+            // Update conda
+            $ conda update conda
+            
+            // Create a new environment and activate it
+            $ conda create -n gmxMMPBSA python=3.9 -y -q 
+            $ conda activate gmxMMPBSA
+            
+            // Install mpi4py and AmberTools
+            $ conda install -c conda-forge mpi4py=3.1.3 ambertools=21.12 compilers -y -q
+            
+            // Install updated version of ParmEd
+            $ python -m pip install git+https://github.com/Valdes-Tresanco-MS/ParmEd.git@v3.4
+            
+            // Install PyQt5 required to use the GUI analyzer tool (gmx_MMPBSA_ana). Not needed for HPC
+            $ python -m pip install pyqt5
+
+            // (Optional) Install GROMACS
+            $ conda install -c bioconda gromacs==2021.3 -y -q
+            ```
+                
+            </div>
+
+            ??? note "Copy described intructions"     
+
+                ``` bash 
+                conda update conda
+                conda create -n gmxMMPBSA python=3.9 -y -q                                      # (1)
+                conda activate gmxMMPBSA                                                        # (2)
+                conda install -c conda-forge mpi4py=3.1.3 ambertools=21.12 compilers -y -q      # (3)
+                python -m pip install git+https://github.com/Valdes-Tresanco-MS/ParmEd.git@v3.4 # (4)
+                python -m pip install pyqt5                                                     # (5)
+                # Optional
+                conda install -c bioconda gromacs==2021.3 -y -q                                 # (6)
+               
+                ```
+            
+                1. Create `gmxMMPBSA` environment
+                2. Activate `gmxMMPBSA` environment
+                3. Install dependencies
+                4. Install ParmEd
+                5. Install PyQt5 if you will use gmx_MMPBSA_ana
+                6. (Optional) Install GROMACS if GROMACS is not installed in your machine
+
+            === "Rolling/stable release"
+                
+                **INSTALLATION**
+                <div class="termy">
+                ```console
+                // INSTALLATION
+                $ python -m pip install gmx_MMPBSA
+                ```
+                </div>
+
+                **UPDATE**
+                <div class="termy">
+                ```console
+                // UPDATE
+                $ python -m pip install gmx_MMPBSA -U
+                ```
+                </div>
+
                 !!! info 
                     Install/update gmx_MMPBSA from PyPI. PyPI has the latest version of *gmx_MMPBSA* including stable 
                     and beta versions.
             
             === "development version" 
-                **INSTALLATION**
-                ```bash
-                python -m pip install git+https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA
-                ```
 
-                **UPDATE**     
-                ```bash
-                python -m pip install git+https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA -U
+                **INSTALLATION**
+                <div class="termy">
+                ```console
+                // INSTALLATION
+                $ python -m pip install git+https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA
                 ```
+                </div>
+
+                **UPDATE**
+                <div class="termy">
+                ```console
+                // UPDATE
+                $ python -m pip install git+https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA -U
+                ```
+                </div>
 
                 !!! warning
                     Install gmx_MMPBSA from the master branch of GitHub repository. This is only recommended 
@@ -147,19 +218,22 @@ errors are more frequent.
     
         === "Rolling/stable release"
             **INSTALLATION**
-            ```bash
-
-            amber.python -m pip install git+https://github.com/Valdes-Tresanco-MS/ParmEd.git@v3.4 # (1)
-            amber.python -m pip install gmx_MMPBSA                                                # (2)
+            <div class="termy">
+            ```console
+            // Install uodated ParmEd
+            $ amber.python -m pip install git+https://github.com/Valdes-Tresanco-MS/ParmEd.git@v3.4
+            // Install gmx_MMPBSA
+            $ amber.python -m pip install gmx_MMPBSA                                               
             ```
+            </div>
 
-            1. Install ParmEd
-            2. Install gmx_MMPBSA
-    
             **UPDATE**
-            ```bash
-            amber.python -m pip install gmx_MMPBSA -U
+            <div class="termy">
+            ```console
+            // Update gmx_MMPBSA
+            $ amber.python -m pip install gmx_MMPBSA -U
             ```
+            </div>
     
             !!! info 
                 Install gmx_MMPBSA from PyPI PyPI has the latest version of *gmx_MMPBSA* including stable and beta
@@ -167,18 +241,21 @@ errors are more frequent.
             
         === "development version" 
             **INSTALLATION**
+            <div class="termy">
             ```bash
-            amber.python -m pip install git+https://github.com/Valdes-Tresanco-MS/ParmEd.git@v3.4 # (1)
-            amber.python -m pip install git+https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA      # (2)
+            // Install updated ParmEd
+            $ amber.python -m pip install git+https://github.com/Valdes-Tresanco-MS/ParmEd.git@v3.4
+            // Install gmx_MMPBSA
+            $ amber.python -m pip install git+https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA     
             ```
-            
-            1. Install ParmEd
-            2. Install gmx_MMPBSA
+            </div>
 
             **UPDATE**
+            <div class="termy">
             ```bash
             amber.python -m pip install git+https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA -U
             ```
+            </div>
 
             !!! warning
                 Install/update gmx_MMPBSA from the master branch of GitHub repository. This version is only recommended 
@@ -202,11 +279,16 @@ errors are more frequent.
     === "Miniconda Installation"
     
         [Miniconda] installation
+        <div class="termy">
         ```bash
-        curl -O https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
-        chmod +x Miniconda3-latest-Linux-x86_64.sh
-        ./Miniconda3-latest-Linux-x86_64.sh
+        $ curl -O https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+        ---> 100%
+        $ chmod +x Miniconda3-latest-Linux-x86_64.sh
+        $ ./Miniconda3-latest-Linux-x86_64.sh
+        ---> 100%
+        Successful miniconda intallation
         ```
+        </div>
 
 ### Extra Dependencies
 gmx_MMPBSA uses some dependencies for other functions independent of calculations or in some cases they may be 

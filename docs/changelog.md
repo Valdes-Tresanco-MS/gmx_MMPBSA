@@ -3,6 +3,91 @@ template: main.html
 title: Changelog
 ---
 # Changelog
+## gmx_MMPBSA v1.5.5 (06/10/2022)
+
+### Additions
+
+#### gmx_MMPBSA
+
+- Improved the API (#209)
+    - Added a new method to get the Enthalpy 
+    - Added a new method to get the Entropy
+    - Added a new method to get the Binding
+    - Added a new method to get the Decomposition energy
+    - Added a new method to get the gmx_MMPBSA_ana data
+
+#### gmx_MMPBSA_ana
+- Added multiprocessing and multithreading (#209)
+- Wait indicator
+- Added Error line cap size
+- Systems, subsystems and component selection options
+- Added threshold to remove energetic terms or residues
+- Correlation (#137)
+    - Normal correlation using ΔG
+    - Mutant correlation using ΔΔG
+    - Energy values table
+    - Interactive systems selection and Experimental Ki editor
+    - New regression plot with bivariate and univariate graphs
+    - Chart options panel
+        - General options
+        - Regression options
+            - Scatter
+            - Distribution
+
+#### Documentation
+- News section
+- Animated command-line code block with terminal
+- Added versioning
+- Added installation using *.yml configuration file (#221)
+- Added a new tutorial for correlation analysis (#194)
+
+### Fix
+#### gmx_MMPBSA_ana
+- Close gmx_MMPBSA_ana properly when the selection dialog is rejected
+- Compatibility with previous versions (`< v1.5.2`)
+- Added several tooltips
+- Improved general performance. See the [benchmark](analyzer.md#fast-like-a-rocket) (#209, #230, #243)
+    - Improved the reading of output files and optimized data storage. (#228)
+    - Eliminated the recalculation of IE and C2 entropies before opening the GUI. Now read from outputs files
+    - Optimized data storage and access to subsets in panda's Dataframes
+    - Now file processing and graphics generation does not freeze the GUI.
+    - Removed redundant steps and data
+    - Removed line graphs for components in the per-wise decomposition schema
+    - Data access, processing, and storage are done in the API.
+    - Added the option to temporarily store data on the hard disk instead of memory
+    - Removed several pop-up windows
+    - Decreased RAM consumption
+
+- Removed H5 support 
+- Invalid periodicity in the prmtop (#211)
+- Buffer saturation (#213)
+
+
+### Changes
+#### gmx_MMPBSA
+- Improved IE and C2 calculation
+
+#### gmx_MMPBSA_ana
+
+- Change the IE representation
+- Removed summary widget
+- Now the bar plot data contain the Average, SD, and SEM instead of all frames
+- Chart Options
+    - Error line color
+    - Error line representation (SD or SEM)
+
+- Restructured the init (system selection) dialog
+    - Improved energy and decomposition options selection
+    - Improved the correlation options
+    - Added a new section for performance configuration
+    - Added RAM consumption estimator
+    - Improved the systems' tree representation and edition options
+
+
+#### gmx_MMPBSA_test
+- The examples folder moved up to the root directory
+
+---
 
 ## gmx_MMPBSA v1.5.2 (03/23/2022)
 
@@ -52,8 +137,8 @@ title: Changelog
 #### `Documentation`
 
 - gmx_MMPBSA_ana documentation (v1.5.0) (#152)
-- [Tutorial for psf_dcd files](https://valdes-tresanco-ms.github.io/gmx_MMPBSA/examples/#support-for-psf_dcd-files)
-- [Tutorial for OPLS ff files](https://valdes-tresanco-ms.github.io/gmx_MMPBSA/examples/#oplsff-support)
+- [Tutorial for psf_dcd files](https://valdes-tresanco-ms.github.io/gmx_MMPBSA/dev/examples/#support-for-psf_dcd-files)
+- [Tutorial for OPLS ff files](https://valdes-tresanco-ms.github.io/gmx_MMPBSA/dev/examples/#oplsff-support)
 
 ### Fixes
 
@@ -179,9 +264,9 @@ title: Changelog
 
 ## [gxm_MMPBSA v1.4.3 (05/26/2021)](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/releases/tag/v1.4.3)
 ### Additions
-- Added two new tutorials [Protein_ligand_LPH_atoms_CHARMMff](https://valdes-tresanco-ms.github.io/gmx_MMPBSA/examples/Protein_ligand_LPH_atoms_CHARMMff/) and [QM/MMGBSA calculations](https://valdes-tresanco-ms.github.io/gmx_MMPBSA/examples/QM_MMGBSA/)
+- Added two new tutorials [Protein_ligand_LPH_atoms_CHARMMff](https://valdes-tresanco-ms.github.io/gmx_MMPBSA/dev/examples/Protein_ligand_LPH_atoms_CHARMMff/) and [QM/MMGBSA calculations](https://valdes-tresanco-ms.github.io/gmx_MMPBSA/examples/QM_MMGBSA/)
 - Now the program reports the `p-value` associated with the correlation coefficient when performing the correlation analysis
-- Google Analytics is used as a third-party tracking service to improve documentation. Check our [Private Policy](https://valdes-tresanco-ms.github.io/gmx_MMPBSA/private_policy/) for more details
+- Google Analytics is used as a third-party tracking service to improve documentation. Check our [Private Policy](https://valdes-tresanco-ms.github.io/gmx_MMPBSA/dev/private_policy/) for more details
 
 ### Fixes
 - Minor fixes in the documentation
@@ -281,7 +366,7 @@ This release focuses almost entirely on `gmx_MMPBSA_ana` with minor issues fixed
     - Multiple models at the same time
     - Graphs and correlation data for each calculated energy term (ΔH, ΔH+IE, ΔH+NMODE and ΔH+QH)  
     - Table with the experimental energy of the systems, and the data of the selected model
-- New arguments flags for gmx_MMPBSA_ana (See the [gmx_MMPBSA_ana documentation](https://valdes-tresanco-ms.github.io/gmx_MMPBSA/analyzer/))
+- New arguments flags for gmx_MMPBSA_ana (See the [gmx_MMPBSA_ana documentation](https://valdes-tresanco-ms.github.io/gmx_MMPBSA/dev/analyzer/))
     - replaced `-p` by `-f`
     - `-f` accept a folder, single info file or a list of them
     - New flag `-r`. This flag allows to load all the systems inside a selected folder

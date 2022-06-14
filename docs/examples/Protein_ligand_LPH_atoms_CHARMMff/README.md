@@ -8,7 +8,7 @@ title: Protein-ligand LPH (Charmm)
     optimized for amber atom types (_i.e._ bondi, mbondi, mbondi2, mbondi3) and CHARMM force field hasn't been tested 
     extensively. Please, check this [thread][1] for more information and proceed with caution.
 
-    **:material-new-box:{:.heart } in gmx_MMPBSA v1.5.0!!!**
+    **:material-new-box:{:.heart } in gmx_MMPBSA v1.5.x series!!!**
 
     In gmx_MMPBSA v1.5.0 we have added a new PB radii set named _charmm_radii_. **This radii set should be used only 
     with systems prepared with CHARMM force fields**. The atomic radii set for Poisson-Boltzmann calculations has been 
@@ -27,7 +27,7 @@ title: Protein-ligand LPH (Charmm)
 
 !!! info
 
-    This example can be found in the [docs/examples/Protein_ligand_LPH_atoms_CHARMMff][6] directory in the repository
+    This example can be found in the [examples/Protein_ligand_LPH_atoms_CHARMMff][6] directory in the repository
     folder
 
     LPH is a positively charged virtual particle attached to halogen atoms. This strategy aims to get a better 
@@ -42,7 +42,7 @@ title: Protein-ligand LPH (Charmm)
     As the LPH particle is not considered during the calculations in gmx_MMPBSA, take the results with a grain of 
     salt, especially when working with systems where the halogen bond is determinant for the binding.
 
-    **:material-new-box:{:.heart } in gmx_MMPBSA v1.5.0!!!**
+    **:material-new-box:{:.heart } in gmx_MMPBSA v1.5.x series!!!**
 
     We have included standard radii for halogens in _charmm_radii_ set:
 
@@ -183,11 +183,11 @@ That being said, once you are in the folder containing all files, the command-li
 
 === "Serial"
 
-        gmx_MMPBSA -O -i mmpbsa.in -cs str_noLP.pdb -ci index_mod_gromacs.ndx -cg 1 17 -ct com_traj.xtc -cp topol.top
+        gmx_MMPBSA -O -i mmpbsa.in -cs str_noLP.pdb -ci index_mod_gromacs.ndx -cg 1 17 -ct com_traj.xtc -cp topol.top -o FINAL_RESULTS_MMPBSA.dat -eo FINAL_RESULTS_MMPBSA.csv
 
 === "With MPI"
 
-        mpirun -np 2 gmx_MMPBSA MPI -O -i mmpbsa.in -cs str_noLP.pdb -ci index_mod_gromacs.ndx -cg 1 17 -ct com_traj.xtc -cp topol.top
+        mpirun -np 2 gmx_MMPBSA MPI -O -i mmpbsa.in -cs str_noLP.pdb -ci index_mod_gromacs.ndx -cg 1 17 -ct com_traj.xtc -cp topol.top -o FINAL_RESULTS_MMPBSA.dat -eo FINAL_RESULTS_MMPBSA.csv
 
 where the `mmpbsa.in` input file, is a text file containing the following lines:
 
@@ -229,6 +229,12 @@ index file (`index_mod_gromacs.ndx`), a trajectory file (`com_traj.xtc`), and bo
 numbers in the index file (`1 17`) are needed. The `mmpbsa.in` input file will contain all the parameters needed for 
 the MM/PB(GB)SA calculation. A topology file is also needed (mandatory) in this case to generate the topology files 
 in amber format with all the terms for CHARMM force field.
+
+A plain text output file with all the statistics (default: `FINAL_RESULTS_MMPBSA.dat`) and a CSV-format 
+output file containing all energy terms for every frame in every calculation will be saved. The file name in 
+'-eo' flag will be forced to end in [.csv] (`FINAL_RESULTS_MMPBSA.csv` in this case). This file is only written when 
+specified on the command-line.
+
 !!! note
     Once the calculation is done, the results can be analyzed in `gmx_MMPBSA_ana` (if `-nogui` flag was not used in the command-line). 
     Please, check the [gmx_MMPBSA_ana][5] section for more information
@@ -239,6 +245,6 @@ in amber format with all the terms for CHARMM force field.
   [3]: ../../input_file.md#the-input-file
   [4]: ../../input_file.md#sample-input-files
   [5]: ../../analyzer.md#gmx_mmpbsa_ana-the-analyzer-tool
-  [6]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/docs/examples/Protein_ligand_LPH_atoms_CHARMMff
+  [6]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/examples/Protein_ligand_LPH_atoms_CHARMMff
   [7]: ../gmx_MMPBSA_test.md#gmx_mmpbsa_test-command-line
   [8]: https://www.sciencedirect.com/science/article/abs/pii/S0968089616304576?via%3Dihub

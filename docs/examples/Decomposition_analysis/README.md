@@ -35,11 +35,11 @@ That being said, once you are in the folder containing all files, the command-li
 
 === "Serial"
 
-        gmx_MMPBSA -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 20 21 -ct com_traj.xtc
+        gmx_MMPBSA -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 20 21 -ct com_traj.xtc -o FINAL_RESULTS_MMPBSA.dat -eo FINAL_RESULTS_MMPBSA.csv -do FINAL_DECOMP_MMPBSA.dat -deo FINAL_DECOMP_MMPBSA.csv
 
 === "With MPI"
 
-        mpirun -np 2 gmx_MMPBSA MPI -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 20 21 -ct com_traj.xtc
+        mpirun -np 2 gmx_MMPBSA MPI -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 20 21 -ct com_traj.xtc -o FINAL_RESULTS_MMPBSA.dat -eo FINAL_RESULTS_MMPBSA.csv -do FINAL_DECOMP_MMPBSA.dat -deo FINAL_DECOMP_MMPBSA.csv
 
 === "gmx_MMPBSA_test"
 
@@ -90,7 +90,14 @@ with the igb5 (GB-OBC2) model and a salt concentration = 0.15M.
 
 Per-residue `decomp` with 1-4 EEL added to EEL and 1-4 VDW added to VDW potential terms (`idecomp=2`) is going to be 
 performed and residues within 4Å in both receptor and ligand will be printed in the output file. Please see 
-`print_res` variable in [`&decomp namelist variables`][4] section 
+`print_res` variable in [`&decomp namelist variables`][4] section.
+
+A plain text output file with all the statistics (default: `FINAL_RESULTS_MMPBSA.dat`) and a CSV-format 
+output file containing all energy terms for every frame in every calculation will be saved. The file name in 
+'-eo' flag will be forced to end in [.csv] (`FINAL_RESULTS_MMPBSA.csv` in this case). This file is only written when 
+specified on the command-line. A plain text (`FINAL_DECOMP_MMPBSA.dat`) and a CSV-format (`FINAL_DECOMP_MMPBSA.csv`) 
+output files containing all energy terms for each printed residue in decomposition calculations will be also saved.
+
 
 !!! note
     Once the calculation is done, the results can be analyzed in `gmx_MMPBSA_ana` (if `-nogui` flag was not used in the command-line). 
@@ -104,7 +111,7 @@ You can also use [VMD][8] and [Chimera][9] to view the modified pdb file with th
   [3]: ../../input_file.md#sample-input-files
   [4]: ../../input_file.md#decomp-namelist-variables
   [5]: ../../analyzer.md#gmx_mmpbsa_ana-the-analyzer-tool
-  [6]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/docs/examples/Decomposition_analysis
+  [6]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/examples/Decomposition_analysis
   [7]: ../gmx_MMPBSA_test.md#gmx_mmpbsa_test-command-line
   [8]: https://www.youtube.com/watch?v=PeboM8KE5SA
   [9]: https://www.youtube.com/watch?v=jKA4fuYuKps

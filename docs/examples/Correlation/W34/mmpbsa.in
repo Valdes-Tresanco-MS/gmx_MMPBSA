@@ -1,0 +1,19 @@
+Sample input file for Alanine scanning
+#This input file is meant to show only that gmx_MMPBSA works. Although, we tried to use the input files as recommended in the
+#Amber manual, some parameters have been changed to perform more expensive calculations in a reasonable amount of time. Feel free to change the parameters
+#according to what is better for your system.
+
+&general
+sys_name="W34",
+exp_ki=30,
+startframe=1,
+endframe=10,
+forcefields="leaprc.protein.ff14SB",
+PBRadii=4,
+/
+&gb
+igb=8, saltcon=0.150,
+/
+&alanine_scanning
+mutant='ALA', mutant_res='A:34', mutant_only=1
+/
