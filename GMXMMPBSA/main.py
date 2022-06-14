@@ -1132,6 +1132,19 @@ class MMPBSA_App(object):
             if calculated:
                 break
 
+    def _res2print(self):
+        """
+        Get residues list from print_res variable
+        Returns: residues to print list
+        """
+        print_res = []
+        for x in self.INPUT['decomp']['print_res'].split(','):
+            r = list(map(int, x.split('-')))
+            s = r[0]
+            e = r[-1] + 1
+            print_res.extend(range(s, e))
+        return print_res
+
     def _get_decomp(self):
         from GMXMMPBSA.amber_outputs import (DecompOut, PairDecompOut, DecompBinding, PairDecompBinding)
         outkey = ('gb', 'pb')
@@ -1147,15 +1160,18 @@ class MMPBSA_App(object):
             DecompBindingClass = PairDecompBinding
             DecompClass = PairDecompOut
 
+        # get residues list from print_res variable
+        print_res = self._res2print()
         com_list = {}
         rec_list = {}
         lig_list = {}
         for x in self.resl:
-            com_list[x.index - 1] = x
-            if x.is_receptor():
-                rec_list[x.id_index - 1] = x
-            else:
-                lig_list[x.id_index - 1] = x
+            if x.index in print_res:
+                com_list[x.index] = x
+                if x.is_receptor():
+                    rec_list[x.id_index] = x
+                else:
+                    lig_list[x.id_index] = x
 
         for i, key in enumerate(outkey):
             if triggers[i] not in INPUT or not INPUT[triggers[i]]:
