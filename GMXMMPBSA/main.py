@@ -1138,7 +1138,7 @@ class MMPBSA_App(object):
         Returns: residues to print list
         """
         print_res = []
-        for x in self.INPUT['decomp']['print_res'].split(','):
+        for x in self.INPUT['print_res'].split(','):
             r = list(map(int, x.split('-')))
             s = r[0]
             e = r[-1] + 1
