@@ -23,8 +23,8 @@ import sys
 with open("README.md", "r") as f:
     LONG_DESCRIPTION = f.read()
 
-if sys.version_info[:2] < (3, 8):
-    raise RuntimeError("seaborn requires python >= 3.8.")
+if sys.version_info[:2] < (3, 9):
+    raise RuntimeError("gmx_MMPBSA requires python >= 3.9.0")
 
 setup(
     name='gmx_MMPBSA',
@@ -43,8 +43,7 @@ setup(
     long_description=LONG_DESCRIPTION,
     long_description_content_type='text/markdown',
     keywords=['gmx_MMPBSA', 'MMPBSA', 'MMGBSA', 'GROMACS', 'AmberTools'],
-    install_requires=['pandas>=1.2.2', 'seaborn>=0.11.2', 'mpi4py>=3.1.3', 'scipy>=1.6.1', 'matplotlib>=3.5.1',
-                      'h5py'],
+    install_requires=['pandas>=1.2.2', 'seaborn>=0.11.2', 'mpi4py>=3.1.3', 'scipy>=1.6.1', 'matplotlib>=3.5.1'],
     entry_points={
         "console_scripts": [
             "gmx_MMPBSA=GMXMMPBSA.app:gmxmmpbsa",
