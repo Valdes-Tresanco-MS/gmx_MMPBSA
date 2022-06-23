@@ -43,7 +43,7 @@ from GMXMMPBSA.infofile import InfoFile
 from GMXMMPBSA.fake_mpi import MPI as FakeMPI
 from GMXMMPBSA.input_parser import input_file as _input_file
 from GMXMMPBSA.make_trajs import make_trajectories, make_mutant_trajectories
-from GMXMMPBSA.output_file import (write_outputs, write_decomp_output, Data2h5)
+from GMXMMPBSA.output_file import (write_outputs, write_decomp_output, data2pkl)
 from GMXMMPBSA.parm_setup import MMPBSA_System
 from GMXMMPBSA.make_top import CheckMakeTop
 from GMXMMPBSA.timer import Timer
@@ -607,9 +607,8 @@ class MMPBSA_App(object):
         write_outputs(self)
         if self.INPUT['decomprun']:
             write_decomp_output(self)
-        # if self.INPUT['keep_files'] in [0, 2]:
-        #     # Store the calc_types data in a h5 file
-        #     Data2h5(self)
+        if self.INPUT['keep_files'] in [0, 2]:
+            data2pkl(self)
 
         info = InfoFile(self)
         info.write_info(f'{self.pre}info')
