@@ -1235,10 +1235,10 @@ class DecompOut(dict):
             if self.frame_idx == self.numframes:
                 self.frame_idx = 0
             if line[:3] in self.allowed_tokens:
-                if self.mut and self.resl[int(line[4:10]) - 1].is_mutant():
-                    resnum = self.resl[int(line[4:10]) - 1].mutant_string
+                if self.mut and self.resl[int(line[4:10])].is_mutant():
+                    resnum = self.resl[int(line[4:10])].mutant_string
                 else:
-                    resnum = self.resl[int(line[4:10]) - 1].string
+                    resnum = self.resl[int(line[4:10])].string
                 internal = float(line[11:20])
                 vdw = float(line[21:30])
                 eel = float(line[31:40])
@@ -1256,7 +1256,7 @@ class DecompOut(dict):
                 self[line[:3]][resnum]['pol'][self.frame_idx] = pol
                 self[line[:3]][resnum]['sas'][self.frame_idx] = sas
 
-                if resnum == list(self.resl.values())[-1].string:
+                if line[:3] == self.allowed_tokens[-1] and resnum == list(self.resl.values())[-1].string:
                     self.frame_idx += 1
 
     def _print_vectors(self, csvwriter):
@@ -1373,14 +1373,14 @@ class PairDecompOut(DecompOut):
     def _get_decomp_energies(self, outfile):
         while line := outfile.readline():
             if line[:3] in self.allowed_tokens:
-                if self.mut and self.resl[int(line[4:11]) - 1].is_mutant():
-                    resnum = self.resl[int(line[4:11]) - 1].mutant_string
+                if self.mut and self.resl[int(line[4:11])].is_mutant():
+                    resnum = self.resl[int(line[4:11])].mutant_string
                 else:
-                    resnum = self.resl[int(line[4:11]) - 1].string
-                if self.mut and self.resl[int(line[13:20]) - 1].is_mutant():
-                    resnum2 = self.resl[int(line[13:20]) - 1].mutant_string
+                    resnum = self.resl[int(line[4:11])].string
+                if self.mut and self.resl[int(line[13:20])].is_mutant():
+                    resnum2 = self.resl[int(line[13:20])].mutant_string
                 else:
-                    resnum2 = self.resl[int(line[13:20]) - 1].string
+                    resnum2 = self.resl[int(line[13:20])].string
 
                 internal = float(line[21:33])
                 vdw = float(line[34:46])
@@ -1401,7 +1401,7 @@ class PairDecompOut(DecompOut):
                 self[line[:3]][resnum][resnum2]['eel'][self.frame_idx] = eel
                 self[line[:3]][resnum][resnum2]['pol'][self.frame_idx] = pol
                 self[line[:3]][resnum][resnum2]['sas'][self.frame_idx] = sas
-                if resnum == list(self.resl.values())[-1].string == resnum2:
+                if line[:3] == self.allowed_tokens[-1] and resnum == list(self.resl.values())[-1].string == resnum2:
                     self.frame_idx += 1
 
     def _print_vectors(self, csvwriter):

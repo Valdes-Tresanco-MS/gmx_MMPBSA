@@ -14,6 +14,7 @@
 #  or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License    #
 #  for more details.                                                           #
 # ##############################################################################
+import pickle
 
 from GMXMMPBSA.analyzer.items_delegate import KiTreeDelegate
 
@@ -392,16 +393,18 @@ class InitDialog(QDialog):
             mut_only = False
             mutant = None
             stability = False
-            if fname.suffix == '.h5':
-                with h5py.File(fname) as fi:
-                    basename = fi['INPUT']['sys_name'][()].decode('utf-8')
+            if fname.suffix == '.mmxsa':
+                with open(fname, 'rb') as of:
+                    info = pickle.load(of)
+                    basename = info.INPUT['sys_name']
                     if basename in names:
                         while basename in names:
                             basename = f"{basename}-{names.count(basename) + 1}"
                         names.append(basename)
-                    exp_ki = float(fi['INPUT']['exp_ki'][()])
-                    mut_only = int(fi['INPUT']['mutant_only'][()])
-                    mutant = fi['INFO']['mut_str'][()].decode('utf-8')
+                    temp_ki = [info.INPUT['exp_ki']] if isinstance(info.INPUT['exp_ki'], float) else info.INPUT['exp_ki']
+                    mut_only = info.INPUT['mutant_only']
+                    mutant = info.mut_str
+                    stability = info.FILES.stability
             else:
                 with open(fname) as fi:
                     for line in fi:

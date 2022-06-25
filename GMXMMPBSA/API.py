@@ -24,6 +24,7 @@ the full power of Python's extensions, if they want (e.g., numpy, scipy, etc.)
 # ##############################################################################
 import logging
 import math
+import pickle
 import shutil
 from multiprocessing.pool import ThreadPool
 from copy import copy, deepcopy
@@ -243,11 +244,10 @@ class MMPBSA_API():
                 raise NoFileExists(f"cannot find {self.fname}!")
             os.chdir(self.fname.parent)
 
-        # if self.fname.suffix == '.h5':
-        #     self._get_fromH5(fname)
-        # else:
-        self._get_fromApp(self.fname)
-        # print('API', self.app_namespace)
+        if self.fname.suffix == '.mmxsa':
+            self._get_fromBinary(self.fname)
+        else:
+            self._get_fromApp(self.fname)
 
     def get_info(self):
         """
@@ -830,36 +830,56 @@ class MMPBSA_API():
         info.read_info(ifile)
         app.normal_system = app.mutant_system = None
         app.parse_output_files(from_calc=False)
-        self.app_namespace = self._get_namespace(app)
+        self.app_namespace = self._get_namespace(app, 'App')
         self._oringin = {'normal': app.calc_types.normal, 'mutant': app.calc_types.mutant,
                          'decomp_normal': app.calc_types.decomp_normal, 'decomp_mutant': app.calc_types.decomp_mutant,
                          'mutant-normal': app.calc_types.mut_norm,
                          }
+        self._finalize_reading(ifile)
+
+    def _get_fromBinary(self, ifile):
+        with open(ifile, 'rb') as bf:
+            info = pickle.load(bf)
+            self.app_namespace = self._get_namespace(info, 'Binary')
+            bdata = pickle.load(bf)
+            self._oringin = {'normal': bdata.normal, 'mutant': bdata.mutant, 'decomp_normal': bdata.decomp_normal,
+                             'decomp_mutant': bdata.decomp_mutant, 'mutant-normal': bdata.mut_norm}
+            self._finalize_reading(ifile)
+
+    def _finalize_reading(self, ifile):
         self.temp_folder = ifile.parent.joinpath('.gmx_mmpbsa_temp')
         if self.temp_folder.exists():
             shutil.rmtree(self.temp_folder)
         self.temp_folder.mkdir()
         self.data = copy(self._oringin)
         self._get_frames()
-        self._get_data(None)
 
     @staticmethod
-    def _get_namespace(app):
+    def _get_namespace(app, tfile):
 
-        # input_file_text = ('|Input file:\n|--------------------------------------------------------------\n|'
-        #                    + ''.join(open(app.FILES.input_file).readlines()).replace('\n', '\n|') +
-        #                    '--------------------------------------------------------------\n')
-        INFO = {'COM_PDB': ''.join(open(app.FILES.complex_fixed).readlines()),
-                'input_file': app.input_file_text,
+        if tfile == 'App':
+            com_pdb = ''.join(open(app.FILES.complex_fixed).readlines())
+            input_file = app.input_file_text
+            output_file = ''.join(open(app.FILES.output_file).readlines())
+            decomp_output_file = ''.join(open(app.FILES.decompout).readlines()) if app.INPUT['decomprun'] else None
+            size = app.mpi_size
+        else:
+            com_pdb = app.COM_PDB
+            input_file = app.input_file
+            output_file = app.output_file
+            decomp_output_file = app.decomp_output_file if app.INPUT['decomprun'] else None
+            size = app.size
+
+        INFO = {'COM_PDB': com_pdb,
+                'input_file': input_file,
                 'mutant_index': app.mutant_index,
                 'mut_str': app.resl[app.mutant_index].mutant_label if app.mutant_index else '',
                 'numframes': app.numframes,
                 'numframes_nmode': app.numframes_nmode,
-                'output_file': ''.join(open(app.FILES.output_file).readlines()),
-                'size': app.mpi_size,
-                'using_chamber': app.using_chamber}
-        if app.INPUT['decomprun']:
-            INFO['decomp_output_file'] = ''.join(open(app.FILES.decompout).readlines())
+                'output_file': output_file,
+                'size': size,
+                'using_chamber': app.using_chamber,
+                'decomp_output_file': decomp_output_file}
 
         return SimpleNamespace(FILES=app.FILES, INPUT=app.INPUT, INFO=INFO)
 

@@ -21,104 +21,33 @@ statistics printing.
 #  for more details.                                                           #
 # ##############################################################################
 
-import io
-import numpy as np
+from types import SimpleNamespace
 from GMXMMPBSA import utils
 from math import sqrt, ceil
 from os import linesep as ls
-import h5py
+import pickle
 
-h5py.get_config().track_order = True
 
-class Data2h5:
-    def __init__(self, app):
-        self.app = app
-        self.h5f = h5py.File('RESULTS_gmx_MMPBSA.h5', 'w')
-        grp = self.h5f.create_group('normal')
-        self._e2h5(app.calc_types.normal, grp)
-        if app.calc_types.mutant:
-            grp = self.h5f.create_group('mutant')
-            self._e2h5(app.calc_types.mutant, grp)
-        if app.calc_types.decomp_normal:
-            grp = self.h5f.create_group('decomp_normal')
-            self._decomp2h5(app.calc_types.decomp_normal, grp)
-        if app.calc_types.decomp_mutant:
-            grp = self.h5f.create_group('decomp_mutant')
-            self._decomp2h5(app.calc_types.decomp_mutant, grp)
-        self._info2h5()
-        self.h5f.close()
+def data2pkl(app):
+    info_file = SimpleNamespace(
+        INPUT=app.INPUT,
+        FILES=app.FILES,
+        size=app.mpi_size,
+        numframes=app.numframes,
+        numframes_nmode=app.numframes_nmode,
+        mutant_index=app.mutant_index,
+        mut_str=app.mut_str,
+        using_chamber=app.using_chamber,
+        input_file=app.input_file_text,
+        COM_PDB=''.join(open(app.FILES.complex_fixed).readlines()),
+        output_file=''.join(open(app.FILES.output_file).readlines()),
+        decomp_output_file=''.join(open(app.FILES.decompout).readlines()) if app.INPUT['decomprun']
+        else None
+    )
 
-    def _info2h5(self):
-        grp = self.h5f.create_group('INPUT')
-        for x in self.app.INPUT:
-            data = np.nan if self.app.INPUT[x] is None else self.app.INPUT[x]
-            dset = grp.create_dataset(x, data=data)
-
-        grp = self.h5f.create_group('FILES')
-        for x in dir(self.app.FILES):
-            # this must be equal to the info saved in the info file
-            if x.startswith('_') or x in ('rewrite_output', 'energyout', 'dec_energies', 'overwrite'):
-                continue
-            d = getattr(self.app.FILES, x)
-            data = np.nan if d is None else d
-            dset = grp.create_dataset(x, data=data)
-
-        grp = self.h5f.create_group('INFO')
-        dset = grp.create_dataset('size', data=self.app.mpi_size)
-        dset = grp.create_dataset('numframes', data=self.app.numframes)
-        dset = grp.create_dataset('numframes_nmode', data=self.app.numframes_nmode)
-        dset = grp.create_dataset('mutant_index', data= np.nan if self.app.mutant_index is None else self.app.mutant_index)
-        dset = grp.create_dataset('mut_str', data=self.app.mut_str)
-        dset = grp.create_dataset('using_chamber', data=self.app.using_chamber)
-        dset = grp.create_dataset('input_file', data=self.app.input_file_text)
-
-        # save the complex fixed structure
-        com_fixed = ''.join(open(self.app.FILES.complex_fixed).readlines())
-        dset = grp.create_dataset('COM_PDB', data=com_fixed)
-
-        # get output files
-        outfile = ''.join(open(self.app.FILES.output_file).readlines())
-        dset = grp.create_dataset('output_file', data=outfile)
-        if self.app.INPUT['decomprun']:
-            doutfile = ''.join(open(self.app.FILES.decompout).readlines())
-            dset = grp.create_dataset('decomp_output_file', data=doutfile)
-
-    @staticmethod
-    def _e2h5(d, f):
-        # key  Energy: [gb, pb, rism std, rism gf], Entropy: [nmode, qh, ie, c2]
-        for key in d:
-            grp = f.create_group(key)
-            # key2 is complex, receptor, ligand, delta or model for ie and c2
-            for key2 in d[key]:
-                grp2 = grp.create_group(key2)
-                for key3 in d[key][key2]:
-                    dset = grp2.create_dataset(key3, data=d[key][key2][key3])
-
-    @staticmethod
-    def _decomp2h5(d, g):
-        for key in d:
-            # model (GB or PB)
-            grp = g.create_group(key)
-            # complex, receptor, ligand, delta
-            for key2 in d[key]:
-                grp2 = grp.create_group(key2)
-                # TDC, SDC, BDC
-                for key3 in d[key][key2]:
-                    grp3 = grp2.create_group(key3)
-                    # residue first level
-                    for key4 in d[key][key2][key3]:
-                        # we need to convert the res number in str since h5 only admit str as keys
-                        grp4 = grp3.create_group(str(key4))
-                        # residue sec level for per-wise or energy terms for per-residue
-                        for key5 in d[key][key2][key3][key4]:
-                            if isinstance(d[key][key2][key3][key4][key5], dict):
-                                grp5 = grp4.create_group(str(key5))
-                                # energy terms
-                                for key6 in d[key][key2][key3][key4][key5]:
-                                    dset = grp5.create_dataset(key6, data=d[key][key2][key3][key4][key5][key6])
-                            else:
-                                # energy terms
-                                dset = grp4.create_dataset(key5, data=d[key][key2][key3][key4][key5])
+    with open('COMPACT_gmx_MMPBSA_RESULTS.mmxsa', "wb") as f:
+        pickle.dump(info_file, f)
+        pickle.dump(app.calc_types, f)
 
 
 def write_outputs(app):

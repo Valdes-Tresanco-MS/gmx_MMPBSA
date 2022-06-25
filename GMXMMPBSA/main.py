@@ -43,7 +43,7 @@ from GMXMMPBSA.infofile import InfoFile
 from GMXMMPBSA.fake_mpi import MPI as FakeMPI
 from GMXMMPBSA.input_parser import input_file as _input_file
 from GMXMMPBSA.make_trajs import make_trajectories, make_mutant_trajectories
-from GMXMMPBSA.output_file import (write_outputs, write_decomp_output, Data2h5)
+from GMXMMPBSA.output_file import (write_outputs, write_decomp_output, data2pkl)
 from GMXMMPBSA.parm_setup import MMPBSA_System
 from GMXMMPBSA.make_top import CheckMakeTop
 from GMXMMPBSA.timer import Timer
@@ -607,9 +607,8 @@ class MMPBSA_App(object):
         write_outputs(self)
         if self.INPUT['decomprun']:
             write_decomp_output(self)
-        # if self.INPUT['keep_files'] in [0, 2]:
-        #     # Store the calc_types data in a h5 file
-        #     Data2h5(self)
+        if self.INPUT['keep_files'] in [0, 2]:
+            data2pkl(self)
 
         info = InfoFile(self)
         info.write_info(f'{self.pre}info')
@@ -1132,6 +1131,19 @@ class MMPBSA_App(object):
             if calculated:
                 break
 
+    def _res2print(self):
+        """
+        Get residues list from print_res variable
+        Returns: residues to print list
+        """
+        print_res = []
+        for x in self.INPUT['print_res'].split(','):
+            r = list(map(int, x.split('-')))
+            s = r[0]
+            e = r[-1] + 1
+            print_res.extend(range(s, e))
+        return print_res
+
     def _get_decomp(self):
         from GMXMMPBSA.amber_outputs import (DecompOut, PairDecompOut, DecompBinding, PairDecompBinding)
         outkey = ('gb', 'pb')
@@ -1147,15 +1159,18 @@ class MMPBSA_App(object):
             DecompBindingClass = PairDecompBinding
             DecompClass = PairDecompOut
 
+        # get residues list from print_res variable
+        print_res = self._res2print()
         com_list = {}
         rec_list = {}
         lig_list = {}
         for x in self.resl:
-            com_list[x.index - 1] = x
-            if x.is_receptor():
-                rec_list[x.id_index - 1] = x
-            else:
-                lig_list[x.id_index - 1] = x
+            if x.index in print_res:
+                com_list[x.index] = x
+                if x.is_receptor():
+                    rec_list[x.id_index] = x
+                else:
+                    lig_list[x.id_index] = x
 
         for i, key in enumerate(outkey):
             if triggers[i] not in INPUT or not INPUT[triggers[i]]:

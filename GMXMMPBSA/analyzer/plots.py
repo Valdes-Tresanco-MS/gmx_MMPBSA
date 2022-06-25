@@ -24,27 +24,24 @@ except:
     from PyQt5.QtWidgets import *
 
 
-import matplotlib as mpl
+import itertools
+
+from matplotlib.colors import ListedColormap
 import matplotlib.backend_bases
+import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
-import matplotlib.patches as mpatches
-from matplotlib.lines import Line2D
-from scipy.stats import linregress
-
 import numpy as np
-import pandas
 import pandas as pd
 import seaborn as sns
-
 from matplotlib import gridspec
 from matplotlib.backends import qt_compat
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas, NavigationToolbar2QT
 from matplotlib.figure import Figure
+from matplotlib.lines import Line2D
 from matplotlib.widgets import Cursor
 from mpl_toolkits.axes_grid1 import make_axes_locatable
-from scipy import stats
-import itertools
+from scipy.stats import linregress, pearsonr, spearmanr
 
 # sns.set_theme()
 from GMXMMPBSA.analyzer.chartsettings import Palettes
@@ -637,7 +634,7 @@ class MHeatmap:
             # row-side:
             matrix = matrix.T
 
-        cmap = mpl.colors.ListedColormap(all_colors)
+        cmap = ListedColormap(all_colors)
         return matrix, cmap
 
     def plot_colors(self, **kws):
@@ -673,7 +670,7 @@ class MHeatmap:
 
 
 class RegChart(ChartsBase):
-    def __init__(self, data: pandas.DataFrame, button: QToolButton, options: dict = None, item_parent=None):
+    def __init__(self, data: pd.DataFrame, button: QToolButton, options: dict = None, item_parent=None):
         super(RegChart, self).__init__(button, options, item_parent)
 
         ci = options[('Regression Plot', 'Conf. Interval')] or None
@@ -688,9 +685,9 @@ class RegChart(ChartsBase):
                            line_kws=line_kws)
 
         # get correlation coefficients
-        pearson, ppvalue = stats.pearsonr(data['ExpΔG'], data['Average'])
+        pearson, ppvalue = pearsonr(data['ExpΔG'], data['Average'])
         slope, intercept, r_value, p_value, std_err = linregress(data['ExpΔG'], data['Average'])
-        spearman, spvalue = stats.spearmanr(data['ExpΔG'], data['Average'])
+        spearman, spvalue = spearmanr(data['ExpΔG'], data['Average'])
 
         if options[('Regression Plot', 'Distribution', 'show')]:
             args = {}
