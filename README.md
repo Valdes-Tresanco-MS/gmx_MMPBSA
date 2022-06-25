@@ -7,7 +7,7 @@
 
 # Welcome to gmx_MMPBSA!
 gmx_MMPBSA is a new tool based on AMBER's MMPBSA.py aiming to perform end-state free energy calculations with GROMACS 
-files. It works with all GROMACS versions along with AmberTools20 or 21.
+files. It works with all GROMACS versions along with AmberTools20, 21 or 22.
 
 **Please see the documentation [here](https://valdes-tresanco-ms.github.io/gmx_MMPBSA/dev/getting-started)**
 
@@ -42,6 +42,7 @@ Authors:
 Acknowledgements:
 - First of all, to Amber and GROMACS developers. Without their incredible and hard work, gmx_MMPBSA would not exist.
 - Jason Swails (Amber developer and [ParmEd](https://github.com/ParmEd/ParmEd) principal developer) for his continuous support on ParmEd issues.
+- Dr. Hymavathi Veeravarapu for helping with the introductory video for gmx_MMPBSA.
 - To the Open Source license of the [JetBrains](https://www.jetbrains.com) programs.
 - To the [Sourcery](https://sourcery.ai/invite/gndRrjlo) team for supporting us with the [Pro version](https://sourcery.ai/pro/).
 - To all researchers that help improving gmx_MMPBSA with comments, feedback, and bug reports.

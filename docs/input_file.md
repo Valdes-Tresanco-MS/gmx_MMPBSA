@@ -508,12 +508,14 @@ in the PATH variable. In this path the following executables will be searched: `
 `keep_files` (Default = 2)
 :   Specifies which files are kept.
 
-    * 0: Keep only Hierarchical Data Format (h5) file
+    * 0: Keep only binary file (_COMPACT_gmx_MMPBSA_RESULTS.mmxsa_)
     * 1: Keep all temporary files (_prefix_*)
-    * 2: Keep all temporary files (_prefix_*) and Hierarchical Data Format (h5) file
+    * 2: Keep all temporary files (_prefix_*) and binary file
 
-    !!! danger "Keep in mind"
-        The h5 file is still experimental. It is recommended to use `keep_files = 1` or `keep_files = 2` to 
+    !!! note "Keep in mind"
+        The binary file contains all the information necessary to analyze the data with gmx_MMPBSA_ana. Its 
+        use is only recommended in special cases where the original 
+        raw data is not present. We recommnend to use `keep_files = 1` or `keep_files = 2` to 
         avoid errors when using `gmx_MMPBSA_ana`
 
 `netcdf` (Default = 0)

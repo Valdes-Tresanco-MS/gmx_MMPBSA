@@ -124,8 +124,7 @@ is performed in gmx_MMPBSA.
 * [gmx_MMPBSA_ana](analyzer.md) provides an intuitive way to analyze the data from gmx_MMPBSA calculations and save 
   high-quality pictures
 * [gmx_MMPBSA_test](examples/gmx_MMPBSA_test.md#gmx_mmpbsa_test-command-line) is a tool designed to test if the installation 
-  was 
-  successful by running one or more available [examples](examples/README.md) in gmx_MMPBSA.
+  was successful by running one or more available [examples](examples/README.md) in gmx_MMPBSA.
   
 !!! note "Easy to run"
     gmx_MMPBSA can run in parallel and requires just few things in order to perform any kind of calculation. That is:
@@ -143,6 +142,12 @@ is performed in gmx_MMPBSA.
     You can check [How gmx_MMPBSA works page](howworks.md) to get more details. Also check our 
     [example page](examples/README.md) to see how gmx_MMPBSA works with real examples
 
+If you prefer a more general overview of the gmx_MMPBSA suite, check this amazing video by Dr. Hymavathi Veeravarapu.
+
+<div class="embed-container">
+    <iframe src="https://www.youtube.com/embed/_2mYeffqFIo" frameborder="0" allowfullscreen></iframe>
+</div>
+
 ## **Need help?**
 [Help](Q&A/README.md) section contains the most frequently asked questions and errors. Also, look at our 
 [Google group](https://groups.google.com/g/gmx_mmpbsa) or the [issues](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/issues)
@@ -156,10 +161,10 @@ If you still have doubts or cannot solve the problem, please consider opening an
 Visit [Pypi Stats](https://pypistats.org/packages/gmx-mmpbsa) or [PePy](https://pepy.tech/project/gmx-mmpbsa)
 to see how gmx_MMPBSA is doing.
 
-## **Colaboration**
+## **Collaboration**
 
 gmx_MMPBSA is rapidly becoming one of the main programs to perform end-point free energy calculations out there 
-(~27.5k downloads so far). We are currently focused on optimizing the program, supporting new types of calculations, 
+(~29k downloads so far). We are currently focused on optimizing the program, supporting new types of calculations, 
 force fields, etc. However, the video tutorials are not that great.
 
 That being said, **and here is where we need help**, we will appreciate any collaboration in making video tutorials for 
@@ -173,6 +178,7 @@ Feel free to contact us through our google group (https://groups.google.com/g/gm
 - First of all, to Amber and GROMACS developers. Without their incredible and hard work, gmx_MMPBSA would not exist.
 - Jason Swails (Amber developer and [ParmEd](https://github.com/ParmEd/ParmEd) principal developer) for his continuous 
   support on ParmEd issues.
+- Dr. Hymavathi Veeravarapu for helping with the introductory video for gmx_MMPBSA
 
 [<img src="../assets/images/jetbrains-variant-4.png" height="100" width="178" align="right" />][11]
 
