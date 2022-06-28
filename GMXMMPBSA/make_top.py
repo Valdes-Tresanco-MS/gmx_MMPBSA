@@ -516,7 +516,7 @@ class CheckMakeTop:
                                     f"that they are correct. Otherwise report the error...")
 
             rec_top.coordinates = self.receptor_str.coordinates
-            rec_top.save(f"{self.FILES.prefix}REC.inpcrd", format='rst7', overwrite=True)
+            # rec_top.save(f"{self.FILES.prefix}REC.inpcrd", format='rst7', overwrite=True)
             if rec_top.impropers or rec_top.urey_bradleys:
                 if com_top_parm == 'amber':
                     GMXMMPBSA_ERROR('Inconsistent parameter format. The defined Complex is Amber/OPLS type while the '
@@ -545,6 +545,7 @@ class CheckMakeTop:
         action = ChRad(rec_amb_prm, PBRadii[self.INPUT['PBRadii']])
         logging.info('Writing Normal Receptor AMBER topology...')
         rec_amb_prm.write_parm(self.receptor_pmrtop)
+        rec_amb_prm.save(f"{self.FILES.prefix}REC.inpcrd", format='rst7', overwrite=True)
 
         lig_hastop = True
         if self.FILES.ligand_top:
@@ -563,7 +564,7 @@ class CheckMakeTop:
                                     f"that they are correct. Otherwise report the error...")
 
             lig_top.coordinates = self.ligand_str.coordinates
-            lig_top.save(f"{self.FILES.prefix}LIG.inpcrd", format='rst7', overwrite=True)
+            # lig_top.save(f"{self.FILES.prefix}LIG.inpcrd", format='rst7', overwrite=True)
             if lig_top.impropers or lig_top.urey_bradleys:
                 if com_top_parm == 'amber':
                     GMXMMPBSA_ERROR('Inconsistent parameter format. The defined Complex is Amber/OPLS type while the '
@@ -591,6 +592,7 @@ class CheckMakeTop:
         action = ChRad(lig_amb_prm, PBRadii[self.INPUT['PBRadii']])
         logging.info('Writing Normal Ligand AMBER topology...')
         lig_amb_prm.write_parm(self.ligand_pmrtop)
+        lig_amb_prm.save(f"{self.FILES.prefix}LIG.inpcrd", format='rst7', overwrite=True)
 
         if self.INPUT['alarun']:
             logging.info('Building Mutant Complex Topology...')
