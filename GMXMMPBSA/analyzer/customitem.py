@@ -531,7 +531,7 @@ class CustomItem(QTreeWidgetItem):
             if i == 0:
                 com_pdb_str = com2str(com_pdb)
                 bar_plot_data = self.app.systems[self.system_index]['items_data'][self.keys_path]['bar_plot_data'][0]
-                temp_dict = bar_plot_data.aggregate(["mean"]).iloc[0].to_dict()
+                temp_dict = bar_plot_data.iloc[0].to_dict()
                 res_dict = {k[2:]: value for k, value in temp_dict.items()}
                 for res in com_pdb_str.residues:
                     res_notation = f'{res.chain}:{res.name}:{res.number}'
