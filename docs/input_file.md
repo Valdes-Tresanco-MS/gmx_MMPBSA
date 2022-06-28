@@ -343,7 +343,7 @@ tested in previous `protein_forcefield` and `ligand_forcefield` variables.
             
   [300]: https://pubs.acs.org/doi/full/10.1021/acs.jctc.9b00106
 
-    * 7: charmm_radii
+    * 7: charmm_radii (compatible only with &pb)
         
         !!! note "_charmm_radii_ radii set"
             This raddi set haven been added in _gmx_MMPBSA v1.5.0_. **Use only with systems prepared with CHARMM 

@@ -930,6 +930,9 @@ class MMPBSA_App(object):
         ):
             GMXMMPBSA_ERROR('You did not specify any type of calculation!', InputError)
 
+        if INPUT['gbrun'] and INPUT['PBRadii'] == 7:
+            GMXMMPBSA_ERROR('PBRadii = 7 (charmm_radii) is compatible only with &pb!', InputError)
+
         if INPUT['decomprun'] and not INPUT['gbrun'] and not INPUT['pbrun']:
             GMXMMPBSA_ERROR('DECOMP must be run with either GB or PB!', InputError)
 
