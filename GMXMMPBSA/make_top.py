@@ -432,7 +432,7 @@ class CheckMakeTop:
                     'SPC', 'SPCE',
                     'OPC'
                 ]
-                for res in self.complex_str
+                for res in self.complex_str.residues
         ):
             GMXMMPBSA_ERROR(f'gmx_MMPBSA does not support water/ions molecules in any structure, but we found'
                             f' {counter} molecules in the complex.')
