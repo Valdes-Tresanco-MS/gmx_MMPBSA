@@ -31,8 +31,7 @@ import logging
 from GMXMMPBSA import utils, __version__
 from GMXMMPBSA.amber_outputs import (QHout, NMODEout, QMMMout, GBout, PBout, PolarRISM_std_Out, RISM_std_Out,
                                      PolarRISM_gf_Out, RISM_gf_Out, PolarRISM_pcplus_Out, RISM_pcplus_Out,
-                                     BindingStatistics, IEout, C2out,
-                                     DeltaBindingStatistics)
+                                     BindingStatistics, IEout, C2out, DeltaDeltaStatistics, DeltaIEC2Statistic)
 from GMXMMPBSA.calculation import (CalculationList, EnergyCalculation, PBEnergyCalculation,
                                    NmodeCalc, QuasiHarmCalc, CopyCalc, PrintCalc, LcpoCalc, MolsurfCalc,
                                    InteractionEntropyCalc, C2EntropyCalc)
@@ -1072,8 +1071,17 @@ class MMPBSA_App(object):
                                                                              self.calc_types.mutant[key]['ligand'],
                                                                              self.using_chamber, self.traj_protocol)
             if INPUT['alarun'] and not INPUT['mutant_only']:
-                self.calc_types.mut_norm[key] = {'delta': DeltaBindingStatistics(
-                    self.calc_types.mutant[key]['delta'], self.calc_types.normal[key]['delta'])}
+                self.calc_types.mut_norm[key] = {'complex': DeltaDeltaStatistics(
+                    self.calc_types.mutant[key]['complex'], self.calc_types.normal[key]['complex'])}
+                if not self.stability:
+                    if self.FILES.receptor_prmtop != self.FILES.mutant_receptor_prmtop:
+                        self.calc_types.mut_norm[key]['receptor'] = DeltaDeltaStatistics(
+                            self.calc_types.mutant[key]['receptor'], self.calc_types.normal[key]['receptor'])
+                    else:
+                        self.calc_types.mut_norm[key]['ligand'] = DeltaDeltaStatistics(
+                            self.calc_types.mutant[key]['ligand'], self.calc_types.normal[key]['ligand'])
+                    self.calc_types.mut_norm[key]['delta'] = DeltaDeltaStatistics(
+                        self.calc_types.mutant[key]['delta'], self.calc_types.normal[key]['delta'])
 
             self.get_iec2entropy(from_calc)
 
@@ -1112,6 +1120,10 @@ class MMPBSA_App(object):
                                                                  self.numframes)
                     calculated = True
 
+                if self.INPUT['alarun'] and not self.INPUT['mutant_only']:
+                    self.calc_types.mut_norm['ie'] = DeltaIEC2Statistic(
+                        self.calc_types.mutant['ie'], self.calc_types.normal['ie'])
+
             if self.INPUT['c2_entropy']:
                 if key in self.calc_types.normal:
                     if from_calc:
@@ -1131,6 +1143,10 @@ class MMPBSA_App(object):
                     self.calc_types.mutant['c2'] = C2out()
                     self.calc_types.mutant['c2'].parse_from_file(f'{self.pre}mutant_c2_entropy.dat')
                     calculated = True
+
+                if self.INPUT['alarun'] and not self.INPUT['mutant_only']:
+                    self.calc_types.mut_norm['c2'] = DeltaIEC2Statistic(
+                        self.calc_types.mutant['c2'], self.calc_types.normal['c2'])
             if calculated:
                 break
 

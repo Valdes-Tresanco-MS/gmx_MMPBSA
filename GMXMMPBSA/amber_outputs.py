@@ -1130,6 +1130,89 @@ class DeltaBindingStatistics(dict):
         return summary_list
 
 
+class DeltaIEC2Statistic(dict):
+    def __init__(self, mut, norm, **kwargs):
+        super(DeltaIEC2Statistic, self).__init__(**kwargs)
+
+        self.mut = mut
+        self.norm = norm
+        self.meth = 'C2' if 'c2data' in self.norm else 'IE'
+        self._delta()
+
+    def _delta(self):
+        """
+        Calculates the delta statistics. Should check for any consistencies that
+        would cause verbosity levels to change, and it should change them
+        accordingly in the child classes
+        """
+        for key in self.norm:
+            if key == 'sigma':
+                self[key] = (self.mut[key] + self.norm[key]) / 2
+            elif key == 'ieframes':
+                self[key] = self.norm[key]
+            elif key == 'c2data':
+                self[key] = self.mut[key] - self.norm[key]
+            elif key == 'c2_std':
+                self[key] = get_std(self.mut[key], self.norm[key])
+            elif key == 'c2_ci':
+                continue
+            else:
+                self[key] = self.mut[key].corr_sub(self.norm[key])
+
+    def _print_vectors(self, csvwriter):
+        """ Output all of the energy terms including the differences if we're
+            doing a single trajectory simulation and there are no missing terms
+        """
+
+        csvwriter.writerow(['Delta Delta Entropy Terms (Mutant - Normal)'])
+
+        # write the header
+        csvwriter.writerow(['Frame #'] + list(self.keys()))
+
+        # write out each frame
+        c = self.norm.INPUT['nmstartframe'] if isinstance(self.norm, NMODEout) else self.norm.INPUT['startframe']
+        for i in range(self.numframes):
+            csvwriter.writerow([c] + [round(self[key][i], 2) for key in self])
+            c += self.norm.INPUT['nminterval'] if isinstance(self.norm, NMODEout) else self.norm.INPUT['interval']
+        csvwriter.writerow([])
+
+    def summary_output(self):
+        summary = self.summary()
+        text = []
+        for row in summary:
+            key, sigma, avg, std = row
+            if isinstance(avg, str):
+                text.extend((f'{key:15s} {sigma:>14s} {avg:>16s} {std:>14s}', sep))
+            else:
+                text.append(f"Δ{key:14s} {sigma:14.2f} {avg:16.2f} {std:14.2f}")
+        return '\n'.join(text) + '\n\n'
+
+    def summary(self):
+        """ Returns a string printing the summary of the binding statistics """
+        if self.meth == 'C2':
+            return [
+                [
+                    'Method',
+                    'σ(Int. Energy)',
+                    'C2 Value',
+                    'SD'
+                ],
+                ['C2', float(self['sigma']), float(self['c2data']), float(self['c2_std'])]
+            ]
+        avg = float(self['data'][-self['ieframes']:].mean())
+        stdev = float(self['data'][-self['ieframes']:].stdev())
+
+        return [
+            [
+                'Method',
+                'σ(Int. Energy)',
+                'Average',
+                'SD'
+            ],
+            ['IE', self['sigma'], avg, stdev]
+        ]
+
+
 class DecompOut(dict):
     """ Class for decomposition output file to collect statistics and output them """
     indicator = "                    PRINT DECOMP - TOTAL ENERGIES"
