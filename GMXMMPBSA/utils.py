@@ -665,7 +665,7 @@ def remove(flag, fnpre='_GMXMMPBSA_'):
             if (
                     fil.startswith(fnpre) or fil.startswith(f"#{fnpre}") or
                     bool(re.match('#?(COM|REC|LIG|MUT_COM|MUT_REC|MUT_LIG)_traj_(\d)\.xtc', fil)) or
-                    fil == 'RESULTS_gmx_MMPBSA.h5' or
+                    fil == 'COMPACT_MMXSA_RESULTS.mmxsa' or
                     fil in other_files or
                     fil in result_files):
                 os.remove(fil)

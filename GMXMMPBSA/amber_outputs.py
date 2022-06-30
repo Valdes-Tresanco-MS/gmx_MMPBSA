@@ -28,7 +28,6 @@ from copy import deepcopy
 from math import sqrt
 from GMXMMPBSA.exceptions import (OutputError, LengthError, DecompError)
 from GMXMMPBSA.utils import EnergyVector, get_std
-import h5py
 from types import SimpleNamespace
 import numpy as np
 import sys
@@ -107,14 +106,6 @@ class AmberOutput(dict):
         for key in self.composite_keys:
             self[key] = EnergyVector(numframes)
         AmberOutput._read(self)
-        self._fill_composite_terms()
-
-    def parse_from_h5(self, d: dict):
-        for key in d:
-            if key in ['']:
-                continue
-            self[key] = EnergyVector(d[key][()])
-        self.is_read = True
         self._fill_composite_terms()
 
     def _print_vectors(self, csvwriter):
@@ -267,15 +258,6 @@ class IEout(dict):
                 f += 1
         self['iedata'] = self['data'][-self['ieframes']:]
 
-    def parse_from_h5(self, d):
-        for model in d:
-            self[model] = {}
-            for term in d[model]:
-                if term in ['data', 'iedata']:
-                    self[model][term] = EnergyVector(d[model][term][()])
-                else:
-                    self[model][term] = d[model][term][()]
-
     def _print_vectors(self, csvwriter):
         """ Prints the energy vectors to a CSV file for easy viewing
             in spreadsheets
@@ -342,12 +324,6 @@ class C2out(dict):
                 elif line.startswith('C2 Entropy CI:'):
                     self['c2_ci'] = [float(line.strip('\n').split()[-2]), float(line.strip('\n').split()[-1])]
 
-    def parse_from_h5(self, d):
-        for model in d:
-            self[model] = {}
-            for term in d[model]:
-                self[model][term] = d[model][term][()]
-
     def summary_output(self):
         summary = self.summary()
         text = []
@@ -386,14 +362,6 @@ class QHout(dict):
         self.temperature = temp
         self.stability = False
         self._read()
-
-    def parse_from_h5(self, d):
-        # key: complex, receptor, ligand, delta
-        for key in d:
-            # key1: Translational, Rotational, Vibrational, Total
-            self[key] = {}
-            for key1 in d[key]:
-                self[key][key1] = d[key][key1][()]
 
     def summary_output(self):
         text = ['           Translational      Rotational      Vibrational           Total',
@@ -1246,20 +1214,6 @@ class DecompOut(dict):
         self._read()
         self._fill_composite_terms()
 
-    def parse_from_h5(self, d):
-        for term in d:
-            self[term] = {}
-            for res in d[term]:
-                self[term][res] = {}
-                for res_e in d[term][res]:
-                    if isinstance(d[term][res][res_e], np.ndarray):
-                        self[term][res][res_e] = EnergyVector(d[term][res][res_e][()])
-                    else:
-                        self[term][res][res_e] = {}
-                        for res2 in d[term][res][res_e]:
-                            self[term][res][res_e][res2] = EnergyVector(d[term][res][res_e][res2][()])
-        self._fill_composite_terms()
-
     def _get_num_terms(self):
         """ Gets the number of terms in the output file """
         with open('%s.%d' % (self.basename, 0), 'r') as decfile:
@@ -1781,90 +1735,6 @@ class PairDecompBinding(DecompBinding):
                 text.append('')
 
         return text if _output_format else '\n'.join(text) + '\n\n'
-
-
-class H5Output:
-    def __init__(self, fname):
-        self.h5f = h5py.File(fname, 'r')
-        self.app_namespace = SimpleNamespace(INPUT={}, FILES=SimpleNamespace(), INFO={})
-        self.calc_types = SimpleNamespace(normal={}, mutant={}, decomp_normal={}, decomp_mutant={})
-
-        for key in self.h5f:
-            if key in ['normal', 'mutant']:
-                self._h52e(key)
-            elif key in ['decomp_normal', 'decomp_mutant']:
-                self._h52decomp(key)
-            elif key in ['INFO', 'INPUT', 'FILES']:
-                self._h52app_namespace(key)
-        self.h5f.close()
-
-    def _h52app_namespace(self, key):
-        for x in self.h5f[key]:
-            tvar = self.h5f[key][x][()]
-            if isinstance(tvar, bytes):
-                cvar = tvar.decode()
-            elif isinstance(tvar, np.float):
-                cvar = None if np.isnan(tvar) else tvar
-            elif isinstance(tvar, np.ndarray):
-                cvar = [x.decode() if isinstance(x, bytes) else x for x in tvar if isinstance(x, bytes)]
-            else:
-                cvar = tvar
-            if key == 'INPUT':
-                self.app_namespace.INPUT[x] = cvar
-            elif key == 'FILES':
-                setattr(self.app_namespace.FILES, x, cvar)
-            else:
-                self.app_namespace.INFO[x] = cvar
-
-    def _h52e(self, key):
-
-        GBClass = QMMMout if self.app_namespace.INPUT['ifqnt'] else GBout
-        # Determine which kind of RISM output class we are based on std/gf and
-        # polardecomp
-        if self.app_namespace.INPUT['polardecomp']:
-            RISM_GF = PolarRISM_gf_Out
-            RISM_Std = PolarRISM_std_Out
-            RISM_PCplus = PolarRISM_pcplus_Out
-        else:
-            RISM_GF = RISM_gf_Out
-            RISM_Std = RISM_std_Out
-            RISM_PCplus = RISM_pcplus_Out
-        energy_outkeys = {'nmode': NMODEout, 'gb': GBClass, 'pb': PBout, 'rism std': RISM_Std, 'rism gf': RISM_GF,
-                          'rism pcplus': RISM_PCplus}
-        ent_outkeys = {'ie': IEout, 'c2': C2out}
-        # key: normal or mutant
-        calc_types = getattr(self.calc_types, key)
-        # key  Energy: [gb, pb, rism std, rism gf], Decomp: [gb, pb], Entropy: [nmode, qh, ie, c2]
-        for key1 in self.h5f[key]:
-            # if key in ['gb', 'pb', 'rism std', 'rism gf', 'nmode', 'qh', 'ie', 'c2']:
-            if key1 == 'qh':
-                calc_types[key1] = QHout()
-                calc_types[key1].parse_from_h5(self.h5f[key][key1])
-                continue
-            elif key1 in ent_outkeys:
-                calc_types[key1] = ent_outkeys[key1]()
-                calc_types[key1].parse_from_h5(self.h5f[key][key1])
-                continue
-            else:
-                calc_types[key1] = {}
-            # key2 is complex, receptor, ligand, delta or model for ie and c2
-            for key2 in self.h5f[key][key1]:
-                if key1 not in energy_outkeys:
-                    continue
-                calc_types[key1][key2] = energy_outkeys[key1](key2, self.app_namespace.INPUT,
-                                                              self.app_namespace.INFO['using_chamber'])
-                calc_types[key1][key2].parse_from_h5(self.h5f[key][key1][key2])
-
-    def _h52decomp(self, key):
-        DecompClass = DecompOut if self.app_namespace.INPUT['idecomp'] in [1, 2] else PairDecompOut
-        calc_types = getattr(self.calc_types, key)
-        for key1 in self.h5f[key]:
-            # model
-            calc_types[key1] = {}
-            # key2 is complex, receptor, ligand, delta
-            for key2 in self.h5f[key][key1]:
-                calc_types[key1][key2] = DecompClass(key2)
-                calc_types[key1][key2].parse_from_h5(self.h5f[key][key1][key2])
 
 
 def _get_cpptraj_surf(fname):

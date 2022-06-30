@@ -97,7 +97,6 @@ class InfoFile(object):
 
     def read_info(self, name=None):
         """ Reads a _MMPBSA_info file and populates the app """
-        # FIXME: get this info from the info or h5 file
         from GMXMMPBSA.commandlineparser import OptionList
         # Give self.app a FILES attribute if it does not have one yet before
         # trying to modify it

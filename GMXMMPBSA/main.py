@@ -656,7 +656,7 @@ class MMPBSA_App(object):
             logging.info('Opening gmx_MMPBSA_ana to analyze results...\n')
             ifile = Path(f'{self.FILES.prefix}info')
             if not ifile.exists():
-                ifile = Path('RESULTS_gmx_MMPBSA.h5')
+                ifile = Path('COMPACT_MMXSA_RESULTS.mmxsa')
 
             g = subprocess.Popen(['gmx_MMPBSA_ana', '-f', ifile.as_posix()])
             if g.wait():

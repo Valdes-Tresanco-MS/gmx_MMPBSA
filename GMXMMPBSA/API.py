@@ -226,7 +226,6 @@ class MMPBSA_API():
 
     def load_file(self, fname: Union[Path, str] = None):
         """
-        Load the info or h5 file and extract the info
 
         Args:
             fname: String- or Path-like file reference
