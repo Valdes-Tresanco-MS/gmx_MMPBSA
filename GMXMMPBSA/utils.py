@@ -190,38 +190,6 @@ def calc_sum(vector1, vector2, mut=False) -> (float, float):
     return dmean, dstd
 
 
-def calc_sub(vector1, vector2, mut=False) -> (float, float):
-    """
-    Calculate the mean and std of the two vector/numbers subtraction
-    Args:
-        vector1: EnergyVector or float
-        vector2: EnergyVector or float
-        mut: If mutant, the SD is the standard deviation of the array
-
-    Returns:
-        dmean: Mean of the subtraction
-        dstd: Standard deviation
-    """
-    if isinstance(vector2, EnergyVector) and isinstance(vector1, EnergyVector):
-        if mut:
-            d = vector2 - vector1
-            dmean = float(d.mean())
-            dstd = float(d.std())
-        else:
-            dmean = float(vector2.mean() - vector1.mean())
-            dstd = float(get_std(vector2.std(), vector1.std()))
-    elif isinstance(vector2, EnergyVector) and isinstance(vector1, (int, float)):
-        dmean = float(vector2.mean() - vector1)
-        dstd = vector2.std()
-    elif isinstance(vector2, (int, float)) and isinstance(vector1, EnergyVector):
-        dmean = float(vector2 - vector1.mean())
-        dstd = vector1.std()
-    else:
-        dmean = float(vector2 - vector1)
-        dstd = 0.0
-    return dmean, dstd
-
-
 def create_input_args(args: list):
     if not args or 'all' in args:
         return 'general', 'gb', 'pb', 'ala', 'nmode', 'decomp', 'rism'

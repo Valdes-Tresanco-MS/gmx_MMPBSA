@@ -27,7 +27,7 @@ import math
 import pickle
 import shutil
 from multiprocessing.pool import ThreadPool
-from copy import copy, deepcopy
+from copy import copy
 from typing import Union
 
 from GMXMMPBSA.calculation import InteractionEntropyCalc, C2EntropyCalc
@@ -35,8 +35,7 @@ from GMXMMPBSA.calculation import InteractionEntropyCalc, C2EntropyCalc
 from GMXMMPBSA import infofile, main, utils
 from GMXMMPBSA.exceptions import NoFileExists
 from GMXMMPBSA.fake_mpi import MPI
-from GMXMMPBSA.amber_outputs import (H5Output, BindingStatistics, IEout, C2out, DeltaBindingStatistics,
-                                     DecompBinding, PairDecompBinding)
+from GMXMMPBSA.amber_outputs import IEout, C2out
 import pandas as pd
 from pathlib import Path
 import os

@@ -1002,9 +1002,11 @@ class MMPBSA_App(object):
         # Quasi-harmonic analysis is a special-case, so handle that separately
         if INPUT['qh_entropy']:
             if not INPUT['mutant_only']:
-                self.calc_types.normal['qh'] = QHout(self.pre + 'cpptraj_entropy.out', INPUT['temperature'])
+                self.calc_types.normal['qh'] = QHout(f'{self.pre}cpptraj_entropy.out', INPUT['temperature'])
+
             if INPUT['alarun']:
-                self.calc_types.mutant['qh'] = QHout(self.pre + 'mutant_cpptraj_entropy.out', INPUT['temperature'])
+                self.calc_types.mutant['qh'] = QHout(f'{self.pre}mutant_cpptraj_entropy.out', INPUT['temperature'])
+
         # Determine if our GB is QM/MM or not
         GBClass = QMMMout if INPUT['ifqnt'] else GBout
         # Determine which kind of RISM output class we are based on std/gf and
@@ -1099,7 +1101,7 @@ class MMPBSA_App(object):
         calculated = False
         for key in allowed_met:
             if self.INPUT['interaction_entropy']:
-                if key in self.calc_types.normal:
+                if not self.INPUT['mutant_only'] and key in self.calc_types.normal:
                     if from_calc:
                         edata = self.calc_types.normal[key]['delta']['GGAS']
                         ie = InteractionEntropyCalc(edata, self.INPUT)
@@ -1125,7 +1127,7 @@ class MMPBSA_App(object):
                         self.calc_types.mutant['ie'], self.calc_types.normal['ie'])
 
             if self.INPUT['c2_entropy']:
-                if key in self.calc_types.normal:
+                if not self.INPUT['mutant_only'] and key in self.calc_types.normal:
                     if from_calc:
                         edata = self.calc_types.normal[key]['delta']['GGAS']
                         c2 = C2EntropyCalc(edata, self.INPUT)
