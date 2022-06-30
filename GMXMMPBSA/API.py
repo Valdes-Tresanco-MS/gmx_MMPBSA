@@ -41,7 +41,7 @@ from pathlib import Path
 import os
 from types import SimpleNamespace
 
-from GMXMMPBSA.utils import emapping, flatten
+from GMXMMPBSA.utils import emapping, flatten, mask2list
 
 
 def _remove_empty_charts(data):
@@ -867,6 +867,7 @@ class MMPBSA_API():
             output_file = app.output_file
             decomp_output_file = app.decomp_output_file if app.INPUT['decomprun'] else None
             size = app.size
+            app.resl = mask2list(app.FILES.complex_fixed, app.INPUT['receptor_mask'], app.INPUT['ligand_mask'])
 
         INFO = {'COM_PDB': com_pdb,
                 'input_file': input_file,
