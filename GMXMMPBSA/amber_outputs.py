@@ -27,7 +27,7 @@ import logging
 from copy import deepcopy
 from math import sqrt
 from GMXMMPBSA.exceptions import (OutputError, LengthError, DecompError)
-from GMXMMPBSA.utils import EnergyVector
+from GMXMMPBSA.utils import EnergyVector, get_std
 import h5py
 from types import SimpleNamespace
 import numpy as np
@@ -42,6 +42,26 @@ idecompString = ['idecomp = 0: No decomposition analysis',
                  'idecomp = 4: Pairwise decomp adding 1-4 interactions to EEL and VDW.']
 sep = '-------------------------------------------------------------------------------'
 
+data_key_owner = {'BOND': ['GGAS', 'TOTAL'], 'ANGLE': ['GGAS', 'TOTAL'], 'DIHED': ['GGAS', 'TOTAL'],
+                  'VDWAALS': ['GGAS', 'TOTAL'], 'EEL': ['GGAS', 'TOTAL'], '1-4 VDW': ['GGAS', 'TOTAL'],
+                  '1-4 EEL': ['GGAS', 'TOTAL'],
+                  # charmm
+                  'UB': ['GGAS', 'TOTAL'], 'IMP': ['GGAS', 'TOTAL'], 'CMAP': ['GGAS', 'TOTAL'],
+                  # non lineal PB
+                  'EEL+EPB': ['TOTAL'],
+                  # PB
+                  'EPB': ['GSOLV', 'TOTAL'], 'ENPOLAR': ['GSOLV', 'TOTAL'], 'EDISPER': ['GSOLV', 'TOTAL'],
+                  # GB
+                  'EGB': ['GSOLV', 'TOTAL'], 'ESURF': ['GSOLV', 'TOTAL'],
+                  # QM/GB
+                  'ESCF': ['GGAS', 'TOTAL'],
+                  # RISM
+                  'POLAR SOLV': ['GSOLV', 'TOTAL'], 'APOLAR SOLV': ['GSOLV', 'TOTAL'],
+                  'ERISM': ['GSOLV', 'TOTAL'],
+                  # NMODE and QH
+                  'TRANSLATIONAL': ['TOTAL'], 'ROTATIONAL': ['TOTAL'], 'VIBRATIONAL': ['TOTAL']
+                  }
+
 
 class AmberOutput(dict):
     """
@@ -53,6 +73,7 @@ class AmberOutput(dict):
 
     def __init__(self, mol: str, INPUT, chamber=False, **kwargs):
         super(AmberOutput, self).__init__(**kwargs)
+        self.numframes = None
         self.mol = mol
         self.INPUT = INPUT
         self.chamber = chamber
@@ -68,23 +89,6 @@ class AmberOutput(dict):
 
         self.data_keys = ['BOND', 'ANGLE', 'DIHED', 'VDWAALS', 'EEL', '1-4 VDW', '1-4 EEL']
         self.chamber_keys = ['CMAP', 'IMP', 'UB']
-        self.data_key_owner = {'BOND': ['GGAS', 'TOTAL'], 'ANGLE': ['GGAS', 'TOTAL'], 'DIHED': ['GGAS', 'TOTAL'],
-                               'VDWAALS': ['GGAS', 'TOTAL'], 'EEL': ['GGAS', 'TOTAL'], '1-4 VDW': ['GGAS', 'TOTAL'],
-                               '1-4 EEL': ['GGAS', 'TOTAL'],
-                               # charmm
-                               'UB': ['GGAS', 'TOTAL'], 'IMP': ['GGAS', 'TOTAL'], 'CMAP': ['GGAS', 'TOTAL'],
-                               # non lineal PB
-                               'EEL+EPB': ['TOTAL'],
-                               # PB
-                               'EPB': ['GSOLV', 'TOTAL'], 'ENPOLAR': ['GSOLV', 'TOTAL'], 'EDISPER': ['GSOLV', 'TOTAL'],
-                               # GB
-                               'EGB': ['GSOLV', 'TOTAL'], 'ESURF': ['GSOLV', 'TOTAL'],
-                               # QM/GB
-                               'ESCF': ['GGAS', 'TOTAL'],
-                               # RISM
-                               'POLAR SOLV': ['GSOLV', 'TOTAL'], 'APOLAR SOLV': ['GSOLV', 'TOTAL'],
-                               'ERISM': ['GSOLV', 'TOTAL'],
-                               }
         self.composite_keys = ['GGAS', 'GSOLV', 'TOTAL']
 
         if self.chamber:
@@ -96,6 +100,7 @@ class AmberOutput(dict):
         self.num_files = num_files
         self.basename = basename
         self.temperature = self.INPUT['temperature']
+        self.numframes = numframes
 
         for key in self.data_keys:
             self[key] = EnergyVector(numframes)
@@ -125,7 +130,7 @@ class AmberOutput(dict):
 
         # write out each frame
         c = self.INPUT['nmstartframe'] if self.__class__ == NMODEout else self.INPUT['startframe']
-        for i in range(len(self[print_keys[0]])):
+        for i in range(self.numframes):
             csvwriter.writerow([c] + [round(self[key][i], 2) for key in print_keys])
             c += self.INPUT['nminterval'] if self.__class__ == NMODEout else self.INPUT['interval']
 
@@ -173,18 +178,18 @@ class AmberOutput(dict):
                 continue
             avg = float(self[key].mean())
             stdev = float(self[key].stdev())
-            semp = float(stdev / sqrt(len(self[key])))
+            semp = float(self[key].semp())
             std = float(self[key].std())
-            sem = float(std / sqrt(len(self[key])))
+            sem = float(self[key].sem())
             summary_list.append([key, avg, stdev, std, semp, sem])
 
         for key in self.composite_keys:
             # Now print out the composite terms
             avg = float(self[key].mean())
             stdev = float(self[key].stdev())
-            semp = float(stdev / sqrt(len(self[key])))
+            semp = float(self[key].semp())
             std = float(self[key].std())
-            sem = float(std / sqrt(len(self[key])))
+            sem = float(self[key].sem())
             summary_list.append([key, avg, stdev, std, semp, sem])
 
         return summary_list
@@ -204,6 +209,9 @@ class AmberOutput(dict):
 
         self.is_read = True
 
+    def _get_energies(self, output_file):
+        pass
+
     def _extra_reading(self, fileno):
         pass
 
@@ -217,12 +225,11 @@ class AmberOutput(dict):
         on whether or not certain terms need to be added in)
         """
 
-        length = len(self['EEL']) if 'EEL' in self else len(self['TRANSLATIONAL'])
         for key in self.composite_keys:
-            self[key] = EnergyVector(length)
+            self[key] = EnergyVector(self.numframes)
 
         for key in self.data_keys:
-            for component in self.data_key_owner[key]:
+            for component in data_key_owner[key]:
                 self[component] = self[key] + self[component]
 
 
@@ -389,18 +396,11 @@ class QHout(dict):
                 self[key][key1] = d[key][key1][()]
 
     def summary_output(self):
-        text = list(
-            (
-                '           Translational      Rotational      Vibrational           Total',
-                'Complex   %13.4f %15.4f %16.4f %15.4f\n'
-                % (
-                    self['complex']['TRANSLATIONAL'],
-                    self['complex']['ROTATIONAL'],
-                    self['complex']['VIBRATIONAL'],
-                    self['complex']['TOTAL'],
-                ),
-            )
-        )
+        text = ['           Translational      Rotational      Vibrational           Total',
+                'Complex   %13.4f %15.4f %16.4f %15.4f\n' % (self['complex']['TRANSLATIONAL'],
+                                                             self['complex']['ROTATIONAL'],
+                                                             self['complex']['VIBRATIONAL'],
+                                                             self['complex']['TOTAL'],)]
 
         if not self.stability:
             text.extend(['Receptor  %13.4f %15.4f %16.4f %15.4f\n' % (self['receptor']['TRANSLATIONAL'],
@@ -513,7 +513,6 @@ class NMODEout(AmberOutput):
 
         # Other aspects of AmberOutputs, which are just blank arrays
         self.composite_keys = ['TOTAL']
-        self.data_key_owner = {'TRANSLATIONAL': ['TOTAL'], 'ROTATIONAL': ['TOTAL'], 'VIBRATIONAL': ['TOTAL']}
 
     def _get_energies(self, outfile):
         """ Parses the energy terms from the output file. This will parse 1 line
@@ -837,6 +836,8 @@ class BindingStatistics(dict):
         self.com = com
         self.rec = rec
         self.lig = lig
+        self.mol = 'delta'
+        self.numframes = self.com.numframes
         self.INPUT = self.com.INPUT
         self.chamber = chamber
         self.traj_protocol = traj_protocol
@@ -861,16 +862,15 @@ class BindingStatistics(dict):
         """
         # First thing we do is check to make sure that all of the terms that
         # should *not* be printed actually cancel out (i.e. bonded terms)
-        if not isinstance(self.com, NMODEout):
-            if self.traj_protocol == 'STP':
-                TINY = 0.005
-                for key in self.st_null:
-                    diff = self.com[key] - self.rec[key] - self.lig[key]
-                    if diff.abs_gt(TINY):
-                        self.inconsistent = True
-                        logging.warning(f"{key} component is reported as inconsistent. Please, check the output file "
-                                        f"for more details")
-                        break
+        if not isinstance(self.com, NMODEout) and self.traj_protocol == 'STP':
+            TINY = 0.005
+            for key in self.st_null:
+                diff = self.com[key] - self.rec[key] - self.lig[key]
+                if diff.abs_gt(TINY):
+                    self.inconsistent = True
+                    logging.warning(f"{key} component is reported as inconsistent. Please, check the output file "
+                                    f"for more details")
+                    break
 
         for key in self.com.data_keys:
             if self.traj_protocol == 'STP':
@@ -879,33 +879,30 @@ class BindingStatistics(dict):
             else:
                 self[key] = self.com[key] - self.rec[key] - self.lig[key]
         for key in self.com.composite_keys:
-            if isinstance(self.com, NMODEout):
-                k = 'TRANSLATIONAL'
-            else:
-                k = 'VDWAALS'
-            self[key] = EnergyVector(len(self.com[k]))
+            self[key] = EnergyVector(self.numframes)
             self.composite_keys.append(key)
         for key in self.com.data_keys:
             if self.traj_protocol == 'STP' and key in self.st_null:
                 continue
-            for component in self.com.data_key_owner[key]:
+            for component in data_key_owner[key]:
                 self[component] = self[key] + self[component]
 
     def _print_vectors(self, csvwriter):
         """ Output all of the energy terms including the differences if we're
             doing a single trajectory simulation and there are no missing terms
         """
-        csvwriter.writerow(['Complex Energy Terms'])
+        term_text = 'Entropy' if isinstance(self.com, NMODEout) else 'Energy'
+        csvwriter.writerow([f'Complex {term_text} Terms'])
         self.com._print_vectors(csvwriter)
         csvwriter.writerow([])
-        csvwriter.writerow(['Receptor Energy Terms'])
+        csvwriter.writerow([f'Receptor {term_text} Terms'])
         self.rec._print_vectors(csvwriter)
         csvwriter.writerow([])
-        csvwriter.writerow(['Ligand Energy Terms'])
+        csvwriter.writerow([f'Ligand {term_text} Terms'])
         self.lig._print_vectors(csvwriter)
         csvwriter.writerow([])
 
-        csvwriter.writerow(['Delta Energy Terms'])
+        csvwriter.writerow([f'Delta {term_text} Terms'])
         print_keys = list(self.data_keys)
         # Add on the composite keys
         print_keys += self.composite_keys
@@ -915,7 +912,7 @@ class BindingStatistics(dict):
 
         # write out each frame
         c = self.com.INPUT['nmstartframe'] if isinstance(self.com, NMODEout) else self.com.INPUT['startframe']
-        for i in range(len(self[print_keys[0]])):
+        for i in range(self.numframes):
             csvwriter.writerow([c] + [round(self[key][i], 2) for key in print_keys])
             c += self.com.INPUT['nminterval'] if isinstance(self.com, NMODEout) else self.com.INPUT['interval']
         csvwriter.writerow([])
@@ -988,52 +985,40 @@ class BindingStatistics(dict):
             # Skip the composite terms, since we print those at the end
             if key in self.composite_keys:
                 continue
-            # Catch special case of NMODEout classes
-            if isinstance(self.com, NMODEout) and key == 'TOTAL':
-                printkey = '\n-TΔS binding ='
-            else:
-                printkey = key
             # Now print out the stats
             stdev = float(self[key].stdev())
             avg = float(self[key].mean())
             std = float(self[key].std())
-            if not self.missing_terms:
-                num_frames = len(self[key])
-            else:
-                num_frames = min(len(self.com[key]), len(self.rec[key]), len(self.lig[key]))
-            semp = float(stdev / sqrt(num_frames))
-            sem = float(std / sqrt(num_frames))
-            summary_list.append([printkey, avg, stdev, std, semp, sem])
+            semp = float(self[key].semp())
+            sem = float(self[key].sem())
+            summary_list.append([key, avg, stdev, std, semp, sem])
 
         for key in self.composite_keys:
             # Now print out the composite terms
             stdev = float(self[key].stdev())
             avg = float(self[key].mean())
             std = float(self[key].std())
-            if not self.missing_terms:
-                num_frames = len(self[key])
-            else:
-                num_frames = min(len(self.com[key]), len(self.rec[key]), len(self.lig[key]))
-            semp = float(stdev / sqrt(num_frames))
-            sem = float(std / sqrt(num_frames))
+            semp = float(self[key].semp())
+            sem = float(self[key].sem())
             summary_list.append([key, avg, stdev, std, semp, sem])
 
         return summary_list
 
 
-class DeltaBindingStatistics(dict):
-    """ Base class for compiling the binding statistics """
+class DeltaDeltaStatistics(dict):
+    """ Base class for compiling the binding statistics. Include """
     st_null = ['BOND', 'ANGLE', 'DIHED', '1-4 VDW', '1-4 EEL']
 
-    def __init__(self, mut: BindingStatistics, norm: BindingStatistics, **kwargs):
-        super(DeltaBindingStatistics, self).__init__(**kwargs)
+    def __init__(self, mut, norm, **kwargs):
+        super(DeltaDeltaStatistics, self).__init__(**kwargs)
 
         self.mut = mut
         self.norm = norm
-
+        self.numframes = self.norm.numframes
+        self.mol = self.norm.mol
         self.data_keys = self.norm.data_keys
         self.composite_keys = ['GGAS', 'GSOLV', 'TOTAL']
-
+        self.term_text = 'Entropy' if 'ROTATIONAL' in self.data_keys else 'Energy'
         self._delta()
 
     def _delta(self):
@@ -1048,24 +1033,24 @@ class DeltaBindingStatistics(dict):
             self[key] = self.mut[key].corr_sub(self.norm[key])
 
         for key in self.composite_keys:
-            self[key] = EnergyVector(len(self.norm['VDWAALS']))
+            self[key] = EnergyVector(self.numframes)
             # self.composite_keys.append(key)
         for key in self.data_keys:
-            for component in self.norm.com.data_key_owner[key]:
+            for component in data_key_owner[key]:
                 self[component] = self[key] + self[component]
 
     def _print_vectors(self, csvwriter):
         """ Output all of the energy terms including the differences if we're
             doing a single trajectory simulation and there are no missing terms
         """
-        csvwriter.writerow(['Delta Delta Energy Terms (Mutant - Normal)'])
+        csvwriter.writerow([f'Delta Delta {self.term_text} Terms (Mutant - Normal)'])
 
         # write the header
         csvwriter.writerow(['Frame #'] + list(self.keys()))
 
         # write out each frame
         c = self.norm.INPUT['nmstartframe'] if isinstance(self.norm, NMODEout) else self.norm.INPUT['startframe']
-        for i in range(len(self['VDWAALS'])):
+        for i in range(self.numframes):
             csvwriter.writerow([c] + [round(self[key][i], 2) for key in self])
             c += self.norm.INPUT['nminterval'] if isinstance(self.norm, NMODEout) else self.norm.INPUT['interval']
         csvwriter.writerow([])
@@ -1093,38 +1078,26 @@ class DeltaBindingStatistics(dict):
     def summary(self):
         """ Returns a string printing the summary of the binding statistics """
 
-        if isinstance(self.norm.com, NMODEout):
-            col_name = '%-16s' % 'Entropy Term'
-        else:
-            col_name = '%-16s' % 'Energy Component'
-
         summary_list = [
-            [col_name] + ['Average', 'SD(Prop.)', 'SD', 'SEM(Prop.)', 'SEM']
+            [f'{self.term_text} Component'] + ['Average', 'SD(Prop.)', 'SD', 'SEM(Prop.)', 'SEM']
         ]
 
         for key in self.norm.data_keys:
-            # Catch special case of NMODEout classes
-            if isinstance(self.norm.com, NMODEout) and key == 'TOTAL':
-                printkey = '\n-TΔΔS binding ='
-            else:
-                printkey = key
             # Now print out the stats
             stdev = float(self[key].stdev())
             avg = float(self[key].mean())
             std = float(self[key].std())
-            num_frames = len(self[key])
-            sem = float(std / sqrt(num_frames))
-            semp = float(stdev / sqrt(num_frames))
-            summary_list.append([printkey, avg, stdev, std, semp, sem])
+            sem = float(self[key].sem())
+            semp = float(self[key].semp())
+            summary_list.append([key, avg, stdev, std, semp, sem])
 
         for key in self.composite_keys:
             # Now print out the composite terms
             stdev = float(self[key].stdev())
             avg = float(self[key].mean())
             std = float(self[key].std())
-            num_frames = len(self[key])
-            sem = float(std / sqrt(num_frames))
-            semp = float(stdev / sqrt(num_frames))
+            sem = float(self[key].sem())
+            semp = float(self[key].semp())
             summary_list.append([key, avg, stdev, std, semp, sem])
 
         return summary_list
@@ -1223,6 +1196,7 @@ class DecompOut(dict):
     def __init__(self, mol: str, **kwargs):
         super(DecompOut, self).__init__(**kwargs)
 
+        self.numframes = None
         self.mut = None
         self.mol = mol
         self.decfile = None
@@ -1508,9 +1482,9 @@ class PairDecompOut(DecompOut):
         _output_format = 0 if output_format == 'ascii' else 1
         text = []
         if _output_format:
-            text.extend([[self.mol.capitalize() + ':']])
+            text.extend([[f'{self.mol.capitalize()}:']])
         else:
-            text.extend([self.mol.capitalize() + ':'])
+            text.extend([f'{self.mol.capitalize()}:'])
         for term in self:
             if _output_format:
                 text.extend([[self.descriptions[term]],
