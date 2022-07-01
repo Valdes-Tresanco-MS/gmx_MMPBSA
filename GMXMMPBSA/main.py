@@ -1222,7 +1222,7 @@ class MMPBSA_App(object):
                 self.calc_types.decomp_mutant[key] = {'complex': DecompClass('Mutant-Complex')}
                 self.calc_types.decomp_mutant[key]['complex'].parse_from_file(
                     (f'{self.pre}mutant_' + basename[i] % 'complex'),
-                    self.resl,
+                    com_list,
                     INPUT,
                     surften,
                     self.mpi_size,
