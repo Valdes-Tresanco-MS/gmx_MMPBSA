@@ -1,0 +1,15 @@
+Sample input file for GB calculation
+#This input file is meant to show only that gmx_MMPBSA works. Although, we tried to use the input files as recommended in the
+#Amber manual, some parameters have been changed to perform more expensive calculations in a reasonable amount of time. Feel free to change the parameters
+#according to what is better for your system.
+
+&general
+sys_name="Prot-DNA"
+startframe=5
+endframe=14
+PBRadii=4
+forcefields="oldff/leaprc.ff99SB"
+/
+&gb
+igb=8, saltcon=0.150, intdiel=10
+/
