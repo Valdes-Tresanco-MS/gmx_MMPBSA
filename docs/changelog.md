@@ -3,6 +3,31 @@ template: main.html
 title: Changelog
 ---
 # Changelog
+
+## gmx_MMPBSA v1.5.6 (07/06/2022)
+
+### Fix
+
+#### gmx_MMPBSA
+
+- Inconsistent decomposition output (#246, #248)
+- IE and C2 entropies calculation fail when rewrite-output (#253)
+- Delta Delta Entropies' values are incorrect (#257)
+- Loading binary file fails when alanine scanning is performed (#258)
+
+#### gmx_MMPBSA_ana
+
+- Mutant-Normal data is not computed or displayed (#254)
+- Inconsistent energy values in PyMol visualization (#255)
+
+### Changes
+
+#### gmx_MMPBSA
+
+- Re-implementation of compact binary output file (#249)
+
+---
+
 ## gmx_MMPBSA v1.5.5 (06/10/2022)
 
 ### Additions
@@ -42,6 +67,7 @@ title: Changelog
 - Added a new tutorial for correlation analysis (#194)
 
 ### Fix
+
 #### gmx_MMPBSA_ana
 - Close gmx_MMPBSA_ana properly when the selection dialog is rejected
 - Compatibility with previous versions (`< v1.5.2`)
@@ -64,6 +90,7 @@ title: Changelog
 
 
 ### Changes
+
 #### gmx_MMPBSA
 - Improved IE and C2 calculation
 
