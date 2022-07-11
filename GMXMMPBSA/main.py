@@ -31,7 +31,8 @@ import logging
 from GMXMMPBSA import utils, __version__
 from GMXMMPBSA.amber_outputs import (QHout, NMODEout, QMMMout, GBout, PBout, PolarRISM_std_Out, RISM_std_Out,
                                      PolarRISM_gf_Out, RISM_gf_Out, PolarRISM_pcplus_Out, RISM_pcplus_Out,
-                                     BindingStatistics, IEout, C2out, DeltaDeltaStatistics, DeltaIEC2Statistic)
+                                     BindingStatistics, IEout, C2out, DeltaDeltaStatistics, DeltaIEC2Statistic,
+                                     DeltaDeltaQH)
 from GMXMMPBSA.calculation import (CalculationList, EnergyCalculation, PBEnergyCalculation,
                                    NmodeCalc, QuasiHarmCalc, CopyCalc, PrintCalc, LcpoCalc, MolsurfCalc,
                                    InteractionEntropyCalc, C2EntropyCalc)
@@ -506,7 +507,7 @@ class MMPBSA_App(object):
         # Only master does entropy calculations
         if self.INPUT['qh_entropy']:
             self.calc_list.append(
-                PrintCalc('\nBeginning quasi-harmonic calculations with %s' %
+                PrintCalc('Beginning quasi-harmonic calculations with %s' %
                           progs['qh']), timer_key='qh')
 
             c = QuasiHarmCalc(progs['qh'], parm_system.complex_prmtop,
@@ -1003,9 +1004,11 @@ class MMPBSA_App(object):
         if INPUT['qh_entropy']:
             if not INPUT['mutant_only']:
                 self.calc_types.normal['qh'] = QHout(f'{self.pre}cpptraj_entropy.out', INPUT['temperature'])
-
             if INPUT['alarun']:
                 self.calc_types.mutant['qh'] = QHout(f'{self.pre}mutant_cpptraj_entropy.out', INPUT['temperature'])
+            if INPUT['alarun'] and not INPUT['mutant_only']:
+                self.calc_types.mut_norm['qh'] = DeltaDeltaQH(self.calc_types.mutant['qh'],
+                                                              self.calc_types.normal['qh'])
 
         # Determine if our GB is QM/MM or not
         GBClass = QMMMout if INPUT['ifqnt'] else GBout

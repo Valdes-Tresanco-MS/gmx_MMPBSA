@@ -123,9 +123,12 @@ def write_outputs(app):
                 qhnorm = app.calc_types.normal['qh']['complex']
             else:
                 qhnorm = app.calc_types.normal['qh']['delta']
+            _qhnorm = app.calc_types.normal['qh']
+            from icecream import ic
+            ic(qhnorm)
             final_output.writeline(f'Normal [ -TΔS ]')
             final_output.writeline('ENTROPY RESULTS (QH APPROXIMATION):')
-            final_output.add_section(qhnorm.summary_output())
+            final_output.add_section(app.calc_types.normal['qh'].summary_output())
         if INPUT['alarun']:
             if stability:
                 qhnorm = app.calc_types.mutant['qh']['complex']
@@ -134,12 +137,16 @@ def write_outputs(app):
             qhmutant = app.calc_types.mutant['qh']
             final_output.writeline(mut_str + ' Mutant [ -TΔS ]')
             final_output.writeline('ENTROPY RESULTS (QH APPROXIMATION):')
-            final_output.add_section(qhmutant.summary_output())
+            final_output.add_section(app.calc_types.mutant['qh'].summary_output())
         if INPUT['alarun'] and not INPUT['mutant_only']:
-            qhmut_norm = app.calc_types.mut_norm['qh']
+            if stability:
+                qhmut_norm = app.calc_types.mut_norm['qh']['complex']
+            else:
+                qhmut_norm = app.calc_types.mut_norm['qh']['delta']
+            # qhmut_norm = app.calc_types.mut_norm['qh']
             final_output.writeline(f'Delta ( Mutant - Normal ) [ Δ(-TΔS) ]')
             final_output.writeline('ENTROPY RESULTS (QH APPROXIMATION):')
-            final_output.add_section(qhmut_norm.summary_output())
+            final_output.add_section(app.calc_types.mut_norm['qh'].summary_output())
 
     if not stability:
         # end if INPUT['entropy']
@@ -336,7 +343,7 @@ def write_outputs(app):
                                f"ΔΔH binding = {ddh_davg:9.2f} +/- {ddh_dstd:7.2f}\n")
 
             if INPUT['qh_entropy']:
-                ddgqh_davg = ddh_davg + qhmut_norm.mean()
+                ddgqh_davg = ddh_davg + qhmut_norm['TOTAL']
                 # this std is the same of ΔΔH
                 final_output.write('\n   (quasi-harmonic entropy)\n'
                                    f'ΔΔG{"" if stability else " binding"} = {ddgqh_davg:9.2f} +/- {ddh_dstd:7.2f}\n')
