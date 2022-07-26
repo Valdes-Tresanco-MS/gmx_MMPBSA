@@ -703,6 +703,13 @@ class MMPBSA_API():
                                                 if not remove:
                                                     model_decomp_energy[m1][c][r1] = temp_energy
                                                     e_map[etkey][m][m1][c][r1] = temp_emap
+                                # issue #269
+                                if not model_decomp_energy[m1].get('BDC'):
+                                    model_decomp_energy[m1].pop('BDC')
+                                    e_map[etkey][m][m1].pop('BDC')
+                                    if verbose:
+                                        warnings.warn('Warning: Empty BDC component...')
+
                         decomp_energy[etkey][m] = pd.DataFrame(flatten(model_decomp_energy), index=index)
         return {'map': e_map, 'data': decomp_energy}
 
