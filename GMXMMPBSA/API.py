@@ -26,6 +26,7 @@ import logging
 import math
 import pickle
 import shutil
+import warnings
 from multiprocessing.pool import ThreadPool
 from copy import copy
 from typing import Union
@@ -289,7 +290,7 @@ class MMPBSA_API():
         return arg if isinstance(arg, tuple) else tuple(arg)
 
     def get_energy(self, etype: tuple = None, model: tuple = None, mol: tuple = None, term: tuple = None,
-                    remove_empty_terms=True, threshold=0.01, startframe=None, endframe=None, interval=1):
+                    remove_empty_terms=True, threshold=0.01, startframe=None, endframe=None, interval=1, verbose=True):
         """
         Get energy
         Args:
@@ -316,7 +317,8 @@ class MMPBSA_API():
 
         for et in temp_print_keys:
             if et not in self.data:
-                print(f'Not etype {et} in data')
+                if verbose:
+                    warnings.warn(f'Not etype {et} in data')
             elif not self.data[et]:
                 continue
             else:
@@ -327,17 +329,13 @@ class MMPBSA_API():
                 temp_model_keys = model or tuple(x for x in self.data[et].keys() if x not in ['nmode', 'qh', 'ie','c2'])
 
                 for m in temp_model_keys:
-                    if m not in self.data[et]:
-                        print(f'Not model {m} in etype {et}')
-                    else:
+                    if m in self.data[et]:
                         e_map[et][m] = {}
                         model_energy = {}
                         temp_mol_keys = mol or tuple(self.data[et][m].keys())
 
                         for m1 in temp_mol_keys:
-                            if m1 not in self.data[et][m]:
-                                print(f'Not mol {m1} in etype {et} > model {m}')
-                            else:
+                            if m1 in self.data[et][m]:
                                 e_map[et][m][m1] = []
                                 model_energy[m1] = {}
                                 temp_terms_keys = ([x for x in self.data[et][m][m1].keys() if x in term] if term
@@ -346,7 +344,8 @@ class MMPBSA_API():
 
                                 for t in temp_terms_keys:
                                     if t not in self.data[et][m][m1]:
-                                        print(f'Not term {t} in etype {et} > model {m} > mol {m1}')
+                                        if verbose:
+                                            warnings.warn(f'Not term {t} in etype {et} > model {m} > mol {m1}')
                                     elif (
                                         not remove_empty_terms
                                         or abs(self.data[et][m][m1][t].mean())
@@ -355,8 +354,12 @@ class MMPBSA_API():
                                         e_map[et][m][m1].append(t)
                                         model_energy[m1][t] = self.data[et][m][m1][t][s:e:interval]
                                         valid_terms.append(t)
+                            elif verbose:
+                                warnings.warn(f'Not mol {m1} in etype {et} > model {m}')
                         energy[et][m], summ_df[et][m] = self._model2df(model_energy, index)
 
+                    elif verbose:
+                        warnings.warn(f'Not model {m} in etype {et}')
         corr = {}
         for et, v in summ_df.items():
             corr[et] = {}
@@ -376,7 +379,7 @@ class MMPBSA_API():
         return df, summary_df
 
     def get_nmode_entropy(self, nmtype: tuple = None, mol: tuple = None, term: tuple = None,
-                          startframe=None, endframe=None, interval=None):
+                          startframe=None, endframe=None, interval=None, verbose=True):
 
         s, e, index = self._get_frames_index('entropy', startframe, endframe, interval)
 
@@ -385,57 +388,57 @@ class MMPBSA_API():
         temp_print_keys = nmtype or tuple(x for x in ['normal', 'mutant', 'mutant-normal'] if x in self.data and
                                           self.data[x])
         for et in temp_print_keys:
-            if et not in self.data:
-                print(f'Not nmtype {et} in data')
-            else:
+            if et in self.data:
                 energy[et] = {'nmode': {}}
                 summ_df[et] = {'nmode': {}}
                 model_energy = {}
                 temp_mol_keys = mol or tuple(self.data[et]['nmode'].keys())
                 for m1 in temp_mol_keys:
-                    if m1 not in self.data[et]['nmode']:
-                        print(f'Not mol {m1} in etype {et}')
-                    else:
+                    if m1 in self.data[et]['nmode']:
                         model_energy[m1] = {}
                         temp_terms_keys = ([x for x in self.data[et]['nmode'][m1].keys() if x in term] if term
                                            else tuple(self.data[et]['nmode'][m1].keys()))
                         valid_terms = []
                         for t in temp_terms_keys:
-                            if t not in self.data[et]['nmode'][m1]:
-                                print(f'Not term {t} in etype {et} > mol {m1}')
-                            else:
+                            if t in self.data[et]['nmode'][m1]:
                                 model_energy[m1][t] = self.data[et]['nmode'][m1][t][s:e:interval]
                                 valid_terms.append(t)
+                            elif verbose:
+                                warnings.warn(f'Not term {t} in etype {et} > mol {m1}')
+                    elif verbose:
+                        warnings.warn(f'Not mol {m1} in etype {et}')
                 energy[et]['nmode'], summ_df[et]['nmode'] = self._model2df(model_energy, index)
 
+            elif verbose:
+                warnings.warn(f'Not nmtype {et} in data')
         return {'map': emapping(energy), 'data': energy, 'summary': summ_df}
 
-    def get_qh_entropy(self, qhtype: tuple = None, mol: tuple = None, term: tuple = None):
+    def get_qh_entropy(self, qhtype: tuple = None, mol: tuple = None, term: tuple = None, verbose=True):
         temp_print_keys = qhtype or tuple(x for x in ['normal', 'mutant', 'mutant-normal'] if x in self.data)
         entropy = {}
         for et in temp_print_keys:
-            if et not in self.data:
-                print(f'Not qhtype {et} in data')
-            else:
+            if et in self.data:
                 entropy[et] = {'qh': {}}
                 temp_mol_keys = mol or tuple(self.data[et]['qh'].keys())
                 for m1 in temp_mol_keys:
-                    if m1 not in self.data[et]['qh']:
-                        print(f'Not mol {m1} in qhtype {et}')
-                    else:
+                    if m1 in self.data[et]['qh']:
                         entropy[et]['qh'][m1] = {}
                         temp_terms_keys = ([x for x in self.data[et]['qh'][m1].keys() if x in term] if term
                                            else tuple(self.data[et]['qh'][m1].keys()))
                         for t in temp_terms_keys:
-                            if t not in self.data[et]['qh'][m1]:
-                                print(f'Not term {t} in etype {et} > mol {m1}')
-                            else:
+                            if t in self.data[et]['qh'][m1]:
                                 entropy[et]['qh'][m1][t] = self.data[et]['qh'][m1][t]
 
+                            elif verbose:
+                                warnings.warn(f'Not term {t} in etype {et} > mol {m1}')
+                    elif verbose:
+                        warnings.warn(f'Not mol {m1} in qhtype {et}')
+            elif verbose:
+                warnings.warn(f'Not qhtype {et} in data')
         df = pd.DataFrame(flatten(entropy))
         return {'map': emapping(entropy), 'data': df, 'summary': df.xs(('delta', 'TOTAL'), level=[1, 2], axis=1)}
 
-    def get_c2_entropy(self, c2type: tuple = None, startframe=None, endframe=None, interval=None):
+    def get_c2_entropy(self, c2type: tuple = None, startframe=None, endframe=None, interval=None, verbose=True):
         temp_print_keys = c2type or tuple(x for x in ['normal', 'mutant', 'mutant-normal'] if x in self.data and
                                           self.data[x])
         entropy = {}
@@ -445,8 +448,8 @@ class MMPBSA_API():
                        interval and interval != self.app_namespace.INPUT['interval']))
 
         for et in temp_print_keys:
-            if et not in self.data:
-                print(f'Not c2type {et} in data')
+            if et not in self.data and verbose:
+                warnings.warn(f'Not c2type {et} in data')
             if recalc:
                 d = self._recalc_iec2('c2', et, startframe, endframe, interval)
             else:
@@ -458,7 +461,7 @@ class MMPBSA_API():
         return {'map': emapping(entropy), 'data': entropy_df, 'summary': entropy_df}
 
     def get_ie_entropy(self, ietype: tuple = None, startframe=None, endframe=None, interval=None,
-                       ie_segment = 25):
+                       ie_segment = 25, verbose=True):
         temp_print_keys = ietype or tuple(x for x in ['normal', 'mutant', 'mutant-normal'] if x in self.data and
                                           self.data[x])
         entropy = {}
@@ -471,7 +474,8 @@ class MMPBSA_API():
         s, e, index = self._get_frames_index('energy', startframe, endframe, interval)
         for et in temp_print_keys:
             if et not in self.data:
-                print(f'Not ietype {et} in data')
+                if verbose:
+                    warnings.warn(f'Not ietype {et} in data')
                 continue
             if recalc:
                 d = self._recalc_iec2('ie', et, startframe, endframe, interval, ie_segment)
@@ -502,15 +506,15 @@ class MMPBSA_API():
 
     def get_entropy(self, etype: tuple = None, model: tuple = None, mol: tuple = None, term: tuple = None,
                     nmstartframe=None, nmendframe=None, nminterval=1, startframe=None, endframe=None, interval=None,
-                    ie_segment=25):
+                    ie_segment=25, verbose=True):
         temp_print_keys = etype or tuple(x for x in ['normal', 'mutant', 'mutant-normal'] if x in self.data)
         entropy_keys = []
 
         for et in temp_print_keys:
-            if et not in self.data:
-                print(f'Not etype {et} in data')
-            else:
+            if et in self.data:
                 entropy_keys.extend(x for x in self.data[et].keys() if x in ['nmode', 'qh', 'ie','c2'])
+            elif verbose:
+                warnings.warn(f'Not etype {et} in data')
         temp_model_keys = tuple(x for x in entropy_keys if x in model) if model else tuple(entropy_keys)
 
         ent_summ = {}
@@ -553,7 +557,7 @@ class MMPBSA_API():
                 break
         return result
 
-    def get_binding(self, energy_summary=None, entropy_summary=None):
+    def get_binding(self, energy_summary=None, entropy_summary=None, verbose=True):
         binding  = {}
         b_map = {}
         corr = {}
@@ -596,7 +600,7 @@ class MMPBSA_API():
 
     def get_decomp_energy(self, etype: tuple = None, model: tuple=None, mol: tuple = None, contribution: tuple = None,
                           res1: tuple = None, res2: tuple = None, term: tuple = None, res_threshold=0.5,
-                          startframe=None, endframe=None, interval=None):
+                          startframe=None, endframe=None, interval=None, verbose=True):
 
         s, e, index = self._get_frames_index('energy', startframe, endframe, interval)
         name = index.name
@@ -610,7 +614,8 @@ class MMPBSA_API():
         e_map = {}
         for et in temp_print_keys:
             if not self.data.get(et):
-                print(f'Not etype {et} in data')
+                if verbose:
+                    warnings.warn(f'Not etype {et} in data')
             else:
                 etkey = et.split('_')[1]
                 decomp_energy[etkey] = {}
@@ -619,7 +624,8 @@ class MMPBSA_API():
 
                 for m in temp_model_keys:
                     if m not in self.data[et]:
-                        print(f'Not model {m} in etype {et}')
+                        if verbose:
+                            warnings.warn(f'Not model {m} in etype {et}')
                     else:
                         model_decomp_energy = {}
 
@@ -628,14 +634,16 @@ class MMPBSA_API():
 
                         for m1 in temp_mol_keys:
                             if m1 not in self.data[et][m]:
-                                print(f'Not mol {m1} in etype {et} > model {m}')
+                                if verbose:
+                                    warnings.warn(f'Not mol {m1} in etype {et} > model {m}')
                             else:
                                 model_decomp_energy[m1] = {}
                                 e_map[etkey][m][m1] = {}
                                 temp_comp_keys = contribution or tuple(self.data[et][m][m1].keys())
                                 for c in temp_comp_keys:
                                     if c not in self.data[et][m][m1]:
-                                        print(f'Not component {c} in etype {et} > model {m} > mol {m1}')
+                                        if verbose:
+                                            warnings.warn(f'Not component {c} in etype {et} > model {m} > mol {m1}')
                                     else:
                                         model_decomp_energy[m1][c] = {}
                                         e_map[etkey][m][m1][c] = {}
@@ -644,7 +652,8 @@ class MMPBSA_API():
                                         for r1 in temp_res1_keys:
                                             remove = False
                                             if r1 not in self.data[et][m][m1][c]:
-                                                print(f'Not res {r1} in etype {et} > model {m} > mol {m1} > comp {c} ')
+                                                if verbose:
+                                                    warnings.warn(f'Not res {r1} in etype {et} > model {m} > mol {m1} > comp {c} ')
                                             else:
                                                 temp_energy = {}
 
@@ -654,8 +663,9 @@ class MMPBSA_API():
 
                                                     for t in temp_terms_keys:
                                                         if t not in self.data[et][m][m1][c][r1]:
-                                                            print(f'Not term {t} in etype {et} > model {m} > mol {m1} '
-                                                                  f'> comp {c} > res {r1}')
+                                                            if verbose:
+                                                                warnings.warn(f'Not term {t} in etype {et} > model {m} '
+                                                                              f'> mol {m1} > comp {c} > res {r1}')
                                                         else:
                                                             temp_energy[t] = self.data[et][m][m1][c][r1][t][s:e:interval]
                                                             temp_emap.append(t)
@@ -673,8 +683,9 @@ class MMPBSA_API():
                                                     res1_contrib = 0
                                                     for r2 in temp_res2_keys:
                                                         if r2 not in self.data[et][m][m1][c][r1]:
-                                                            print(f'Not res {r2} in etype {et} > model {m} > mol {m1} '
-                                                                  f'> comp {c} > res {r1}')
+                                                            if verbose:
+                                                                warnings.warn(f'Not res {r2} in etype {et} > model {m}'
+                                                                              f' > mol {m1} > comp {c} > res {r1}')
                                                         else:
                                                             temp_energy_r2 = {}
                                                             temp_emap[r2] = []
@@ -682,7 +693,8 @@ class MMPBSA_API():
                                                             temp_terms_keys = term or tuple(self.data[et][m][m1][c][r1][r2].keys())
                                                             for t in temp_terms_keys:
                                                                 if t not in self.data[et][m][m1][c][r1][r2]:
-                                                                    print(
+                                                                    if verbose:
+                                                                        warnings.warn(
                                                                         f'Not term {t} in etype {et} > model {m} '
                                                                         f'> mol {m1} > comp {c} > res {r1} > res {r2}')
                                                                 else:
@@ -714,14 +726,14 @@ class MMPBSA_API():
         return {'map': e_map, 'data': decomp_energy}
 
     def get_ana_data(self, energy_options=None, entropy_options=None, decomp_options=None, performance_options=None,
-                     correlation=False):
+                     correlation=False, verbose=False):
         TASKs = []
         d = {}
         corr = {}
         ecorr = None
         memory_args = dict(temp_path=self.temp_folder)
         if energy_options:
-            energy_map, energy, energy_summary, ecorr = self.get_energy(**energy_options).values()
+            energy_map, energy, energy_summary, ecorr = self.get_energy(**energy_options, verbose=verbose).values()
             if energy_map:
                 for et, v in ecorr.items():
                     corr[et] = v
@@ -738,7 +750,7 @@ class MMPBSA_API():
                                           (level, level1, level2,level3), 'enthalpy'] for level3 in value2)
 
         if entropy_options:
-            entropy_map, entropy, entropy_summary = self.get_entropy(**entropy_options).values()
+            entropy_map, entropy, entropy_summary = self.get_entropy(**entropy_options, verbose=verbose).values()
             if entropy_map:
                 d['entropy'] = {'map': entropy_map, 'keys': {}, 'summary': entropy_summary}
                 memory_args['inmemory'] = performance_options.get('energy_memory')
@@ -762,7 +774,7 @@ class MMPBSA_API():
                                           (level, level1), 'entropy'])
 
         if energy_options and entropy_options:
-            bind_map, binding, bcorr = self.get_binding(energy_summary, entropy_summary).values()
+            bind_map, binding, bcorr = self.get_binding(energy_summary, entropy_summary, verbose=verbose).values()
             if bind_map:
                 for et, v in bcorr.items():
                     for m, v1 in v.items():
@@ -777,7 +789,7 @@ class MMPBSA_API():
                                                         memory=memory_args),
                                       (level, level1, level2), 'binding'] for level2 in value1)
         if decomp_options:
-            decomp_map, decomp = self.get_decomp_energy(**decomp_options).values()
+            decomp_map, decomp = self.get_decomp_energy(**decomp_options, verbose=verbose).values()
             if decomp_map:
                 d['decomposition'] = {'map': decomp_map, 'keys': {}}
                 memory_args['inmemory'] = performance_options.get('decomp_memory')
