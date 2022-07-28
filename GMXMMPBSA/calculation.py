@@ -32,6 +32,10 @@ Classes:
 #  for more details.                                                           #
 # ##############################################################################
 import logging
+import threading
+from pathlib import Path
+from tqdm import tqdm
+from time import sleep
 
 from GMXMMPBSA.exceptions import CalcError
 from GMXMMPBSA.exceptions import GMXMMPBSA_ERROR
@@ -41,7 +45,35 @@ import numpy as np
 import math
 
 
-# +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+TQDM_BAR_FORMAT = '{l_bar}{bar}| {n_fmt}/{total_fmt} [elapsed: {elapsed} remaining: {remaining}]'
+
+
+def pb(output_basename, nframes=1, mpi_size=1, nmode=False):
+    pbar = tqdm(total=nframes, ascii=True, bar_format=TQDM_BAR_FORMAT)
+    accum_frames = 0
+    ctime = 0
+
+    while accum_frames < nframes:
+        sleep(ctime)
+        frames = 0
+        for i in range(mpi_size):
+            if not Path(output_basename % i).exists():
+                continue
+            with open(output_basename % i) as of:
+                for line in of:
+                    if not nmode and line.startswith('minimizing coord set #'):
+                        frames += 1
+                    elif nmode and line.startswith('Total:'):
+                        frames += 1
+        if frames - accum_frames:
+            pbar.update(frames - accum_frames)
+            accum_frames = frames
+        else:
+            ctime += 1
+
+    pbar.clear()
+    pbar.close()
+
 
 class CalculationList(list):
     """ This contains the list of all calculations that need to be run """
@@ -50,9 +82,11 @@ class CalculationList(list):
         self.timer = timer
         self.timer_keys = []
         self.labels = []
+        self.output_files = []
+        self.nframes, self.nmframes, self.mpi_size = args
         list.__init__(self)
 
-    def append(self, calc, label='', timer_key=None):
+    def append(self, calc, label='', timer_key=None, output_basename=None):
         """ Add a new Calculation instance to the list """
         if not isinstance(calc, Calculation):
             raise TypeError('CalculationList can only take Calculation instances!')
@@ -60,6 +94,7 @@ class CalculationList(list):
         self.timer_keys.append(timer_key)
         list.append(self, calc)
         self.labels.append(label)
+        self.output_files.append(output_basename)
 
     def extend(self, calcs, labels, timer_keys):
         """ Add a list/iterable of Calculation instances to the list """
@@ -76,15 +111,28 @@ class CalculationList(list):
             f = stdout
         try:
             for i, calc in enumerate(self):
+                pb_thread = None
                 # Start timer, run calculation, then stop the timer
                 if self.timer_keys[i] is not None:
                     self.timer.start_timer(self.timer_keys[i])
                 if self.labels[i] and rank == 0:
                     logging.info(self.labels[i])
+                    if isinstance(calc, (EnergyCalculation, NmodeCalc)):
+                        if isinstance(calc, EnergyCalculation):
+                            nframes = self.nframes
+                            nmode = False
+                        else:
+                            nframes = self.nmframes
+                            nmode = True
+                        pb_thread = threading.Thread(target=pb, args=(self.output_files[i], nframes, self.mpi_size, nmode))
+                        pb_thread.start()
+
                 calc.setup()
                 calc.run(rank, stdout=stdout, stderr=stderr)
                 if self.timer_keys[i] is not None:
                     self.timer.stop_timer(self.timer_keys[i])
+                    if pb_thread:
+                        pb_thread.join()
         finally:
             if own_handle: f.close()
 
