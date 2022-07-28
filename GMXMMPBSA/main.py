@@ -1114,6 +1114,7 @@ class MMPBSA_App(object):
                 if not self.INPUT['mutant_only'] and key in self.calc_types.normal:
                     if from_calc:
                         edata = self.calc_types.normal[key]['delta']['GGAS']
+                        logging.info('Beginning Interaction Entropy calculations...')
                         ie = InteractionEntropyCalc(edata, self.INPUT)
                         ie.save_output(f'{self.pre}normal_interaction_entropy.dat')
 
@@ -1124,6 +1125,7 @@ class MMPBSA_App(object):
                 if key in self.calc_types.mutant:
                     if from_calc:
                         edata = self.calc_types.mutant[key]['delta']['GGAS']
+                        logging.info('Beginning Mutant Interaction Entropy calculations...')
                         mie = InteractionEntropyCalc(edata, self.INPUT)
                         mie.save_output(f'{self.pre}mutant_interaction_entropy.dat')
 
@@ -1140,6 +1142,7 @@ class MMPBSA_App(object):
                 if not self.INPUT['mutant_only'] and key in self.calc_types.normal:
                     if from_calc:
                         edata = self.calc_types.normal[key]['delta']['GGAS']
+                        logging.info('Beginning C2 Entropy calculations...')
                         c2 = C2EntropyCalc(edata, self.INPUT)
                         c2.save_output(f'{self.pre}normal_c2_entropy.dat')
 
@@ -1149,6 +1152,7 @@ class MMPBSA_App(object):
                 if key in self.calc_types.mutant:
                     if from_calc:
                         edata = self.calc_types.mutant[key]['delta']['GGAS']
+                        logging.info('Beginning Mutant C2 Entropy calculations...')
                         c2 = C2EntropyCalc(edata, self.INPUT)
                         c2.save_output(f'{self.pre}mutant_c2_entropy.dat')
 
