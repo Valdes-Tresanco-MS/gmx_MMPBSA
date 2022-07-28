@@ -45,7 +45,7 @@ import numpy as np
 import math
 
 
-TQDM_BAR_FORMAT = '{l_bar}{bar}| {n_fmt}/{total_fmt} [elapsed: {elapsed} remaining: {remaining}]'
+TQDM_BAR_FORMAT = '            {l_bar}{bar}| {n_fmt}/{total_fmt} [elapsed: {elapsed} remaining: {remaining}]'
 
 
 def pb(output_basename, nframes=1, mpi_size=1, nmode=False):
@@ -682,7 +682,7 @@ class InteractionEntropyCalc:
         exp_energy_int = np.array([], dtype=np.float)
         self.data = np.zeros(self.ggas.size, dtype=np.float)
 
-        for i in range(self.ggas.size):
+        for i in tqdm(range(self.ggas.size), bar_format=TQDM_BAR_FORMAT, ascii=True):
             aeint = self.ggas[:i+1].mean()
             deint = self.ggas[i] - aeint
             try:
