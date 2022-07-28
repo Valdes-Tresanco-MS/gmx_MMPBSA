@@ -150,16 +150,14 @@ class Calculation(object):
             for i in range(len(self.command_args)):
                 self.command_args[i] = str(self.command_args[i])
                 if '%d' in self.command_args[i]:
-                    self.command_args[i] = self.command_args[i] % rank
+                    self.command_args[i] %= rank
 
-            process = Popen(self.command_args, stdin=None, stdout=process_stdout,
-                            stderr=process_stderr)
+            process = Popen(self.command_args, stdin=None, stdout=process_stdout, stderr=process_stderr)
 
             calc_failed = bool(process.wait())
 
             if calc_failed:
-                raise CalcError('%s failed with prmtop %s!' % (self.program,
-                                                               self.prmtop))
+                raise CalcError(f'{self.program} failed with prmtop {self.prmtop}!')
         finally:
             if own_handleo: process_stdout.close()
             if own_handlee: process_stdout.close()
@@ -525,8 +523,7 @@ class SurfCalc(Calculation):
         calc_failed = bool(process.wait())
 
         if calc_failed:
-            raise CalcError('%s failed with prmtop %s!' % (self.program,
-                                                           self.prmtop))
+            raise CalcError(f'{self.program} failed with prmtop {self.prmtop}!')
 
 
 # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+

@@ -236,13 +236,10 @@ def mask2list(com_str, rec_mask, lig_mask):
 
 
 def log_subprocess_output(process):
-    while True:
-        if output := process.stdout.readline().decode():
-            if output.startswith(' ->  frame'):
-                continue
-            logging.debug(output.strip('\n'))
-        else:
-            break
+    while output := process.stdout.readline().decode():
+        if output.startswith(' ->  frame'):
+            continue
+        logging.debug(output.strip('\n'))
 
 
 class Residue(object):
