@@ -546,7 +546,7 @@ class MMPBSA_App(object):
             logging.info('Building AMBER topologies from GROMACS files... Done.\n')
             self.INPUT['receptor_mask'], self.INPUT['ligand_mask'], self.resl = maketop.get_masks()
             self.mutant_index = maketop.com_mut_index
-            self.mut_str = self.resl[maketop.com_mut_index].mutant_label if self.mutant_index else ''
+            self.mut_str = self.resl[maketop.com_mut_index].mutant_label if self.mutant_index is not None else ''
             self.FILES.complex_fixed = f'{self.FILES.prefix}COM_FIXED.pdb'
         self.FILES = self.MPI.COMM_WORLD.bcast(self.FILES, root=0)
         self.INPUT = self.MPI.COMM_WORLD.bcast(self.INPUT, root=0)
