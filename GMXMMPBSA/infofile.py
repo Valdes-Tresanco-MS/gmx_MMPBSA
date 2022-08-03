@@ -91,7 +91,7 @@ class InfoFile(object):
         outfile.write('numframes_nmode = %d\n' % self.app.numframes_nmode)
         outfile.write("mutant_index = %s\n" % self.app.mutant_index)
         outfile.write("mut_str = '%s'\n" % (self.app.resl[self.app.mutant_index].mutant_label
-                                            if self.app.mutant_index else ""))
+                                            if self.app.mutant_index is not None else ""))
         outfile.write('using_chamber = %s\n' % self.app.using_chamber)
         outfile.write(self.app.input_file_text)
 

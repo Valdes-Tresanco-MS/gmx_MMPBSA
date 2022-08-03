@@ -24,24 +24,20 @@ scanning.
 # ##############################################################################
 
 from GMXMMPBSA.exceptions import MutateError, MutantResError
+import contextlib
 
-#+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 def _getCoords(line, coordsperline, coordsize):
     """ Returns the coordinates of a line in a mdcrd file """
     holder = []
     location = 0
-    for i in range(coordsperline):
-        try:
-            tmp = float(line[location:location+coordsize])
+    for _ in range(coordsperline):
+        with contextlib.suppress(Exception):
+            tmp = float(line[location:location + coordsize])
             holder.append(tmp)
-        except:
-            pass
         location += coordsize
-
     return holder
 
-#+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 def _scaledistance(coords, dist):
     """ Scales the distance between 2 3-D cartesian coordinates to the specified
@@ -59,19 +55,18 @@ def _scaledistance(coords, dist):
     actualdist = sqrt(coords[3]*coords[3] + coords[4]*coords[4] +
                       coords[5]*coords[5])
 
-    scalefactor = dist / actualdist # determine scale factor
+    scalefactor = dist / actualdist  # determine scale factor
 
     coords[3] *= scalefactor  # scale original coordinates
     coords[4] *= scalefactor
     coords[5] *= scalefactor
 
-    coords[3] += coords[0] # move back to original place
+    coords[3] += coords[0]  # move back to original place
     coords[4] += coords[1]
     coords[5] += coords[2]
 
     return coords  # return the coordinates
 
-#+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 def _getnumatms(resname):
     """ Returns the number of atoms in a given Amino acid residue """
@@ -103,11 +98,9 @@ def _getnumatms(resname):
         return 22
     if resname in ('ARG', 'TRP'):
         return 24
+    raise MutateError(f'Unrecognized residue! Add {resname} to _getnumatms(resname) in alamdcrd.py and reinstall '
+                      f'gmx_MMPBSA')
 
-    raise MutateError(('Unrecognized residue! Add %s to _getnumatms(resname) in alamdcrd.py and reinstall gmx_MMPBSA'
-                       % resname))
-
-#+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 def _ressymbol(resname):
     """ Return 1-letter symbol of give amino acid """
@@ -118,23 +111,23 @@ def _ressymbol(resname):
         return 'R'
     elif resname == 'ASN':
         return 'N'
-    elif resname in ['ASP','ASH']:
+    elif resname in ['ASP', 'ASH']:
         return 'D'
-    elif resname in ['CYS','CYX','CYM']:
+    elif resname in ['CYS', 'CYX', 'CYM']:
         return 'C'
-    elif resname in ['GLU','GLH']:
+    elif resname in ['GLU', 'GLH']:
         return 'E'
     elif resname == 'GLN':
         return 'Q'
     elif resname == 'GLY':
         return 'G'
-    elif resname in ['HIP','HID','HIE']:
+    elif resname in ['HIP', 'HID', 'HIE']:
         return 'H'
     elif resname == 'ILE':
         return 'I'
     elif resname == 'LEU':
         return 'L'
-    elif resname in ['LYN','LYS']:
+    elif resname in ['LYN', 'LYS']:
         return 'K'
     elif resname == 'MET':
         return 'M'
@@ -155,15 +148,11 @@ def _ressymbol(resname):
     else:
         return resname
 
-#+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 class MutantMdcrd(object):
     """ Class for an alanine-mutated amber trajectory file.
         ASCII only (no netcdf)
     """
-
-    #-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
-
     def __init__(self, trajname, prm1, prm2):
         self.traj = trajname
         self.orig_prm = prm1
@@ -171,14 +160,10 @@ class MutantMdcrd(object):
         self.mutres = self.FindMutantResidue()
         self.hasbox = bool(prm1.ptr('ifbox'))
 
-    #-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
-
     def __str__(self):
         return '%s%d%s' % (_ressymbol(
             self.orig_prm.parm_data['RESIDUE_LABEL'][self.mutres-1]),
                            self.mutres, _ressymbol('ALA'))
-
-    #-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
 
     def FindMutantResidue(self):
         """ Finds which residue is the alanine mutant in a pair of prmtop files
@@ -197,18 +182,13 @@ class MutantMdcrd(object):
             if origres[i] != newres[i]:
                 diffs += 1
                 if newres[i] != 'ALA':
-                    raise MutantResError('Mutant residue %s is %s but must be ALA!' %
-                                         (i+1, newres[i]))
+                    raise MutantResError(f'Mutant residue {i + 1} is {newres[i]} but must be ALA!')
                 mutres = i + 1
-
         if diffs == 0:
-            raise MutateError('Mutant prmtop (%s) has the same sequence as the original!' % self.new_prm.prm_name)
+            raise MutateError(f'Mutant prmtop ({self.new_prm.prm_name}) has the same sequence as the original!')
         elif diffs > 1:
-            raise MutateError('Mutant prmtop (%s) can only have one mutation!' % self.new_prm.prm_name)
-
+            raise MutateError(f'Mutant prmtop ({self.new_prm.prm_name}) can only have one mutation!')
         return mutres
-
-    #-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
 
     def MutateTraj(self, newname):
         """ Mutates a given mdcrd file based on 2 prmtops """
@@ -225,118 +205,118 @@ class MutantMdcrd(object):
         if self.orig_prm.ptr('ifbox'):
             number_atoms_mut += 1
 
-        coordsperline = 10 # number of coordinates in each line
-        coordsize = 8      # how large coordinates are in characters
+        coordsperline = 10  # number of coordinates in each line
+        coordsize = 8       # how large coordinates are in characters
         counter = 0
         coords_done = 0
         coords_tomutate = []
         temp_holder = []
-        new_coords = []
 
         # location is 0 before modified coordinates, 1 during modified
         # coordinates, and 2 after modified coordinates
         location = 0
 
         if orig_resname == 'GLY':
-            raise MutateError('Trying to mutate GLY to ALA! ' + 'Not currently supported.')
+            raise MutateError('Trying to mutate GLY to ALA! Not currently supported.')
 
-        new_mdcrd = open(newname, 'w')
-        mdcrd = open(self.traj, 'r')
+        with open(self.traj) as mdcrd:
+            with open(newname, 'w') as new_mdcrd:
+                for line in mdcrd:
+                    counter += 1
+                    # First line is always a comment
+                    if counter == 1:
+                        new_mdcrd.write('%-80s' % f'{line.strip()} and mutated by gmx_MMPBSA for alanine scanning')
+                        continue
 
-        for line in mdcrd:
-            counter += 1
-            # First line is always a comment
-            if counter == 1:
-                new_mdcrd.write('%-80s' % (line.strip() + ' and mutated by gmx_MMPBSA for alanine scanning'))
-                continue
+                    if (
+                            location == 0 and
+                            coords_done <= max(resstart * 3 - 4, 0) < coords_done + coordsperline
+                    ):
+                        location = 1
+                        words = _getCoords(line, coordsperline, coordsize)
+                        for i in range(coordsperline):
+                            if coords_done <= resstart * 3 - 4:
+                                if coords_done % coordsperline == 0:
+                                    new_mdcrd.write('\n')
+                                new_mdcrd.write('%8.3f' % words[i])
+                                coords_done += 1
+                            else:
+                                coords_tomutate.append(words[i])
+                    elif location == 1:
+                        words = _getCoords(line, coordsperline, coordsize)
+                        if coordsperline + len(coords_tomutate) >= 3 * (nextresstart - resstart):
+                            location = 2
+                            if nextresstart == self.orig_prm.ptr('natom'):
+                                for i in range(len(words)):
+                                    if len(coords_tomutate) < 3 * (nextresstart - resstart):
+                                        coords_tomutate.append(words[i])
+                                    else:
+                                        temp_holder.append(words[i])
+                            else:
+                                for i in range(coordsperline):
+                                    if len(coords_tomutate) < 3 * (nextresstart - resstart):
+                                        coords_tomutate.append(words[i])
+                                    else:
+                                        temp_holder.append(words[i])
 
-            if location == 0 and coords_done <= max(resstart * 3 - 4, 0) and \
-                    coords_done + coordsperline > max(resstart * 3 - 4, 0):
-                location = 1
-                words = _getCoords(line, coordsperline, coordsize)
-                for i in range(coordsperline):
-                    if coords_done <= resstart * 3 - 4:
-                        if coords_done % coordsperline == 0:
-                            new_mdcrd.write('\n')
-                        new_mdcrd.write('%8.3f' % words[i])
-                        coords_done += 1
-                    else:
-                        coords_tomutate.append(words[i])
-                continue
+                            new_coords = self._mutate(orig_resname, coords_tomutate)
+                            for i in range(len(new_coords)):
+                                if coords_done % coordsperline == 0:
+                                    new_mdcrd.write('\n')
+                                new_mdcrd.write('%8.3f' % new_coords[i])
+                                coords_done += 1
+                            if len(temp_holder) != 0:
+                                for i in range(len(temp_holder)):
+                                    if coords_done % coordsperline == 0:
+                                        new_mdcrd.write('\n')
+                                    new_mdcrd.write('%8.3f' % temp_holder[i])
+                                    coords_done += 1
+                                    if self.hasbox and coords_done == number_atoms_mut * 3 - 3:
+                                        new_mdcrd.write('\n')
+                                if coords_done == number_atoms_mut * 3:
+                                    coords_done = 0
+                                    location = 0
 
-            elif location == 1:
-                words = _getCoords(line, coordsperline, coordsize)
-                if coordsperline + len(coords_tomutate) >= \
-                        3 * (nextresstart - resstart):
-                    location = 2
-                    for i in range(coordsperline):
-                        if len(coords_tomutate) < 3 * (nextresstart - resstart):
-                            coords_tomutate.append(words[i])
+                            coords_tomutate = []
+                            temp_holder = []
                         else:
-                            temp_holder.append(words[i])
+                            for i in range(coordsperline):
+                                coords_tomutate.append(words[i])
 
-                    new_coords = self._mutate(orig_resname, coords_tomutate)
-                    for i in range(len(new_coords)):
+                    elif location == 2:
+                        words = _getCoords(line, coordsperline, coordsize)
+                        for i in range(len(words)):
+                            if (
+                                    coords_done % coordsperline == 0 and
+                                    (not self.hasbox or coords_done < number_atoms_mut * 3 - 3)
+                            ):
+                                new_mdcrd.write('\n')
+                            new_mdcrd.write('%8.3f' % words[i])
+                            coords_done += 1
+                            if self.hasbox and coords_done == number_atoms_mut * 3 - 3:
+                                new_mdcrd.write('\n')
+
+                        if coords_done == number_atoms_mut * 3:
+                            coords_done = 0
+                            location = 0
+                    else:
                         if coords_done % coordsperline == 0:
                             new_mdcrd.write('\n')
-                        new_mdcrd.write('%8.3f' % new_coords[i])
-                        coords_done += 1
-                    if len(temp_holder) != 0:
-                        for i in range(len(temp_holder)):
-                            if coords_done % coordsperline == 0:
-                                new_mdcrd.write('\n')
-                            new_mdcrd.write('%8.3f' % temp_holder[i])
-                            coords_done += 1
-                    coords_tomutate = []
-                    temp_holder = []
-                else:
-                    for i in range(coordsperline):
-                        coords_tomutate.append(words[i])
+                        new_mdcrd.write(line[:-1])
+                        coords_done = coords_done + coordsperline
+                    continue
 
-                continue
-
-            elif location == 2:
-                words = _getCoords(line, coordsperline, coordsize)
-                for i in range(len(words)):
-                    if coords_done % coordsperline == 0:
-                        if not self.hasbox or coords_done < number_atoms_mut * 3 - 3:
-                            new_mdcrd.write('\n')
-                    new_mdcrd.write('%8.3f' % words[i])
-                    coords_done += 1
-                    if self.hasbox and coords_done == number_atoms_mut * 3 - 3:
-                        new_mdcrd.write('\n')
-
-                if coords_done == number_atoms_mut * 3:
-                    coords_done = 0
-                    location = 0
-                continue
-            else:
-                if coords_done % coordsperline == 0:
-                    new_mdcrd.write('\n')
-                new_mdcrd.write(line[:len(line)-1])
-                coords_done = coords_done + coordsperline
-                continue
-
-        new_mdcrd.write('\n')
-        mdcrd.close()
-        new_mdcrd.close()
-
-    #-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
+                new_mdcrd.write('\n')
 
     def _mutate(self, resname, coords):
-        list_one = 'ARG ASH ASN ASP CYM CYS CYX GLH GLN GLU HID HIE HIP ' + \
-                   'LEU LYN LYS MET PHE SER TRP TYR'
+        list_one = 'ARG ASH ASN ASP CYM CYS CYX GLH GLN GLU HID HIE HIP LEU LYN LYS MET PHE SER TRP TYR'
+
         list_two = 'ILE THR VAL'
         list_three = 'PRO'
-
         chdist = 1.09
         nhdist = 1.01
-
         coords_tosend = []
-        new_coords  = []
-        coords_received = []
-        cterm = False
-
+        new_coords = []
         if _getnumatms(resname) * 3 == len(coords):
             startindex = 0
             cterm = False
@@ -347,107 +327,62 @@ class MutantMdcrd(object):
             startindex = 0
             cterm = True
         else:
-            raise MutateError(('Mismatch in atom # in residue %s. (%d in alamdcrd.py and %d passed in)') %
-                              (resname, _getnumatms(resname), len(coords)))
+            raise MutateError('Mismatch in atom # in residue %s. (%d in alamdcrd.py and %d passed '
+                              'in)' % (resname, _getnumatms(resname), len(coords)))
 
         if resname in list_one:
-            for i in range((7+startindex)*3):
-                new_coords.append(coords[i])
-            for i in range(3):
-                coords_tosend.append(coords[(4+startindex)*3+i])
-            for i in range(3):
-                coords_tosend.append(coords[(7+startindex)*3+i])
+            new_coords.extend(coords[i] for i in range((7 + startindex) * 3))
+            coords_tosend.extend(coords[(4 + startindex) * 3 + i] for i in range(3))
+            coords_tosend.extend(coords[(7 + startindex) * 3 + i] for i in range(3))
             coords_received = _scaledistance(coords_tosend, chdist)
-
-            for i in range(3):
-                new_coords.append(coords_received[i+3])
-
+            new_coords.extend(coords_received[i + 3] for i in range(3))
         elif resname in list_two:
-            for i in range((6+startindex)*3):
-                new_coords.append(coords[i])
-
-            for i in range(3):
-                coords_tosend.append(coords[(4+startindex)*3+i])
-            for i in range(3):
-                coords_tosend.append(coords[(6+startindex)*3+i])
+            new_coords.extend(coords[i] for i in range((6 + startindex) * 3))
+            coords_tosend.extend(coords[(4 + startindex) * 3 + i] for i in range(3))
+            coords_tosend.extend(coords[(6 + startindex) * 3 + i] for i in range(3))
             coords_received = _scaledistance(coords_tosend, chdist)
-
-            for i in range(3):
-                new_coords.append(coords_received[i+3])
-
+            new_coords.extend(coords_received[i + 3] for i in range(3))
             coords_tosend = []
-            coords_received = []
-            for i in range(3):
-                coords_tosend.append(coords[(4+startindex)*3+i])
-            for i in range(3):
-                coords_tosend.append(coords[(10+startindex)*3+i])
+            coords_tosend.extend(coords[(4 + startindex) * 3 + i] for i in range(3))
+            coords_tosend.extend(coords[(10 + startindex) * 3 + i] for i in range(3))
             coords_received = _scaledistance(coords_tosend, chdist)
-
-            for i in range(3):
-                new_coords.append(coords_received[3+i])
-
+            new_coords.extend(coords_received[3 + i] for i in range(3))
         elif resname in list_three:
-            for i in range((1+startindex)*3):
-                new_coords.append(coords[i])
-
-            coords_tosend = coords[startindex*3:startindex*3 + 6]
+            new_coords.extend(coords[i] for i in range((1 + startindex) * 3))
+            coords_tosend = coords[startindex * 3:startindex * 3 + 6]
             coords_received = _scaledistance(coords_tosend, nhdist)
-
-            for i in range(3):
-                new_coords.append(coords_received[i+3])
-            for i in range(6):
-                new_coords.append(coords[(10+startindex)*3+i])
-            for i in range(9):
-                new_coords.append(coords[(7+startindex)*3+i])
-
+            new_coords.extend(coords_received[i + 3] for i in range(3))
+            new_coords.extend(coords[(10 + startindex) * 3 + i] for i in range(6))
+            new_coords.extend(coords[(7 + startindex) * 3 + i] for i in range(9))
             coords_tosend = []
-            coords_received = []
-            for i in range(3):
-                coords_tosend.append(coords[(7+startindex)*3+i])
-            for i in range(3):
-                coords_tosend.append(coords[(4+startindex)*3+i])
+            coords_tosend.extend(coords[(7 + startindex) * 3 + i] for i in range(3))
+            coords_tosend.extend(coords[(4 + startindex) * 3 + i] for i in range(3))
             coords_received = _scaledistance(coords_tosend, chdist)
-
-            for i in range(3):
-                new_coords.append(coords_received[i+3])
-
+            new_coords.extend(coords_received[i + 3] for i in range(3))
         else:
-            raise MutateError("Residue %s not recognized! Can't mutate." % resname)
-
+            raise MutateError(f"Residue {resname} not recognized! Can't mutate.")
         if cterm:
-            for i in range(9):
-                new_coords.append(coords[len(coords)-9+i])
+            new_coords.extend(coords[len(coords) - 9 + i] for i in range(9))
         else:
-            for i in range(6):
-                new_coords.append(coords[len(coords)-6+i])
-
+            new_coords.extend(coords[len(coords) - 6 + i] for i in range(6))
         return new_coords
 
-#+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 class GlyMutantMdcrd(MutantMdcrd):
-
-    #-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
-
     def __str__(self):
         return '%s%d%s' % (_ressymbol(
             self.orig_prm.parm_data['RESIDUE_LABEL'][self.mutres-1]),
                            self.mutres, _ressymbol('GLY'))
 
-    #-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
-
     def _mutate(self, resname, coords):
-        list_one = 'ARG ASH ASN ASP CYM CYS CYX GLH GLN GLU HID HIE HIP ' + \
-                   'LEU LYN LYS MET PHE SER TRP TYR ALA ILE THR VAL'
+        list_one = 'ARG ASH ASN ASP CYM CYS CYX GLH GLN GLU HID HIE HIP LEU LYN LYS MET PHE SER TRP TYR ALA ILE THR VAL'
         list_two = 'PRO'
 
         chdist = 1.09
         nhdist = 1.01
 
         coords_tosend = []    # Coordinates to send to be scaled
-        new_coords  = []      # Mutated coordinates to return
-        coords_received = []  # Scaled coordinates received
-        cterm = False
+        new_coords = []      # Mutated coordinates to return
 
         if _getnumatms(resname) * 3 == len(coords):
             startindex = 0
@@ -460,57 +395,36 @@ class GlyMutantMdcrd(MutantMdcrd):
             cterm = True
         else:
             raise MutateError(('Mismatch in atom # in residue %s. (%d in ' +
-                               'alamdcrd.py and %d passed in)') % (resname,
-                                                                   _getnumatms(resname), len(coords)))
+                               'alamdcrd.py and %d passed in)') % (resname, _getnumatms(resname), len(coords)))
 
         if resname in list_one:
-            for i in range((4+startindex)*3):
-                new_coords.append(coords[i])
-            for i in range(3):
-                coords_tosend.append(coords[(2+startindex)*3+i])
-            for i in range(3):
-                coords_tosend.append(coords[(4+startindex)*3+i])
+            new_coords.extend(coords[i] for i in range((4+startindex)*3))
+            coords_tosend.extend(coords[(2+startindex)*3+i] for i in range(3))
+            coords_tosend.extend(coords[(4+startindex)*3+i] for i in range(3))
             coords_received = _scaledistance(coords_tosend, chdist)
 
-            for i in range(3):
-                new_coords.append(coords_received[i+3])
-
+            new_coords.extend(coords_received[i+3] for i in range(3))
         elif resname in list_two:
-            for i in range((1+startindex)*3):
-                new_coords.append(coords[i])
-
+            new_coords.extend(coords[i] for i in range((1+startindex)*3))
             coords_tosend = coords[startindex*3:startindex*3 + 6]
             coords_received = _scaledistance(coords_tosend, nhdist)
 
-            for i in range(3):
-                new_coords.append(coords_received[i+3])
-            for i in range(6):
-                new_coords.append(coords[(10+startindex)*3+i])
-
+            new_coords.extend(coords_received[i+3] for i in range(3))
+            new_coords.extend(coords[(10+startindex)*3+i] for i in range(6))
             coords_tosend = []
-            coords_received = []
-            for i in range(3):
-                coords_tosend.append(coords[(10+startindex)*3+i])
-            for i in range(3):
-                coords_tosend.append(coords[(7+startindex)*3+i])
+            coords_tosend.extend(coords[(10+startindex)*3+i] for i in range(3))
+            coords_tosend.extend(coords[(7+startindex)*3+i] for i in range(3))
             coords_received = _scaledistance(coords_tosend, chdist)
 
-            for i in range(3):
-                new_coords.append(coords_received[i+3])
-
+            new_coords.extend(coords_received[i+3] for i in range(3))
         else:
             raise MutateError("Residue %s not recognized! Can't mutate." % resname)
 
         if cterm:
-            for i in range(9):
-                new_coords.append(coords[len(coords)-9+i])
+            new_coords.extend(coords[len(coords)-9+i] for i in range(9))
         else:
-            for i in range(6):
-                new_coords.append(coords[len(coords)-6+i])
-
+            new_coords.extend(coords[len(coords)-6+i] for i in range(6))
         return new_coords
-
-    #-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
 
     def FindMutantResidue(self):
         """ Finds which residue is the alanine mutant in a pair of prmtop files
@@ -521,16 +435,14 @@ class GlyMutantMdcrd(MutantMdcrd):
         mutres = -1
 
         if len(origres) != len(newres):
-            raise MutateError(('Mutant prmtop (%s) has a different number of ' +
-                               'residues than the original (%s)!') %
-                              (self.new_prm.prm_name, self.orig_prm.prm_name))
+            raise MutateError(f'Mutant prmtop ({self.new_prm.prm_name}) has a different number of residues than '
+                              f'the original ({self.orig_prm.prm_name})!')
 
         for i in range(len(origres)):
             if origres[i] != newres[i]:
                 diffs += 1
                 if newres[i] != 'GLY':
-                    raise MutantResError('Mutant residue %s is %s but must be GLY!' %
-                                         (i+1, newres[i]))
+                    raise MutantResError(f'Mutant residue {i + 1} is {newres[i]} but must be GLY!')
                 mutres = i + 1
 
         if diffs == 0:
@@ -538,7 +450,6 @@ class GlyMutantMdcrd(MutantMdcrd):
                                'as the original!') % (self.new_prm.prm_name,
                                                       self.orig_prm.prm_name))
         elif diffs > 1:
-            raise MutateError('Your mutant prmtop (%s) can only have one mutation!'
-                              % self.new_prm.prm_name)
+            raise MutateError(f'Your mutant prmtop ({self.new_prm.prm_name}) can only have one mutation!')
 
         return mutres

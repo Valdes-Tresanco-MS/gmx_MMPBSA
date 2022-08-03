@@ -50,11 +50,8 @@ def gmxmmpbsa():
             stream_handler])
     # Just for compatibility as mpi4py works as serial when run without mpirun
     # (since v1.4.2)
-    if len(sys.argv) > 1 and sys.argv[1] in ['MPI', 'mpi']:
-        from mpi4py import MPI
-    else:
-        # If we're not running "gmx_MMPBSA MPI", bring MPI into the top-level namespace
-        # (which will overwrite the MPI from mpi4py, which we *want* to do in serial)
+    from mpi4py import MPI
+    if MPI.COMM_WORLD.size == 1:
         from GMXMMPBSA.fake_mpi import MPI
     # Set up error/signal handlers
     main.setup_run()

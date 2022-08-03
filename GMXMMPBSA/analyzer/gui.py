@@ -1201,6 +1201,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
         sys_name = self.systems[sys_index]['name']
         sys_item = CustomItem(self.treeWidget, [sys_name], app=self, system_index=sys_index,
                               buttons=(-1,))
+        self.treeWidget.setItemWidget(sys_item, 1, sys_item.setup_buttons())
         sys_item.setExpanded(True)
 
         for c in [0, 1]:

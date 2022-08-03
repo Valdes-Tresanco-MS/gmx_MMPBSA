@@ -755,7 +755,7 @@ class OutputFiles(QMdiSubWindow):
         self.setWidget(self.textedit)
 
         font = QFont("Monospace")
-        font.setStyleHint(QFont.TypeWriter)
+        font.setStyleHint(QFont.StyleHint.TypeWriter)
         self.textedit.setFont(font)
         self.textedit.setPlainText(''.join(text))
 

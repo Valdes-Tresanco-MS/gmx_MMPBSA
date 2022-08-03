@@ -216,7 +216,9 @@ class MMPBSA_App(object):
         calculation type, add a class to calculation.py, import it at the top of
         the file here, then append it to the calc list appropriately
         """
-        self.calc_list = CalculationList(self.timer)
+        nframes = self.numframes if self.master else 0
+        nmframes = self.numframes_nmode if self.master else 0
+        self.calc_list = CalculationList(self.timer, nframes, nmframes, self.mpi_size)
 
         if not self.INPUT['mutant_only']:
             self.calc_list.append(PrintCalc('Running calculations on normal system...'), timer_key=None)
@@ -288,7 +290,8 @@ class MMPBSA_App(object):
                                   '%scomplex.%s.%%d' % (prefix, trj_sfx),
                                   mdin, '%scomplex_gb.mdout.%%d' % (prefix),
                                   self.pre + 'restrt.%d')
-            self.calc_list.append(c, '  calculating complex contribution...', timer_key='gb')
+            self.calc_list.append(c, '  calculating complex contribution...', timer_key='gb',
+                                  output_basename='%scomplex_gb.mdout.%%d' % (prefix))
             c = SAClass(parm_system.complex_prmtop,
                         '%scomplex.%s.%%d' % (prefix, trj_sfx),
                         '%scomplex_gb_surf.dat.%%d' % prefix)
@@ -317,7 +320,7 @@ class MMPBSA_App(object):
                                           mdin, '%sreceptor_gb.mdout.%%d' % (prefix),
                                           self.pre + 'restrt.%d')
                     self.calc_list.append(c, '  calculating receptor contribution...',
-                                          timer_key='gb')
+                                          timer_key='gb', output_basename='%sreceptor_gb.mdout.%%d' % (prefix))
                 c = SAClass(parm_system.receptor_prmtop,
                             '%sreceptor.%s.%%d' % (prefix, trj_sfx),
                             '%sreceptor_gb_surf.dat.%%d' % prefix)
@@ -345,7 +348,7 @@ class MMPBSA_App(object):
                                           mdin, '%sligand_gb.mdout.%%d' % (prefix),
                                           self.pre + 'restrt.%d')
                     self.calc_list.append(c, '  calculating ligand contribution...',
-                                          timer_key='gb')
+                                          timer_key='gb', output_basename='%sligand_gb.mdout.%%d' % (prefix))
                 c = SAClass(parm_system.ligand_prmtop,
                             '%sligand.%s.%%d' % (prefix, trj_sfx),
                             '%sligand_gb_surf.dat.%%d' % prefix)
@@ -378,7 +381,8 @@ class MMPBSA_App(object):
                                     '%scomplex.%s.%%d' % (prefix, trj_sfx),
                                     mdin, '%scomplex_pb.mdout.%%d' % prefix,
                                     self.pre + 'restrt.%d')
-            self.calc_list.append(c, '  calculating complex contribution...', timer_key='pb')
+            self.calc_list.append(c, '  calculating complex contribution...', timer_key='pb',
+                                  output_basename='%scomplex_pb.mdout.%%d' % (prefix))
             if not self.stability:
                 try:
                     mdin = mdin_template % 'rec'
@@ -399,7 +403,7 @@ class MMPBSA_App(object):
                                             mdin, '%sreceptor_pb.mdout.%%d' % prefix,
                                             self.pre + 'restrt.%d')
                     self.calc_list.append(c, '  calculating receptor contribution...',
-                                          timer_key='pb')
+                                          timer_key='pb', output_basename='%sreceptor_pb.mdout.%%d' % (prefix))
 
                 try:
                     mdin2 = mdin_template2 % 'lig'
@@ -420,7 +424,7 @@ class MMPBSA_App(object):
                                             mdin2, '%sligand_pb.mdout.%%d' % (prefix),
                                             self.pre + 'restrt.%d')
                     self.calc_list.append(c, '  calculating ligand contribution...',
-                                          timer_key='pb')
+                                          timer_key='pb', output_basename='%sligand_pb.mdout.%%d' % (prefix))
         # end if self.INPUT['pbrun']
 
         if self.INPUT['rismrun']:
@@ -433,7 +437,8 @@ class MMPBSA_App(object):
                                   '%scomplex.%s.%%d' % (prefix, trj_sfx), mdin,
                                   '%scomplex_rism.mdout.%%d' % prefix,
                                   self.pre + 'restrt.%d', self.FILES.xvvfile)
-            self.calc_list.append(c, '  calculating complex contribution...', timer_key='rism')
+            self.calc_list.append(c, '  calculating complex contribution...', timer_key='rism',
+                                  output_basename='%scomplex_rism.mdout.%%d' % (prefix))
 
             if not self.stability:
                 if copy_receptor:
@@ -448,7 +453,7 @@ class MMPBSA_App(object):
                                           '%sreceptor_rism.mdout.%%d' % prefix,
                                           self.pre + 'restrt.%d', self.FILES.xvvfile)
                     self.calc_list.append(c, '  calculating receptor contribution...',
-                                          timer_key='rism')
+                                          timer_key='rism', output_basename='%sreceptor_rism.mdout.%%d' % (prefix))
 
                 if copy_ligand:
                     c = CopyCalc('%sligand_rism.mdout.%%d' % self.pre,
@@ -461,7 +466,8 @@ class MMPBSA_App(object):
                                           '%sligand.%s.%%d' % (prefix, trj_sfx), mdin,
                                           '%sligand_rism.mdout.%%d' % prefix,
                                           self.pre + 'restrt.%d', self.FILES.xvvfile)
-                    self.calc_list.append(c, '  calculating ligand contribution...', timer_key='rism')
+                    self.calc_list.append(c, '  calculating ligand contribution...',
+                                          timer_key='rism', output_basename='%sligand_rism.mdout.%%d' % (prefix))
 
         # end if self.INPUT['rismrun']
 
@@ -473,7 +479,8 @@ class MMPBSA_App(object):
                           '%scomplex.pdb' % prefix,
                           '%scomplex_nm.%s.%%d' % (prefix, trj_sfx),
                           '%scomplex_nm.out.%%d' % prefix, self.INPUT)
-            self.calc_list.append(c, '  calculating complex contribution...', timer_key='nmode')
+            self.calc_list.append(c, '  calculating complex contribution...', timer_key='nmode',
+                                  output_basename='%scomplex_nm.out.%%d' % (prefix))
 
             if not self.stability:
                 if copy_receptor:
@@ -487,7 +494,7 @@ class MMPBSA_App(object):
                                   '%sreceptor_nm.%s.%%d' % (prefix, trj_sfx),
                                   '%sreceptor_nm.out.%%d' % prefix, self.INPUT)
                     self.calc_list.append(c, '  calculating receptor contribution...',
-                                          timer_key='nmode')
+                                          timer_key='nmode', output_basename='%sreceptor_nm.out.%%d' % (prefix))
 
                 if copy_ligand:
                     c = CopyCalc('%sligand_nm.out.%%d' % self.pre,
@@ -500,7 +507,7 @@ class MMPBSA_App(object):
                                   '%sligand_nm.%s.%%d' % (prefix, trj_sfx),
                                   '%sligand_nm.out.%%d' % prefix, self.INPUT)
                     self.calc_list.append(c, '  calculating ligand contribution...',
-                                          timer_key='nmode')
+                                          timer_key='nmode', output_basename='%sligand_nm.out.%%d' % (prefix))
 
         # end if self.INPUT['nmoderun']
 
@@ -539,7 +546,7 @@ class MMPBSA_App(object):
             logging.info('Building AMBER topologies from GROMACS files... Done.\n')
             self.INPUT['receptor_mask'], self.INPUT['ligand_mask'], self.resl = maketop.get_masks()
             self.mutant_index = maketop.com_mut_index
-            self.mut_str = self.resl[maketop.com_mut_index].mutant_label if self.mutant_index else ''
+            self.mut_str = self.resl[maketop.com_mut_index].mutant_label if self.mutant_index is not None else ''
             self.FILES.complex_fixed = f'{self.FILES.prefix}COM_FIXED.pdb'
         self.FILES = self.MPI.COMM_WORLD.bcast(self.FILES, root=0)
         self.INPUT = self.MPI.COMM_WORLD.bcast(self.INPUT, root=0)
@@ -1107,6 +1114,7 @@ class MMPBSA_App(object):
                 if not self.INPUT['mutant_only'] and key in self.calc_types.normal:
                     if from_calc:
                         edata = self.calc_types.normal[key]['delta']['GGAS']
+                        logging.info('Beginning Interaction Entropy calculations...')
                         ie = InteractionEntropyCalc(edata, self.INPUT)
                         ie.save_output(f'{self.pre}normal_interaction_entropy.dat')
 
@@ -1117,6 +1125,7 @@ class MMPBSA_App(object):
                 if key in self.calc_types.mutant:
                     if from_calc:
                         edata = self.calc_types.mutant[key]['delta']['GGAS']
+                        logging.info('Beginning Mutant Interaction Entropy calculations...')
                         mie = InteractionEntropyCalc(edata, self.INPUT)
                         mie.save_output(f'{self.pre}mutant_interaction_entropy.dat')
 
@@ -1133,6 +1142,7 @@ class MMPBSA_App(object):
                 if not self.INPUT['mutant_only'] and key in self.calc_types.normal:
                     if from_calc:
                         edata = self.calc_types.normal[key]['delta']['GGAS']
+                        logging.info('Beginning C2 Entropy calculations...')
                         c2 = C2EntropyCalc(edata, self.INPUT)
                         c2.save_output(f'{self.pre}normal_c2_entropy.dat')
 
@@ -1142,6 +1152,7 @@ class MMPBSA_App(object):
                 if key in self.calc_types.mutant:
                     if from_calc:
                         edata = self.calc_types.mutant[key]['delta']['GGAS']
+                        logging.info('Beginning Mutant C2 Entropy calculations...')
                         c2 = C2EntropyCalc(edata, self.INPUT)
                         c2.save_output(f'{self.pre}mutant_c2_entropy.dat')
 

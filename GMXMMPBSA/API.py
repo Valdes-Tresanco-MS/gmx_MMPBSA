@@ -891,7 +891,7 @@ class MMPBSA_API():
         INFO = {'COM_PDB': com_pdb,
                 'input_file': input_file,
                 'mutant_index': app.mutant_index,
-                'mut_str': app.resl[app.mutant_index].mutant_label if app.mutant_index else '',
+                'mut_str': app.resl[app.mutant_index].mutant_label if app.mutant_index is not None else '',
                 'numframes': app.numframes,
                 'numframes_nmode': app.numframes_nmode,
                 'output_file': output_file,
