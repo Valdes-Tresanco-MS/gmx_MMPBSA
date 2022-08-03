@@ -76,25 +76,25 @@ def _getnumatms(resname):
         return 10
     if resname in ('CYS', 'SER'):
         return 11
-    if resname in 'ASP':
+    if resname in ('ASP'):
         return 12
     if resname in ('ASN', 'PRO', 'THR'):
         return 14
-    if resname in 'GLU':
+    if resname in ('GLU'):
         return 15
     if resname in ('GLH', 'VAL'):
         return 16
     if resname in ('GLN', 'HID', 'HIE', 'MET'):
         return 17
-    if resname in 'HIP':
+    if resname in ('HIP'):
         return 18
     if resname in ('ILE', 'LEU'):
         return 19
-    if resname in 'PHE':
+    if resname in ('PHE'):
         return 20
     if resname in ('LYN', 'TYR'):
         return 21
-    if resname in 'LYS':
+    if resname in ('LYS'):
         return 22
     if resname in ('ARG', 'TRP'):
         return 24
