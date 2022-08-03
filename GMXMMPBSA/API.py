@@ -716,7 +716,7 @@ class MMPBSA_API():
                                                     model_decomp_energy[m1][c][r1] = temp_energy
                                                     e_map[etkey][m][m1][c][r1] = temp_emap
                                 # issue #269
-                                if not model_decomp_energy[m1].get('BDC'):
+                                if model_decomp_energy[m1].get('BDC') is not None:
                                     model_decomp_energy[m1].pop('BDC')
                                     e_map[etkey][m][m1].pop('BDC')
                                     if verbose:
