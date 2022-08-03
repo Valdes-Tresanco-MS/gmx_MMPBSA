@@ -61,7 +61,7 @@ def pb(output_basename, nframes=1, mpi_size=1, nmode=False):
                 continue
             with open(output_basename % i) as of:
                 for line in of:
-                    if not nmode and line.startswith('minimizing coord set #'):
+                    if not nmode and line.startswith('                    FINAL RESULTS'):
                         frames += 1
                     elif nmode and line.startswith('Total:'):
                         frames += 1
