@@ -288,7 +288,7 @@ class MutantMdcrd(object):
                         for i in range(len(words)):
                             if (
                                     coords_done % coordsperline == 0 and
-                                    not self.hasbox or coords_done < number_atoms_mut * 3 - 3
+                                    (not self.hasbox or coords_done < number_atoms_mut * 3 - 3)
                             ):
                                 new_mdcrd.write('\n')
                             new_mdcrd.write('%8.3f' % words[i])
