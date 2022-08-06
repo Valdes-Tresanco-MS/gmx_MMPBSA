@@ -845,8 +845,8 @@ method, while a level-set based algebraic method is used when `ipb > 2`.
 
     !!! info "Keep in mind"
         Sometimes, high values for the solvation energy are obtained using `inp=2`. Check 
-        this [section](https://valdes-tresanco-ms.github.io/gmx_MMPBSA/Q%26A/calculations/#possible-solutions_2) to see 
-        a workaround.
+        this [section](https://valdes-tresanco-ms.github.io/gmx_MMPBSA/dev/Q%26A/calculations/#possible-solutions_2) to 
+        see a workaround.
 
   [227]: https://pubs.acs.org/doi/abs/10.1021/jp073399n
   [229]: https://onlinelibrary.wiley.com/doi/10.1002/jcc.540100504
