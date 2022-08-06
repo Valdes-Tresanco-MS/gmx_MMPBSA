@@ -364,23 +364,23 @@ class QHout(dict):
         self._read()
 
     def summary_output(self):
-        text = ['           Translational      Rotational      Vibrational           Total',
-                'Complex   %13.4f %15.4f %16.4f %15.4f\n' % (self['complex']['TRANSLATIONAL'],
+        text = ['           TRANSLATIONAL      ROTATIONAL      VIBRATIONAL           TOTAL',
+                'Complex   %13.4f %15.4f %16.4f %15.4f' % (self['complex']['TRANSLATIONAL'],
                                                              self['complex']['ROTATIONAL'],
                                                              self['complex']['VIBRATIONAL'],
                                                              self['complex']['TOTAL'],)]
 
         if not self.stability:
-            text.extend(['Receptor  %13.4f %15.4f %16.4f %15.4f\n' % (self['receptor']['TRANSLATIONAL'],
+            text.extend(['Receptor  %13.4f %15.4f %16.4f %15.4f' % (self['receptor']['TRANSLATIONAL'],
                                                                       self['receptor']['ROTATIONAL'],
                                                                       self['receptor']['VIBRATIONAL'],
                                                                       self['receptor']['TOTAL']),
-                         'Ligand    %13.4f %15.4f %16.4f %15.4f\n' % (self['ligand']['TRANSLATIONAL'],
+                         'Ligand    %13.4f %15.4f %16.4f %15.4f' % (self['ligand']['TRANSLATIONAL'],
                                                                       self['ligand']['ROTATIONAL'],
                                                                       self['ligand']['VIBRATIONAL'],
                                                                       self['ligand']['TOTAL']),
                          '',
-                         '-TΔS   %13.4f %15.4f %16.4f %15.4f\n' % (self['delta']['TRANSLATIONAL'],
+                         'Delta     %13.4f %15.4f %16.4f %15.4f' % (self['delta']['TRANSLATIONAL'],
                                                                    self['delta']['ROTATIONAL'],
                                                                    self['delta']['VIBRATIONAL'],
                                                                    self['delta']['TOTAL'])])
@@ -467,6 +467,67 @@ class QHout(dict):
                                            self['ligand']['ROTATIONAL'])
             self['delta']['VIBRATIONAL'] = (self['complex']['VIBRATIONAL'] - self['receptor']['VIBRATIONAL'] -
                                             self['ligand']['VIBRATIONAL'])
+
+class DeltaDeltaQH(dict):
+    def __init__(self, mut, norm, **kwargs):
+        super(DeltaDeltaQH, self).__init__(**kwargs)
+        self.mut = mut
+        self.norm = norm
+
+        self._delta()
+
+    def _delta(self):
+        for key in self.mut:
+            self[key] = self.mut[key] - self.norm[key]
+
+    def summary_output(self):
+        text = ['           TRANSLATIONAL      ROTATIONAL      VIBRATIONAL           TOTAL',
+                'Complex   %13.4f %15.4f %16.4f %15.4f' % (self['complex']['TRANSLATIONAL'],
+                                                             self['complex']['ROTATIONAL'],
+                                                             self['complex']['VIBRATIONAL'],
+                                                             self['complex']['TOTAL'],)]
+
+        if not self.norm.stability:
+            text.extend(['Receptor  %13.4f %15.4f %16.4f %15.4f' % (self['receptor']['TRANSLATIONAL'],
+                                                                      self['receptor']['ROTATIONAL'],
+                                                                      self['receptor']['VIBRATIONAL'],
+                                                                      self['receptor']['TOTAL']),
+                         'Ligand    %13.4f %15.4f %16.4f %15.4f' % (self['ligand']['TRANSLATIONAL'],
+                                                                      self['ligand']['ROTATIONAL'],
+                                                                      self['ligand']['VIBRATIONAL'],
+                                                                      self['ligand']['TOTAL']),
+                         '',
+                         'Delta     %13.4f %15.4f %16.4f %15.4f' % (self['delta']['TRANSLATIONAL'],
+                                                                   self['delta']['ROTATIONAL'],
+                                                                   self['delta']['VIBRATIONAL'],
+                                                                   self['delta']['TOTAL'])])
+        return '\n'.join(text) + '\n\n'
+
+    def summary(self):
+        """ Formatted summary of quasi-harmonic results """
+
+        summry_list = [['', 'TRANSLATIONAL', 'ROTATIONAL', 'VIBRATIONAL', 'TOTAL'],
+                       ['Complex', self['complex']['TRANSLATIONAL'], self['complex']['ROTATIONAL'],
+                        self['complex']['VIBRATIONAL'], self['complex']['TOTAL']]]
+
+        if not self.norm.stability:
+            summry_list.extend([['Receptor',
+                                 self['receptor']['TRANSLATIONAL'],
+                                 self['receptor']['ROTATIONAL'],
+                                 self['receptor']['VIBRATIONAL'],
+                                 self['receptor']['TOTAL']],
+                                ['Ligand',
+                                 self['ligand']['TRANSLATIONAL'],
+                                 self['ligand']['ROTATIONAL'],
+                                 self['ligand']['VIBRATIONAL'],
+                                 self['ligand']['TOTAL']],
+                                ['-TΔS',
+                                 self['delta']['TRANSLATIONAL'],
+                                 self['delta']['ROTATIONAL'],
+                                 self['delta']['VIBRATIONAL'],
+                                 self['delta']['TOTAL']]])
+
+        return summry_list
 
 
 class NMODEout(AmberOutput):

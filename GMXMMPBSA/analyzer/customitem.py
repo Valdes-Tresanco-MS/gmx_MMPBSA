@@ -571,7 +571,7 @@ class CustomItem(QTreeWidgetItem):
                 self.tb.addWidget(self.charts_action[b]())
 
         if -1 in self.buttons:
-            self._define_option_button()
+            self.tb.addWidget(self._define_option_button())
         elif -2 in self.buttons:
             self._define_result_table_btn()
         elif len(self.buttons) > 1:
