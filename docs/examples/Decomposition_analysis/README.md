@@ -66,6 +66,7 @@ igb=5, saltcon=0.150,
 /
 #make sure to include at least one residue from both the receptor
 #and ligand in the print_res mask of the &decomp section.
+#this requirement is automatically fulfilled when using the within keyword.
 #http://archive.ambermd.org/201308/0075.html
 &decomp
 idecomp=2, dec_verbose=3,
