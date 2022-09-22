@@ -836,7 +836,12 @@ method, while a level-set based algebraic method is used when `ipb > 2`.
 :   Option to select different methods to compute non-polar solvation free energy.
 
     * 1: The total non-polar solvation free energy is modeled as a single term linearly proportional to the
-    solvent accessible surface area. If `inp = 1`, `use_sav` must be equal to 0. ([ref.][227])
+    solvent accessible surface area ([ref.][227]). When using `inp = 1`:
+
+        * `sprob` is reset to 1.4
+        * `cavity_surften` is reset to 0.005
+        * `cavity_offset` is reset to 0.000
+
     * 2: The total non-polar solvation free energy is modeled as two terms: the cavity term and the
     dispersion term. The dispersion term is computed with a surface-based integration method
     ([ref.][227]) closely related to the PCM solvent for quantum chemical programs. ([ref.][229]) Under this
@@ -845,8 +850,8 @@ method, while a level-set based algebraic method is used when `ipb > 2`.
 
     !!! info "Keep in mind"
         Sometimes, high values for the solvation energy are obtained using `inp=2`. Check 
-        this [section](https://valdes-tresanco-ms.github.io/gmx_MMPBSA/Q%26A/calculations/#possible-solutions_2) to see 
-        a workaround.
+        this [section](https://valdes-tresanco-ms.github.io/gmx_MMPBSA/dev/Q%26A/calculations/#possible-solutions_2) to 
+        see a workaround.
 
   [227]: https://pubs.acs.org/doi/abs/10.1021/jp073399n
   [229]: https://onlinelibrary.wiley.com/doi/10.1002/jcc.540100504

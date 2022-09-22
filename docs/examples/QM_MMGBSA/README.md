@@ -64,6 +64,10 @@ endframe=14,
 PBRadii=2,
 forcefields="oldff/leaprc.ff99SB,leaprc.gaff"
 /
+#make sure to include at least one residue from both the receptor
+#and ligand in the qm_residues mask when using 'ifqnt'.
+#this requirement is automatically fulfilled when using the within keyword.
+#https://groups.google.com/g/gmx_mmpbsa/c/GNb4q4YGCH8
 &gb
 igb=1, saltcon=0.150,
 ifqnt=1, qm_theory=PM3,

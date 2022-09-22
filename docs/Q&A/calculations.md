@@ -103,8 +103,7 @@ Here we describe a series of frequent issues related to calculations and their p
     is, the total non-polar solvation free energy will be modeled as two terms: the cavity term and the dispersion 
     term. The dispersion term is computed with a surface-based integration method closely related to the PCM 
     solvent for quantum chemical programs. Under this framework, the cavity term is still computed as a term 
-    linearly proportional to the molecular solvent-accessible-surface area (SASA) or the molecular volume enclosed 
-    by SASA.
+    linearly proportional to the molecular volume enclosed by SASA.
 
         #### **Possible solutions:**
     
@@ -121,6 +120,22 @@ Here we describe a series of frequent issues related to calculations and their p
             istrng=0.15, fillratio=4.0, inp=1
             /
             ```
+
+        : Another way to avoid the EDISPER contribution is by modifying the `_GMXMMPBSA_info` file. Changing the value of
+        `INPUT['inp']` to 1 and run:
+
+            ```
+            gmx_MMPBSA --rewrite-output
+            ```
+
+        :  will avoid the calculation of the EDISPER contribution and report just the ENPOLAR contribution as a term 
+        linearly proportional to the molecular volume enclosed by SASA. 
+
+        
+        !!! info
+            **Note that these two approximations will yield different values for the non-polar component of the 
+            solvation energy.** 
+            Use one or another depending on your interest.
 
     : Check this [publication][11] and see the drawbacks of modeling the total non-polar solvation free energy with 
     two terms, _i.e._, the cavity term and the dispersion term. Sometimes there are imbalances in the 
