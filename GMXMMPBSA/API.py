@@ -886,6 +886,9 @@ class MMPBSA_API():
             output_file = app.output_file
             decomp_output_file = app.decomp_output_file if app.INPUT['decomprun'] else None
             size = app.size
+            # write the pdb file
+            with open(app.FILES.complex_fixed, 'w') as opdb:
+                opdb.write(app.COM_PDB)
             app.resl = mask2list(app.FILES.complex_fixed, app.INPUT['receptor_mask'], app.INPUT['ligand_mask'])
 
         INFO = {'COM_PDB': com_pdb,
