@@ -130,15 +130,23 @@ class CheckMakeTop:
                         'Increasing cutoff value by 0.1 until number of decomp residues to print >= 2'
                     )
                     cutoff = float(self.INPUT['print_res'].split()[1])
+                    it = 0
                     while len(decomp_res) < 2:
-                        cutoff = round(cutoff, 1) + 0.1
+                        cutoff = round(cutoff, 1) + 0.25
                         decomp_res = self.get_selected_residues(f'within {cutoff}')
+                        if it == 20:
+                            # probably not needed, but...
+                            GMXMMPBSA_ERROR('The maximum number of iterations to select interaction residues was '
+                                            'reached. Please set print_res with a valid selection.')
+                        it += 1
 
                     logging.info(f"Selecting residues by distance ({round(cutoff, 1)} Å) between "
                                  f"receptor and ligand for decomposition analysis...")
                 else:
                     logging.info(f"Selecting residues by distance ({self.INPUT['print_res'].split()[1]} Å) between "
                                  f"receptor and ligand for decomposition analysis...")
+            elif self.INPUT['print_res'] == 'all':
+                logging.info('Selecting all residues for decomposition analysis...')
             else:
                 logging.info('User-selected residues for decomposition analysis...')
 
@@ -160,10 +168,11 @@ class CheckMakeTop:
                 if total_items > 250:
                     logging.warning(f"Using idecomp = {self.INPUT['idecomp']} and dec_verbose ="
                                     f" {self.INPUT['dec_verbose']} will generate approximately {total_items} items. "
-                                    f"Large print selections can demand a large amount of memory and take a "
+                                    f"Large print selections demand a large amount of memory and take a "
                                     f"significant amount of time to print!")
 
             self.INPUT['print_res'] = ','.join(list2range(decomp_res)['string'])
+
         if self.INPUT['ifqnt']:
             qm_residues, (rec_charge, lig_charge) = self.get_selected_residues(self.INPUT['qm_residues'], True)
 
@@ -174,15 +183,23 @@ class CheckMakeTop:
                         'Increasing cutoff value by 0.1 until number of qm_residues > 0'
                     )
                     cutoff = float(self.INPUT['qm_residues'].split()[1])
+                    it = 0
                     while len(qm_residues) == 0:
-                        cutoff = round(cutoff, 1) + 0.1
+                        cutoff = round(cutoff, 1) + 0.25
                         qm_residues, (rec_charge, lig_charge) = self.get_selected_residues(f'within {cutoff}', True)
+                        if it == 20:
+                            # probably not needed, but...
+                            GMXMMPBSA_ERROR('The maximum number of iterations to select interaction residues was '
+                                            'reached. Please set print_res with a valid selection.')
+                        it += 1
 
                     logging.info(f"Selecting residues by distance ({round(cutoff, 1)} Å) between "
                                  f"receptor and ligand for QM/MM calculation...")
                 else:
                     logging.info(f"Selecting residues by distance ({self.INPUT['qm_residues'].split()[1]} Å) between "
                                  f"receptor and ligand for QM calculation...")
+            elif self.INPUT['qm_residues'] == 'all':
+                logging.info('Selecting all residues for QM calculation...')
             else:
                 logging.info('User-selected residues for QM calculation...')
 
@@ -728,7 +745,7 @@ class CheckMakeTop:
                     # not copy ions and solvent
                     sol_ion = [
                         # standard gmx form
-                        'NA', 'CL', 'SOL',
+                        'NA', 'CL', 'SOL', 'K'
                         # charmm-GUI form ??
                         'SOD', 'Na+', 'CLA', 'Cl-', 'POT', 'K+',
                         'TIP3P', 'TIP3', 'TP3', 'TIPS3P', 'TIP3o',
@@ -775,13 +792,11 @@ class CheckMakeTop:
         """
         Convert string selection format to amber index list
         """
-        # FIXME: Error when any residue is selected
-
         if qm_sele:
             com_top = parmed.load_file(self.complex_pmrtop)
 
         dist, res_selection = selector(select)
-        sele_res = []
+        residues_selection = {'rec': [], 'lig': []}
         rec_charge = 0
         lig_charge = 0
         if dist:
@@ -796,39 +811,46 @@ class CheckMakeTop:
                         for lat in self.complex_str.residues[lres - 1].atoms:
                             lat_coor = [lat.xx, lat.xy, lat.xz]
                             if get_dist(rat_coor, lat_coor) <= dist:
-                                if rres not in sele_res:
-                                    sele_res.append(rres)
+                                if rres not in residues_selection['rec']:
+                                    residues_selection['rec'].append(rres)
                                     if qm_sele:
                                         rec_charge += round(
                                             sum(atm.charge for atm in com_top.residues[rres - 1].atoms), 0)
-                                if lres not in sele_res:
-                                    sele_res.append(lres)
+                                if lres not in residues_selection['lig']:
+                                    residues_selection['lig'].append(lres)
                                     if qm_sele:
                                         lig_charge += round(
                                             sum(atm.charge for atm in com_top.residues[lres - 1].atoms), 0)
                                 break
         elif res_selection:
             for i in self.resl:
-                if i.is_ligand():
-                    continue
                 rres = self.complex_str.residues[i - 1]
                 if [rres.chain, rres.number, rres.insertion_code] in res_selection:
-                    sele_res.append(i)
-                    if qm_sele:
-                        rec_charge += round(sum(atm.charge for atm in com_top.residues[i - 1].atoms), 0)
+                    if i.is_ligand():
+                        residues_selection['lig'].append(i)
+                        if qm_sele:
+                            rec_charge += round(sum(atm.charge for atm in com_top.residues[i - 1].atoms), 0)
+                    else:
+                        residues_selection['rec'].append(i)
+                        if qm_sele:
+                            lig_charge += round(sum(atm.charge for atm in com_top.residues[i - 1].atoms), 0)
                     res_selection.remove([rres.chain, rres.number, rres.insertion_code])
-            for j in self.resl:
-                if j.is_receptor():
-                    continue
-                lres = self.complex_str.residues[j - 1]
-                if [lres.chain, lres.number, lres.insertion_code] in res_selection:
-                    sele_res.append(j)
-                    if qm_sele:
-                        lig_charge += round(sum(atm.charge for atm in com_top.residues[j - 1].atoms), 0)
-                    res_selection.remove([lres.chain, lres.number, lres.insertion_code])
             for res in res_selection:
                 logging.warning("We couldn't find this residue CHAIN:{} RES_NUM:{} ICODE: {}".format(*res))
-        sele_res = sorted(sele_res, key=lambda x: x.index)
+            # check if residues in receptor and ligand was defined
+            if not residues_selection['rec'] or not residues_selection['lig']:
+                GMXMMPBSA_ERROR('For decomposition analysis, you most define residues for both receptor and ligand!')
+        else:
+            for i in self.resl:
+                if i.is_ligand():
+                    residues_selection['lig'].append(i)
+                    if qm_sele:
+                        rec_charge += round(sum(atm.charge for atm in com_top.residues[i - 1].atoms), 0)
+                else:
+                    residues_selection['rec'].append(i)
+                    if qm_sele:
+                        lig_charge += round(sum(atm.charge for atm in com_top.residues[i - 1].atoms), 0)
+        sele_res = sorted([r for m in residues_selection.values() for r in m], key=lambda x: x.index)
         return (sele_res, (rec_charge, lig_charge)) if qm_sele else sele_res
 
     def fixparm2amber(self, structure, str_name=None):

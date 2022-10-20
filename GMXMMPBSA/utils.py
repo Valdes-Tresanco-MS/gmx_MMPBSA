@@ -610,7 +610,9 @@ def selector(selection: str):
     dist = None
     # exclude = None
     res_selections = []
-    if selection.startswith('within'):
+    if selection == 'all':
+        pass
+    elif selection.startswith('within'):
         try:
             dist = float(string_list[1])
         except:
