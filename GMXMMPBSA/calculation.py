@@ -124,7 +124,8 @@ class CalculationList(list):
                         else:
                             nframes = self.nmframes
                             nmode = True
-                        pb_thread = threading.Thread(target=pb, args=(self.output_files[i], nframes, self.mpi_size, nmode))
+                        pb_thread = threading.Thread(target=pb, args=(self.output_files[i], nframes, self.mpi_size,
+                                                                      nmode), daemon=True)
                         pb_thread.start()
 
                 calc.setup()
