@@ -134,7 +134,8 @@ Here we describe a series of frequent issues related to calculations and their p
         
         !!! info
             **Note that these two approximations will yield different values for the non-polar component of the 
-            solvation energy.** 
+            solvation energy 
+            (see [here](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/issues/273#issuecomment-1207144247)).** 
             Use one or another depending on your interest.
 
     : Check this [publication][11] and see the drawbacks of modeling the total non-polar solvation free energy with 
