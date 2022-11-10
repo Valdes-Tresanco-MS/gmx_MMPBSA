@@ -4,6 +4,31 @@ title: Changelog
 ---
 # Changelog
 
+## gmx_MMPBSA v1.5.7 (09/10/2022)
+
+### Additions
+- Progress bar implementation
+- verbose options for API and info logging for IE and C2 entropy calculations
+- Added logging info for MPI calculations
+
+### Fixes
+
+- QH entropy calculation
+- Decomposition bug (#269)
+- Alanine scanning in Terminal residues
+- Regression to output files subwindow in gmx_MMPBSA_ana
+- Bug when using the compact results version
+- Seaborn compatibility
+- `print_res` in `&decomp` namelist does not accept "all" (#292)
+- error when output files are open and any plot property is changed
+- error if at least one residue of both the receptor and the ligand are not included in the selection for decomposition
+
+
+### Changes
+- now use `mpi4py` when `mpi_size > 1` otherwise use `fake_MPI`. Now "MPI" flag is not required 
+
+---
+
 ## gmx_MMPBSA v1.5.6 (07/06/2022)
 
 ### Fix
