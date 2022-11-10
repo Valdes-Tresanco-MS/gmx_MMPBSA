@@ -21,6 +21,11 @@
          <changefreq>daily</changefreq>
     </url>
     <url>
+         <loc>https://valdes-tresanco-ms.github.io/gmx_MMPBSA/dev/dev/api_reference/</loc>
+         <lastmod>2022-11-10</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
          <loc>https://valdes-tresanco-ms.github.io/gmx_MMPBSA/dev/dev/changelog/</loc>
          <lastmod>2022-11-10</lastmod>
          <changefreq>daily</changefreq>
