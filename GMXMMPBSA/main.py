@@ -219,7 +219,10 @@ class MMPBSA_App(object):
         nframes = self.numframes if self.master else 0
         nmframes = self.numframes_nmode if self.master else 0
         self.calc_list = CalculationList(self.timer, nframes, nmframes, self.mpi_size)
-
+        if self.master:
+            logging.info(f'Starting calculations in {self.mpi_size} CPUs...')
+            if (self.INPUT['pbrun'] or self.INPUT['rismrun'] or self.INPUT['nmoderun']) and self.mpi_size > 1:
+                logging.warning('PB/RISM/NMODE will be calculated with multiple threads, make sure you have enough RAM.')
         if not self.INPUT['mutant_only']:
             self.calc_list.append(PrintCalc('Running calculations on normal system...'), timer_key=None)
             self._load_calc_list(self.pre, False, self.normal_system)
@@ -712,6 +715,8 @@ class MMPBSA_App(object):
                 args.remove('mpi')
             elif 'MPI' in args:
                 args.remove('MPI')
+            elif self.mpi_size > 1:
+                pass
             else:
                 _mpi = False
             mpi_cl = f'  mpirun -np {self.mpi_size} ' if _mpi else '  '
