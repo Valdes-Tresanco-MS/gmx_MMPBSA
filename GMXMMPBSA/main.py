@@ -1139,7 +1139,7 @@ class MMPBSA_App(object):
                                                                  self.numframes)
                     calculated = True
 
-                if self.INPUT['alarun'] and not self.INPUT['mutant_only']:
+                if self.INPUT['alarun'] and not self.INPUT['mutant_only'] and key in self.calc_types.normal:
                     self.calc_types.mut_norm['ie'] = DeltaIEC2Statistic(
                         self.calc_types.mutant['ie'], self.calc_types.normal['ie'])
 
@@ -1165,7 +1165,7 @@ class MMPBSA_App(object):
                     self.calc_types.mutant['c2'].parse_from_file(f'{self.pre}mutant_c2_entropy.dat')
                     calculated = True
 
-                if self.INPUT['alarun'] and not self.INPUT['mutant_only']:
+                if self.INPUT['alarun'] and not self.INPUT['mutant_only'] and key in self.calc_types.normal:
                     self.calc_types.mut_norm['c2'] = DeltaIEC2Statistic(
                         self.calc_types.mutant['c2'], self.calc_types.normal['c2'])
             if calculated:
