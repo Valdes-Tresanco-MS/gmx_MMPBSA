@@ -32,4 +32,4 @@ jobs:
           GOOGLE_ANALYTICS_KEY: ${{ secrets.GOOGLE_ANALYTICS_KEY }}
         run: |
           mike deploy --push --rebase --update-aliases dev latest
-          mike set-default --push --rebase latest
+          mike set-default --push --rebase dev
