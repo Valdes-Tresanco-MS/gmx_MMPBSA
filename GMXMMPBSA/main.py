@@ -219,7 +219,10 @@ class MMPBSA_App(object):
         nframes = self.numframes if self.master else 0
         nmframes = self.numframes_nmode if self.master else 0
         self.calc_list = CalculationList(self.timer, nframes, nmframes, self.mpi_size)
-
+        if self.master:
+            logging.info(f'Starting calculations in {self.mpi_size} CPUs...')
+            if (self.INPUT['pbrun'] or self.INPUT['rismrun'] or self.INPUT['nmoderun']) and self.mpi_size > 1:
+                logging.warning('PB/RISM/NMODE will be calculated with multiple threads, make sure you have enough RAM.')
         if not self.INPUT['mutant_only']:
             self.calc_list.append(PrintCalc('Running calculations on normal system...'), timer_key=None)
             self._load_calc_list(self.pre, False, self.normal_system)
@@ -712,6 +715,8 @@ class MMPBSA_App(object):
                 args.remove('mpi')
             elif 'MPI' in args:
                 args.remove('MPI')
+            elif self.mpi_size > 1:
+                pass
             else:
                 _mpi = False
             mpi_cl = f'  mpirun -np {self.mpi_size} ' if _mpi else '  '
@@ -1134,7 +1139,7 @@ class MMPBSA_App(object):
                                                                  self.numframes)
                     calculated = True
 
-                if self.INPUT['alarun'] and not self.INPUT['mutant_only']:
+                if self.INPUT['alarun'] and not self.INPUT['mutant_only'] and key in self.calc_types.normal:
                     self.calc_types.mut_norm['ie'] = DeltaIEC2Statistic(
                         self.calc_types.mutant['ie'], self.calc_types.normal['ie'])
 
@@ -1160,7 +1165,7 @@ class MMPBSA_App(object):
                     self.calc_types.mutant['c2'].parse_from_file(f'{self.pre}mutant_c2_entropy.dat')
                     calculated = True
 
-                if self.INPUT['alarun'] and not self.INPUT['mutant_only']:
+                if self.INPUT['alarun'] and not self.INPUT['mutant_only'] and key in self.calc_types.normal:
                     self.calc_types.mut_norm['c2'] = DeltaIEC2Statistic(
                         self.calc_types.mutant['c2'], self.calc_types.normal['c2'])
             if calculated:

@@ -839,7 +839,8 @@ class CheckMakeTop:
                 logging.warning("We couldn't find this residue CHAIN:{} RES_NUM:{} ICODE: {}".format(*res))
             # check if residues in receptor and ligand was defined
             if not residues_selection['rec'] or not residues_selection['lig']:
-                GMXMMPBSA_ERROR('For decomposition analysis, you most define residues for both receptor and ligand!')
+                if not self.INPUT['alarun']:
+                    GMXMMPBSA_ERROR('For decomposition analysis, you most define residues for both receptor and ligand!')
         else:
             for i in self.resl:
                 if i.is_ligand():

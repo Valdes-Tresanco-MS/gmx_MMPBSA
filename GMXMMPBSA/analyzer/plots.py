@@ -758,7 +758,7 @@ class OutputFiles(QMdiSubWindow):
         font.setStyleHint(QFont.StyleHint.TypeWriter)
         self.textedit.setFont(font)
         self.textedit.setPlainText(''.join(text))
-
+        self.item_parent = None
         self.button = button
 
     def closeEvent(self, closeEvent: QCloseEvent) -> None:
