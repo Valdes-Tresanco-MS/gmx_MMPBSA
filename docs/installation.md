@@ -14,7 +14,7 @@ smoothly with any GROMACS present in the `PATH` and that is compatible with the 
 
 !!! danger
     gmx_MMPBSA v1.5.x includes a number of new functionalities and parts of the code have been completely rewritten, 
-    hence is incompatible with previous versions.
+    hence it is incompatible with previous versions.
 
 Currently, gmx_MMPBSA can be installed using two ways:
 
@@ -32,6 +32,10 @@ errors are more frequent.
 
 !!! info "Installation"
     === "conda environment"
+
+        !!! Info "Important"
+            Make sure to have conda installed in your computer. Check the third tab "Miniconda installation" for more 
+            info. 
 
         === "`*.yml file`"    
             Installing gmx_MMPBSA using a yml file. 
@@ -278,17 +282,36 @@ errors are more frequent.
     
     === "Miniconda Installation"
     
-        [Miniconda] installation
+        Download and install [Miniconda]
+
         <div class="termy">
+
         ```bash
         $ curl -O https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
         ---> 100%
+
         $ chmod +x Miniconda3-latest-Linux-x86_64.sh
+
         $ ./Miniconda3-latest-Linux-x86_64.sh
         ---> 100%
+
         Successful miniconda intallation
         ```
+
         </div>
+
+        ??? note "Copy described intructions"     
+
+            ``` bash 
+            curl -O https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh   # (1)
+            chmod +x Miniconda3-latest-Linux-x86_64.sh                                      # (2)
+            ./Miniconda3-latest-Linux-x86_64.sh                                             # (3) 
+           
+            ```
+        
+            1. Download Miniconda installer
+            2. Change permissions for the installer
+            3. Execute and install miniconda
 
 ### Extra Dependencies
 gmx_MMPBSA uses some dependencies for other functions independent of calculations or in some cases they may be 
