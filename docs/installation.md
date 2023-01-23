@@ -80,7 +80,7 @@ errors are more frequent.
             $ conda activate gmxMMPBSA
             
             // Install mpi4py and AmberTools
-            $ conda install -c conda-forge mpi4py=3.1.3 ambertools=21.12 compilers -y -q
+            $ conda install -c conda-forge mpi4py=3.1.3 ambertools=21.12 compilers=1.2.0 -y -q
             
             // Install updated version of ParmEd
             $ python -m pip install git+https://github.com/Valdes-Tresanco-MS/ParmEd.git@v3.4
@@ -100,7 +100,7 @@ errors are more frequent.
                 conda update conda
                 conda create -n gmxMMPBSA python=3.9 -y -q                                      # (1)
                 conda activate gmxMMPBSA                                                        # (2)
-                conda install -c conda-forge mpi4py=3.1.3 ambertools=21.12 compilers -y -q      # (3)
+                conda install -c conda-forge mpi4py=3.1.3 ambertools=21.12 compilers=1.2.0 -y -q      # (3)
                 python -m pip install git+https://github.com/Valdes-Tresanco-MS/ParmEd.git@v3.4 # (4)
                 python -m pip install pyqt5                                                     # (5)
                 # Optional
