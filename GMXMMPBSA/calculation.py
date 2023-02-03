@@ -680,8 +680,8 @@ class InteractionEntropyCalc:
         k = 0.001985875
         temperature = self.INPUT['temperature']
 
-        exp_energy_int = np.array([], dtype=np.float)
-        self.data = np.zeros(self.ggas.size, dtype=np.float)
+        exp_energy_int = np.array([], dtype=float)
+        self.data = np.zeros(self.ggas.size, dtype=float)
 
         for i in tqdm(range(self.ggas.size), bar_format=TQDM_BAR_FORMAT, ascii=True):
             aeint = self.ggas[:i+1].mean()
