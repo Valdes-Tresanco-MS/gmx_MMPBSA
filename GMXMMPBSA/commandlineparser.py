@@ -94,6 +94,11 @@ def mol2(arg):
 def index(arg):
     return arg
 
+def index_groups(value):
+    try:
+        return int(value)
+    except Exception:
+        return value
 
 class GMXMMPBSA_ArgParser(ArgumentParser):
 
@@ -173,7 +178,7 @@ group.add_argument('-cs', dest='complex_tpr', metavar='<Structure File>', defaul
                          below. Allowed formats: *.tpr (recommended), *.pdb''')
 group.add_argument('-ci', dest='complex_index', metavar='<Index File>', default=None, type=index,
                    help='Index file of the bound complex.')
-group.add_argument('-cg', dest='complex_groups', metavar='index', nargs=2, default=None, type=int,
+group.add_argument('-cg', dest='complex_groups', metavar='index', nargs=2, default=None, type=index_groups,
                    help='Groups of receptor and ligand in complex index file. The notation is as follows: "-cg '
                         '<Receptor group> <Ligand group>", ie. -cg 1 13')
 group.add_argument('-ct', dest='complex_trajs', nargs='*', metavar='TRJ', type=trajectory,

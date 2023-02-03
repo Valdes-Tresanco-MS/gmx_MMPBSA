@@ -26,7 +26,7 @@ import textwrap
 import parmed
 from GMXMMPBSA.exceptions import *
 from GMXMMPBSA.utils import (selector, get_dist, list2range, res2map, get_indexes, log_subprocess_output, check_str,
-                             eq_strs)
+                             eq_strs, get_index_groups)
 from GMXMMPBSA.alamdcrd import _scaledistance
 import subprocess
 from pathlib import Path
@@ -233,15 +233,17 @@ class CheckMakeTop:
 
         # wt complex
         # make index for extract pdb structure
-        rec_group, lig_group = self.FILES.complex_groups
-        if rec_group == lig_group:
+        com_rec_group, com_lig_group = self.FILES.complex_groups
+        if com_rec_group == com_lig_group:
             GMXMMPBSA_ERROR('The receptor and ligand groups have to be different')
+        num_com_rec_group, str_com_rec_group = get_index_groups(self.FILES.complex_index, com_rec_group)
+        num_com_lig_group, str_com_lig_group = get_index_groups(self.FILES.complex_index, com_lig_group)
 
         logging.info('Making gmx_MMPBSA index for complex...')
         # merge both (rec and lig) groups into complex group, modify index and create a copy
         # 1-rename groups, 2-merge
-        make_ndx_echo_args = ['echo', 'name {r} GMXMMPBSA_REC\n name {l} GMXMMPBSA_LIG\n  {r} | '
-                                      '{l}\n q\n'.format(r=rec_group, l=lig_group)]
+        make_ndx_echo_args = ['echo', '-e', 'name {r} GMXMMPBSA_REC\n name {l} GMXMMPBSA_LIG\n  {r} | '
+                                      '{l}\n q\n'.format(r=num_com_rec_group, l=num_com_lig_group)]
         c1 = subprocess.Popen(make_ndx_echo_args, stdout=subprocess.PIPE)
 
         com_ndx = self.FILES.prefix + 'COM_index.ndx'
@@ -254,7 +256,8 @@ class CheckMakeTop:
             GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(self.make_ndx), self.FILES.complex_index))
         self.FILES.complex_index = com_ndx
 
-        logging.info(f'Normal Complex: Saving group {rec_group}_{lig_group} in {self.FILES.complex_index} file as '
+        logging.info(f'Normal Complex: Saving group {str_com_rec_group}_{str_com_lig_group} '
+                     f'({num_com_rec_group}_{num_com_lig_group}) in {self.FILES.complex_index} file as '
                      f'{self.complex_str_file}')
         # avoid PBC and not chain ID problems
         pdbcom_echo_args = ['echo', 'GMXMMPBSA_REC_GMXMMPBSA_LIG']
@@ -304,7 +307,7 @@ class CheckMakeTop:
             self.use_temp = True
             logging.warning('When &decomp is defined, we generate a receptor file in order to extract interface '
                             'residues')
-            rec_echo_args = ['echo', '{}'.format(rec_group)]
+            rec_echo_args = ['echo', '-e', '{}'.format(num_com_rec_group)]
             cp1 = subprocess.Popen(rec_echo_args, stdout=subprocess.PIPE)
             if str_format == 'tpr':
                 # we extract the pdb from the first frame of trajs to make amber topology
@@ -327,9 +330,26 @@ class CheckMakeTop:
         # wt receptor
         if self.FILES.receptor_tpr:
             logging.info('A receptor structure file was defined. Using MT approach...')
-            logging.info(f'Normal Receptor: Saving group {self.FILES.receptor_group} in {self.FILES.receptor_index} '
-                         f'file as {self.receptor_str_file}')
-            pdbrec_echo_args = ['echo', '{}'.format(self.FILES.receptor_group)]
+            num_rec_group, str_rec_group = get_index_groups(self.FILES.receptor_index, self.FILES.receptor_group)
+
+            logging.info('Making gmx_MMPBSA index for receptor...')
+            make_ndx_echo_args = ['echo', '-e', 'name {r} GMXMMPBSA_REC\n q\n'.format(r=num_rec_group)]
+            c1 = subprocess.Popen(make_ndx_echo_args, stdout=subprocess.PIPE)
+
+            rec_ndx = self.FILES.prefix + 'REC_index.ndx'
+            make_ndx_args = self.make_ndx + ['-n', self.FILES.receptor_index, '-o', rec_ndx]
+            logging.debug('Running command: ' + ' '.join(make_ndx_echo_args[:2]) + ' "' +
+                          (' '.join(make_ndx_echo_args[2:]).replace('\n', '\\n')) + '"' + ' | ' +
+                          ' '.join(make_ndx_args))
+            c2 = subprocess.Popen(make_ndx_args, stdin=c1.stdout, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            log_subprocess_output(c2)
+            if c2.wait():  # if it quits with return code != 0
+                GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(self.make_ndx), self.FILES.complex_index))
+            self.FILES.receptor_index = rec_ndx
+
+            logging.info(f'Normal Receptor: Saving group {str_rec_group} ({num_rec_group}) in '
+                         f'{self.FILES.receptor_index} file as {self.receptor_str_file}')
+            pdbrec_echo_args = ['echo', '-e', '{}'.format(num_rec_group)]
             p1 = subprocess.Popen(pdbrec_echo_args, stdout=subprocess.PIPE)
             str_format = 'tpr' if self.FILES.receptor_tpr[-3:] == 'tpr' else 'pdb'
             if str_format == 'tpr':
@@ -350,9 +370,9 @@ class CheckMakeTop:
         else:
             logging.info('No receptor structure file was defined. Using ST approach...')
             logging.info('Using receptor structure from complex to generate AMBER topology')
-            logging.info('Normal Receptor: Saving group {} in {} file as {}'.format(
-                rec_group, self.FILES.complex_index, self.receptor_str_file))
-            pdbrec_echo_args = ['echo', '{}'.format(rec_group)]
+            logging.info(f'Normal Receptor: Saving group {str_com_rec_group} ({num_com_rec_group}) in '
+                         f'{self.FILES.complex_index} file as {self.receptor_str_file}')
+            pdbrec_echo_args = ['echo', '-e', '{}'.format(num_com_rec_group)]
             cp1 = subprocess.Popen(pdbrec_echo_args, stdout=subprocess.PIPE)
             str_format = 'tpr' if self.FILES.complex_tpr[-3:] == 'tpr' else 'pdb'
             if str_format == 'tpr':
@@ -372,10 +392,27 @@ class CheckMakeTop:
         if self.FILES.ligand_tpr:  # ligand is protein
             # FIXME: if ligand is a zwitterionic aa fail
             logging.info('A ligand structure file was defined. Using MT approach...')
-            logging.info('Normal Ligand: Saving group {} in {} file as {}'.format(
-                self.FILES.ligand_group, self.FILES.ligand_index, self.ligand_str_file))
+            num_lig_group, str_lig_group = get_index_groups(self.FILES.ligand_index, self.FILES.ligand_group)
+
+            logging.info('Making gmx_MMPBSA index for ligand...')
+            make_ndx_echo_args = ['echo', '-e', 'name {l} GMXMMPBSA_LIG\n q\n'.format(l=num_lig_group)]
+            c1 = subprocess.Popen(make_ndx_echo_args, stdout=subprocess.PIPE)
+
+            lig_ndx = self.FILES.prefix + 'LIG_index.ndx'
+            make_ndx_args = self.make_ndx + ['-n', self.FILES.ligand_index, '-o', lig_ndx]
+            logging.debug('Running command: ' + ' '.join(make_ndx_echo_args[:2]) + ' "' +
+                          (' '.join(make_ndx_echo_args[2:]).replace('\n', '\\n')) + '"' + ' | ' +
+                          ' '.join(make_ndx_args))
+            c2 = subprocess.Popen(make_ndx_args, stdin=c1.stdout, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            log_subprocess_output(c2)
+            if c2.wait():  # if it quits with return code != 0
+                GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(self.make_ndx), self.FILES.complex_index))
+            self.FILES.ligand_index = lig_ndx
+
+            logging.info(f'Normal Ligand: Saving group {str_lig_group} ({num_lig_group}) in {self.FILES.ligand_index}'
+                         f' file as {self.ligand_str_file}')
             # wt ligand
-            pdblig_echo_args = ['echo', '{}'.format(self.FILES.ligand_group)]
+            pdblig_echo_args = ['echo', '-e', '{}'.format(num_lig_group)]
             l1 = subprocess.Popen(pdblig_echo_args, stdout=subprocess.PIPE)
             str_format = 'tpr' if self.FILES.ligand_tpr[-3:] == 'tpr' else 'pdb'
             if str_format == 'tpr':
@@ -396,9 +433,9 @@ class CheckMakeTop:
             # wt complex ligand
             logging.info('No ligand structure file was defined. Using ST approach...')
             logging.info('Using ligand structure from complex to generate AMBER topology')
-            logging.info('Normal Ligand: Saving group {} in {} file as {}'.format(lig_group, self.FILES.complex_index,
-                                                                                  self.ligand_str_file))
-            pdblig_echo_args = ['echo', '{}'.format(lig_group)]
+            logging.info(f'Normal Ligand: Saving group {str_com_lig_group} ({num_com_lig_group}) in '
+                         f'{self.FILES.complex_index} file as {self.ligand_str_file}')
+            pdblig_echo_args = ['echo', '-e', '{}'.format(num_com_lig_group)]
             l1 = subprocess.Popen(pdblig_echo_args, stdout=subprocess.PIPE)
 
             str_format = 'tpr' if self.FILES.complex_tpr[-3:] == 'tpr' else 'pdb'
@@ -431,8 +468,8 @@ class CheckMakeTop:
             self.ref_str = check_str(self.FILES.reference_structure, ref=True)
         self.check4water()
         self.indexes = get_indexes(com_ndx=self.FILES.complex_index,
-                                   rec_ndx=self.FILES.receptor_index, rec_group=self.FILES.receptor_group,
-                                   lig_ndx=self.FILES.ligand_index, lig_group=self.FILES.ligand_group)
+                                   rec_ndx=self.FILES.receptor_index,
+                                   lig_ndx=self.FILES.ligand_index)
         self.resi, self.resl, self.orderl = res2map(self.indexes, self.complex_str)
         self.check_structures(self.complex_str, self.receptor_str, self.ligand_str)
 

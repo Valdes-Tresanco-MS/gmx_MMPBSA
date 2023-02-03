@@ -371,7 +371,16 @@ def emapping(d):
     return internal_dict
 
 
-def get_indexes(com_ndx, rec_ndx=None, rec_group=1, lig_ndx=None, lig_group=1):
+def get_index_groups(ndx, group):
+    groups = []
+    with open(ndx) as ndx_file:
+        groups.extend(line.split()[1] for line in ndx_file if line.startswith('['))
+    if isinstance(group, int):
+        return group, groups[group]
+    else:
+        return groups.index(group), group
+
+def get_indexes(com_ndx, rec_ndx=None, lig_ndx=None):
     ndx_files = {'COM': com_ndx, 'REC': rec_ndx, 'LIG': lig_ndx}
     ndx = {'COM': {'header': [], 'index': []}, 'REC': {'header': [], 'index': []}, 'LIG': {'header': [], 'index': []}}
     for n, f in ndx_files.items():
@@ -395,8 +404,16 @@ def get_indexes(com_ndx, rec_ndx=None, rec_group=1, lig_ndx=None, lig_group=1):
     cligind = ndx['COM']['header'].index('GMXMMPBSA_LIG')
     com_indexes = {'COM': ndx['COM']['index'][comind], 'REC': ndx['COM']['index'][crecind],
                    'LIG': ndx['COM']['index'][cligind]}
-    rec_indexes = ndx['REC']['index'][rec_group] if rec_ndx else {}
-    lig_indexes = ndx['LIG']['index'][lig_group] if lig_ndx else {}
+    if rec_ndx:
+        recind = ndx['REC']['header'].index('GMXMMPBSA_REC')
+        rec_indexes = ndx['REC']['index'][recind]
+    else:
+        rec_indexes = {}
+    if lig_ndx:
+        ligind = ndx['LIG']['header'].index('GMXMMPBSA_LIG')
+        lig_indexes = ndx['LIG']['index'][ligind]
+    else:
+        lig_indexes = {}
     return {'COM': com_indexes, 'REC': rec_indexes, 'LIG': lig_indexes}
 
 
