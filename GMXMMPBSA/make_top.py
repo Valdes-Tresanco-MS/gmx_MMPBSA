@@ -248,7 +248,8 @@ class CheckMakeTop:
 
         com_ndx = self.FILES.prefix + 'COM_index.ndx'
         make_ndx_args = self.make_ndx + ['-n', self.FILES.complex_index, '-o', com_ndx]
-        logging.debug('Running command: ' + (' '.join(make_ndx_echo_args).replace('\n', '\\n')) + ' | ' +
+        logging.debug('Running command: ' + ' '.join(make_ndx_echo_args[:2]) + ' "' +
+                      (' '.join(make_ndx_echo_args[2:]).replace('\n', '\\n')) + '"' + ' | ' +
                       ' '.join(make_ndx_args))
         c2 = subprocess.Popen(make_ndx_args, stdin=c1.stdout, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         log_subprocess_output(c2)
@@ -260,7 +261,7 @@ class CheckMakeTop:
                      f'({num_com_rec_group}_{num_com_lig_group}) in {self.FILES.complex_index} file as '
                      f'{self.complex_str_file}')
         # avoid PBC and not chain ID problems
-        pdbcom_echo_args = ['echo', 'GMXMMPBSA_REC_GMXMMPBSA_LIG']
+        pdbcom_echo_args = ['echo', '-e', 'GMXMMPBSA_REC_GMXMMPBSA_LIG']
         c3 = subprocess.Popen(pdbcom_echo_args, stdout=subprocess.PIPE)
 
         str_format = 'tpr' if self.FILES.complex_tpr[-3:] == 'tpr' else 'pdb'
@@ -273,7 +274,9 @@ class CheckMakeTop:
             comprog = self.editconf
             pdbcom_args = self.editconf + ['-f', self.FILES.complex_tpr, '-n', self.FILES.complex_index, '-o',
                                            self.complex_str_file]
-        logging.debug('Running command: ' + (' '.join(pdbcom_echo_args)) + ' | ' + ' '.join(pdbcom_args))
+        logging.debug('Running command: ' + ' '.join(pdbcom_echo_args[:2]) + ' "' +
+                      (' '.join(pdbcom_echo_args[2:]).replace('\n', '\\n')) + '"' +
+                      '| ' + ' '.join(pdbcom_args))
         c4 = subprocess.Popen(pdbcom_args, stdin=c3.stdout, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         log_subprocess_output(c4)
         if c4.wait():  # if it quits with return code != 0
@@ -316,7 +319,9 @@ class CheckMakeTop:
             else:
                 pdbrec_args = self.editconf + ['-f', self.FILES.complex_tpr, '-n', self.FILES.complex_index, '-o',
                                                'rec_temp.pdb']
-            logging.debug('Running command: ' + (' '.join(rec_echo_args)) + ' | ' + ' '.join(pdbrec_args))
+            logging.debug('Running command: ' + ' '.join(rec_echo_args[:2]) + ' "' +
+                          (' '.join(rec_echo_args[2:]).replace('\n', '\\n')) + '"' +
+                          '| ' + ' '.join(pdbrec_args))
             cp2 = subprocess.Popen(pdbrec_args, stdin=cp1.stdout, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             log_subprocess_output(cp2)
             if cp2.wait():  # if it quits with return code != 0
@@ -362,7 +367,9 @@ class CheckMakeTop:
                 pdbrec_args = self.editconf + ['-f', self.FILES.receptor_tpr, '-n', self.FILES.receptor_index, '-o',
                                                self.receptor_str_file]
 
-            logging.debug('Running command: ' + (' '.join(pdbrec_echo_args)) + ' | ' + ' '.join(pdbrec_args))
+            logging.debug('Running command: ' + ' '.join(pdbrec_echo_args[:2]) + ' "' +
+                          (' '.join(pdbrec_echo_args[2:]).replace('\n', '\\n')) + '"' +
+                          '| ' + ' '.join(pdbrec_args))
             cp2 = subprocess.Popen(pdbrec_args, stdin=p1.stdout, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             log_subprocess_output(cp2)
             if cp2.wait():  # if it quits with return code != 0
@@ -382,7 +389,9 @@ class CheckMakeTop:
             else:
                 pdbrec_args = self.editconf + ['-f', self.FILES.complex_tpr, '-n', self.FILES.complex_index, '-o',
                                                self.receptor_str_file]
-            logging.debug('Running command: ' + (' '.join(pdbrec_echo_args)) + ' | ' + ' '.join(pdbrec_args))
+            logging.debug('Running command: ' + ' '.join(pdbrec_echo_args[:2]) + ' "' +
+                          (' '.join(pdbrec_echo_args[2:]).replace('\n', '\\n')) + '"' +
+                          '| ' + ' '.join(pdbrec_args))
             cp2 = subprocess.Popen(pdbrec_args, stdin=cp1.stdout, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             log_subprocess_output(cp2)
             if cp2.wait():  # if it quits with return code != 0
@@ -424,7 +433,9 @@ class CheckMakeTop:
                 prog = self.editconf
                 pdblig_args = self.editconf + ['-f', self.FILES.ligand_tpr, '-n', self.FILES.ligand_index, '-o',
                                                self.ligand_str_file]
-            logging.debug('Running command: ' + (' '.join(pdblig_echo_args)) + ' | ' + ' '.join(pdblig_args))
+            logging.debug('Running command: ' + ' '.join(pdblig_echo_args[:2]) + ' "' +
+                          (' '.join(pdblig_echo_args[2:]).replace('\n', '\\n')) + '"' +
+                          '| ' + ' '.join(pdblig_args))
             l2 = subprocess.Popen(pdblig_args, stdin=l1.stdout, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             log_subprocess_output(l2)
             if l2.wait():  # if it quits with return code != 0
@@ -448,7 +459,9 @@ class CheckMakeTop:
                                                self.ligand_str_file]
 
             # we extract a pdb from structure file to make amber topology
-            logging.debug('Running command: ' + (' '.join(pdblig_echo_args)) + ' | ' + ' '.join(pdblig_args))
+            logging.debug('Running command: ' + ' '.join(pdblig_echo_args[:2]) + ' "' +
+                          (' '.join(pdblig_echo_args[2:]).replace('\n', '\\n')) + '"' +
+                          '| ' + ' '.join(pdblig_args))
             l2 = subprocess.Popen(pdblig_args, stdin=l1.stdout, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             log_subprocess_output(l2)
             if l2.wait():  # if it quits with return code != 0
@@ -1155,17 +1168,19 @@ class CheckMakeTop:
         logging.info('Cleaning normal complex trajectories...')
         new_trajs = []
         for i in range(len(self.FILES.complex_trajs)):
-            trjconv_echo_args = ['echo', 'GMXMMPBSA_REC_GMXMMPBSA_LIG']
+            trjconv_echo_args = ['echo', '-e', 'GMXMMPBSA_REC_GMXMMPBSA_LIG']
             c5 = subprocess.Popen(trjconv_echo_args, stdout=subprocess.PIPE)
             # we get only first trajectory to extract a pdb file and make amber topology for complex
             trjconv_args = self.trjconv + ['-f', self.FILES.complex_trajs[i], '-s', self.FILES.complex_tpr, '-o',
-                                           'COM_traj_{}.xtc'.format(i), '-n', self.FILES.complex_index]
-            logging.debug('Running command: ' + (' '.join(trjconv_echo_args)) + ' | ' + ' '.join(trjconv_args))
+                                           f'COM_traj_{i}.xtc', '-n', self.FILES.complex_index]
+            logging.debug('Running command: ' + ' '.join(trjconv_echo_args[:2]) + ' "' +
+                          (' '.join(trjconv_echo_args[2:]).replace('\n', '\\n')) + '"' +
+                          '| ' + ' '.join(trjconv_args))
             c6 = subprocess.Popen(trjconv_args, stdin=c5.stdout, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             log_subprocess_output(c6)
             if c6.wait():  # if it quits with return code != 0
                 GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(self.trjconv), self.FILES.complex_trajs[i]))
-            new_trajs.append('COM_traj_{}.xtc'.format(i))
+            new_trajs.append(f'COM_traj_{i}.xtc')
         self.FILES.complex_trajs = new_trajs
 
         # clear trajectory
@@ -1173,12 +1188,14 @@ class CheckMakeTop:
             logging.info('Cleaning normal receptor trajectories...')
             new_trajs = []
             for i in range(len(self.FILES.receptor_trajs)):
-                trjconv_echo_args = ['echo', '{}'.format(self.FILES.receptor_group)]
+                trjconv_echo_args = ['echo', '-e', 'GMXMMPBSA_REC']
                 c5 = subprocess.Popen(trjconv_echo_args, stdout=subprocess.PIPE)
                 # we get only first trajectory to extract a pdb file and make amber topology for complex
                 trjconv_args = self.trjconv + ['-f', self.FILES.receptor_trajs[i], '-s', self.FILES.receptor_tpr,
                                                '-o', 'REC_traj_{}.xtc'.format(i), '-n', self.FILES.receptor_index]
-                logging.debug('Running command: ' + (' '.join(trjconv_echo_args)) + ' | ' + ' '.join(trjconv_args))
+                logging.debug('Running command: ' + ' '.join(trjconv_echo_args[:2]) + ' "' +
+                              (' '.join(trjconv_echo_args[2:]).replace('\n', '\\n')) + '"' +
+                              '| ' + ' '.join(trjconv_args))
                 c6 = subprocess.Popen(trjconv_args, stdin=c5.stdout, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
                 log_subprocess_output(c6)
                 if c6.wait():  # if it quits with return code != 0
@@ -1191,12 +1208,14 @@ class CheckMakeTop:
             logging.info('Cleaning normal ligand trajectories...')
             new_trajs = []
             for i in range(len(self.FILES.ligand_trajs)):
-                trjconv_echo_args = ['echo', '{}'.format(self.FILES.ligand_group)]
+                trjconv_echo_args = ['echo', '-e', 'GMXMMPBSA_LIG']
                 c5 = subprocess.Popen(trjconv_echo_args, stdout=subprocess.PIPE)
                 # we get only first trajectory to extract a pdb file and make amber topology for complex
                 trjconv_args = self.trjconv + ['-f', self.FILES.ligand_trajs[i], '-s', self.FILES.ligand_tpr, '-o',
                                                'LIG_traj_{}.xtc'.format(i), '-n', self.FILES.ligand_index]
-                logging.debug('Running command: ' + (' '.join(trjconv_echo_args)) + ' | ' + ' '.join(trjconv_args))
+                logging.debug('Running command: ' + ' '.join(trjconv_echo_args[:2]) + ' "' +
+                              (' '.join(trjconv_echo_args[2:]).replace('\n', '\\n')) + '"' +
+                              '| ' + ' '.join(trjconv_args))
                 c6 = subprocess.Popen(trjconv_args, stdin=c5.stdout, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
                 log_subprocess_output(c6)
                 if c6.wait():  # if it quits with return code != 0
