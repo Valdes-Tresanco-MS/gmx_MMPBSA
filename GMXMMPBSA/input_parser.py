@@ -144,8 +144,8 @@ class Namelist(object):
         """ Adds a variable to this namelist. It checks to make sure that it's
           going to create a conflict with an existing variable.
         """
-        if varname in list(self.variables.keys()):
-            raise InternalError('Duplicated variable %s in Namelist' % varname)
+        if varname in self.variables:
+            raise InternalError(f'Duplicated variable {varname} in Namelist')
         self.variables[varname] = Variable(varname, datatype, default, description, int_dat_type)
 
     def Open(self):
@@ -165,7 +165,7 @@ class Namelist(object):
         for variable in self.variables:
             if variable is self.trigger: continue
             retstr += '  %s\n' % self.variables[variable].help_str()
-        return retstr + '/'
+        return f'{retstr}/'
 
 
 class InputFile(object):
@@ -206,6 +206,7 @@ class InputFile(object):
         # section description
         sd = {'general': '# General namelist variables',
               'gb': '# (AMBER) Generalized-Born namelist variables',
+              'gbnsr6': '# GBNSR6 namelist variables',
               'pb': '# (AMBER) Possion-Boltzmann namelist variables',
               'rism': '# 3D-RISM namelist variables',
               'decomp': '# Decomposition namelist variables',
@@ -307,7 +308,7 @@ class InputFile(object):
                 continue
 
             # Catch some errors
-            if innml and line.strip().startswith('&'):
+            if innml and line.strip().startswith('&') and line.strip() != '&end':
                 raise InputError('Invalid input. Terminate each namelist prior to starting another one.')
 
             # End of a namelist
@@ -321,8 +322,7 @@ class InputFile(object):
                 namelist = self._full_namelist_name(namelist)
 
                 if namelist in declared_namelists:
-                    raise InputError('Namelist %s specified multiple times' %
-                                     namelist)
+                    raise InputError('Namelist %s specified multiple times' % namelist)
 
                 self.namelists[namelist].Open()
                 declared_namelists.append(namelist)
@@ -330,7 +330,7 @@ class InputFile(object):
 
             # We are in a namelist here, now fill in the fields
             elif innml:
-                line = line[:line.strip().index('#')] if '#' in line else line
+                line = line[:line.strip().index('#')] if '#' in line else line.strip('\n')
                 items = line.strip().split(',')
                 # Screen any blank fields
                 j = 0
@@ -341,19 +341,16 @@ class InputFile(object):
                     else:
                         j += 1
                 namelist_fields[-1].extend(items)
-            # end if [elif innml]
-        # # end for line in lines
-
         # # Combine any multi-element fields into the last field that has a = in it
         begin_field = -1
-        for i in range(len(namelist_fields)):
-            for j in range(len(namelist_fields[i])):
+        for i, _ in enumerate(namelist_fields):
+            for j, _ in enumerate(namelist_fields[i]):
                 if '=' in namelist_fields[i][j]:
                     begin_field = j
                 elif begin_field == -1:
-                    raise ('Invalid input file! Error reading namelist %s' % declared_namelists[i])
+                    raise f'Invalid input file! Error reading namelist {declared_namelists[i]}'
                 else:
-                    namelist_fields[i][begin_field] += ',%s' % namelist_fields[i][j]
+                    namelist_fields[i][begin_field] += f',{namelist_fields[i][j]}'
         # Now parse through the items to add them to the master dictionary. Note
         # that thanks to the last step, all data in namelist_fields will be
         # contained within fields that have a '='. All others can be ignored
@@ -368,27 +365,28 @@ class InputFile(object):
                 # Now we have to loop through all variables in that namelist to
                 # see if this is the variable we want.
                 found = False
-                for key in list(self.namelists[declared_namelists[i]].variables.keys()):
+                for key in self.namelists[declared_namelists[i]].variables:
                     if self.namelists[declared_namelists[i]].variables[key] == var[0]:
                         self.namelists[declared_namelists[i]].variables[key].SetValue(var[1])
                         found = True
                         break
 
                 if not found:
-                    raise InputError('Unknown variable %s in &%s' % (var[0], declared_namelists[i]))
+                    raise InputError(f'Unknown variable {var[0]} in &{declared_namelists[i]}')
         # Now it's time to fill the INPUT dictionary
         INPUT = {}
         for nml in self.ordered_namelist_keys:
-            for var in list(self.namelists[nml].variables.keys()):
+            INPUT[nml] = {}
+            for var in self.namelists[nml].variables:
                 # Here, the triggers are just bool types, so protect from accessing
                 # an attribute that doesn't exist! We only allow Variable types and
                 # bool types
                 var_object = self.namelists[nml].variables[var]
                 try:
-                    INPUT[var] = self.namelists[nml].variables[var].value
+                    INPUT[nml][var] = self.namelists[nml].variables[var].value
                 except AttributeError:
                     if isinstance(var_object, bool):
-                        INPUT[var] = var_object
+                        INPUT[nml][var] = var_object
                     else:
                         raise InputError('Disallowed namelist variable type')
         return INPUT
@@ -466,6 +464,31 @@ input_file.addNamelist('gb', 'gb',
                            ['alpb', int, 0, 'Use Analytical Linearized Poisson-Boltzmann (ALPB)'],
                            ['arad_method', int, 1, 'Selected method to estimate the effective electrostatic size']
                        ], trigger='gbrun')
+
+input_file.addNamelist('gbnsr6', 'gbnsr6',
+                       [
+                           ['b', float, 0.028, 'Specifies the value of uniform offset to the (inverse) effective '
+                                               'radii'],
+                           ['epsin', float, 1.0, 'Sets the dielectric constant of the solute region'],
+                           ['epsout', float, 78.5, 'Sets the implicit solvent dielectric constant for the solvent'],
+                            # FIXME: convert to M
+                           ['istrng', float, 0.0, 'Sets the ionic strength in M for the GB equation'],
+                           ['rs', float, 0.52, 'Sets the value of the dielectric boundary shift compared to the '
+                                               'molecular surface (only relevant for the -chagb option)'],
+                           ['dprob', float, 1.4, 'Sets the radius of the solvent robe'],
+                           ['space', float, 0.5, 'Sets the grid spacing that determines the resolution of the solute '
+                                                 'molecular surface'],
+                           ['arcres', float, 0.2, 'Sets the arc resolution used for numerical integration over '
+                                                  'molecular surface'],
+                           ['dgij', int, 0, 'Printing interatomic pairwise electrostatic energies'],
+                           ['radiopt', int, 0, 'Specifies the set of intrinsic atomic radii to be used with the chagb'
+                                               'option.'],
+                           ['chagb', int, 0, 'Define if CHAGB is used'],
+                           ['roh', int, 1, 'Sets the value of RzOH for CHA GB model'],
+                           ['tau', float, 1.47, 'Sets the value of τ in the CHAGB model'],
+                           ['cavity_surften', float, 0.005, 'Sets the surface tension parameter for nonpolar solvation'
+                                                            'calculation'],
+                       ], trigger='gbnsr6run')
 
 input_file.addNamelist('pb', 'pb',
                        [

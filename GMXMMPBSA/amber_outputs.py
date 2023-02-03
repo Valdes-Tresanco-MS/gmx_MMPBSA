@@ -81,7 +81,7 @@ class AmberOutput(dict):
         self.frame_idx = 0
         self.extraframe_idx = 0
         self.is_read = False
-        self.apbs = INPUT['sander_apbs']
+        self.apbs = INPUT['pb']['sander_apbs']
 
         # This variable is used to get if the nmode calculation hasn't at least one frame
         self.no_nmode_convergence = False
@@ -98,7 +98,7 @@ class AmberOutput(dict):
     def parse_from_file(self, basename, num_files=1, numframes=1):
         self.num_files = num_files
         self.basename = basename
-        self.temperature = self.INPUT['temperature']
+        self.temperature = self.INPUT['general']['temperature']
         self.numframes = numframes
 
         for key in self.data_keys:
@@ -120,10 +120,10 @@ class AmberOutput(dict):
         csvwriter.writerow(['Frame #'] + print_keys)
 
         # write out each frame
-        c = self.INPUT['nmstartframe'] if self.__class__ == NMODEout else self.INPUT['startframe']
+        c = self.INPUT['nmode']['nmstartframe'] if self.__class__ == NMODEout else self.INPUT['nmode']['startframe']
         for i in range(self.numframes):
             csvwriter.writerow([c] + [round(self[key][i], 2) for key in print_keys])
-            c += self.INPUT['nminterval'] if self.__class__ == NMODEout else self.INPUT['interval']
+            c += self.INPUT['nmode']['nminterval'] if self.__class__ == NMODEout else self.INPUT['nmode']['interval']
 
     def set_frame_range(self, start=None, end=None, interval=None):
         d = deepcopy(self)
@@ -263,10 +263,10 @@ class IEout(dict):
             in spreadsheets
         """
         csvwriter.writerow(['Frame #', 'Interaction Entropy'])
-        f = self.INPUT['startframe']
+        f = self.INPUT['general']['startframe']
         for d in self['data']:
             csvwriter.writerow([f] + [round(d, 2)])
-            f += self.INPUT['interval']
+            f += self.INPUT['general']['interval']
         csvwriter.writerow([])
 
     def summary_output(self):
@@ -630,9 +630,73 @@ class GBout(AmberOutput):
         fname = fname.replace('gb.mdout', 'gb_surf.dat')
         surf_data = _get_cpptraj_surf(fname)
         for sd in surf_data:
-            self['ESURF'][self.extraframe_idx] = sd * self.INPUT['surften'] + self.INPUT['surfoff']
+            self['ESURF'][self.extraframe_idx] = sd * self.INPUT['gb']['surften'] + self.INPUT['gb']['surfoff']
             self.extraframe_idx += 1
 
+class GBNSR6out(AmberOutput):
+    """ Amber output class for normal generalized Born simulations """
+    print_levels = {'BOND': 2, 'ANGLE': 2, 'DIHED': 2, 'VDWAALS': 1, 'EEL': 1, '1-4 VDW': 2, '1-4 EEL': 2, 'EGB': 1,
+                    'ESURF': 1}
+
+    # Ordered list of keys in the data dictionary
+
+    def __init__(self, mol, INPUT, chamber=False, **kwargs):
+        AmberOutput.__init__(self, mol, INPUT, chamber, **kwargs)
+        # As the MM terms will be updated, in order to maintain order, we need to initialize these keys
+        self.data_keys.extend(['EGB', 'ESURF'])
+
+    def _get_energies(self, outfile):
+        """ Parses the mdout files for the GB potential terms """
+        while rawline := outfile.readline():
+            if rawline[:5] == ' BOND':
+                words = rawline.split()
+                self['BOND'][self.frame_idx] = float(words[2])
+                self['ANGLE'][self.frame_idx] = float(words[5])
+                self['DIHED'][self.frame_idx] = float(words[8])
+                words = outfile.readline().split()
+                if self.chamber:
+                    self['UB'][self.frame_idx] = float(words[2])
+                    self['IMP'][self.frame_idx] = float(words[5])
+                    self['CMAP'][self.frame_idx] = float(words[8])
+                    words = outfile.readline().split()
+                self['VDWAALS'][self.frame_idx] = float(words[2])
+                self['EEL'][self.frame_idx] = float(words[5])
+                self['EGB'][self.frame_idx] = float(words[8])
+                words = outfile.readline().split()
+                self['1-4 VDW'][self.frame_idx] = float(words[3])
+                self['1-4 EEL'][self.frame_idx] = float(words[7])
+                words = outfile.readline().split()
+                self['ESURF'][self.frame_idx] = float(words[2])
+
+
+class MMout(AmberOutput):
+    """ Amber output class for normal MM simulations """
+    print_levels = {'BOND': 2, 'ANGLE': 2, 'DIHED': 2, 'VDWAALS': 1, 'EEL': 1, '1-4 VDW': 2, '1-4 EEL': 2}
+
+    # Ordered list of keys in the data dictionary
+
+    def __init__(self, mol, INPUT, chamber=False, **kwargs):
+        AmberOutput.__init__(self, mol, INPUT, chamber, **kwargs)
+
+    def _get_energies(self, outfile):
+        """ Parses the mdout files for the GB potential terms """
+        while rawline := outfile.readline():
+            if rawline[:5] == ' BOND':
+                words = rawline.split()
+                self['BOND'][self.frame_idx] = float(words[2])
+                self['ANGLE'][self.frame_idx] = float(words[5])
+                self['DIHED'][self.frame_idx] = float(words[8])
+                words = outfile.readline().split()
+                if self.chamber:
+                    self['UB'][self.frame_idx] = float(words[2])
+                    self['IMP'][self.frame_idx] = float(words[5])
+                    self['CMAP'][self.frame_idx] = float(words[8])
+                    words = outfile.readline().split()
+                self['VDWAALS'][self.frame_idx] = float(words[2])
+                self['EEL'][self.frame_idx] = float(words[5])
+                words = outfile.readline().split()
+                self['1-4 VDW'][self.frame_idx] = float(words[3])
+                self['1-4 EEL'][self.frame_idx] = float(words[7])
 
 class PBout(AmberOutput):
 
@@ -667,7 +731,7 @@ class PBout(AmberOutput):
                 self['1-4 EEL'][self.frame_idx] = float(words[7])
                 words = outfile.readline().split()
                 self['ENPOLAR'][self.frame_idx] = float(words[2])
-                if self.INPUT['inp'] == 2 and not self.apbs:
+                if self.INPUT['pb']['inp'] == 2 and not self.apbs:
                     self['EDISPER'][self.frame_idx] = float(words[5])
                 self.frame_idx += 1
 
@@ -940,10 +1004,12 @@ class BindingStatistics(dict):
         csvwriter.writerow(['Frame #'] + print_keys)
 
         # write out each frame
-        c = self.com.INPUT['nmstartframe'] if isinstance(self.com, NMODEout) else self.com.INPUT['startframe']
+        c = self.com.INPUT['nmode']['nmstartframe'] if isinstance(self.com, NMODEout) else self.com.INPUT['general'][
+            'startframe']
         for i in range(self.numframes):
             csvwriter.writerow([c] + [round(self[key][i], 2) for key in print_keys])
-            c += self.com.INPUT['nminterval'] if isinstance(self.com, NMODEout) else self.com.INPUT['interval']
+            c += self.com.INPUT['nmode']['nminterval'] if isinstance(self.com, NMODEout) else self.com.INPUT['general'][
+                'interval']
         csvwriter.writerow([])
 
     def report_inconsistency(self, output_format: str = 'ascii'):
@@ -1078,10 +1144,12 @@ class DeltaDeltaStatistics(dict):
         csvwriter.writerow(['Frame #'] + list(self.keys()))
 
         # write out each frame
-        c = self.norm.INPUT['nmstartframe'] if isinstance(self.norm, NMODEout) else self.norm.INPUT['startframe']
+        c = self.norm.INPUT['nmode']['nmstartframe'] if isinstance(self.norm, NMODEout) else \
+            self.norm.INPUT['general']['startframe']
         for i in range(self.numframes):
             csvwriter.writerow([c] + [round(self[key][i], 2) for key in self])
-            c += self.norm.INPUT['nminterval'] if isinstance(self.norm, NMODEout) else self.norm.INPUT['interval']
+            c += self.norm.INPUT['nmode']['nminterval'] if isinstance(self.norm, NMODEout) else \
+                self.norm.INPUT['general']['interval']
         csvwriter.writerow([])
 
     def summary_output(self):
@@ -1172,10 +1240,12 @@ class DeltaIEC2Statistic(dict):
         csvwriter.writerow(['Frame #'] + list(self.keys()))
 
         # write out each frame
-        c = self.norm.INPUT['nmstartframe'] if isinstance(self.norm, NMODEout) else self.norm.INPUT['startframe']
+        c = self.norm.INPUT['nmode']['nmstartframe'] if isinstance(self.norm, NMODEout) else\
+            self.norm.INPUT['general']['startframe']
         for i in range(self.numframes):
             csvwriter.writerow([c] + [round(self[key][i], 2) for key in self])
-            c += self.norm.INPUT['nminterval'] if isinstance(self.norm, NMODEout) else self.norm.INPUT['interval']
+            c += self.norm.INPUT['nmode']['nminterval'] if isinstance(self.norm, NMODEout) else\
+                self.norm.INPUT['general']['interval']
         csvwriter.writerow([])
 
     def summary_output(self):
@@ -1259,7 +1329,7 @@ class DecompOut(dict):
 
         self.num_files = num_files  # how many MPI files we created
         self.INPUT = INPUT
-        self.verbose = INPUT['dec_verbose']
+        self.verbose = INPUT['decomp']['dec_verbose']
         self.surften = surften  # explicitly defined since is for GB and PB models
 
         if self.verbose in [1, 3]:
@@ -1339,11 +1409,11 @@ class DecompOut(dict):
             csvwriter.writerow([tokens[term]])
             csvwriter.writerow(['Frame #', 'Residue', 'Internal', 'van der Waals', 'Electrostatic', 'Polar Solvation',
                                 'Non-Polar Solv.', 'TOTAL'])
-            c = self.INPUT['startframe']
+            c = self.INPUT['general']['startframe']
             for i in range(self.numframes):
                 for res in self[term]:
                     csvwriter.writerow([c, res] + [round(self[term][res][key][i], 2) for key in self[term][res]])
-                c += self.INPUT['interval']
+                c += self.INPUT['general']['interval']
 
     def _fill_composite_terms(self):
         for term in self:
@@ -1484,13 +1554,13 @@ class PairDecompOut(DecompOut):
             csvwriter.writerow([tokens[term]])
             csvwriter.writerow(['Frame #', 'Resid 1', 'Resid 2', 'Internal', 'van der Waals', 'Electrostatic',
                                 'Polar Solvation', 'Non-Polar Solv.', 'TOTAL'])
-            c = self.INPUT['startframe']
+            c = self.INPUT['general']['startframe']
             for i in range(self.numframes):
                 for res in self[term]:
                     for res2 in self[term][res]:
                         csvwriter.writerow([c, res, res2] +
                                            [round(self[term][res][res2][key][i], 2) for key in self[term][res][res2]])
-                c += self.INPUT['interval']
+                c += self.INPUT['general']['interval']
 
     def summary(self, output_format: str = 'ascii'):
         """ Writes the summary in ASCII format to and open output_file """
@@ -1565,8 +1635,8 @@ class DecompBinding(dict):
         self.num_terms = self.com.num_terms
         self.desc = desc  # Description
         self.INPUT = INPUT
-        self.idecomp = INPUT['idecomp']
-        self.verbose = INPUT['dec_verbose']
+        self.idecomp = INPUT['decomp']['idecomp']
+        self.verbose = INPUT['decomp']['dec_verbose']
         # Set up the data for the DELTAs
         if self.verbose in [1, 3]:
             self.allowed_tokens = 'TDC', 'SDC', 'BDC'
@@ -1586,11 +1656,11 @@ class DecompBinding(dict):
             csvwriter.writerow([tokens[term]])
             csvwriter.writerow(['Frame #', 'Residue', 'Internal', 'van der Waals', 'Electrostatic', 'Polar Solvation',
                                 'Non-Polar Solv.', 'TOTAL'])
-            c = self.INPUT['startframe']
+            c = self.INPUT['general']['startframe']
             for i in range(self.com.numframes):
                 for res in self[term]:
                     csvwriter.writerow([c, res] + [round(self[term][res][key][i], 2) for key in self[term][res]])
-                c += self.INPUT['interval']
+                c += self.INPUT['general']['interval']
 
     def _parse_all_begin(self):
         """ Parses through all of the terms in all of the frames, but doesn't
@@ -1716,13 +1786,13 @@ class PairDecompBinding(DecompBinding):
             csvwriter.writerow([tokens[term]])
             csvwriter.writerow(['Frame #', 'Resid 1', 'Resid 2', 'Internal', 'van der Waals', 'Electrostatic',
                                 'Polar Solvation', 'Non-Polar Solv.', 'TOTAL'])
-            c = self.com.INPUT['startframe']
+            c = self.com.INPUT['general']['startframe']
             for i in range(self.com.numframes):
                 for res in self[term]:
                     for res2 in self[term][res]:
                         csvwriter.writerow([c, res, res2] +
                                            [round(self[term][res][res2][key][i], 2) for key in self[term][res][res2]])
-                c += self.com.INPUT['interval']
+                c += self.com.INPUT['general']['interval']
 
     def summary(self, output_format: str = 'ascii'):
 

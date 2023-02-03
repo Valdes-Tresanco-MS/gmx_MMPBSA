@@ -273,42 +273,42 @@ class RISMCalculation(Calculation):
 
         # Set up instance variables
         self.xvvfile = xvvfile
-        self.closure = ','.join(map(str, INPUT['closure']))
-        self.polardecomp = INPUT['polardecomp']
-        self.ng = ','.join(map(str, INPUT['ng']))
-        self.solvbox = ','.join(map(str, INPUT['solvbox']))
-        self.buffer = INPUT['buffer']
-        self.grdspc = ','.join(map(str, INPUT['grdspc']))
-        self.solvcut = INPUT['solvcut']
-        self.tolerance = ','.join(map(str, INPUT['tolerance']))
-        self.verbose = INPUT['rism_verbose']
-        self.solvbox = ','.join(map(str, INPUT['solvbox']))
-        self.gf = INPUT['rismrun_gf']
+        self.closure = ','.join(map(str, INPUT['rism']['closure']))
+        self.polardecomp = INPUT['rism']['polardecomp']
+        self.ng = ','.join(map(str, INPUT['rism']['ng']))
+        self.solvbox = ','.join(map(str, INPUT['rism']['solvbox']))
+        self.buffer = INPUT['rism']['buffer']
+        self.grdspc = ','.join(map(str, INPUT['rism']['grdspc']))
+        self.solvcut = INPUT['rism']['solvcut']
+        self.tolerance = ','.join(map(str, INPUT['rism']['tolerance']))
+        self.verbose = INPUT['rism']['rism_verbose']
+        self.solvbox = ','.join(map(str, INPUT['rism']['solvbox']))
+        self.gf = INPUT['rism']['rismrun_gf']
 
-        self.noasympcorr = INPUT['noasympcorr']
-        self.mdiis_del = INPUT['mdiis_del']
-        self.mdiis_restart = INPUT['mdiis_restart']
-        self.mdiis_nvec = INPUT['mdiis_nvec']
-        self.maxstep = INPUT['maxstep']
-        self.npropagate = INPUT['npropagate']
-        # self.centering = INPUT['centering']
-        # self.entropicDecomp = INPUT['entropicDecomp']
-        # self.pc_plus = INPUT['rismrun_pc+']
-        # self.uccoeff = ','.join(map(str, INPUT['uccoeff']))
-        self.treeDCF = INPUT['treeDCF']
-        self.treeTCF = INPUT['treeTCF']
-        self.treeCoulomb = INPUT['treeCoulomb']
-        self.treeDCFOrder = INPUT['treeDCFOrder']
-        self.treeTCFOrder = INPUT['treeTCFOrder']
-        self.treeCoulombOrder = INPUT['treeCoulombOrder']
-        self.treeDCFN0 = INPUT['treeDCFN0']
-        self.treeTCFN0 = INPUT['treeTCFN0']
-        self.treeCoulombN0 = INPUT['treeCoulombN0']
-        self.treeDCFMAC = INPUT['treeDCFMAC']
-        self.treeTCFMAC = INPUT['treeTCFMAC']
-        self.treeCoulombMAC = INPUT['treeCoulombMAC']
-        self.asympKSpaceTolerance = INPUT['asympKSpaceTolerance']
-        self.ljTolerance = INPUT['ljTolerance']
+        self.noasympcorr = INPUT['rism']['noasympcorr']
+        self.mdiis_del = INPUT['rism']['mdiis_del']
+        self.mdiis_restart = INPUT['rism']['mdiis_restart']
+        self.mdiis_nvec = INPUT['rism']['mdiis_nvec']
+        self.maxstep = INPUT['rism']['maxstep']
+        self.npropagate = INPUT['rism']['npropagate']
+        # self.centering = INPUT['rism']['centering']
+        # self.entropicDecomp = INPUT['rism']['entropicDecomp']
+        # self.pc_plus = INPUT['rism']['rismrun_pc+']
+        # self.uccoeff = ','.join(map(str, INPUT['rism']['uccoeff']))
+        self.treeDCF = INPUT['rism']['treeDCF']
+        self.treeTCF = INPUT['rism']['treeTCF']
+        self.treeCoulomb = INPUT['rism']['treeCoulomb']
+        self.treeDCFOrder = INPUT['rism']['treeDCFOrder']
+        self.treeTCFOrder = INPUT['rism']['treeTCFOrder']
+        self.treeCoulombOrder = INPUT['rism']['treeCoulombOrder']
+        self.treeDCFN0 = INPUT['rism']['treeDCFN0']
+        self.treeTCFN0 = INPUT['rism']['treeTCFN0']
+        self.treeCoulombN0 = INPUT['rism']['treeCoulombN0']
+        self.treeDCFMAC = INPUT['rism']['treeDCFMAC']
+        self.treeTCFMAC = INPUT['rism']['treeTCFMAC']
+        self.treeCoulombMAC = INPUT['rism']['treeCoulombMAC']
+        self.asympKSpaceTolerance = INPUT['rism']['asympKSpaceTolerance']
+        self.ljTolerance = INPUT['rism']['ljTolerance']
 
     # -#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
 
@@ -386,17 +386,17 @@ class NmodeCalc(Calculation):
         from math import sqrt
         Calculation.__init__(self, prog, prmtop, incrd, inptraj, None, output)
 
-        kappa = sqrt(0.10806 * INPUT['nmode_istrng'])
-        if INPUT['nmode_igb']:
+        kappa = sqrt(0.10806 * INPUT['nmode']['nmode_istrng'])
+        if INPUT['nmode']['nmode_igb']:
             option_string = ('ntpr=10000, diel=C, kappa=%f, cut=1000, gb=1, ' +
-                             'dielc=%f, temp0=%f') % (kappa, INPUT['dielc'], INPUT['temperature'])
+                             'dielc=%f, temp0=%f') % (kappa, INPUT['nmode']['dielc'], INPUT['general']['temperature'])
         else:
             option_string = ('ntpr=10000, diel=R, kappa=%f, cut=1000, gb=0, ' +
-                             'dielc=%f, temp0=%f') % (kappa, INPUT['dielc'], INPUT['temperature'])
+                             'dielc=%f, temp0=%f') % (kappa, INPUT['nmode']['dielc'], INPUT['general']['temperature'])
 
         self.option_string = option_string
-        self.drms = INPUT['drms']
-        self.maxcyc = INPUT['maxcyc']
+        self.drms = INPUT['nmode']['drms']
+        self.maxcyc = INPUT['nmode']['maxcyc']
 
     # -#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
 
@@ -635,6 +635,24 @@ class CopyCalc(Calculation):
         copy(orig_name, final_name)
 
 
+class MergeOut(Calculation):
+    def __init__(self, topology, output_filename, mm_filename, mdout_filenames, idecomp, dec_verbose):
+        self.topology = topology
+        self.output_filename = output_filename
+        self.mm_filename = mm_filename
+        self.mdouts = mdout_filenames
+        self.idecomp = idecomp
+        self.dec_verbose = dec_verbose
+
+
+    def run(self, rank, stdout=None, stderr=None):
+        # Do rank-substitution if necessary
+        out_filename = self.output_filename % rank if '%d' in self.output_filename else self.output_filename
+        mm_filename = self.mm_filename % rank if '%d' in self.mm_filename else self.mm_filename
+        MergeGBNSR6Output(self.topology, out_filename, mm_filename,
+                          [file % rank for file in sorted(self.mdouts, key=lambda x: f"{int(x.split('.')[1]):08d}")],
+                          self.idecomp, self.dec_verbose)
+
 # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 class PrintCalc(Calculation):
@@ -670,7 +688,7 @@ class InteractionEntropyCalc:
         """
         self.ggas = ggas
         self.INPUT = INPUT
-        self.isegment = iesegment or INPUT['ie_segment']
+        self.isegment = iesegment or INPUT['general']['ie_segment']
         self.data = []
 
         self._calculate()
@@ -678,7 +696,7 @@ class InteractionEntropyCalc:
     def _calculate(self):
         # boltzmann constant in kcal/(mol⋅K)
         k = 0.001985875
-        temperature = self.INPUT['temperature']
+        temperature = self.INPUT['general']['temperature']
 
         exp_energy_int = np.array([], dtype=float)
         self.data = np.zeros(self.ggas.size, dtype=float)
@@ -693,7 +711,7 @@ class InteractionEntropyCalc:
                                 'possible to continue with the calculations. Please, make sure your system is '
                                 'consistent')
                 logging.info('The Interaction Entropy will be skipped...')
-                self.INPUT['interaction_entropy'] = 0
+                self.INPUT['general']['interaction_entropy'] = 0
                 break
             exp_energy_int = np.append(exp_energy_int, eceint)
             aeceint = exp_energy_int.mean()
@@ -708,9 +726,9 @@ class InteractionEntropyCalc:
     def save_output(self, filename):
         frames = list(
             range(
-                self.INPUT['startframe'],
-                self.INPUT['startframe'] + len(self.data) * self.INPUT['interval'],
-                self.INPUT['interval']
+                self.INPUT['general']['startframe'],
+                self.INPUT['general']['startframe'] + len(self.data) * self.INPUT['general']['interval'],
+                self.INPUT['general']['interval'],
             )
         )
         with open(filename, 'w') as out:
@@ -741,7 +759,7 @@ class C2EntropyCalc:
     def _calculate(self):
         # gas constant in kcal/(mol⋅K)
         R = 0.001987
-        temperature = self.INPUT['temperature']
+        temperature = self.INPUT['general']['temperature']
         self.ie_std = float(self.ggas.std())
         self.c2data = (self.ie_std ** 2) / (2 * temperature * R)
 
@@ -767,3 +785,331 @@ class C2EntropyCalc:
 
 
 # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+def get_gbnsr6_out(dgij, topology, idecomp=0, dec_verbose=0, res2print=None):
+    import parmed
+    t = parmed.load_file(topology)
+    res_list = {residue.idx + 1: [atm.idx + 1 for atm in residue.atoms] for residue in t.residues}
+    if idecomp in [1, 2]:
+        pw = {x: {y: {} for y in res_list} for x in res_list if x in res2print}
+    else:
+        pw = {x: {y: {} for y in res_list if y in res2print} for x in res_list if x in res2print}
+
+    for line in dgij:
+        if line.startswith('DGij'):
+            kw, at1, at2, energy = line.strip('\n').split()
+            res_idx = t.atoms[int(at1) - 1].residue.idx + 1
+            res2_idx = t.atoms[int(at2) - 1].residue.idx + 1
+            if res_idx not in res2print:
+                continue
+            if idecomp in [1, 2]:
+                pw[res_idx][res2_idx].setdefault((at1, at2), float(energy))
+                if res_idx != res2_idx and res2_idx in res2print:
+                    pw[res2_idx][res_idx].setdefault((at2, at1), float(energy))
+            else:
+                if res2_idx not in res2print:
+                    continue
+                pw[res_idx][res2_idx].setdefault((at1, at2), float(energy))
+                if res_idx != res2_idx:
+                    pw[res2_idx][res_idx].setdefault((at2, at1), float(energy))
+    return _get_decomp(pw, idecomp, dec_verbose, t)
+
+
+def _get_decomp(pw, idecomp, dec_verbose, t):
+    bb = ['CA', 'C', 'O', 'N', 'H', 'OXT', 'H1', 'H2', 'H3']
+    decomp = {'TDC': []}
+    if dec_verbose in [1, 3]:
+        decomp |= {'BDC': [], 'SDC': []}
+    for r1, v1 in pw.items():
+        if idecomp in [1, 2]:
+            TDC = sum(sum(float(x) for x in v2.values()) for r2, v2 in v1.items())
+            decomp['TDC'].append(['TDC', r1, TDC])
+            if dec_verbose in [1, 3]:
+                BDC = sum(sum(v3 for (tr1, tr2), v3 in v2.items() if t.atoms[int(tr1) - 1].name in bb)
+                          for r2, v2 in v1.items())
+                SDC = TDC - BDC
+                decomp['BDC'].append(['BDC', r1, BDC])
+                decomp['SDC'].append(['SDC', r1, SDC])
+        else:
+            for r2, v2 in v1.items():
+                TDC = sum(float(x) for x in v2.values())
+                decomp['TDC'].append(['TDC', r1, r2, TDC])
+                if dec_verbose in [1, 3]:
+                    BDC = sum(v3 for (tr1, tr2), v3 in v2.items() if t.atoms[int(tr1) - 1].name in bb)
+                    SDC = TDC - BDC
+                    decomp['BDC'].append(['BDC', r1, r2, BDC])
+                    decomp['SDC'].append(['SDC', r1, r2, SDC])
+    return decomp
+
+
+class MergeGBNSR6Output():
+    def __init__(self, topology, output_filename, mm_filename, mdout_filenames, idecomp, dec_verbose):
+        self.topology = topology
+        self.output_filename = output_filename
+        self.mm_filename = mm_filename
+        self.mdout_filenames = mdout_filenames
+        self.idecomp = idecomp
+
+        self.dec_verbose = dec_verbose
+        self.header = '''
+          -------------------------------------------------------
+          SANDER + GBNSR6
+          -------------------------------------------------------\n\n
+          '''
+        self.resource = ('--------------------------------------------------------------------------------\n'
+                         '   1.  ' 'RESOURCE   USE:\n'
+                         '--------------------------------------------------------------------------------\n')
+        self.control_data = ('--------------------------------------------------------------------------------\n'
+                             '   2.  CONTROL  DATA  FOR  THE  RUN\n'
+                             '--------------------------------------------------------------------------------\n')
+        self.atomic_coor = ('--------------------------------------------------------------------------------\n'
+                            '   3.  ATOMIC COORDINATES AND VELOCITIES\n'
+                            '--------------------------------------------------------------------------------\n')
+        self.results = ('--------------------------------------------------------------------------------\n'
+                        '   4.  RESULTS\n'
+                        '--------------------------------------------------------------------------------\n')
+
+        self.decomp_labels = {'TDC': 'TOTAL ENERGIES', 'SDC': 'SIDECHAIN ENERGIES', 'BDC': 'BACKBONE ENERGIES'}
+        self.decomp_headers = {'pr': '                    PRINT DECOMP - {}\n\n'
+                                     '    resid |internal |vdw      |eel      |pol      |sas\n'
+                                     '============================================================\n',
+                               'pw': '                    PRINT PAIR DECOMP - {}\n\n'
+                                     '    resid1 ->resid2 |internal    |vdw         |eel         |pol         |sas\n'
+                                     '=============================================================================\n'}
+
+        self.write_output()
+
+    def read_mm_output(self):
+
+        file_assignments = []
+        inputfile = []
+        resource_section = []
+        control_data = []
+        atomic_coor_vel = []
+        results_section = []
+        temp_res2print = None
+
+        with open(self.mm_filename) as mmfile:
+            current_section = None
+            while line := mmfile.readline():
+                if 'File Assignments:' in line:
+                    current_section = file_assignments
+                    line = mmfile.readline()
+                elif line.startswith(' Here is the input file:'):
+                    current_section = inputfile
+                    line = mmfile.readline()
+                if line.startswith('----------------------------------------------------------------------------'):
+                    line = mmfile.readline()
+                    if line.startswith('   1.  RESOURCE   USE:'):
+                        current_section = resource_section
+                        mmfile.readline()
+                        line = mmfile.readline()
+                    elif line.startswith('   2.  CONTROL  DATA  FOR  THE  RUN'):
+                        current_section = control_data
+                        mmfile.readline()
+                        line = mmfile.readline()
+                    elif 'ATOMIC COORDINATES AND VELOCITIES' in line:
+                        current_section = atomic_coor_vel
+                        mmfile.readline()
+                        line = mmfile.readline()
+                    elif '.  RESULTS' in line:
+                        current_section = results_section
+                        mmfile.readline()
+                        line = mmfile.readline()
+                    else:
+                        continue
+                if current_section is not None:
+                    current_section.append(line)
+                if line[:4] == 'RES ':
+                    temp_res2print = line.split()[1:]
+
+        res2print = []
+        if temp_res2print:
+            for i in range(0, len(temp_res2print), 2):
+                res2print.extend(range(int(temp_res2print[i]), int(temp_res2print[i + 1]) + 1))
+
+        return {'file_assignments': file_assignments, 'inputfile': inputfile, 'resource_section': resource_section,
+                'control_data': control_data, 'atomic_coor_vel': atomic_coor_vel,
+                'results_section': self._get_energy_decomp(results_section), 'res2print': res2print}
+
+    @staticmethod
+    def _get_energy_decomp(results_section):
+        energy = {}
+        decomp = {}
+
+        c = 0
+        while True:
+            line = results_section[c]
+            if line.startswith('minimizing coord set #'):
+                f = int(line.split()[-1])
+                energy[f] = {}
+                decomp[f] = {}
+            if line.startswith(' BOND'):
+                words = line.split()
+                energy[f][words[0].strip()] = float(words[2])
+                energy[f][words[3].strip()] = float(words[5])
+                energy[f][words[6].strip()] = float(words[8])
+                c += 1
+                line = results_section[c]
+                words = line.split()
+                energy[f][words[0].strip()] = float(words[2])
+                energy[f][words[3].strip()] = float(words[5])
+                energy[f][words[6].strip()] = float(words[8])
+                c += 1
+                line = results_section[c]
+                words = line.split()
+                t = ' '.join([words[0].strip(), words[1].strip()])
+                energy[f][t] = float(words[3])
+                t = ' '.join([words[4].strip(), words[5].strip()])
+                energy[f][t] = float(words[7])
+                energy[f][words[8].strip()] = float(words[10])
+                c += 1
+                line = results_section[c]
+                words = line.split()
+                energy[f][words[0].strip()] = float(words[2])
+            if line[:3] in ['TDC', 'SDC', 'BDC']:
+                data = [x.strip().strip('->') for x in line.split()]
+                if len(data) == 8:
+                    _t, _r1, _r2, _i, _v, _e, _p, _s = data
+                    data = [_t, int(_r1), int(_r2), float(_i), float(_v), float(_e), float(_p), float(_s)]
+                else:
+                    _t, _r1, _i, _v, _e, _p, _s = data
+                    data = [_t, int(_r1), float(_i), float(_v), float(_e), float(_p), float(_s)]
+                if not decomp[f].get(line[:3]):
+                    decomp[f][line[:3]] = [data]
+                else:
+                    decomp[f][line[:3]].append(data)
+            c +=1
+            if c == len(results_section):
+                break
+        return {'energy': energy, 'decomp':decomp}
+
+    def read_gbnsr6_output(self, res2print):
+        file_assignments = []
+        inputfile = []
+
+        energy = {}
+        decomp = {}
+        for i, filename in enumerate(self.mdout_filenames, start=1):
+            results_section = []
+            decomp_section = []
+            with open(filename) as mmfile:
+                current_section = None
+                while line := mmfile.readline():
+                    if i == 1 and 'File Assignments:' in line:
+                        current_section = file_assignments
+                        line = mmfile.readline()
+                    elif i == 1 and line.startswith(' Here is the input file:'):
+                        current_section = inputfile
+                        line = mmfile.readline()
+                    if line.startswith('----------------------------------------------------------------------------'):
+                        line = mmfile.readline()
+                        if '.  RESULTS' in line:
+                            current_section = results_section
+                            mmfile.readline()
+                            line = mmfile.readline()
+                        else:
+                            current_section = None
+                    if current_section is not None:
+                        if line.startswith('DGij'):
+                            decomp_section.append(line)
+                        else:
+                            current_section.append(line)
+            energy[i] = self._get_energy_gbnsr6(results_section)
+            if self.idecomp:
+                decomp[i] = get_gbnsr6_out(decomp_section, self.topology, self.idecomp, self.dec_verbose, res2print)
+
+        results = {'energy': energy, 'decomp':decomp}
+        return {'file_assignments': file_assignments, 'inputfile': inputfile, 'results_section': results}
+
+    @staticmethod
+    def _get_energy_gbnsr6(results_section):
+        energy = {}
+
+        store = False
+        c = 0
+        while True:
+            line = results_section[c]
+            if "FINAL RESULTS" in line:
+                store = True
+            if store and line.startswith(' EELEC'):
+                words = line.split()
+                energy[words[3].strip()] = float(words[5])
+                c += 1
+                line = results_section[c]
+                words = line.split()
+                energy[words[0].strip()] = float(words[2])
+            c += 1
+            if c == len(results_section):
+                break
+        return energy
+
+    def write_output(self):
+        mm = self.read_mm_output()
+        gbnsr6 = self.read_gbnsr6_output(mm['res2print'])
+
+        with open(self.output_filename, 'w') as output_file:
+            output_file.write(self.header)
+            output_file.write('File Assignments:\n')
+            output_file.write(' MM:\n')
+            for l in mm['file_assignments']:
+                output_file.write(l)
+            output_file.write(' GBNSR6:\n')
+            for l in gbnsr6['file_assignments']:
+                output_file.write(l)
+
+            output_file.write(' Here is the input file:\n')
+            output_file.write(' MM:\n')
+            for l in mm['inputfile']:
+                output_file.write(l)
+            output_file.write(' GBNSR6:\n')
+            for l in gbnsr6['inputfile']:
+                output_file.write(l)
+
+            output_file.write(self.resource)
+            for l in mm['resource_section']:
+                output_file.write(l)
+
+            output_file.write(self.control_data)
+            for l in mm['control_data']:
+                output_file.write(l)
+            output_file.write(self.atomic_coor)
+            for l in mm['atomic_coor_vel']:
+                output_file.write(l)
+            output_file.write(self.results)
+
+            mmenergy, mmdecomp = mm['results_section'].values()
+            gbenergy, gbdecomp = gbnsr6['results_section'].values()
+
+            k2print = [['BOND', 'ANGLE', 'DIHED'], ['VDWAALS', 'EEL', 'EGB'], ['1-4 VDW', '1-4 EEL', 'RESTRAINT'],
+                       ['ESURF']]
+            for i, _ in enumerate(range(len(mmenergy)), start=1):
+                output_file.write(f'minimizing coord set #       {i}\n\n')
+                mmenergy[i].pop('EGB')
+                for e, ev in gbenergy[i].items():
+                    mmenergy[i][e] = ev
+                for kl in k2print:
+                    if len(kl) == 3:
+                        f = []
+                        for klk in kl:
+                            f.extend((klk, mmenergy[i][klk]))
+                        output_file.write(' {:8s}={:>14.4f}  {:8s}={:>14.4f}  {:11s}={:>14.4f}\n'.format(*f))
+                    else:
+                        f = [kl[0], mmenergy[i][kl[0]]]
+                        output_file.write(' {:8s}={:>14.4f}\n\n'.format(*f))
+
+                if self.idecomp:
+                    if self.idecomp in [1, 2]:
+                        for term in mmdecomp[i]:
+                            output_file.write(self.decomp_headers['pr'].format(self.decomp_labels[term]))
+                            for c, l in enumerate(mmdecomp[i][term]):
+                                l[-2] = gbdecomp[i][term][c][-1]
+                                output_file.write('{}{:>7d}{:>10.3f}{:>10.3f}{:>10.3f}{:>10.3f}{:>10.3f}\n'.format(*l))
+                            output_file.write('\n')
+                    else:
+                        for term in mmdecomp[i]:
+                            output_file.write(self.decomp_headers['pw'].format(self.decomp_labels[term]))
+                            for c, l in enumerate(mmdecomp[i][term]):
+                                l[-2] = gbdecomp[i][term][c][-1]
+                                output_file.write('{}{:>8d}->{:>7d}{:>13.4f}{:>13.4f}{:>13.4f}{:>13.4f}{:>13.4f}\n'.format(*l))
+                            output_file.write('\n')
