@@ -375,6 +375,9 @@ def get_index_groups(ndx, group):
     groups = []
     with open(ndx) as ndx_file:
         groups.extend(line.split()[1] for line in ndx_file if line.startswith('['))
+
+    if group not in groups:
+        GMXMMPBSA_ERROR('Define a valid index group')
     if isinstance(group, int):
         return group, groups[group]
     else:
