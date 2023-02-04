@@ -32,10 +32,10 @@ from GMXMMPBSA import utils, __version__
 from GMXMMPBSA.amber_outputs import (QHout, NMODEout, QMMMout, GBout, PBout, PolarRISM_std_Out, RISM_std_Out,
                                      PolarRISM_gf_Out, RISM_gf_Out, PolarRISM_pcplus_Out, RISM_pcplus_Out,
                                      BindingStatistics, IEout, C2out, DeltaDeltaStatistics, DeltaIEC2Statistic,
-                                     DeltaDeltaQH, DeltaBindingStatistics, GBNSR6out, MMout)
+                                     DeltaDeltaQH, GBNSR6out, MMout)
 from GMXMMPBSA.calculation import (CalculationList, EnergyCalculation, PBEnergyCalculation,
                                    NmodeCalc, QuasiHarmCalc, CopyCalc, PrintCalc, LcpoCalc, MolsurfCalc,
-                                   InteractionEntropyCalc, C2EntropyCalc, MergeOut)
+                                   InteractionEntropyCalc, C2EntropyCalc, MergeOut, ListEnergyCalculation)
 from GMXMMPBSA.commandlineparser import parser
 from GMXMMPBSA.createinput import create_inputs, SanderRISMInput
 from GMXMMPBSA.exceptions import (MMPBSA_Error, InternalError, InputError, GMXMMPBSA_ERROR)
@@ -223,7 +223,7 @@ class MMPBSA_App(object):
         self.calc_list = CalculationList(self.timer, nframes, nmframes, self.mpi_size)
         if self.master:
             logging.info(f'Starting calculations in {self.mpi_size} CPUs...')
-            if (self.INPUT['pb']['pbrun'] or self.INPUT['rims']['rismrun'] or
+            if (self.INPUT['pb']['pbrun'] or self.INPUT['rism']['rismrun'] or
                 self.INPUT['nmode']['nmoderun']) and self.mpi_size > 1:
                 logging.warning('PB/RISM/NMODE will be calculated with multiple threads, make sure you have enough RAM.')
         if not self.INPUT['ala']['mutant_only']:
@@ -387,18 +387,26 @@ class MMPBSA_App(object):
             self.calc_list.append(PrintCalc(f"Beginning GBNSR6 calculations with {progs['gbnsr6']}"),
                                   timer_key='gbnsr6')
             if not mm_com_calculated:
-                c = EnergyCalculation(progs['gb'], parm_system.complex_prmtop, incrd % 'complex', mm_mdin,
-                                      f'{prefix}complex_mm.mdout.%d', self.pre + 'restrt.%d',
-                                      f'{prefix}complex.{trj_sfx}.%d')
-                self.calc_list.append(c, '  calculating complex contribution...', timer_key='gbnsr6')
+                self.calc_list.append(PrintCalc("  calculating complex contribution..."),
+                                      timer_key='gbnsr6')
+                c = EnergyCalculation(progs['gb'], parm_system.complex_prmtop,
+                                      incrd % 'complex',
+                                      '%scomplex.%s.%%d' % (prefix, trj_sfx),
+                                      mm_mdin,
+                                      f'{prefix}complex_mm.mdout.%d',
+                                      self.pre + 'restrt.%d')
+                self.calc_list.append(c, '    calculating MM...', timer_key='gbnsr6',
+                                      output_basename=f'{prefix}complex_mm.mdout.%d')
 
-            files = Path(f"{prefix}inpcrd_{self.mpi_rank}").glob(f"{prefix}complex*")
-            mdouts = []
-            for i, file in enumerate(files, start=1):
-                mdout = file.parent.joinpath(f"{file.name.split('.')[0]}_gbnsr6{file.suffixes[0]}.mdout.%d").as_posix()
-                mdouts.append(mdout)
-                c = EnergyCalculation(progs['gbnsr6'], parm_system.complex_prmtop, file, mdin, mdout)
-                self.calc_list.append(c, '', timer_key='gbnsr6')
+            files = list(Path(f"{prefix}inpcrd_{self.mpi_rank}").glob(f"{prefix}complex*"))
+            mdouts = [file.parent.joinpath(f"{file.name.split('.')[0]}_gbnsr6{file.suffixes[0]}.mdout").as_posix()
+                      for file in files]
+            incrds = [file.as_posix() for file in files]
+
+            c = ListEnergyCalculation(progs['gbnsr6'], parm_system.complex_prmtop, mdin, incrds, mdouts)
+            self.calc_list.append(c, '    calculating GB...', timer_key='gbnsr6',
+                                      output_basename=f"{prefix}inpcrd_%d/{prefix}complex_gbnsr6.mdout")
+
             c = MergeOut(self.FILES.complex_prmtop, f"{prefix}complex_gbnsr6.mdout.%d",
                          f'{prefix}complex_mm.mdout.%d', mdouts, self.INPUT['decomp']['idecomp'],
                          self.INPUT['decomp']['dec_verbose'])
@@ -421,19 +429,27 @@ class MMPBSA_App(object):
                     self.calc_list.append(c, '', timer_key='gbnsr6')
                 else:
                     if not mm_rec_calculated:
-                        c = EnergyCalculation(progs['gb'], parm_system.receptor_prmtop, incrd % 'receptor', mm_mdin,
-                                              f'{prefix}receptor_mm.mdout.%d', self.pre + 'restrt.%d',
-                                              f'{prefix}receptor.{trj_sfx}.%d')
-                        self.calc_list.append(c, '  calculating receptor contribution...', timer_key='gbnsr6')
+                        self.calc_list.append(PrintCalc("  calculating receptor contribution..."),
+                                              timer_key='gbnsr6')
+                        c = EnergyCalculation(progs['gb'], parm_system.receptor_prmtop,
+                                              incrd % 'receptor',
+                                              f'{prefix}receptor.{trj_sfx}.%d',
+                                              mm_mdin,
+                                              f'{prefix}receptor_mm.mdout.%d',
+                                              self.pre + 'restrt.%d')
 
-                    files = Path(f"{prefix}inpcrd_{self.mpi_rank}").glob(f"{prefix}receptor*")
-                    mdouts = []
-                    for i, file in enumerate(files, start=1):
-                        mdout = file.parent.joinpath(
-                            f"{file.name.split('.')[0]}_gbnsr6{file.suffixes[0]}.mdout.%d").as_posix()
-                        mdouts.append(mdout)
-                        c = EnergyCalculation(progs['gbnsr6'], parm_system.receptor_prmtop, file, mdin, mdout)
-                        self.calc_list.append(c, '', timer_key='gbnsr6')
+                        self.calc_list.append(c, '    calculating MM...', timer_key='gbnsr6',
+                                              output_basename=f'{prefix}receptor_mm.mdout.%d')
+                    files = list(Path(f"{prefix}inpcrd_{self.mpi_rank}").glob(f"{prefix}receptor*"))
+                    mdouts = [
+                        file.parent.joinpath(f"{file.name.split('.')[0]}_gbnsr6{file.suffixes[0]}.mdout").as_posix()
+                        for file in files]
+                    incrds = [file.as_posix() for file in files]
+
+                    c = ListEnergyCalculation(progs['gbnsr6'], parm_system.receptor_prmtop, mdin, incrds, mdouts)
+                    self.calc_list.append(c, '    calculating GB...', timer_key='gbnsr6',
+                                          output_basename=f"{prefix}inpcrd_%d/{prefix}receptor_gbnsr6.mdout")
+
                     c = MergeOut(self.FILES.receptor_prmtop, f"{prefix}receptor_gbnsr6.mdout.%d",
                                  f'{prefix}receptor_mm.mdout.%d', mdouts, self.INPUT['decomp']['idecomp'],
                                  self.INPUT['decomp']['dec_verbose'])
@@ -455,19 +471,26 @@ class MMPBSA_App(object):
                     self.calc_list.append(c, '', timer_key='gbnsr6')
                 else:
                     if not mm_lig_calculated:
-                        c = EnergyCalculation(progs['gb'], parm_system.ligand_prmtop, incrd % 'ligand', mm_mdin,
-                                              f'{prefix}ligand_mm.mdout.%d', self.pre + 'restrt.%d',
-                                              f'{prefix}ligand.{trj_sfx}.%d')
-                        self.calc_list.append(c, '  calculating ligand contribution...', timer_key='gbnsr6')
+                        self.calc_list.append(PrintCalc("  calculating ligand contribution..."),
+                                              timer_key='gbnsr6')
+                        c = EnergyCalculation(progs['gb'], parm_system.ligand_prmtop,
+                                              incrd % 'ligand',
+                                              f'{prefix}ligand.{trj_sfx}.%d',
+                                              mm_mdin,
+                                              f'{prefix}ligand_mm.mdout.%d',
+                                              self.pre + 'restrt.%d')
 
-                    files = Path(f"{prefix}inpcrd_{self.mpi_rank}").glob(f"{prefix}ligand*")
-                    mdouts = []
-                    for i, file in enumerate(files, start=1):
-                        mdout = file.parent.joinpath(
-                            f"{file.name.split('.')[0]}_gbnsr6{file.suffixes[0]}.mdout.%d").as_posix()
-                        mdouts.append(mdout)
-                        c = EnergyCalculation(progs['gbnsr6'], parm_system.ligand_prmtop, file, mdin, mdout)
-                        self.calc_list.append(c, '', timer_key='gbnsr6')
+                        self.calc_list.append(c, '    calculating MM...', timer_key='gbnsr6',
+                                              output_basename=f'{prefix}ligand_mm.mdout.%d')
+                    files = list(Path(f"{prefix}inpcrd_{self.mpi_rank}").glob(f"{prefix}ligand*"))
+                    mdouts = [
+                        file.parent.joinpath(f"{file.name.split('.')[0]}_gbnsr6{file.suffixes[0]}.mdout").as_posix()
+                        for file in files]
+                    incrds = [file.as_posix() for file in files]
+
+                    c = ListEnergyCalculation(progs['gbnsr6'], parm_system.ligand_prmtop, mdin, incrds, mdouts)
+                    self.calc_list.append(c, '    calculating GB...', timer_key='gbnsr6',
+                                          output_basename=f"{prefix}inpcrd_%d/{prefix}ligand_gbnsr6.mdout")
                     c = MergeOut(self.FILES.ligand_prmtop, f"{prefix}ligand_gbnsr6.mdout.%d",
                                  f'{prefix}ligand_mm.mdout.%d', mdouts, self.INPUT['decomp']['idecomp'],
                                  self.INPUT['decomp']['dec_verbose'])
@@ -732,7 +755,7 @@ class MMPBSA_App(object):
         write_outputs(self)
         if self.INPUT['decomp']['decomprun']:
             write_decomp_output(self)
-        if self.INPUT['keep_files'] in [0, 2]:
+        if self.INPUT['general']['keep_files'] in [0, 2]:
             data2pkl(self)
 
         info = InfoFile(self)
@@ -972,20 +995,20 @@ class MMPBSA_App(object):
             GMXMMPBSA_ERROR('FILL_RATIO must be positive!', InputError)
         if INPUT['pb']['radiopt'] not in [0, 1]:
             GMXMMPBSA_ERROR('RADIOPT (%s) must be 0 or 1!' % INPUT['radiopt'], InputError)
-        if INPUT['pb']['dielc'] <= 0:
+        if INPUT['nmode']['dielc'] <= 0:
             GMXMMPBSA_ERROR('DIELC must be positive!', InputError)
-        if INPUT['pb']['maxcyc'] < 1:
+        if INPUT['nmode']['maxcyc'] < 1:
             GMXMMPBSA_ERROR('MAXCYC must be a positive integer!', InputError)
         if INPUT['pb']['sander_apbs'] not in [0, 1]:
             GMXMMPBSA_ERROR('SANDER_APBS must be 0 or 1!', InputError)
         if INPUT['decomp']['idecomp'] not in [0, 1, 2, 3, 4]:
-            GMXMMPBSA_ERROR('IDECOMP (%s) must be 1, 2, 3, or 4!' % INPUT['idecomp'], InputError)
-        if INPUT['decomp']['idecomp'] != 0 and INPUT['sander_apbs'] == 1:
+            GMXMMPBSA_ERROR('IDECOMP (%s) must be 1, 2, 3, or 4!' % INPUT['decomp']['idecomp'], InputError)
+        if INPUT['decomp']['idecomp'] != 0 and INPUT['pb']['sander_apbs'] == 1:
             GMXMMPBSA_ERROR('IDECOMP cannot be used with sander.APBS!', InputError)
-        if INPUT['decomp']['decomprun'] and INPUT['idecomp'] == 0:
+        if INPUT['decomp']['decomprun'] and INPUT['decomp']['idecomp'] == 0:
             GMXMMPBSA_ERROR('IDECOMP cannot be 0 for Decomposition analysis!', InputError)
 
-        if INPUT['ala']['alarun'] and INPUT['netcdf'] != '':
+        if INPUT['ala']['alarun'] and INPUT['general']['netcdf'] != '':
             GMXMMPBSA_ERROR('Alanine scanning is incompatible with NETCDF != 0!', InputError)
         if INPUT['general']['ions_parameters'] not in range(1, 17):
             GMXMMPBSA_ERROR('Ions parameters file name must be in %s!' % range(1, 17), InputError)
@@ -1062,11 +1085,12 @@ class MMPBSA_App(object):
             # if INPUT['thermo'] not in ['std', 'gf', 'pc+', 'all']:
             #     GMXMMPBSA_ERROR('THERMO must be "std", "gf", "pc+" or "all"!', InputError)
         if (
-                not INPUT['gbrun']
-                and not INPUT['pbrun']
-                and not INPUT['rismrun']
-                and not INPUT['nmoderun']
-                and not INPUT['qh_entropy']
+                not INPUT['gb']['gbrun']
+                and not INPUT['pb']['pbrun']
+                and not INPUT['rism']['rismrun']
+                and not INPUT['nmode']['nmoderun']
+                and not INPUT['general']['qh_entropy']
+                and not INPUT['gbnsr6']['gbnsr6run']
         ):
             GMXMMPBSA_ERROR('You did not specify any type of calculation!', InputError)
 
@@ -1080,8 +1104,8 @@ class MMPBSA_App(object):
             logging.warning("&decomp namelist has not been defined in the input file. Ignoring '-deo' flag... ")
 
         if (
-                not INPUT['pb']['molsurf']
-                and (INPUT['pb']['msoffset'] != 0 or INPUT['pb']['probe'] != 1.4)
+                not INPUT['gb']['molsurf']
+                and (INPUT['gb']['msoffset'] != 0 or INPUT['gb']['probe'] != 1.4)
                 and self.master
         ):
             logging.warning('offset and probe are molsurf-only options')
