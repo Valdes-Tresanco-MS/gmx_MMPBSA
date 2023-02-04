@@ -57,14 +57,22 @@ def pb(output_basename, nframes=1, mpi_size=1, nmode=False):
         sleep(ctime)
         frames = 0
         for i in range(mpi_size):
-            if not Path(output_basename % i).exists():
-                continue
-            with open(output_basename % i) as of:
-                for line in of:
-                    if not nmode and line.startswith('                    FINAL RESULTS'):
-                        frames += 1
-                    elif nmode and line.startswith('Total:'):
-                        frames += 1
+            if 'gbnsr6' in output_basename:
+                _output_folder, _output_filename = output_basename.split('/')
+                output_folder = Path(_output_folder % i)
+                output_filename = Path(_output_filename)
+                frames = len(list(output_folder.glob(f"{output_filename.stem}*")))
+            else:
+                obasename = Path(output_basename % i)
+                if not obasename.exists():
+                    continue
+                with obasename.open() as of:
+                    for line in of:
+                        if not nmode and line.startswith('                    FINAL RESULTS'):
+                            frames += 1
+                        elif nmode and line.startswith('Total:'):
+                            frames += 1
+
         if frames - accum_frames:
             pbar.update(frames - accum_frames)
             accum_frames = frames
@@ -88,7 +96,7 @@ class CalculationList(list):
 
     def append(self, calc, label='', timer_key=None, output_basename=None):
         """ Add a new Calculation instance to the list """
-        if not isinstance(calc, Calculation):
+        if not isinstance(calc, (Calculation, MultiCalculation)):
             raise TypeError('CalculationList can only take Calculation instances!')
 
         self.timer_keys.append(timer_key)
@@ -117,8 +125,8 @@ class CalculationList(list):
                     self.timer.start_timer(self.timer_keys[i])
                 if self.labels[i] and rank == 0:
                     logging.info(self.labels[i])
-                    if isinstance(calc, (EnergyCalculation, NmodeCalc)):
-                        if isinstance(calc, EnergyCalculation):
+                    if isinstance(calc, (EnergyCalculation, ListEnergyCalculation, NmodeCalc)):
+                        if isinstance(calc, (EnergyCalculation, ListEnergyCalculation)):
                             nframes = self.nframes
                             nmode = False
                         else:
@@ -139,6 +147,71 @@ class CalculationList(list):
 
 
 # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+class MultiCalculation(object):
+    def __init__(self):
+        self.list_calc = []
+
+    def run(self, rank, stdout=sys.stdout, stderr=sys.stderr):
+        """ Runs the program. All command-line arguments must be set before
+                    calling this method. Command-line arguments should be set in setup()
+                """
+        from subprocess import Popen
+
+        # If this has not been set up yet
+        # then raise a stink
+        if not self.calc_setup:
+            raise CalcError('Cannot run a calculation without calling its its setup() function!')
+
+            # Here, make sure that we could pass a file *OR* a string as stdout/stderr.
+        # If they are strings, then open files up with that name, and make sure to
+        # close them afterwards. The setup() method should make sure that they are
+        # either a file or a string!
+        own_handleo = own_handlee = False
+        try:
+            process_stdout = open(stdout, 'w')
+            own_handleo = True
+        except TypeError:
+            process_stdout = stdout
+        try:
+            process_stderr = open(stderr, 'w')
+            own_handlee = True
+        except TypeError:
+            process_stderr = stderr
+
+        # The setup() method sets the command-line arguments and makes sure that
+        # all of the CL arguments are set. Now all we have to do is start the
+        # process and monitor it for success.
+
+        # Popen can only take strings as command-line arguments, so convert
+        # everything to a string here. And if it appears to need the rank
+        # substituted into the file name, substitute that in here
+        try:
+            for command_args in self.list_calc:
+                for i in range(len(command_args)):
+                    command_args[i] = str(command_args[i])
+                    if '%d' in command_args[i]:
+                        command_args[i] %= rank
+
+                process = Popen(command_args, stdin=None, stdout=process_stdout, stderr=process_stderr)
+
+                calc_failed = bool(process.wait())
+                # print(command_args, calc_failed)
+                if calc_failed:
+                    raise CalcError(f'{command_args[0]} failed with prmtop {command_args[1]}!')
+        finally:
+            if own_handleo: process_stdout.close()
+            if own_handlee: process_stdout.close()
+
+        # -#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
+
+    def setup(self):
+        """ Sets up the Calculation. Finds the program and adds that to the
+            first element of the array. Inherited classes should call this
+            method first, but then do anything else that is necessary for that
+            calculation.
+        """
+        self.calc_setup = True
+
 
 class Calculation(object):
     """ Base calculation class. All other calculation classes should be inherited
@@ -242,8 +315,9 @@ class EnergyCalculation(Calculation):
         self.command_args.extend(('-i', self.input_file))  # input file flag
         self.command_args.extend(('-p', self.prmtop))  # prmtop flag
         self.command_args.extend(('-c', self.incrd))  # input coordinate flag
-        self.command_args.extend(('-y', self.inptraj))  # input trajectory flag
         self.command_args.extend(('-o', self.output))  # output file flag
+        if self.inptraj is not None:
+            self.command_args.extend(('-y', self.inptraj))  # input trajectory flag
         if self.restrt is not None:
             self.command_args.extend(('-r', self.restrt))  # restart file flag
         if self.xvv is not None:
@@ -256,9 +330,38 @@ class EnergyCalculation(Calculation):
 
         self.calc_setup = True
 
+class ListEnergyCalculation(MultiCalculation):
+    def __init__(self, prog, prmtop, input_file, incrds, outputs, xvv=None):
+        super().__init__()
+        self.program = prog
+        self.prmtop = prmtop
+        self.incrds = incrds
+        self.input_file = input_file
+        self.outputs = outputs
+        self.xvv = xvv
 
-# +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    def setup(self):
+        """
+        Sets up the command-line arguments. Sander requires a unique restrt file
+        for the MPI version (since one is *always* written and you don't want 2
+        threads fighting to write the same dumb file)
+        """
+        # print(self.incrds, self.outputs)
+        for c, o in zip(self.incrds, self.outputs):
+            command_args = [self.program,
+                            '-i', self.input_file,  # input file flag
+                            '-p', self.prmtop  # prmtop flag
+                            ]
+            command_args.extend(('-c', c))  # input coordinate flag
+            command_args.extend(('-o', o))  # output file flag
+            self.list_calc.append(command_args)
 
+            # Now test to make sure that the input file exists, since that's the only
+            # one that may be absent (due to the use of -use-mdins)
+            # if not os.path.exists(self.input_file):
+            #     raise IOError("Input file (%s) doesn't exist" % self.input_file)
+
+        self.calc_setup = True
 class RISMCalculation(Calculation):
     """ This class handles RISM calculations """
 
@@ -650,8 +753,7 @@ class MergeOut(Calculation):
         out_filename = self.output_filename % rank if '%d' in self.output_filename else self.output_filename
         mm_filename = self.mm_filename % rank if '%d' in self.mm_filename else self.mm_filename
         MergeGBNSR6Output(self.topology, out_filename, mm_filename,
-                          [file % rank for file in sorted(self.mdouts, key=lambda x: f"{int(x.split('.')[1]):08d}")],
-                          self.idecomp, self.dec_verbose)
+                          self.mdouts, self.idecomp, self.dec_verbose)
 
 # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
@@ -964,9 +1066,9 @@ class MergeGBNSR6Output():
                 energy[f][t] = float(words[7])
                 energy[f][words[8].strip()] = float(words[10])
                 c += 1
-                line = results_section[c]
-                words = line.split()
-                energy[f][words[0].strip()] = float(words[2])
+                # line = results_section[c]
+                # words = line.split()
+                # energy[f][words[0].strip()] = float(words[2])
             if line[:3] in ['TDC', 'SDC', 'BDC']:
                 data = [x.strip().strip('->') for x in line.split()]
                 if len(data) == 8:
