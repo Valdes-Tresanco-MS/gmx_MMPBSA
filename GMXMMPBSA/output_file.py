@@ -41,7 +41,7 @@ def data2pkl(app):
         input_file=app.input_file_text,
         COM_PDB=''.join(open(app.FILES.complex_fixed).readlines()),
         output_file=''.join(open(app.FILES.output_file).readlines()),
-        decomp_output_file=''.join(open(app.FILES.decompout).readlines()) if app.INPUT['decomprun']
+        decomp_output_file=''.join(open(app.FILES.decompout).readlines()) if app.INPUT['decomp']['decomprun']
         else None
     )
 

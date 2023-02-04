@@ -325,7 +325,7 @@ def make_mutant_trajectories(INPUT, FILES, rank, cpptraj,
 
     stability = FILES.stability
 
-    if INPUT['netcdf']:
+    if INPUT['general']['netcdf']:
         trj_suffix = 'nc'
         raise TypeError('Alanine/Glycine scanning requires ASCII trajectories (netcdf=0)')
     else:
