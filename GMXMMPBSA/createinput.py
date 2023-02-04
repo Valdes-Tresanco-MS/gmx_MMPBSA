@@ -288,7 +288,7 @@ class SanderInput(object):
     input_items = {'foo': 'bar'}  # replace this in derived classes
     name_map = {'foo': 'orig'}  # replace this in derived classes
     parent_namelist = {'foo': 'foo_namelist'}  # replace this in derived classes
-    namelist = ['foo']
+    namelist = 'foo'
 
     def __init__(self, INPUT):
         self.mdin = Mdin(self.program)
@@ -299,14 +299,13 @@ class SanderInput(object):
                 self.mdin.change('cntrl', 'ioutfm', int(bool(INPUT['general']['netcdf'])))
                 continue
             vunchanged = True
-            for nml in self.namelist:
-                if self.name_map[key] in INPUT[nml]:
-                    self.mdin.change(self.parent_namelist[key], key, INPUT[nml][self.name_map[key]])
-                    vunchanged = False
+            if self.name_map[key] in INPUT[self.namelist]:
+                self.mdin.change(self.parent_namelist[key], key, INPUT[self.namelist][self.name_map[key]])
+                vunchanged = False
             if vunchanged:
                 self.mdin.change(self.parent_namelist[key], key, self.input_items[key])
-
-        self.mdin.change('cntrl', 'ioutfm', int(bool(INPUT['general']['netcdf'])))
+        if self.namelist in ['gb', 'pb', 'rism']:
+            self.mdin.change('cntrl', 'ioutfm', int(bool(INPUT['general']['netcdf'])))
 
     def write_input(self, filename):
         """ Write the mdin file """
@@ -347,7 +346,7 @@ class SanderGBInput(SanderInput):
                 'ifqnt': 'ifqnt',  'qmmask': 'qmmask', 'qm_theory': 'qm_theory',
                 'qmcharge': 'qmcharge', 'qmgb': 'qmgb', 'qmcut': 'qmcut',
                 'scfconv': 'scfconv', 'peptide_corr': 'peptide_corr', 'writepdb': 'writepdb', 'verbosity': 'verbosity'}
-
+    namelist = 'gb'
 
 class GBNSR6Input(SanderInput):
     """ GB sander input file """
@@ -367,7 +366,7 @@ class GBNSR6Input(SanderInput):
                 'b': 'b', 'epsin': 'epsin', 'epsout': 'epsout', 'istrng': 'istrng', 'rs': 'rs',
                 'dprob': 'dprob', 'space': 'space', 'arcres': 'arcres', 'rbornstat': 'rbornstat', 'dgij': 'dgij',
                 'radiopt': 'radiopt', 'chagb': 'chagb', 'roh': 'roh', 'tau': 'tau', 'cavity_surften': 'cavity_surften'}
-
+    namelist = 'gbnsr6'
 
 class SanderMMInput(SanderInput):
     """ GB sander input file """
@@ -380,7 +379,7 @@ class SanderMMInput(SanderInput):
 
     name_map = {'ntb': 'ntb', 'cut': 'cut', 'nsnb': 'nsnb', 'imin': 'imin', 'idecomp': 'idecomp',
                 'dec_verbose': 'dec_verbose', 'igb': 'igb', 'gbsa': 'gbsa'}
-
+    namelist = 'gb'
 
 class SanderMMDecomp(SanderMMInput):
     """ MM decomposition input file for sander. In addition to the INPUT dictionary,
@@ -456,7 +455,7 @@ class SanderRISMInput(SanderInput):
                 # Output
                 'polardecomp': 'polardecomp', 'entropicdecomp': 'entropicdecomp', 'verbose': 'rism_verbose'}
 
-
+    namelist = 'rism'
 # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 class SanderPBSADECOMPInput(SanderInput):
@@ -536,11 +535,12 @@ class SanderPBSADECOMPInput(SanderInput):
                        'cavity_offset': 'pb', 'maxsph': 'pb', 'maxarcdot': 'pb',
                        # Options for output
                        'npbverb': 'pb'}
+    namelist = 'pb'
 
     def __init__(self, INPUT):
         # We need to change istrng to mM (from M).
         SanderInput.__init__(self, INPUT)
-        self.mdin.change('pb', 'istrng', INPUT['istrng'] * 1000)
+        self.mdin.change('pb', 'istrng', INPUT['pb']['istrng'] * 1000)
 
 
 # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -620,11 +620,12 @@ class SanderPBSAInput(SanderInput):
                        'cavity_offset': 'pb', 'maxsph': 'pb', 'maxarcdot': 'pb',
                        # Options for output
                        'npbverb': 'pb'}
+    namelist = 'pb'
 
     def __init__(self, INPUT):
         # We need to change istrng to mM (from M).
         SanderInput.__init__(self, INPUT)
-        self.mdin.change('pb', 'istrng', INPUT['istrng'] * 1000)
+        self.mdin.change('pb', 'istrng', INPUT['pb']['istrng'] * 1000)
 
 
 # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -704,11 +705,12 @@ class SanderPBSA2Input(SanderInput):
                        'cavity_offset': 'pb', 'maxsph': 'pb', 'maxarcdot': 'pb',
                        # Options for output
                        'npbverb': 'pb'}
+    namelist = 'pb'
 
     def __init__(self, INPUT):
         # We need to change istrng to mM (from M).
         SanderInput.__init__(self, INPUT)
-        self.mdin.change('pb', 'istrng', INPUT['istrng'] * 1000)
+        self.mdin.change('pb', 'istrng', INPUT['pb']['istrng'] * 1000)
 
 
 # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -744,11 +746,11 @@ class SanderAPBSInput(SanderInput):
     def __init__(self, INPUT):
         SanderInput.__init__(self, INPUT)
         # We also have to make some modifications specific to sander.APBS
-        self.mdin.change('apbs', 'grid', '%s,%s,%s' % (INPUT['scale'],
-                                                       INPUT['scale'], INPUT['scale']))
-        self.mdin.change('apbs', 'ionc', '%s,%s' % (INPUT['istrng'],
-                                                    INPUT['istrng']))
-        self.mdin.change('apbs', 'gamma', INPUT['cavity_surften'] * 4.184)
+        self.mdin.change('apbs', 'grid', '%s,%s,%s' % (INPUT['pb']['scale'],
+                                                       INPUT['pb']['scale'], INPUT['pb']['scale']))
+        self.mdin.change('apbs', 'ionc', '%s,%s' % (INPUT['pb']['istrng'],
+                                                    INPUT['pb']['istrng']))
+        self.mdin.change('apbs', 'gamma', INPUT['pb']['cavity_surften'] * 4.184)
 
 
 # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
