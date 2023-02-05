@@ -667,7 +667,7 @@ class GBNSR6out(AmberOutput):
                 self['1-4 EEL'][self.frame_idx] = float(words[7])
                 words = outfile.readline().split()
                 self['ESURF'][self.frame_idx] = float(words[2])
-
+                self.frame_idx += 1
 
 class MMout(AmberOutput):
     """ Amber output class for normal MM simulations """
