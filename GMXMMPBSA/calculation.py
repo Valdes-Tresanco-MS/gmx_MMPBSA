@@ -61,7 +61,7 @@ def pb(output_basename, nframes=1, mpi_size=1, nmode=False):
                 _output_folder, _output_filename = output_basename.split('/')
                 output_folder = Path(_output_folder % i)
                 output_filename = Path(_output_filename)
-                frames = len(list(output_folder.glob(f"{output_filename.stem}*")))
+                frames += len(list(output_folder.glob(f"{output_filename.stem}*")))
             else:
                 obasename = Path(output_basename % i)
                 if not obasename.exists():
@@ -1134,9 +1134,14 @@ class MergeGBNSR6Output():
             line = results_section[c]
             if "FINAL RESULTS" in line:
                 store = True
-            if store and line.startswith(' EELEC'):
+            if store and line.startswith(' 1-4 NB'):
                 words = line.split()
-                energy[words[3].strip()] = float(words[5])
+                energy['1-4 EEL'] = float(words[7])
+                c += 1
+                line = results_section[c]
+                words = line.split()
+                energy['EEL'] = float(words[2])
+                energy['EGB'] = float(words[5])
                 c += 1
                 line = results_section[c]
                 words = line.split()
@@ -1188,6 +1193,8 @@ class MergeGBNSR6Output():
             for i, _ in enumerate(range(len(mmenergy)), start=1):
                 output_file.write(f'minimizing coord set #       {i}\n\n')
                 mmenergy[i].pop('EGB')
+                mmenergy[i].pop('EEL')
+                mmenergy[i].pop('1-4 EEL')
                 for e, ev in gbenergy[i].items():
                     mmenergy[i][e] = ev
                 for kl in k2print:
@@ -1201,17 +1208,15 @@ class MergeGBNSR6Output():
                         output_file.write(' {:8s}={:>14.4f}\n\n'.format(*f))
 
                 if self.idecomp:
-                    if self.idecomp in [1, 2]:
-                        for term in mmdecomp[i]:
+                    for term in mmdecomp[i]:
+                        if self.idecomp in [1, 2]:
                             output_file.write(self.decomp_headers['pr'].format(self.decomp_labels[term]))
                             for c, l in enumerate(mmdecomp[i][term]):
                                 l[-2] = gbdecomp[i][term][c][-1]
                                 output_file.write('{}{:>7d}{:>10.3f}{:>10.3f}{:>10.3f}{:>10.3f}{:>10.3f}\n'.format(*l))
-                            output_file.write('\n')
-                    else:
-                        for term in mmdecomp[i]:
+                        else:
                             output_file.write(self.decomp_headers['pw'].format(self.decomp_labels[term]))
                             for c, l in enumerate(mmdecomp[i][term]):
                                 l[-2] = gbdecomp[i][term][c][-1]
                                 output_file.write('{}{:>8d}->{:>7d}{:>13.4f}{:>13.4f}{:>13.4f}{:>13.4f}{:>13.4f}\n'.format(*l))
-                            output_file.write('\n')
+                        output_file.write('\n')
