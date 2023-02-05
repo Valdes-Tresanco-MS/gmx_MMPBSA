@@ -373,7 +373,7 @@ class MMPBSA_App(object):
 
             # Mdin depends on decomp or not
             if self.INPUT['decomp']['decomprun']:
-                mdin_template = self.pre + 'mm_decomp_%s.mdin'
+                mdin_template = self.pre + 'mm_gbnsr6_decomp_%s.mdin'
             else:
                 mdin_template = self.pre + 'mm.mdin'
 
