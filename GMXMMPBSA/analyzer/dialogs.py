@@ -395,28 +395,29 @@ class InitDialog(QDialog):
             if fname.suffix == '.mmxsa':
                 with open(fname, 'rb') as of:
                     info = pickle.load(of)
-                    basename = info.INPUT['sys_name']
+                    basename = info.INPUT['general']['sys_name']
                     if basename in names:
                         while basename in names:
                             basename = f"{basename}-{names.count(basename) + 1}"
                         names.append(basename)
-                    temp_ki = [info.INPUT['exp_ki']] if isinstance(info.INPUT['exp_ki'], float) else info.INPUT['exp_ki']
-                    mut_only = info.INPUT['mutant_only']
+                    temp_ki = [info.INPUT['general']['exp_ki']] if isinstance(info.INPUT['general']['exp_ki'], float) \
+                        else info.INPUT['general']['exp_ki']
+                    mut_only = info.INPUT['ala']['mutant_only']
                     mutant = info.mut_str
                     stability = info.FILES.stability
             else:
                 with open(fname) as fi:
                     for line in fi:
                         line = line.strip('\n')
-                        if line.startswith("INPUT['sys_name']"):
+                        if line.startswith("INPUT['general']['sys_name']"):
                             basename = str(line.split()[2]).strip('"\'')
                             if basename in names:
                                 while basename in names:
                                     basename = f"{basename}-{names.count(basename) + 1}"
                                 names.append(basename)
-                        if line.startswith("INPUT['exp_ki']"):
+                        if line.startswith("INPUT['general']['exp_ki']"):
                             temp_ki = [float(x.strip()) for x in line.split('=')[1].strip(' []').split(',')]
-                        if line.startswith("INPUT['mutant_only']"):
+                        if line.startswith("INPUT['general']['mutant_only']"):
                             mut_only = int(line.split()[2])
                         if line.startswith("mut_str"):
                             mutant = line.split('=')[1].strip(" '")
