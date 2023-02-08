@@ -702,7 +702,10 @@ def remove(flag, fnpre='_GMXMMPBSA_'):
                     fil == 'COMPACT_MMXSA_RESULTS.mmxsa' or
                     fil in other_files or
                     fil in result_files):
-                os.remove(fil)
+                if Path(fil).is_dir():
+                    shutil.rmtree(fil)
+                else:
+                    os.remove(fil)
 
     elif flag == 0:  # remove all temporary files
         for fil in allfiles:
