@@ -967,7 +967,7 @@ class MergeGBNSR6Output():
         control_data = []
         atomic_coor_vel = []
         results_section = []
-        temp_res2print = None
+        temp_res2print = []
 
         with open(self.mm_filename) as mmfile:
             current_section = None
@@ -1001,12 +1001,13 @@ class MergeGBNSR6Output():
                 if current_section is not None:
                     current_section.append(line)
                 if line[:4] == 'RES ':
-                    temp_res2print = line.split()[1:]
+                    temp_res2print.append(line.split()[1:])
 
         res2print = []
         if temp_res2print:
-            for i in range(0, len(temp_res2print), 2):
-                res2print.extend(range(int(temp_res2print[i]), int(temp_res2print[i + 1]) + 1))
+            for l in temp_res2print:
+                for i in range(0, len(l), 2):
+                    res2print.extend(range(int(l[i]), int(l[i + 1]) + 1))
 
         return {'file_assignments': file_assignments, 'inputfile': inputfile, 'resource_section': resource_section,
                 'control_data': control_data, 'atomic_coor_vel': atomic_coor_vel,
