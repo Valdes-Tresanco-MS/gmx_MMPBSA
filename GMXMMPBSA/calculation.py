@@ -146,7 +146,6 @@ class CalculationList(list):
             if own_handle: f.close()
 
 
-# +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 class MultiCalculation(object):
     def __init__(self):
         self.list_calc = []
@@ -295,8 +294,6 @@ class Calculation(object):
         self.calc_setup = True
 
 
-# +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-
 class EnergyCalculation(Calculation):
     """ Uses mmpbsa_py_energy to evaluate energies """
 
@@ -330,6 +327,7 @@ class EnergyCalculation(Calculation):
 
         self.calc_setup = True
 
+
 class ListEnergyCalculation(MultiCalculation):
     def __init__(self, prog, prmtop, input_file, incrds, outputs, xvv=None):
         super().__init__()
@@ -362,6 +360,8 @@ class ListEnergyCalculation(MultiCalculation):
             #     raise IOError("Input file (%s) doesn't exist" % self.input_file)
 
         self.calc_setup = True
+
+
 class RISMCalculation(Calculation):
     """ This class handles RISM calculations """
 
@@ -477,8 +477,6 @@ class RISMCalculation(Calculation):
         Calculation.run(self, rank, stdout=self.output % rank)
 
 
-# +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-
 class NmodeCalc(Calculation):
     """ Calculates entropy contribution by normal mode approximation """
 
@@ -515,8 +513,6 @@ class NmodeCalc(Calculation):
     def run(self, rank, *args, **kwargs):
         Calculation.run(self, rank, stdout=self.output % rank)
 
-
-# +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 class QuasiHarmCalc(Calculation):
     """ Quasi-harmonic entropy calculation class """
@@ -570,8 +566,6 @@ class QuasiHarmCalc(Calculation):
     def run(self, rank, *args, **kwargs):
         Calculation.run(self, rank, stdout=self.output)
 
-
-# +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 class PBEnergyCalculation(EnergyCalculation):
     """
@@ -635,8 +629,6 @@ class PBEnergyCalculation(EnergyCalculation):
             if own_handle: process_stderr.close()
 
 
-# +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-
 class SurfCalc(Calculation):
     """
     Base class for a surface area calculation using cpptraj. Children must
@@ -678,8 +670,6 @@ class SurfCalc(Calculation):
             raise CalcError(f'{self.program} failed with prmtop {self.prmtop}!')
 
 
-# +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-
 class LcpoCalc(SurfCalc):
     """
     Uses LCPO to calculate the surface area
@@ -692,8 +682,6 @@ class LcpoCalc(SurfCalc):
         output = self.output % rank
         return "trajin %s\nsolvent none\nsurf :* out %s\n" % (inptraj, output)
 
-
-# +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 class MolsurfCalc(SurfCalc):
     """ Uses molsurf to calculate the surface area """
@@ -709,8 +697,6 @@ class MolsurfCalc(SurfCalc):
         return "trajin %s\nmolsurf :* out %s probe %s offset %s" % (inptraj,
                                                                     output, self.probe, self.offset)
 
-
-# +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 class CopyCalc(Calculation):
     """
@@ -752,10 +738,8 @@ class MergeOut(Calculation):
         # Do rank-substitution if necessary
         out_filename = self.output_filename % rank if '%d' in self.output_filename else self.output_filename
         mm_filename = self.mm_filename % rank if '%d' in self.mm_filename else self.mm_filename
-        MergeGBNSR6Output(self.topology, out_filename, mm_filename,
-                          self.mdouts, self.idecomp, self.dec_verbose)
+        MergeGBNSR6Output(self.topology, out_filename, mm_filename, self.mdouts, self.idecomp, self.dec_verbose)
 
-# +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 class PrintCalc(Calculation):
     """
@@ -771,8 +755,6 @@ class PrintCalc(Calculation):
             logging.info(self.message)
             # stdout.write(self.message + '\n')
 
-
-# +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 class InteractionEntropyCalc:
     """
@@ -844,7 +826,6 @@ class InteractionEntropyCalc:
             for f, d in zip(frames, self.data):
                 out.write('{:d}  {:.2f}\n'.format(f, d))
 
-# +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 class C2EntropyCalc:
     """
@@ -884,9 +865,6 @@ class C2EntropyCalc:
             out.write(f'Internal Energy SD (sigma): {self.ie_std:9.2f}\n')
             out.write(f'C2 Entropy CI: {self.c2_ci[0]:.4f} {self.c2_ci[1]:.4f}\n')
 
-
-
-# +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 def get_gbnsr6_out(dgij, topology, idecomp=0, dec_verbose=0, res2print=None):
     import parmed
@@ -1070,7 +1048,7 @@ class MergeGBNSR6Output():
                 # words = line.split()
                 # energy[f][words[0].strip()] = float(words[2])
             if line[:3] in ['TDC', 'SDC', 'BDC']:
-                data = [x.strip().strip('->') for x in line.split()]
+                data = [x.strip().replace('->', '') for x in line.split()]
                 if len(data) == 8:
                     _t, _r1, _r2, _i, _v, _e, _p, _s = data
                     data = [_t, int(_r1), int(_r2), float(_i), float(_v), float(_e), float(_p), float(_s)]

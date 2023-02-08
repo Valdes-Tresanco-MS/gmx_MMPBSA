@@ -43,7 +43,7 @@ from parmed.exceptions import AmberError
 from copy import deepcopy
 
 ROH = {1: 0.586, 2: 0.699, 3: 0.734, 4: 0.183}
-# +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
 
 def create_inputs(INPUT, prmtop_system, pre):
     """ Creates the input files for all necessary calculations """
@@ -318,7 +318,7 @@ class SanderInput(object):
         self.mdin.write(filename)
 
 
-# +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
 
 class SanderGBInput(SanderInput):
     """ GB sander input file """
@@ -355,7 +355,7 @@ class SanderGBInput(SanderInput):
                 'qmcharge': 'qmcharge', 'qmgb': 'qmgb', 'qmcut': 'qmcut',
                 'scfconv': 'scfconv', 'peptide_corr': 'peptide_corr', 'writepdb': 'writepdb', 'verbosity': 'verbosity'}
         self.namelist = 'gb'
-        self.make_mdin()
+
 
 class GBNSR6Input(SanderInput):
     """ GB sander input file """
@@ -589,8 +589,6 @@ class SanderPBSADECOMPInput(SanderInput):
     #     self.mdin.change('pb', 'istrng', INPUT['pb']['istrng'] * 1000)
 
 
-# +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-
 class SanderPBSAInput(SanderInput):
     """ PB sander input file """
     def __init__(self, INPUT):
@@ -677,8 +675,6 @@ class SanderPBSAInput(SanderInput):
     #     SanderInput.__init__(self, INPUT)
     #     self.mdin.change('pb', 'istrng', INPUT['pb']['istrng'] * 1000)
 
-
-# +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 class SanderPBSA2Input(SanderInput):
     """ PB sander input file """
@@ -768,8 +764,6 @@ class SanderPBSA2Input(SanderInput):
     #     self.mdin.change('pb', 'istrng', INPUT['pb']['istrng'] * 1000)
 
 
-# +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-
 class SanderAPBSInput(SanderInput):
     """ PB sander input file using APBS as the PB solver """
     def __init__(self, INPUT):
@@ -814,8 +808,6 @@ class SanderAPBSInput(SanderInput):
     #     self.mdin.change('apbs', 'gamma', INPUT['pb']['cavity_surften'] * 4.184)
 
 
-# +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-
 class SanderGBDecomp(SanderGBInput):
     """ GB decomposition input file for sander. In addition to the INPUT dictionary,
        this class also needs several GROUP cards to define the 
@@ -827,8 +819,6 @@ class SanderGBDecomp(SanderGBInput):
             self.mdin.AddCard(card[0], card[1])
 
 
-# +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-
 class SanderPBDecomp(SanderPBSADECOMPInput):
     """ PB decomposition input file for sander """
 
@@ -837,8 +827,6 @@ class SanderPBDecomp(SanderPBSADECOMPInput):
         for card in cards:
             self.mdin.AddCard(card[0], card[1])
 
-
-# +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 class QuasiHarmonicInput(object):
     """ Write a cpptraj input file to do a quasi-harmonic entropy calculation """
@@ -866,4 +854,3 @@ class QuasiHarmonicInput(object):
         """ Writes the input file """
         open(filename, 'w').write(self.file_string)
 
-# +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+

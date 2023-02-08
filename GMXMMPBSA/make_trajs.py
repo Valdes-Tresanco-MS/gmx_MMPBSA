@@ -314,8 +314,6 @@ def make_trajectories(INPUT, FILES, size, cpptraj, pre):
     return com_frames, rec_frames, lig_frames, num_frames_nmode
 
 
-# +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-
 def make_mutant_trajectories(INPUT, FILES, rank, cpptraj,
                              norm_sys, mut_sys, pre):
     """ Mutates given trajectories and outputs dummy files for mutants """
@@ -441,8 +439,6 @@ def make_mutant_trajectories(INPUT, FILES, rank, cpptraj,
 
     return str(com_mut), com_mut.mutres
 
-
-# +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 class Trajectory(object):
     """ Base Trajectory class:
@@ -720,7 +716,6 @@ class Trajectory(object):
         finally:
             if own_handle: stdout.close()
 
-    # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
     def Outtraj(self, filename, frames=None, filetype='', nobox='nobox', options=None):
         """ This adds an outtraj command to the action stack, and you can specify
@@ -736,5 +731,3 @@ class Trajectory(object):
             self.actions.append(
                 f"outtraj {filename} {filetype} onlyframes {frames} {nobox}"
             )
-
-# +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
