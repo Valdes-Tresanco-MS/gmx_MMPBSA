@@ -57,6 +57,7 @@ def create_inputs(INPUT, prmtop_system, pre):
             temp_input['gbnsr6']['dgij'] = 1
         temp_input['gbnsr6']['istrng'] = INPUT['gbnsr6']['istrng'] / 1000
         gbnsr6_mdin = GBNSR6Input(temp_input)
+        gbnsr6_mdin.make_mdin()
         gbnsr6_mdin.write_input(f'{pre}gbnsr6.mdin')
 
     # First check if we are running decomp
@@ -128,17 +129,21 @@ def create_inputs(INPUT, prmtop_system, pre):
             if stability:
                 pri_res = ['Residues to print', com_card]
                 com_mdin = SanderPBDecomp(INPUT, rec_res, pri_res)
+                com_mdin.make_mdin()
                 com_mdin.write_input(f"{pre}pb_decomp_com.mdin")
             else:
                 lig_res = ['Residues considered as LIG', full_lc]
                 pri_res = ['Residues to print', com_card]
                 com_mdin = SanderPBDecomp(INPUT, rec_res, lig_res, pri_res)
+                com_mdin.make_mdin()
                 rec_res = ['Residues considered as REC', full_rec]
                 pri_res = ['Residues to print', rec_card]
                 rec_mdin = SanderPBDecomp(INPUT, rec_res, pri_res)
+                rec_mdin.make_mdin()
                 lig_res = ['Residues considered as LIG', full_lig]
                 pri_res = ['Residues to print', lig_card]
                 lig_mdin = SanderPBDecomp(INPUT, lig_res, pri_res)
+                lig_mdin.make_mdin()
                 com_mdin.write_input(f"{pre}pb_decomp_com.mdin")
                 rec_mdin.write_input(f"{pre}pb_decomp_rec.mdin")
                 lig_mdin.write_input(f"{pre}pb_decomp_lig.mdin")
@@ -149,22 +154,18 @@ def create_inputs(INPUT, prmtop_system, pre):
             rec_res = ['Residues considered as REC', full_rc]
             if stability:
                 pri_res = ['Residues to print', com_card]
-                com_mdin = SanderMMDecomp(INPUT, rec_res, pri_res)
-                com_mdin.set_gbnsr6_param()
+                com_mdin = SanderMMDecomp(INPUT, 'gbnsr6', rec_res, pri_res)
                 com_mdin.write_input(f"{pre}mm_gbnsr6_decomp_com.mdin")
             else:
                 lig_res = ['Residues considered as LIG', full_lc]
                 pri_res = ['Residues to print', com_card]
-                com_mdin = SanderMMDecomp(INPUT, rec_res, lig_res, pri_res)
-                com_mdin.set_gbnsr6_param()
+                com_mdin = SanderMMDecomp(INPUT, 'gbnsr6', rec_res, lig_res, pri_res)
                 rec_res = ['Residues considered as REC', full_rec]
                 pri_res = ['Residues to print', rec_card]
-                rec_mdin = SanderMMDecomp(INPUT, rec_res, pri_res)
-                rec_mdin.set_gbnsr6_param()
+                rec_mdin = SanderMMDecomp(INPUT, 'gbnsr6', rec_res, pri_res)
                 lig_res = ['Residues considered as LIG', full_lig]
                 pri_res = ['Residues to print', lig_card]
-                lig_mdin = SanderMMDecomp(INPUT, lig_res, pri_res)
-                lig_mdin.set_gbnsr6_param()
+                lig_mdin = SanderMMDecomp(INPUT, 'gbnsr6', lig_res, pri_res)
                 com_mdin.write_input(f"{pre}mm_gbnsr6_decomp_com.mdin")
                 rec_mdin.write_input(f"{pre}mm_gbnsr6_decomp_rec.mdin")
                 lig_mdin.write_input(f"{pre}mm_gbnsr6_decomp_lig.mdin")
@@ -207,6 +208,7 @@ def create_inputs(INPUT, prmtop_system, pre):
                 if com_arad:
                     com_input['gb']['arad'] = com_arad
                 gb_mdin = SanderGBInput(com_input)
+                gb_mdin.make_mdin()
                 gb_mdin.write_input(f'{pre}gb_qmmm_com.mdin')
                 if not stability:
                     if not rec_input['gb']['qmmask']:
@@ -219,6 +221,7 @@ def create_inputs(INPUT, prmtop_system, pre):
                     if rec_arad:
                         rec_input['gb']['arad'] = rec_arad
                     gb_mdin = SanderGBInput(rec_input)
+                    gb_mdin.make_mdin()
                     gb_mdin.write_input(f'{pre}gb_qmmm_rec.mdin')
                     if not lig_input['gb']['qmmask']:
                         lig_input['gb']['ifqnt'] = 0
@@ -230,6 +233,7 @@ def create_inputs(INPUT, prmtop_system, pre):
                     if lig_arad:
                         lig_input['gb']['arad'] = lig_arad
                     gb_mdin = SanderGBInput(lig_input)
+                    gb_mdin.make_mdin()
                     gb_mdin.write_input(f'{pre}gb_qmmm_lig.mdin')
 
             elif INPUT['gb']['alpb']:
@@ -238,36 +242,46 @@ def create_inputs(INPUT, prmtop_system, pre):
                 lig_input = deepcopy(INPUT)
                 com_input['gb']['arad'] = com_arad
                 gb_mdin = SanderGBInput(com_input)
+                gb_mdin.make_mdin()
                 gb_mdin.write_input(f'{pre}gb_com.mdin')
                 rec_input['gb']['arad'] = rec_arad
                 gb_mdin = SanderGBInput(rec_input)
+                gb_mdin.make_mdin()
                 gb_mdin.write_input(f'{pre}gb_rec.mdin')
                 lig_input['gb']['arad'] = lig_arad
                 gb_mdin = SanderGBInput(lig_input)
+                gb_mdin.make_mdin()
                 gb_mdin.write_input(f'{pre}gb_lig.mdin')
             else:
                 gb_mdin = SanderGBInput(INPUT)
+                gb_mdin.make_mdin()
                 gb_mdin.write_input(f'{pre}gb.mdin')
 
         # We only need to run it once for the GBNSR6, pbsa.cuda and APBS calculations.
         if INPUT['gbnsr6']['gbnsr6run']:
             mm_mdin = SanderMMInput(INPUT)
+            mm_mdin.make_mdin()
             mm_mdin.write_input(f'{pre}mm.mdin')
 
         if INPUT['pb']['pbrun']:
             pb_prog = 'sander.APBS' if INPUT['sander_apbs'] else 'sander'
             if pb_prog == 'sander.APBS':
                 pb_mdin = SanderAPBSInput(INPUT)
+                pb_mdin.make_mdin()
                 pb_mdin2 = SanderAPBSInput(INPUT)
+                pb_mdin2.make_mdin()
             else:
                 pb_mdin = SanderPBSAInput(INPUT)
+                pb_mdin.make_mdin()
                 pb_mdin2 = SanderPBSA2Input(INPUT)
+                pb_mdin2.make_mdin()
 
             pb_mdin.write_input(f'{pre}pb.mdin')
             pb_mdin2.write_input(f'{pre}pb.mdin2')
 
         if INPUT['rism']['rismrun']:
             rism_mdin = SanderRISMInput(INPUT)
+            rism_mdin.make_mdin()
             rism_mdin.write_input(f'{pre}rism.mdin')
 
     # end if decomprun
@@ -304,11 +318,11 @@ class SanderInput(object):
             if key == 'ioutfm':
                 self.mdin.change('cntrl', 'ioutfm', int(bool(self.INPUT['general']['netcdf'])))
                 continue
-            vunchanged = True
             if self.name_map[key] in self.INPUT[self.namelist]:
                 self.mdin.change(self.parent_namelist[key], key, self.INPUT[self.namelist][self.name_map[key]])
-                vunchanged = False
-            if vunchanged:
+            elif key in ['dec_verbose', 'idecomp']:
+                self.mdin.change(self.parent_namelist[key], key, self.INPUT['decomp'][self.name_map[key]])
+            else:
                 self.mdin.change(self.parent_namelist[key], key, value)
         if self.namelist in {'gb', 'pb', 'rism'}:
             self.mdin.change('cntrl', 'ioutfm', int(bool(self.INPUT['general']['netcdf'])))
@@ -362,7 +376,6 @@ class GBNSR6Input(SanderInput):
     def __init__(self, INPUT):
         super().__init__(INPUT)
         self.program = 'gbnsr6'
-        self.namelist = ['gbnsr6']
         self.input_items = {'inp': 1,
                    'b': 0.028, 'epsin': 1.0, 'epsout': 78.5, 'istrng': 0.0, 'rs': 0.52, 'dprob': 1.4, 'space': 0.5,
                    'arcres': 0.2, 'rbornstat': 0, 'dgij': 0, 'radiopt': 0, 'chagb': 0, 'roh': 1, 'tau': 1.47,
@@ -378,7 +391,6 @@ class GBNSR6Input(SanderInput):
                 'dprob': 'dprob', 'space': 'space', 'arcres': 'arcres', 'rbornstat': 'rbornstat', 'dgij': 'dgij',
                 'radiopt': 'radiopt', 'chagb': 'chagb', 'roh': 'roh', 'tau': 'tau', 'cavity_surften': 'cavity_surften'}
         self.namelist = 'gbnsr6'
-        self.make_mdin()
 
 
 class SanderMMInput(SanderInput):
@@ -406,26 +418,30 @@ class SanderMMInput(SanderInput):
                 }
 
         self.namelist = 'gb'
-        self.make_mdin()
+
 
 class SanderMMDecomp(SanderMMInput):
     """ MM decomposition input file for sander. In addition to the INPUT dictionary,
        this class also needs several GROUP cards to define the
    """
 
-    def __init__(self, INPUT, *cards):
+    def __init__(self, INPUT, method, *cards):
         super().__init__(INPUT)
         # SanderMMInput.__init__(self, INPUT)
         self.INPUT = INPUT
+        # update parameters before make mdin and adding cards
+        if method == 'gbnsr6':
+            self.set_gbnsr6_param()
+
         self.input_items['gbsa'] = 2
         self.input_items['dec_verbose'] = self.INPUT['decomp']['dec_verbose']
+
+        self.make_mdin()
         for card in cards:
             self.mdin.AddCard(card[0], card[1])
 
     def set_gbnsr6_param(self):
-        transferable = {'epsin': 'intdiel', 'epsout': 'extdiel', 'istrng':'saltcon', 'dprob': 'probe',
-                        'cavity_surften': 'surften'}
-
+        transferable = {'epsin': 'intdiel', 'epsout': 'extdiel', 'istrng':'saltcon', 'cavity_surften': 'surften'}
         for gbnsr6k, gbk in transferable.items():
             self.input_items[gbk] = self.INPUT['gbnsr6'][gbnsr6k]
 
@@ -497,7 +513,6 @@ class SanderRISMInput(SanderInput):
                 'polardecomp': 'polardecomp', 'entropicdecomp': 'entropicdecomp', 'verbose': 'rism_verbose'}
 
         self.namelist = 'rism'
-        self.make_mdin()
 
 
 class SanderPBSADECOMPInput(SanderInput):
@@ -580,7 +595,6 @@ class SanderPBSADECOMPInput(SanderInput):
                        # Options for output
                        'npbverb': 'pb'}
         self.namelist = 'pb'
-        self.make_mdin()
 
         self.mdin.change('pb', 'istrng', INPUT['pb']['istrng'] * 1000)
     # def __init__(self, INPUT):
@@ -667,7 +681,6 @@ class SanderPBSAInput(SanderInput):
                        # Options for output
                        'npbverb': 'pb'}
         self.namelist = 'pb'
-        self.make_mdin()
 
         self.mdin.change('pb', 'istrng', INPUT['pb']['istrng'] * 1000)
     # def __init__(self, INPUT):
@@ -755,7 +768,6 @@ class SanderPBSA2Input(SanderInput):
                        # Options for output
                        'npbverb': 'pb'}
         self.namelist = 'pb'
-        self.make_mdin()
 
         self.mdin.change('pb', 'istrng', INPUT['pb']['istrng'] * 1000)
     # def __init__(self, INPUT):
@@ -793,7 +805,6 @@ class SanderAPBSInput(SanderInput):
                            'ionc': 'apbs', 'ionrr': 'apbs', 'radiopt': 'apbs',
                            'calcforce': 'apbs', 'grid': 'apbs', 'gamma': 'apbs',
                            'calcnpenergy': 'apbs'}
-        self.make_mdin()
 
         self.mdin.change('apbs', 'grid', f"{INPUT['pb']['scale']},{INPUT['pb']['scale']},{INPUT['pb']['scale']}")
         self.mdin.change('apbs', 'ionc', f"{INPUT['pb']['istrng']},{INPUT['pb']['istrng']}")
@@ -815,6 +826,7 @@ class SanderGBDecomp(SanderGBInput):
 
     def __init__(self, INPUT, *cards):
         SanderGBInput.__init__(self, INPUT)
+        self.make_mdin()
         for card in cards:
             self.mdin.AddCard(card[0], card[1])
 
@@ -824,6 +836,7 @@ class SanderPBDecomp(SanderPBSADECOMPInput):
 
     def __init__(self, INPUT, *cards):
         SanderPBSADECOMPInput.__init__(self, INPUT)
+        self.make_mdin()
         for card in cards:
             self.mdin.AddCard(card[0], card[1])
 
