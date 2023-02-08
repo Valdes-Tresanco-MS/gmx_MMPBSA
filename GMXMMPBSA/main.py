@@ -398,7 +398,7 @@ class MMPBSA_App(object):
                 self.calc_list.append(c, '    calculating MM...', timer_key='gbnsr6',
                                       output_basename=f'{prefix}complex_mm.mdout.%d')
 
-            files = list(Path(f"{prefix}inpcrd_{self.mpi_rank}").glob(f"{prefix}complex*"))
+            files = sorted(list(Path(f"{prefix}inpcrd_{self.mpi_rank}").glob(f"{prefix}complex*")))
             mdouts = [file.parent.joinpath(f"{file.name.split('.')[0]}_gbnsr6{file.suffixes[0]}.mdout").as_posix()
                       for file in files]
             incrds = [file.as_posix() for file in files]
@@ -440,7 +440,7 @@ class MMPBSA_App(object):
 
                         self.calc_list.append(c, '    calculating MM...', timer_key='gbnsr6',
                                               output_basename=f'{prefix}receptor_mm.mdout.%d')
-                    files = list(Path(f"{prefix}inpcrd_{self.mpi_rank}").glob(f"{prefix}receptor*"))
+                    files = sorted(list(Path(f"{prefix}inpcrd_{self.mpi_rank}").glob(f"{prefix}receptor*")))
                     mdouts = [
                         file.parent.joinpath(f"{file.name.split('.')[0]}_gbnsr6{file.suffixes[0]}.mdout").as_posix()
                         for file in files]
@@ -482,7 +482,7 @@ class MMPBSA_App(object):
 
                         self.calc_list.append(c, '    calculating MM...', timer_key='gbnsr6',
                                               output_basename=f'{prefix}ligand_mm.mdout.%d')
-                    files = list(Path(f"{prefix}inpcrd_{self.mpi_rank}").glob(f"{prefix}ligand*"))
+                    files = sorted(list(Path(f"{prefix}inpcrd_{self.mpi_rank}").glob(f"{prefix}ligand*")))
                     mdouts = [
                         file.parent.joinpath(f"{file.name.split('.')[0]}_gbnsr6{file.suffixes[0]}.mdout").as_posix()
                         for file in files]
