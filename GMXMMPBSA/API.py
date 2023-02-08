@@ -657,7 +657,7 @@ class MMPBSA_API():
                                             else:
                                                 temp_energy = {}
 
-                                                if self.app_namespace.INPUT['idecomp'] in [1, 2]:
+                                                if self.app_namespace.INPUT['decomp']['idecomp'] in [1, 2]:
                                                     temp_emap = []
                                                     temp_terms_keys = term or tuple(self.data[et][m][m1][c][r1].keys())
 
