@@ -547,12 +547,12 @@ class MMPBSA_API():
                     ie = InteractionEntropyCalc(edata,
                                                 dict(temperature=self.app_namespace.INPUT['general']['temperature'],
                                                      startframe=startframe, endframe=endframe, interval=interval),
-                                                iesegment=ie_segment)
-                    result = IEout({})
+                                                key, iesegment=ie_segment)
+                    result = IEout({}, key)
                     result.parse_from_dict(dict(data=ie.data, sigma=ie.ie_std, iedata=ie.iedata))
                 else:
-                    c2 = C2EntropyCalc(edata, dict(temperature=self.app_namespace.INPUT['general']['temperature']))
-                    result = C2out()
+                    c2 = C2EntropyCalc(edata, dict(temperature=self.app_namespace.INPUT['general']['temperature']), key)
+                    result = C2out(key)
                     result.parse_from_dict(dict(c2data=c2.c2data, c2_std=c2.c2_std, sigma=c2.ie_std, c2_ci=c2.c2_ci))
                 break
         return result

@@ -762,7 +762,7 @@ class InteractionEntropyCalc:
     :return {IE_key: data}
     """
 
-    def __init__(self, ggas, INPUT, iesegment=None):
+    def __init__(self, ggas, INPUT, method, iesegment=None):
         """
 
         Args:
@@ -772,6 +772,7 @@ class InteractionEntropyCalc:
         """
         self.ggas = ggas
         self.INPUT = INPUT
+        self.method = method
         self.isegment = iesegment or INPUT['general']['ie_segment']
         self.data = []
 
@@ -816,7 +817,7 @@ class InteractionEntropyCalc:
             )
         )
         with open(filename, 'w') as out:
-            out.write('| Interaction Entropy results\n')
+            out.write(f'| Interaction Entropy results for {self.method} calculations\n')
             out.write(f'IE-frames: last {self.ieframes}\n')
             out.write(f'Internal Energy SD (sigma): {self.ie_std:9.2f}\n')
             out.write(f'| Interaction Entropy (-TΔS): {self.iedata.mean():9.2f} +/- {self.iedata.std():7.2f}\n\n')
@@ -833,9 +834,10 @@ class C2EntropyCalc:
     :return {IE_key: data}
     """
 
-    def __init__(self, ggas, INPUT):
+    def __init__(self, ggas, INPUT, method):
         self.ggas = ggas
         self.INPUT = INPUT
+        self.method = method
 
         self._calculate()
 
@@ -859,7 +861,7 @@ class C2EntropyCalc:
 
     def save_output(self, filename):
         with open(filename, 'w') as out:
-            out.write('| C2 Entropy results\n')
+            out.write(f'| C2 Entropy results for {self.method} calculations\n')
             out.write(f'C2 Entropy (-TΔS): {self.c2data:.4f}\n')
             out.write(f'C2 Entropy SD: {self.c2_std:.4f}\n')
             out.write(f'Internal Energy SD (sigma): {self.ie_std:9.2f}\n')

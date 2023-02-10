@@ -229,9 +229,10 @@ class IEout(dict):
     Interaction Entropy output
     """
 
-    def __init__(self, INPUT, **kwargs):
+    def __init__(self, INPUT, method, **kwargs):
         super(IEout, self).__init__(**kwargs)
         self.INPUT = INPUT
+        self.method = method
 
     def parse_from_dict(self, d: dict):
         self.update(d)
@@ -273,11 +274,14 @@ class IEout(dict):
         summary = self.summary()
         text = []
         for row in summary:
-            key, sigma, avg, std, sem = row
+            met, key, sigma, avg, std, sem = row
             if isinstance(avg, str):
-                text.extend((f'{key:15s} {sigma:>14s} {avg:>16s} {std:>14s} {sem:>16s}', sep))
+                text.extend((
+                    f'{met:16s} {key:>13s} {sigma:>13s} {avg:>10s} {std:>12s} {sem:>10s}',
+                    sep,
+                ))
             else:
-                text.append(f"{key:15s} {sigma:14.2f} {avg:16.2f} {std:14.2f} {sem:16.2f}")
+                text.append(f'{met:16s} {key:>13s} {sigma:13.2f} {avg:10.2f} {std:12.2f} {sem:10.2f}')
         return '\n'.join(text) + '\n\n'
 
     def summary(self):
@@ -289,13 +293,14 @@ class IEout(dict):
 
         return [
             [
-                'Method',
+                'Energy Method',
+                'Entropy',
                 'σ(Int. Energy)',
                 'Average',
                 'SD',
                 'SEM'
             ],
-            ['IE', self['sigma'], avg, stdev, sem]
+            [self.method.upper(), 'IE', self['sigma'], avg, stdev, sem]
         ]
 
 
@@ -304,8 +309,9 @@ class C2out(dict):
     C2 Entropy output
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self, method, **kwargs):
         super(C2out, self).__init__(**kwargs)
+        self.method = method
 
     def parse_from_dict(self, d):
         self.update(d)
@@ -328,11 +334,11 @@ class C2out(dict):
         summary = self.summary()
         text = []
         for row in summary:
-            key, sigma, avg, std, ci = row
+            met, key, sigma, avg, std, ci = row
             if isinstance(avg, str):
-                text.extend((f'{key:15s} {sigma:>14s} {avg:>16s} {std:>14s} {ci:>16s}', sep))
+                text.extend((f'{met:16s} {key:>13s} {sigma:>13s} {avg:>10s} {std:>8s} {ci:>14s}', sep))
             else:
-                text.append(f"{key:15s} {sigma:14.2f} {avg:16.2f} {std:14.2f} {ci:>16s}")
+                text.append(f"{met:16s} {key:>13s} {sigma:13.2f} {avg:10.2f} {std:8.2f} {ci:>14s}")
         return '\n'.join(text) + '\n\n'
 
     def summary(self):
@@ -340,13 +346,14 @@ class C2out(dict):
 
         return [
             [
-                'Method',
+                'Energy Method',
+                'Entropy',
                 'σ(Int. Energy)',
                 'C2 Value',
                 'SD',
                 'C.Inter.(95%)'
             ],
-            ['C2', float(self['sigma']), float(self['c2data']), float(self['c2_std']),
+            [self.method.upper(), 'C2', float(self['sigma']), float(self['c2data']), float(self['c2_std']),
              f"{self['c2_ci'][0]:.2f}-{self['c2_ci'][1]:.2f}",]
         ]
 

@@ -1270,63 +1270,56 @@ class MMPBSA_App(object):
 
     def get_iec2entropy(self, from_calc):
         allowed_met = ['gb', 'pb', 'rism std', 'rism gf', 'rism pcplus', 'gbnsr6']
-        calculated = False
         for key in allowed_met:
             if self.INPUT['general']['interaction_entropy']:
                 if key in self.calc_types.normal:
                     if from_calc:
                         edata = self.calc_types.normal[key]['delta']['GGAS']
                         logging.info('Beginning Interaction Entropy calculations...')
-                        ie = InteractionEntropyCalc(edata, self.INPUT)
-                        ie.save_output(f'{self.pre}normal_interaction_entropy.dat')
+                        ie = InteractionEntropyCalc(edata, self.INPUT, key)
+                        ie.save_output(f'{self.pre}normal_{key}_IE.dat')
 
-                    self.calc_types.normal['ie'] = IEout(self.INPUT)
-                    self.calc_types.normal['ie'].parse_from_file(f'{self.pre}normal_interaction_entropy.dat',
-                                                                 self.numframes)
-                    calculated = True
+                    self.calc_types.normal[key]['ie'] = IEout(self.INPUT, key)
+                    self.calc_types.normal[key]['ie'].parse_from_file(f'{self.pre}normal_{key}_IE.dat',
+                                                                        self.numframes)
                 if key in self.calc_types.mutant:
                     if from_calc:
                         edata = self.calc_types.mutant[key]['delta']['GGAS']
                         logging.info('Beginning Mutant Interaction Entropy calculations...')
-                        mie = InteractionEntropyCalc(edata, self.INPUT)
-                        mie.save_output(f'{self.pre}mutant_interaction_entropy.dat')
+                        mie = InteractionEntropyCalc(edata, self.INPUT, key)
+                        mie.save_output(f'{self.pre}mutant_{key}_IE.dat')
 
-                    self.calc_types.mutant['ie'] = IEout(self.INPUT)
-                    self.calc_types.mutant['ie'].parse_from_file(f'{self.pre}mutant_interaction_entropy.dat',
+                    self.calc_types.mutant[key]['ie'] = IEout(self.INPUT, key)
+                    self.calc_types.mutant[key]['ie'].parse_from_file(f'{self.pre}mutant_{key}_IE.dat',
                                                                  self.numframes)
-                    calculated = True
 
                 if self.INPUT['ala']['alarun'] and not self.INPUT['ala']['mutant_only'] and key in self.calc_types.normal:
-                    self.calc_types.mut_norm['ie'] = DeltaIEC2Statistic(
-                        self.calc_types.mutant['ie'], self.calc_types.normal['ie'])
+                    self.calc_types.mut_norm[key]['ie'] = DeltaIEC2Statistic(
+                        self.calc_types.mutant[key]['ie'], self.calc_types.normal[key]['ie'])
 
             if self.INPUT['general']['c2_entropy']:
                 if not self.INPUT['ala']['mutant_only'] and key in self.calc_types.normal:
                     if from_calc:
                         edata = self.calc_types.normal[key]['delta']['GGAS']
                         logging.info('Beginning C2 Entropy calculations...')
-                        c2 = C2EntropyCalc(edata, self.INPUT)
-                        c2.save_output(f'{self.pre}normal_c2_entropy.dat')
+                        c2 = C2EntropyCalc(edata, self.INPUT, key)
+                        c2.save_output(f'{self.pre}normal_{key}_c2_entropy.dat')
 
-                    self.calc_types.normal['c2'] = C2out()
-                    self.calc_types.normal['c2'].parse_from_file(f'{self.pre}normal_c2_entropy.dat')
-                    calculated = True
+                    self.calc_types.normal[key]['c2'] = C2out(key)
+                    self.calc_types.normal[key]['c2'].parse_from_file(f'{self.pre}normal_{key}_c2_entropy.dat')
                 if key in self.calc_types.mutant:
                     if from_calc:
                         edata = self.calc_types.mutant[key]['delta']['GGAS']
                         logging.info('Beginning Mutant C2 Entropy calculations...')
-                        c2 = C2EntropyCalc(edata, self.INPUT)
-                        c2.save_output(f'{self.pre}mutant_c2_entropy.dat')
+                        c2 = C2EntropyCalc(edata, self.INPUT, key)
+                        c2.save_output(f'{self.pre}mutant_{key}_c2_entropy.dat')
 
-                    self.calc_types.mutant['c2'] = C2out()
-                    self.calc_types.mutant['c2'].parse_from_file(f'{self.pre}mutant_c2_entropy.dat')
-                    calculated = True
+                    self.calc_types.mutant[key]['c2'] = C2out(key)
+                    self.calc_types.mutant[key]['c2'].parse_from_file(f'{self.pre}mutant_{key}_c2_entropy.dat')
 
                 if self.INPUT['ala']['alarun'] and not self.INPUT['ala']['mutant_only'] and key in self.calc_types.normal:
-                    self.calc_types.mut_norm['c2'] = DeltaIEC2Statistic(
-                        self.calc_types.mutant['c2'], self.calc_types.normal['c2'])
-            if calculated:
-                break
+                    self.calc_types.mut_norm[key]['c2'] = DeltaIEC2Statistic(
+                        self.calc_types.mutant[key]['c2'], self.calc_types.normal[key]['c2'])
 
     def _get_mm_data(self):
 
