@@ -247,7 +247,7 @@ class CheckMakeTop:
         c1 = subprocess.Popen(make_ndx_echo_args, stdout=subprocess.PIPE)
 
         com_ndx = self.FILES.prefix + 'COM_index.ndx'
-        make_ndx_args = self.make_ndx + ['-n', self.FILES.complex_index, '-o', com_ndx]
+        make_ndx_args = self.make_ndx + ['-n', self.FILES.complex_index, '-o', com_ndx, '-f', self.FILES.complex_tpr]
         logging.debug('Running command: ' + ' '.join(make_ndx_echo_args[:2]) + ' "' +
                       (' '.join(make_ndx_echo_args[2:]).replace('\n', '\\n')) + '"' + ' | ' +
                       ' '.join(make_ndx_args))
@@ -342,14 +342,14 @@ class CheckMakeTop:
             c1 = subprocess.Popen(make_ndx_echo_args, stdout=subprocess.PIPE)
 
             rec_ndx = self.FILES.prefix + 'REC_index.ndx'
-            make_ndx_args = self.make_ndx + ['-n', self.FILES.receptor_index, '-o', rec_ndx]
+            make_ndx_args = self.make_ndx + ['-n', self.FILES.receptor_index, '-o', rec_ndx, '-f', self.FILES.receptor_tpr]
             logging.debug('Running command: ' + ' '.join(make_ndx_echo_args[:2]) + ' "' +
                           (' '.join(make_ndx_echo_args[2:]).replace('\n', '\\n')) + '"' + ' | ' +
                           ' '.join(make_ndx_args))
             c2 = subprocess.Popen(make_ndx_args, stdin=c1.stdout, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             log_subprocess_output(c2)
             if c2.wait():  # if it quits with return code != 0
-                GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(self.make_ndx), self.FILES.complex_index))
+                GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(self.make_ndx), self.FILES.receptor_index))
             self.FILES.receptor_index = rec_ndx
 
             logging.info(f'Normal Receptor: Saving group {str_rec_group} ({num_rec_group}) in '
@@ -408,14 +408,14 @@ class CheckMakeTop:
             c1 = subprocess.Popen(make_ndx_echo_args, stdout=subprocess.PIPE)
 
             lig_ndx = self.FILES.prefix + 'LIG_index.ndx'
-            make_ndx_args = self.make_ndx + ['-n', self.FILES.ligand_index, '-o', lig_ndx]
+            make_ndx_args = self.make_ndx + ['-n', self.FILES.ligand_index, '-o', lig_ndx, '-f', self.FILES.ligand_tpr]
             logging.debug('Running command: ' + ' '.join(make_ndx_echo_args[:2]) + ' "' +
                           (' '.join(make_ndx_echo_args[2:]).replace('\n', '\\n')) + '"' + ' | ' +
                           ' '.join(make_ndx_args))
             c2 = subprocess.Popen(make_ndx_args, stdin=c1.stdout, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             log_subprocess_output(c2)
             if c2.wait():  # if it quits with return code != 0
-                GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(self.make_ndx), self.FILES.complex_index))
+                GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(self.make_ndx), self.FILES.ligand_index))
             self.FILES.ligand_index = lig_ndx
 
             logging.info(f'Normal Ligand: Saving group {str_lig_group} ({num_lig_group}) in {self.FILES.ligand_index}'
