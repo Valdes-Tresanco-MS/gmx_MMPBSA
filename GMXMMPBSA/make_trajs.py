@@ -164,7 +164,7 @@ def make_trajectories(INPUT, FILES, size, cpptraj, pre):
         #    rectraj.StripSolvent(strip_mask)
         # else:
         rectraj = Trajectory(FILES.receptor_prmtop, FILES.receptor_trajs, cpptraj)
-        rectraj.Setup(INPUT['startframe'], INPUT['endframe'], INPUT['interval'])
+        rectraj.Setup(INPUT['general']['startframe'], INPUT['general']['endframe'], INPUT['general']['interval'])
         rec_frames = int(rectraj.processed_frames)
         rectraj.rms('!(%s)' % strip_mask)
         if INPUT['general']['full_traj'] or INPUT['general']['qh_entropy']:

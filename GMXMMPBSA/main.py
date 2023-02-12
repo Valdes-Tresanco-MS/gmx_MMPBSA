@@ -1054,7 +1054,7 @@ class MMPBSA_App(object):
                 logging.info('Writing qmmm_region.pdb PDB file of the selected QM region...')
             if INPUT['gb']['verbosity'] not in [0, 1, 2, 3, 4, 5]:
                 GMXMMPBSA_ERROR('VERBOSITY must be 0, 1, 2, 3, 4 or 5!', InputError)
-            if INPUT['general']['verbosity'] >= 2:
+            if INPUT['general']['verbose'] >= 2:
                 logging.warning('VERBOSITY values of 2 or higher will produce a lot of output')
 
         if INPUT['rism']['rismrun']:
@@ -1127,7 +1127,7 @@ class MMPBSA_App(object):
                             f" {self.INPUT['general']['startframe']} to 1")
             self.INPUT['general']['startframe'] = 1
         if INPUT['nmode']['nmoderun']:
-            if self.INPUT['nmstartframe'] < 1:
+            if self.INPUT['nmode']['nmstartframe'] < 1:
                 logging.warning(f"The nmstartframe variable must be >= 1. Changing nmstartframe from"
                                 f" {self.INPUT['nmode']['nmstartframe']} to 1")
                 self.INPUT['nmode']['nmstartframe'] = 1

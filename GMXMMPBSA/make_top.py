@@ -1115,7 +1115,7 @@ class CheckMakeTop:
         # change intdiel if cas_intdiel was defined before end the mutation process
         if self.INPUT['ala']['cas_intdiel']:
             if self.INPUT['gb']['gbrun']:
-                if self.INPUT['intdiel'] != 1.0:
+                if self.INPUT['gb']['intdiel'] != 1.0:
                     logging.warning('Both cas_intdiel and intdiel were defined. The dielectric constants associated '
                                     'with cas_intdiel will be ignored and intdiel will be used instead')
                 elif mutant_resname in polar_aa:
