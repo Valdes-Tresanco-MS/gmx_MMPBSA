@@ -327,6 +327,9 @@ class SanderInput(object):
         if self.namelist in {'gb', 'pb', 'rism'}:
             self.mdin.change('cntrl', 'ioutfm', int(bool(self.INPUT['general']['netcdf'])))
 
+        if self.namelist in ['pb', 'gbnsr6']:
+            self.mdin.change(self.namelist, 'istrng', self.INPUT[self.namelist]['istrng'] * 1000)
+
     def write_input(self, filename):
         """ Write the mdin file """
         self.mdin.write(filename)
@@ -596,7 +599,7 @@ class SanderPBSADECOMPInput(SanderInput):
                        'npbverb': 'pb'}
         self.namelist = 'pb'
 
-        self.mdin.change('pb', 'istrng', INPUT['pb']['istrng'] * 1000)
+        # self.mdin.change('pb', 'istrng', INPUT['pb']['istrng'] * 1000)
     # def __init__(self, INPUT):
     #     # We need to change istrng to mM (from M).
     #     SanderInput.__init__(self, INPUT)
@@ -682,7 +685,7 @@ class SanderPBSAInput(SanderInput):
                        'npbverb': 'pb'}
         self.namelist = 'pb'
 
-        self.mdin.change('pb', 'istrng', INPUT['pb']['istrng'] * 1000)
+
     # def __init__(self, INPUT):
     #     # We need to change istrng to mM (from M).
     #     SanderInput.__init__(self, INPUT)
@@ -769,7 +772,7 @@ class SanderPBSA2Input(SanderInput):
                        'npbverb': 'pb'}
         self.namelist = 'pb'
 
-        self.mdin.change('pb', 'istrng', INPUT['pb']['istrng'] * 1000)
+        # self.mdin.change('pb', 'istrng', INPUT['pb']['istrng'] * 1000)
     # def __init__(self, INPUT):
     #     # We need to change istrng to mM (from M).
     #     SanderInput.__init__(self, INPUT)

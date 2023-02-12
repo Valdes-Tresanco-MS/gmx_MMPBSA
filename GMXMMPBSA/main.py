@@ -1142,7 +1142,7 @@ class MMPBSA_App(object):
         # Assigning variables
         # set the pbtemp = temperature
         self.INPUT['pb']['pbtemp'] = self.INPUT['general']['temperature']
-        self.INPUT['gbnsr6']['istrng'] = self.INPUT['gbnsr6']['istrng'] * 1000
+        # self.INPUT['gbnsr6']['istrng'] = self.INPUT['gbnsr6']['istrng'] * 1000
 
         logging.info(f'Checking {self.FILES.input_file} input file...Done.\n')
 
