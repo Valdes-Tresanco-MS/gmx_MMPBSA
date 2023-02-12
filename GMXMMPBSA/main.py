@@ -1097,7 +1097,8 @@ class MMPBSA_App(object):
         if INPUT['gb']['gbrun'] and INPUT['general']['PBRadii'] == 7:
             GMXMMPBSA_ERROR('PBRadii = 7 (charmm_radii) is compatible only with &pb!', InputError)
 
-        if INPUT['decomp']['decomprun'] and not INPUT['gb']['gbrun'] and not INPUT['pb']['pbrun']:
+        if INPUT['decomp']['decomprun'] and \
+                not (INPUT['gb']['gbrun'] or INPUT['pb']['pbrun'] or INPUT['gbnsr6']['gbnsr6run']):
             GMXMMPBSA_ERROR('DECOMP must be run with either GB or PB!', InputError)
 
         if '-deo' in sys.argv and not INPUT['decomp']['decomprun']:
@@ -1244,6 +1245,7 @@ class MMPBSA_App(object):
                                                                              self.calc_types.mutant[key]['receptor'],
                                                                              self.calc_types.mutant[key]['ligand'],
                                                                              self.using_chamber, self.traj_protocol)
+
             if INPUT['ala']['alarun'] and not INPUT['ala']['mutant_only']:
                 self.calc_types.mut_norm[key] = {'complex': DeltaDeltaStatistics(
                     self.calc_types.mutant[key]['complex'], self.calc_types.normal[key]['complex'])}
@@ -1399,7 +1401,12 @@ class MMPBSA_App(object):
             if not INPUT.get(nmls[i]) or not INPUT[nmls[i]].get(triggers[i]) or not INPUT[nmls[i]][triggers[i]]:
                 continue
             # FIXME
-            surften = INPUT['gb']['surften'] if key == 'gb' else INPUT['pb']['cavity_surften']
+            if key == 'gb':
+                surften = INPUT['gb']['surften']
+            elif key == 'pb':
+                surften = INPUT['pb']['cavity_surften']
+            else: # gbnsr6
+                surften = INPUT['gbnsr6']['cavity_surften']
 
             if not self.INPUT['ala']['mutant_only']:
                 self.calc_types.decomp_normal[key] = {'complex': DecompClass('complex')}

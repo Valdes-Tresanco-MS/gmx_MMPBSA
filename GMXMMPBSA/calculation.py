@@ -36,9 +36,11 @@ import threading
 from pathlib import Path
 from tqdm import tqdm
 from time import sleep
+import json
 
 from GMXMMPBSA.exceptions import CalcError
 from GMXMMPBSA.exceptions import GMXMMPBSA_ERROR
+from GMXMMPBSA.utils import mdout2json
 import os
 import sys
 import numpy as np
@@ -190,13 +192,14 @@ class MultiCalculation(object):
                     command_args[i] = str(command_args[i])
                     if '%d' in command_args[i]:
                         command_args[i] %= rank
-
                 process = Popen(command_args, stdin=None, stdout=process_stdout, stderr=process_stderr)
-
                 calc_failed = bool(process.wait())
-                # print(command_args, calc_failed)
                 if calc_failed:
                     raise CalcError(f'{command_args[0]} failed with prmtop {command_args[1]}!')
+                # Each file of gbnsr6 with decomp is huge, so we need to reduce it. Here we transform the file to json
+                # to make it small
+                if 'gbnsr6' in command_args[0]:
+                    mdout2json(command_args)
         finally:
             if own_handleo: process_stdout.close()
             if own_handlee: process_stdout.close()
@@ -344,7 +347,6 @@ class ListEnergyCalculation(MultiCalculation):
         for the MPI version (since one is *always* written and you don't want 2
         threads fighting to write the same dumb file)
         """
-        # print(self.incrds, self.outputs)
         for c, o in zip(self.incrds, self.outputs):
             command_args = [self.program,
                             '-i', self.input_file,  # input file flag
@@ -1068,42 +1070,61 @@ class MergeGBNSR6Output():
         return {'energy': energy, 'decomp':decomp}
 
     def read_gbnsr6_output(self, res2print):
-        file_assignments = []
-        inputfile = []
 
         energy = {}
         decomp = {}
         for i, filename in enumerate(self.mdout_filenames, start=1):
-            results_section = []
-            decomp_section = []
-            with open(filename) as mmfile:
-                current_section = None
-                while line := mmfile.readline():
-                    if i == 1 and 'File Assignments:' in line:
-                        current_section = file_assignments
-                        line = mmfile.readline()
-                    elif i == 1 and line.startswith(' Here is the input file:'):
-                        current_section = inputfile
-                        line = mmfile.readline()
-                    if line.startswith('----------------------------------------------------------------------------'):
-                        line = mmfile.readline()
-                        if '.  RESULTS' in line:
-                            current_section = results_section
-                            mmfile.readline()
-                            line = mmfile.readline()
-                        else:
-                            current_section = None
-                    if current_section is not None:
-                        if line.startswith('DGij'):
-                            decomp_section.append(line)
-                        else:
-                            current_section.append(line)
-            energy[i] = self._get_energy_gbnsr6(results_section)
+            jsonfilename = Path(filename).with_suffix('.json')
+            with open(jsonfilename, 'r') as openfile:
+                data = json.load(openfile)
+                if i == 1:
+                    file_assignments = data['file_assignments']
+                    inputfile = data['inputfile']
+                energy[i] = data['results_section']['energy']
             if self.idecomp:
-                decomp[i] = get_gbnsr6_out(decomp_section, self.topology, self.idecomp, self.dec_verbose, res2print)
+                decomp[i] = self.get_decomp(data['results_section']['decomp'], res2print)
 
         results = {'energy': energy, 'decomp':decomp}
         return {'file_assignments': file_assignments, 'inputfile': inputfile, 'results_section': results}
+
+    def get_decomp(self, decomp, res2print):
+        d = {}
+        if self.idecomp in [1, 2]:
+            for res1, v1 in decomp.items():
+                res1 = int(res1)
+                if res1 not in res2print:
+                    continue
+                d[res1] = {'TDC': 0.0}
+                if self.dec_verbose in [1, 3]:
+                    d[res1]['BDC'] = 0.0
+                    d[res1]['SDC'] = 0.0
+                for res2, de in v1.items():
+                    res2 = int(res2)
+                    for t, e in de.items():
+                        if t in ['BDC', 'SDC'] and self.dec_verbose not in [1, 3]:
+                            continue
+                        d[res1][t] += e if res1 == res2 else e/2
+        else:
+            for res1, v1 in decomp.items():
+                res1 = int(res1)
+                if res1 not in res2print:
+                    continue
+                d[res1] = {}
+                for res2, de in v1.items():
+                    res2 = int(res2)
+                    if res2 not in res2print:
+                        continue
+                    # if res1 == res2:
+                    #     continue
+                    d[res1][res2] = {'TDC': 0.0}
+                    if self.dec_verbose in [1, 3]:
+                        d[res1][res2]['BDC'] = 0.0
+                        d[res1][res2]['SDC'] = 0.0
+                    for t, e in de.items():
+                        if t in ['BDC', 'SDC'] and self.dec_verbose not in [1, 3]:
+                            continue
+                        d[res1][res2][t] = e if res1 == res2 else e/2
+        return d
 
     @staticmethod
     def _get_energy_gbnsr6(results_section):
@@ -1193,11 +1214,13 @@ class MergeGBNSR6Output():
                         if self.idecomp in [1, 2]:
                             output_file.write(self.decomp_headers['pr'].format(self.decomp_labels[term]))
                             for c, l in enumerate(mmdecomp[i][term]):
-                                l[-2] = gbdecomp[i][term][c][-1]
+                                r1 = mmdecomp[i][term][c][1]
+                                l[-2] = gbdecomp[i][r1][term]
                                 output_file.write('{}{:>7d}{:>10.3f}{:>10.3f}{:>10.3f}{:>10.3f}{:>10.3f}\n'.format(*l))
                         else:
                             output_file.write(self.decomp_headers['pw'].format(self.decomp_labels[term]))
                             for c, l in enumerate(mmdecomp[i][term]):
-                                l[-2] = gbdecomp[i][term][c][-1]
+                                r1, r2 = mmdecomp[i][term][c][1:3]
+                                l[-2] = gbdecomp[i][r1][r2][term]
                                 output_file.write('{}{:>8d}->{:>7d}{:>13.4f}{:>13.4f}{:>13.4f}{:>13.4f}{:>13.4f}\n'.format(*l))
                         output_file.write('\n')
