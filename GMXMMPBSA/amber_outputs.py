@@ -120,10 +120,10 @@ class AmberOutput(dict):
         csvwriter.writerow(['Frame #'] + print_keys)
 
         # write out each frame
-        c = self.INPUT['nmode']['nmstartframe'] if self.__class__ == NMODEout else self.INPUT['nmode']['startframe']
+        c = self.INPUT['nmode']['nmstartframe'] if self.__class__ == NMODEout else self.INPUT['general']['startframe']
         for i in range(self.numframes):
             csvwriter.writerow([c] + [round(self[key][i], 2) for key in print_keys])
-            c += self.INPUT['nmode']['nminterval'] if self.__class__ == NMODEout else self.INPUT['nmode']['interval']
+            c += self.INPUT['nmode']['nminterval'] if self.__class__ == NMODEout else self.INPUT['general']['interval']
 
     def set_frame_range(self, start=None, end=None, interval=None):
         d = deepcopy(self)
