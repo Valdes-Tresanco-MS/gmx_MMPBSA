@@ -495,7 +495,7 @@ class SanderRISMInput(SanderInput):
 
         self.name_map = {'ntb': 'ntb', 'cut': 'cut', 'nsnb': 'nsnb', 'idecomp': 'idecomp', 'offset': 'offset',
                 'imin': 'imin', 'gbsa': 'gbsa', 'ioutfm': 'netcdf', 'dec_verbose': 'dec_verbose',
-                'maxcyc': 'rism_maxcyc', 'ncyc': 'ncyc',
+                'maxcyc': 'rism_maxcyc', 'ncyc': 'ncyc', 'irism':'irism',
                 # Closure approximations
                 'closure': 'closure',
                 # Solvation free energy corrections
