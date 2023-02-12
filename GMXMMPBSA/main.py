@@ -1201,7 +1201,6 @@ class MMPBSA_App(object):
                     '%s_gbnsr6.mdout')
 
         for i, key in enumerate(outkey):
-            from icecream import ic
             if not INPUT.get(nmls[i]) or not INPUT[nmls[i]].get(triggers[i]) or not INPUT[nmls[i]][triggers[i]]:
                 continue
             numframes = self.numframes_nmode if key == 'nmode' else self.numframes

@@ -124,8 +124,6 @@ def write_outputs(app):
             else:
                 qhnorm = app.calc_types.normal['qh']['delta']
             _qhnorm = app.calc_types.normal['qh']
-            from icecream import ic
-            ic(qhnorm)
             final_output.writeline(f'Normal [ -TΔS ]')
             final_output.writeline('ENTROPY RESULTS (QH APPROXIMATION):')
             final_output.add_section(app.calc_types.normal['qh'].summary_output())
