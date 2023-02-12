@@ -187,7 +187,7 @@ def make_trajectories(INPUT, FILES, size, cpptraj, pre):
         for i in range(size):
             frame_string = '%d-%d' % (last_frame, last_frame + frame_count[i] - 1)
             rectraj.Outtraj(pre + 'receptor.%s.%d' % (trj_suffix, i),
-                            frames=frame_string, filetype=INPUT['netcdf'])
+                            frames=frame_string, filetype=INPUT['general']['netcdf'])
             # FIXME: include pbsa.cuda. For APBS and PBDelphi we need to generate pqr instead
             if INPUT['gbnsr6']['gbnsr6run']:
                 traj.Outtraj(f"{pre}inpcrd_{i}/{pre}receptor.inpcrd", frames=frame_string, filetype='restart',
@@ -243,7 +243,7 @@ def make_trajectories(INPUT, FILES, size, cpptraj, pre):
     if INPUT['nmode']['nmoderun']:
         nmtraj = Trajectory(FILES.complex_prmtop, [pre + 'complex.%s.%d' %
                                                    (trj_suffix, i) for i in range(size)], cpptraj)
-        nmtraj.Setup(INPUT['nmstartframe'], INPUT['nmendframe'], INPUT['nminterval'])
+        nmtraj.Setup(INPUT['nmode']['nmstartframe'], INPUT['nmode']['nmendframe'], INPUT['nmode']['nminterval'])
 
         num_frames_nmode = int(nmtraj.processed_frames)
 
