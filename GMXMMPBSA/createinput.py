@@ -264,7 +264,7 @@ def create_inputs(INPUT, prmtop_system, pre):
             mm_mdin.write_input(f'{pre}mm.mdin')
 
         if INPUT['pb']['pbrun']:
-            pb_prog = 'sander.APBS' if INPUT['sander_apbs'] else 'sander'
+            pb_prog = 'sander.APBS' if INPUT['pb']['sander_apbs'] else 'sander'
             if pb_prog == 'sander.APBS':
                 pb_mdin = SanderAPBSInput(INPUT)
                 pb_mdin.make_mdin()
