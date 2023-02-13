@@ -787,11 +787,11 @@ on the very first step to a file named qmmm_region.pdb.
 
 !!! note "Keep in mind"
     * GBNSR6 is an implementation of the Generalized Born (GB) model in which the effective Born radii are computed 
-    numerically, via the so-called "R6" integration [ref.][222] over molecular surface of the solute. In contrast to 
+    numerically, via the so-called "R6" integration ([ref.][222]) over molecular surface of the solute. In contrast to 
     most GB practical models, GBNSR6 model is parameter free in the same sense as the numerical PB framework is. Thus, 
     accuracy of GBNSR6 relative to the PB standard is virtually unaffected by the choice of input atomic radii. Check
-    the chapter [§5](https://ambermd.org/doc12/Amber21.pdf#chapter.5) for a more thorough description of the GBNSR6 
-    model and its parameters.
+    the chapter [§5](https://ambermd.org/doc12/Amber21.pdf#chapter.5) in Amber manual for a more thorough description 
+    of the GBNSR6 model and its parameters.
     * A default GBNSR6 input file can be created as follows:
 
         ```
