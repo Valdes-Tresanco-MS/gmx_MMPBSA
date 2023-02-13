@@ -15,6 +15,7 @@ calculation. The allowed namelists are:
 - [`&general`](input_file.md#general-namelist-variables): contains variables that apply to all aspects of the 
   calculation or parameters required for building AMBER topologies from GROMACS files.
 - [`&gb`](input_file.md#gb-namelist-variables): unique variables to Generalized Born (GB) calculations
+- [`&gbnsr6`](input_file.md#gbnsr6-namelist-variables): unique variables to Generalized Born (GB) calculations
 - [`&pb`](input_file.md#pb-namelist-variables): unique variables to Poisson Boltzmann (PB) calculations
 - [`&rism`](input_file.md#rism-namelist-variables): unique variables to 3D-RISM calculations
 - [`&alanine_scanning`](input_file.md#alanine_scanning-namelist-variables): unique variables to alanine scanning calculations
@@ -133,7 +134,7 @@ every trajectory file placed on the command-line. This is always the first frame
 trajectory file supplied on the command-line.
 
 `interval` (Default = 1)
-:     The offset from which to choose frames from each trajectory file. For example, an interval of 2 will pull
+:   The offset from which to choose frames from each trajectory file. For example, an interval of 2 will pull
 every 2nd frame beginning at startframe and ending less than or equal to endframe.
 
 #### **Parameter options**
@@ -141,8 +142,8 @@ every 2nd frame beginning at startframe and ending less than or equal to endfram
 `forcefields` (Default = "oldff/leaprc.ff99SB,leaprc.gaff")
 :   Comma-separated list of force fields used to build Amber topologies. This variable is more flexible than the 
 previous ones (`protein_forcefield` and `ligand_forcefield`). The goal of this variable is to provide convenient 
-support for complex systems like this one: [5O8F](https://www.rcsb.org/3d-view/5o8f). It supports all force fields 
-tested in previous `protein_forcefield` and `ligand_forcefield` variables.
+support for complex systems with several components. It supports all force fields tested in previous 
+`protein_forcefield` and `ligand_forcefield` variables.
     
     !!! tip Keep in mind
         * The value of this variable depends on the force field you used for your system in GROMACS
@@ -388,7 +389,7 @@ tested in previous `protein_forcefield` and `ligand_forcefield` variables.
 
     _New in v1.4.2: Equivalent to (Removed) `entropy = 1`_
 
-`interaction_entropy` (default = 0) 
+`interaction_entropy` (default = 0)
 :    It specifies whether to use the [Interaction Entropy (IE)][3] approximation.
      
      * 0: Don’t
@@ -410,7 +411,7 @@ tested in previous `protein_forcefield` and `ligand_forcefield` variables.
         - The Interaction Entropy results may vary depending on the system flexibility or whether constraints were used 
         or not in the MD simulation. 
 
-        Please, consult this [paper][10] for further details.
+        Please, check this [paper][10] for further details.
 
     _New in v1.4.2: Equivalent to (Removed) `entropy = 2`_
 
@@ -447,7 +448,7 @@ Interaction Entropy, _e.g._: `ie_segment = 25` means that the last quartile of t
         - The C2 Entropy results may vary depending on the system flexibility or whether constraints were used 
         or not in the MD simulation.
 
-        Please, consult this [paper][10] for further details.
+        Please, check this [paper][10] for further details.
 
     _New in v1.5.0_
 
@@ -782,6 +783,105 @@ on the very first step to a file named qmmm_region.pdb.
     
   [4]: https://ambermd.org/doc12/Amber21.pdf#subsection.34.11.49
 
+### **`&gbnsr6` namelist variables**
+
+!!! note "Keep in mind"
+    * GBNSR6 is an implementation of the Generalized Born (GB) model in which the effective Born radii are computed 
+    numerically, via the so-called "R6" integration ([ref.][222]) over molecular surface of the solute. In contrast to 
+    most GB practical models, GBNSR6 model is parameter free in the same sense as the numerical PB framework is. Thus, 
+    accuracy of GBNSR6 relative to the PB standard is virtually unaffected by the choice of input atomic radii. Check
+    Chapter [§5](https://ambermd.org/doc12/Amber21.pdf#chapter.5) in Amber manual for a more thorough description 
+    of the GBNSR6 model and its parameters.
+    * A default GBNSR6 input file can be created as follows:
+
+        ```
+        gmx_MMPBSA --create_input gbnsr6
+        ```
+    
+    * A sample GBNSR6 input file is shown [here](input_file.md#gbnsr6)
+    * A tutorial on binding free energy calculation with GBNSR6 model is available 
+    [here](examples/GBNSR6/README.md)
+
+  [222]: https://pubs.acs.org/doi/abs/10.1021/ct200786m
+
+#### **Basic input options**
+
+`epsin` (Default = 1.0)
+:   Dielectric constant of the solute region.
+
+`epsout` (Default = 78.5)
+:   Implicit solvent dielectric constant for the solvent.
+
+`istrng` (Default = 0.0)
+:   Ionic strength in M for the GBNSR6 equation.
+                           
+`dprob` (Default = 1.4)
+:   Radius of the solvent probe.
+
+`cavity_surften` (Default = 0.005)
+:   Surface tension parameter for nonpolar solvation calculation.
+
+#### **Options to select numerical procedures**
+
+`space` (Default = 0.5)
+:   Sets the grid spacing that determines the resolution of the solute molecular surface. Note that memory footprint of 
+this grid-based implementation of GBNSR6 may become large for large structures, e.g. the nucleosome (about 25,000 
+atoms) will take close to 2 GB of RAM when the default grid spacing is used. For very large structures, one may 
+consider increasing the value of space, which will reduce the memory footprint and execution time; however, the 
+accuracy will also decrease.
+
+`arcres` (Default = 0.2)
+:   Arc resolution used for numerical integration over molecular surface.
+
+`b` (Default = 0.028)
+:   Specifies the value of uniform offset to the (inverse) effective radii, the default value 0.028 gives 
+better agreement with the PB model, regardless of the structure size. For best agreement with the explicit solvent 
+(TIP3P) solvation energies, optimal value of B depends on the structure size: for small molecules (number of atoms 
+less than 50), B=0 is recommended. With -chagb option, B is calculated automatically based on the solute size.
+
+`alpb` (Default = 1)
+:   Specifies if ALBP correction is to be used.
+
+    * 0: Canonical GB is used.
+    * 1: ALPB is used (default)
+
+#### **Options for CHAGB model**
+
+`chagb` (Default = 0)
+:   Define if CHAGB is used.
+
+    * 0: Do not use CHAGB.
+    * 1: Use CHAGB.
+
+`rs` (Default = 0.52)
+:   Dielectric boundary shift compared to the molecular surface.
+
+`radiopt` (Default = 0)
+:   Set of intrinsic atomic radii to be used.
+
+    * 0: uses hardcoded intrisic radii optimized for small drug like molecules, and single amino acid
+    dipeptides ([ref.][215])
+    * 1: intrinsic radii are read from the topology file. Note that the dielectric surface defined using
+    these radii is then shifted outwards by Rs relative to the molecular surface. The option is not
+    recommended unless you are planning to re-optimize the input radii set for your problem.
+
+  [215]: https://pubs.acs.org/doi/full/10.1021/ct4010917
+
+`roh` (Default = 0.586)
+:   Sets the value of R<sup>z</sup><sub>OH</sub> for CHAGB model, the default is 0.586Å. This parameter defines which 
+explicit water model is being mimicked with respect to its propensity to cause charge hydration asymmetry. A perfectly 
+tetrahedral water , which can not cause charge hydration asymmetry, would have R<sup>z</sup><sub>OH</sub> = 0. The 
+options for `roh` are:
+
+    * 1: R<sup>z</sup><sub>OH</sub> = 0.586Å corresponds to TIP3P and SPC/E. 
+    * 2: R<sup>z</sup><sub>OH</sub> = 0.699Å for OPC.
+    * 3: R<sup>z</sup><sub>OH</sub> = 0.734Å for TIP4P 
+    * 4: R<sup>z</sup><sub>OH</sub> = 0.183Å for TIP5P/E. 
+
+`tau` (Default = 1.47)
+:   Value of τ in the CHAGB model. This dimensionless parameter controls the effective range of the neighboring 
+charges (_j_) affecting the CHA of atom (_i_), see ([ref.][215]) for details.
+
 ### **`&pb` namelist variables**
 
 !!! note "Keep in mind"
@@ -802,7 +902,7 @@ on the very first step to a file named qmmm_region.pdb.
 
 #### **Basic input options**
 
-`ipb` (Default = 2) 
+`ipb` (Default = 2)
 :   Option to set up a dielectric model for all numerical PB procedures. `ipb = 1` corresponds to a classical geometric 
 method, while a level-set based algebraic method is used when `ipb > 2`.
 
@@ -1874,6 +1974,22 @@ forcefields="oldff/leaprc.ff99SB,leaprc.gaff"
 
 &gb
 igb=5, saltcon=0.150,
+/
+```
+
+### GBNSR6
+
+``` linenums="1"
+Sample input file for GBNSR6 calculation building the Amber topologies
+from structures. Please refer to the section "How gmx_MMPBSA works"
+
+&general
+startframe=5, endframe=100, interval=5, verbose=2, 
+forcefields="oldff/leaprc.ff99SB,leaprc.gaff"
+/
+
+&gbnsr6
+epsin=1.0, istrng=0.150,
 /
 ```
 

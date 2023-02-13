@@ -474,9 +474,9 @@ input_file.addNamelist('gbnsr6', 'gbnsr6',
                            ['epsout', float, 78.5, 'Sets the implicit solvent dielectric constant for the solvent'],
                             # FIXME: convert to M
                            ['istrng', float, 0.0, 'Sets the ionic strength in M for the GB equation'],
-                           ['rs', float, 0.52, 'Sets the value of the dielectric boundary shift compared to the '
+                           ['rs', float, 0.52, 'Dielectric boundary shift compared to the '
                                                'molecular surface (only relevant for the -chagb option)'],
-                           ['dprob', float, 1.4, 'Sets the radius of the solvent robe'],
+                           ['dprob', float, 1.4, 'Sets the radius of the solvent probe'],
                            ['space', float, 0.5, 'Sets the grid spacing that determines the resolution of the solute '
                                                  'molecular surface'],
                            ['arcres', float, 0.2, 'Sets the arc resolution used for numerical integration over '
@@ -486,8 +486,8 @@ input_file.addNamelist('gbnsr6', 'gbnsr6',
                            ['chagb', int, 0, 'Define if CHAGB is used'],
                            ['roh', int, 1, 'Sets the value of RzOH for CHA GB model'],
                            ['tau', float, 1.47, 'Sets the value of τ in the CHAGB model'],
-                           ['cavity_surften', float, 0.005, 'Sets the surface tension parameter for nonpolar solvation'
-                                                            'calculation'],
+                           ['cavity_surften', float, 0.005, 'Surface tension parameter for nonpolar '
+                                                            'solvation calculation'],
                        ], trigger='gbnsr6run')
 
 input_file.addNamelist('pb', 'pb',

@@ -58,7 +58,7 @@ forcefields="leaprc.protein.ff14SB"
 /
 
 &gbnsr6
-epsin=4.0, cavity_surften=0.0072
+epsin=1.0, cavity_surften=0.005
 /
 ```
 
