@@ -469,6 +469,7 @@ input_file.addNamelist('gbnsr6', 'gbnsr6',
                        [
                            ['b', float, 0.028, 'Specifies the value of uniform offset to the (inverse) effective '
                                                'radii'],
+                           ['alpb', int, 1, 'Specifies if ALBP correction is to be used.'],
                            ['epsin', float, 1.0, 'Sets the dielectric constant of the solute region'],
                            ['epsout', float, 78.5, 'Sets the implicit solvent dielectric constant for the solvent'],
                             # FIXME: convert to M
@@ -480,7 +481,6 @@ input_file.addNamelist('gbnsr6', 'gbnsr6',
                                                  'molecular surface'],
                            ['arcres', float, 0.2, 'Sets the arc resolution used for numerical integration over '
                                                   'molecular surface'],
-                           ['dgij', int, 0, 'Printing interatomic pairwise electrostatic energies'],
                            ['radiopt', int, 0, 'Specifies the set of intrinsic atomic radii to be used with the chagb'
                                                'option.'],
                            ['chagb', int, 0, 'Define if CHAGB is used'],
