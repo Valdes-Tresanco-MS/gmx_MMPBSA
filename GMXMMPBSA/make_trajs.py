@@ -314,8 +314,7 @@ def make_trajectories(INPUT, FILES, size, cpptraj, pre):
     return com_frames, rec_frames, lig_frames, num_frames_nmode
 
 
-def make_mutant_trajectories(INPUT, FILES, rank, cpptraj,
-                             norm_sys, mut_sys, pre):
+def make_mutant_trajectories(INPUT, FILES, rank, cpptraj, norm_sys, mut_sys, pre):
     """ Mutates given trajectories and outputs dummy files for mutants """
     from GMXMMPBSA.alamdcrd import MutantMdcrd, GlyMutantMdcrd
     import shutil
@@ -382,32 +381,45 @@ def make_mutant_trajectories(INPUT, FILES, rank, cpptraj,
             shutil.copyfile(pre + 'receptor.%s.%d' % (trj_suffix, rank),
                             pre + 'mutant_receptor.%s.%d' % (trj_suffix, rank))
 
+    if INPUT['gbnsr6']['gbnsr6run']:
+        temp_dir = Path(f"{pre}inpcrd_{rank}")
+        if not temp_dir.exists():
+            temp_dir.mkdir()
+        com_traj = Trajectory(FILES.mutant_complex_prmtop, f"{pre}mutant_complex.{trj_suffix}.{rank}", cpptraj)
+        com_traj.Setup()
+        com_traj.Outtraj(f"{pre}inpcrd_{rank}/{pre}mutant_complex.inpcrd", filetype='restart', options=['keepext'])
+        com_traj.Run(pre + 'commutant_gbnsr6_traj_cpptraj.out')
+
+        if not stability:
+            # receptor
+            rec_traj = Trajectory(FILES.mutant_receptor_prmtop, f"{pre}mutant_receptor.{trj_suffix}.{rank}", cpptraj)
+            rec_traj.Setup()
+            rec_traj.Outtraj(f"{pre}inpcrd_{rank}/{pre}mutant_receptor.inpcrd", filetype='restart', options=['keepext'])
+            rec_traj.Run(pre + 'recmutant_gbnsr6_traj_cpptraj.out')
+            # ligand
+            lig_traj = Trajectory(FILES.mutant_ligand_prmtop, f"{pre}mutant_ligand.{trj_suffix}.{rank}", cpptraj)
+            lig_traj.Setup()
+            lig_traj.Outtraj(f"{pre}inpcrd_{rank}/{pre}mutant_ligand.inpcrd", filetype='restart', options=['keepext'])
+            lig_traj.Run(pre + 'ligmutant_gbnsr6_traj_cpptraj.out')
+
     # Have our master dump out dummy files
     if master:
-        com_traj = Trajectory(FILES.mutant_complex_prmtop,
-                              pre + 'mutant_complex.%s.0' % trj_suffix, cpptraj)
+        com_traj = Trajectory(FILES.mutant_complex_prmtop, pre + 'mutant_complex.%s.0' % trj_suffix, cpptraj)
         com_traj.Setup(1, 1, 1)
         com_traj.Outtraj(pre + 'mutant_complex.pdb', frames='1', filetype='pdb')
-        com_traj.Outtraj(pre + 'mutant_dummycomplex.inpcrd', frames='1',
-                         filetype='restart')
+        com_traj.Outtraj(pre + 'mutant_dummycomplex.inpcrd', frames='1', filetype='restart')
         com_traj.Run(pre + 'mutant_complex_cpptraj.out')
         if not stability:
-            rec_traj = Trajectory(FILES.mutant_receptor_prmtop,
-                                  pre + 'mutant_receptor.%s.0' % trj_suffix, cpptraj)
+            rec_traj = Trajectory(FILES.mutant_receptor_prmtop, pre + 'mutant_receptor.%s.0' % trj_suffix, cpptraj)
             rec_traj.Setup(1, 1, 1)
-            rec_traj.Outtraj(pre + 'mutant_receptor.pdb', frames='1',
-                             filetype='pdb')
-            rec_traj.Outtraj(pre + 'mutant_dummyreceptor.inpcrd', frames='1',
-                             filetype='restart')
+            rec_traj.Outtraj(pre + 'mutant_receptor.pdb', frames='1', filetype='pdb')
+            rec_traj.Outtraj(pre + 'mutant_dummyreceptor.inpcrd', frames='1', filetype='restart')
             rec_traj.Run(pre + 'mutant_receptor_cpptraj.out')
 
-            lig_traj = Trajectory(FILES.mutant_ligand_prmtop,
-                                  pre + 'mutant_ligand.%s.0' % trj_suffix, cpptraj)
+            lig_traj = Trajectory(FILES.mutant_ligand_prmtop, pre + 'mutant_ligand.%s.0' % trj_suffix, cpptraj)
             lig_traj.Setup(1, 1, 1)
-            lig_traj.Outtraj(pre + 'mutant_ligand.pdb', frames='1',
-                             filetype='pdb')
-            lig_traj.Outtraj(pre + 'mutant_dummyligand.inpcrd', frames='1',
-                             filetype='restart')
+            lig_traj.Outtraj(pre + 'mutant_ligand.pdb', frames='1', filetype='pdb')
+            lig_traj.Outtraj(pre + 'mutant_dummyligand.inpcrd', frames='1', filetype='restart')
             lig_traj.Run(pre + 'mutant_ligand_cpptraj.out')
 
     # Mutate our nmode trajectories if need be
@@ -433,8 +445,7 @@ def make_mutant_trajectories(INPUT, FILES, rank, cpptraj,
 
     # If we're doing a quasi-harmonic approximation we need the full com traj
     if (INPUT['general']['full_traj'] or INPUT['general']['qh_entropy']) and master:
-        com_mut = MutantMdcrd(pre + 'complex.%s' % trj_suffix,
-                              norm_sys.complex_prmtop, mut_sys.complex_prmtop)
+        com_mut = MutantMdcrd(pre + 'complex.%s' % trj_suffix, norm_sys.complex_prmtop, mut_sys.complex_prmtop)
         com_mut.MutateTraj(pre + 'mutant_complex.%s' % trj_suffix)
 
     return str(com_mut), com_mut.mutres
