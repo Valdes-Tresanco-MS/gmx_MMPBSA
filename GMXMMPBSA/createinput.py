@@ -383,19 +383,20 @@ class GBNSR6Input(SanderInput):
         super().__init__(INPUT)
         self.program = 'gbnsr6'
         self.input_items = {'inp': 1,
-                   'b': 0.028, 'epsin': 1.0, 'epsout': 78.5, 'istrng': 0.0, 'rs': 0.52, 'dprob': 1.4, 'space': 0.5,
-                   'arcres': 0.2, 'rbornstat': 0, 'dgij': 0, 'radiopt': 0, 'chagb': 0, 'roh': 1, 'tau': 1.47,
-                   'cavity_surften': 0.005}
+                            'b': 0.028, 'alpb': 1, 'epsin': 1.0, 'epsout': 78.5, 'istrng': 0.0, 'rs': 0.52,
+                            'dprob': 1.4, 'space': 0.5, 'arcres': 0.2, 'rbornstat': 0, 'dgij': 0, 'radiopt': 0,
+                            'chagb': 0, 'roh': 1, 'tau': 1.47, 'cavity_surften': 0.005}
 
         self.parent_namelist = {'inp': 'cntrl',
-                       'b': 'gb', 'epsin': 'gb', 'epsout': 'gb', 'istrng': 'gb', 'rs': 'gb', 'dprob': 'gb',
-                       'space': 'gb', 'arcres': 'gb', 'rbornstat': 'gb', 'dgij': 'gb', 'radiopt': 'gb',
-                       'chagb': 'gb', 'roh': 'gb', 'tau': 'gb', 'cavity_surften': 'gb'}
+                                'b': 'gb', 'alpb': 'gb', 'epsin': 'gb', 'epsout': 'gb', 'istrng': 'gb', 'rs': 'gb',
+                                'dprob': 'gb', 'space': 'gb', 'arcres': 'gb', 'rbornstat': 'gb', 'dgij': 'gb',
+                                'radiopt': 'gb', 'chagb': 'gb', 'roh': 'gb', 'tau': 'gb', 'cavity_surften': 'gb'}
 
         self.name_map = {'inp': 'inp',
-                'b': 'b', 'epsin': 'epsin', 'epsout': 'epsout', 'istrng': 'istrng', 'rs': 'rs',
-                'dprob': 'dprob', 'space': 'space', 'arcres': 'arcres', 'rbornstat': 'rbornstat', 'dgij': 'dgij',
-                'radiopt': 'radiopt', 'chagb': 'chagb', 'roh': 'roh', 'tau': 'tau', 'cavity_surften': 'cavity_surften'}
+                         'b': 'b', 'alpb': 'alpb', 'epsin': 'epsin', 'epsout': 'epsout', 'istrng': 'istrng',
+                         'rs': 'rs', 'dprob': 'dprob', 'space': 'space', 'arcres': 'arcres', 'rbornstat': 'rbornstat',
+                         'dgij': 'dgij', 'radiopt': 'radiopt', 'chagb': 'chagb', 'roh': 'roh', 'tau': 'tau',
+                         'cavity_surften': 'cavity_surften'}
         self.namelist = 'gbnsr6'
 
 
