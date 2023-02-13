@@ -116,7 +116,9 @@ def _setup_data(data: pd.DataFrame, level=0, iec2=False, name=None, index=None,
             line_plot_data.to_parquet(parquet_file % 'lp', compression=None)
             cont['line_plot_data'] = [parquet_file % 'lp', options, change]
     elif level == 1:
-        options = ({'iec2': True} if iec2 else {}) | dict(groups=_itemdata_properties(data))
+        options = ({'iec2': True} if iec2 else {}) | {
+            'groups': _itemdata_properties(data)
+        }
         bar_plot_data = data[-3:].reindex(columns=index)
         if inmemory:
             cont['bar_plot_data'] = [bar_plot_data, options, change]
@@ -454,10 +456,16 @@ class MMPBSA_API():
                 d = self._recalc_iec2('c2', et, startframe, endframe, interval)
             else:
                 d = self.data[et]['c2']
-            entropy[et] = {'c2': {x: None for x in ['c2', 'sigma']}}
-            entropy_df[et] = {'c2': pd.DataFrame({'c2': [d['c2data'], d['c2_std'], d['c2_std']], 'sigma': [d['sigma'], 0, 0]},
-                                                 index=['Average', 'SD', 'SEM'])}
 
+            entropy[et] = {'c2': {}}
+            entropy_df[et] = {'c2': {}}
+
+            for emodel in d:
+                entropy[et]['c2'][emodel] = {x: None for x in ['c2', 'sigma']}
+                entropy_df[et]['c2'][emodel] = pd.DataFrame({'c2': [d[emodel]['c2data'], d[emodel]['c2_std'],
+                                                                    d[emodel]['c2_std']],
+                                                             'sigma': [d[emodel]['sigma'], 0, 0]},
+                                                            index=['Average', 'SD', 'SEM'])
         return {'map': emapping(entropy), 'data': entropy_df, 'summary': entropy_df}
 
     def get_ie_entropy(self, ietype: tuple = None, startframe=None, endframe=None, interval=None,
@@ -481,19 +489,26 @@ class MMPBSA_API():
                 d = self._recalc_iec2('ie', et, startframe, endframe, interval, ie_segment)
             else:
                 d = self.data[et]['ie']
-            ieframes = math.ceil(len(d['data']) * ie_segment / 100)
-            entropy[et] = {'ie': {x: None for x in ['AccIntEnergy', 'ie', 'sigma']}}
-            df = pd.DataFrame({'AccIntEnergy': d['data']}, index=index)
-            df1 = pd.DataFrame({'ie': d['data'][-ieframes:]}, index=index[-ieframes:])
-            df2 = pd.concat([df, df1], axis=1)
-            df3 = pd.DataFrame({'ie': [float(d['iedata'].mean()),
-                                       float(d['iedata'].std()),
-                                       float(d['iedata'].std() / math.sqrt(ieframes))],
-                                'sigma': [d['sigma'], 0, 0]}, index=['Average', 'SD', 'SEM'])
-            summ_df[et] = {'ie': df3}
-            df4 = pd.concat([df2, df3])
-            df4.index.name = df.index.name
-            entropy_df[et] = {'ie': df4}
+
+            entropy[et] = {'ie': {}}
+            summ_df[et] = {'ie': {}}
+            entropy_df[et] = {'ie': {}}
+
+            for emodel in d:
+                ieframes = math.ceil(len(d[emodel]['data']) * ie_segment / 100)
+                entropy[et]['ie'][emodel] = {x: None for x in ['AccIntEnergy', 'ie', 'sigma']}
+
+                df = pd.DataFrame({'AccIntEnergy': d[emodel]['data']}, index=index)
+                df1 = pd.DataFrame({'ie': d[emodel]['data'][-ieframes:]}, index=index[-ieframes:])
+                df2 = pd.concat([df, df1], axis=1)
+                df3 = pd.DataFrame({'ie': [float(d[emodel]['iedata'].mean()),
+                                           float(d[emodel]['iedata'].std()),
+                                           float(d[emodel]['iedata'].std() / math.sqrt(ieframes))],
+                                    'sigma': [d[emodel]['sigma'], 0, 0]}, index=['Average', 'SD', 'SEM'])
+                summ_df[et]['ie'][emodel] = df3
+                df4 = pd.concat([df2, df3])
+                df4.index.name = df.index.name
+                entropy_df[et]['ie'][emodel] = df4
         return {'map': emapping(entropy), 'data': entropy_df, 'summary': summ_df}
 
     @staticmethod
@@ -537,7 +552,7 @@ class MMPBSA_API():
 
     def _recalc_iec2(self, method, etype, startframe=None, endframe=None, interval=None, ie_segment=25):
         allowed_met = ['gb', 'pb', 'rism std', 'rism gf', 'rism pcplus', 'gbnsr6']
-        result = None
+        result = {}
         start = list(self.frames.keys()).index(startframe) if startframe else startframe
         end = list(self.frames.keys()).index(endframe) + 1 if endframe else endframe
         for key in allowed_met:
@@ -545,16 +560,20 @@ class MMPBSA_API():
                 edata = self.data[etype][key]['delta']['GGAS'][start:end:interval]
                 if method == 'ie':
                     ie = InteractionEntropyCalc(edata,
-                                                dict(temperature=self.app_namespace.INPUT['general']['temperature'],
-                                                     startframe=startframe, endframe=endframe, interval=interval),
+                                                {'general':
+                                                    dict(
+                                                        temperature=self.app_namespace.INPUT['general']['temperature'],
+                                                        startframe=startframe, endframe=endframe, interval=interval
+                                                    )},
                                                 key, iesegment=ie_segment)
-                    result = IEout({}, key)
-                    result.parse_from_dict(dict(data=ie.data, sigma=ie.ie_std, iedata=ie.iedata))
+                    result[key] = IEout({}, key)
+                    result[key].parse_from_dict(dict(data=ie.data, sigma=ie.ie_std, iedata=ie.iedata))
                 else:
-                    c2 = C2EntropyCalc(edata, dict(temperature=self.app_namespace.INPUT['general']['temperature']), key)
-                    result = C2out(key)
-                    result.parse_from_dict(dict(c2data=c2.c2data, c2_std=c2.c2_std, sigma=c2.ie_std, c2_ci=c2.c2_ci))
-                break
+                    c2 = C2EntropyCalc(edata, {'general':
+                                                    dict(temperature=self.app_namespace.INPUT['general'][
+                                                        'temperature'])}, key)
+                    result[key] = C2out(key)
+                    result[key].parse_from_dict(dict(c2data=c2.c2data, c2_std=c2.c2_std, sigma=c2.ie_std, c2_ci=c2.c2_ci))
         return result
 
     def get_binding(self, energy_summary=None, entropy_summary=None, verbose=True):
@@ -580,9 +599,9 @@ class MMPBSA_API():
                         for ent, etv in entropy_summary[et].items():
                             b_map[et][em].append(ent)
                             if ent == 'ie' and not self.app_namespace.FILES.stability:
-                                entdata = etv['ie']
+                                entdata = etv[em]['ie']
                             elif ent == 'c2' and not self.app_namespace.FILES.stability:
-                                entdata = etv['c2']
+                                entdata = etv[em]['c2']
                             else:
                                 entdata = etv[mol]['TOTAL']
                             entdata.name = '-TΔS'
@@ -765,13 +784,15 @@ class MMPBSA_API():
                                                                 level=0, memory=memory_args),
                                               (level, level1, level2, level3), 'entropy'] for level3 in value2)
                         elif level1 == 'c2':
-                            TASKs.append([_setup_data, dict(data=entropy[level][level1], level=1, iec2=True,
+                            for level2, value2 in value1.items():
+                                TASKs.append([_setup_data, dict(data=entropy[level][level1][level2], level=1, iec2=True,
                                                             memory=memory_args),
-                                          (level, level1), 'entropy'])
+                                          (level, level1, level2), 'entropy'])
                         elif level1 == 'ie':
-                            TASKs.append([_setup_data, dict(data=entropy[level][level1], level=1.5,
-                                                            memory=memory_args),
-                                          (level, level1), 'entropy'])
+                            for level2, value2 in value1.items():
+                                TASKs.append([_setup_data, dict(data=entropy[level][level1][level2], level=1.5,
+                                                                memory=memory_args),
+                                              (level, level1, level2), 'entropy'])
 
         if energy_options and entropy_options:
             bind_map, binding, bcorr = self.get_binding(energy_summary, entropy_summary, verbose=verbose).values()

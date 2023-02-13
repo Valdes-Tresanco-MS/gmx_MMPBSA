@@ -1271,6 +1271,11 @@ class MMPBSA_App(object):
 
     def get_iec2entropy(self, from_calc):
         allowed_met = ['gb', 'pb', 'rism std', 'rism gf', 'rism pcplus', 'gbnsr6']
+        if self.INPUT['general']['interaction_entropy']:
+            self.calc_types.normal['ie'] = {}
+        if self.INPUT['general']['c2_entropy']:
+            self.calc_types.normal['c2'] = {}
+
         for key in allowed_met:
             if self.INPUT['general']['interaction_entropy']:
                 if key in self.calc_types.normal:
@@ -1280,8 +1285,8 @@ class MMPBSA_App(object):
                         ie = InteractionEntropyCalc(edata, self.INPUT, key)
                         ie.save_output(f'{self.pre}normal_{key}_IE.dat')
 
-                    self.calc_types.normal[key]['ie'] = IEout(self.INPUT, key)
-                    self.calc_types.normal[key]['ie'].parse_from_file(f'{self.pre}normal_{key}_IE.dat',
+                    self.calc_types.normal['ie'][key] = IEout(self.INPUT, key)
+                    self.calc_types.normal['ie'][key].parse_from_file(f'{self.pre}normal_{key}_IE.dat',
                                                                         self.numframes)
                 if key in self.calc_types.mutant:
                     if from_calc:
@@ -1290,13 +1295,13 @@ class MMPBSA_App(object):
                         mie = InteractionEntropyCalc(edata, self.INPUT, key)
                         mie.save_output(f'{self.pre}mutant_{key}_IE.dat')
 
-                    self.calc_types.mutant[key]['ie'] = IEout(self.INPUT, key)
-                    self.calc_types.mutant[key]['ie'].parse_from_file(f'{self.pre}mutant_{key}_IE.dat',
+                    self.calc_types.mutant['ie'][key] = IEout(self.INPUT, key)
+                    self.calc_types.mutant['ie'][key].parse_from_file(f'{self.pre}mutant_{key}_IE.dat',
                                                                  self.numframes)
 
                 if self.INPUT['ala']['alarun'] and not self.INPUT['ala']['mutant_only'] and key in self.calc_types.normal:
-                    self.calc_types.mut_norm[key]['ie'] = DeltaIEC2Statistic(
-                        self.calc_types.mutant[key]['ie'], self.calc_types.normal[key]['ie'])
+                    self.calc_types.mut_norm['ie'][key] = DeltaIEC2Statistic(
+                        self.calc_types.mutant['ie'][key], self.calc_types.normal['ie'][key])
 
             if self.INPUT['general']['c2_entropy']:
                 if not self.INPUT['ala']['mutant_only'] and key in self.calc_types.normal:
@@ -1306,8 +1311,8 @@ class MMPBSA_App(object):
                         c2 = C2EntropyCalc(edata, self.INPUT, key)
                         c2.save_output(f'{self.pre}normal_{key}_c2_entropy.dat')
 
-                    self.calc_types.normal[key]['c2'] = C2out(key)
-                    self.calc_types.normal[key]['c2'].parse_from_file(f'{self.pre}normal_{key}_c2_entropy.dat')
+                    self.calc_types.normal['c2'][key] = C2out(key)
+                    self.calc_types.normal['c2'][key].parse_from_file(f'{self.pre}normal_{key}_c2_entropy.dat')
                 if key in self.calc_types.mutant:
                     if from_calc:
                         edata = self.calc_types.mutant[key]['delta']['GGAS']
@@ -1315,12 +1320,12 @@ class MMPBSA_App(object):
                         c2 = C2EntropyCalc(edata, self.INPUT, key)
                         c2.save_output(f'{self.pre}mutant_{key}_c2_entropy.dat')
 
-                    self.calc_types.mutant[key]['c2'] = C2out(key)
-                    self.calc_types.mutant[key]['c2'].parse_from_file(f'{self.pre}mutant_{key}_c2_entropy.dat')
+                    self.calc_types.mutant['c2'][key] = C2out(key)
+                    self.calc_types.mutant['c2'][key].parse_from_file(f'{self.pre}mutant_{key}_c2_entropy.dat')
 
                 if self.INPUT['ala']['alarun'] and not self.INPUT['ala']['mutant_only'] and key in self.calc_types.normal:
-                    self.calc_types.mut_norm[key]['c2'] = DeltaIEC2Statistic(
-                        self.calc_types.mutant[key]['c2'], self.calc_types.normal[key]['c2'])
+                    self.calc_types.mut_norm['c2'][key] = DeltaIEC2Statistic(
+                        self.calc_types.mutant['c2'][key], self.calc_types.normal['c2'][key])
 
     def _get_mm_data(self):
 

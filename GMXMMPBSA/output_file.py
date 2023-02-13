@@ -159,7 +159,7 @@ def write_outputs(app):
 
                 for key in allowed_met:
                     if key in app.calc_types.normal:
-                        ie_dict['normal'][key] = app.calc_types.normal[key]['ie']
+                        ie_dict['normal'][key] = app.calc_types.normal['ie'][key]
 
                         final_output.add_section(ie_dict['normal'][key].summary_output())
                         # Now dump the energy vectors in CSV format
@@ -174,7 +174,7 @@ def write_outputs(app):
                 final_output.writeline('ENTROPY RESULTS (INTERACTION ENTROPY):')
                 for key in allowed_met:
                     if key in app.calc_types.mutant:
-                        ie_dict['mutant'][key] = app.calc_types.mutant[key]['ie']
+                        ie_dict['mutant'][key] = app.calc_types.mutant['ie'][key]
                         final_output.add_section(ie_dict['mutant'][key].summary_output())
                         ie_inconsistent = ie_dict['mutant'][key]['sigma'] > 3.6
 
@@ -183,7 +183,7 @@ def write_outputs(app):
                 final_output.writeline('ENTROPY RESULTS (INTERACTION ENTROPY):')
                 for key in allowed_met:
                     if key in app.calc_types.mut_norm:
-                        ie_dict['mut_norm'][key] = app.calc_types.mut_norm[key]['ie']
+                        ie_dict['mut_norm'][key] = app.calc_types.mut_norm['ie'][key]
                         final_output.add_section(ie_dict['mut_norm'][key].summary_output())
 
             if ie_inconsistent:
@@ -199,7 +199,7 @@ def write_outputs(app):
                 final_output.writeline('ENTROPY RESULTS (C2 ENTROPY):')
                 for key in allowed_met:
                     if key in app.calc_types.normal:
-                        c2_dict['normal'][key] = app.calc_types.normal[key]['c2']
+                        c2_dict['normal'][key] = app.calc_types.normal['c2'][key]
                         final_output.add_section(c2_dict['normal'][key].summary_output())
                         c2_inconsistent = c2_dict['normal'][key]['sigma'] > 3.6
 
@@ -208,7 +208,7 @@ def write_outputs(app):
                 final_output.writeline('ENTROPY RESULTS (C2 ENTROPY):')
                 for key in allowed_met:
                     if key in app.calc_types.mutant:
-                        c2_dict['mutant'][key] = app.calc_types.mutant[key]['c2']
+                        c2_dict['mutant'][key] = app.calc_types.mutant['c2'][key]
                         final_output.add_section(c2_dict['mutant'][key].summary_output())
                         final_output.add_section(c2_dict['mutant'][key].summary_output())
                         c2_inconsistent = c2_dict['mutant'][key]['sigma'] > 3.6
@@ -218,7 +218,7 @@ def write_outputs(app):
                 final_output.writeline('ENTROPY RESULTS (C2 ENTROPY):')
                 for key in allowed_met:
                     if key in app.calc_types.mut_norm:
-                        c2_dict['mut_norm'][key] = app.calc_types.mut_norm[key]['c2']
+                        c2_dict['mut_norm'][key] = app.calc_types.mut_norm['c2'][key]
                         final_output.add_section(c2_dict['mut_norm'][key].summary_output())
 
             if c2_inconsistent:

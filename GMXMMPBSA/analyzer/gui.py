@@ -1372,28 +1372,25 @@ class GMX_MMPBSA_ANA(QMainWindow):
 
     def _make_iec2_items(self, sys_name, sys_index, item1, level1, v1):
         for level2, v2 in v1.items():
+            item2 = CustomItem(item1, [f'{level2.upper()}'], system_index=sys_index)
+            item2.setExpanded(True)
+
             if level2 == 'ie':
-                titem = CustomItem(item1,
-                                   [level2.upper()],
+                title = "Interaction Entropy"
+                buttons = (1, 2)
+            else:
+                title = "C2 Entropy"
+                buttons = (2,)
+            for level3, v3 in v2.items():
+                item3 = CustomItem(item2,
+                                   [level3.upper()],
                                    app=self,
-                                   buttons=(1, 2),
-                                   title="Interaction Entropy",
-                                   subtitle=f"{sys_name} | {level1.capitalize()} | {level2.upper()}",
+                                   buttons=buttons,
+                                   title=title,
+                                   subtitle=f"{sys_name} | {level1.capitalize()} | "
+                                            f"{level2.upper()} | {level3.upper()}",
                                    system_index=sys_index,
-                                   keys_path=(level1, level2),
+                                   keys_path=(level1, level2, level3),
                                    # part=part
                                    )
-                self.treeWidget.setItemWidget(titem, 1, titem.setup_buttons())
-            elif level2 == 'c2':
-                titem = CustomItem(item1,
-                                   [level2.upper()],
-                                   app=self,
-                                   buttons=(2,),
-                                   title="C2 Entropy",
-                                   subtitle=f"{sys_name} | {level1.capitalize()} | {level2.upper()}",
-                                   system_index=sys_index,
-                                   keys_path=(level1, level2),
-                                   # part=part
-                                   )
-                self.treeWidget.setItemWidget(titem, 1, titem.setup_buttons())
-                
+                self.treeWidget.setItemWidget(item3, 1, item3.setup_buttons())
