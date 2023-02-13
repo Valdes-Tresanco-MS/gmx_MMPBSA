@@ -839,6 +839,12 @@ better agreement with the PB model, regardless of the structure size. For best a
 (TIP3P) solvation energies, optimal value of B depends on the structure size: for small molecules (number of atoms 
 less than 50), B=0 is recommended. With -chagb option, B is calculated automatically based on the solute size.
 
+`alpb` (Default = 1)
+:   Specifies if ALBP correction is to be used.
+
+    * 0: Canonical GB is used.
+    * 1: ALPB is used (default)
+
 #### **Options for CHAGB model**
 
 `chagb` (Default = 0)
@@ -870,7 +876,7 @@ hydration asymmetry, would have R<sup>z</sup><sub>OH</sub> = 0.
 
 `tau` (Default = 1.47)
 :   Value of τ in the CHAGB model. This dimensionless parameter controls the effective range of the neighboring 
-charges (_j_) affecting the CHA of atom (_i_), see [ref.][215] for details.
+charges (_j_) affecting the CHA of atom (_i_), see ([ref.][215]) for details.
 
 ### **`&pb` namelist variables**
 
