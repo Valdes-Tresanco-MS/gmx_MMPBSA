@@ -193,6 +193,7 @@ nav:
         - Multiple Trajectory Protocol: examples/Protein_ligand/MT/README.md
         - BFE calculations:
             - BFE calculation with GB: examples/Protein_ligand/ST/README.md
+            - BFE calculation with GBNSR6: examples/GBNSR6/README.md
             - BFE calculation with Linear PB: examples/Linear_PB_solver/README.md
             - BFE calculation with NonLinear PB : examples/NonLinear_PB_solver/README.md
             - BFE calculation with 3D-RISM: examples/3D-RISM/README.md
