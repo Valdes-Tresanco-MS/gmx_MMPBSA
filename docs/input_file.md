@@ -867,7 +867,7 @@ less than 50), B=0 is recommended. With -chagb option, B is calculated automatic
 
   [215]: https://pubs.acs.org/doi/full/10.1021/ct4010917
 
-`roh` (Default = 0.586)
+`roh` (Default = 1)
 :   Sets the value of R<sup>z</sup><sub>OH</sub> for CHAGB model, the default is 0.586Å. This parameter defines which 
 explicit water model is being mimicked with respect to its propensity to cause charge hydration asymmetry. A perfectly 
 tetrahedral water , which can not cause charge hydration asymmetry, would have R<sup>z</sup><sub>OH</sub> = 0. The 
