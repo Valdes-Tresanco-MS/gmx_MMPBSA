@@ -55,7 +55,6 @@ def create_inputs(INPUT, prmtop_system, pre):
         temp_input['gbnsr6']['roh'] = ROH[INPUT['gbnsr6']['roh']]
         if INPUT['decomp']['decomprun']:
             temp_input['gbnsr6']['dgij'] = 1
-        temp_input['gbnsr6']['istrng'] = INPUT['gbnsr6']['istrng'] / 1000
         gbnsr6_mdin = GBNSR6Input(temp_input)
         gbnsr6_mdin.make_mdin()
         gbnsr6_mdin.write_input(f'{pre}gbnsr6.mdin')
