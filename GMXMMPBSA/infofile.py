@@ -160,7 +160,7 @@ class InfoFile(object):
             if rematch := inputre_new.match(line):
                 nl, var, val = rematch.groups()
                 val = _determine_type(val.strip())
-                print(nl, var, val)
+                # print(nl, var, val)
                 nl_dict = self.app.INPUT.get(nl)
                 if not nl_dict:
                     self.app.INPUT[nl] = {}
