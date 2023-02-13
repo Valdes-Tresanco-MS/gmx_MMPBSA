@@ -328,7 +328,10 @@ class SanderInput(object):
             self.mdin.change('cntrl', 'ioutfm', int(bool(self.INPUT['general']['netcdf'])))
 
         if self.namelist in ['pb', 'gbnsr6']:
-            self.mdin.change(self.namelist, 'istrng', self.INPUT[self.namelist]['istrng'] * 1000)
+            # in parmed.amber.mdin gbnsr6 namelist not exists, in this case, is gb, we need to change this namelist
+            # variable in mdin, but use gbnsr6 as namelist to get parameters from the the INPUT
+            nl = 'pb' if self.namelist == 'pb' else 'gb'
+            self.mdin.change(nl, 'istrng', self.INPUT[self.namelist]['istrng'] * 1000)
 
     def write_input(self, filename):
         """ Write the mdin file """
