@@ -1,39 +1,18 @@
 Sample input file for GB calculation using GBNSR6 model
-
-#This input file is meant to show only that gmx_MMPBSA works. Although, we tried to use the input files as recommended in the
-#Amber manual, some parameters have been changed to perform more expensive calculations in a reasonable amount of time. Feel free to change the parameters
-#according to what is better for your system.
+#This input file is meant to show only that gmx_MMPBSA works. 
+Although, we tried to use the input files as recommended in the
+#Amber manual, some parameters have been changed to perform 
+more expensive calculations in a reasonable amount of time. 
+Feel free to change the parameters #according to what is better 
+for your system.
 
 &general
-sys_name="Prot-Prot",
+sys_name="GBNSR6",
 startframe=1,
-endframe=4,
-forcefields="leaprc.protein.ff14SB",
-#interaction_entropy=1
-#c2_entropy=1
-#/
-#&gb
-#igb=5, intdiel=4
+endframe=10,
+forcefields="leaprc.protein.ff14SB"
 /
 
 &gbnsr6
-epsin=4.0, cavity_surften=0.0072
+epsin=1.0, cavity_surften=0.0072
 /
-
-
-#&pb
-#inp=1
-#use_sav=0
-#/
-#
-#
-&decomposition
-  idecomp              = 4                                              # Which type of decomposition analysis to do
-  dec_verbose          = 0                                              # Control energy terms are printed to the output
-  csv_format           = 1                                              # Write decomposition data in CSV format
-  print_res = "within 4"
-/
-#
-#&alanine_scanning
-#mutant_res='A/11', cas_intdiel=1
-#/
