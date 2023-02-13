@@ -927,7 +927,7 @@ class MMPBSA_API():
         if INPUT['nmode']['nmoderun']:
             nmframes_list = list(range(INPUT['nmode']['nmstartframe'],
                                        INPUT['nmode']['nmstartframe'] + nmnumframes * INPUT['nmode']['nminterval'],
-                                       INPUT['nmode']['interval']))
+                                       INPUT['nmode']['nminterval']))
             INPUT['nmode']['nmendframe'] = nmframes_list[-1]
 
             nm_start = (nmframes_list[0] - frames_list[0]) * INPUT['general']['interval']
