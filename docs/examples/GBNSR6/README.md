@@ -59,7 +59,7 @@ forcefields="leaprc.protein.ff14SB"
 /
 
 &gbnsr6
-epsin=1.0, cavity_surften=0.005
+istrng=0.15
 /
 ```
 
@@ -77,6 +77,17 @@ index file (`index.ndx`), a trajectory file (`com_traj.xtc`), and both the recep
 index file (`20 21`) are needed. The `mmpbsa.in` input file will contain all the 
 parameters needed for the MM/PB(GB)SA calculation. In this case, 10 frames are going to be used when performing the 
 MM/PB(GB)SA calculation using the GBNSR6 model.
+
+!!! note "Comments on GBNSR6 model"
+    * GBNSR6 is an implementation of the Generalized Born (GB) model in which the effective Born radii are computed 
+    numerically, via the so-called "R6" integration ([ref.][222]) over molecular surface of the solute. 
+    * In contrast to most GB practical models, GBNSR6 model is parameter free in the same sense as the numerical 
+    PB framework is. Thus, accuracy of GBNSR6 relative to the PB standard is virtually unaffected by the choice of 
+    input atomic radii. 
+    * Check Chapter [§5](https://ambermd.org/doc12/Amber21.pdf#chapter.5) in Amber manual for a more thorough 
+    description of the GBNSR6 model and its parameters.
+
+  [222]: https://pubs.acs.org/doi/abs/10.1021/ct200786m
 
 A plain text output file with all the statistics (default: `FINAL_RESULTS_MMPBSA.dat`) and a CSV-format 
 output file containing all energy terms for every frame in every calculation will be saved. The file name in 
