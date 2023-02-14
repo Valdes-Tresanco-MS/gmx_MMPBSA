@@ -401,12 +401,13 @@ class MMPBSA_App(object):
                 self.calc_list.append(c, '    calculating MM...', timer_key='gbnsr6',
                                       output_basename=f'{prefix}complex_mm.mdout.%d')
             # use pre directly to have only one folder per rank
-            files = sorted(list(Path(f"{pre}inpcrd_{self.mpi_rank}").glob(f"{prefix}complex*")))
+            files = sorted(list(Path(f"{pre}inpcrd_{self.mpi_rank}").glob(f"{prefix}complex*.inpcrd")),
+                           key=lambda x: int(x.stem.split('.')[1]))
             mdouts = [file.parent.joinpath(f"{file.name.split('.')[0]}_gbnsr6{file.suffixes[0]}.mdout").as_posix()
                       for file in files]
-            incrds = [file.as_posix() for file in files]
+            inpcrds = [file.as_posix() for file in files]
 
-            c = ListEnergyCalculation(progs['gbnsr6'], parm_system.complex_prmtop, mdin, incrds, mdouts)
+            c = ListEnergyCalculation(progs['gbnsr6'], parm_system.complex_prmtop, mdin, inpcrds, mdouts)
             self.calc_list.append(c, '    calculating GB...', timer_key='gbnsr6',
                                       output_basename=f"{pre}inpcrd_%d/{prefix}complex_gbnsr6.mdout")
 
@@ -443,13 +444,14 @@ class MMPBSA_App(object):
 
                         self.calc_list.append(c, '    calculating MM...', timer_key='gbnsr6',
                                               output_basename=f'{prefix}receptor_mm.mdout.%d')
-                    files = sorted(list(Path(f"{pre}inpcrd_{self.mpi_rank}").glob(f"{prefix}receptor*")))
+                    files = sorted(list(Path(f"{pre}inpcrd_{self.mpi_rank}").glob(f"{prefix}receptor*.inpcrd")),
+                                   key=lambda x: int(x.stem.split('.')[1]))
                     mdouts = [
                         file.parent.joinpath(f"{file.name.split('.')[0]}_gbnsr6{file.suffixes[0]}.mdout").as_posix()
                         for file in files]
-                    incrds = [file.as_posix() for file in files]
+                    inpcrds = [file.as_posix() for file in files]
 
-                    c = ListEnergyCalculation(progs['gbnsr6'], parm_system.receptor_prmtop, mdin, incrds, mdouts)
+                    c = ListEnergyCalculation(progs['gbnsr6'], parm_system.receptor_prmtop, mdin, inpcrds, mdouts)
                     self.calc_list.append(c, '    calculating GB...', timer_key='gbnsr6',
                                           output_basename=f"{pre}inpcrd_%d/{prefix}receptor_gbnsr6.mdout")
 
@@ -485,13 +487,14 @@ class MMPBSA_App(object):
 
                         self.calc_list.append(c, '    calculating MM...', timer_key='gbnsr6',
                                               output_basename=f'{prefix}ligand_mm.mdout.%d')
-                    files = sorted(list(Path(f"{pre}inpcrd_{self.mpi_rank}").glob(f"{prefix}ligand*")))
+                    files = sorted(list(Path(f"{pre}inpcrd_{self.mpi_rank}").glob(f"{prefix}ligand*.inpcrd")),
+                                   key=lambda x: int(x.stem.split('.')[1]))
                     mdouts = [
                         file.parent.joinpath(f"{file.name.split('.')[0]}_gbnsr6{file.suffixes[0]}.mdout").as_posix()
                         for file in files]
-                    incrds = [file.as_posix() for file in files]
+                    inpcrds = [file.as_posix() for file in files]
 
-                    c = ListEnergyCalculation(progs['gbnsr6'], parm_system.ligand_prmtop, mdin, incrds, mdouts)
+                    c = ListEnergyCalculation(progs['gbnsr6'], parm_system.ligand_prmtop, mdin, inpcrds, mdouts)
                     self.calc_list.append(c, '    calculating GB...', timer_key='gbnsr6',
                                           output_basename=f"{pre}inpcrd_%d/{prefix}ligand_gbnsr6.mdout")
                     c = MergeOut(self.FILES.ligand_prmtop, f"{prefix}ligand_gbnsr6.mdout.%d",
@@ -568,7 +571,7 @@ class MMPBSA_App(object):
                                             mdin2, '%sligand_pb.mdout.%%d' % (prefix),
                                             self.pre + 'restrt.%d')
                     self.calc_list.append(c, '  calculating ligand contribution...',
-                                          timer_key='pb')
+                                          timer_key='pb', output_basename='%sligand_pb.mdout.%%d' % (prefix))
         # end if self.INPUT['pb']['pbrun']
 
         if self.INPUT['rism']['rismrun']:
