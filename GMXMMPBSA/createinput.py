@@ -259,6 +259,7 @@ def create_inputs(INPUT, prmtop_system, pre):
         # We only need to run it once for the GBNSR6, pbsa.cuda and APBS calculations.
         if INPUT['gbnsr6']['gbnsr6run']:
             mm_mdin = SanderMMInput(INPUT)
+            mm_mdin.set_gbnsr6_param()
             mm_mdin.make_mdin()
             mm_mdin.write_input(f'{pre}mm.mdin')
 
@@ -317,7 +318,7 @@ class SanderInput(object):
             if key == 'ioutfm':
                 self.mdin.change('cntrl', 'ioutfm', int(bool(self.INPUT['general']['netcdf'])))
                 continue
-            if self.name_map[key] in self.INPUT[self.namelist]:
+            if self.INPUT.get(self.namelist) and self.name_map[key] in self.INPUT[self.namelist]:
                 self.mdin.change(self.parent_namelist[key], key, self.INPUT[self.namelist][self.name_map[key]])
             elif key in ['dec_verbose', 'idecomp']:
                 self.mdin.change(self.parent_namelist[key], key, self.INPUT['decomp'][self.name_map[key]])
@@ -423,7 +424,12 @@ class SanderMMInput(SanderInput):
                 'igb': 'igb', 'intdiel': 'intdiel', 'extdiel': 'extdiel', 'saltcon': 'saltcon', 'surften': 'surften'
                 }
 
-        self.namelist = 'gb'
+        self.namelist = 'mm'
+
+    def set_gbnsr6_param(self):
+        transferable = {'epsin': 'intdiel', 'epsout': 'extdiel', 'istrng': 'saltcon', 'cavity_surften': 'surften'}
+        for gbnsr6k, gbk in transferable.items():
+            self.input_items[gbk] = self.INPUT['gbnsr6'][gbnsr6k]
 
 
 class SanderMMDecomp(SanderMMInput):
