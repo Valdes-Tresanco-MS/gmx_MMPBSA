@@ -231,9 +231,9 @@ class MMPBSA_App(object):
             self._load_calc_list(self.pre, False, self.normal_system)
         if self.INPUT['ala']['alarun']:
             self.calc_list.append(PrintCalc('Running calculations on mutant system...'), timer_key=None)
-            self._load_calc_list(f'{self.pre}mutant_', True, self.mutant_system)
+            self._load_calc_list(f'{self.pre}', True, self.mutant_system)
 
-    def _load_calc_list(self, prefix, mutant, parm_system):
+    def _load_calc_list(self, pre, mutant, parm_system):
         """
         Internal routine to handle building calculation list. Called separately
         for mutant and normal systems
@@ -260,6 +260,9 @@ class MMPBSA_App(object):
                          self.FILES.receptor_prmtop == self.FILES.mutant_receptor_prmtop)
         copy_ligand = (mutant and not self.INPUT['ala']['mutant_only'] and
                        self.FILES.ligand_prmtop == self.FILES.mutant_ligand_prmtop)
+
+        prefix = pre + 'mutant_' if mutant else pre
+
 
         mm_com_calculated = False
         mm_rec_calculated = False
@@ -397,15 +400,15 @@ class MMPBSA_App(object):
                                       self.pre + 'restrt.%d')
                 self.calc_list.append(c, '    calculating MM...', timer_key='gbnsr6',
                                       output_basename=f'{prefix}complex_mm.mdout.%d')
-
-            files = sorted(list(Path(f"{prefix}inpcrd_{self.mpi_rank}").glob(f"{prefix}complex*")))
+            # use pre directly to have only one folder per rank
+            files = sorted(list(Path(f"{pre}inpcrd_{self.mpi_rank}").glob(f"{prefix}complex*")))
             mdouts = [file.parent.joinpath(f"{file.name.split('.')[0]}_gbnsr6{file.suffixes[0]}.mdout").as_posix()
                       for file in files]
             incrds = [file.as_posix() for file in files]
 
             c = ListEnergyCalculation(progs['gbnsr6'], parm_system.complex_prmtop, mdin, incrds, mdouts)
             self.calc_list.append(c, '    calculating GB...', timer_key='gbnsr6',
-                                      output_basename=f"{prefix}inpcrd_%d/{prefix}complex_gbnsr6.mdout")
+                                      output_basename=f"{pre}inpcrd_%d/{prefix}complex_gbnsr6.mdout")
 
             c = MergeOut(self.FILES.complex_prmtop, f"{prefix}complex_gbnsr6.mdout.%d",
                          f'{prefix}complex_mm.mdout.%d', mdouts, self.INPUT['decomp']['idecomp'],
@@ -440,7 +443,7 @@ class MMPBSA_App(object):
 
                         self.calc_list.append(c, '    calculating MM...', timer_key='gbnsr6',
                                               output_basename=f'{prefix}receptor_mm.mdout.%d')
-                    files = sorted(list(Path(f"{prefix}inpcrd_{self.mpi_rank}").glob(f"{prefix}receptor*")))
+                    files = sorted(list(Path(f"{pre}inpcrd_{self.mpi_rank}").glob(f"{prefix}receptor*")))
                     mdouts = [
                         file.parent.joinpath(f"{file.name.split('.')[0]}_gbnsr6{file.suffixes[0]}.mdout").as_posix()
                         for file in files]
@@ -448,7 +451,7 @@ class MMPBSA_App(object):
 
                     c = ListEnergyCalculation(progs['gbnsr6'], parm_system.receptor_prmtop, mdin, incrds, mdouts)
                     self.calc_list.append(c, '    calculating GB...', timer_key='gbnsr6',
-                                          output_basename=f"{prefix}inpcrd_%d/{prefix}receptor_gbnsr6.mdout")
+                                          output_basename=f"{pre}inpcrd_%d/{prefix}receptor_gbnsr6.mdout")
 
                     c = MergeOut(self.FILES.receptor_prmtop, f"{prefix}receptor_gbnsr6.mdout.%d",
                                  f'{prefix}receptor_mm.mdout.%d', mdouts, self.INPUT['decomp']['idecomp'],
@@ -482,7 +485,7 @@ class MMPBSA_App(object):
 
                         self.calc_list.append(c, '    calculating MM...', timer_key='gbnsr6',
                                               output_basename=f'{prefix}ligand_mm.mdout.%d')
-                    files = sorted(list(Path(f"{prefix}inpcrd_{self.mpi_rank}").glob(f"{prefix}ligand*")))
+                    files = sorted(list(Path(f"{pre}inpcrd_{self.mpi_rank}").glob(f"{prefix}ligand*")))
                     mdouts = [
                         file.parent.joinpath(f"{file.name.split('.')[0]}_gbnsr6{file.suffixes[0]}.mdout").as_posix()
                         for file in files]
@@ -490,7 +493,7 @@ class MMPBSA_App(object):
 
                     c = ListEnergyCalculation(progs['gbnsr6'], parm_system.ligand_prmtop, mdin, incrds, mdouts)
                     self.calc_list.append(c, '    calculating GB...', timer_key='gbnsr6',
-                                          output_basename=f"{prefix}inpcrd_%d/{prefix}ligand_gbnsr6.mdout")
+                                          output_basename=f"{pre}inpcrd_%d/{prefix}ligand_gbnsr6.mdout")
                     c = MergeOut(self.FILES.ligand_prmtop, f"{prefix}ligand_gbnsr6.mdout.%d",
                                  f'{prefix}ligand_mm.mdout.%d', mdouts, self.INPUT['decomp']['idecomp'],
                                  self.INPUT['decomp']['dec_verbose'])

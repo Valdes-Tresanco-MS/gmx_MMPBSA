@@ -41,13 +41,14 @@ That being said, once you are in the folder containing all files, the command-li
 
 where the `mmpbsa.in` input file, is a text file containing the following lines:
 
-``` yaml linenums="1" title="Sample input file for PB calculation"
+``` yaml linenums="1" title="Sample input file for GB calculation using GBNSR6 model"
 Sample input file for GB calculation using GBNSR6 model
 #This input file is meant to show only that gmx_MMPBSA works. 
 Although, we tried to use the input files as recommended in the
 #Amber manual, some parameters have been changed to perform 
 more expensive calculations in a reasonable amount of time. 
-Feel free to change the parameters #according to what is better 
+Feel free to change the parameters 
+#according to what is better 
 for your system.
 
 &general

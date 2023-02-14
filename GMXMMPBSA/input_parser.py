@@ -484,7 +484,7 @@ input_file.addNamelist('gbnsr6', 'gbnsr6',
                            ['radiopt', int, 0, 'Specifies the set of intrinsic atomic radii to be used with the chagb'
                                                'option.'],
                            ['chagb', int, 0, 'Define if CHAGB is used'],
-                           ['roh', float, 0.586, 'Sets the value of RzOH for CHA GB model'],
+                           ['roh', int, 1, 'Sets the value of RzOH for CHA GB model'],
                            ['tau', float, 1.47, 'Sets the value of τ in the CHAGB model'],
                            ['cavity_surften', float, 0.005, 'Surface tension parameter for nonpolar '
                                                             'solvation calculation'],

@@ -1137,6 +1137,30 @@ class CheckMakeTop:
                 else:
                     logging.warning(f"Unclassified mutant residue {mutant_resname}. The default "
                                     f"intdiel will be used")
+            if self.INPUT['gbnsr6']['gbnsr6run']:
+                if self.INPUT['gbnsr6']['epsin'] != 1.0:
+                    logging.warning('Both cas_intdiel and epsin were defined. The dielectric constants associated '
+                                    'with cas_intdiel will be ignored and epsin will be used instead')
+                elif mutant_resname in polar_aa:
+                    self.INPUT['gbnsr6']['epsin'] = self.INPUT['ala']['intdiel_polar']
+                    logging.info(f"Setting epsin = intdiel_polar = {self.INPUT['ala']['intdiel_polar']} for "
+                                 f"Alanine scanning")
+                elif mutant_resname in nonpolar_aa:
+                    self.INPUT['gbnsr6']['epsin'] = self.INPUT['ala']['intdiel_nonpolar']
+                    logging.info(f"Setting epsin = intdiel_nonpolar = {self.INPUT['ala']['intdiel_nonpolar']} for Alanine "
+                                 f"scanning")
+                elif mutant_resname in positive_aa:
+                    self.INPUT['gbnsr6']['epsin'] = self.INPUT['ala']['intdiel_positive']
+                    logging.info(f"Setting epsin = intdiel_positive = {self.INPUT['ala']['intdiel_positive']} for Alanine "
+                                 f"scanning")
+                elif mutant_resname in negative_aa:
+                    self.INPUT['gbnsr6']['epsin'] = self.INPUT['ala']['intdiel_negative']
+                    logging.info(f"Setting epsin = intdiel_negative = {self.INPUT['ala']['intdiel_negative']} for Alanine "
+                                 f"scanning")
+                else:
+                    logging.warning(f"Unclassified mutant residue {mutant_resname}. The default "
+                                    f"intdiel will be used")
+
             if self.INPUT['pb']['pbrun']:
                 if self.INPUT['pb']['indi'] != 1.0:
                     logging.warning('Both cas_intdiel and indi were defined. The dielectric constants associated with '

@@ -55,7 +55,6 @@ def create_inputs(INPUT, prmtop_system, pre):
         temp_input['gbnsr6']['roh'] = ROH[INPUT['gbnsr6']['roh']]
         if INPUT['decomp']['decomprun']:
             temp_input['gbnsr6']['dgij'] = 1
-        temp_input['gbnsr6']['istrng'] = INPUT['gbnsr6']['istrng'] / 1000
         gbnsr6_mdin = GBNSR6Input(temp_input)
         gbnsr6_mdin.make_mdin()
         gbnsr6_mdin.write_input(f'{pre}gbnsr6.mdin')
@@ -260,6 +259,7 @@ def create_inputs(INPUT, prmtop_system, pre):
         # We only need to run it once for the GBNSR6, pbsa.cuda and APBS calculations.
         if INPUT['gbnsr6']['gbnsr6run']:
             mm_mdin = SanderMMInput(INPUT)
+            mm_mdin.set_gbnsr6_param()
             mm_mdin.make_mdin()
             mm_mdin.write_input(f'{pre}mm.mdin')
 
@@ -318,7 +318,7 @@ class SanderInput(object):
             if key == 'ioutfm':
                 self.mdin.change('cntrl', 'ioutfm', int(bool(self.INPUT['general']['netcdf'])))
                 continue
-            if self.name_map[key] in self.INPUT[self.namelist]:
+            if self.INPUT.get(self.namelist) and self.name_map[key] in self.INPUT[self.namelist]:
                 self.mdin.change(self.parent_namelist[key], key, self.INPUT[self.namelist][self.name_map[key]])
             elif key in ['dec_verbose', 'idecomp']:
                 self.mdin.change(self.parent_namelist[key], key, self.INPUT['decomp'][self.name_map[key]])
@@ -383,19 +383,20 @@ class GBNSR6Input(SanderInput):
         super().__init__(INPUT)
         self.program = 'gbnsr6'
         self.input_items = {'inp': 1,
-                   'b': 0.028, 'epsin': 1.0, 'epsout': 78.5, 'istrng': 0.0, 'rs': 0.52, 'dprob': 1.4, 'space': 0.5,
-                   'arcres': 0.2, 'rbornstat': 0, 'dgij': 0, 'radiopt': 0, 'chagb': 0, 'roh': 1, 'tau': 1.47,
-                   'cavity_surften': 0.005}
+                            'b': 0.028, 'alpb': 1, 'epsin': 1.0, 'epsout': 78.5, 'istrng': 0.0, 'rs': 0.52,
+                            'dprob': 1.4, 'space': 0.5, 'arcres': 0.2, 'rbornstat': 0, 'dgij': 0, 'radiopt': 0,
+                            'chagb': 0, 'roh': 1, 'tau': 1.47, 'cavity_surften': 0.005}
 
         self.parent_namelist = {'inp': 'cntrl',
-                       'b': 'gb', 'epsin': 'gb', 'epsout': 'gb', 'istrng': 'gb', 'rs': 'gb', 'dprob': 'gb',
-                       'space': 'gb', 'arcres': 'gb', 'rbornstat': 'gb', 'dgij': 'gb', 'radiopt': 'gb',
-                       'chagb': 'gb', 'roh': 'gb', 'tau': 'gb', 'cavity_surften': 'gb'}
+                                'b': 'gb', 'alpb': 'gb', 'epsin': 'gb', 'epsout': 'gb', 'istrng': 'gb', 'rs': 'gb',
+                                'dprob': 'gb', 'space': 'gb', 'arcres': 'gb', 'rbornstat': 'gb', 'dgij': 'gb',
+                                'radiopt': 'gb', 'chagb': 'gb', 'roh': 'gb', 'tau': 'gb', 'cavity_surften': 'gb'}
 
         self.name_map = {'inp': 'inp',
-                'b': 'b', 'epsin': 'epsin', 'epsout': 'epsout', 'istrng': 'istrng', 'rs': 'rs',
-                'dprob': 'dprob', 'space': 'space', 'arcres': 'arcres', 'rbornstat': 'rbornstat', 'dgij': 'dgij',
-                'radiopt': 'radiopt', 'chagb': 'chagb', 'roh': 'roh', 'tau': 'tau', 'cavity_surften': 'cavity_surften'}
+                         'b': 'b', 'alpb': 'alpb', 'epsin': 'epsin', 'epsout': 'epsout', 'istrng': 'istrng',
+                         'rs': 'rs', 'dprob': 'dprob', 'space': 'space', 'arcres': 'arcres', 'rbornstat': 'rbornstat',
+                         'dgij': 'dgij', 'radiopt': 'radiopt', 'chagb': 'chagb', 'roh': 'roh', 'tau': 'tau',
+                         'cavity_surften': 'cavity_surften'}
         self.namelist = 'gbnsr6'
 
 
@@ -423,7 +424,12 @@ class SanderMMInput(SanderInput):
                 'igb': 'igb', 'intdiel': 'intdiel', 'extdiel': 'extdiel', 'saltcon': 'saltcon', 'surften': 'surften'
                 }
 
-        self.namelist = 'gb'
+        self.namelist = 'mm'
+
+    def set_gbnsr6_param(self):
+        transferable = {'epsin': 'intdiel', 'epsout': 'extdiel', 'istrng': 'saltcon', 'cavity_surften': 'surften'}
+        for gbnsr6k, gbk in transferable.items():
+            self.input_items[gbk] = self.INPUT['gbnsr6'][gbnsr6k]
 
 
 class SanderMMDecomp(SanderMMInput):

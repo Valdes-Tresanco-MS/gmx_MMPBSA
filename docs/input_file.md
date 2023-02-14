@@ -137,7 +137,7 @@ every trajectory file placed on the command-line. This is always the first frame
 trajectory file supplied on the command-line.
 
 `interval` (Default = 1)
-:     The offset from which to choose frames from each trajectory file. For example, an interval of 2 will pull
+:   The offset from which to choose frames from each trajectory file. For example, an interval of 2 will pull
 every 2nd frame beginning at startframe and ending less than or equal to endframe.
 
 #### **Parameter options**
@@ -145,8 +145,8 @@ every 2nd frame beginning at startframe and ending less than or equal to endfram
 `forcefields` (Default = "oldff/leaprc.ff99SB,leaprc.gaff")
 :   Comma-separated list of force fields used to build Amber topologies. This variable is more flexible than the 
 previous ones (`protein_forcefield` and `ligand_forcefield`). The goal of this variable is to provide convenient 
-support for complex systems like this one: [5O8F](https://www.rcsb.org/3d-view/5o8f). It supports all force fields 
-tested in previous `protein_forcefield` and `ligand_forcefield` variables.
+support for complex systems with several components. It supports all force fields tested in previous 
+`protein_forcefield` and `ligand_forcefield` variables.
     
     !!! tip Keep in mind
         * The value of this variable depends on the force field you used for your system in GROMACS
@@ -392,7 +392,7 @@ tested in previous `protein_forcefield` and `ligand_forcefield` variables.
 
     _Implemented in v1.4.2: Equivalent to (Removed) `entropy = 1`_
 
-`interaction_entropy` (default = 0) 
+`interaction_entropy` (default = 0)
 :    It specifies whether to use the [Interaction Entropy (IE)][3] approximation.
      
      * 0: Don’t
@@ -414,7 +414,7 @@ tested in previous `protein_forcefield` and `ligand_forcefield` variables.
         - The Interaction Entropy results may vary depending on the system flexibility or whether constraints were used 
         or not in the MD simulation. 
 
-        Please, consult this [paper][10] for further details.
+        Please, check this [paper][10] for further details.
 
     _Implemented in v1.4.2: Equivalent to (Removed) `entropy = 2`_
 
@@ -451,7 +451,7 @@ Interaction Entropy, _e.g._: `ie_segment = 25` means that the last quartile of t
         - The C2 Entropy results may vary depending on the system flexibility or whether constraints were used 
         or not in the MD simulation.
 
-        Please, consult this [paper][10] for further details.
+        Please, check this [paper][10] for further details.
 
     _Implemented in v1.5.0_
 
@@ -793,7 +793,7 @@ on the very first step to a file named qmmm_region.pdb.
     numerically, via the so-called "R6" integration ([ref.][222]) over molecular surface of the solute. In contrast to 
     most GB practical models, GBNSR6 model is parameter free in the same sense as the numerical PB framework is. Thus, 
     accuracy of GBNSR6 relative to the PB standard is virtually unaffected by the choice of input atomic radii. Check
-    the chapter [§5](https://ambermd.org/doc12/Amber21.pdf#chapter.5) in Amber manual for a more thorough description 
+    Chapter [§5](https://ambermd.org/doc12/Amber21.pdf#chapter.5) in Amber manual for a more thorough description 
     of the GBNSR6 model and its parameters.
     * A default GBNSR6 input file can be created as follows:
 
@@ -870,12 +870,16 @@ less than 50), B=0 is recommended. With -chagb option, B is calculated automatic
 
   [215]: https://pubs.acs.org/doi/full/10.1021/ct4010917
 
-`roh` (Default = 0.586)
+`roh` (Default = 1)
 :   Sets the value of R<sup>z</sup><sub>OH</sub> for CHAGB model, the default is 0.586Å. This parameter defines which 
-explicit water model is being mimicked with respect to its propensity to cause charge hydration asymmetry, the default 
-corresponds to TIP3P and SPC/E. For OPC, R<sup>z</sup><sub>OH</sub> = 0.699Å, for TIP4P 
-R<sup>z</sup><sub>OH</sub> = 0.734Å, and 0.183Å for TIP5P/E. A perfectly tetrahedral water , which can not cause charge 
-hydration asymmetry, would have R<sup>z</sup><sub>OH</sub> = 0.
+explicit water model is being mimicked with respect to its propensity to cause charge hydration asymmetry. A perfectly 
+tetrahedral water , which can not cause charge hydration asymmetry, would have R<sup>z</sup><sub>OH</sub> = 0. The 
+options for `roh` are:
+
+    * 1: R<sup>z</sup><sub>OH</sub> = 0.586Å corresponds to TIP3P and SPC/E. 
+    * 2: R<sup>z</sup><sub>OH</sub> = 0.699Å for OPC.
+    * 3: R<sup>z</sup><sub>OH</sub> = 0.734Å for TIP4P 
+    * 4: R<sup>z</sup><sub>OH</sub> = 0.183Å for TIP5P/E. 
 
 `tau` (Default = 1.47)
 :   Value of τ in the CHAGB model. This dimensionless parameter controls the effective range of the neighboring 
