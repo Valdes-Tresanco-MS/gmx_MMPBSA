@@ -147,7 +147,7 @@ class EnergyVector(np.ndarray):
 
     def abs_gt(self, val):
         """ If any element's absolute value is greater than a # """
-        return np.any(np.greater(self, val))
+        return np.any(np.greater(np.abs(self), val))
 
 
 def get_std(val1, val2):
