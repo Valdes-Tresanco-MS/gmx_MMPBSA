@@ -21,6 +21,7 @@ Generate Amber topology files from GROMACS files
 # ##############################################################################
 
 import os
+import platform
 import textwrap
 
 import parmed
@@ -33,6 +34,12 @@ from pathlib import Path
 import logging
 import string
 from parmed.tools.changeradii import ChRad
+
+
+if platform.system() == "Darwin":
+    echo_command = ['echo']
+else:
+    echo_command = ['echo', '-e']
 
 chains_letters = list(string.ascii_uppercase)
 his = ['HIS', 'HIE', 'HID', 'HIP']
@@ -242,14 +249,14 @@ class CheckMakeTop:
         logging.info('Making gmx_MMPBSA index for complex...')
         # merge both (rec and lig) groups into complex group, modify index and create a copy
         # 1-rename groups, 2-merge
-        make_ndx_echo_args = ['echo', '-e', 'name {r} GMXMMPBSA_REC\n name {l} GMXMMPBSA_LIG\n  {r} | '
+        make_ndx_echo_args = echo_command + ['name {r} GMXMMPBSA_REC\n name {l} GMXMMPBSA_LIG\n  {r} | '
                                       '{l}\n q\n'.format(r=num_com_rec_group, l=num_com_lig_group)]
         c1 = subprocess.Popen(make_ndx_echo_args, stdout=subprocess.PIPE)
 
         com_ndx = self.FILES.prefix + 'COM_index.ndx'
         make_ndx_args = self.make_ndx + ['-n', self.FILES.complex_index, '-o', com_ndx, '-f', self.FILES.complex_tpr]
-        logging.debug('Running command: ' + ' '.join(make_ndx_echo_args[:2]) + ' "' +
-                      (' '.join(make_ndx_echo_args[2:]).replace('\n', '\\n')) + '"' + ' | ' +
+        logging.debug('Running command: ' + ' '.join(echo_command) + ' "' +
+                      (' '.join(make_ndx_echo_args[len(echo_command):]).replace('\n', '\\n')) + '"' + ' | ' +
                       ' '.join(make_ndx_args))
         c2 = subprocess.Popen(make_ndx_args, stdin=c1.stdout, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         log_subprocess_output(c2)
@@ -261,7 +268,7 @@ class CheckMakeTop:
                      f'({num_com_rec_group}_{num_com_lig_group}) in {self.FILES.complex_index} file as '
                      f'{self.complex_str_file}')
         # avoid PBC and not chain ID problems
-        pdbcom_echo_args = ['echo', '-e', 'GMXMMPBSA_REC_GMXMMPBSA_LIG']
+        pdbcom_echo_args = echo_command + ['GMXMMPBSA_REC_GMXMMPBSA_LIG']
         c3 = subprocess.Popen(pdbcom_echo_args, stdout=subprocess.PIPE)
 
         str_format = 'tpr' if self.FILES.complex_tpr[-3:] == 'tpr' else 'pdb'
@@ -274,8 +281,8 @@ class CheckMakeTop:
             comprog = self.editconf
             pdbcom_args = self.editconf + ['-f', self.FILES.complex_tpr, '-n', self.FILES.complex_index, '-o',
                                            self.complex_str_file]
-        logging.debug('Running command: ' + ' '.join(pdbcom_echo_args[:2]) + ' "' +
-                      (' '.join(pdbcom_echo_args[2:]).replace('\n', '\\n')) + '"' +
+        logging.debug('Running command: ' + ' '.join(echo_command) + ' "' +
+                      (' '.join(pdbcom_echo_args[len(echo_command):]).replace('\n', '\\n')) + '"' +
                       '| ' + ' '.join(pdbcom_args))
         c4 = subprocess.Popen(pdbcom_args, stdin=c3.stdout, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         log_subprocess_output(c4)
@@ -310,7 +317,7 @@ class CheckMakeTop:
             self.use_temp = True
             logging.warning('When &decomp is defined, we generate a receptor file in order to extract interface '
                             'residues')
-            rec_echo_args = ['echo', '-e', '{}'.format(num_com_rec_group)]
+            rec_echo_args = echo_command + ['{}'.format(num_com_rec_group)]
             cp1 = subprocess.Popen(rec_echo_args, stdout=subprocess.PIPE)
             if str_format == 'tpr':
                 # we extract the pdb from the first frame of trajs to make amber topology
@@ -319,8 +326,8 @@ class CheckMakeTop:
             else:
                 pdbrec_args = self.editconf + ['-f', self.FILES.complex_tpr, '-n', self.FILES.complex_index, '-o',
                                                'rec_temp.pdb']
-            logging.debug('Running command: ' + ' '.join(rec_echo_args[:2]) + ' "' +
-                          (' '.join(rec_echo_args[2:]).replace('\n', '\\n')) + '"' +
+            logging.debug('Running command: ' + ' '.join(echo_command) + ' "' +
+                          (' '.join(rec_echo_args[len(echo_command):]).replace('\n', '\\n')) + '"' +
                           '| ' + ' '.join(pdbrec_args))
             cp2 = subprocess.Popen(pdbrec_args, stdin=cp1.stdout, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             log_subprocess_output(cp2)
@@ -338,13 +345,13 @@ class CheckMakeTop:
             num_rec_group, str_rec_group = get_index_groups(self.FILES.receptor_index, self.FILES.receptor_group)
 
             logging.info('Making gmx_MMPBSA index for receptor...')
-            make_ndx_echo_args = ['echo', '-e', 'name {r} GMXMMPBSA_REC\n q\n'.format(r=num_rec_group)]
+            make_ndx_echo_args = echo_command + ['name {r} GMXMMPBSA_REC\n q\n'.format(r=num_rec_group)]
             c1 = subprocess.Popen(make_ndx_echo_args, stdout=subprocess.PIPE)
 
             rec_ndx = self.FILES.prefix + 'REC_index.ndx'
             make_ndx_args = self.make_ndx + ['-n', self.FILES.receptor_index, '-o', rec_ndx, '-f', self.FILES.receptor_tpr]
-            logging.debug('Running command: ' + ' '.join(make_ndx_echo_args[:2]) + ' "' +
-                          (' '.join(make_ndx_echo_args[2:]).replace('\n', '\\n')) + '"' + ' | ' +
+            logging.debug('Running command: ' + ' '.join(echo_command) + ' "' +
+                          (' '.join(make_ndx_echo_args[len(echo_command):]).replace('\n', '\\n')) + '"' + ' | ' +
                           ' '.join(make_ndx_args))
             c2 = subprocess.Popen(make_ndx_args, stdin=c1.stdout, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             log_subprocess_output(c2)
@@ -354,7 +361,7 @@ class CheckMakeTop:
 
             logging.info(f'Normal Receptor: Saving group {str_rec_group} ({num_rec_group}) in '
                          f'{self.FILES.receptor_index} file as {self.receptor_str_file}')
-            pdbrec_echo_args = ['echo', '-e', '{}'.format(num_rec_group)]
+            pdbrec_echo_args = echo_command + ['{}'.format(num_rec_group)]
             p1 = subprocess.Popen(pdbrec_echo_args, stdout=subprocess.PIPE)
             str_format = 'tpr' if self.FILES.receptor_tpr[-3:] == 'tpr' else 'pdb'
             if str_format == 'tpr':
@@ -367,8 +374,8 @@ class CheckMakeTop:
                 pdbrec_args = self.editconf + ['-f', self.FILES.receptor_tpr, '-n', self.FILES.receptor_index, '-o',
                                                self.receptor_str_file]
 
-            logging.debug('Running command: ' + ' '.join(pdbrec_echo_args[:2]) + ' "' +
-                          (' '.join(pdbrec_echo_args[2:]).replace('\n', '\\n')) + '"' +
+            logging.debug('Running command: ' + ' '.join(echo_command) + ' "' +
+                          (' '.join(pdbrec_echo_args[len(echo_command):]).replace('\n', '\\n')) + '"' +
                           '| ' + ' '.join(pdbrec_args))
             cp2 = subprocess.Popen(pdbrec_args, stdin=p1.stdout, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             log_subprocess_output(cp2)
@@ -379,7 +386,7 @@ class CheckMakeTop:
             logging.info('Using receptor structure from complex to generate AMBER topology')
             logging.info(f'Normal Receptor: Saving group {str_com_rec_group} ({num_com_rec_group}) in '
                          f'{self.FILES.complex_index} file as {self.receptor_str_file}')
-            pdbrec_echo_args = ['echo', '-e', '{}'.format(num_com_rec_group)]
+            pdbrec_echo_args = echo_command + ['{}'.format(num_com_rec_group)]
             cp1 = subprocess.Popen(pdbrec_echo_args, stdout=subprocess.PIPE)
             str_format = 'tpr' if self.FILES.complex_tpr[-3:] == 'tpr' else 'pdb'
             if str_format == 'tpr':
@@ -389,8 +396,8 @@ class CheckMakeTop:
             else:
                 pdbrec_args = self.editconf + ['-f', self.FILES.complex_tpr, '-n', self.FILES.complex_index, '-o',
                                                self.receptor_str_file]
-            logging.debug('Running command: ' + ' '.join(pdbrec_echo_args[:2]) + ' "' +
-                          (' '.join(pdbrec_echo_args[2:]).replace('\n', '\\n')) + '"' +
+            logging.debug('Running command: ' + ' '.join(echo_command) + ' "' +
+                          (' '.join(pdbrec_echo_args[len(echo_command):]).replace('\n', '\\n')) + '"' +
                           '| ' + ' '.join(pdbrec_args))
             cp2 = subprocess.Popen(pdbrec_args, stdin=cp1.stdout, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             log_subprocess_output(cp2)
@@ -404,13 +411,13 @@ class CheckMakeTop:
             num_lig_group, str_lig_group = get_index_groups(self.FILES.ligand_index, self.FILES.ligand_group)
 
             logging.info('Making gmx_MMPBSA index for ligand...')
-            make_ndx_echo_args = ['echo', '-e', 'name {l} GMXMMPBSA_LIG\n q\n'.format(l=num_lig_group)]
+            make_ndx_echo_args = echo_command + ['name {l} GMXMMPBSA_LIG\n q\n'.format(l=num_lig_group)]
             c1 = subprocess.Popen(make_ndx_echo_args, stdout=subprocess.PIPE)
 
             lig_ndx = self.FILES.prefix + 'LIG_index.ndx'
             make_ndx_args = self.make_ndx + ['-n', self.FILES.ligand_index, '-o', lig_ndx, '-f', self.FILES.ligand_tpr]
-            logging.debug('Running command: ' + ' '.join(make_ndx_echo_args[:2]) + ' "' +
-                          (' '.join(make_ndx_echo_args[2:]).replace('\n', '\\n')) + '"' + ' | ' +
+            logging.debug('Running command: ' + ' '.join(echo_command) + ' "' +
+                          (' '.join(make_ndx_echo_args[len(echo_command):]).replace('\n', '\\n')) + '"' + ' | ' +
                           ' '.join(make_ndx_args))
             c2 = subprocess.Popen(make_ndx_args, stdin=c1.stdout, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             log_subprocess_output(c2)
@@ -421,7 +428,7 @@ class CheckMakeTop:
             logging.info(f'Normal Ligand: Saving group {str_lig_group} ({num_lig_group}) in {self.FILES.ligand_index}'
                          f' file as {self.ligand_str_file}')
             # wt ligand
-            pdblig_echo_args = ['echo', '-e', '{}'.format(num_lig_group)]
+            pdblig_echo_args = echo_command + ['{}'.format(num_lig_group)]
             l1 = subprocess.Popen(pdblig_echo_args, stdout=subprocess.PIPE)
             str_format = 'tpr' if self.FILES.ligand_tpr[-3:] == 'tpr' else 'pdb'
             if str_format == 'tpr':
@@ -433,8 +440,8 @@ class CheckMakeTop:
                 prog = self.editconf
                 pdblig_args = self.editconf + ['-f', self.FILES.ligand_tpr, '-n', self.FILES.ligand_index, '-o',
                                                self.ligand_str_file]
-            logging.debug('Running command: ' + ' '.join(pdblig_echo_args[:2]) + ' "' +
-                          (' '.join(pdblig_echo_args[2:]).replace('\n', '\\n')) + '"' +
+            logging.debug('Running command: ' + ' '.join(echo_command) + ' "' +
+                          (' '.join(pdblig_echo_args[len(echo_command):]).replace('\n', '\\n')) + '"' +
                           '| ' + ' '.join(pdblig_args))
             l2 = subprocess.Popen(pdblig_args, stdin=l1.stdout, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             log_subprocess_output(l2)
@@ -446,7 +453,7 @@ class CheckMakeTop:
             logging.info('Using ligand structure from complex to generate AMBER topology')
             logging.info(f'Normal Ligand: Saving group {str_com_lig_group} ({num_com_lig_group}) in '
                          f'{self.FILES.complex_index} file as {self.ligand_str_file}')
-            pdblig_echo_args = ['echo', '-e', '{}'.format(num_com_lig_group)]
+            pdblig_echo_args = echo_command + ['{}'.format(num_com_lig_group)]
             l1 = subprocess.Popen(pdblig_echo_args, stdout=subprocess.PIPE)
 
             str_format = 'tpr' if self.FILES.complex_tpr[-3:] == 'tpr' else 'pdb'
@@ -459,8 +466,8 @@ class CheckMakeTop:
                                                self.ligand_str_file]
 
             # we extract a pdb from structure file to make amber topology
-            logging.debug('Running command: ' + ' '.join(pdblig_echo_args[:2]) + ' "' +
-                          (' '.join(pdblig_echo_args[2:]).replace('\n', '\\n')) + '"' +
+            logging.debug('Running command: ' + ' '.join(echo_command) + ' "' +
+                          (' '.join(pdblig_echo_args[len(echo_command):]).replace('\n', '\\n')) + '"' +
                           '| ' + ' '.join(pdblig_args))
             l2 = subprocess.Popen(pdblig_args, stdin=l1.stdout, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             log_subprocess_output(l2)
@@ -1168,13 +1175,13 @@ class CheckMakeTop:
         logging.info('Cleaning normal complex trajectories...')
         new_trajs = []
         for i in range(len(self.FILES.complex_trajs)):
-            trjconv_echo_args = ['echo', '-e', 'GMXMMPBSA_REC_GMXMMPBSA_LIG']
+            trjconv_echo_args = echo_command + ['GMXMMPBSA_REC_GMXMMPBSA_LIG']
             c5 = subprocess.Popen(trjconv_echo_args, stdout=subprocess.PIPE)
             # we get only first trajectory to extract a pdb file and make amber topology for complex
             trjconv_args = self.trjconv + ['-f', self.FILES.complex_trajs[i], '-s', self.FILES.complex_tpr, '-o',
                                            f'COM_traj_{i}.xtc', '-n', self.FILES.complex_index]
-            logging.debug('Running command: ' + ' '.join(trjconv_echo_args[:2]) + ' "' +
-                          (' '.join(trjconv_echo_args[2:]).replace('\n', '\\n')) + '"' +
+            logging.debug('Running command: ' + ' '.join(echo_command) + ' "' +
+                          (' '.join(trjconv_echo_args[len(echo_command):]).replace('\n', '\\n')) + '"' +
                           '| ' + ' '.join(trjconv_args))
             c6 = subprocess.Popen(trjconv_args, stdin=c5.stdout, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             log_subprocess_output(c6)
@@ -1188,13 +1195,13 @@ class CheckMakeTop:
             logging.info('Cleaning normal receptor trajectories...')
             new_trajs = []
             for i in range(len(self.FILES.receptor_trajs)):
-                trjconv_echo_args = ['echo', '-e', 'GMXMMPBSA_REC']
+                trjconv_echo_args = echo_command + ['GMXMMPBSA_REC']
                 c5 = subprocess.Popen(trjconv_echo_args, stdout=subprocess.PIPE)
                 # we get only first trajectory to extract a pdb file and make amber topology for complex
                 trjconv_args = self.trjconv + ['-f', self.FILES.receptor_trajs[i], '-s', self.FILES.receptor_tpr,
                                                '-o', 'REC_traj_{}.xtc'.format(i), '-n', self.FILES.receptor_index]
-                logging.debug('Running command: ' + ' '.join(trjconv_echo_args[:2]) + ' "' +
-                              (' '.join(trjconv_echo_args[2:]).replace('\n', '\\n')) + '"' +
+                logging.debug('Running command: ' + ' '.join(echo_command) + ' "' +
+                              (' '.join(trjconv_echo_args[len(echo_command):]).replace('\n', '\\n')) + '"' +
                               '| ' + ' '.join(trjconv_args))
                 c6 = subprocess.Popen(trjconv_args, stdin=c5.stdout, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
                 log_subprocess_output(c6)
@@ -1208,13 +1215,13 @@ class CheckMakeTop:
             logging.info('Cleaning normal ligand trajectories...')
             new_trajs = []
             for i in range(len(self.FILES.ligand_trajs)):
-                trjconv_echo_args = ['echo', '-e', 'GMXMMPBSA_LIG']
+                trjconv_echo_args = echo_command + ['GMXMMPBSA_LIG']
                 c5 = subprocess.Popen(trjconv_echo_args, stdout=subprocess.PIPE)
                 # we get only first trajectory to extract a pdb file and make amber topology for complex
                 trjconv_args = self.trjconv + ['-f', self.FILES.ligand_trajs[i], '-s', self.FILES.ligand_tpr, '-o',
                                                'LIG_traj_{}.xtc'.format(i), '-n', self.FILES.ligand_index]
-                logging.debug('Running command: ' + ' '.join(trjconv_echo_args[:2]) + ' "' +
-                              (' '.join(trjconv_echo_args[2:]).replace('\n', '\\n')) + '"' +
+                logging.debug('Running command: ' + ' '.join(echo_command) + ' "' +
+                              (' '.join(trjconv_echo_args[len(echo_command):]).replace('\n', '\\n')) + '"' +
                               '| ' + ' '.join(trjconv_args))
                 c6 = subprocess.Popen(trjconv_args, stdin=c5.stdout, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
                 log_subprocess_output(c6)
