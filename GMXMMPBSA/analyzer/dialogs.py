@@ -395,6 +395,11 @@ class InitDialog(QDialog):
             if fname.suffix == '.mmxsa':
                 with open(fname, 'rb') as of:
                     info = pickle.load(of)
+                    # raise exception when the result file is old
+                    if not info.INPUT.get('general'):
+                        raise ('The current output files were made with an earlier version of gmx_MMPBSA. Please run '
+                               '"gmx_MMPBSA --rewrite-output" to make them compatible with the current version.')
+
                     basename = info.INPUT['general']['sys_name']
                     if basename in names:
                         while basename in names:
@@ -407,16 +412,28 @@ class InitDialog(QDialog):
                     stability = info.FILES.stability
             else:
                 with open(fname) as fi:
+                    checked = False
                     for line in fi:
                         line = line.strip('\n')
+                        if line.startswith('#'):
+                            continue
+                        # raise exception when the result file is old
+                        if line.startswith('INPUT') and not checked:
+                            if 'general' not in line:
+                                raise ('The current output files were made with an earlier version of gmx_MMPBSA. '
+                                       'Please run "gmx_MMPBSA --rewrite-output" to make them compatible with the '
+                                       'current version.')
+                            checked = True
+
+                        if line.startswith("INPUT['general']['exp_ki']"):
+                            temp_ki = [float(x.strip()) for x in line.split('=')[1].strip(' []').split(',')]
+
                         if line.startswith("INPUT['general']['sys_name']"):
                             basename = str(line.split()[2]).strip('"\'')
                             if basename in names:
                                 while basename in names:
                                     basename = f"{basename}-{names.count(basename) + 1}"
                                 names.append(basename)
-                        if line.startswith("INPUT['general']['exp_ki']"):
-                            temp_ki = [float(x.strip()) for x in line.split('=')[1].strip(' []').split(',')]
                         if line.startswith("INPUT['general']['mutant_only']"):
                             mut_only = int(line.split()[2])
                         if line.startswith("mut_str"):
