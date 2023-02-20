@@ -494,7 +494,7 @@ input_file.addNamelist('pb', 'pb',
                        [
                             # Basic input options
                            ['ipb', int, 2, 'Dielectric model for PB'],
-                           ['inp', int, 2, 'Nonpolar solvation method'],
+                           ['inp', int, 1, 'Nonpolar solvation method'],
                            ['sander_apbs', int, 0, 'Use sander.APBS?'],
 
                            # Options to define the physical constants
