@@ -8,28 +8,28 @@ title: Changelog
 
 ### Additions
 - GBNSR6 model implementation
-  - Enthalpy
-  - Per-residue and Per-wise decomposition
-  - Documentation and examples
-- added git dependency to env.yml file
-- groups can now be defined as either the number or the name (#157)
-- added error tracking for groups that are not in the index file
+    - Enthalpy
+    - Per-residue and Per-wise decomposition
+    - Documentation and examples
+- Added git dependency to env.yml file
+- Groups can now be defined as either the number or the name (#157)
+- Added error tracking for groups that are not in the index file
 
 ### Fixes
-- incompatible `compilers` version
+- Incompatible `compilers` version
 - Fixed bug when CAS and PB/RISM calculations are performed
 - Fixed duplicated options and args checking
 - Documentation improved
 - Fixed numpy deprecated np.float (#316)
-- fixed reproducible command line in debugging in log file (#335)
+- Fixed reproducible command line in debugging in log file (#335)
 - GROMACS 2023 compatibility (#327, #335)
-- fixed IE and C2 Entropy (#325)
+- Fixed IE and C2 Entropy (#325)
 - PyMOL doesn't open within gmx_MMPBSA environment (#331)
 - Inaccessible _temp_top.top when the topology file is in different directory (#299)
 
 ### Changes
-- A copy old info file is created when rewrite-output (for drawback compatibility)
-- setting inp = 1 by default (#329)
+- A copy old info file is created when rewrite-output (for backward compatibility)
+- Setting inp = 1 by default (#329)
 
 ---
 
