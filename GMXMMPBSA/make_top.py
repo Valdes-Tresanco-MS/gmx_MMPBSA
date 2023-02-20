@@ -1024,7 +1024,8 @@ class CheckMakeTop:
         cterm_atoms = 'OXT'
         sc_cb_atom = 'CB'
         sc_ala_atoms = ('HB,' +  # VAL, ILE, THR
-                        'HB1,HB2,' +
+                        'HB1,HB2,' + # charmm -> HB1, HB2
+                        'HB3,' + # amber -> HB2, HB3
                         'CG1,CG2,OG1,' +  # VAL, ILE, THR
                         'OG,' +  # SER
                         'SG,' +  # CYS
@@ -1038,8 +1039,10 @@ class CheckMakeTop:
         else:
             # FIXME: allow terminal residues to mutate?
             strip_mask = f":{mut_index + 1} &!@{','.join([bb_atoms, sc_cb_atom, nterm_atoms, cterm_atoms])}"
+            print(strip_mask)
             if not pdb:
                 strip_mask += f",{sc_ala_atoms}"
+                print(strip_mask, 1)
         mut_top.strip(strip_mask)
 
         h_atoms_prop = {}
@@ -1072,7 +1075,11 @@ class CheckMakeTop:
 
         mut_top.residues[mut_index].name = mut_aa
 
+        for x in self.complex_str.residues[mut_index].atoms:
+            print(x)
+
         for at in mut_top.residues[mut_index].atoms:
+            print(at)
             if mut_aa == 'GlY':
                 if at.name == 'CA':
                     ca_atom = at
@@ -1118,7 +1125,7 @@ class CheckMakeTop:
                 elif at.name in ['HB1', 'HB2', 'HB3']:
                     at.type = h_atoms_prop['type']
                     at.atom_type = h_atoms_prop['atom_type']
-
+            print(at, 2)
         # change intdiel if cas_intdiel was defined before end the mutation process
         if self.INPUT['ala']['cas_intdiel']:
             if self.INPUT['gb']['gbrun']:
