@@ -4,10 +4,9 @@ Sample input file for GB calculation
 #according to what is better for your system.
 &general
 sys_name="C2_entropy",
-startframe=5,
-endframe=20,
-forcefields="oldff/leaprc.ff99SB,leaprc.gaff",
-c2_entropy=1, temperature=300,
+startframe=1,
+endframe=10,
+c2_entropy=1, temperature=303.15,
 /
 &gb
 igb=5, saltcon=0.150,

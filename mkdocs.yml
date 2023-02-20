@@ -174,7 +174,7 @@ nav:
       - Protein-DNA: examples/Protein_DNA/README.md
       - Protein-glycan: examples/Protein_glycan/README.md
       - Membrane proteins: examples/Protein_membrane/README.md
-      - Metalloprotein-peptide: examples/Metalloprotein_peptide/README.md
+      - Metalloprotein-ligand: examples/Metalloprotein_ligand/README.md
       - Multicomponent system: examples/Comp_receptor/README.md
       - COVID-19 related proteins:
           - Info: examples/COVID-19_related_proteins/README.md

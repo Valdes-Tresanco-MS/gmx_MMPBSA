@@ -86,7 +86,7 @@ In the current version, gmx_MMPBSA supports a number of different systems includ
 * [Protein-protein][12]
 * [Protein-ligand][13]
 * [Protein-DNA][14]
-* [Metalloprotein-peptide][15]
+* [Metalloprotein-ligand][15]
 * [Protein-glycan][16]
 * [Membrane proteins][17]
 * Multicomponent systems (_e.g._, [Protein-DNA-RNA-Ions-Ligand][18])
@@ -94,7 +94,7 @@ In the current version, gmx_MMPBSA supports a number of different systems includ
   [12]: examples/Protein_protein/README.md
   [13]: examples/Protein_ligand/ST/README.md
   [14]: examples/Protein_DNA/README.md
-  [15]: examples/Metalloprotein_peptide/README.md
+  [15]: examples/Metalloprotein_ligand/README.md
   [16]: examples/Protein_glycan/README.md
   [17]: examples/Protein_membrane/README.md
   [18]: examples/Comp_receptor/README.md

@@ -6,7 +6,7 @@ title: Interaction Entropy
 # Interaction Entropy calculations
 
 !!! info
-    This example can be found in the [examples/Entropy_calculations/Interaction_Entropy][6] directory in the 
+    This example can be found in the [docs/examples/Entropy_calculations/Interaction_Entropy][6] directory in the 
     repository folder. If you didn't use gmx_MMPBSA_test before, use [downgit](https://downgit.github.io/#/home) to 
     download the specific folder from gmx_MMPBSA GitHub repository.
 
@@ -103,5 +103,5 @@ specified on the command-line.
   [3]: ../../../input_file.md#sample-input-files  
   [4]: https://pubs.acs.org/doi/abs/10.1021/jacs.6b02682
   [5]: ../../../analyzer.md#gmx_mmpbsa_ana-the-analyzer-tool
-  [6]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/examples/Entropy_calculations/Interaction_Entropy
+  [6]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/docs/examples/Entropy_calculations/Interaction_Entropy
   [7]: ../../gmx_MMPBSA_test.md#gmx_mmpbsa_test-command-line
