@@ -13,8 +13,6 @@ title: Protein-ligand (ST)
 
 
 ## Requirements
-!!! danger
-    The ligand mol2 file must be the Antechamber output.
 
 In this case, `gmx_MMPBSA` requires:
 
@@ -26,7 +24,7 @@ In this case, `gmx_MMPBSA` requires:
 | Receptor and ligand group      | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |        `integers`       | Group numbers in the index files |
 | A trajectory file              | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } | `xtc` `pdb` `trr` | Final GROMACS MD trajectory, fitted and with no pbc. |
 | Ligand parameters file         | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |          `mol2`         | The Antechamber output  `mol2` file of ligand parametrization|
-| A topology file (not included) | :octicons-check-circle-fill-16:{ .req_opt .scale_icon_medium }    |           `top`         | GROMACS topology file (The `* .itp` files defined in the topology must be in the same folder |
+| A topology file | :octicons-check-circle-fill-16:{ .req_opt .scale_icon_medium }    |           `top`         | GROMACS topology file (The `* .itp` files defined in the topology must be in the same folder |
 | A Reference Structure file     | :octicons-check-circle-fill-16:{ .req_optrec .scale_icon_medium } |           `pdb`         | Complex reference structure file (without hydrogens) with the desired assignment of chain ID and residue numbers |
               
 :octicons-check-circle-fill-16:{ .req } -> Must be defined -- :octicons-check-circle-fill-16:{ .req_optrec } -> 
@@ -34,7 +32,8 @@ Optional, but recommended -- :octicons-check-circle-fill-16:{ .req_opt } -> Opti
 
 !!! tip "Remember"
     When a topology file is defined, the ligand mol2 file is not needed. The ligand mol2 file only required when  
-    `gmx_MMPBSA` build the amber topology from a structure  
+    `gmx_MMPBSA` build the amber topology from a structure. The ligand mol2 file must be the Antechamber output.
+    
 _See a detailed list of all the flags in gmx_MMPBSA command line [here][1]_
 
 ## Command-line
@@ -42,11 +41,11 @@ That being said, once you are in the folder containing all files, the command-li
 
 === "Serial"
 
-        gmx_MMPBSA -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 1 13 -ct com_traj.xtc -lm ligand.mol2 -o FINAL_RESULTS_MMPBSA.dat -eo FINAL_RESULTS_MMPBSA.csv
+        gmx_MMPBSA -O -i mmpbsa.in -cs com.tpr -ct com_traj.xtc -ci index.ndx -cg 3 4 -cp topol.top -o FINAL_RESULTS_MMPBSA.dat -eo FINAL_RESULTS_MMPBSA.csv
 
 === "With MPI"
 
-        mpirun -np 2 gmx_MMPBSA MPI -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 1 13 -ct com_traj.xtc -lm ligand.mol2 -o FINAL_RESULTS_MMPBSA.dat -eo FINAL_RESULTS_MMPBSA.csv
+        mpirun -np 2 gmx_MMPBSA MPI -O -i mmpbsa.in -cs com.tpr -ct com_traj.xtc -ci index.ndx -cg 3 4 -cp topol.top -lm ligand.mol2 -o FINAL_RESULTS_MMPBSA.dat -eo FINAL_RESULTS_MMPBSA.csv
 
 === "gmx_MMPBSA_test"
 
@@ -65,9 +64,8 @@ according to what is better for your system.
 
 &general
 sys_name="Prot-Lig-ST",
-startframe=5,
-endframe=14,
-forcefields="oldff/leaprc.ff99SB,leaprc.gaff"
+startframe=1,
+endframe=10,
 /
 &gb
 igb=5, saltcon=0.150,
@@ -83,8 +81,9 @@ igb=5, saltcon=0.150,
 
 ## Considerations
 In this case, a single trajectory (ST) approximation is followed, which means the receptor and ligand structures and 
-trajectories will be obtained from that of the complex. To do so, an MD Structure+mass(db) file (`com.tpr`), an index file (`index.ndx`),
-a trajectory file (`com_traj.xtc`), and both the receptor and ligand group numbers in the index file (`1 13`) are needed.
+trajectories will be obtained from that of the complex. To do so, an MD Structure+mass(db) file (`com.tpr`), 
+an index file (`index.ndx`),
+a trajectory file (`com_traj.xtc`), and both the receptor and ligand group numbers in the index file (`3 4`) are needed.
 A ligand .mol2 file is also needed for generating the ligand topology. The `mmpbsa.in` input file will contain all the 
 parameters needed for the MM/PB(GB)SA calculation. In this case, 10 frames 
 are going to be used when performing the MM/PB(GB)SA calculation with the igb5 (GB-OBC2) model and a 
