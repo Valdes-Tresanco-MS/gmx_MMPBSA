@@ -208,9 +208,6 @@ class MMPBSA_App(object):
 
         if master:
             self.timer.stop_timer('calc')
-            # Write out the info file now
-            info = InfoFile(self)
-            info.write_info(f'{self.pre}info')
 
     def load_calc_list(self):
         """

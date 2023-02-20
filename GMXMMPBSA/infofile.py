@@ -78,9 +78,10 @@ class InfoFile(object):
 
     DEPRECATED_VARS = {}
 
-    def __init__(self, app):
+    def __init__(self, app, make_copy=False):
         """ Instantiate me """
         self.app = app
+        self.make_copy = make_copy
 
     def write_info(self, name=None):
         """ Writes the info file to the info name """
@@ -144,6 +145,17 @@ class InfoFile(object):
             self.app.FILES = OptionList()
         if name is None:
             name = f'{self.app.pre}info'
+
+        # if rewrite-output
+        if self.make_copy:
+            from pathlib import Path
+            from datetime import datetime
+            import shutil
+            oldfile = Path(name)
+            if oldfile.exists():
+                newfile = Path(f"{name}_{datetime.now().strftime('%m%d%Y%H%M%S')}")
+                shutil.copy(oldfile, newfile)
+
         inputre = re.compile(r'''INPUT\['(\S+)'] = (.*)''')
         inputre_new = re.compile(r'''INPUT\['(\S+)']\['(\S+)'] = (.*)''')
         filesre = re.compile(r'''FILES\.(\S+) = (.*)''')

@@ -101,7 +101,7 @@ def gmxmmpbsa():
         app.run_mmpbsa()
     # If we are rewriting output, load the info and check prmtops
     else:
-        info = InfoFile(app)
+        info = InfoFile(app, True)
         info.read_info()
         app.loadcheck_prmtops()
 
