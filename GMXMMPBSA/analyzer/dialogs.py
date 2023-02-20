@@ -397,8 +397,9 @@ class InitDialog(QDialog):
                     info = pickle.load(of)
                     # raise exception when the result file is old
                     if not info.INPUT.get('general'):
-                        raise ('The current output files were made with an earlier version of gmx_MMPBSA. Please run '
-                               '"gmx_MMPBSA --rewrite-output" to make them compatible with the current version.')
+                        raise TypeError('The current output files were created with an earlier version of gmx_MMPBSA.\n'
+                                        'Please run "gmx_MMPBSA --rewrite-output" to make them compatible with the '
+                                        'current version.')
 
                     basename = info.INPUT['general']['sys_name']
                     if basename in names:
@@ -420,9 +421,10 @@ class InitDialog(QDialog):
                         # raise exception when the result file is old
                         if line.startswith('INPUT') and not checked:
                             if 'general' not in line:
-                                raise ('The current output files were made with an earlier version of gmx_MMPBSA. '
-                                       'Please run "gmx_MMPBSA --rewrite-output" to make them compatible with the '
-                                       'current version.')
+                                raise TypeError('The current output files were created with an earlier version of '
+                                                'gmx_MMPBSA.\n'
+                                                'Please run "gmx_MMPBSA --rewrite-output" to make them compatible '
+                                                'with the current version.')
                             checked = True
 
                         if line.startswith("INPUT['general']['exp_ki']"):
