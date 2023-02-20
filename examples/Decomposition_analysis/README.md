@@ -23,7 +23,7 @@ In this case, `gmx_MMPBSA` requires:
 | Receptor and ligand group      | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |        `integers`       | Receptor and ligand group numbers in the index file |
 | A trajectory file              | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } | `xtc` `pdb` `trr` | Final GROMACS MD trajectory, fitted and with no pbc. |
 | Ligand parameters file         | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |          `mol2`         | The Antechamber output  `mol2` file of ligand parametrization|
-| A topology file (not included) | :octicons-check-circle-fill-16:{ .req_opt .scale_icon_medium }    |           `top`         | GROMACS topology file (The `* .itp` files defined in the topology must be in the same folder |
+| A topology file                | :octicons-check-circle-fill-16:{ .req_opt .scale_icon_medium }    |           `top`         | GROMACS topology file (The `* .itp` files defined in the topology must be in the same folder |
 | A Reference Structure file     | :octicons-check-circle-fill-16:{ .req_optrec .scale_icon_medium } |           `pdb`         | Complex reference structure file (without hydrogens) with the desired assignment of chain ID and residue numbers |
               
 :octicons-check-circle-fill-16:{ .req } -> Must be defined -- :octicons-check-circle-fill-16:{ .req_optrec } -> 
@@ -35,11 +35,11 @@ That being said, once you are in the folder containing all files, the command-li
 
 === "Serial"
 
-        gmx_MMPBSA -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 20 21 -ct com_traj.xtc -o FINAL_RESULTS_MMPBSA.dat -eo FINAL_RESULTS_MMPBSA.csv -do FINAL_DECOMP_MMPBSA.dat -deo FINAL_DECOMP_MMPBSA.csv
+        ggmx_MMPBSA -O -i mmpbsa.in -cs com.tpr -ct com_traj.xtc -ci index.ndx -cg 3 4 -cp topol.top -o FINAL_RESULTS_MMPBSA.dat -eo FINAL_RESULTS_MMPBSA.csv -do FINAL_DECOMP_MMPBSA.dat -deo FINAL_DECOMP_MMPBSA.csv
 
 === "With MPI"
 
-        mpirun -np 2 gmx_MMPBSA MPI -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 20 21 -ct com_traj.xtc -o FINAL_RESULTS_MMPBSA.dat -eo FINAL_RESULTS_MMPBSA.csv -do FINAL_DECOMP_MMPBSA.dat -deo FINAL_DECOMP_MMPBSA.csv
+        mpirun -np 2 gmx_MMPBSA MPI -O -i mmpbsa.in -cs com.tpr -ct com_traj.xtc -ci index.ndx -cg 3 4 -cp topol.top -o FINAL_RESULTS_MMPBSA.dat -eo FINAL_RESULTS_MMPBSA.csv -do FINAL_DECOMP_MMPBSA.dat -deo FINAL_DECOMP_MMPBSA.csv
 
 === "gmx_MMPBSA_test"
 
@@ -66,6 +66,7 @@ igb=5, saltcon=0.150,
 /
 #make sure to include at least one residue from both the receptor
 #and ligand in the print_res mask of the &decomp section.
+#this requirement is automatically fulfilled when using the within keyword.
 #http://archive.ambermd.org/201308/0075.html
 &decomp
 idecomp=2, dec_verbose=3,
@@ -83,7 +84,7 @@ print_res="within 4"
 In this case, a single trajectory (ST) approximation is followed, which means the receptor and ligand structures and 
 trajectories will be obtained from that of the complex. To do so, an MD Structure+mass(db) file (`com.tpr`), an index 
 file (`index.ndx`), a trajectory file (`com_traj.xtc`), and both the receptor and ligand group numbers in the index 
-file (`20 21`) are needed. A ligand .mol2 file is also needed for generating the ligand topology. The `mmpbsa.in` 
+file (`3 4`) are needed. The `mmpbsa.in` 
 input file will contain all the parameters needed for the MM/PB(GB)SA calculation. In this case, 10 frames 
 are going to be used when performing the MM/PB(GB)SA calculation 
 with the igb5 (GB-OBC2) model and a salt concentration = 0.15M.

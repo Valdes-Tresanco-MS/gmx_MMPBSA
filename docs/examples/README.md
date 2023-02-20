@@ -20,7 +20,7 @@ be disappointed! 😀
 * [Protein-DNA](Protein_DNA/README.md)[^1][^2][^3]
 * [Protein-glycan](Protein_glycan/README.md)[^1][^2][^3]
 * [MMPBSA with membrane proteins](Protein_membrane/README.md)[^1][^2]  
-* [Metalloprotein-peptide](Metalloprotein_peptide/README.md)[^1][^2]
+* [Metalloprotein-ligand](Metalloprotein_ligand/README.md)[^1][^2]
 * [Multicomponent system (Protein-DNA-RNA-Ions-Ligand)](Comp_receptor/README.md)[^1][^2][^3]
 * COVID-19 related proteins
     * [Info](COVID-19_related_proteins/README.md)

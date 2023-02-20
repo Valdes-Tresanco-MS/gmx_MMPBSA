@@ -103,7 +103,7 @@ def run_test(parser):
         5: [examples.joinpath('Protein_DNA'), 'Protein-DNA'],
         6: [examples.joinpath('Protein_membrane'), 'Protein-Membrane'],
         7: [examples.joinpath('Protein_glycan'), 'Protein-Glycan'],
-        8: [examples.joinpath('Metalloprotein_peptide'), 'Metalloprotein-Peptide'],
+        8: [examples.joinpath('Metalloprotein_ligand'), 'Metalloprotein-ligand'],
         9: [examples.joinpath('Comp_receptor'), 'Comp_receptor'],
         10: [examples.joinpath('Protein_ligand_CHARMMff'), 'Protein-Ligand (CHARMM force field)'],
         11: [examples.joinpath('Protein_membrane_CHARMMff'), 'Protein-ligand complex in membrane with CHARMMff'],

@@ -1,0 +1,81 @@
+[INFO   ]                           Example                                STATE
+[INFO   ] Protein-Ligand (Single trajectory approximation)               RUNNING
+[ERROR  ] Protein-Ligand (Single trajectory approximation)       [ 1/20]   ERROR
+           Please, check the test log
+           (/home/mario/Downloads/gmx_MMPBSA_test/examples/Protein_ligand/ST/3.log)
+[INFO   ] Protein-Protein                                                RUNNING
+[ERROR  ] Protein-Protein                                        [ 2/20]   ERROR
+           Please, check the test log
+           (/home/mario/Downloads/gmx_MMPBSA_test/examples/Protein_protein/4.log)
+[INFO   ] Protein-DNA                                                    RUNNING
+[ERROR  ] Protein-DNA                                            [ 3/20]   ERROR
+           Please, check the test log
+           (/home/mario/Downloads/gmx_MMPBSA_test/examples/Protein_DNA/5.log)
+[INFO   ] Protein-Membrane                                               RUNNING
+[ERROR  ] Protein-Membrane                                       [ 4/20]   ERROR
+           Please, check the test log
+           (/home/mario/Downloads/gmx_MMPBSA_test/examples/Protein_membrane/6.log)
+[INFO   ] Protein-Glycan                                                 RUNNING
+[ERROR  ] Protein-Glycan                                         [ 5/20]   ERROR
+           Please, check the test log
+           (/home/mario/Downloads/gmx_MMPBSA_test/examples/Protein_glycan/7.log)
+[INFO   ] Metalloprotein-Peptide                                         RUNNING
+[ERROR  ] Metalloprotein-Peptide                                 [ 6/20]   ERROR
+           Please, check the test log
+           (/home/mario/Downloads/gmx_MMPBSA_test/examples/Metalloprotein_peptide/8.log)
+[INFO   ] Comp_receptor                                                  RUNNING
+[ERROR  ] Comp_receptor                                          [ 7/20]   ERROR
+           Please, check the test log
+           (/home/mario/Downloads/gmx_MMPBSA_test/examples/Comp_receptor/9.log)
+[INFO   ] Protein-Ligand (CHARMM force field)                            RUNNING
+[ERROR  ] Protein-Ligand (CHARMM force field)                    [ 8/20]   ERROR
+           Please, check the test log
+           (/home/mario/Downloads/gmx_MMPBSA_test/examples/Protein_ligand_CHARMMff/10.log)
+[INFO   ] Alanine Scanning                                               RUNNING
+[ERROR  ] Alanine Scanning                                       [ 9/20]   ERROR
+           Please, check the test log
+           (/home/mario/Downloads/gmx_MMPBSA_test/examples/Alanine_scanning/12.log)
+[INFO   ] Stability calculation                                          RUNNING
+[ERROR  ] Stability calculation                                  [10/20]   ERROR
+           Please, check the test log
+           (/home/mario/Downloads/gmx_MMPBSA_test/examples/Stability/13.log)
+[INFO   ] Decomposition Analysis                                         RUNNING
+[ERROR  ] Decomposition Analysis                                 [11/20]   ERROR
+           Please, check the test log
+           (/home/mario/Downloads/gmx_MMPBSA_test/examples/Decomposition_analysis/14.log)
+[INFO   ] Interaction Entropy approximation                              RUNNING
+[ERROR  ] Interaction Entropy approximation                      [12/20]   ERROR
+           Please, check the test log
+           (/home/mario/Downloads/gmx_MMPBSA_test/examples/Entropy_calculations/Interaction_Entropy/15.log)
+[INFO   ] Protein-Ligand (Multiple trajectory approximation)             RUNNING
+[ERROR  ] Protein-Ligand (Multiple trajectory approximation)     [13/20]   ERROR
+           Please, check the test log
+           (/home/mario/Downloads/gmx_MMPBSA_test/examples/Protein_ligand/MT/16.log)
+[INFO   ] Entropy calculation using Normal Mode approximation            RUNNING
+[ERROR  ] Entropy calculation using Normal Mode approximation    [14/20]   ERROR
+           Please, check the test log
+           (/home/mario/Downloads/gmx_MMPBSA_test/examples/Entropy_calculations/nmode/17.log)
+[INFO   ] Calculations using 3D-RISM approximation                       RUNNING
+[ERROR  ] Calculations using 3D-RISM approximation               [15/20]   ERROR
+           Please, check the test log
+           (/home/mario/Downloads/gmx_MMPBSA_test/examples/3D-RISM/18.log)
+[INFO   ] C2 Entropy approximation                                       RUNNING
+[ERROR  ] C2 Entropy approximation                               [16/20]   ERROR
+           Please, check the test log
+           (/home/mario/Downloads/gmx_MMPBSA_test/examples/Entropy_calculations/C2_Entropy/19.log)
+[INFO   ] LPB Calculation                                                RUNNING
+[ERROR  ] LPB Calculation                                        [17/20]   ERROR
+           Please, check the test log
+           (/home/mario/Downloads/gmx_MMPBSA_test/examples/Linear_PB_solver/20.log)
+[INFO   ] NLPB Calculation                                               RUNNING
+[ERROR  ] NLPB Calculation                                       [18/20]   ERROR
+           Please, check the test log
+           (/home/mario/Downloads/gmx_MMPBSA_test/examples/NonLinear_PB_solver/21.log)
+[INFO   ] Protein-Ligand_LPH (CHARMM force field)                        RUNNING
+[ERROR  ] Protein-Ligand_LPH (CHARMM force field)                [19/20]   ERROR
+           Please, check the test log
+           (/home/mario/Downloads/gmx_MMPBSA_test/examples/Protein_ligand_LPH_atoms_CHARMMff/22.log)
+[INFO   ] QM/MMGBSA Calculation                                          RUNNING
+[ERROR  ] QM/MMGBSA Calculation                                  [20/20]   ERROR
+           Please, check the test log
+           (/home/mario/Downloads/gmx_MMPBSA_test/examples/QM_MMGBSA/23.log)
