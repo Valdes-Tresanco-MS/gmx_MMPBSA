@@ -30,8 +30,6 @@ from parmed.amber import LoadParm, AmberMask
 from GMXMMPBSA.exceptions import PrmtopError, SelectionError
 
 
-# +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-
 class Residue(object):
     """ Atom class in MM/PBSA, complex/receptor/ligand context """
 
@@ -60,8 +58,6 @@ class Residue(object):
         """ Deselect this atom """
         self.selected = False
 
-
-# +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 class MMPBSA_System(object):
     """
@@ -870,8 +866,6 @@ class MMPBSA_System(object):
                                   (i + 1))
 
 
-# +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-
 def range_string(num1, num2):
     """ This function returns a single number if they're equal, or a range if
        they're not
@@ -881,5 +875,3 @@ def range_string(num1, num2):
         return str(num1)
     else:
         return '%d-%d' % (num1, num2)
-
-# +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+

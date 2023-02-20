@@ -119,7 +119,8 @@ def run_test(parser):
         20: [examples.joinpath('Linear_PB_solver'), 'LPB Calculation'],
         21: [examples.joinpath('NonLinear_PB_solver'), 'NLPB Calculation'],
         22: [examples.joinpath('Protein_ligand_LPH_atoms_CHARMMff'), 'Protein-Ligand_LPH (CHARMM force field)'],
-        23: [examples.joinpath('QM_MMGBSA'), 'QM/MMGBSA Calculation']
+        23: [examples.joinpath('QM_MMGBSA'), 'QM/MMGBSA Calculation'],
+        24: [examples.joinpath('GBNSR6'), 'GBNSR6 Calculation']
     }
 
     if parser.test == [0]:
@@ -129,7 +130,7 @@ def run_test(parser):
     elif parser.test == [2]:
         key_list = [3, 4, 5, 7, 9, 12, 13, 14, 15]
     elif parser.test == [101]:
-        key_list = [3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23]
+        key_list = [3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24]
     else:
         key_list = parser.test
 

@@ -116,7 +116,9 @@ def _setup_data(data: pd.DataFrame, level=0, iec2=False, name=None, index=None,
             line_plot_data.to_parquet(parquet_file % 'lp', compression=None)
             cont['line_plot_data'] = [parquet_file % 'lp', options, change]
     elif level == 1:
-        options = ({'iec2': True} if iec2 else {}) | dict(groups=_itemdata_properties(data))
+        options = ({'iec2': True} if iec2 else {}) | {
+            'groups': _itemdata_properties(data)
+        }
         bar_plot_data = data[-3:].reindex(columns=index)
         if inmemory:
             cont['bar_plot_data'] = [bar_plot_data, options, change]
@@ -443,9 +445,9 @@ class MMPBSA_API():
                                           self.data[x])
         entropy = {}
         entropy_df = {}
-        recalc = bool((startframe and startframe != self.app_namespace.INPUT['startframe'] or
-                       endframe and endframe != self.app_namespace.INPUT['endframe'] or
-                       interval and interval != self.app_namespace.INPUT['interval']))
+        recalc = bool((startframe and startframe != self.app_namespace.INPUT['general']['startframe'] or
+                       endframe and endframe != self.app_namespace.INPUT['general']['endframe'] or
+                       interval and interval != self.app_namespace.INPUT['general']['interval']))
 
         for et in temp_print_keys:
             if et not in self.data and verbose:
@@ -454,10 +456,16 @@ class MMPBSA_API():
                 d = self._recalc_iec2('c2', et, startframe, endframe, interval)
             else:
                 d = self.data[et]['c2']
-            entropy[et] = {'c2': {x: None for x in ['c2', 'sigma']}}
-            entropy_df[et] = {'c2': pd.DataFrame({'c2': [d['c2data'], d['c2_std'], d['c2_std']], 'sigma': [d['sigma'], 0, 0]},
-                                                 index=['Average', 'SD', 'SEM'])}
 
+            entropy[et] = {'c2': {}}
+            entropy_df[et] = {'c2': {}}
+
+            for emodel in d:
+                entropy[et]['c2'][emodel] = {x: None for x in ['c2', 'sigma']}
+                entropy_df[et]['c2'][emodel] = pd.DataFrame({'c2': [d[emodel]['c2data'], d[emodel]['c2_std'],
+                                                                    d[emodel]['c2_std']],
+                                                             'sigma': [d[emodel]['sigma'], 0, 0]},
+                                                            index=['Average', 'SD', 'SEM'])
         return {'map': emapping(entropy), 'data': entropy_df, 'summary': entropy_df}
 
     def get_ie_entropy(self, ietype: tuple = None, startframe=None, endframe=None, interval=None,
@@ -467,9 +475,9 @@ class MMPBSA_API():
         entropy = {}
         summ_df = {}
         entropy_df = {}
-        recalc = bool((startframe and startframe != self.app_namespace.INPUT['startframe'] or
-                       endframe and endframe != self.app_namespace.INPUT['endframe'] or
-                       interval and interval != self.app_namespace.INPUT['interval']))
+        recalc = bool((startframe and startframe != self.app_namespace.INPUT['general']['startframe'] or
+                       endframe and endframe != self.app_namespace.INPUT['general']['endframe'] or
+                       interval and interval != self.app_namespace.INPUT['general']['interval']))
 
         s, e, index = self._get_frames_index('energy', startframe, endframe, interval)
         for et in temp_print_keys:
@@ -481,19 +489,26 @@ class MMPBSA_API():
                 d = self._recalc_iec2('ie', et, startframe, endframe, interval, ie_segment)
             else:
                 d = self.data[et]['ie']
-            ieframes = math.ceil(len(d['data']) * ie_segment / 100)
-            entropy[et] = {'ie': {x: None for x in ['AccIntEnergy', 'ie', 'sigma']}}
-            df = pd.DataFrame({'AccIntEnergy': d['data']}, index=index)
-            df1 = pd.DataFrame({'ie': d['data'][-ieframes:]}, index=index[-ieframes:])
-            df2 = pd.concat([df, df1], axis=1)
-            df3 = pd.DataFrame({'ie': [float(d['iedata'].mean()),
-                                       float(d['iedata'].std()),
-                                       float(d['iedata'].std() / math.sqrt(ieframes))],
-                                'sigma': [d['sigma'], 0, 0]}, index=['Average', 'SD', 'SEM'])
-            summ_df[et] = {'ie': df3}
-            df4 = pd.concat([df2, df3])
-            df4.index.name = df.index.name
-            entropy_df[et] = {'ie': df4}
+
+            entropy[et] = {'ie': {}}
+            summ_df[et] = {'ie': {}}
+            entropy_df[et] = {'ie': {}}
+
+            for emodel in d:
+                ieframes = math.ceil(len(d[emodel]['data']) * ie_segment / 100)
+                entropy[et]['ie'][emodel] = {x: None for x in ['AccIntEnergy', 'ie', 'sigma']}
+
+                df = pd.DataFrame({'AccIntEnergy': d[emodel]['data']}, index=index)
+                df1 = pd.DataFrame({'ie': d[emodel]['data'][-ieframes:]}, index=index[-ieframes:])
+                df2 = pd.concat([df, df1], axis=1)
+                df3 = pd.DataFrame({'ie': [float(d[emodel]['iedata'].mean()),
+                                           float(d[emodel]['iedata'].std()),
+                                           float(d[emodel]['iedata'].std() / math.sqrt(ieframes))],
+                                    'sigma': [d[emodel]['sigma'], 0, 0]}, index=['Average', 'SD', 'SEM'])
+                summ_df[et]['ie'][emodel] = df3
+                df4 = pd.concat([df2, df3])
+                df4.index.name = df.index.name
+                entropy_df[et]['ie'][emodel] = df4
         return {'map': emapping(entropy), 'data': entropy_df, 'summary': summ_df}
 
     @staticmethod
@@ -537,7 +552,7 @@ class MMPBSA_API():
 
     def _recalc_iec2(self, method, etype, startframe=None, endframe=None, interval=None, ie_segment=25):
         allowed_met = ['gb', 'pb', 'rism std', 'rism gf', 'rism pcplus', 'gbnsr6']
-        result = None
+        result = {}
         start = list(self.frames.keys()).index(startframe) if startframe else startframe
         end = list(self.frames.keys()).index(endframe) + 1 if endframe else endframe
         for key in allowed_met:
@@ -545,16 +560,20 @@ class MMPBSA_API():
                 edata = self.data[etype][key]['delta']['GGAS'][start:end:interval]
                 if method == 'ie':
                     ie = InteractionEntropyCalc(edata,
-                                                dict(temperature=self.app_namespace.INPUT['temperature'],
-                                                     startframe=startframe, endframe=endframe, interval=interval),
-                                                iesegment=ie_segment)
-                    result = IEout({})
-                    result.parse_from_dict(dict(data=ie.data, sigma=ie.ie_std, iedata=ie.iedata))
+                                                {'general':
+                                                    dict(
+                                                        temperature=self.app_namespace.INPUT['general']['temperature'],
+                                                        startframe=startframe, endframe=endframe, interval=interval
+                                                    )},
+                                                key, iesegment=ie_segment)
+                    result[key] = IEout({}, key)
+                    result[key].parse_from_dict(dict(data=ie.data, sigma=ie.ie_std, iedata=ie.iedata))
                 else:
-                    c2 = C2EntropyCalc(edata, dict(temperature=self.app_namespace.INPUT['temperature']))
-                    result = C2out()
-                    result.parse_from_dict(dict(c2data=c2.c2data, c2_std=c2.c2_std, sigma=c2.ie_std, c2_ci=c2.c2_ci))
-                break
+                    c2 = C2EntropyCalc(edata, {'general':
+                                                    dict(temperature=self.app_namespace.INPUT['general'][
+                                                        'temperature'])}, key)
+                    result[key] = C2out(key)
+                    result[key].parse_from_dict(dict(c2data=c2.c2data, c2_std=c2.c2_std, sigma=c2.ie_std, c2_ci=c2.c2_ci))
         return result
 
     def get_binding(self, energy_summary=None, entropy_summary=None, verbose=True):
@@ -580,9 +599,9 @@ class MMPBSA_API():
                         for ent, etv in entropy_summary[et].items():
                             b_map[et][em].append(ent)
                             if ent == 'ie' and not self.app_namespace.FILES.stability:
-                                entdata = etv['ie']
+                                entdata = etv[em]['ie']
                             elif ent == 'c2' and not self.app_namespace.FILES.stability:
-                                entdata = etv['c2']
+                                entdata = etv[em]['c2']
                             else:
                                 entdata = etv[mol]['TOTAL']
                             entdata.name = '-TΔS'
@@ -657,7 +676,7 @@ class MMPBSA_API():
                                             else:
                                                 temp_energy = {}
 
-                                                if self.app_namespace.INPUT['idecomp'] in [1, 2]:
+                                                if self.app_namespace.INPUT['decomp']['idecomp'] in [1, 2]:
                                                     temp_emap = []
                                                     temp_terms_keys = term or tuple(self.data[et][m][m1][c][r1].keys())
 
@@ -765,13 +784,15 @@ class MMPBSA_API():
                                                                 level=0, memory=memory_args),
                                               (level, level1, level2, level3), 'entropy'] for level3 in value2)
                         elif level1 == 'c2':
-                            TASKs.append([_setup_data, dict(data=entropy[level][level1], level=1, iec2=True,
+                            for level2, value2 in value1.items():
+                                TASKs.append([_setup_data, dict(data=entropy[level][level1][level2], level=1, iec2=True,
                                                             memory=memory_args),
-                                          (level, level1), 'entropy'])
+                                          (level, level1, level2), 'entropy'])
                         elif level1 == 'ie':
-                            TASKs.append([_setup_data, dict(data=entropy[level][level1], level=1.5,
-                                                            memory=memory_args),
-                                          (level, level1), 'entropy'])
+                            for level2, value2 in value1.items():
+                                TASKs.append([_setup_data, dict(data=entropy[level][level1][level2], level=1.5,
+                                                                memory=memory_args),
+                                              (level, level1, level2), 'entropy'])
 
         if energy_options and entropy_options:
             bind_map, binding, bcorr = self.get_binding(energy_summary, entropy_summary, verbose=verbose).values()
@@ -780,7 +801,7 @@ class MMPBSA_API():
                     for m, v1 in v.items():
                         if ecorr:
                             corr[et][m] = pd.concat([ecorr[et][m], v1], axis=1)
-                    
+
                 d['binding'] = {'map': bind_map, 'keys': {}, 'summary': binding}
                 memory_args['inmemory'] = performance_options.get('energy_memory')
                 for level, value in bind_map.items():
@@ -797,13 +818,13 @@ class MMPBSA_API():
                     for level1, value1 in value.items():
                         for level2, value2 in value1.items():
                             for level3, value3 in value2.items():
-                                item_lvl = 2 if self.app_namespace.INPUT['idecomp'] in [1, 2] else 3
+                                item_lvl = 2 if self.app_namespace.INPUT['decomp']['idecomp'] in [1, 2] else 3
                                 index = list(value3.keys())
                                 for level4, value4 in value3.items():
                                     if item_lvl == 3 and len(index) == 1:
                                         index.append(list(value4.keys()))
-                                    item_lvl2 = 1 if self.app_namespace.INPUT['idecomp'] in [1, 2] else 2
-                                    if self.app_namespace.INPUT['idecomp'] in [1, 2]:
+                                    item_lvl2 = 1 if self.app_namespace.INPUT['decomp']['idecomp'] in [1, 2] else 2
+                                    if self.app_namespace.INPUT['decomp']['idecomp'] in [1, 2]:
                                         TASKs.append(
                                             [_setup_data, dict(data=decomp[level][level1][level2][level3][level4],
                                                                level=item_lvl2, name=level4, index=value4,
@@ -878,18 +899,20 @@ class MMPBSA_API():
             com_pdb = ''.join(open(app.FILES.complex_fixed).readlines())
             input_file = app.input_file_text
             output_file = ''.join(open(app.FILES.output_file).readlines())
-            decomp_output_file = ''.join(open(app.FILES.decompout).readlines()) if app.INPUT['decomprun'] else None
+            decomp_output_file = ''.join(open(app.FILES.decompout).readlines()) if app.INPUT['decomp']['decomprun'] \
+                else None
             size = app.mpi_size
         else:
             com_pdb = app.COM_PDB
             input_file = app.input_file
             output_file = app.output_file
-            decomp_output_file = app.decomp_output_file if app.INPUT['decomprun'] else None
+            decomp_output_file = app.decomp_output_file if app.INPUT['decomp']['decomprun'] else None
             size = app.size
             # write the pdb file
             with open(app.FILES.complex_fixed, 'w') as opdb:
                 opdb.write(app.COM_PDB)
-            app.resl = mask2list(app.FILES.complex_fixed, app.INPUT['receptor_mask'], app.INPUT['ligand_mask'])
+            app.resl = mask2list(app.FILES.complex_fixed, app.INPUT['general']['receptor_mask'],
+                                 app.INPUT['general']['ligand_mask'])
 
         INFO = {'COM_PDB': com_pdb,
                 'input_file': input_file,
@@ -912,26 +935,27 @@ class MMPBSA_API():
         numframes = self.app_namespace.INFO['numframes']
         nmnumframes = self.app_namespace.INFO['numframes_nmode']
 
-        frames_list = list(range(INPUT['startframe'],
-                                 INPUT['startframe'] + numframes * INPUT['interval'],
-                                 INPUT['interval']))
+        frames_list = list(range(INPUT['general']['startframe'],
+                                 INPUT['general']['startframe'] + numframes * INPUT['general']['interval'],
+                                 INPUT['general']['interval']))
         self.frames_list = frames_list
-        INPUT['endframe'] = frames_list[-1]
+        INPUT['general']['endframe'] = frames_list[-1]
         time_step_list = list(range(self.starttime,
-                                    self.starttime + len(frames_list) * ts * INPUT['interval'],
-                                    ts * INPUT['interval']))
+                                    self.starttime + len(frames_list) * ts * INPUT['general']['interval'],
+                                    ts * INPUT['general']['interval']))
         self.frames = dict(zip(frames_list, time_step_list))
 
-        if INPUT['nmoderun']:
-            nmframes_list = list(range(INPUT['nmstartframe'],
-                                       INPUT['nmstartframe'] + nmnumframes * INPUT['nminterval'],
-                                       INPUT['interval']))
-            INPUT['nmendframe'] = nmframes_list[-1]
+        if INPUT['nmode']['nmoderun']:
+            nmframes_list = list(range(INPUT['nmode']['nmstartframe'],
+                                       INPUT['nmode']['nmstartframe'] + nmnumframes * INPUT['nmode']['nminterval'],
+                                       INPUT['nmode']['nminterval']))
+            INPUT['nmode']['nmendframe'] = nmframes_list[-1]
 
-            nm_start = (nmframes_list[0] - frames_list[0]) * INPUT['interval']
+            nm_start = (nmframes_list[0] - frames_list[0]) * INPUT['general']['interval']
             nmtime_step_list = list(range(self.starttime + nm_start,
-                                          self.starttime + nm_start + len(nmframes_list) * ts * INPUT['nminterval'],
-                                          ts * INPUT['nminterval']))
+                                          self.starttime + nm_start + len(nmframes_list) * ts * INPUT['nmode'][
+                                              'nminterval'],
+                                          ts * INPUT['nmode']['nminterval']))
             self.nmframes_list = nmframes_list
             self.nmframes = dict(zip(nmframes_list, nmtime_step_list))
 
@@ -950,7 +974,7 @@ class MMPBSA_API():
         numframes_nmode = self.app_namespace.INFO['numframes_nmode']
         # See if we are doing stability
         self.stability = self.app_namespace.FILES.stability
-        self.mutant_only = self.app_namespace.INPUT['mutant_only']
+        self.mutant_only = self.app_namespace.INPUT['ala']['mutant_only']
         self.traj_protocol = ('MTP' if self.app_namespace.FILES.receptor_trajs or
                                        self.app_namespace.FILES.ligand_trajs else 'STP')
 

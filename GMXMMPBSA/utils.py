@@ -147,7 +147,7 @@ class EnergyVector(np.ndarray):
 
     def abs_gt(self, val):
         """ If any element's absolute value is greater than a # """
-        return np.any(np.greater(self, val))
+        return np.any(np.greater(np.abs(self), val))
 
 
 def get_std(val1, val2):
@@ -192,10 +192,10 @@ def calc_sum(vector1, vector2, mut=False) -> (float, float):
 
 def create_input_args(args: list):
     if not args or 'all' in args:
-        return 'general', 'gb', 'pb', 'ala', 'nmode', 'decomp', 'rism'
-    elif 'gb' not in args and 'pb' not in args and 'rism' not in args and 'nmode' not in 'args':
+        return 'general', 'gb', 'gbnsr6', 'pb', 'ala', 'nmode', 'decomp', 'rism'
+    elif 'gb' not in args and 'pb' not in args and 'rism' not in args and 'nmode' not in args and 'gbnsr6' not in args:
         GMXMMPBSA_ERROR('You did not specify any type of calculation!')
-    elif 'gb' not in args and 'pb' not in args and 'decomp' in args:
+    elif 'gb' not in args and 'pb' not in args and 'decomp' in args: # FIXME: gbnsr6?
         logging.warning('&decomp calculation is only compatible with &gb and &pb calculations. Will be ignored!')
         args.remove('decomp')
         return ['general'] + args
@@ -704,7 +704,10 @@ def remove(flag, fnpre='_GMXMMPBSA_'):
                     fil == 'COMPACT_MMXSA_RESULTS.mmxsa' or
                     fil in other_files or
                     fil in result_files):
-                os.remove(fil)
+                if Path(fil).is_dir():
+                    shutil.rmtree(fil)
+                else:
+                    os.remove(fil)
 
     elif flag == 0:  # remove all temporary files
         for fil in allfiles:
@@ -722,11 +725,11 @@ def find_progs(INPUT, mpi_size=0):
                   'tleap': True,
                   'parmchk2': True,
                   'sander': True,
-                  'sander.APBS': INPUT['sander_apbs'] == 1,
-                  'mmpbsa_py_nabnmode': INPUT['nmoderun'],
-                  # 'rism3d.snglpnt': INPUT['rismrun']
-                  'elsize': INPUT['alpb']
-
+                  'sander.APBS': INPUT['pb']['sander_apbs'] == 1,
+                  'mmpbsa_py_nabnmode': INPUT['nmode']['nmoderun'],
+                  # 'rism3d.snglpnt': INPUT['rism']['rismrun']
+                  'elsize': INPUT['gb']['alpb'],
+                  'gbnsr6': INPUT['gbnsr6']['gbnsr6run']
                   }
     gro_exe = {
         'gmx5': [
@@ -743,10 +746,10 @@ def find_progs(INPUT, mpi_size=0):
         my_progs[prog] = shutil.which(prog, path=os.environ['PATH'])
         if needed:
             if not my_progs[prog]:
-                GMXMMPBSA_ERROR('Could not find necessary program [%s]' % prog)
-            logging.info('%s found! Using %s' % (prog, str(my_progs[prog])))
+                GMXMMPBSA_ERROR(f'Could not find necessary program [{prog}]')
+            logging.info(f'{prog} found! Using {str(my_progs[prog])}')
 
-    search_parth = INPUT['gmx_path'] or os.environ['PATH']
+    search_parth = INPUT['general']['gmx_path'] or os.environ['PATH']
     g5 = False
     for gv, g_exes in gro_exe.items():
         if gv == 'gmx5':
@@ -762,7 +765,7 @@ def find_progs(INPUT, mpi_size=0):
                                         'due to incompatibility between the mpi libraries used to compile GROMACS and '
                                         'mpi4py respectively. You can still use gmx_mpi or gmx_mpi_d to run gmx_MMPBSA '
                                         'serial. For parallel calculations use gmx instead')
-                    logging.info('%s found! Using %s' % (prog, exe))
+                    logging.info(f'{prog} found! Using {exe}')
                     break
             if g5:
                 break
@@ -771,7 +774,7 @@ def find_progs(INPUT, mpi_size=0):
             for prog in g_exes:
                 if exe := shutil.which(prog, path=search_parth):
                     my_progs[prog] = [exe]
-                    logging.info('%s found! Using %s' % (prog, str(my_progs[prog])))
+                    logging.info(f'{prog} found! Using {str(my_progs[prog])}')
 
     if 'make_ndx' not in my_progs or 'editconf' not in my_progs or 'trjconv' not in my_progs:
         GMXMMPBSA_ERROR('Could not find necessary program [ GROMACS ]')
@@ -818,3 +821,94 @@ class Unbuffered(object):
 
     def __getattr__(self, attr):
         return getattr(self._handle, attr)
+
+def mdout2json(ca):
+    mdout_file = Path(ca[ca.index('-o') + 1])
+    output_file = mdout_file.parent.joinpath(mdout_file.stem + '.json')
+    topology = ca[ca.index('-p') + 1]
+    t = parmed.load_file(topology)
+    res_list = {residue.idx + 1: [atm.idx + 1 for atm in residue.atoms] for residue in t.residues}
+    pw = {x: {y: {'TDC': 0.0, 'BDC': 0.0, 'SDC': 0.0} for y in res_list} for x in res_list}
+
+    file_assignments = []
+    inputfile = []
+
+    decomp = False
+    results_section = []
+
+    with mdout_file.open() as mmfile:
+        current_section = None
+        while line := mmfile.readline():
+            if 'File Assignments:' in line:
+                current_section = file_assignments
+                line = mmfile.readline()
+            elif line.startswith(' Here is the input file:'):
+                current_section = inputfile
+                line = mmfile.readline()
+            if line.startswith('----------------------------------------------------------------------------'):
+                line = mmfile.readline()
+                if '.  RESULTS' in line:
+                    current_section = results_section
+                    mmfile.readline()
+                    line = mmfile.readline()
+                else:
+                    current_section = None
+            if current_section is not None:
+                if line.startswith('DGij'):
+                    pw = get_gbnsr6_out(line, pw, t)
+                    decomp = True
+                else:
+                    current_section.append(line)
+        energy = _get_energy_gbnsr6(results_section)
+        results = {'energy': energy}
+        if decomp:
+            results['decomp'] = pw
+    with open(output_file, "w") as outfile:
+        json.dump({'file_assignments': file_assignments, 'inputfile': inputfile, 'results_section': results}, outfile)
+    mdout_file.unlink(missing_ok=True)
+
+
+def get_gbnsr6_out(dgij, pw, t):
+    bb = ['CA', 'C', 'O', 'N', 'H', 'OXT', 'H1', 'H2', 'H3']
+    kw, at1, at2, energy = dgij.strip('\n').split()
+    res_idx = t.atoms[int(at1) - 1].residue.idx + 1
+    res2_idx = t.atoms[int(at2) - 1].residue.idx + 1
+    if t.atoms[int(at1) - 1].name in bb:
+        pw[res_idx][res2_idx]['BDC'] += float(energy)
+    else:
+        pw[res_idx][res2_idx]['SDC'] += float(energy)
+    pw[res_idx][res2_idx]['TDC'] += float(energy)
+
+    if res_idx != res2_idx:
+        if t.atoms[int(at2) - 1].name in bb:
+            pw[res2_idx][res_idx]['BDC'] += float(energy)
+        else:
+            pw[res2_idx][res_idx]['SDC'] += float(energy)
+        pw[res2_idx][res_idx]['TDC'] += float(energy)
+    return pw
+
+def _get_energy_gbnsr6(results_section):
+    energy = {}
+
+    store = False
+    c = 0
+    while True:
+        line = results_section[c]
+        if "FINAL RESULTS" in line:
+            store = True
+        if store and line.startswith(' 1-4 NB'):
+            words = line.split()
+            energy['1-4 EEL'] = float(words[7])
+            c += 1
+            line = results_section[c]
+            words = line.split()
+            energy['EEL'] = float(words[2])
+            energy['EGB'] = float(words[5])
+            c += 1
+            line = results_section[c]
+            words = line.split()
+            energy[words[0].strip()] = float(words[2])
+        c += 1
+        if c == len(results_section):
+            break
+    return energy

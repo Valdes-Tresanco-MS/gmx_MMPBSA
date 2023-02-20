@@ -55,6 +55,7 @@ decomposition; PB, Interaction Entropy, and Per-residue decomposition) in the sa
 * [Multiple Trajectory Protocol](Protein_ligand/MT/README.md)[^1]
 * Binding free energy calculations
     * [Binding free energy calculation with GB](Protein_ligand/ST/README.md)
+    * [Binding free energy calculation with GBNSR6](GBNSR6/README.md)
     * [Binding free energy calculation with linear PB (LPBE)](Linear_PB_solver/README.md)
     * [Binding free energy calculation with NonLinear PB (non-LPBE)](NonLinear_PB_solver/README.md)  
     * [Binding free energy calculation with 3D-RISM model](3D-RISM/README.md)[^1]

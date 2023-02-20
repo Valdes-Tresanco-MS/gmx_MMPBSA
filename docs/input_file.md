@@ -7,19 +7,22 @@ title: The input file
 
 ## Description
 
-`gmx_MMPBSA` input file contains all the specifications for the MM/PB(GB)SA calculations. The input file is 
-syntactically similar to other programs in Amber, although we incorporated a new format more similar to the one used
-on GROMACS *.mdp files. The input file contains sections called `namelist` where the variables are defined for each 
+`gmx_MMPBSA` input file contains all the specifications for the calculations. The input file is syntactically similar 
+to other programs in Amber, although we incorporated a new format more similar to the one used on GROMACS *.mdp 
+files (see bleow). The input file contains sections called `namelist` where the variables are defined for each 
 calculation. The allowed namelists are:
 
 - [`&general`](input_file.md#general-namelist-variables): contains variables that apply to all aspects of the 
   calculation or parameters required for building AMBER topologies from GROMACS files.
-- [`&gb`](input_file.md#gb-namelist-variables): unique variables to Generalized Born (GB) calculations
-- [`&pb`](input_file.md#pb-namelist-variables): unique variables to Poisson Boltzmann (PB) calculations
-- [`&rism`](input_file.md#rism-namelist-variables): unique variables to 3D-RISM calculations
-- [`&alanine_scanning`](input_file.md#alanine_scanning-namelist-variables): unique variables to alanine scanning calculations
-- [`&decomp`](input_file.md#decomp-namelist-variables): unique variables to the decomposition scheme
-- [`&nmode`](input_file.md#nmode-namelist-variables): unique variables to the normal mode (NMODE) calculations used to approximate vibrational entropies
+- [`&gb`](input_file.md#gb-namelist-variables): unique variables to Generalized Born (GB) calculations.
+- [`&gbnsr6`](input_file.md#gbnsr6-namelist-variables): unique variables to GBNSR6 calculations.
+- [`&pb`](input_file.md#pb-namelist-variables): unique variables to Poisson Boltzmann (PB) calculations.
+- [`&rism`](input_file.md#rism-namelist-variables): unique variables to 3D-RISM calculations.
+- [`&alanine_scanning`](input_file.md#alanine_scanning-namelist-variables): unique variables to alanine scanning 
+  calculations.
+- [`&decomp`](input_file.md#decomp-namelist-variables): unique variables to the decomposition scheme.
+- [`&nmode`](input_file.md#nmode-namelist-variables): unique variables to the normal mode (NMODE) calculations used to 
+  approximate vibrational entropies.
 
   [1]: https://pubs.acs.org/doi/10.1021/ct300418h
 
@@ -29,7 +32,7 @@ The input file can be created using `gmx_MMPBSA` by selecting the calculations y
 ``` title="Command-line"
 gmx_MMPBSA --create_input args
 
-where `args` can be:  gb, pb, rism, ala, decomp, nmode, all
+where `args` can be:  gb, gbnsr6, pb, rism, ala, decomp, nmode, all
 ```
 
 Example:
@@ -56,13 +59,14 @@ Example:
 !!! Danger 
     Note that several variables must be explicitly defined in the input file
 
-_New in v1.5.0_
+_Implemented in v1.5.0_
 
 ## Format
-All the input variables are described below according to their respective namelists. Integers and floating point 
+All the input variables are described below according to their respective namelists. Descriptions are taken from 
+original sources and modified accordingly when needed. Integers and floating point 
 variables should be typed as-is while strings should be put in either single- or double-quotes. All variables should be 
 set with `variable = value` and separated by commas is they appear in the same line. If the variables appear in different 
-lines, the comma is no longer needed. See several [examples](#sample-input-files) below. As you will see, several 
+lines, the comma is no longer needed. See several [examples](#sample-input-files) are shown below. As you will see, several 
 calculations can be performed in the same run (_i.e._ `&gb` and `&pb`; `&gb` and `&alanine_scanning`; `&pb` and
 `&decomp`; etc). As we have mentioned, the input file can be generated using the `create_input` option of `gmx_MMPBSA`. 
 This style, while retaining the same Amber format (derived from Fortran), is aesthetically more familiar to the GROMACS
@@ -115,14 +119,14 @@ combined. See the formats below:
 
 `sys_name` (Default = None)
 :   Define the System Name. This is useful when trying to analyze several systems at the same time or calculating 
-the correlation between the predicted and the experimental energies. If the name is not defined, one will be 
-assigned when loading it in `gmx_MMPBSA_ana` according to the order in this is done.
+the correlation between the predicted and the experimental energies. If the name is not defined, one will be assigned 
+when loading the system in `gmx_MMPBSA_ana` on a first-come, first-served basis.
 
     !!! tip 
         The definition of the system name is entirely optional, however it can provide a better clarity during 
         the results analysis. All files associated with this system will be saved using its name.
 
-    _New in v1.4.0_  
+    _Implemented in v1.4.0_  
 
 `startframe` (Default = 1)
 :   The frame from which to begin extracting snapshots from the full, concatenated trajectory comprised of
@@ -133,7 +137,7 @@ every trajectory file placed on the command-line. This is always the first frame
 trajectory file supplied on the command-line.
 
 `interval` (Default = 1)
-:     The offset from which to choose frames from each trajectory file. For example, an interval of 2 will pull
+:   The offset from which to choose frames from each trajectory file. For example, an interval of 2 will pull
 every 2nd frame beginning at startframe and ending less than or equal to endframe.
 
 #### **Parameter options**
@@ -141,8 +145,8 @@ every 2nd frame beginning at startframe and ending less than or equal to endfram
 `forcefields` (Default = "oldff/leaprc.ff99SB,leaprc.gaff")
 :   Comma-separated list of force fields used to build Amber topologies. This variable is more flexible than the 
 previous ones (`protein_forcefield` and `ligand_forcefield`). The goal of this variable is to provide convenient 
-support for complex systems like this one: [5O8F](https://www.rcsb.org/3d-view/5o8f). It supports all force fields 
-tested in previous `protein_forcefield` and `ligand_forcefield` variables.
+support for complex systems with several components. It supports all force fields tested in previous 
+`protein_forcefield` and `ligand_forcefield` variables.
     
     !!! tip Keep in mind
         * The value of this variable depends on the force field you used for your system in GROMACS
@@ -223,7 +227,7 @@ tested in previous `protein_forcefield` and `ligand_forcefield` variables.
     !!! tip Keep in mind
         `*` We added the gmxMMPBSA data to the tleap path. This way, we keep `gmx_MMPBSA` data separated from Amber's.
 
-    _New in v1.4.1_
+    _Implemented in v1.4.1_
 
     _Modified in v1.4.3: Internal change_
 
@@ -369,7 +373,7 @@ tested in previous `protein_forcefield` and `ligand_forcefield` variables.
 `temperature` (Default = 298.15)  
 :   Specify the temperature (in K) used in the calculations.
    
-    _New in v1.4.0: Replace `entropy_temp`_
+    _Implemented in v1.4.0: Replace `entropy_temp`_
 
     _Reworked in v1.5.0: Temperature value used not only for entropy but all calculations
 
@@ -386,9 +390,9 @@ tested in previous `protein_forcefield` and `ligand_forcefield` variables.
         complex
         * Check this [thread](http://archive.ambermd.org/201207/0319.html) for more info on QH analysis
 
-    _New in v1.4.2: Equivalent to (Removed) `entropy = 1`_
+    _Implemented in v1.4.2: Equivalent to (Removed) `entropy = 1`_
 
-`interaction_entropy` (default = 0) 
+`interaction_entropy` (default = 0)
 :    It specifies whether to use the [Interaction Entropy (IE)][3] approximation.
      
      * 0: Don’t
@@ -410,9 +414,9 @@ tested in previous `protein_forcefield` and `ligand_forcefield` variables.
         - The Interaction Entropy results may vary depending on the system flexibility or whether constraints were used 
         or not in the MD simulation. 
 
-        Please, consult this [paper][10] for further details.
+        Please, check this [paper][10] for further details.
 
-    _New in v1.4.2: Equivalent to (Removed) `entropy = 2`_
+    _Implemented in v1.4.2: Equivalent to (Removed) `entropy = 2`_
 
     _Updated in v1.5.0: Now reports the `σIE`. Chart improved in `gmx_MMPBSA_ana`_
 
@@ -425,7 +429,7 @@ tested in previous `protein_forcefield` and `ligand_forcefield` variables.
 Interaction Entropy, _e.g._: `ie_segment = 25` means that the last quartile of the total number of frames
 (`(endframe-startframe)/interval`) will be used to calculate the average Interaction Entropy.
 
-    _New in v1.4.2_
+    _Implemented in v1.4.2_
 
 `c2_entropy` (default = 0) 
 :    It specifies whether to use the [C2 Entropy][11] approximation.
@@ -447,9 +451,9 @@ Interaction Entropy, _e.g._: `ie_segment = 25` means that the last quartile of t
         - The C2 Entropy results may vary depending on the system flexibility or whether constraints were used 
         or not in the MD simulation.
 
-        Please, consult this [paper][10] for further details.
+        Please, check this [paper][10] for further details.
 
-    _New in v1.5.0_
+    _Implemented in v1.5.0_
 
   [10]: https://pubs.acs.org/doi/full/10.1021/acs.jctc.1c00374
   [11]: https://pubs.acs.org/doi/full/10.1021/acs.jctc.8b00418
@@ -462,7 +466,7 @@ Interaction Entropy, _e.g._: `ie_segment = 25` means that the last quartile of t
 according to the structure[^1]. If `assign_chainID = 2`, `gmx_MMPBSA` assign the chains ID, exist or not, 
 according to the structure[^1] (can generate inconsistencies).
 
-    _New in v1.2.0_
+    _Implemented in v1.2.0_
 
     _Updated in v1.5.0: Internal changes_
 
@@ -474,7 +478,7 @@ according to the structure[^1] (can generate inconsistencies).
 :   Specify the experimental Ki (in nM) for correlations analysis. If not defined or exp_ki = 0 then this system 
 will be omitted in the correlation analysis
 
-    _New in v1.4.0_
+    _Implemented in v1.4.0_
 
 `full_traj` (Default = 0)
 :   Print trajectories
@@ -503,7 +507,7 @@ in the PATH variable. In this path the following executables will be searched: `
            
             # replace this "/home/programs/gromacs/bin" with the path to the GROMACS you want to use.
 
-    _New in v1.1.1_
+    _Implemented in v1.1.1_
 
 `keep_files` (Default = 2)
 :   Specifies which files are kept.
@@ -532,7 +536,7 @@ However, this option is incompatible with alanine scanning.
     * 0: Don’t
     * 1: Generate clean trajectory
 
-    _New in v1.3.0_
+    _Implemented in v1.3.0_
 
     _Updated in v1.5.0. Bugs fixed_
 
@@ -609,7 +613,7 @@ within the implicit solvent model (see [§4.2](https://ambermd.org/doc12/Amber21
 `extdiel` (Default = 78.5)
 :   Define External dielectric constant.
 
-    _New in v1.5.0: This variable `= 80.0` in previous versions_
+    _Implemented in v1.5.0: This variable `= 80.0` in previous versions_
 
 `saltcon` (Default = 0.0)
 :   Salt concentration in Molarity (M).
@@ -782,6 +786,105 @@ on the very first step to a file named qmmm_region.pdb.
     
   [4]: https://ambermd.org/doc12/Amber21.pdf#subsection.34.11.49
 
+### **`&gbnsr6` namelist variables**
+
+!!! note "Keep in mind"
+    * GBNSR6 is an implementation of the Generalized Born (GB) model in which the effective Born radii are computed 
+    numerically, via the so-called "R6" integration ([ref.][222]) over molecular surface of the solute. In contrast to 
+    most GB practical models, GBNSR6 model is parameter free in the same sense as the numerical PB framework is. Thus, 
+    accuracy of GBNSR6 relative to the PB standard is virtually unaffected by the choice of input atomic radii. Check
+    Chapter [§5](https://ambermd.org/doc12/Amber21.pdf#chapter.5) in Amber manual for a more thorough description 
+    of the GBNSR6 model and its parameters.
+    * A default GBNSR6 input file can be created as follows:
+
+        ```
+        gmx_MMPBSA --create_input gbnsr6
+        ```
+    
+    * A sample GBNSR6 input file is shown [here](input_file.md#gbnsr6)
+    * A tutorial on binding free energy calculation with GBNSR6 model is available 
+    [here](examples/GBNSR6/README.md)
+
+  [222]: https://pubs.acs.org/doi/abs/10.1021/ct200786m
+
+#### **Basic input options**
+
+`epsin` (Default = 1.0)
+:   Dielectric constant of the solute region.
+
+`epsout` (Default = 78.5)
+:   Implicit solvent dielectric constant for the solvent.
+
+`istrng` (Default = 0.0)
+:   Ionic strength in M for the GBNSR6 equation.
+                           
+`dprob` (Default = 1.4)
+:   Radius of the solvent probe.
+
+`cavity_surften` (Default = 0.005)
+:   Surface tension parameter for nonpolar solvation calculation.
+
+#### **Options to select numerical procedures**
+
+`space` (Default = 0.5)
+:   Sets the grid spacing that determines the resolution of the solute molecular surface. Note that memory footprint of 
+this grid-based implementation of GBNSR6 may become large for large structures, e.g. the nucleosome (about 25,000 
+atoms) will take close to 2 GB of RAM when the default grid spacing is used. For very large structures, one may 
+consider increasing the value of space, which will reduce the memory footprint and execution time; however, the 
+accuracy will also decrease.
+
+`arcres` (Default = 0.2)
+:   Arc resolution used for numerical integration over molecular surface.
+
+`b` (Default = 0.028)
+:   Specifies the value of uniform offset to the (inverse) effective radii, the default value 0.028 gives 
+better agreement with the PB model, regardless of the structure size. For best agreement with the explicit solvent 
+(TIP3P) solvation energies, optimal value of B depends on the structure size: for small molecules (number of atoms 
+less than 50), B=0 is recommended. With -chagb option, B is calculated automatically based on the solute size.
+
+`alpb` (Default = 1)
+:   Specifies if ALBP correction is to be used.
+
+    * 0: Canonical GB is used.
+    * 1: ALPB is used (default)
+
+#### **Options for CHAGB model**
+
+`chagb` (Default = 0)
+:   Define if CHAGB is used.
+
+    * 0: Do not use CHAGB.
+    * 1: Use CHAGB.
+
+`rs` (Default = 0.52)
+:   Dielectric boundary shift compared to the molecular surface.
+
+`radiopt` (Default = 0)
+:   Set of intrinsic atomic radii to be used.
+
+    * 0: uses hardcoded intrisic radii optimized for small drug like molecules, and single amino acid
+    dipeptides ([ref.][215])
+    * 1: intrinsic radii are read from the topology file. Note that the dielectric surface defined using
+    these radii is then shifted outwards by Rs relative to the molecular surface. The option is not
+    recommended unless you are planning to re-optimize the input radii set for your problem.
+
+  [215]: https://pubs.acs.org/doi/full/10.1021/ct4010917
+
+`roh` (Default = 1)
+:   Sets the value of R<sup>z</sup><sub>OH</sub> for CHAGB model, the default is 0.586Å. This parameter defines which 
+explicit water model is being mimicked with respect to its propensity to cause charge hydration asymmetry. A perfectly 
+tetrahedral water , which can not cause charge hydration asymmetry, would have R<sup>z</sup><sub>OH</sub> = 0. The 
+options for `roh` are:
+
+    * 1: R<sup>z</sup><sub>OH</sub> = 0.586Å corresponds to TIP3P and SPC/E. 
+    * 2: R<sup>z</sup><sub>OH</sub> = 0.699Å for OPC.
+    * 3: R<sup>z</sup><sub>OH</sub> = 0.734Å for TIP4P 
+    * 4: R<sup>z</sup><sub>OH</sub> = 0.183Å for TIP5P/E. 
+
+`tau` (Default = 1.47)
+:   Value of τ in the CHAGB model. This dimensionless parameter controls the effective range of the neighboring 
+charges (_j_) affecting the CHA of atom (_i_), see ([ref.][215]) for details.
+
 ### **`&pb` namelist variables**
 
 !!! note "Keep in mind"
@@ -802,7 +905,7 @@ on the very first step to a file named qmmm_region.pdb.
 
 #### **Basic input options**
 
-`ipb` (Default = 2) 
+`ipb` (Default = 2)
 :   Option to set up a dielectric model for all numerical PB procedures. `ipb = 1` corresponds to a classical geometric 
 method, while a level-set based algebraic method is used when `ipb > 2`.
 
@@ -889,7 +992,7 @@ solute/solvent dielectric boundary.
 
   [243]: https://pubs.acs.org/doi/10.1021/cr00101a005
 
-    _New in v1.5.0_
+    _Implemented in v1.5.0_
 
 `istrng` (Default = 0.0)
 :   Ionic strength in Molarity (M). It is converted to mM for `PBSA` and kept as M for `APBS`.
@@ -912,7 +1015,7 @@ solute/solvent dielectric boundary.
 `iprob` (Default = 2.0)
 :   Mobile ion probe radius (in Å) for ion accessible surface used to define the Stern layer.
 
-    _New in v1.5.0_
+    _Implemented in v1.5.0_
 
 `sasopt` (Default = 0)
 :   Option to determine which kind of molecular surfaces to be used in the Poisson-Boltzmann implicit solvent model.
@@ -929,7 +1032,7 @@ solute/solvent dielectric boundary.
 :   The `arcres` keyword gives the resolution (in Å) of dots used to represent solvent accessible arcs. More
 generally, `arcres` should be set to max(0.125 Å, 0.5h) (h is the grid spacing). ([ref.][239])
 
-    _New in v1.5.0_
+    _Implemented in v1.5.0_
 
 #### **Options for implicit membranes**
 
@@ -964,7 +1067,7 @@ that of the water. ([ref.][248])
 
   [248]: https://pubs.acs.org/doi/abs/10.1021/acs.jctc.7b00382
 
-    _New in v1.5.0_
+    _Implemented in v1.5.0_
 
 [<img src="../assets/prot_memb.png" height="200" width="258" align="right"/>]()
 
@@ -997,7 +1100,7 @@ that of the water. ([ref.][248])
         least, take into account that using NLPBE can significantly increase the calculation time required for 
         PB calculation.
 
-    _New in v1.5.0_
+    _Implemented in v1.5.0_
 
 `solvopt` (Default = 1)
 :   Option to select iterative solvers.
@@ -1017,7 +1120,7 @@ that of the water. ([ref.][248])
 `accept` (Default = 0.001)
 :   Sets the iteration convergence criterion (relative to the initial residue).
 
-    _New in v1.5.0_
+    _Implemented in v1.5.0_
 
 `linit` (Default = 1000) 
 :   Sets the maximum number of iterations for the finite difference solvers. Note that `linit` has to be set to a 
@@ -1037,7 +1140,7 @@ to lie outside the finite-difference grid, causing the finite-difference solvers
 :   Sets how far away (in grid units) the boundary of the finite difference grid is away from the solute
 surface; _i.e._, automatically set to be at least a solvent probe or ion probe (diameter) away from the solute surface.
 
-    _New in v1.5.0_
+    _Implemented in v1.5.0_
 
 `nfocus` (Default = 2)
 :   Set how many successive FD calculations will be used to perform an electrostatic focussing calculation on a 
@@ -1046,12 +1149,12 @@ molecule. When `nfocus` = 1, no focusing is used. It is recommended that `nfocus
 `fscale` (Default = 8)
 :   Set the ratio between the coarse and fine grid spacings in an electrostatic focussing calculation.
 
-    _New in v1.5.0_
+    _Implemented in v1.5.0_
 
 `npbgrid` (Default = 1)
 :   Sets how often the finite-difference grid is regenerated.
 
-    _New in v1.5.0_
+    _Implemented in v1.5.0_
 
 #### **Options to compute energy and forces**
 
@@ -1115,7 +1218,7 @@ molecule. When `nfocus` = 1, no focusing is used. It is recommended that `nfocus
     * 1: Scale dielectric boundary surface charges using Gauss’s law before computing reaction field
     energy and forces.
 
-    _New in v1.5.0_
+    _Implemented in v1.5.0_
 
 `cutfd` (Default = 5.0)
 :   Atom-based cutoff distance to remove short-range finite-difference interactions, and to add pairwise
@@ -1132,7 +1235,7 @@ Waals interactions only. The particle-particle portion of the Coulombic interact
 `nsnba` (Default = 1)
 :   Sets how often (steps) atom-based pairlist is generated.
 
-    _New in v1.5.0_
+    _Implemented in v1.5.0_
 
 #### **Options to select a non-polar solvation treatment**
 
@@ -1146,7 +1249,7 @@ understand the decomposition.
     * 2: The _σ_ decomposition scheme.
     * 3: The WCA decomposition scheme.
 
-    _New in v1.5.0_
+    _Implemented in v1.5.0_
 
 `use_rmin` (Default = 1)
 :   The option to set up van der Waals radii. The default is to use van der Waals _rmin_ to improve the agreement with
@@ -1155,7 +1258,7 @@ TIP3P. ([ref.][227])
     * 0: Use atomic van der Waals _σ_ values.
     * 1: Use atomic van der Waals _rmin_ values.
 
-    _New in v1.5.0_
+    _Implemented in v1.5.0_
 
 `sprob` (Default = 0.557)
 :   Solvent probe radius (in Å) for solvent accessible surface area (SASA) used to compute the dispersion term,
@@ -1171,21 +1274,21 @@ repulsive terms in previous releases in Amber. However, it was found in the more
 that it was impossible to use the same probe radii for all three terms after each term was calibrated
 and validated with respect to the TIP3P solvent. ([ref.][227])
 
-    _New in v1.5.0_
+    _Implemented in v1.5.0_
 
 `vprob` (Default = 1.300)
 :   Solvent probe radius (in Å) for molecular volume (the volume enclosed by SASA) used to compute non-polar cavity 
 solvation free energy, default to 1.300 Å, the value optimized in ([ref.][227]) with respect to the TIP3P solvent. 
 Recommended values for other decomposition schemes can be found in Tables 1-3 of ([ref.][227]).
 
-    _New in v1.5.0_
+    _Implemented in v1.5.0_
 
 `rhow_effect` (Default = 1.129)
 :   Effective water density used in the non-polar dispersion term calculation, default to 1.129 for `decompopt = 2`, the 
 _σ_ scheme. This was optimized in ([ref.][227]) with respect to the TIP3P solvent in PME. Optimized values for other 
 decomposition schemes can be found in Table 4 of ([ref.][227]).
 
-    _New in v1.5.0_
+    _Implemented in v1.5.0_
 
 `use_sav` (Default = 1)
 :   The option to use molecular volume (the volume enclosed by SASA) or to use molecular surface (SASA) for cavity term 
@@ -1195,7 +1298,7 @@ biomacromolecules.
     * 0: Use SASA to estimate cavity free energy
     * 1: Use the molecular volume enclosed by SASA
 
-    _New in v1.5.0_
+    _Implemented in v1.5.0_
 
 `cavity_surften` (Default = 0.0378)
 :   The regression coefficient for the linear relation between the total non-polar solvation free energy (`inp` = 1), or 
@@ -1220,7 +1323,7 @@ summation of the atomic SASA’s. A molecular SASA is used for both PB dielectri
   [5]: https://ambermd.org/doc12/Amber21.pdf#chapter.6
   [6]: https://onlinelibrary.wiley.com/doi/10.1002/jcc.24467
 
-    _New in v1.5.0_
+    _Implemented in v1.5.0_
 
 `maxarcdot` (Default = 1500)
 :   Number of dots used to store arc dots per atom.
@@ -1233,7 +1336,7 @@ summation of the atomic SASA’s. A molecular SASA is used for both PB dielectri
     * 0: Off
     * 1: On
 
-    _New in v1.5.0_
+    _Implemented in v1.5.0_
 
 ### **`&rism` namelist variables**
 
@@ -1340,7 +1443,7 @@ pdf#subsection.7.3.1))
     * 0: Do not use long-range corrections
     * 1: Use the long-range corrections
 
-    _New in v1.5.0_
+    _Implemented in v1.5.0_
 
 `treeDCF` (Default = 1)
 :   Use direct sum, or the treecode approximation to calculate the direct correlation function long-range asymptotic 
@@ -1349,7 +1452,7 @@ correction.
     * 0: Use direct sum
     * 1: Use treecode approximation
 
-    _New in v1.5.0_
+    _Implemented in v1.5.0_
 
 `treeTCF` (Default = 1)
 :   Use direct sum, or the treecode approximation to calculate the total correlation function long-range asymptotic 
@@ -1358,7 +1461,7 @@ correction.
     * 0: Use direct sum
     * 1: Use treecode approximation
 
-    _New in v1.5.0_
+    _Implemented in v1.5.0_
 
 `treeCoulomb` (Default = 1)
 :   Use direct sum, or the treecode approximation to calculate the Coulomb potential energy.
@@ -1366,57 +1469,57 @@ correction.
     * 0: Use direct sum
     * 1: Use treecode approximation
 
-    _New in v1.5.0_
+    _Implemented in v1.5.0_
 
 `treeDCFMAC` (Default = 0.1)
 :   Treecode multipole acceptance criterion for the direct correlation function long-range asymptotic correction.
 
-    _New in v1.5.0_
+    _Implemented in v1.5.0_
 
 `treeTCFMAC` (Default = 0.1)
 :   Treecode multipole acceptance criterion for the total correlation function long-range asymptotic correction.
 
-    _New in v1.5.0_
+    _Implemented in v1.5.0_
 
 `treeCoulombMAC` (Default = 0.1)
 :   Treecode multipole acceptance criterion for the Coulomb potential energy.
 
-    _New in v1.5.0_
+    _Implemented in v1.5.0_
 
 `treeDCFOrder` (Default = 2)
 :   Treecode Taylor series order for the direct correlation function long-range asymptotic correction.
 
-    _New in v1.5.0_
+    _Implemented in v1.5.0_
 
 `treeTCFOrder` (Default = 2)
 :   Treecode Taylor series order for the total correlation function long-range asymptotic correction. Note that the 
 Taylor expansion used does not converge exactly to the TCF long-range asymptotic correction, so a very high order 
 will not necessarily increase accuracy.
 
-    _New in v1.5.0_
+    _Implemented in v1.5.0_
 
 `treeCoulombOrder` (Default = 2)
 :   Treecode Taylor series order for the Coulomb potential energy.
 
-    _New in v1.5.0_
+    _Implemented in v1.5.0_
 
 `treeDCFN0` (Default = 500)
 :   Maximum number of grid points contained within the treecode leaf clusters for the direct correlation function 
 long-range asymptotic correction. This sets the depth of the hierarchical octtree.
 
-    _New in v1.5.0_
+    _Implemented in v1.5.0_
 
 `treeTCFN0` (Default = 500)
 :   Maximum number of grid points contained within the treecode leaf clusters for the total correlation function 
 long-range asymptotic correction. This sets the depth of the hierarchical octtree.
 
-    _New in v1.5.0_
+    _Implemented in v1.5.0_
 
 `treeCoulombN0` (Default = 500)
 :   Maximum number of grid points contained within the treecode leaf clusters for the Coulomb potential energy. This 
 sets the depth of the hierarchical octtree.
 
-    _New in v1.5.0_
+    _Implemented in v1.5.0_
 
 #### **Solvation box**
 
@@ -1544,7 +1647,7 @@ accuracy and how this interacts with `ljTolerance`, `buffer`, and `solvbox`. Thr
 the calculation. See [§7.2.3](https://ambermd.org/doc12/Amber21.pdf#subsection.7.2.3) for details on how this affects 
 numerical accuracy and how this interacts with `tolerance`, `buffer`, and `solvbox`.
 
-    _New in v1.5.0_
+    _Implemented in v1.5.0_
 
 `asympKSpaceTolerance` (Default = -1)
 :   Tolerance reciprocal space long range asymptotics accuracy (Optional.) Determines the reciprocal space long 
@@ -1556,29 +1659,29 @@ accuracy. Possible values are:
     * when = 0: no cutoff
     * when > 0: given value determines the maximum error in the reciprocal-space long range asymptotics calculations
 
-    _New in v1.5.0_
+    _Implemented in v1.5.0_
 
 `mdiis_del` (Default = 0.7)
 :   MDIIS step size.
 
-    _New in v1.5.0_
+    _Implemented in v1.5.0_
 
 `mdiis_nvec` (Default = 5)
 :   Number of previous iterations MDIIS uses to predict a new solution.
 
-    _New in v1.5.0_
+    _Implemented in v1.5.0_
 
 `mdiis_restart` (Default = 10)
 :   If the current residual is mdiis_restart times larger than the smallest residual in memory, then the MDIIS 
 procedure is restarted using the lowest residual solution stored in memory. Increasing this number can sometimes 
 help convergence.
 
-    _New in v1.5.0_
+    _Implemented in v1.5.0_
 
 `maxstep` (Default = 10000)
 :   Maximum number of iterations allowed to converge on a solution.
 
-    _New in v1.5.0_
+    _Implemented in v1.5.0_
 
 `npropagate` (Default = 5)
 :   Number of previous solutions propagated forward to create an initial guess for this solute atom configuration.
@@ -1587,7 +1690,7 @@ help convergence.
     * = 1..5: Values greater than 0 but less than 4 or 5 will use less system memory but may introduce artifacts to 
     the solution (_e.g._, energy drift).
 
-    _New in v1.5.0_
+    _Implemented in v1.5.0_
 
 #### **Output**
 
@@ -1674,29 +1777,29 @@ mutated.
 
   [9]: https://pubs.acs.org/doi/10.1021/acs.jcim.6b00734
     
-    _New in v1.4.2_
+    _Implemented in v1.4.2_
 
 `intdiel_nonpolar` (Default = 1)
 :   Define the `intdiel`(GB)/`indi`(PB) value for non-polar residues (`PHE`, `TRP`, `VAL`, `ILE`, `LEU`, `MET`, `PRO`,
 `CYX`, `ALA`, `GLY`, `PRO`)
     
-    _New in v1.4.2_
+    _Implemented in v1.4.2_
 
 `intdiel_polar` (Default = 3)
 :   Define the `intdiel`(GB)/`indi`(PB) value for polar residues (`TYR`, `SER`, `THR`, `CYM`, `CYS`, `HIE`, `HID`, 
 `ASN`, `GLN`, `ASH`, `GLH`, `LYN`)
     
-    _New in v1.4.2_
+    _Implemented in v1.4.2_
 
 `intdiel_positive` (Default = 5)
 :   Define the `intdiel`(GB)/`indi`(PB) value for positive charged residues (`LYS`, `ARG`, `HIP`)
     
-    _New in v1.4.2_
+    _Implemented in v1.4.2_
 
 `intdiel_negative` (Default = 5)
 :   Define the `intdiel`(GB)/`indi`(PB) value for negative charged residues (`GLU`, `ASP`)
     
-    _New in v1.4.2_
+    _Implemented in v1.4.2_
 
 ### **`&decomp` namelist variables**
 
@@ -1874,6 +1977,22 @@ forcefields="oldff/leaprc.ff99SB,leaprc.gaff"
 
 &gb
 igb=5, saltcon=0.150,
+/
+```
+
+### GBNSR6
+
+``` linenums="1"
+Sample input file for GBNSR6 calculation building the Amber topologies
+from structures. Please refer to the section "How gmx_MMPBSA works"
+
+&general
+startframe=5, endframe=100, interval=5, verbose=2, 
+forcefields="oldff/leaprc.ff99SB,leaprc.gaff"
+/
+
+&gbnsr6
+epsin=1.0, istrng=0.150,
 /
 ```
 

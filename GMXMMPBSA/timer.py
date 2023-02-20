@@ -24,8 +24,6 @@ import logging
 from time import time
 
 
-# +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-
 class Timer(object):
     """ Timer class. It adds new timers and keeps track of how much time has been
         spent. """
@@ -127,4 +125,3 @@ class Timer(object):
         msg =  "%-40s %8.3f %s" % (self.descriptions[timer], self.timers[timer], self.units) + nl
         logging.info(msg)
 
-# +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
