@@ -10,6 +10,7 @@ title: GBNSR6
     use gmx_MMPBSA_test before, use [downgit](https://downgit.github.io/#/home) to download the specific folder from 
     gmx_MMPBSA GitHub repository.
 
+## Requirements
 
 In this case, `gmx_MMPBSA` requires:
 
@@ -20,7 +21,7 @@ In this case, `gmx_MMPBSA` requires:
 | An index file                  | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |          `ndx`    | File containing the receptor and ligand in separated groups |
 | Receptor and ligand group      | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |        `integers`       | Group numbers in the index files |
 | A trajectory file              | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } | `xtc` `pdb` `trr` | Final GROMACS MD trajectory, fitted and with no pbc. |
-| A topology file (not included) | :octicons-check-circle-fill-16:{ .req_opt .scale_icon_medium }    |           `top`         | GROMACS topology file (The `* .itp` files defined in the topology must be in the same folder |
+| A topology file                | :octicons-check-circle-fill-16:{ .req_opt .scale_icon_medium }    |           `top`         | GROMACS topology file (The `* .itp` files defined in the topology must be in the same folder |
 | A Reference Structure file     | :octicons-check-circle-fill-16:{ .req_optrec .scale_icon_medium } |           `pdb`         | Complex reference structure file (without hydrogens) with the desired assignment of chain ID and residue numbers |
               
 :octicons-check-circle-fill-16:{ .req } -> Must be defined -- :octicons-check-circle-fill-16:{ .req_optrec } -> 
@@ -33,11 +34,11 @@ That being said, once you are in the folder containing all files, the command-li
 
 === "Serial"
 
-        gmx_MMPBSA -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 20 21 -ct com_traj.xtc -o FINAL_RESULTS_MMPBSA.dat -eo FINAL_RESULTS_MMPBSA.csv
+        gmx_MMPBSA -O -i mmpbsa.in -cs com.tpr -ct com_traj.xtc -ci index.ndx -cg 3 4 -cp topol.top -o FINAL_RESULTS_MMPBSA.dat -eo FINAL_RESULTS_MMPBSA.csv
 
 === "With MPI"
 
-        mpirun -np 2 gmx_MMPBSA MPI -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 20 21 -ct com_traj.xtc -o FINAL_RESULTS_MMPBSA.dat -eo FINAL_RESULTS_MMPBSA.csv
+        mpirun -np 2 gmx_MMPBSA MPI -O -i mmpbsa.in -cs com.tpr -ct com_traj.xtc -ci index.ndx -cg 3 4 -cp topol.top -o FINAL_RESULTS_MMPBSA.dat -eo FINAL_RESULTS_MMPBSA.csv
 
 where the `mmpbsa.in` input file, is a text file containing the following lines:
 
@@ -59,7 +60,7 @@ forcefields="leaprc.protein.ff14SB"
 /
 
 &gbnsr6
-epsin=1.0, cavity_surften=0.005
+istrng=0.15
 /
 ```
 
@@ -77,6 +78,17 @@ index file (`index.ndx`), a trajectory file (`com_traj.xtc`), and both the recep
 index file (`20 21`) are needed. The `mmpbsa.in` input file will contain all the 
 parameters needed for the MM/PB(GB)SA calculation. In this case, 10 frames are going to be used when performing the 
 MM/PB(GB)SA calculation using the GBNSR6 model.
+
+!!! note "Comments on GBNSR6 model"
+    * GBNSR6 is an implementation of the Generalized Born (GB) model in which the effective Born radii are computed 
+    numerically, via the so-called "R6" integration ([ref.][222]) over molecular surface of the solute. 
+    * In contrast to most GB practical models, GBNSR6 model is parameter free in the same sense as the numerical 
+    PB framework is. Thus, accuracy of GBNSR6 relative to the PB standard is virtually unaffected by the choice of 
+    input atomic radii. 
+    * Check Chapter [§5](https://ambermd.org/doc12/Amber21.pdf#chapter.5) in Amber manual for a more thorough 
+    description of the GBNSR6 model and its parameters.
+
+  [222]: https://pubs.acs.org/doi/abs/10.1021/ct200786m
 
 A plain text output file with all the statistics (default: `FINAL_RESULTS_MMPBSA.dat`) and a CSV-format 
 output file containing all energy terms for every frame in every calculation will be saved. The file name in 
