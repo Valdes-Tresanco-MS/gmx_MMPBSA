@@ -150,6 +150,7 @@ def run_test(parser):
                                 f'{req_cpus[x] if req_cpus[x] <= parser.num_processors else parser.num_processors}']
                                + [gmx_mmpbsa_path, 'MPI'] + line.strip('\n').split()[1:] + ['-nogui'])
                     TASKS.append((test_sys[x], x, command))
+                    break
 
     result_list = []
     logging.info(f"{'Example':^60}{'STATE':>10}")
