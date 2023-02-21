@@ -67,6 +67,7 @@ decomposition; PB, Interaction Entropy, and Per-residue decomposition) in the sa
     * [C2 Entropy calculations](Entropy_calculations/C2_Entropy/README.md)
 * [Stability calculations](Stability/README.md)[^1][^2][^3]
 * [QM/MMGBSA calculations](QM_MMGBSA/README.md)
+* [Correlation](Correlation/README.md)
 
 ## Support for psf_dcd files
 
