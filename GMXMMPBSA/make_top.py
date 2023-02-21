@@ -1039,10 +1039,8 @@ class CheckMakeTop:
         else:
             # FIXME: allow terminal residues to mutate?
             strip_mask = f":{mut_index + 1} &!@{','.join([bb_atoms, sc_cb_atom, nterm_atoms, cterm_atoms])}"
-            print(strip_mask)
             if not pdb:
                 strip_mask += f",{sc_ala_atoms}"
-                print(strip_mask, 1)
         mut_top.strip(strip_mask)
 
         h_atoms_prop = {}
