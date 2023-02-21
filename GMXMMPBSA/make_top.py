@@ -1073,11 +1073,7 @@ class CheckMakeTop:
 
         mut_top.residues[mut_index].name = mut_aa
 
-        for x in self.complex_str.residues[mut_index].atoms:
-            print(x)
-
         for at in mut_top.residues[mut_index].atoms:
-            print(at)
             if mut_aa == 'GlY':
                 if at.name == 'CA':
                     ca_atom = at
@@ -1123,7 +1119,6 @@ class CheckMakeTop:
                 elif at.name in ['HB1', 'HB2', 'HB3']:
                     at.type = h_atoms_prop['type']
                     at.atom_type = h_atoms_prop['atom_type']
-            print(at, 2)
         # change intdiel if cas_intdiel was defined before end the mutation process
         if self.INPUT['ala']['cas_intdiel']:
             if self.INPUT['gb']['gbrun']:
