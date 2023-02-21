@@ -6,7 +6,7 @@ title: Decomposition
 # Decomposition analysis
 
 !!! info
-    This example can be found in the [docs/examples/Decomposition_analysis][6] directory in the repository folder. If you didn't 
+    This example can be found in the [examples/Decomposition_analysis][6] directory in the repository folder. If you didn't
     use gmx_MMPBSA_test before, use [downgit](https://downgit.github.io/#/home) to download the specific folder from 
     gmx_MMPBSA GitHub repository.
 
@@ -39,7 +39,7 @@ That being said, once you are in the folder containing all files, the command-li
 
 === "With MPI"
 
-        mpirun -np 2 gmx_MMPBSA MPI -O -i mmpbsa.in -cs com.tpr -ct com_traj.xtc -ci index.ndx -cg 3 4 -cp topol.top -o FINAL_RESULTS_MMPBSA.dat -eo FINAL_RESULTS_MMPBSA.csv -do FINAL_DECOMP_MMPBSA.dat -deo FINAL_DECOMP_MMPBSA.csv
+        mpirun -np 2 gmx_MMPBSA -O -i mmpbsa.in -cs com.tpr -ct com_traj.xtc -ci index.ndx -cg 3 4 -cp topol.top -o FINAL_RESULTS_MMPBSA.dat -eo FINAL_RESULTS_MMPBSA.csv -do FINAL_DECOMP_MMPBSA.dat -deo FINAL_DECOMP_MMPBSA.csv
 
 === "gmx_MMPBSA_test"
 
@@ -112,7 +112,7 @@ You can also use [VMD][8] and [Chimera][9] to view the modified pdb file with th
   [3]: ../../input_file.md#sample-input-files
   [4]: ../../input_file.md#decomp-namelist-variables
   [5]: ../../analyzer.md#gmx_mmpbsa_ana-the-analyzer-tool
-  [6]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/docs/examples/Decomposition_analysis
+  [6]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/examples/Decomposition_analysis
   [7]: ../gmx_MMPBSA_test.md#gmx_mmpbsa_test-command-line
   [8]: https://www.youtube.com/watch?v=PeboM8KE5SA
   [9]: https://www.youtube.com/watch?v=jKA4fuYuKps

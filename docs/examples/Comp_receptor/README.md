@@ -6,7 +6,7 @@ title: Complex receptor
 # Binding free energy calculations in multicomponent systems
 
 !!! info
-    This example can be found in the [docs/examples/Comp_receptor][6] directory in the repository folder. If you didn't 
+    This example can be found in the [examples/Comp_receptor][6] directory in the repository folder. If you didn't
     use gmx_MMPBSA_test before, use [downgit](https://downgit.github.io/#/home) to download the specific folder from 
     gmx_MMPBSA GitHub repository.
 
@@ -41,7 +41,7 @@ That being said, once you are in the folder containing all files, the command-li
 
 === "With MPI"
 
-        mpirun -np 2 gmx_MMPBSA MPI -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 33 14 -ct com_traj.xtc -lm ligand.mol2 -o FINAL_RESULTS_MMPBSA.dat -eo FINAL_RESULTS_MMPBSA.csv
+        mpirun -np 2 gmx_MMPBSA -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 33 14 -ct com_traj.xtc -lm ligand.mol2 -o FINAL_RESULTS_MMPBSA.dat -eo FINAL_RESULTS_MMPBSA.csv
 
 === "gmx_MMPBSA_test"
 

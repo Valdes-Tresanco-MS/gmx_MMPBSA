@@ -11,7 +11,7 @@ title: Protein-protein (OPLS)
 # Protein-protein binding free energy calculations (Single Trajectory method) with OPLSff files
 
 !!! info
-    This example can be found in the [docs/examples/OPLS/protein_protein][6] directory in the repository folder. If you 
+    This example can be found in the [examples/OPLS/protein_protein][6] directory in the repository folder. If you
     didn't 
     use gmx_MMPBSA_test before, use [downgit](https://downgit.github.io/#/home) to download the specific folder from 
     gmx_MMPBSA GitHub repository.
@@ -45,7 +45,7 @@ That being said, once you are in the folder containing all files, the command-li
 
 === "With MPI"
 
-        mpirun -np 2 gmx_MMPBSA MPI -O -i mmpbsa.in -cs com.pdb -ct com_traj.xtc -ci index.ndx -cg 10 11 -cp topol.top -o FINAL_RESULTS_MMPBSA.dat -eo FINAL_RESULTS_MMPBSA.csv
+        mpirun -np 2 gmx_MMPBSA -O -i mmpbsa.in -cs com.pdb -ct com_traj.xtc -ci index.ndx -cg 10 11 -cp topol.top -o FINAL_RESULTS_MMPBSA.dat -eo FINAL_RESULTS_MMPBSA.csv
 
 where the `mmpbsa.in` input file, is a text file containing the following lines:
 
@@ -91,5 +91,5 @@ specified on the command-line.
   [2]: ../../../input_file.md#the-input-file
   [3]: ../../../input_file.md#sample-input-files
   [5]: ../../../analyzer.md#gmx_mmpbsa_ana-the-analyzer-tool
-  [6]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/docs/examples/OPLS/protein_protein
+  [6]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/examples/OPLS/protein_protein
   [7]: ../../gmx_MMPBSA_test.md#gmx_mmpbsa_test-command-line

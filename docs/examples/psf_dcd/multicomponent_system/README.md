@@ -6,7 +6,7 @@ title: Multicomponent-system
 # Binding free energy calculations in multicomponent systems (3 or more elements)
 
 !!! info
-    This example can be found in the [docs/examples/psf_dcd/multicomponent_system][6] directory in the repository 
+    This example can be found in the [examples/psf_dcd/multicomponent_system][6] directory in the repository
     folder. If 
     you didn't use gmx_MMPBSA_test before, use [downgit](https://downgit.github.io/#/home) to download the specific 
     folder from gmx_MMPBSA GitHub repository.
@@ -205,7 +205,7 @@ Once the gmx_MMPBSA files have been generated, the program can be run either in 
 
 === "With MPI"
 
-        mpirun -np 2 gmx_MMPBSA MPI -O -i mmpbsa.in -cs gromacs.pdb -ct traj.xtc -ci index.ndx -cg 13 11 -cp gromacs.top -o FINAL_RESULTS_MMPBSA.dat -eo FINAL_RESULTS_MMPBSA.csv
+        mpirun -np 2 gmx_MMPBSA -O -i mmpbsa.in -cs gromacs.pdb -ct traj.xtc -ci index.ndx -cg 13 11 -cp gromacs.top -o FINAL_RESULTS_MMPBSA.dat -eo FINAL_RESULTS_MMPBSA.csv
 
 ## Considerations
 In this case, a single trajectory (ST) approximation is followed, which means the receptor and ligand structures and 
@@ -230,7 +230,7 @@ specified on the command-line.
   [2]: ../../../input_file.md#the-input-file
   [3]: ../../../input_file.md#sample-input-files
   [5]: ../../../analyzer.md#gmx_mmpbsa_ana-the-analyzer-tool
-  [6]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/docs/examples/psf_dcd/multicomponent_system
+  [6]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/examples/psf_dcd/multicomponent_system
   [7]: ../../gmx_MMPBSA_test.md#gmx_mmpbsa_test-command-line
   [8]: ../../../input_file.md#generation-of-input-files-with-gmx_mmpbsa
   [9]: ../../../howworks.md
