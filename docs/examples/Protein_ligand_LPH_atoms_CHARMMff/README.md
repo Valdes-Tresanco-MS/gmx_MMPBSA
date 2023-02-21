@@ -27,7 +27,7 @@ title: Protein-ligand LPH (Charmm)
 
 !!! info
 
-    This example can be found in the [docs/examples/Protein_ligand_LPH_atoms_CHARMMff][6] directory in the repository
+    This example can be found in the [examples/Protein_ligand_LPH_atoms_CHARMMff][6] directory in the repository
     folder
 
     LPH is a positively charged virtual particle attached to halogen atoms. This strategy aims to get a better 
@@ -187,7 +187,7 @@ That being said, once you are in the folder containing all files, the command-li
 
 === "With MPI"
 
-        mpirun -np 2 gmx_MMPBSA MPI -O -i mmpbsa.in -cs str_noLP.pdb -ci index_mod_gromacs.ndx -cg 1 17 -ct com_traj.xtc -cp topol.top -o FINAL_RESULTS_MMPBSA.dat -eo FINAL_RESULTS_MMPBSA.csv
+        mpirun -np 2 gmx_MMPBSA -O -i mmpbsa.in -cs str_noLP.pdb -ci index_mod_gromacs.ndx -cg 1 17 -ct com_traj.xtc -cp topol.top -o FINAL_RESULTS_MMPBSA.dat -eo FINAL_RESULTS_MMPBSA.csv
 
 where the `mmpbsa.in` input file, is a text file containing the following lines:
 
@@ -245,6 +245,6 @@ specified on the command-line.
   [3]: ../../input_file.md#the-input-file
   [4]: ../../input_file.md#sample-input-files
   [5]: ../../analyzer.md#gmx_mmpbsa_ana-the-analyzer-tool
-  [6]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/docs/examples/Protein_ligand_LPH_atoms_CHARMMff
+  [6]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/examples/Protein_ligand_LPH_atoms_CHARMMff
   [7]: ../gmx_MMPBSA_test.md#gmx_mmpbsa_test-command-line
   [8]: https://www.sciencedirect.com/science/article/abs/pii/S0968089616304576?via%3Dihub

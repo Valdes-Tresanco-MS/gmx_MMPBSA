@@ -7,7 +7,7 @@ title: Alanine scanning
 # Alanine scanning
 
 !!! info
-    This example can be found in the [docs/examples/Alanine_scanning][6] directory in the repository folder. If you 
+    This example can be found in the [examples/Alanine_scanning][6] directory in the repository folder. If you
     didn't 
     use gmx_MMPBSA_test before, use [downgit](https://downgit.github.io/#/home) to download the specific folder from 
     gmx_MMPBSA GitHub repository.
@@ -41,7 +41,7 @@ That being said, once you are in the folder containing all files, the command-li
 
 === "With MPI"
 
-        mpirun -np 2 gmx_MMPBSA MPI -O -i mmpbsa.in -cs com.tpr -ct com_traj.xtc -ci index.ndx -cg 3 4 -cp topol.top -o FINAL_RESULTS_MMPBSA.dat -eo FINAL_RESULTS_MMPBSA.csv
+        mpirun -np 2 gmx_MMPBSA -O -i mmpbsa.in -cs com.tpr -ct com_traj.xtc -ci index.ndx -cg 3 4 -cp topol.top -o FINAL_RESULTS_MMPBSA.dat -eo FINAL_RESULTS_MMPBSA.csv
 
 === "gmx_MMPBSA_test"
 
@@ -125,5 +125,5 @@ On the other hand, if this reference structure is omitted, then it will depend o
   [3]: ../../input_file.md#sample-input-files
   [4]: ../../analyzer.md#gmx_mmpbsa_ana-the-analyzer-tool  
   [5]: ../../input_file.md#general-namelist-variables
-  [6]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/docs/examples/Alanine_scanning
+  [6]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/examples/Alanine_scanning
   [7]: ../gmx_MMPBSA_test.md#gmx_mmpbsa_test-command-line

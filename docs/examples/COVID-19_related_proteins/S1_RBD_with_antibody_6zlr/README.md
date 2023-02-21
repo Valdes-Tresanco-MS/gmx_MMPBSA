@@ -11,7 +11,7 @@ title: SARS-CoV-2 Receptor Binding Domain (RBD):CR3022 antibody complex
 # SARS-CoV-2 Receptor Binding Domain (RBD):CR3022 antibody complex binding free energy calculations (Single Trajectory method) with CHARMMff files
 
 !!! info
-    This example can be found in the [docs/examples/COVID-19_related_proteins/S1_RBD_with_antibody_6zlr][6] directory 
+    This example can be found in the [examples/COVID-19_related_proteins/S1_RBD_with_antibody_6zlr][6] directory
     in the repository folder. If you didn't 
     use gmx_MMPBSA_test before, use [downgit](https://downgit.github.io/#/home) to download the specific folder from 
     gmx_MMPBSA Github repository.
@@ -43,7 +43,7 @@ That being said, once you are in the folder containing all files, the command-li
 
 === "With MPI"
 
-        mpirun -np 2 gmx_MMPBSA MPI -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 21 20 -ct com_traj.xtc -cp topol.top
+        mpirun -np 2 gmx_MMPBSA -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 21 20 -ct com_traj.xtc -cp topol.top
 
 where the `mmpbsa.in` input file, is a text file containing the following lines:
 
@@ -86,5 +86,5 @@ with all the terms for CHARMM force field.
   [3]: ../../../input_file.md#the-input-file
   [4]: ../../../input_file.md#sample-input-files
   [5]: ../../../analyzer.md#gmx_mmpbsa_ana-the-analyzer-tool
-  [6]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/docs/examples/COVID-19_related_proteins/S1_RBD_with_antibody_6zlr
+  [6]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/examples/COVID-19_related_proteins/S1_RBD_with_antibody_6zlr
   [7]: ../../gmx_MMPBSA_test.md#gmx_mmpbsa_test-command-line
