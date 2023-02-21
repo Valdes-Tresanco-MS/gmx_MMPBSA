@@ -75,7 +75,7 @@ istrng=0.15
 In this case, a single trajectory (ST) approximation is followed, which means the receptor and ligand structures and 
 trajectories will be obtained from that of the complex. To do so, an MD Structure+mass(db) file (`com.tpr`), an 
 index file (`index.ndx`), a trajectory file (`com_traj.xtc`), and both the receptor and ligand group numbers in the 
-index file (`20 21`) are needed. The `mmpbsa.in` input file will contain all the 
+index file (`3 4`) are needed. The `mmpbsa.in` input file will contain all the 
 parameters needed for the MM/PB(GB)SA calculation. In this case, 10 frames are going to be used when performing the 
 MM/PB(GB)SA calculation using the GBNSR6 model.
 

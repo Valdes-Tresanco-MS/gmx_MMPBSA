@@ -6,7 +6,7 @@ title: GBNSR6
 # Binding free energy calculation with GBNSR6 model
 
 !!! info
-    This example can be found in the [examples/GBNSR6][6] directory in the repository folder. If you didn't
+    This example can be found in the [docs/examples/GBNSR6][6] directory in the repository folder. If you didn't
     use gmx_MMPBSA_test before, use [downgit](https://downgit.github.io/#/home) to download the specific folder from 
     gmx_MMPBSA GitHub repository.
 
@@ -75,7 +75,7 @@ istrng=0.15
 In this case, a single trajectory (ST) approximation is followed, which means the receptor and ligand structures and 
 trajectories will be obtained from that of the complex. To do so, an MD Structure+mass(db) file (`com.tpr`), an 
 index file (`index.ndx`), a trajectory file (`com_traj.xtc`), and both the receptor and ligand group numbers in the 
-index file (`20 21`) are needed. The `mmpbsa.in` input file will contain all the 
+index file (`3 4`) are needed. The `mmpbsa.in` input file will contain all the 
 parameters needed for the MM/PB(GB)SA calculation. In this case, 10 frames are going to be used when performing the 
 MM/PB(GB)SA calculation using the GBNSR6 model.
 
