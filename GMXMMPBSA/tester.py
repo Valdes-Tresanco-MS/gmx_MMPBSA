@@ -148,7 +148,7 @@ def run_test(parser):
                 if 'gmx_MMPBSA -O -i mmpbsa.in' in line:
                     command = (['mpirun', '-np',
                                 f'{req_cpus[x] if req_cpus[x] <= parser.num_processors else parser.num_processors}']
-                               + [gmx_mmpbsa_path, 'MPI'] + line.strip('\n').split()[1:] + ['-nogui'])
+                               + [gmx_mmpbsa_path] + line.strip('\n').split()[1:] + ['-nogui'])
                     TASKS.append((test_sys[x], x, command))
                     break
 
