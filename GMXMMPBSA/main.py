@@ -507,10 +507,8 @@ class MMPBSA_App(object):
             # Mdin depends on decomp or not
             if self.INPUT['decomp']['decomprun']:
                 mdin_template = self.pre + 'pb_decomp_%s.mdin'
-                mdin_template2 = mdin_template
             else:
                 mdin_template = self.pre + 'pb.mdin'
-                mdin_template2 = self.pre + 'pb.mdin2'
 
             # Now do complex-specific stuff
             try:
@@ -550,9 +548,9 @@ class MMPBSA_App(object):
                                           timer_key='pb', output_basename='%sreceptor_pb.mdout.%%d' % (prefix))
 
                 try:
-                    mdin2 = mdin_template2 % 'lig'
+                    mdin = mdin_template % 'lig'
                 except TypeError:
-                    mdin2 = mdin_template2
+                    mdin = mdin_template
 
                 # Either copy the existing ligand if the mutation is in the receptor
                 # or perform a ligand calculation
@@ -565,7 +563,7 @@ class MMPBSA_App(object):
                     c = PBEnergyCalculation(progs['pb'], parm_system.ligand_prmtop,
                                             incrd % 'ligand',
                                             '%sligand.%s.%%d' % (prefix, trj_sfx),
-                                            mdin2, '%sligand_pb.mdout.%%d' % (prefix),
+                                            mdin, '%sligand_pb.mdout.%%d' % (prefix),
                                             self.pre + 'restrt.%d')
                     self.calc_list.append(c, '  calculating ligand contribution...',
                                           timer_key='pb', output_basename='%sligand_pb.mdout.%%d' % (prefix))

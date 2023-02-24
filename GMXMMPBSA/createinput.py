@@ -264,16 +264,10 @@ def create_inputs(INPUT, prmtop_system, pre):
             if pb_prog == 'sander.APBS':
                 pb_mdin = SanderAPBSInput(INPUT)
                 pb_mdin.make_mdin()
-                pb_mdin2 = SanderAPBSInput(INPUT)
-                pb_mdin2.make_mdin()
             else:
                 pb_mdin = SanderPBSAInput(INPUT)
                 pb_mdin.make_mdin()
-                pb_mdin2 = SanderPBSA2Input(INPUT)
-                pb_mdin2.make_mdin()
-
             pb_mdin.write_input(f'{pre}pb.mdin')
-            pb_mdin2.write_input(f'{pre}pb.mdin2')
 
         if INPUT['rism']['rismrun']:
             rism_mdin = SanderRISMInput(INPUT)
@@ -332,8 +326,6 @@ class SanderInput(object):
     def write_input(self, filename):
         """ Write the mdin file """
         self.mdin.write(filename)
-
-
 
 
 class SanderGBInput(SanderInput):
@@ -615,7 +607,7 @@ class SanderPBSAInput(SanderInput):
     """ PB sander input file """
     def __init__(self, INPUT):
         super().__init__(INPUT)
-        self.input_items = {'ntb': 0, 'cut': 999.0, 'nsnb': 99999, 'ioutfm': 0,
+        self.input_items = {'ntb': 0, 'cut': 999.0, 'nsnb': 99999, 'ioutfm': 0, 'idecomp': 0, 'dec_verbose': 0,
                    'imin': 5, 'maxcyc': 1, 'ntx': 1, 'pbtemp': 300,
                    # Basic input options
                    'ipb': 2, 'inp': 2,
@@ -639,6 +631,7 @@ class SanderPBSAInput(SanderInput):
                    'npbverb': 0}
 
         self.name_map = {'ntb': 'ntb', 'cut': 'cut', 'nsnb': 'nsnb', 'ioutfm': 'netcdf',
+                'idecomp': 'idecomp', 'dec_verbose': 'dec_verbose',
                 'imin': 'imin', 'maxcyc': 'pb_maxcyc', 'ntx': 'ntx', 'pbtemp': 'temperature',
                 # Basic input options
                 'ipb': 'ipb', 'inp': 'inp',
@@ -665,6 +658,7 @@ class SanderPBSAInput(SanderInput):
                 'npbverb': 'npbverb'}
 
         self.parent_namelist = {'ntb': 'cntrl', 'cut': 'cntrl', 'nsnb': 'cntrl', 'ioutfm': 'cntrl',
+                       'idecomp': 'cntrl', 'dec_verbose': 'cntrl',
                        'imin': 'cntrl', 'maxcyc': 'cntrl', 'ntx': 'cntrl', 'pbtemp': 'pb',
                        # Basic input options
                        'ipb': 'cntrl', 'inp': 'cntrl',
@@ -691,93 +685,6 @@ class SanderPBSAInput(SanderInput):
         self.namelist = 'pb'
 
 
-    # def __init__(self, INPUT):
-    #     # We need to change istrng to mM (from M).
-    #     SanderInput.__init__(self, INPUT)
-    #     self.mdin.change('pb', 'istrng', INPUT['pb']['istrng'] * 1000)
-
-
-class SanderPBSA2Input(SanderInput):
-    """ PB sander input file """
-
-    def __init__(self, INPUT):
-        super().__init__(INPUT)
-        self.input_items = {'ntb': 0, 'cut': 999.0, 'nsnb': 99999, 'ioutfm': 0,
-                   'imin': 5, 'maxcyc': 1, 'ntx': 1, 'pbtemp': 300,
-                   # Basic input options
-                   'ipb': 2, 'inp': 2,
-                   # Options to define the physical constants
-                   'epsin': 1.0, 'epsout': 80.0, 'epsmem': 1.0, 'smoothopt': 1, 'istrng': 0.0,
-                   'radiopt': 1, 'dprob': 1.4, 'iprob': 2.0, 'sasopt': 0, 'arcres': 0.25,
-                   # Options for Implicit Membranes
-                   'membraneopt': 0, 'mprob': 2.70, 'mthick': 40, 'mctrdz': 0.0,
-                   'poretype': 1,
-                   # Options to select numerical procedures
-                   'npbopt': 0, 'solvopt': 1, 'accept': 0.001, 'maxitn': 1000, 'fillratio': 4.0,
-                   'space': 0.5, 'nbuffer': 0, 'nfocus': 2, 'fscale': 8, 'npbgrid': 1,
-                   # Options to compute energy and forces
-                   'bcopt': 5, 'eneopt': 2, 'frcopt': 0, 'scalec': 0, 'cutfd': 5.0, 'cutnb': 0.0,
-                   'nsnba': 1,
-                   # Options to select a non - polar solvation treatment
-                   'decompopt': 2, 'use_rmin': 1, 'sprob': 0.557, 'vprob': 1.300,
-                   'rhow_effect': 1.129, 'use_sav': 1, 'cavity_surften': 0.0378,
-                   'cavity_offset': -0.5692, 'maxsph': 400, 'maxarcdot': 1500,
-                   # Options for output
-                   'npbverb': 0}
-
-        self.name_map = {'ntb': 'ntb', 'cut': 'cut', 'nsnb': 'nsnb', 'ioutfm': 'netcdf',
-                'imin': 'imin', 'maxcyc': 'pb_maxcyc', 'ntx': 'ntx', 'pbtemp': 'temperature',
-                # Basic input options
-                'ipb': 'ipb', 'inp': 'inp',
-                # Options to define the physical constants
-                'epsin': 'indi', 'epsout': 'exdi', 'epsmem': 'emem', 'smoothopt': 'smoothopt',
-                'istrng': 'istrng', 'radiopt': 'radiopt', 'dprob': 'prbrad', 'iprob': 'iprob',
-                'sasopt': 'sasopt', 'arcres': 'arcres',
-                # Options for Implicit Membranes
-                'membraneopt': 'memopt', 'mprob': 'mprob', 'mthick': 'mthick', 'mctrdz': 'mctrdz',
-                'poretype': 'poretype',
-                # Options to select numerical procedures
-                'npbopt': 'npbopt', 'solvopt': 'solvopt', 'accept': 'accept', 'maxitn': 'linit',
-                'fillratio': 'fillratio', 'space': 'scale', 'nbuffer': 'nbuffer', 'nfocus': 'nfocus',
-                'fscale': 'fscale', 'npbgrid': 'npbgrid',
-                # Options to compute energy and forces
-                'bcopt': 'bcopt', 'eneopt': 'eneopt', 'frcopt': 'frcopt', 'scalec': 'scalec',
-                'cutfd': 'cutfd', 'cutnb': 'cutnb', 'nsnba': 'nsnba',
-                # Options to select a non-polar solvation treatment
-                'decompopt': 'decompopt', 'use_rmin': 'use_rmin', 'sprob': 'sprob',
-                'vprob': 'vprob', 'rhow_effect': 'rhow_effect', 'use_sav': 'use_sav',
-                'cavity_surften': 'cavity_surften', 'cavity_offset': 'cavity_offset',
-                'maxsph': 'maxsph', 'maxarcdot': 'maxarcdot',
-                # Options for output
-                'npbverb': 'npbverb'}
-
-        self.parent_namelist = {'ntb': 'cntrl', 'cut': 'cntrl', 'nsnb': 'cntrl', 'ioutfm': 'cntrl',
-                       'imin': 'cntrl', 'maxcyc': 'cntrl', 'ntx': 'cntrl', 'pbtemp': 'pb',
-                       # Basic input options
-                       'ipb': 'cntrl', 'inp': 'cntrl',
-                       # Options to define the physical constants
-                       'epsin': 'pb', 'epsout': 'pb', 'epsmem': 'pb', 'smoothopt': 'pb',
-                       'istrng': 'pb', 'radiopt': 'pb', 'dprob': 'pb', 'iprob': 'pb',
-                       'sasopt': 'pb', 'arcres': 'pb',
-                       # Options for Implicit Membranes
-                       'membraneopt': 'pb', 'mprob': 'pb', 'mthick': 'pb', 'mctrdz': 'pb',
-                       'poretype': 'pb',
-                       # Options to select numerical procedures
-                       'npbopt': 'pb', 'solvopt': 'pb', 'accept': 'pb', 'maxitn': 'pb',
-                       'fillratio': 'pb', 'space': 'pb', 'nbuffer': 'pb', 'nfocus': 'pb',
-                       'fscale': 'pb', 'npbgrid': 'pb',
-                       # Options to compute energy and forces
-                       'bcopt': 'pb', 'eneopt': 'pb', 'frcopt': 'pb', 'scalec': 'pb',
-                       'cutfd': 'pb', 'cutnb': 'pb', 'nsnba': 'pb',
-                       # Options to select a non-polar solvation treatment
-                       'decompopt': 'pb', 'use_rmin': 'pb', 'sprob': 'pb', 'vprob': 'pb',
-                       'rhow_effect': 'pb', 'use_sav': 'pb', 'cavity_surften': 'pb',
-                       'cavity_offset': 'pb', 'maxsph': 'pb', 'maxarcdot': 'pb',
-                       # Options for output
-                       'npbverb': 'pb'}
-        self.namelist = 'pb'
-
-        # self.mdin.change('pb', 'istrng', INPUT['pb']['istrng'] * 1000)
     # def __init__(self, INPUT):
     #     # We need to change istrng to mM (from M).
     #     SanderInput.__init__(self, INPUT)
@@ -839,11 +746,11 @@ class SanderGBDecomp(SanderGBInput):
             self.mdin.AddCard(card[0], card[1])
 
 
-class SanderPBDecomp(SanderPBSADECOMPInput):
+class SanderPBDecomp(SanderPBSAInput):
     """ PB decomposition input file for sander """
 
     def __init__(self, INPUT, *cards):
-        SanderPBSADECOMPInput.__init__(self, INPUT)
+        SanderPBSAInput.__init__(self, INPUT)
         self.make_mdin()
         for card in cards:
             self.mdin.AddCard(card[0], card[1])
