@@ -128,21 +128,17 @@ def create_inputs(INPUT, prmtop_system, pre):
             if stability:
                 pri_res = ['Residues to print', com_card]
                 com_mdin = SanderPBDecomp(INPUT, rec_res, pri_res)
-                com_mdin.make_mdin()
                 com_mdin.write_input(f"{pre}pb_decomp_com.mdin")
             else:
                 lig_res = ['Residues considered as LIG', full_lc]
                 pri_res = ['Residues to print', com_card]
                 com_mdin = SanderPBDecomp(INPUT, rec_res, lig_res, pri_res)
-                com_mdin.make_mdin()
                 rec_res = ['Residues considered as REC', full_rec]
                 pri_res = ['Residues to print', rec_card]
                 rec_mdin = SanderPBDecomp(INPUT, rec_res, pri_res)
-                rec_mdin.make_mdin()
                 lig_res = ['Residues considered as LIG', full_lig]
                 pri_res = ['Residues to print', lig_card]
                 lig_mdin = SanderPBDecomp(INPUT, lig_res, pri_res)
-                lig_mdin.make_mdin()
                 com_mdin.write_input(f"{pre}pb_decomp_com.mdin")
                 rec_mdin.write_input(f"{pre}pb_decomp_rec.mdin")
                 lig_mdin.write_input(f"{pre}pb_decomp_lig.mdin")
