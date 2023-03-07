@@ -7,7 +7,7 @@ title: Installation
 ## Requirements
 `gmx_MMPBSA` requires **[GROMACS](https://manual.gromacs.org/) (series `4.x.x` or `5.x.x` or `20xx.x`)** and 
 **[AmberTools20 or 21](https://ambermd.org/AmberTools.php)** to be installed in your machine with **Python3**.
-`gmx_MMPBSA` has been tested with GROMACS `4.6.7`, `5.1.2`, `2018.3`, `2020.4` and `2021.3`, although it should run 
+`gmx_MMPBSA` has been tested with GROMACS `4.6.7`, `5.1.2`, `2018.3`, `2020.4` and `2022.4`, although it should run 
 smoothly with any GROMACS present in the `PATH` and that is compatible with the files you are using.
 
 ## Installing gmx_MMPBSA v1.5.x
@@ -89,7 +89,7 @@ errors are more frequent.
             $ python -m pip install pyqt5
 
             // (Optional) Install GROMACS
-            $ conda install -c bioconda gromacs==2021.3 -y -q
+            $ conda install -c conda-forge gromacs==2022.4 -y -q
             ```
                 
             </div>
@@ -104,7 +104,7 @@ errors are more frequent.
                 python -m pip install git+https://github.com/Valdes-Tresanco-MS/ParmEd.git@v3.4 # (4)
                 python -m pip install pyqt5                                                     # (5)
                 # Optional
-                conda install -c bioconda gromacs==2021.3 -y -q                                 # (6)
+                conda install -c conda-forge gromacs==2022.4 -y -q                                 # (6)
                
                 ```
             
@@ -179,7 +179,7 @@ errors are more frequent.
 
 [comment]: <> (            # Optional)
 
-[comment]: <> (            conda install -c bioconda gromacs==2021.3 -y -q                                 # &#40;6&#41;)
+[comment]: <> (            conda install -c conda-forge gromacs==2022.4 -y -q                                 # &#40;6&#41;)
 
 [comment]: <> (            ```)
             
