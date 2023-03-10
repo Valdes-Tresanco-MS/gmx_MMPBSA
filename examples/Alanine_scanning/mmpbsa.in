@@ -14,5 +14,5 @@ PBRadii=4,
 igb=8, saltcon=0.150,
 /
 &alanine_scanning
-mutant='ALA', mutant_res='A:23', cas_intdiel=1
+mutant='ALA', mutant_res='R:23', cas_intdiel=1
 /

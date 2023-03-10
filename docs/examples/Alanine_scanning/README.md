@@ -37,11 +37,11 @@ That being said, once you are in the folder containing all files, the command-li
 
 === "Serial"
 
-        gmx_MMPBSA -O -i mmpbsa.in -cs com.tpr -ct com_traj.xtc -ci index.ndx -cg 3 4 -cp topol.top -o FINAL_RESULTS_MMPBSA.dat -eo FINAL_RESULTS_MMPBSA.csv
+        gmx_MMPBSA -O -i mmpbsa.in -cs com.tpr -ct com_traj.xtc -ci index.ndx -cg 3 4 -cp topol.top -cr com.pdb -o FINAL_RESULTS_MMPBSA.dat -eo FINAL_RESULTS_MMPBSA.csv
 
 === "With MPI"
 
-        mpirun -np 2 gmx_MMPBSA -O -i mmpbsa.in -cs com.tpr -ct com_traj.xtc -ci index.ndx -cg 3 4 -cp topol.top -o FINAL_RESULTS_MMPBSA.dat -eo FINAL_RESULTS_MMPBSA.csv
+        mpirun -np 2 gmx_MMPBSA -O -i mmpbsa.in -cs com.tpr -ct com_traj.xtc -ci index.ndx -cg 3 4 -cp topol.top -cr com.pdb -o FINAL_RESULTS_MMPBSA.dat -eo FINAL_RESULTS_MMPBSA.csv
 
 === "gmx_MMPBSA_test"
 
@@ -68,7 +68,7 @@ PBRadii=4,
 igb=8, saltcon=0.150,
 /
 &alanine_scanning
-mutant='ALA', mutant_res='A:23', cas_intdiel=1
+mutant='ALA', mutant_res='R:23', cas_intdiel=1
 /
 ```
 
@@ -88,7 +88,8 @@ all the parameters needed for the MM/PB(GB)SA calculation. In this case, 10 fram
 the MM/PB(GB)SA calculation with the igb8 (GB-Neck2) model and a salt concentration = 0.15M. Of note, mbondi3 
 radii (`PBRadii=4`) will be used as recommended for GB-Neck2 solvation model. Also, The dielectric constant 
 (`intdiel`) will be modified depending on the nature of the residue to be mutated as `cas_intdiel=1`. In this case, 
-the residue `A/23` is a Tyrosine which means `intdiel = 3` will be used.
+the residue `R/23` is a Tyrosine which means `intdiel = 3` will be used. **Note also that we used a reference structure 
+to ensure that the selection process for the residue to be mutated is successful (see below).**
 
 A plain text output file with all the statistics (default: `FINAL_RESULTS_MMPBSA.dat`) and a CSV-format 
 output file containing all energy terms for every frame in every calculation will be saved. The file name in 
