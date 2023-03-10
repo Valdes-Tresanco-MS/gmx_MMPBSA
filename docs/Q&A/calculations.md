@@ -74,6 +74,8 @@ Here we describe a series of frequent issues related to calculations and their p
                     
                     Make sure that the trajectory is consistent (as shown in Fig 2, right panel)
 
+                5. If the process is not succesful, consider using other options like `-pbc nojump` (as suggested [here][4])
+
                 <figure markdown="1">
                 [![overview][2]][2]
                   <figcaption markdown="1" style="margin-top:0;">
@@ -83,6 +85,7 @@ Here we describe a series of frequent issues related to calculations and their p
                 </figure>
                 
                   [2]:../assets/images/q_a/traj_comp.gif
+                  [4]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/issues/353
         
         2. You are trying to calculate the energetic contribution of a very large group. Technically, the energy 
         value should not exceed 7 digits, so if you get a value higher than this, this error will occur. Although 
