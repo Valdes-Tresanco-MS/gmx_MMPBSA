@@ -423,34 +423,36 @@ def get_indexes(com_ndx, rec_ndx=None, lig_ndx=None):
 
 
 def _get_dup_args(args):
-    flags_values_list = []
-    cv = []
-    current_flag = None
-    for o in args:
+    flag_index = []
+    flags = []
+
+    for i, o in enumerate(args):
         if o.startswith('-'):
-            if current_flag:
-                flags_values_list.append([current_flag, cv])
-            current_flag = o
-            cv = []
-        else:
-            cv.append(o)
+            flag_index.append(i)
+            flags.append(o)
 
     opt_duplicates = []
-    args_duplicates = []
-    flags = [a[0] for a in flags_values_list]
-
-    for x in flags:
-        if flags.count(x) > 1 and x not in opt_duplicates:
-            opt_duplicates.append(x)
+    flags_values = {}
+    for i, f in enumerate(flags):
+        if flags.count(f) > 1 and f not in opt_duplicates:
+            opt_duplicates.append(f)
+        if i == len(flags) - 1:
+            flags_values[f] = [args[x] for x in range(flag_index[i] + 1, len(args))]
+            print('tets')
+        elif flag_index[i] - flag_index[i+1]:
+            flags_values[f] = [args[x] for x in range(flag_index[i]+1, flag_index[i+1])]
+        else:
+            flags_values[f] = []
 
     if opt_duplicates:
         GMXMMPBSA_ERROR('Several options are duplicated in the command-line...\n'
                         f"Duplicated options:\n\t{', '.join(opt_duplicates)}")
 
-    flags_values_dict = dict(flags_values_list)
+    args_duplicates = []
     unique_args = []
     inverted_args_dict = {}
-    for k, v in flags_values_dict.items():
+    for k, v in flags_values.items():
+        # skip this options since they can share the same group number/name
         if k in ['-cg', '-rg', '-lg']:
             continue
         for a in v:
@@ -460,8 +462,8 @@ def _get_dup_args(args):
             else:
                 args_duplicates.append([k, a])
 
-    text_out = '\n'.join([f"\t{inverted_args_dict[a]} {' '.join(flags_values_dict[inverted_args_dict[a]])} <---> "
-                          f"{k} {' '.join(flags_values_dict[k])}"
+    text_out = '\n'.join([f"\t{inverted_args_dict[a]} {' '.join(flags_values[inverted_args_dict[a]])} <---> "
+                          f"{k} {' '.join(flags_values[k])}"
                           for k, a in args_duplicates])
     if args_duplicates:
         GMXMMPBSA_ERROR('Several args are duplicated in the command-line...\n'
