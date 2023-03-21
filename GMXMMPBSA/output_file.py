@@ -178,7 +178,7 @@ def write_outputs(app):
                         final_output.add_section(ie_dict['mutant'][key].summary_output())
                         ie_inconsistent = ie_dict['mutant'][key]['sigma'] > 3.6
 
-            if INPUT['ala']['alarun'] and not INPUT['mutant_only']:
+            if INPUT['ala']['alarun'] and not INPUT['ala']['mutant_only']:
                 final_output.writeline(f'Delta ( Mutant - Normal ) [ Δ(-TΔS) ]')
                 final_output.writeline('ENTROPY RESULTS (INTERACTION ENTROPY):')
                 for key in allowed_met:
