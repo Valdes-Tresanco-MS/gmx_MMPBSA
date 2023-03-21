@@ -667,8 +667,7 @@ def selector(selection: str):
             for r in resl:
                 rr = r.split('-')
                 if len(rr) == 1:
-                    ci = rr[0].split(':')
-                    ri = [chain, int(ci[0]), ''] if len(ci) == 1 else [chain, int(ci[0]), ci[1]]
+                    ri = [chain, int(rr[0]), ''] if rr[0][-1] not in ascii_letters else [chain, int(rr[0][:-1]), rr[0][-1]]
                     if ri in res_selections:
                         logging.warning('Found duplicated residue in selection: CHAIN:{} RES_NUM:{} ICODE: '
                                         '{}'.format(*ri))

@@ -710,8 +710,8 @@ the same used for `print_res` variable in `&decomp` namelist.
                 insertion code are contained in the range
                 
                 **Individual selection**
-                :   `qm_residues="A/5,6:B,6:C,7` Will treat with quantum mechanic all mentioned residues except the 
-                residues A:6:A and A:6:D from chain A
+                :   `qm_residues="A/5,6B,6C,7` Will treat with quantum mechanic all mentioned residues except the 
+                residues 6A and 6D from chain A
                 
                 **Multiple chain selection**
                 :   `qm_residues="A/5-10,100 B/34,56` Will treat with quantum mechanic residues 5 through 10, and 100 from 
@@ -1877,7 +1877,8 @@ sufficient in most cases, however we have added several additional notations
                         contained in the range
                     
                     **Individual selection**
-                    :   `print_res="A/5,6:B,6:C,7 B/25` Will print all mentioned residues except the residues A:6:A and A:6:D
+                    :   `print_res="A/5,6B,6C,7 B/25` Will print all mentioned residues except the residues 6A and 
+                        6D from chain A
     
                 === "Wrong notation"
                     `print_res="A/5-6B,6D-7` Will end in error.
