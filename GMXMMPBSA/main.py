@@ -1274,8 +1274,16 @@ class MMPBSA_App(object):
         allowed_met = ['gb', 'pb', 'rism std', 'rism gf', 'rism pcplus', 'gbnsr6']
         if self.INPUT['general']['interaction_entropy']:
             self.calc_types.normal['ie'] = {}
+            if self.INPUT['ala']['alarun']:
+                self.calc_types.mutant['ie'] = {}
+                if not self.INPUT['ala']['mutant_only']:
+                    self.calc_types.mut_norm['ie'] = {}
         if self.INPUT['general']['c2_entropy']:
             self.calc_types.normal['c2'] = {}
+            if self.INPUT['ala']['alarun']:
+                self.calc_types.mutant['c2'] = {}
+                if not self.INPUT['ala']['mutant_only']:
+                    self.calc_types.mut_norm['c2'] = {}
 
         for key in allowed_met:
             if self.INPUT['general']['interaction_entropy']:
