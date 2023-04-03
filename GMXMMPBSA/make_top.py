@@ -241,7 +241,7 @@ class CheckMakeTop:
         # make index for extract pdb structure
         com_rec_group, com_lig_group = self.FILES.complex_groups
         if com_rec_group == com_lig_group:
-            GMXMMPBSA_ERROR('The receptor and ligand groups have to be different')
+            GMXMMPBSA_ERROR('The receptor and ligand groups must be different')
         num_com_rec_group, str_com_rec_group = get_index_groups(self.FILES.complex_index, com_rec_group)
         num_com_lig_group, str_com_lig_group = get_index_groups(self.FILES.complex_index, com_lig_group)
 
@@ -728,7 +728,8 @@ class CheckMakeTop:
         :return:
         """
         if self.INPUT['general']['PBRadii'] == 7:
-            GMXMMPBSA_ERROR(f"The PBRadii {PBRadii[self.INPUT['general']['PBRadii']]} is not compatible with Amber topologies...")
+            GMXMMPBSA_ERROR(f"The PBRadii {PBRadii[self.INPUT['general']['PBRadii']]} is not compatible with "
+                            f"Amber topologies...")
 
         logging.info('Generating AMBER Compatible PDB Files...')
         # fix receptor and structures
@@ -896,7 +897,7 @@ class CheckMakeTop:
             # check if residues in receptor and ligand was defined
             if not residues_selection['rec'] or not residues_selection['lig']:
                 if not self.INPUT['ala']['alarun']:
-                    GMXMMPBSA_ERROR('For decomposition analysis, you most define residues for both receptor and ligand!')
+                    GMXMMPBSA_ERROR('For decomposition analysis, you must define residues for both receptor and ligand!')
         else:
             for i in self.resl:
                 if i.is_ligand():
@@ -983,7 +984,7 @@ class CheckMakeTop:
         # dict = { resind: [chain, resnum, icode]
         sele_res_dict = self.get_selected_residues(self.INPUT['ala']['mutant_res'])
         if len(sele_res_dict) != 1:
-            GMXMMPBSA_ERROR('Only ONE mutant residue is allowed.')
+            GMXMMPBSA_ERROR('Only ONE mutant residue is allowed!')
         r = sele_res_dict[0]
         res = self.complex_str.residues[r - 1]
         icode = f':{res.insertion_code}' if res.insertion_code else ''

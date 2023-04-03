@@ -165,8 +165,8 @@ class StabilityWarning(MMPBSA_Warning):
 
 class GMXMMPBSA_ERROR():
     def __init__(self, msg='gmx_MMPBSA error', exc=MMPBSA_Error):
-        logging.error(f"{exc.__name__} {msg}.\n           Check the gmx_MMPBSA.log file to report the problem.")
-        raise exc(msg + '\nCheck the gmx_MMPBSA.log file to report the problem.')
+        logging.error(f"{exc.__name__} \n\n{msg}\n\nCheck the gmx_MMPBSA.log file to report the problem.")
+        raise exc('\n\n' + msg + '\n\nCheck the gmx_MMPBSA.log file to report the problem.')
 
 
 class GMXMMPBSA_INFO():

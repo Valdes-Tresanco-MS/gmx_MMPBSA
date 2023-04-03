@@ -503,9 +503,13 @@ def check_str(structure, ref=False, skip=False):
     res_dict = {}
     duplicates = []
     for res in refstr.residues:
-        if 'LP' in res.name:
-            GMXMMPBSA_ERROR('The LP pseudo-atom is not supported. Please remove them following this instructions: '
-                            'https://valdes-tresanco-ms.github.io/gmx_MMPBSA/dev/examples/Protein_ligand_LPH_atoms_CHARMMff/')
+        if not (parmed.residue.AminoAcidResidue.has(res.name) or
+                parmed.residue.DNAResidue.has(res.name) or
+                parmed.residue.RNAResidue.has(res.name)):
+            for atm in res.atoms:
+                if 'LP' in atm.name:
+                    GMXMMPBSA_ERROR('The LP pseudo-atom is not supported. Please remove them following these instructions: '
+                                    'https://valdes-tresanco-ms.github.io/gmx_MMPBSA/dev/examples/Protein_ligand_LPH_atoms_CHARMMff')
         if res.chain == '':
             if ref:
                 GMXMMPBSA_ERROR('The reference structure used is inconsistent. The following residue does not have a '
@@ -653,7 +657,7 @@ def selector(selection: str):
         try:
             dist = float(string_list[1])
         except:
-            GMXMMPBSA_ERROR(f'Invalid dist, we expected a float value but we get "{string_list[1]}"')
+            GMXMMPBSA_ERROR(f'Invalid distance value, we expected a float value but we get "{string_list[1]}"')
     else:
         # try to process residue selection
         for s in string_list:
@@ -677,7 +681,7 @@ def selector(selection: str):
                         start = int(rr[0])
                         end = int(rr[1]) + 1
                     except:
-                        GMXMMPBSA_ERROR(f'When residues range is defined, start and end most be integer but we get'
+                        GMXMMPBSA_ERROR(f'When residues range is defined, start and end must be integers but we got'
                                         f' {rr[0]} and {rr[1]}')
                     for cr in range(start, end):
                         if [chain, cr, ''] in res_selections:
