@@ -1276,6 +1276,8 @@ class CheckMakeTop:
                                     'based on the reference structure. Please check that the reference structure is '
                                     'correct')
                 com_str.residues[c].chain = res.chain
+                # update the chain id (https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/issues/354)
+                self.resl[c].chain = res.chain
                 i = self.resl[c].id_index - 1
                 if self.resl[c].is_receptor():
                     rec_str.residues[i].chain = res.chain
