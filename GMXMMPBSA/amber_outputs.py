@@ -603,7 +603,7 @@ def conv_float(word):
         GMXMMPBSA_ERROR('Some energy terms are undefined. Please, check the input structure and trajectory. Check this '
                         'section the docs for more info '
                         'https://valdes-tresanco-ms.github.io/gmx_MMPBSA/dev/Q%26A/calculations/#possible-solutions')
-    elif 'nan' in word.lower:
+    elif 'nan' in word.lower():
         GMXMMPBSA_ERROR('Some energy terms are undefined. Please, check the input structure and trajectory. Check this '
                         'section the docs for more info '
                         'https://valdes-tresanco-ms.github.io/gmx_MMPBSA/dev/Q%26A/calculations/#possible-solutions')
