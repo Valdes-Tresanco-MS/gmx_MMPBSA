@@ -4,6 +4,13 @@ title: Changelog
 ---
 # Changelog
 
+## gmx_MMPBSA v1.6.1 (04/04/2023)
+
+### Fixes
+
+- PB decomp ends in error (https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/issues/352)
+- Better parsing for errors
+
 ## gmx_MMPBSA v1.6.0 (02/19/2023)
 
 ### Additions

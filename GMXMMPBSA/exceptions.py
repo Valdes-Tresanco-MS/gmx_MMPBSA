@@ -157,11 +157,13 @@ class InputWarning(MMPBSA_Warning):
     """ If we have a non-fatal warning """
     pass
 
+
 class StabilityWarning(MMPBSA_Warning):
     """
     When define stability calculation and protein or ligand
     """
     pass
+
 
 class GMXMMPBSA_ERROR():
     def __init__(self, msg='gmx_MMPBSA error', exc=MMPBSA_Error):
