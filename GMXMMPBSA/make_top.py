@@ -216,8 +216,8 @@ class CheckMakeTop:
             if self.INPUT['gb']['qmcharge_com'] != rec_charge + lig_charge:
                 logging.warning('System specified with odd number of electrons. Most likely the charge of QM region '
                                 '(qmcharge_com) have been set incorrectly.')
-                self.INPUT['gb']['qmcharge_com'] = rec_charge + lig_charge
-                logging.warning(f'Setting qmcharge_com = {rec_charge + lig_charge}')
+            self.INPUT['gb']['qmcharge_com'] = rec_charge + lig_charge
+            logging.warning(f'Setting qmcharge_com = {rec_charge + lig_charge}')
 
             if self.INPUT['gb']['qmcharge_rec'] != rec_charge:
                 logging.warning(f'Setting qmcharge_rec = {rec_charge}')
@@ -871,13 +871,11 @@ class CheckMakeTop:
                                 if rres not in residues_selection['rec']:
                                     residues_selection['rec'].append(rres)
                                     if qm_sele:
-                                        rec_charge += round(
-                                            sum(atm.charge for atm in com_top.residues[rres - 1].atoms), 0)
+                                        rec_charge += sum(atm.charge for atm in com_top.residues[rres - 1].atoms)
                                 if lres not in residues_selection['lig']:
                                     residues_selection['lig'].append(lres)
                                     if qm_sele:
-                                        lig_charge += round(
-                                            sum(atm.charge for atm in com_top.residues[lres - 1].atoms), 0)
+                                        lig_charge += sum(atm.charge for atm in com_top.residues[lres - 1].atoms)
                                 break
         elif res_selection:
             for i in self.resl:
