@@ -1022,7 +1022,7 @@ class CheckMakeTop:
                     res.ter = False
             else:
                 atms_name = [at.name for at in res.atoms]
-                if 'OXT' in atms_name:   # already used, but is better to get here anyway
+                if 'OXT' in atms_name or 'OT1' in atms_name or 'OT2' in atms_name:   # already used, but is better to get here anyway
                     res.ter = 'C'  # ter is a boolean variable, but it is not used anyway
                 elif ('H3' in atms_name and
                       parmed.residue.AminoAcidResidue.has(res.name) # exclude other residues with H3, for examples ligs
@@ -1043,7 +1043,7 @@ class CheckMakeTop:
 
         bb_atoms = 'N,H,CA,HA,C,O,HN'
         nterm_atoms = 'H1,H2,H3'
-        cterm_atoms = 'OXT'
+        cterm_atoms = 'OXT,OT1,OT2'  # OXT amber, OTx charmm
         sc_cb_atom = 'CB'
         sc_ala_atoms = ('HB,' +  # VAL, ILE, THR
                         'HB1,HB2,' + # charmm -> HB1, HB2
