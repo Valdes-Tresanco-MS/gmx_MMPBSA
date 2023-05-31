@@ -753,7 +753,14 @@ class PBout(AmberOutput):
                 self['1-4 VDW'][self.frame_idx] = conv_float(words[3])
                 self['1-4 EEL'][self.frame_idx] = conv_float(words[7])
                 words = outfile.readline().split()
-                self['ENPOLAR'][self.frame_idx] = conv_float(words[2])
+
+                # electrostatic solvation free energy will not report in amber ouput
+                # when `ipb=0`. in such case, set it as 0 would be reasonable
+                if self.INPUT['pb']['ipb'] == 0:
+                    self['ENPOLAR'][self.frame_idx] = 0
+                else:
+                    self['ENPOLAR'][self.frame_idx] = conv_float(words[2])
+
                 if self.INPUT['pb']['inp'] == 2 and not self.apbs:
                     self['EDISPER'][self.frame_idx] = conv_float(words[5])
                 self.frame_idx += 1
