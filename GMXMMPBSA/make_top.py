@@ -213,15 +213,22 @@ class CheckMakeTop:
             logging.info(f'Selected {len(qm_residues)} residues:\n' + '\n'.join(textwraped) + '\n')
             self.INPUT['gb']['qm_residues'] = ','.join(list2range(qm_residues)['string'])
 
+            user_values = (self.INPUT['gb']['qmcharge_com'] or self.INPUT['gb']['qmcharge_rec'] or
+                           self.INPUT['gb']['qmcharge_lig'])
+
             if self.INPUT['gb']['qmcharge_com'] != rec_charge + lig_charge:
                 logging.warning('System specified with odd number of electrons. Most likely the charge of QM region '
                                 '(qmcharge_com) have been set incorrectly.')
-            if self.INPUT['gb']['qmcharge_com']:
+            if user_values:
                 logging.warning('Using user-defined qmcharge_com. Are you sure of this value?')
+                if self.INPUT['gb']['qmcharge_com'] != rec_charge + lig_charge:
+                    logging.warning(
+                        'System specified with odd number of electrons. Most likely the charge of QM region '
+                        '(qmcharge_com) have been set incorrectly. Are you sure of this value?')
             else:
                 self.INPUT['gb']['qmcharge_com'] = rec_charge + lig_charge
                 logging.warning(f'Setting qmcharge_com = {rec_charge + lig_charge}')
-            if self.INPUT['gb']['qmcharge_rec']:
+            if user_values:
                 logging.warning('Using user-defined qmcharge_rec. Are you sure of this value?')
                 if self.INPUT['gb']['qmcharge_rec'] != rec_charge:
                     logging.warning(f"Defined qmcharge_rec ({self.INPUT['gb']['qmcharge_rec']}) is different from the "
@@ -230,7 +237,7 @@ class CheckMakeTop:
                 if self.INPUT['gb']['qmcharge_rec'] != rec_charge:
                     logging.warning(f'Setting qmcharge_rec = {rec_charge}')
                     self.INPUT['gb']['qmcharge_rec'] = rec_charge
-            if self.INPUT['gb']['qmcharge_lig']:
+            if user_values:
                 logging.warning('Using user-defined qmcharge_lig. Are you sure of this value?')
                 if self.INPUT['gb']['qmcharge_lig'] != lig_charge:
                     logging.warning(f"Defined qmcharge_lig ({self.INPUT['gb']['qmcharge_lig']}) is different from the "
