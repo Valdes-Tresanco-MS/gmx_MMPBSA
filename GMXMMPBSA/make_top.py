@@ -220,7 +220,7 @@ class CheckMakeTop:
                 logging.warning('System specified with odd number of electrons. Most likely the charge of QM region '
                                 '(qmcharge_com) have been set incorrectly.')
             if user_values:
-                logging.warning('Using user-defined qmcharge_com. Are you sure of this value?')
+                logging.warning('Using user-defined qmcharge_com.')
                 if self.INPUT['gb']['qmcharge_com'] != rec_charge + lig_charge:
                     logging.warning(
                         'System specified with odd number of electrons. Most likely the charge of QM region '
@@ -229,7 +229,7 @@ class CheckMakeTop:
                 self.INPUT['gb']['qmcharge_com'] = rec_charge + lig_charge
                 logging.warning(f'Setting qmcharge_com = {rec_charge + lig_charge}')
             if user_values:
-                logging.warning('Using user-defined qmcharge_rec. Are you sure of this value?')
+                logging.warning('Using user-defined qmcharge_rec.')
                 if self.INPUT['gb']['qmcharge_rec'] != rec_charge:
                     logging.warning(f"Defined qmcharge_rec ({self.INPUT['gb']['qmcharge_rec']}) is different from the "
                                     f"computed value ({rec_charge}). Are you really sure of this value?")
@@ -238,7 +238,7 @@ class CheckMakeTop:
                     logging.warning(f'Setting qmcharge_rec = {rec_charge}')
                     self.INPUT['gb']['qmcharge_rec'] = rec_charge
             if user_values:
-                logging.warning('Using user-defined qmcharge_lig. Are you sure of this value?')
+                logging.warning('Using user-defined qmcharge_lig.')
                 if self.INPUT['gb']['qmcharge_lig'] != lig_charge:
                     logging.warning(f"Defined qmcharge_lig ({self.INPUT['gb']['qmcharge_lig']}) is different from the "
                                     f"computed value ({lig_charge}). Are you really sure of this value?")
