@@ -905,11 +905,11 @@ class CheckMakeTop:
                     if i.is_ligand():
                         residues_selection['lig'].append(i)
                         if qm_sele:
-                            rec_charge += round(sum(atm.charge for atm in com_top.residues[i - 1].atoms), 0)
+                            lig_charge += round(sum(atm.charge for atm in com_top.residues[i - 1].atoms), 0)
                     else:
                         residues_selection['rec'].append(i)
                         if qm_sele:
-                            lig_charge += round(sum(atm.charge for atm in com_top.residues[i - 1].atoms), 0)
+                            rec_charge += round(sum(atm.charge for atm in com_top.residues[i - 1].atoms), 0)
                     res_selection.remove([rres.chain, rres.number, rres.insertion_code])
             for res in res_selection:
                 logging.warning("We couldn't find this residue CHAIN:{} RES_NUM:{} ICODE: {}".format(*res))
@@ -922,11 +922,11 @@ class CheckMakeTop:
                 if i.is_ligand():
                     residues_selection['lig'].append(i)
                     if qm_sele:
-                        rec_charge += round(sum(atm.charge for atm in com_top.residues[i - 1].atoms), 0)
+                        lig_charge += round(sum(atm.charge for atm in com_top.residues[i - 1].atoms), 0)
                 else:
                     residues_selection['rec'].append(i)
                     if qm_sele:
-                        lig_charge += round(sum(atm.charge for atm in com_top.residues[i - 1].atoms), 0)
+                        rec_charge += round(sum(atm.charge for atm in com_top.residues[i - 1].atoms), 0)
         sele_res = sorted([r for m in residues_selection.values() for r in m], key=lambda x: x.index)
         return (sele_res, (rec_charge, lig_charge)) if qm_sele else sele_res
 
