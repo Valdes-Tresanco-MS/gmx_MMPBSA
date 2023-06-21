@@ -36,6 +36,7 @@ Classes:
 # ##############################################################################
 
 from __future__ import division
+import logging
 
 import parmed
 from parmed.amber.mdin import Mdin
@@ -98,6 +99,7 @@ def create_inputs(INPUT, prmtop_system, pre):
                 com_input = deepcopy(INPUT)
                 if com_arad:
                     com_input['gb']['arad'] = com_arad
+                    logging.warning(f'Setting complex arad = {com_arad}')
                 com_mdin = SanderGBDecomp(com_input, rec_res, pri_res)
                 com_mdin.write_input(f"{pre}gb_decomp_com.mdin")
             else:
@@ -106,18 +108,21 @@ def create_inputs(INPUT, prmtop_system, pre):
                 com_input = deepcopy(INPUT)
                 if com_arad:
                     com_input['gb']['arad'] = com_arad
+                    logging.warning(f'Setting complex arad = {com_arad}')
                 com_mdin = SanderGBDecomp(com_input, rec_res, lig_res, pri_res)
                 rec_res = ['Residues considered as REC', full_rec]
                 pri_res = ['Residues to print', rec_card]
                 rec_input = deepcopy(INPUT)
                 if rec_arad:
                     rec_input['gb']['arad'] = rec_arad
+                    logging.warning(f'Setting receptor arad = {rec_arad}')
                 rec_mdin = SanderGBDecomp(rec_input, rec_res, pri_res)
                 lig_res = ['Residues considered as LIG', full_lig]
                 pri_res = ['Residues to print', lig_card]
                 lig_input = deepcopy(INPUT)
                 if lig_arad:
                     lig_input['gb']['arad'] = lig_arad
+                    logging.warning(f'Setting ligand arad = {lig_arad}')
                 lig_mdin = SanderGBDecomp(lig_input, lig_res, pri_res)
                 com_mdin.write_input(f"{pre}gb_decomp_com.mdin")
                 rec_mdin.write_input(f"{pre}gb_decomp_rec.mdin")
@@ -202,6 +207,7 @@ def create_inputs(INPUT, prmtop_system, pre):
                 # check if alpb
                 if com_arad:
                     com_input['gb']['arad'] = com_arad
+                    logging.warning(f'Setting complex arad = {com_arad}')
                 gb_mdin = SanderGBInput(com_input)
                 gb_mdin.make_mdin()
                 gb_mdin.write_input(f'{pre}gb_qmmm_com.mdin')
@@ -215,6 +221,7 @@ def create_inputs(INPUT, prmtop_system, pre):
                     # check if alpb
                     if rec_arad:
                         rec_input['gb']['arad'] = rec_arad
+                        logging.warning(f'Setting receptor arad = {rec_arad}')
                     gb_mdin = SanderGBInput(rec_input)
                     gb_mdin.make_mdin()
                     gb_mdin.write_input(f'{pre}gb_qmmm_rec.mdin')
@@ -227,6 +234,7 @@ def create_inputs(INPUT, prmtop_system, pre):
                     # check if alpb
                     if lig_arad:
                         lig_input['gb']['arad'] = lig_arad
+                        logging.warning(f'Setting ligand arad = {lig_arad}')
                     gb_mdin = SanderGBInput(lig_input)
                     gb_mdin.make_mdin()
                     gb_mdin.write_input(f'{pre}gb_qmmm_lig.mdin')
@@ -236,14 +244,17 @@ def create_inputs(INPUT, prmtop_system, pre):
                 rec_input = deepcopy(INPUT)
                 lig_input = deepcopy(INPUT)
                 com_input['gb']['arad'] = com_arad
+                logging.warning(f'Setting complex arad = {com_arad}')
                 gb_mdin = SanderGBInput(com_input)
                 gb_mdin.make_mdin()
                 gb_mdin.write_input(f'{pre}gb_com.mdin')
                 rec_input['gb']['arad'] = rec_arad
+                logging.warning(f'Setting receptor arad = {rec_arad}')
                 gb_mdin = SanderGBInput(rec_input)
                 gb_mdin.make_mdin()
                 gb_mdin.write_input(f'{pre}gb_rec.mdin')
                 lig_input['gb']['arad'] = lig_arad
+                logging.warning(f'Setting ligand arad = {lig_arad}')
                 gb_mdin = SanderGBInput(lig_input)
                 gb_mdin.make_mdin()
                 gb_mdin.write_input(f'{pre}gb_lig.mdin')
