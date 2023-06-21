@@ -190,7 +190,7 @@ def make_trajectories(INPUT, FILES, size, cpptraj, pre):
                             frames=frame_string, filetype=INPUT['general']['netcdf'])
             # FIXME: include pbsa.cuda. For APBS and PBDelphi we need to generate pqr instead
             if INPUT['gbnsr6']['gbnsr6run']:
-                traj.Outtraj(f"{pre}inpcrd_{i}/{pre}receptor.inpcrd", frames=frame_string, filetype='restart',
+                rectraj.Outtraj(f"{pre}inpcrd_{i}/{pre}receptor.inpcrd", frames=frame_string, filetype='restart',
                              options=['keepext'])
             last_frame += frame_count[i]
 
@@ -231,7 +231,7 @@ def make_trajectories(INPUT, FILES, size, cpptraj, pre):
                             frames=frame_string, filetype=INPUT['general']['netcdf'])
             # FIXME: include pbsa.cuda. For APBS and PBDelphi we need to generate pqr instead
             if INPUT['gbnsr6']['gbnsr6run']:
-                traj.Outtraj(f"{pre}inpcrd_{i}/{pre}ligand.inpcrd", frames=frame_string, filetype='restart',
+                ligtraj.Outtraj(f"{pre}inpcrd_{i}/{pre}ligand.inpcrd", frames=frame_string, filetype='restart',
                              options=['keepext'])
             last_frame += frame_count[i]
 
