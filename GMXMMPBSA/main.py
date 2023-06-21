@@ -261,10 +261,6 @@ class MMPBSA_App(object):
         prefix = pre + 'mutant_' if mutant else pre
 
 
-        mm_com_calculated = False
-        mm_rec_calculated = False
-        mm_lig_calculated = False
-
         # First load the GB calculations
         if self.INPUT['gb']['gbrun']:
             incrd = '%sdummy%%s.inpcrd' % prefix
@@ -386,17 +382,17 @@ class MMPBSA_App(object):
 
             self.calc_list.append(PrintCalc(f"Beginning GBNSR6 calculations with {progs['gbnsr6']}"),
                                   timer_key='gbnsr6')
-            if not mm_com_calculated:
-                self.calc_list.append(PrintCalc("  calculating complex contribution..."),
-                                      timer_key='gbnsr6')
-                c = EnergyCalculation(progs['gb'], parm_system.complex_prmtop,
-                                      incrd % 'complex',
-                                      '%scomplex.%s.%%d' % (prefix, trj_sfx),
-                                      mm_mdin,
-                                      f'{prefix}complex_mm.mdout.%d',
-                                      self.pre + 'restrt.%d')
-                self.calc_list.append(c, '    calculating MM...', timer_key='gbnsr6',
-                                      output_basename=f'{prefix}complex_mm.mdout.%d')
+
+            self.calc_list.append(PrintCalc("  calculating complex contribution..."),
+                                  timer_key='gbnsr6')
+            c = EnergyCalculation(progs['gb'], parm_system.complex_prmtop,
+                                  incrd % 'complex',
+                                  '%scomplex.%s.%%d' % (prefix, trj_sfx),
+                                  mm_mdin,
+                                  f'{prefix}complex_mm.mdout.%d',
+                                  self.pre + 'restrt.%d')
+            self.calc_list.append(c, '    calculating MM...', timer_key='gbnsr6',
+                                  output_basename=f'{prefix}complex_mm.mdout.%d')
             # use pre directly to have only one folder per rank
             files = sorted(list(Path(f"{pre}inpcrd_{self.mpi_rank}").glob(f"{prefix}complex*.inpcrd")),
                            key=lambda x: int(x.stem.split('.')[1]))
@@ -429,18 +425,18 @@ class MMPBSA_App(object):
                                  f'{prefix}receptor_gbnsr6.mdout.%d')
                     self.calc_list.append(c, '', timer_key='gbnsr6')
                 else:
-                    if not mm_rec_calculated:
-                        self.calc_list.append(PrintCalc("  calculating receptor contribution..."),
-                                              timer_key='gbnsr6')
-                        c = EnergyCalculation(progs['gb'], parm_system.receptor_prmtop,
-                                              incrd % 'receptor',
-                                              f'{prefix}receptor.{trj_sfx}.%d',
-                                              mm_mdin,
-                                              f'{prefix}receptor_mm.mdout.%d',
-                                              self.pre + 'restrt.%d')
 
-                        self.calc_list.append(c, '    calculating MM...', timer_key='gbnsr6',
-                                              output_basename=f'{prefix}receptor_mm.mdout.%d')
+                    self.calc_list.append(PrintCalc("  calculating receptor contribution..."),
+                                          timer_key='gbnsr6')
+                    c = EnergyCalculation(progs['gb'], parm_system.receptor_prmtop,
+                                          incrd % 'receptor',
+                                          f'{prefix}receptor.{trj_sfx}.%d',
+                                          mm_mdin,
+                                          f'{prefix}receptor_mm.mdout.%d',
+                                          self.pre + 'restrt.%d')
+
+                    self.calc_list.append(c, '    calculating MM...', timer_key='gbnsr6',
+                                          output_basename=f'{prefix}receptor_mm.mdout.%d')
                     files = sorted(list(Path(f"{pre}inpcrd_{self.mpi_rank}").glob(f"{prefix}receptor*.inpcrd")),
                                    key=lambda x: int(x.stem.split('.')[1]))
                     mdouts = [
@@ -472,18 +468,17 @@ class MMPBSA_App(object):
                                  f'{prefix}ligand_gbnsr6.mdout.%d')
                     self.calc_list.append(c, '', timer_key='gbnsr6')
                 else:
-                    if not mm_lig_calculated:
-                        self.calc_list.append(PrintCalc("  calculating ligand contribution..."),
-                                              timer_key='gbnsr6')
-                        c = EnergyCalculation(progs['gb'], parm_system.ligand_prmtop,
-                                              incrd % 'ligand',
-                                              f'{prefix}ligand.{trj_sfx}.%d',
-                                              mm_mdin,
-                                              f'{prefix}ligand_mm.mdout.%d',
-                                              self.pre + 'restrt.%d')
+                    self.calc_list.append(PrintCalc("  calculating ligand contribution..."),
+                                          timer_key='gbnsr6')
+                    c = EnergyCalculation(progs['gb'], parm_system.ligand_prmtop,
+                                          incrd % 'ligand',
+                                          f'{prefix}ligand.{trj_sfx}.%d',
+                                          mm_mdin,
+                                          f'{prefix}ligand_mm.mdout.%d',
+                                          self.pre + 'restrt.%d')
 
-                        self.calc_list.append(c, '    calculating MM...', timer_key='gbnsr6',
-                                              output_basename=f'{prefix}ligand_mm.mdout.%d')
+                    self.calc_list.append(c, '    calculating MM...', timer_key='gbnsr6',
+                                          output_basename=f'{prefix}ligand_mm.mdout.%d')
                     files = sorted(list(Path(f"{pre}inpcrd_{self.mpi_rank}").glob(f"{prefix}ligand*.inpcrd")),
                                    key=lambda x: int(x.stem.split('.')[1]))
                     mdouts = [
