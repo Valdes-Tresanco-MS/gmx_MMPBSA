@@ -129,6 +129,7 @@ def make_trajectories(INPUT, FILES, size, cpptraj, pre):
             last_frame += frame_count[i]
         traj.Unstrip(restrip_solvent=True)
         traj.rms('!(%s)' % strip_mask)
+        rec_frames = com_frames
 
     if not stability and not FILES.ligand_trajs:
         traj.Strip(INPUT['general']['receptor_mask'])
@@ -149,6 +150,7 @@ def make_trajectories(INPUT, FILES, size, cpptraj, pre):
             last_frame += frame_count[i]
         traj.Unstrip(restrip_solvent=True)
         traj.rms('!(%s)' % strip_mask)
+        lig_frames = com_frames
 
     # Run cpptraj to get the trajectory
     traj.Run(pre + 'normal_traj_cpptraj.out')
