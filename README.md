@@ -1,11 +1,15 @@
-[![pypi](https://img.shields.io/pypi/v/gmx-MMPBSA)](https://pypi.org/project/gmx-MMPBSA/)
-[![support](https://img.shields.io/badge/support-JetBrains-brightgreen)](https://www.jetbrains.com/?from=gmx_MMPBSA)
-[![support](https://img.shields.io/badge/support-Sourcery-orange)](https://sourcery.ai/invite/gndRrjlo)
 [![python](https://img.shields.io/badge/python-v3.x-blue)]()
-[![help forum](https://img.shields.io/badge/help_forum-Google_group-blue)](https://groups.google.com/g/gmx_mmpbsa)
-[![Issue tracking](https://img.shields.io/badge/Issue_tracking-GitHub-blue)](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/issues)
+[![pypi](https://img.shields.io/pypi/v/gmx-MMPBSA)](https://pypi.org/project/gmx-MMPBSA/)
 [![Downloads](https://pepy.tech/badge/gmx-mmpbsa)](https://pepy.tech/project/gmx-mmpbsa)
 [![DOI](https://img.shields.io/badge/DOI-10.1021%2Facs.jctc.1c00645-blue)](https://pubs.acs.org/doi/10.1021/acs.jctc.1c00645)
+
+[![help forum](https://img.shields.io/badge/Docs-Getting_Started-blue)](https://valdes-tresanco-ms.github.io/gmx_MMPBSA/dev/getting-started/)
+[![help forum](https://img.shields.io/badge/help_forum-Google_group-blue)](https://groups.google.com/g/gmx_mmpbsa)
+[![Issue tracking](https://img.shields.io/badge/Issue_tracking-GitHub-blue)](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/issues)
+
+[![support](https://img.shields.io/badge/support-JetBrains-brightgreen)](https://www.jetbrains.com/?from=gmx_MMPBSA)
+[![support](https://img.shields.io/badge/support-Sourcery-orange)](https://sourcery.ai/invite/gndRrjlo)
+
 
 # Welcome to gmx_MMPBSA!
 gmx_MMPBSA is a new tool based on AMBER's MMPBSA.py aiming to perform end-state free energy calculations with GROMACS 
