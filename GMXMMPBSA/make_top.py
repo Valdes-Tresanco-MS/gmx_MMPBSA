@@ -213,18 +213,39 @@ class CheckMakeTop:
             logging.info(f'Selected {len(qm_residues)} residues:\n' + '\n'.join(textwraped) + '\n')
             self.INPUT['gb']['qm_residues'] = ','.join(list2range(qm_residues)['string'])
 
+            user_values = (self.INPUT['gb']['qmcharge_com'] or self.INPUT['gb']['qmcharge_rec'] or
+                           self.INPUT['gb']['qmcharge_lig'])
+
             if self.INPUT['gb']['qmcharge_com'] != rec_charge + lig_charge:
                 logging.warning('System specified with odd number of electrons. Most likely the charge of QM region '
                                 '(qmcharge_com) have been set incorrectly.')
+            if user_values:
+                logging.warning('Using user-defined qmcharge_com.')
+                if self.INPUT['gb']['qmcharge_com'] != rec_charge + lig_charge:
+                    logging.warning(
+                        'System specified with odd number of electrons. Most likely the charge of QM region '
+                        '(qmcharge_com) have been set incorrectly. Are you sure of this value?')
+            else:
                 self.INPUT['gb']['qmcharge_com'] = rec_charge + lig_charge
                 logging.warning(f'Setting qmcharge_com = {rec_charge + lig_charge}')
-
-            if self.INPUT['gb']['qmcharge_rec'] != rec_charge:
-                logging.warning(f'Setting qmcharge_rec = {rec_charge}')
-                self.INPUT['gb']['qmcharge_rec'] = rec_charge
-            if self.INPUT['gb']['qmcharge_lig'] != lig_charge:
-                logging.warning(f'Setting qmcharge_lig = {lig_charge}')
-                self.INPUT['gb']['qmcharge_lig'] = lig_charge
+            if user_values:
+                logging.warning('Using user-defined qmcharge_rec.')
+                if self.INPUT['gb']['qmcharge_rec'] != rec_charge:
+                    logging.warning(f"Defined qmcharge_rec ({self.INPUT['gb']['qmcharge_rec']}) is different from the "
+                                    f"computed value ({rec_charge}). Are you really sure of this value?")
+            else:
+                if self.INPUT['gb']['qmcharge_rec'] != rec_charge:
+                    logging.warning(f'Setting qmcharge_rec = {rec_charge}')
+                    self.INPUT['gb']['qmcharge_rec'] = rec_charge
+            if user_values:
+                logging.warning('Using user-defined qmcharge_lig.')
+                if self.INPUT['gb']['qmcharge_lig'] != lig_charge:
+                    logging.warning(f"Defined qmcharge_lig ({self.INPUT['gb']['qmcharge_lig']}) is different from the "
+                                    f"computed value ({lig_charge}). Are you really sure of this value?")
+            else:
+                if self.INPUT['gb']['qmcharge_lig'] != lig_charge:
+                    logging.warning(f'Setting qmcharge_lig = {lig_charge}')
+                    self.INPUT['gb']['qmcharge_lig'] = lig_charge
 
         self.cleanup_trajs()
         return tops
@@ -241,7 +262,7 @@ class CheckMakeTop:
         # make index for extract pdb structure
         com_rec_group, com_lig_group = self.FILES.complex_groups
         if com_rec_group == com_lig_group:
-            GMXMMPBSA_ERROR('The receptor and ligand groups have to be different')
+            GMXMMPBSA_ERROR('The receptor and ligand groups must be different')
         num_com_rec_group, str_com_rec_group = get_index_groups(self.FILES.complex_index, com_rec_group)
         num_com_lig_group, str_com_lig_group = get_index_groups(self.FILES.complex_index, com_lig_group)
 
@@ -728,7 +749,8 @@ class CheckMakeTop:
         :return:
         """
         if self.INPUT['general']['PBRadii'] == 7:
-            GMXMMPBSA_ERROR(f"The PBRadii {PBRadii[self.INPUT['general']['PBRadii']]} is not compatible with Amber topologies...")
+            GMXMMPBSA_ERROR(f"The PBRadii {PBRadii[self.INPUT['general']['PBRadii']]} is not compatible with "
+                            f"Amber topologies...")
 
         logging.info('Generating AMBER Compatible PDB Files...')
         # fix receptor and structures
@@ -870,13 +892,11 @@ class CheckMakeTop:
                                 if rres not in residues_selection['rec']:
                                     residues_selection['rec'].append(rres)
                                     if qm_sele:
-                                        rec_charge += round(
-                                            sum(atm.charge for atm in com_top.residues[rres - 1].atoms), 0)
+                                        rec_charge += sum(atm.charge for atm in com_top.residues[rres - 1].atoms)
                                 if lres not in residues_selection['lig']:
                                     residues_selection['lig'].append(lres)
                                     if qm_sele:
-                                        lig_charge += round(
-                                            sum(atm.charge for atm in com_top.residues[lres - 1].atoms), 0)
+                                        lig_charge += sum(atm.charge for atm in com_top.residues[lres - 1].atoms)
                                 break
         elif res_selection:
             for i in self.resl:
@@ -885,28 +905,28 @@ class CheckMakeTop:
                     if i.is_ligand():
                         residues_selection['lig'].append(i)
                         if qm_sele:
-                            rec_charge += round(sum(atm.charge for atm in com_top.residues[i - 1].atoms), 0)
+                            lig_charge += round(sum(atm.charge for atm in com_top.residues[i - 1].atoms), 0)
                     else:
                         residues_selection['rec'].append(i)
                         if qm_sele:
-                            lig_charge += round(sum(atm.charge for atm in com_top.residues[i - 1].atoms), 0)
+                            rec_charge += round(sum(atm.charge for atm in com_top.residues[i - 1].atoms), 0)
                     res_selection.remove([rres.chain, rres.number, rres.insertion_code])
             for res in res_selection:
                 logging.warning("We couldn't find this residue CHAIN:{} RES_NUM:{} ICODE: {}".format(*res))
             # check if residues in receptor and ligand was defined
             if not residues_selection['rec'] or not residues_selection['lig']:
                 if not self.INPUT['ala']['alarun']:
-                    GMXMMPBSA_ERROR('For decomposition analysis, you most define residues for both receptor and ligand!')
+                    GMXMMPBSA_ERROR('For decomposition analysis, you must define residues for both receptor and ligand!')
         else:
             for i in self.resl:
                 if i.is_ligand():
                     residues_selection['lig'].append(i)
                     if qm_sele:
-                        rec_charge += round(sum(atm.charge for atm in com_top.residues[i - 1].atoms), 0)
+                        lig_charge += round(sum(atm.charge for atm in com_top.residues[i - 1].atoms), 0)
                 else:
                     residues_selection['rec'].append(i)
                     if qm_sele:
-                        lig_charge += round(sum(atm.charge for atm in com_top.residues[i - 1].atoms), 0)
+                        rec_charge += round(sum(atm.charge for atm in com_top.residues[i - 1].atoms), 0)
         sele_res = sorted([r for m in residues_selection.values() for r in m], key=lambda x: x.index)
         return (sele_res, (rec_charge, lig_charge)) if qm_sele else sele_res
 
@@ -983,7 +1003,7 @@ class CheckMakeTop:
         # dict = { resind: [chain, resnum, icode]
         sele_res_dict = self.get_selected_residues(self.INPUT['ala']['mutant_res'])
         if len(sele_res_dict) != 1:
-            GMXMMPBSA_ERROR('Only ONE mutant residue is allowed.')
+            GMXMMPBSA_ERROR('Only ONE mutant residue is allowed!')
         r = sele_res_dict[0]
         res = self.complex_str.residues[r - 1]
         icode = f':{res.insertion_code}' if res.insertion_code else ''
@@ -1009,6 +1029,27 @@ class CheckMakeTop:
         # return r - 1 since r is the complex mutant index from amber selection format. Needed for top mutation only
         return r - 1, part_mut, part_index
 
+    def _assign_ter(self):
+        for res in self.complex_str.residues:
+            # evident terminal
+            if len(res.name) == 4:
+                if res.name.startswith('N'):
+                    res.ter = 'N'   # ter is a boolean variable, but it is not used anyway
+                elif res.name.startswith('C'):
+                    res.ter = 'C'  # ter is a boolean variable, but it is not used anyway
+                else:
+                    res.ter = False
+            else:
+                atms_name = [at.name for at in res.atoms]
+                if 'OXT' in atms_name or 'OT1' in atms_name or 'OT2' in atms_name:   # already used, but is better to get here anyway
+                    res.ter = 'C'  # ter is a boolean variable, but it is not used anyway
+                elif ('H3' in atms_name and
+                      parmed.residue.AminoAcidResidue.has(res.name) # exclude other residues with H3, for examples ligs
+                    ):
+                    res.ter = 'N'  # ter is a boolean variable, but it is not used anyway
+                else:
+                    res.ter = False
+
     def makeMutTop(self, wt_top, mut_index, pdb=False):
         """
 
@@ -1021,7 +1062,7 @@ class CheckMakeTop:
 
         bb_atoms = 'N,H,CA,HA,C,O,HN'
         nterm_atoms = 'H1,H2,H3'
-        cterm_atoms = 'OXT'
+        cterm_atoms = 'OXT,OT1,OT2'  # OXT amber, OTx charmm
         sc_cb_atom = 'CB'
         sc_ala_atoms = ('HB,' +  # VAL, ILE, THR
                         'HB1,HB2,' + # charmm -> HB1, HB2
@@ -1032,37 +1073,66 @@ class CheckMakeTop:
                         'CG')
 
         if mut_aa in ['GLY', 'G']:
-            # FIXME: allow terminal residues to mutate?
             strip_mask = f":{mut_index + 1} &!@{','.join([bb_atoms, nterm_atoms, cterm_atoms])}"
             if not pdb:
                 strip_mask += f",{sc_cb_atom}"
         else:
-            # FIXME: allow terminal residues to mutate?
             strip_mask = f":{mut_index + 1} &!@{','.join([bb_atoms, sc_cb_atom, nterm_atoms, cterm_atoms])}"
             if not pdb:
                 strip_mask += f",{sc_ala_atoms}"
         mut_top.strip(strip_mask)
 
-        h_atoms_prop = {}
-        # get an example HB atom if not PDB
-        if not pdb:
-            for res in mut_top.residues:
-                if res.name == mut_aa:
-                    for at in res.atoms:
-                        if (
-                                mut_aa == 'GLY'
-                                and at.name in ['HA2']
-                                or mut_aa != 'GLY'
-                                and at.name in ['HB2']
-                        ):
-                            h_atoms_prop['mass'] = at.mass
-                            h_atoms_prop['element'] = at.element
-                            h_atoms_prop['atomic_number'] = at.atomic_number
-                            h_atoms_prop['charge'] = at.charge
-                            h_atoms_prop['atom_type'] = at.atom_type
-                            h_atoms_prop['type'] = at.type
-                            break
-                    break
+        # add terminals only for mutation
+        self._assign_ter()
+
+        # solution for issue #364
+        # NOTE: We selected the charge from  Amber14SB because it is the same as amber99sb, amber99SB-ILDN, amber12SB,
+        # etc. In any case, the error associated with this charge must be small.
+        # GLY-HB atom type - amber 14SB
+        hc = parmed.AtomType('HC', None, 1.008, 1)
+        hc.set_lj_params(eps=0.0157, rmin=1.4870, eps14=0.0157, rmin14=1.4870)
+        # GLY-HA atom type - amber 14SB
+        h1 = parmed.AtomType('H1', None, 1.008, 1)
+        h1.set_lj_params(eps=0.0157, rmin=1.3870, eps14=0.0157, rmin14=1.3870)
+        # GLY-HB atom type - charmm
+        ha3 = parmed.AtomType('HA3', None, 1.008, 1)
+        ha3.set_lj_params(eps=1.3400, rmin=0.0240, eps14=1.3400, rmin14=0.0240)
+        # GLY-HA atom type - charmm
+        hb2 = parmed.AtomType('HB2', None, 1.008, 1)
+        hb2.set_lj_params(eps=1.3400, rmin=0.0280, eps14=1.3400, rmin14=0.0280)
+
+        # In amber the charge depend on aa position in the sequence.
+        # ALA: C: 0.0764, N: 0.0300, int: 0.0603
+        # GLY: C: 0.1056, N: 0.0895, int: 0.0698
+
+        if self.complex_str.residues[mut_index].ter == 'C':
+            h_ala_charge = 0.0764
+            h_gly_charge = 0.1056
+        elif self.complex_str.residues[mut_index].ter == 'N':
+            h_ala_charge = 0.0300
+            h_gly_charge = 0.0895
+        else:
+            h_ala_charge = 0.0603
+            h_gly_charge = 0.0698
+
+        h_atoms_prop = {
+            'charmm': {
+                'ALA': {
+                    'mass': 1.008, 'element': 'H', 'atomic_number': 1, 'atom_type': ha3, 'type': 'HA3',
+                    'charge': 0.09},
+                'GLY': {
+                    'mass': 1.008, 'element': 'H', 'atomic_number': 1, 'atom_type': hb2, 'type': 'HB2',
+                    'charge': 0.09}},
+            'amber': {
+                'ALA': {
+                    'mass': 1.008, 'element': 'H', 'atomic_number': 1, 'atom_type': hc, 'type': 'HC',
+                    'charge': h_ala_charge},
+                'GLY': {
+                    'mass': 1.008, 'element': 'H', 'atomic_number': 1, 'atom_type': h1, 'type': 'H1',
+                    'charge': h_gly_charge}}
+        }
+        ff_rep = 'charmm' if isinstance(mut_top, parmed.amber.ChamberParm) else 'amber'
+
         cb_atom = None
         ca_atom = None
         logging.info(
@@ -1083,42 +1153,82 @@ class CheckMakeTop:
                         [ca_atom.xx, ca_atom.xy,
                          ca_atom.xz, at.xx, at.xy,
                          at.xz], 1.09)
-                    for ref_at in h_atoms_prop:
-                        setattr(at, ref_at, h_atoms_prop[ref_at])
+                    for p in h_atoms_prop[ff_rep]['GLY']:
+                        setattr(at, p, h_atoms_prop[ff_rep]['GLY'][p])
                 elif at.name in ['HA']:
                     at.name = 'HA1'
-                    at.type = h_atoms_prop['type']
-                    at.atom_type = h_atoms_prop['atom_type']
+                    for p in h_atoms_prop[ff_rep]['GLY']:
+                        setattr(at, p, h_atoms_prop[ff_rep]['GLY'][p])
             else:
+                # ARG, ASN, ASP, GLN, GLU, HIS, LEU, LYS, MET, PHE, TYR, TRP
+                #    |
+                # HN-N
+                #    |   HB1
+                #    |   |
+                # HA-CA--CB--CG (ARG, ASN, ASP, GLN, GLU, HIS, LEU, LYS, MET, PHE, TYR, TRP)
+                #    |   |
+                #    |   HB2
+                #  O=C
+                #    |
+                #
+                # CYS (no S-S), SER
+                #    |
+                # HN-N
+                #    |   HB1
+                #    |   |
+                # HA-CA--CB--SG|OG (CYS | SER)
+                #    |   |
+                #    |   HB2
+                #  O=C
+                #    |
+                #
+                # ILE, THR, VAL
+                #    |
+                # HN-N
+                #    |     CG2 (ILE, VAL, THR)
+                #    |    /
+                # HA-CA--CB-HB
+                #    |    \
+                #    |     CG1|OG1  (ILE, VAL | THR)
+                #  O=C
+                #    |
+                #
+                # EXCLUDE: GLY, PRO, ALA
+
                 if at.name == 'CB':
                     cb_atom = at
                     continue
-                if at.name == 'CG2':  # VAL, LEU and THR
+                if at.name == 'CG2':  # VAL, ILE and THR
                     at.name = 'HB2'
                     cb_atom.xx, cb_atom.xy, cb_atom.xz, at.xx, at.xy, at.xz = _scaledistance(
                         [cb_atom.xx, cb_atom.xy,
                          cb_atom.xz, at.xx, at.xy,
                          at.xz], 1.09)
-                    for ref_at in h_atoms_prop:
-                        setattr(at, ref_at, h_atoms_prop[ref_at])
-                elif at.name in ['HB']:  # VAL, LEU and THR
+                    for p in h_atoms_prop[ff_rep]['ALA']:
+                        setattr(at, p, h_atoms_prop[ff_rep]['ALA'][p])
+                elif at.name in ['HB']:  # ILE, VAL and THR
                     at.name = 'HB1'
-                    at.type = h_atoms_prop['type']
-                    at.atom_type = h_atoms_prop['atom_type']
-                elif at.name in ['CG', 'OG', 'SG',  # LEU, PHE, TRP, MET, TYR, ARG, LYS, ASN, GLN, ASP, GLU, HIS,
-                                 # PRO (EXCLUDED), CYS (EXCLUDED IF S-S), SER
-                                 'CG1', 'OG1'  # VAL, LEU and THR
+                    for p in h_atoms_prop[ff_rep]['ALA']:
+                        setattr(at, p, h_atoms_prop[ff_rep]['ALA'][p])
+                elif at.name in ['CG',   # LEU, PHE, TRP, MET, TYR, ARG, LYS, ASN, GLN, ASP, GLU, HIS,
+                                 'OG',  # SER
+                                 'SG',  # CYS (no S-S)
+                                 'CG1',  # VAL, ILE and THR
+                                 'OG1'  # THR
                                  ]:
-                    at.name = 'HB3'
+                    # check if it was assigned. In some cases, the HB can be HB2 and HB3 instead HB1 and HB2
+                    if 'HB3' not in [atm.name for atm in mut_top.residues[mut_index].atoms]:
+                        at.name = 'HB3'
+                    else:
+                        at.name = 'HB1'
                     cb_atom.xx, cb_atom.xy, cb_atom.xz, at.xx, at.xy, at.xz = _scaledistance(
-                        [cb_atom.xx, cb_atom.xy,
-                         cb_atom.xz, at.xx, at.xy,
-                         at.xz], 1.09)
-                    for ref_at in h_atoms_prop:
-                        setattr(at, ref_at, h_atoms_prop[ref_at])
+                        [cb_atom.xx, cb_atom.xy, cb_atom.xz, at.xx, at.xy, at.xz], 1.09)
+                    for p in h_atoms_prop[ff_rep]['ALA']:
+                        setattr(at, p, h_atoms_prop[ff_rep]['ALA'][p])
                 elif at.name in ['HB1', 'HB2', 'HB3']:
-                    at.type = h_atoms_prop['type']
-                    at.atom_type = h_atoms_prop['atom_type']
+                    for p in h_atoms_prop[ff_rep]['ALA']:
+                        setattr(at, p, h_atoms_prop[ff_rep]['ALA'][p])
+
         # change intdiel if cas_intdiel was defined before end the mutation process
         if self.INPUT['ala']['cas_intdiel']:
             if self.INPUT['gb']['gbrun']:
@@ -1275,6 +1385,8 @@ class CheckMakeTop:
                                     'based on the reference structure. Please check that the reference structure is '
                                     'correct')
                 com_str.residues[c].chain = res.chain
+                # update the chain id (https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/issues/354)
+                self.resl[c].chain = res.chain
                 i = self.resl[c].id_index - 1
                 if self.resl[c].is_receptor():
                     rec_str.residues[i].chain = res.chain

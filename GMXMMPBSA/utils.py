@@ -423,34 +423,36 @@ def get_indexes(com_ndx, rec_ndx=None, lig_ndx=None):
 
 
 def _get_dup_args(args):
-    flags_values_list = []
-    cv = []
-    current_flag = None
-    for o in args:
+    flag_index = []
+    flags = []
+
+    for i, o in enumerate(args):
         if o.startswith('-'):
-            if current_flag:
-                flags_values_list.append([current_flag, cv])
-            current_flag = o
-            cv = []
-        else:
-            cv.append(o)
+            flag_index.append(i)
+            flags.append(o)
 
     opt_duplicates = []
-    args_duplicates = []
-    flags = [a[0] for a in flags_values_list]
-
-    for x in flags:
-        if flags.count(x) > 1 and x not in opt_duplicates:
-            opt_duplicates.append(x)
+    flags_values = {}
+    for i, f in enumerate(flags):
+        if flags.count(f) > 1 and f not in opt_duplicates:
+            opt_duplicates.append(f)
+        if i == len(flags) - 1:
+            flags_values[f] = [args[x] for x in range(flag_index[i] + 1, len(args))]
+            print('tets')
+        elif flag_index[i] - flag_index[i+1]:
+            flags_values[f] = [args[x] for x in range(flag_index[i]+1, flag_index[i+1])]
+        else:
+            flags_values[f] = []
 
     if opt_duplicates:
         GMXMMPBSA_ERROR('Several options are duplicated in the command-line...\n'
                         f"Duplicated options:\n\t{', '.join(opt_duplicates)}")
 
-    flags_values_dict = dict(flags_values_list)
+    args_duplicates = []
     unique_args = []
     inverted_args_dict = {}
-    for k, v in flags_values_dict.items():
+    for k, v in flags_values.items():
+        # skip this options since they can share the same group number/name
         if k in ['-cg', '-rg', '-lg']:
             continue
         for a in v:
@@ -460,8 +462,8 @@ def _get_dup_args(args):
             else:
                 args_duplicates.append([k, a])
 
-    text_out = '\n'.join([f"\t{inverted_args_dict[a]} {' '.join(flags_values_dict[inverted_args_dict[a]])} <---> "
-                          f"{k} {' '.join(flags_values_dict[k])}"
+    text_out = '\n'.join([f"\t{inverted_args_dict[a]} {' '.join(flags_values[inverted_args_dict[a]])} <---> "
+                          f"{k} {' '.join(flags_values[k])}"
                           for k, a in args_duplicates])
     if args_duplicates:
         GMXMMPBSA_ERROR('Several args are duplicated in the command-line...\n'
@@ -503,9 +505,13 @@ def check_str(structure, ref=False, skip=False):
     res_dict = {}
     duplicates = []
     for res in refstr.residues:
-        if 'LP' in res.name:
-            GMXMMPBSA_ERROR('The LP pseudo-atom is not supported. Please remove them following this instructions: '
-                            'https://valdes-tresanco-ms.github.io/gmx_MMPBSA/dev/examples/Protein_ligand_LPH_atoms_CHARMMff/')
+        if not (parmed.residue.AminoAcidResidue.has(res.name) or
+                parmed.residue.DNAResidue.has(res.name) or
+                parmed.residue.RNAResidue.has(res.name)):
+            for atm in res.atoms:
+                if 'LP' in atm.name:
+                    GMXMMPBSA_ERROR('The LP pseudo-atom is not supported. Please remove them following these instructions: '
+                                    'https://valdes-tresanco-ms.github.io/gmx_MMPBSA/dev/examples/Protein_ligand_LPH_atoms_CHARMMff')
         if res.chain == '':
             if ref:
                 GMXMMPBSA_ERROR('The reference structure used is inconsistent. The following residue does not have a '
@@ -653,7 +659,7 @@ def selector(selection: str):
         try:
             dist = float(string_list[1])
         except:
-            GMXMMPBSA_ERROR(f'Invalid dist, we expected a float value but we get "{string_list[1]}"')
+            GMXMMPBSA_ERROR(f'Invalid distance value, we expected a float value but we get "{string_list[1]}"')
     else:
         # try to process residue selection
         for s in string_list:
@@ -665,8 +671,7 @@ def selector(selection: str):
             for r in resl:
                 rr = r.split('-')
                 if len(rr) == 1:
-                    ci = rr[0].split(':')
-                    ri = [chain, int(ci[0]), ''] if len(ci) == 1 else [chain, int(ci[0]), ci[1]]
+                    ri = [chain, int(rr[0]), ''] if rr[0][-1] not in ascii_letters else [chain, int(rr[0][:-1]), rr[0][-1]]
                     if ri in res_selections:
                         logging.warning('Found duplicated residue in selection: CHAIN:{} RES_NUM:{} ICODE: '
                                         '{}'.format(*ri))
@@ -677,7 +682,7 @@ def selector(selection: str):
                         start = int(rr[0])
                         end = int(rr[1]) + 1
                     except:
-                        GMXMMPBSA_ERROR(f'When residues range is defined, start and end most be integer but we get'
+                        GMXMMPBSA_ERROR(f'When residues range is defined, start and end must be integers but we got'
                                         f' {rr[0]} and {rr[1]}')
                     for cr in range(start, end):
                         if [chain, cr, ''] in res_selections:

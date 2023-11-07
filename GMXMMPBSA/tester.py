@@ -72,7 +72,7 @@ def run_test(parser):
         GMXMMPBSA_ERROR('Please make sure gmx_MMPBSA and gmx_MMPBSA_ana are in the PATH and try again...')
 
     if not parser.folder.exists():
-        GMXMMPBSA_ERROR(f'{parser.folder} not exists or is inaccessible. Please define a new folder and try again...')
+        GMXMMPBSA_ERROR(f'{parser.folder} does not exist or is inaccessible. Please define a new folder and try again...')
 
     gmx_mmpbsa_test_folder = parser.folder.joinpath('gmx_MMPBSA_test').absolute()
 
@@ -92,7 +92,7 @@ def run_test(parser):
         git_p = subprocess.Popen(['git', 'clone', 'https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA',
                                   gmx_mmpbsa_test_folder.as_posix()])
         if git_p.wait():  # if it quits with return code != 0
-            GMXMMPBSA_ERROR('git failed when try to clone the gmx_MMPBSA repository')
+            GMXMMPBSA_ERROR('git failed when trying to clone the gmx_MMPBSA repository')
 
         logging.info('Cloning gmx_MMPBSA repository...Done.')
 
