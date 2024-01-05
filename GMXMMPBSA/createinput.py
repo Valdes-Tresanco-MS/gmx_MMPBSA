@@ -291,11 +291,11 @@ def create_inputs(INPUT, prmtop_system, pre):
         trj_suffix = 'nc' if INPUT['general']['netcdf'] else 'mdcrd'
         com_mask, rec_mask, lig_mask = prmtop_system.Mask('all', True)
         if not INPUT['ala']['mutant_only']:
-            qh_in = QuasiHarmonicInput(com_mask, rec_mask, lig_mask, temperature=INPUT['temperature'],
+            qh_in = QuasiHarmonicInput(com_mask, rec_mask, lig_mask, temperature=INPUT['general']['temperature'],
                                        stability=stability, prefix=pre, trj_suffix=trj_suffix)
             qh_in.write_input(f'{pre}cpptrajentropy.in')
         if INPUT['ala']['alarun']:
-            qh_in = QuasiHarmonicInput(com_mask, rec_mask, lig_mask, temperature=INPUT['temperature'],
+            qh_in = QuasiHarmonicInput(com_mask, rec_mask, lig_mask, temperature=INPUT['general']['temperature'],
                                        stability=stability, prefix=pre + 'mutant_', trj_suffix=trj_suffix)
             qh_in.write_input(f'{pre}mutant_cpptrajentropy.in')
 
