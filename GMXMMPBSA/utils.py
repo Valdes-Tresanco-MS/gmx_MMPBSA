@@ -438,7 +438,6 @@ def _get_dup_args(args):
             opt_duplicates.append(f)
         if i == len(flags) - 1:
             flags_values[f] = [args[x] for x in range(flag_index[i] + 1, len(args))]
-            print('tets')
         elif flag_index[i] - flag_index[i+1]:
             flags_values[f] = [args[x] for x in range(flag_index[i]+1, flag_index[i+1])]
         else:

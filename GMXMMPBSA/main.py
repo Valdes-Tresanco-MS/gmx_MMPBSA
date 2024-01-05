@@ -1167,7 +1167,7 @@ class MMPBSA_App(object):
         if INPUT['general']['qh_entropy']:
             if not INPUT['ala']['mutant_only']:
                 self.calc_types.normal['qh'] = QHout(f'{self.pre}cpptraj_entropy.out', INPUT['general']['temperature'])
-            if INPUT['alarun']:
+            if INPUT['ala']['alarun']:
                 self.calc_types.mutant['qh'] = QHout(f'{self.pre}mutant_cpptraj_entropy.out', INPUT['general']['temperature'])
             if INPUT['ala']['alarun'] and not INPUT['ala']['mutant_only']:
                 self.calc_types.mut_norm['qh'] = DeltaDeltaQH(self.calc_types.mutant['qh'],
