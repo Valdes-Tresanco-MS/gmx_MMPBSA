@@ -3,19 +3,23 @@ template: main.html
 title: Getting started
 ---
 
-[![pypi](https://img.shields.io/pypi/v/gmx-MMPBSA)](https://pypi.org/project/gmx-MMPBSA/)
-[![support](https://img.shields.io/badge/support-JetBrains-brightgreen)](https://www.jetbrains.com/?from=gmx_MMPBSA)
-[![support](https://img.shields.io/badge/support-Sourcery-orange)](https://sourcery.ai/invite/gndRrjlo)
-[![python](https://img.shields.io/badge/python-v3.x-blue)]()
+[![Python](https://img.shields.io/badge/Python-v3.x-blue)]()
+[![Pypi](https://img.shields.io/pypi/v/gmx-MMPBSA)](https://pypi.org/project/gmx-MMPBSA/)
 [![Downloads](https://pepy.tech/badge/gmx-mmpbsa)](https://pepy.tech/project/gmx-mmpbsa)
 [![DOI](https://img.shields.io/badge/DOI-10.1021%2Facs.jctc.1c00645-blue)](https://pubs.acs.org/doi/10.1021/acs.jctc.1c00645)
+[![Help forum](https://img.shields.io/badge/Docs-Getting_Started-blue)](https://valdes-tresanco-ms.github.io/gmx_MMPBSA/dev/getting-started/)
+[![Help forum](https://img.shields.io/badge/Help_forum-Google_group-blue)](https://groups.google.com/g/gmx_mmpbsa)
+[![Issue tracking](https://img.shields.io/badge/Issue_tracking-GitHub-blue)](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/issues)
+
+[![Support](https://img.shields.io/badge/Support-JetBrains-brightgreen)](https://www.jetbrains.com/?from=gmx_MMPBSA)
+[![Support](https://img.shields.io/badge/Support-Sourcery-orange)](https://sourcery.ai/invite/gndRrjlo)
 
 [<img src="../assets/TOC.png" height="120%" width="258" align="right"/>]()
 
 ## [Help needed for gmx_MMPBSA! To the content creators out there...](#colaboration)
 
 gmx_MMPBSA is a new tool based on AMBER's MMPBSA.py aiming to perform end-state free energy calculations with GROMACS 
-files. **_It works with all GROMACS versions along with AmberTools20, 21 or 22 and brings improvements in 
+files. **_It works with all GROMACS versions along with AmberTools >=20 and brings improvements in 
 compatibility, versatility, analyses, and parallelization compared to existing programs (see [here](versus.md) for a 
 detailed comparison)_**
 
@@ -29,8 +33,8 @@ detailed comparison)_**
 
 !!! note "Cite gmx_MMPBSA"
     <a href="https://www.scimagojr.com/journalsearch.php?q=5100155074&amp;tip=sid&amp;exact=no" title="SCImago Journal 
-    &amp; Country Rank"><img border="0" align="left" width=160 src="https://www.scimagojr.com/journal_img.php?id=5100155074" 
-    alt="SCImago Journal &amp; Country Rank"  /></a>
+    &amp; Country Rank"><img border="0" align="right" src="https://www.scimagojr.com/journal_img.php?id=5100155074"
+    alt="SCImago Journal &amp; Country Rank"/></a>
     
     `gmx_MMPBSA` official paper has been published on _Journal of Chemical Theory and Computation_ and can be accessed 
     [here](https://pubs.acs.org/doi/10.1021/acs.jctc.1c00645). If you use `gmx_MMPBSA`, please cite it as follows:
@@ -38,6 +42,10 @@ detailed comparison)_**
     Valdés-Tresanco, M.S., Valdés-Tresanco, M.E., Valiente, P.A. and Moreno E. _gmx_MMPBSA: A New Tool to Perform 
     End-State Free Energy Calculations with GROMACS_. Journal of Chemical Theory and Computation, 2021 17 (10), 6281-6291. 
     https://pubs.acs.org/doi/10.1021/acs.jctc.1c00645. 
+
+    <span class="__dimensions_badge_embed__" data-doi="10.1021/acs.jctc.1c00645"  data-style="medium_circle" 
+    data-legend="always"></span><script async src="https://badge.dimensions.ai/badge.js" charset="utf-8" align="right"> 
+     </script>
     
     Download | [*.bib](gmx_MMPBSA_citation.bib) | [*.ris](gmx_MMPBSA_citation.ris)
 

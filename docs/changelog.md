@@ -4,6 +4,12 @@ title: Changelog
 ---
 # Changelog
 
+## gmx_MMPBSA v1.6.2 (09/14/2023)
+
+### Fixes
+
+Fixed minor issues
+
 ## gmx_MMPBSA v1.6.1 (04/04/2023)
 
 ### Fixes
