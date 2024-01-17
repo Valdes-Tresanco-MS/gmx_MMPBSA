@@ -266,7 +266,7 @@ testparser = ArgumentParser(epilog=f'gmx_MMPBSA is an effort to implement the GB
 testparser.add_argument('-v', '--version', action='version',
                        version='%%(prog)s %s based on MMPBSA version %s' % (__version__, __mmpbsa_version__))
 group = testparser.add_argument_group('Test options')
-group.add_argument('-t', dest='test', choices=list(range(19)) + [101], type=int, nargs='*', default=[2],
+group.add_argument('-t', dest='test', choices=list(range(25)) + [101], type=int, nargs='*', default=[2],
                    help='''\
 The level the test is going to be run at. Multiple systems and analysis can be run at the same time.
       Nr. of Sys  
@@ -295,6 +295,12 @@ The level the test is going to be run at. Multiple systems and analysis can be r
 * 16   . | 10   Protein-Ligand (Multiple trajectory approximation)
 * 17   x |  4   Entropy calculation using Normal Mode approximation 
 * 18   x |  4   Calculations using 3D-RISM approximation
+* 19            C2 Entropy approximation
+* 20            LPB Calculation
+* 21            NLPB Calculation
+* 22            Protein-Ligand_LPH (CHARMM force field)
+* 23            QM/MMGBSA Calculation
+* 24            GBNSR6 Calculation
 ''')
 group.add_argument('-f', '--folder', help='Defines the folder to store all data', type=Path, default='.')
 group.add_argument('-r', '--reuse', help='Defines the existing test forlder will be reuse', action='store_true')

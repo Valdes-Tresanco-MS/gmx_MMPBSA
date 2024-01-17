@@ -900,14 +900,14 @@ class CheckMakeTop:
                                     residues_selection['rec'].append(rres)
                                     if qm_sele and not self.INPUT['gb']['exclude_backbone']:
                                         rec_charge += sum(atm.charge for atm in com_top.residues[rres - 1].atoms)
-                                    else:
+                                    elif qm_sele and self.INPUT['gb']['exclude_backbone']:
                                         rec_charge += sum(atm.charge for atm in com_top.residues[rres - 1].atoms if
                                                           not atm.name in ['C', 'O', 'N', 'H'])
                                 if lres not in residues_selection['lig']:
                                     residues_selection['lig'].append(lres)
                                     if qm_sele and not self.INPUT['gb']['exclude_backbone']:
                                         lig_charge += sum(atm.charge for atm in com_top.residues[lres - 1].atoms)
-                                    else:
+                                    elif qm_sele and self.INPUT['gb']['exclude_backbone']:
                                         lig_charge += sum(atm.charge for atm in com_top.residues[lres - 1].atoms if
                                                           not atm.name in ['C', 'O', 'N', 'H'])
                                 break
