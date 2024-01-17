@@ -382,7 +382,7 @@ support for complex systems with several components. It supports all force field
 `qh_entropy` (Default = 0)
 :    It specifies whether to perform a quasi-harmonic entropy (QH) approximation with `cpptraj` or not.
      
-     * 0: Don’t
+     * 0: Do not perform QH
      * 1: perform QH
 
     !!! important "Keep in mind"
@@ -395,8 +395,8 @@ support for complex systems with several components. It supports all force field
 `interaction_entropy` (default = 0)
 :    It specifies whether to use the [Interaction Entropy (IE)][3] approximation.
      
-     * 0: Don’t
-     * 1: perform IE
+     * 0: Do not perform IE calculation
+     * 1: Perform IE calculation
 
     !!! note "Keep in mind"
         - The Interaction Entropy can be calculated independently of the solvent model used.
@@ -434,8 +434,8 @@ Interaction Entropy, _e.g._: `ie_segment = 25` means that the last quartile of t
 `c2_entropy` (default = 0) 
 :    It specifies whether to use the [C2 Entropy][11] approximation.
      
-     * 0: Don’t
-     * 1: perform C2
+     * 0: Do not perform C2 calculation
+     * 1: Perform C2 calculation
 
     !!! note "Keep in mind"
         - The C2 Entropy can be calculated independently of the solvent model used.
@@ -533,7 +533,7 @@ However, this option is incompatible with alanine scanning.
 `solvated_trajectory` (Default = 1)
 :   Define if it is necessary to generate a clean trajectory with no water and ions.
     
-    * 0: Don’t
+    * 0: Do not generate clean trajectory
     * 1: Generate clean trajectory
 
     _Implemented in v1.3.0_
@@ -594,7 +594,7 @@ within the implicit solvent model (see [§4.2](https://ambermd.org/doc12/Amber21
     of the analytical GB models to be set, that is igb = 1, 2, 5, or 7, for computing the effective Born radii. It uses 
     the same sets of radii as required by the particular GB model.
 
-    * 0: Don't
+    * 0: Do not use ALPB
     * 1: Use ALPB
 
   [209]: https://aip.scitation.org/doi/10.1063/1.1857811
@@ -630,8 +630,8 @@ within the implicit solvent model (see [§4.2](https://ambermd.org/doc12/Amber21
 `molsurf` (Default = 0)
 :   Define the algorithm to calculate the surface area for the non-polar solvation term.
     
-    * 0: LCPO (Linear Combination of Pairwise Overlaps)
-    * 1: molsurf algorithm
+    * 0: Use LCPO (Linear Combination of Pairwise Overlaps)
+    * 1: Use molsurf algorithm
 
 `msoffset` (Default = 0) 
 :   Offset to apply to the individual atomic radii in the system when calculating the `molsurf` surface. See the
@@ -642,7 +642,7 @@ description of the `molsurf` action command in [cpptraj][4].
 molecular surface.
     
     !!! note
-        only applicable when `molsurf` is set to 1
+        Only applicable when `molsurf` is set to 1
 
 #### **QM options**
 
@@ -720,6 +720,12 @@ the same used for `print_res` variable in `&decomp` namelist.
             === "Wrong notation"
                 `qm_residues="A/5-6B,6D-7` Will end in error.
 
+`exclude_backbone` (Default = 0)
+:   Exclude backbone atoms from residues to treat with QM.
+    
+    * 0: Consider backbone atoms in residues selected to treat with QM
+    * 1: Do not consider backbone atoms in residues selected to treat with QM
+
 `qmcharge_com` (Default = 0)
 :   The charge of the quantum section for the complex.
 
@@ -748,7 +754,7 @@ to oscillations in the SCF, due to limitations in machine precision, that can le
 allow easy checking of what atoms were included in the QM region. Write a PDB file of the atoms in the QM region 
 on the very first step to a file named qmmm_region.pdb.
 
-    * 0: Don't
+    * 0: Do not write a PDB file of the selected QM region
     * 1: Write a PDB file of the selected QM region
 
 `peptide_corr` (Default = 0)
@@ -767,7 +773,7 @@ on the very first step to a file named qmmm_region.pdb.
     where _ϕ_ is the dihedral angle of the H-N-C-O linkage and h<sub>type</sub> is a constant dependent on the 
     Hamiltonian used. Recommended, except for DFTB/SCC-DFTB.
 
-    * 0: Don't
+    * 0: Do not apply a MM correction to peptide linkages
     * 1: Apply a MM correction to peptide linkages
 
 `verbosity` (Default = 0)
@@ -842,11 +848,11 @@ better agreement with the PB model, regardless of the structure size. For best a
 (TIP3P) solvation energies, optimal value of B depends on the structure size: for small molecules (number of atoms 
 less than 50), B=0 is recommended. With -chagb option, B is calculated automatically based on the solute size.
 
-`alpb` (Default = 1)
+`alpb` (Default = 0)
 :   Specifies if ALBP correction is to be used.
 
-    * 0: Canonical GB is used.
-    * 1: ALPB is used (default)
+    * 0: Use canonical GB (default)
+    * 1: Use ALPB approximation
 
 #### **Options for CHAGB model**
 
@@ -963,7 +969,7 @@ method, while a level-set based algebraic method is used when `ipb > 2`.
 :   Option to use `APBS` for `PB` calculation instead of the built-in `PBSA` solver. This will work only through the
     `iAPBS` interface built into `sander.APBS`. Instructions for this can be found online at the iAPBS/APBS websites.
     
-    * 0: Don’t use `APBS`
+    * 0: Do not use `sander.APBS`
     * 1: Use `sander.APBS`
 
 #### **Options to define the physical constants**
@@ -1245,9 +1251,9 @@ of the different schemes. The _σ_ decomposition scheme is the best of the three
 discussed in ([ref.][227]), `decompopt = 1` is not a very accurate approach even if it is more straightforward to 
 understand the decomposition.
 
-    * 1: The 6/12 decomposition scheme.
-    * 2: The _σ_ decomposition scheme.
-    * 3: The WCA decomposition scheme.
+    * 1: Use the 6/12 decomposition scheme
+    * 2: Use the _σ_ decomposition scheme
+    * 3: Use the WCA decomposition scheme
 
     _Implemented in v1.5.0_
 
@@ -1698,7 +1704,7 @@ help convergence.
 :   Decomposes solvation free energy into polar and non-polar components. Note that this typically requires 80% more 
 computation time.
 
-    * 0: Don’t decompose solvation free energy into polar and non-polar components. 
+    * 0: Do not decompose solvation free energy into polar and non-polar components. 
     * 1: Decompose solvation free energy into polar and non-polar components.
 
 `entropicdecomp` (Default = 0)
@@ -1766,8 +1772,8 @@ CHAIN/RESNUM:INSERTION_CODE if applicable (_e.g._: "A/27:B").
 :   The dielectric constant (`intdiel`(GB)/`indi`(PB)) will be modified depending on the nature of the residue to be 
 mutated. 
     
-    * 0: Don’t
-    * 1: Adaptative `intdiel` assignation
+    * 0: Do not use adaptative `intdiel` assignation
+    * 1: Use adaptative `intdiel` assignation
 
     !!! important
         * Works with the GB and PB calculations
@@ -1908,8 +1914,8 @@ sufficient in most cases, however we have added several additional notations
 :   Print the decomposition output in a Comma-Separated-Values (CSV) file. CSV files open natively in most
 spreadsheets. 
 
-    * 0: data to be written out in the standard ASCII format.
-    * 1: data to be written out in a CSV file, and standard error of the mean will be calculated and included for all 
+    * 0: Data to be written out in the standard ASCII format.
+    * 1: Data to be written out in a CSV file, and standard error of the mean will be calculated and included for all 
     data.
 
 ### **`&nmode` namelist variables**
@@ -1972,8 +1978,7 @@ Sample input file for GB calculation building the Amber topologies
 from structures. Please refer to the section "How gmx_MMPBSA works"
 
 &general
-startframe=5, endframe=100, interval=5, verbose=2, 
-forcefields="oldff/leaprc.ff99SB,leaprc.gaff"
+startframe=5, endframe=100, interval=5, verbose=2
 /
 
 &gb
@@ -1988,8 +1993,7 @@ Sample input file for GBNSR6 calculation building the Amber topologies
 from structures. Please refer to the section "How gmx_MMPBSA works"
 
 &general
-startframe=5, endframe=100, interval=5, verbose=2, 
-forcefields="oldff/leaprc.ff99SB,leaprc.gaff"
+startframe=5, endframe=100, interval=5, verbose=2
 /
 
 &gbnsr6
@@ -2019,8 +2023,7 @@ Sample input file for PB calculation building the Amber topologies
 from structures. Please refer to the section "How gmx_MMPBSA works"
 
 &general
-startframe=5, endframe=100, interval=5,
-forcefields="oldff/leaprc.ff99SB,leaprc.gaff"
+startframe=5, endframe=100, interval=5
 /
 
 &pb
@@ -2068,8 +2071,7 @@ polardecomp=1, thermo="gf"
 Sample input file for Alanine scanning
 
 &general
-startframe=5, endframe=21, interval=1,
-forcefields="oldff/leaprc.ff99SB", PBRadii=4
+startframe=5, endframe=21, interval=1, PBRadii=4
 /
 
 &gb
