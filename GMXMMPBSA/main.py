@@ -1017,6 +1017,8 @@ class MMPBSA_App(object):
         if INPUT['gb']['ifqnt'] == 0 and (INPUT['gb']['qm_theory'] or INPUT['gb']['qm_residues']):
             logging.warning('qm_theory/qm_residues variable has been defined, however the potential function is '
                             'strictly classical (ifqnt=0). Please, set ifqnt=1 if you want to use Use QM/MM')
+        if INPUT['gb']['exclude_backbone'] not in [0, 1]:
+            GMXMMPBSA_ERROR('exclude_backbone must be 0 or 1!', InputError)
         if (
                 not INPUT['gb']['molsurf']
                 and (INPUT['gb']['msoffset'] != 0 or INPUT['gb']['probe'] != 1.4)

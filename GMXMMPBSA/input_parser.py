@@ -450,6 +450,8 @@ input_file.addNamelist('gb', 'gb',
                            ['qm_theory', str, '', 'Semi-empirical QM theory to use'],
                            ['qm_residues', str, '', 'Residues to treat with QM'],
 
+                           ['exclude_backbone', int, 0, 'Exclude backbone atoms from residues to treat with QM'],
+
                            # TODO: deprecated since 1.5.0. Automatic charge assignment
                            ['qmcharge_com', int, 0, 'Charge of QM region in complex'],
                            ['qmcharge_lig', int, 0, 'Charge of QM region in ligand'],

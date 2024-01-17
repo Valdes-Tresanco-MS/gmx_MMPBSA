@@ -35,7 +35,6 @@ import logging
 import string
 from parmed.tools.changeradii import ChRad
 
-
 if platform.system() == "Darwin":
     echo_command = ['echo']
 else:
@@ -150,8 +149,9 @@ class CheckMakeTop:
                     logging.info(f"Selecting residues by distance ({round(cutoff, 1)} Å) between "
                                  f"receptor and ligand for decomposition analysis...")
                 else:
-                    logging.info(f"Selecting residues by distance ({self.INPUT['decomp']['print_res'].split()[1]} Å) between "
-                                 f"receptor and ligand for decomposition analysis...")
+                    logging.info(
+                        f"Selecting residues by distance ({self.INPUT['decomp']['print_res'].split()[1]} Å) between "
+                        f"receptor and ligand for decomposition analysis...")
             elif self.INPUT['decomp']['print_res'] == 'all':
                 logging.info('Selecting all residues for decomposition analysis...')
             else:
@@ -202,8 +202,9 @@ class CheckMakeTop:
                     logging.info(f"Selecting residues by distance ({round(cutoff, 1)} Å) between "
                                  f"receptor and ligand for QM/MM calculation...")
                 else:
-                    logging.info(f"Selecting residues by distance ({self.INPUT['gb']['qm_residues'].split()[1]} Å) between "
-                                 f"receptor and ligand for QM calculation...")
+                    logging.info(
+                        f"Selecting residues by distance ({self.INPUT['gb']['qm_residues'].split()[1]} Å) between "
+                        f"receptor and ligand for QM calculation...")
             elif self.INPUT['gb']['qm_residues'] == 'all':
                 logging.info('Selecting all residues for QM calculation...')
             else:
@@ -217,14 +218,18 @@ class CheckMakeTop:
                            self.INPUT['gb']['qmcharge_lig'])
 
             if self.INPUT['gb']['qmcharge_com'] != rec_charge + lig_charge:
-                logging.warning('System specified with odd number of electrons. Most likely the charge of QM region '
-                                '(qmcharge_com) have been set incorrectly.')
+                logging.warning(f"System specified with odd number of electrons. Most likely the charge of QM region "
+                                f"(qmcharge_com={self.INPUT['gb']['qmcharge_com']}) have been set incorrectly and"
+                                f" is different than qmcharge_rec + qmcharge_lig ({rec_charge} + "
+                                f"{lig_charge}).")
             if user_values:
                 logging.warning('Using user-defined qmcharge_com.')
                 if self.INPUT['gb']['qmcharge_com'] != rec_charge + lig_charge:
                     logging.warning(
-                        'System specified with odd number of electrons. Most likely the charge of QM region '
-                        '(qmcharge_com) have been set incorrectly. Are you sure of this value?')
+                        f"System specified with odd number of electrons. Most likely the charge of QM region "
+                        f"(qmcharge_com={self.INPUT['gb']['qmcharge_com']}) have been set incorrectly and"
+                        f" is different than qmcharge_rec + qmcharge_lig ({rec_charge} + "
+                        f"{lig_charge}). Are you sure of this value?")
             else:
                 self.INPUT['gb']['qmcharge_com'] = rec_charge + lig_charge
                 logging.warning(f'Setting qmcharge_com = {rec_charge + lig_charge}')
@@ -232,7 +237,7 @@ class CheckMakeTop:
                 logging.warning('Using user-defined qmcharge_rec.')
                 if self.INPUT['gb']['qmcharge_rec'] != rec_charge:
                     logging.warning(f"Defined qmcharge_rec ({self.INPUT['gb']['qmcharge_rec']}) is different from the "
-                                    f"computed value ({rec_charge}). Are you really sure of this value?")
+                                    f"computed value ({rec_charge}). Are you sure of this value?")
             else:
                 if self.INPUT['gb']['qmcharge_rec'] != rec_charge:
                     logging.warning(f'Setting qmcharge_rec = {rec_charge}')
@@ -241,7 +246,7 @@ class CheckMakeTop:
                 logging.warning('Using user-defined qmcharge_lig.')
                 if self.INPUT['gb']['qmcharge_lig'] != lig_charge:
                     logging.warning(f"Defined qmcharge_lig ({self.INPUT['gb']['qmcharge_lig']}) is different from the "
-                                    f"computed value ({lig_charge}). Are you really sure of this value?")
+                                    f"computed value ({lig_charge}). Are you sure of this value?")
             else:
                 if self.INPUT['gb']['qmcharge_lig'] != lig_charge:
                     logging.warning(f'Setting qmcharge_lig = {lig_charge}')
@@ -270,7 +275,7 @@ class CheckMakeTop:
         # merge both (rec and lig) groups into complex group, modify index and create a copy
         # 1-rename groups, 2-merge
         make_ndx_echo_args = echo_command + ['name {r} GMXMMPBSA_REC\n name {l} GMXMMPBSA_LIG\n  {r} | '
-                                      '{l}\n q\n'.format(r=num_com_rec_group, l=num_com_lig_group)]
+                                             '{l}\n q\n'.format(r=num_com_rec_group, l=num_com_lig_group)]
         c1 = subprocess.Popen(make_ndx_echo_args, stdout=subprocess.PIPE)
 
         com_ndx = self.FILES.prefix + 'COM_index.ndx'
@@ -369,7 +374,8 @@ class CheckMakeTop:
             c1 = subprocess.Popen(make_ndx_echo_args, stdout=subprocess.PIPE)
 
             rec_ndx = self.FILES.prefix + 'REC_index.ndx'
-            make_ndx_args = self.make_ndx + ['-n', self.FILES.receptor_index, '-o', rec_ndx, '-f', self.FILES.receptor_tpr]
+            make_ndx_args = self.make_ndx + ['-n', self.FILES.receptor_index, '-o', rec_ndx, '-f',
+                                             self.FILES.receptor_tpr]
             logging.debug('Running command: ' + ' '.join(echo_command) + ' "' +
                           (' '.join(make_ndx_echo_args[len(echo_command):]).replace('\n', '\\n')) + '"' + ' | ' +
                           ' '.join(make_ndx_args))
@@ -585,8 +591,9 @@ class CheckMakeTop:
 
         logging.info(f"Assigning PBRadii {PBRadii[self.INPUT['general']['PBRadii']]} to Complex...")
         if com_top_parm == 'amber' and self.INPUT['general']['PBRadii'] == 7:
-            GMXMMPBSA_ERROR(f"The PBRadii {PBRadii[self.INPUT['general']['PBRadii']]} is not compatible with Amber/OPLS "
-                            f"topologies...")
+            GMXMMPBSA_ERROR(
+                f"The PBRadii {PBRadii[self.INPUT['general']['PBRadii']]} is not compatible with Amber/OPLS "
+                f"topologies...")
         action = ChRad(com_amb_prm, PBRadii[self.INPUT['general']['PBRadii']])
         logging.info('Writing Normal Complex AMBER topology...')
         com_amb_prm.write_parm(self.complex_pmrtop)
@@ -825,7 +832,7 @@ class CheckMakeTop:
                         # standard gmx form
                         'NA', 'CL', 'SOL', 'K'
                         # charmm-GUI form ??
-                        'SOD', 'Na+', 'CLA', 'Cl-', 'POT', 'K+',
+                                           'SOD', 'Na+', 'CLA', 'Cl-', 'POT', 'K+',
                         'TIP3P', 'TIP3', 'TP3', 'TIPS3P', 'TIP3o',
                         'TIP4P', 'TIP4PEW', 'T4E', 'TIP4PD',
                         'TIP5P',
@@ -891,12 +898,18 @@ class CheckMakeTop:
                             if get_dist(rat_coor, lat_coor) <= dist:
                                 if rres not in residues_selection['rec']:
                                     residues_selection['rec'].append(rres)
-                                    if qm_sele:
+                                    if qm_sele and not self.INPUT['gb']['exclude_backbone']:
                                         rec_charge += sum(atm.charge for atm in com_top.residues[rres - 1].atoms)
+                                    else:
+                                        rec_charge += sum(atm.charge for atm in com_top.residues[rres - 1].atoms if
+                                                          not atm.name in ['C', 'O', 'N', 'H'])
                                 if lres not in residues_selection['lig']:
                                     residues_selection['lig'].append(lres)
-                                    if qm_sele:
+                                    if qm_sele and not self.INPUT['gb']['exclude_backbone']:
                                         lig_charge += sum(atm.charge for atm in com_top.residues[lres - 1].atoms)
+                                    else:
+                                        lig_charge += sum(atm.charge for atm in com_top.residues[lres - 1].atoms if
+                                                          not atm.name in ['C', 'O', 'N', 'H'])
                                 break
         elif res_selection:
             for i in self.resl:
@@ -916,7 +929,8 @@ class CheckMakeTop:
             # check if residues in receptor and ligand was defined
             if not residues_selection['rec'] or not residues_selection['lig']:
                 if not self.INPUT['ala']['alarun']:
-                    GMXMMPBSA_ERROR('For decomposition analysis, you must define residues for both receptor and ligand!')
+                    GMXMMPBSA_ERROR(
+                        'For decomposition analysis, you must define residues for both receptor and ligand!')
         else:
             for i in self.resl:
                 if i.is_ligand():
@@ -1034,18 +1048,18 @@ class CheckMakeTop:
             # evident terminal
             if len(res.name) == 4:
                 if res.name.startswith('N'):
-                    res.ter = 'N'   # ter is a boolean variable, but it is not used anyway
+                    res.ter = 'N'  # ter is a boolean variable, but it is not used anyway
                 elif res.name.startswith('C'):
                     res.ter = 'C'  # ter is a boolean variable, but it is not used anyway
                 else:
                     res.ter = False
             else:
                 atms_name = [at.name for at in res.atoms]
-                if 'OXT' in atms_name or 'OT1' in atms_name or 'OT2' in atms_name:   # already used, but is better to get here anyway
+                if 'OXT' in atms_name or 'OT1' in atms_name or 'OT2' in atms_name:  # already used, but is better to get here anyway
                     res.ter = 'C'  # ter is a boolean variable, but it is not used anyway
                 elif ('H3' in atms_name and
-                      parmed.residue.AminoAcidResidue.has(res.name) # exclude other residues with H3, for examples ligs
-                    ):
+                      parmed.residue.AminoAcidResidue.has(res.name)  # exclude other residues with H3, for examples ligs
+                ):
                     res.ter = 'N'  # ter is a boolean variable, but it is not used anyway
                 else:
                     res.ter = False
@@ -1065,8 +1079,8 @@ class CheckMakeTop:
         cterm_atoms = 'OXT,OT1,OT2'  # OXT amber, OTx charmm
         sc_cb_atom = 'CB'
         sc_ala_atoms = ('HB,' +  # VAL, ILE, THR
-                        'HB1,HB2,' + # charmm -> HB1, HB2
-                        'HB3,' + # amber -> HB2, HB3
+                        'HB1,HB2,' +  # charmm -> HB1, HB2
+                        'HB3,' +  # amber -> HB2, HB3
                         'CG1,CG2,OG1,' +  # VAL, ILE, THR
                         'OG,' +  # SER
                         'SG,' +  # CYS
@@ -1210,7 +1224,7 @@ class CheckMakeTop:
                     at.name = 'HB1'
                     for p in h_atoms_prop[ff_rep]['ALA']:
                         setattr(at, p, h_atoms_prop[ff_rep]['ALA'][p])
-                elif at.name in ['CG',   # LEU, PHE, TRP, MET, TYR, ARG, LYS, ASN, GLN, ASP, GLU, HIS,
+                elif at.name in ['CG',  # LEU, PHE, TRP, MET, TYR, ARG, LYS, ASN, GLN, ASP, GLU, HIS,
                                  'OG',  # SER
                                  'SG',  # CYS (no S-S)
                                  'CG1',  # VAL, ILE and THR
@@ -1241,16 +1255,19 @@ class CheckMakeTop:
                                  f"Alanine scanning")
                 elif mutant_resname in nonpolar_aa:
                     self.INPUT['gb']['intdiel'] = self.INPUT['ala']['intdiel_nonpolar']
-                    logging.info(f"Setting intdiel = intdiel_nonpolar = {self.INPUT['ala']['intdiel_nonpolar']} for Alanine "
-                                 f"scanning")
+                    logging.info(
+                        f"Setting intdiel = intdiel_nonpolar = {self.INPUT['ala']['intdiel_nonpolar']} for Alanine "
+                        f"scanning")
                 elif mutant_resname in positive_aa:
                     self.INPUT['gb']['intdiel'] = self.INPUT['ala']['intdiel_positive']
-                    logging.info(f"Setting intdiel = intdiel_positive = {self.INPUT['ala']['intdiel_positive']} for Alanine "
-                                 f"scanning")
+                    logging.info(
+                        f"Setting intdiel = intdiel_positive = {self.INPUT['ala']['intdiel_positive']} for Alanine "
+                        f"scanning")
                 elif mutant_resname in negative_aa:
                     self.INPUT['gb']['intdiel'] = self.INPUT['ala']['intdiel_negative']
-                    logging.info(f"Setting intdiel = intdiel_negative = {self.INPUT['ala']['intdiel_negative']} for Alanine "
-                                 f"scanning")
+                    logging.info(
+                        f"Setting intdiel = intdiel_negative = {self.INPUT['ala']['intdiel_negative']} for Alanine "
+                        f"scanning")
                 else:
                     logging.warning(f"Unclassified mutant residue {mutant_resname}. The default "
                                     f"intdiel will be used")
@@ -1264,16 +1281,19 @@ class CheckMakeTop:
                                  f"Alanine scanning")
                 elif mutant_resname in nonpolar_aa:
                     self.INPUT['gbnsr6']['epsin'] = self.INPUT['ala']['intdiel_nonpolar']
-                    logging.info(f"Setting epsin = intdiel_nonpolar = {self.INPUT['ala']['intdiel_nonpolar']} for Alanine "
-                                 f"scanning")
+                    logging.info(
+                        f"Setting epsin = intdiel_nonpolar = {self.INPUT['ala']['intdiel_nonpolar']} for Alanine "
+                        f"scanning")
                 elif mutant_resname in positive_aa:
                     self.INPUT['gbnsr6']['epsin'] = self.INPUT['ala']['intdiel_positive']
-                    logging.info(f"Setting epsin = intdiel_positive = {self.INPUT['ala']['intdiel_positive']} for Alanine "
-                                 f"scanning")
+                    logging.info(
+                        f"Setting epsin = intdiel_positive = {self.INPUT['ala']['intdiel_positive']} for Alanine "
+                        f"scanning")
                 elif mutant_resname in negative_aa:
                     self.INPUT['gbnsr6']['epsin'] = self.INPUT['ala']['intdiel_negative']
-                    logging.info(f"Setting epsin = intdiel_negative = {self.INPUT['ala']['intdiel_negative']} for Alanine "
-                                 f"scanning")
+                    logging.info(
+                        f"Setting epsin = intdiel_negative = {self.INPUT['ala']['intdiel_negative']} for Alanine "
+                        f"scanning")
                 else:
                     logging.warning(f"Unclassified mutant residue {mutant_resname}. The default "
                                     f"intdiel will be used")
@@ -1284,19 +1304,23 @@ class CheckMakeTop:
                                     'cas_intdiel will be ignored and indi will be used instead')
                 elif mutant_resname in polar_aa:
                     self.INPUT['pb']['indi'] = self.INPUT['ala']['intdiel_polar']
-                    logging.info(f"Setting indi = intdiel_polar = {self.INPUT['ala']['intdiel_polar']} for Alanine scanning")
+                    logging.info(
+                        f"Setting indi = intdiel_polar = {self.INPUT['ala']['intdiel_polar']} for Alanine scanning")
                 elif mutant_resname in nonpolar_aa:
                     self.INPUT['pb']['indi'] = self.INPUT['ala']['intdiel_nonpolar']
-                    logging.info(f"Setting indi = intdiel_nonpolar = {self.INPUT['ala']['intdiel_nonpolar']} for Alanine "
-                                 f"scanning")
+                    logging.info(
+                        f"Setting indi = intdiel_nonpolar = {self.INPUT['ala']['intdiel_nonpolar']} for Alanine "
+                        f"scanning")
                 elif mutant_resname in positive_aa:
                     self.INPUT['pb']['indi'] = self.INPUT['ala']['intdiel_positive']
-                    logging.info(f"Setting intdiel = indi = intdiel_positive = {self.INPUT['ala']['intdiel_positive']} for "
-                                 f"Alanine scanning")
+                    logging.info(
+                        f"Setting intdiel = indi = intdiel_positive = {self.INPUT['ala']['intdiel_positive']} for "
+                        f"Alanine scanning")
                 elif mutant_resname in negative_aa:
                     self.INPUT['pb']['indi'] = self.INPUT['ala']['intdiel_negative']
-                    logging.info(f"Setting indi = intdiel_negative = {self.INPUT['ala']['intdiel_negative']} for Alanine "
-                                 f"scanning")
+                    logging.info(
+                        f"Setting indi = intdiel_negative = {self.INPUT['ala']['intdiel_negative']} for Alanine "
+                        f"scanning")
                 else:
                     logging.warning(f"Unclassified mutant residue {mutant_resname}. The default indi will be used")
         return mut_top
@@ -1585,22 +1609,25 @@ class CheckMakeTop:
             com_prmtop = parmed.load_file(self.complex_pmrtop)
             com_amb_parm = parmed.amber.AmberParm.from_structure(com_prmtop)
             action = ChRad(com_amb_parm, PBRadii[self.INPUT['general']['PBRadii']])
-            logging.info(f"Assigning modified PBRadii {PBRadii[self.INPUT['general']['PBRadii']]} to Normal Complex AMBER "
-                         f"topology...")
+            logging.info(
+                f"Assigning modified PBRadii {PBRadii[self.INPUT['general']['PBRadii']]} to Normal Complex AMBER "
+                f"topology...")
             com_amb_parm.write_parm(self.complex_pmrtop)
             if not self.FILES.stability:
                 rec_prmtop = parmed.load_file(self.receptor_pmrtop)
                 rec_amb_parm = parmed.amber.AmberParm.from_structure(rec_prmtop)
                 action = ChRad(rec_amb_parm, PBRadii[self.INPUT['general']['PBRadii']])
-                logging.info(f"Assigning modified PBRadii {PBRadii[self.INPUT['general']['PBRadii']]} to Normal Receptor AMBER "
-                             f"topology...")
+                logging.info(
+                    f"Assigning modified PBRadii {PBRadii[self.INPUT['general']['PBRadii']]} to Normal Receptor AMBER "
+                    f"topology...")
                 rec_amb_parm.write_parm(self.receptor_pmrtop)
 
                 lig_prmtop = parmed.load_file(self.ligand_pmrtop)
                 lig_amb_parm = parmed.amber.AmberParm.from_structure(lig_prmtop)
                 action = ChRad(lig_amb_parm, PBRadii[self.INPUT['general']['PBRadii']])
-                logging.info(f"Assigning modified PBRadii {PBRadii[self.INPUT['general']['PBRadii']]} to Normal Ligand AMBER "
-                             f"topology...")
+                logging.info(
+                    f"Assigning modified PBRadii {PBRadii[self.INPUT['general']['PBRadii']]} to Normal Ligand AMBER "
+                    f"topology...")
                 lig_amb_parm.write_parm(self.ligand_pmrtop)
 
         if self.INPUT['ala']['alarun']:
@@ -1669,22 +1696,25 @@ class CheckMakeTop:
                 mcom_prmtop = parmed.load_file(self.mutant_complex_pmrtop)
                 mcom_amb_parm = parmed.amber.AmberParm.from_structure(mcom_prmtop)
                 action = ChRad(mcom_amb_parm, PBRadii[self.INPUT['general']['PBRadii']])
-                logging.info(f"Assigning modified PBRadii {PBRadii[self.INPUT['general']['PBRadii']]} to Mutant Complex AMBER "
-                             f"topology...")
+                logging.info(
+                    f"Assigning modified PBRadii {PBRadii[self.INPUT['general']['PBRadii']]} to Mutant Complex AMBER "
+                    f"topology...")
                 mcom_amb_parm.write_parm(self.mutant_complex_pmrtop)
                 if not self.FILES.stability:
                     mrec_prmtop = parmed.load_file(self.mutant_receptor_pmrtop)
                     mrec_amb_parm = parmed.amber.AmberParm.from_structure(mrec_prmtop)
                     action = ChRad(rec_amb_parm, PBRadii[self.INPUT['general']['PBRadii']])
-                    logging.info(f"Assigning modified PBRadii {PBRadii[self.INPUT['general']['PBRadii']]} to Mutant Receptor "
-                                 f"AMBER topology...")
+                    logging.info(
+                        f"Assigning modified PBRadii {PBRadii[self.INPUT['general']['PBRadii']]} to Mutant Receptor "
+                        f"AMBER topology...")
                     mrec_amb_parm.write_parm(self.mutant_receptor_pmrtop)
 
                     mlig_prmtop = parmed.load_file(self.mutant_ligand_pmrtop)
                     mlig_amb_parm = parmed.amber.AmberParm.from_structure(mlig_prmtop)
                     action = ChRad(mlig_amb_parm, PBRadii[self.INPUT['general']['PBRadii']])
-                    logging.info(f"Assigning modified PBRadii {PBRadii[self.INPUT['general']['PBRadii']]} to Mutant Ligand AMBER "
-                                 f"topology...")
+                    logging.info(
+                        f"Assigning modified PBRadii {PBRadii[self.INPUT['general']['PBRadii']]} to Mutant Ligand AMBER "
+                        f"topology...")
                     mlig_amb_parm.write_parm(self.mutant_ligand_pmrtop)
 
         else:
