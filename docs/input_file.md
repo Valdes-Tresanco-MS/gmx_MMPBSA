@@ -721,7 +721,7 @@ the same used for `print_res` variable in `&decomp` namelist.
                 `qm_residues="A/5-6B,6D-7` Will end in error.
 
 `exclude_backbone` (Default = 0)
-:   Exclude backbone atoms from residues to treat with QM.
+:   Exclude backbone atoms from residues selected to treat with QM.
     
     * 0: Consider backbone atoms in residues selected to treat with QM
     * 1: Do not consider backbone atoms in residues selected to treat with QM
