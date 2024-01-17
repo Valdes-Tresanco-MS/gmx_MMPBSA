@@ -394,8 +394,9 @@ class MMPBSA_App(object):
             self.calc_list.append(c, '    calculating MM...', timer_key='gbnsr6',
                                   output_basename=f'{prefix}complex_mm.mdout.%d')
             # use pre directly to have only one folder per rank
-            files = sorted(list(Path(f"{pre}inpcrd_{self.mpi_rank}").glob(f"{prefix}complex*.inpcrd")),
-                           key=lambda x: int(x.stem.split('.')[1]))
+
+            files = sorted(list(Path(f"{pre}inpcrd_{self.mpi_rank}").glob(f"{prefix}complex*.inpcrd")))
+
             mdouts = [file.parent.joinpath(f"{file.name.split('.')[0]}_gbnsr6{file.suffixes[0]}.mdout").as_posix()
                       for file in files]
             inpcrds = [file.as_posix() for file in files]
@@ -437,8 +438,7 @@ class MMPBSA_App(object):
 
                     self.calc_list.append(c, '    calculating MM...', timer_key='gbnsr6',
                                           output_basename=f'{prefix}receptor_mm.mdout.%d')
-                    files = sorted(list(Path(f"{pre}inpcrd_{self.mpi_rank}").glob(f"{prefix}receptor*.inpcrd")),
-                                   key=lambda x: int(x.stem.split('.')[1]))
+                    files = sorted(list(Path(f"{pre}inpcrd_{self.mpi_rank}").glob(f"{prefix}receptor*.inpcrd")))
                     mdouts = [
                         file.parent.joinpath(f"{file.name.split('.')[0]}_gbnsr6{file.suffixes[0]}.mdout").as_posix()
                         for file in files]
@@ -479,8 +479,7 @@ class MMPBSA_App(object):
 
                     self.calc_list.append(c, '    calculating MM...', timer_key='gbnsr6',
                                           output_basename=f'{prefix}ligand_mm.mdout.%d')
-                    files = sorted(list(Path(f"{pre}inpcrd_{self.mpi_rank}").glob(f"{prefix}ligand*.inpcrd")),
-                                   key=lambda x: int(x.stem.split('.')[1]))
+                    files = sorted(list(Path(f"{pre}inpcrd_{self.mpi_rank}").glob(f"{prefix}ligand*.inpcrd")))
                     mdouts = [
                         file.parent.joinpath(f"{file.name.split('.')[0]}_gbnsr6{file.suffixes[0]}.mdout").as_posix()
                         for file in files]
