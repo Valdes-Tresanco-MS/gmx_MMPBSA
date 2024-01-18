@@ -197,19 +197,22 @@ def create_inputs(INPUT, prmtop_system, pre):
                 com_input = deepcopy(INPUT)
                 rec_input = deepcopy(INPUT)
                 lig_input = deepcopy(INPUT)
-                (com_input['gb']['qmmask'], rec_input['gb']['qmmask'],
-                 lig_input['gb']['qmmask']) = prmtop_system.Mask(INPUT['gb']['qm_residues'], in_complex=False)
 
-                if INPUT['gb']['exclude_backbone']:
-                    com_input['gb']['qmmask'] = f"({com_input['gb']['qmmask']} & !@N,H,CA,HA,C,O)"
-                    rec_input['gb']['qmmask'] = f"({rec_input['gb']['qmmask']} & !@N,H,CA,HA,C,O)"
-                    lig_input['gb']['qmmask'] = f"({lig_input['gb']['qmmask']} & !@N,H,CA,HA,C,O)"
+                if INPUT['gb']['com_qmmask'] or INPUT['gb']['rec_qmmask'] or INPUT['gb']['lig_qmmask']:
+                    (com_input['gb']['qmmask'], rec_input['gb']['qmmask'],
+                     lig_input['gb']['qmmask']) = (INPUT['gb']['com_qmmask'], INPUT['gb']['rec_qmmask'],
+                                                   INPUT['gb']['lig_qmmask'])
+                    logging.warning(f'Ignoring residues from qm_residues variable. Using user defined masks instead...')
+                else:
+                    (com_input['gb']['qmmask'], rec_input['gb']['qmmask'],
+                     lig_input['gb']['qmmask']) = prmtop_system.Mask(INPUT['gb']['qm_residues'], in_complex=False)
 
                 if not com_input['gb']['qmmask']:
                     raise AmberError('No valid QM residues chosen!')
                 com_input['gb']['qm_theory'] = "'%s'" % com_input['gb']['qm_theory']
                 com_input['gb']['qmmask'] = "'%s'" % com_input['gb']['qmmask']
                 com_input['gb']['qmcharge'] = com_input['gb']['qmcharge_com']
+
                 # check if alpb
                 if com_arad:
                     com_input['gb']['arad'] = com_arad

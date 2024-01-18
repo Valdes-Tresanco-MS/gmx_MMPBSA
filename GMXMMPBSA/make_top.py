@@ -179,7 +179,7 @@ class CheckMakeTop:
                                     f"significant amount of time to print!")
 
             self.INPUT['decomp']['print_res'] = ','.join(list2range(decomp_res)['string'])
-        if self.INPUT['gb']['ifqnt']:
+        if self.INPUT['gb']['ifqnt'] and self.INPUT['gb']['com_qmmask'] == '':
             qm_residues, (rec_charge, lig_charge) = self.get_selected_residues(self.INPUT['gb']['qm_residues'], True)
 
             if 'within' in self.INPUT['gb']['qm_residues']:
@@ -251,6 +251,10 @@ class CheckMakeTop:
                 if self.INPUT['gb']['qmcharge_lig'] != lig_charge:
                     logging.warning(f'Setting qmcharge_lig = {lig_charge}')
                     self.INPUT['gb']['qmcharge_lig'] = lig_charge
+
+        elif self.INPUT['gb']['com_qmmask'] != '':
+            logging.warning('Overriding automatic assigment of qmcharge_com, qmcharge_rec, and qmcharge_lig. Using '
+                            'default or user defined qmcharge_com, qmcharge_rec, and qmcharge_lig instead...')
 
         self.cleanup_trajs()
         return tops
@@ -898,18 +902,12 @@ class CheckMakeTop:
                             if get_dist(rat_coor, lat_coor) <= dist:
                                 if rres not in residues_selection['rec']:
                                     residues_selection['rec'].append(rres)
-                                    if qm_sele and not self.INPUT['gb']['exclude_backbone']:
+                                    if qm_sele:
                                         rec_charge += sum(atm.charge for atm in com_top.residues[rres - 1].atoms)
-                                    elif qm_sele and self.INPUT['gb']['exclude_backbone']:
-                                        rec_charge += sum(atm.charge for atm in com_top.residues[rres - 1].atoms if
-                                                          not atm.name in ['C', 'O', 'N', 'H'])
                                 if lres not in residues_selection['lig']:
                                     residues_selection['lig'].append(lres)
-                                    if qm_sele and not self.INPUT['gb']['exclude_backbone']:
+                                    if qm_sele:
                                         lig_charge += sum(atm.charge for atm in com_top.residues[lres - 1].atoms)
-                                    elif qm_sele and self.INPUT['gb']['exclude_backbone']:
-                                        lig_charge += sum(atm.charge for atm in com_top.residues[lres - 1].atoms if
-                                                          not atm.name in ['C', 'O', 'N', 'H'])
                                 break
         elif res_selection:
             for i in self.resl:

@@ -401,26 +401,26 @@ input_file = InputFile()
 
 input_file.addNamelist('general', 'general',
                        [
-                            # Basic options
+                           # Basic options
                            ['sys_name', str, '', 'System name'],
                            ['startframe', int, 1, 'First frame to analyze'],
                            ['endframe', int, 9999999, 'Last frame to analyze'],
                            ['interval', int, 1, 'Number of frames between adjacent frames analyzed'],
 
-                            # Parameters options
+                           # Parameters options
                            ['forcefields', list, 'oldff/leaprc.ff99SB, leaprc.gaff', 'Define the force field to build '
                                                                                      'the Amber topology'],
                            ['ions_parameters', int, 1, 'Define ions parameters to build the Amber topology'],
                            ['PBRadii', int, 3, 'Define PBRadii to build amber topology from GROMACS files'],
                            ['temperature', float, 298.15, 'Temperature'],
 
-                            # Entropy options
+                           # Entropy options
                            ['qh_entropy', int, 0, 'Do quasi-harmonic calculation'],
                            ['interaction_entropy', int, 0, 'Do Interaction Entropy calculation'],
                            ['ie_segment', int, 25, 'Trajectory segment to calculate interaction entropy'],
                            ['c2_entropy', int, 0, 'Do C2 Entropy calculation'],
 
-                            # Miscellaneous options
+                           # Miscellaneous options
                            ['assign_chainID', int, 0, 'Assign chains ID'],
                            ['exp_ki', list, [0.0], 'Experimental Ki in nM', float],
                            ['full_traj', int, 0, 'Print a full traj. AND the thread trajectories'],
@@ -450,12 +450,15 @@ input_file.addNamelist('gb', 'gb',
                            ['qm_theory', str, '', 'Semi-empirical QM theory to use'],
                            ['qm_residues', str, '', 'Residues to treat with QM'],
 
-                           ['exclude_backbone', int, 0, 'Exclude backbone atoms from residues to treat with QM'],
+                           ['com_qmmask', str, '', 'Mask specifying the quantum atoms in complex'],
+                           ['rec_qmmask', str, '', 'Mask specifying the quantum atoms in receptor'],
+                           ['lig_qmmask', str, '', 'Mask specifying the quantum atoms in ligand'],
 
-                           # TODO: deprecated since 1.5.0. Automatic charge assignment
+                           # deprecated since 1.5.0. Automatic charge assignment except when using user defined masks
                            ['qmcharge_com', int, 0, 'Charge of QM region in complex'],
                            ['qmcharge_lig', int, 0, 'Charge of QM region in ligand'],
                            ['qmcharge_rec', int, 0, 'Charge of QM region in receptor'],
+
                            ['qmcut', float, 9999, 'Cutoff in the QM region'],
                            ['scfconv', float, 1.0e-8, 'Convergence criteria for the SCF calculation, in kcal/mol'],
                            ['peptide_corr', int, 0, 'Apply MM correction to peptide linkages'],
@@ -474,7 +477,7 @@ input_file.addNamelist('gbnsr6', 'gbnsr6',
                            ['alpb', int, 1, 'Specifies if ALBP correction is to be used.'],
                            ['epsin', float, 1.0, 'Sets the dielectric constant of the solute region'],
                            ['epsout', float, 78.5, 'Sets the implicit solvent dielectric constant for the solvent'],
-                            # FIXME: convert to M
+                           # FIXME: convert to M
                            ['istrng', float, 0.0, 'Sets the ionic strength in M for the GB equation'],
                            ['rs', float, 0.52, 'Dielectric boundary shift compared to the '
                                                'molecular surface (only relevant for the -chagb option)'],
@@ -494,7 +497,7 @@ input_file.addNamelist('gbnsr6', 'gbnsr6',
 
 input_file.addNamelist('pb', 'pb',
                        [
-                            # Basic input options
+                           # Basic input options
                            ['ipb', int, 2, 'Dielectric model for PB'],
                            ['inp', int, 1, 'Nonpolar solvation method'],
                            ['sander_apbs', int, 0, 'Use sander.APBS?'],
@@ -537,7 +540,7 @@ input_file.addNamelist('pb', 'pb',
                                               'electrostatic focussing calculation'],
                            ['npbgrid', int, 1, 'Sets how often the finite-difference grid is regenerated'],
 
-                            # Options to compute energy and forces
+                           # Options to compute energy and forces
                            ['bcopt', int, 5, 'Boundary condition option'],
                            ['eneopt', int, 2, 'Compute electrostatic energy and forces'],
                            ['frcopt', int, 0, 'Output for computing electrostatic forces'],
@@ -546,7 +549,7 @@ input_file.addNamelist('pb', 'pb',
                            ['cutnb', float, 0.0, 'Cutoff for nonbonded interations'],
                            ['nsnba', int, 1, 'Sets how often atom-based pairlist is generated'],
 
-                            # Options to select a non-polar solvation treatment
+                           # Options to select a non-polar solvation treatment
                            ['decompopt', int, 2, 'Option to select different decomposition schemes when INP = 2'],
                            ['use_rmin', int, 1, 'The option to set up van der Waals radii'],
                            ['sprob', float, 0.557, 'Solvent probe radius for SASA used to compute the dispersion term'],
@@ -646,15 +649,15 @@ input_file.addNamelist('decomp', 'decomposition',
 
 input_file.addNamelist('nmode', 'nmode',
                        [
-                            # Basic Options
+                           # Basic Options
                            ['nmstartframe', int, 1, 'First frame to analyze for normal modes'],
                            ['nmendframe', int, 1000000, 'Last frame to analyze for normal modes'],
                            ['nminterval', int, 1, 'Interval to take snapshots for normal mode analysis'],
-                            # Parameters options
+                           # Parameters options
                            ['nmode_igb', int, 1, 'GB model to use for normal mode calculation'],
                            ['nmode_istrng', float, 0, 'Ionic strength for GB model (M)'],
                            ['dielc', float, 1, 'Dielectric constant'],
-                            # Minimization options
+                           # Minimization options
                            ['drms', float, 0.001, 'Minimization gradient cutoff'],
                            ['maxcyc', int, 10000, 'Maximum number of minimization cycles'],
                        ], trigger='nmoderun')
