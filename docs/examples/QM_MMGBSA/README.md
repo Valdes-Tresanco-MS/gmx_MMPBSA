@@ -17,16 +17,16 @@ title: QM/MMGBSA
 
 In this case, `gmx_MMPBSA` requires:
 
-| Input File required            | Required |           Type             | Description |
-|:-------------------------------|:--------:|:--------------------------:|:-------------------------------------------------------------------------------------------------------------|
-| Input parameters file          | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |           `in`          | Input file containing all the specifications regarding the type of calculation that is going to be performed |
-| The MD Structure+mass(db) file | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |    `tpr` `pdb`    | Structure file containing the system coordinates |
-| An index file                  | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |          `ndx`    | File containing the receptor and ligand in separated groups |
-| Receptor and ligand group      | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |        `integers`       | Group numbers in the index files |
-| A trajectory file              | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } | `xtc` `pdb` `trr` | Final GROMACS MD trajectory, fitted and with no pbc. |
-| Ligand parameters file         | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |          `mol2`         | The Antechamber output  `mol2` file of ligand parametrization|
-| A topology file (not included) | :octicons-check-circle-fill-16:{ .req_opt .scale_icon_medium }    |           `top`         | GROMACS topology file (The `* .itp` files defined in the topology must be in the same folder |
-| A Reference Structure file     | :octicons-check-circle-fill-16:{ .req_optrec .scale_icon_medium } |           `pdb`         | Complex reference structure file (without hydrogens) with the desired assignment of chain ID and residue numbers |
+| Input File required            |                             Required                              |       Type        | Description                                                                                                      |
+|:-------------------------------|:-----------------------------------------------------------------:|:-----------------:|:-----------------------------------------------------------------------------------------------------------------|
+| Input parameters file          |    :octicons-check-circle-fill-16:{ .req .scale_icon_medium }     |       `in`        | Input file containing all the specifications regarding the type of calculation that is going to be performed     |
+| The MD Structure+mass(db) file |    :octicons-check-circle-fill-16:{ .req .scale_icon_medium }     |    `tpr` `pdb`    | Structure file containing the system coordinates                                                                 |
+| An index file                  |    :octicons-check-circle-fill-16:{ .req .scale_icon_medium }     |       `ndx`       | File containing the receptor and ligand in separated groups                                                      |
+| Receptor and ligand group      |    :octicons-check-circle-fill-16:{ .req .scale_icon_medium }     |    `integers`     | Group numbers in the index files                                                                                 |
+| A trajectory file              |    :octicons-check-circle-fill-16:{ .req .scale_icon_medium }     | `xtc` `pdb` `trr` | Final GROMACS MD trajectory, fitted and with no pbc.                                                             |
+| Ligand parameters file         |    :octicons-check-circle-fill-16:{ .req .scale_icon_medium }     |      `mol2`       | The Antechamber output  `mol2` file of ligand parametrization                                                    |
+| A topology file (not included) |  :octicons-check-circle-fill-16:{ .req_opt .scale_icon_medium }   |       `top`       | GROMACS topology file (The `* .itp` files defined in the topology must be in the same folder                     |
+| A Reference Structure file     | :octicons-check-circle-fill-16:{ .req_optrec .scale_icon_medium } |       `pdb`       | Complex reference structure file (without hydrogens) with the desired assignment of chain ID and residue numbers |
               
 :octicons-check-circle-fill-16:{ .req } -> Must be defined -- :octicons-check-circle-fill-16:{ .req_optrec } -> 
 Optional, but recommended -- :octicons-check-circle-fill-16:{ .req_opt } -> Optional
@@ -67,9 +67,21 @@ forcefields="oldff/leaprc.ff99SB,leaprc.gaff"
 &gb
 igb=1, saltcon=0.150,
 ifqnt=1, qm_theory=PM3,
-qm_residues="A/40-41,44,47,78,81-82,85,88,115,118,122,215,218-220,232 B/241"
-# qm_residues selection with "within" keyword (new in v1.5.0)
-#qm_residues="within 5"
+
+# Residues to be treated with QM can be selected using different approaches. Please, make sure to include at least 
+# one residue from both the receptor and ligand in the qm_residues mask when using 'ifqnt'. This requirement is 
+# automatically fulfilled when using the within keyword https://groups.google.com/g/gmx_mmpbsa/c/GNb4q4YGCH8
+
+# Residue selection by distance (recommended)
+qm_residues="within 4"
+
+## Explicit residue selection
+#qm_residues="A/40-41,44,47,78,81-82,85,88,115,118,122,215,218-220,232 B/241"
+
+# Residue selection with amber masks
+#com_qmmask="(:44,47,85,88,218&!@N,H,CA,HA,C,O) | :241"
+#rec_qmmask="(:44,47,85,88,218&!@N,H,CA,HA,C,O)"
+#lig_qmmask=":1"
 /
 ```
 

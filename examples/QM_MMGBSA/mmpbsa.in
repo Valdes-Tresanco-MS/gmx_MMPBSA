@@ -1,7 +1,9 @@
 Sample input file for QM/MMGBSA calculation
-#This input file is meant to show only that gmx_MMPBSA works. Although, we tried to use the input files as recommended in the
-#Amber manual, some parameters have been changed to perform more expensive calculations in a reasonable amount of time. Feel free to change the parameters
-#according to what is better for your system.
+This input file is meant to show only that gmx_MMPBSA works.
+Although, we tried to use the input files as recommended in the
+Amber manual, some parameters have been changed to perform more
+expensive calculations in a reasonable amount of time. Feel free
+to change the parameters according to what is better for your system.
 
 &general
 sys_name="QM/MMGBSA",
@@ -10,14 +12,22 @@ endframe=14,
 PBRadii=2,
 forcefields="oldff/leaprc.ff99SB,leaprc.gaff"
 /
-#make sure to include at least one residue from both the receptor
-#and ligand in the qm_residues mask when using 'ifqnt'.
-#this requirement is automatically fulfilled when using the within keyword
-#https://groups.google.com/g/gmx_mmpbsa/c/GNb4q4YGCH8
 &gb
 igb=1, saltcon=0.150,
 ifqnt=1, qm_theory=PM3,
-qm_residues="A/40-41,44,47,78,81-82,85,88,115,118,122,215,218-220,232 B/241"
-# qm_residues selection with "within" keyword (new in v1.5.0)
-#qm_residues="within 5"
+
+# Residues to be treated with QM can be selected using different approaches. Please, make sure to include at least
+# one residue from both the receptor and ligand in the qm_residues mask when using 'ifqnt'. This requirement is
+# automatically fulfilled when using the within keyword https://groups.google.com/g/gmx_mmpbsa/c/GNb4q4YGCH8
+
+# Residue selection by distance (recommended)
+qm_residues="within 4"
+
+## Explicit residue selection
+#qm_residues="A/40-41,44,47,78,81-82,85,88,115,118,122,215,218-220,232 B/241"
+
+# Residue selection with amber masks
+#com_qmmask="(:44,47,85,88,218&!@N,H,CA,HA,C,O) | :241"
+#rec_qmmask="(:44,47,85,88,218&!@N,H,CA,HA,C,O)"
+#lig_qmmask=":1"
 /
