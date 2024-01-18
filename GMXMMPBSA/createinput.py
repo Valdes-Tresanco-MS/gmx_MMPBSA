@@ -201,9 +201,9 @@ def create_inputs(INPUT, prmtop_system, pre):
                  lig_input['gb']['qmmask']) = prmtop_system.Mask(INPUT['gb']['qm_residues'], in_complex=False)
 
                 if INPUT['gb']['exclude_backbone']:
-                    com_input['gb']['qmmask'] = f"({com_input['gb']['qmmask']} & !@N,CA,HA,C,O)"
-                    rec_input['gb']['qmmask'] = f"({rec_input['gb']['qmmask']} & !@N,CA,HA,C,O)"
-                    lig_input['gb']['qmmask'] = f"({lig_input['gb']['qmmask']} & !@N,CA,HA,C,O)"
+                    com_input['gb']['qmmask'] = f"({com_input['gb']['qmmask']} & !@N,H,CA,HA,C,O)"
+                    rec_input['gb']['qmmask'] = f"({rec_input['gb']['qmmask']} & !@N,H,CA,HA,C,O)"
+                    lig_input['gb']['qmmask'] = f"({lig_input['gb']['qmmask']} & !@N,H,CA,HA,C,O)"
 
                 if not com_input['gb']['qmmask']:
                     raise AmberError('No valid QM residues chosen!')
