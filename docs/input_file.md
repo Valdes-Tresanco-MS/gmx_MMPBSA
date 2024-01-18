@@ -674,7 +674,7 @@ must be treated with quantum mechanics in the receptor or ligand to obtain meani
 the same used for `print_res` variable in `&decomp` namelist.
 
     !!! danger
-         No `qm_residues` default, this must be specified if `ifqnt` = 1.
+         No `qm_residues` default, this must be specified if `ifqnt` = 1 except when using user defined masks.
 
     !!! example "Selection schemes"
 
@@ -720,26 +720,44 @@ the same used for `print_res` variable in `&decomp` namelist.
             === "Wrong notation"
                 `qm_residues="A/5-6B,6D-7` Will end in error.
 
-`exclude_backbone` (Default = 0)
-:   Exclude backbone atoms from residues selected to treat with QM.
+`com_qmmask` (Default = '')
+:   Amber mask specifying the quantum atoms in the complex. If defined, residues selected with `qm_residues` variable are 
+ignored. When using user defined masks, `com_qmmask`, `rec_qmmask`, and `lig_qmmask` must be defined.
     
-    * 0: Consider backbone atoms in residues selected to treat with QM
-    * 1: Do not consider backbone atoms in residues selected to treat with QM
+    !!! danger
+        When using user defined masks, automatic assigment of `qmcharge_com` is overrided and default or user defined 
+        `qmcharge_com` is used.
+
+`rec_qmmask` (Default = '')
+:   Amber mask specifying the quantum atoms in the receptor. When using user defined masks, `com_qmmask`, `rec_qmmask`, 
+and `lig_qmmask` must be defined.
+    
+    !!! danger
+        When using user defined masks, automatic assigment of `qmcharge_rec` is overrided and default or user defined 
+        `qmcharge_rec` is used.
+
+`lig_qmmask` (Default = '')
+:   Amber mask specifying the quantum atoms in the receptor. When using user defined masks, `com_qmmask`, `rec_qmmask`, 
+and `lig_qmmask` must be defined.
+    
+    !!! danger
+        When using user defined masks, automatic assigment of `qmcharge_lig` is overrided and default or user defined 
+        `qmcharge_lig` is used.
 
 `qmcharge_com` (Default = 0)
-:   The charge of the quantum section for the complex.
-
-    _Deprecated in v1.5.0: Now, `qmcharge_com` is assigned automatically based on the selection_
-
-`qmcharge_lig` (Default = 0)
-:   The charge of the quantum section of the ligand.
-
-    _Deprecated in v1.5.0: Now, `qmcharge_lig` is assigned automatically based on the selection_
+:   The charge of the quantum section for the complex. `qmcharge_com` is automatically assigned based on the selection 
+`qm_residues`. When using user defined masks, automatic assigment of `qmcharge_com` is overrided and default or user 
+defined `qmcharge_com` is used.
 
 `qmcharge_rec` (Default = 0)
-:   The charge of the quantum section for the receptor.
+:   The charge of the quantum section for the receptor. `qmcharge_rec` is automatically assigned based on the selection 
+`qm_residues`. When using user defined masks, automatic assigment of `qmcharge_rec` is overrided and default or user 
+defined `qmcharge_rec` is used.
 
-    _Deprecated in v1.5.0: Now, `qmcharge_rec` is assigned automatically based on the selection_
+`qmcharge_lig` (Default = 0)
+:   The charge of the quantum section for the ligand. `qmcharge_lig` is automatically assigned based on the selection 
+`qm_residues`. When using user defined masks, automatic assigment of `qmcharge_lig` is overrided and default or user 
+defined `qmcharge_lig` is used.
 
 `qmcut` (Default = 9999.0)
 :   The cutoff for the qm/mm charge interactions.
