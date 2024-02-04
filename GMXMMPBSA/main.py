@@ -992,9 +992,26 @@ class MMPBSA_App(object):
             logging.warning('qm_theory/qm_residues variable has been defined, however the potential function is '
                             'strictly classical (ifqnt=0). Please, set ifqnt=1 if you want to use Use QM/MM')
         if INPUT['gb']['ifqnt'] == 1:
-            if INPUT['gb']['qm_theory'] not in ['PM3', 'AM1', 'MNDO', 'PDDG-PM3', 'PM3PDDG',
+
+            """
+            qm_theory Level of theory to use for the QM region of the simulation (Hamiltonian). Default is to use the
+            semi-empirical Hamiltonian PM3. Options are AM1, RM1, MNDO, PM3-PDDG, MNDO-PDDG,
+            149
+            8. sqm: Semi-empirical quantum chemistry
+            PM3-CARB1, MNDO/d (same as MNDOD), AM1/d (same as AM1D), PM6, DFTB2 (same as
+            DFTB), and DFTB3. The dispersion correction can be switched on for AM1 and PM6 by choosing
+            AM1-D* and PM6-D, respectively. The dispersion and hydrogen bond correction will be applied
+            for AM1-DH+ and PM6-DH+.
+            
+            """
+
+
+
+            if INPUT['gb']['qm_theory'] not in ['PM3', 'AM1', 'RM1', 'MNDO', 'PM3PDDG',
+
+                                                'PDDG-PM3',
                                                 'PDDG-MNDO', 'PDDGMNDO', 'PM3-CARB1',
-                                                'PM3CARB1', 'DFTB', 'SCC-DFTB', 'RM1', 'PM6',
+                                                'PM3CARB1', 'DFTB', 'SCC-DFTB', 'PM6',
                                                 'PM3-ZnB', 'PM3-MAIS', 'PM6-D', 'PM6-DH+',
                                                 'AM1-DH+', 'AM1-D*', 'PM3ZNB', 'MNDO/D',
                                                 'MNDOD']:
@@ -1003,6 +1020,8 @@ class MMPBSA_App(object):
                                 'PM3, AM1, MNDO, PDDG-PM3, PM3PDDG, PDDG-MNDO, PDDGMNDO, \n'
                                 'PM3-CARB1, PM3CARB1, DFTB, SCC-DFTB, RM1, PM6, PM3-ZnB, \n'
                                 'PM3-MAIS, PM6-D, PM6-DH+, AM1-DH+, AM1-D*, PM3ZNB, MNDO/D, MNDOD', InputError)
+
+
             if INPUT['gb']['qm_residues'] == '' and INPUT['gb']['com_qmmask'] == '':
                 GMXMMPBSA_ERROR('QM_RESIDUES must be specified for IFQNT = 1!', InputError)
             if (INPUT['gb']['qmcharge_lig'] + INPUT['gb']['qmcharge_rec'] !=
@@ -1020,7 +1039,8 @@ class MMPBSA_App(object):
                 GMXMMPBSA_ERROR('VERBOSITY must be 0, 1, 2, 3, 4 or 5!', InputError)
             if INPUT['general']['verbose'] >= 2:
                 logging.warning('VERBOSITY values of 2 or higher will produce a lot of output')
-            if (INPUT['gb']['qm_residues'] == '' and INPUT['gb']['com_qmmask'] == '' or INPUT['gb']['rec_qmmask'] == ''
+
+            if INPUT['gb']['qm_residues'] == '' and (INPUT['gb']['com_qmmask'] == '' or INPUT['gb']['rec_qmmask'] == ''
                     or INPUT['gb']['lig_qmmask'] == ''):
                 GMXMMPBSA_ERROR('When using user defined masks, com_qmmask, rec_qmmask, and '
                                 'lig_qmmask must be defined!', InputError)
