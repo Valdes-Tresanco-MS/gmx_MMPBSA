@@ -994,32 +994,21 @@ class MMPBSA_App(object):
         if INPUT['gb']['ifqnt'] == 1:
 
             """
-            qm_theory Level of theory to use for the QM region of the simulation (Hamiltonian). Default is to use the
-            semi-empirical Hamiltonian PM3. Options are AM1, RM1, MNDO, PM3-PDDG, MNDO-PDDG,
-            149
-            8. sqm: Semi-empirical quantum chemistry
-            PM3-CARB1, MNDO/d (same as MNDOD), AM1/d (same as AM1D), PM6, DFTB2 (same as
-            DFTB), and DFTB3. The dispersion correction can be switched on for AM1 and PM6 by choosing
-            AM1-D* and PM6-D, respectively. The dispersion and hydrogen bond correction will be applied
-            for AM1-DH+ and PM6-DH+.
+            Valid options are: PM3, AM1, RM1, MNDO, PM3-PDDG, PM3-PDDG_08, MNDO-PDDG, PM3-CARB1, PM3-ZNB, 
+            PM3-MAIS, AM1-D*, AM1-DH+, MNDO/D, AM1/D, PM6, PM6-D, PM6-DH+, DFTB, DFTB2, and DFTB3.
+             
+            TO DO: add support for externals: QUICK, TCPB (or TC, or TERACHEM), SEBOMD (full QM) and EXTERN (external)
             
             """
 
-
-
-            if INPUT['gb']['qm_theory'] not in ['PM3', 'AM1', 'RM1', 'MNDO', 'PM3PDDG',
-
-                                                'PDDG-PM3',
-                                                'PDDG-MNDO', 'PDDGMNDO', 'PM3-CARB1',
-                                                'PM3CARB1', 'DFTB', 'SCC-DFTB', 'PM6',
-                                                'PM3-ZnB', 'PM3-MAIS', 'PM6-D', 'PM6-DH+',
-                                                'AM1-DH+', 'AM1-D*', 'PM3ZNB', 'MNDO/D',
-                                                'MNDOD']:
+            if INPUT['gb']['qm_theory'] not in ['PM3', 'AM1', 'RM1', 'MNDO', 'PM3-PDDG', 'PM3-PDDG_08', 'MNDO-PDDG',
+                                                'PM3-CARB1', 'PM3-ZNB', 'PM3-MAIS', 'AM1-D*', 'AM1-DH+', 'MNDO/D',
+                                                'AM1/D', 'PM6', 'PM6-D', 'PM6-DH+', 'DFTB', 'DFTB2', 'DFTB3']:
                 GMXMMPBSA_ERROR('Invalid QM_THEORY (%s)! ' % INPUT['gb']['qm_theory'] +
                                 'This variable must be set to allowable options.\n' +
-                                'PM3, AM1, MNDO, PDDG-PM3, PM3PDDG, PDDG-MNDO, PDDGMNDO, \n'
-                                'PM3-CARB1, PM3CARB1, DFTB, SCC-DFTB, RM1, PM6, PM3-ZnB, \n'
-                                'PM3-MAIS, PM6-D, PM6-DH+, AM1-DH+, AM1-D*, PM3ZNB, MNDO/D, MNDOD', InputError)
+                                'PM3, AM1, RM1, MNDO, PM3-PDDG, PM3-PDDG_08, MNDO-PDDG, \n'
+                                'PM3-CARB1, PM3-ZNB, PM3-MAIS, AM1-D*, AM1-DH+, MNDO/D, \n'
+                                'AM1/D, PM6, PM6-D, PM6-DH+, DFTB, DFTB2, DFTB3', InputError)
 
 
             if INPUT['gb']['qm_residues'] == '' and INPUT['gb']['com_qmmask'] == '':
