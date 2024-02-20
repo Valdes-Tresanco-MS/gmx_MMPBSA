@@ -43,7 +43,8 @@ setup(
     long_description=LONG_DESCRIPTION,
     long_description_content_type='text/markdown',
     keywords=['gmx_MMPBSA', 'MMPBSA', 'MMGBSA', 'GROMACS', 'AmberTools'],
-    install_requires=['pandas==1.2.2', 'seaborn<0.12', 'mpi4py>=3.1.5', 'scipy>=1.6.1', 'matplotlib==3.5.2', 'tqdm'],
+    install_requires=['pandas==1.2.2', 'seaborn<0.12', 'mpi4py<=3.1.5', 'scipy>=1.6.1', 'matplotlib==3.5.2', 'tqdm',
+                      'parmed>=4.2.2'],
     entry_points={
         "console_scripts": [
             "gmx_MMPBSA=GMXMMPBSA.app:gmxmmpbsa",
