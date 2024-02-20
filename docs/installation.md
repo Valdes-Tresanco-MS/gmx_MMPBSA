@@ -76,20 +76,17 @@ errors are more frequent.
             $ conda update conda
             
             // Create a new environment and activate it
-            $ conda create -n gmxMMPBSA python=3.9 -y -q 
+            $ conda create -n gmxMMPBSA python=3.10 -y -q 
             $ conda activate gmxMMPBSA
             
             // Install mpi4py and AmberTools
-            $ conda install -c conda-forge mpi4py=3.1.3 ambertools=21.12 compilers=1.2.0 -y -q
-            
-            // Install updated version of ParmEd
-            $ python -m pip install git+https://github.com/Valdes-Tresanco-MS/ParmEd.git@v3.4
-            
-            // Install PyQt5 required to use the GUI analyzer tool (gmx_MMPBSA_ana). Not needed for HPC
-            $ python -m pip install pyqt5
+            $ conda install -c conda-forge "mpi4py<=3.1.5" "ambertools<=23.3" -y -q
+
+            // Install PyQt6 required to use the GUI analyzer tool (gmx_MMPBSA_ana). Not needed for HPC
+            $ python -m pip install "pyqt6<=6.6.1"    
 
             // (Optional) Install GROMACS
-            $ conda install -c conda-forge gromacs==2022.4 -y -q
+            $ conda install -c conda-forge "gromacs<=2023.4" pocl -y -q
             ```
                 
             </div>
@@ -98,22 +95,20 @@ errors are more frequent.
 
                 ``` bash 
                 conda update conda
-                conda create -n gmxMMPBSA python=3.9 -y -q                                      # (1)
+                conda create -n gmxMMPBSA python=3.10 -y -q                                     # (1)
                 conda activate gmxMMPBSA                                                        # (2)
-                conda install -c conda-forge mpi4py=3.1.3 ambertools=21.12 compilers=1.2.0 -y -q      # (3)
-                python -m pip install git+https://github.com/Valdes-Tresanco-MS/ParmEd.git@v3.4 # (4)
-                python -m pip install pyqt5                                                     # (5)
+                conda install -c conda-forge "mpi4py<=3.1.5" "ambertools<=23.3" -y -q               # (3)
+                python -m pip install "pyqt6<=6.6.1"                                            # (4)
                 # Optional
-                conda install -c conda-forge gromacs==2022.4 -y -q                                 # (6)
+                conda install -c conda-forge "gromacs<=2023.4" pocl -y -q                         # (5)
                
                 ```
             
                 1. Create `gmxMMPBSA` environment
                 2. Activate `gmxMMPBSA` environment
                 3. Install dependencies
-                4. Install ParmEd
-                5. Install PyQt5 if you will use gmx_MMPBSA_ana
-                6. (Optional) Install GROMACS if GROMACS is not installed in your machine
+                4. Install PyQt6 if you will use gmx_MMPBSA_ana
+                5. (Optional) Install GROMACS if GROMACS is not installed in your machine
 
             === "Rolling/stable release"
                 
@@ -159,60 +154,6 @@ errors are more frequent.
                     Install gmx_MMPBSA from the master branch of GitHub repository. This is only recommended 
                     for testing new versions or temporary solutions to reported bugs.
     
-[comment]: <> (        === "`conda`")
-
-[comment]: <> (            Stable version only)
-            
-[comment]: <> (            ``` bash )
-
-[comment]: <> (            conda update conda)
-
-[comment]: <> (            conda create -n gmxMMPBSA python=3.9 -y -q                                      # &#40;1&#41;        )
-
-[comment]: <> (            conda activate gmxMMPBSA                                                        # &#40;2&#41;                        )
-
-[comment]: <> (            conda install -c conda-forge mpi4py=3.1.3 ambertools=21.12 compilers -y -q                  # &#40;3&#41;)
-
-[comment]: <> (            python -m pip install git+https://github.com/ParmEd/ParmEd.git@16fb236          # &#40;4&#41;)
-
-[comment]: <> (            python -m pip install pyqt5                                                     # &#40;5&#41;)
-
-[comment]: <> (            # Optional)
-
-[comment]: <> (            conda install -c conda-forge gromacs==2022.4 -y -q                                 # &#40;6&#41;)
-
-[comment]: <> (            ```)
-            
-[comment]: <> (            1. Create `gmxMMPBSA` environment)
-
-[comment]: <> (            2. Activate `gmxMMPBSA` environment)
-
-[comment]: <> (            3. Install dependencies)
-
-[comment]: <> (            4. Install ParmEd)
-
-[comment]: <> (            5. Install PyQt5 if you will use gmx_MMPBSA_ana)
-
-[comment]: <> (            6. &#40;Optional&#41; Install GROMACS if GROMACS is not installed in your machine)
-    
-[comment]: <> (            **INSTALLATION**)
-
-[comment]: <> (            ```bash        )
-
-[comment]: <> (            conda install -c conda-forge gmx_mmpbsa                                         # &#40;1&#41;    )
-
-[comment]: <> (            ```)
-            
-[comment]: <> (            1. Install gmx_MMPBSA from conda-forge. This package will install all dependencies automatically)
-            
-[comment]: <> (            **UPDATE**)
-
-[comment]: <> (            ```bash        )
-
-[comment]: <> (            conda update gmx_mmpbsa    )
-
-[comment]: <> (            ```)
-    
         [Miniconda]: https://docs.conda.io/en/latest/miniconda.html
     
     === "AmberTools compilation"
@@ -224,8 +165,6 @@ errors are more frequent.
             **INSTALLATION**
             <div class="termy">
             ```console
-            // Install uodated ParmEd
-            $ amber.python -m pip install git+https://github.com/Valdes-Tresanco-MS/ParmEd.git@v3.4
             // Install gmx_MMPBSA
             $ amber.python -m pip install gmx_MMPBSA                                               
             ```
@@ -247,8 +186,6 @@ errors are more frequent.
             **INSTALLATION**
             <div class="termy">
             ```bash
-            // Install updated ParmEd
-            $ amber.python -m pip install git+https://github.com/Valdes-Tresanco-MS/ParmEd.git@v3.4
             // Install gmx_MMPBSA
             $ amber.python -m pip install git+https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA     
             ```
