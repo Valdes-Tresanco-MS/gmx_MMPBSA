@@ -155,7 +155,7 @@ def get_std(val1, val2):
 
 
 def get_corrstd(val1, val2):
-    return sqrt(val1 ** 2 + val2 ** 2 - 2 * val1 * val2)
+    return sqrt(max(0, val1 ** 2 + val2 ** 2 - 2 * val1 * val2))
 
 
 def calc_sum(vector1, vector2, mut=False) -> (float, float):
