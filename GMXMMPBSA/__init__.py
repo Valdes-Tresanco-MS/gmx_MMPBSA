@@ -31,6 +31,5 @@ __mmpbsa_author__ = "Jason Swails, Dwight McGee, and Bill Miller III"
 __mmpbsa_version__ = "16.0"
 __ambertools_version__ = "20"
 
-from ._version import get_versions
-__version__ = get_versions()['version']
-del get_versions
+from . import _version
+__version__ = _version.get_versions()['version']
