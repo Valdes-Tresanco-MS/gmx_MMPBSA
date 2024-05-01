@@ -823,7 +823,7 @@ class CheckMakeTop:
         top_file = Path(top_file)
         molsect = False
 
-        with tempfile.NamedTemporaryFile(dir=top_file.parent, prefix='_temp_top', suffix='.top', mode='w+') as temp_top:
+        with tempfile.NamedTemporaryFile(dir=top_file.parent, prefix='_temp_top', suffix='.top', mode='w', delete=False) as temp_top:
             # temp_top.write('; Modified by gmx_MMPBSA\n')
             # TODO: keep solvent when n-wat is implemented
             with open(top_file) as topf:
@@ -849,8 +849,8 @@ class CheckMakeTop:
                             continue
                     temp_top.write(line)
 
-            # read the temp topology with parmed
-            rtemp_top = parmed.gromacs.GromacsTopologyFile(temp_top.name)
+        # read the temp topology with parmed
+        rtemp_top = parmed.gromacs.GromacsTopologyFile(temp_top.name)
         # get the residues in the top from the com_ndx
         res_list = []
 
@@ -865,6 +865,9 @@ class CheckMakeTop:
 
         ranges = list2range(res_list)
         rtemp_top.strip(f"!:{','.join(ranges['string'])}")
+
+        # Clean temporal file
+        Path(temp_top.name).unlink()
         return rtemp_top
 
     def get_masks(self):
