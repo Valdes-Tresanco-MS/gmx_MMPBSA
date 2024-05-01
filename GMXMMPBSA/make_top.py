@@ -23,6 +23,7 @@ Generate Amber topology files from GROMACS files
 import os
 import platform
 import textwrap
+import tempfile
 
 import parmed
 from GMXMMPBSA.exceptions import *
@@ -822,36 +823,34 @@ class CheckMakeTop:
         top_file = Path(top_file)
         molsect = False
 
-        ttp_file = top_file.parent.joinpath('_temp_top.top')
-        temp_top = ttp_file.open(mode='w')
-        # temp_top.write('; Modified by gmx_MMPBSA\n')
-        # TODO: keep solvent when n-wat is implemented
-        with open(top_file) as topf:
-            for line in topf:
-                if '[ molecules ]' in line:
-                    molsect = True
-                if molsect:
-                    # not copy ions and solvent
-                    sol_ion = [
-                        # standard gmx form
-                        'NA', 'CL', 'SOL', 'K'
-                        # charmm-GUI form ??
-                                           'SOD', 'Na+', 'CLA', 'Cl-', 'POT', 'K+',
-                        'TIP3P', 'TIP3', 'TP3', 'TIPS3P', 'TIP3o',
-                        'TIP4P', 'TIP4PEW', 'T4E', 'TIP4PD',
-                        'TIP5P',
-                        'SPC', 'SPC/E', 'SPCE',
-                        'WAT',
-                        'OPC']
-                    if not line.split():
-                        continue
-                    if line.split()[0].strip() in sol_ion:
-                        continue
-                temp_top.write(line)
-        temp_top.close()
+        with tempfile.NamedTemporaryFile(dir=top_file.parent, prefix='_temp_top', suffix='.top', mode='w') as temp_top:
+            # temp_top.write('; Modified by gmx_MMPBSA\n')
+            # TODO: keep solvent when n-wat is implemented
+            with open(top_file) as topf:
+                for line in topf:
+                    if '[ molecules ]' in line:
+                        molsect = True
+                    if molsect:
+                        # not copy ions and solvent
+                        sol_ion = [
+                            # standard gmx form
+                            'NA', 'CL', 'SOL', 'K'
+                            # charmm-GUI form ??
+                                            'SOD', 'Na+', 'CLA', 'Cl-', 'POT', 'K+',
+                            'TIP3P', 'TIP3', 'TP3', 'TIPS3P', 'TIP3o',
+                            'TIP4P', 'TIP4PEW', 'T4E', 'TIP4PD',
+                            'TIP5P',
+                            'SPC', 'SPC/E', 'SPCE',
+                            'WAT',
+                            'OPC']
+                        if not line.split():
+                            continue
+                        if line.split()[0].strip() in sol_ion:
+                            continue
+                    temp_top.write(line)
 
-        # read the temp topology with parmed
-        rtemp_top = parmed.gromacs.GromacsTopologyFile(ttp_file.as_posix())
+            # read the temp topology with parmed
+            rtemp_top = parmed.gromacs.GromacsTopologyFile(temp_top.name)
         # get the residues in the top from the com_ndx
         res_list = []
 
@@ -866,7 +865,6 @@ class CheckMakeTop:
 
         ranges = list2range(res_list)
         rtemp_top.strip(f"!:{','.join(ranges['string'])}")
-        ttp_file.unlink()
         return rtemp_top
 
     def get_masks(self):
