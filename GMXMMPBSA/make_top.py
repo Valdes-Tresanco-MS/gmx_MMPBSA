@@ -823,7 +823,7 @@ class CheckMakeTop:
         top_file = Path(top_file)
         molsect = False
 
-        with tempfile.NamedTemporaryFile(dir=top_file.parent, prefix='_temp_top', suffix='.top', mode='w') as temp_top:
+        with tempfile.NamedTemporaryFile(dir=top_file.parent, prefix='_temp_top', suffix='.top', mode='w+') as temp_top:
             # temp_top.write('; Modified by gmx_MMPBSA\n')
             # TODO: keep solvent when n-wat is implemented
             with open(top_file) as topf:
