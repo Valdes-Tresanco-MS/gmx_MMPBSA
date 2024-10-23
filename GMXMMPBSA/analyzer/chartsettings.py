@@ -515,9 +515,9 @@ class ChartSettings(dict):
                         'default': None,
                         'children': {
                             'width': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'width',
-                                      'value': 5, 'default': 5, 'action_type': R},
+                                      'value': 6, 'default': 6, 'action_type': R},
                             'height': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'height',
-                                       'value': 4, 'default': 4, 'action_type': R}}}}},
+                                       'value': 5, 'default': 5, 'action_type': R}}}}},
             'Heatmap Plot': {
                 'type': 'group', 'enabled': True, 'expanded': False, 'name': 'Heatmap Plot', 'value': None,
                 'default': None,
