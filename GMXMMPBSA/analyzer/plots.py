@@ -296,6 +296,8 @@ class BarChart(ChartsBase):
                 self.setup_text(bar_plot_ax, options, key='Bar Plot', title=g, ylabel=ylabel)
                 setattr(self, f'cursor{c}', Cursor(bar_plot_ax, useblit=True, color='black', linewidth=0.5, ls='--'))
                 bar_plot_ax.set_xticklabels(self._set_xticks(bar_plot_ax, options[('Bar Plot', 'remove-molid')]))
+                self.axes[c].legend(prop={'size': options[('Bar Plot', 'fontsize', 'legend')],
+                                          'family': 'monospace'})
         else:
             self.axes = self.fig.subplots(1, 1)
             if options.get('iec2'):
