@@ -491,7 +491,10 @@ class ChartSettings(dict):
                             'title': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'title',
                                       'value': 14, 'default': 14, 'action_type': D},
                             'suptitle': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'suptitle',
-                                         'value': 12, 'default': 12, 'action_type': D}}},
+                                         'value': 12, 'default': 12, 'action_type': D},
+                            'legend': {'type': 'int', 'enabled': True, 'expanded': True, 'name': 'legend',
+                                       'value': 9, 'default': 9, 'action_type': D}
+                        }},
                     'axes': {
                         'type': 'group', 'enabled': True, 'expanded': True, 'name': 'axes', 'value': None,
                         'default': None,
