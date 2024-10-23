@@ -270,9 +270,10 @@ class BarChart(ChartsBase):
             for c, g in enumerate(options['groups']):
                 df = self.data[options['groups'][g]]
                 bar_plot_ax = sns.barplot(x=df.columns,
-                                          y=df.loc['Average'],
-                                          yerr=df.loc[options[('Bar Plot', 'error-line', 'representation')]],
+                                          y=df.loc['Average'].values,
+                                          yerr=df.loc[options[('Bar Plot', 'error-line', 'representation')]].values,
                                           palette=palette[s: s + len(options['groups'][g])] if palette else palette,
+                                          hue=df.columns,
                                           color=rgb2rgbf(options[('Bar Plot', 'color')]),
                                           error_kw=dict(
                                               ecolor=rgb2rgbf(options[('Bar Plot', 'error-line', 'color')]),
