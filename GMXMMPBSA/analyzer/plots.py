@@ -293,7 +293,7 @@ class BarChart(ChartsBase):
                                    label_type=options[('Bar Plot', 'bar-label', 'label_type')])
                     self.bar_labels.append(bl)
                 ylabel = '' if c != 0 else 'Energy (kcal/mol)'
-                self.setup_text(bar_plot_ax, options, key='Bar Plot', title=g, ylabel=ylabel)
+                self.setup_text(self.axes[c], options, key='Bar Plot', title=g, ylabel=ylabel)
                 setattr(self, f'cursor{c}', Cursor(bar_plot_ax, useblit=True, color='black', linewidth=0.5, ls='--'))
                 bar_plot_ax.set_xticklabels(self._set_xticks(bar_plot_ax, options[('Bar Plot', 'remove-molid')]))
                 self.axes[c].legend(prop={'size': options[('Bar Plot', 'fontsize', 'legend')],
