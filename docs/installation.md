@@ -46,7 +46,7 @@ errors are more frequent.
 
             ```console
             // Create a new environment and use the *.yml file to install dependencies
-            $ conda env create -file env.yml
+            $ conda env create --file env.yml
 
             // To use gmx_MMPBSA, just activate the environment
             $ conda activate gmxMMPBSA
