@@ -25,7 +25,7 @@ import os
 import platform
 import textwrap
 import tempfile
-
+from copy import copy
 import parmed
 from GMXMMPBSA.exceptions import *
 from GMXMMPBSA.utils import (selector, get_dist, list2range, res2map, get_indexes, log_subprocess_output, check_str,
@@ -109,6 +109,21 @@ class CheckMakeTop:
         self.complex_str_file = f'{self.FILES.prefix}COM.pdb'
         self.receptor_str_file = f'{self.FILES.prefix}REC.pdb'
         self.ligand_str_file = f'{self.FILES.prefix}LIG.pdb'
+
+        self.sol_ion = [
+            # amber ff ???
+            'Cl*', 'K*', 'MG*',  # default strip_mask
+            # standard gmx form
+            'NA', 'CL', 'SOL', 'K'
+            # charmm-GUI form ??
+            'SOD', 'Na+', 'CLA', 'Cl-', 'POT', 'K+',
+            'TIP3P', 'TIP3', 'TP3', 'TIPS3P', 'TIP3o',
+            'TIP4P', 'TIP4PEW', 'T4E', 'TIP4PD',
+            'TIP5P',
+            'SPC', 'SPC/E', 'SPCE',
+            'WAT',
+            'OPC']
+
 
         self.checkFiles()
 
@@ -526,22 +541,26 @@ class CheckMakeTop:
         self.check_structures(self.complex_str, self.receptor_str, self.ligand_str)
 
     def check4water(self):
-        if counter := sum(
-                res.name
-                in [
-                    'SOD', 'Na+', 'NA', 'Na', 'CLA', 'Cl-', 'CL', 'Cl', 'POT', 'K+', 'K',
-                    'SOL', 'WAT',
-                    'TIP3P', 'TIP3', 'TP3', 'TIPS3P', 'TIP3o',
-                    'TIP3P', 'TIP3', 'TP3', 'TIPS3P', 'TIP3o',
-                    'TIP4P', 'TIP4PEW', 'T4E', 'TIP4PD',
-                    'TIP5P',
-                    'SPC', 'SPCE',
-                    'OPC'
-                ]
-                for res in self.complex_str.residues
-        ):
-            GMXMMPBSA_ERROR(f'gmx_MMPBSA does not support water/ions molecules in any structure, but we found'
-                            f' {counter} molecules in the complex.')
+        if keep_ions := self.INPUT['general']['keep_ions']:
+            logging.warning('You are defining keep_ions. This is experimental and can produce unexpected results. '
+                           'Please, make sure you know what you are doing.'
+                           )
+            new_sol_ions = copy(self.sol_ion)
+            invalid_ions = []
+            for i in keep_ions:
+                if i not in ['NA', 'CL', 'K', 'SOD', 'Na+', 'CLA', 'Cl-', 'POT', 'K+', 'Cl*', 'K*', 'MG*']:
+                    invalid_ions.append(i)
+                if i in new_sol_ions:
+                    new_sol_ions.remove(i)
+                else:
+                    invalid_ions.append(i)
+            if invalid_ions:
+                GMXMMPBSA_ERROR(f'Invalid ions in keep_ions: {invalid_ions}')
+            if self.sol_ion == new_sol_ions:
+                GMXMMPBSA_ERROR(f'Invalid keep_ions: {keep_ions}')
+            self.sol_ion = new_sol_ions
+
+
         ions = []
         for res in self.complex_str.residues:
             if res.name in self.sol_ion and res.name not in ions:
@@ -821,14 +840,16 @@ class CheckMakeTop:
                     self.mut_ligand_list[f'MLIG{c}'] = sfile
                     start += end
 
-    @staticmethod
-    def cleantop(top_file, ndx, id='complex'):
+    def cleantop(self, top_file, ndx, id='complex'):
         """
         Create a new top file with selected groups and without SOL and IONS
         :param top_file: User-defined topology file
         :param ndx: atoms index
+        :param id: group name
+        :param keep_ions: list of ions
         :return: new and clean top instance
         """
+        
         top_file = Path(top_file)
         molsect = False
 
@@ -841,20 +862,9 @@ class CheckMakeTop:
                         molsect = True
                     if molsect:
                         # not copy ions and solvent
-                        sol_ion = [
-                            # standard gmx form
-                            'NA', 'CL', 'SOL', 'K'
-                            # charmm-GUI form ??
-                                            'SOD', 'Na+', 'CLA', 'Cl-', 'POT', 'K+',
-                            'TIP3P', 'TIP3', 'TP3', 'TIPS3P', 'TIP3o',
-                            'TIP4P', 'TIP4PEW', 'T4E', 'TIP4PD',
-                            'TIP5P',
-                            'SPC', 'SPC/E', 'SPCE',
-                            'WAT',
-                            'OPC']
                         if not line.split():
                             continue
-                        if line.split()[0].strip() in sol_ion:
+                        if line.split()[0].strip() in self.sol_ion:
                             continue
                     temp_top.write(line)
 
@@ -885,7 +895,16 @@ class CheckMakeTop:
 
         if self.INPUT['ala']['alarun']:
             self.resl[self.com_mut_index].set_mut(self.INPUT['ala']['mutant'])
-        return rec_mask, lig_mask, self.resl
+
+        strip_mask = ':WAT,Cl*,CIO,Cs+,IB,K*,Li+,MG*,Na+,Rb+,CS,RB,NA,F,CL'
+
+        new_strip_mask_list = [
+            i for i in strip_mask.split(',') if i not in self.sol_ion
+        ]
+        strip_mask = ','.join(new_strip_mask_list)
+
+
+        return rec_mask, lig_mask, self.resl, strip_mask
 
     def get_selected_residues(self, select, qm_sele=False):
         """
