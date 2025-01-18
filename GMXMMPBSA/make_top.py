@@ -1,6 +1,7 @@
 """
 Generate Amber topology files from GROMACS files
 """
+from collections import Counter
 
 # ##############################################################################
 #                           GPLv3 LICENSE INFO                                 #
@@ -541,6 +542,14 @@ class CheckMakeTop:
         ):
             GMXMMPBSA_ERROR(f'gmx_MMPBSA does not support water/ions molecules in any structure, but we found'
                             f' {counter} molecules in the complex.')
+        ions = []
+        for res in self.complex_str.residues:
+            if res.name in self.sol_ion and res.name not in ions:
+                ions.append(res.name)
+        if counter := Counter(ions):
+            GMXMMPBSA_ERROR(f'gmx_MMPBSA does not support water/ions molecules in any structure, but we found\n'
+                            f'  {dict(counter)}\n'
+                            f'molecules in the complex.')
 
     def _check_periodicity(self, parm, system):
         """
