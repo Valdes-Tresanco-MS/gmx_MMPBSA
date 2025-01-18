@@ -73,6 +73,7 @@ class MMPBSA_App(object):
         and error streams (unbuffered by default) and the prefix for the
         intermediate files. Also set up empty INPUT dict
         """
+        self.strip_mask = None
         global _rank, _stdout, _stderr, _mpi_size, _MPI
         _MPI = self.MPI = MPI
         self.pre = '_GMXMMPBSA_'
@@ -137,8 +138,10 @@ class MMPBSA_App(object):
             (self.numframes, rec_frames,
              lig_frames, self.numframes_nmode) = make_trajectories(INPUT, FILES, self.mpi_size,
                                                                    self.external_progs['cpptraj'],
-                                                                   self.pre)
-            if self.traj_protocol == 'MTP' and not self.numframes == rec_frames == lig_frames:
+                                                                   self.pre, self.strip_mask)
+            if self.traj_protocol == 'MTP' and not (self.numframes == rec_frames == lig_frames or
+                                                    self.numframes == rec_frames and lig_frames == 0 or
+                                                    self.numframes == lig_frames and rec_frames == 0):
                 GMXMMPBSA_ERROR('The complex, receptor, and ligand trajectories must be the same length. Since v1.5.0 '
                                 'we have simplified a few things to make the code easier to maintain. Please check the '
                                 'documentation')
@@ -680,7 +683,8 @@ class MMPBSA_App(object):
              self.FILES.mutant_complex_prmtop,
              self.FILES.mutant_receptor_prmtop, self.FILES.mutant_ligand_prmtop) = maketop.buildTopology()
             logging.info('Building AMBER topologies from GROMACS files... Done.\n')
-            self.INPUT['general']['receptor_mask'], self.INPUT['general']['ligand_mask'], self.resl = maketop.get_masks()
+            (self.INPUT['general']['receptor_mask'], self.INPUT['general']['ligand_mask'],
+             self.resl, self.strip_mask) = maketop.get_masks()
             self.mutant_index = maketop.com_mut_index
             self.mut_str = self.resl[maketop.com_mut_index].mutant_label if self.mutant_index is not None else ''
             self.FILES.complex_fixed = f'{self.FILES.prefix}COM_FIXED.pdb'
