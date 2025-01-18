@@ -37,13 +37,13 @@ from warnings import warn
 from GMXMMPBSA.exceptions import (TrajError, MMPBSA_Error, InternalError, MutantResError)
 from pathlib import Path
 
-strip_mask = ':WAT,Cl*,CIO,Cs+,IB,K*,Li+,MG*,Na+,Rb+,CS,RB,NA,F,CL'
+# strip_mask = ':WAT,Cl*,CIO,Cs+,IB,K*,Li+,MG*,Na+,Rb+,CS,RB,NA,F,CL'
 
 
-def make_trajectories(INPUT, FILES, size, cpptraj, pre):
+def make_trajectories(INPUT, FILES, size, cpptraj, pre, strip_mask):
     """
-    This function creates the necessary trajectory files, and creates thread-
-    specific trajectories for parallel calculations
+    This function creates the necessary trajectory files, and creates thread-specific
+    trajectories for parallel calculations
     """
 
     stability = FILES.stability
