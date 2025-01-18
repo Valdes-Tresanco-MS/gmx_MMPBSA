@@ -52,7 +52,8 @@ class Variable(object):
             self.value = default.replace("'", '').replace('"', '')
         elif self.datatype in [list, tuple]:
             if isinstance(default, str):
-                self.value = [self.int_datatype(x.strip()) for x in re.split(';\s*|,\s*', default.replace('"',''))]
+                values = [self.int_datatype(x.strip()) for x in re.split(';\s*|,\s*', default.replace('"',''))]
+                self.value = [] if values == [''] else values
             else:
                 self.value = default
         else:
@@ -411,6 +412,7 @@ input_file.addNamelist('general', 'general',
                            ['forcefields', list, 'oldff/leaprc.ff99SB, leaprc.gaff', 'Define the force field to build '
                                                                                      'the Amber topology'],
                            ['ions_parameters', int, 1, 'Define ions parameters to build the Amber topology'],
+                           ['keep_ions', list, '', 'Keep defined ions in the strip mask. (Experimental)'],
                            ['PBRadii', int, 3, 'Define PBRadii to build amber topology from GROMACS files'],
                            ['temperature', float, 298.15, 'Temperature'],
 
