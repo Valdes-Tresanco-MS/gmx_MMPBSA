@@ -1084,7 +1084,7 @@ class CheckMakeTop:
                 atms_name = [at.name for at in res.atoms]
                 if 'OXT' in atms_name or 'OT1' in atms_name or 'OT2' in atms_name:  # already used, but is better to get here anyway
                     res.ter = 'C'  # ter is a boolean variable, but it is not used anyway
-                elif ('H3' in atms_name and
+                elif (('H3' in atms_name or 'HT3' in atms_name) and
                       parmed.residue.AminoAcidResidue.has(res.name)  # exclude other residues with H3, for examples ligs
                 ):
                     res.ter = 'N'  # ter is a boolean variable, but it is not used anyway
@@ -1102,7 +1102,7 @@ class CheckMakeTop:
         mut_aa = self.INPUT['ala']['mutant']
 
         bb_atoms = 'N,H,CA,HA,C,O,HN'
-        nterm_atoms = 'H1,H2,H3'
+        nterm_atoms = 'H1,H2,H3,HT1,HT2,HT3'
         cterm_atoms = 'OXT,OT1,OT2'  # OXT amber, OTx charmm
         sc_cb_atom = 'CB'
         sc_ala_atoms = ('HB,' +  # VAL, ILE, THR
