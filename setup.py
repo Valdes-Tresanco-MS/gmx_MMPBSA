@@ -23,8 +23,8 @@ import sys
 with open("README.md", "r") as f:
     LONG_DESCRIPTION = f.read()
 
-if sys.version_info[:2] < (3, 9):
-    raise RuntimeError("gmx_MMPBSA requires python >= 3.9.0")
+if sys.version_info[:3] != (3, 11, 8):
+    raise RuntimeError("gmx_MMPBSA requires python == 3.11.8")
 
 setup(
     name='gmx_MMPBSA',
