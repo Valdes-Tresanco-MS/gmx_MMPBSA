@@ -42,7 +42,7 @@ else:
     echo_command = ['echo', '-e']
 
 chains_letters = list(string.ascii_uppercase)
-his = ['HIS', 'HIE', 'HID', 'HIP']
+his = ['HIS', 'HIE', 'HID', 'HIP', 'HSP', 'HSD', 'HSE']
 cys_name = ['CYS', 'CYX', 'CYM']
 lys = ['LYS', 'LYN']
 asp = ['ASP', 'ASH']
@@ -1020,8 +1020,11 @@ class CheckMakeTop:
         r = sele_res_dict[0]
         res = self.complex_str.residues[r - 1]
         icode = f':{res.insertion_code}' if res.insertion_code else ''
-        if (not parmed.residue.AminoAcidResidue.has(res.name) or res.name in ['CYX', 'PRO', 'GLY'] or
-                res.name == 'ALA' and self.INPUT['ala']['mutant'] == 'ALA'):
+        if (
+            not parmed.residue.AminoAcidResidue.has(res.name) and res.name not in ['HSP', 'HSE', 'HSD']
+            or res.name in ['CYX', 'PRO', 'GLY']
+            or res.name == 'ALA' and self.INPUT['ala']['mutant'] == 'ALA'
+        ):
             GMXMMPBSA_ERROR(f"Selecting residue {res.chain}:{res.name}:{res.number}{icode} can't be mutated. Please, "
                             f"define a valid residue...")
 
