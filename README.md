@@ -38,7 +38,7 @@ Please, visit [Cite gmx_MMPBSA](cite_us.md) page for more information on how to 
 ---------------------------------------
 
 Authors:
-- [Mario Sergio Valdés Tresanco](https://www.researchgate.net/profile/Mario-Valdes-Tresanco-2), PhD Student. _University of Medellin, Colombia_
+- [Mario Sergio Valdés Tresanco](https://www.researchgate.net/profile/Mario-Valdes-Tresanco-2), PhD. _University of Medellin, Colombia_
 - [Mario Ernesto Valdés Tresanco](https://www.researchgate.net/profile/Mario-Valdes-Tresanco), PhD Student. _University of Calgary, Canada._
 - [Pedro Alberto Valiente](https://www.researchgate.net/profile/Pedro-Valiente), PhD. _University of Toronto, Canada_
 - [Ernesto Moreno Frías](https://www.researchgate.net/profile/Ernesto-Moreno-Frias), PhD. _University of Medellin, Colombia_
@@ -51,6 +51,6 @@ Acknowledgements:
 - Dr. Hymavathi Veeravarapu for helping with the [introductory video](https://www.youtube.com/watch?v=_2mYeffqFIo) for gmx_MMPBSA.
 - To the Open Source license of the [JetBrains](https://www.jetbrains.com) programs.
 - To the [Sourcery](https://sourcery.ai/invite/gndRrjlo) team for supporting us with the [Pro version](https://sourcery.ai/pro/).
-- To all researchers that help improving gmx_MMPBSA with comments, feedback, and bug reports.
+- To all researchers who help improve gmx_MMPBSA with comments, feedback, and bug reports.
 
 ---------------------------------------
