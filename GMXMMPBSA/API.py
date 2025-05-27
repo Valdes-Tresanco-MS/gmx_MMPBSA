@@ -469,7 +469,7 @@ class MMPBSA_API():
         return {'map': emapping(entropy), 'data': entropy_df, 'summary': entropy_df}
 
     def get_ie_entropy(self, ietype: tuple = None, startframe=None, endframe=None, interval=None,
-                       ie_segment = 25, verbose=True):
+                       ie_segment = None, verbose=True):
         temp_print_keys = ietype or tuple(x for x in ['normal', 'mutant', 'mutant-normal'] if x in self.data and
                                           self.data[x])
         entropy = {}
@@ -477,8 +477,10 @@ class MMPBSA_API():
         entropy_df = {}
         recalc = bool((startframe and startframe != self.app_namespace.INPUT['general']['startframe'] or
                        endframe and endframe != self.app_namespace.INPUT['general']['endframe'] or
-                       interval and interval != self.app_namespace.INPUT['general']['interval']))
+                       interval and interval != self.app_namespace.INPUT['general']['interval']) or
+                       ie_segment and ie_segment != self.app_namespace.INPUT['general']['ie_segment'])
 
+        ie_segment = ie_segment or self.app_namespace.INPUT['general']['ie_segment']
         s, e, index = self._get_frames_index('energy', startframe, endframe, interval)
         for et in temp_print_keys:
             if et not in self.data:
@@ -521,7 +523,7 @@ class MMPBSA_API():
 
     def get_entropy(self, etype: tuple = None, model: tuple = None, mol: tuple = None, term: tuple = None,
                     nmstartframe=None, nmendframe=None, nminterval=1, startframe=None, endframe=None, interval=None,
-                    ie_segment=25, verbose=True):
+                    ie_segment=None, verbose=True):
         temp_print_keys = etype or tuple(x for x in ['normal', 'mutant', 'mutant-normal'] if x in self.data)
         entropy_keys = []
 
