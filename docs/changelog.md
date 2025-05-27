@@ -4,6 +4,10 @@ title: Changelog
 ---
 # Changelog
 
+## gmx_MMPBSA v1.6.4 (04/11/2024)
+
+https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/releases/tag/1.6.4
+
 ## gmx_MMPBSA v1.6.2 (09/14/2023)
 
 ### Fixes
