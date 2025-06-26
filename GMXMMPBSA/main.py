@@ -1263,7 +1263,7 @@ class MMPBSA_App(object):
                     self.calc_types.mut_norm[key]['delta'] = DeltaDeltaStatistics(
                         self.calc_types.mutant[key]['delta'], self.calc_types.normal[key]['delta'])
 
-            self.get_iec2entropy(from_calc)
+        self.get_iec2entropy(from_calc)
 
         if not hasattr(self, 'resl'):
             from GMXMMPBSA.utils import mask2list
