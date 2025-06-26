@@ -508,7 +508,7 @@ class CheckMakeTop:
         if (self.FILES.receptor_tpr or self.FILES.ligand_tpr) and (
                 self.INPUT['general']['interaction_entropy'] or self.INPUT['general']['c2_entropy']
         ):
-            logging.warning("The IE or C2 entropy method don't support the MTP approach...")
+            logging.warning("The IE or C2 entropy method doesn't support the MTP approach...")
             self.INPUT['general']['interaction_entropy'] = self.INPUT['general']['c2_entropy'] = 0
 
         # initialize receptor and ligand structures. Needed to get residues map
