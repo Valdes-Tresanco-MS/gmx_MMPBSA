@@ -1372,6 +1372,8 @@ class GMX_MMPBSA_ANA(QMainWindow):
 
     def _make_iec2_items(self, sys_name, sys_index, item1, level1, v1):
         for level2, v2 in v1.items():
+            if level2 in ['nmode', 'qh']:
+                continue
             item2 = CustomItem(item1, [f'{level2.upper()}'], system_index=sys_index)
             item2.setExpanded(True)
 
