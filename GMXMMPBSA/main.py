@@ -718,8 +718,8 @@ class MMPBSA_App(object):
         if self.using_chamber:
             if INPUT['rism']['rismrun']:
                 GMXMMPBSA_ERROR('CHAMBER prmtops cannot be used with 3D-RISM')
-            if INPUT['nmode']['nmoderun']:
-                GMXMMPBSA_ERROR('CHAMBER prmtops cannot be used with NMODE')
+            # if INPUT['nmode']['nmoderun']:
+            #     GMXMMPBSA_ERROR('CHAMBER prmtops cannot be used with NMODE')
 
         self.normal_system.Map(INPUT['general']['receptor_mask'], INPUT['general']['ligand_mask'])
         self.normal_system.CheckConsistency()

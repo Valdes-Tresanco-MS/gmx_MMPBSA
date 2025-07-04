@@ -580,6 +580,10 @@ class CheckMakeTop:
         if com_top.impropers or com_top.urey_bradleys:
             com_amb_prm = parmed.amber.ChamberParm.from_structure(com_top)
             com_top_parm = 'chamber'
+
+            title = com_amb_prm.parm_data['CTITLE']
+            com_amb_prm.add_flag('TITLE', '20a4', title or '', after='CTITLE')
+
             logging.info('Detected CHARMM force field topology format...')
         else:
             com_amb_prm = parmed.amber.AmberParm.from_structure(com_top)
