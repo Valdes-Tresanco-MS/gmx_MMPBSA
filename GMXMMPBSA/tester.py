@@ -89,7 +89,7 @@ def run_test(parser):
 
     if clonning:
         logging.info(f'Cloning gmx_MMPBSA repository in {gmx_mmpbsa_test_folder}')
-        git_p = subprocess.Popen(['git', 'clone', 'https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA',
+        git_p = subprocess.Popen(['git', 'clone', '--depth', '1', 'https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA',
                                   gmx_mmpbsa_test_folder.as_posix()])
         if git_p.wait():  # if it quits with return code != 0
             GMXMMPBSA_ERROR('git failed when trying to clone the gmx_MMPBSA repository')
