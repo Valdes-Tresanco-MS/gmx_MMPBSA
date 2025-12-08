@@ -18,7 +18,7 @@ title: Getting started
 
 ## [Help needed for gmx_MMPBSA! To the content creators out there...](#colaboration)
 
-gmx_MMPBSA is a new tool based on AMBER's MMPBSA.py aiming to perform end-state free energy calculations with GROMACS 
+gmx_MMPBSA is a new tool based on AMBER's MMPBSA.py, aiming to perform end-state free energy calculations with GROMACS 
 files. **_It works with all GROMACS versions along with AmberTools >=20 and brings improvements in 
 compatibility, versatility, analyses, and parallelization compared to existing programs (see [here](versus.md) for a 
 detailed comparison)_**
@@ -39,7 +39,7 @@ detailed comparison)_**
     `gmx_MMPBSA` official paper has been published on _Journal of Chemical Theory and Computation_ and can be accessed 
     [here](https://pubs.acs.org/doi/10.1021/acs.jctc.1c00645). If you use `gmx_MMPBSA`, please cite it as follows:
     
-    Valdés-Tresanco, M.S., Valdés-Tresanco, M.E., Valiente, P.A. and Moreno E. _gmx_MMPBSA: A New Tool to Perform 
+    Valdés-Tresanco, M.S., Valdés-Tresanco, M.E., Valiente, P.A., and Moreno, E. _gmx_MMPBSA: A New Tool to Perform 
     End-State Free Energy Calculations with GROMACS_. Journal of Chemical Theory and Computation, 2021 17 (10), 6281-6291. 
     https://pubs.acs.org/doi/10.1021/acs.jctc.1c00645. 
 
@@ -64,7 +64,7 @@ detailed comparison)_**
 Ready to use gmx_MMPBSA 😀? Check the [installation page](installation.md)
 
 ## **What can be done with gmx_MMPBSA?**
-Multiple calculations can be performed with `gmx_MMPBSA` such as:
+Multiple calculations can be performed with `gmx_MMPBSA`, such as:
 
 * Binding free energy calculations with [PB][1], [GB][2] and/or [3D-RISM][3] models
 * [Alanine scanning][4] 
@@ -86,10 +86,10 @@ Multiple calculations can be performed with `gmx_MMPBSA` such as:
 
 !!! note "There is always more..."
     You can check [`gmx_MMPBSA` in a nutshell page](summary.md) for a more detailed overview of the types of calculations 
-    supported in gmx_MMPBSA. Also check our [example page](examples/README.md) to see a detailed list of all the 
+    supported in gmx_MMPBSA. Also, check our [example page](examples/README.md) to see a detailed list of all the 
     examples available
 
-In the current version, gmx_MMPBSA supports a number of different systems including but not limited to:
+In the current version, gmx_MMPBSA supports a number of different systems, including but not limited to:
 
 * [Protein-protein][12]
 * [Protein-ligand][13]
@@ -107,14 +107,14 @@ In the current version, gmx_MMPBSA supports a number of different systems includ
   [17]: examples/Protein_membrane/README.md
   [18]: examples/Comp_receptor/README.md
 
-!!! note "Support for Amber, OPLS and CHARMM force fields"
-    In the current version, gmx_MMPBSA supports Amber, OPLS and CHARMM force fields. Any system built for GROMACS with 
+!!! note "Support for Amber, OPLS, and CHARMM force fields"
+    In the current version, gmx_MMPBSA supports Amber, OPLS, and CHARMM force fields. Any system built for GROMACS with 
     either [pdb2gmx](https://manual.gromacs.org/documentation/current/onlinehelp/gmx-pdb2gmx.html) or 
     [CHARMM-GUI](https://www.charmm-gui.org/) is supported in gmx_MMPBSA. Likewise, any system built for NAMD and 
     potentially any other software that uses *.psf - *.dcd files can be processed in gmx_MMPBSA 😀. Check our 
     [example page](examples/README.md) to see a detailed list of all the examples available.
 
-The following video shows how a typical binding free energy calculation with GB model and Interaction entropy method 
+The following video shows how a typical binding free energy calculation with the GB model and the Interaction entropy method 
 is performed in gmx_MMPBSA.
 
 <div class="embed-container">
@@ -122,7 +122,7 @@ is performed in gmx_MMPBSA.
 </div>
 
 ## **`gmx_MMPBSA` a quick overview**
-`gmx_MMPBSA` is a python module that contains 3 applications: 
+`gmx_MMPBSA` is a Python module that contains three applications: 
 
 * [gmx_MMPBSA](howworks.md) is the fundamental application and carries out the calculations mentioned above
 * [gmx_MMPBSA_ana](analyzer.md) provides an intuitive way to analyze the data from gmx_MMPBSA calculations and save 
@@ -131,7 +131,7 @@ is performed in gmx_MMPBSA.
   was successful by running one or more available [examples](examples/README.md) in gmx_MMPBSA.
   
 !!! note "Easy to run"
-    gmx_MMPBSA can run in parallel and requires just few things in order to perform any kind of calculation. That is:
+    gmx_MMPBSA can run in parallel and requires only a few things to perform any calculation. That is:
 
     * an input parameters file (`*.in`, contains all the specifications regarding the type of calculation that is going 
     to be performed)
@@ -139,7 +139,7 @@ is performed in gmx_MMPBSA.
     * an index file (`*.ndx`)
     * receptor and ligand groups (group numbers in the index file)
     * a trajectory file (`*.xtc`, `*.pdb`, `*.trr`)
-    * In certain occasions, defining a topology file (`*.top`) may be required.
+    * On certain occasions, defining a topology file (`*.top`) may be required.
 
     Once the calculation is done, you can analyze the results in [gmx_MMPBSA_ana](analyzer.md)
 
@@ -172,11 +172,11 @@ gmx_MMPBSA is rapidly becoming one of the main programs to perform end-point fre
 force fields, etc. However, the video tutorials are not that great.
 
 That being said, **and here is where we need help**, we will appreciate any collaboration in making video tutorials for 
-the documentation. The video tutorial will be included as a link to YouTube in gmx_MMPBSA documentation with full 
-acknowledgment of the person who created the video tutorial. It will be also acknowledged as a contributor of 
+the documentation. The video tutorial will be included as a link to YouTube in the gmx_MMPBSA documentation with full 
+acknowledgment of the person who created the video tutorial. It will also be acknowledged as a contributor of 
 gmx_MMPBSA... 😃
 
-Feel free to contact us through our google group (https://groups.google.com/g/gmx_mmpbsa) for more details...
+Feel free to contact us through our Google group (https://groups.google.com/g/gmx_mmpbsa) for more details...
 
 ## **Acknowledgments**
 - First of all, to Amber and GROMACS developers. Without their incredible and hard work, gmx_MMPBSA would not exist.
@@ -188,11 +188,11 @@ Feel free to contact us through our google group (https://groups.google.com/g/gm
 
 - To the Open Source license of the [JetBrains](https://www.jetbrains.com) programs.
 
-[<img src="../assets/images/sourcery.png" height="40" width="108" align="right" />][12]
+[<img src="../assets/images/sourcery.png" height="40" width="108" align="right" />][19]
 
 - To the [Sourcery](https://sourcery.ai/invite/gndRrjlo) team for supporting us 
   with the [Pro version](https://sourcery.ai/pro/).
-- To all researchers that help improving gmx_MMPBSA with comments, feedback, and bug reports.
+- To all researchers who help improve gmx_MMPBSA with comments, feedback, and bug reports.
 
   [11]: https://www.jetbrains.com/?from=gmx_MMPBSA
-  [12]: https://sourcery.ai/?from=gmx_MMPBSA
+  [19]: https://sourcery.ai/?from=gmx_MMPBSA
