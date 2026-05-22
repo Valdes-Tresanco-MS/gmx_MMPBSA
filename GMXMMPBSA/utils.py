@@ -605,6 +605,87 @@ def res2map(indexes, com_file):
 
     return masks, res_list, order_list
 
+def _parse_amber_mask(mask_str):
+    """
+    Parse AMBER mask string (e.g., "1-240,242-250") into a set of residue numbers.
+    """
+    mask_str = mask_str.strip(":")
+    residues = set()
+
+    if not mask_str:
+        return residues
+
+    parts = mask_str.split(',')
+    for part in parts:
+        part = part.strip()
+        if '-' in part:
+            start, end = map(int, part.split('-'))
+            residues.update(range(start, end + 1))
+        else:
+            residues.add(int(part))
+
+    return residues
+
+
+def res2map_amber(amber_masks, com_file):
+    """
+    Similar to res2map but uses AMBER masks instead of GROMACS indexes.
+
+    :param amber_masks: Dictionary with 'REC' and 'LIG' keys containing AMBER mask strings (e.g., ":1-240", ":241")
+    :param com_file: Complex structure file (parmed.Structure or file path)
+    :return: masks (dict with REC and LIG ranges), res_list (list of Residue objects), order_list
+    """
+    rec_list = []
+    lig_list = []
+
+    if isinstance(com_file, parmed.Structure):
+        com_str = com_file
+    else:
+        com_str = parmed.load_file(com_file)
+
+    # Parse AMBER masks to get residue number sets
+    rec_residues = _parse_amber_mask(amber_masks['REC'])
+    lig_residues = _parse_amber_mask(amber_masks['LIG'])
+
+    resindex = 1
+    rec_index = 1
+    lig_index = 1
+    proc_res = None
+    res_list = []
+
+    # Iterate over residues in the complex structure
+    for residue in com_str.residues:
+        res = [residue.chain, residue.number, residue.name, residue.insertion_code]
+
+        # Check if this residue belongs to receptor or ligand based on AMBER mask
+        if residue.number in rec_residues:
+            if res != proc_res and resindex not in [r.index for r in res_list]:
+                rec_list.append(resindex)
+                res_list.append(Residue(resindex, residue.number, residue.chain, 'R',
+                                        rec_index, residue.name, residue.insertion_code))
+                resindex += 1
+                rec_index += 1
+                proc_res = res
+        elif residue.number in lig_residues:
+            if res != proc_res and resindex not in [r.index for r in res_list]:
+                lig_list.append(resindex)
+                res_list.append(Residue(resindex, residue.number, residue.chain, 'L',
+                                        lig_index, residue.name, residue.insertion_code))
+                resindex += 1
+                lig_index += 1
+                proc_res = res
+
+    masks = {'REC': list2range(rec_list), 'LIG': list2range(lig_list)}
+
+    temp = []
+    for m, value in masks.items():
+        for e in value['num']:
+            v = e[0] if isinstance(e, list) else e
+            temp.append([v, m])
+    temp.sort(key=lambda x: x[0])
+    order_list = [c[1] for c in temp]
+
+    return masks, res_list, order_list
 
 def get_dist(coor1, coor2):
     return sqrt((coor2[0] - coor1[0]) ** 2 + (coor2[1] - coor1[1]) ** 2 + (coor2[2] - coor1[2]) ** 2)
