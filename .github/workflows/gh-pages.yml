@@ -22,7 +22,6 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
       - name: Install Python dependencies
         run: |
-          pip install setuptools
           pip install -r ./docs/requirements.txt
       - name: Setup git config
         run: |
