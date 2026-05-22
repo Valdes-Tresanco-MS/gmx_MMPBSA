@@ -725,7 +725,7 @@ class Trajectory(object):
             process.communicate(input_string.encode())
 
             if process.wait():
-                raise TrajError('Error running %s' % self.program)
+                raise TrajError('Error running %s' % self.exe)
         finally:
             if own_handle: stdout.close()
 
