@@ -42,6 +42,7 @@ from GMXMMPBSA.exceptions import (MMPBSA_Error, InternalError, InputError, GMXMM
 from GMXMMPBSA.infofile import InfoFile
 from GMXMMPBSA.fake_mpi import MPI as FakeMPI
 from GMXMMPBSA.input_parser import input_file as _input_file
+from GMXMMPBSA.make_top_amber import CheckAmberTop
 from GMXMMPBSA.make_trajs import make_trajectories, make_mutant_trajectories
 from GMXMMPBSA.output_file import (write_outputs, write_decomp_output, data2pkl)
 from GMXMMPBSA.parm_setup import MMPBSA_System
@@ -66,6 +67,7 @@ class MMPBSA_App(object):
     # The command line parser and input file objects are class attributes here
     clparser = parser
     input_file = _input_file
+    engine = 'gmx'
 
     def __init__(self, MPI, stdout=None, stderr=None, size=None):
         """
@@ -674,8 +676,14 @@ class MMPBSA_App(object):
         self.external_progs = external_progs
         if self.master:
             # Make amber topologies
-            logging.info('Building AMBER topologies from GROMACS files...')
-            maketop = CheckMakeTop(self.FILES, self.INPUT, self.external_progs)
+            if self.engine == 'gmx':
+                logging.info('Building AMBER topologies from GROMACS files...')
+                maketop = CheckMakeTop(self.FILES, self.INPUT, self.external_progs)
+
+            else:
+                logging.info('Building AMBER topologies...')
+                maketop = CheckAmberTop(self.FILES, self.INPUT, self.external_progs)
+
             (self.FILES.complex_prmtop, self.FILES.receptor_prmtop, self.FILES.ligand_prmtop,
              self.FILES.mutant_complex_prmtop,
              self.FILES.mutant_receptor_prmtop, self.FILES.mutant_ligand_prmtop) = maketop.buildTopology()
@@ -857,11 +865,16 @@ class MMPBSA_App(object):
                 _mpi = False
             mpi_cl = f'  mpirun -np {self.mpi_size} ' if _mpi else '  '
             # save args in gmx_MMPBSA.log
-            logging.info('Command-line\n' + mpi_cl +
+            if self.engine == 'amber':
+                logging.info('Command-line\n' + mpi_cl +
+                         'gmx_MMPBSA_amber ' + text_args + '\n')
+            else:
+                logging.info('Command-line\n' + mpi_cl +
                          'gmx_MMPBSA ' + text_args + '\n')
             # check if any arg is duplicated
             utils._get_dup_args(args)
             self.FILES = self.clparser.parse_args(args)
+            self.FILES.engine = self.engine
         else:
             self.FILES = object()
         # Broadcast the FILES
