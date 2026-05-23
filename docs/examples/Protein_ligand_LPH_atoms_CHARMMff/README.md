@@ -60,7 +60,7 @@ title: Protein-ligand LPH (Charmm)
     PBRadii=7,
     /
     &pb
-    inp=1, saopt=1, radiopt=0, cavity_surften=0.005, cavity_offset=0.0000
+    inp=1, radiopt=0, cavity_surften=0.005, cavity_offset=0.0000
     /
     ```
 
