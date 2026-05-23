@@ -4,7 +4,7 @@ title: Changelog
 ---
 # Changelog
 
-## gmx_MMPBSA v1.7.0 (05/22/2026)
+## gmx_MMPBSA v1.6.5 (05/22/2026)
 
 ### Application Changes
 
