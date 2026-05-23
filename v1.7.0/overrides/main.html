@@ -1,0 +1,28 @@
+{#-
+  This file was automatically generated - do not edit
+-#}
+{% extends "base.html" %}
+
+{% block outdated %}
+  You're not viewing the latest version.
+  <a href="{{ '../' ~ base_url }}">
+    <strong>Click here to go to latest.</strong>
+  </a>
+{% endblock %}
+{% block extrahead %}
+  <link rel="stylesheet" href="{{ 'overrides/assets/stylesheets/main.c1d34250.min.css' | url }}">
+  <link rel="stylesheet" href="{{ 'overrides/stylesheets/global.css' | url }}">
+
+
+{% endblock %}
+{% block announce %}
+  <span class="title">NEWS</span>
+  <div class="marquee">
+    <ul class="marquee-content" id="news-container">
+    </ul>
+  </div>
+      <script src="{{ 'assets/js/news.js' | url }}"></script>
+      <script type="text/javascript">
+        loadNews("{{ 'news.json' | url }}")
+      </script>
+{% endblock %}
