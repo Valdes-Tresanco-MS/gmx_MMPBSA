@@ -4,6 +4,48 @@ title: Changelog
 ---
 # Changelog
 
+## gmx_MMPBSA v1.7.0 (05/22/2026)
+
+### Application Changes
+
+#### Additions
+- [experimental] Implemented nmode for CHARMM topologies
+- Added support for additional histidine variants in residue selection
+
+#### Fixes
+- Stricter rules for detecting LP atoms
+- Filtered out 'nmode' and 'qh' from IEC2 items to avoid duplicated items
+- Fixed typo in make_top.py
+- Fixed duplication in IE and C2 calculations
+- Fixed IE calculation when ie_segment != 25 in input file and is updated to 25 in gmx_MMPBSA_ana
+
+#### Changes
+- Enhanced handling of terminal hydrogen atoms in make_top.py
+
+### Development Environment Changes
+
+#### Additions
+- New installation script: `scripts/conda_pip_install.sh`
+
+#### Fixes
+- Removed the unsupported `saopt` PBSA parameter from the LPH atoms CHARMMff documentation (#583)
+- Fixed setuptools version in GitHub workflow
+- Fixed broken links, grammar and clarity in getting-started.md
+- Optimized git clone speed in tester
+- Fixed typo in installation.md
+
+#### Changes
+- Updated environment dependencies to compatible versions of Python, AmberTools, ParmEd, and GROMACS
+- Updated installation instructions for conda and pip to reflect version changes
+- Added setuptools installation in GitHub workflow
+- Updated Python version to the latest stable version in GitHub workflow
+- Updated Python version requirement check in setup.py
+- Restricted Python version requirement to 3.11
+- Updated README.md
+- Updated news.json and changelog.md
+
+---
+
 ## gmx_MMPBSA v1.6.4 (04/11/2024)
 
 https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/releases/tag/1.6.4
