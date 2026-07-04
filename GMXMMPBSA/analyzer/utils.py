@@ -104,6 +104,21 @@ def bar_label(ax, container, labels=None, *, fmt="%g", label_type="edge", paddin
     def sign(x):
         return 1 if x >= 0 else -1
 
+    def error_endpoint(err, coord_index, positive, default):
+        err = np.asarray(err)
+        if err.size == 0:
+            return default
+        if err.ndim == 1:
+            if err.size >= 4 and err.size % 2 == 0:
+                err = err.reshape(-1, 2)
+            elif err.size > coord_index:
+                return err[coord_index]
+            else:
+                return default
+
+        values = err[:, coord_index]
+        return values.max() if positive else values.min()
+
     _api.check_in_list(['edge', 'center'], label_type=label_type)
 
     bars = container.patches
@@ -141,9 +156,9 @@ def bar_label(ax, container, labels=None, *, fmt="%g", label_type="edge", paddin
         if err is None:
             endpt = extrema
         elif orientation == "vertical":
-            endpt = err[:, 1].max() if dat >= 0 else err[:, 1].min()
+            endpt = error_endpoint(err, 1, dat >= 0, extrema)
         elif orientation == "horizontal":
-            endpt = err[:, 0].max() if dat >= 0 else err[:, 0].min()
+            endpt = error_endpoint(err, 0, dat >= 0, extrema)
 
         if label_type == "center":
             value = sign(dat) * length
