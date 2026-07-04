@@ -51,7 +51,7 @@ local p c
 COMPREPLY=() c=${COMP_WORDS[COMP_CWORD]} p=${COMP_WORDS[COMP_CWORD-1]}
 if (( $COMP_CWORD <= 1 )) || [[ $c == -* ]];
  then
-   COMPREPLY=( $(compgen  -W ' -h --help -v --version --input-file-help --create_input -O --overwrite -prefix -i
+   COMPREPLY=( $(compgen  -W ' -h --help -v --version --input-file-help --create_input -O --overwrite -prefix -sys_name -i
    -xvvfile -o -do -eo -deo -nogui -s --stability -cs -ci -cg -ct -cp -cr -rs -ri -rg -rt -rp -lm -ls -li -lg -lt -lp
    --rewrite-output --clean' -- $c)); return 0; fi
 case "$p" in

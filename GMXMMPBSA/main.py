@@ -882,6 +882,8 @@ class MMPBSA_App(object):
                 GMXMMPBSA_ERROR('FILES not present and no input file given!', InternalError)
             infile = self.FILES.input_file
         self.INPUT = self.input_file.Parse(infile)
+        if self.FILES.sys_name is not None:
+            self.INPUT['general']['sys_name'] = self.FILES.sys_name
         self.input_file_text = str(self.input_file)
         if self.master:
             for line in self.input_file_text.split('\n'):

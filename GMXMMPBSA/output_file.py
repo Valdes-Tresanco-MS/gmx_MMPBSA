@@ -543,6 +543,8 @@ class OutputFile(object):
         stability = not FILES.receptor_prmtop
 
         self.writeline('|gmx_MMPBSA Version=%s based on MMPBSA.py v.%s' % (__version__, __mmpbsa_version__))
+        if INPUT['general']['sys_name']:
+            self.writeline(f'{"|System name:":40}{INPUT["general"]["sys_name"]:>40}')
 
         # if FILES.solvated_prmtop:
         #    self.writeline('|Solvated complex topology file:  %s' %

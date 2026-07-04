@@ -145,6 +145,9 @@ group.add_argument('-O', '--overwrite', default=False, action='store_true',
 group.add_argument('-prefix', dest='prefix', default='_GMXMMPBSA_',
                    metavar='<file prefix>',
                    help='Prefix for intermediate files.')
+group.add_argument('-sys_name', dest='sys_name', default=None,
+                   metavar='<system name>',
+                   help='System name. Overrides sys_name in the input file.')
 group = parser.add_argument_group('Input and Output Files', '''These options specify the input files and optional 
 output files.''')
 group.add_argument('-i', dest='input_file', metavar='FILE', help='MM/PBSA input file.')
