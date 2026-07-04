@@ -1164,7 +1164,7 @@ class CheckMakeTop:
         mut_top.residues[mut_index].name = mut_aa
 
         for at in mut_top.residues[mut_index].atoms:
-            if mut_aa == 'GlY':
+            if mut_aa == 'GLY':
                 if at.name == 'CA':
                     ca_atom = at
                 if at.name in ['CB']:

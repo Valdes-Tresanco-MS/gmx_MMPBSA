@@ -1091,8 +1091,10 @@ class MMPBSA_App(object):
         if INPUT['ala']['cas_intdiel'] not in [0, 1]:
             GMXMMPBSA_ERROR('cas_intdiel must be set to 0 or 1!', InputError)
         # check mutant definition
-        if self.INPUT['ala']['mutant'].upper() not in ['ALA', 'A', 'GLY', 'G']:
+        mutant = self.INPUT['ala']['mutant'].upper()
+        if mutant not in ['ALA', 'A', 'GLY', 'G']:
             GMXMMPBSA_ERROR('The mutant most be ALA (or A) or GLY (or G)', InputError)
+        self.INPUT['ala']['mutant'] = {'A': 'ALA', 'G': 'GLY'}.get(mutant, mutant)
 
         if INPUT['rism']['rismrun']:
             if INPUT['rism']['rism_verbose'] not in [0, 1, 2]:
