@@ -33,6 +33,11 @@ import multiprocessing
 from GMXMMPBSA.analyzer.chartsettings import ChartSettings
 
 
+class CompactDoubleSpinBox(QDoubleSpinBox):
+    def textFromValue(self, value):
+        return f'{value:.6f}'.rstrip('0').rstrip('.')
+
+
 class InitDialog(QDialog):
     def __init__(self, parent):
         super(InitDialog, self).__init__(parent)
@@ -146,13 +151,14 @@ class InitDialog(QDialog):
         self.time_start.setRange(0, 1000000)
         self.time_start.setAccelerated(True)
         self.frame2time_layout.addRow('Start:', self.time_start)
-        self.time_step = QSpinBox()
-        self.time_step.setRange(1, 10000)
+        self.time_step = CompactDoubleSpinBox()
+        self.time_step.setRange(0.000001, 1000000)
+        self.time_step.setDecimals(6)
         self.time_step.setValue(10)
         self.time_step.setAccelerated(True)
         self.frame2time_layout.addRow('Scale:', self.time_step)
         self.time_unit = QComboBox()
-        self.time_unit.addItems(['ps', 'ns'])
+        self.time_unit.addItems(['fs', 'ps', 'ns', 'us', 'ms', 's'])
         self.frame2time_layout.addRow('Unit:', self.time_unit)
 
         self.performance_group = QGroupBox('Performance Options')

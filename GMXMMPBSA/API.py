@@ -221,6 +221,11 @@ class MMPBSA_API():
         self.timestep = timestep
         self.timeunit = timeunit
 
+    @staticmethod
+    def _time_range(start, step, length):
+        values = [round(start + i * step, 6) for i in range(length)]
+        return [int(v) if float(v).is_integer() else v for v in values]
+
     def setup_file(self, fname: Union[Path, str]):
         self.fname = fname if isinstance(fname, Path) else Path(fname)
         if not self.fname.exists():
@@ -942,9 +947,7 @@ class MMPBSA_API():
                                  INPUT['general']['interval']))
         self.frames_list = frames_list
         INPUT['general']['endframe'] = frames_list[-1]
-        time_step_list = list(range(self.starttime,
-                                    self.starttime + len(frames_list) * ts * INPUT['general']['interval'],
-                                    ts * INPUT['general']['interval']))
+        time_step_list = self._time_range(self.starttime, ts * INPUT['general']['interval'], len(frames_list))
         self.frames = dict(zip(frames_list, time_step_list))
 
         if INPUT['nmode']['nmoderun']:
@@ -953,11 +956,10 @@ class MMPBSA_API():
                                        INPUT['nmode']['nminterval']))
             INPUT['nmode']['nmendframe'] = nmframes_list[-1]
 
-            nm_start = (nmframes_list[0] - frames_list[0]) * INPUT['general']['interval']
-            nmtime_step_list = list(range(self.starttime + nm_start,
-                                          self.starttime + nm_start + len(nmframes_list) * ts * INPUT['nmode'][
-                                              'nminterval'],
-                                          ts * INPUT['nmode']['nminterval']))
+            nm_start = (nmframes_list[0] - frames_list[0]) * INPUT['general']['interval'] * ts
+            nmtime_step_list = self._time_range(
+                self.starttime + nm_start, ts * INPUT['nmode']['nminterval'], len(nmframes_list)
+            )
             self.nmframes_list = nmframes_list
             self.nmframes = dict(zip(nmframes_list, nmtime_step_list))
 

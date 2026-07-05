@@ -674,7 +674,8 @@ class MHeatmap:
         self.ax_heatmap.yaxis.set_ticks_position('right')
         self.ax_heatmap.yaxis.set_label_position('right')
         if self.heatmap_type == 2:
-            self.ax_heatmap.set_xlabel('Frames', fontdict={'fontsize': self.xlabel_fontsize})
+            self.ax_heatmap.set_xlabel(self.data.columns.name or 'Frames',
+                                       fontdict={'fontsize': self.xlabel_fontsize})
 
 
 class RegChart(ChartsBase):
