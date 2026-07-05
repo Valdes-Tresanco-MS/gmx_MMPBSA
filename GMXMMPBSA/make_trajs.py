@@ -608,8 +608,7 @@ class Trajectory(object):
 
         self.actions.append('noprogress')  # quash the progress bar
 
-        self.processed_frames = (min(orig_endframe, self.total_frames) -
-                                 orig_startframe) / interval + 1
+        self.processed_frames = self.analyzed_frames
 
     # -#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
 
