@@ -563,8 +563,10 @@ class CheckMakeTop:
         logging.info('Using topology conversion. Setting radiopt = 0...')
         self.INPUT['pb']['radiopt'] = 0
         logging.info('Building Normal Complex Amber topology...')
-        com_top = self.cleantop(self.FILES.complex_top, self.indexes['COM']['COM'])
-        if error_info := eq_strs(com_top, self.complex_str):
+        com_top, error_info = self._cleantop_with_retry(
+            self.FILES.complex_top, self.indexes['COM']['COM'], self.complex_str
+        )
+        if error_info:
             if error_info[0] == 'atoms':
                 GMXMMPBSA_ERROR(f"The number of atoms in the topology ({error_info[1]}) and the complex structure "
                                 f"({error_info[2]}) are different. Please check these files and verify that they are "
@@ -613,9 +615,11 @@ class CheckMakeTop:
         if self.FILES.receptor_top:
             logging.info('A Receptor topology file was defined. Using MT approach...')
             logging.info('Building AMBER Receptor Topology from GROMACS Receptor Topology...')
-            rec_top = self.cleantop(self.FILES.receptor_top, self.indexes['REC'], 'receptor')
+            rec_top, error_info = self._cleantop_with_retry(
+                self.FILES.receptor_top, self.indexes['REC'], self.receptor_str, 'receptor'
+            )
 
-            if error_info := eq_strs(rec_top, self.receptor_str):
+            if error_info:
                 if error_info[0] == 'atoms':
                     GMXMMPBSA_ERROR(f"The number of atoms in the topology ({error_info[1]}) and the receptor "
                                     f"structure ({error_info[2]}) are different. Please check this files and verify "
@@ -661,9 +665,11 @@ class CheckMakeTop:
         if self.FILES.ligand_top:
             logging.info('A Ligand Topology file was defined. Using MT approach...')
             logging.info('Building AMBER Ligand Topology from GROMACS Ligand Topology...')
-            lig_top = self.cleantop(self.FILES.ligand_top, self.indexes['LIG'], 'ligand')
+            lig_top, error_info = self._cleantop_with_retry(
+                self.FILES.ligand_top, self.indexes['LIG'], self.ligand_str, 'ligand'
+            )
 
-            if error_info := eq_strs(lig_top, self.ligand_str):
+            if error_info:
                 if error_info[0] == 'atoms':
                     GMXMMPBSA_ERROR(f"The number of atoms in the topology ({error_info[1]}) and the ligand "
                                     f"structure ({error_info[2]}) are different. Please check this files and verify "
@@ -816,12 +822,40 @@ class CheckMakeTop:
                     self.mut_ligand_list[f'MLIG{c}'] = sfile
                     start += end
 
+    def _cleantop_with_retry(self, top_file, ndx, structure, id='complex'):
+        try:
+            top = self.cleantop(top_file, ndx, id)
+        except IndexError as err:
+            logging.warning(f'{err} Retrying with the full topology before applying the index...')
+            try:
+                top = self.cleantop(top_file, ndx, id, remove_solvent=False)
+            except IndexError:
+                GMXMMPBSA_ERROR(f'The atom index in the {id} index is not found in the topology file. Please check '
+                                'that the files are consistent.')
+            return top, eq_strs(top, structure)
+
+        error_info = eq_strs(top, structure)
+        if error_info:
+            logging.warning(
+                f'The {id} topology generated after removing solvent/ions before applying the index is inconsistent '
+                'with the structure. Retrying with the full topology before applying the index...'
+            )
+            try:
+                top = self.cleantop(top_file, ndx, id, remove_solvent=False)
+            except IndexError:
+                GMXMMPBSA_ERROR(f'The atom index in the {id} index is not found in the topology file. Please check '
+                                'that the files are consistent.')
+            error_info = eq_strs(top, structure)
+
+        return top, error_info
+
     @staticmethod
-    def cleantop(top_file, ndx, id='complex'):
+    def cleantop(top_file, ndx, id='complex', remove_solvent=True):
         """
         Create a new top file with selected groups and without SOL and IONS
         :param top_file: User-defined topology file
         :param ndx: atoms index
+        :param remove_solvent: remove solvent/ions from the temporary topology before applying the index
         :return: new and clean top instance
         """
         top_file = Path(top_file)
@@ -834,7 +868,7 @@ class CheckMakeTop:
                 for line in topf:
                     if '[ molecules ]' in line:
                         molsect = True
-                    if molsect:
+                    if remove_solvent and molsect:
                         # not copy ions and solvent
                         sol_ion = [
                             # standard gmx form
@@ -864,8 +898,10 @@ class CheckMakeTop:
                 if idx not in res_list:
                     res_list.append(rtemp_top.atoms[i - 1].residue.number + 1)
             except IndexError:
-                GMXMMPBSA_ERROR(f'The atom {i} in the {id} index is not found in the topology file. Please check that '
-                                'the files are consistent.')
+                Path(temp_top.name).unlink()
+                raise IndexError(
+                    f'The atom {i} in the {id} index is not found in the topology generated from {top_file}'
+                )
 
         ranges = list2range(res_list)
         rtemp_top.strip(f"!:{','.join(ranges['string'])}")
