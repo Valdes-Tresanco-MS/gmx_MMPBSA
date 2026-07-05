@@ -38,8 +38,8 @@ Please, visit [Cite gmx_MMPBSA](cite_us.md) page for more information on how to 
 ---------------------------------------
 
 Authors:
-- [Mario Sergio Valdés Tresanco](https://www.researchgate.net/profile/Mario-Valdes-Tresanco-2), PhD. _University of Medellin, Colombia_
-- [Mario Ernesto Valdés Tresanco](https://www.researchgate.net/profile/Mario-Valdes-Tresanco), PhD Student. _University of Calgary, Canada._
+- [Mario S. Valdés-Tresanco](https://www.researchgate.net/profile/Mario-Valdes-Tresanco-2), PhD. _University of Medellin, Colombia_
+- [Mario E. Valdés-Tresanco](https://www.researchgate.net/profile/Mario-Valdes-Tresanco), PhD. _University of Calgary, Canada._
 - [Pedro Alberto Valiente](https://www.researchgate.net/profile/Pedro-Valiente), PhD. _University of Toronto, Canada_
 - [Ernesto Moreno Frías](https://www.researchgate.net/profile/Ernesto-Moreno-Frias), PhD. _University of Medellin, Colombia_
 
