@@ -349,6 +349,7 @@ amber_parser.add_argument('--input-file-help', dest='infilehelp', action='store_
 amber_parser.add_argument('--create_input', dest='createinput', choices=['gb', 'pb', 'rism', 'ala', 'decomp', 'nmode',
                                                                    'gbnsr6', 'all'],
                     nargs='*', help='Create an new input file with selected calculation type.')
+amber_parser.set_defaults(ligand_mol2=None)
 group = amber_parser.add_argument_group('Miscellaneous Options')
 group.add_argument('-O', '--overwrite', default=False, action='store_true',
                    help='Allow output files to be overwritten', dest='overwrite')
