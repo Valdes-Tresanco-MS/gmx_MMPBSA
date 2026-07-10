@@ -1160,7 +1160,7 @@ class CheckAmberTop:
             com_traj.Strip(f'!({"|".join(self.FILES.complex_mask)})')
             com_traj.Outtraj(f'COM_traj_{i}.{trj_suffix}', filetype=self.INPUT['general']['netcdf'])
             com_traj.Run(f'COM_traj_{i}_cpptraj.out')
-            new_trajs.append(f'COM_traj_{i}.mdcrd')
+            new_trajs.append(f'COM_traj_{i}.{trj_suffix}')
         self.FILES.complex_trajs = new_trajs
 
         # clear trajectory
