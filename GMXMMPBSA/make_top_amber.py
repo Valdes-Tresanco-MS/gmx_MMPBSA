@@ -295,7 +295,7 @@ class CheckAmberTop:
 
 
         # check if stability
-        if self.FILES.stability and (self.FILES.receptor_tpr or self.FILES.ligand_tpr):
+        if self.FILES.stability and (self.FILES.receptor_top or self.FILES.ligand_top or self.FILES.receptor_trajs or self.FILES.ligand_trajs):
             logging.warning('When Stability calculation mode is selected, receptor and ligand files are not '
                             'needed...')
         # wt receptor
