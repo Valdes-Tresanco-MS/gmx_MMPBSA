@@ -568,6 +568,8 @@ class OutputFile(object):
                     self.writeline(f'{"|Ligand (GROMACS) topology file:":40}{FILES.ligand_top:>40}')
                 if FILES.ligand_tpr:
                     self.writeline(f'{"|Ligand Structure file:":40}{FILES.ligand_tpr:>40}')
+                if FILES.ligand_mol2:
+                    self.writeline(f'{"|Ligand Structure file:":40}{FILES.ligand_mol2:>40}')
             else:
                 if FILES.receptor_top:
                     self.writeline(f'{"|Receptor (ORIGINAL) topology file:":40}{FILES.receptor_top:>40}')
