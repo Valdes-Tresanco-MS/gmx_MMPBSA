@@ -508,7 +508,7 @@ def check_str(structure, ref=False, skip=False):
                 parmed.residue.DNAResidue.has(res.name) or
                 parmed.residue.RNAResidue.has(res.name)):
             for atm in res.atoms:
-                if ('LP' in atm.name or 'LP' in atm.type) and atm.mass == 0:
+                if (('LP' in atm.name) or (atm.type and 'LP' in str(atm.type))) and atm.mass == 0:
                     GMXMMPBSA_ERROR('The LP pseudo-atom is not supported. Please remove them following these instructions: '
                                     'https://valdes-tresanco-ms.github.io/gmx_MMPBSA/dev/examples/Protein_ligand_LPH_atoms_CHARMMff')
         if res.chain == '':
