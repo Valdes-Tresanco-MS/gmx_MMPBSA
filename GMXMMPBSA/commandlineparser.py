@@ -125,8 +125,7 @@ def amber_residue_mask_type(value: str) -> str:
         raise ArgumentTypeError("Mask must be a non-empty string.")
 
     # 1. Strip all whitespaces to standardize evaluation
-    clean_value = value.replace(" ", "")
-
+    clean_value = re.sub(r'\s+', '', value)
     # 2. Enforce the mandatory ':' residue prefix
     if not clean_value.startswith(':'):
         raise ArgumentTypeError(
