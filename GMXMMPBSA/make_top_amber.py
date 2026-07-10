@@ -106,12 +106,11 @@ class CheckAmberTop:
         self.receptor_str_file = f'{self.FILES.prefix}REC.pdb'
         self.ligand_str_file = f'{self.FILES.prefix}LIG.pdb'
 
-        # self.checkFiles()
+        self.checkFiles()
 
     def checkFiles(self):
-        if (not self.FILES.complex_tpr or not self.FILES.complex_index or
-                not self.FILES.complex_trajs or not self.FILES.complex_groups):
-            GMXMMPBSA_ERROR('You must define the structure, topology and index files, as well as the groups!')
+        if (not self.FILES.complex_top or not self.FILES.complex_trajs or not self.FILES.complex_mask):
+            GMXMMPBSA_ERROR('You must define the complex topology (-cp), trajectory (-ct) and complex masks (-cm).')
 
     def buildTopology(self):
         """
