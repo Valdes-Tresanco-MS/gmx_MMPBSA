@@ -483,8 +483,8 @@ class CheckAmberTop:
         rec_hastop = True
         if self.FILES.receptor_top:
             logging.info('A Receptor topology file was defined. Using MT approach...')
-            logging.info('Building AMBER Receptor Topology from GROMACS Receptor Topology...')
-            rec_top = self.cleantop(self.FILES.receptor_top, self.indexes['REC'], 'receptor')
+            logging.info('Building AMBER Receptor Topology from AMBER Receptor Topology...')
+            rec_top = parmed.amber.AmberParm(self.FILES.receptor_top)
 
             if error_info := eq_strs(rec_top, self.receptor_str):
                 if error_info[0] == 'atoms':
@@ -531,8 +531,8 @@ class CheckAmberTop:
         lig_hastop = True
         if self.FILES.ligand_top:
             logging.info('A Ligand Topology file was defined. Using MT approach...')
-            logging.info('Building AMBER Ligand Topology from GROMACS Ligand Topology...')
-            lig_top = self.cleantop(self.FILES.ligand_top, self.indexes['LIG'], 'ligand')
+            logging.info('Building AMBER Ligand Topology from AMBER Ligand Topology...')
+            lig_top = parmed.amber.AmberParm(self.FILES.ligand_top)
 
             if error_info := eq_strs(lig_top, self.ligand_str):
                 if error_info[0] == 'atoms':
