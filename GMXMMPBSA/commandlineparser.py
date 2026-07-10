@@ -90,7 +90,7 @@ def mdcrd(arg):
 def topology(arg):
     return arg
 
-@check_arg(['.prmtop', '.top'], True)
+@check_arg(['.prmtop', '.parm7'], True)
 def prmtop(arg):
     return arg
 
