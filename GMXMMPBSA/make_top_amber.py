@@ -1307,7 +1307,7 @@ class CheckAmberTop:
                 curr_chain_id = chains_letters[chains_letters.index(chains_ids[-1]) + 1]
                 res.chain = curr_chain_id
                 i = self.resl[c].id_index - 1
-                if self.resl[c + 1].is_receptor():
+                if self.resl[c].is_receptor():
                     rec_str.residues[i].chain = res.chain
                 else:
                     lig_str.residues[i].chain = res.chain
