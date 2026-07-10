@@ -402,7 +402,7 @@ group.add_argument('-lp', dest='ligand_top', metavar='<Topology>', default=None,
                    help='''The ligand Topology file''')
 group.add_argument('-lm', dest='ligand_mask', metavar='mask', default=None, type=amber_residue_mask_type,
                    help='''Ligand mask. Notation: "-lm <Ligand mask>", e.g. -lm ":1"''')
-group.add_argument('-lt', dest='ligand_trajs', nargs='*', metavar='MDCRD', type=mdcrd,
+group.add_argument('-lt', dest='ligand_trajs', nargs='*', metavar='MDCRD', type=amber_trajectory,
                    help='''Input trajectories of the unbound ligand for multiple trajectory approach. 
                          Allowed formats: *.mdcrd (recommended) (specify as many as you'd like).''')
 
