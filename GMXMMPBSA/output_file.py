@@ -552,6 +552,8 @@ class OutputFile(object):
             self.writeline(f'{"|Complex Structure file:":40}{FILES.complex_tpr:>40}')
         else:
             self.writeline(f'{"|Complex (ORIGINAL) topology file:":40}{FILES.complex_top:>40}')
+            if getattr(FILES, "complex_str", None):
+                self.writeline(f'{"|Complex Structure file:":40}{FILES.complex_str:>40}')
         self.writeline(f'{"|Complex (AMBER) topology file:":40}{FILES.complex_prmtop:>40}')
 
         if not stability:
