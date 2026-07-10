@@ -323,10 +323,7 @@ class CheckAmberTop:
         # ligand
         # # check consistence
         if self.FILES.ligand_trajs:  # ligand is protein
-            # FIXME: if ligand is a zwitterionic aa fail
-            logging.info('A ligand structure file was defined. Using MT approach...')
-            num_lig_group, str_lig_group = get_index_groups(self.FILES.ligand_index, self.FILES.ligand_group)
-
+            GMXMMPBSA_ERROR('Ligand multiple-trajectory approach (-lt) is not implemented for AMBER mode yet. Please omit -lt and extract the ligand from the complex using -cm.')
             logging.info('Making gmx_MMPBSA index for ligand...')
             make_ndx_echo_args = echo_command + ['name {l} GMXMMPBSA_LIG\n q\n'.format(l=num_lig_group)]
             c1 = subprocess.Popen(make_ndx_echo_args, stdout=subprocess.PIPE)
