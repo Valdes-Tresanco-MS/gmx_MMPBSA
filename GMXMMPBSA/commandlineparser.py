@@ -393,7 +393,7 @@ group.add_argument('-rp', dest='receptor_top', metavar='<Topology>', default=Non
                    help='''The receptor Topology file''')
 group.add_argument('-rm', dest='receptor_mask', metavar='mask', default=None, type=amber_residue_mask_type,
                    help='''Receptor mask. Notation: "-rm <Receptor mask>", e.g. -rm ":1-240"''')
-group.add_argument('-rt', dest='receptor_trajs', nargs='*', metavar='MDCRD', type=mdcrd,
+group.add_argument('-rt', dest='receptor_trajs', nargs='*', metavar='MDCRD', type=amber_trajectory,
                    help='''Input trajectories of the unbound receptor for multiple trajectory approach.
                          Allowed formats: *.mdcrd (recommended) (specify as many as you'd like).''')
 
