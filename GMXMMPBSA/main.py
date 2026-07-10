@@ -895,6 +895,8 @@ class MMPBSA_App(object):
                 GMXMMPBSA_ERROR('FILES not present and no input file given!', InternalError)
             infile = self.FILES.input_file
         self.INPUT = self.input_file.Parse(infile)
+        if self.FILES.sys_name is not None:
+            self.INPUT['general']['sys_name'] = self.FILES.sys_name
         self.input_file_text = str(self.input_file)
         if self.master:
             for line in self.input_file_text.split('\n'):
@@ -1104,8 +1106,10 @@ class MMPBSA_App(object):
         if INPUT['ala']['cas_intdiel'] not in [0, 1]:
             GMXMMPBSA_ERROR('cas_intdiel must be set to 0 or 1!', InputError)
         # check mutant definition
-        if self.INPUT['ala']['mutant'].upper() not in ['ALA', 'A', 'GLY', 'G']:
+        mutant = self.INPUT['ala']['mutant'].upper()
+        if mutant not in ['ALA', 'A', 'GLY', 'G']:
             GMXMMPBSA_ERROR('The mutant most be ALA (or A) or GLY (or G)', InputError)
+        self.INPUT['ala']['mutant'] = {'A': 'ALA', 'G': 'GLY'}.get(mutant, mutant)
 
         if INPUT['rism']['rismrun']:
             if INPUT['rism']['rism_verbose'] not in [0, 1, 2]:

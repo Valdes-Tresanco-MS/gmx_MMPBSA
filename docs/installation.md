@@ -76,11 +76,11 @@ errors are more frequent.
             $ conda update conda
             
             // Create a new environment and activate it
-            $ conda create -n gmxMMPBSA python=3.11.8 -y -q 
+            $ conda create -n gmxMMPBSA python=3.11 -y -q 
             $ conda activate gmxMMPBSA
             
             // Install mpi4py and AmberTools
-            $ conda install -c conda-forge "mpi4py=4.0.1" "ambertools<=23.3" -y -q
+            $ conda install -c conda-forge "mpi4py=4.0.1" "ambertools<24" -y -q
 
             // Install dependencies for ploting
             $ conda install -c conda-forge "numpy=1.26.4" "matplotlib=3.7.3" "scipy=1.14.1" "pandas=1.5.3" "seaborn=0.11.2" -y -q
@@ -89,7 +89,7 @@ errors are more frequent.
             $ python -m pip install "pyqt6==6.7.1"    
 
             // (Optional) Install GROMACS
-            $ conda install -c conda-forge "gromacs<=2023.4" pocl -y -q
+            $ conda install -c conda-forge "gromacs<2026" pocl -y -q
             ```
                 
             </div>
@@ -98,13 +98,13 @@ errors are more frequent.
 
                 ``` bash 
                 conda update conda
-                conda create -n gmxMMPBSA python=3.11.8 -y -q                                      # (1)
+                conda create -n gmxMMPBSA python=3.11 -y -q                                      # (1)
                 conda activate gmxMMPBSA                                                        # (2)
-                conda install -c conda-forge "mpi4py=4.0.1" "ambertools<=23.3" -y -q               # (3)
+                conda install -c conda-forge "mpi4py=4.0.1" "ambertools<24" -y -q               # (3)
                 conda install -c conda-forge "numpy=1.26.4" "matplotlib=3.7.3" "scipy=1.14.1" "pandas=1.5.3" "seaborn=0.11.2" -y -q # (4)
                 python -m pip install "pyqt6==6.7.1"                                            # (5)
                 # Optional
-                conda install -c conda-forge "gromacs<=2023.4" pocl -y -q                         # (6)
+                conda install -c conda-forge "gromacs<2026" pocl -y -q                         # (6)
                
                 ```
             
@@ -115,49 +115,51 @@ errors are more frequent.
                 5. Install PyQt6 if you will use gmx_MMPBSA_ana
                 6. (Optional) Install GROMACS if GROMACS is not installed in your machine
 
-            === "Rolling/stable release"
-                
-                **INSTALLATION**
-                <div class="termy">
-                ```console
-                // INSTALLATION
-                $ python -m pip install gmx_MMPBSA
-                ```
-                </div>
+        Install gmx_MMPBSA using pip
 
-                **UPDATE**
-                <div class="termy">
-                ```console
-                // UPDATE
-                $ python -m pip install gmx_MMPBSA -U
-                ```
-                </div>
-
-                !!! info 
-                    Install/update gmx_MMPBSA from PyPI. PyPI has the latest version of *gmx_MMPBSA* including stable 
-                    and beta versions.
+        === "Rolling/stable release"
             
-            === "development version" 
+            **INSTALLATION**
+            <div class="termy">
+            ```console
+            // INSTALLATION
+            $ python -m pip install gmx_MMPBSA
+            ```
+            </div>
 
-                **INSTALLATION**
-                <div class="termy">
-                ```console
-                // INSTALLATION
-                $ python -m pip install git+https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA
-                ```
-                </div>
+            **UPDATE**
+            <div class="termy">
+            ```console
+            // UPDATE
+            $ python -m pip install gmx_MMPBSA -U
+            ```
+            </div>
 
-                **UPDATE**
-                <div class="termy">
-                ```console
-                // UPDATE
-                $ python -m pip install git+https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA -U
-                ```
-                </div>
+            !!! info 
+                Install/update gmx_MMPBSA from PyPI. PyPI has the latest version of *gmx_MMPBSA* including stable 
+                and beta versions.
+        
+        === "development version" 
 
-                !!! warning
-                    Install gmx_MMPBSA from the master branch of GitHub repository. This is only recommended 
-                    for testing new versions or temporary solutions to reported bugs.
+            **INSTALLATION**
+            <div class="termy">
+            ```console
+            // INSTALLATION
+            $ python -m pip install git+https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA.git
+            ```
+            </div>
+
+            **UPDATE**
+            <div class="termy">
+            ```console
+            // UPDATE
+            $ python -m pip install git+https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA.git -U
+            ```
+            </div>
+
+            !!! warning
+                Install gmx_MMPBSA from the master branch of GitHub repository. This is only recommended 
+                for testing new versions or temporary solutions to reported bugs.
     
         [Miniconda]: https://docs.conda.io/en/latest/miniconda.html
     

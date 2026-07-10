@@ -12,8 +12,8 @@ title:
     $ gmx_MMPBSA -h
     
     usage: gmx_MMPBSA [-h] [-v] [--input-file-help] [--create_input [{gb,pb,rism,ala,decomp,nmode,all}] 
-                      [-O] [-prefix <file prefix>] [-i FILE] [-xvvfile XVVFILE] [-o FILE] [-do FILE] [-eo FILE]
-                      [-deo FILE] [-nogui] [-s] [-cs <Structure File>] [-ci <Index File>] [-cg index index] 
+                      [-O] [-prefix <file prefix>] [-sys_name <system name>] [-i FILE] [-xvvfile XVVFILE] [-o FILE]
+                      [-do FILE] [-eo FILE] [-deo FILE] [-nogui] [-s] [-cs <Structure File>] [-ci <Index File>] [-cg index index]
                       [-ct [TRJ [TRJ ...]]] [-cp <Topology>] [-cr <PDB File>] [-rs <Structure File>] [-ri <Index File>] 
                       [-rg index] [-rt [TRJ [TRJ ...]]] [-rp <Topology>] [-lm <Structure File>] [-ls <Structure File>] 
                       [-li <Index File>] [-lg index] [-lt [TRJ [TRJ ...]]] [-lp <Topology>] [--rewrite-output] [--clean]
@@ -35,6 +35,9 @@ title:
     Miscellaneous Options:
       -O, --overwrite       Allow output files to be overwritten (default: False)
       -prefix <file prefix> Prefix for intermediate files. (default: _GMXMMPBSA_)
+      -sys_name <system name>, --sys_name <system name>
+                            System name. Overrides sys_name in the input file.
+                            (default: None)
     
     Input and Output Files:
       These options specify the input files and optional output files.

@@ -249,6 +249,21 @@ class LineChart(ChartsBase):
 
 
 class BarChart(ChartsBase):
+    def _label_bars(self, ax, options):
+        labels = []
+        for container in ax.containers:
+            if not getattr(container, 'patches', None):
+                continue
+            if not hasattr(container, 'datavalues'):
+                continue
+            bl = bar_label(ax, container,
+                           size=options[('Bar Plot', 'bar-label', 'fontsize')],
+                           fmt='%.2f',
+                           padding=options[('Bar Plot', 'bar-label', 'padding')],
+                           label_type=options[('Bar Plot', 'bar-label', 'label_type')])
+            labels.append(bl)
+        return labels
+
     def __init__(self, data, button: QToolButton, options: dict = None, item_parent=None):
         super(BarChart, self).__init__(button, options, item_parent)
 
@@ -286,12 +301,7 @@ class BarChart(ChartsBase):
                 if options[('Bar Plot', 'scale-yaxis')]: # and options['scalable']:
                     bar_plot_ax.set_yscale('symlog')
                 if options[('Bar Plot', 'bar-label', 'show')]:
-                    bl = bar_label(bar_plot_ax, bar_plot_ax.containers[1],
-                                   size=options[('Bar Plot', 'bar-label', 'fontsize')],
-                                   fmt='%.2f',
-                                   padding=options[('Bar Plot', 'bar-label', 'padding')],
-                                   label_type=options[('Bar Plot', 'bar-label', 'label_type')])
-                    self.bar_labels.append(bl)
+                    self.bar_labels.extend(self._label_bars(bar_plot_ax, options))
                 ylabel = '' if c != 0 else 'Energy (kcal/mol)'
                 self.setup_text(self.axes[c], options, key='Bar Plot', title=g, ylabel=ylabel)
                 setattr(self, f'cursor{c}', Cursor(bar_plot_ax, useblit=True, color='black', linewidth=0.5, ls='--'))
@@ -321,12 +331,7 @@ class BarChart(ChartsBase):
             if options[('Bar Plot', 'axes', 'y-inverted')] and not options.get('iec2'):
                 bar_plot_ax.invert_yaxis()
             if options[('Bar Plot', 'bar-label', 'show')]:
-                bl = bar_label(bar_plot_ax, bar_plot_ax.containers[1],
-                               size=options[('Bar Plot', 'bar-label', 'fontsize')],
-                               fmt='%.2f',
-                               padding=options[('Bar Plot', 'bar-label', 'padding')],
-                               label_type=options[('Bar Plot', 'bar-label', 'label_type')])
-                self.bar_labels.append(bl)
+                self.bar_labels.extend(self._label_bars(bar_plot_ax, options))
             self.setup_text(bar_plot_ax, options, key='Bar Plot')
             self.cursor = Cursor(bar_plot_ax, useblit=True, color='black', linewidth=0.5, ls='--')
             bar_plot_ax.set_xticklabels(self._set_xticks(bar_plot_ax, options[('Bar Plot', 'remove-molid')]))
@@ -669,7 +674,8 @@ class MHeatmap:
         self.ax_heatmap.yaxis.set_ticks_position('right')
         self.ax_heatmap.yaxis.set_label_position('right')
         if self.heatmap_type == 2:
-            self.ax_heatmap.set_xlabel('Frames', fontdict={'fontsize': self.xlabel_fontsize})
+            self.ax_heatmap.set_xlabel(self.data.columns.name or 'Frames',
+                                       fontdict={'fontsize': self.xlabel_fontsize})
 
 
 class RegChart(ChartsBase):

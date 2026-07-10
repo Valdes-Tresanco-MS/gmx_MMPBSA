@@ -485,8 +485,13 @@ class DeltaDeltaQH(dict):
         self._delta()
 
     def _delta(self):
-        for key in self.mut:
-            self[key] = self.mut[key] - self.norm[key]
+        for key, mut_values in self.mut.items():
+            norm_values = self.norm.get(key, {})
+            self[key] = {
+                term: value - norm_values[term]
+                for term, value in mut_values.items()
+                if term in norm_values
+            }
 
     def summary_output(self):
         text = ['           TRANSLATIONAL      ROTATIONAL      VIBRATIONAL           TOTAL',
