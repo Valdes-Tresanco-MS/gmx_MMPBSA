@@ -435,7 +435,7 @@ class CheckAmberTop:
         logging.info('Building Normal Complex Amber topology...')
 
         com_top = parmed.amber.AmberParm(self.FILES.complex_top)
-        print(f'!({"|".join(self.FILES.complex_mask)})')
+        logging.debug(f'Stripping complex topology with mask: {"|".join(self.FILES.complex_mask)}')
         com_top.strip(f'!({"|".join(self.FILES.complex_mask)})')
 
         # com_top = self.cleantop(self.FILES.complex_top, self.indexes['COM']['COM'])
