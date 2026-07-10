@@ -1160,43 +1160,28 @@ class CheckAmberTop:
         self.FILES.complex_trajs = new_trajs
 
         # clear trajectory
-        if self.FILES.receptor_top:
+        if self.FILES.receptor_trajs:
             logging.info('Cleaning normal receptor trajectories...')
             new_trajs = []
             for i in range(len(self.FILES.receptor_trajs)):
-                trjconv_echo_args = echo_command + ['GMXMMPBSA_REC']
-                c5 = subprocess.Popen(trjconv_echo_args, stdout=subprocess.PIPE)
-                # we get only first trajectory to extract a pdb file and make amber topology for complex
-                trjconv_args = self.trjconv + ['-f', self.FILES.receptor_trajs[i], '-s', self.FILES.receptor_tpr,
-                                               '-o', 'REC_traj_{}.xtc'.format(i), '-n', self.FILES.receptor_index]
-                logging.debug('Running command: ' + ' '.join(echo_command) + ' "' +
-                              (' '.join(trjconv_echo_args[len(echo_command):]).replace('\n', '\\n')) + '"' +
-                              '| ' + ' '.join(trjconv_args))
-                c6 = subprocess.Popen(trjconv_args, stdin=c5.stdout, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-                log_subprocess_output(c6)
-                if c6.wait():  # if it quits with return code != 0
-                    GMXMMPBSA_ERROR(
-                        '%s failed when querying %s' % (' '.join(self.trjconv), self.FILES.receptor_trajs[i]))
-                new_trajs.append('REC_traj_{}.xtc'.format(i))
+                rec_traj = Trajectory(self.FILES.receptor_top, self.FILES.receptor_trajs[i])
+                rec_traj.Setup()
+                rec_traj.Strip(f'!{self.FILES.receptor_mask}')
+                rec_traj.Outtraj(f'REC_traj_{i}.{trj_suffix}', filetype=self.INPUT['general']['netcdf'])
+                rec_traj.Run(f'REC_traj_{i}_cpptraj.out')
+                new_trajs.append(f'REC_traj_{i}.{trj_suffix}')
             self.FILES.receptor_trajs = new_trajs
 
-        if self.FILES.ligand_top:
+        if self.FILES.ligand_trajs:
             logging.info('Cleaning normal ligand trajectories...')
             new_trajs = []
             for i in range(len(self.FILES.ligand_trajs)):
-                trjconv_echo_args = echo_command + ['GMXMMPBSA_LIG']
-                c5 = subprocess.Popen(trjconv_echo_args, stdout=subprocess.PIPE)
-                # we get only first trajectory to extract a pdb file and make amber topology for complex
-                trjconv_args = self.trjconv + ['-f', self.FILES.ligand_trajs[i], '-s', self.FILES.ligand_tpr, '-o',
-                                               'LIG_traj_{}.xtc'.format(i), '-n', self.FILES.ligand_index]
-                logging.debug('Running command: ' + ' '.join(echo_command) + ' "' +
-                              (' '.join(trjconv_echo_args[len(echo_command):]).replace('\n', '\\n')) + '"' +
-                              '| ' + ' '.join(trjconv_args))
-                c6 = subprocess.Popen(trjconv_args, stdin=c5.stdout, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-                log_subprocess_output(c6)
-                if c6.wait():  # if it quits with return code != 0
-                    GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(self.trjconv), self.FILES.ligand_trajs[i]))
-                new_trajs.append('LIG_traj_{}.xtc'.format(i))
+                lig_traj = Trajectory(self.FILES.ligand_top, self.FILES.ligand_trajs[i])
+                lig_traj.Setup()
+                lig_traj.Strip(f'!{self.FILES.ligand_mask}')
+                lig_traj.Outtraj(f'LIG_traj_{i}.{trj_suffix}', filetype=self.INPUT['general']['netcdf'])
+                lig_traj.Run(f'LIG_traj_{i}_cpptraj.out')
+                new_trajs.append(f'LIG_traj_{i}.{trj_suffix}')
             self.FILES.ligand_trajs = new_trajs
 
     def check_structures(self, com_str, rec_str=None, lig_str=None):

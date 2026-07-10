@@ -94,6 +94,12 @@ def topology(arg):
 def prmtop(arg):
     return arg
 
+
+@check_arg(['.pdb', '.inpcrd', '.rst7'], True)
+def amber_structure(arg):
+    return arg
+
+
 @check_arg(['.mol2'], True)
 def mol2(arg):
     return arg
@@ -375,8 +381,8 @@ group.add_argument('-s', '--stability', dest='stability', action='store_true', d
 group = amber_parser.add_argument_group('Complex', complex_group_des)
 group.add_argument('-cp', dest='complex_top', metavar='<Topology>', default=None, type=prmtop,
                    help='''The complex Topology file''')
-group.add_argument('-cs', dest='complex_str', metavar='<Structure File>', default=None, type=structure,
-                   help='''Structure file of the complex. Allowed formats: *.pdb, *.inpcrd''')
+group.add_argument('-cs', dest='complex_str', metavar='<Structure File>', default=None, type=amber_structure,
+                   help='''Structure file of the complex. Allowed formats: *.pdb, *.inpcrd, *.rst7''')
 group.add_argument('-cm', dest='complex_mask', metavar='mask', nargs=2, default=None, type=amber_residue_mask_type,
                    help='Receptor and Ligand masks in complex file. The notation is as follows: "-cm '
                         '<Receptor mask> <Ligand mask>", ie. -cm ":1-240 :241"')

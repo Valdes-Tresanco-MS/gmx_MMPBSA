@@ -687,7 +687,10 @@ class MMPBSA_App(object):
             (self.FILES.complex_prmtop, self.FILES.receptor_prmtop, self.FILES.ligand_prmtop,
              self.FILES.mutant_complex_prmtop,
              self.FILES.mutant_receptor_prmtop, self.FILES.mutant_ligand_prmtop) = maketop.buildTopology()
-            logging.info('Building AMBER topologies from GROMACS files... Done.\n')
+            if self.engine == 'gmx':
+                logging.info('Building AMBER topologies from GROMACS files... Done.\n')
+            else:
+                logging.info('Building AMBER topologies... Done.\n')
             self.INPUT['general']['receptor_mask'], self.INPUT['general']['ligand_mask'], self.resl = maketop.get_masks()
             self.mutant_index = maketop.com_mut_index
             self.mut_str = self.resl[maketop.com_mut_index].mutant_label if self.mutant_index is not None else ''
