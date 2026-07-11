@@ -123,13 +123,13 @@ def run_test(parser):
     }
 
     if parser.test == [0]:
-        key_list = range(3, 19)
+        key_list = list(range(3, 26))
     elif parser.test == [1]:
         key_list = [3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 14, 15]
     elif parser.test == [2]:
         key_list = [3, 4, 5, 7, 9, 12, 13, 14, 15]
     elif parser.test == [101]:
-        key_list = [3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25]
+        key_list = list(range(3, 26))
     else:
         key_list = parser.test
     if not key_list:

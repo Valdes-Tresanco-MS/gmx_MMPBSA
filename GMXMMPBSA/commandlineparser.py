@@ -335,9 +335,9 @@ group.add_argument('--clean', dest='clean', action='store_true', default=False,
 # Amber parser
 
 amber_parser = GMXMMPBSA_ArgParser(epilog=f'''gmx_MMPBSA is an effort to implement the GB/PB and others calculations in GROMACS.
-                                    \nBased on MMPBSA.py (version {__mmpbsa_version__}) and 
+                                    \nBased on MMPBSA.py (version {__mmpbsa_version__}) and
                                     AmberTools{__ambertools_version__}''',
-                        description=(description + '''This is the core of gmx_MMPBSA and it will do all the 
+                        description=(description + '''This is the core of gmx_MMPBSA and it will do all the
                                     calculations'''),
                         formatter_class=ArgumentDefaultsHelpFormatter)
 amber_parser.add_argument('-v', '--version', action='version',
@@ -359,7 +359,7 @@ group.add_argument('-prefix', dest='prefix', default='_GMXMMPBSA_',
 group.add_argument('-sys_name', dest='sys_name', default=None,
                    metavar='<system name>',
                    help='System name. Overrides sys_name in the input file.')
-group = amber_parser.add_argument_group('Input and Output Files', '''These options specify the input files and optional 
+group = amber_parser.add_argument_group('Input and Output Files', '''These options specify the input files and optional
 output files.''')
 group.add_argument('-i', dest='input_file', metavar='FILE', help='MM/PBSA input file.')
 group.add_argument('-xvvfile', dest='xvvfile', help='XVV file for 3D-RISM.', default=rism_xvv)
@@ -392,10 +392,10 @@ group.add_argument('-cm', dest='complex_mask', metavar='mask', nargs=2, default=
                         '<Receptor mask> <Ligand mask>", ie. -cm ":1-240 :241"')
 group.add_argument('-ct', dest='complex_trajs', nargs='*', metavar='MDCRD', type=amber_trajectory,
                    help='''Complex trajectories. Make sure the trajectory is fitted and
-                         pbc have been removed. Allowed formats: *.mdcrd (recommended) (specify as many as you'd 
+                         pbc have been removed. Allowed formats: *.mdcrd (recommended) (specify as many as you'd
                          like).''')
 group.add_argument('-cr', dest='reference_structure', metavar='<PDB File>', default=None, type=pdb,
-                   help='''Complex Reference Structure file. This option is optional but recommended 
+                   help='''Complex Reference Structure file. This option is optional but recommended
                          (Use the PDB file used to generate the topology in tLEAP). If not defined,
                          the chains ID assignment (if the structure used in -cs does not have chain
                          IDs) will be done automatically according to the structure (can generate
@@ -416,7 +416,7 @@ group.add_argument('-lp', dest='ligand_top', metavar='<Topology>', default=None,
 group.add_argument('-lm', dest='ligand_mask', metavar='mask', default=None, type=amber_residue_mask_type,
                    help='''Ligand mask. Notation: "-lm <Ligand mask>", e.g. -lm ":1"''')
 group.add_argument('-lt', dest='ligand_trajs', nargs='*', metavar='MDCRD', type=amber_trajectory,
-                   help='''Input trajectories of the unbound ligand for multiple trajectory approach. 
+                   help='''Input trajectories of the unbound ligand for multiple trajectory approach.
                          Allowed formats: *.mdcrd (recommended) (specify as many as you'd like).''')
 
 group = amber_parser.add_argument_group('Miscellaneous Actions')
@@ -459,8 +459,8 @@ group.add_argument('-t', dest='test', choices=list(range(26)) + [101], type=int,
                    help='''\
 The level the test is going to be run at. Multiple systems and analysis can be run at the same time.
       Nr. of Sys  
-* 0      16     All -- Run all examples (Can take a long time!!!)
-* 1      13     Minimal -- Does a minimal test with a set of systems and analyzes 
+* 0      23     All -- Run all examples (Can take a long time!!!)
+* 1      12     Minimal -- Does a minimal test with a set of systems and analyzes
                 that show that gmx_MMPBSA runs correctly. Only exclude 3drism, nmode
                 protein-ligand MT because take a long time or are redundant
 * 2       9     Fast -- Only the calculations that take a short time are run (Default)

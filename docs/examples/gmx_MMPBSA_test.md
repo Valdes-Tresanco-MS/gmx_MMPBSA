@@ -22,8 +22,8 @@ title: gmx_MMPBSA_test
                             The level the test is going to be run at. Multiple systems and analysis can be run at the same 
                             time.
                                   Nr. of Sys  
-                            * 0      16     All -- Run all examples (Can take a long time!!!)
-                            * 1      13     Minimal -- Does a minimal test with a set of systems and analyzes 
+                            * 0      23     All -- Run all examples (Can take a long time!!!)
+                            * 1      12     Minimal -- Does a minimal test with a set of systems and analyzes
                                             that show that gmx_MMPBSA runs correctly. Only exclude 3drism, nmode
                                             protein-ligand MT because take a long time or are redundant
                             * 2       9     Fast -- Only the calculations that take a short time are run (Default)
@@ -108,7 +108,7 @@ Each example can use up to `-n/--num_processors` MPI ranks.
         
         * Download gmx_MMPBSA repository content in `/home/user/Documents`
         * Works with `Minimal` set of examples [-t 1]
-        * Perform the calculation on 13 examples sequentially, using 10 cpus each time
+        * Perform the calculation on 12 examples sequentially, using 10 cpus each time
     
     === "All"
         
@@ -118,7 +118,7 @@ Each example can use up to `-n/--num_processors` MPI ranks.
         
         * Download gmx_MMPBSA repository content in `/home/user/Documents`
         * Works with `All` set of examples
-        * Perform the calculation on 16 examples sequentially, using 10 cpus each time
+        * Perform the calculation on 23 examples sequentially, using 10 cpus each time
         
     === "Multiple selection"
         
