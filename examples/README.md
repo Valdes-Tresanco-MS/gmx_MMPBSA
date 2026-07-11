@@ -35,6 +35,7 @@ This section focuses on the analysis that can be performed with gmx_MMPBSA. Alth
 cases, you can use gmx_MMPBSA to perform several types of calculations (_e.g._ GB, Alanine scanning and Per-residue 
 decomposition; PB, Interaction Entropy, and Per-residue decomposition) in the same run for a specific system.
 
+* [Python API extraction](API/README.md)
 * [Single Trajectory Protocol](Protein_ligand/ST/README.md)[^1][^2][^3]
 * [Multiple Trajectory Protocol](Protein_ligand/MT/README.md)[^1]
 * Binding free energy calculations

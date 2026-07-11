@@ -13,3 +13,8 @@ examples/AMBER/*
 !examples/AMBER/*.prmtop
 !examples/AMBER/*.inpcrd
 !examples/AMBER/*.mdcrd
+!examples/API/
+!examples/API/README.md
+!examples/API/COMPACT_MMXSA_RESULTS.mmxsa
+!examples/API/extract_api_data.py
+!examples/API/gb_delta_total.csv
