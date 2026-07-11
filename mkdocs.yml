@@ -168,6 +168,7 @@ nav:
   - Examples:
     - Examples: examples/README.md
     - gmx_MMPBSA_test: examples/gmx_MMPBSA_test.md
+    - AMBER input files: examples/AMBER/README.md
     - Systems:
       - Protein-protein: examples/Protein_protein/README.md
       - Protein-ligand: examples/Protein_ligand/ST/README.md
