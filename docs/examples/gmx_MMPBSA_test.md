@@ -9,7 +9,7 @@ title: gmx_MMPBSA_test
     $ gmx_MMPBSA_test -h
     usage: gmx_MMPBSA_test [-h] [-v] 
            [-t [{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,101} [{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,101} ...]]]
-           [-f FOLDER] [-r] [-ng] [-n NUM_PROCESSORS]
+           [-f FOLDER] [-r] [-ng] [-n NUM_PROCESSORS] [-j NUM_CONCURRENT]
     
     This program is part of gmx_MMPBSA and will allow you to run various gmx_MMPBSA examples easily.
     
@@ -62,6 +62,9 @@ title: gmx_MMPBSA_test
                             Defines the number of processor cores you want to use with MPI per calculation. If the number 
                             of frames is less than the number of cpus defined, the calculation will be performed with 
                             the number of processors = number of frames.
+      -j NUM_CONCURRENT, --num_concurrent NUM_CONCURRENT
+                            Defines the number of examples to run concurrently. Each example can use up to
+                            --num_processors MPI ranks, so the total rank count can be -j * -n.
     
     
     gmx_MMPBSA is an effort to implement the GB/PB and others calculations in GROMACS. 
@@ -70,9 +73,9 @@ title: gmx_MMPBSA_test
 </div>
 
 ## Running gmx_MMPBSA_test
-gmx_MMPBSA_test is designed to run a set of samples (all or minimal) or a specific example efficiently. 
-Additionally, gmx_MMPBSA_test can run in parallel, decreasing the execution time gmx_MMPBSA_test will download the 
-most recent version of the repository in the specified folder and will perform the calculations.
+gmx_MMPBSA_test is designed to run a set of samples (all or minimal) or a specific example efficiently.
+By default, examples run sequentially. To run multiple examples at the same time, use `-j/--num_concurrent`.
+Each example can use up to `-n/--num_processors` MPI ranks.
 
 !!! info "Sets in gmx_MMPBSA_test"
 
@@ -85,6 +88,17 @@ most recent version of the repository in the specified folder and will perform t
         * Download gmx_MMPBSA repository content in `/home/user/Documents`
         * Works with `Fast` set of examples [-t 2 is the default]
         * Perform the calculation on 9 examples sequentially, using 10 cpus each time
+
+    === "Parallel examples"
+
+            gmx_MMPBSA_test -f /home/user/Documents -t 3 5 7 -n 4 -j 2
+
+        Through this command-line, gmxMMPBSA_test will:
+
+        * Download gmx_MMPBSA repository content in `/home/user/Documents`
+        * Execute examples `3`, `5`, and `7`
+        * Run up to 2 examples at the same time
+        * Use up to 4 MPI ranks per example
     
     === "Minimal"
         

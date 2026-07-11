@@ -140,6 +140,8 @@ def run_test(parser):
         key_list = [3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25]
     else:
         key_list = parser.test
+    if not key_list:
+        GMXMMPBSA_ERROR('No test was selected. Please define at least one test number')
 
     req_cpus = {x: _get_frames(test_sys[x][0].joinpath('mmpbsa.in')) for x in key_list}
 
@@ -147,6 +149,16 @@ def run_test(parser):
         logging.warning(f'The number cpus defined {parser.num_processors} is greater than the system cpu'
                         f' {multiprocessing.cpu_count()}. All the cpus will be used...')
         parser.num_processors = multiprocessing.cpu_count()
+
+    if parser.num_concurrent < 1:
+        GMXMMPBSA_ERROR('The number of concurrent examples must be greater than 0')
+    if parser.num_concurrent > len(key_list):
+        parser.num_concurrent = len(key_list)
+    if parser.num_processors * parser.num_concurrent > multiprocessing.cpu_count():
+        logging.warning(f'The requested test concurrency can use up to '
+                        f'{parser.num_processors * parser.num_concurrent} MPI ranks across '
+                        f'{parser.num_concurrent} examples, which is greater than the system cpu '
+                        f'{multiprocessing.cpu_count()}. Consider reducing -n or -j...')
 
     TASKS = []
     for x in key_list:
@@ -165,7 +177,7 @@ def run_test(parser):
     print(80 * '-')
     any_failed = False
     c = 1
-    with multiprocessing.Pool(1) as pool:
+    with multiprocessing.Pool(parser.num_concurrent) as pool:
         imap_unordered_it = pool.imap_unordered(calculatestar, TASKS)
         for x in imap_unordered_it:
             sys_name, failed = x

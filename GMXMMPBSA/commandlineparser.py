@@ -500,3 +500,6 @@ group.add_argument('-n', '--num_processors', type=int, default=4,
                    help='Defines the number of processor cores you want to use with MPI per calculation. If the number '
                         'of frames is less than the number of cpus defined, the calculation will be performed with '
                         'the number of processors = number of frames')
+group.add_argument('-j', '--num_concurrent', type=int, default=1,
+                   help='Defines the number of examples to run concurrently. Each example can use up to '
+                        '--num_processors MPI ranks, so the total rank count can be -j * -n')
