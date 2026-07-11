@@ -802,7 +802,7 @@ def remove(flag, fnpre='_GMXMMPBSA_'):
                 os.remove(fil)
 
 
-def find_progs(INPUT, mpi_size=0):
+def find_progs(INPUT, mpi_size=0, engine='gmx'):
     """ Find the necessary programs based in the user INPUT """
     # List all of the used programs with the conditions that they are needed
     logging.info('Checking external programs...')
@@ -834,35 +834,36 @@ def find_progs(INPUT, mpi_size=0):
                 GMXMMPBSA_ERROR(f'Could not find necessary program [{prog}]')
             logging.info(f'{prog} found! Using {str(my_progs[prog])}')
 
-    search_parth = INPUT['general']['gmx_path'] or os.environ['PATH']
-    g5 = False
-    for gv, g_exes in gro_exe.items():
-        if gv == 'gmx5':
-            for prog in g_exes:
-                if exe := shutil.which(prog, path=search_parth):
-                    logging.info('Using GROMACS version > 5.x.x!')
-                    my_progs['make_ndx'] = [exe, 'make_ndx']
-                    my_progs['editconf'] = [exe, 'editconf']
-                    my_progs['trjconv'] = [exe, 'trjconv']
-                    g5 = True
-                    if prog in ['gmx_mpi', 'gmx_mpi_d'] and mpi_size > 1:
-                        GMXMMPBSA_ERROR('gmx_mpi and gmx_mpi_d are not supported when running gmx_MMPBSA in parallel '
-                                        'due to incompatibility between the mpi libraries used to compile GROMACS and '
-                                        'mpi4py respectively. You can still use gmx_mpi or gmx_mpi_d to run gmx_MMPBSA '
-                                        'serial. For parallel calculations use gmx instead')
-                    logging.info(f'{prog} found! Using {exe}')
+    if engine == 'gmx':
+        search_parth = INPUT['general']['gmx_path'] or os.environ['PATH']
+        g5 = False
+        for gv, g_exes in gro_exe.items():
+            if gv == 'gmx5':
+                for prog in g_exes:
+                    if exe := shutil.which(prog, path=search_parth):
+                        logging.info('Using GROMACS version > 5.x.x!')
+                        my_progs['make_ndx'] = [exe, 'make_ndx']
+                        my_progs['editconf'] = [exe, 'editconf']
+                        my_progs['trjconv'] = [exe, 'trjconv']
+                        g5 = True
+                        if prog in ['gmx_mpi', 'gmx_mpi_d'] and mpi_size > 1:
+                            GMXMMPBSA_ERROR('gmx_mpi and gmx_mpi_d are not supported when running gmx_MMPBSA in '
+                                            'parallel due to incompatibility between the mpi libraries used to compile '
+                                            'GROMACS and mpi4py respectively. You can still use gmx_mpi or gmx_mpi_d '
+                                            'to run gmx_MMPBSA serial. For parallel calculations use gmx instead')
+                        logging.info(f'{prog} found! Using {exe}')
+                        break
+                if g5:
                     break
-            if g5:
-                break
-        else:
-            logging.info('Using GROMACS version 4.x.x!')
-            for prog in g_exes:
-                if exe := shutil.which(prog, path=search_parth):
-                    my_progs[prog] = [exe]
-                    logging.info(f'{prog} found! Using {str(my_progs[prog])}')
+            else:
+                logging.info('Using GROMACS version 4.x.x!')
+                for prog in g_exes:
+                    if exe := shutil.which(prog, path=search_parth):
+                        my_progs[prog] = [exe]
+                        logging.info(f'{prog} found! Using {str(my_progs[prog])}')
 
-    if 'make_ndx' not in my_progs or 'editconf' not in my_progs or 'trjconv' not in my_progs:
-        GMXMMPBSA_ERROR('Could not find necessary program [ GROMACS ]')
+        if 'make_ndx' not in my_progs or 'editconf' not in my_progs or 'trjconv' not in my_progs:
+            GMXMMPBSA_ERROR('Could not find necessary program [ GROMACS ]')
     logging.info('Checking external programs...Done.\n')
     return my_progs
 
