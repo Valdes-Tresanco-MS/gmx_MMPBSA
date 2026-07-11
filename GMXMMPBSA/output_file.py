@@ -550,8 +550,10 @@ class OutputFile(object):
         #    self.writeline('|Solvated complex topology file:  %s' %
         #               FILES.solvated_prmtop)
         if FILES.engine == 'gmx':
-            self.writeline(f'{"|Complex (GROMACS) topology file:":40}{FILES.complex_top:>40}')
-            self.writeline(f'{"|Complex Structure file:":40}{FILES.complex_tpr:>40}')
+            if FILES.complex_top:
+                self.writeline(f'{"|Complex (GROMACS) topology file:":40}{FILES.complex_top:>40}')
+            if FILES.complex_tpr:
+                self.writeline(f'{"|Complex Structure file:":40}{FILES.complex_tpr:>40}')
         else:
             self.writeline(f'{"|Complex (ORIGINAL) topology file:":40}{FILES.complex_top:>40}')
             if getattr(FILES, "complex_str", None):
