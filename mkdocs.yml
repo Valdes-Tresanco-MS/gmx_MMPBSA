@@ -161,6 +161,9 @@ nav:
     - The input file: input_file.md
     - The output file: output.md
     - Python API: api.md
+  - amber_MMPBSA:
+    - amber_MMPBSA: amber_MMPBSA.md
+    - AMBER input files example: examples/AMBER/README.md
   - gmx_MMPBSA_ana:
     - gmx_MMPBSA_ana: analyzer.md
     - Command-line: gmx_MMPBSA_ana_command-line.md
