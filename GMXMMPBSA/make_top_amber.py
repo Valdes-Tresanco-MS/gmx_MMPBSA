@@ -425,6 +425,22 @@ class CheckAmberTop:
 
         return parm
 
+    @staticmethod
+    def _radius_set(parm):
+        return parm.parm_data.get('RADIUS_SET', ['unknown'])[0]
+
+    def _copy_implicit_radii(self, source, target, system):
+        for flag in ['RADII', 'SCREEN']:
+            if flag not in source.parm_data:
+                GMXMMPBSA_ERROR(f'The {system} topology does not contain the {flag} flag required for GB radii.')
+            if len(source.parm_data[flag]) != len(target.atoms):
+                GMXMMPBSA_ERROR(f'The number of {flag} values in the {system} topology '
+                                f'({len(source.parm_data[flag])}) does not match the generated topology '
+                                f'({len(target.atoms)} atoms).')
+            target.parm_data[flag] = list(source.parm_data[flag])
+        target.parm_data['RADIUS_SET'] = list(source.parm_data.get('RADIUS_SET', ['unknown']))
+        logging.info(f'Preserving {system} GB radii from input topology: {self._radius_set(target)}')
+
     def ambertop2prmtop(self):
         logging.info('Using topology conversion. Setting radiopt = 0...')
         self.INPUT['pb']['radiopt'] = 0
@@ -469,12 +485,7 @@ class CheckAmberTop:
 
         self.fixparm2amber(com_amb_prm)
 
-        logging.info(f"Assigning PBRadii {PBRadii[self.INPUT['general']['PBRadii']]} to Complex...")
-        if com_top_parm == 'amber' and self.INPUT['general']['PBRadii'] == 7:
-            GMXMMPBSA_ERROR(
-                f"The PBRadii {PBRadii[self.INPUT['general']['PBRadii']]} is not compatible with Amber/OPLS "
-                f"topologies...")
-        action = ChRad(com_amb_prm, PBRadii[self.INPUT['general']['PBRadii']])
+        self._copy_implicit_radii(com_top, com_amb_prm, 'Complex')
         logging.info('Writing Normal Complex AMBER topology...')
         com_amb_prm.write_parm(self.complex_pmrtop)
 
@@ -522,8 +533,10 @@ class CheckAmberTop:
             rec_amb_prm.strip(f'!:{rec_indexes_string}')
             rec_hastop = False
 
-        logging.info(f"Assigning PBRadii {PBRadii[self.INPUT['general']['PBRadii']]} to Receptor...")
-        action = ChRad(rec_amb_prm, PBRadii[self.INPUT['general']['PBRadii']])
+        if rec_hastop:
+            self._copy_implicit_radii(rec_top, rec_amb_prm, 'Receptor')
+        else:
+            logging.info(f'Preserving Receptor GB radii inherited from Complex: {self._radius_set(rec_amb_prm)}')
         logging.info('Writing Normal Receptor AMBER topology...')
         rec_amb_prm.write_parm(self.receptor_pmrtop)
         rec_amb_prm.save(f"{self.FILES.prefix}REC.inpcrd", format='rst7', overwrite=True)
@@ -569,8 +582,10 @@ class CheckAmberTop:
             lig_amb_prm = self.molstr(com_amb_prm)
             lig_amb_prm.strip(f':{rec_indexes_string}')
             lig_hastop = False
-        logging.info(f"Assigning PBRadii {PBRadii[self.INPUT['general']['PBRadii']]} to Ligand...")
-        action = ChRad(lig_amb_prm, PBRadii[self.INPUT['general']['PBRadii']])
+        if lig_hastop:
+            self._copy_implicit_radii(lig_top, lig_amb_prm, 'Ligand')
+        else:
+            logging.info(f'Preserving Ligand GB radii inherited from Complex: {self._radius_set(lig_amb_prm)}')
         logging.info('Writing Normal Ligand AMBER topology...')
         lig_amb_prm.write_parm(self.ligand_pmrtop)
         lig_amb_prm.save(f"{self.FILES.prefix}LIG.inpcrd", format='rst7', overwrite=True)
