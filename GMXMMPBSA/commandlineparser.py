@@ -388,8 +388,8 @@ group.add_argument('-cp', dest='complex_top', metavar='<Topology>', default=None
 group.add_argument('-cs', dest='complex_str', metavar='<Structure File>', default=None, type=amber_structure,
                    help='''Structure file of the complex. Allowed formats: *.pdb, *.inpcrd, *.rst7''')
 group.add_argument('-cm', dest='complex_mask', metavar='mask', nargs=2, default=None, type=amber_residue_mask_type,
-                   help='Receptor and Ligand masks in complex file. The notation is as follows: "-cm '
-                        '<Receptor mask> <Ligand mask>", ie. -cm ":1-240 :241"')
+                   help='Receptor and Ligand masks in complex file. The notation is as follows: -cm '
+                        '"<Receptor mask>" "<Ligand mask>", ie. -cm ":1-240" ":241"')
 group.add_argument('-ct', dest='complex_trajs', nargs='*', metavar='MDCRD', type=amber_trajectory,
                    help='''Complex trajectories. Make sure the trajectory is fitted and
                          pbc have been removed. Allowed formats: *.mdcrd (recommended) (specify as many as you'd

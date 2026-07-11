@@ -34,7 +34,7 @@ Once you are in the folder containing all files, the command-line will be as fol
 
 === "Serial"
 
-        amber_MMPBSA -O -i mmpbsa.in -cp ras-raf_complex.prmtop -cs ras-raf_complex.inpcrd -ct prod_complex.mdcrd -cm ":1-166" ":167-242" -o FINAL_RESULTS_MMPBSA.dat -eo FINAL_RESULTS_MMPBSA.csv
+        amber_MMPBSA -O -i mmpbsa.in -cp ras-raf_complex.prmtop -cs ras-raf_complex.inpcrd -ct prod_complex.mdcrd -rp ras.prmtop -lp raf.prmtop -cm ":1-166" ":167-242" -o FINAL_RESULTS_MMPBSA.dat -eo FINAL_RESULTS_MMPBSA.csv
 
 === "gmx_MMPBSA_test"
 

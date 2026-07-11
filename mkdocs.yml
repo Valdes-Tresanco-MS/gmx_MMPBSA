@@ -168,7 +168,6 @@ nav:
   - Examples:
     - Examples: examples/README.md
     - gmx_MMPBSA_test: examples/gmx_MMPBSA_test.md
-    - AMBER input files: examples/AMBER/README.md
     - Systems:
       - Protein-protein: examples/Protein_protein/README.md
       - Protein-ligand: examples/Protein_ligand/ST/README.md
@@ -183,13 +182,7 @@ nav:
           - Papain-like protease: examples/COVID-19_related_proteins/Papain-like_protease_7koj/README.md
           - S1-ACE2 complex: examples/COVID-19_related_proteins/S1-ACE2_complex_7dmu/README.md
           - S1 RBD with antibody: examples/COVID-19_related_proteins/S1_RBD_with_antibody_6zlr/README.md
-    - CHARMMff Support:
-        - Protein-ligand: examples/Protein_ligand_CHARMMff/README.md
-        - Protein-ligand complex embedded in membrane: examples/Protein_membrane_CHARMMff/README.md
-        - Protein-ligand with LPH particles (ST): examples/Protein_ligand_LPH_atoms_CHARMMff/README.md
-    - OPLSff Support:
-        - Protein-protein: examples/OPLS/protein_protein/README.md
-    - Analysis:
+    - Analyses:
         - Single Trajectory Protocol: examples/Protein_ligand/ST/README.md
         - Multiple Trajectory Protocol: examples/Protein_ligand/MT/README.md
         - BFE calculations:
@@ -207,6 +200,14 @@ nav:
         - Stability calculations: examples/Stability/README.md
         - QM/MMGBSA: examples/QM_MMGBSA/README.md
         - Correlation: examples/Correlation/README.md
+    - AMBER Support:
+        - Protein-protein: examples/AMBER/README.md
+    - CHARMMff Support:
+        - Protein-ligand: examples/Protein_ligand_CHARMMff/README.md
+        - Protein-ligand complex embedded in membrane: examples/Protein_membrane_CHARMMff/README.md
+        - Protein-ligand with LPH particles (ST): examples/Protein_ligand_LPH_atoms_CHARMMff/README.md
+    - OPLSff Support:
+        - Protein-protein: examples/OPLS/protein_protein/README.md
     - Support for psf_dcd files:
         - Protein-protein: examples/psf_dcd/protein_protein/README.md
         - Protein-ligand: examples/psf_dcd/protein_ligand/README.md
