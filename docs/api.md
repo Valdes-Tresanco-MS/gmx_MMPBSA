@@ -3,240 +3,350 @@ template: main.html
 title: Python API
 ---
 
-# Python API for gmx_MMPBSA v1.5.x coming soon...
+# Python API
 
-# Python API for gmx_MMPBSA v1.4.3
+The `GMXMMPBSA.API` module provides programmatic access to parsed `gmx_MMPBSA`
+results. The current API is the same data layer used by `gmx_MMPBSA_ana`: it
+loads `_GMXMMPBSA_info` files or compact `COMPACT_MMXSA_RESULTS.mmxsa` files and
+returns pandas-based data structures for custom analysis.
 
-The aim of the `gmx_MMPBSA` API is to provide you with direct access to the raw data produced during a `gmx_MMPBSA`
-calculation. By default, gmx_MMPBSA calculates an average, standard deviation, and standard error of the mean for 
-all the generated data sets, but it does not support custom analyses. The API reads an _GMXMMPBSA_info file, from which 
-it will determine what kind of calculation was performed, then automatically parse the output files and load the 
-data into arrays.
-
-!!! warning
-    The topology files you used in the `gmx_MMPBSA` calculation must also be available in the location specified in the 
-    _`GMXMMPBSA_info` file.
-
-## Using the API
-
-We have derived a new API to reorganize the data so that it is arranged more hierarchically. This makes easier to
-transform the data into graphs in the `gmx_MMPBSA_ana`. **The original and the current API only differ in the name of
-the callable function, the disposition of the data in Per-wise decomposition analysis and in the new 'delta' key.
-
-The function `load_gmxmmpbsa_info` takes the name of a `gmx_MMPBSA` info file (typically `_GMXMMPBSA_info`)
-and returns a populated `mmpbsa_data` instance with all the parsed data. An example code snippet that creates
-a `mmpbsa_data` instance from the information in _`GMXMMPBSA_info` is shown below.
-
-!!! important
-    Unlike MMPBSA.py, `load_gmxmmpbsa_info` does not need to be located in the folder that contains the 
-    `_GMXMMPBSA_info` file.
-
-    _New in v1.4.0_
-
-```python
-from GMXMMPBSA import API as gmxMMPBSAapi
-
-data = gmxMMPBSAapi.load_gmxmmpbsa_info("_GMXMMPBSA_info")
-```
-
-
-## Properties of mmpbsa_data
-
-The `mmpbsa_data` class is a nested dictionary structure (`mmpbsa_data` is actually derived from `dict`). The various
-attributes of `mmpbsa_data` are described below followed by the defined operators.
-
-### Attributes
-
-If the numpy package is installed and available, all data arrays will be `numpy.ndarray` instances. Otherwise, all data
-arrays will be `array.array` instances with the ’d’ data type specifier (for a double precision float). The data is
-organized in an `mmpbsa_data` instance in the following manner:
-
-```python
-mmpbsa_data_instance['calc_key']['system_component']['energy_term']
-```
-
-In this example, `calc_key` is a `dict` key that is paired to another `dict` (`mmpbsa_data_instance` is the
-first-level `dict`, in this case) (Table 2). The keys of these second-level dict instances
-(`system_component`) pair to another `dict` (Table 3).
-
-Table 2. List and description of `calc_key` dict keys that may be present in instances of the `mmpbsa_data`
-class.
-
-| Dictionary Key (calc_key) | Calculation Type                     |
-|:-------------------------:|:-------------------------------------|
-|           `gb`            | Generalized Born Results             |
-|           `pb`            | Poisson-Boltzmann Results            |
-|         `rism gf`         | Gaussian Fluctuation 3D-RISM Results |
-|        `rism std`         | Standard 3D-RISM Results             |
-|           `ie`            | Interaction Entropy Results          |
-|          `nmode`          | Normal Mode Analysis Results         |
-|           `qh`            | Quasi-harmonic Approximation Results |
-
-Table 3. List and description of system_component keys that may be present in instances of the mmpbsa_data class.
-
-| Dictionary Key (system_component) | Description                                      |
-|:---------------------------------:|:-------------------------------------------------|
-|             `complex`             | Data sets for the complex. (Stability & Binding) |
-|            `receptor`             | Data sets for the receptor. (Binding only)       |
-|             `ligand`              | Data sets for the ligand. (Binding only)         |
-|              `delta`              | Data sets for the delta. (Binding only)          |
-
-The keys of these inner-most (third-level) `dict` instances are paired with the data arrays for that energy term (Table
-4). The various dictionary keys are listed below for each level. If alanine scanning was performed, the
-`mmpbsa_data_instance` also has a `"mutant"` attribute that contains the same dictionary structure as
-`mmpbsa_data` does for the normal system. If not, the mutant attribute is None. The only difference is that the data is
-accessed as follows:
-
-```python
-mmpbsa_data_instance.mutant['calc_key']['system_component']['energy_term']
-```
+!!! note
+    Older documentation described a dict-like `mmpbsa_data` object for
+    `gmx_MMPBSA` 1.4.x. That interface is no longer the canonical API. The
+    historical `load_gmxmmpbsa_info()` function is still available, but it now
+    returns a loaded `MMPBSA_API` object and emits a deprecation warning.
 
 !!! warning
-    All keys are case-sensitive, and if a space appears in the key, it must be present in your program. Also, if
-    polar/non-polar decomposition is not performed for `3D-RISM`, then the `POLAR SOLV` and `APOLAR SOLV` keys are 
-    replaced with the single key `ERISM`
+    When loading an `_GMXMMPBSA_info` file, the topology, output, and related
+    files referenced by that info file must still be available. The compact
+    `.mmxsa` file is usually the most portable input for API use.
 
-Table 4. List and description of energy_term keys that may be present in instances of the mmpbsa_data class. The
-allowed values of energy_term depend on the value of calc_key above in Table 2. The `energy_term` keys are listed 
-for each `calc_key` enumerated above, accompanied by a description. The RISM keys are the same for both `rism gf` 
-and `rism std` although the value of `POLAR SOLV` and `APOLAR SOLV` will differ depending on the method chosen. 
-Those keys marked with * are specific to the CHARMM force field used through chamber. Those arrays are all 0 for 
-normal Amber topology files.
+## Loading Results
 
-| Description                 |   `gb`    |   `pb`    |    `RISM`     |
-|:----------------------------|:---------:|:---------:|:-------------:|
-| Bond energy                 |  `BOND`   |  `BOND`   |    `BOND`     |
-| Angle energy                |  `ANGLE`  |  `ANGLE`  |    `ANGLE`    |
-| Dihedral Energy             |  `DIHED`  |  `DIHED`  |    `DIHED`    |
-| Urey-Bradley*               |   `UB`    |   `UB`    |       —       |
-| Improper Dihedrals*         |   `IMP`   |   `IMP`   |       —       |
-| Correction Map*             |  `CMAP`   |  `CMAP`   |       —       |
-| 1-4 van der Waals energy    | `1-4 VDW` | `1-4 VDW` |   `1-4 VDW`   |
-| 1-4 Electrostatic energy    | `1-4 EEL` | `1-4 EEL` |   `1-4 EEL`   |
-| van der Waals energy        | `VDWAALS` | `VDWAALS` |   `VDWAALS`   |
-| Electrostatic energy        |   `EEL`   |   `EEL`   |     `EEL`     |
-| Polar solvation energy      |   `EGB`   |   `EPB`   | `POLAR SOLV`  |
-| Non-polar solvation energy  |  `ESURF`  | `ENPOLAR` | `APOLAR SOLV` |
-| Total solvation free energy | `G solv`  | `G solv`  |   `G solv`    |
-| Total gas phase free energy |  `G gas`  |  `G gas`  |    `G gas`    |
-| Total energy                |  `TOTAL`  |  `TOTAL`  |    `TOTAL`    |
-
-Table 5. Same as Table 4 for the entropy (nmode and qh) data.
-
-| Description           |     `nmode`     |      `qh`       |
-|:----------------------|:---------------:|:---------------:|
-| Translational entropy | `Translational` | `Translational` |
-| Rotational entropy    |  `Rotational`   |  `Rotational`   |
-| Vibrational entropy   |  `Vibrational`  |  `Vibrational`  |
-| Total entropy         |     `Total`     |     `Total`     |
-
-Table 6. Same as Table 5 for the Interaction Entropy data.
-
-| Description                                  |   `IE`   |
-|:---------------------------------------------|:--------:|
-| Data per-frame                               |  `data`  |
-| Mean of the selected interval                |  `value` |
-| Star and End frames of the selected interval | `frames` |
-
-### Defined operators
-
-In-place addition: It extends all the arrays that are common to both `mmpbsa_data` instances. This is useful if, for
-instance, you run two `gmx_MMPBSA` calculations, and you use -prefix <new_prefix> for the second simulation. Assuming
-that <new_prefix> is `_GMXMMPBSA2_` for the second `gmx_MMPBSA` calculation, the following pseudo-code will generate a
-mmpbsa_data instance with all the data in concatenated arrays. The pseudo-code assumes GMXMMPBSA.API was imported as
-demonstrated below.
+Use `load()` for new code:
 
 ```python
-data = gmxMMPBSAapi.load_gmxmmpbsa_info("_GMXMMPBSA_info")
-data += gmxMMPBSAapi.load_gmxmmpbsa_info("_GMXMMPBSA2_info")
+from GMXMMPBSA import API
+
+api = API.load("COMPACT_MMXSA_RESULTS.mmxsa")
 ```
 
-
-## Example API Usage
-
-In many cases, the autocorrelation function of the energy can aid in the analysis of MM/PBSA data, since it provides a
-way of determining the statistical independence of your data points. For example, 1000 correlated snapshots provide less
-information, and therefore less statistical certainty, than 1000 uncorrelated snapshots. The standard error of the mean
-calculation performed by `gmx_MMPBSA` assumes a completely uncorrelated set of snapshots, which means that it is a lower
-bound of the true standard error of the mean, and a plot of the autocorrelation function may help determine the actual
-value.
-
-The example program below will calculate the autocorrelation function of the total energy (complex only for both the
-normal and alanine mutant systems) from a GB calculation and plot the resulting code using matplotlib.
+The same loader accepts an info file:
 
 ```python
-import os
-import sys
+from GMXMMPBSA import API
 
-# append AMBERHOME/bin to sys.path
-sys.path.append(os.path.join(os.getenv('AMBERHOME'), 'bin'))
-# Now import the MMPBSA API
-from GMXMMPBSA import API as gmxMMPBSAapi
-import matplotlib.pyplot as plt
-import numpy as np
+api = API.load("_GMXMMPBSA_info")
+```
 
-data = gmxMMPBSAapi.load_gmxmmpbsa_info('_GMXMMPBSA_info')
-total = data['gb']['complex']['TOTAL'].copy()
-data = gmxMMPBSAapi.load_gmxmmpbsa_info('_GMXMMPBSA_info')
-total_mut = data.mutant['gb']['complex']['TOTAL'].copy()
-# Create a second copy of the data set. The np.correlate function does not
-# normalize the correlation function, so we modify total and total2 to get
-# that effect
-total -= total.mean()
-total /= total.std()
-total2 = total.copy() / len(total)
-acor = np.correlate(total, total2, 'full')
-total_mut -= total_mut.mean()
-total_mut /= total_mut.std()
-total2_mut = total_mut.copy() / len(total_mut)
-acor_mut = np.correlate(total_mut, total2_mut, 'full')
-# Now generate the 'lag' axis
-xdata = np.arange(0, len(total))
-# The acor data set is symmetric about the origin, so only accept the
-# positive lag times. Graph the result
-plt.plot(xdata, acor[len(acor) // 2:], xdata, acor_mut[len(acor) // 2:])
-plt.show()
+If you need frame indexes expressed as simulation time, pass the same arguments
+accepted by `MMPBSA_API.setting_time()`:
+
+```python
+from GMXMMPBSA import API
+
+api = API.load(
+    "COMPACT_MMXSA_RESULTS.mmxsa",
+    time={"timestep": 10, "timeunit": "ps"},
+)
+```
+
+The lower-level class remains public:
+
+```python
+from GMXMMPBSA.API import MMPBSA_API
+
+api = MMPBSA_API()
+api.setting_time(timestep=10, timeunit="ps")
+api.load_file("COMPACT_MMXSA_RESULTS.mmxsa")
+```
+
+For a complete runnable example that loads a real compact result and writes a
+CSV file, see the [Python API extraction example](examples/API/README.md).
+
+## Metadata
+
+The loaded object exposes calculation metadata:
+
+```python
+info = api.get_info()
+input_options = api.get_input()
+files = api.get_files()
+
+print(info["numframes"])
+print(input_options["general"]["temperature"])
+print(files.output_file)
+```
+
+`get_info()` returns a dictionary with values such as frame counts, output text,
+mutation information, and the complex PDB text. `get_input()` returns the parsed
+input namelists. `get_files()` returns the file namespace stored in the result.
+
+## Energy Data
+
+`get_energy()` returns a dictionary with four main entries:
+
+* `map`: available result keys after filtering.
+* `data`: pandas DataFrames containing per-frame values plus `Average`, `SD`,
+  and `SEM` rows.
+* `summary`: pandas DataFrames containing only `Average`, `SD`, and `SEM`.
+* `correlation`: compact energy summary used by correlation analysis.
+
+Example:
+
+```python
+energy = api.get_energy()
+
+gb_delta = energy["data"]["normal"]["gb"]["delta"]
+total = gb_delta["TOTAL"]
+
+print(total.head())
+print(energy["summary"]["normal"]["gb"]["delta"]["TOTAL"])
+```
+
+You can restrict the returned data:
+
+```python
+energy = api.get_energy(
+    etype=("normal",),
+    model=("gb",),
+    mol=("complex", "delta"),
+    term=("VDWAALS", "EEL", "TOTAL"),
+    startframe=1,
+    endframe=100,
+    interval=2,
+)
+```
+
+Common `etype` values are `normal`, `mutant`, and `mutant-normal`. Common model
+values include `gb`, `pb`, `rism std`, `rism gf`, `rism pcplus`, and `gbnsr6`,
+depending on the calculation.
+
+## Key Reference
+
+The keys available through the API depend on the calculation that produced the
+result file. For example, `pb` keys are only present when PB was run, `mutant`
+keys are only present for alanine scanning, and decomposition keys are only
+present when decomposition was enabled.
+
+Use the returned `map` object to inspect what is actually available:
+
+```python
+api = API.load("examples/API/COMPACT_MMXSA_RESULTS.mmxsa")
+
+energy = api.get_energy()
+entropy = api.get_entropy()
+
+print(energy["map"])
+print(entropy["map"])
+
+# For a decomposition result:
+# decomp = api.get_decomp_energy()
+# print(decomp["map"])
+```
+
+### Result Types
+
+| Key | Meaning |
+| --- | --- |
+| `normal` | Results for the original system. |
+| `mutant` | Results for the mutated system when alanine or glycine scanning was run. |
+| `mutant-normal` | Difference between mutant and normal results. |
+| `decomp_normal` | Decomposition data for the original system. Used as an `etype` argument to `get_decomp_energy()`. |
+| `decomp_mutant` | Decomposition data for the mutated system. Used as an `etype` argument to `get_decomp_energy()`. |
+
+### Molecular Components
+
+| Key | Meaning |
+| --- | --- |
+| `complex` | Complex energy or entropy. Present for stability and binding calculations. |
+| `receptor` | Receptor contribution. Present for binding calculations. |
+| `ligand` | Ligand contribution. Present for binding calculations. |
+| `delta` | Binding difference, usually `complex - receptor - ligand`. |
+
+### Energy Models
+
+| Key | Meaning |
+| --- | --- |
+| `gb` | Generalized Born energy. |
+| `gbnsr6` | GBNSR6 energy. |
+| `pb` | Poisson-Boltzmann energy. |
+| `rism std` | Standard 3D-RISM energy. |
+| `rism gf` | Gaussian fluctuation 3D-RISM energy. |
+| `rism pcplus` | PC+ corrected 3D-RISM energy. |
+
+### Energy Terms
+
+| Key | Meaning |
+| --- | --- |
+| `BOND` | Bond energy. |
+| `ANGLE` | Angle energy. |
+| `DIHED` | Dihedral energy. |
+| `VDWAALS` | van der Waals energy. |
+| `EEL` | Electrostatic energy. |
+| `1-4 VDW` | 1-4 van der Waals energy. |
+| `1-4 EEL` | 1-4 electrostatic energy. |
+| `UB` | Urey-Bradley term for CHARMM-style topologies. |
+| `IMP` | Improper dihedral term for CHARMM-style topologies. |
+| `CMAP` | Correction map term for CHARMM-style topologies. |
+| `ESCF` | Semiempirical correction term for supported QM/MM calculations. |
+| `EGB` | GB polar solvation energy. |
+| `ESURF` | GB non-polar solvation energy. |
+| `EPB` | PB polar solvation energy. |
+| `ENPOLAR` | PB non-polar cavity/dispersion-style contribution, depending on PB settings. |
+| `EDISPER` | PB dispersion contribution. |
+| `POLAR SOLV` | 3D-RISM polar solvation energy. |
+| `APOLAR SOLV` | 3D-RISM apolar solvation energy. |
+| `ERISM` | Combined 3D-RISM solvation energy when polar/apolar decomposition is not available. |
+| `GGAS` | Composite gas-phase energy. |
+| `GSOLV` | Composite solvation energy. |
+| `TOTAL` | Total energy. |
+
+### Entropy Models And Terms
+
+| Key | Meaning |
+| --- | --- |
+| `nmode` | Normal mode entropy. |
+| `qh` | Quasi-harmonic entropy. |
+| `ie` | Interaction entropy. |
+| `c2` | C2 entropy. |
+| `TRANSLATIONAL` | Translational entropy term for NMODE/QH outputs. |
+| `ROTATIONAL` | Rotational entropy term for NMODE/QH outputs. |
+| `VIBRATIONAL` | Vibrational entropy term for NMODE/QH outputs. |
+| `TOTAL` | Total NMODE/QH entropy. |
+| `AccIntEnergy` | Accumulated interaction energy series used in IE output. |
+| `ie` | Interaction entropy values in IE DataFrames. |
+| `sigma` | IE/C2 sigma value. |
+| `c2` | C2 entropy value in C2 DataFrames. |
+
+### Decomposition Keys
+
+| Key | Meaning |
+| --- | --- |
+| `TDC` | Total decomposition contribution. |
+| `SDC` | Sidechain decomposition contribution. |
+| `BDC` | Backbone decomposition contribution. |
+| Residue key | Per-residue identifier from the parsed decomposition output. |
+| Pair residue key | Partner residue identifier for pairwise decomposition. |
+| `int` | Internal contribution. |
+| `vdw` | van der Waals contribution. |
+| `eel` | Electrostatic contribution. |
+| `pol` | Polar solvation contribution. |
+| `sas` | Non-polar solvation contribution. |
+| `tot` | Total decomposition contribution for the residue or pair. |
+
+### Return Object Keys
+
+| Key | Returned by | Meaning |
+| --- | --- | --- |
+| `map` | `get_energy()`, `get_entropy()`, `get_decomp_energy()`, `get_binding()` | Nested dictionary/list of available keys after filtering. |
+| `data` | `get_energy()`, `get_entropy()`, `get_decomp_energy()`, `get_binding()` | Main pandas result objects. |
+| `summary` | `get_energy()`, `get_entropy()` | `Average`, `SD`, and `SEM` summaries. |
+| `correlation` | `get_energy()`, `get_binding()`, optional `get_ana_data()` | Compact values prepared for correlation analysis. |
+| `keys` | `get_ana_data()` | Analyzer chart-data keys. |
+
+## Entropy And Binding
+
+`get_entropy()` combines available entropy methods:
+
+```python
+entropy = api.get_entropy(model=("ie", "c2", "nmode", "qh"))
+print(entropy["map"])
+```
+
+Specific helpers are also available:
+
+```python
+ie = api.get_ie_entropy(ie_segment=25)
+c2 = api.get_c2_entropy()
+nmode = api.get_nmode_entropy()
+qh = api.get_qh_entropy()
+```
+
+To compute binding tables that combine enthalpy and entropy summaries:
+
+```python
+energy = api.get_energy()
+entropy = api.get_entropy()
+
+binding = api.get_binding(
+    energy_summary=energy["summary"],
+    entropy_summary=entropy["summary"],
+)
+
+print(binding["data"]["normal"]["gb"]["ie"])
 ```
 
 ## Decomposition Data
 
-When performing decomposition analysis, the various decomp data is stored in a separate tree of dicts referenced with
-the `decomp` key. The key sequence is similar to the sequence for the `normal` data described above, where `decomp` is
-followed by the solvent model (`GB` or `PB`), followed by the species (`complex`, `receptor`, or `ligand`) 
-(additionally, we include `delta` key), followed by the decomposition components (total, backbone, or sidechain), 
-followed by the residue number (and residue pair for pairwise decomposition), finally followed by the contribution 
-(`internal`, `van der Waals`, `electrostatics`, etc.) The available keys are shown in Figure 1 (and each key is 
-described afterwards).
+`get_decomp_energy()` returns decomposition data when decomposition was enabled
+in the original calculation:
 
-**Decomp Key Descriptions:**
+```python
+decomp = api.get_decomp_energy(
+    model=("gb",),
+    mol=("complex", "delta"),
+    contribution=("TDC", "SDC"),
+    res_threshold=0.5,
+)
 
-* `gb` All Generalized Born results
-* `pb` All Poisson-Boltzmann results
-* `complex` All results from the complex trajectory
-* `receptor` All results from the receptor trajectory
-* `ligand` All results from the ligand trajectory
-* `delta` All results from delta total decomposition [ complex TDC - (receptor TDC + ligand TDC) ]
-* `TDC` All results from the total decomposition
-* `SDC` All results from the sidechain decomposition
-* `BDC` All results from the backbone decomposition
-* `#` All data from residue number `#` in per-residue and per-wise decomposition (same residue numbering scheme as in
-  each respective topology file)
-    * `##` All interaction energies between residues `##` and their respective pair `#` in per-wise decomposition (same
-      residue numbering scheme as in each respective topology file)
-* `int` Internal energy contributions (see the idecomp variable description above)
-* `vdw` van der Waals energy contributions
-* `eel` Electrostatic energy contributions
-* `pol` Polar solvation free energy contributions
-* `sas` Non-polar solvation free energy contributions
-* `tot` Total free energy contributions (sum of previous 5).
+print(decomp["map"])
+print(decomp["data"]["normal"]["gb"].head())
+```
 
+For pairwise decomposition, use `res1` and `res2` to restrict residue pairs.
+For per-residue decomposition, use `res1` and `term`.
 
-<figure markdown="1">
-[![decomp][1]][1]
-  <figcaption markdown="1" style="margin-top:0;">
-  **Figure 1**. Tree of `dict` keys following the `decomp` key in a `mmpbsa_data` instance.
-  </figcaption>
-</figure>
+## Analyzer Data
 
-[1]: assets/images/decomp_dict_keys.png
+`get_ana_data()` prepares the same hierarchical data consumed by
+`gmx_MMPBSA_ana`. Public API use defaults to in-memory pandas objects:
 
+```python
+ana_data = api.get_ana_data(
+    energy_options={"etype": ("normal",)},
+    entropy_options={"etype": ("normal",)},
+    decomp_options={"res_threshold": 0.5},
+    performance_options={"energy_memory": True, "decomp_memory": True},
+    correlation=True,
+)
+```
+
+Disk-backed analyzer data uses parquet files. If you request disk-backed data,
+install either `pyarrow` or `fastparquet`:
+
+```python
+api = API.load("COMPACT_MMXSA_RESULTS.mmxsa", data_on_disk=True)
+ana_data = api.get_ana_data(
+    energy_options={},
+    performance_options={"energy_memory": False, "decomp_memory": True},
+)
+```
+
+## Compatibility Loader
+
+`load_gmxmmpbsa_info()` is kept for older imports:
+
+```python
+from GMXMMPBSA import API
+
+api = API.load_gmxmmpbsa_info("_GMXMMPBSA_info")
+energy = api.get_energy()
+```
+
+This compatibility function intentionally returns the modern `MMPBSA_API`
+object. Scripts written for the old dict-like API should be migrated to
+`get_energy()["data"]`, `get_entropy()["data"]`, and `get_decomp_energy()["data"]`.
+
+## Validation Status
+
+This API modernization is intentionally staged on a separate branch. The current
+minimum validation target is:
+
+```bash
+python3 -m py_compile GMXMMPBSA/API.py
+```
+
+Import and fixture-loading smoke tests should be run in the supported Python
+3.11 environment with the project dependencies installed. Full API regression
+coverage is deferred until the public interface is reviewed.
