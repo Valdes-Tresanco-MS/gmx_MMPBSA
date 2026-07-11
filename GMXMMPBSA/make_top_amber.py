@@ -321,46 +321,9 @@ class CheckAmberTop:
 
 
         # ligand
-        # # check consistence
-        if self.FILES.ligand_trajs:  # ligand is protein
-            GMXMMPBSA_ERROR('Ligand multiple-trajectory approach (-lt) is not implemented for AMBER mode yet. Please omit -lt and extract the ligand from the complex using -cm.')
-            logging.info('Making gmx_MMPBSA index for ligand...')
-            make_ndx_echo_args = echo_command + ['name {l} GMXMMPBSA_LIG\n q\n'.format(l=num_lig_group)]
-            c1 = subprocess.Popen(make_ndx_echo_args, stdout=subprocess.PIPE)
-
-            lig_ndx = self.FILES.prefix + 'LIG_index.ndx'
-            make_ndx_args = self.make_ndx + ['-n', self.FILES.ligand_index, '-o', lig_ndx, '-f', self.FILES.ligand_tpr]
-            logging.debug('Running command: ' + ' '.join(echo_command) + ' "' +
-                          (' '.join(make_ndx_echo_args[len(echo_command):]).replace('\n', '\\n')) + '"' + ' | ' +
-                          ' '.join(make_ndx_args))
-            c2 = subprocess.Popen(make_ndx_args, stdin=c1.stdout, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-            log_subprocess_output(c2)
-            if c2.wait():  # if it quits with return code != 0
-                GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(self.make_ndx), self.FILES.ligand_index))
-            self.FILES.ligand_index = lig_ndx
-
-            logging.info(f'Normal Ligand: Saving group {str_lig_group} ({num_lig_group}) in {self.FILES.ligand_index}'
-                         f' file as {self.ligand_str_file}')
-            # wt ligand
-            pdblig_echo_args = echo_command + ['{}'.format(num_lig_group)]
-            l1 = subprocess.Popen(pdblig_echo_args, stdout=subprocess.PIPE)
-            str_format = 'tpr' if self.FILES.ligand_tpr[-3:] == 'tpr' else 'pdb'
-            if str_format == 'tpr':
-                prog = self.trjconv
-                # we extract a pdb from structure file to make amber topology
-                pdblig_args = self.trjconv + ['-f', self.FILES.ligand_trajs[0], '-s', self.FILES.ligand_tpr, '-o',
-                                              self.ligand_str_file, '-n', self.FILES.ligand_index, '-dump', '0']
-            else:
-                prog = self.editconf
-                pdblig_args = self.editconf + ['-f', self.FILES.ligand_tpr, '-n', self.FILES.ligand_index, '-o',
-                                               self.ligand_str_file]
-            logging.debug('Running command: ' + ' '.join(echo_command) + ' "' +
-                          (' '.join(pdblig_echo_args[len(echo_command):]).replace('\n', '\\n')) + '"' +
-                          '| ' + ' '.join(pdblig_args))
-            l2 = subprocess.Popen(pdblig_args, stdin=l1.stdout, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-            log_subprocess_output(l2)
-            if l2.wait():  # if it quits with return code != 0
-                GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(prog), self.FILES.ligand_trajs[0]))
+        if self.FILES.ligand_trajs:
+            GMXMMPBSA_ERROR('Ligand multiple-trajectory approach (-lt) is not implemented for AMBER mode yet. '
+                            'Please omit -lt and extract the ligand from the complex using -cm.')
         else:
             # wt complex ligand
             logging.info('No ligand structure file was defined. Using ST approach...')
