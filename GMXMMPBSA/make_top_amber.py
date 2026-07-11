@@ -429,6 +429,18 @@ class CheckAmberTop:
     def _radius_set(parm):
         return parm.parm_data.get('RADIUS_SET', ['unknown'])[0]
 
+    def _chrad_radius_name(self, parm):
+        radius_set = self._radius_set(parm).lower()
+        for radius_name in PBRadii.values():
+            if f'({radius_name.lower()})' in radius_set:
+                return radius_name
+        for radius_name in sorted(PBRadii.values(), key=len, reverse=True):
+            if radius_name.lower() in radius_set:
+                return radius_name
+        logging.warning(f"Could not identify GB radii from topology RADIUS_SET '{self._radius_set(parm)}'. "
+                        f"Using input PBRadii {PBRadii[self.INPUT['general']['PBRadii']]}.")
+        return PBRadii[self.INPUT['general']['PBRadii']]
+
     def _copy_implicit_radii(self, source, target, system):
         for flag in ['RADII', 'SCREEN']:
             if flag not in source.parm_data:
@@ -595,8 +607,9 @@ class CheckAmberTop:
             # get mutation index in complex
             self.com_mut_index, self.part_mut, self.part_index = self.getMutationInfo()
             mut_com_amb_prm = self.makeMutTop(com_amb_prm, self.com_mut_index)
-            logging.info(f"Assigning PBRadii {PBRadii[self.INPUT['general']['PBRadii']]} to Mutant Complex...")
-            action = ChRad(mut_com_amb_prm, PBRadii[self.INPUT['general']['PBRadii']])
+            mutant_radius = self._chrad_radius_name(com_amb_prm)
+            logging.info(f"Assigning inherited PBRadii {mutant_radius} to Mutant Complex...")
+            action = ChRad(mut_com_amb_prm, mutant_radius)
             logging.info('Writing Mutant Complex AMBER topology...')
             mut_com_amb_prm.write_parm(self.mutant_complex_pmrtop)
 
@@ -623,9 +636,10 @@ class CheckAmberTop:
                 mut_prot_amb_prm = parmed.amber.ChamberParm.from_structure(mtop)
             else:
                 mut_prot_amb_prm = parmed.amber.AmberParm.from_structure(mtop)
-            logging.info(f"Assigning PBRadii {PBRadii[self.INPUT['general']['PBRadii']]} to Mutant "
+            mutant_part_radius = self._chrad_radius_name(rec_amb_prm if self.part_mut == 'REC' else lig_amb_prm)
+            logging.info(f"Assigning inherited PBRadii {mutant_part_radius} to Mutant "
                          f"{'Receptor' if self.part_mut == 'REC' else 'Ligand'}...")
-            action = ChRad(mut_prot_amb_prm, PBRadii[self.INPUT['general']['PBRadii']])
+            action = ChRad(mut_prot_amb_prm, mutant_part_radius)
             logging.info(f"Writing Mutant {'Receptor' if self.part_mut == 'REC' else 'Ligand'} AMBER topology...")
             mut_prot_amb_prm.write_parm(out_prmtop)
         else:
