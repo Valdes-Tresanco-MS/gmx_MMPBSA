@@ -56,26 +56,15 @@ def _get_frames(input_file: Path):
     return 1 + endframe - startframe
 
 
+def _find_executable(executable: str):
+    exe_path = shutil.which(executable)
+    if exe_path is None:
+        GMXMMPBSA_ERROR(f'Please make sure {executable} is in the PATH and try again...')
+    return exe_path
+
+
 def run_test(parser):
-    # get the git path
-    git_path = [os.path.join(path, 'git') for path in os.environ["PATH"].split(os.pathsep)
-                if os.path.exists(os.path.join(path, 'git')) and
-                os.access(os.path.join(path, 'git'), os.X_OK)][0]
-    gmx_mmpbsa_path = [os.path.join(path, 'gmx_MMPBSA') for path in os.environ["PATH"].split(os.pathsep)
-                       if os.path.exists(os.path.join(path, 'gmx_MMPBSA')) and
-                       os.access(os.path.join(path, 'gmx_MMPBSA'), os.X_OK)][0]
-    amber_mmpbsa_path = [os.path.join(path, 'amber_MMPBSA') for path in os.environ["PATH"].split(os.pathsep)
-                         if os.path.exists(os.path.join(path, 'amber_MMPBSA')) and
-                         os.access(os.path.join(path, 'amber_MMPBSA'), os.X_OK)][0]
-    gmx_mmpbsa_ana_path = [os.path.join(path, 'gmx_MMPBSA_ana') for path in os.environ["PATH"].split(os.pathsep)
-                           if os.path.exists(os.path.join(path, 'gmx_MMPBSA_ana')) and
-                           os.access(os.path.join(path, 'gmx_MMPBSA_ana'), os.X_OK)][0]
-    if not git_path:
-        GMXMMPBSA_ERROR('Git not found. Please install git ( sudo apt install git ) or make sure git is in the PATH '
-                        'and try again...')
-    if not gmx_mmpbsa_path or not amber_mmpbsa_path or not gmx_mmpbsa_ana_path:
-        GMXMMPBSA_ERROR('Please make sure gmx_MMPBSA, amber_MMPBSA and gmx_MMPBSA_ana are in the PATH and '
-                        'try again...')
+    git_path = _find_executable('git')
 
     if not parser.folder.exists():
         GMXMMPBSA_ERROR(f'{parser.folder} does not exist or is inaccessible. Please define a new folder and try again...')
@@ -165,7 +154,7 @@ def run_test(parser):
         with open(test_sys[x][0].joinpath('README.md')) as readme:
             for line in readme:
                 if 'gmx_MMPBSA -O -i mmpbsa.in' in line or 'amber_MMPBSA -O -i mmpbsa.in' in line:
-                    executable = amber_mmpbsa_path if 'amber_MMPBSA' in line else gmx_mmpbsa_path
+                    executable = _find_executable('amber_MMPBSA' if 'amber_MMPBSA' in line else 'gmx_MMPBSA')
                     command = (['mpirun', '-np',
                                 f'{req_cpus[x] if req_cpus[x] <= parser.num_processors else parser.num_processors}']
                                + [executable] + shlex.split(line)[1:] + ['-nogui'])
@@ -196,6 +185,7 @@ def run_test(parser):
         sys.exit(1)
 
     if not parser.nogui:
+        gmx_mmpbsa_ana_path = _find_executable('gmx_MMPBSA_ana')
         print(80 * '-')
         logging.info('Opening gmx_MMPBSA_ana...')
         g_p = subprocess.Popen([gmx_mmpbsa_ana_path, '-f'] + result_list, stdout=subprocess.PIPE,
