@@ -23,6 +23,7 @@ import shutil
 import multiprocessing
 import shlex
 import sys
+import re
 from pathlib import Path
 from GMXMMPBSA.exceptions import GMXMMPBSA_ERROR
 import time
@@ -44,16 +45,18 @@ def run_process(system, sys_name, args):
 
 
 def _get_frames(input_file: Path):
-    startframe = 1
-    endframe = 21
+    values = {'startframe': 1, 'endframe': 21, 'interval': 1}
+    assignment = re.compile(r'\b(startframe|endframe|interval)\s*=\s*(\d+)\b')
     with input_file.open() as ifile:
         for line in ifile:
-            line = line.strip('\n').strip(',')
-            if line.startswith('startframe'):
-                startframe = int(line.split('=')[1])
-            elif line.startswith('endframe'):
-                endframe = int(line.split('=')[1])
-    return 1 + endframe - startframe
+            line = line.split('#', 1)[0]
+            for key, value in assignment.findall(line):
+                values[key] = int(value)
+    if values['interval'] < 1:
+        GMXMMPBSA_ERROR(f'Invalid interval in {input_file}. It must be greater than 0')
+    if values['endframe'] < values['startframe']:
+        GMXMMPBSA_ERROR(f'Invalid frame range in {input_file}. endframe must be greater than or equal to startframe')
+    return ((values['endframe'] - values['startframe']) // values['interval']) + 1
 
 
 def _find_executable(executable: str):
