@@ -22,6 +22,7 @@ import subprocess
 import shutil
 import multiprocessing
 import shlex
+import sys
 from pathlib import Path
 from GMXMMPBSA.exceptions import GMXMMPBSA_ERROR
 import time
@@ -162,13 +163,14 @@ def run_test(parser):
     result_list = []
     logging.info(f"{'Example':^60}{'STATE':>10}")
     print(80 * '-')
-    exitcode = 0
+    any_failed = False
     c = 1
     with multiprocessing.Pool(1) as pool:
         imap_unordered_it = pool.imap_unordered(calculatestar, TASKS)
         for x in imap_unordered_it:
-            sys_name, exitcode = x
-            if exitcode:
+            sys_name, failed = x
+            if failed:
+                any_failed = True
                 logging.error(f"{test_sys[sys_name][1]:55}[{c:2}/{len(key_list):2}]{'ERROR':>8}\n"
                               f"           Please, check the test log\n"
                               f"           ({test_sys[sys_name][0].joinpath(f'{sys_name}')}.log)")
@@ -178,12 +180,14 @@ def run_test(parser):
 
             c += 1
 
-    if not parser.nogui and not exitcode:
+    if any_failed:
+        sys.exit(1)
+
+    if not parser.nogui:
         print(80 * '-')
         logging.info('Opening gmx_MMPBSA_ana...')
         g_p = subprocess.Popen([gmx_mmpbsa_ana_path, '-f'] + result_list, stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE)
         if g_p.wait():
             error = g_p.stderr.read().decode("utf-8")
-            import sys
             sys.stderr.write(error)
