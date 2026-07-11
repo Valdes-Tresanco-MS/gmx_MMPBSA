@@ -8,7 +8,7 @@ title: gmx_MMPBSA_test
     ```bash
     $ gmx_MMPBSA_test -h
     usage: gmx_MMPBSA_test [-h] [-v] 
-           [-t [{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18} [{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18} ...]]] 
+           [-t [{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,101} [{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,101} ...]]]
            [-f FOLDER] [-r] [-ng] [-n NUM_PROCESSORS]
     
     This program is part of gmx_MMPBSA and will allow you to run various gmx_MMPBSA examples easily.
@@ -18,7 +18,7 @@ title: gmx_MMPBSA_test
       -v, --version         show program's version number and exit
     
     Test options:
-      -t [{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18} [{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18} ...]]
+      -t [{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,101} [{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,101} ...]]
                             The level the test is going to be run at. Multiple systems and analysis can be run at the same 
                             time.
                                   Nr. of Sys  
@@ -47,6 +47,13 @@ title: gmx_MMPBSA_test
                             * 16   . | 10   Protein-Ligand (Multiple trajectory approximation)
                             * 17   x |  4   Entropy calculation using Normal Mode approximation 
                             * 18   x |  4   Calculations using 3D-RISM approximation
+                            * 19          C2 Entropy approximation
+                            * 20          LPB Calculation
+                            * 21          NLPB Calculation
+                            * 22          Protein-Ligand_LPH (CHARMM force field)
+                            * 23          QM/MMGBSA Calculation
+                            * 24          GBNSR6 Calculation
+                            * 25     |  5 AMBER input files
       -f FOLDER, --folder FOLDER
                             Defines the folder to store all data
       -r, --reuse           Defines the existing test forlder will be reuse
@@ -106,7 +113,7 @@ most recent version of the repository in the specified folder and will perform t
         Through this command-line, gmxMMPBSA_test will:
         
         * Download gmx_MMPBSA repository content in `/home/user/Documents`
-        * Execute `3` [Protein-Ligand (Single Trajectory approach)], `5` [Protein-DNA], and `7` [Protein-Glycan] 
+        * Execute `3` [Protein-Ligand (Single Trajectory approach)], `5` [Protein-DNA], and `7` [Protein-Glycan]
         examples
 
     === "Single selection"
@@ -117,3 +124,12 @@ most recent version of the repository in the specified folder and will perform t
         
         * Download gmx_MMPBSA repository content in `/home/user/Documents`
         * Execute `3` [Protein-Ligand (Single Trajectory approach)] example
+
+    === "AMBER input files"
+
+            gmx_MMPBSA_test -f /home/user/Documents -t 25
+
+        Through this command-line, gmxMMPBSA_test will:
+
+        * Download gmx_MMPBSA repository content in `/home/user/Documents`
+        * Execute `25` [AMBER input files] example

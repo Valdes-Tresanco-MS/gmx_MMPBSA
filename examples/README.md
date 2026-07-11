@@ -38,6 +38,12 @@ for better clarity.
 * [Protein-ligand complex embedded in membrane](Protein_membrane_CHARMMff/README.md)[^1]
 * [Protein-ligand with LPH atoms](Protein_ligand_LPH_atoms_CHARMMff/README.md)
 
+## AMBER input files
+
+This section focuses on how to work directly with native AMBER topology, coordinate, and trajectory files.
+
+* [AMBER input files](AMBER/README.md)[^1]
+
 ## OPLSff support
 
 This section focuses more on how to work with systems prepared with OPLS force fields. We only show few examples 

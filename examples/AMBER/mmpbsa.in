@@ -1,0 +1,11 @@
+Input file for a short AMBER input files test
+&general
+   sys_name="AMBER",
+   startframe=1,
+   endframe=5,
+   interval=1,
+   verbose=1,
+/
+&gb
+   igb=2, saltcon=0.100,
+/

@@ -21,6 +21,7 @@ import logging
 import subprocess
 import shutil
 import multiprocessing
+import shlex
 from pathlib import Path
 from GMXMMPBSA.exceptions import GMXMMPBSA_ERROR
 import time
@@ -62,14 +63,18 @@ def run_test(parser):
     gmx_mmpbsa_path = [os.path.join(path, 'gmx_MMPBSA') for path in os.environ["PATH"].split(os.pathsep)
                        if os.path.exists(os.path.join(path, 'gmx_MMPBSA')) and
                        os.access(os.path.join(path, 'gmx_MMPBSA'), os.X_OK)][0]
+    gmx_mmpbsa_amber_path = [os.path.join(path, 'gmx_MMPBSA_amber') for path in os.environ["PATH"].split(os.pathsep)
+                             if os.path.exists(os.path.join(path, 'gmx_MMPBSA_amber')) and
+                             os.access(os.path.join(path, 'gmx_MMPBSA_amber'), os.X_OK)][0]
     gmx_mmpbsa_ana_path = [os.path.join(path, 'gmx_MMPBSA_ana') for path in os.environ["PATH"].split(os.pathsep)
                            if os.path.exists(os.path.join(path, 'gmx_MMPBSA_ana')) and
                            os.access(os.path.join(path, 'gmx_MMPBSA_ana'), os.X_OK)][0]
     if not git_path:
         GMXMMPBSA_ERROR('Git not found. Please install git ( sudo apt install git ) or make sure git is in the PATH '
                         'and try again...')
-    if not gmx_mmpbsa_path or not gmx_mmpbsa_ana_path:
-        GMXMMPBSA_ERROR('Please make sure gmx_MMPBSA and gmx_MMPBSA_ana are in the PATH and try again...')
+    if not gmx_mmpbsa_path or not gmx_mmpbsa_amber_path or not gmx_mmpbsa_ana_path:
+        GMXMMPBSA_ERROR('Please make sure gmx_MMPBSA, gmx_MMPBSA_amber and gmx_MMPBSA_ana are in the PATH and '
+                        'try again...')
 
     if not parser.folder.exists():
         GMXMMPBSA_ERROR(f'{parser.folder} does not exist or is inaccessible. Please define a new folder and try again...')
@@ -120,7 +125,8 @@ def run_test(parser):
         21: [examples.joinpath('NonLinear_PB_solver'), 'NLPB Calculation'],
         22: [examples.joinpath('Protein_ligand_LPH_atoms_CHARMMff'), 'Protein-Ligand_LPH (CHARMM force field)'],
         23: [examples.joinpath('QM_MMGBSA'), 'QM/MMGBSA Calculation'],
-        24: [examples.joinpath('GBNSR6'), 'GBNSR6 Calculation']
+        24: [examples.joinpath('GBNSR6'), 'GBNSR6 Calculation'],
+        25: [examples.joinpath('AMBER'), 'AMBER input files']
     }
 
     if parser.test == [0]:
@@ -130,7 +136,7 @@ def run_test(parser):
     elif parser.test == [2]:
         key_list = [3, 4, 5, 7, 9, 12, 13, 14, 15]
     elif parser.test == [101]:
-        key_list = [3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24]
+        key_list = [3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25]
     else:
         key_list = parser.test
 
@@ -145,10 +151,11 @@ def run_test(parser):
     for x in key_list:
         with open(test_sys[x][0].joinpath('README.md')) as readme:
             for line in readme:
-                if 'gmx_MMPBSA -O -i mmpbsa.in' in line:
+                if 'gmx_MMPBSA -O -i mmpbsa.in' in line or 'gmx_MMPBSA_amber -O -i mmpbsa.in' in line:
+                    executable = gmx_mmpbsa_amber_path if 'gmx_MMPBSA_amber' in line else gmx_mmpbsa_path
                     command = (['mpirun', '-np',
                                 f'{req_cpus[x] if req_cpus[x] <= parser.num_processors else parser.num_processors}']
-                               + [gmx_mmpbsa_path] + line.strip('\n').split()[1:] + ['-nogui'])
+                               + [executable] + shlex.split(line)[1:] + ['-nogui'])
                     TASKS.append((test_sys[x], x, command))
                     break
 
