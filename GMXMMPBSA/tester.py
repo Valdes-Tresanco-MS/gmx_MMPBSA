@@ -63,17 +63,17 @@ def run_test(parser):
     gmx_mmpbsa_path = [os.path.join(path, 'gmx_MMPBSA') for path in os.environ["PATH"].split(os.pathsep)
                        if os.path.exists(os.path.join(path, 'gmx_MMPBSA')) and
                        os.access(os.path.join(path, 'gmx_MMPBSA'), os.X_OK)][0]
-    gmx_mmpbsa_amber_path = [os.path.join(path, 'gmx_MMPBSA_amber') for path in os.environ["PATH"].split(os.pathsep)
-                             if os.path.exists(os.path.join(path, 'gmx_MMPBSA_amber')) and
-                             os.access(os.path.join(path, 'gmx_MMPBSA_amber'), os.X_OK)][0]
+    amber_mmpbsa_path = [os.path.join(path, 'amber_MMPBSA') for path in os.environ["PATH"].split(os.pathsep)
+                         if os.path.exists(os.path.join(path, 'amber_MMPBSA')) and
+                         os.access(os.path.join(path, 'amber_MMPBSA'), os.X_OK)][0]
     gmx_mmpbsa_ana_path = [os.path.join(path, 'gmx_MMPBSA_ana') for path in os.environ["PATH"].split(os.pathsep)
                            if os.path.exists(os.path.join(path, 'gmx_MMPBSA_ana')) and
                            os.access(os.path.join(path, 'gmx_MMPBSA_ana'), os.X_OK)][0]
     if not git_path:
         GMXMMPBSA_ERROR('Git not found. Please install git ( sudo apt install git ) or make sure git is in the PATH '
                         'and try again...')
-    if not gmx_mmpbsa_path or not gmx_mmpbsa_amber_path or not gmx_mmpbsa_ana_path:
-        GMXMMPBSA_ERROR('Please make sure gmx_MMPBSA, gmx_MMPBSA_amber and gmx_MMPBSA_ana are in the PATH and '
+    if not gmx_mmpbsa_path or not amber_mmpbsa_path or not gmx_mmpbsa_ana_path:
+        GMXMMPBSA_ERROR('Please make sure gmx_MMPBSA, amber_MMPBSA and gmx_MMPBSA_ana are in the PATH and '
                         'try again...')
 
     if not parser.folder.exists():
@@ -151,8 +151,8 @@ def run_test(parser):
     for x in key_list:
         with open(test_sys[x][0].joinpath('README.md')) as readme:
             for line in readme:
-                if 'gmx_MMPBSA -O -i mmpbsa.in' in line or 'gmx_MMPBSA_amber -O -i mmpbsa.in' in line:
-                    executable = gmx_mmpbsa_amber_path if 'gmx_MMPBSA_amber' in line else gmx_mmpbsa_path
+                if 'gmx_MMPBSA -O -i mmpbsa.in' in line or 'amber_MMPBSA -O -i mmpbsa.in' in line:
+                    executable = amber_mmpbsa_path if 'amber_MMPBSA' in line else gmx_mmpbsa_path
                     command = (['mpirun', '-np',
                                 f'{req_cpus[x] if req_cpus[x] <= parser.num_processors else parser.num_processors}']
                                + [executable] + shlex.split(line)[1:] + ['-nogui'])

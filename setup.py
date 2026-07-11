@@ -52,7 +52,6 @@ setup(
     entry_points={
         "console_scripts": [
             "gmx_MMPBSA=GMXMMPBSA.app:gmxmmpbsa",
-            "gmx_MMPBSA_amber=GMXMMPBSA.app:gmxmmpbsa_amber",
             "amber_MMPBSA=GMXMMPBSA.app:gmxmmpbsa_amber",
             "gmx_MMPBSA_ana=GMXMMPBSA.app:gmxmmpbsa_ana",
             "gmx_MMPBSA_test=GMXMMPBSA.app:gmxmmpbsa_test"]}

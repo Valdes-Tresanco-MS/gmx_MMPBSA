@@ -870,7 +870,7 @@ class MMPBSA_App(object):
             # save args in gmx_MMPBSA.log
             if self.engine == 'amber':
                 logging.info('Command-line\n' + mpi_cl +
-                         'gmx_MMPBSA_amber ' + text_args + '\n')
+                         'amber_MMPBSA ' + text_args + '\n')
             else:
                 logging.info('Command-line\n' + mpi_cl +
                          'gmx_MMPBSA ' + text_args + '\n')

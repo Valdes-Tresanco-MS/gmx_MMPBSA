@@ -12,7 +12,7 @@ title: AMBER input files
 
 ## Requirements
 
-In this case, `gmx_MMPBSA_amber` requires:
+In this case, `amber_MMPBSA` requires:
 
 | Input File required            | Required | Type | Description |
 |:-------------------------------|:--------:|:----:|:------------|
@@ -34,7 +34,7 @@ Once you are in the folder containing all files, the command-line will be as fol
 
 === "Serial"
 
-        gmx_MMPBSA_amber -O -i mmpbsa.in -cp ras-raf_complex.prmtop -cs ras-raf_complex.inpcrd -ct prod_complex.mdcrd -rp ras.prmtop -lp raf.prmtop -cm ":1-166" ":167-242" -o FINAL_RESULTS_MMPBSA.dat -eo FINAL_RESULTS_MMPBSA.csv
+        amber_MMPBSA -O -i mmpbsa.in -cp ras-raf_complex.prmtop -cs ras-raf_complex.inpcrd -ct prod_complex.mdcrd -rp ras.prmtop -lp raf.prmtop -cm ":1-166" ":167-242" -o FINAL_RESULTS_MMPBSA.dat -eo FINAL_RESULTS_MMPBSA.csv
 
 === "gmx_MMPBSA_test"
 
@@ -57,14 +57,14 @@ Input file for a short AMBER input files test
 ```
 
 !!! info "Keep in mind"
-    This example is meant only to show that `gmx_MMPBSA_amber` works with native AMBER input files. It uses a short
+    This example is meant only to show that `amber_MMPBSA` works with native AMBER input files. It uses a short
     five-frame trajectory and preserves the radii already stored in the AMBER topology files.
 
 ## Considerations
 
 In this case, a single trajectory (ST) approximation is followed. The receptor and ligand are selected from the
 complex with AMBER masks (`:1-166` and `:167-242`). Receptor and ligand topology files are provided directly, so
-`gmx_MMPBSA_amber` can build the working topologies without using GROMACS files.
+`amber_MMPBSA` can build the working topologies without using GROMACS files.
 
   [1]: ../../gmx_MMPBSA_command-line.md#gmx_mmpbsa-command-line
   [6]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/examples/AMBER
