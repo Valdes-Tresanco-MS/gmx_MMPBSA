@@ -8,7 +8,7 @@ the full power of Python's extensions, if they want (e.g., numpy, scipy, etc.)
 # ##############################################################################
 #                           GPLv3 LICENSE INFO                                 #
 #                                                                              #
-#  Copyright (C) 2020  Mario S. Valdes-Tresanco and Mario E. Valdes-Tresanco   #
+#  Copyright (C) 2020  Mario S. Valdés-Tresanco and Mario E. Valdés-Tresanco   #
 #  Copyright (C) 2014  Jason Swails, Bill Miller III, and Dwight McGee         #
 #                                                                              #
 #   Project: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA                  #

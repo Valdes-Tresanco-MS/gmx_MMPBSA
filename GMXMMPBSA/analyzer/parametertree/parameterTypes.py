@@ -1,7 +1,7 @@
 # ##############################################################################
 #                           GPLv3 LICENSE INFO                                 #
 #                                                                              #
-#  Copyright (C) 2020  Mario S. Valdes-Tresanco and Mario E. Valdes-Tresanco   #
+#  Copyright (C) 2020  Mario S. Valdés-Tresanco and Mario E. Valdés-Tresanco   #
 #  Copyright (C) 2020  pyqtgraph                                               #
 #                                                                              #
 #   This module is based on pyqtgraph                                          #
