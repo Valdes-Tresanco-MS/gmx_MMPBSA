@@ -9,6 +9,12 @@ a number of different components (_i.e._ metalloprotein-ligand complex, Protein-
 several types of calculations (_e.g._ GB, Alanine scanning and Per-residue decomposition; PB, Interaction Entropy, 
 and Per-wise decomposition) can be also performed in the same run for a specific system.
 
+## Run examples in Google Colab
+
+You can run selected `gmx_MMPBSA_test` examples on Google Colab CPU runtimes with the
+[gmx_MMPBSA Colab notebook](https://colab.research.google.com/github/Valdes-Tresanco-MS/gmx_MMPBSA/blob/colab-notebook/notebooks/gmx_MMPBSA_Colab.ipynb).
+The notebook installs a conda-based CPU environment, runs bundled examples, and displays the generated result files.
+
 ## Systems
 
 This is a representation of the systems that can be processed and analyzed with gmx_MMPBSA. Our program has a robust 
