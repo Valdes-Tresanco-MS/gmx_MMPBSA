@@ -203,6 +203,7 @@ nav:
         - Stability calculations: examples/Stability/README.md
         - QM/MMGBSA: examples/QM_MMGBSA/README.md
         - Correlation: examples/Correlation/README.md
+        - Python API extraction: examples/API/README.md
     - AMBER Support:
         - Protein-protein: examples/AMBER/README.md
     - CHARMMff Support:

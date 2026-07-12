@@ -1743,6 +1743,13 @@ See [§7.1.3](https://ambermd.org/doc12/Amber21.pdf#subsection.7.1.3) and
     * 2: additionally prints the residual for each iteration and details of the MDIIS solver (useful for debugging 
     and convergence analyses)
 
+    !!! warning "AmberTools runtime compatibility"
+        If a 3D-RISM job stops before the calculation starts with
+        `Fortran runtime error: Missing comma between descriptors` from `amber_rism_interface.F90`, this is a known
+        AmberTools/Fortran runtime compatibility issue. Changing `rism_verbose` or other `&rism` input options does
+        not resolve this failure. A known working workaround is `gmx_MMPBSA` 1.6.4 with Python 3.9 or 3.10,
+        AmberTools 23, and `libgfortran5`/`libgcc-ng` 12.x, or a patched AmberTools build.
+
 ### **`&alanine_scanning` namelist variables**
 
 !!! note "Keep in mind"

@@ -8,7 +8,7 @@ the full power of Python's extensions, if they want (e.g., numpy, scipy, etc.)
 # ##############################################################################
 #                           GPLv3 LICENSE INFO                                 #
 #                                                                              #
-#  Copyright (C) 2020  Mario S. Valdes-Tresanco and Mario E. Valdes-Tresanco   #
+#  Copyright (C) 2020  Mario S. Valdés-Tresanco and Mario E. Valdés-Tresanco   #
 #  Copyright (C) 2014  Jason Swails, Bill Miller III, and Dwight McGee         #
 #                                                                              #
 #   Project: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA                  #
@@ -27,6 +27,7 @@ import math
 import pickle
 import shutil
 import warnings
+from contextlib import contextmanager
 from multiprocessing.pool import ThreadPool
 from copy import copy
 from typing import Union
@@ -43,6 +44,36 @@ import os
 from types import SimpleNamespace
 
 from GMXMMPBSA.utils import emapping, flatten, mask2list
+
+
+@contextmanager
+def _working_directory(path: Path):
+    cwd = Path.cwd()
+    os.chdir(path)
+    try:
+        yield
+    finally:
+        os.chdir(cwd)
+
+
+def _series_with_summary(data, mean, std, sem):
+    if not isinstance(data, (pd.Series, pd.DataFrame)):
+        return data.append([mean, std, sem])
+    return pd.concat([data, pd.Series([mean, std, sem], index=['Average', 'SD', 'SEM'])])
+
+
+def _require_parquet_engine():
+    try:
+        import pyarrow  # noqa: F401
+    except ImportError:
+        try:
+            import fastparquet  # noqa: F401
+        except ImportError as exc:
+            raise ImportError(
+                "Disk-backed analyzer data requires a pandas parquet engine. "
+                "Install either 'pyarrow' or 'fastparquet', or use in-memory "
+                "data by setting performance_options energy_memory/decomp_memory to True."
+            ) from exc
 
 
 def _remove_empty_charts(data):
@@ -203,6 +234,7 @@ class MMPBSA_API():
         self.fname = None
         self.settings = settings
         self.temp_folder = None
+        self.setting_time()
 
         self._settings = {'data_on_disk': False, 'create_temporal_data': True, 'use_temporal_data': True, 
                           'overwrite_temp': True}
@@ -227,10 +259,9 @@ class MMPBSA_API():
         return [int(v) if float(v).is_integer() else v for v in values]
 
     def setup_file(self, fname: Union[Path, str]):
-        self.fname = fname if isinstance(fname, Path) else Path(fname)
+        self.fname = (fname if isinstance(fname, Path) else Path(fname)).expanduser().resolve()
         if not self.fname.exists():
             raise NoFileExists(f"cannot find {self.fname}!")
-        os.chdir(self.fname.parent)
 
     def load_file(self, fname: Union[Path, str] = None):
         """
@@ -242,18 +273,21 @@ class MMPBSA_API():
 
         """
         if not fname and not self.fname:
-            raise
+            raise ValueError("load_file requires a file path or a prior setup_file() call")
 
-        if not self.fname:
-            self.fname = fname if isinstance(fname, Path) else Path(fname)
-            if not self.fname.exists():
-                raise NoFileExists(f"cannot find {self.fname}!")
-            os.chdir(self.fname.parent)
+        if fname:
+            self.fname = (fname if isinstance(fname, Path) else Path(fname)).expanduser().resolve()
+        elif self.fname:
+            self.fname = self.fname.expanduser().resolve()
 
-        if self.fname.suffix == '.mmxsa':
-            self._get_fromBinary(self.fname)
-        else:
-            self._get_fromApp(self.fname)
+        if not self.fname.exists():
+            raise NoFileExists(f"cannot find {self.fname}!")
+
+        with _working_directory(self.fname.parent):
+            if self.fname.suffix == '.mmxsa':
+                self._get_fromBinary(self.fname)
+            else:
+                self._get_fromApp(self.fname)
 
     def get_info(self):
         """
@@ -698,7 +732,9 @@ class MMPBSA_API():
                                                             mean = temp_energy[t].mean()
                                                             std = temp_energy[t].std()
                                                             sem = std / math.sqrt(len(temp_energy[t]))
-                                                            temp_energy[t] = temp_energy[t].append([mean, std, sem])
+                                                            temp_energy[t] = _series_with_summary(
+                                                                temp_energy[t], mean, std, sem
+                                                            )
                                                             if (t == 'tot' and res_threshold > 0 and
                                                                     abs(mean) < res_threshold):
                                                                 remove = True
@@ -730,8 +766,9 @@ class MMPBSA_API():
                                                                     mean = temp_energy_r2[t].mean()
                                                                     std = temp_energy_r2[t].std()
                                                                     sem = std / math.sqrt(len(temp_energy_r2[t]))
-                                                                    temp_energy_r2[t] = temp_energy_r2[t].append([
-                                                                        mean, std, sem])
+                                                                    temp_energy_r2[t] = _series_with_summary(
+                                                                        temp_energy_r2[t], mean, std, sem
+                                                                    )
                                                                     if t == 'tot':
                                                                         res1_contrib += mean
                                                             if temp_energy_r2:
@@ -753,6 +790,14 @@ class MMPBSA_API():
 
     def get_ana_data(self, energy_options=None, entropy_options=None, decomp_options=None, performance_options=None,
                      correlation=False, verbose=False):
+        performance_options = dict(performance_options or {})
+        default_inmemory = not self._settings['data_on_disk']
+        performance_options.setdefault('energy_memory', default_inmemory)
+        performance_options.setdefault('decomp_memory', default_inmemory)
+        performance_options.setdefault('jobs', None)
+        if not performance_options['energy_memory'] or not performance_options['decomp_memory']:
+            _require_parquet_engine()
+
         TASKs = []
         d = {}
         corr = {}
@@ -982,71 +1027,52 @@ class MMPBSA_API():
         self.traj_protocol = ('MTP' if self.app_namespace.FILES.receptor_trajs or
                                        self.app_namespace.FILES.ligand_trajs else 'STP')
 
-def load_gmxmmpbsa_info(fname: Union[Path, str]):
+def load(fname: Union[Path, str], *, time: dict = None, data_on_disk: bool = False,
+         settings: dict = None) -> MMPBSA_API:
     """
-    Loads up an gmx_MMPBSA info or h5 file and returns a dictionary with all
-    energy terms and  a namespace with some variables needed in gmx_MMPBSA_ana
+    Load a gmx_MMPBSA result file and return a populated :class:`MMPBSA_API`.
 
-    Depending on the data type store the variable can be a Dataframe, string or
-    scalar
+    Parameters
+    ----------
+    fname
+        Path to a ``_GMXMMPBSA_info`` file or ``COMPACT_MMXSA_RESULTS.mmxsa``.
+    time
+        Optional arguments for :meth:`MMPBSA_API.setting_time`, for example
+        ``{'timestep': 10, 'timeunit': 'ns'}``.
+    data_on_disk
+        Request disk-backed analyzer data when calling :meth:`get_ana_data`.
+        Public API examples default to in-memory pandas objects.
+    settings
+        Optional low-level settings passed to :class:`MMPBSA_API`.
 
-    Data attributes:
-    -----------------------
-       o  All attributes from dict
-       o  Each solvent model is a dictionary key for a numpy array (if numpy is
-          available) or array.array (if numpy is unavailable) for each of the
-          species (complex, receptor, ligand) present in the calculation.
-       o  The alanine scanning mutant data is under another dict denoted by the
-          'mutant' key.
-
-    Data Layout:
-    ------------
-               Model       | Dict Key    |  Data Keys Available
-       --------------------------------------------------------------
-       Generalized Born    | 'gb'        |  EGB, ESURF, *
-       Poisson-Boltzmann   | 'pb'        |  EPB, EDISPER, ECAVITY, *
-       3D-RISM (GF)        | 'rism gf'   |  POLAR SOLV, APOLAR SOLV, *
-       3D-RISM (Standard)  | 'rism std'  |
-       3D-RISM (PCPLUS)    |'rism pcplus'|
-       Normal Mode         | 'nmode'     |
-       Quasi-harmonic      | 'qh'        |
-       Interaction entropy | 'ie'        |
-       C2 Entropy          | 'c2'        |
-
-
-    * == TOTAL, VDW, EEL, 1-4 EEL, 1-4 VDW, BOND, ANGLE, DIHED
-
-    The keys above are entries for the main dict as well as the sub-dict whose
-    key is 'mutant' in the main dict.  Each entry in the main (and mutant sub-)
-    dict is, itself, a dict with 1 or 3 keys; 'complex', 'receptor', 'ligand';
-    where 'receptor' and 'ligand' are missing for stability calculations.
-    If numpy is available, all data will be numpy.ndarray instances.  Otherwise,
-    all data will be array.array instances.
-
-    All of the objects referenced by the listed 'Dictionary Key's are dicts in
-    which the listed 'Data Keys Available' are keys to the data arrays themselves
-
-    Examples:
-    ---------
-       # Load numpy for our analyses (optional)
-       import numpy as np
-
-       # Load the _MMPBSA_info file:
-       mydata = load_mmpbsa_info('_MMPBSA_info')
-
-       # Access the complex GB data structure and calculate the autocorr. fcn.
-       autocorr = np.correlate(mydata['gb']['complex']['TOTAL'],
-                               mydata['gb']['complex']['TOTAL'])
-
-       # Calculate the standard deviation of the alanine mutant receptor in PB
-       print mydata.mutant['pb']['receptor']['TOTAL'].stdev()
+    Returns
+    -------
+    MMPBSA_API
+        A loaded API object. Use methods like :meth:`get_energy`,
+        :meth:`get_entropy`, and :meth:`get_decomp_energy` to retrieve data.
     """
-    if not isinstance(fname, Path):
-        fname = Path(fname)
+    settings = dict(settings or {})
+    settings.setdefault('data_on_disk', data_on_disk)
+    api = MMPBSA_API(settings=settings)
+    if time:
+        api.setting_time(**time)
+    api.load_file(fname)
+    return api
 
-    if not fname.exists():
-        raise NoFileExists("cannot find %s!" % fname)
-    os.chdir(fname.parent)
-    d_mmpbsa = MMPBSA_API()
-    d_mmpbsa.load_file(fname)
-    return d_mmpbsa.get_energy(), d_mmpbsa.app_namespace
+
+def load_gmxmmpbsa_info(fname: Union[Path, str]) -> MMPBSA_API:
+    """
+    Compatibility loader for older scripts.
+
+    This function is kept for the historical public API name, but the modern
+    return value is a loaded :class:`MMPBSA_API` object rather than the legacy
+    dict-like ``mmpbsa_data`` object documented for gmx_MMPBSA 1.4.x.
+    """
+    warnings.warn(
+        "load_gmxmmpbsa_info() now returns a loaded MMPBSA_API object. "
+        "Use api.get_energy(), api.get_entropy(), or api.get_decomp_energy() "
+        "to access pandas-based result data.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+    return load(fname)
