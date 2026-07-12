@@ -21,6 +21,9 @@ import logging
 import subprocess
 import shutil
 import multiprocessing
+import shlex
+import sys
+import re
 from pathlib import Path
 from GMXMMPBSA.exceptions import GMXMMPBSA_ERROR
 import time
@@ -42,34 +45,29 @@ def run_process(system, sys_name, args):
 
 
 def _get_frames(input_file: Path):
-    startframe = 1
-    endframe = 21
+    values = {'startframe': 1, 'endframe': 21, 'interval': 1}
+    assignment = re.compile(r'\b(startframe|endframe|interval)\s*=\s*(\d+)\b')
     with input_file.open() as ifile:
         for line in ifile:
-            line = line.strip('\n').strip(',')
-            if line.startswith('startframe'):
-                startframe = int(line.split('=')[1])
-            elif line.startswith('endframe'):
-                endframe = int(line.split('=')[1])
-    return 1 + endframe - startframe
+            line = line.split('#', 1)[0]
+            for key, value in assignment.findall(line):
+                values[key] = int(value)
+    if values['interval'] < 1:
+        GMXMMPBSA_ERROR(f'Invalid interval in {input_file}. It must be greater than 0')
+    if values['endframe'] < values['startframe']:
+        GMXMMPBSA_ERROR(f'Invalid frame range in {input_file}. endframe must be greater than or equal to startframe')
+    return ((values['endframe'] - values['startframe']) // values['interval']) + 1
+
+
+def _find_executable(executable: str):
+    exe_path = shutil.which(executable)
+    if exe_path is None:
+        GMXMMPBSA_ERROR(f'Please make sure {executable} is in the PATH and try again...')
+    return exe_path
 
 
 def run_test(parser):
-    # get the git path
-    git_path = [os.path.join(path, 'git') for path in os.environ["PATH"].split(os.pathsep)
-                if os.path.exists(os.path.join(path, 'git')) and
-                os.access(os.path.join(path, 'git'), os.X_OK)][0]
-    gmx_mmpbsa_path = [os.path.join(path, 'gmx_MMPBSA') for path in os.environ["PATH"].split(os.pathsep)
-                       if os.path.exists(os.path.join(path, 'gmx_MMPBSA')) and
-                       os.access(os.path.join(path, 'gmx_MMPBSA'), os.X_OK)][0]
-    gmx_mmpbsa_ana_path = [os.path.join(path, 'gmx_MMPBSA_ana') for path in os.environ["PATH"].split(os.pathsep)
-                           if os.path.exists(os.path.join(path, 'gmx_MMPBSA_ana')) and
-                           os.access(os.path.join(path, 'gmx_MMPBSA_ana'), os.X_OK)][0]
-    if not git_path:
-        GMXMMPBSA_ERROR('Git not found. Please install git ( sudo apt install git ) or make sure git is in the PATH '
-                        'and try again...')
-    if not gmx_mmpbsa_path or not gmx_mmpbsa_ana_path:
-        GMXMMPBSA_ERROR('Please make sure gmx_MMPBSA and gmx_MMPBSA_ana are in the PATH and try again...')
+    git_path = _find_executable('git')
 
     if not parser.folder.exists():
         GMXMMPBSA_ERROR(f'{parser.folder} does not exist or is inaccessible. Please define a new folder and try again...')
@@ -120,19 +118,22 @@ def run_test(parser):
         21: [examples.joinpath('NonLinear_PB_solver'), 'NLPB Calculation'],
         22: [examples.joinpath('Protein_ligand_LPH_atoms_CHARMMff'), 'Protein-Ligand_LPH (CHARMM force field)'],
         23: [examples.joinpath('QM_MMGBSA'), 'QM/MMGBSA Calculation'],
-        24: [examples.joinpath('GBNSR6'), 'GBNSR6 Calculation']
+        24: [examples.joinpath('GBNSR6'), 'GBNSR6 Calculation'],
+        25: [examples.joinpath('AMBER'), 'AMBER input files']
     }
 
     if parser.test == [0]:
-        key_list = range(3, 19)
+        key_list = list(range(3, 26))
     elif parser.test == [1]:
         key_list = [3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 14, 15]
     elif parser.test == [2]:
         key_list = [3, 4, 5, 7, 9, 12, 13, 14, 15]
     elif parser.test == [101]:
-        key_list = [3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24]
+        key_list = list(range(3, 26))
     else:
         key_list = parser.test
+    if not key_list:
+        GMXMMPBSA_ERROR('No test was selected. Please define at least one test number')
 
     req_cpus = {x: _get_frames(test_sys[x][0].joinpath('mmpbsa.in')) for x in key_list}
 
@@ -141,27 +142,39 @@ def run_test(parser):
                         f' {multiprocessing.cpu_count()}. All the cpus will be used...')
         parser.num_processors = multiprocessing.cpu_count()
 
+    if parser.num_concurrent < 1:
+        GMXMMPBSA_ERROR('The number of concurrent examples must be greater than 0')
+    if parser.num_concurrent > len(key_list):
+        parser.num_concurrent = len(key_list)
+    if parser.num_processors * parser.num_concurrent > multiprocessing.cpu_count():
+        logging.warning(f'The requested test concurrency can use up to '
+                        f'{parser.num_processors * parser.num_concurrent} MPI ranks across '
+                        f'{parser.num_concurrent} examples, which is greater than the system cpu '
+                        f'{multiprocessing.cpu_count()}. Consider reducing -n or -j...')
+
     TASKS = []
     for x in key_list:
         with open(test_sys[x][0].joinpath('README.md')) as readme:
             for line in readme:
-                if 'gmx_MMPBSA -O -i mmpbsa.in' in line:
+                if 'gmx_MMPBSA -O -i mmpbsa.in' in line or 'amber_MMPBSA -O -i mmpbsa.in' in line:
+                    executable = _find_executable('amber_MMPBSA' if 'amber_MMPBSA' in line else 'gmx_MMPBSA')
                     command = (['mpirun', '-np',
                                 f'{req_cpus[x] if req_cpus[x] <= parser.num_processors else parser.num_processors}']
-                               + [gmx_mmpbsa_path] + line.strip('\n').split()[1:] + ['-nogui'])
+                               + [executable] + shlex.split(line)[1:] + ['-nogui'])
                     TASKS.append((test_sys[x], x, command))
                     break
 
     result_list = []
     logging.info(f"{'Example':^60}{'STATE':>10}")
     print(80 * '-')
-    exitcode = 0
+    any_failed = False
     c = 1
-    with multiprocessing.Pool(1) as pool:
+    with multiprocessing.Pool(parser.num_concurrent) as pool:
         imap_unordered_it = pool.imap_unordered(calculatestar, TASKS)
         for x in imap_unordered_it:
-            sys_name, exitcode = x
-            if exitcode:
+            sys_name, failed = x
+            if failed:
+                any_failed = True
                 logging.error(f"{test_sys[sys_name][1]:55}[{c:2}/{len(key_list):2}]{'ERROR':>8}\n"
                               f"           Please, check the test log\n"
                               f"           ({test_sys[sys_name][0].joinpath(f'{sys_name}')}.log)")
@@ -171,12 +184,15 @@ def run_test(parser):
 
             c += 1
 
-    if not parser.nogui and not exitcode:
+    if any_failed:
+        sys.exit(1)
+
+    if not parser.nogui:
+        gmx_mmpbsa_ana_path = _find_executable('gmx_MMPBSA_ana')
         print(80 * '-')
         logging.info('Opening gmx_MMPBSA_ana...')
         g_p = subprocess.Popen([gmx_mmpbsa_ana_path, '-f'] + result_list, stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE)
         if g_p.wait():
             error = g_p.stderr.read().decode("utf-8")
-            import sys
             sys.stderr.write(error)

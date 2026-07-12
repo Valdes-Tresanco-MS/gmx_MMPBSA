@@ -1,1 +1,4 @@
 GMXMMPBSA/_version.py export-subst
+examples/AMBER/*.inpcrd binary
+examples/AMBER/*.mdcrd binary
+examples/AMBER/*.prmtop binary

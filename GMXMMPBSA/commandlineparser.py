@@ -26,7 +26,8 @@ in gmx_MMPBSA will be assigned as attributes to the returned class.
 
 import os
 import sys
-from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter, RawDescriptionHelpFormatter, RawTextHelpFormatter
+from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter, RawTextHelpFormatter, ArgumentTypeError
+import re
 from pathlib import Path
 from GMXMMPBSA import __version__, __mmpbsa_version__, __ambertools_version__
 from GMXMMPBSA.exceptions import GMXMMPBSA_ERROR
@@ -80,8 +81,22 @@ def trajectory(arg):
     return arg
 
 
+@check_arg(['.mdcrd'], True)
+def mdcrd(arg):
+    return arg
+
+
 @check_arg(['.top'], True)
 def topology(arg):
+    return arg
+
+@check_arg(['.prmtop', '.parm7'], True)
+def prmtop(arg):
+    return arg
+
+
+@check_arg(['.pdb', '.inpcrd', '.rst7'], True)
+def amber_structure(arg):
     return arg
 
 
@@ -100,6 +115,77 @@ def index_groups(value):
     except Exception:
         return value
 
+# check the amber mask format
+def amber_residue_mask_type(value: str) -> str:
+    """
+    Strict validation type for argparse to ensure the AMBER mask
+    contains ONLY residue selectors, integers, ranges, or comma-separated lists.
+
+    Valid formats:
+      - Single: :10
+      - Range: :10-50
+      - List: :10,11,12
+      - Combined: :10-50,100-150 or :10,20-30,40
+    """
+    if not value or not isinstance(value, str):
+        raise ArgumentTypeError("Mask must be a non-empty string.")
+
+    # 1. Strip all whitespaces to standardize evaluation
+    clean_value = re.sub(r'\s+', '', value)
+    # 2. Enforce the mandatory ':' residue prefix
+    if not clean_value.startswith(':'):
+        raise ArgumentTypeError(
+            f"Missing mandatory residue prefix ':'. Got: '{value}'"
+        )
+
+    # 3. Extract the contents after the ':'
+    content = clean_value[1:]
+
+    # Regex strict pattern:
+    # - An integer: \d+
+    # - Or an integer range: \d+-\d+
+    # - Separated strictly by commas
+    # ^(\d+(-\d+)?)(,\d+(-\d+)?)*$
+    strict_pattern = re.compile(r'^(\d+(-\d+)?)(,\d+(-\d+)?)*$')
+
+    if not strict_pattern.match(content):
+        raise ArgumentTypeError(
+            f"Mask '{value}' does not comply with the strict AMBER residue format. "
+            "It must use ':' followed by integers, ranges (e.g., 10-50), or comma-separated lists (e.g., 10,12,14)."
+        )
+
+    # 4. Logical validation: Ensure start residue is less than or equal to end residue in ranges
+    ranges = re.findall(r'(\d+)-(\d+)', content)
+    for start, end in ranges:
+        if int(start) > int(end):
+            raise ArgumentTypeError(
+                f"Invalid range found in '{value}': starting residue ({start}) "
+                f"cannot be greater than the ending residue ({end})."
+            )
+
+    return clean_value
+
+
+
+# ── Amber file types ─────────────────────────────────────────────────────────
+
+@check_arg(['.prmtop', '.parm7'], True)
+def amber_topology(arg):
+    return arg
+
+
+@check_arg(['.inpcrd', '.rst7', '.mdcrd', '.nc', '.crd'], True)
+def amber_trajectory(arg):
+    return arg
+
+
+@check_arg(['.inpcrd', '.rst7'], True)
+def amber_coordinates(arg):
+    return arg
+
+
+# ── Custom ArgumentParser ────────────────────────────────────────────────────
+
 class GMXMMPBSA_ArgParser(ArgumentParser):
 
     def exit(self, status=0, message=None):
@@ -112,6 +198,9 @@ description = ("gmx_MMPBSA is a new tool based on AMBER's MMPBSA.py aiming to pe
                " with GROMACS files. This program is an adaptation of Amber's MMPBSA.py and essentially works as such. "
                "gmx_MMPBSA works with any GROMACS version. This program will calculate binding free energies using "
                "end-state free energy methods on an ensemble of snapshots using a variety of implicit solvent models.")
+amber_description = ("amber_MMPBSA is a command-line module for end-state free energy calculations directly from "
+                     "native AMBER topology, coordinate, trajectory, and mask inputs. It uses the same calculation "
+                     "engine and input-file options as gmx_MMPBSA, but does not require GROMACS files.")
 
 complex_group_des = ("Complex files and info that are needed to perform the calculation. If the receptor and/or the "
                      "ligand info is not defined, we generate them from that of the complex.")
@@ -244,6 +333,105 @@ group.add_argument('--rewrite-output', dest='rewrite_output', default=False,
 group.add_argument('--clean', dest='clean', action='store_true', default=False,
                    help='''Clean temporary files and quit.''')
 
+
+#######################################################################################
+# Amber parser
+
+amber_parser = GMXMMPBSA_ArgParser(epilog=f'''amber_MMPBSA runs GB/PB and other end-state free energy calculations from AMBER files.
+                                    \nBased on MMPBSA.py (version {__mmpbsa_version__}) and
+                                    AmberTools{__ambertools_version__}''',
+                        description=amber_description,
+                        formatter_class=ArgumentDefaultsHelpFormatter)
+amber_parser.add_argument('-v', '--version', action='version',
+                    version='''%%(prog)s %s based on MMPBSA version %s and AmberTools %s''' %
+                            (__version__, __mmpbsa_version__, __ambertools_version__))
+amber_parser.add_argument('--input-file-help', dest='infilehelp', action='store_true',
+                    help='Print all available options in the input file.',
+                    default=False)
+amber_parser.add_argument('--create_input', dest='createinput', choices=['gb', 'pb', 'rism', 'ala', 'decomp', 'nmode',
+                                                                   'gbnsr6', 'all'],
+                    nargs='*', help='Create an new input file with selected calculation type.')
+amber_parser.set_defaults(ligand_mol2=None)
+group = amber_parser.add_argument_group('Miscellaneous Options')
+group.add_argument('-O', '--overwrite', default=False, action='store_true',
+                   help='Allow output files to be overwritten', dest='overwrite')
+group.add_argument('-prefix', dest='prefix', default='_GMXMMPBSA_',
+                   metavar='<file prefix>',
+                   help='Prefix for intermediate files.')
+group.add_argument('-sys_name', dest='sys_name', default=None,
+                   metavar='<system name>',
+                   help='System name. Overrides sys_name in the input file.')
+group = amber_parser.add_argument_group('Input and Output Files', '''These options specify the input files and optional
+output files.''')
+group.add_argument('-i', dest='input_file', metavar='FILE', help='MM/PBSA input file.')
+group.add_argument('-xvvfile', dest='xvvfile', help='XVV file for 3D-RISM.', default=rism_xvv)
+group.add_argument('-o', dest='output_file', default='FINAL_RESULTS_MMPBSA.dat', metavar='FILE',
+                   help='Output file with MM/PBSA statistics.')
+group.add_argument('-do', dest='decompout', metavar='FILE', default='FINAL_DECOMP_MMPBSA.dat',
+                   help='Output file for decomposition statistics summary.')
+group.add_argument('-eo', dest='energyout', metavar='FILE',
+                   help='''CSV-format output of all energy terms for every frame
+                  in every calculation. File name forced to end in [.csv].
+                  This file is only written when specified on the
+                  command-line.''')
+group.add_argument('-deo', dest='dec_energies', metavar='FILE',
+                   help='''CSV-format output of all energy terms for each printed
+                  residue in decomposition calculations. File name forced to end
+                  in [.csv]. This file is only written when specified on the
+                  command-line.''')
+group.add_argument('-nogui', dest='gui', action='store_false', default=True,
+                   help='No open gmx_MMPBSA_ana after all calculations finished')
+group.add_argument('-s', '--stability', dest='stability', action='store_true', default=False,
+                   help='''Perform stability calculation. Only the complex parameters are required.''')
+
+group = amber_parser.add_argument_group('Complex', complex_group_des)
+group.add_argument('-cp', dest='complex_top', metavar='<Topology>', default=None, type=prmtop,
+                   help='''The complex Topology file''')
+group.add_argument('-cs', dest='complex_str', metavar='<Structure File>', default=None, type=amber_structure,
+                   help='''Structure file of the complex. Allowed formats: *.pdb, *.inpcrd, *.rst7''')
+group.add_argument('-cm', dest='complex_mask', metavar='mask', nargs=2, default=None, type=amber_residue_mask_type,
+                   help='Receptor and Ligand masks in complex file. The notation is as follows: -cm '
+                        '"<Receptor mask>" "<Ligand mask>", ie. -cm ":1-240" ":241"')
+group.add_argument('-ct', dest='complex_trajs', nargs='*', metavar='MDCRD', type=amber_trajectory,
+                   help='''Complex trajectories. Make sure the trajectory is fitted and
+                         pbc have been removed. Allowed formats: *.mdcrd (recommended) (specify as many as you'd
+                         like).''')
+group.add_argument('-cr', dest='reference_structure', metavar='<PDB File>', default=None, type=pdb,
+                   help='''Complex Reference Structure file. This option is optional but recommended
+                         (Use the PDB file used to generate the topology in tLEAP). If not defined,
+                         the chains ID assignment (if the structure used in -cs does not have chain
+                         IDs) will be done automatically according to the structure (can generate
+                         wrong mapping).''')
+
+group = amber_parser.add_argument_group('Receptor', receptor_group_des)
+group.add_argument('-rp', dest='receptor_top', metavar='<Topology>', default=None, type=prmtop,
+                   help='''The receptor Topology file''')
+group.add_argument('-rm', dest='receptor_mask', metavar='mask', default=None, type=amber_residue_mask_type,
+                   help='''Receptor mask. Notation: "-rm <Receptor mask>", e.g. -rm ":1-240"''')
+group.add_argument('-rt', dest='receptor_trajs', nargs='*', metavar='MDCRD', type=amber_trajectory,
+                   help='''Input trajectories of the unbound receptor for multiple trajectory approach.
+                         Allowed formats: *.mdcrd (recommended) (specify as many as you'd like).''')
+
+group = amber_parser.add_argument_group('Ligand', ligand_group_des)
+group.add_argument('-lp', dest='ligand_top', metavar='<Topology>', default=None, type=prmtop,
+                   help='''The ligand Topology file''')
+group.add_argument('-lm', dest='ligand_mask', metavar='mask', default=None, type=amber_residue_mask_type,
+                   help='''Ligand mask. Notation: "-lm <Ligand mask>", e.g. -lm ":1"''')
+group.add_argument('-lt', dest='ligand_trajs', nargs='*', metavar='MDCRD', type=amber_trajectory,
+                   help='''Input trajectories of the unbound ligand for multiple trajectory approach.
+                         Allowed formats: *.mdcrd (recommended) (specify as many as you'd like).''')
+
+group = amber_parser.add_argument_group('Miscellaneous Actions')
+group.add_argument('--rewrite-output', dest='rewrite_output', default=False,
+                   action='store_true', help='''Do not re-run any calculations,
+                  just parse the output files from the previous calculation and
+                  rewrite the output files.''')
+group.add_argument('--clean', dest='clean', action='store_true', default=False,
+                   help='''Clean temporary files and quit.''')
+
+#######################################################################################
+
+#######################################################################################
 # GUI parser
 description = 'This program is part of gmx_MMPBSA and will show a workspace to analyze the gmx_MMPBSA results'
 anaparser = ArgumentParser(epilog=f'gmx_MMPBSA is an effort to implement the GB/PB and others calculations in '
@@ -269,12 +457,12 @@ testparser = ArgumentParser(epilog=f'gmx_MMPBSA is an effort to implement the GB
 testparser.add_argument('-v', '--version', action='version',
                        version='%%(prog)s %s based on MMPBSA version %s' % (__version__, __mmpbsa_version__))
 group = testparser.add_argument_group('Test options')
-group.add_argument('-t', dest='test', choices=list(range(25)) + [101], type=int, nargs='*', default=[2],
+group.add_argument('-t', dest='test', choices=list(range(26)) + [101], type=int, nargs='*', default=[2],
                    help='''\
 The level the test is going to be run at. Multiple systems and analysis can be run at the same time.
       Nr. of Sys  
-* 0      16     All -- Run all examples (Can take a long time!!!)
-* 1      13     Minimal -- Does a minimal test with a set of systems and analyzes 
+* 0      23     All -- Run all examples (Can take a long time!!!)
+* 1      12     Minimal -- Does a minimal test with a set of systems and analyzes
                 that show that gmx_MMPBSA runs correctly. Only exclude 3drism, nmode
                 protein-ligand MT because take a long time or are redundant
 * 2       9     Fast -- Only the calculations that take a short time are run (Default)
@@ -304,6 +492,7 @@ The level the test is going to be run at. Multiple systems and analysis can be r
 * 22            Protein-Ligand_LPH (CHARMM force field)
 * 23            QM/MMGBSA Calculation
 * 24            GBNSR6 Calculation
+* 25            AMBER input files
 ''')
 group.add_argument('-f', '--folder', help='Defines the folder to store all data', type=Path, default='.')
 group.add_argument('-r', '--reuse', help='Defines the existing test forlder will be reuse', action='store_true')
@@ -313,3 +502,6 @@ group.add_argument('-n', '--num_processors', type=int, default=4,
                    help='Defines the number of processor cores you want to use with MPI per calculation. If the number '
                         'of frames is less than the number of cpus defined, the calculation will be performed with '
                         'the number of processors = number of frames')
+group.add_argument('-j', '--num_concurrent', type=int, default=1,
+                   help='Defines the number of examples to run concurrently. Each example can use up to '
+                        '--num_processors MPI ranks, so the total rank count can be -j * -n')

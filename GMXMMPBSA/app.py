@@ -26,7 +26,7 @@ try:
     from GMXMMPBSA.infofile import InfoFile
     from GMXMMPBSA import main
     from GMXMMPBSA.tester import run_test
-    from GMXMMPBSA.commandlineparser import anaparser, testparser
+    from GMXMMPBSA.commandlineparser import anaparser, testparser, amber_parser
     from GMXMMPBSA.utils import create_input_args
 except ImportError:
     import os
@@ -37,7 +37,7 @@ except ImportError:
                       (amberhome, amberhome))
 
 
-def gmxmmpbsa():
+def _gmxmmpbsa_base(parser, engine='gmx'):
     stream_handler = logging.StreamHandler()
     stream_handler.setLevel(logging.INFO)
     formatter = logging.Formatter("[%(levelname)-7s] %(message)s")
@@ -58,6 +58,8 @@ def gmxmmpbsa():
 
     # Instantiate the main MMPBSA_App
     app = main.MMPBSA_App(MPI)
+    app.clparser = parser
+    app.engine = engine
 
     # Read the command-line arguments
     try:
@@ -110,6 +112,13 @@ def gmxmmpbsa():
     app.write_final_outputs()
     app.finalize()
 
+
+def gmxmmpbsa():
+    from GMXMMPBSA.commandlineparser import parser
+    _gmxmmpbsa_base(parser)
+
+def gmxmmpbsa_amber():
+    _gmxmmpbsa_base(amber_parser, 'amber')
 
 def gmxmmpbsa_ana():
     try:

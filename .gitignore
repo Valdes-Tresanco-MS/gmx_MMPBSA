@@ -5,4 +5,11 @@ build/
 dist/
 *.egg-info/
 *.log
-examples
+examples/*
+!examples/AMBER/
+examples/AMBER/*
+!examples/AMBER/README.md
+!examples/AMBER/mmpbsa.in
+!examples/AMBER/*.prmtop
+!examples/AMBER/*.inpcrd
+!examples/AMBER/*.mdcrd

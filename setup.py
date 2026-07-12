@@ -43,6 +43,10 @@ setup(
     long_description=LONG_DESCRIPTION,
     long_description_content_type='text/markdown',
     keywords=['gmx_MMPBSA', 'MMPBSA', 'MMGBSA', 'GROMACS', 'AmberTools'],
+    # Compatibility smoke tests with gmx_MMPBSA_test passed using newer
+    # pandas/matplotlib/seaborn combinations installed via conda and this
+    # package installed with --no-deps. Pins are kept unchanged here until
+    # dependency ranges are formally updated.
     install_requires=['numpy==1.26.4', 'pandas==1.5.3',
                       'matplotlib==3.7.3', 'seaborn==0.11.2',
                       'scipy==1.14.1',
@@ -52,6 +56,7 @@ setup(
     entry_points={
         "console_scripts": [
             "gmx_MMPBSA=GMXMMPBSA.app:gmxmmpbsa",
+            "amber_MMPBSA=GMXMMPBSA.app:gmxmmpbsa_amber",
             "gmx_MMPBSA_ana=GMXMMPBSA.app:gmxmmpbsa_ana",
             "gmx_MMPBSA_test=GMXMMPBSA.app:gmxmmpbsa_test"]}
 )

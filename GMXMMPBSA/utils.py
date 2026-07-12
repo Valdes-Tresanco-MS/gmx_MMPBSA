@@ -508,7 +508,7 @@ def check_str(structure, ref=False, skip=False):
                 parmed.residue.DNAResidue.has(res.name) or
                 parmed.residue.RNAResidue.has(res.name)):
             for atm in res.atoms:
-                if ('LP' in atm.name or 'LP' in atm.type) and atm.mass == 0:
+                if (('LP' in atm.name) or (atm.type and 'LP' in str(atm.type))) and atm.mass == 0:
                     GMXMMPBSA_ERROR('The LP pseudo-atom is not supported. Please remove them following these instructions: '
                                     'https://valdes-tresanco-ms.github.io/gmx_MMPBSA/dev/examples/Protein_ligand_LPH_atoms_CHARMMff')
         if res.chain == '':
@@ -605,6 +605,95 @@ def res2map(indexes, com_file):
 
     return masks, res_list, order_list
 
+def _parse_amber_mask(mask_str):
+    """
+    Parse AMBER mask string (e.g., "1-240,242-250") into a set of residue numbers.
+    """
+    mask_str = mask_str.strip(":")
+    residues = set()
+
+    if not mask_str:
+        return residues
+
+    parts = mask_str.split(',')
+    for part in parts:
+        part = part.strip()
+        if '-' in part:
+            start, end = map(int, part.split('-'))
+            residues.update(range(start, end + 1))
+        else:
+            residues.add(int(part))
+
+    return residues
+
+
+def res2map_amber(amber_masks, com_file):
+    """
+    Similar to res2map but uses AMBER masks instead of GROMACS indexes.
+
+    :param amber_masks: Dictionary with 'REC' and 'LIG' keys containing AMBER mask strings (e.g., ":1-240", ":241")
+    :param com_file: Complex structure file (parmed.Structure or file path)
+    :return: masks (dict with REC and LIG ranges), res_list (list of Residue objects), order_list
+    """
+    rec_list = []
+    lig_list = []
+
+    if isinstance(com_file, parmed.Structure):
+        com_str = com_file
+    else:
+        com_str = parmed.load_file(com_file)
+
+    # Parse AMBER masks to get residue number sets
+    rec_residues = _parse_amber_mask(amber_masks['REC'])
+    lig_residues = _parse_amber_mask(amber_masks['LIG'])
+
+    overlap = rec_residues & lig_residues
+    if overlap:
+        GMXMMPBSA_ERROR(f'Receptor and ligand masks overlap on residues: {sorted(overlap)}')
+
+    known_resnums = {r.number for r in com_str.residues}
+    missing = (rec_residues | lig_residues) - known_resnums
+    if missing:
+        GMXMMPBSA_ERROR(f'Mask selects residues not present in complex structure: {sorted(missing)}')
+    resindex = 1
+    rec_index = 1
+    lig_index = 1
+    proc_res = None
+    res_list = []
+
+    # Iterate over residues in the complex structure
+    for residue in com_str.residues:
+        res = [residue.chain, residue.number, residue.name, residue.insertion_code]
+
+        # Check if this residue belongs to receptor or ligand based on AMBER mask
+        if residue.number in rec_residues:
+            if res != proc_res and resindex not in [r.index for r in res_list]:
+                rec_list.append(resindex)
+                res_list.append(Residue(resindex, residue.number, residue.chain, 'R',
+                                        rec_index, residue.name, residue.insertion_code))
+                resindex += 1
+                rec_index += 1
+                proc_res = res
+        elif residue.number in lig_residues:
+            if res != proc_res and resindex not in [r.index for r in res_list]:
+                lig_list.append(resindex)
+                res_list.append(Residue(resindex, residue.number, residue.chain, 'L',
+                                        lig_index, residue.name, residue.insertion_code))
+                resindex += 1
+                lig_index += 1
+                proc_res = res
+
+    masks = {'REC': list2range(rec_list), 'LIG': list2range(lig_list)}
+
+    temp = []
+    for m, value in masks.items():
+        for e in value['num']:
+            v = e[0] if isinstance(e, list) else e
+            temp.append([v, m])
+    temp.sort(key=lambda x: x[0])
+    order_list = [c[1] for c in temp]
+
+    return masks, res_list, order_list
 
 def get_dist(coor1, coor2):
     return sqrt((coor2[0] - coor1[0]) ** 2 + (coor2[1] - coor1[1]) ** 2 + (coor2[2] - coor1[2]) ** 2)
@@ -721,7 +810,7 @@ def remove(flag, fnpre='_GMXMMPBSA_'):
                 os.remove(fil)
 
 
-def find_progs(INPUT, mpi_size=0):
+def find_progs(INPUT, mpi_size=0, engine='gmx'):
     """ Find the necessary programs based in the user INPUT """
     # List all of the used programs with the conditions that they are needed
     logging.info('Checking external programs...')
@@ -753,35 +842,36 @@ def find_progs(INPUT, mpi_size=0):
                 GMXMMPBSA_ERROR(f'Could not find necessary program [{prog}]')
             logging.info(f'{prog} found! Using {str(my_progs[prog])}')
 
-    search_parth = INPUT['general']['gmx_path'] or os.environ['PATH']
-    g5 = False
-    for gv, g_exes in gro_exe.items():
-        if gv == 'gmx5':
-            for prog in g_exes:
-                if exe := shutil.which(prog, path=search_parth):
-                    logging.info('Using GROMACS version > 5.x.x!')
-                    my_progs['make_ndx'] = [exe, 'make_ndx']
-                    my_progs['editconf'] = [exe, 'editconf']
-                    my_progs['trjconv'] = [exe, 'trjconv']
-                    g5 = True
-                    if prog in ['gmx_mpi', 'gmx_mpi_d'] and mpi_size > 1:
-                        GMXMMPBSA_ERROR('gmx_mpi and gmx_mpi_d are not supported when running gmx_MMPBSA in parallel '
-                                        'due to incompatibility between the mpi libraries used to compile GROMACS and '
-                                        'mpi4py respectively. You can still use gmx_mpi or gmx_mpi_d to run gmx_MMPBSA '
-                                        'serial. For parallel calculations use gmx instead')
-                    logging.info(f'{prog} found! Using {exe}')
+    if engine == 'gmx':
+        search_parth = INPUT['general']['gmx_path'] or os.environ['PATH']
+        g5 = False
+        for gv, g_exes in gro_exe.items():
+            if gv == 'gmx5':
+                for prog in g_exes:
+                    if exe := shutil.which(prog, path=search_parth):
+                        logging.info('Using GROMACS version > 5.x.x!')
+                        my_progs['make_ndx'] = [exe, 'make_ndx']
+                        my_progs['editconf'] = [exe, 'editconf']
+                        my_progs['trjconv'] = [exe, 'trjconv']
+                        g5 = True
+                        if prog in ['gmx_mpi', 'gmx_mpi_d'] and mpi_size > 1:
+                            GMXMMPBSA_ERROR('gmx_mpi and gmx_mpi_d are not supported when running gmx_MMPBSA in '
+                                            'parallel due to incompatibility between the mpi libraries used to compile '
+                                            'GROMACS and mpi4py respectively. You can still use gmx_mpi or gmx_mpi_d '
+                                            'to run gmx_MMPBSA serial. For parallel calculations use gmx instead')
+                        logging.info(f'{prog} found! Using {exe}')
+                        break
+                if g5:
                     break
-            if g5:
-                break
-        else:
-            logging.info('Using GROMACS version 4.x.x!')
-            for prog in g_exes:
-                if exe := shutil.which(prog, path=search_parth):
-                    my_progs[prog] = [exe]
-                    logging.info(f'{prog} found! Using {str(my_progs[prog])}')
+            else:
+                logging.info('Using GROMACS version 4.x.x!')
+                for prog in g_exes:
+                    if exe := shutil.which(prog, path=search_parth):
+                        my_progs[prog] = [exe]
+                        logging.info(f'{prog} found! Using {str(my_progs[prog])}')
 
-    if 'make_ndx' not in my_progs or 'editconf' not in my_progs or 'trjconv' not in my_progs:
-        GMXMMPBSA_ERROR('Could not find necessary program [ GROMACS ]')
+        if 'make_ndx' not in my_progs or 'editconf' not in my_progs or 'trjconv' not in my_progs:
+            GMXMMPBSA_ERROR('Could not find necessary program [ GROMACS ]')
     logging.info('Checking external programs...Done.\n')
     return my_progs
 

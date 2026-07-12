@@ -549,9 +549,15 @@ class OutputFile(object):
         # if FILES.solvated_prmtop:
         #    self.writeline('|Solvated complex topology file:  %s' %
         #               FILES.solvated_prmtop)
-        self.writeline(f'{"|Complex Structure file:":40}{FILES.complex_tpr:>40}')
-        if FILES.complex_top:
-            self.writeline(f'{"|Complex (GROMACS) topology file:":40}{FILES.complex_top:>40}')
+        if FILES.engine == 'gmx':
+            if FILES.complex_top:
+                self.writeline(f'{"|Complex (GROMACS) topology file:":40}{FILES.complex_top:>40}')
+            if FILES.complex_tpr:
+                self.writeline(f'{"|Complex Structure file:":40}{FILES.complex_tpr:>40}')
+        else:
+            self.writeline(f'{"|Complex (ORIGINAL) topology file:":40}{FILES.complex_top:>40}')
+            if getattr(FILES, "complex_str", None):
+                self.writeline(f'{"|Complex Structure file:":40}{FILES.complex_str:>40}')
         self.writeline(f'{"|Complex (AMBER) topology file:":40}{FILES.complex_prmtop:>40}')
 
         if not stability:
@@ -559,22 +565,23 @@ class OutputFile(object):
             #    if FILES.solvated_receptor_prmtop:
             #       self.writeline('|Solvated receptor topology file: %s' %
             #                  FILES.solvated_receptor_prmtop)
-            if FILES.receptor_tpr:
-                self.writeline(f'{"|Receptor Structure file:":40}{FILES.receptor_tpr:>40}')
-            if FILES.receptor_top:
-                self.writeline(f'{"|Receptor (GROMACS) topology file:":40}{FILES.receptor_top:>40}')
+            if FILES.engine == 'gmx':
+                if FILES.receptor_top:
+                    self.writeline(f'{"|Receptor (GROMACS) topology file:":40}{FILES.receptor_top:>40}')
+                if FILES.receptor_tpr:
+                    self.writeline(f'{"|Receptor Structure file:":40}{FILES.receptor_tpr:>40}')
+                if FILES.ligand_top:
+                    self.writeline(f'{"|Ligand (GROMACS) topology file:":40}{FILES.ligand_top:>40}')
+                if FILES.ligand_tpr:
+                    self.writeline(f'{"|Ligand Structure file:":40}{FILES.ligand_tpr:>40}')
+                if FILES.ligand_mol2:
+                    self.writeline(f'{"|Ligand Structure file:":40}{FILES.ligand_mol2:>40}')
+            else:
+                if FILES.receptor_top:
+                    self.writeline(f'{"|Receptor (ORIGINAL) topology file:":40}{FILES.receptor_top:>40}')
+                if FILES.ligand_top:
+                    self.writeline(f'{"|Ligand (ORIGINAL) topology file:":40}{FILES.ligand_top:>40}')
             self.writeline(f'{"|Receptor (AMBER) topology file:":40}{FILES.receptor_prmtop:>40}')
-
-            # if FILES.ligand_trajs:
-            # if FILES.solvated_ligand_prmtop:
-            #    self.writeline('|Solvated ligand topology file:   %s' %
-            #               FILES.solvated_ligand_prmtop)
-            if FILES.ligand_mol2:
-                self.writeline(f'{"|Ligand Structure file:":40}{FILES.ligand_mol2:>40}')
-            if FILES.ligand_tpr:
-                self.writeline(f'{"|Ligand Structure file:":40}{FILES.ligand_tpr:>40}')
-            if FILES.ligand_top:
-                self.writeline(f'{"|Ligand (GROMACS) topology file:":40}{FILES.ligand_top:>40}')
             self.writeline(f'{"|Ligand (AMBER) topology file:":40}{FILES.ligand_prmtop:>40}')
 
         if INPUT['ala']['alarun']:
