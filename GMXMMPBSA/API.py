@@ -57,6 +57,8 @@ def _working_directory(path: Path):
 
 
 def _series_with_summary(data, mean, std, sem):
+    if not isinstance(data, (pd.Series, pd.DataFrame)):
+        return data.append([mean, std, sem])
     return pd.concat([data, pd.Series([mean, std, sem], index=['Average', 'SD', 'SEM'])])
 
 
