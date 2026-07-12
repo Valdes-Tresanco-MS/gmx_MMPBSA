@@ -647,6 +647,14 @@ def res2map_amber(amber_masks, com_file):
     rec_residues = _parse_amber_mask(amber_masks['REC'])
     lig_residues = _parse_amber_mask(amber_masks['LIG'])
 
+    overlap = rec_residues & lig_residues
+    if overlap:
+        GMXMMPBSA_ERROR(f'Receptor and ligand masks overlap on residues: {sorted(overlap)}')
+
+    known_resnums = {r.number for r in com_str.residues}
+    missing = (rec_residues | lig_residues) - known_resnums
+    if missing:
+        GMXMMPBSA_ERROR(f'Mask selects residues not present in complex structure: {sorted(missing)}')
     resindex = 1
     rec_index = 1
     lig_index = 1
