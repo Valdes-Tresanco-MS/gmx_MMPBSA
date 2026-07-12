@@ -26,7 +26,7 @@ In this case, `amber_MMPBSA` requires:
 
 :octicons-check-circle-fill-16:{ .req } -> Must be defined -- :octicons-check-circle-fill-16:{ .req_opt } -> Optional
 
-_See a detailed list of all the flags in gmx_MMPBSA command line [here][1]_
+_See a detailed overview of `amber_MMPBSA` inputs and flags [here][1]._
 
 ## Command-line
 
@@ -66,5 +66,5 @@ In this case, a single trajectory (ST) approximation is followed. The receptor a
 complex with AMBER masks (`:1-166` and `:167-242`). Receptor and ligand topology files are provided directly, so
 `amber_MMPBSA` can build the working topologies without using GROMACS files.
 
-  [1]: ../../gmx_MMPBSA_command-line.md#gmx_mmpbsa-command-line
+  [1]: ../../amber_MMPBSA.md
   [6]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/examples/AMBER

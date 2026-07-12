@@ -198,6 +198,9 @@ description = ("gmx_MMPBSA is a new tool based on AMBER's MMPBSA.py aiming to pe
                " with GROMACS files. This program is an adaptation of Amber's MMPBSA.py and essentially works as such. "
                "gmx_MMPBSA works with any GROMACS version. This program will calculate binding free energies using "
                "end-state free energy methods on an ensemble of snapshots using a variety of implicit solvent models.")
+amber_description = ("amber_MMPBSA is a command-line module for end-state free energy calculations directly from "
+                     "native AMBER topology, coordinate, trajectory, and mask inputs. It uses the same calculation "
+                     "engine and input-file options as gmx_MMPBSA, but does not require GROMACS files.")
 
 complex_group_des = ("Complex files and info that are needed to perform the calculation. If the receptor and/or the "
                      "ligand info is not defined, we generate them from that of the complex.")
@@ -334,11 +337,10 @@ group.add_argument('--clean', dest='clean', action='store_true', default=False,
 #######################################################################################
 # Amber parser
 
-amber_parser = GMXMMPBSA_ArgParser(epilog=f'''gmx_MMPBSA is an effort to implement the GB/PB and others calculations in GROMACS.
+amber_parser = GMXMMPBSA_ArgParser(epilog=f'''amber_MMPBSA runs GB/PB and other end-state free energy calculations from AMBER files.
                                     \nBased on MMPBSA.py (version {__mmpbsa_version__}) and
                                     AmberTools{__ambertools_version__}''',
-                        description=(description + '''This is the core of gmx_MMPBSA and it will do all the
-                                    calculations'''),
+                        description=amber_description,
                         formatter_class=ArgumentDefaultsHelpFormatter)
 amber_parser.add_argument('-v', '--version', action='version',
                     version='''%%(prog)s %s based on MMPBSA version %s and AmberTools %s''' %

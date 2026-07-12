@@ -60,7 +60,7 @@ This section focuses on how to work directly with native AMBER topologies, coord
 
 ## CHARMMff support
 
-This section focuses more on how to work with systems prepared with CHARMM force fields. We only show few examples 
+This section focuses more on how to work with systems prepared with CHARMM force fields. We only show few examples
 for better clarity.
 
 * [Protein-ligand](Protein_ligand_CHARMMff/README.md)[^1][^2]
@@ -69,7 +69,7 @@ for better clarity.
 
 ## OPLSff support
 
-This section focuses more on how to work with systems prepared with OPLS force fields. We only show few examples 
+This section focuses more on how to work with systems prepared with OPLS force fields. We only show few examples
 for better clarity.
 
 * [Protein-protein](OPLS/protein_protein/README.md)
