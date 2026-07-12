@@ -1,5 +1,5 @@
 """
-Generate Amber topology files from GROMACS files
+Build working AMBER topology/coordinate files from native AMBER inputs.
 """
 
 # ##############################################################################
