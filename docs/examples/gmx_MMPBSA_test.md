@@ -147,3 +147,11 @@ Each example can use up to `-n/--num_processors` MPI ranks.
 
         * Download gmx_MMPBSA repository content in `/home/user/Documents`
         * Execute `25` [AMBER input files] example
+
+!!! warning "3D-RISM AmberTools runtime failures"
+    Test `18` uses AmberTools 3D-RISM. If this test fails while the other examples pass and the log contains
+    `Fortran runtime error: Missing comma between descriptors` from `amber_rism_interface.F90`, the failure is a
+    known AmberTools/Fortran runtime compatibility issue. It has been reproduced with conda AmberTools builds linked
+    against newer `libgfortran` runtimes. A known working workaround is `gmx_MMPBSA` 1.6.4 with Python 3.9 or 3.10,
+    AmberTools 23, and `libgfortran5`/`libgcc-ng` 12.x, or a patched AmberTools build. See the
+    [3D-RISM example](3D-RISM/README.md) for details.

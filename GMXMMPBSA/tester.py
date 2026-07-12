@@ -44,6 +44,17 @@ def run_process(system, sys_name, args):
     return sys_name, False
 
 
+def _has_known_rism_fortran_runtime_error(log_file: Path):
+    try:
+        log_text = log_file.read_text(errors='replace')
+    except OSError:
+        return False
+    return (
+        'Fortran runtime error: Missing comma between descriptors' in log_text
+        and 'amber_rism_interface.F90' in log_text
+    )
+
+
 def _get_frames(input_file: Path):
     values = {'startframe': 1, 'endframe': 21, 'interval': 1}
     assignment = re.compile(r'\b(startframe|endframe|interval)\s*=\s*(\d+)\b')
@@ -175,9 +186,16 @@ def run_test(parser):
             sys_name, failed = x
             if failed:
                 any_failed = True
+                log_file = test_sys[sys_name][0].joinpath(f'{sys_name}.log')
                 logging.error(f"{test_sys[sys_name][1]:55}[{c:2}/{len(key_list):2}]{'ERROR':>8}\n"
                               f"           Please, check the test log\n"
-                              f"           ({test_sys[sys_name][0].joinpath(f'{sys_name}')}.log)")
+                              f"           ({log_file})")
+                if sys_name == 18 and _has_known_rism_fortran_runtime_error(log_file):
+                    logging.warning('The 3D-RISM log matches a known AmberTools/Fortran runtime issue. '
+                                    'Conda AmberTools builds linked with newer libgfortran can abort before '
+                                    'the RISM calculation starts. A known working workaround is gmx_MMPBSA 1.6.4 '
+                                    'with Python 3.9/3.10, AmberTools 23, and libgfortran5/libgcc-ng 12.x, or a '
+                                    'patched AmberTools build.')
             else:
                 logging.info(f"{test_sys[sys_name][1]:55}[{c:2}/{len(key_list):2}]{'DONE':>8}")
                 result_list.append(test_sys[sys_name][0])
