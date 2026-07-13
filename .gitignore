@@ -18,3 +18,4 @@ examples/AMBER/*
 !examples/API/COMPACT_MMXSA_RESULTS.mmxsa
 !examples/API/extract_api_data.py
 !examples/API/gb_delta_total.csv
+.vscode/settings.json
