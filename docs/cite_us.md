@@ -99,7 +99,7 @@ mutant='ALA', mutant_res='C:68', cas_intdiel=1
 
 ## Authors
 
-* Mario Sergio Valdés Tresanco, PhD Student. _University of Medellin, Colombia_
-* Mario Ernesto Valdés Tresanco, PhD Student. _University of Calgary, Canada._
-* Pedro Alberto Valiente, PhD. _University of Toronto, Canada_
-* Ernesto Moreno Frías, PhD. _University of Medellin, Colombia_
+* Mario S. Valdés-Tresanco, PhD. _University of Medellin, Colombia_
+* Mario E. Valdés-Tresanco, PhD. _University of Calgary, Canada._
+* Pedro A. Valiente, PhD. _University of Toronto, Canada_
+* Ernesto Moreno, PhD. _University of Medellin, Colombia_

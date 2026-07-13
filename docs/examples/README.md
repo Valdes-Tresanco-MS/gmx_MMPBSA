@@ -9,11 +9,15 @@ a number of different components (_i.e._ metalloprotein-ligand complex, Protein-
 several types of calculations (_e.g._ GB, Alanine scanning and Per-residue decomposition; PB, Interaction Entropy, 
 and Per-wise decomposition) can be also performed in the same run for a specific system.
 
-## Run examples in Google Colab
+## Jupyter notebooks
 
-You can run selected `gmx_MMPBSA_test` examples on Google Colab CPU runtimes with the
-[gmx_MMPBSA Colab notebook](https://colab.research.google.com/github/Valdes-Tresanco-MS/gmx_MMPBSA/blob/colab-notebook/notebooks/gmx_MMPBSA_Colab.ipynb).
-The notebook installs a conda-based CPU environment, runs bundled examples, and displays the generated result files.
+Two Jupyter notebooks are available for interactive use:
+
+* [Google Colab notebook](https://colab.research.google.com/github/Valdes-Tresanco-MS/gmx_MMPBSA/blob/colab-notebook/notebooks/gmx_MMPBSA_Colab.ipynb):
+  installs a conda-based CPU environment, runs bundled examples, supports uploaded user files, and displays results
+  through the Python API.
+* [Local notebook](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/blob/colab-notebook/notebooks/gmx_MMPBSA_Local.ipynb):
+  runs or loads local results, extracts data with the Python API, and plots energy terms with seaborn.
 
 ## Systems
 
@@ -35,29 +39,12 @@ be disappointed! 😀
     * [S1-ACE2 complex](COVID-19_related_proteins/S1-ACE2_complex_7dmu/README.md)
     * [S1 RBD with antibody](COVID-19_related_proteins/S1_RBD_with_antibody_6zlr/README.md)
 
-## CHARMMff support
-
-This section focuses more on how to work with systems prepared with CHARMM force fields. We only show few examples 
-for better clarity.
-
-* [Protein-ligand](Protein_ligand_CHARMMff/README.md)[^1][^2]
-* [Protein-ligand complex embedded in membrane](Protein_membrane_CHARMMff/README.md)[^1]
-* [Protein-ligand with LPH atoms](Protein_ligand_LPH_atoms_CHARMMff/README.md)
-
-## OPLSff support
-
-This section focuses more on how to work with systems prepared with OPLS force fields. We only show few examples 
-for better clarity.
-
-* [Protein-protein](OPLS/protein_protein/README.md)
-
-## Analysis
+## Analyses
 
 This section focuses on the analysis that can be performed with gmx_MMPBSA. Although each example focuses on specific 
 cases, you can use gmx_MMPBSA to perform several types of calculations (_e.g._ GB, Alanine scanning and Per-residue 
 decomposition; PB, Interaction Entropy, and Per-residue decomposition) in the same run for a specific system.
 
-* [Python API extraction](API/README.md)
 * [Single Trajectory Protocol](Protein_ligand/ST/README.md)[^1][^2][^3]
 * [Multiple Trajectory Protocol](Protein_ligand/MT/README.md)[^1]
 * Binding free energy calculations
@@ -75,6 +62,29 @@ decomposition; PB, Interaction Entropy, and Per-residue decomposition) in the sa
 * [Stability calculations](Stability/README.md)[^1][^2][^3]
 * [QM/MMGBSA calculations](QM_MMGBSA/README.md)
 * [Correlation](Correlation/README.md)
+* [Python API extraction](API/README.md)
+* [Local API/seaborn notebook](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/blob/colab-notebook/notebooks/gmx_MMPBSA_Local.ipynb)
+
+## AMBER support
+
+This section focuses more on how to work with systems prepared with AMBER. We only show few examples for better clarity.
+
+* [Protein-protein](AMBER/README.md)
+
+## CHARMMff support
+
+This section focuses more on how to work with systems prepared with CHARMM force fields. We only show few examples for better clarity.
+
+* [Protein-ligand](Protein_ligand_CHARMMff/README.md)[^1][^2]
+* [Protein-ligand complex embedded in membrane](Protein_membrane_CHARMMff/README.md)[^1]
+* [Protein-ligand with LPH atoms](Protein_ligand_LPH_atoms_CHARMMff/README.md)
+
+## OPLSff support
+
+This section focuses more on how to work with systems prepared with OPLS force fields. We only show few examples 
+for better clarity.
+
+* [Protein-protein](OPLS/protein_protein/README.md)
 
 ## Support for psf_dcd files
 
