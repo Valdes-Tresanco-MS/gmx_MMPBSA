@@ -54,6 +54,7 @@ nonpolar_aa = ['PHE', 'TRP', 'VAL', 'ILE', 'LEU', 'MET', 'PRO', 'CYX', 'ALA', 'G
 polar_aa = ['TYR', 'SER', 'THR', 'CYM', 'CYS', 'HIE', 'HID', 'GLN', 'ASN', 'ASH', 'GLH', 'LYN']
 
 PBRadii = {1: 'bondi', 2: 'mbondi', 3: 'mbondi2', 4: 'mbondi3', 5: 'mbondi_pb2', 6: 'mbondi_pb3', 7: 'charmm_radii'}
+GB_RADII_RECOMMENDATIONS = {1: 'mbondi', 2: 'mbondi2', 5: 'mbondi2', 7: 'bondi', 8: 'mbondi3'}
 
 # ions_para_files = {1: 'frcmod.ions234lm_126_tip3p', 2: 'frcmod.ions234lm_iod_tip4pew', 3: 'frcmod.ions234lm_iod_spce',
 #                    4: 'frcmod.ions234lm_hfe_spce', 5: 'frcmod.ions234lm_126_tip4pew', 6: 'frcmod.ions234lm_126_spce',
@@ -415,6 +416,19 @@ class CheckAmberTop:
             target.parm_data[flag] = list(source.parm_data[flag])
         target.parm_data['RADIUS_SET'] = list(source.parm_data.get('RADIUS_SET', ['unknown']))
         logging.info(f'Preserving {system} GB radii from input topology: {self._radius_set(target)}')
+        self._warn_if_gb_radii_mismatch(target, system)
+
+    def _warn_if_gb_radii_mismatch(self, parm, system):
+        if not self.INPUT['gb']['gbrun']:
+            return
+        igb = self.INPUT['gb']['igb']
+        recommended_radii = GB_RADII_RECOMMENDATIONS[igb]
+        topology_radii = self._chrad_radius_name(parm)
+        if topology_radii != recommended_radii:
+            logging.warning(
+                f"{system} topology uses {topology_radii} GB radii, but igb={igb} is typically used with "
+                f"{recommended_radii} radii. Please verify that this radii set is intended for your GB calculation."
+            )
 
     def ambertop2prmtop(self):
         logging.info('Using topology conversion. Setting radiopt = 0...')

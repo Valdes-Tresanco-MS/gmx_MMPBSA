@@ -59,6 +59,9 @@ _mpi_size = 1
 _rank = 0
 _MPI = FakeMPI()
 
+PBRadii = {1: 'bondi', 2: 'mbondi', 3: 'mbondi2', 4: 'mbondi3', 5: 'mbondi_pb2', 6: 'mbondi_pb3', 7: 'charmm_radii'}
+GB_RADII_RECOMMENDATIONS = {1: 2, 2: 3, 5: 3, 7: 1, 8: 4}
+
 
 # Main class
 
@@ -983,6 +986,14 @@ class MMPBSA_App(object):
 
         if INPUT['gb']['igb'] not in [1, 2, 5, 7, 8]:
             GMXMMPBSA_ERROR('Invalid value for IGB (%s)! ' % INPUT['gb']['igb'] + 'IGB must be 1, 2, 5, 7, or 8.', InputError)
+        recommended_radii = GB_RADII_RECOMMENDATIONS[INPUT['gb']['igb']]
+        if INPUT['gb']['gbrun'] and INPUT['general']['PBRadii'] not in [recommended_radii, 7]:
+            logging.warning(
+                f"igb={INPUT['gb']['igb']} is typically used with {PBRadii[recommended_radii]} radii "
+                f"(PBRadii={recommended_radii}), but PBRadii={INPUT['general']['PBRadii']} "
+                f"({PBRadii[INPUT['general']['PBRadii']]}) was selected. Please verify that this radii set is "
+                f"intended for your GB calculation."
+            )
         if INPUT['gb']['intdiel'] < 0:
             GMXMMPBSA_ERROR('INDI must be non-negative!', InputError)
         # User warning when intdiel > 10
