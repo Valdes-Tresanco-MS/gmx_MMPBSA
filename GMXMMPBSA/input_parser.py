@@ -513,7 +513,7 @@ input_file.addNamelist('pb', 'pb',
                            ['prbrad', float, 1.4, 'Probe radius'],
                            ['iprob', float, 2.0, 'Mobile ion probe radius (Angstroms) for ion accessible surface used '
                                                  'to define the Stern layer'],
-                           ['sasopt', int, 0, 'Molecular surface in PB implict model'],
+                           ['sasopt', int, 0, 'Molecular surface in PB implicit model'],
                            ['arcres', float, 0.25, 'The resolution (Å) to compute solvent accessible arcs'],
 
                            # Options for Implicit Membranes
