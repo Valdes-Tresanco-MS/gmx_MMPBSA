@@ -27,7 +27,9 @@ import os
 import signal
 import sys
 import logging
+import shutil
 from pathlib import Path
+from copy import deepcopy
 from GMXMMPBSA import utils, __version__
 from GMXMMPBSA.amber_outputs import (QHout, NMODEout, QMMMout, GBout, PBout, PolarRISM_std_Out, RISM_std_Out,
                                      PolarRISM_gf_Out, RISM_gf_Out, PolarRISM_pcplus_Out, RISM_pcplus_Out,
@@ -43,11 +45,13 @@ from GMXMMPBSA.infofile import InfoFile
 from GMXMMPBSA.fake_mpi import MPI as FakeMPI
 from GMXMMPBSA.input_parser import input_file as _input_file
 from GMXMMPBSA.make_top_amber import CheckAmberTop
-from GMXMMPBSA.make_trajs import make_trajectories, make_mutant_trajectories
+from GMXMMPBSA.make_trajs import make_trajectories, make_mutant_trajectories, Trajectory
 from GMXMMPBSA.output_file import (write_outputs, write_decomp_output, data2pkl)
 from GMXMMPBSA.parm_setup import MMPBSA_System
 from GMXMMPBSA.make_top import CheckMakeTop
 from GMXMMPBSA.timer import Timer
+from GMXMMPBSA.auto_dielectric import (prepare_auto_dielectric, restore_auto_dielectric_decomp,
+                                       select_dielectric_from_decomp)
 
 # Global variables for the excepthook replacement at the bottom. Override these
 # in the MMPBSA_App constructor and input file reading
@@ -197,6 +201,9 @@ class MMPBSA_App(object):
         if rank is None:
             rank = self.mpi_rank
         master = rank == 0
+
+        if self.INPUT.get('auto_dielectric') and not self.INPUT['auto_dielectric']['done']:
+            self._run_auto_dielectric_prepass(rank)
 
         # Load the list of calculations we need to do, then run them.
 
@@ -698,10 +705,214 @@ class MMPBSA_App(object):
             self.mutant_index = maketop.com_mut_index
             self.mut_str = self.resl[maketop.com_mut_index].mutant_label if self.mutant_index is not None else ''
             self.FILES.complex_fixed = f'{self.FILES.prefix}COM_FIXED.pdb'
+            restore_auto_dielectric_decomp(self.INPUT)
         self.FILES = self.MPI.COMM_WORLD.bcast(self.FILES, root=0)
         self.INPUT = self.MPI.COMM_WORLD.bcast(self.INPUT, root=0)
         self.sync_mpi()
         self.timer.stop_timer('setup_gmx')
+
+    def _run_auto_dielectric_prepass(self, rank=None):
+        rank = self.mpi_rank if rank is None else rank
+        master = rank == 0
+        original_input = deepcopy(self.INPUT)
+        original_pre = self.pre
+        original_numframes = self.numframes
+        auto = original_input['auto_dielectric']
+
+        if master:
+            logging.info('Running automatic internal dielectric selection prepass...')
+            prepass_pre, prepass_frames = self._prepare_auto_dielectric_trajectories()
+            logging.info(
+                'Automatic internal dielectric selection will use %d/%d frame(s).',
+                prepass_frames, original_numframes
+            )
+        else:
+            prepass_pre = None
+            prepass_frames = None
+
+        prepass_pre = self.MPI.COMM_WORLD.bcast(prepass_pre, root=0)
+        prepass_frames = self.MPI.COMM_WORLD.bcast(prepass_frames, root=0)
+
+        prepass_input = deepcopy(self.INPUT)
+        prepass_input['gb']['gbrun'] = True
+        prepass_input['gb']['intdiel'] = 5.0
+        prepass_input['pb']['pbrun'] = False
+        prepass_input['gbnsr6']['gbnsr6run'] = False
+        prepass_input['rism']['rismrun'] = False
+        prepass_input['nmode']['nmoderun'] = False
+        prepass_input['general']['qh_entropy'] = 0
+        prepass_input['general']['interaction_entropy'] = 0
+        prepass_input['general']['c2_entropy'] = 0
+        prepass_input['decomp']['decomprun'] = True
+        prepass_input['decomp']['idecomp'] = 2
+        prepass_input['decomp']['dec_verbose'] = 0
+        prepass_input['decomp']['print_res'] = auto['print_res']
+        prepass_input['ala']['alarun'] = False
+        prepass_input['ala']['mutant_only'] = 0
+
+        self.INPUT = prepass_input
+        self.pre = prepass_pre
+        self.numframes = prepass_frames
+        if master:
+            create_inputs(self.INPUT, self.normal_system, self.pre)
+        self.sync_mpi()
+
+        self.load_calc_list()
+        self.stdout.write('\n')
+        self.calc_list.run(rank, self.stdout)
+        self.sync_mpi()
+
+        if master:
+            result = self._select_auto_dielectric_from_prepass()
+            auto.update(result)
+            auto['done'] = True
+            auto['frames'] = prepass_frames
+            auto['total_frames'] = original_numframes
+            self._apply_auto_dielectric_selection(original_input, auto)
+            logging.info(
+                'Automatic internal dielectric selection: selected %.1f from %s predominance '
+                '(nonpolar=%.3f, polar=%.3f, charged=%.3f kcal/mol).',
+                auto['selected'], auto['dominant'], auto['totals']['nonpolar'],
+                auto['totals']['polar'], auto['totals']['charged']
+            )
+            self.INPUT = original_input
+            self.pre = original_pre
+            self.numframes = original_numframes
+            create_inputs(self.INPUT, self.normal_system, self.pre)
+
+        self.INPUT = self.MPI.COMM_WORLD.bcast(original_input if master else None, root=0)
+        self.pre = original_pre
+        self.numframes = original_numframes
+        self.sync_mpi()
+
+    def _prepare_auto_dielectric_trajectories(self):
+        max_frames = self.INPUT['general']['auto_intdiel_frames']
+        if max_frames < 0:
+            GMXMMPBSA_ERROR('auto_intdiel_frames must be >= 0', InputError)
+
+        prepass_pre = f'{self.pre}auto_'
+        trj_sfx = 'nc' if self.INPUT['general']['netcdf'] else 'mdcrd'
+        selected = self._auto_dielectric_selected_frames(max_frames)
+        rank_frames = self._auto_dielectric_rank_frames(selected)
+        prepass_frames = len(selected)
+
+        systems = [
+            ('complex', self.FILES.complex_prmtop),
+            ('receptor', self.FILES.receptor_prmtop),
+            ('ligand', self.FILES.ligand_prmtop),
+        ]
+        for mol, _ in systems:
+            shutil.copyfile(f'{self.pre}dummy{mol}.inpcrd', f'{prepass_pre}dummy{mol}.inpcrd')
+
+        for rank, frames in rank_frames.items():
+            if len(frames) == self._auto_dielectric_rank_count(rank):
+                for mol, _ in systems:
+                    shutil.copyfile(
+                        f'{self.pre}{mol}.{trj_sfx}.{rank}',
+                        f'{prepass_pre}{mol}.{trj_sfx}.{rank}'
+                    )
+                continue
+
+            frame_string = ','.join(map(str, frames))
+            for mol, prmtop in systems:
+                traj = Trajectory(prmtop, f'{self.pre}{mol}.{trj_sfx}.{rank}', self.external_progs['cpptraj'])
+                traj.Setup()
+                traj.Outtraj(
+                    f'{prepass_pre}{mol}.{trj_sfx}.{rank}',
+                    frames=frame_string,
+                    filetype=self.INPUT['general']['netcdf']
+                )
+                traj.Run(f'{prepass_pre}{mol}_sample_cpptraj.{rank}.out')
+
+        return prepass_pre, prepass_frames
+
+    def _auto_dielectric_selected_frames(self, max_frames):
+        if max_frames == 0 or max_frames >= self.numframes:
+            return list(range(1, self.numframes + 1))
+
+        target = max(max_frames, min(self.mpi_size, self.numframes))
+        selected = set()
+
+        for rank in range(self.mpi_size):
+            start, count = self._auto_dielectric_rank_bounds(rank)
+            if count:
+                selected.add(start)
+
+        if target == 1:
+            selected.add(1)
+        else:
+            for i in range(target):
+                frame = round(1 + i * (self.numframes - 1) / (target - 1))
+                selected.add(frame)
+
+        return sorted(selected)
+
+    def _auto_dielectric_rank_frames(self, selected):
+        rank_frames = {rank: [] for rank in range(self.mpi_size)}
+        for frame in selected:
+            for rank in range(self.mpi_size):
+                start, count = self._auto_dielectric_rank_bounds(rank)
+                end = start + count - 1
+                if start <= frame <= end:
+                    rank_frames[rank].append(frame - start + 1)
+                    break
+        return rank_frames
+
+    def _auto_dielectric_rank_count(self, rank):
+        return self._auto_dielectric_rank_bounds(rank)[1]
+
+    def _auto_dielectric_rank_bounds(self, rank):
+        frames_per_rank = self.numframes // self.mpi_size
+        extras = self.numframes - frames_per_rank * self.mpi_size
+        count = frames_per_rank + (1 if rank < extras else 0)
+        start = rank * frames_per_rank + min(rank, extras) + 1
+        return start, count
+
+    def _select_auto_dielectric_from_prepass(self):
+        from GMXMMPBSA.amber_outputs import DecompOut, DecompBinding
+
+        print_res = self._res2print()
+        com_list = {}
+        rec_list = {}
+        lig_list = {}
+        for res in self.resl:
+            if res.index in print_res:
+                com_list[res.index] = res
+                if res.is_receptor():
+                    rec_list[res.id_index] = res
+                else:
+                    lig_list[res.id_index] = res
+
+        complex_decomp = DecompOut('complex')
+        complex_decomp.parse_from_file(
+            f'{self.pre}complex_gb.mdout', com_list, self.INPUT, self.INPUT['gb']['surften'],
+            self.mpi_size, self.numframes
+        )
+        receptor_decomp = DecompOut('receptor')
+        receptor_decomp.parse_from_file(
+            f'{self.pre}receptor_gb.mdout', rec_list, self.INPUT, self.INPUT['gb']['surften'],
+            self.mpi_size, self.numframes
+        )
+        ligand_decomp = DecompOut('ligand')
+        ligand_decomp.parse_from_file(
+            f'{self.pre}ligand_gb.mdout', lig_list, self.INPUT, self.INPUT['gb']['surften'],
+            self.mpi_size, self.numframes
+        )
+        delta = DecompBinding(complex_decomp, receptor_decomp, ligand_decomp, self.INPUT)
+        return select_dielectric_from_decomp(delta)
+
+    def _apply_auto_dielectric_selection(self, INPUT, auto):
+        active_fields = [
+            ('gb', 'gbrun', 'intdiel'),
+            ('pb', 'pbrun', 'indi'),
+            ('gbnsr6', 'gbnsr6run', 'epsin'),
+        ]
+        requested = set(tuple(field) for field in auto['requested'])
+        for nml, trigger, key in active_fields:
+            if not INPUT[nml][trigger]:
+                continue
+            if (nml, key) in requested or INPUT[nml][key] == 1.0:
+                INPUT[nml][key] = auto['selected']
 
     def loadcheck_prmtops(self):
         """ Loads the topology files and checks their consistency """
@@ -932,8 +1143,12 @@ class MMPBSA_App(object):
             self.INPUT['general']['netcdf'] = 'netcdf'
             self.trjsuffix = 'nc'
 
+        prepare_auto_dielectric(self.INPUT)
+        auto_decomp_only = self.INPUT.get('auto_dielectric') and not \
+            self.INPUT['auto_dielectric']['decomp']['decomprun']
+
         # Set default GBSA for Decomp
-        if self.INPUT['decomp']['decomprun']:
+        if self.INPUT['decomp']['decomprun'] and not auto_decomp_only:
             self.INPUT['gb']['gbsa'] = 2
 
         # Stability: no terms cancel, so print them all
@@ -961,6 +1176,13 @@ class MMPBSA_App(object):
         # check force fields
 
         logging.info(f'Checking {self.FILES.input_file} input file...')
+
+        if INPUT.get('auto_dielectric') and self.FILES.stability:
+            GMXMMPBSA_ERROR('Automatic internal dielectric selection requires a binding calculation.', InputError)
+        auto_decomp_only = INPUT.get('auto_dielectric') and not INPUT['auto_dielectric']['decomp']['decomprun']
+        user_decomp_run = INPUT['decomp']['decomprun'] and not auto_decomp_only
+        if INPUT['general']['auto_intdiel_frames'] < 0:
+            GMXMMPBSA_ERROR('auto_intdiel_frames must be >= 0', InputError)
 
         if self.FILES.ligand_mol2:
             if ('leaprc.gaff' in self.INPUT['general']['forcefields'] or
@@ -1051,7 +1273,7 @@ class MMPBSA_App(object):
                                 '1.0e-12 kcal/mol')
             if INPUT['gb']['writepdb']:
                 logging.info('Writing qmmm_region.pdb PDB file of the selected QM region...')
-            if INPUT['decomp']['decomprun']:
+            if user_decomp_run:
                 GMXMMPBSA_ERROR('QM/MM and decomposition are incompatible!', InputError)
             if INPUT['gb']['verbosity'] not in [0, 1, 2, 3, 4, 5]:
                 GMXMMPBSA_ERROR('VERBOSITY must be 0, 1, 2, 3, 4 or 5!', InputError)
@@ -1110,9 +1332,9 @@ class MMPBSA_App(object):
 
         if INPUT['decomp']['idecomp'] not in [0, 1, 2, 3, 4]:
             GMXMMPBSA_ERROR('IDECOMP (%s) must be 1, 2, 3, or 4!' % INPUT['decomp']['idecomp'], InputError)
-        if INPUT['decomp']['idecomp'] != 0 and INPUT['pb']['sander_apbs'] == 1:
+        if user_decomp_run and INPUT['decomp']['idecomp'] != 0 and INPUT['pb']['sander_apbs'] == 1:
             GMXMMPBSA_ERROR('IDECOMP cannot be used with sander.APBS!', InputError)
-        if INPUT['decomp']['decomprun'] and INPUT['decomp']['idecomp'] == 0:
+        if user_decomp_run and INPUT['decomp']['idecomp'] == 0:
             GMXMMPBSA_ERROR('IDECOMP cannot be 0 for Decomposition analysis!', InputError)
 
         if INPUT['ala']['alarun'] and INPUT['general']['netcdf'] != '':
@@ -1165,11 +1387,11 @@ class MMPBSA_App(object):
         if INPUT['gb']['gbrun'] and INPUT['general']['PBRadii'] == 7:
             GMXMMPBSA_ERROR('PBRadii = 7 (charmm_radii) is compatible only with &pb!', InputError)
 
-        if INPUT['decomp']['decomprun'] and \
+        if user_decomp_run and \
                 not (INPUT['gb']['gbrun'] or INPUT['pb']['pbrun'] or INPUT['gbnsr6']['gbnsr6run']):
             GMXMMPBSA_ERROR('DECOMP must be run with either GB or PB!', InputError)
 
-        if '-deo' in sys.argv and not INPUT['decomp']['decomprun']:
+        if '-deo' in sys.argv and not user_decomp_run:
             logging.warning("&decomp namelist has not been defined in the input file. Ignoring '-deo' flag... ")
 
         # fixed the error when try to open gmx_MMPBSA_ana in the issue

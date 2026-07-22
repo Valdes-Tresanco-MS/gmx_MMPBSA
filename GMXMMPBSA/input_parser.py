@@ -100,7 +100,17 @@ class Variable(object):
             data = value.replace('"', '').replace("'", '')
             self.value = [self.int_datatype(x.strip()) for x in re.split(';\s*|,\s*', data)]
         else:
-            self.value = self.datatype(value)
+            try:
+                self.value = self.datatype(value)
+            except ValueError:
+                clean_value = value.replace('"', '').replace("'", '').strip().lower()
+                if self.datatype is float and self.name in ['intdiel', 'indi', 'epsin'] and \
+                        clean_value in ['calculate', 'auto']:
+                    self.value = clean_value
+                else:
+                    if self.datatype is float and self.name in ['intdiel', 'indi', 'epsin']:
+                        raise InputError(f"{self.name} must be a number or one of 'calculate', 'auto'")
+                    raise
 
 
 class Namelist(object):
@@ -424,6 +434,7 @@ input_file.addNamelist('general', 'general',
                            ['assign_chainID', int, 0, 'Assign chains ID'],
                            ['exp_ki', list, [0.0], 'Experimental Ki in nM', float],
                            ['full_traj', int, 0, 'Print a full traj. AND the thread trajectories'],
+                           ['auto_intdiel_frames', int, 20, 'Maximum frames for automatic dielectric selection'],
                            ['gmx_path', str, '', 'Force to use this path to get GROMACS executable'],
                            ['keep_files', int, 2, 'How many files to keep after successful completion'],
 

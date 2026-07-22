@@ -30,8 +30,9 @@ nl_variables = {
     'sys_name': 'general', 'startframe': 'general', 'endframe': 'general', 'interval': 'general',
     'forcefields': 'general', 'ions_parameters': 'general', 'PBRadii': 'general', 'temperature': 'general',
     'qh_entropy': 'general', 'interaction_entropy': 'general', 'ie_segment': 'general', 'c2_entropy': 'general',
-    'assign_chainID': 'general', 'exp_ki': 'general', 'full_traj': 'general', 'gmx_path': 'general',
-    'keep_files': 'general', 'netcdf': 'general', 'solvated_trajectory': 'general', 'verbose': 'general',
+    'assign_chainID': 'general', 'exp_ki': 'general', 'full_traj': 'general', 'auto_intdiel_frames': 'general',
+    'gmx_path': 'general', 'keep_files': 'general', 'netcdf': 'general', 'solvated_trajectory': 'general',
+    'verbose': 'general',
     'receptor_mask': 'general', 'ligand_mask': 'general',
     'gbrun': 'gb', 'igb': 'gb', 'intdiel': 'gb', 'extdiel': 'gb', 'saltcon': 'gb', 'surften': 'gb', 'surfoff': 'gb',
     'molsurf': 'gb', 'msoffset': 'gb', 'probe': 'gb', 'ifqnt': 'gb', 'qm_theory': 'gb', 'qm_residues': 'gb',
@@ -253,6 +254,9 @@ def _determine_type(thing):
 
     # Check for list
     if thing.startswith('[') and thing.endswith(']'):
+        return eval(thing)
+
+    if thing.startswith('{') and thing.endswith('}'):
         return eval(thing)
 
     # No idea what else it could be! Return string, but warn

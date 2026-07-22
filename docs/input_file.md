@@ -486,6 +486,11 @@ will be omitted in the correlation analysis
     * 0: Print only thread trajectories in *.mdcrd format
     * 1: Print a full traj and the thread trajectories in *.mdcrd format
 
+`auto_intdiel_frames` (Default = 20)
+:   Maximum number of evenly sampled frames used by the automatic internal dielectric selection prepass. This option is
+    used only when `intdiel`, `indi`, or `epsin` is set to `calculate` or `auto`. Set to `0` to use all frames selected
+    by `startframe`, `endframe`, and `interval`.
+
 `gmx_path` 
 :   Define a path to search for GROMACS executables. This path takes precedence over the path defined
 in the PATH variable. In this path the following executables will be searched: `gmx`, `gmx_mpi`, `gmx_d`, or
@@ -608,7 +613,10 @@ within the implicit solvent model (see [§4.2](https://ambermd.org/doc12/Amber21
     * 3: Use elliptic integral (numerical)
 
 `intdiel` (Default = 1.0)
-:   Define Internal dielectric constant.
+:   Define Internal dielectric constant. Set to `calculate` or `auto` to run an automatic WT GB per-residue
+    decomposition prepass at `intdiel = 5` and select the final value from interface residue energetic predominance:
+    hydrophobic -> 1, polar -> 3, charged -> 5. Ties use the highest dielectric among the tied classes. The prepass
+    uses at most `auto_intdiel_frames` frames by default.
 
 `extdiel` (Default = 78.5)
 :   Define External dielectric constant.
@@ -834,7 +842,8 @@ on the very first step to a file named qmmm_region.pdb.
 #### **Basic input options**
 
 `epsin` (Default = 1.0)
-:   Dielectric constant of the solute region.
+:   Dielectric constant of the solute region. Set to `calculate` or `auto` to use the automatic dielectric selector
+    described for `intdiel`.
 
 `epsout` (Default = 78.5)
 :   Implicit solvent dielectric constant for the solvent.
@@ -993,7 +1002,8 @@ method, while a level-set based algebraic method is used when `ipb > 2`.
 #### **Options to define the physical constants**
 
 `indi` (Default = 1.0)
-:   Internal dielectric constant. This corresponds to `epsin` in [pbsa][5].
+:   Internal dielectric constant. This corresponds to `epsin` in [pbsa][5]. Set to `calculate` or `auto` to use the
+    automatic dielectric selector described for `intdiel`.
 
 `exdi` (Default = 80.0)
 :   External dielectric constant. This corresponds to `epsout` in [pbsa][5].

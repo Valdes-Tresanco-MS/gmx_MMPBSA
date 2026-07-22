@@ -36,6 +36,7 @@ from pathlib import Path
 import logging
 import string
 from parmed.tools.changeradii import ChRad
+from GMXMMPBSA.auto_dielectric import POSITIVE_AA, NEGATIVE_AA, NONPOLAR_AA, POLAR_AA
 
 if platform.system() == "Darwin":
     echo_command = ['echo']
@@ -48,10 +49,10 @@ cys_name = ['CYS', 'CYX', 'CYM']
 lys = ['LYS', 'LYN']
 asp = ['ASP', 'ASH']
 glu = ['GLU', 'GLH']
-positive_aa = ['LYS', 'ARG', 'HIP']
-negative_aa = ['GLU', 'ASP']
-nonpolar_aa = ['PHE', 'TRP', 'VAL', 'ILE', 'LEU', 'MET', 'PRO', 'CYX', 'ALA', 'GLY']
-polar_aa = ['TYR', 'SER', 'THR', 'CYM', 'CYS', 'HIE', 'HID', 'GLN', 'ASN', 'ASH', 'GLH', 'LYN']
+positive_aa = POSITIVE_AA
+negative_aa = NEGATIVE_AA
+nonpolar_aa = NONPOLAR_AA
+polar_aa = POLAR_AA
 
 PBRadii = {1: 'bondi', 2: 'mbondi', 3: 'mbondi2', 4: 'mbondi3', 5: 'mbondi_pb2', 6: 'mbondi_pb3', 7: 'charmm_radii'}
 GB_RADII_RECOMMENDATIONS = {1: 'mbondi', 2: 'mbondi2', 5: 'mbondi2', 7: 'bondi', 8: 'mbondi3'}
@@ -1063,7 +1064,9 @@ class CheckAmberTop:
                         setattr(at, p, h_atoms_prop[ff_rep]['ALA'][p])
 
         # change intdiel if cas_intdiel was defined before end the mutation process
-        if self.INPUT['ala']['cas_intdiel']:
+        if self.INPUT['ala']['cas_intdiel'] and self.INPUT.get('auto_dielectric'):
+            logging.info('Automatic internal dielectric selection is active. Ignoring cas_intdiel...')
+        if self.INPUT['ala']['cas_intdiel'] and not self.INPUT.get('auto_dielectric'):
             if self.INPUT['gb']['gbrun']:
                 if self.INPUT['gb']['intdiel'] != 1.0:
                     logging.warning('Both cas_intdiel and intdiel were defined. The dielectric constants associated '
