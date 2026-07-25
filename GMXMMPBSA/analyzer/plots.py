@@ -249,6 +249,28 @@ class LineChart(ChartsBase):
 
 
 class BarChart(ChartsBase):
+    def _barplot(self, ax, columns, averages, errors, options, palette=None):
+        columns = list(columns)
+        x = np.arange(len(columns))
+        averages = np.asarray(averages, dtype=float)
+        errors = np.asarray(errors, dtype=float)
+        if errors.shape != averages.shape:
+            errors = np.ravel(errors)
+        if errors.shape != averages.shape:
+            errors = np.resize(errors, averages.shape)
+        colors = palette or [rgb2rgbf(options[('Bar Plot', 'color')])] * len(columns)
+        ax.bar(
+            x, averages, yerr=errors, color=colors,
+            error_kw=dict(
+                ecolor=rgb2rgbf(options[('Bar Plot', 'error-line', 'color')]),
+                capsize=options[('Bar Plot', 'error-line', 'cap-size')],
+                elinewidth=options[('Bar Plot', 'error-line', 'width')]
+            )
+        )
+        ax.set_xticks(x)
+        ax.set_xticklabels(columns)
+        return ax
+
     def _label_bars(self, ax, options):
         labels = []
         for container in ax.containers:
@@ -279,24 +301,17 @@ class BarChart(ChartsBase):
         if options.get('groups') and options[('Bar Plot', 'subplot-components')]:
             self.axes = self.fig.subplots(1, len(options['groups']), sharey=True,
                                           gridspec_kw={'width_ratios': [len(x) for x in options['groups'].values()]})
+            self.axes = np.atleast_1d(self.axes)
             if options[('Bar Plot', 'axes', 'y-inverted')]:
                 self.axes[0].invert_yaxis()
             s = 0
             for c, g in enumerate(options['groups']):
                 df = self.data[options['groups'][g]]
-                bar_plot_ax = sns.barplot(x=df.columns,
-                                          y=df.loc['Average'].values,
-                                          yerr=df.loc[options[('Bar Plot', 'error-line', 'representation')]].values,
-                                          palette=palette[s: s + len(options['groups'][g])] if palette else palette,
-                                          hue=df.columns,
-                                          color=rgb2rgbf(options[('Bar Plot', 'color')]),
-                                          error_kw=dict(
-                                              ecolor=rgb2rgbf(options[('Bar Plot', 'error-line', 'color')]),
-                                              capsize=options[('Bar Plot', 'error-line', 'cap-size')],
-                                              elinewidth=options[('Bar Plot', 'error-line', 'width')]
-                                          ),
-                                          ax=self.axes[c]
-                                          )
+                bar_plot_ax = self._barplot(
+                    self.axes[c], df.columns, df.loc['Average'].values,
+                    df.loc[options[('Bar Plot', 'error-line', 'representation')]].values,
+                    options, palette[s: s + len(options['groups'][g])] if palette else palette
+                )
                 s += len(options['groups'][g])
                 if options[('Bar Plot', 'scale-yaxis')]: # and options['scalable']:
                     bar_plot_ax.set_yscale('symlog')
@@ -306,8 +321,10 @@ class BarChart(ChartsBase):
                 self.setup_text(self.axes[c], options, key='Bar Plot', title=g, ylabel=ylabel)
                 setattr(self, f'cursor{c}', Cursor(bar_plot_ax, useblit=True, color='black', linewidth=0.5, ls='--'))
                 bar_plot_ax.set_xticklabels(self._set_xticks(bar_plot_ax, options[('Bar Plot', 'remove-molid')]))
-                self.axes[c].legend(prop={'size': options[('Bar Plot', 'fontsize', 'legend')],
-                                          'family': 'monospace'})
+                handles, labels = self.axes[c].get_legend_handles_labels()
+                if handles:
+                    self.axes[c].legend(handles, labels, prop={'size': options[('Bar Plot', 'fontsize', 'legend')],
+                                                               'family': 'monospace'})
         else:
             self.axes = self.fig.subplots(1, 1)
             if options.get('iec2'):
@@ -316,18 +333,11 @@ class BarChart(ChartsBase):
                 nr_sigma = rgb2rgbf(options[('Bar Plot', 'IE/C2 Entropy', 'sigma-color', 'non-reliable')])
                 palette = [ie_color, r_sigma if self.data['sigma'].loc[['Average']].values[0] < 3.6 else nr_sigma]
 
-            bar_plot_ax = sns.barplot(x=self.data.columns,
-                                      y=self.data.loc['Average'],
-                                      yerr=self.data.loc[options[('Bar Plot', 'error-line', 'representation')]],
-                                      error_kw=dict(
-                                          ecolor=rgb2rgbf(options[('Bar Plot', 'error-line', 'color')]),
-                                          capsize=options[('Bar Plot', 'error-line', 'cap-size')],
-                                          elinewidth=options[('Bar Plot', 'error-line', 'width')]
-                                      ),
-                                      ax=self.axes,
-                                      palette=palette,
-                                      color=rgb2rgbf(options[('Bar Plot', 'color')]),
-                                      )
+            bar_plot_ax = self._barplot(
+                self.axes, self.data.columns, self.data.loc['Average'].values,
+                self.data.loc[options[('Bar Plot', 'error-line', 'representation')]].values,
+                options, palette
+            )
             if options[('Bar Plot', 'axes', 'y-inverted')] and not options.get('iec2'):
                 bar_plot_ax.invert_yaxis()
             if options[('Bar Plot', 'bar-label', 'show')]:
