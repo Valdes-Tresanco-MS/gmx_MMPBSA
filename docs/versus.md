@@ -42,7 +42,7 @@ This comparison is based on the documentation of the different programs
 | Feature                   |        [g_mmpbsa][1]         |               [GMXPBSA 2.1][2]               |              MMPBSA.py [^1]               |              [gmx_MMPBSA][3]              |
 |:--------------------------|:----------------------------:|:--------------------------------------------:|:-----------------------------------------:|:-----------------------------------------:|
 | **GROMACS Version**       |   4.x, 5.x and 2016+ [^6]    |           4.x, 5.x and 20xx.x [^7]           |                    ---                    |            4.x, 5.x and 20xx.x            |
-| **Dependencies**          | APBS (1.2.x, 1.3.x or 1.4.x) |              APBS (1.x.x) [^8]               |              AmberTools20/21              |           AmberTools20/21 [^9]            |
+| **Dependencies**          | APBS (1.2.x, 1.3.x or 1.4.x) |              APBS (1.x.x) [^8]               |              AmberTools                   |             AmberTools [^9]               |
 | **Parallel computation**  |       Depends on APBS        | Locally using APBS or in HPC divided in jobs | :material-check-bold:{.scale_icon_medium} | :material-check-bold:{.scale_icon_medium} |
 | **Steps for:**            |                              |                                              |                                           |                                           |
 | * Calculation and Summary |           Multiple           |                   Multiple                   |                    One                    |                    One                    |
@@ -61,10 +61,11 @@ with versions higher than 2016.x one, but still with limitations
   [^7]: It is not clear whether it does support GROMACS versions 20xx.x or not, but we assume that it does since 
 it is script-based
   [^8]: It is not clear whether it does support APBS versions 3.x.x
-  [^9]: gmx_MMPBSA is compatible with AmberTools20, AmberTools21, and AmberTools22
+  [^9]: The recommended conda dependency boundary is AmberTools `>=24.8,<27`; older compatible AmberTools
+versions may also work when their Python and compiled dependency stack is consistent.
   [^0]: gmx_MMPBSA supports Linear and Non-Linear PB equations. [MMPBSA.py][4] on the other hand, requires the user to 
 modify manually the *.mdin input files 
-  
+
 
   [1]: https://github.com/RashmiKumari/g_mmpbsa
   [2]: https://github.com/aspitaleri/gmxpbsa
@@ -72,4 +73,3 @@ modify manually the *.mdin input files
   [4]: https://ambermd.org/doc12/Amber21.pdf#chapter.36
   [5]: https://github.com/williamdlees/AmberUtils
 
-  

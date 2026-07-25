@@ -5,10 +5,12 @@ title: Installation
 # Installing gmx_MMPBSA
 
 ## Requirements
-`gmx_MMPBSA` requires **[GROMACS](https://manual.gromacs.org/) (series `4.x.x` or `5.x.x` or `20xx.x`)** and 
-**[AmberTools20 or 21](https://ambermd.org/AmberTools.php)** to be installed in your machine with **Python3**.
-`gmx_MMPBSA` has been tested with GROMACS `4.6.7`, `5.1.2`, `2018.3`, `2020.4` and `2022.4`, although it should run 
-smoothly with any GROMACS present in the `PATH` and that is compatible with the files you are using.
+`gmx_MMPBSA` requires **[GROMACS](https://manual.gromacs.org/)** and
+**[AmberTools](https://ambermd.org/AmberTools.php)** to be installed in your machine with **Python3**.
+For conda installations, Python `>=3.11,<3.13`, AmberTools `>=24.8,<27`, and GROMACS `>=2022,<2027`
+are the recommended dependency boundaries. This keeps the environment compatible with the tested Python 3.12
+stack without pinning users to one AmberTools or GROMACS release. `gmx_MMPBSA` supports a broad range of
+GROMACS versions and should run with any GROMACS in the `PATH` that is compatible with the files you are using.
 
 ## Installing gmx_MMPBSA v1.5.x
 
@@ -76,20 +78,20 @@ errors are more frequent.
             $ conda update conda
             
             // Create a new environment and activate it
-            $ conda create -n gmxMMPBSA python=3.11 -y -q 
+            $ conda create -n gmxMMPBSA python=3.12 -y -q
             $ conda activate gmxMMPBSA
             
             // Install mpi4py and AmberTools
-            $ conda install -c conda-forge "mpi4py=4.0.1" "ambertools<24" -y -q
+            $ conda install -c conda-forge "mpi4py>=4.0.1,<5" "ambertools>=24.8,<27" -y -q
 
             // Install dependencies for ploting
-            $ conda install -c conda-forge "numpy=1.26.4" "matplotlib=3.7.3" "scipy=1.14.1" "pandas=1.5.3" "seaborn=0.11.2" -y -q
+            $ conda install -c conda-forge "numpy>=1.26.4,<2" "matplotlib>=3.8,<4" "scipy>=1.14.1,<2" "pandas>=2.2,<3" "seaborn>=0.13,<0.14" -y -q
 
             // Install PyQt6 required to use the GUI analyzer tool (gmx_MMPBSA_ana). Not needed for HPC
-            $ python -m pip install "pyqt6==6.7.1"    
+            $ conda install -c conda-forge pyqt6 -y -q
 
             // (Optional) Install GROMACS
-            $ conda install -c conda-forge "gromacs<2026" pocl -y -q
+            $ conda install -c conda-forge "gromacs>=2022,<2027" pocl -y -q
             ```
                 
             </div>
@@ -98,13 +100,13 @@ errors are more frequent.
 
                 ``` bash 
                 conda update conda
-                conda create -n gmxMMPBSA python=3.11 -y -q                                      # (1)
+                conda create -n gmxMMPBSA python=3.12 -y -q                                      # (1)
                 conda activate gmxMMPBSA                                                        # (2)
-                conda install -c conda-forge "mpi4py=4.0.1" "ambertools<24" -y -q               # (3)
-                conda install -c conda-forge "numpy=1.26.4" "matplotlib=3.7.3" "scipy=1.14.1" "pandas=1.5.3" "seaborn=0.11.2" -y -q # (4)
-                python -m pip install "pyqt6==6.7.1"                                            # (5)
+                conda install -c conda-forge "mpi4py>=4.0.1,<5" "ambertools>=24.8,<27" -y -q   # (3)
+                conda install -c conda-forge "numpy>=1.26.4,<2" "matplotlib>=3.8,<4" "scipy>=1.14.1,<2" "pandas>=2.2,<3" "seaborn>=0.13,<0.14" -y -q # (4)
+                conda install -c conda-forge pyqt6 -y -q                                        # (5)
                 # Optional
-                conda install -c conda-forge "gromacs<2026" pocl -y -q                         # (6)
+                conda install -c conda-forge "gromacs>=2022,<2027" pocl -y -q                  # (6)
                
                 ```
             

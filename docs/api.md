@@ -348,5 +348,5 @@ python3 -m py_compile GMXMMPBSA/API.py
 ```
 
 Import and fixture-loading smoke tests should be run in the supported Python
-3.11 environment with the project dependencies installed. Full API regression
+3.11 or 3.12 environment with the project dependencies installed. Full API regression
 coverage is deferred until the public interface is reviewed.

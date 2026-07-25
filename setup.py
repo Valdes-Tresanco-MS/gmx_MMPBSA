@@ -23,8 +23,8 @@ import sys
 with open("README.md", "r") as f:
     LONG_DESCRIPTION = f.read()
 
-if sys.version_info[:2] != (3, 11):
-    raise RuntimeError("gmx_MMPBSA requires python == 3.11")
+if sys.version_info < (3, 11) or sys.version_info >= (3, 13):
+    raise RuntimeError("gmx_MMPBSA requires python >=3.11,<3.13")
 
 setup(
     name='gmx_MMPBSA',
@@ -43,15 +43,16 @@ setup(
     long_description=LONG_DESCRIPTION,
     long_description_content_type='text/markdown',
     keywords=['gmx_MMPBSA', 'MMPBSA', 'MMGBSA', 'GROMACS', 'AmberTools'],
-    # Compatibility smoke tests with gmx_MMPBSA_test passed using newer
-    # pandas/matplotlib/seaborn combinations installed via conda and this
-    # package installed with --no-deps. Pins are kept unchanged here until
-    # dependency ranges are formally updated.
-    install_requires=['numpy==1.26.4', 'pandas==1.5.3',
-                      'matplotlib==3.7.3', 'seaborn==0.11.2',
-                      'scipy==1.14.1',
-                      'mpi4py==4.0.1',
-                      'parmed>=4.2.2',
+    # Dependency ranges allow the Python 3.12 stack required by newer GROMACS
+    # packages while preserving Python 3.11 support.
+    python_requires='>=3.11,<3.13',
+    install_requires=['numpy>=1.26.4,<2',
+                      'pandas>=2.2.0,<3',
+                      'matplotlib>=3.8.0,<4',
+                      'seaborn>=0.13.0,<0.14',
+                      'scipy>=1.14.1,<2',
+                      'mpi4py>=4.0.1,<5',
+                      'parmed>=4.2.2,<5',
                       'tqdm'],
     entry_points={
         "console_scripts": [

@@ -36,11 +36,14 @@ title: Changelog
 
 #### Changes
 - Updated environment dependencies to compatible versions of Python, AmberTools, ParmEd, and GROMACS
+- Set conda dependency recommendations to bounded AmberTools and GROMACS series ranges instead of exact pins
+- Expanded Python 3.12 conda smoke coverage through GROMACS 2022.4, 2023.4, 2024.5, 2025.4, and 2026.0
 - Updated installation instructions for conda and pip to reflect version changes
 - Added setuptools installation in GitHub workflow
 - Updated Python version to the latest stable version in GitHub workflow
 - Updated Python version requirement check in setup.py
-- Restricted Python version requirement to 3.11
+- Restricted Python version requirement to 3.11 and 3.12
+- Added automatic ignoring of GROMACS CMAP terms during topology conversion
 - Updated README.md
 - Updated news.json and changelog.md
 
