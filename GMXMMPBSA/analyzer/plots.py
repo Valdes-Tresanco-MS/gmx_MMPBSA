@@ -45,16 +45,52 @@ from scipy.stats import linregress, pearsonr, spearmanr
 
 # sns.set_theme()
 from GMXMMPBSA.analyzer.chartsettings import Palettes
-from GMXMMPBSA.analyzer.style import logo
+from GMXMMPBSA.analyzer.style import logo, polish_table, polish_toolbar, polish_tool_button
 from GMXMMPBSA.analyzer.utils import bar_label
 
 plt.rcParams["figure.autolayout"] = True
+
+PLOT_THEME_RC = {
+    'axes.facecolor': '#f6f7fb',
+    'axes.edgecolor': '#c7ced8',
+    'axes.grid': True,
+    'grid.color': '#ffffff',
+    'grid.linewidth': 0.8,
+    'grid.alpha': 0.85,
+    'axes.linewidth': 0.8,
+    'xtick.color': '#202733',
+    'ytick.color': '#202733',
+    'axes.labelcolor': '#202733',
+}
 
 import os
 
 
 def rgb2rgbf(color):
     return [x / 255 for x in color]
+
+
+def place_subwindow(subwindow, default_size):
+    if getattr(subwindow, '_placed_once', False):
+        return
+    mdi = subwindow.mdiArea()
+    if not mdi:
+        return
+
+    viewport = mdi.viewport().rect()
+    width = min(default_size.width(), max(420, viewport.width() - 80))
+    height = min(default_size.height(), max(360, viewport.height() - 80))
+    visible_windows = [w for w in mdi.subWindowList() if w is not subwindow and w.isVisible()]
+    offset = (len(visible_windows) % 7) * 28
+    x = max(12, (viewport.width() - width) // 2 + offset)
+    y = max(12, (viewport.height() - height) // 2 + offset)
+    if x + width > viewport.width() - 12:
+        x = max(12, viewport.width() - width - 12)
+    if y + height > viewport.height() - 12:
+        y = max(12, viewport.height() - height - 12)
+
+    subwindow.setGeometry(x, y, width, height)
+    subwindow._placed_once = True
 
 
 class NavigationToolbar(NavigationToolbar2QT):
@@ -122,13 +158,16 @@ class NavigationToolbar(NavigationToolbar2QT):
 class ChartsBase(QMdiSubWindow):
     def __init__(self, button: QToolButton, options: dict = None, item_parent=None):
         super(ChartsBase, self).__init__()
-        self.setMinimumSize(400, 400)
+        self.setObjectName('ChartSubWindow')
+        self.setMinimumSize(520, 420)
+        self._placed_once = False
         self.options = options
         self.item_parent = item_parent
         self.setWindowIcon(QIcon(logo))
 
         self.mainwidgetmdi = QMainWindow()  # must be QMainWindow to handle the toolbar
-        sns.set_theme(style=self.options[('General', 'theme')])
+        self.mainwidgetmdi.setObjectName('ChartWindow')
+        sns.set_theme(style=self.options[('General', 'theme')], rc=PLOT_THEME_RC)
         self.plot = None
         self.frange = []  # Frames range with which it was created
         self.button = button
@@ -140,7 +179,15 @@ class ChartsBase(QMdiSubWindow):
         fig = fig or Figure(dpi=self.options[('General', 'figure-format', 'dpi-plot')])
         self.figure_canvas = FigureCanvas(fig)
         self.fig = self.figure_canvas.figure
-        self.mainwidgetmdi.setCentralWidget(self.figure_canvas)
+
+        self.canvas_panel = QWidget(self.mainwidgetmdi)
+        self.canvas_panel.setObjectName('ChartCanvasPanel')
+        self.canvas_layout = QVBoxLayout(self.canvas_panel)
+        self.canvas_layout.setContentsMargins(10, 10, 10, 10)
+        self.canvas_layout.setSpacing(0)
+        self.canvas_layout.addWidget(self.figure_canvas)
+        self.mainwidgetmdi.setCentralWidget(self.canvas_panel)
+
         # similar to figure canvas
         self.mpl_toolbar = NavigationToolbar(self.figure_canvas, self)
         self.mpl_toolbar.setVisible(self.options['General', 'toolbar'])
@@ -149,12 +196,27 @@ class ChartsBase(QMdiSubWindow):
                                          'filename': self.options['subtitle']})
         self.mainwidgetmdi.addToolBar(Qt.ToolBarArea.BottomToolBarArea, self.mpl_toolbar)
 
-        self.fbtn = QPushButton(self.style().standardIcon(QStyle.StandardPixmap.SP_FileDialogDetailedView), '',
-                                self.figure_canvas)
-        self.fbtn.setToolTip('Show or Hide the Navigation Toolbar')
-        self.fbtn.toggled.connect(self.mpl_toolbar.setVisible)
+        self.chart_control_bar = QToolBar(self.mainwidgetmdi)
+        self.chart_control_bar.setObjectName('ChartControlBar')
+        self.chart_control_bar.setMovable(False)
+        self.chart_control_bar.setFloatable(False)
+        polish_toolbar(self.chart_control_bar)
+        self.fbtn = QToolButton(self.chart_control_bar)
+        self.fbtn.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_FileDialogDetailedView))
+        self.fbtn.setToolTip('Show or hide the navigation toolbar')
         self.fbtn.setCheckable(True)
-        self.fbtn.setChecked(False)
+        self.fbtn.toggled.connect(self.mpl_toolbar.setVisible)
+        self.fbtn.setChecked(self.options['General', 'toolbar'])
+        polish_tool_button(self.fbtn)
+        spacer = QWidget(self.chart_control_bar)
+        spacer.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+        self.chart_control_bar.addWidget(spacer)
+        self.chart_control_bar.addWidget(self.fbtn)
+        self.mainwidgetmdi.addToolBar(Qt.ToolBarArea.TopToolBarArea, self.chart_control_bar)
+
+    def showEvent(self, event):
+        super(ChartsBase, self).showEvent(event)
+        place_subwindow(self, QSize(760, 540))
 
     def draw(self):
         self.fig.tight_layout()
@@ -768,8 +830,12 @@ class RegChart(ChartsBase):
 class OutputFiles(QMdiSubWindow):
     def __init__(self, text, button):
         super(OutputFiles, self).__init__()
-        self.setMinimumSize(400, 400)
+        self.setObjectName('OutputSubWindow')
+        self.setMinimumSize(560, 420)
+        self._placed_once = False
+        self.setWindowTitle('Output file')
         self.textedit = QTextEdit(self)
+        self.textedit.setObjectName('AnalyzerTextOutput')
         self.textedit.setReadOnly(True)
         self.setWidget(self.textedit)
 
@@ -783,15 +849,23 @@ class OutputFiles(QMdiSubWindow):
     def closeEvent(self, closeEvent: QCloseEvent) -> None:
         self.button.setChecked(False)
 
+    def showEvent(self, event):
+        super(OutputFiles, self).showEvent(event)
+        place_subwindow(self, QSize(760, 520))
+
 
 class Tables(QMdiSubWindow):
     def __init__(self, df: pd.DataFrame, button: QToolButton, options: dict = None, summary=False):
         super(Tables, self).__init__()
-        self.setMinimumSize(400, 400)
+        self.setObjectName('TableSubWindow')
+        self.setMinimumSize(560, 420)
+        self._placed_once = False
         self.container = QWidget()
+        self.container.setObjectName('AnalyzerTablePanel')
         self.setWidget(self.container)
         self.container_layout = QVBoxLayout(self.container)
-        self.container_layout.setContentsMargins(0, 0, 0, 0)
+        self.container_layout.setContentsMargins(8, 8, 8, 8)
+        self.container_layout.setSpacing(8)
         self.item_parent = None
         self.options = options
         self.setWindowTitle(self.options['table_name'])
@@ -799,6 +873,7 @@ class Tables(QMdiSubWindow):
         self.button = button
 
         self.table = QTableWidget(self)
+        polish_table(self.table)
         self.container_layout.addWidget(self.table)
         self._df = df.round(2)
 
@@ -853,6 +928,7 @@ class Tables(QMdiSubWindow):
         self.save_format.addItem('*.csv')
         # self.save_format.addItem('*.xlsx')
         self.save_layout = QHBoxLayout()
+        self.save_layout.setContentsMargins(0, 0, 0, 0)
         self.save_layout.addStretch(10)
         self.save_layout.addWidget(self.save_format)
         self.save_layout.addWidget(self.save_btn)
@@ -876,6 +952,10 @@ class Tables(QMdiSubWindow):
             self._df.to_csv(fileName)
         else:
             self._df.to_excel(fileName)
+
+    def showEvent(self, event):
+        super(Tables, self).showEvent(event)
+        place_subwindow(self, QSize(780, 520))
 
     def eventFilter(self, source, event):
         if (event.type() == QEvent.Type.KeyPress and event.matches(QKeySequence.StandardKey.Copy)):
