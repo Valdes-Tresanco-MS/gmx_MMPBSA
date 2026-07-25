@@ -23,10 +23,10 @@ Generate Amber topology files from GROMACS files
 import os
 import platform
 import textwrap
-import tempfile
 
 import parmed
 from GMXMMPBSA.exceptions import *
+from GMXMMPBSA.topology_preprocess import GromacsTopologyPreprocessor
 from GMXMMPBSA.utils import (selector, get_dist, list2range, res2map, get_indexes, log_subprocess_output, check_str,
                              eq_strs, get_index_groups)
 from GMXMMPBSA.alamdcrd import _scaledistance
@@ -859,36 +859,25 @@ class CheckMakeTop:
         :return: new and clean top instance
         """
         top_file = Path(top_file)
-        molsect = False
+        sol_ion = [
+            # standard gmx form
+            'NA', 'CL', 'SOL', 'K',
+            # charmm-GUI form ??
+            'SOD', 'Na+', 'CLA', 'Cl-', 'POT', 'K+',
+            'TIP3P', 'TIP3', 'TP3', 'TIPS3P', 'TIP3o',
+            'TIP4P', 'TIP4PEW', 'T4E', 'TIP4PD',
+            'TIP5P',
+            'SPC', 'SPC/E', 'SPCE',
+            'WAT',
+            'OPC']
 
-        with tempfile.NamedTemporaryFile(dir=top_file.parent, prefix='_temp_top', suffix='.top', mode='w', delete=False) as temp_top:
-            # temp_top.write('; Modified by gmx_MMPBSA\n')
-            # TODO: keep solvent when n-wat is implemented
-            with open(top_file) as topf:
-                for line in topf:
-                    if '[ molecules ]' in line:
-                        molsect = True
-                    if remove_solvent and molsect:
-                        # not copy ions and solvent
-                        sol_ion = [
-                            # standard gmx form
-                            'NA', 'CL', 'SOL', 'K'
-                            # charmm-GUI form ??
-                                            'SOD', 'Na+', 'CLA', 'Cl-', 'POT', 'K+',
-                            'TIP3P', 'TIP3', 'TP3', 'TIPS3P', 'TIP3o',
-                            'TIP4P', 'TIP4PEW', 'T4E', 'TIP4PD',
-                            'TIP5P',
-                            'SPC', 'SPC/E', 'SPCE',
-                            'WAT',
-                            'OPC']
-                        if not line.split():
-                            continue
-                        if line.split()[0].strip() in sol_ion:
-                            continue
-                    temp_top.write(line)
+        preprocessor = GromacsTopologyPreprocessor()
+        temp_top = preprocessor.preprocess(top_file, remove_solvent, sol_ion)
+        if preprocessor.cmap_found:
+            logging.info(f'Ignoring CMAP terms in {top_file} include tree for GROMACS topology conversion.')
 
         # read the temp topology with parmed
-        rtemp_top = parmed.gromacs.GromacsTopologyFile(temp_top.name)
+        rtemp_top = parmed.gromacs.GromacsTopologyFile(temp_top.as_posix())
         # get the residues in the top from the com_ndx
         res_list = []
 
@@ -898,7 +887,8 @@ class CheckMakeTop:
                 if idx not in res_list:
                     res_list.append(rtemp_top.atoms[i - 1].residue.number + 1)
             except IndexError:
-                Path(temp_top.name).unlink()
+                for temp_file in preprocessor.created_files:
+                    temp_file.unlink(missing_ok=True)
                 raise IndexError(
                     f'The atom {i} in the {id} index is not found in the topology generated from {top_file}'
                 )
@@ -907,7 +897,8 @@ class CheckMakeTop:
         rtemp_top.strip(f"!:{','.join(ranges['string'])}")
 
         # Clean temporal file
-        Path(temp_top.name).unlink()
+        for temp_file in preprocessor.created_files:
+            temp_file.unlink(missing_ok=True)
         return rtemp_top
 
     def get_masks(self):
