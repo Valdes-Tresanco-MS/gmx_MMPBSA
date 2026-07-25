@@ -31,6 +31,7 @@ from queue import Queue, Empty
 from pathlib import Path
 import multiprocessing
 from GMXMMPBSA.analyzer.chartsettings import ChartSettings
+from GMXMMPBSA.analyzer.style import polish_tree
 
 
 class CompactDoubleSpinBox(QDoubleSpinBox):
@@ -45,6 +46,7 @@ class InitDialog(QDialog):
         self.setWindowModality(Qt.WindowModality.WindowModal)
         self.setWindowTitle('Initialization gmx_MMPBSA_ana')
         self.setMinimumWidth(650)
+        self.setMinimumHeight(760)
         self.curr_progress = 0
         self.systems_list = {}
         self.chart_default_setting = ChartSettings()
@@ -231,8 +233,11 @@ class InitDialog(QDialog):
         self.header_item.setTextAlignment(5, Qt.AlignmentFlag.AlignCenter)
         self.header_item.setTextAlignment(6, Qt.AlignmentFlag.AlignCenter)
         self.result_tree = QTreeWidget(self)
+        polish_tree(self.result_tree)
+        self.result_tree.setMinimumHeight(132)
         self.result_tree.setHeaderItem(self.header_item)
         self.result_tree.header().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
+        self.result_tree.header().setStretchLastSection(True)
         self.result_tree.hideColumn(4)
         self.result_tree.hideColumn(5)
         # self.result_tree.colum
@@ -268,6 +273,7 @@ class InitDialog(QDialog):
         self.content_layout.addWidget(self.result_tree, 6, 0, 1, 3)
         self.content_layout.addWidget(self.statusbar, 7, 0, 1, 2)
         self.content_layout.addWidget(btnbox, 7, 2, 1, 1, Qt.AlignmentFlag.AlignRight)
+        self.content_layout.setRowMinimumHeight(6, 132)
         self.content_layout.setRowStretch(6, 10)
 
     def _show_corr_column(self, check):

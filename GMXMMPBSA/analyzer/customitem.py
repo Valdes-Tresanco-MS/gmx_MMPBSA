@@ -24,16 +24,18 @@ except Exception:
     from PyQt5.QtGui import *
 
 from .utils import com2str, energy2pdb_pml
-from .style import (result_file_icon, bar_plot_icon, line_plot_icon, heatmap_plot_icon, pymol_icon, result_table_icon)
+from .style import (result_file_icon, bar_plot_icon, line_plot_icon, heatmap_plot_icon, pymol_icon, result_table_icon,
+                    polish_toolbar, polish_tool_button)
 
 
 class SpacerItem(QToolButton):
     def __init__(self, parent=None):
         super(SpacerItem, self).__init__(parent)
+        self.setObjectName('ToolbarSpacer')
         self.setDisabled(True)
         self.setContentsMargins(0, 0, 0, 0)
-        self.setStyleSheet("QToolButton { /* mimic the look of the QToolButton with MenuButtonPopup */ "
-                           "padding-right: 15px; /* make way for the popup button */}")
+        polish_tool_button(self)
+        self.setFixedWidth(22)
 
 
 class TableActionBtn(QWidget):
@@ -47,6 +49,8 @@ class TableActionBtn(QWidget):
         self.reg_chart_action.setText('Regression Chart')
         self.reg_chart_action.setCheckable(True)
         self.reg_chart_action.setContentsMargins(0, 0, 0, 0)
+        self.reg_chart_action.setToolTip('Show regression chart')
+        polish_tool_button(self.reg_chart_action)
 
 
 class CustomCorrItem(QTableWidgetItem):
@@ -139,9 +143,7 @@ class CustomItem(QTreeWidgetItem):
         self.changed = False
 
         self.tb = QToolBar()
-        self.tb.setStyleSheet("QToolBar {padding: 0, 20, 0, 20;}")
-
-        self.tb.setIconSize(QSize(16, 16))
+        polish_toolbar(self.tb)
         self.tb.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonIconOnly)
         self.item_charts = []
 
@@ -181,6 +183,7 @@ class CustomItem(QTreeWidgetItem):
         self.line_chart_action.setPopupMode(QToolButton.ToolButtonPopupMode.MenuButtonPopup)
         self.line_chart_action.setContentsMargins(0, 0, 0, 0)
         self.line_chart_action.setMenu(line_menu)
+        polish_tool_button(self.line_chart_action)
         self.btn_group.addButton(self.line_chart_action, 1)
 
         return self.line_chart_action
@@ -213,6 +216,7 @@ class CustomItem(QTreeWidgetItem):
         self.bar_chart_action.setPopupMode(QToolButton.ToolButtonPopupMode.MenuButtonPopup)
         self.bar_chart_action.setContentsMargins(0, 0, 0, 0)
         self.bar_chart_action.setMenu(bar_menu)
+        polish_tool_button(self.bar_chart_action)
         self.btn_group.addButton(self.bar_chart_action, 2)
 
         return self.bar_chart_action
@@ -246,6 +250,7 @@ class CustomItem(QTreeWidgetItem):
         self.heatmap_chart_action.setPopupMode(QToolButton.ToolButtonPopupMode.MenuButtonPopup)
         self.heatmap_chart_action.setContentsMargins(0, 0, 0, 0)
         self.heatmap_chart_action.setMenu(heatmap_menu)
+        polish_tool_button(self.heatmap_chart_action)
         self.btn_group.addButton(self.heatmap_chart_action, 3)
 
         return self.heatmap_chart_action
@@ -279,6 +284,7 @@ class CustomItem(QTreeWidgetItem):
         self.vis_action.setPopupMode(QToolButton.ToolButtonPopupMode.MenuButtonPopup)
         self.vis_action.setContentsMargins(0, 0, 0, 0)
         # self.vis_action.setMenu(heatmap_menu)
+        polish_tool_button(self.vis_action)
         self.btn_group.addButton(self.vis_action, 4)
 
         return self.vis_action
@@ -301,6 +307,7 @@ class CustomItem(QTreeWidgetItem):
         self.options_button.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
         self.options_button.setContentsMargins(0, 0, 0, 0)
         self.options_button.setMenu(options_menu)
+        polish_tool_button(self.options_button)
 
         return self.options_button
 
@@ -341,6 +348,7 @@ class CustomItem(QTreeWidgetItem):
         self.result_table_action.setText('Result Table')
         self.result_table_action.setCheckable(True)
         self.result_table_action.setContentsMargins(0, 0, 0, 0)
+        polish_tool_button(self.result_table_action)
         self.btn_group.addButton(self.result_table_action, 5)
 
         return self.result_table_action

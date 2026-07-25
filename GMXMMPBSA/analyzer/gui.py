@@ -34,7 +34,7 @@ from GMXMMPBSA.API import MMPBSA_API
 from GMXMMPBSA.analyzer.dialogs import InitDialog, ProcessingProgressBar
 from GMXMMPBSA.analyzer.customitem import CustomItem, CustomCorrItem
 from GMXMMPBSA.analyzer.style import save_default_config, default_config, save_user_config, user_config, toc_img, logo, \
-    alert, config
+    alert, config, apply_app_theme, polish_table, polish_tree, polish_tool_button
 from GMXMMPBSA.analyzer.utils import ki2energy
 from GMXMMPBSA.analyzer.chartsettings import ChartSettings, CorrChartSettings
 from GMXMMPBSA.analyzer.parametertree import ParameterTree, Parameter
@@ -44,6 +44,7 @@ import math
 class GMX_MMPBSA_ANA(QMainWindow):
     def __init__(self, ifiles):
         super(GMX_MMPBSA_ANA, self).__init__()
+        apply_app_theme(self)
         self.showMaximized()
         self.setWindowIcon(QIcon(logo))
         self.correlation = {'chart_options': CorrChartSettings(), 'items_data': {}, 'data': {}}
@@ -63,19 +64,21 @@ class GMX_MMPBSA_ANA(QMainWindow):
         self.setCentralWidget(self.mdi)
 
         self.treeDockWidget = QDockWidget('Data', self)
+        self.treeDockWidget.setMinimumWidth(360)
         self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.treeDockWidget)
 
         self.correlation_DockWidget = QDockWidget('Correlations', self)
+        self.correlation_DockWidget.setMinimumWidth(420)
         self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.correlation_DockWidget)
         self.tabifyDockWidget(self.treeDockWidget, self.correlation_DockWidget)
 
 
         self.optionDockWidget = QDockWidget('Options', self)
+        self.optionDockWidget.setMinimumWidth(320)
         self.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.optionDockWidget)
 
         self.treeWidget = QTreeWidget(self)
-        self.treeWidget.setIndentation(12)
-        self.treeWidget.setUniformRowHeights(True)
+        polish_tree(self.treeWidget)
         self.treeWidget.setMinimumWidth(380)
         self.treeWidget.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         # self.treeWidget.customContextMenuRequested.connect(self.data_context_menu)
@@ -99,11 +102,10 @@ class GMX_MMPBSA_ANA(QMainWindow):
 
         self.correlation_tableWidget = QTableWidget(self)
 
-        self.correlation_tableWidget.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
+        polish_table(self.correlation_tableWidget, single_selection=True)
         self.correlation_tableWidget.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.correlation_tableWidget.itemSelectionChanged.connect(self.update_table)
         self.correlation_tableWidget.setColumnCount(6)
-        self.correlation_tableWidget.verticalHeader().hide()
         header_tt = {'MODEL': 'Selected Model',
                      'ΔGeff': '''<html>Correlation plot for ΔG<sub>effective</sub>. Energy when entropy contribution is 
         neglected. Calculated as ΔG<sub>effective</sub> = ΔH</html>''',
@@ -130,17 +132,18 @@ class GMX_MMPBSA_ANA(QMainWindow):
         cheader.setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
 
         self.data_table_widget = QTableWidget(0, 6)
+        polish_table(self.data_table_widget, single_selection=True)
         self.data_table_widget.setHorizontalHeaderLabels(['Sys.', 'Type', 'Exp.ΔG', 'Avg.', 'SD', 'SEM'])
         self.data_table_widget.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
-        self.data_table_widget.verticalHeader().hide()
 
         self.corr_parm_tree_w = ParameterTree()
+        polish_tree(self.corr_parm_tree_w)
         self.corr_parms = Parameter().create()
         self.corr_parms.restoreState(CorrChartSettings())
         self.corr_parm_tree_w.setParameters(self.corr_parms, showTop=False)
 
         self.corr_sys_sel_w = QTableWidget()
-        self.corr_sys_sel_w.verticalHeader().hide()
+        polish_table(self.corr_sys_sel_w, stretch=False)
         self.corr_sys_sel_w.setColumnCount(6)
         self.corr_sys_sel_w.setHorizontalHeaderLabels(['Id', 'Sel.', 'Ref.', 'Type', '  Exp.Ki  ', 'Name'])
         self.corr_sys_sel_w.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
@@ -160,6 +163,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
         self.corr_options_widget.currentChanged.connect(partial(self._change_update_btn, tw='corr'))
 
         self.corr_container_widget = QWidget()
+        self.corr_container_widget.setObjectName('CorrelationPanel')
         self.corr_container_widget_layout = QVBoxLayout(self.corr_container_widget)
         # self.corr_container_widget.addWidget(self.correlation_treeWidget)
         self.corr_container_widget_layout.addWidget(self.correlation_tableWidget, 1)
@@ -187,6 +191,8 @@ class GMX_MMPBSA_ANA(QMainWindow):
         self.aboutMenu.addAction('Google group', self._group)
         self.aboutMenu.addAction('About gmx_MMPBSA', self._about_dialog)
         self.statusbar = self.statusBar()
+        self.resizeDocks([self.optionDockWidget], [360], Qt.Orientation.Horizontal)
+        self.resizeDocks([self.treeDockWidget], [430], Qt.Orientation.Horizontal)
 
         self.init_dialog = InitDialog(self)
         self.init_dialog.rejected.connect(self.close)
@@ -264,27 +270,50 @@ class GMX_MMPBSA_ANA(QMainWindow):
 
     def _about_dialog(self):
         from GMXMMPBSA import __version__
-        QMessageBox.about(self.mdi, "About gmx_MMPBSA",
-                              "<html>"
-                              "<body>"
-                              "<h2 style='text-align:center'>About gmx_MMPBSA</h2>"
-                              "<div text-align:center;>"
-                              f"<a href='https://valdes-tresanco-ms.github.io/gmx_MMPBSA/dev/'>"
-                              f"<img src={toc_img} alt='gmx_MMPBSA TOC' width='450' height='350'>"
-                              "</a>"
-                              "</div>"
-                              "<p style='text-align:center'><b>gmx_MMPBSA</b> is a new tool based on AMBER's MMPBSA.py "
-                              "aiming to perform end-state free energy calculations with GROMACS files.</p>"
-                              f"<p style='text-align:center'><b style='text-align:center'>Version:</b> {__version__}</p>"
-                              "<h2 style='text-align:center'>Cite gmx_MMPBSA</h2>"
-                              "<p style='text-align:center'> "
-                              "Valdés-Tresanco, M.S., Valdés-Tresanco, M.E., Valiente, P.A. and Moreno E. "
-                              "gmx_MMPBSA: A New Tool to Perform End-State Free Energy Calculations with GROMACS. "
-                              "Journal of Chemical Theory and Computation, 2021 17 (10), 6281-6291. "
-                              "<a href='https://pubs.acs.org/doi/10.1021/acs.jctc.1c00645'>"
-                              "https://pubs.acs.org/doi/10.1021/acs.jctc.1c00645</a> </p>"
-                              "</body>"
-                              "</html>")
+        about_dialog = QDialog(self)
+        about_dialog.setWindowTitle("About gmx_MMPBSA")
+        about_dialog.setWindowModality(Qt.WindowModality.WindowModal)
+        about_dialog.setMinimumWidth(560)
+
+        content = QLabel(about_dialog)
+        content.setAlignment(Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignTop)
+        content.setOpenExternalLinks(True)
+        content.setWordWrap(True)
+        content.setText(
+            "<html>"
+            "<body style='text-align:center;'>"
+            "<h2>About gmx_MMPBSA</h2>"
+            "<p style='margin:0;'>"
+            f"<a href='https://valdes-tresanco-ms.github.io/gmx_MMPBSA/dev/'>"
+            f"<img src='{toc_img}' alt='gmx_MMPBSA TOC' width='450' height='350'>"
+            "</a>"
+            "</p>"
+            "<p style='margin:10px 28px 6px 28px;'>"
+            "<b>gmx_MMPBSA</b> is a new tool based on AMBER's MMPBSA.py aiming to perform end-state free energy "
+            "calculations with GROMACS files."
+            "</p>"
+            f"<p style='margin:6px 0 14px 0;'><b>Version:</b> {__version__}</p>"
+            "<h2 style='margin-bottom:8px;'>Cite gmx_MMPBSA</h2>"
+            "<p style='margin:0 34px 0 34px;'>"
+            "Valdés-Tresanco, M.S., Valdés-Tresanco, M.E., Valiente, P.A. and Moreno E.<br>"
+            "gmx_MMPBSA: A New Tool to Perform End-State Free Energy Calculations with GROMACS.<br>"
+            "Journal of Chemical Theory and Computation, 2021 17 (10), 6281-6291.<br>"
+            "<a href='https://pubs.acs.org/doi/10.1021/acs.jctc.1c00645'>"
+            "https://pubs.acs.org/doi/10.1021/acs.jctc.1c00645</a>"
+            "</p>"
+            "</body>"
+            "</html>"
+        )
+
+        btnbox = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok)
+        btnbox.accepted.connect(about_dialog.accept)
+
+        layout = QVBoxLayout(about_dialog)
+        layout.setContentsMargins(18, 14, 18, 12)
+        layout.setSpacing(8)
+        layout.addWidget(content, alignment=Qt.AlignmentFlag.AlignHCenter)
+        layout.addWidget(btnbox, alignment=Qt.AlignmentFlag.AlignRight)
+        about_dialog.exec()
 
     def _help(self):
         QDesktopServices().openUrl(QUrl('https://valdes-tresanco-ms.github.io/gmx_MMPBSA/dev/analyzer/'))
@@ -400,6 +429,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
     def _make_options_panel(self):
 
         self.optionWidget = QWidget(self)
+        self.optionWidget.setObjectName('AnalyzerOptionPanel')
         self.optionWidget.setMinimumWidth(300)
         optionWidget_l = QVBoxLayout(self.optionWidget)
 
@@ -426,6 +456,7 @@ class GMX_MMPBSA_ANA(QMainWindow):
         charts_opt_tb = QToolButton()
         charts_opt_tb.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
         charts_opt_tb.setIcon(QIcon(config))
+        polish_tool_button(charts_opt_tb)
         self.chart_options_l.addWidget(charts_opt_tb, alignment=Qt.AlignmentFlag.AlignRight)
         charts_opt_menu = QMenu()
         charts_opt_menu.setToolTipsVisible(True)
@@ -1214,8 +1245,8 @@ class GMX_MMPBSA_ANA(QMainWindow):
         sys_item.setExpanded(True)
 
         for c in [0, 1]:
-            sys_item.setBackground(c, QBrush(QColor(100, 100, 100)))
-            sys_item.setForeground(c, QBrush(QColor(220, 220, 255)))
+            sys_item.setBackground(c, QBrush(QColor(86, 99, 116)))
+            sys_item.setForeground(c, QBrush(QColor(248, 250, 252)))
             font = sys_item.font(c)
             font.setWeight(QFont.Weight.DemiBold)
             font.setPointSize(font.pointSize() + 1)

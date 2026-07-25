@@ -504,14 +504,14 @@ class GroupParameterItem(ParameterItem):
         ## This allows highest-level groups to be displayed more prominently.
         for c in [0, 1]:
             if depth == 0:
-                self.setBackground(c, QBrush(QColor(100, 100, 100)))
-                self.setForeground(c, QBrush(QColor(220, 220, 255)))
+                self.setBackground(c, QBrush(QColor(86, 99, 116)))
+                self.setForeground(c, QBrush(QColor(248, 250, 252)))
                 font = self.font(c)
                 font.setWeight(QFont.Weight.DemiBold)
                 font.setPointSize(font.pointSize() + 1)
             else:
-                self.setBackground(c, QBrush(QColor(220, 220, 220)))
-                self.setForeground(c, QBrush(QColor(50, 50, 50)))
+                self.setBackground(c, QBrush(QColor(226, 232, 240)))
+                self.setForeground(c, QBrush(QColor(32, 39, 51)))
                 font = self.font(c)
                 font.setWeight(QFont.Weight.DemiBold)
             self.setFont(c, font)

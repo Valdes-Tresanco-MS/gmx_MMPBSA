@@ -1,5 +1,30 @@
 from pathlib import Path
 
+
+def apply_app_theme(widget):
+    from GMXMMPBSA.analyzer.style.app_theme import apply_app_theme as _apply_app_theme
+    return _apply_app_theme(widget)
+
+
+def polish_table(*args, **kwargs):
+    from GMXMMPBSA.analyzer.style.app_theme import polish_table as _polish_table
+    return _polish_table(*args, **kwargs)
+
+
+def polish_tree(*args, **kwargs):
+    from GMXMMPBSA.analyzer.style.app_theme import polish_tree as _polish_tree
+    return _polish_tree(*args, **kwargs)
+
+
+def polish_tool_button(*args, **kwargs):
+    from GMXMMPBSA.analyzer.style.app_theme import polish_tool_button as _polish_tool_button
+    return _polish_tool_button(*args, **kwargs)
+
+
+def polish_toolbar(*args, **kwargs):
+    from GMXMMPBSA.analyzer.style.app_theme import polish_toolbar as _polish_toolbar
+    return _polish_toolbar(*args, **kwargs)
+
 this = Path(__file__).parent
 
 ArmyRose_7 = this.joinpath('ArmyRose_7.png').absolute().as_posix()
