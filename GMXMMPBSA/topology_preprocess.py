@@ -14,6 +14,9 @@ def comment_gromacs_cmap(line, in_cmap=False):
     if section:
         in_cmap = section.group(1).strip().lower() == 'cmap'
 
+    if in_cmap and stripped.startswith('#'):
+        return line, True, False
+
     if in_cmap:
         return line if stripped.startswith(';') else f';{line}', True, True
 

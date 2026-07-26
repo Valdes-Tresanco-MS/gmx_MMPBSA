@@ -63,6 +63,28 @@ class CommentGromacsCmapTest(unittest.TestCase):
 
         self.assertEqual(self._filter(lines), lines)
 
+    def test_preserves_preprocessor_directives_after_cmap(self):
+        lines = [
+            '[ cmap ]\n',
+            '1 2 3 4 5 1\n',
+            '#ifdef POSRES\n',
+            '[ position_restraints ]\n',
+            '1 1 1000 1000 1000\n',
+            '#endif\n',
+        ]
+
+        self.assertEqual(
+            self._filter(lines),
+            [
+                ';[ cmap ]\n',
+                ';1 2 3 4 5 1\n',
+                '#ifdef POSRES\n',
+                '[ position_restraints ]\n',
+                '1 1 1000 1000 1000\n',
+                '#endif\n',
+            ],
+        )
+
     def test_preprocesses_local_includes_recursively(self):
         with TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
