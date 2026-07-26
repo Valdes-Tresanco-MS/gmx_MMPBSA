@@ -87,7 +87,7 @@ combined. See the formats below:
     
     # Generalized-Born namelist variables
     &gb
-      igb                  = 5                       # GB model to use
+      igb                  = 8                       # GB model to use
       ...
       probe                = 1.4                     # Solvent probe radius for surface area calc
     /
@@ -105,7 +105,7 @@ combined. See the formats below:
     
     # Generalized-Born namelist variables
     &gb
-      igb = 5, 
+      igb = 8,
       ...
       probe = 1.4
     /
@@ -270,8 +270,11 @@ support for complex systems with several components. It supports all force field
 
     _Updated in v1.5.0: Add new ion parameters sets_
 
-`PBRadii` (Default = 3)
+`PBRadii` (Default = 4)
 :   PBRadii to build amber topology files:
+
+    The default value is `4` (`mbondi3`) to match the default GB-Neck2 model (`igb = 8`), so it does not need to be
+    specified for standard GB calculations using the default GB model.
 
     * 1: bondi, recommended when igb = 7
     * 2: mbondi, recommended when igb = 1
@@ -502,7 +505,7 @@ in the PATH variable. In this path the following executables will be searched: `
             gmx_path="/home/programs/gromacs/bin"
             /
             &gb
-            igb=5, saltcon=0.150  
+            igb=8, saltcon=0.150
             /
            
             # replace this "/home/programs/gromacs/bin" with the path to the GROMACS you want to use.
@@ -568,7 +571,7 @@ However, this option is incompatible with alanine scanning.
 
 #### **Basic input options**
 
-`igb` (Default = 5)
+`igb` (Default = 8)
 :   Generalized Born method to use (see [§4](https://ambermd.org/doc12/Amber21.pdf#chapter.4) for more info).
 
     * 1: The [Hawkins, Cramer, Truhlar][191] pairwise GB model (GB-HCT)
@@ -995,7 +998,7 @@ method, while a level-set based algebraic method is used when `ipb > 2`.
 `indi` (Default = 1.0)
 :   Internal dielectric constant. This corresponds to `epsin` in [pbsa][5].
 
-`exdi` (Default = 80.0)
+`exdi` (Default = 78.5)
 :   External dielectric constant. This corresponds to `epsout` in [pbsa][5].
 
 `emem` (Default = 4.0)
@@ -2007,7 +2010,7 @@ startframe=5, endframe=100, interval=5, verbose=2
 /
 
 &gb
-igb=5, saltcon=0.150,
+igb=8, saltcon=0.150,
 /
 ```
 
@@ -2036,7 +2039,7 @@ startframe=5, endframe=100, interval=5,
 /
 
 &gb
-igb=5, saltcon=0.100, ifqnt=1,
+igb=8, saltcon=0.100, ifqnt=1,
 qm_residues="A/240-251 B/297", qm_theory="PM3"
 /
 ```
@@ -2122,7 +2125,7 @@ startframe=5, endframe=21, interval=1,
 /
 
 &gb
-igb=5, saltcon=0.150,
+igb=8, saltcon=0.150,
 /
 
 &decomp

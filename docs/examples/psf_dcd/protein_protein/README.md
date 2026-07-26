@@ -52,7 +52,7 @@ Optional, but recommended -- :octicons-check-circle-fill-16:{ .req_opt } -> Opti
           interval             = 1                                              # Number of frames between adjacent frames analyzed
           forcefields          = "oldff/leaprc.ff99SB,leaprc.gaff"           # Force field(IGNORED SINCE WE ARE DEFINING THE TOPOLOGY)
           ions_parameters      = 1                                              # Define ions parameters to build the Amber topology
-          PBRadii              = 3                                              # Define PBRadii to build amber topology from GROMACS files
+          PBRadii              = 4                                              # Define PBRadii to build amber topology from GROMACS files
           temperature          = 298.15                                         # Temperature
           qh_entropy           = 0                                              # Do quasi-harmonic calculation
           interaction_entropy  = 0                                              # Do Interaction Entropy calculation
@@ -70,7 +70,7 @@ Optional, but recommended -- :octicons-check-circle-fill-16:{ .req_opt } -> Opti
         
         # (AMBER) Generalized-Born namelist variables
         &gb
-          igb                  = 5                                              # GB model to use
+          igb                  = 8                                              # GB model to use
           intdiel              = 1.0                                            # Internal dielectric constant for sander
           extdiel              = 78.5                                           # External dielectric constant for sander
           saltcon              = 0.15                                        # SALT CONCENTRATION (M)

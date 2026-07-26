@@ -411,7 +411,7 @@ input_file.addNamelist('general', 'general',
                            ['forcefields', list, 'oldff/leaprc.ff99SB, leaprc.gaff', 'Define the force field to build '
                                                                                      'the Amber topology'],
                            ['ions_parameters', int, 1, 'Define ions parameters to build the Amber topology'],
-                           ['PBRadii', int, 3, 'Define PBRadii to build amber topology from GROMACS files'],
+                           ['PBRadii', int, 4, 'Define PBRadii to build amber topology from GROMACS files'],
                            ['temperature', float, 298.15, 'Temperature'],
 
                            # Entropy options
@@ -434,7 +434,7 @@ input_file.addNamelist('general', 'general',
 
 input_file.addNamelist('gb', 'gb',
                        [
-                           ['igb', int, 5, 'GB model to use'],
+                           ['igb', int, 8, 'GB model to use'],
                            ['intdiel', float, 1.0, 'Internal dielectric constant for sander'],
                            ['extdiel', float, 78.5, 'External dielectric constant for sander'],
 
@@ -504,7 +504,7 @@ input_file.addNamelist('pb', 'pb',
 
                            # Options to define the physical constants
                            ['indi', float, 1, 'Internal dielectric constant'],
-                           ['exdi', float, 80, 'External dielectric constant'],
+                           ['exdi', float, 78.5, 'External dielectric constant'],
                            ['emem', float, 4.0, 'Membrane dielectric constant'],
                            ['smoothopt', int, 1, 'Set up dielectric values for finite-difference grid edges that are '
                                                  'located across the solute/solvent dielectric boundary'],

@@ -62,7 +62,7 @@ endframe=10,
 forcefields="leaprc.protein.ff14SB"
 /
 &gb
-igb=5, saltcon=0.150,
+igb=8, saltcon=0.150,
 /
 #make sure to include at least one residue from both the receptor
 #and ligand in the print_res mask of the &decomp section.

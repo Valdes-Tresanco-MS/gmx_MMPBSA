@@ -60,7 +60,7 @@ startframe=1,
 endframe=10,
 /
 &gb
-igb=5, saltcon=0.150,
+igb=8, saltcon=0.150,
 /
 ```
 

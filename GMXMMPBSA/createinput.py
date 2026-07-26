@@ -355,7 +355,7 @@ class SanderGBInput(SanderInput):
         self.input_items = {'ntb': 0, 'cut': 999.0, 'nsnb': 99999, 'idecomp': 0, 'offset': -999999.0,
                    'imin': 5, 'maxcyc': 1, 'ncyc': 0, 'gbsa': 0, 'ioutfm': 0, 'dec_verbose': 0,
                    # Basic options
-                   'igb': 5, 'intdiel': 1.0, 'extdiel': 78.5, 'saltcon': 0.0, 'surften': 0.0072,
+                   'igb': 8, 'intdiel': 1.0, 'extdiel': 78.5, 'saltcon': 0.0, 'surften': 0.0072,
                    # QM options
                    'ifqnt': 0, 'qmmask': '', 'qm_theory': '', 'qmcharge': 0,
                    'qmgb': 2, 'qmcut': 999.0,
@@ -544,7 +544,7 @@ class SanderPBSADECOMPInput(SanderInput):
                    # Basic input options
                    'ipb': 2, 'inp': 2,
                    # Options to define the physical constants
-                   'epsin': 1.0, 'epsout': 80.0, 'epsmem': 1.0, 'smoothopt': 1, 'istrng': 0.0,
+                   'epsin': 1.0, 'epsout': 78.5, 'epsmem': 1.0, 'smoothopt': 1, 'istrng': 0.0,
                    'radiopt': 1, 'dprob': 1.4, 'iprob': 2.0, 'sasopt': 0, 'arcres': 0.25,
                    # Options for Implicit Membranes
                    'membraneopt': 0, 'mprob': 2.70, 'mthick': 40, 'mctrdz': 0.0,
@@ -632,7 +632,7 @@ class SanderPBSAInput(SanderInput):
                    # Basic input options
                    'ipb': 2, 'inp': 2,
                    # Options to define the physical constants
-                   'epsin': 1.0, 'epsout': 80.0, 'epsmem': 1.0, 'smoothopt': 1, 'istrng': 0.0,
+                   'epsin': 1.0, 'epsout': 78.5, 'epsmem': 1.0, 'smoothopt': 1, 'istrng': 0.0,
                    'radiopt': 1, 'dprob': 1.4, 'iprob': 2.0, 'sasopt': 0, 'arcres': 0.25,
                    # Options for Implicit Membranes
                    'membraneopt': 0, 'mprob': 2.70, 'mthick': 40, 'mctrdz': 0.0,
@@ -801,4 +801,3 @@ class QuasiHarmonicInput(object):
     def write_input(self, filename):
         """ Writes the input file """
         open(filename, 'w').write(self.file_string)
-

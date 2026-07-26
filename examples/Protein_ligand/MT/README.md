@@ -71,7 +71,7 @@ endframe=14,
 forcefields="oldff/leaprc.ff99SB",leaprc.gaff"
 /
 &gb
-igb=5, saltcon=0.150,
+igb=8, saltcon=0.150,
 /
 ```
 

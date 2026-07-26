@@ -60,7 +60,7 @@ endframe=10,
 c2_entropy=1, temperature=303.15,
 /
 &gb
-igb=5, saltcon=0.150,
+igb=8, saltcon=0.150,
 /
 ```
 

@@ -116,7 +116,7 @@ input file will contain all the parameters needed for the MM/PB(GB)SA calculatio
     slab-like planar region of uniform dielectric constant running parallel to the xy plane. The dielectric constant 
     can be controlled using `emem`. We set the membrane interior dielectric constant to a value of 7.0 in this example. 
     The value of `emem` should always be set to a value greater than or equal to `indi` (solute dielectric constant, 
-    1 in this example) and less than `exdi` (solvent dielectric constant, 80.0 default).
+    1 in this example) and less than `exdi` (solvent dielectric constant, 78.5 default).
 
     [<img src="../../assets/prot_memb.png" height="200" width="258" align="right"/>]()
 
