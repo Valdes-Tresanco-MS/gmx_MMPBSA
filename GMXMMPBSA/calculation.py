@@ -47,7 +47,7 @@ import numpy as np
 import math
 
 
-TQDM_BAR_FORMAT = '            {l_bar}{bar}| {n_fmt}/{total_fmt} [elapsed: {elapsed} remaining: {remaining}]'
+TQDM_BAR_FORMAT = '            {l_bar}{bar:100}| {n_fmt}/{total_fmt} [elapsed: {elapsed} remaining: {remaining}]'
 
 
 def pb(output_basename, nframes=1, mpi_size=1, nmode=False):
