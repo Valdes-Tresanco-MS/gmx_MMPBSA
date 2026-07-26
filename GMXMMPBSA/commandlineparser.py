@@ -174,7 +174,11 @@ def amber_topology(arg):
     return arg
 
 
-@check_arg(['.inpcrd', '.rst7', '.mdcrd', '.nc', '.crd'], True)
+AMBER_TRAJECTORY_FORMATS = ['.mdcrd', '.nc', '.crd', '.rst7', '.inpcrd', '.xtc', '.trr', '.pdb', '.gro', '.dcd']
+AMBER_TRAJECTORY_FORMATS_HELP = ', '.join(f'*{suffix}' for suffix in AMBER_TRAJECTORY_FORMATS)
+
+
+@check_arg(AMBER_TRAJECTORY_FORMATS, True)
 def amber_trajectory(arg):
     return arg
 
@@ -392,10 +396,10 @@ group.add_argument('-cs', dest='complex_str', metavar='<Structure File>', defaul
 group.add_argument('-cm', dest='complex_mask', metavar='mask', nargs=2, default=None, type=amber_residue_mask_type,
                    help='Receptor and Ligand masks in complex file. The notation is as follows: -cm '
                         '"<Receptor mask>" "<Ligand mask>", ie. -cm ":1-240" ":241"')
-group.add_argument('-ct', dest='complex_trajs', nargs='*', metavar='MDCRD', type=amber_trajectory,
+group.add_argument('-ct', dest='complex_trajs', nargs='*', metavar='TRJ', type=amber_trajectory,
                    help='''Complex trajectories. Make sure the trajectory is fitted and
-                         pbc have been removed. Allowed formats: *.mdcrd (recommended) (specify as many as you'd
-                         like).''')
+                         pbc have been removed. Allowed formats: {} (specify as many as you'd
+                         like).'''.format(AMBER_TRAJECTORY_FORMATS_HELP))
 group.add_argument('-cr', dest='reference_structure', metavar='<PDB File>', default=None, type=pdb,
                    help='''Complex Reference Structure file. This option is optional but recommended
                          (Use the PDB file used to generate the topology in tLEAP). If not defined,
@@ -408,18 +412,20 @@ group.add_argument('-rp', dest='receptor_top', metavar='<Topology>', default=Non
                    help='''The receptor Topology file''')
 group.add_argument('-rm', dest='receptor_mask', metavar='mask', default=None, type=amber_residue_mask_type,
                    help='''Receptor mask. Notation: "-rm <Receptor mask>", e.g. -rm ":1-240"''')
-group.add_argument('-rt', dest='receptor_trajs', nargs='*', metavar='MDCRD', type=amber_trajectory,
+group.add_argument('-rt', dest='receptor_trajs', nargs='*', metavar='TRJ', type=amber_trajectory,
                    help='''Input trajectories of the unbound receptor for multiple trajectory approach.
-                         Allowed formats: *.mdcrd (recommended) (specify as many as you'd like).''')
+                         Allowed formats: {} (specify as many as you'd like).'''.format(
+                             AMBER_TRAJECTORY_FORMATS_HELP))
 
 group = amber_parser.add_argument_group('Ligand', ligand_group_des)
 group.add_argument('-lp', dest='ligand_top', metavar='<Topology>', default=None, type=prmtop,
                    help='''The ligand Topology file''')
 group.add_argument('-lm', dest='ligand_mask', metavar='mask', default=None, type=amber_residue_mask_type,
                    help='''Ligand mask. Notation: "-lm <Ligand mask>", e.g. -lm ":1"''')
-group.add_argument('-lt', dest='ligand_trajs', nargs='*', metavar='MDCRD', type=amber_trajectory,
+group.add_argument('-lt', dest='ligand_trajs', nargs='*', metavar='TRJ', type=amber_trajectory,
                    help='''Input trajectories of the unbound ligand for multiple trajectory approach.
-                         Allowed formats: *.mdcrd (recommended) (specify as many as you'd like).''')
+                         Allowed formats: {} (specify as many as you'd like).'''.format(
+                             AMBER_TRAJECTORY_FORMATS_HELP))
 
 group = amber_parser.add_argument_group('Miscellaneous Actions')
 group.add_argument('--rewrite-output', dest='rewrite_output', default=False,

@@ -25,7 +25,7 @@ with `gmx_MMPBSA_ana`.
 |:------|:------:|:------------|
 | Complex topology | `-cp` | AMBER topology file for the complex |
 | Complex structure | `-cs` | AMBER coordinate file for the complex. Supported formats include `*.pdb`, `*.inpcrd`, and `*.rst7` |
-| Complex trajectory | `-ct` | AMBER trajectory file. Supported format: `*.mdcrd` |
+| Complex trajectory | `-ct` | Trajectory file readable by cpptraj with the supplied AMBER topology. Supported formats include `*.mdcrd`, `*.nc`, `*.crd`, `*.rst7`, `*.inpcrd`, `*.xtc`, `*.trr`, `*.pdb`, `*.gro`, and `*.dcd` |
 | Complex masks | `-cm` | Receptor and ligand masks from the complex |
 | Receptor topology | `-rp` | AMBER topology file for the receptor |
 | Ligand topology | `-lp` | AMBER topology file for the ligand |
