@@ -33,6 +33,7 @@ Classes:
 #  for more details.                                                           #
 # ##############################################################################
 
+import logging
 from warnings import warn
 from GMXMMPBSA.exceptions import (TrajError, MMPBSA_Error, InternalError, MutantResError)
 from pathlib import Path
@@ -75,9 +76,16 @@ def make_trajectories(INPUT, FILES, size, cpptraj, pre):
     lig_frames = 0
     num_frames_nmode = 0
 
-    # Sanity check
+    # Sanity check. MPI launches a fixed-size world, but the selected trajectory
+    # may contain fewer frames than ranks. Use only ranks that can receive work.
+    if traj.processed_frames < 1:
+        raise MMPBSA_Error('No frames selected for calculation!')
     if traj.processed_frames < size:
-        raise MMPBSA_Error('Must have at least as many frames as processors!')
+        logging.warning(
+            'Only %d frame(s) were selected for calculation; using %d of %d MPI ranks.',
+            traj.processed_frames, traj.processed_frames, size
+        )
+        size = traj.processed_frames
 
     # We now know how many frames we have in total, so make a list that lists the
     # number of frames found for each rank, and assign extra frames incrementally
@@ -313,7 +321,7 @@ def make_trajectories(INPUT, FILES, size, cpptraj, pre):
         # end if not stability
 
     # end if INPUT['nmode']['nmoderun']
-    return com_frames, rec_frames, lig_frames, num_frames_nmode
+    return com_frames, rec_frames, lig_frames, num_frames_nmode, size
 
 
 def make_mutant_trajectories(INPUT, FILES, rank, cpptraj, norm_sys, mut_sys, pre):

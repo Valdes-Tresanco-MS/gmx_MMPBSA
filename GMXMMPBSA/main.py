@@ -93,6 +93,7 @@ class MMPBSA_App(object):
         _rank = self.mpi_rank = self.MPI.COMM_WORLD.Get_rank()
         self.master = self.mpi_rank == 0
         _mpi_size = self.mpi_size = self.MPI.COMM_WORLD.Get_size()
+        self.mpi_active = True
         if not self.master:
             self.stdout = open(os.devnull, 'w')
         if self.master:
@@ -107,6 +108,13 @@ class MMPBSA_App(object):
         # mpi_size is > 1, just use the MPI mechanism instead
         if size is not None and self.mpi_size == 1:
             self.mpi_size = size
+
+    def set_active_mpi_size(self, mpi_size):
+        """Limit calculation work to MPI ranks that have assigned frames."""
+        global _mpi_size
+        self.mpi_size = mpi_size
+        self.mpi_active = self.mpi_rank < self.mpi_size
+        _mpi_size = self.mpi_size
 
     def file_setup(self):
         """ Sets up the trajectories and input files """
@@ -137,13 +145,19 @@ class MMPBSA_App(object):
         if master:
             logging.info('Preparing trajectories for simulation...\n')
             (self.numframes, rec_frames,
-             lig_frames, self.numframes_nmode) = make_trajectories(INPUT, FILES, self.mpi_size,
-                                                                   self.external_progs['cpptraj'],
-                                                                   self.pre)
+             lig_frames, self.numframes_nmode,
+             mpi_size) = make_trajectories(INPUT, FILES, self.mpi_size,
+                                           self.external_progs['cpptraj'],
+                                           self.pre)
             if self.traj_protocol == 'MTP' and not self.numframes == rec_frames == lig_frames:
                 GMXMMPBSA_ERROR('The complex, receptor, and ligand trajectories must be the same length. Since v1.5.0 '
                                 'we have simplified a few things to make the code easier to maintain. Please check the '
                                 'documentation')
+        else:
+            mpi_size = None
+
+        mpi_size = self.MPI.COMM_WORLD.bcast(mpi_size, root=0)
+        self.set_active_mpi_size(mpi_size)
 
         self.MPI.COMM_WORLD.Barrier()
 
@@ -154,8 +168,9 @@ class MMPBSA_App(object):
 
         if INPUT['ala']['alarun'] and self.master:
             logging.info('Mutating trajectories...')
-        _, mutant_residue = make_mutant_trajectories(INPUT, FILES, self.mpi_rank, self.external_progs['cpptraj'],
-                                                     self.normal_system, self.mutant_system, self.pre)
+        if self.mpi_active:
+            _, mutant_residue = make_mutant_trajectories(INPUT, FILES, self.mpi_rank, self.external_progs['cpptraj'],
+                                                         self.normal_system, self.mutant_system, self.pre)
 
         self.MPI.COMM_WORLD.Barrier()
 
@@ -194,6 +209,10 @@ class MMPBSA_App(object):
         if rank is None:
             rank = self.mpi_rank
         master = rank == 0
+
+        if not self.mpi_active:
+            self.sync_mpi()
+            return
 
         # Load the list of calculations we need to do, then run them.
 
