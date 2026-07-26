@@ -44,4 +44,17 @@ amber_MMPBSA -O -i mmpbsa.in \
   -eo FINAL_RESULTS_MMPBSA.csv
 ```
 
+AMBER masks can also select non-contiguous residue ranges. For example, the receptor can be residues 1-120 and
+181-260 while the ligand is residues 121-180:
+
+``` bash
+amber_MMPBSA -O -i mmpbsa.in \
+  -cp complex.prmtop \
+  -cs complex.inpcrd \
+  -ct prod.mdcrd \
+  -cm ":1-120,181-260" ":121-180" \
+  -o FINAL_RESULTS_MMPBSA.dat \
+  -eo FINAL_RESULTS_MMPBSA.csv
+```
+
 See the [AMBER input files example](examples/AMBER/README.md) for a complete runnable example.

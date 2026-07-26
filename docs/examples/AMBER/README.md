@@ -66,5 +66,8 @@ In this case, a single trajectory (ST) approximation is followed. The receptor a
 complex with AMBER masks (`:1-166` and `:167-242`). Receptor and ligand topology files are provided directly, so
 `amber_MMPBSA` can build the working topologies without using GROMACS files.
 
+AMBER masks can also select non-contiguous residue ranges. For example, use `-cm ":1-120,181-260" ":121-180"` when
+residues 1-120 and 181-260 belong to the receptor and residues 121-180 belong to the ligand.
+
   [1]: ../../amber_MMPBSA.md
   [6]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/examples/AMBER
