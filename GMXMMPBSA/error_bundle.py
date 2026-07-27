@@ -76,7 +76,7 @@ def _add_referenced_files(zf, files, added, manifest):
         if attr.startswith('_') or attr in TRAJ_ATTRS:
             continue
         for path in _iter_paths(value):
-            _add_existing_file(zf, path, f'inputs/{attr}/{path.name}', added, manifest)
+            _add_existing_file(zf, path, _input_archive_name(path), added, manifest, source=attr)
 
 
 def _add_topology_includes(zf, files, added, manifest):
@@ -85,7 +85,7 @@ def _add_topology_includes(zf, files, added, manifest):
         if not top:
             continue
         for include in _topology_includes(Path(top)):
-            _add_existing_file(zf, include, f'inputs/topology_includes/{include.name}', added, manifest)
+            _add_existing_file(zf, include, _input_archive_name(include), added, manifest, source='topology_include')
 
 
 def _add_generated_files(zf, prefix, added, manifest):
@@ -258,7 +258,7 @@ def _first_existing(*paths):
     return None
 
 
-def _add_existing_file(zf, path, arcname, added, manifest):
+def _add_existing_file(zf, path, arcname, added, manifest, source=None):
     path = Path(path)
     if not path.is_file():
         return
@@ -274,7 +274,19 @@ def _add_existing_file(zf, path, arcname, added, manifest):
         return
     zf.write(path, arcname)
     added.add(resolved)
-    manifest['files'].append({'path': str(path), 'archive_name': arcname, 'size': size})
+    entry = {'path': str(path), 'archive_name': arcname, 'size': size}
+    if source:
+        entry['source'] = source
+    manifest['files'].append(entry)
+
+
+def _input_archive_name(path):
+    path = Path(path)
+    try:
+        relpath = path.resolve().relative_to(Path.cwd().resolve())
+    except ValueError:
+        relpath = Path('external_inputs') / path.name
+    return relpath.as_posix()
 
 
 def _iter_paths(value):

@@ -28,12 +28,14 @@ class ErrorBundleTest(unittest.TestCase):
             root = Path(tmpdir)
             input_file = root / 'mmpbsa.in'
             topology = root / 'topol.top'
-            include = root / 'forcefield.itp'
+            toppar = root / 'toppar'
+            include = toppar / 'forcefield.itp'
             traj = root / 'traj.xtc'
             log = root / 'gmx_MMPBSA.log'
             prmtop = root / 'COM.prmtop'
+            toppar.mkdir()
             input_file.write_text('&general\n/\n')
-            topology.write_text('#include "forcefield.itp"\n')
+            topology.write_text('#include "toppar/forcefield.itp"\n')
             include.write_text('[ defaults ]\n')
             traj.write_text('not a real trajectory')
             log.write_text('log text')
@@ -61,12 +63,14 @@ class ErrorBundleTest(unittest.TestCase):
 
             self.assertIn('manifest.json', names)
             self.assertIn('logs/gmx_MMPBSA.log', names)
-            self.assertIn('inputs/input_file/mmpbsa.in', names)
-            self.assertIn('inputs/complex_top/topol.top', names)
-            self.assertIn('inputs/topology_includes/forcefield.itp', names)
+            self.assertIn('mmpbsa.in', names)
+            self.assertIn('topol.top', names)
+            self.assertIn('toppar/forcefield.itp', names)
             self.assertIn('generated/COM.prmtop', names)
-            self.assertNotIn('inputs/complex_trajs/traj.xtc', names)
+            self.assertNotIn('traj.xtc', names)
             self.assertIn('Trajectory sampling tools were not discovered', ' '.join(manifest['notes']))
+            input_entry = next(f for f in manifest['files'] if f['archive_name'] == 'mmpbsa.in')
+            self.assertEqual(input_entry['source'], 'input_file')
 
     def test_parser_accepts_error_bundle_opt_out(self):
         args = parser.parse_args(['--no-error-bundle', '--create_input', 'gb'])
