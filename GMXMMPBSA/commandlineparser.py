@@ -266,6 +266,8 @@ group.add_argument('-s', '--stability', dest='stability', action='store_true', d
                          ligand is non-Protein (small molecule) type, then ligand *.mol2 file is 
                          required. In any other case receptor and ligand parameters will be ignored.
                          See description bellow''')
+group.add_argument('--no-error-bundle', dest='no_error_bundle', action='store_true', default=False,
+                   help='Do not create a diagnostic zip bundle automatically when gmx_MMPBSA fails.')
 
 group = parser.add_argument_group('Complex', complex_group_des)
 group.add_argument('-cs', dest='complex_tpr', metavar='<Structure File>', default=None, type=structure,
@@ -387,6 +389,8 @@ group.add_argument('-nogui', dest='gui', action='store_false', default=True,
                    help='No open gmx_MMPBSA_ana after all calculations finished')
 group.add_argument('-s', '--stability', dest='stability', action='store_true', default=False,
                    help='''Perform stability calculation. Only the complex parameters are required.''')
+group.add_argument('--no-error-bundle', dest='no_error_bundle', action='store_true', default=False,
+                   help='Do not create a diagnostic zip bundle automatically when amber_MMPBSA fails.')
 
 group = amber_parser.add_argument_group('Complex', complex_group_des)
 group.add_argument('-cp', dest='complex_top', metavar='<Topology>', default=None, type=prmtop,

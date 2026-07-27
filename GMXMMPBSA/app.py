@@ -27,6 +27,7 @@ try:
     from GMXMMPBSA import main
     from GMXMMPBSA.tester import run_test
     from GMXMMPBSA.commandlineparser import anaparser, testparser, amber_parser
+    from GMXMMPBSA.error_bundle import create_error_bundle
     from GMXMMPBSA.utils import create_input_args
 except ImportError:
     import os
@@ -85,32 +86,61 @@ def _gmxmmpbsa_base(parser, engine='gmx'):
         app.input_file.print_contents(sys.stdout)
         sys.exit(0)
 
-    # If we're not rewriting output do whole shebang, otherwise load info and parms
-    # Throw up a barrier before and after running the actual calcs
-    if not app.FILES.rewrite_output:
-        try:
-            app.read_input_file()
-        except InputError as e:
-            sys.stderr.write('%s: %s' % (type(e).__name__, e) + '\n')
-            sys.stderr.write('  Enter `%s --help` for help\n' %
-                             (split(sys.argv[0])[1]))
-            sys.exit(1)
-        app.process_input()
-        app.check_for_bad_input()
-        app.make_prmtops()
-        app.loadcheck_prmtops()
-        app.file_setup()
-        app.run_mmpbsa()
-    # If we are rewriting output, load the info and check prmtops
-    else:
-        info = InfoFile(app, True)
-        info.read_info()
-        app.loadcheck_prmtops()
+    try:
+        # If we're not rewriting output do whole shebang, otherwise load info and parms
+        # Throw up a barrier before and after running the actual calcs
+        if not app.FILES.rewrite_output:
+            try:
+                app.read_input_file()
+            except InputError as e:
+                _maybe_create_error_bundle(app, e)
+                sys.stderr.write('%s: %s' % (type(e).__name__, e) + '\n')
+                sys.stderr.write('  Enter `%s --help` for help\n' %
+                                 (split(sys.argv[0])[1]))
+                sys.exit(1)
+            app.process_input()
+            app.check_for_bad_input()
+            app.make_prmtops()
+            app.loadcheck_prmtops()
+            app.file_setup()
+            app.run_mmpbsa()
+        # If we are rewriting output, load the info and check prmtops
+        else:
+            info = InfoFile(app, True)
+            info.read_info()
+            app.loadcheck_prmtops()
 
-    # Now we parse the output, print, and finish
-    app.parse_output_files()
-    app.write_final_outputs()
-    app.finalize()
+        # Now we parse the output, print, and finish
+        app.parse_output_files()
+        app.write_final_outputs()
+        app.finalize()
+    except SystemExit:
+        raise
+    except Exception as e:
+        _maybe_create_error_bundle(app, e)
+        raise
+
+
+def _maybe_create_error_bundle(app, exc):
+    if not getattr(app, 'master', True):
+        return
+    if getattr(app, '_error_bundle_created', False):
+        return
+    files = getattr(app, 'FILES', None)
+    if files is not None and getattr(files, 'no_error_bundle', False):
+        return
+    app._error_bundle_created = True
+    try:
+        bundle = create_error_bundle(app, exc)
+    except Exception as bundle_exc:
+        sys.stderr.write('\nCould not create gmx_MMPBSA error bundle: %s\n' % bundle_exc)
+        return
+    sys.stderr.write(
+        '\nA gmx_MMPBSA error bundle was created for debugging:\n'
+        '  %s\n\n'
+        'Please attach this zip file when reporting the issue. It contains logs,\n'
+        'input/setup files, generated intermediates, and up to 5 trajectory frames.\n\n' % bundle
+    )
 
 
 def gmxmmpbsa():
