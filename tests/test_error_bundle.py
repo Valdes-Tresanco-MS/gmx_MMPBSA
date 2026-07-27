@@ -6,6 +6,7 @@ from contextlib import contextmanager
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from types import SimpleNamespace
+from unittest.mock import patch
 
 from GMXMMPBSA.commandlineparser import parser
 from GMXMMPBSA.error_bundle import create_error_bundle
@@ -51,7 +52,7 @@ class ErrorBundleTest(unittest.TestCase):
                 mpi_size=1,
             )
 
-            with working_directory(root):
+            with working_directory(root), patch('GMXMMPBSA.error_bundle.shutil.which', return_value=None):
                 bundle = create_error_bundle(app, RuntimeError('boom'))
 
             with zipfile.ZipFile(bundle) as zf:
@@ -65,7 +66,7 @@ class ErrorBundleTest(unittest.TestCase):
             self.assertIn('inputs/topology_includes/forcefield.itp', names)
             self.assertIn('generated/COM.prmtop', names)
             self.assertNotIn('inputs/complex_trajs/traj.xtc', names)
-            self.assertIn('cpptraj/trjconv were not available', ' '.join(manifest['notes']))
+            self.assertIn('Trajectory sampling tools were not discovered', ' '.join(manifest['notes']))
 
     def test_parser_accepts_error_bundle_opt_out(self):
         args = parser.parse_args(['--no-error-bundle', '--create_input', 'gb'])

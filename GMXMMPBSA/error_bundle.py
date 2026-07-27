@@ -4,6 +4,7 @@ import json
 import os
 import platform
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -106,8 +107,8 @@ def _add_trajectory_samples(zf, app, tmpdir, max_frames, added, manifest):
     if files is None:
         return
     external_progs = getattr(app, 'external_progs', {})
-    cpptraj = external_progs.get('cpptraj') if isinstance(external_progs, dict) else None
-    trjconv = _command_args(external_progs.get('trjconv')) if isinstance(external_progs, dict) else None
+    cpptraj = _find_cpptraj(external_progs)
+    trjconv = _find_trjconv(external_progs)
     gmx_check = _gmx_check_command(trjconv)
 
     specs = [
@@ -154,7 +155,9 @@ def _add_trajectory_samples(zf, app, tmpdir, max_frames, added, manifest):
                     'reason': 'Unable to create trajectory sample with cpptraj or gmx trjconv.',
                 })
     if not sample_created and not cpptraj and not trjconv:
-        manifest['notes'].append('cpptraj/trjconv were not available; trajectory samples were not created.')
+        manifest['notes'].append(
+            'Trajectory sampling tools were not discovered before the failure; trajectory samples were not created.'
+        )
 
 
 def _write_cpptraj_sample(cpptraj, prmtop, traj, sample, max_frames):
@@ -220,6 +223,24 @@ def _command_args(command):
     if isinstance(command, (list, tuple)):
         return [str(part) for part in command]
     return [str(command)]
+
+
+def _find_cpptraj(external_progs):
+    if isinstance(external_progs, dict) and external_progs.get('cpptraj'):
+        return str(external_progs['cpptraj'])
+    return shutil.which('cpptraj')
+
+
+def _find_trjconv(external_progs):
+    if isinstance(external_progs, dict) and external_progs.get('trjconv'):
+        return _command_args(external_progs['trjconv'])
+    gmx = shutil.which('gmx')
+    if gmx:
+        return [gmx, 'trjconv']
+    trjconv = shutil.which('trjconv')
+    if trjconv:
+        return [trjconv]
+    return None
 
 
 def _gmx_check_command(trjconv):
