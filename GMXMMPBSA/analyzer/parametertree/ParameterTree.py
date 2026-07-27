@@ -45,7 +45,10 @@ class ParameterTree(QTreeWidget):
         self.setHeaderLabels(["Parameter", "Value"])
         self.setAlternatingRowColors(True)
         self.paramSet = None
-        self.header().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
+        self.header().setStretchLastSection(False)
+        self.header().setSectionResizeMode(0, QHeaderView.ResizeMode.Interactive)
+        self.header().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
+        self.setColumnWidth(0, 150)
         self.setHeaderHidden(not showHeader)
         self.lastSel = None
         self.setRootIsDecorated(False)

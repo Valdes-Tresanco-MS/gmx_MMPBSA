@@ -605,11 +605,18 @@ class ListParameterItem(WidgetParameterItem):
     def __init__(self, param, depth):
         self.targetValue = None
         super(ListParameterItem, self).__init__(param, depth)
+        self.hideWidget = False
+        self.setSizeHint(0, QSize(1, 30))
+        self.setSizeHint(1, QSize(1, 30))
 
     def makeWidget(self):
         opts = self.param.opts
         w = QComboBox()
-        w.setMaximumHeight(20)  ## set to match height of spin box and line edit
+        w.setMinimumHeight(26)
+        w.setMinimumWidth(96)
+        size_adjust_policy = getattr(QComboBox, 'SizeAdjustPolicy', QComboBox)
+        w.setSizeAdjustPolicy(size_adjust_policy.AdjustToContents)
+        w.view().setMinimumWidth(120)
         w.sigChanged = w.currentIndexChanged
         w.value = self.value
         w.setValue = self.setValue
