@@ -16,7 +16,7 @@
 # ##############################################################################
 try:
     from PyQt6.QtCore import *
-except:
+except ImportError:
     from PyQt5.QtCore import *
 
 import logging

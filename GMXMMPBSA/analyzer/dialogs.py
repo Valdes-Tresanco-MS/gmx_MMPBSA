@@ -14,6 +14,7 @@
 #  or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License    #
 #  for more details.                                                           #
 # ##############################################################################
+import ast
 import pickle
 
 from GMXMMPBSA.analyzer.items_delegate import KiTreeDelegate
@@ -22,7 +23,7 @@ try:
     from PyQt6.QtWidgets import *
     from PyQt6.QtCore import *
     from PyQt6.QtGui import *
-except:
+except ImportError:
     from PyQt5.QtWidgets import *
     from PyQt5.QtCore import *
     from PyQt5.QtGui import *
@@ -453,7 +454,7 @@ class InitDialog(QDialog):
                         if line.startswith("mut_str"):
                             mutant = line.split('=')[1].strip(" '")
                         if line.startswith("FILES.stability"):
-                            stability = eval(line.split()[2])
+                            stability = ast.literal_eval(line.split()[2])
             # check for custom settings
             custom_settings = fname.parent.joinpath('settings.json').exists()
 
@@ -577,7 +578,7 @@ class InitDialog(QDialog):
                                 corr['mutant'] = child.child(c1).checkState(4) == Qt.CheckState.Checked
                             if self.energy_type.currentIndex() == 1:
                                 ref = self.result_tree.itemWidget(child.child(c1), 5).isChecked()
-            queue.put(self.systems_list[eval(child.text(0))] +
+            queue.put(self.systems_list[int(child.text(0))] +
                       [t, corr, ref,self.result_tree.itemWidget(child, 6).currentText()])
             counter += 1
         if not counter:

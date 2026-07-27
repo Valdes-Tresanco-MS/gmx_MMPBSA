@@ -18,7 +18,7 @@ try:
     from PyQt6.QtCore import QSize, Qt
     from PyQt6.QtGui import QColor, QPalette
     from PyQt6.QtWidgets import QAbstractItemView, QApplication, QHeaderView
-except Exception:
+except ImportError:
     from PyQt5.QtCore import QSize, Qt
     from PyQt5.QtGui import QColor, QPalette
     from PyQt5.QtWidgets import QAbstractItemView, QApplication, QHeaderView

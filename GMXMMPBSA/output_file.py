@@ -635,5 +635,5 @@ class OutputFile(object):
     def __del__(self):
         try:
             self._handle.close()
-        except:
+        except (AttributeError, OSError):
             pass

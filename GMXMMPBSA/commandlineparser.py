@@ -112,7 +112,7 @@ def index(arg):
 def index_groups(value):
     try:
         return int(value)
-    except Exception:
+    except ValueError:
         return value
 
 # check the amber mask format

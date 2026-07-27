@@ -124,11 +124,11 @@ def gmxmmpbsa_ana():
     try:
         from PyQt6.QtWidgets import QApplication
         pyqt = True
-    except:
+    except ImportError:
         try:
             from PyQt5.QtWidgets import QApplication
             pyqt = True
-        except:
+        except ImportError:
             pyqt = False
     finally:
         if not pyqt:

@@ -1536,7 +1536,7 @@ def excepthook(exception_type, exception_value, tb):
     """
     import traceback
     global _stderr, _mpi_size, _rank
-    if not isinstance(exception_type, MMPBSA_Error):
+    if not issubclass(exception_type, MMPBSA_Error):
         traceback.print_tb(tb)
     _stderr.write('%s: %s\n' % (exception_type.__name__, exception_value))
     if _mpi_size > 1:

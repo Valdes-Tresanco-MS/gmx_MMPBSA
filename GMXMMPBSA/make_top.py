@@ -1563,7 +1563,7 @@ class CheckMakeTop:
                     for x in new_str:
                         fw.write(x)
             except IOError as e:
-                GMXMMPBSA_ERROR('', str(e))
+                GMXMMPBSA_ERROR(str(e))
 
             structure = parmed.read_PDB(pdb_file)
         else:

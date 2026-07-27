@@ -22,6 +22,7 @@ re-supplying all of the information again.
 #  for more details.                                                           #
 # ##############################################################################
 
+import ast
 import re
 import warnings
 
@@ -253,7 +254,12 @@ def _determine_type(thing):
 
     # Check for list
     if thing.startswith('[') and thing.endswith(']'):
-        return eval(thing)
+        try:
+            return ast.literal_eval(thing)
+        except (SyntaxError, ValueError):
+            warnings.warn('Encountered invalid list value in info file.\n' +
+                          str(thing))
+            return thing
 
     # No idea what else it could be! Return string, but warn
     warnings.warn('Encountered unknown type in info file.\n' +

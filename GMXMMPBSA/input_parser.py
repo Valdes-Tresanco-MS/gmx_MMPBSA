@@ -348,7 +348,7 @@ class InputFile(object):
                 if '=' in namelist_fields[i][j]:
                     begin_field = j
                 elif begin_field == -1:
-                    raise f'Invalid input file! Error reading namelist {declared_namelists[i]}'
+                    raise InputError(f'Invalid input file! Error reading namelist {declared_namelists[i]}')
                 else:
                     namelist_fields[i][begin_field] += f',{namelist_fields[i][j]}'
         # Now parse through the items to add them to the master dictionary. Note

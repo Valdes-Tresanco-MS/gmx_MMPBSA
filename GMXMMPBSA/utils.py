@@ -746,8 +746,9 @@ def selector(selection: str):
     elif selection.startswith('within'):
         try:
             dist = float(string_list[1])
-        except:
-            GMXMMPBSA_ERROR(f'Invalid distance value, we expected a float value but we get "{string_list[1]}"')
+        except (IndexError, ValueError):
+            value = string_list[1] if len(string_list) > 1 else ''
+            GMXMMPBSA_ERROR(f'Invalid distance value, we expected a float value but we get "{value}"')
     else:
         # try to process residue selection
         for s in string_list:
@@ -769,9 +770,10 @@ def selector(selection: str):
                     try:
                         start = int(rr[0])
                         end = int(rr[1]) + 1
-                    except:
+                    except (IndexError, ValueError):
+                        end = rr[1] if len(rr) > 1 else ''
                         GMXMMPBSA_ERROR(f'When residues range is defined, start and end must be integers but we got'
-                                        f' {rr[0]} and {rr[1]}')
+                                        f' {rr[0]} and {end}')
                     for cr in range(start, end):
                         if [chain, cr, ''] in res_selections:
                             logging.warning('Found duplicated residue in selection: CHAIN:{} RES_NUM:{} ICODE: '

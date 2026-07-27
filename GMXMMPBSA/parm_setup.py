@@ -759,7 +759,7 @@ class MMPBSA_System(object):
                 try:
                     res1 = int(field_items[0])
                     res2 = int(field_items[1])
-                except:
+                except ValueError:
                     raise SelectionError('Invalid selection! Integers expected.')
 
                 # Now make sure that they're within the legal range and not stupid
@@ -775,7 +775,7 @@ class MMPBSA_System(object):
                 # Here the field is just a single residue
                 try:
                     res1 = int(field)
-                except:
+                except ValueError:
                     raise SelectionError('Invalid selection! Integers expected.')
 
                 # select that one residue
