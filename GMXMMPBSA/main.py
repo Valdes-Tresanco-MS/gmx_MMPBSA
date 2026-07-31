@@ -1062,9 +1062,10 @@ class MMPBSA_App(object):
             GMXMMPBSA_ERROR('ARAD_METHOD must be 1, 2, or 3!', InputError)
         if INPUT['gb']['ifqnt'] not in [0, 1]:
             GMXMMPBSA_ERROR('QMMM must be 0 or 1!', InputError)
-        if INPUT['gb']['ifqnt'] == 0 and (INPUT['gb']['qm_theory'] or INPUT['gb']['qm_residues']):
-            logging.warning('qm_theory/qm_residues variable has been defined, however the potential function is '
-                            'strictly classical (ifqnt=0). Please, set ifqnt=1 if you want to use Use QM/MM')
+        if INPUT['gb']['ifqnt'] == 0 and (INPUT['gb']['qm_residues'] or INPUT['gb']['com_qmmask'] or
+                                          INPUT['gb']['rec_qmmask'] or INPUT['gb']['lig_qmmask']):
+            logging.warning('qm_residues or qm masks have been defined, however the potential function is '
+                            'strictly classical (ifqnt=0). Please, set ifqnt=1 if you want to use QM/MM')
         if INPUT['gb']['ifqnt'] == 1:
 
             """

@@ -66,7 +66,7 @@ forcefields="oldff/leaprc.ff99SB,leaprc.gaff"
 /
 &gb
 igb=1, saltcon=0.150,
-ifqnt=1, qm_theory=PM3,
+ifqnt=1, qm_theory=PM6-DH+,
 
 # Residues to be treated with QM can be selected using different approaches. Please, make sure to include at least 
 # one residue from both the receptor and ligand in the qm_residues mask when using 'ifqnt'. This requirement is 
@@ -99,7 +99,7 @@ a trajectory file (`com_traj.xtc`), and both the receptor and ligand group numbe
 A ligand .mol2 file is also needed for generating the ligand topology. The `mmpbsa.in` input file will contain all 
 the parameters needed for the QM/MMGBSA calculation. 10 frames are going to be used when performing QM/MMGBSA 
 calculation with the igb1 (GB-HCT) model (note that `mbondi` raddi set `PBRadii=2` 
-is used), PM3 method and a salt concentration = 0.15M.
+is used), **PM6-DH+** (default QM Hamiltonian; dispersion- and H-bond-corrected PM6) and a salt concentration of 0.15 M.
 
 A plain text output file with all the statistics (default: `FINAL_RESULTS_MMPBSA.dat`) and a CSV-format 
 output file containing all energy terms for every frame in every calculation will be saved. The file name in 
@@ -109,6 +109,20 @@ specified on the command-line.
 !!! note
     Once the calculation is done, the results can be analyzed in `gmx_MMPBSA_ana` (if `-nogui` flag was not used in the command-line). 
     Please, check the [gmx_MMPBSA_ana][5] section for more information
+
+## References for `PM6-DH+`
+
+`PM6-DH+` is the default `qm_theory` because protein-ligand, nucleic-acid-ligand, and carbohydrate interfaces 
+are dominated by hydrogen bonding and dispersion - interactions that plain PM3/PM6 treat poorly. Key references:
+
+1. **Method development:** Řezáč & Hobza, *J. Chem. Theory Comput.* **2009**, 5, 1749-1760. [doi:10.1021/ct9000922](https://doi.org/10.1021/ct9000922) — PM6-DH dispersion/H-bond corrections; tested on DNA base pairs.
+2. **PM6-DH+ H-bond correction:** Korth, *J. Chem. Theory Comput.* **2010**, 6, 3808-3816. [doi:10.1021/ct100408b](https://doi.org/10.1021/ct100408b)
+3. **Protein-ligand review:** Grimme & Brandenburg, *Front. Chem.* **2015**, 3, 8. [PMC4881564](https://pmc.ncbi.nlm.nih.gov/articles/PMC4881564/) — SQM-DH methods (incl. PM6-DH+) for non-covalent interactions.
+4. **QM/MM-GBSA benchmark (protein-carbohydrate):** Thapa *et al.*, *J. Phys. Chem. B* **2018**, 122, 7866-7878. [doi:10.1021/acs.jpcb.8b03655](https://doi.org/10.1021/acs.jpcb.8b03655)
+5. **QM/MMGBSA with gmx_MMPBSA + PM6-DH+:** *Commun. Biol.* **2025**. [doi:10.1038/s42003-025-09143-z](https://doi.org/10.1038/s42003-025-09143-z)
+6. **Host-guest binding with PM6-DH+:** Muddana & Gilson, *J. Chem. Theory Comput.* **2012**, 8, 2868-2880. [doi:10.1021/ct3002738](https://doi.org/10.1021/ct3002738)
+
+`PM6-DH+` is **not** equivalent to GFN-xTB. GFN-xTB requires a separately built XTB-enabled `sander` (not available in the default conda AmberTools package).
   
   [1]: ../../gmx_MMPBSA_command-line.md#gmx_mmpbsa-command-line
   [2]: ../../input_file.md#the-input-file

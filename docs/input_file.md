@@ -454,7 +454,7 @@ support for complex systems with several components. It supports all force field
         converge the exponential average.
         - It is advisable to study how the Interaction Entropy depends on N by block averaging (which also provide an 
         estimate of the precision of the calculated entropies).
-        - A sampling frequency of 10 fs, as reported in the original [IE publication][3], seems to be 3–40 times too 
+        - A sampling frequency of 10 fs, as reported in the original [IE publication][3], seems to be 3-40 times too 
         dense. A sampling frequency of 0.1 ps would be more appropriate.
         - The Interaction Entropy results may vary depending on the system flexibility or whether constraints were used 
         or not in the MD simulation. 
@@ -491,7 +491,7 @@ Interaction Entropy, _e.g._: `ie_segment = 25` means that the last quartile of t
         entropies.
         - It is advisable to study how the C2 Entropy depends on N by block averaging (which also provide an 
         estimate of the precision of the calculated entropies).
-        - A sampling frequency of 10 fs, seems to be 3–40 times too dense. A sampling frequency of 0.1 ps would be more 
+        - A sampling frequency of 10 fs, seems to be 3-40 times too dense. A sampling frequency of 0.1 ps would be more 
         appropriate.
         - The C2 Entropy results may vary depending on the system flexibility or whether constraints were used 
         or not in the MD simulation.
@@ -710,8 +710,15 @@ molecular surface.
 and `PM6` by choosing `AM1-D*` and `PM6-D`, respectively. The dispersion and hydrogen bond correction will be 
 applied for `AM1-DH+` and `PM6-DH+`.
 
+    The default is `PM6-DH+` which includes dispersion and hydrogen-bond corrections missing from plain PM3/PM6,and have been used in the past to study protein-ligand interactions. 
+    (see [Řezáč & Hobza, *JCTC* **2009**, 5, 1749](https://doi.org/10.1021/ct9000922); 
+    [Korth, *JCTC* **2010**, 6, 3808](https://doi.org/10.1021/ct100408b)). 
+    For QM/MMGBSA applications, see also 
+    [Thapa *et al.*, *J. Phys. Chem. B* **2018**, 122, 7866](https://doi.org/10.1021/acs.jpcb.8b03655) and 
+    [*Commun. Biol.* **2025**](https://doi.org/10.1038/s42003-025-09143-z).
+
     !!! danger
-         No `qm_theory` default, this must be specified if `ifqnt` = 1.
+         `qm_theory` must be specified if `ifqnt` = 1 (default: `PM6-DH+`).
 
 `qm_residues`
 :   Complex residues to treat with quantum mechanics. All residues treated with quantum mechanics in the complex 
@@ -2085,7 +2092,7 @@ startframe=5, endframe=100, interval=5,
 
 &gb
 igb=8, saltcon=0.100, ifqnt=1,
-qm_residues="A/240-251 B/297", qm_theory="PM3"
+qm_residues="A/240-251 B/297", qm_theory="PM6-DH+"
 /
 ```
 

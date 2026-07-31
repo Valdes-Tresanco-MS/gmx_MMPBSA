@@ -457,7 +457,7 @@ input_file.addNamelist('gb', 'gb',
 
                             # Options for QM
                            ['ifqnt', int, 0, 'Enable QM/MM; 0/1'],
-                           ['qm_theory', str, '', 'QM theory; e.g. "PM3"'],
+                           ['qm_theory', str, 'PM6-DH+', 'QM theory; e.g. "PM6-DH+"'],
                            ['qm_residues', str, '', 'QM residues; e.g. ":1-5"'],
 
                            ['com_qmmask', str, '', 'Complex QM mask; e.g. ":1-5"'],
