@@ -22,3 +22,4 @@ examples/AMBER/*
 !examples/Explicit_receptor_waters/
 !examples/Explicit_receptor_waters/README.md
 !examples/Explicit_receptor_waters/mmpbsa_explicit_waters_pymol.in
+.vscode/settings.json
