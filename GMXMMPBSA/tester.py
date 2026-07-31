@@ -33,14 +33,20 @@ def calculatestar(args):
     return run_process(*args)
 
 
-def run_process(system, sys_name, args):
+def _parse_test_entry(entry):
+    path, name = entry[0], entry[1]
+    options = entry[2] if len(entry) > 2 else {}
+    return path, name, options
+
+
+def run_process(work_dir, display_name, sys_name, args, log_file):
     time.sleep(0.1)
-    logging.info(f"{system[1]:60}{'RUNNING':>10}")
-    os.chdir(system[0])
-    system_log = open(f'{sys_name}.log', 'a')
-    g_p = subprocess.Popen(args, stdout=system_log, stderr=system_log)
-    if g_p.wait():
-        return sys_name, True
+    logging.info(f"{display_name:60}{'RUNNING':>10}")
+    os.chdir(work_dir)
+    with open(log_file, 'a') as system_log:
+        g_p = subprocess.Popen(args, stdout=system_log, stderr=system_log)
+        if g_p.wait():
+            return sys_name, True
     return sys_name, False
 
 
@@ -130,23 +136,36 @@ def run_test(parser):
         22: [examples.joinpath('Protein_ligand_LPH_atoms_CHARMMff'), 'Protein-Ligand_LPH (CHARMM force field)'],
         23: [examples.joinpath('QM_MMGBSA'), 'QM/MMGBSA Calculation'],
         24: [examples.joinpath('GBNSR6'), 'GBNSR6 Calculation'],
-        25: [examples.joinpath('AMBER'), 'AMBER input files']
+        25: [examples.joinpath('AMBER'), 'AMBER input files'],
+        26: [examples.joinpath('Explicit_receptor_waters'), 'ST MM/PB(GB)SA with explicit receptor waters']
     }
 
     if parser.test == [0]:
-        key_list = list(range(3, 26))
+        key_list = list(range(3, 27))
     elif parser.test == [1]:
         key_list = [3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 14, 15]
     elif parser.test == [2]:
         key_list = [3, 4, 5, 7, 9, 12, 13, 14, 15]
     elif parser.test == [101]:
-        key_list = list(range(3, 26))
+        key_list = list(range(3, 27))
     else:
         key_list = parser.test
     if not key_list:
         GMXMMPBSA_ERROR('No test was selected. Please define at least one test number')
 
-    req_cpus = {x: _get_frames(test_sys[x][0].joinpath('mmpbsa.in')) for x in key_list}
+    test_meta = {}
+    req_cpus = {}
+    for x in key_list:
+        path, name, options = _parse_test_entry(test_sys[x])
+        input_file = options.get('input_file', path.joinpath('mmpbsa.in'))
+        work_dir = options.get('cwd', path)
+        req_cpus[x] = _get_frames(input_file)
+        test_meta[x] = {
+            'path': path,
+            'name': name,
+            'work_dir': work_dir,
+            'log_file': work_dir.joinpath(f'{x}.log'),
+        }
 
     if parser.num_processors > multiprocessing.cpu_count():
         logging.warning(f'The number cpus defined {parser.num_processors} is greater than the system cpu'
@@ -165,15 +184,23 @@ def run_test(parser):
 
     TASKS = []
     for x in key_list:
-        with open(test_sys[x][0].joinpath('README.md')) as readme:
-            for line in readme:
-                if 'gmx_MMPBSA -O -i mmpbsa.in' in line or 'amber_MMPBSA -O -i mmpbsa.in' in line:
-                    executable = _find_executable('amber_MMPBSA' if 'amber_MMPBSA' in line else 'gmx_MMPBSA')
-                    command = (['mpirun', '-np',
-                                f'{req_cpus[x] if req_cpus[x] <= parser.num_processors else parser.num_processors}']
-                               + [executable] + shlex.split(line)[1:] + ['-nogui'])
-                    TASKS.append((test_sys[x], x, command))
-                    break
+        path, name, options = _parse_test_entry(test_sys[x])
+        meta = test_meta[x]
+        command_line = options.get('command')
+        if not command_line:
+            with open(path.joinpath('README.md')) as readme:
+                for line in readme:
+                    if 'gmx_MMPBSA -O -i mmpbsa.in' in line or 'amber_MMPBSA -O -i mmpbsa.in' in line:
+                        command_line = line.strip()
+                        break
+        if not command_line:
+            GMXMMPBSA_ERROR(f'No runnable command found for test {x} ({name})')
+
+        executable = _find_executable('amber_MMPBSA' if 'amber_MMPBSA' in command_line else 'gmx_MMPBSA')
+        command = (['mpirun', '-np',
+                    f'{req_cpus[x] if req_cpus[x] <= parser.num_processors else parser.num_processors}']
+                   + [executable] + shlex.split(command_line)[1:] + ['-nogui'])
+        TASKS.append((meta['work_dir'], name, x, command, meta['log_file']))
 
     result_list = []
     logging.info(f"{'Example':^60}{'STATE':>10}")
@@ -186,8 +213,8 @@ def run_test(parser):
             sys_name, failed = x
             if failed:
                 any_failed = True
-                log_file = test_sys[sys_name][0].joinpath(f'{sys_name}.log')
-                logging.error(f"{test_sys[sys_name][1]:55}[{c:2}/{len(key_list):2}]{'ERROR':>8}\n"
+                log_file = test_meta[sys_name]['log_file']
+                logging.error(f"{test_meta[sys_name]['name']:55}[{c:2}/{len(key_list):2}]{'ERROR':>8}\n"
                               f"           Please, check the test log\n"
                               f"           ({log_file})")
                 if sys_name == 18 and _has_known_rism_fortran_runtime_error(log_file):
@@ -197,8 +224,8 @@ def run_test(parser):
                                     'with Python 3.9/3.10, AmberTools 23, and libgfortran5/libgcc-ng 12.x, or a '
                                     'patched AmberTools build.')
             else:
-                logging.info(f"{test_sys[sys_name][1]:55}[{c:2}/{len(key_list):2}]{'DONE':>8}")
-                result_list.append(test_sys[sys_name][0])
+                logging.info(f"{test_meta[sys_name]['name']:55}[{c:2}/{len(key_list):2}]{'DONE':>8}")
+                result_list.append(test_meta[sys_name]['work_dir'])
 
             c += 1
 

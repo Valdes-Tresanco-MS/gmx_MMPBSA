@@ -467,11 +467,11 @@ testparser = ArgumentParser(epilog=f'gmx_MMPBSA is an effort to implement the GB
 testparser.add_argument('-v', '--version', action='version',
                        version='%%(prog)s %s based on MMPBSA version %s' % (__version__, __mmpbsa_version__))
 group = testparser.add_argument_group('Test options')
-group.add_argument('-t', dest='test', choices=list(range(26)) + [101], type=int, nargs='*', default=[2],
+group.add_argument('-t', dest='test', choices=list(range(27)) + [101], type=int, nargs='*', default=[2],
                    help='''\
 The level the test is going to be run at. Multiple systems and analysis can be run at the same time.
       Nr. of Sys  
-* 0      23     All -- Run all examples (Can take a long time!!!)
+* 0      24     All -- Run all examples (Can take a long time!!!)
 * 1      12     Minimal -- Does a minimal test with a set of systems and analyzes
                 that show that gmx_MMPBSA runs correctly. Only exclude 3drism, nmode
                 protein-ligand MT because take a long time or are redundant
@@ -503,6 +503,7 @@ The level the test is going to be run at. Multiple systems and analysis can be r
 * 23            QM/MMGBSA Calculation
 * 24            GBNSR6 Calculation
 * 25            AMBER input files
+* 26     | 10   ST MM/PB(GB)SA with explicit receptor waters
 ''')
 group.add_argument('-f', '--folder', help='Defines the folder to store all data', type=Path, default='.')
 group.add_argument('-r', '--reuse', help='Defines the existing test forlder will be reuse', action='store_true')
