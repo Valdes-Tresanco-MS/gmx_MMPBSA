@@ -38,17 +38,32 @@ except ImportError:
                       (amberhome, amberhome))
 
 
-def _gmxmmpbsa_base(parser, engine='gmx'):
+class WarningSpacingFormatter(logging.Formatter):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._previous_was_warning = False
+
+    def format(self, record):
+        message = super().format(record)
+        if record.levelno == logging.WARNING:
+            prefix = '' if self._previous_was_warning else '\n'
+            self._previous_was_warning = True
+            return f'{prefix}{message}\n'
+        self._previous_was_warning = False
+        return message
+
+
+def _setup_logging(log_file):
     stream_handler = logging.StreamHandler()
     stream_handler.setLevel(logging.INFO)
-    formatter = logging.Formatter("[%(levelname)-7s] %(message)s")
-    stream_handler.setFormatter(formatter)
-    logging.basicConfig(
-        level=logging.DEBUG,
-        format="[%(levelname)-7s] %(message)s",
-        handlers=[
-            logging.FileHandler("gmx_MMPBSA.log", 'w'),
-            stream_handler])
+    stream_handler.setFormatter(WarningSpacingFormatter("[%(levelname)-7s] %(message)s"))
+    file_handler = logging.FileHandler(log_file, 'w')
+    file_handler.setFormatter(WarningSpacingFormatter("[%(levelname)-7s] %(message)s"))
+    logging.basicConfig(level=logging.DEBUG, handlers=[file_handler, stream_handler], force=True)
+
+
+def _gmxmmpbsa_base(parser, engine='gmx'):
+    _setup_logging("gmx_MMPBSA.log")
     # Just for compatibility as mpi4py works as serial when run without mpirun
     # (since v1.4.2)
     from mpi4py import MPI
@@ -182,14 +197,7 @@ def gmxmmpbsa_ana():
 
 
 def gmxmmpbsa_test():
-    stream_handler = logging.StreamHandler()
-    stream_handler.setLevel(logging.INFO)
-    logging.basicConfig(
-        level=logging.DEBUG,
-        format="[%(levelname)-7s] %(message)s",
-        handlers=[
-            logging.FileHandler("gmx_MMPBSA_test.log", 'w'),
-            stream_handler])
+    _setup_logging("gmx_MMPBSA_test.log")
     try:
         parser = testparser.parse_args(sys.argv[1:])
     except CommandlineError as e:

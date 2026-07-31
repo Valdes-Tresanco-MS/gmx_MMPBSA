@@ -55,8 +55,6 @@ def _import_main_with_stubs():
     _stub_module('GMXMMPBSA.createinput', create_inputs=lambda *args, **kwargs: None,
                  SanderRISMInput=dummy)
     _stub_module('GMXMMPBSA.make_top_amber', CheckAmberTop=dummy)
-    _stub_module('GMXMMPBSA.make_trajs', make_trajectories=lambda *args, **kwargs: None,
-                 make_mutant_trajectories=lambda *args, **kwargs: None)
     _stub_module('GMXMMPBSA.output_file', write_outputs=lambda *args, **kwargs: None,
                  write_decomp_output=lambda *args, **kwargs: None,
                  data2pkl=lambda *args, **kwargs: None)
