@@ -1370,6 +1370,9 @@ cmd.quit()
                     residues_selection['rec'].append(i)
                     if qm_sele:
                         rec_charge += round(sum(atm.charge for atm in com_top.residues[i - 1].atoms), 0)
+        if qm_sele:
+            rec_charge = int(round(rec_charge))
+            lig_charge = int(round(lig_charge))
         sele_res = sorted([r for m in residues_selection.values() for r in m], key=lambda x: x.index)
         return (sele_res, (rec_charge, lig_charge)) if qm_sele else sele_res
 
