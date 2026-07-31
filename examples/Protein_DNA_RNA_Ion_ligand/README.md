@@ -49,8 +49,9 @@ That being said, once you are in the folder containing all files, the command-li
 
 === "gmx_MMPBSA_test"
 
-        gmx_MMPBSA_test -t prot_dna_rna_ions_lig
+        gmx_MMPBSA_test -t 9
 
+This example uses the same test case as [Comp_receptor](../Comp_receptor/README.md) (`-t 9`).
 
 where the `mmpbsa.in` input file, is a text file containing the following lines:
 

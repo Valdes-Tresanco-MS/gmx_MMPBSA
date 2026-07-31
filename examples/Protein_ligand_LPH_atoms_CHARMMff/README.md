@@ -189,6 +189,10 @@ That being said, once you are in the folder containing all files, the command-li
 
         mpirun -np 2 gmx_MMPBSA -O -i mmpbsa.in -cs str_noLP.pdb -ci index_mod_gromacs.ndx -cg 1 17 -ct com_traj.xtc -cp topol.top -o FINAL_RESULTS_MMPBSA.dat -eo FINAL_RESULTS_MMPBSA.csv
 
+=== "gmx_MMPBSA_test"
+
+        gmx_MMPBSA_test -t 22
+
 where the `mmpbsa.in` input file, is a text file containing the following lines:
 
 ``` yaml linenums="1" title="Sample input file for PB calculation"

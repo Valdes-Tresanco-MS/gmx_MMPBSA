@@ -43,6 +43,25 @@ That being said, once you are in the folder containing all files, the command-li
 
         gmx_MMPBSA_test -t 18
 
+!!! warning "AmberTools/Fortran runtime compatibility"
+    The 3D-RISM calculation is run by AmberTools. Some conda AmberTools builds linked with newer Fortran runtime
+    libraries can abort before the RISM calculation starts with:
+
+    ```text
+    Fortran runtime error: Missing comma between descriptors
+    amber_rism_interface.F90
+    ```
+
+    This is an AmberTools/runtime compatibility issue, not an input preparation error in `gmx_MMPBSA`. A tested
+    workaround is to use `gmx_MMPBSA` 1.6.4 with Python 3.9 and an AmberTools runtime built with compatible
+    GCC runtime libraries, for example AmberTools 23 with `libgfortran5`/`libgcc-ng` 12.x:
+
+    ```bash
+    conda create -n gmxMMPBSA_rism -c conda-forge python=3.9 ambertools=23 "libgfortran5<13" "libgcc-ng<13"
+    conda activate gmxMMPBSA_rism
+    python -m pip install "gmx_MMPBSA==1.6.4"
+    ```
+
 where the `mmpbsa.in` input file, is a text file containing the following lines:
 
 ``` yaml linenums="1" title="Sample input file for MM/3D-RISM"

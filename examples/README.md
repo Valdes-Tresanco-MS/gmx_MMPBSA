@@ -9,6 +9,16 @@ a number of different components (_i.e._ metalloprotein-ligand complex, Protein-
 several types of calculations (_e.g._ GB, Alanine scanning and Per-residue decomposition; PB, Interaction Entropy, 
 and Per-wise decomposition) can be also performed in the same run for a specific system.
 
+## Jupyter notebooks
+
+Two Jupyter notebooks are available for interactive use:
+
+* [Google Colab notebook](https://colab.research.google.com/github/Valdes-Tresanco-MS/gmx_MMPBSA/blob/colab-notebook/notebooks/gmx_MMPBSA_Colab.ipynb):
+  installs a conda-based CPU environment, runs bundled examples, supports uploaded user files, and displays results
+  through the Python API.
+* [Local notebook](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/blob/colab-notebook/notebooks/gmx_MMPBSA_Local.ipynb):
+  runs or loads local results, extracts data with the Python API, and plots energy terms with seaborn.
+
 ## Systems
 
 This is a representation of the systems that can be processed and analyzed with gmx_MMPBSA. Our program has a robust 
@@ -16,10 +26,10 @@ method to process input structures. Even if your system is not represented here,
 be disappointed! 😀
 
 * [Protein-protein](Protein_protein/README.md)[^1][^2][^3]
-* [Protein-ligand](Protein_ligand/ST/README.md)[^1][^2]  
+* [Protein-ligand](Protein_ligand/ST/README.md)[^1][^2]
 * [Protein-DNA](Protein_DNA/README.md)[^1][^2][^3]
 * [Protein-glycan](Protein_glycan/README.md)[^1][^2][^3]
-* [MMPBSA with membrane proteins](Protein_membrane/README.md)[^1][^2]  
+* [MMPBSA with membrane proteins](Protein_membrane/README.md)[^1][^2]
 * [Metalloprotein-ligand](Metalloprotein_ligand/README.md)[^1][^2]
 * [Multicomponent system (Protein-DNA-RNA-Ions-Ligand)](Comp_receptor/README.md)[^1][^2][^3]
 * COVID-19 related proteins
@@ -35,24 +45,26 @@ This section focuses on the analysis that can be performed with gmx_MMPBSA. Alth
 cases, you can use gmx_MMPBSA to perform several types of calculations (_e.g._ GB, Alanine scanning and Per-residue 
 decomposition; PB, Interaction Entropy, and Per-residue decomposition) in the same run for a specific system.
 
-* [Python API extraction](API/README.md)
 * [Single Trajectory Protocol](Protein_ligand/ST/README.md)[^1][^2][^3]
 * [Multiple Trajectory Protocol](Protein_ligand/MT/README.md)[^1]
 * Binding free energy calculations
     * [Binding free energy calculation with GB](Protein_ligand/ST/README.md)
     * [ST MM/PB(GB)SA with explicit receptor waters](Explicit_receptor_waters/README.md)[^1]
-    * [Binding free energy calculation with GBNSR6](GBNSR6/README.md)
-    * [Binding free energy calculation with linear PB (LPBE)](Linear_PB_solver/README.md)
-    * [Binding free energy calculation with NonLinear PB (non-LPBE)](NonLinear_PB_solver/README.md)  
+    * [Binding free energy calculation with GBNSR6](GBNSR6/README.md)[^1]
+    * [Binding free energy calculation with linear PB (LPBE)](Linear_PB_solver/README.md)[^1]
+    * [Binding free energy calculation with NonLinear PB (non-LPBE)](NonLinear_PB_solver/README.md)[^1]
     * [Binding free energy calculation with 3D-RISM model](3D-RISM/README.md)[^1]
 * [Alanine scanning](Alanine_scanning/README.md)[^1][^2][^3]
 * [Decomposition analysis](Decomposition_analysis/README.md)[^1][^2][^3]
 * Entropy
     * [Interaction Entropy calculations](Entropy_calculations/Interaction_Entropy/README.md)[^1][^2][^3]
     * [NMODE Entropy calculations](Entropy_calculations/nmode/README.md)[^1]
-    * [C2 Entropy calculations](Entropy_calculations/C2_Entropy/README.md)
+    * [C2 Entropy calculations](Entropy_calculations/C2_Entropy/README.md)[^1]
 * [Stability calculations](Stability/README.md)[^1][^2][^3]
-* [QM/MMGBSA calculations](QM_MMGBSA/README.md)
+* [QM/MMGBSA calculations](QM_MMGBSA/README.md)[^1]
+* [Correlation](Correlation/README.md)
+* [Python API extraction](API/README.md)
+* [Local API/seaborn notebook](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/blob/colab-notebook/notebooks/gmx_MMPBSA_Local.ipynb)
 
 ## AMBER support
 
@@ -62,17 +74,15 @@ This section focuses on how to work directly with native AMBER topologies, coord
 
 ## CHARMMff support
 
-This section focuses more on how to work with systems prepared with CHARMM force fields. We only show few examples
-for better clarity.
+This section focuses more on how to work with systems prepared with CHARMM force fields. We only show few examples for better clarity.
 
 * [Protein-ligand](Protein_ligand_CHARMMff/README.md)[^1][^2]
 * [Protein-ligand complex embedded in membrane](Protein_membrane_CHARMMff/README.md)[^1]
-* [Protein-ligand with LPH atoms](Protein_ligand_LPH_atoms_CHARMMff/README.md)
+* [Protein-ligand with LPH atoms](Protein_ligand_LPH_atoms_CHARMMff/README.md)[^1]
 
 ## OPLSff support
 
-This section focuses more on how to work with systems prepared with OPLS force fields. We only show few examples
-for better clarity.
+This section focuses more on how to work with systems prepared with OPLS force fields. We only show few examples for better clarity.
 
 * [Protein-protein](OPLS/protein_protein/README.md)
 

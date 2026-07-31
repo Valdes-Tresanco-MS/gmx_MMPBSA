@@ -17,16 +17,16 @@ title: QM/MMGBSA
 
 In this case, `gmx_MMPBSA` requires:
 
-| Input File required            | Required |           Type             | Description |
-|:-------------------------------|:--------:|:--------------------------:|:-------------------------------------------------------------------------------------------------------------|
-| Input parameters file          | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |           `in`          | Input file containing all the specifications regarding the type of calculation that is going to be performed |
-| The MD Structure+mass(db) file | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |    `tpr` `pdb`    | Structure file containing the system coordinates |
-| An index file                  | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |          `ndx`    | File containing the receptor and ligand in separated groups |
-| Receptor and ligand group      | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |        `integers`       | Group numbers in the index files |
-| A trajectory file              | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } | `xtc` `pdb` `trr` | Final GROMACS MD trajectory, fitted and with no pbc. |
-| Ligand parameters file         | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |          `mol2`         | The Antechamber output  `mol2` file of ligand parametrization|
-| A topology file (not included) | :octicons-check-circle-fill-16:{ .req_opt .scale_icon_medium }    |           `top`         | GROMACS topology file (The `* .itp` files defined in the topology must be in the same folder |
-| A Reference Structure file     | :octicons-check-circle-fill-16:{ .req_optrec .scale_icon_medium } |           `pdb`         | Complex reference structure file (without hydrogens) with the desired assignment of chain ID and residue numbers |
+| Input File required            |                             Required                              |       Type        | Description                                                                                                      |
+|:-------------------------------|:-----------------------------------------------------------------:|:-----------------:|:-----------------------------------------------------------------------------------------------------------------|
+| Input parameters file          |    :octicons-check-circle-fill-16:{ .req .scale_icon_medium }     |       `in`        | Input file containing all the specifications regarding the type of calculation that is going to be performed     |
+| The MD Structure+mass(db) file |    :octicons-check-circle-fill-16:{ .req .scale_icon_medium }     |    `tpr` `pdb`    | Structure file containing the system coordinates                                                                 |
+| An index file                  |    :octicons-check-circle-fill-16:{ .req .scale_icon_medium }     |       `ndx`       | File containing the receptor and ligand in separated groups                                                      |
+| Receptor and ligand group      |    :octicons-check-circle-fill-16:{ .req .scale_icon_medium }     |    `integers`     | Group numbers in the index files                                                                                 |
+| A trajectory file              |    :octicons-check-circle-fill-16:{ .req .scale_icon_medium }     | `xtc` `pdb` `trr` | Final GROMACS MD trajectory, fitted and with no pbc.                                                             |
+| Ligand parameters file         |    :octicons-check-circle-fill-16:{ .req .scale_icon_medium }     |      `mol2`       | The Antechamber output  `mol2` file of ligand parametrization                                                    |
+| A topology file (not included) |  :octicons-check-circle-fill-16:{ .req_opt .scale_icon_medium }   |       `top`       | GROMACS topology file (The `* .itp` files defined in the topology must be in the same folder                     |
+| A Reference Structure file     | :octicons-check-circle-fill-16:{ .req_optrec .scale_icon_medium } |       `pdb`       | Complex reference structure file (without hydrogens) with the desired assignment of chain ID and residue numbers |
               
 :octicons-check-circle-fill-16:{ .req } -> Must be defined -- :octicons-check-circle-fill-16:{ .req_optrec } -> 
 Optional, but recommended -- :octicons-check-circle-fill-16:{ .req_opt } -> Optional
@@ -47,6 +47,10 @@ That being said, once you are in the folder containing all files, the command-li
 
         mpirun -np 2 gmx_MMPBSA -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 1 13 -ct com_traj.xtc -lm ligand.mol2 -o FINAL_RESULTS_MMPBSA.dat -eo FINAL_RESULTS_MMPBSA.csv
 
+=== "gmx_MMPBSA_test"
+
+        gmx_MMPBSA_test -t 23
+
 where the `mmpbsa.in` input file, is a text file containing the following lines:
 
 ``` yaml linenums="1" title="Sample input file for QM/MMGBSA calculation"
@@ -66,10 +70,22 @@ forcefields="oldff/leaprc.ff99SB,leaprc.gaff"
 /
 &gb
 igb=1, saltcon=0.150,
-ifqnt=1, qm_theory=PM3,
-qm_residues="A/40-41,44,47,78,81-82,85,88,115,118,122,215,218-220,232 B/241"
-# qm_residues selection with "within" keyword (new in v1.5.0)
-#qm_residues="within 5"
+ifqnt=1, qm_theory=PM6-DH+,
+
+# Residues to be treated with QM can be selected using different approaches. Please, make sure to include at least
+# one residue from both the receptor and ligand in the qm_residues mask when using 'ifqnt'. This requirement is
+# automatically fulfilled when using the within keyword https://groups.google.com/g/gmx_mmpbsa/c/GNb4q4YGCH8
+
+# Residue selection by distance (recommended)
+qm_residues="within 4"
+
+## Explicit residue selection
+#qm_residues="A/40-41,44,47,78,81-82,85,88,115,118,122,215,218-220,232 B/241"
+
+# Residue selection with amber masks
+#com_qmmask="(:44,47,85,88,218&!@N,H,CA,HA,C,O) | :241"
+#rec_qmmask="(:44,47,85,88,218&!@N,H,CA,HA,C,O)"
+#lig_qmmask=":1"
 /
 ```
 
@@ -87,7 +103,7 @@ a trajectory file (`com_traj.xtc`), and both the receptor and ligand group numbe
 A ligand .mol2 file is also needed for generating the ligand topology. The `mmpbsa.in` input file will contain all 
 the parameters needed for the QM/MMGBSA calculation. 10 frames are going to be used when performing QM/MMGBSA 
 calculation with the igb1 (GB-HCT) model (note that `mbondi` raddi set `PBRadii=2` 
-is used), PM3 method and a salt concentration = 0.15M.
+is used), **PM6-DH+** (default QM Hamiltonian; dispersion- and H-bond-corrected PM6) and a salt concentration of 0.15 M.
 
 A plain text output file with all the statistics (default: `FINAL_RESULTS_MMPBSA.dat`) and a CSV-format 
 output file containing all energy terms for every frame in every calculation will be saved. The file name in 
@@ -97,6 +113,20 @@ specified on the command-line.
 !!! note
     Once the calculation is done, the results can be analyzed in `gmx_MMPBSA_ana` (if `-nogui` flag was not used in the command-line). 
     Please, check the [gmx_MMPBSA_ana][5] section for more information
+
+## References for `PM6-DH+`
+
+`PM6-DH+` is the default `qm_theory` because protein-ligand, nucleic-acid-ligand, and carbohydrate interfaces
+are dominated by hydrogen bonding and dispersion - interactions that plain PM3/PM6 treat poorly. Key references:
+
+1. **Method development:** Řezáč & Hobza, *J. Chem. Theory Comput.* **2009**, 5, 1749-1760. [doi:10.1021/ct9000922](https://doi.org/10.1021/ct9000922) — PM6-DH dispersion/H-bond corrections; tested on DNA base pairs.
+2. **PM6-DH+ H-bond correction:** Korth, *J. Chem. Theory Comput.* **2010**, 6, 3808-3816. [doi:10.1021/ct100408b](https://doi.org/10.1021/ct100408b)
+3. **Protein-ligand review:** Grimme & Brandenburg, *Front. Chem.* **2015**, 3, 8. [PMC4881564](https://pmc.ncbi.nlm.nih.gov/articles/PMC4881564/) — SQM-DH methods (incl. PM6-DH+) for non-covalent interactions.
+4. **QM/MM-GBSA benchmark (protein-carbohydrate):** Thapa *et al.*, *J. Phys. Chem. B* **2018**, 122, 7866-7878. [doi:10.1021/acs.jpcb.8b03655](https://doi.org/10.1021/acs.jpcb.8b03655)
+5. **QM/MMGBSA with gmx_MMPBSA + PM6-DH+:** *Commun. Biol.* **2025**. [doi:10.1038/s42003-025-09143-z](https://doi.org/10.1038/s42003-025-09143-z)
+6. **Host-guest binding with PM6-DH+:** Muddana & Gilson, *J. Chem. Theory Comput.* **2012**, 8, 2868-2880. [doi:10.1021/ct3002738](https://doi.org/10.1021/ct3002738)
+
+`PM6-DH+` is **not** equivalent to GFN-xTB. GFN-xTB requires a separately built XTB-enabled `sander` (not available in the default conda AmberTools package).
   
   [1]: ../../gmx_MMPBSA_command-line.md#gmx_mmpbsa-command-line
   [2]: ../../input_file.md#the-input-file

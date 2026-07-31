@@ -100,10 +100,10 @@ specified on the command-line. A plain text (`FINAL_DECOMP_MMPBSA.dat`) and a CS
 output files containing all energy terms for each printed residue in decomposition calculations will be also saved.
 
 !!! Important
-    In several cases, `set cartoon_side_chain_helper, 1` in PyMOL causes undesired visual effects, _e.g._ it shows the 
-    terminal chain residue incompletely or hides the oxygen atoms of the PO3 group. Additionally, it can prevent the 
-    user from displaying any atoms that are hidden by this method, _i.e._, the backbone atoms. In such cases, using the 
-    command `set cartoon_side_chain_helper, 0` should solve teh problem.
+    In several cases, `set cartoon_side_chain_helper, 1` in PyMOL causes undesired visual effects, _e.g._ it shows the
+    terminal chain residue incompletely or hides the oxygen atoms of the PO3 group. Additionally, it can prevent the
+    user from displaying any atoms that are hidden by this method, _i.e._, the backbone atoms. In such cases, using the
+    command `set cartoon_side_chain_helper, 0` should solve the problem.
 
 !!! note
     Once the calculation is done, the results can be analyzed in `gmx_MMPBSA_ana` (if `-nogui` flag was not used in the command-line). 

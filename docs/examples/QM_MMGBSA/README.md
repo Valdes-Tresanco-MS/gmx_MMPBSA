@@ -47,6 +47,10 @@ That being said, once you are in the folder containing all files, the command-li
 
         mpirun -np 2 gmx_MMPBSA -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 1 13 -ct com_traj.xtc -lm ligand.mol2 -o FINAL_RESULTS_MMPBSA.dat -eo FINAL_RESULTS_MMPBSA.csv
 
+=== "gmx_MMPBSA_test"
+
+        gmx_MMPBSA_test -t 23
+
 where the `mmpbsa.in` input file, is a text file containing the following lines:
 
 ``` yaml linenums="1" title="Sample input file for QM/MMGBSA calculation"
@@ -68,8 +72,8 @@ forcefields="oldff/leaprc.ff99SB,leaprc.gaff"
 igb=1, saltcon=0.150,
 ifqnt=1, qm_theory=PM6-DH+,
 
-# Residues to be treated with QM can be selected using different approaches. Please, make sure to include at least 
-# one residue from both the receptor and ligand in the qm_residues mask when using 'ifqnt'. This requirement is 
+# Residues to be treated with QM can be selected using different approaches. Please, make sure to include at least
+# one residue from both the receptor and ligand in the qm_residues mask when using 'ifqnt'. This requirement is
 # automatically fulfilled when using the within keyword https://groups.google.com/g/gmx_mmpbsa/c/GNb4q4YGCH8
 
 # Residue selection by distance (recommended)
@@ -112,7 +116,7 @@ specified on the command-line.
 
 ## References for `PM6-DH+`
 
-`PM6-DH+` is the default `qm_theory` because protein-ligand, nucleic-acid-ligand, and carbohydrate interfaces 
+`PM6-DH+` is the default `qm_theory` because protein-ligand, nucleic-acid-ligand, and carbohydrate interfaces
 are dominated by hydrogen bonding and dispersion - interactions that plain PM3/PM6 treat poorly. Key references:
 
 1. **Method development:** Řezáč & Hobza, *J. Chem. Theory Comput.* **2009**, 5, 1749-1760. [doi:10.1021/ct9000922](https://doi.org/10.1021/ct9000922) — PM6-DH dispersion/H-bond corrections; tested on DNA base pairs.
