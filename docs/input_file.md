@@ -822,6 +822,9 @@ on the very first step to a file named qmmm_region.pdb.
     accuracy of GBNSR6 relative to the PB standard is virtually unaffected by the choice of input atomic radii. Check
     Chapter [§5](https://ambermd.org/doc12/Amber21.pdf#chapter.5) in Amber manual for a more thorough description 
     of the GBNSR6 model and its parameters.
+    * `gmx_MMPBSA` prepares temporary GBNSR6 topology copies for the energy calculation and keeps the original
+    COM/REC/LIG topology files for output parsing. This compatibility step is automatic and does not require extra
+    input options.
     * A default GBNSR6 input file can be created as follows:
 
         ```

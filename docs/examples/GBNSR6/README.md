@@ -85,6 +85,8 @@ MM/PB(GB)SA calculation using the GBNSR6 model.
     * In contrast to most GB practical models, GBNSR6 model is parameter free in the same sense as the numerical 
     PB framework is. Thus, accuracy of GBNSR6 relative to the PB standard is virtually unaffected by the choice of 
     input atomic radii. 
+    * `gmx_MMPBSA` automatically prepares temporary GBNSR6 topology copies for the calculation and keeps the original
+    COM/REC/LIG topology files for output parsing. No extra input option is required.
     * Check Chapter [§5](https://ambermd.org/doc12/Amber21.pdf#chapter.5) in Amber manual for a more thorough 
     description of the GBNSR6 model and its parameters.
 

@@ -918,7 +918,7 @@ class Unbuffered(object):
     def __getattr__(self, attr):
         return getattr(self._handle, attr)
 
-def mdout2json(ca):
+def mdout2json(ca, keep_mdout=False):
     mdout_file = Path(ca[ca.index('-o') + 1])
     output_file = mdout_file.parent.joinpath(mdout_file.stem + '.json')
     topology = ca[ca.index('-p') + 1]
@@ -961,7 +961,8 @@ def mdout2json(ca):
             results['decomp'] = pw
     with open(output_file, "w") as outfile:
         json.dump({'file_assignments': file_assignments, 'inputfile': inputfile, 'results_section': results}, outfile)
-    mdout_file.unlink(missing_ok=True)
+    if not keep_mdout:
+        mdout_file.unlink(missing_ok=True)
 
 
 def get_gbnsr6_out(dgij, pw, t):

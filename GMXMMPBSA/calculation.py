@@ -151,6 +151,8 @@ class CalculationList(list):
 class MultiCalculation(object):
     def __init__(self):
         self.list_calc = []
+        self.postprocess_prmtop = None
+        self.keep_mdouts = False
 
     def run(self, rank, stdout=sys.stdout, stderr=sys.stderr):
         """ Runs the program. All command-line arguments must be set before
@@ -199,7 +201,11 @@ class MultiCalculation(object):
                 # Each file of gbnsr6 with decomp is huge, so we need to reduce it. Here we transform the file to json
                 # to make it small
                 if 'gbnsr6' in command_args[0]:
-                    mdout2json(command_args)
+                    postprocess_args = command_args
+                    if self.postprocess_prmtop is not None:
+                        postprocess_args = command_args.copy()
+                        postprocess_args[postprocess_args.index('-p') + 1] = str(self.postprocess_prmtop)
+                    mdout2json(postprocess_args, keep_mdout=self.keep_mdouts)
         finally:
             if own_handleo: process_stdout.close()
             if own_handlee: process_stdout.close()
@@ -332,7 +338,8 @@ class EnergyCalculation(Calculation):
 
 
 class ListEnergyCalculation(MultiCalculation):
-    def __init__(self, prog, prmtop, input_file, incrds, outputs, xvv=None):
+    def __init__(self, prog, prmtop, input_file, incrds, outputs, xvv=None, postprocess_prmtop=None,
+                 keep_mdouts=False):
         super().__init__()
         self.program = prog
         self.prmtop = prmtop
@@ -340,6 +347,8 @@ class ListEnergyCalculation(MultiCalculation):
         self.input_file = input_file
         self.outputs = outputs
         self.xvv = xvv
+        self.postprocess_prmtop = postprocess_prmtop
+        self.keep_mdouts = keep_mdouts
 
     def setup(self):
         """

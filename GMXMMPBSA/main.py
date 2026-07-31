@@ -41,6 +41,7 @@ from GMXMMPBSA.createinput import create_inputs, SanderRISMInput
 from GMXMMPBSA.exceptions import (MMPBSA_Error, InternalError, InputError, GMXMMPBSA_ERROR)
 from GMXMMPBSA.infofile import InfoFile
 from GMXMMPBSA.fake_mpi import MPI as FakeMPI
+from GMXMMPBSA.gbnsr6_topology import strip_dihedral_terms_for_gbnsr6
 from GMXMMPBSA.input_parser import input_file as _input_file
 from GMXMMPBSA.make_top_amber import CheckAmberTop
 from GMXMMPBSA.make_trajs import make_trajectories, make_mutant_trajectories
@@ -280,6 +281,9 @@ class MMPBSA_App(object):
                        self.FILES.ligand_prmtop == self.FILES.mutant_ligand_prmtop)
 
         prefix = pre + 'mutant_' if mutant else pre
+        complex_prmtop_path = self.FILES.mutant_complex_prmtop if mutant else self.FILES.complex_prmtop
+        receptor_prmtop_path = self.FILES.mutant_receptor_prmtop if mutant else self.FILES.receptor_prmtop
+        ligand_prmtop_path = self.FILES.mutant_ligand_prmtop if mutant else self.FILES.ligand_prmtop
 
 
         # First load the GB calculations
@@ -387,6 +391,21 @@ class MMPBSA_App(object):
         if self.INPUT['gbnsr6']['gbnsr6run']:
             incrd = '%sdummy%%s.inpcrd' % prefix
             mdin = self.pre + 'gbnsr6.mdin'
+            keep_gbnsr6_mdouts = self.INPUT['general']['keep_files'] == 2
+            if self.master:
+                logging.warning('Preparing GBNSR6 topology copies with dihedral terms disabled.')
+            gbnsr6_complex_prmtop = strip_dihedral_terms_for_gbnsr6(
+                complex_prmtop_path, f'{prefix}complex_gbnsr6.prmtop'
+            )
+            gbnsr6_receptor_prmtop = None
+            gbnsr6_ligand_prmtop = None
+            if not self.stability:
+                gbnsr6_receptor_prmtop = strip_dihedral_terms_for_gbnsr6(
+                    receptor_prmtop_path, f'{prefix}receptor_gbnsr6.prmtop'
+                )
+                gbnsr6_ligand_prmtop = strip_dihedral_terms_for_gbnsr6(
+                    ligand_prmtop_path, f'{prefix}ligand_gbnsr6.prmtop'
+                )
 
             # Mdin depends on decomp or not
             if self.INPUT['decomp']['decomprun']:
@@ -422,7 +441,10 @@ class MMPBSA_App(object):
                       for file in files]
             inpcrds = [file.as_posix() for file in files]
 
-            c = ListEnergyCalculation(progs['gbnsr6'], parm_system.complex_prmtop, mdin, inpcrds, mdouts)
+            c = ListEnergyCalculation(
+                progs['gbnsr6'], gbnsr6_complex_prmtop, mdin, inpcrds, mdouts,
+                postprocess_prmtop=complex_prmtop_path, keep_mdouts=keep_gbnsr6_mdouts
+            )
             self.calc_list.append(c, '    calculating GB...', timer_key='gbnsr6',
                                       output_basename=f"{pre}inpcrd_%d/{prefix}complex_gbnsr6.mdout")
 
@@ -465,7 +487,10 @@ class MMPBSA_App(object):
                         for file in files]
                     inpcrds = [file.as_posix() for file in files]
 
-                    c = ListEnergyCalculation(progs['gbnsr6'], parm_system.receptor_prmtop, mdin, inpcrds, mdouts)
+                    c = ListEnergyCalculation(
+                        progs['gbnsr6'], gbnsr6_receptor_prmtop, mdin, inpcrds, mdouts,
+                        postprocess_prmtop=receptor_prmtop_path, keep_mdouts=keep_gbnsr6_mdouts
+                    )
                     self.calc_list.append(c, '    calculating GB...', timer_key='gbnsr6',
                                           output_basename=f"{pre}inpcrd_%d/{prefix}receptor_gbnsr6.mdout")
 
@@ -506,7 +531,10 @@ class MMPBSA_App(object):
                         for file in files]
                     inpcrds = [file.as_posix() for file in files]
 
-                    c = ListEnergyCalculation(progs['gbnsr6'], parm_system.ligand_prmtop, mdin, inpcrds, mdouts)
+                    c = ListEnergyCalculation(
+                        progs['gbnsr6'], gbnsr6_ligand_prmtop, mdin, inpcrds, mdouts,
+                        postprocess_prmtop=ligand_prmtop_path, keep_mdouts=keep_gbnsr6_mdouts
+                    )
                     self.calc_list.append(c, '    calculating GB...', timer_key='gbnsr6',
                                           output_basename=f"{pre}inpcrd_%d/{prefix}ligand_gbnsr6.mdout")
                     c = MergeOut(self.FILES.ligand_prmtop, f"{prefix}ligand_gbnsr6.mdout.%d",
