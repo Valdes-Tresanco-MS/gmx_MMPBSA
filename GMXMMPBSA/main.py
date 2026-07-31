@@ -1022,6 +1022,15 @@ class MMPBSA_App(object):
             GMXMMPBSA_ERROR('PBRadii must be 1, 2, 3, 4, 5, 6, or 7!', InputError)
         if INPUT['general']['solvated_trajectory'] not in [0, 1]:
             GMXMMPBSA_ERROR('SOLVATED_TRAJECTORY must be 0 or 1!', InputError)
+        if INPUT['general']['explicit_waters'] < 0:
+            GMXMMPBSA_ERROR('EXPLICIT_WATERS must be >= 0!', InputError)
+        if INPUT['general']['explicit_waters_pymol_cutoff'] < 0:
+            GMXMMPBSA_ERROR('EXPLICIT_WATERS_PYMOL_CUTOFF must be >= 0!', InputError)
+        if INPUT['general']['explicit_waters_as'].lower() != 'receptor':
+            GMXMMPBSA_ERROR('EXPLICIT_WATERS_AS only supports "receptor" in this version.', InputError)
+        if INPUT['general']['explicit_waters_extra_points'].lower() not in ['error', 'strip']:
+            GMXMMPBSA_ERROR('EXPLICIT_WATERS_EXTRA_POINTS must be "error" or "strip".', InputError)
+        INPUT['general']['explicit_waters_extra_points'] = INPUT['general']['explicit_waters_extra_points'].lower()
         if self.INPUT['general']['startframe'] < 1:
             # GMXMMPBSA_ERROR('The startframe variable must be >= 1')
             logging.warning(f"The startframe variable must be >= 1. Changing startframe from"
@@ -1150,6 +1159,26 @@ class MMPBSA_App(object):
             GMXMMPBSA_ERROR('IDECOMP cannot be used with sander.APBS!', InputError)
         if INPUT['decomp']['decomprun'] and INPUT['decomp']['idecomp'] == 0:
             GMXMMPBSA_ERROR('IDECOMP cannot be 0 for Decomposition analysis!', InputError)
+
+        if INPUT['general']['explicit_waters'] > 0:
+            if not (INPUT['gb']['gbrun'] or INPUT['pb']['pbrun']):
+                GMXMMPBSA_ERROR('EXPLICIT_WATERS requires a GB or PB calculation (&gb or &pb).', InputError)
+            if not INPUT['general']['explicit_waters_mask'].strip():
+                GMXMMPBSA_ERROR('EXPLICIT_WATERS_MASK must be defined when EXPLICIT_WATERS > 0.', InputError)
+            if not self.FILES.complex_top:
+                GMXMMPBSA_ERROR('EXPLICIT_WATERS requires a GROMACS complex topology (-cp) in this version.',
+                                InputError)
+            if any([
+                self.FILES.receptor_tpr, self.FILES.receptor_trajs, self.FILES.receptor_top,
+                self.FILES.ligand_tpr, self.FILES.ligand_trajs, self.FILES.ligand_top,
+            ]):
+                GMXMMPBSA_ERROR('EXPLICIT_WATERS is supported only for the single-trajectory approach.', InputError)
+            if any([
+                INPUT['rism']['rismrun'], INPUT['gbnsr6']['gbnsr6run'],
+                INPUT['nmode']['nmoderun'], INPUT['general']['qh_entropy'],
+            ]):
+                GMXMMPBSA_ERROR('EXPLICIT_WATERS currently supports only ST GB or PB calculations without '
+                                'entropy, RISM, or GBNSR6.', InputError)
 
         if INPUT['ala']['alarun'] and INPUT['general']['netcdf'] != '':
             GMXMMPBSA_ERROR('Alanine scanning is incompatible with NETCDF != 0!', InputError)

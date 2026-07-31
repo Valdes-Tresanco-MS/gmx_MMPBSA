@@ -1,0 +1,16 @@
+Sample input file for ST GB calculation with explicit receptor waters
+# This input keeps 10 waters closest to the PyMOL/dASA interface.
+# PyMOL is required only when explicit_waters_mask="pymol".
+
+&general
+sys_name="Prot-Prot-ExpWat",
+startframe=1,
+endframe=10,
+forcefields="leaprc.protein.ff14SB",
+explicit_waters=10,
+explicit_waters_mask="pymol",
+explicit_waters_pymol_cutoff=0.5,
+/
+&gb
+igb=2, saltcon=0.150,
+/

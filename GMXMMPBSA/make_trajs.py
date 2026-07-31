@@ -38,7 +38,8 @@ from warnings import warn
 from GMXMMPBSA.exceptions import (TrajError, MMPBSA_Error, InternalError, MutantResError)
 from pathlib import Path
 
-strip_mask = ':WAT,Cl*,CIO,Cs+,IB,K*,Li+,MG*,Na+,Rb+,CS,RB,NA,F,CL'
+strip_mask = ':WAT,SOL,TIP3P,TIP3,TP3,TIPS3P,TIP3o,TIP4P,TIP4PEW,T4E,TIP4PD,TIP5P,SPC,SPCE,OPC,' \
+             'Cl*,CIO,Cs+,IB,K*,Li+,MG*,Na+,Rb+,CS,RB,NA,F,CL'
 
 
 def make_trajectories(INPUT, FILES, size, cpptraj, pre):
@@ -67,7 +68,10 @@ def make_trajectories(INPUT, FILES, size, cpptraj, pre):
     #    print FILES.complex_prmtop, FILES.complex_trajs, cpptraj
 
     traj = Trajectory(FILES.complex_prmtop, FILES.complex_trajs, cpptraj)
-    traj.Setup(INPUT['general']['startframe'], INPUT['general']['endframe'], INPUT['general']['interval'])
+    if getattr(FILES, 'explicit_waters_preselected', False):
+        traj.Setup(1, traj.total_frames, 1)
+    else:
+        traj.Setup(INPUT['general']['startframe'], INPUT['general']['endframe'], INPUT['general']['interval'])
     # RMS fit
     traj.rms('!(%s)' % strip_mask)
 

@@ -28,7 +28,7 @@ import parmed
 from GMXMMPBSA.exceptions import *
 from GMXMMPBSA.topology_preprocess import GromacsTopologyPreprocessor
 from GMXMMPBSA.utils import (selector, get_dist, list2range, res2map, get_indexes, log_subprocess_output, check_str,
-                             eq_strs, get_index_groups)
+                             eq_strs, get_index_groups, Residue)
 from GMXMMPBSA.alamdcrd import _scaledistance
 import subprocess
 from pathlib import Path
@@ -72,6 +72,25 @@ ions = ["AG", "AL", "Ag", "BA", "BR", "Be", "CA", "CD", "CE", "CL", "CO", "CR", 
         "LA", "LI", "LU", "MG", "MN", "NA", "NH4", "NI", "Na+", "Nd", "PB", "PD", "PR", "PT", "Pu", "RB", "Ra", "SM",
         "SR", "Sm", "Sn", "TB", "TL", "Th", "Tl", "Tm", "U4+", "V2+", "Y", "YB2", "ZN", "Zr"]
 
+water_residues = [
+    'SOL', 'WAT',
+    'TIP3P', 'TIP3', 'TP3', 'TIPS3P', 'TIP3o',
+    'TIP4P', 'TIP4PEW', 'T4E', 'TIP4PD',
+    'TIP5P',
+    'SPC', 'SPC/E', 'SPCE',
+    'OPC'
+]
+
+solvent_ion_residues = [
+    'NA', 'CL', 'K',
+    'SOD', 'Na+', 'CLA', 'Cl-', 'POT', 'K+',
+    *water_residues
+]
+explicit_water_ion_mask = ':NA,CL,K,SOD,Na+,CLA,Cl-,POT,K+'
+explicit_water_solvent_mask = ':' + ','.join(water_residues)
+explicit_water_reference_exclusion_mask = ':' + ','.join(solvent_ion_residues)
+explicit_water_group_names = ['SOLV', 'SOL', 'Water', 'WAT', *water_residues]
+
 
 class CheckMakeTop:
     def __init__(self, FILES, INPUT, external_programs):
@@ -95,6 +114,13 @@ class CheckMakeTop:
 
         self.rec_str_ions = False
         self.lig_str_ions = False
+        self.explicit_waters = self.INPUT['general']['explicit_waters']
+        self.explicit_waters_mask = self.INPUT['general']['explicit_waters_mask']
+        self.explicit_waters_group = self.INPUT['general']['explicit_waters_group']
+        self.explicit_waters_extra_points = self.INPUT['general']['explicit_waters_extra_points'].lower()
+        self.explicit_water_prmtop = None
+        self.explicit_water_range = ''
+        self.explicit_water_extra_point_mask = ''
 
         # create the * prmtop variables for compatibility with the original code
         self.complex_pmrtop = 'COM.prmtop'
@@ -121,6 +147,7 @@ class CheckMakeTop:
         :return: complex, receptor, ligand topologies and their mutants
         """
         self.gmx2pdb()
+        self._resolve_explicit_waters_mask()
         if self.FILES.complex_top:
             tops = self.gmxtop2prmtop()
         else:
@@ -128,6 +155,9 @@ class CheckMakeTop:
             tops = self.makeToptleap()
 
         if self.INPUT['decomp']['decomprun']:
+            explicit_water_res = []
+            if self.explicit_waters and self.INPUT['decomp']['print_res'] == 'all':
+                explicit_water_res = self._ensure_explicit_water_residues_mapped()
             decomp_res = self.get_selected_residues(self.INPUT['decomp']['print_res'])
             if 'within' in self.INPUT['decomp']['print_res']:
                 if len(decomp_res) < 2:
@@ -153,6 +183,8 @@ class CheckMakeTop:
                     logging.info(
                         f"Selecting residues by distance ({self.INPUT['decomp']['print_res'].split()[1]} Å) between "
                         f"receptor and ligand for decomposition analysis...")
+                explicit_water_res = self._ensure_explicit_water_residues_mapped()
+                decomp_res = self._include_explicit_waters_in_decomp(decomp_res, explicit_water_res)
             elif self.INPUT['decomp']['print_res'] == 'all':
                 logging.info('Selecting all residues for decomposition analysis...')
             else:
@@ -260,6 +292,22 @@ class CheckMakeTop:
         self.cleanup_trajs()
         return tops
 
+    @staticmethod
+    def _get_index_group_names(index_file):
+        with open(index_file) as ndx_file:
+            return [line.split('[', 1)[1].split(']', 1)[0].strip()
+                    for line in ndx_file if line.lstrip().startswith('[')]
+
+    def _explicit_water_group_candidates(self):
+        if self.explicit_waters_group.strip():
+            return [self.explicit_waters_group.strip()]
+
+        candidates = []
+        for group_name in explicit_water_group_names:
+            if group_name.lower() not in [name.lower() for name in candidates]:
+                candidates.append(group_name)
+        return candidates
+
     def gmx2pdb(self):
         """
         Generate PDB file to generate topology
@@ -275,12 +323,44 @@ class CheckMakeTop:
             GMXMMPBSA_ERROR('The receptor and ligand groups must be different')
         num_com_rec_group, str_com_rec_group = get_index_groups(self.FILES.complex_index, com_rec_group)
         num_com_lig_group, str_com_lig_group = get_index_groups(self.FILES.complex_index, com_lig_group)
+        with open(self.FILES.complex_index) as ndx_file:
+            combined_group_number = sum(1 for line in ndx_file if line.startswith('['))
+        num_com_wat_group = None
+        str_com_wat_group = None
+        if self.explicit_waters:
+            groups = self._get_index_group_names(self.FILES.complex_index)
+            solvent_group_candidates = self._explicit_water_group_candidates()
+            for candidate in solvent_group_candidates:
+                for group_index, group_name in enumerate(groups):
+                    if group_name.lower() == candidate.lower():
+                        num_com_wat_group = group_index
+                        str_com_wat_group = group_name
+                        break
+                if num_com_wat_group is not None:
+                    break
+            if num_com_wat_group is None:
+                candidate_list = ', '.join(solvent_group_candidates)
+                GMXMMPBSA_ERROR(f'EXPLICIT_WATERS requires a solvent group named one of [{candidate_list}] in the '
+                                'complex index file. If your solvent group has another name, set '
+                                'explicit_waters_group in &general.')
+            logging.info(f'Using solvent group {str_com_wat_group} ({num_com_wat_group}) for explicit waters.')
 
         logging.info('Making gmx_MMPBSA index for complex...')
         # merge both (rec and lig) groups into complex group, modify index and create a copy
         # 1-rename groups, 2-merge
-        make_ndx_echo_args = echo_command + ['name {r} GMXMMPBSA_REC\n name {l} GMXMMPBSA_LIG\n  {r} | '
-                                             '{l}\n q\n'.format(r=num_com_rec_group, l=num_com_lig_group)]
+        if self.explicit_waters:
+            make_ndx_echo_args = echo_command + [
+                'name {r} GMXMMPBSA_REC\n name {l} GMXMMPBSA_LIG\n name {w} GMXMMPBSA_WAT\n'
+                ' {r} | {l} | {w}\n name {c} GMXMMPBSA_REC_GMXMMPBSA_LIG\n q\n'.format(
+                    r=num_com_rec_group, l=num_com_lig_group, w=num_com_wat_group, c=combined_group_number
+                )
+            ]
+        else:
+            make_ndx_echo_args = echo_command + ['name {r} GMXMMPBSA_REC\n name {l} GMXMMPBSA_LIG\n  {r} | '
+                                                 '{l}\n name {c} GMXMMPBSA_REC_GMXMMPBSA_LIG\n q\n'.format(
+                                                     r=num_com_rec_group, l=num_com_lig_group,
+                                                     c=combined_group_number
+                                                 )]
         c1 = subprocess.Popen(make_ndx_echo_args, stdout=subprocess.PIPE)
 
         com_ndx = self.FILES.prefix + 'COM_index.ndx'
@@ -294,9 +374,14 @@ class CheckMakeTop:
             GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(self.make_ndx), self.FILES.complex_index))
         self.FILES.complex_index = com_ndx
 
-        logging.info(f'Normal Complex: Saving group {str_com_rec_group}_{str_com_lig_group} '
-                     f'({num_com_rec_group}_{num_com_lig_group}) in {self.FILES.complex_index} file as '
-                     f'{self.complex_str_file}')
+        if self.explicit_waters:
+            logging.info(f'Normal Complex: Saving group {str_com_rec_group}_{str_com_lig_group}_{str_com_wat_group} '
+                         f'({num_com_rec_group}_{num_com_lig_group}_{num_com_wat_group}) in '
+                         f'{self.FILES.complex_index} file as {self.complex_str_file}')
+        else:
+            logging.info(f'Normal Complex: Saving group {str_com_rec_group}_{str_com_lig_group} '
+                         f'({num_com_rec_group}_{num_com_lig_group}) in {self.FILES.complex_index} file as '
+                         f'{self.complex_str_file}')
         # avoid PBC and not chain ID problems
         pdbcom_echo_args = echo_command + ['GMXMMPBSA_REC_GMXMMPBSA_LIG']
         c3 = subprocess.Popen(pdbcom_echo_args, stdout=subprocess.PIPE)
@@ -512,33 +597,34 @@ class CheckMakeTop:
             self.INPUT['general']['interaction_entropy'] = self.INPUT['general']['c2_entropy'] = 0
 
         # initialize receptor and ligand structures. Needed to get residues map
+        logging.info('Loading extracted complex, receptor, and ligand PDB files with ParmEd...')
         self.complex_str = self.molstr(self.complex_str_file)
         self.receptor_str = self.molstr(self.receptor_str_file)
         self.ligand_str = self.molstr(self.ligand_str_file)
+        logging.info('Loaded structures: complex %d atoms/%d residues, receptor %d atoms/%d residues, '
+                     'ligand %d atoms/%d residues.',
+                     len(self.complex_str.atoms), len(self.complex_str.residues),
+                     len(self.receptor_str.atoms), len(self.receptor_str.residues),
+                     len(self.ligand_str.atoms), len(self.ligand_str.residues))
         if self.FILES.reference_structure:
+            logging.info('Loading reference structure for chain/residue consistency checks...')
             self.ref_str = check_str(self.FILES.reference_structure, ref=True)
         self.check4water()
+        logging.info('Reading receptor/ligand atom indexes and building residue maps...')
         self.indexes = get_indexes(com_ndx=self.FILES.complex_index,
                                    rec_ndx=self.FILES.receptor_index,
                                    lig_ndx=self.FILES.ligand_index)
         self.resi, self.resl, self.orderl = res2map(self.indexes, self.complex_str)
+        logging.info('Residue map built: %d receptor residues, %d ligand residues.',
+                     sum(end - start + 1 for start, end in self.resi['REC']['num']),
+                     sum(end - start + 1 for start, end in self.resi['LIG']['num']))
         self.check_structures(self.complex_str, self.receptor_str, self.ligand_str)
 
     def check4water(self):
-        if counter := sum(
-                res.name
-                in [
-                    'SOD', 'Na+', 'NA', 'Na', 'CLA', 'Cl-', 'CL', 'Cl', 'POT', 'K+', 'K',
-                    'SOL', 'WAT',
-                    'TIP3P', 'TIP3', 'TP3', 'TIPS3P', 'TIP3o',
-                    'TIP3P', 'TIP3', 'TP3', 'TIPS3P', 'TIP3o',
-                    'TIP4P', 'TIP4PEW', 'T4E', 'TIP4PD',
-                    'TIP5P',
-                    'SPC', 'SPCE',
-                    'OPC'
-                ]
-                for res in self.complex_str.residues
-        ):
+        if self.explicit_waters:
+            return
+
+        if counter := sum(res.name in solvent_ion_residues for res in self.complex_str.residues):
             GMXMMPBSA_ERROR(f'gmx_MMPBSA does not support water/ions molecules in any structure, but we found'
                             f' {counter} molecules in the complex.')
 
@@ -559,6 +645,234 @@ class CheckMakeTop:
 
         return parm
 
+    def _explicit_water_residues(self, parm):
+        return [res.idx + 1 for res in parm.residues if res.name in water_residues]
+
+    def _explicit_ion_residues(self, parm):
+        return [res.idx + 1 for res in parm.residues if res.name in solvent_ion_residues and res.name not in water_residues]
+
+    def _explicit_water_range(self, parm):
+        if not self.explicit_waters:
+            return ''
+        water_res = self._explicit_water_residues(parm)
+        if len(water_res) < self.explicit_waters:
+            GMXMMPBSA_ERROR(f'EXPLICIT_WATERS requested {self.explicit_waters} waters, but only '
+                            f'{len(water_res)} water residues were found in the complex topology.')
+        return ','.join(list2range(water_res[:self.explicit_waters])['string'])
+
+    def _strip_extra_explicit_waters(self, parm):
+        if not self.explicit_waters:
+            return ''
+        ion_res = self._explicit_ion_residues(parm)
+        if ion_res:
+            parm.strip(f":{','.join(list2range(ion_res)['string'])}")
+        water_res = self._explicit_water_residues(parm)
+        water_range = self._explicit_water_range(parm)
+        extra_waters = water_res[self.explicit_waters:]
+        if extra_waters:
+            parm.strip(f":{','.join(list2range(extra_waters)['string'])}")
+        return water_range
+
+    @staticmethod
+    def _extra_point_atom_indices(parm):
+        return [
+            getattr(atom, 'idx', index - 1) + 1 for index, atom in enumerate(parm.atoms, start=1)
+            if (
+                getattr(atom, 'atomic_number', None) == 0 or
+                getattr(atom, 'mass', None) == 0 or
+                getattr(atom, 'type', '').upper() == 'EP' or
+                getattr(atom, 'name', '').upper().startswith('EP')
+            )
+        ]
+
+    def _extra_point_atom_mask(self, parm):
+        atom_indices = self._extra_point_atom_indices(parm)
+        if not atom_indices:
+            return ''
+        return '@' + ','.join(list2range(atom_indices)['string'])
+
+    def _check_explicit_waters_supported_by_energy_model(self, parm):
+        if not self.explicit_waters:
+            return
+        extra_point_mask = self._extra_point_atom_mask(parm)
+        if not extra_point_mask:
+            return
+
+        if getattr(self, 'explicit_waters_extra_points', 'error') == 'error':
+            GMXMMPBSA_ERROR(
+                'EXPLICIT_WATERS found extra-point water atoms from a virtual-site water model such as OPC/TIP4P. '
+                'sander calculations can fail with these atoms. Set EXPLICIT_WATERS_EXTRA_POINTS="strip" to remove '
+                'the extra points and continue, or use a 3-site water model such as TIP3P/SPC.'
+            )
+
+        self.explicit_water_extra_point_mask = extra_point_mask
+        extra_point_count = len(self._range_string_to_list(extra_point_mask[1:]))
+        parm.strip(extra_point_mask)
+        logging.warning(
+            'EXPLICIT_WATERS_EXTRA_POINTS="strip" removed %d extra-point atom(s) from the selected explicit waters. '
+            'The selected water model is approximated after removing virtual sites; use this only for controlled '
+            'relative comparisons.',
+            extra_point_count
+        )
+        logging.warning(
+            'GB/PB energies with stripped OPC/TIP4P extra points should be interpreted cautiously because the '
+            'water electrostatics no longer correspond to the original virtual-site model.'
+        )
+
+    def _resolve_explicit_waters_mask(self):
+        if not self.explicit_waters:
+            return
+
+        selection = self.explicit_waters_mask.strip()
+        if selection.lower() == 'pymol':
+            self._resolve_pymol_explicit_waters_mask()
+            return
+
+        if not selection.startswith('within'):
+            return
+
+        selected_residues = self.get_selected_residues(selection)
+        cutoff = float(selection.split()[1])
+        if len(selected_residues) < 2:
+            logging.warning(f"Number of interface residues selected using explicit_waters_mask = '{selection}' < 2")
+            logging.info('Increasing cutoff value by 0.25 until number of interface residues selected >= 2')
+            it = 0
+            while len(selected_residues) < 2:
+                cutoff = round(cutoff, 1) + 0.25
+                selected_residues = self.get_selected_residues(f'within {cutoff}')
+                if it == 20:
+                    GMXMMPBSA_ERROR('The maximum number of iterations to select interaction residues was reached. '
+                                    'Please set explicit_waters_mask with a valid selection.')
+                it += 1
+
+        if not selected_residues:
+            GMXMMPBSA_ERROR('EXPLICIT_WATERS_MASK did not select any interface residues.')
+
+        textwraped = textwrap.wrap('\t'.join(x.string for x in selected_residues), tabsize=4, width=120)
+        logging.info(f"Selecting waters closest to interface residues defined by explicit_waters_mask = "
+                     f"'within {round(cutoff, 1)} Å'...")
+        logging.info(f'Selected {len(selected_residues)} interface residues:\n' + '\n'.join(textwraped) + '\n')
+
+        resolved_mask = ':' + ','.join(list2range(selected_residues)['string'])
+        self.explicit_waters_mask = resolved_mask
+        self.INPUT['general']['explicit_waters_mask'] = resolved_mask
+        logging.info(f'Resolved explicit water reference mask for cpptraj closest: {resolved_mask}')
+
+    def _explicit_water_closest_reference_mask(self):
+        return f'({self.explicit_waters_mask})&(!{explicit_water_reference_exclusion_mask})'
+
+    @staticmethod
+    def _pymol_residue_selector(residues):
+        selectors = []
+        for residue in residues:
+            chain = f'chain {residue.chain} and ' if residue.chain else ''
+            selectors.append(f'({chain}resi {residue.number}{residue.icode})')
+        return ' or '.join(selectors)
+
+    @staticmethod
+    def _pymol_residue_key(chain, resi):
+        resi = resi.strip()
+        number = ''.join(ch for ch in resi if ch.isdigit() or ch == '-')
+        icode = resi[len(number):] if number else ''
+        return chain.strip(), int(number), icode
+
+    def _resolve_pymol_explicit_waters_mask(self):
+        pymol = self.external_progs.get('pymol')
+        if not pymol:
+            GMXMMPBSA_ERROR('EXPLICIT_WATERS_MASK="pymol" requires PyMOL in PATH.')
+
+        receptor_residues = [res for res in self.resl if res.is_receptor()]
+        ligand_residues = [res for res in self.resl if res.is_ligand()]
+        receptor_selector = self._pymol_residue_selector(receptor_residues)
+        ligand_selector = self._pymol_residue_selector(ligand_residues)
+        if not receptor_selector or not ligand_selector:
+            GMXMMPBSA_ERROR('EXPLICIT_WATERS_MASK="pymol" requires receptor and ligand residues.')
+
+        cutoff = self.INPUT['general']['explicit_waters_pymol_cutoff']
+        pymol_input = f'{self.FILES.prefix}explicit_waters_interface.py'
+        pymol_output = f'{self.FILES.prefix}explicit_waters_interface.dat'
+        pymol_log = f'{self.FILES.prefix}explicit_waters_pymol.log'
+        script = f"""
+from pymol import cmd, stored
+
+cutoff = float({cutoff!r})
+receptor_selector = {receptor_selector!r}
+ligand_selector = {ligand_selector!r}
+
+oldDS = cmd.get("dot_solvent")
+cmd.set("dot_solvent", 1)
+cmd.load({self.complex_str_file!r}, "complex")
+cmd.create("tempComplex", "complex")
+cmd.remove("tempComplex and not (polymer and (%s or %s))" % (receptor_selector, ligand_selector))
+cmd.get_area("tempComplex", load_b=1)
+cmd.alter("tempComplex", "q=b")
+cmd.create("chA", "tempComplex and (%s)" % receptor_selector)
+cmd.create("chB", "tempComplex and (%s)" % ligand_selector)
+if cmd.count_atoms("chA") == 0 or cmd.count_atoms("chB") == 0:
+    raise RuntimeError("PyMOL receptor or ligand selection is empty")
+cmd.get_area("chA", load_b=1)
+cmd.get_area("chB", load_b=1)
+cmd.alter("chA", "b=b-q")
+cmd.alter("chB", "b=b-q")
+stored.interface = []
+cmd.iterate("chA", "stored.interface.append((chain, resi, resn, b))")
+cmd.iterate("chB", "stored.interface.append((chain, resi, resn, b))")
+cmd.set("dot_solvent", oldDS)
+
+with open({pymol_output!r}, "w") as outfile:
+    seen = set()
+    for chain, resi, resn, diff in stored.interface:
+        key = (chain, resi)
+        if abs(diff) < cutoff or key in seen:
+            continue
+        seen.add(key)
+        outfile.write("%s\\t%s\\t%s\\t%.6f\\n" % (chain, resi, resn, diff))
+cmd.quit()
+"""
+        with open(pymol_input, 'w') as pml:
+            pml.write(script)
+
+        logging.info(f'Selecting interface residues with PyMOL dASA cutoff {cutoff} for explicit waters...')
+        logging.debug('Running command: %s -cq %s', pymol, pymol_input)
+        pymol_env = os.environ.copy()
+        pymol_env['PATH'] = os.path.dirname(pymol) + os.pathsep + pymol_env.get('PATH', '')
+        pymol_env.pop('PYTHONPATH', None)
+        with open(pymol_log, 'w') as log_file:
+            pymol_proc = subprocess.Popen([pymol, '-cq', pymol_input], stdout=log_file, stderr=subprocess.STDOUT,
+                                          env=pymol_env)
+        if pymol_proc.wait():
+            GMXMMPBSA_ERROR(f'{pymol} failed when selecting PyMOL interface residues. Check {pymol_log}.')
+
+        selected_keys = set()
+        try:
+            with open(pymol_output) as output:
+                for line in output:
+                    fields = line.split()
+                    if len(fields) < 2:
+                        continue
+                    selected_keys.add(self._pymol_residue_key(fields[0], fields[1]))
+        except FileNotFoundError:
+            GMXMMPBSA_ERROR(f'PyMOL did not write {pymol_output} when selecting interface residues. '
+                            f'Check {pymol_log}.')
+
+        selected_residues = []
+        for residue in self.resl:
+            key = (residue.chain.strip(), int(residue.number), residue.icode)
+            if key in selected_keys:
+                selected_residues.append(residue)
+
+        if not selected_residues:
+            GMXMMPBSA_ERROR('PyMOL did not select any interface residues for EXPLICIT_WATERS_MASK="pymol".')
+
+        textwraped = textwrap.wrap('\t'.join(x.string for x in selected_residues), tabsize=4, width=120)
+        logging.info(f'Selected {len(selected_residues)} PyMOL dASA interface residues:\n' +
+                     '\n'.join(textwraped) + '\n')
+
+        resolved_mask = ':' + ','.join(list2range(selected_residues)['string'])
+        self.explicit_waters_mask = resolved_mask
+        self.INPUT['general']['explicit_waters_mask'] = resolved_mask
+        logging.info(f'Resolved explicit water reference mask for cpptraj closest: {resolved_mask}')
+
     def gmxtop2prmtop(self):
         logging.info('Using topology conversion. Setting radiopt = 0...')
         self.INPUT['pb']['radiopt'] = 0
@@ -574,12 +888,15 @@ class CheckMakeTop:
             else:
                 GMXMMPBSA_ERROR(f"The number of residues in the topology ({error_info[1]}) and the complex structure "
                                 f"({error_info[2]}) are different. Please check these files and verify that they are "
-                                f"correct. Otherwise report the error...")
+                f"correct. Otherwise report the error...")
 
+        logging.info('Assigning complex coordinates to the selected topology...')
         com_top.coordinates = self.complex_str.coordinates
+        logging.info('Writing complex restart coordinates to %sCOM.inpcrd...', self.FILES.prefix)
         com_top.save(f"{self.FILES.prefix}COM.inpcrd", format='rst7', overwrite=True)
         # try:
         if com_top.impropers or com_top.urey_bradleys:
+            logging.info('Converting selected complex topology to AMBER ChamberParm...')
             com_amb_prm = parmed.amber.ChamberParm.from_structure(com_top)
             com_top_parm = 'chamber'
 
@@ -588,6 +905,7 @@ class CheckMakeTop:
 
             logging.info('Detected CHARMM force field topology format...')
         else:
+            logging.info('Converting selected complex topology to AMBER AmberParm...')
             com_amb_prm = parmed.amber.AmberParm.from_structure(com_top)
             com_top_parm = 'amber'
             logging.info('Detected Amber/OPLS force field topology format...')
@@ -599,6 +917,14 @@ class CheckMakeTop:
         com_amb_prm = self._check_periodicity(com_amb_prm, 'complex')
 
         self.fixparm2amber(com_amb_prm)
+        explicit_water_range = ''
+        if self.explicit_waters:
+            self.explicit_water_prmtop = f'{self.FILES.prefix}COM_FULL_SOLVENT.prmtop'
+            com_amb_prm.write_parm(self.explicit_water_prmtop)
+            explicit_water_range = self._strip_extra_explicit_waters(com_amb_prm)
+            self.explicit_water_range = explicit_water_range
+            self._check_explicit_waters_supported_by_energy_model(com_amb_prm)
+            logging.info(f'Keeping {self.explicit_waters} explicit water residues assigned to the receptor.')
 
         logging.info(f"Assigning PBRadii {PBRadii[self.INPUT['general']['PBRadii']]} to Complex...")
         if com_top_parm == 'amber' and self.INPUT['general']['PBRadii'] == 7:
@@ -652,7 +978,10 @@ class CheckMakeTop:
             logging.info('Building AMBER Receptor topology from Complex...')
             # we make a copy for receptor topology
             rec_amb_prm = self.molstr(com_amb_prm)
-            rec_amb_prm.strip(f'!:{rec_indexes_string}')
+            rec_keep = rec_indexes_string
+            if explicit_water_range:
+                rec_keep = f'{rec_keep},{explicit_water_range}'
+            rec_amb_prm.strip(f'!:{rec_keep}')
             rec_hastop = False
 
         logging.info(f"Assigning PBRadii {PBRadii[self.INPUT['general']['PBRadii']]} to Receptor...")
@@ -702,7 +1031,10 @@ class CheckMakeTop:
             logging.info('Building AMBER Ligand topology from Complex...')
             # we make a copy for ligand topology
             lig_amb_prm = self.molstr(com_amb_prm)
-            lig_amb_prm.strip(f':{rec_indexes_string}')
+            lig_strip = rec_indexes_string
+            if explicit_water_range:
+                lig_strip = f'{lig_strip},{explicit_water_range}'
+            lig_amb_prm.strip(f':{lig_strip}')
             lig_hastop = False
         logging.info(f"Assigning PBRadii {PBRadii[self.INPUT['general']['PBRadii']]} to Ligand...")
         action = ChRad(lig_amb_prm, PBRadii[self.INPUT['general']['PBRadii']])
@@ -727,7 +1059,10 @@ class CheckMakeTop:
                 if rec_hastop:
                     mtop = self.makeMutTop(rec_amb_prm, self.part_index)
                 else:
-                    mut_com_amb_prm.strip(f'!:{rec_indexes_string}')
+                    mut_rec_keep = rec_indexes_string
+                    if explicit_water_range:
+                        mut_rec_keep = f'{mut_rec_keep},{explicit_water_range}'
+                    mut_com_amb_prm.strip(f'!:{mut_rec_keep}')
                     mtop = mut_com_amb_prm
             else:
                 logging.info('Detecting mutation in Ligand. Building Mutant Ligand topology...')
@@ -736,7 +1071,10 @@ class CheckMakeTop:
                 if lig_hastop:
                     mtop = self.makeMutTop(lig_amb_prm, self.part_index)
                 else:
-                    mut_com_amb_prm.strip(f':{rec_indexes_string}')
+                    mut_lig_strip = rec_indexes_string
+                    if explicit_water_range:
+                        mut_lig_strip = f'{mut_lig_strip},{explicit_water_range}'
+                    mut_com_amb_prm.strip(f':{mut_lig_strip}')
                     mtop = mut_com_amb_prm
 
             if com_top_parm == 'chamber':
@@ -823,11 +1161,14 @@ class CheckMakeTop:
                     start += end
 
     def _cleantop_with_retry(self, top_file, ndx, structure, id='complex'):
+        logging.info('Preparing %s topology from %s using %d selected atom indexes...',
+                     id, top_file, len(ndx))
         try:
             top = self.cleantop(top_file, ndx, id)
         except IndexError as err:
             logging.warning(f'{err} Retrying with the full topology before applying the index...')
             try:
+                logging.info('Preparing %s topology again without removing solvent before applying the index...', id)
                 top = self.cleantop(top_file, ndx, id, remove_solvent=False)
             except IndexError:
                 GMXMMPBSA_ERROR(f'The atom index in the {id} index is not found in the topology file. Please check '
@@ -841,6 +1182,7 @@ class CheckMakeTop:
                 'with the structure. Retrying with the full topology before applying the index...'
             )
             try:
+                logging.info('Preparing %s topology again without removing solvent before applying the index...', id)
                 top = self.cleantop(top_file, ndx, id, remove_solvent=False)
             except IndexError:
                 GMXMMPBSA_ERROR(f'The atom index in the {id} index is not found in the topology file. Please check '
@@ -859,26 +1201,18 @@ class CheckMakeTop:
         :return: new and clean top instance
         """
         top_file = Path(top_file)
-        sol_ion = [
-            # standard gmx form
-            'NA', 'CL', 'SOL', 'K',
-            # charmm-GUI form ??
-            'SOD', 'Na+', 'CLA', 'Cl-', 'POT', 'K+',
-            'TIP3P', 'TIP3', 'TP3', 'TIPS3P', 'TIP3o',
-            'TIP4P', 'TIP4PEW', 'T4E', 'TIP4PD',
-            'TIP5P',
-            'SPC', 'SPC/E', 'SPCE',
-            'WAT',
-            'OPC']
-
+        logging.info('Preprocessing %s include tree for %s topology conversion%s...',
+                     top_file, id, ' with solvent/ion removal' if remove_solvent else '')
         preprocessor = GromacsTopologyPreprocessor()
-        temp_top = preprocessor.preprocess(top_file, remove_solvent, sol_ion)
+        temp_top = preprocessor.preprocess(top_file, remove_solvent, solvent_ion_residues)
         if preprocessor.cmap_found:
             logging.info(f'Ignoring CMAP terms in {top_file} include tree for GROMACS topology conversion.')
 
         # read the temp topology with parmed
+        logging.info('Reading preprocessed %s topology with ParmEd...', id)
         rtemp_top = parmed.gromacs.GromacsTopologyFile(temp_top.as_posix())
         # get the residues in the top from the com_ndx
+        logging.info('Applying %s index selection to topology (%d atoms selected)...', id, len(ndx))
         res_list = []
 
         for i in ndx:
@@ -895,6 +1229,8 @@ class CheckMakeTop:
 
         ranges = list2range(res_list)
         rtemp_top.strip(f"!:{','.join(ranges['string'])}")
+        logging.info('Prepared %s topology selection: %d atoms/%d residues retained.',
+                     id, len(rtemp_top.atoms), len(rtemp_top.residues))
 
         # Clean temporal file
         for temp_file in preprocessor.created_files:
@@ -904,10 +1240,67 @@ class CheckMakeTop:
     def get_masks(self):
         rec_mask = ':' + ','.join(self.resi['REC']['string'])
         lig_mask = ':' + ','.join(self.resi['LIG']['string'])
+        if self.explicit_waters:
+            dry_residues = []
+            for part in ['REC', 'LIG']:
+                for start, end in self.resi[part]['num']:
+                    dry_residues.extend(range(start, end + 1))
+            first_water = max(dry_residues) + 1
+            last_water = first_water + self.explicit_waters - 1
+            rec_mask = f'{rec_mask},{first_water}-{last_water}'
 
         if self.INPUT['ala']['alarun']:
             self.resl[self.com_mut_index].set_mut(self.INPUT['ala']['mutant'])
         return rec_mask, lig_mask, self.resl
+
+    @staticmethod
+    def _range_string_to_list(range_string):
+        residue_numbers = []
+        if not range_string:
+            return residue_numbers
+        for item in range_string.split(','):
+            item = item.strip()
+            if not item:
+                continue
+            if '-' in item:
+                start, end = map(int, item.split('-', 1))
+                residue_numbers.extend(range(start, end + 1))
+            else:
+                residue_numbers.append(int(item))
+        return residue_numbers
+
+    def _ensure_explicit_water_residues_mapped(self):
+        if not self.explicit_waters or not self.explicit_water_range:
+            return []
+
+        rec_count = sum(end - start + 1 for start, end in self.resi['REC']['num'])
+        mapped_residue_indexes = {res.index for res in self.resl}
+        complex_prmtop = parmed.load_file(self.complex_pmrtop)
+        water_res = []
+        for offset, res_index in enumerate(self._range_string_to_list(self.explicit_water_range), start=1):
+            if res_index > len(complex_prmtop.residues):
+                GMXMMPBSA_ERROR(f'Explicit water residue {res_index} is not present in the complex topology.')
+            top_res = complex_prmtop.residues[res_index - 1]
+            res = Residue(res_index, res_index, '', 'R', rec_count + offset, top_res.name)
+            water_res.append(res)
+            if res.index not in mapped_residue_indexes:
+                self.resl.append(res)
+                mapped_residue_indexes.add(res.index)
+        self.resl.sort(key=lambda res: res.index)
+        return water_res
+
+    @staticmethod
+    def _include_explicit_waters_in_decomp(decomp_res, explicit_water_res):
+        if not explicit_water_res:
+            return decomp_res
+
+        selected = {res.index for res in decomp_res}
+        added = [res for res in explicit_water_res if res.index not in selected]
+        if added:
+            logging.info(f'Including {len(added)} explicit water residues assigned to the receptor in '
+                         'decomposition print_res.')
+            decomp_res = decomp_res + added
+        return sorted(decomp_res, key=lambda res: res.index)
 
     def get_selected_residues(self, select, qm_sele=False):
         """
@@ -921,6 +1314,10 @@ class CheckMakeTop:
         rec_charge = 0
         lig_charge = 0
         if dist:
+            rec_residues = [res for res in self.resl if res.is_receptor()]
+            lig_residues = [res for res in self.resl if res.is_ligand()]
+            logging.info('Scanning receptor/ligand residue contacts within %.3g Å (%d receptor residues x %d '
+                         'ligand residues)...', dist, len(rec_residues), len(lig_residues))
             for rres in self.resl:
                 if rres.is_ligand():
                     continue
@@ -941,6 +1338,8 @@ class CheckMakeTop:
                                     if qm_sele:
                                         lig_charge += sum(atm.charge for atm in com_top.residues[lres - 1].atoms)
                                 break
+            logging.info('Contact scan selected %d receptor and %d ligand residues.',
+                         len(residues_selection['rec']), len(residues_selection['lig']))
         elif res_selection:
             for i in self.resl:
                 rres = self.complex_str.residues[i - 1]
@@ -1368,8 +1767,10 @@ class CheckMakeTop:
             trjconv_echo_args = echo_command + ['GMXMMPBSA_REC_GMXMMPBSA_LIG']
             c5 = subprocess.Popen(trjconv_echo_args, stdout=subprocess.PIPE)
             # we get only first trajectory to extract a pdb file and make amber topology for complex
+            com_traj_name = (f'{self.FILES.prefix}COM_full_traj_{i}.xtc' if self.explicit_waters
+                             else f'COM_traj_{i}.xtc')
             trjconv_args = self.trjconv + ['-f', self.FILES.complex_trajs[i], '-s', self.FILES.complex_tpr, '-o',
-                                           f'COM_traj_{i}.xtc', '-n', self.FILES.complex_index]
+                                           com_traj_name, '-n', self.FILES.complex_index]
             logging.debug('Running command: ' + ' '.join(echo_command) + ' "' +
                           (' '.join(trjconv_echo_args[len(echo_command):]).replace('\n', '\\n')) + '"' +
                           '| ' + ' '.join(trjconv_args))
@@ -1377,7 +1778,34 @@ class CheckMakeTop:
             log_subprocess_output(c6)
             if c6.wait():  # if it quits with return code != 0
                 GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(self.trjconv), self.FILES.complex_trajs[i]))
-            new_trajs.append(f'COM_traj_{i}.xtc')
+            if self.explicit_waters:
+                filtered_traj = f'{self.FILES.prefix}COM_traj_{i}.mdcrd'
+                startframe = self.INPUT['general']['startframe']
+                endframe = self.INPUT['general']['endframe']
+                interval = self.INPUT['general']['interval']
+                extra_point_strip = (f'strip {self.explicit_water_extra_point_mask}\n'
+                                     if self.explicit_water_extra_point_mask else '')
+                cpptraj_input = (
+                    f'trajin {com_traj_name} {startframe} {endframe} {interval}\n'
+                    f'strip {explicit_water_ion_mask}\n'
+                    f'closest {self.explicit_waters} {self._explicit_water_closest_reference_mask()} '
+                    f'solventmask {explicit_water_solvent_mask} noimage '
+                    f'closestout {self.FILES.prefix}explicit_waters_closest_{i}.dat\n'
+                    f'{extra_point_strip}'
+                    f'trajout {filtered_traj} nobox\n'
+                )
+                logging.debug('Running command: %s %s', self.external_progs['cpptraj'], self.explicit_water_prmtop)
+                with open(f'{self.FILES.prefix}explicit_waters_cpptraj_{i}.out', 'w') as cpptraj_out:
+                    c7 = subprocess.Popen([self.external_progs['cpptraj'], self.explicit_water_prmtop],
+                                          stdin=subprocess.PIPE, stdout=cpptraj_out, stderr=subprocess.STDOUT)
+                    c7.communicate(cpptraj_input.encode())
+                if c7.wait():
+                    GMXMMPBSA_ERROR(f"{self.external_progs['cpptraj']} failed when selecting explicit waters from "
+                                    f"{com_traj_name}")
+                new_trajs.append(filtered_traj)
+                self.FILES.explicit_waters_preselected = True
+            else:
+                new_trajs.append(f'COM_traj_{i}.xtc')
         self.FILES.complex_trajs = new_trajs
 
         # clear trajectory
@@ -1422,8 +1850,11 @@ class CheckMakeTop:
 
     def check_structures(self, com_str, rec_str=None, lig_str=None):
         logging.info('Checking the structures consistency...')
+        logging.info('Validating complex structure...')
         check_str(com_str)
+        logging.info('Validating receptor structure...')
         check_str(rec_str, skip=True)
+        logging.info('Validating ligand structure...')
         check_str(lig_str, skip=True)
 
         if self.FILES.reference_structure:
@@ -1470,8 +1901,9 @@ class CheckMakeTop:
             if assign:
                 self._assign_chains_IDs(com_str, rec_str, lig_str)
         # Save fixed complex structure for analysis and set it in FILES to save in info file
+        logging.info('Writing fixed complex structure to %sCOM_FIXED.pdb...', self.FILES.prefix)
         com_str.save(f'{self.FILES.prefix}COM_FIXED.pdb', 'pdb', True, renumber=False)
-        logging.info('')
+        logging.info('Structure consistency checks complete.')
 
     def _assign_chains_IDs(self, com_str, rec_str, lig_str):
         chains_ids = []
@@ -1481,6 +1913,8 @@ class CheckMakeTop:
         curr_chain_id = 'A'
         has_nucl = 0
         for c, res in enumerate(com_str.residues):
+            if c >= len(self.resl):
+                continue
             if res.chain:
                 if res.chain != curr_chain_id:
                     res.chain = curr_chain_id

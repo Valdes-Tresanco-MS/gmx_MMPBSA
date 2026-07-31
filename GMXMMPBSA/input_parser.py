@@ -52,7 +52,7 @@ class Variable(object):
             self.value = default.replace("'", '').replace('"', '')
         elif self.datatype in [list, tuple]:
             if isinstance(default, str):
-                self.value = [self.int_datatype(x.strip()) for x in re.split(';\s*|,\s*', default.replace('"',''))]
+                self.value = [self.int_datatype(x.strip()) for x in re.split(r';\s*|,\s*', default.replace('"',''))]
             else:
                 self.value = default
         else:
@@ -69,18 +69,18 @@ class Variable(object):
 
     def help_str(self):
         """ returns the string [<name> = <value>.... # description] """
+        name_width = 30
         if self.datatype is str:
-            valstring = f'{self.name:20s} = "{self.value:s}"'
+            valstring = f'{self.name:{name_width}s} = "{self.value:s}"'
         elif self.datatype in [list, tuple]:
+            v = ','.join(map(str, self.value))
             if self.int_datatype == str:
-                v = ','.join(self.value)
-                valstring = f'{self.name:20s} = "{v}"'
+                valstring = f'{self.name:{name_width}s} = "{v}"'
             else:
-                v = ','.join(map(str, self.value))
-                valstring = f'{self.name:20s} = {v}'
+                valstring = f'{self.name:{name_width}s} = {v}'
         else:
-            valstring = f'{self.name:20s} = {self.value}'
-        length = 70
+            valstring = f'{self.name:{name_width}s} = {self.value}'
+        length = 72
         valstring += ' ' + ' ' * (length - len(valstring) - 2) + ' '
         return valstring + '# %s' % self.description
 
@@ -98,7 +98,7 @@ class Variable(object):
             self.value = value.replace('"', '').replace("'", '')
         elif self.datatype in [list, tuple]:
             data = value.replace('"', '').replace("'", '')
-            self.value = [self.int_datatype(x.strip()) for x in re.split(';\s*|,\s*', data)]
+            self.value = [self.int_datatype(x.strip()) for x in re.split(r';\s*|,\s*', data)]
         else:
             self.value = self.datatype(value)
 
@@ -402,262 +402,236 @@ input_file = InputFile()
 input_file.addNamelist('general', 'general',
                        [
                            # Basic options
-                           ['sys_name', str, '', 'System name'],
-                           ['startframe', int, 1, 'First frame to analyze'],
-                           ['endframe', int, 9999999, 'Last frame to analyze'],
-                           ['interval', int, 1, 'Number of frames between adjacent frames analyzed'],
+                           ['sys_name', str, '', 'System name; e.g. "complex"'],
+                           ['startframe', int, 1, 'First frame; e.g. 1'],
+                           ['endframe', int, 9999999, 'Last frame; e.g. 100'],
+                           ['interval', int, 1, 'Frame interval; e.g. 1'],
 
                            # Parameters options
-                           ['forcefields', list, 'oldff/leaprc.ff99SB, leaprc.gaff', 'Define the force field to build '
-                                                                                     'the Amber topology'],
-                           ['ions_parameters', int, 1, 'Define ions parameters to build the Amber topology'],
-                           ['PBRadii', int, 4, 'Define PBRadii to build amber topology from GROMACS files'],
-                           ['temperature', float, 298.15, 'Temperature'],
+                           ['forcefields', list, 'oldff/leaprc.ff99SB, leaprc.gaff',
+                            'Force fields; e.g. "leaprc.protein.ff14SB"'],
+                           ['ions_parameters', int, 1, 'Ion params; e.g. 1'],
+                           ['PBRadii', int, 4, 'PB radii set; 1-7'],
+                           ['temperature', float, 298.15, 'Temperature (K); e.g. 298.15'],
 
                            # Entropy options
-                           ['qh_entropy', int, 0, 'Do quasi-harmonic calculation'],
-                           ['interaction_entropy', int, 0, 'Do Interaction Entropy calculation'],
-                           ['ie_segment', int, 25, 'Trajectory segment to calculate interaction entropy'],
-                           ['c2_entropy', int, 0, 'Do C2 Entropy calculation'],
+                           ['qh_entropy', int, 0, 'Run QH entropy; 0/1'],
+                           ['interaction_entropy', int, 0, 'Run IE entropy; 0/1'],
+                           ['ie_segment', int, 25, 'IE segment length (%); e.g. 25'],
+                           ['c2_entropy', int, 0, 'Run C2 entropy; 0/1'],
 
                            # Miscellaneous options
-                           ['assign_chainID', int, 0, 'Assign chains ID'],
-                           ['exp_ki', list, [0.0], 'Experimental Ki in nM', float],
-                           ['full_traj', int, 0, 'Print a full traj. AND the thread trajectories'],
-                           ['gmx_path', str, '', 'Force to use this path to get GROMACS executable'],
-                           ['keep_files', int, 2, 'How many files to keep after successful completion'],
+                           ['assign_chainID', int, 0, 'Assign chain IDs; 0/1'],
+                           ['exp_ki', list, [0.0], 'Experimental Ki (nM); e.g. 0.0', float],
+                           ['full_traj', int, 0, 'Write full trajectory; 0/1'],
+                           ['gmx_path', str, '', 'GROMACS path; e.g. "/usr/bin"'],
+                           ['keep_files', int, 2, 'Files to keep; 0-2'],
 
-                           ['netcdf', int, 0, 'Use NetCDF intermediate trajectories'],
-                           ['solvated_trajectory', int, 1, 'Define if it is necessary to cleanup the trajectories'],
-                           ['verbose', int, 1, 'How many energy terms to print in the final output']
+                           ['netcdf', int, 0, 'Use NetCDF; 0/1'],
+                           ['solvated_trajectory', int, 1, 'Clean solvated traj.; 0/1'],
+                           ['explicit_waters', int, 0, 'Explicit waters; e.g. 10'],
+                           ['explicit_waters_mask', str, '',
+                            'Water reference; e.g. ":1-10", "within 4", "pymol"'],
+                           ['explicit_waters_group', str, '',
+                            'Solvent group; e.g. "TIP3"'],
+                           ['explicit_waters_pymol_cutoff', float, 0.5,
+                            'PyMOL dASA cutoff; e.g. 0.5'],
+                           ['explicit_waters_as', str, 'receptor', 'Water owner; e.g. "receptor"'],
+                           ['explicit_waters_extra_points', str, 'error',
+                            'Virtual sites; "error" or "strip"'],
+                           ['verbose', int, 1, 'Output verbosity; 0-2']
                        ], trigger=None)
 
 input_file.addNamelist('gb', 'gb',
                        [
-                           ['igb', int, 8, 'GB model to use'],
-                           ['intdiel', float, 1.0, 'Internal dielectric constant for sander'],
-                           ['extdiel', float, 78.5, 'External dielectric constant for sander'],
+                           ['igb', int, 8, 'GB model, e.g. 2 or 8'],
+                           ['intdiel', float, 1.0, 'Internal dielectric; e.g. 1.0'],
+                           ['extdiel', float, 78.5, 'External dielectric; e.g. 78.5'],
 
-                           ['saltcon', float, 0, 'Salt concentration (M)'],
-                           ['surften', float, 0.0072, 'Surface tension'],
-                           ['surfoff', float, 0.0, 'Surface tension offset'],
-                           ['molsurf', int, 0, 'Use Connelly surface (\'molsurf\' program)'],
-                           ['msoffset', float, 0.0, 'Offset for molsurf calculation'],
-                           ['probe', float, 1.4, 'Solvent probe radius for surface area calc'],
+                           ['saltcon', float, 0, 'Salt conc. (M); e.g. 0.150'],
+                           ['surften', float, 0.0072, 'Surface tension; e.g. 0.0072'],
+                           ['surfoff', float, 0.0, 'Surface offset; e.g. 0.0'],
+                           ['molsurf', int, 0, 'Use molsurf; 0/1'],
+                           ['msoffset', float, 0.0, 'Molsurf offset; e.g. 0.0'],
+                           ['probe', float, 1.4, 'Probe radius (A); e.g. 1.4'],
 
                             # Options for QM
-                           ['ifqnt', int, 0, 'Use QM on part of the system'],
-                           ['qm_theory', str, '', 'Semi-empirical QM theory to use'],
-                           ['qm_residues', str, '', 'Residues to treat with QM'],
+                           ['ifqnt', int, 0, 'Enable QM/MM; 0/1'],
+                           ['qm_theory', str, '', 'QM theory; e.g. "PM3"'],
+                           ['qm_residues', str, '', 'QM residues; e.g. ":1-5"'],
 
-                           ['com_qmmask', str, '', 'Mask specifying the quantum atoms in complex'],
-                           ['rec_qmmask', str, '', 'Mask specifying the quantum atoms in receptor'],
-                           ['lig_qmmask', str, '', 'Mask specifying the quantum atoms in ligand'],
+                           ['com_qmmask', str, '', 'Complex QM mask; e.g. ":1-5"'],
+                           ['rec_qmmask', str, '', 'Receptor QM mask; e.g. ":1-5"'],
+                           ['lig_qmmask', str, '', 'Ligand QM mask; e.g. ":1"'],
 
                            # deprecated since 1.5.0. Automatic charge assignment except when using user defined masks
-                           ['qmcharge_com', int, 0, 'Charge of QM region in complex'],
-                           ['qmcharge_lig', int, 0, 'Charge of QM region in ligand'],
-                           ['qmcharge_rec', int, 0, 'Charge of QM region in receptor'],
+                           ['qmcharge_com', int, 0, 'Complex QM charge; e.g. 0'],
+                           ['qmcharge_lig', int, 0, 'Ligand QM charge; e.g. 0'],
+                           ['qmcharge_rec', int, 0, 'Receptor QM charge; e.g. 0'],
 
-                           ['qmcut', float, 9999, 'Cutoff in the QM region'],
-                           ['scfconv', float, 1.0e-8, 'Convergence criteria for the SCF calculation, in kcal/mol'],
-                           ['peptide_corr', int, 0, 'Apply MM correction to peptide linkages'],
-                           ['writepdb', int, 1, 'Write a PDB file of the selected QM region'],
-                           ['verbosity', int, 0, 'Controls the verbosity of QM/MM related output'],
+                           ['qmcut', float, 9999, 'QM cutoff (A); e.g. 9999'],
+                           ['scfconv', float, 1.0e-8, 'SCF convergence; e.g. 1.0e-8'],
+                           ['peptide_corr', int, 0, 'Peptide correction; 0/1'],
+                           ['writepdb', int, 1, 'Write QM PDB; 0/1'],
+                           ['verbosity', int, 0, 'QM/MM verbosity; 0-5'],
 
                            # Options for alpb
-                           ['alpb', int, 0, 'Use Analytical Linearized Poisson-Boltzmann (ALPB)'],
-                           ['arad_method', int, 1, 'Selected method to estimate the effective electrostatic size']
+                           ['alpb', int, 0, 'Use ALPB; 0/1'],
+                           ['arad_method', int, 1, 'ALPB size method; e.g. 1']
                        ], trigger='gbrun')
 
 input_file.addNamelist('gbnsr6', 'gbnsr6',
                        [
-                           ['b', float, 0.028, 'Specifies the value of uniform offset to the (inverse) effective '
-                                               'radii'],
-                           ['alpb', int, 1, 'Specifies if ALBP correction is to be used.'],
-                           ['epsin', float, 1.0, 'Sets the dielectric constant of the solute region'],
-                           ['epsout', float, 78.5, 'Sets the implicit solvent dielectric constant for the solvent'],
+                           ['b', float, 0.028, 'GBNSR6 offset; e.g. 0.028'],
+                           ['alpb', int, 1, 'Use ALPB; 0/1'],
+                           ['epsin', float, 1.0, 'Solute dielectric; e.g. 1.0'],
+                           ['epsout', float, 78.5, 'Solvent dielectric; e.g. 78.5'],
                            # FIXME: convert to M
-                           ['istrng', float, 0.0, 'Sets the ionic strength in M for the GB equation'],
-                           ['rs', float, 0.52, 'Dielectric boundary shift compared to the '
-                                               'molecular surface (only relevant for the -chagb option)'],
-                           ['dprob', float, 1.4, 'Sets the radius of the solvent probe'],
-                           ['space', float, 0.5, 'Sets the grid spacing that determines the resolution of the solute '
-                                                 'molecular surface'],
-                           ['arcres', float, 0.2, 'Sets the arc resolution used for numerical integration over '
-                                                  'molecular surface'],
-                           ['radiopt', int, 0, 'Specifies the set of intrinsic atomic radii to be used with the chagb'
-                                               'option.'],
-                           ['chagb', int, 0, 'Define if CHAGB is used'],
-                           ['roh', int, 1, 'Sets the value of RzOH for CHA GB model'],
-                           ['tau', float, 1.47, 'Sets the value of τ in the CHAGB model'],
-                           ['cavity_surften', float, 0.005, 'Surface tension parameter for nonpolar '
-                                                            'solvation calculation'],
+                           ['istrng', float, 0.0, 'Ionic strength (M); e.g. 0.150'],
+                           ['rs', float, 0.52, 'Boundary shift; e.g. 0.52'],
+                           ['dprob', float, 1.4, 'Probe radius (A); e.g. 1.4'],
+                           ['space', float, 0.5, 'Grid spacing (A); e.g. 0.5'],
+                           ['arcres', float, 0.2, 'Arc resolution; e.g. 0.2'],
+                           ['radiopt', int, 0, 'Radii option; e.g. 0'],
+                           ['chagb', int, 0, 'Use CHAGB; 0/1'],
+                           ['roh', int, 1, 'RzOH value; e.g. 1'],
+                           ['tau', float, 1.47, 'CHAGB tau; e.g. 1.47'],
+                           ['cavity_surften', float, 0.005, 'Cavity surften; e.g. 0.005'],
                        ], trigger='gbnsr6run')
 
 input_file.addNamelist('pb', 'pb',
                        [
                            # Basic input options
-                           ['ipb', int, 2, 'Dielectric model for PB'],
-                           ['inp', int, 1, 'Nonpolar solvation method'],
-                           ['sander_apbs', int, 0, 'Use sander.APBS?'],
+                           ['ipb', int, 2, 'PB model; e.g. 2'],
+                           ['inp', int, 1, 'Nonpolar method; 1 or 2'],
+                           ['sander_apbs', int, 0, 'Use sander.APBS; 0/1'],
 
                            # Options to define the physical constants
-                           ['indi', float, 1, 'Internal dielectric constant'],
-                           ['exdi', float, 78.5, 'External dielectric constant'],
-                           ['emem', float, 4.0, 'Membrane dielectric constant'],
-                           ['smoothopt', int, 1, 'Set up dielectric values for finite-difference grid edges that are '
-                                                 'located across the solute/solvent dielectric boundary'],
-                           ['istrng', float, 0.0, 'Ionic strength (M)'],
-                           ['radiopt', int, 1, 'Use optimized radii?'],
-                           ['prbrad', float, 1.4, 'Probe radius'],
-                           ['iprob', float, 2.0, 'Mobile ion probe radius (Angstroms) for ion accessible surface used '
-                                                 'to define the Stern layer'],
-                           ['sasopt', int, 0, 'Molecular surface in PB implict model'],
-                           ['arcres', float, 0.25, 'The resolution (Å) to compute solvent accessible arcs'],
+                           ['indi', float, 1, 'Internal dielectric; e.g. 1.0'],
+                           ['exdi', float, 78.5, 'External dielectric; e.g. 78.5'],
+                           ['emem', float, 4.0, 'Membrane dielectric; e.g. 4.0'],
+                           ['smoothopt', int, 1, 'Dielectric smoothing; 0-2'],
+                           ['istrng', float, 0.0, 'Ionic strength (M); e.g. 0.150'],
+                           ['radiopt', int, 1, 'Use optimized radii; 0/1'],
+                           ['prbrad', float, 1.4, 'Probe radius (A); e.g. 1.4'],
+                           ['iprob', float, 2.0, 'Ion probe (A); e.g. 2.0'],
+                           ['sasopt', int, 0, 'PB surface option; 0/1'],
+                           ['arcres', float, 0.25, 'Arc resolution (A); e.g. 0.25'],
 
                            # Options for Implicit Membranes
-                           ['memopt', int, 0, 'Use PB optimization for membrane'],
-                           ['mprob', float, 2.70, 'Membrane probe radius in Å'],
-                           ['mthick', float, 40.0, 'Membrane thickness'],
-                           ['mctrdz', float, 0.0, 'Distance to offset membrane in Z direction'],
-                           ['poretype', int, 1, 'Use exclusion region for channel proteins'],
+                           ['memopt', int, 0, 'Use membrane PB; 0/1'],
+                           ['mprob', float, 2.70, 'Membrane probe (A); e.g. 2.7'],
+                           ['mthick', float, 40.0, 'Membrane thickness (A); e.g. 40'],
+                           ['mctrdz', float, 0.0, 'Membrane Z offset (A); e.g. 0'],
+                           ['poretype', int, 1, 'Pore type; 1 or 2'],
 
                            # Options to select numerical procedures
-                           ['npbopt', int, 0, 'Use NonLinear PB solver?'],
-                           ['solvopt', int, 1, 'Select iterative solver'],
-                           ['accept', float, 0.001, 'Sets the iteration convergence criterion (relative to the initial '
-                                                    'residue)'],
-                           ['linit', int, 1000, 'Number of SCF iterations'],
-                           ['fillratio', float, 4, 'Ratio between the longest dimension of the rectangular '
-                                                   'finite-difference grid and that of the solute'],
-                           ['scale', float, 2.0, '1/scale = grid spacing for the finite difference solver (default = '
-                                                 '1/2 Å)'],
-                           ['nbuffer', float, 0, 'Sets how far away (in grid units) the boundary of the finite '
-                                                 'difference grid is away from the solute surface'],
-                           ['nfocus', int, 2, 'Electrostatic focusing calculation'],
-                           ['fscale', int, 8, 'Set the ratio between the coarse and fine grid spacings in an '
-                                              'electrostatic focussing calculation'],
-                           ['npbgrid', int, 1, 'Sets how often the finite-difference grid is regenerated'],
+                           ['npbopt', int, 0, 'Use nonlinear PB; 0/1'],
+                           ['solvopt', int, 1, 'PB solver; e.g. 1'],
+                           ['accept', float, 0.001, 'Convergence; e.g. 0.001'],
+                           ['linit', int, 1000, 'SCF iterations; e.g. 1000'],
+                           ['fillratio', float, 4, 'Grid fill ratio; e.g. 4'],
+                           ['scale', float, 2.0, 'Grid scale; e.g. 2'],
+                           ['nbuffer', float, 0, 'Grid buffer; e.g. 0'],
+                           ['nfocus', int, 2, 'Focus levels; e.g. 2'],
+                           ['fscale', int, 8, 'Focus scale; e.g. 8'],
+                           ['npbgrid', int, 1, 'Grid update freq.; e.g. 1'],
 
                            # Options to compute energy and forces
-                           ['bcopt', int, 5, 'Boundary condition option'],
-                           ['eneopt', int, 2, 'Compute electrostatic energy and forces'],
-                           ['frcopt', int, 0, 'Output for computing electrostatic forces'],
-                           ['scalec', int, 0, 'Option to compute reaction field energy and forces'],
-                           ['cutfd', float, 5.0, 'Cutoff for finite-difference interactions'],
-                           ['cutnb', float, 0.0, 'Cutoff for nonbonded interations'],
-                           ['nsnba', int, 1, 'Sets how often atom-based pairlist is generated'],
+                           ['bcopt', int, 5, 'Boundary condition; e.g. 5'],
+                           ['eneopt', int, 2, 'Energy option; e.g. 2'],
+                           ['frcopt', int, 0, 'Force output; e.g. 0'],
+                           ['scalec', int, 0, 'Reaction field option; e.g. 0'],
+                           ['cutfd', float, 5.0, 'FD cutoff (A); e.g. 5'],
+                           ['cutnb', float, 0.0, 'Nonbonded cutoff (A); e.g. 0'],
+                           ['nsnba', int, 1, 'Pairlist frequency; e.g. 1'],
 
                            # Options to select a non-polar solvation treatment
-                           ['decompopt', int, 2, 'Option to select different decomposition schemes when INP = 2'],
-                           ['use_rmin', int, 1, 'The option to set up van der Waals radii'],
-                           ['sprob', float, 0.557, 'Solvent probe radius for SASA used to compute the dispersion term'],
-                           ['vprob', float, 1.300, 'Solvent probe radius for molecular volume (the volume enclosed by '
-                                                   'SASA)'],
-                           ['rhow_effect', float, 1.129, 'Effective water density used in the non-polar dispersion '
-                                                         'term calculation'],
-                           ['use_sav', int, 1, 'Use molecular volume (the volume enclosed by SASA) for cavity term '
-                                               'calculation'],
-                           ['cavity_surften', float, 0.0378, 'Surface tension'],
-                           ['cavity_offset', float, -0.5692, 'Offset for nonpolar solvation calc'],
-                           ['maxsph', int, 400, 'Approximate number of dots to represent the maximum atomic solvent '
-                                                'accessible surface'],
-                           ['maxarcdot', int, 1500, 'Number of dots used to store arc dots per atom'],
+                           ['decompopt', int, 2, 'Decomp scheme; 1 or 2'],
+                           ['use_rmin', int, 1, 'Use Rmin radii; 0/1'],
+                           ['sprob', float, 0.557, 'SASA probe (A); e.g. 0.557'],
+                           ['vprob', float, 1.300, 'Volume probe (A); e.g. 1.3'],
+                           ['rhow_effect', float, 1.129, 'Water density; e.g. 1.129'],
+                           ['use_sav', int, 1, 'Use SAV cavity; 0/1'],
+                           ['cavity_surften', float, 0.0378, 'Cavity surften; e.g. 0.0378'],
+                           ['cavity_offset', float, -0.5692, 'Cavity offset; e.g. -0.5692'],
+                           ['maxsph', int, 400, 'Max surface dots; e.g. 400'],
+                           ['maxarcdot', int, 1500, 'Max arc dots; e.g. 1500'],
 
                            # Options for output
-                           ['npbverb', int, 0, 'Option to turn on verbose mode']
+                           ['npbverb', int, 0, 'PB verbosity; 0/1']
                        ], trigger='pbrun')
 
 input_file.addNamelist('rism', 'rism',
                        [
-                           ['closure', list, ['kh'], 'Closure equation to use'],
-                           ['gfcorrection', int, 0, 'Compute the Gaussian fluctuation excess chemical potential '
-                                                    'functional'],
-                           ['pcpluscorrection', int, 0, 'Compute the PC+/3D-RISM excess chemical potential functional'],
-                           ['noasympcorr', int, 1, 'Turn off long range asymptotic corrections for thermodynamic '
-                                                   'output only'],
-                           ['buffer', float, 14, 'Distance between solute and edge of grid'],
-                           ['solvcut', float, -1, 'Cutoff of the box'],
-                           ['grdspc', list, [0.5, 0.5, 0.5], 'Grid spacing', float],
-                           ['ng', list, [-1, -1, -1], 'Number of grid points', int],
-                           ['solvbox', list, [-1, -1, -1], 'Box limits', int],
-                           ['tolerance', list, [1.0e-5], 'Convergence tolerance', float],
-                           ['ljTolerance', float, -1.0, 'Determines the Lennard-Jones cutoff distance based on the '
-                                                        'desired accuracy of the calculation'],
-                           ['asympKSpaceTolerance', float, -1.0, 'Determines the reciprocal space long range '
-                                                                 'asymptotics cutoff distance based on the desired '
-                                                                 'accuracy of the calculation'],
-                           ['treeDCF', int, 1, 'Use the treecode approximation to calculate the direct '
-                                               'correlation function (DCF) long-range asymptotic correction'],
-                           ['treeTCF', int, 1, 'Use the treecode approximation to calculate the total '
-                                               'correlation function (TCF) long-range asymptotic correction'],
-                           ['treeCoulomb', int, 0, 'Use direct sum or the treecode approximation to calculate the '
-                                                   'Coulomb potential energy'],
-                           ['treeDCFMAC', float, 0.1, 'Treecode multipole acceptance criterion for the DCF long-range '
-                                                      'asymptotic correction'],
-                           ['treeTCFMAC', float, 0.1, 'Treecode multipole acceptance criterion for the TCF long-range '
-                                                      'asymptotic correction'],
-                           ['treeCoulombMAC', float, 0.1, 'Treecode multipole acceptance criterion for the Coulomb '
-                                                          'potential energy'],
-                           ['treeDCFOrder', int, 2, 'Treecode Taylor series order for the DCF long-range asymptotic '
-                                                    'correction'],
-                           ['treeTCFOrder', int, 2, 'Treecode Taylor series order for the TCF long-range asymptotic '
-                                                    'correction'],
-                           ['treeCoulombOrder', int, 2, 'Treecode Taylor series order for the Coulomb potential '
-                                                        'energy'],
-                           ['treeDCFN0', int, 500, 'Maximum number of grid points contained within the treecode leaf '
-                                                   'clusters for the DCF'],
-                           ['treeTCFN0', int, 500, 'Maximum number of grid points contained within the treecode leaf '
-                                                   'clusters for the  TCF'],
-                           ['treeCoulombN0', int, 500, 'Maximum number of grid points contained within the treecode '
-                                                       'leaf clusters for the Coulomb potential energy'],
-                           ['mdiis_del', float, 0.7, 'MDIIS step size'],
-                           ['mdiis_nvec', int, 5, 'Number of previous iterations MDIIS uses to predict a new solution'],
-                           ['mdiis_restart', float, 10.0, 'Use lowest residual solution in memory if '
-                                                          'current residual is mdiis_restart times larger than '
-                                                          'the smallest residual in memory'],
-                           ['maxstep', int, 10000, 'Maximum number of iterative steps per solution'],
-                           ['npropagate', int, 5, 'Number of previous solutions to use in predicting a new solution'],
-                           ['polardecomp', int, 0, 'Break solv. energy into polar and nonpolar terms'],
+                           ['closure', list, ['kh'], 'Closure equation; e.g. "kh"'],
+                           ['gfcorrection', int, 0, 'GF correction; 0/1'],
+                           ['pcpluscorrection', int, 0, 'PC+ correction; 0/1'],
+                           ['noasympcorr', int, 1, 'Disable asymptotic corr.; 0/1'],
+                           ['buffer', float, 14, 'Grid buffer (A); e.g. 14'],
+                           ['solvcut', float, -1, 'Solvent cutoff (A); e.g. -1'],
+                           ['grdspc', list, [0.5, 0.5, 0.5], 'Grid spacing; e.g. 0.5,0.5,0.5', float],
+                           ['ng', list, [-1, -1, -1], 'Grid points; e.g. -1,-1,-1', int],
+                           ['solvbox', list, [-1, -1, -1], 'Solvent box; e.g. -1,-1,-1', int],
+                           ['tolerance', list, [1.0e-5], 'Convergence tol.; e.g. 1.0e-5', float],
+                           ['ljTolerance', float, -1.0, 'LJ tolerance; e.g. -1.0'],
+                           ['asympKSpaceTolerance', float, -1.0, 'K-space tolerance; e.g. -1.0'],
+                           ['treeDCF', int, 1, 'Use DCF treecode; 0/1'],
+                           ['treeTCF', int, 1, 'Use TCF treecode; 0/1'],
+                           ['treeCoulomb', int, 0, 'Use Coulomb treecode; 0/1'],
+                           ['treeDCFMAC', float, 0.1, 'DCF MAC; e.g. 0.1'],
+                           ['treeTCFMAC', float, 0.1, 'TCF MAC; e.g. 0.1'],
+                           ['treeCoulombMAC', float, 0.1, 'Coulomb MAC; e.g. 0.1'],
+                           ['treeDCFOrder', int, 2, 'DCF tree order; e.g. 2'],
+                           ['treeTCFOrder', int, 2, 'TCF tree order; e.g. 2'],
+                           ['treeCoulombOrder', int, 2, 'Coulomb tree order; e.g. 2'],
+                           ['treeDCFN0', int, 500, 'DCF leaf size; e.g. 500'],
+                           ['treeTCFN0', int, 500, 'TCF leaf size; e.g. 500'],
+                           ['treeCoulombN0', int, 500, 'Coulomb leaf size; e.g. 500'],
+                           ['mdiis_del', float, 0.7, 'MDIIS step size; e.g. 0.7'],
+                           ['mdiis_nvec', int, 5, 'MDIIS vectors; e.g. 5'],
+                           ['mdiis_restart', float, 10.0, 'MDIIS restart; e.g. 10.0'],
+                           ['maxstep', int, 10000, 'Max iterations; e.g. 10000'],
+                           ['npropagate', int, 5, 'Propagation history; e.g. 5'],
+                           ['polardecomp', int, 0, 'Polar decomposition; 0/1'],
                            # TODO: work with entropicDecomp? need more tests...
-                           ['entropicdecomp', int, 0, 'Decomposes solvation free energy into energy and entropy '
-                                                      'components'],
+                           ['entropicdecomp', int, 0, 'Entropic decomposition; 0/1'],
                            # ['centering', int, 1, 'Select how solute is centered in the solvent box'],
-                           ['rism_verbose', int, 0, 'Control how much 3D-RISM info to print']
+                           ['rism_verbose', int, 0, 'RISM verbosity; 0-2']
                        ], trigger='rismrun')
 
 input_file.addNamelist('ala', 'alanine_scanning',
                        [
-                           ['mutant_res', str, '', 'Which residue will be mutated'],
-                           ['mutant', str, 'ALA', 'Defines if Alanine or Glycine scanning will be performed'],
-                           ['mutant_only', int, 0, 'Only compute mutant energies'],
-                           ['cas_intdiel', int, 0, 'Change the intdiel value based on which aa is mutated'],
-                           ['intdiel_nonpolar', int, 1, 'intdiel for nonpolar residues'],
-                           ['intdiel_polar', int, 3, 'intdiel for polar residues'],
-                           ['intdiel_positive', int, 5, 'intdiel for positive charged residues'],
-                           ['intdiel_negative', int, 5, 'intdiel for negative charged residues']
+                           ['mutant_res', str, '', 'Residue to mutate; e.g. "A/23"'],
+                           ['mutant', str, 'ALA', 'Mutation target; "ALA" or "GLY"'],
+                           ['mutant_only', int, 0, 'Mutant energies only; 0/1'],
+                           ['cas_intdiel', int, 0, 'Set intdiel by residue; 0/1'],
+                           ['intdiel_nonpolar', int, 1, 'Nonpolar intdiel; e.g. 1'],
+                           ['intdiel_polar', int, 3, 'Polar intdiel; e.g. 3'],
+                           ['intdiel_positive', int, 5, 'Positive intdiel; e.g. 5'],
+                           ['intdiel_negative', int, 5, 'Negative intdiel; e.g. 5']
                        ], trigger='alarun')
 
 input_file.addNamelist('decomp', 'decomposition',
                        [
-                           ['idecomp', int, 0, 'Which type of decomposition analysis to do'],
-                           ['dec_verbose', int, 0, 'Control energy terms are printed to the output'],
-                           ['print_res', str, 'within 6', 'Which residues to print decomposition data for'],
-                           ['csv_format', int, 1, 'Write decomposition data in CSV format']
+                           ['idecomp', int, 0, 'Decomp mode; 0-4'],
+                           ['dec_verbose', int, 0, 'Decomp verbosity; 0-3'],
+                           ['print_res', str, 'within 6',
+                            'Residues to print; e.g. "all", "within 6", "A/2-10"'],
+                           ['csv_format', int, 1, 'Write CSV output; 0/1']
                        ], trigger='decomprun')
 
 input_file.addNamelist('nmode', 'nmode',
                        [
                            # Basic Options
-                           ['nmstartframe', int, 1, 'First frame to analyze for normal modes'],
-                           ['nmendframe', int, 1000000, 'Last frame to analyze for normal modes'],
-                           ['nminterval', int, 1, 'Interval to take snapshots for normal mode analysis'],
+                           ['nmstartframe', int, 1, 'First NM frame; e.g. 1'],
+                           ['nmendframe', int, 1000000, 'Last NM frame; e.g. 100'],
+                           ['nminterval', int, 1, 'NM frame stride; e.g. 1'],
                            # Parameters options
-                           ['nmode_igb', int, 1, 'GB model to use for normal mode calculation'],
-                           ['nmode_istrng', float, 0, 'Ionic strength for GB model (M)'],
-                           ['dielc', float, 1, 'Dielectric constant'],
+                           ['nmode_igb', int, 1, 'GB model, e.g. 1'],
+                           ['nmode_istrng', float, 0, 'NM ionic strength (M); e.g. 0.0'],
+                           ['dielc', float, 1, 'NM dielectric; e.g. 1.0'],
                            # Minimization options
-                           ['drms', float, 0.001, 'Minimization gradient cutoff'],
-                           ['maxcyc', int, 10000, 'Maximum number of minimization cycles'],
+                           ['drms', float, 0.001, 'Min. gradient cutoff; e.g. 0.001'],
+                           ['maxcyc', int, 10000, 'Max minimization cycles; e.g. 10000'],
                        ], trigger='nmoderun')

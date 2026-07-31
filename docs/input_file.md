@@ -140,6 +140,48 @@ trajectory file supplied on the command-line.
 :   The offset from which to choose frames from each trajectory file. For example, an interval of 2 will pull
 every 2nd frame beginning at startframe and ending less than or equal to endframe.
 
+`explicit_waters` (Default = 0)
+:   Number of explicit water molecules to keep in the working complex trajectory and assign to the receptor. A value of
+0 disables this feature and preserves the standard dry MM/PB(GB)SA workflow.
+
+    !!! important "Scope"
+        Explicit receptor waters are currently supported only for single-trajectory GB or PB calculations. This mode is not
+        compatible with RISM, GBNSR6, normal-mode or quasi-harmonic entropy, or multi-trajectory receptor/ligand inputs.
+        Extra-point water models such as OPC or TIP4P can fail in `sander` because of their virtual-site atoms. By
+        default, `gmx_MMPBSA` stops when these atoms are found. Set `explicit_waters_extra_points="strip"` only if you
+        intentionally want to remove the virtual sites and use the result as an approximate relative comparison.
+
+`explicit_waters_mask` (Default = "")
+:   Reference selection used to choose the closest explicit waters when `explicit_waters > 0`. Accepted values are:
+
+    * An Amber residue mask, for example `":4,6,7,8,9"`
+    * A decomposition-style distance selection, for example `"within 4"`
+    * `"pymol"` to identify interface residues with PyMOL dASA before selecting closest waters
+
+    The selected interface/reference residues are static for the calculation. The water identities can change from frame
+    to frame because `cpptraj closest` is applied during trajectory processing.
+
+`explicit_waters_group` (Default = "")
+:   Solvent group name in the complex index file. When empty, `gmx_MMPBSA` looks for common solvent group names and
+water model names such as `SOLV`, `SOL`, `Water`, `WAT`, `TP3`, `TIP3P`, `SPC`, and `OPC`. Set this option only when
+the solvent group in the index file uses a custom name.
+
+`explicit_waters_pymol_cutoff` (Default = 0.5)
+:   dASA cutoff used when `explicit_waters_mask="pymol"`. PyMOL must be available in `PATH` for this mode. This option
+is ignored for Amber mask and `within <distance>` selections.
+
+`explicit_waters_as` (Default = "receptor")
+:   Molecule that receives the explicit waters. The only supported value is `"receptor"` in the current implementation.
+
+`explicit_waters_extra_points` (Default = "error")
+:   How to handle virtual-site/extra-point atoms in selected explicit waters. Accepted values are:
+
+    * `"error"`: stop when extra-point atoms are found.
+    * `"strip"`: remove extra-point atoms from the explicit-water topologies and trajectories, with a warning.
+
+    The `"strip"` option changes the electrostatics of OPC/TIP4P-style waters and should be used only for controlled
+    relative comparisons where this approximation is acceptable.
+
 #### **Parameter options**
 
 `forcefields` (Default = "oldff/leaprc.ff99SB,leaprc.gaff")

@@ -583,7 +583,7 @@ def res2map(indexes, com_file):
                 rec_index += 1
                 proc_res = res
         # save residue number in the lig list
-        elif res != proc_res and resindex not in res_list:
+        elif indexes['COM']['COM'][i] in indexes['COM']['LIG'] and res != proc_res and resindex not in res_list:
             lig_list.append(resindex)
             res_list.append(Residue(resindex, com_str.atoms[i].residue.number,
                                     com_str.atoms[i].residue.chain, 'L', lig_index,
@@ -824,7 +824,9 @@ def find_progs(INPUT, mpi_size=0, engine='gmx'):
                   'mmpbsa_py_nabnmode': INPUT['nmode']['nmoderun'],
                   # 'rism3d.snglpnt': INPUT['rism']['rismrun']
                   'elsize': INPUT['gb']['alpb'],
-                  'gbnsr6': INPUT['gbnsr6']['gbnsr6run']
+                  'gbnsr6': INPUT['gbnsr6']['gbnsr6run'],
+                  'pymol': (INPUT['general']['explicit_waters'] > 0 and
+                            INPUT['general']['explicit_waters_mask'].strip().lower() == 'pymol')
                   }
     gro_exe = {
         'gmx5': [
@@ -841,6 +843,9 @@ def find_progs(INPUT, mpi_size=0, engine='gmx'):
         my_progs[prog] = shutil.which(prog, path=os.environ['PATH'])
         if needed:
             if not my_progs[prog]:
+                if prog == 'pymol':
+                    GMXMMPBSA_ERROR('EXPLICIT_WATERS_MASK="pymol" requires PyMOL in PATH. Install PyMOL, '
+                                    'load a module that provides it, or use an Amber mask/within selection instead.')
                 GMXMMPBSA_ERROR(f'Could not find necessary program [{prog}]')
             logging.info(f'{prog} found! Using {str(my_progs[prog])}')
 

@@ -45,9 +45,12 @@ class FakeTrajectory:
         self.traj_files = traj_files
         self.outputs = []
         self.processed_frames = 0
+        self.total_frames = self.processed_frame_count
+        self.setup_args = None
         FakeTrajectory.instances.append(self)
 
     def Setup(self, *args):
+        self.setup_args = args
         self.processed_frames = self.processed_frame_count
 
     def rms(self, mask):
@@ -93,3 +96,16 @@ class MakeTrajectoriesMPIFrameTest(unittest.TestCase):
         with patch('GMXMMPBSA.make_trajs.Trajectory', FakeTrajectory):
             with self.assertRaises(MMPBSA_Error):
                 make_trajectories(_input(), _files(), 4, 'cpptraj', '_GMXMMPBSA_')
+
+    def test_preselected_explicit_water_trajs_are_not_subsampled_again(self):
+        files = _files()
+        files.explicit_waters_preselected = True
+        inp = _input()
+        inp['general']['startframe'] = 2
+        inp['general']['endframe'] = 20
+        inp['general']['interval'] = 3
+
+        with patch('GMXMMPBSA.make_trajs.Trajectory', FakeTrajectory):
+            make_trajectories(inp, files, 1, 'cpptraj', '_GMXMMPBSA_')
+
+        self.assertEqual(FakeTrajectory.instances[0].setup_args, (1, 3, 1))
