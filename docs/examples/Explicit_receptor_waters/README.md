@@ -30,19 +30,32 @@ _See a detailed list of all the flags in gmx_MMPBSA command line [here][1]_
 
 ## Command-line
 
-Run from the `examples/Protein_protein` folder so the topology can resolve its local `toppar/` includes:
+That being said, once you are in the [examples/Explicit_receptor_waters][6] folder, the command-line will be as
+follows. Structure, trajectory, index, and topology files are reused from the [Protein-protein][8] example through
+relative paths:
 
 === "Serial"
 
-        cd examples/Protein_protein
-        gmx_MMPBSA -O -i ../Explicit_receptor_waters/mmpbsa_explicit_waters_pymol.in -cs com.tpr -ct com_traj.xtc -ci index.ndx -cg 3 4 -cp topol.top -o FINAL_RESULTS_EXPLICIT_WATERS_PYMOL.dat -eo FINAL_RESULTS_EXPLICIT_WATERS_PYMOL.csv
+        gmx_MMPBSA -O -i mmpbsa.in -cs ../Protein_protein/com.tpr -ct ../Protein_protein/com_traj.xtc -ci ../Protein_protein/index.ndx -cg 3 4 -cp ../Protein_protein/topol.top -o FINAL_RESULTS_MMPBSA.dat -eo FINAL_RESULTS_MMPBSA.csv
 
-where the `mmpbsa_explicit_waters_pymol.in` input file is a text file containing the following lines:
+=== "With MPI"
+
+        mpirun -np 2 gmx_MMPBSA -O -i mmpbsa.in -cs ../Protein_protein/com.tpr -ct ../Protein_protein/com_traj.xtc -ci ../Protein_protein/index.ndx -cg 3 4 -cp ../Protein_protein/topol.top -o FINAL_RESULTS_MMPBSA.dat -eo FINAL_RESULTS_MMPBSA.csv
+
+=== "PyMOL interface"
+
+        gmx_MMPBSA -O -i mmpbsa_explicit_waters_pymol.in -cs ../Protein_protein/com.tpr -ct ../Protein_protein/com_traj.xtc -ci ../Protein_protein/index.ndx -cg 3 4 -cp ../Protein_protein/topol.top -o FINAL_RESULTS_EXPLICIT_WATERS_PYMOL.dat -eo FINAL_RESULTS_EXPLICIT_WATERS_PYMOL.csv
+
+=== "gmx_MMPBSA_test"
+
+        gmx_MMPBSA_test -t 26
+
+where the `mmpbsa.in` input file is a text file containing the following lines:
 
 ``` yaml linenums="1" title="Sample input file for ST GB calculation with explicit receptor waters"
 Sample input file for ST GB calculation with explicit receptor waters
-# This input keeps 10 waters closest to the PyMOL/dASA interface.
-# PyMOL is required only when explicit_waters_mask="pymol".
+# This input keeps 10 waters closest to a static within-distance selection.
+# PyMOL is not required for this variant (used by gmx_MMPBSA_test -t 26).
 
 &general
 sys_name="Prot-Prot-ExpWat",
@@ -50,13 +63,14 @@ startframe=1,
 endframe=10,
 forcefields="leaprc.protein.ff14SB",
 explicit_waters=10,
-explicit_waters_mask="pymol",
-explicit_waters_pymol_cutoff=0.5,
+explicit_waters_mask="within 4",
 /
 &gb
 igb=2, saltcon=0.150,
 /
 ```
+
+The optional `mmpbsa_explicit_waters_pymol.in` input uses `explicit_waters_mask="pymol"` and requires PyMOL in `PATH`.
 
 !!! info "Keep in mind"
     See a detailed list of all the options in `gmx_MMPBSA` input file [here][2] as well as several [examples][3].

@@ -40,7 +40,7 @@ decomposition; PB, Interaction Entropy, and Per-residue decomposition) in the sa
 * [Multiple Trajectory Protocol](Protein_ligand/MT/README.md)[^1]
 * Binding free energy calculations
     * [Binding free energy calculation with GB](Protein_ligand/ST/README.md)
-    * [ST MM/PB(GB)SA with explicit receptor waters](Explicit_receptor_waters/README.md)
+    * [ST MM/PB(GB)SA with explicit receptor waters](Explicit_receptor_waters/README.md)[^1]
     * [Binding free energy calculation with GBNSR6](GBNSR6/README.md)
     * [Binding free energy calculation with linear PB (LPBE)](Linear_PB_solver/README.md)
     * [Binding free energy calculation with NonLinear PB (non-LPBE)](NonLinear_PB_solver/README.md)  

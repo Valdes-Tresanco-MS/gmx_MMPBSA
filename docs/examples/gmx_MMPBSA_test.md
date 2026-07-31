@@ -8,7 +8,7 @@ title: gmx_MMPBSA_test
     ```bash
     $ gmx_MMPBSA_test -h
     usage: gmx_MMPBSA_test [-h] [-v] 
-           [-t [{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,101} [{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,101} ...]]]
+           [-t [{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,101} [{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,101} ...]]]
            [-f FOLDER] [-r] [-ng] [-n NUM_PROCESSORS] [-j NUM_CONCURRENT]
     
     This program is part of gmx_MMPBSA and will allow you to run various gmx_MMPBSA examples easily.
@@ -22,7 +22,7 @@ title: gmx_MMPBSA_test
                             The level the test is going to be run at. Multiple systems and analysis can be run at the same 
                             time.
                                   Nr. of Sys  
-                            * 0      23     All -- Run all examples (Can take a long time!!!)
+                            * 0      24     All -- Run all examples (Can take a long time!!!)
                             * 1      12     Minimal -- Does a minimal test with a set of systems and analyzes
                                             that show that gmx_MMPBSA runs correctly. Only exclude 3drism, nmode
                                             protein-ligand MT because take a long time or are redundant
@@ -54,6 +54,7 @@ title: gmx_MMPBSA_test
                             * 23          QM/MMGBSA Calculation
                             * 24          GBNSR6 Calculation
                             * 25     |  5 AMBER input files
+                            * 26     | 10 ST MM/PB(GB)SA with explicit receptor waters
       -f FOLDER, --folder FOLDER
                             Defines the folder to store all data
       -r, --reuse           Defines the existing test forlder will be reuse
@@ -118,7 +119,7 @@ Each example can use up to `-n/--num_processors` MPI ranks.
         
         * Download gmx_MMPBSA repository content in `/home/user/Documents`
         * Works with `All` set of examples
-        * Perform the calculation on 23 examples sequentially, using 10 cpus each time
+        * Perform the calculation on 24 examples sequentially, using 10 cpus each time
         
     === "Multiple selection"
         
@@ -138,6 +139,16 @@ Each example can use up to `-n/--num_processors` MPI ranks.
         
         * Download gmx_MMPBSA repository content in `/home/user/Documents`
         * Execute `3` [Protein-Ligand (Single Trajectory approach)] example
+
+    === "Explicit receptor waters"
+
+            gmx_MMPBSA_test -f /home/user/Documents -t 26
+
+        Through this command-line, gmxMMPBSA_test will:
+
+        * Download gmx_MMPBSA repository content in `/home/user/Documents`
+        * Execute `26` [ST MM/PB(GB)SA with explicit receptor waters] example
+        * Run from the `Explicit_receptor_waters` example folder using its local `mmpbsa.in` input
 
     === "AMBER input files"
 
