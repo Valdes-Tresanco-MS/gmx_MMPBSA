@@ -9,6 +9,34 @@ a number of different components (_i.e._ metalloprotein-ligand complex, Protein-
 several types of calculations (_e.g._ GB, Alanine scanning and Per-residue decomposition; PB, Interaction Entropy, 
 and Per-wise decomposition) can be also performed in the same run for a specific system.
 
+## Maintaining example documentation
+
+Example README files under `examples/` are the **canonical** copies used by
+`gmx_MMPBSA_test` and GitHub browsing. The MkDocs site reads published copies
+under `docs/examples/`.
+
+When you edit an example README:
+
+1. Change the file under `examples/` only.
+2. Run from the repository root:
+
+   ```bash
+   python scripts/sync_example_docs.py
+   ```
+
+3. Commit both the `examples/` change and the synced `docs/examples/` copy.
+
+CI runs `python scripts/sync_example_docs.py --check` and fails if the docs
+copies are stale.
+
+The examples available through `gmx_MMPBSA_test` are defined in
+`GMXMMPBSA/data/gmx_MMPBSA_test_manifest.json`. When adding, removing, or
+renaming a testable example, update the manifest and run:
+
+```bash
+python scripts/validate_gmx_MMPBSA_test_docs.py
+```
+
 ## Jupyter notebooks
 
 Two Jupyter notebooks are available for interactive use:

@@ -119,9 +119,9 @@ specified on the command-line.
 `PM6-DH+` is the default `qm_theory` because protein-ligand, nucleic-acid-ligand, and carbohydrate interfaces
 are dominated by hydrogen bonding and dispersion - interactions that plain PM3/PM6 treat poorly. Key references:
 
-1. **Method development:** Řezáč & Hobza, *J. Chem. Theory Comput.* **2009**, 5, 1749-1760. [doi:10.1021/ct9000922](https://doi.org/10.1021/ct9000922) — PM6-DH dispersion/H-bond corrections; tested on DNA base pairs.
+1. **Method development:** Řezáč & Hobza, *J. Chem. Theory Comput.* **2009**, 5, 1749-1760. [doi:10.1021/ct9000922](https://doi.org/10.1021/ct9000922) - PM6-DH dispersion/H-bond corrections; tested on DNA base pairs.
 2. **PM6-DH+ H-bond correction:** Korth, *J. Chem. Theory Comput.* **2010**, 6, 3808-3816. [doi:10.1021/ct100408b](https://doi.org/10.1021/ct100408b)
-3. **Protein-ligand review:** Grimme & Brandenburg, *Front. Chem.* **2015**, 3, 8. [PMC4881564](https://pmc.ncbi.nlm.nih.gov/articles/PMC4881564/) — SQM-DH methods (incl. PM6-DH+) for non-covalent interactions.
+3. **Protein-ligand review:** Grimme & Brandenburg, *Front. Chem.* **2015**, 3, 8. [PMC4881564](https://pmc.ncbi.nlm.nih.gov/articles/PMC4881564/) - SQM-DH methods (incl. PM6-DH+) for non-covalent interactions.
 4. **QM/MM-GBSA benchmark (protein-carbohydrate):** Thapa *et al.*, *J. Phys. Chem. B* **2018**, 122, 7866-7878. [doi:10.1021/acs.jpcb.8b03655](https://doi.org/10.1021/acs.jpcb.8b03655)
 5. **QM/MMGBSA with gmx_MMPBSA + PM6-DH+:** *Commun. Biol.* **2025**. [doi:10.1038/s42003-025-09143-z](https://doi.org/10.1038/s42003-025-09143-z)
 6. **Host-guest binding with PM6-DH+:** Muddana & Gilson, *J. Chem. Theory Comput.* **2012**, 8, 2868-2880. [doi:10.1021/ct3002738](https://doi.org/10.1021/ct3002738)
