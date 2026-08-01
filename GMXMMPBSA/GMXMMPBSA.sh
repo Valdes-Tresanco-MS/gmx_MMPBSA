@@ -101,11 +101,11 @@ local p c
 COMPREPLY=() c=${COMP_WORDS[COMP_CWORD]} p=${COMP_WORDS[COMP_CWORD-1]}
 if (( $COMP_CWORD <= 1 )) || [[ $c == -* ]];
   then
-    COMPREPLY=( $(compgen  -W ' -h --help -v --version -t -f --folder --test -r --reuse -ng --nogui -n
-    --num_processors' -- $c));
+    COMPREPLY=( $(compgen  -W ' -h --help -v --version -t -f --folder -r --reuse --examples-dir --examples-source --skip-output-check -ng --nogui -n --num_processors -j --num_concurrent' -- $c));
     return 0;
 fi
 case "$p" in
--t)       COMPREPLY=( $(compgen -S ' ' -W $'0\n1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n13\n14\n15\n16\n17\n18' --  $c));;
+-t)       COMPREPLY=( $(compgen -S ' ' -W $'0\n1\n2\n101\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n13\n14\n15\n16\n17\n18\n19\n20\n21\n22\n23\n24\n25\n26\nprotein_ligand_st\nprotein_ligand_mt\nexplicit_receptor_waters\ngbnsr6\namber\ndecomposition\nrism' --  $c));;
+--examples-source) COMPREPLY=( $(compgen -W 'clone local' -- $c));;
 esac }
 complete -F _gmxmmpbsa_test_compl gmx_MMPBSA_test

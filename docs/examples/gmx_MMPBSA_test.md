@@ -8,8 +8,9 @@ title: gmx_MMPBSA_test
     ```bash
     $ gmx_MMPBSA_test -h
     usage: gmx_MMPBSA_test [-h] [-v] 
-           [-t [{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,101} [{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,101} ...]]]
-           [-f FOLDER] [-r] [-ng] [-n NUM_PROCESSORS] [-j NUM_CONCURRENT]
+           [-t [{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,101,explicit_receptor_waters,gbnsr6,...} ...]]
+           [-f FOLDER] [-r] [--examples-dir EXAMPLES_DIR] [--examples-source {clone,local}]
+           [--skip-output-check] [-ng] [-n NUM_PROCESSORS] [-j NUM_CONCURRENT]
     
     This program is part of gmx_MMPBSA and will allow you to run various gmx_MMPBSA examples easily.
     
@@ -18,9 +19,10 @@ title: gmx_MMPBSA_test
       -v, --version         show program's version number and exit
     
     Test options:
-      -t [{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,101} [{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,101} ...]]
+      -t [{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,101} [{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,101} ...]]
                             The level the test is going to be run at. Multiple systems and analysis can be run at the same 
-                            time.
+                            time. Numeric ids, suite ids (`0`/`1`/`2`), legacy `101` (same as `0`), and named aliases
+                            such as `explicit_receptor_waters` or `gbnsr6` are supported.
                                   Nr. of Sys  
                             * 0      24     All -- Run all examples (Can take a long time!!!)
                             * 1      12     Minimal -- Does a minimal test with a set of systems and analyzes
@@ -58,6 +60,11 @@ title: gmx_MMPBSA_test
       -f FOLDER, --folder FOLDER
                             Defines the folder to store all data
       -r, --reuse           Defines the existing test forlder will be reuse
+      --examples-dir EXAMPLES_DIR
+                            Use a local examples directory instead of cloning the repository
+      --examples-source {clone,local}
+                            Examples source mode. `local` requires `--examples-dir` or `GMXMMPBSA_TEST_EXAMPLES_DIR`
+      --skip-output-check   Skip post-run verification of expected output files
       -ng, --nogui          No open gmx_MMPBSA_ana after all calculations finished
       -n NUM_PROCESSORS, --num_processors NUM_PROCESSORS
                             Defines the number of processor cores you want to use with MPI per calculation. If the number 
@@ -78,7 +85,32 @@ gmx_MMPBSA_test is designed to run a set of samples (all or minimal) or a specif
 By default, examples run sequentially. To run multiple examples at the same time, use `-j/--num_concurrent`.
 Each example can use up to `-n/--num_processors` MPI ranks.
 
+By default, `gmx_MMPBSA_test` clones the GitHub repository to obtain the `examples/` folder. Developers working
+from a local checkout can point directly at that folder with `--examples-dir` (or the
+`GMXMMPBSA_TEST_EXAMPLES_DIR` environment variable) to avoid cloning and to test examples that match the
+installed code. After each successful run, the tool verifies that expected output files exist unless
+`--skip-output-check` is set.
+
+Named selectors such as `-t explicit_receptor_waters` or `-t gbnsr6` are equivalent to their numeric ids.
+`-t 101` is a legacy alias for the full `-t 0` suite.
+
 !!! info "Sets in gmx_MMPBSA_test"
+
+    === "Local examples (development)"
+
+            gmx_MMPBSA_test -f /tmp/gmx_test --examples-dir ./examples -t 2 -ng
+
+        Through this command-line, gmxMMPBSA_test will:
+
+        * Use the local `./examples` directory instead of cloning GitHub
+        * Run the `Fast` set (`-t 2`) against the checkout you are developing
+        * Skip opening `gmx_MMPBSA_ana` at the end (`-ng`)
+
+    === "Named selector"
+
+            gmx_MMPBSA_test -f /home/user/Documents -t explicit_receptor_waters
+
+        Equivalent to `-t 26` for the explicit receptor waters example.
 
     === "Fast"
         

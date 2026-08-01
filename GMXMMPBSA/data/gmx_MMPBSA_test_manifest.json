@@ -1,0 +1,1063 @@
+{
+  "version": 1,
+  "suites": {
+    "all": {
+      "id": 0,
+      "tests": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26
+      ]
+    },
+    "minimal": {
+      "id": 1,
+      "tests": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        12,
+        13,
+        14,
+        15
+      ]
+    },
+    "fast": {
+      "id": 2,
+      "tests": [
+        3,
+        4,
+        5,
+        7,
+        9,
+        12,
+        13,
+        14,
+        15
+      ]
+    }
+  },
+  "aliases": {
+    "101": "all",
+    "protein_ligand_st": 3,
+    "protein_ligand_mt": 16,
+    "explicit_receptor_waters": 26,
+    "gbnsr6": 24,
+    "amber": 25,
+    "decomposition": 14,
+    "rism": 18
+  },
+  "tests": {
+    "3": {
+      "name": "Protein-Ligand (Single trajectory approximation)",
+      "path": "Protein_ligand/ST",
+      "workdir": "Protein_ligand/ST",
+      "input": "mmpbsa.in",
+      "executable": "gmx_MMPBSA",
+      "command_args": [
+        "-O",
+        "-i",
+        "mmpbsa.in",
+        "-cs",
+        "com.tpr",
+        "-ct",
+        "com_traj.xtc",
+        "-ci",
+        "index.ndx",
+        "-cg",
+        "3",
+        "4",
+        "-cp",
+        "topol.top",
+        "-o",
+        "FINAL_RESULTS_MMPBSA.dat",
+        "-eo",
+        "FINAL_RESULTS_MMPBSA.csv"
+      ],
+      "suites": [
+        "all",
+        "minimal",
+        "fast"
+      ],
+      "slow": false,
+      "requires": [
+        "gmx_MMPBSA",
+        "mpirun"
+      ],
+      "expected_outputs": [
+        "FINAL_RESULTS_MMPBSA.dat",
+        "FINAL_RESULTS_MMPBSA.csv"
+      ]
+    },
+    "4": {
+      "name": "Protein-Protein",
+      "path": "Protein_protein",
+      "workdir": "Protein_protein",
+      "input": "mmpbsa.in",
+      "executable": "gmx_MMPBSA",
+      "command_args": [
+        "-O",
+        "-i",
+        "mmpbsa.in",
+        "-cs",
+        "com.tpr",
+        "-ct",
+        "com_traj.xtc",
+        "-ci",
+        "index.ndx",
+        "-cg",
+        "3",
+        "4",
+        "-cp",
+        "topol.top",
+        "-o",
+        "FINAL_RESULTS_MMPBSA.dat",
+        "-eo",
+        "FINAL_RESULTS_MMPBSA.csv"
+      ],
+      "suites": [
+        "all",
+        "minimal",
+        "fast"
+      ],
+      "slow": false,
+      "requires": [
+        "gmx_MMPBSA",
+        "mpirun"
+      ],
+      "expected_outputs": [
+        "FINAL_RESULTS_MMPBSA.dat",
+        "FINAL_RESULTS_MMPBSA.csv"
+      ]
+    },
+    "5": {
+      "name": "Protein-DNA",
+      "path": "Protein_DNA",
+      "workdir": "Protein_DNA",
+      "input": "mmpbsa.in",
+      "executable": "gmx_MMPBSA",
+      "command_args": [
+        "-O",
+        "-i",
+        "mmpbsa.in",
+        "-cs",
+        "com.tpr",
+        "-ct",
+        "com_traj.xtc",
+        "-ci",
+        "index.ndx",
+        "-cg",
+        "3",
+        "4",
+        "-cp",
+        "topol.top",
+        "-o",
+        "FINAL_RESULTS_MMPBSA.dat",
+        "-eo",
+        "FINAL_RESULTS_MMPBSA.csv"
+      ],
+      "suites": [
+        "all",
+        "minimal",
+        "fast"
+      ],
+      "slow": false,
+      "requires": [
+        "gmx_MMPBSA",
+        "mpirun"
+      ],
+      "expected_outputs": [
+        "FINAL_RESULTS_MMPBSA.dat",
+        "FINAL_RESULTS_MMPBSA.csv"
+      ]
+    },
+    "6": {
+      "name": "Protein-Membrane",
+      "path": "Protein_membrane",
+      "workdir": "Protein_membrane",
+      "input": "mmpbsa.in",
+      "executable": "gmx_MMPBSA",
+      "command_args": [
+        "-O",
+        "-i",
+        "mmpbsa.in",
+        "-cs",
+        "com.pdb",
+        "-ci",
+        "index.ndx",
+        "-cg",
+        "1",
+        "13",
+        "-ct",
+        "com_traj.pdb",
+        "-lm",
+        "ligand.mol2",
+        "-o",
+        "FINAL_RESULTS_MMPBSA.dat",
+        "-eo",
+        "FINAL_RESULTS_MMPBSA.csv"
+      ],
+      "suites": [
+        "all",
+        "minimal"
+      ],
+      "slow": true,
+      "requires": [
+        "gmx_MMPBSA",
+        "mpirun"
+      ],
+      "expected_outputs": [
+        "FINAL_RESULTS_MMPBSA.dat",
+        "FINAL_RESULTS_MMPBSA.csv"
+      ]
+    },
+    "7": {
+      "name": "Protein-Glycan",
+      "path": "Protein_glycan",
+      "workdir": "Protein_glycan",
+      "input": "mmpbsa.in",
+      "executable": "gmx_MMPBSA",
+      "command_args": [
+        "-O",
+        "-i",
+        "mmpbsa.in",
+        "-cs",
+        "com.tpr",
+        "-ct",
+        "com_traj.xtc",
+        "-ci",
+        "index.ndx",
+        "-cg",
+        "3",
+        "4",
+        "-cp",
+        "topol.top",
+        "-o",
+        "FINAL_RESULTS_MMPBSA.dat",
+        "-eo",
+        "FINAL_RESULTS_MMPBSA.csv"
+      ],
+      "suites": [
+        "all",
+        "minimal",
+        "fast"
+      ],
+      "slow": false,
+      "requires": [
+        "gmx_MMPBSA",
+        "mpirun"
+      ],
+      "expected_outputs": [
+        "FINAL_RESULTS_MMPBSA.dat",
+        "FINAL_RESULTS_MMPBSA.csv"
+      ]
+    },
+    "8": {
+      "name": "Metalloprotein-ligand",
+      "path": "Metalloprotein_ligand",
+      "workdir": "Metalloprotein_ligand",
+      "input": "mmpbsa.in",
+      "executable": "gmx_MMPBSA",
+      "command_args": [
+        "-O",
+        "-i",
+        "mmpbsa.in",
+        "-cs",
+        "com.tpr",
+        "-ct",
+        "com_traj.xtc",
+        "-ci",
+        "index.ndx",
+        "-cg",
+        "3",
+        "4",
+        "-cp",
+        "topol.top",
+        "-o",
+        "FINAL_RESULTS_MMPBSA.dat",
+        "-eo",
+        "FINAL_RESULTS_MMPBSA.csv"
+      ],
+      "suites": [
+        "all",
+        "minimal"
+      ],
+      "slow": true,
+      "requires": [
+        "gmx_MMPBSA",
+        "mpirun"
+      ],
+      "expected_outputs": [
+        "FINAL_RESULTS_MMPBSA.dat",
+        "FINAL_RESULTS_MMPBSA.csv"
+      ]
+    },
+    "9": {
+      "name": "Comp_receptor",
+      "path": "Comp_receptor",
+      "workdir": "Comp_receptor",
+      "input": "mmpbsa.in",
+      "executable": "gmx_MMPBSA",
+      "command_args": [
+        "-O",
+        "-i",
+        "mmpbsa.in",
+        "-cs",
+        "com.tpr",
+        "-ci",
+        "index.ndx",
+        "-cg",
+        "33",
+        "14",
+        "-ct",
+        "com_traj.xtc",
+        "-lm",
+        "ligand.mol2",
+        "-o",
+        "FINAL_RESULTS_MMPBSA.dat",
+        "-eo",
+        "FINAL_RESULTS_MMPBSA.csv"
+      ],
+      "suites": [
+        "all",
+        "minimal",
+        "fast"
+      ],
+      "slow": false,
+      "requires": [
+        "gmx_MMPBSA",
+        "mpirun"
+      ],
+      "expected_outputs": [
+        "FINAL_RESULTS_MMPBSA.dat",
+        "FINAL_RESULTS_MMPBSA.csv"
+      ]
+    },
+    "10": {
+      "name": "Protein-Ligand (CHARMM force field)",
+      "path": "Protein_ligand_CHARMMff",
+      "workdir": "Protein_ligand_CHARMMff",
+      "input": "mmpbsa.in",
+      "executable": "gmx_MMPBSA",
+      "command_args": [
+        "-O",
+        "-i",
+        "mmpbsa.in",
+        "-cs",
+        "com.tpr",
+        "-ci",
+        "index.ndx",
+        "-cg",
+        "1",
+        "13",
+        "-ct",
+        "com_traj.xtc",
+        "-cp",
+        "topol.top",
+        "-o",
+        "FINAL_RESULTS_MMPBSA.dat",
+        "-eo",
+        "FINAL_RESULTS_MMPBSA.csv"
+      ],
+      "suites": [
+        "all",
+        "minimal"
+      ],
+      "slow": true,
+      "requires": [
+        "gmx_MMPBSA",
+        "mpirun"
+      ],
+      "expected_outputs": [
+        "FINAL_RESULTS_MMPBSA.dat",
+        "FINAL_RESULTS_MMPBSA.csv"
+      ]
+    },
+    "11": {
+      "name": "Protein-ligand complex in membrane with CHARMMff",
+      "path": "Protein_membrane_CHARMMff",
+      "workdir": "Protein_membrane_CHARMMff",
+      "input": "mmpbsa.in",
+      "executable": "gmx_MMPBSA",
+      "command_args": [
+        "-O",
+        "-i",
+        "mmpbsa.in",
+        "-cs",
+        "com.pdb",
+        "-ci",
+        "index.ndx",
+        "-cg",
+        "6",
+        "5",
+        "-ct",
+        "md.xtc",
+        "-cp",
+        "topol.top",
+        "-o",
+        "FINAL_RESULTS_MMPBSA.dat",
+        "-eo",
+        "FINAL_RESULTS_MMPBSA.csv"
+      ],
+      "suites": [
+        "all"
+      ],
+      "slow": true,
+      "requires": [
+        "gmx_MMPBSA",
+        "mpirun"
+      ],
+      "expected_outputs": [
+        "FINAL_RESULTS_MMPBSA.dat",
+        "FINAL_RESULTS_MMPBSA.csv"
+      ]
+    },
+    "12": {
+      "name": "Alanine Scanning",
+      "path": "Alanine_scanning",
+      "workdir": "Alanine_scanning",
+      "input": "mmpbsa.in",
+      "executable": "gmx_MMPBSA",
+      "command_args": [
+        "-O",
+        "-i",
+        "mmpbsa.in",
+        "-cs",
+        "com.tpr",
+        "-ct",
+        "com_traj.xtc",
+        "-ci",
+        "index.ndx",
+        "-cg",
+        "3",
+        "4",
+        "-cp",
+        "topol.top",
+        "-cr",
+        "com.pdb",
+        "-o",
+        "FINAL_RESULTS_MMPBSA.dat",
+        "-eo",
+        "FINAL_RESULTS_MMPBSA.csv"
+      ],
+      "suites": [
+        "all",
+        "minimal",
+        "fast"
+      ],
+      "slow": false,
+      "requires": [
+        "gmx_MMPBSA",
+        "mpirun"
+      ],
+      "expected_outputs": [
+        "FINAL_RESULTS_MMPBSA.dat",
+        "FINAL_RESULTS_MMPBSA.csv"
+      ]
+    },
+    "13": {
+      "name": "Stability calculation",
+      "path": "Stability",
+      "workdir": "Stability",
+      "input": "mmpbsa.in",
+      "executable": "gmx_MMPBSA",
+      "command_args": [
+        "-O",
+        "-i",
+        "mmpbsa.in",
+        "-cs",
+        "com.tpr",
+        "-ct",
+        "com_traj.xtc",
+        "-ci",
+        "index.ndx",
+        "-cg",
+        "3",
+        "4",
+        "-cp",
+        "topol.top",
+        "-o",
+        "FINAL_RESULTS_MMPBSA.dat",
+        "-eo",
+        "FINAL_RESULTS_MMPBSA.csv"
+      ],
+      "suites": [
+        "all",
+        "minimal",
+        "fast"
+      ],
+      "slow": false,
+      "requires": [
+        "gmx_MMPBSA",
+        "mpirun"
+      ],
+      "expected_outputs": [
+        "FINAL_RESULTS_MMPBSA.dat",
+        "FINAL_RESULTS_MMPBSA.csv"
+      ]
+    },
+    "14": {
+      "name": "Decomposition Analysis",
+      "path": "Decomposition_analysis",
+      "workdir": "Decomposition_analysis",
+      "input": "mmpbsa.in",
+      "executable": "gmx_MMPBSA",
+      "command_args": [
+        "-O",
+        "-i",
+        "mmpbsa.in",
+        "-cs",
+        "com.tpr",
+        "-ct",
+        "com_traj.xtc",
+        "-ci",
+        "index.ndx",
+        "-cg",
+        "3",
+        "4",
+        "-cp",
+        "topol.top",
+        "-o",
+        "FINAL_RESULTS_MMPBSA.dat",
+        "-eo",
+        "FINAL_RESULTS_MMPBSA.csv",
+        "-do",
+        "FINAL_DECOMP_MMPBSA.dat",
+        "-deo",
+        "FINAL_DECOMP_MMPBSA.csv"
+      ],
+      "suites": [
+        "all",
+        "minimal",
+        "fast"
+      ],
+      "slow": false,
+      "requires": [
+        "gmx_MMPBSA",
+        "mpirun"
+      ],
+      "expected_outputs": [
+        "FINAL_RESULTS_MMPBSA.dat",
+        "FINAL_RESULTS_MMPBSA.csv",
+        "FINAL_DECOMP_MMPBSA.dat",
+        "FINAL_DECOMP_MMPBSA.csv"
+      ]
+    },
+    "15": {
+      "name": "Interaction Entropy approximation",
+      "path": "Entropy_calculations/Interaction_Entropy",
+      "workdir": "Entropy_calculations/Interaction_Entropy",
+      "input": "mmpbsa.in",
+      "executable": "gmx_MMPBSA",
+      "command_args": [
+        "-O",
+        "-i",
+        "mmpbsa.in",
+        "-cs",
+        "com.tpr",
+        "-ct",
+        "com_traj.xtc",
+        "-ci",
+        "index.ndx",
+        "-cg",
+        "3",
+        "4",
+        "-cp",
+        "topol.top",
+        "-o",
+        "FINAL_RESULTS_MMPBSA.dat",
+        "-eo",
+        "FINAL_RESULTS_MMPBSA.csv"
+      ],
+      "suites": [
+        "all",
+        "minimal",
+        "fast"
+      ],
+      "slow": false,
+      "requires": [
+        "gmx_MMPBSA",
+        "mpirun"
+      ],
+      "expected_outputs": [
+        "FINAL_RESULTS_MMPBSA.dat",
+        "FINAL_RESULTS_MMPBSA.csv"
+      ]
+    },
+    "16": {
+      "name": "Protein-Ligand (Multiple trajectory approximation)",
+      "path": "Protein_ligand/MT",
+      "workdir": "Protein_ligand/MT",
+      "input": "mmpbsa.in",
+      "executable": "gmx_MMPBSA",
+      "command_args": [
+        "-O",
+        "-i",
+        "mmpbsa.in",
+        "-cs",
+        "com.tpr",
+        "-ci",
+        "index.ndx",
+        "-cg",
+        "1",
+        "13",
+        "-ct",
+        "com_traj.xtc",
+        "-rs",
+        "rec.pdb",
+        "-ri",
+        "rec_index.ndx",
+        "-rg",
+        "1",
+        "-rt",
+        "rec_traj.pdb",
+        "-lm",
+        "ligand.mol2",
+        "-ls",
+        "lig.pdb",
+        "-li",
+        "lig_index.ndx",
+        "-lg",
+        "2",
+        "-lt",
+        "lig_traj.pdb",
+        "-o",
+        "FINAL_RESULTS_MMPBSA.dat",
+        "-eo",
+        "FINAL_RESULTS_MMPBSA.csv"
+      ],
+      "suites": [
+        "all"
+      ],
+      "slow": false,
+      "requires": [
+        "gmx_MMPBSA",
+        "mpirun"
+      ],
+      "expected_outputs": [
+        "FINAL_RESULTS_MMPBSA.dat",
+        "FINAL_RESULTS_MMPBSA.csv"
+      ]
+    },
+    "17": {
+      "name": "Entropy calculation using Normal Mode approximation",
+      "path": "Entropy_calculations/nmode",
+      "workdir": "Entropy_calculations/nmode",
+      "input": "mmpbsa.in",
+      "executable": "gmx_MMPBSA",
+      "command_args": [
+        "-O",
+        "-i",
+        "mmpbsa.in",
+        "-cs",
+        "com.tpr",
+        "-ct",
+        "com_traj.xtc",
+        "-ci",
+        "index.ndx",
+        "-cg",
+        "3",
+        "4",
+        "-cp",
+        "topol.top",
+        "-o",
+        "FINAL_RESULTS_MMPBSA.dat",
+        "-eo",
+        "FINAL_RESULTS_MMPBSA.csv"
+      ],
+      "suites": [
+        "all"
+      ],
+      "slow": true,
+      "requires": [
+        "gmx_MMPBSA",
+        "mpirun"
+      ],
+      "expected_outputs": [
+        "FINAL_RESULTS_MMPBSA.dat",
+        "FINAL_RESULTS_MMPBSA.csv"
+      ]
+    },
+    "18": {
+      "name": "Calculations using 3D-RISM approximation",
+      "path": "3D-RISM",
+      "workdir": "3D-RISM",
+      "input": "mmpbsa.in",
+      "executable": "gmx_MMPBSA",
+      "command_args": [
+        "-O",
+        "-i",
+        "mmpbsa.in",
+        "-cs",
+        "com.tpr",
+        "-ct",
+        "com_traj.xtc",
+        "-ci",
+        "index.ndx",
+        "-cg",
+        "3",
+        "4",
+        "-cp",
+        "topol.top",
+        "-o",
+        "FINAL_RESULTS_MMPBSA.dat",
+        "-eo",
+        "FINAL_RESULTS_MMPBSA.csv"
+      ],
+      "suites": [
+        "all"
+      ],
+      "slow": true,
+      "requires": [
+        "gmx_MMPBSA",
+        "mpirun"
+      ],
+      "expected_outputs": [
+        "FINAL_RESULTS_MMPBSA.dat",
+        "FINAL_RESULTS_MMPBSA.csv"
+      ],
+      "known_issues": [
+        "rism_fortran"
+      ]
+    },
+    "19": {
+      "name": "C2 Entropy approximation",
+      "path": "Entropy_calculations/C2_Entropy",
+      "workdir": "Entropy_calculations/C2_Entropy",
+      "input": "mmpbsa.in",
+      "executable": "gmx_MMPBSA",
+      "command_args": [
+        "-O",
+        "-i",
+        "mmpbsa.in",
+        "-cs",
+        "com.tpr",
+        "-ct",
+        "com_traj.xtc",
+        "-ci",
+        "index.ndx",
+        "-cg",
+        "3",
+        "4",
+        "-cp",
+        "topol.top",
+        "-o",
+        "FINAL_RESULTS_MMPBSA.dat",
+        "-eo",
+        "FINAL_RESULTS_MMPBSA.csv"
+      ],
+      "suites": [
+        "all"
+      ],
+      "slow": false,
+      "requires": [
+        "gmx_MMPBSA",
+        "mpirun"
+      ],
+      "expected_outputs": [
+        "FINAL_RESULTS_MMPBSA.dat",
+        "FINAL_RESULTS_MMPBSA.csv"
+      ]
+    },
+    "20": {
+      "name": "LPB Calculation",
+      "path": "Linear_PB_solver",
+      "workdir": "Linear_PB_solver",
+      "input": "mmpbsa.in",
+      "executable": "gmx_MMPBSA",
+      "command_args": [
+        "-O",
+        "-i",
+        "mmpbsa.in",
+        "-cs",
+        "com.tpr",
+        "-ct",
+        "com_traj.xtc",
+        "-ci",
+        "index.ndx",
+        "-cg",
+        "3",
+        "4",
+        "-cp",
+        "topol.top",
+        "-o",
+        "FINAL_RESULTS_MMPBSA.dat",
+        "-eo",
+        "FINAL_RESULTS_MMPBSA.csv"
+      ],
+      "suites": [
+        "all"
+      ],
+      "slow": false,
+      "requires": [
+        "gmx_MMPBSA",
+        "mpirun"
+      ],
+      "expected_outputs": [
+        "FINAL_RESULTS_MMPBSA.dat",
+        "FINAL_RESULTS_MMPBSA.csv"
+      ]
+    },
+    "21": {
+      "name": "NLPB Calculation",
+      "path": "NonLinear_PB_solver",
+      "workdir": "NonLinear_PB_solver",
+      "input": "mmpbsa.in",
+      "executable": "gmx_MMPBSA",
+      "command_args": [
+        "-O",
+        "-i",
+        "mmpbsa.in",
+        "-cs",
+        "com.tpr",
+        "-ct",
+        "com_traj.xtc",
+        "-ci",
+        "index.ndx",
+        "-cg",
+        "3",
+        "4",
+        "-cp",
+        "topol.top",
+        "-o",
+        "FINAL_RESULTS_MMPBSA.dat",
+        "-eo",
+        "FINAL_RESULTS_MMPBSA.csv"
+      ],
+      "suites": [
+        "all"
+      ],
+      "slow": false,
+      "requires": [
+        "gmx_MMPBSA",
+        "mpirun"
+      ],
+      "expected_outputs": [
+        "FINAL_RESULTS_MMPBSA.dat",
+        "FINAL_RESULTS_MMPBSA.csv"
+      ]
+    },
+    "22": {
+      "name": "Protein-Ligand_LPH (CHARMM force field)",
+      "path": "Protein_ligand_LPH_atoms_CHARMMff",
+      "workdir": "Protein_ligand_LPH_atoms_CHARMMff",
+      "input": "mmpbsa.in",
+      "executable": "gmx_MMPBSA",
+      "command_args": [
+        "-O",
+        "-i",
+        "mmpbsa.in",
+        "-cs",
+        "str_noLP.pdb",
+        "-ci",
+        "index_mod_gromacs.ndx",
+        "-cg",
+        "1",
+        "17",
+        "-ct",
+        "com_traj.xtc",
+        "-cp",
+        "topol.top",
+        "-o",
+        "FINAL_RESULTS_MMPBSA.dat",
+        "-eo",
+        "FINAL_RESULTS_MMPBSA.csv"
+      ],
+      "suites": [
+        "all"
+      ],
+      "slow": false,
+      "requires": [
+        "gmx_MMPBSA",
+        "mpirun"
+      ],
+      "expected_outputs": [
+        "FINAL_RESULTS_MMPBSA.dat",
+        "FINAL_RESULTS_MMPBSA.csv"
+      ]
+    },
+    "23": {
+      "name": "QM/MMGBSA Calculation",
+      "path": "QM_MMGBSA",
+      "workdir": "QM_MMGBSA",
+      "input": "mmpbsa.in",
+      "executable": "gmx_MMPBSA",
+      "command_args": [
+        "-O",
+        "-i",
+        "mmpbsa.in",
+        "-cs",
+        "com.tpr",
+        "-ci",
+        "index.ndx",
+        "-cg",
+        "1",
+        "13",
+        "-ct",
+        "com_traj.xtc",
+        "-lm",
+        "ligand.mol2",
+        "-o",
+        "FINAL_RESULTS_MMPBSA.dat",
+        "-eo",
+        "FINAL_RESULTS_MMPBSA.csv"
+      ],
+      "suites": [
+        "all"
+      ],
+      "slow": false,
+      "requires": [
+        "gmx_MMPBSA",
+        "mpirun"
+      ],
+      "expected_outputs": [
+        "FINAL_RESULTS_MMPBSA.dat",
+        "FINAL_RESULTS_MMPBSA.csv"
+      ]
+    },
+    "24": {
+      "name": "GBNSR6 Calculation",
+      "path": "GBNSR6",
+      "workdir": "GBNSR6",
+      "input": "mmpbsa.in",
+      "executable": "gmx_MMPBSA",
+      "command_args": [
+        "-O",
+        "-i",
+        "mmpbsa.in",
+        "-cs",
+        "com.tpr",
+        "-ct",
+        "com_traj.xtc",
+        "-ci",
+        "index.ndx",
+        "-cg",
+        "3",
+        "4",
+        "-cp",
+        "topol.top",
+        "-o",
+        "FINAL_RESULTS_MMPBSA.dat",
+        "-eo",
+        "FINAL_RESULTS_MMPBSA.csv"
+      ],
+      "suites": [
+        "all"
+      ],
+      "slow": false,
+      "requires": [
+        "gmx_MMPBSA",
+        "mpirun"
+      ],
+      "expected_outputs": [
+        "FINAL_RESULTS_MMPBSA.dat",
+        "FINAL_RESULTS_MMPBSA.csv"
+      ]
+    },
+    "25": {
+      "name": "AMBER input files",
+      "path": "AMBER",
+      "workdir": "AMBER",
+      "input": "mmpbsa.in",
+      "executable": "amber_MMPBSA",
+      "command_args": [
+        "-O",
+        "-i",
+        "mmpbsa.in",
+        "-cp",
+        "ras-raf_complex.prmtop",
+        "-cs",
+        "ras-raf_complex.inpcrd",
+        "-ct",
+        "prod_complex.mdcrd",
+        "-rp",
+        "ras.prmtop",
+        "-lp",
+        "raf.prmtop",
+        "-cm",
+        ":1-166",
+        ":167-242",
+        "-o",
+        "FINAL_RESULTS_MMPBSA.dat",
+        "-eo",
+        "FINAL_RESULTS_MMPBSA.csv"
+      ],
+      "suites": [
+        "all"
+      ],
+      "slow": false,
+      "requires": [
+        "amber_MMPBSA",
+        "mpirun"
+      ],
+      "expected_outputs": [
+        "FINAL_RESULTS_MMPBSA.dat",
+        "FINAL_RESULTS_MMPBSA.csv"
+      ]
+    },
+    "26": {
+      "name": "ST MM/PB(GB)SA with explicit receptor waters",
+      "path": "Explicit_receptor_waters",
+      "workdir": "Explicit_receptor_waters",
+      "input": "mmpbsa.in",
+      "executable": "gmx_MMPBSA",
+      "command_args": [
+        "-O",
+        "-i",
+        "mmpbsa.in",
+        "-cs",
+        "../Protein_protein/com.tpr",
+        "-ct",
+        "../Protein_protein/com_traj.xtc",
+        "-ci",
+        "../Protein_protein/index.ndx",
+        "-cg",
+        "3",
+        "4",
+        "-cp",
+        "../Protein_protein/topol.top",
+        "-o",
+        "FINAL_RESULTS_MMPBSA.dat",
+        "-eo",
+        "FINAL_RESULTS_MMPBSA.csv"
+      ],
+      "suites": [
+        "all"
+      ],
+      "slow": false,
+      "requires": [
+        "gmx_MMPBSA",
+        "mpirun"
+      ],
+      "expected_outputs": [
+        "FINAL_RESULTS_MMPBSA.dat",
+        "FINAL_RESULTS_MMPBSA.csv"
+      ]
+    }
+  }
+}

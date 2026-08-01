@@ -16,6 +16,7 @@
 #  for more details.                                                           #
 # ##############################################################################
 
+import os
 import sys
 from os.path import split
 import logging
@@ -199,7 +200,12 @@ def gmxmmpbsa_ana():
 def gmxmmpbsa_test():
     _setup_logging("gmx_MMPBSA_test.log")
     try:
+        from GMXMMPBSA.test_manifest import build_help_text
+        from GMXMMPBSA.commandlineparser import test_action
+        test_action.help = build_help_text()
         parser = testparser.parse_args(sys.argv[1:])
+        if parser.examples_source == 'local' and not parser.examples_dir and not os.getenv('GMXMMPBSA_TEST_EXAMPLES_DIR'):
+            testparser.error('--examples-source local requires --examples-dir or GMXMMPBSA_TEST_EXAMPLES_DIR')
     except CommandlineError as e:
         GMXMMPBSA_ERROR('%s: %s' % (type(e).__name__, e))
         sys.exit(1)

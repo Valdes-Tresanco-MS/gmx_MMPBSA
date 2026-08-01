@@ -467,8 +467,17 @@ testparser = ArgumentParser(epilog=f'gmx_MMPBSA is an effort to implement the GB
 testparser.add_argument('-v', '--version', action='version',
                        version='%%(prog)s %s based on MMPBSA version %s' % (__version__, __mmpbsa_version__))
 group = testparser.add_argument_group('Test options')
-group.add_argument('-t', dest='test', choices=list(range(27)) + [101], type=int, nargs='*', default=[2],
-                   help='''\
+
+
+def _test_selector(value: str) -> str:
+    from GMXMMPBSA.test_manifest import load_manifest
+    token = str(value).strip()
+    if token not in load_manifest().all_valid_choices():
+        raise ArgumentTypeError(f'Invalid test selector: {token}')
+    return token
+
+
+_DEFAULT_TEST_HELP = '''\
 The level the test is going to be run at. Multiple systems and analysis can be run at the same time.
       Nr. of Sys  
 * 0      24     All -- Run all examples (Can take a long time!!!)
@@ -504,9 +513,18 @@ The level the test is going to be run at. Multiple systems and analysis can be r
 * 24            GBNSR6 Calculation
 * 25            AMBER input files
 * 26     | 10   ST MM/PB(GB)SA with explicit receptor waters
-''')
+'''
+
+test_action = group.add_argument('-t', dest='test', type=_test_selector, nargs='*', default=['2'],
+                                 help=_DEFAULT_TEST_HELP)
 group.add_argument('-f', '--folder', help='Defines the folder to store all data', type=Path, default='.')
 group.add_argument('-r', '--reuse', help='Defines the existing test forlder will be reuse', action='store_true')
+group.add_argument('--examples-dir', dest='examples_dir', type=Path, default=None,
+                   help='Use a local examples directory instead of cloning the repository')
+group.add_argument('--examples-source', dest='examples_source', choices=['clone', 'local'], default='clone',
+                   help='Examples source mode. "local" requires --examples-dir or GMXMMPBSA_TEST_EXAMPLES_DIR')
+group.add_argument('--skip-output-check', dest='skip_output_check', action='store_true', default=False,
+                   help='Skip post-run verification of expected output files')
 group.add_argument('-ng', '--nogui', help='No open gmx_MMPBSA_ana after all calculations finished',
                    action='store_true',  default=False)
 group.add_argument('-n', '--num_processors', type=int, default=4,

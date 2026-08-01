@@ -287,8 +287,9 @@ any installation that depends on this package will fail. Required only if you di
     ```
 
 `Git`
-:   Used by **gmx_MMPBSA_test** to download the GitHub repository to get the examples' folder or to install the 
-development version.
+:   Used by **gmx_MMPBSA_test** to download the GitHub repository to get the examples' folder when running in the
+default clone mode, or to install the development version. If you already have a local checkout, you can skip `git`
+for testing by passing `--examples-dir /path/to/examples` (or setting `GMXMMPBSA_TEST_EXAMPLES_DIR`).
 
     ```
     conda install -c anaconda git

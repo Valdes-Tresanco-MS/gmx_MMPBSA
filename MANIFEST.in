@@ -1,2 +1,3 @@
 include versioneer.py
 include GMXMMPBSA/_version.py
+include GMXMMPBSA/data/gmx_MMPBSA_test_manifest.json
