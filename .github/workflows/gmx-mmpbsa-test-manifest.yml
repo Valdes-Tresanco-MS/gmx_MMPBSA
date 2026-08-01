@@ -1,0 +1,62 @@
+name: gmx_MMPBSA_test manifest
+
+on:
+  push:
+    paths:
+      - 'GMXMMPBSA/test_manifest.py'
+      - 'GMXMMPBSA/tester.py'
+      - 'GMXMMPBSA/app.py'
+      - 'GMXMMPBSA/commandlineparser.py'
+      - 'GMXMMPBSA/GMXMMPBSA.sh'
+      - 'GMXMMPBSA/data/gmx_MMPBSA_test_manifest.json'
+      - 'MANIFEST.in'
+      - 'setup.py'
+      - 'examples/**'
+      - 'docs/examples/gmx_MMPBSA_test.md'
+      - 'docs/installation.md'
+      - 'scripts/bootstrap_test_manifest.py'
+      - 'scripts/example_readme_sync.py'
+      - 'scripts/sync_example_docs.py'
+      - 'scripts/validate_example_readme_parity.py'
+      - 'scripts/validate_gmx_MMPBSA_test_docs.py'
+      - 'tests/test_test_manifest.py'
+  pull_request:
+    paths:
+      - 'GMXMMPBSA/test_manifest.py'
+      - 'GMXMMPBSA/tester.py'
+      - 'GMXMMPBSA/app.py'
+      - 'GMXMMPBSA/commandlineparser.py'
+      - 'GMXMMPBSA/GMXMMPBSA.sh'
+      - 'GMXMMPBSA/data/gmx_MMPBSA_test_manifest.json'
+      - 'MANIFEST.in'
+      - 'setup.py'
+      - 'examples/**'
+      - 'docs/examples/gmx_MMPBSA_test.md'
+      - 'docs/installation.md'
+      - 'scripts/bootstrap_test_manifest.py'
+      - 'scripts/example_readme_sync.py'
+      - 'scripts/sync_example_docs.py'
+      - 'scripts/validate_example_readme_parity.py'
+      - 'scripts/validate_gmx_MMPBSA_test_docs.py'
+      - 'tests/test_test_manifest.py'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install package
+        run: pip install -e . --no-deps
+      - name: Install test runner
+        run: pip install pytest
+      - name: Check example README sync
+        run: python scripts/sync_example_docs.py --check
+      - name: Validate example README parity
+        run: python scripts/validate_example_readme_parity.py
+      - name: Validate manifest docs
+        run: python scripts/validate_gmx_MMPBSA_test_docs.py
+      - name: Run manifest tests
+        run: pytest tests/test_test_manifest.py -q
