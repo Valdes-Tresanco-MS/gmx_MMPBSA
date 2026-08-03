@@ -278,8 +278,45 @@ def _estimate_frame_count_label(test: TestEntry) -> str:
     return str(defaults.get(test.id, 10))
 
 
-def verify_outputs(work_dir, expected_outputs: list[str]) -> list[str]:
+def snapshot_outputs(work_dir, expected_outputs: list[str]) -> dict[str, tuple[int, int, int] | None]:
+    """Capture metadata used to distinguish fresh outputs from stale files."""
     from pathlib import Path
 
     base = Path(work_dir)
-    return [name for name in expected_outputs if not (base / name).is_file()]
+    snapshot = {}
+    for name in expected_outputs:
+        path = base / name
+        try:
+            stat = path.stat()
+        except OSError:
+            snapshot[name] = None
+        else:
+            snapshot[name] = (stat.st_ino, stat.st_size, stat.st_mtime_ns)
+    return snapshot
+
+
+def verify_outputs(
+    work_dir,
+    expected_outputs: list[str],
+    previous: dict[str, tuple[int, int, int] | None] | None = None,
+) -> list[str]:
+    """Return expected outputs that are missing or unchanged since ``previous``."""
+    from pathlib import Path
+
+    base = Path(work_dir)
+    missing = []
+    for name in expected_outputs:
+        path = base / name
+        try:
+            stat = path.stat()
+        except OSError:
+            missing.append(name)
+            continue
+        if not path.is_file():
+            missing.append(name)
+            continue
+        if previous is not None and previous.get(name) is not None:
+            current = (stat.st_ino, stat.st_size, stat.st_mtime_ns)
+            if current == previous[name]:
+                missing.append(name)
+    return missing

@@ -25,7 +25,7 @@ import sys
 import re
 from pathlib import Path
 from GMXMMPBSA.exceptions import GMXMMPBSA_ERROR
-from GMXMMPBSA.test_manifest import load_manifest, verify_outputs
+from GMXMMPBSA.test_manifest import load_manifest, snapshot_outputs, verify_outputs
 import time
 
 
@@ -37,6 +37,7 @@ def run_process(work_dir, display_name, sys_name, args, log_file, expected_outpu
     time.sleep(0.1)
     logging.info(f"{display_name:60}{'RUNNING':>10}")
     os.chdir(work_dir)
+    output_snapshot = snapshot_outputs(work_dir, expected_outputs)
     with open(log_file, 'a') as system_log:
         g_p = subprocess.Popen(args, stdout=system_log, stderr=system_log)
         if g_p.wait():
@@ -45,7 +46,7 @@ def run_process(work_dir, display_name, sys_name, args, log_file, expected_outpu
     if skip_output_check:
         return sys_name, False, []
 
-    missing = verify_outputs(work_dir, expected_outputs)
+    missing = verify_outputs(work_dir, expected_outputs, output_snapshot)
     return sys_name, bool(missing), missing
 
 
