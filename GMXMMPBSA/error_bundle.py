@@ -9,6 +9,7 @@ import subprocess
 import sys
 import tempfile
 import traceback
+import uuid
 import zipfile
 from datetime import datetime
 from pathlib import Path
@@ -21,18 +22,29 @@ TRAJ_ATTRS = {'complex_trajs', 'receptor_trajs', 'ligand_trajs'}
 TRAJ_SUFFIXES = {'.xtc', '.trr', '.mdcrd', '.nc', '.netcdf', '.dcd', '.crd'}
 
 
+def _open_bundle_archive():
+    """Open a uniquely named bundle archive without clobbering an existing one."""
+    while True:
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S_%f')
+        suffix = uuid.uuid4().hex[:8]
+        bundle = Path(f'gmx_MMPBSA_error_bundle_{timestamp}_{suffix}.zip').absolute()
+        try:
+            return bundle, zipfile.ZipFile(bundle, 'x', zipfile.ZIP_DEFLATED)
+        except FileExistsError:
+            continue
+
+
 def create_error_bundle(app, exc, tb=None, max_frames=5):
     """Create a zip file with useful inputs and a tiny trajectory sample."""
     files = getattr(app, 'FILES', None)
     prefix = getattr(files, 'prefix', '_GMXMMPBSA_')
-    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-    bundle = Path(f'gmx_MMPBSA_error_bundle_{timestamp}.zip').absolute()
+    bundle, archive = _open_bundle_archive()
     manifest = _base_manifest(app, exc, tb, max_frames)
     added = set()
 
     with tempfile.TemporaryDirectory(prefix='gmx_MMPBSA_error_bundle_') as tmpdir:
         tmpdir = Path(tmpdir)
-        with zipfile.ZipFile(bundle, 'w', zipfile.ZIP_DEFLATED) as zf:
+        with archive as zf:
             _add_existing_file(zf, Path('gmx_MMPBSA.log'), 'logs/gmx_MMPBSA.log', added, manifest)
 
             if files is not None:
