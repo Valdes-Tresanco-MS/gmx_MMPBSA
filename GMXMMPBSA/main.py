@@ -1372,6 +1372,13 @@ class MMPBSA_App(object):
             self._get_decomp()
 
     def get_iec2entropy(self, from_calc):
+        if self.stability and (
+                self.INPUT['general']['interaction_entropy'] or self.INPUT['general']['c2_entropy']
+        ):
+            logging.warning("The IE or C2 entropy method doesn't support stability calculations. Skipping entropy.")
+            self.INPUT['general']['interaction_entropy'] = self.INPUT['general']['c2_entropy'] = 0
+            return
+
         allowed_met = ['gb', 'pb', 'rism std', 'rism gf', 'rism pcplus', 'gbnsr6']
         if self.INPUT['general']['interaction_entropy']:
             self.calc_types.normal['ie'] = {}

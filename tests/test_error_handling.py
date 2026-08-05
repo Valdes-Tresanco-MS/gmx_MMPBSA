@@ -139,6 +139,19 @@ class ErrorHandlingTest(unittest.TestCase):
 
         self.assertIn('Invalid distance value', str(exc.exception))
 
+    def test_stability_skips_interaction_and_c2_entropy(self):
+        main = _import_main_with_stubs()
+        app = object.__new__(main.MMPBSA_App)
+        app.stability = True
+        app.INPUT = {'general': {'interaction_entropy': 1, 'c2_entropy': 1}}
+
+        with self.assertLogs(level='WARNING') as logs:
+            app.get_iec2entropy(from_calc=True)
+
+        self.assertEqual(app.INPUT['general']['interaction_entropy'], 0)
+        self.assertEqual(app.INPUT['general']['c2_entropy'], 0)
+        self.assertIn('doesn\'t support stability calculations', '\n'.join(logs.output))
+
 
 if __name__ == '__main__':
     unittest.main()
