@@ -1004,6 +1004,14 @@ class MMPBSA_App(object):
         # Check deprecated variables
         # check force fields
 
+        if INPUT['general']['qh_entropy']:
+            GMXMMPBSA_ERROR(
+                'Quasi-harmonic entropy (qh_entropy=1) is not supported for new calculations. '
+                'Set qh_entropy=0 and use a supported entropy method instead. '
+                'Historical QH result files remain readable by the analyzer.',
+                InputError,
+            )
+
         logging.info(f'Checking {self.FILES.input_file} input file...')
 
         if self.FILES.ligand_mol2:

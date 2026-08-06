@@ -108,12 +108,11 @@ dispersion terms can be used. In this approach, SASA is used to correlate the ca
 surface-integration method is employed to compute the dispersion term (eq. 8).
 
 Furthermore, the entropic component is usually calculated by normal modes analysis (NMODE). The translational and
-rotational entropies can be estimated using standard statistical mechanical formulas. Nevertheless, calculating 
-vibrational entropy using normal modes is computationally expensive because it requires expanding the internal 
-coordinate covariance matrix for all degrees of freedom for a set of minimized structures. Conversely, the 
-Quasi-harmonic (QH) approximation is less computationally expensive, although it requires a considerable number of
-frames to converge. Recently, other alternatives have been developed, such as NMODE in truncated systems, 
-which considerably reduces the computational cost. Interaction Entropy (IE) is another novel method that 
+rotational entropies can be estimated using standard statistical mechanical formulas. Nevertheless, calculating
+vibrational entropy using normal modes is computationally expensive because it requires expanding the internal
+coordinate covariance matrix for all degrees of freedom for a set of minimized structures. Recently, other
+alternatives have been developed, such as NMODE in truncated systems, which considerably reduces the computational
+cost. Interaction Entropy (IE) is another method that
 calculates the entropic component of the binding free energy directly from MD simulations without any extra 
 computational cost. This method is numerically reliable, more computationally efficient, and superior to the 
 standard NMODE approach, as shown in an extensive study of over a dozen randomly selected protein-ligand binding 

@@ -57,8 +57,9 @@ in rewrite-output workflows, fixed Delta Delta entropy values for alanine
 scanning, removed duplicated entropy items in analyzer output, and improved
 the handling of `ie_segment` changes inside `gmx_MMPBSA_ana`.
 
-The current entropy portfolio includes quasi-harmonic, normal-mode,
-interaction-entropy, and C2 approximations. Normal-mode calculations remain
+The current entropy portfolio includes normal-mode, interaction-entropy, and
+C2 approximations. Quasi-harmonic output is retained for reading historical
+result files but is no longer supported for new calculations. Normal-mode calculations remain
 available through AmberTools, and v1.6.5 adds experimental normal-mode support
 for CHARMM topologies. The report should clearly distinguish this CHARMM nmode
 work as experimental, while presenting C2 and interaction entropy as established

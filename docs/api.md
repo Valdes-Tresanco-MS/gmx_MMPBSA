@@ -207,7 +207,7 @@ print(entropy["map"])
 | Key | Meaning |
 | --- | --- |
 | `nmode` | Normal mode entropy. |
-| `qh` | Quasi-harmonic entropy. |
+| `qh` | Legacy quasi-harmonic entropy read from existing result files. |
 | `ie` | Interaction entropy. |
 | `c2` | C2 entropy. |
 | `TRANSLATIONAL` | Translational entropy term for NMODE/QH outputs. |
@@ -260,7 +260,7 @@ Specific helpers are also available:
 ie = api.get_ie_entropy(ie_segment=25)
 c2 = api.get_c2_entropy()
 nmode = api.get_nmode_entropy()
-qh = api.get_qh_entropy()
+qh = api.get_qh_entropy()  # Reads QH data from existing result files
 ```
 
 To compute binding tables that combine enthalpy and entropy summaries:

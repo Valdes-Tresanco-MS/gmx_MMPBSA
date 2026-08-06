@@ -152,6 +152,19 @@ class ErrorHandlingTest(unittest.TestCase):
         self.assertEqual(app.INPUT['general']['c2_entropy'], 0)
         self.assertIn('doesn\'t support stability calculations', '\n'.join(logs.output))
 
+    def test_qh_entropy_is_rejected_for_new_calculations(self):
+        main = _import_main_with_stubs()
+        app = object.__new__(main.MMPBSA_App)
+        app.master = True
+        app.INPUT = {'general': {'qh_entropy': 1}}
+        app.FILES = types.SimpleNamespace(input_file='mmpbsa.in')
+
+        with self.assertRaises(InputError) as exc:
+            app.check_for_bad_input()
+
+        self.assertIn('qh_entropy=1', str(exc.exception))
+        self.assertIn('not supported', str(exc.exception))
+
 
 if __name__ == '__main__':
     unittest.main()

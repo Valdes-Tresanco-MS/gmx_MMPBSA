@@ -23,9 +23,9 @@ the mutated topology files, and whichever calculations that would be carried out
 also carried out for the mutated systems. Note that only 1 mutation is allowed per simulation, and it must
 be to an alanine or glycine. If `mutant_only` variable is not set to 1, differences resulting from the mutations are 
 calculated.
-* **Entropy corrections**. An entropy term can be added to the free energies calculated above using either the
-quasi-harmonic, the normal mode, interaction entropy or C2 approximations. Calculations will be performed for the normal 
-and mutated systems (alanine scanning) as requested. Normal mode calculations are done with the
+* **Entropy corrections**. An entropy term can be added to the free energies calculated above using the normal mode,
+interaction entropy or C2 approximations. Quasi-harmonic data from historical result files can still be inspected.
+Calculations will be performed for the normal and mutated systems (alanine scanning) as requested. Normal mode calculations are done with the
 `mmpbsa_py_nabnmode` program included with AmberTools.
 * **Decomposition schemes**. The energy terms will be decomposed according to the decomposition scheme (per-residue or 
 per-wise) outlined in the `idecomp` variable description. This should work with all the above, though entropy terms

@@ -425,15 +425,12 @@ support for complex systems with several components. It supports all force field
 #### **Entropy options**
 
 `qh_entropy` (Default = 0)
-:    It specifies whether to perform a quasi-harmonic entropy (QH) approximation with `cpptraj` or not.
-     
-     * 0: Do not perform QH
-     * 1: perform QH
+:    Legacy quasi-harmonic entropy (QH) calculations are no longer supported for new runs. Keep this value at `0`.
+     Historical result files containing QH data remain readable by the analyzer.
 
     !!! important "Keep in mind"
-        * The number of frames used for QH analyses should be higher than 3N, N being the number of atoms in the 
-        complex
-        * Check this [thread](http://archive.ambermd.org/201207/0319.html) for more info on QH analysis
+        QH output is retained only for backward-compatible reading of existing results. Use NMODE, interaction
+        entropy, or C2 entropy for new calculations.
 
     _Implemented in v1.4.2: Equivalent to (Removed) `entropy = 1`_
 

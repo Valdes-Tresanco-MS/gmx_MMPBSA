@@ -415,7 +415,7 @@ input_file.addNamelist('general', 'general',
                            ['temperature', float, 298.15, 'Temperature (K); e.g. 298.15'],
 
                            # Entropy options
-                           ['qh_entropy', int, 0, 'Run QH entropy; 0/1'],
+                           ['qh_entropy', int, 0, 'Legacy QH output reader; new calculations reject 1'],
                            ['interaction_entropy', int, 0, 'Run IE entropy; 0/1'],
                            ['ie_segment', int, 25, 'IE segment length (%); e.g. 25'],
                            ['c2_entropy', int, 0, 'Run C2 entropy; 0/1'],
