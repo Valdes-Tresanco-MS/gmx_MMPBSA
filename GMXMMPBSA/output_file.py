@@ -259,7 +259,7 @@ def write_outputs(app):
 
         # Now calculate the effect of alanine scanning
         if INPUT['ala']['alarun'] and not INPUT['ala']['mutant_only']:
-            nm_sys_mut_norm = app.calc_types.mut_norm['nmode']
+            nm_sys_mut_norm = app.calc_types.mut_norm['nmode']['complex' if stability else 'delta']
             final_output.writeline(f'Delta ( Mutant - Normal ) [ Δ(-TΔS) ]')
             final_output.writeline('ENTROPY RESULTS (NMODE APPROXIMATION):')
             final_output.add_section(nm_sys_mut_norm.summary_output())
@@ -352,7 +352,7 @@ def write_outputs(app):
                                          f'ΔG{"" if stability else " binding"} = {mnm_davg:9.2f} +/- {mnm_dstd:7.2f}\n')
 
         if INPUT['ala']['alarun'] and not INPUT['ala']['mutant_only']:
-            mut_norm = app.calc_types.mut_norm[key]['delta']
+            mut_norm = app.calc_types.mut_norm[key]['complex' if stability else 'delta']
             final_output.add_section(mut_norm.summary_output())
             ddh_davg = mut_norm['TOTAL'].mean()
             ddh_dstd = mut_norm['TOTAL'].std()

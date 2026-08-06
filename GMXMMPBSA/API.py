@@ -477,7 +477,19 @@ class MMPBSA_API():
             elif verbose:
                 warnings.warn(f'Not qhtype {et} in data')
         df = pd.DataFrame(flatten(entropy))
-        return {'map': emapping(entropy), 'data': df, 'summary': df.xs(('delta', 'TOTAL'), level=[1, 2], axis=1)}
+        if isinstance(df.columns, pd.MultiIndex) and len(df.columns):
+            stability = bool(
+                getattr(getattr(self, 'app_namespace', None), 'FILES', None)
+                and getattr(self.app_namespace.FILES, 'stability', False)
+            )
+            summary_mol = 'complex' if stability else 'delta'
+            available_mols = set(df.columns.get_level_values(2))
+            if summary_mol not in available_mols:
+                summary_mol = 'complex' if 'complex' in available_mols else 'delta'
+            summary = df.xs((summary_mol, 'TOTAL'), level=[2, 3], axis=1)
+        else:
+            summary = pd.DataFrame(index=df.index)
+        return {'map': emapping(entropy), 'data': df, 'summary': summary}
 
     def get_c2_entropy(self, c2type: tuple = None, startframe=None, endframe=None, interval=None, verbose=True):
         temp_print_keys = c2type or tuple(x for x in ['normal', 'mutant', 'mutant-normal'] if x in self.data and
