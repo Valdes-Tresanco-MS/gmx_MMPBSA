@@ -807,6 +807,11 @@ def remove(flag, fnpre='_GMXMMPBSA_'):
     elif flag == 0:  # remove all temporary files
         for fil in allfiles:
 
+            # Keep the normalized input metadata so the calculation settings
+            # remain auditable even when the user requests minimal cleanup.
+            if fil == f'{fnpre}info':
+                continue
+
             if fil.startswith(fnpre) or bool(re.match('#?(COM|REC|LIG|MUT_COM|MUT_REC|MUT_LIG)_traj_(\d)\.xtc',
                                                       fil)) or fil in other_files:
                 os.remove(fil)

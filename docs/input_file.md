@@ -554,7 +554,7 @@ in the PATH variable. In this path the following executables will be searched: `
 `keep_files` (Default = 2)
 :   Specifies which files are kept.
 
-    * 0: Keep only binary file (_COMPACT_gmx_MMPBSA_RESULTS.mmxsa_)
+    * 0: Keep only the normalized input metadata and binary file (_GMXMMPBSA_info_ and _COMPACT_gmx_MMPBSA_RESULTS.mmxsa_)
     * 1: Keep all temporary files (_prefix_*)
     * 2: Keep all temporary files (_prefix_*) and binary file
 
