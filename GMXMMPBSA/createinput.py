@@ -542,7 +542,7 @@ class SanderPBSADECOMPInput(SanderInput):
         self.input_items = {'ntb': 0, 'cut': 999.0, 'nsnb': 99999, 'ioutfm': 0, 'idecomp': 0, 'dec_verbose': 0,
                    'imin': 5, 'maxcyc': 1, 'ntx': 1, 'pbtemp': 300,
                    # Basic input options
-                   'ipb': 2, 'inp': 2,
+                   'ipb': 2, 'inp': 1,
                    # Options to define the physical constants
                    'epsin': 1.0, 'epsout': 78.5, 'epsmem': 1.0, 'smoothopt': 1, 'istrng': 0.0,
                    'radiopt': 1, 'dprob': 1.4, 'iprob': 2.0, 'sasopt': 0, 'arcres': 0.25,
@@ -630,7 +630,7 @@ class SanderPBSAInput(SanderInput):
         self.input_items = {'ntb': 0, 'cut': 999.0, 'nsnb': 99999, 'ioutfm': 0, 'idecomp': 0, 'dec_verbose': 0,
                    'imin': 5, 'maxcyc': 1, 'ntx': 1, 'pbtemp': 300,
                    # Basic input options
-                   'ipb': 2, 'inp': 2,
+                   'ipb': 2, 'inp': 1,
                    # Options to define the physical constants
                    'epsin': 1.0, 'epsout': 78.5, 'epsmem': 1.0, 'smoothopt': 1, 'istrng': 0.0,
                    'radiopt': 1, 'dprob': 1.4, 'iprob': 2.0, 'sasopt': 0, 'arcres': 0.25,

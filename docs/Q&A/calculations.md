@@ -102,11 +102,10 @@ Here we describe a series of frequent issues related to calculations and their p
     
 ???+ example "I get high values for the solvation energy when using PB model"    
 
-    : When using PB model, [inp=2][10] is used as default to calculate total non-polar solvation free energy, that 
-    is, the total non-polar solvation free energy will be modeled as two terms: the cavity term and the dispersion 
-    term. The dispersion term is computed with a surface-based integration method closely related to the PCM 
-    solvent for quantum chemical programs. Under this framework, the cavity term is still computed as a term 
-    linearly proportional to the molecular volume enclosed by SASA.
+    : When using the PB model, `inp=1` is the default. The total non-polar solvation free energy is modeled as a
+    single term linearly proportional to the solvent-accessible surface area. To use the two-term cavity plus
+    dispersion model, set `inp=2` explicitly. The dispersion term is computed with a surface-based integration
+    method closely related to the PCM solvent for quantum chemical programs.
 
         #### **Possible solutions:**
     
@@ -125,7 +124,7 @@ Here we describe a series of frequent issues related to calculations and their p
             ```
 
         : Another way to avoid the EDISPER contribution is by modifying the `_GMXMMPBSA_info` file. Changing the value of
-        `INPUT['inp']` to 1 and run:
+        `INPUT['pb']['inp']` to 1 and running:
 
             ```
             gmx_MMPBSA --rewrite-output

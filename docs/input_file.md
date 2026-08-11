@@ -1011,7 +1011,7 @@ method, while a level-set based algebraic method is used when `ipb > 2`.
   [240]: https://onlinelibrary.wiley.com/doi/10.1002/jcc.25783
   [241]: https://pubs.acs.org/doi/10.1021/acs.jctc.9b00602
 
-`inp` (Default = 2) 
+`inp` (Default = 1)
 :   Option to select different methods to compute non-polar solvation free energy.
 
     * 1: The total non-polar solvation free energy is modeled as a single term linearly proportional to the

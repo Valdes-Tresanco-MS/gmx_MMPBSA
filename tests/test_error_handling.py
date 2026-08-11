@@ -165,6 +165,9 @@ class ErrorHandlingTest(unittest.TestCase):
         self.assertIn('qh_entropy=1', str(exc.exception))
         self.assertIn('not supported', str(exc.exception))
 
+    def test_pb_parser_default_inp_is_one(self):
+        self.assertEqual(input_file.namelists['pb'].variables['inp'].value, 1)
+
 
 if __name__ == '__main__':
     unittest.main()
