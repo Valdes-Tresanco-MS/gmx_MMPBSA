@@ -239,7 +239,9 @@ class MMPBSA_App(object):
         """
         nframes = self.numframes if self.master else 0
         nmframes = self.numframes_nmode if self.master else 0
-        self.calc_list = CalculationList(self.timer, nframes, nmframes, self.mpi_size)
+        self.calc_list = CalculationList(
+            self.timer, nframes, nmframes, self.mpi_size, self.FILES.progress_style
+        )
         if self.master:
             logging.info(f'Starting calculations in {self.mpi_size} CPUs...')
             if (self.INPUT['pb']['pbrun'] or self.INPUT['rism']['rismrun'] or

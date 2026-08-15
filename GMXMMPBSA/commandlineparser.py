@@ -241,6 +241,8 @@ group.add_argument('-prefix', dest='prefix', default='_GMXMMPBSA_',
 group.add_argument('-sys_name', dest='sys_name', default=None,
                    metavar='<system name>',
                    help='System name. Overrides sys_name in the input file.')
+group.add_argument('--progress-style', choices=['auto', 'rich', 'classic', 'plain', 'none'], default='auto',
+                   help='Calculation progress display. Auto uses Rich in a terminal and classic otherwise.')
 group = parser.add_argument_group('Input and Output Files', '''These options specify the input files and optional 
 output files.''')
 group.add_argument('-i', dest='input_file', metavar='FILE', help='MM/PBSA input file.')
@@ -367,6 +369,8 @@ group.add_argument('-prefix', dest='prefix', default='_GMXMMPBSA_',
 group.add_argument('-sys_name', dest='sys_name', default=None,
                    metavar='<system name>',
                    help='System name. Overrides sys_name in the input file.')
+group.add_argument('--progress-style', choices=['auto', 'rich', 'classic', 'plain', 'none'], default='auto',
+                   help='Calculation progress display. Auto uses Rich in a terminal and classic otherwise.')
 group = amber_parser.add_argument_group('Input and Output Files', '''These options specify the input files and optional
 output files.''')
 group.add_argument('-i', dest='input_file', metavar='FILE', help='MM/PBSA input file.')

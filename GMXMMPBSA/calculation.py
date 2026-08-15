@@ -35,7 +35,6 @@ import logging
 import threading
 from pathlib import Path
 from tqdm import tqdm
-from time import sleep
 import json
 
 from GMXMMPBSA.exceptions import CalcError
@@ -46,54 +45,23 @@ import sys
 import numpy as np
 import math
 
+from GMXMMPBSA.progress import monitor_progress, TQDM_BAR_FORMAT
 
-TQDM_BAR_FORMAT = '            {l_bar}{bar:100}| {n_fmt}/{total_fmt} [elapsed: {elapsed} remaining: {remaining}]'
 
-
-def pb(output_basename, nframes=1, mpi_size=1, nmode=False):
-    pbar = tqdm(total=nframes, ascii=True, bar_format=TQDM_BAR_FORMAT)
-    accum_frames = 0
-    ctime = 0
-
-    while accum_frames < nframes:
-        sleep(ctime)
-        frames = 0
-        for i in range(mpi_size):
-            if 'gbnsr6' in output_basename:
-                _output_folder, _output_filename = output_basename.split('/')
-                output_folder = Path(_output_folder % i)
-                output_filename = Path(_output_filename)
-                frames += len(list(output_folder.glob(f"{output_filename.stem}*")))
-            else:
-                obasename = Path(output_basename % i)
-                if not obasename.exists():
-                    continue
-                with obasename.open() as of:
-                    for line in of:
-                        if not nmode and line.startswith('                    FINAL RESULTS'):
-                            frames += 1
-                        elif nmode and line.startswith('Total:'):
-                            frames += 1
-
-        if frames - accum_frames:
-            pbar.update(frames - accum_frames)
-            accum_frames = frames
-        else:
-            ctime += 1
-
-    pbar.clear()
-    pbar.close()
+# Backward-compatible name used by callers and third-party integrations.
+pb = monitor_progress
 
 
 class CalculationList(list):
     """ This contains the list of all calculations that need to be run """
 
-    def __init__(self, timer, *args):
+    def __init__(self, timer, nframes, nmframes, mpi_size, progress_style='auto'):
         self.timer = timer
         self.timer_keys = []
         self.labels = []
         self.output_files = []
-        self.nframes, self.nmframes, self.mpi_size = args
+        self.nframes, self.nmframes, self.mpi_size = nframes, nmframes, mpi_size
+        self.progress_style = progress_style
         list.__init__(self)
 
     def append(self, calc, label='', timer_key=None, output_basename=None):
@@ -134,8 +102,14 @@ class CalculationList(list):
                         else:
                             nframes = self.nmframes
                             nmode = True
-                        pb_thread = threading.Thread(target=pb, args=(self.output_files[i], nframes, self.mpi_size,
-                                                                      nmode), daemon=True)
+                        label = self.labels[i].strip().removeprefix('calculating ')
+                        label = label.removesuffix(' contribution...').capitalize()
+                        pb_thread = threading.Thread(
+                            target=pb,
+                            args=(self.output_files[i], nframes, self.mpi_size, nmode),
+                            kwargs={'style': self.progress_style, 'label': label},
+                            daemon=True,
+                        )
                         pb_thread.start()
 
                 calc.setup()

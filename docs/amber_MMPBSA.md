@@ -58,3 +58,10 @@ amber_MMPBSA -O -i mmpbsa.in \
 ```
 
 See the [AMBER input files example](examples/AMBER/README.md) for a complete runnable example.
+
+## Progress display
+
+`amber_MMPBSA` and `gmx_MMPBSA` accept
+`--progress-style {auto,rich,classic,plain,none}`. The default `auto` mode uses an adaptive Rich progress display in
+an interactive terminal and falls back to the classic bar when MPI or output forwarding hides the terminal. Use
+`rich` to force the richer renderer through MPI, `plain` for milestone log messages, or `none` to disable progress.

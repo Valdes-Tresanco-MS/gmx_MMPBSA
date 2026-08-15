@@ -3,7 +3,13 @@ import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from GMXMMPBSA.commandlineparser import AMBER_TRAJECTORY_FORMATS, amber_trajectory, testparser
+from GMXMMPBSA.commandlineparser import (
+    AMBER_TRAJECTORY_FORMATS,
+    amber_parser,
+    amber_trajectory,
+    parser,
+    testparser,
+)
 from GMXMMPBSA.exceptions import MMPBSA_Error
 
 
@@ -39,3 +45,13 @@ class TestParserSelectorTest(unittest.TestCase):
         with self.assertRaises(SystemExit) as exc:
             testparser.parse_args(['-t', 'not-a-test'])
         self.assertEqual(exc.exception.code, 2)
+
+
+class ProgressStyleParserTest(unittest.TestCase):
+    def test_progress_style_defaults_to_auto(self):
+        self.assertEqual(parser.parse_args([]).progress_style, 'auto')
+        self.assertEqual(amber_parser.parse_args([]).progress_style, 'auto')
+
+    def test_progress_style_can_be_selected(self):
+        self.assertEqual(parser.parse_args(['--progress-style', 'classic']).progress_style, 'classic')
+        self.assertEqual(amber_parser.parse_args(['--progress-style', 'none']).progress_style, 'none')

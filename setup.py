@@ -53,7 +53,8 @@ setup(
                       'scipy>=1.14.1,<2',
                       'mpi4py>=4.0.1,<5',
                       'parmed>=4.2.2,<5',
-                      'tqdm'],
+                      'tqdm',
+                      'rich>=13,<15'],
     entry_points={
         "console_scripts": [
             "gmx_MMPBSA=GMXMMPBSA.app:gmxmmpbsa",

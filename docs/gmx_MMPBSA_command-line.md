@@ -12,7 +12,8 @@ title:
     $ gmx_MMPBSA -h
     
     usage: gmx_MMPBSA [-h] [-v] [--input-file-help] [--create_input [{gb,pb,rism,ala,decomp,nmode,all}] 
-                      [-O] [-prefix <file prefix>] [-sys_name <system name>] [-i FILE] [-xvvfile XVVFILE] [-o FILE]
+                      [-O] [-prefix <file prefix>] [-sys_name <system name>]
+                      [--progress-style {auto,rich,classic,plain,none}] [-i FILE] [-xvvfile XVVFILE] [-o FILE]
                       [-do FILE] [-eo FILE] [-deo FILE] [-nogui] [-s] [-cs <Structure File>] [-ci <Index File>] [-cg index index]
                       [-ct [TRJ [TRJ ...]]] [-cp <Topology>] [-cr <PDB File>] [-rs <Structure File>] [-ri <Index File>] 
                       [-rg index] [-rt [TRJ [TRJ ...]]] [-rp <Topology>] [-lm <Structure File>] [-ls <Structure File>] 
@@ -38,6 +39,11 @@ title:
       -sys_name <system name>, --sys_name <system name>
                             System name. Overrides sys_name in the input file.
                             (default: None)
+      --progress-style {auto,rich,classic,plain,none}
+                            Calculation progress display. Auto uses Rich in an
+                            interactive terminal and the classic bar when MPI or
+                            output forwarding hides the terminal. Classic preserves
+                            the original tqdm display. (default: auto)
     
     Input and Output Files:
       These options specify the input files and optional output files.
