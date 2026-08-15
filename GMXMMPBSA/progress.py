@@ -172,28 +172,33 @@ class _RichReporter:
 
 
 class _PlainReporter:
-    def __init__(self, total, label, mpi_size, **_):
+    def __init__(self, total, label, mpi_size, log_level=logging.INFO, **_):
         self.total = total
         self.label = label
         self.mpi_size = mpi_size
+        self.log_level = log_level
         self.started = monotonic()
         self.last_completed = -1
-        self.last_reported_percent = -10
+        self.last_reported_percent = 0
 
     def update(self, completed):
         percent = int(completed * 100 / self.total) if self.total else 100
-        milestone = percent == 100 or percent >= self.last_reported_percent + 10
+        if completed >= self.total:
+            self.last_completed = completed
+            return
+        milestone = percent >= self.last_reported_percent + 10
         if completed != self.last_completed and milestone:
             elapsed = monotonic() - self.started
             rate = completed / elapsed if elapsed else 0
             remaining = _format_duration((self.total - completed) / rate) if rate else '--:--'
-            logging.info(
-                '  %s: %d/%d frames (%d%%), %.2f frame/s, elapsed %s, ETA %s [%d MPI rank%s]',
+            logging.log(
+                self.log_level,
+                '  %s progress: %d/%d frames (%d%%), %.2f frame/s, elapsed %s, ETA %s [%d MPI rank%s]',
                 self.label, completed, self.total, percent, rate,
                 _format_duration(elapsed), remaining, self.mpi_size,
                 '' if self.mpi_size == 1 else 's',
             )
-            self.last_reported_percent = percent
+            self.last_reported_percent = (percent // 10) * 10
         self.last_completed = completed
 
     def close(self, completed):
@@ -225,13 +230,30 @@ def monitor_progress(output_basename, nframes=1, mpi_size=1, nmode=False,
         return
 
     reporter = _reporter(style, nframes, label, mpi_size, stream)
+    # DEBUG records are captured by gmx_MMPBSA.log but filtered from the normal
+    # INFO-level terminal handler. Plain mode already emits its milestones at INFO.
+    log_reporter = None if style == 'plain' else _PlainReporter(
+        total=nframes, label=label, mpi_size=mpi_size, log_level=logging.DEBUG
+    )
     counter = FrameCounter(output_basename, mpi_size, nmode)
     completed = 0
+    started = monotonic()
     try:
         while completed < nframes:
             completed = min(counter.count(), nframes)
             reporter.update(completed)
+            if log_reporter:
+                log_reporter.update(completed)
             if completed < nframes:
                 sleep(poll_interval)
     finally:
         reporter.close(completed)
+        if log_reporter:
+            log_reporter.close(completed)
+        if completed >= nframes:
+            elapsed = monotonic() - started
+            rate = completed / elapsed if elapsed else 0
+            logging.info(
+                '  %s completed: %d frames in %s (%.2f frame/s)',
+                label, completed, _format_duration(elapsed), rate,
+            )

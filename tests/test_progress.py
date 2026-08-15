@@ -73,7 +73,32 @@ class PlainProgressTest(unittest.TestCase):
             with self.assertLogs(level=logging.INFO) as messages:
                 monitor_progress(str(output), nframes=2, style='plain', label='Complex', poll_interval=0)
             text = '\n'.join(messages.output)
-            self.assertIn('Complex: 2/2 frames (100%)', text)
+            self.assertIn('Complex completed: 2 frames in', text)
+            self.assertEqual(text.count('Complex completed:'), 1)
+
+    def test_rich_monitor_logs_completion_summary(self):
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory, 'receptor_gb.mdout.0')
+            output.write_text(FrameCounterTest.marker * 3)
+            with self.assertLogs(level=logging.INFO) as messages:
+                monitor_progress(
+                    str(output), nframes=3, style='rich', label='Receptor',
+                    stream=_Stream(True), poll_interval=0,
+                )
+            self.assertIn('Receptor completed: 3 frames in', '\n'.join(messages.output))
+
+    def test_rich_monitor_logs_cluster_progress_checkpoints(self):
+        stream = _Stream(True)
+        with patch('GMXMMPBSA.progress.FrameCounter.count', side_effect=[5, 10]):
+            with self.assertLogs(level=logging.DEBUG) as messages:
+                monitor_progress(
+                    'complex_gb.mdout.%d', nframes=10, mpi_size=4, style='rich',
+                    label='Complex', stream=stream, poll_interval=0,
+                )
+        text = '\n'.join(messages.output)
+        self.assertIn('Complex progress: 5/10 frames (50%)', text)
+        self.assertIn('[4 MPI ranks]', text)
+        self.assertIn('Complex completed: 10 frames in', text)
 
     def test_none_does_not_read_outputs(self):
         monitor_progress('/does/not/exist.%d', nframes=2, style='none', poll_interval=0)

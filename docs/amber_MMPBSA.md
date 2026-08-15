@@ -65,3 +65,5 @@ See the [AMBER input files example](examples/AMBER/README.md) for a complete run
 `--progress-style {auto,rich,classic,plain,none}`. The default `auto` mode uses an adaptive Rich progress display in
 an interactive terminal and falls back to the classic bar when MPI or output forwarding hides the terminal. Use
 `rich` to force the richer renderer through MPI, `plain` for milestone log messages, or `none` to disable progress.
+Rich and classic displays also record clean 10% checkpoints in `gmx_MMPBSA.log`, including frame count, processing
+rate, elapsed time, ETA, and MPI ranks, so cluster jobs can be followed with `tail -f gmx_MMPBSA.log`.
