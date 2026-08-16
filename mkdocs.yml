@@ -158,6 +158,7 @@ nav:
     - How gmx_MMPBSA works: howworks.md
     - Command-line: gmx_MMPBSA_command-line.md
     - Running gmx_MMPBSA: gmx_MMPBSA_running.md
+    - Logging and progress: logging.md
     - The input file: input_file.md
     - The output file: output.md
     - Python API: api.md

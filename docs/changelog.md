@@ -4,6 +4,16 @@ title: Changelog
 ---
 # Changelog
 
+## Development changes
+
+- Improved MPI-safe calculation logging so rank 0 owns `gmx_MMPBSA.log` and informational commands do not replace a
+  previous calculation log.
+- Added record-based warning/error totals, cleaner progress checkpoints, rate-limited stalled-progress notices, and
+  concise single-record fatal error reporting with diagnostic-bundle paths.
+- Normalized warning severity and topology/validation terminology. Expected automatic actions are now informational;
+  scientific approximations, fallbacks, incomplete convergence, and user-value mismatches remain warnings.
+- Logging message text is not a stable machine-readable interface; use result files and exit status for automation.
+
 ## gmx_MMPBSA v1.6.5 (05/22/2026)
 
 ### Application Changes
