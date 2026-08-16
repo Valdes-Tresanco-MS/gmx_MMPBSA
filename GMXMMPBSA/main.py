@@ -871,13 +871,29 @@ class MMPBSA_App(object):
             if not ifile.exists():
                 ifile = Path('COMPACT_MMXSA_RESULTS.mmxsa')
 
-            g = subprocess.Popen(['gmx_MMPBSA_ana', '-f', ifile.as_posix()])
-            if g.wait():
+            try:
+                g = subprocess.Popen(['gmx_MMPBSA_ana', '-f', ifile.as_posix()])
+                analyzer_status = g.wait()
+            except OSError as exc:
+                logging.debug('Analyzer startup raised %s: %s', type(exc).__name__, exc)
+                analyzer_status = 1
+            if analyzer_status:
                 end = 1
         if end:
-            logging.error('Unable to start gmx_MMPBSA_ana...')
+            self._report_analyzer_startup_failure(ifile)
+            # Analyzer startup is a convenience step after result generation;
+            # it must not turn a scientifically completed calculation into a
+            # failed run.
+            end = 0
         logging.info('Finalized...')
         sys.exit(end)
+
+    @staticmethod
+    def _report_analyzer_startup_failure(ifile):
+        logging.warning(
+            'Calculation completed, but gmx_MMPBSA_ana could not be started. '
+            'Start it manually with: gmx_MMPBSA_ana -f %s', ifile
+        )
 
     def _finalize_timers(self):
         self.timer.print_('cpptraj')
@@ -1015,14 +1031,12 @@ class MMPBSA_App(object):
         logging.info(f'Checking {self.FILES.input_file} input file...')
 
         if self.FILES.ligand_mol2:
-            if ('leaprc.gaff' in self.INPUT['general']['forcefields'] or
-                    'leaprc.gaff2' in self.INPUT['general']['forcefields']):
-                pass
-            else:
-                logging.error(
-                    "When using -lm flag, leaprc.gaff or leaprc.gaff2 should be included in the forcefields "
-                    "variable. Check this tutorial for "
-                    "more details https://valdes-tresanco-ms.github.io/gmx_MMPBSA/dev/examples/Protein_ligand/ST")
+            if not any(ff in self.INPUT['general']['forcefields'] for ff in ('leaprc.gaff', 'leaprc.gaff2')):
+                GMXMMPBSA_ERROR(
+                    'A ligand MOL2 file (-lm) requires leaprc.gaff or leaprc.gaff2 in the forcefields variable. '
+                    'Check the ligand parameterization tutorial for details: '
+                    'https://valdes-tresanco-ms.github.io/gmx_MMPBSA/dev/examples/Protein_ligand/ST',
+                    InputError)
 
         if INPUT['general']['ions_parameters'] not in range(1, 17):
             GMXMMPBSA_ERROR('Ions parameters file name must be in %s!' % range(1, 17), InputError)
@@ -1109,8 +1123,8 @@ class MMPBSA_App(object):
                 GMXMMPBSA_ERROR('QM/MM and decomposition are incompatible!', InputError)
             if INPUT['gb']['verbosity'] not in [0, 1, 2, 3, 4, 5]:
                 GMXMMPBSA_ERROR('VERBOSITY must be 0, 1, 2, 3, 4 or 5!', InputError)
-            if INPUT['general']['verbose'] >= 2:
-                logging.warning('VERBOSITY values of 2 or higher will produce a lot of output')
+            if INPUT['gb']['verbosity'] >= 2:
+                logging.warning('QM/MM VERBOSITY values of 2 or higher will produce a lot of output')
 
             if INPUT['gb']['qm_residues'] == '' and (INPUT['gb']['com_qmmask'] == '' or INPUT['gb']['rec_qmmask'] == ''
                     or INPUT['gb']['lig_qmmask'] == ''):
@@ -1129,19 +1143,19 @@ class MMPBSA_App(object):
         if INPUT['pb']['scale'] < 0:
             GMXMMPBSA_ERROR('SCALE must be non-negative!', InputError)
         if INPUT['pb']['linit'] < 0:
-            GMXMMPBSA_ERROR('LINIT must be a positive integer!', InputError)
+            GMXMMPBSA_ERROR('LINIT must be a non-negative integer!', InputError)
         if INPUT['pb']['prbrad'] not in [1.4, 1.6]:
-            GMXMMPBSA_ERROR('PRBRAD (%s) must be 1.4 and 1.6!' % INPUT['prbrad'], InputError)
+            GMXMMPBSA_ERROR('PRBRAD (%s) must be 1.4 or 1.6!' % INPUT['pb']['prbrad'], InputError)
         if INPUT['pb']['istrng'] < 0:
             GMXMMPBSA_ERROR('ISTRNG must be non-negative!', InputError)
         if INPUT['pb']['inp'] not in [1, 2]:
-            GMXMMPBSA_ERROR('INP/NPOPT (%s) must be 1, or 2!' % INPUT['inp'], InputError)
+            GMXMMPBSA_ERROR('INP/NPOPT (%s) must be 1 or 2!' % INPUT['pb']['inp'], InputError)
         if INPUT['pb']['cavity_surften'] < 0:
             GMXMMPBSA_ERROR('CAVITY_SURFTEN must be non-negative!', InputError)
         if INPUT['pb']['fillratio'] <= 0:
             GMXMMPBSA_ERROR('FILL_RATIO must be positive!', InputError)
         if INPUT['pb']['radiopt'] not in [0, 1]:
-            GMXMMPBSA_ERROR('RADIOPT (%s) must be 0 or 1!' % INPUT['radiopt'], InputError)
+            GMXMMPBSA_ERROR('RADIOPT (%s) must be 0 or 1!' % INPUT['pb']['radiopt'], InputError)
         if INPUT['pb']['sander_apbs'] not in [0, 1]:
             GMXMMPBSA_ERROR('SANDER_APBS must be 0 or 1!', InputError)
 
@@ -1163,7 +1177,7 @@ class MMPBSA_App(object):
                 GMXMMPBSA_ERROR('MAXCYC must be a positive integer!', InputError)
 
         if INPUT['decomp']['idecomp'] not in [0, 1, 2, 3, 4]:
-            GMXMMPBSA_ERROR('IDECOMP (%s) must be 1, 2, 3, or 4!' % INPUT['decomp']['idecomp'], InputError)
+            GMXMMPBSA_ERROR('IDECOMP (%s) must be 0, 1, 2, 3, or 4!' % INPUT['decomp']['idecomp'], InputError)
         if INPUT['decomp']['idecomp'] != 0 and INPUT['pb']['sander_apbs'] == 1:
             GMXMMPBSA_ERROR('IDECOMP cannot be used with sander.APBS!', InputError)
         if INPUT['decomp']['decomprun'] and INPUT['decomp']['idecomp'] == 0:
@@ -1190,7 +1204,7 @@ class MMPBSA_App(object):
                                 'entropy, RISM, or GBNSR6.', InputError)
 
         if INPUT['ala']['alarun'] and INPUT['general']['netcdf'] != '':
-            GMXMMPBSA_ERROR('Alanine scanning is incompatible with NETCDF != 0!', InputError)
+            GMXMMPBSA_ERROR('Alanine scanning requires ASCII trajectories (netcdf=0)!', InputError)
         if INPUT['ala']['cas_intdiel'] not in [0, 1]:
             GMXMMPBSA_ERROR('cas_intdiel must be set to 0 or 1!', InputError)
         # check mutant definition
@@ -1241,7 +1255,7 @@ class MMPBSA_App(object):
 
         if INPUT['decomp']['decomprun'] and \
                 not (INPUT['gb']['gbrun'] or INPUT['pb']['pbrun'] or INPUT['gbnsr6']['gbnsr6run']):
-            GMXMMPBSA_ERROR('DECOMP must be run with either GB or PB!', InputError)
+            GMXMMPBSA_ERROR('DECOMP must be run with GB, GBNSR6, or PB!', InputError)
 
         if '-deo' in sys.argv and not INPUT['decomp']['decomprun']:
             logging.warning("&decomp namelist has not been defined in the input file. Ignoring '-deo' flag... ")

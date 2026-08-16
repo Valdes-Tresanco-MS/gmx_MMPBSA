@@ -421,10 +421,12 @@ class CheckMakeTop:
                 GMXMMPBSA_ERROR('%s failed when querying %s' % (parmchk2, self.FILES.ligand_mol2))
 
         # check if the ligand force field is gaff or gaff2 and get if the ligand mol2 was defined
-        elif "leaprc.gaff2" in self.INPUT['general']['forcefields'] and not self.FILES.complex_top:
-            logging.warning('You must define the ligand mol2 file (-lm) if the ligand forcefield is '
-                            '"leaprc.gaff" or "leaprc.gaff2". If the ligand is parametrized with Amber force '
-                            'fields ignore this warning')
+        elif (any(ff in self.INPUT['general']['forcefields'] for ff in ('leaprc.gaff', 'leaprc.gaff2'))
+              and not self.FILES.complex_top):
+            logging.warning(
+                'No ligand MOL2 file (-lm) was provided while a GAFF force field is selected. '
+                'Provide -lm so tleap can assign ligand parameters. If the ligand is already parameterized '
+                'by an Amber force field, this warning does not apply.')
 
         # make a temp receptor pdb (even when stability) if decomp to get correct receptor residues from complex. This
         # avoids get multiples molecules from complex.split()
@@ -1206,7 +1208,10 @@ cmd.quit()
         preprocessor = GromacsTopologyPreprocessor()
         temp_top = preprocessor.preprocess(top_file, remove_solvent, solvent_ion_residues)
         if preprocessor.cmap_found:
-            logging.info(f'Ignoring CMAP terms in {top_file} include tree for GROMACS topology conversion.')
+            logging.warning(
+                'Ignoring CMAP terms in %s include tree for GROMACS topology conversion. '
+                'The converted topology omits CMAP energy terms and results are therefore an approximation.',
+                top_file)
 
         # read the temp topology with parmed
         logging.info('Reading preprocessed %s topology with ParmEd...', id)

@@ -1,7 +1,10 @@
 import unittest
 from tempfile import TemporaryDirectory
 from pathlib import Path
+from types import SimpleNamespace
+from unittest.mock import patch
 
+from GMXMMPBSA import make_top
 from GMXMMPBSA.topology_preprocess import GromacsTopologyPreprocessor, comment_gromacs_cmap
 
 
@@ -131,6 +134,27 @@ class CommentGromacsCmapTest(unittest.TestCase):
 
             for temp_file in preprocessor.created_files:
                 temp_file.unlink(missing_ok=True)
+
+    def test_cmap_omission_is_reported_as_approximation_warning(self):
+        preprocessor = SimpleNamespace(
+            cmap_found=True,
+            created_files=[],
+            preprocess=lambda *args: Path('sanitized.top'),
+        )
+        residue = SimpleNamespace(idx=0, number=0)
+        topology = SimpleNamespace(
+            atoms=[SimpleNamespace(residue=residue)],
+            residues=[residue],
+            strip=lambda selection: None,
+        )
+
+        with patch.object(make_top, 'GromacsTopologyPreprocessor', return_value=preprocessor), \
+                patch.object(make_top.parmed.gromacs, 'GromacsTopologyFile', return_value=topology):
+            with self.assertLogs(level='WARNING') as logs:
+                make_top.CheckMakeTop.cleantop('topol.top', [1])
+
+        self.assertIn('omits CMAP energy terms', logs.output[0])
+        self.assertIn('approximation', logs.output[0])
 
     def test_preserves_relative_path_for_subdirectory_includes(self):
         with TemporaryDirectory() as tmpdir:

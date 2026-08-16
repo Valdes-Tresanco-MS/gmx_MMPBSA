@@ -581,12 +581,16 @@ class NMODEout(AmberOutput):
                 self.frame_idx += 1
 
     def _fill_nmode_values(self):
+        nonfinite_frames = np.zeros(self.numframes, dtype=bool)
+        for term in self.data_keys + ['TOTAL']:
+            nonfinite_frames |= ~np.isfinite(self[term])
+        unconverged = int(nonfinite_frames.sum())
+
         if np.isnan(self['TOTAL']).all():
-            logging.warning(f'{self.mol.capitalize()}: Convergence criteria for minimized energy gradient in NMODE has not '
-                            f'been\n'
-                            '    satisfied in any of the frames selected. Increase the convergence criteria for\n'
-                            '    minimized energy gradient (drms) or the maximum number of minimization cycles to\n '
-                            '    useper snapshot in sander (maxcyc)...\n')
+            logging.warning(
+                f'{self.mol.capitalize()}: {unconverged} of {self.numframes} NMODE frames did not satisfy the '
+                'minimized-energy-gradient convergence criterion. No converged values are available, so no '
+                'substitution was performed. Increase drms or maxcyc in the NMODE settings.')
             self.no_nmode_convergence = True
             return
 
@@ -596,11 +600,10 @@ class NMODEout(AmberOutput):
                 filling = True
                 self[t] = EnergyVector(np.nan_to_num(self[t], nan=float(np.nanmean(self[t]))))
         if filling:
-            logging.warning(f'{self.mol.capitalize()}: Convergence criteria for minimized energy gradient in NMODE\n '
-                            '    has not been satisfied in several frames selected. Filling "NaN" with the mean\n'
-                            '    value. Please, consider to  increase the convergence criteria for minimized energy\n'
-                            '    gradient (drms) or the maximum number minimization cycles to use per snapshot in\n'
-                            '    sander (maxcyc)...\n')
+            logging.warning(
+                f'{self.mol.capitalize()}: {unconverged} of {self.numframes} NMODE frames did not satisfy the '
+                'minimized-energy-gradient convergence criterion. Nonfinite values were replaced with the mean '
+                'of the converged frames for each entropy term. Consider increasing drms or maxcyc.')
 
 
 def conv_float(word):
