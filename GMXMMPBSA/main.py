@@ -843,9 +843,12 @@ class MMPBSA_App(object):
         self.remove(self.INPUT['general']['keep_files'])
 
         exe_info = utils.get_warnings()
-        logging.info(f"\n   Finalizing gmx_MMPBSA: [ERROR  ] = {exe_info['error']}; [WARNING] = {exe_info['warning']}\n"
-                     f"   Check the gmx_MMPBSA.log file for more details...\n")
-
+        # Nonfatal error records are reported here but do not change the exit
+        # status; fatal exceptions still terminate through the established path.
+        logging.info(
+            f"Run completed with {exe_info['error']} errors and {exe_info['warning']} warnings. "
+            "See gmx_MMPBSA.log for details."
+        )
 
         logging.info(
             '\n Thank you for using gmx_MMPBSA. Please consider supporting gmx_MMPBSA by citing our publication:'

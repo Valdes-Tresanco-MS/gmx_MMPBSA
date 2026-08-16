@@ -902,14 +902,8 @@ def get_sys_info():
 
 
 def get_warnings():
-    info = {'warning': 0, 'error': 0}
-    with open('gmx_MMPBSA.log') as logfile:
-        for line in logfile:
-            if line.startswith('[ERROR  ]'):
-                info['error'] += 1
-            elif line.startswith('[WARNING]'):
-                info['warning'] += 1
-    return info
+    from GMXMMPBSA.logging_utils import get_record_counts
+    return get_record_counts()
 
 
 class Unbuffered(object):

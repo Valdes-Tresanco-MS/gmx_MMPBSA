@@ -313,6 +313,10 @@ rewrite is starting, so `--help` and `--version` do not replace a previous
 calculation log. A real run starts a fresh log and replaces the existing file;
 run calculations in separate working directories when concurrent runs are
 needed. Log records use the compact `[LEVEL] message` format.
+Warning and error totals are counted from logging records, so multiline
+messages count once and formatting changes do not affect the totals. A
+nonfatal error is reported in the completion summary without changing the
+process exit status; fatal exceptions still terminate the run.
 
 `leap.log` This file contains the output coming from tleap program.
 

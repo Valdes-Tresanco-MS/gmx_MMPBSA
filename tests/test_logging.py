@@ -2,9 +2,9 @@ import logging
 import tempfile
 import unittest
 from pathlib import Path
-from unittest.mock import mock_open, patch
 
 from GMXMMPBSA.fake_mpi import MPI as FakeMPI
+from GMXMMPBSA.exceptions import GMXMMPBSA_ERROR, MMPBSA_Error
 from GMXMMPBSA.logging_utils import (
     enable_file_logging,
     format_command_line,
@@ -62,15 +62,20 @@ class LoggingOwnershipTest(unittest.TestCase):
             text = log_file.read_text()
             self.assertEqual(text, '[INFO   ] metadata record\n')
 
-    def test_warning_counter_does_not_count_final_summary(self):
-        content = (
-            '[WARNING] warning\n'
-            '[ERROR  ] error\n'
-            '[INFO   ] '
-            'Finalizing gmx_MMPBSA: [ERROR  ] = 0; [WARNING] = 1\n'
-        )
-        with patch('builtins.open', mock_open(read_data=content)):
-            self.assertEqual(utils.get_warnings(), {'warning': 1, 'error': 1})
+    def test_record_counter_counts_multiline_records_once(self):
+        _setup_logging('unused.log', master=True, rank=0, force=True, file_enabled=False)
+        logging.debug('debug record')
+        logging.warning('first line\nsecond line')
+        logging.error('error record')
+
+        self.assertEqual(utils.get_warnings(), {'warning': 1, 'error': 1})
+
+    def test_fatal_helper_is_counted_once(self):
+        _setup_logging('unused.log', master=True, rank=0, force=True, file_enabled=False)
+        with self.assertRaises(MMPBSA_Error):
+            GMXMMPBSA_ERROR('fatal record')
+
+        self.assertEqual(utils.get_warnings(), {'warning': 0, 'error': 1})
 
     def test_command_line_quoting_and_reconstructed_mpi_label(self):
         command = format_command_line(

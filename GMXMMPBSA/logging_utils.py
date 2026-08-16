@@ -20,6 +20,31 @@ class WarningSpacingFormatter(logging.Formatter):
         return message
 
 
+class RecordCountingHandler(logging.Handler):
+    """Count warning and error records without depending on formatted output."""
+
+    def __init__(self):
+        super().__init__()
+        self.warning_count = 0
+        self.error_count = 0
+
+    def emit(self, record):
+        if record.levelno == logging.WARNING:
+            self.warning_count += 1
+        elif record.levelno >= logging.ERROR:
+            self.error_count += 1
+
+
+def get_record_counts():
+    """Return warning and error totals from the active CLI logging counter."""
+    info = {'warning': 0, 'error': 0}
+    for handler in logging.getLogger().handlers:
+        if isinstance(handler, RecordCountingHandler):
+            info['warning'] += handler.warning_count
+            info['error'] += handler.error_count
+    return info
+
+
 def _rank_failure_log_path(log_file, rank):
     """Return the diagnostic log path used when a non-master rank fails."""
     path = Path(log_file)
@@ -69,6 +94,7 @@ def setup_logging(log_file, master=True, rank=0, *, force=False, file_enabled=Tr
         # A non-master rank must never open the master's file. Keep a separate
         # diagnostic file available only if that rank actually reports an error.
         handlers.append(_RankFailureFileHandler(log_file, rank))
+    handlers.insert(0, RecordCountingHandler())
     logging.basicConfig(level=logging.DEBUG, handlers=handlers, force=force)
 
 
