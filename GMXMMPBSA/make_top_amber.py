@@ -123,8 +123,8 @@ class CheckAmberTop:
             decomp_res = self.get_selected_residues(self.INPUT['decomp']['print_res'])
             if 'within' in self.INPUT['decomp']['print_res']:
                 if len(decomp_res) < 2:
-                    logging.warning(f"Number of decomp residues to print using "
-                                    f"print_res = '{self.INPUT['decomp']['print_res']}' < 2")
+                    logging.info(f"Number of decomp residues to print using "
+                                 f"print_res = '{self.INPUT['decomp']['print_res']}' < 2; expanding the cutoff")
                     logging.info(
                         'Increasing cutoff value by 0.1 until number of decomp residues to print >= 2'
                     )
@@ -177,7 +177,8 @@ class CheckAmberTop:
 
             if 'within' in self.INPUT['gb']['qm_residues']:
                 if len(qm_residues) == 0:
-                    logging.warning(f"Number of qm_residues using print_res = '{self.INPUT['gb']['qm_residues']}' = 0")
+                    logging.info(f"Number of qm_residues using print_res = '{self.INPUT['gb']['qm_residues']}' = 0; "
+                                 'expanding the cutoff')
                     logging.info(
                         'Increasing cutoff value by 0.1 until number of qm_residues > 0'
                     )
@@ -216,7 +217,7 @@ class CheckAmberTop:
                                 f" is different than qmcharge_rec + qmcharge_lig ({rec_charge} + "
                                 f"{lig_charge}).")
             if user_values:
-                logging.warning('Using user-defined qmcharge_com.')
+                logging.info('Using user-defined qmcharge_com.')
                 if self.INPUT['gb']['qmcharge_com'] != rec_charge + lig_charge:
                     logging.warning(
                         f"System specified with odd number of electrons. Most likely the charge of QM region "
@@ -225,24 +226,24 @@ class CheckAmberTop:
                         f"{lig_charge}). Are you sure of this value?")
             else:
                 self.INPUT['gb']['qmcharge_com'] = rec_charge + lig_charge
-                logging.warning(f'Setting qmcharge_com = {rec_charge + lig_charge}')
+                logging.info(f'Setting qmcharge_com = {rec_charge + lig_charge}')
             if user_values:
-                logging.warning('Using user-defined qmcharge_rec.')
+                logging.info('Using user-defined qmcharge_rec.')
                 if self.INPUT['gb']['qmcharge_rec'] != rec_charge:
                     logging.warning(f"Defined qmcharge_rec ({self.INPUT['gb']['qmcharge_rec']}) is different from the "
                                     f"computed value ({rec_charge}). Are you sure of this value?")
             else:
                 if self.INPUT['gb']['qmcharge_rec'] != rec_charge:
-                    logging.warning(f'Setting qmcharge_rec = {rec_charge}')
+                    logging.info(f'Setting qmcharge_rec = {rec_charge}')
                     self.INPUT['gb']['qmcharge_rec'] = rec_charge
             if user_values:
-                logging.warning('Using user-defined qmcharge_lig.')
+                logging.info('Using user-defined qmcharge_lig.')
                 if self.INPUT['gb']['qmcharge_lig'] != lig_charge:
                     logging.warning(f"Defined qmcharge_lig ({self.INPUT['gb']['qmcharge_lig']}) is different from the "
                                     f"computed value ({lig_charge}). Are you sure of this value?")
             else:
                 if self.INPUT['gb']['qmcharge_lig'] != lig_charge:
-                    logging.warning(f'Setting qmcharge_lig = {lig_charge}')
+                    logging.info(f'Setting qmcharge_lig = {lig_charge}')
                     self.INPUT['gb']['qmcharge_lig'] = lig_charge
 
         elif self.INPUT['gb']['com_qmmask'] != '':
@@ -284,8 +285,7 @@ class CheckAmberTop:
         # avoids get multiples molecules from complex.split()
         if self.INPUT['decomp']['decomprun'] and self.FILES.stability:
             self.use_temp = True
-            logging.warning('When &decomp is defined, we generate a receptor file in order to extract interface '
-                            'residues')
+            logging.info('Generating a receptor file internally to extract interface residues for decomposition.')
 
             com_traj = Trajectory(self.FILES.complex_top, self.FILES.complex_trajs[0])
             com_traj.Setup()
@@ -296,8 +296,7 @@ class CheckAmberTop:
 
         # check if stability
         if self.FILES.stability and (self.FILES.receptor_top or self.FILES.ligand_top or self.FILES.receptor_trajs or self.FILES.ligand_trajs):
-            logging.warning('When Stability calculation mode is selected, receptor and ligand files are not '
-                            'needed...')
+            logging.info('Stability calculation mode does not need separate receptor or ligand files; ignoring them.')
         # wt receptor
         if self.FILES.receptor_trajs:
             logging.info('A receptor trajectory file was defined. Using MT approach...')
@@ -1219,13 +1218,12 @@ class CheckAmberTop:
             elif self.INPUT['general']['assign_chainID'] == 2:
                 assign = True
                 if com_str.residues[0].chain:
-                    logging.warning('Assigning chains ID...')
+                    logging.warning('Reassigning existing chain IDs as requested.')
                 else:
-                    logging.warning('Already have chain ID. Re-assigning ID...')
+                    logging.info('Assigning missing chain IDs as requested.')
             elif self.INPUT['general']['assign_chainID'] == 0 and not com_str.residues[0].chain:
                 assign = True
-                logging.warning('No reference structure was found and the complex structure not contain any chain ID. '
-                                'Assigning chains ID automatically...')
+                logging.info('No reference structure or chain IDs were provided; assigning chain IDs automatically.')
             if assign:
                 self._assign_chains_IDs(com_str, rec_str, lig_str)
         # Save fixed complex structure for analysis and set it in FILES to save in info file

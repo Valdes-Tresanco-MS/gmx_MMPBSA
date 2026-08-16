@@ -401,7 +401,7 @@ class MMPBSA_App(object):
             mdin = self.pre + 'gbnsr6.mdin'
             keep_gbnsr6_mdouts = self.INPUT['general']['keep_files'] == 2
             if self.master:
-                logging.warning('Preparing GBNSR6 topology copies with dihedral terms disabled.')
+                logging.info('Preparing GBNSR6 topology copies with dihedral terms disabled.')
             gbnsr6_complex_prmtop = strip_dihedral_terms_for_gbnsr6(
                 complex_prmtop_path, f'{prefix}complex_gbnsr6.prmtop'
             )
