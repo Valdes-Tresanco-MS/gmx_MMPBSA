@@ -307,7 +307,12 @@ reason, every temporary file is described below. Note that not every temporary f
 the end of each description, the lowest value of the original “keep_files” variable that will retain this file will be
 shown in parentheses. Nevertheless, in the current version, all the files are retained for plotting purposes.
 
-`gmx_MMPBSA.log` This file contains the output coming from `gmx_MMPBSA`.
+`gmx_MMPBSA.log` This file contains the output coming from `gmx_MMPBSA`. It is
+opened only after command-line parsing confirms that a calculation or output
+rewrite is starting, so `--help` and `--version` do not replace a previous
+calculation log. A real run starts a fresh log and replaces the existing file;
+run calculations in separate working directories when concurrent runs are
+needed. Log records use the compact `[LEVEL] message` format.
 
 `leap.log` This file contains the output coming from tleap program.
 

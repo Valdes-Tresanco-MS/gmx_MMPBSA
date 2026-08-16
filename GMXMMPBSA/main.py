@@ -70,7 +70,7 @@ class MMPBSA_App(object):
     input_file = _input_file
     engine = 'gmx'
 
-    def __init__(self, MPI, stdout=None, stderr=None, size=None):
+    def __init__(self, MPI, stdout=None, stderr=None, size=None, defer_startup_logging=False):
         """
         Sets up the main gmx_MMPBSA driver class. All we set up here is the output
         and error streams (unbuffered by default) and the prefix for the
@@ -95,11 +95,11 @@ class MMPBSA_App(object):
         self.master = self.mpi_rank == 0
         _mpi_size = self.mpi_size = self.MPI.COMM_WORLD.Get_size()
         self.mpi_active = True
+        self._startup_logged = False
         if not self.master:
             self.stdout = open(os.devnull, 'w')
-        if self.master:
-            logging.info(f'Starting gmx_MMPBSA {__version__}')
-            utils.get_sys_info()
+        if self.master and not defer_startup_logging:
+            self.log_startup()
 
         # Set up timers
         timers = [Timer() for _ in range(self.mpi_size)]
@@ -109,6 +109,12 @@ class MMPBSA_App(object):
         # mpi_size is > 1, just use the MPI mechanism instead
         if size is not None and self.mpi_size == 1:
             self.mpi_size = size
+
+    def log_startup(self):
+        """Write startup information after the CLI log has been opened."""
+        if self.master and not self._startup_logged:
+            logging.info(f'Starting gmx_MMPBSA {__version__}')
+            self._startup_logged = True
 
     def set_active_mpi_size(self, mpi_size):
         """Limit calculation work to MPI ranks that have assigned frames."""
@@ -903,26 +909,15 @@ class MMPBSA_App(object):
         """
         if args is None:
             args = sys.argv
+        args = list(args)
         if self.master:
-            text_args = ' '.join(args)
-            _mpi = True
+            self.command_args = list(args)
+            self.command_mpi_requested = self.mpi_size > 1 or any(arg in ('mpi', 'MPI') for arg in args)
             # remove mpi arg before passed it to app
             if 'mpi' in args:
                 args.remove('mpi')
             elif 'MPI' in args:
                 args.remove('MPI')
-            elif self.mpi_size > 1:
-                pass
-            else:
-                _mpi = False
-            mpi_cl = f'  mpirun -np {self.mpi_size} ' if _mpi else '  '
-            # save args in gmx_MMPBSA.log
-            if self.engine == 'amber':
-                logging.info('Command-line\n' + mpi_cl +
-                         'amber_MMPBSA ' + text_args + '\n')
-            else:
-                logging.info('Command-line\n' + mpi_cl +
-                         'gmx_MMPBSA ' + text_args + '\n')
             # check if any arg is duplicated
             utils._get_dup_args(args)
             self.FILES = self.clparser.parse_args(args)

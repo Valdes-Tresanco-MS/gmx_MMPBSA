@@ -48,7 +48,6 @@ import parmed
 import numpy as np
 from typing import Union
 
-
 class EnergyVector(np.ndarray):
     def __new__(cls, values=None, com_std=None):
         # Input array is an already formed ndarray instance
@@ -889,9 +888,7 @@ def find_progs(INPUT, mpi_size=0, engine='gmx'):
 
 
 def get_sys_info():
-    """
-    Print relevant system info for debugging proposes in the gmx_MMPBSA.log file
-    """
+    """Print relevant system info for debugging purposes in the log file."""
     logging.debug(f"WDIR          : {Path('.').absolute().as_posix()}")
     logging.debug(f"AMBERHOME     : {os.environ['AMBERHOME'] if 'AMBERHOME' in os.environ else ''}")
     logging.debug(f"PYTHON EXE    : {shutil.which('python')}")

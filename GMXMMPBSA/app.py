@@ -30,7 +30,11 @@ try:
     from GMXMMPBSA.commandlineparser import anaparser, testparser, amber_parser
     from GMXMMPBSA.error_bundle import create_error_bundle
     from GMXMMPBSA.utils import create_input_args
-    from GMXMMPBSA.logging_utils import setup_logging as _setup_logging
+    from GMXMMPBSA.logging_utils import (
+        enable_file_logging as _enable_file_logging,
+        format_command_line as _format_command_line,
+        setup_logging as _setup_logging,
+    )
 except ImportError:
     import os
     amberhome = os.getenv('AMBERHOME') or '$AMBERHOME'
@@ -47,12 +51,15 @@ def _gmxmmpbsa_base(parser, engine='gmx'):
     if MPI.COMM_WORLD.Get_size() == 1:
         from GMXMMPBSA.fake_mpi import MPI
     mpi_rank = MPI.COMM_WORLD.Get_rank()
-    _setup_logging("gmx_MMPBSA.log", master=mpi_rank == 0, rank=mpi_rank, force=True)
+    _setup_logging(
+        "gmx_MMPBSA.log", master=mpi_rank == 0, rank=mpi_rank,
+        force=True, file_enabled=False,
+    )
     # Set up error/signal handlers
     main.setup_run()
 
     # Instantiate the main MMPBSA_App
-    app = main.MMPBSA_App(MPI)
+    app = main.MMPBSA_App(MPI, defer_startup_logging=True)
     app.clparser = parser
     app.engine = engine
 
@@ -79,6 +86,21 @@ def _gmxmmpbsa_base(parser, engine='gmx'):
     if app.FILES.infilehelp:
         app.input_file.print_contents(sys.stdout)
         sys.exit(0)
+
+    # Keep informational commands from touching a previous calculation log.
+    # The file is opened only after parsing confirms that a real calculation
+    # or output-rewrite operation is about to begin.
+    _enable_file_logging("gmx_MMPBSA.log", rank=mpi_rank)
+    if app.master:
+        app.log_startup()
+        logging.info(
+            'Command line\n  ' + _format_command_line(
+                app.command_args,
+                engine=engine,
+                mpi_size=app.mpi_size,
+                mpi_requested=app.command_mpi_requested,
+            ) + '\n'
+        )
 
     try:
         # If we're not rewriting output do whole shebang, otherwise load info and parms

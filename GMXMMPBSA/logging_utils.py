@@ -1,6 +1,7 @@
 """Logging setup shared by the command-line entry points."""
 
 import logging
+import shlex
 from pathlib import Path
 
 
@@ -36,7 +37,7 @@ class _RankFailureFileHandler(logging.Handler):
 
     def emit(self, record):
         if self._file_handler is None:
-            self._file_handler = logging.FileHandler(self.log_file, mode='a')
+            self._file_handler = logging.FileHandler(self.log_file, mode='a', encoding='utf-8')
             self._file_handler.setFormatter(WarningSpacingFormatter("[%(levelname)-7s] %(message)s"))
         self._file_handler.emit(record)
 
@@ -47,18 +48,49 @@ class _RankFailureFileHandler(logging.Handler):
         super().close()
 
 
-def setup_logging(log_file, master=True, rank=0, *, force=False):
+def _new_file_handler(log_file, rank, mode='w'):
+    file_handler = logging.FileHandler(log_file, mode=mode, encoding='utf-8')
+    file_handler.setFormatter(WarningSpacingFormatter("[%(levelname)-7s] %(message)s"))
+    file_handler._gmxmmpbsa_master_file = mode == 'w'
+    return file_handler
+
+
+def setup_logging(log_file, master=True, rank=0, *, force=False, file_enabled=True):
     """Configure CLI logging without sharing the master file across MPI ranks."""
+    if not force and logging.getLogger().handlers:
+        return
     stream_handler = logging.StreamHandler()
     stream_handler.setLevel(logging.INFO)
     stream_handler.setFormatter(WarningSpacingFormatter("[%(levelname)-7s] %(message)s"))
     handlers = [stream_handler]
-    if master:
-        file_handler = logging.FileHandler(log_file, 'w')
-        file_handler.setFormatter(WarningSpacingFormatter("[%(levelname)-7s] %(message)s"))
-        handlers.insert(0, file_handler)
+    if master and file_enabled:
+        handlers.insert(0, _new_file_handler(log_file, rank))
     elif rank:
         # A non-master rank must never open the master's file. Keep a separate
         # diagnostic file available only if that rank actually reports an error.
         handlers.append(_RankFailureFileHandler(log_file, rank))
     logging.basicConfig(level=logging.DEBUG, handlers=handlers, force=force)
+
+
+def enable_file_logging(log_file, rank=0):
+    """Open the calculation log after parsing confirms a real run is starting."""
+    if rank != 0:
+        return None
+    root = logging.getLogger()
+    for handler in root.handlers:
+        if getattr(handler, '_gmxmmpbsa_master_file', False):
+            return handler
+    handler = _new_file_handler(log_file, rank)
+    root.addHandler(handler)
+    return handler
+
+
+def format_command_line(args, engine='gmx', mpi_size=1, mpi_requested=False):
+    """Format a reproducible command, marking MPI launch details as reconstructed."""
+    args = list(args)
+    args = [arg for arg in args if arg not in ('mpi', 'MPI')]
+    executable = 'amber_MMPBSA' if engine == 'amber' else 'gmx_MMPBSA'
+    command = [executable, *args]
+    if mpi_requested or mpi_size > 1:
+        return shlex.join(['mpirun', '-np', str(mpi_size), *command]) + ' (reconstructed)'
+    return shlex.join(command)
