@@ -1153,7 +1153,7 @@ cmd.quit()
         if preprocessor.cmap_found:
             logging.warning(
                 'Ignoring CMAP terms in %s include tree for GROMACS topology conversion. '
-                'The converted topology omits CMAP energy terms and results are therefore an approximation.',
+                'The converted topology omits CMAP energy terms.',
                 top_file)
 
         # read the temp topology with parmed
