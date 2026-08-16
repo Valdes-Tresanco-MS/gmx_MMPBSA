@@ -30,6 +30,7 @@ try:
     from GMXMMPBSA.commandlineparser import anaparser, testparser, amber_parser
     from GMXMMPBSA.error_bundle import create_error_bundle
     from GMXMMPBSA.utils import create_input_args
+    from GMXMMPBSA.logging_utils import setup_logging as _setup_logging
 except ImportError:
     import os
     amberhome = os.getenv('AMBERHOME') or '$AMBERHOME'
@@ -39,37 +40,14 @@ except ImportError:
                       (amberhome, amberhome))
 
 
-class WarningSpacingFormatter(logging.Formatter):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self._previous_was_warning = False
-
-    def format(self, record):
-        message = super().format(record)
-        if record.levelno == logging.WARNING:
-            prefix = '' if self._previous_was_warning else '\n'
-            self._previous_was_warning = True
-            return f'{prefix}{message}\n'
-        self._previous_was_warning = False
-        return message
-
-
-def _setup_logging(log_file):
-    stream_handler = logging.StreamHandler()
-    stream_handler.setLevel(logging.INFO)
-    stream_handler.setFormatter(WarningSpacingFormatter("[%(levelname)-7s] %(message)s"))
-    file_handler = logging.FileHandler(log_file, 'w')
-    file_handler.setFormatter(WarningSpacingFormatter("[%(levelname)-7s] %(message)s"))
-    logging.basicConfig(level=logging.DEBUG, handlers=[file_handler, stream_handler], force=True)
-
-
 def _gmxmmpbsa_base(parser, engine='gmx'):
-    _setup_logging("gmx_MMPBSA.log")
     # Just for compatibility as mpi4py works as serial when run without mpirun
     # (since v1.4.2)
     from mpi4py import MPI
-    if MPI.COMM_WORLD.size == 1:
+    if MPI.COMM_WORLD.Get_size() == 1:
         from GMXMMPBSA.fake_mpi import MPI
+    mpi_rank = MPI.COMM_WORLD.Get_rank()
+    _setup_logging("gmx_MMPBSA.log", master=mpi_rank == 0, rank=mpi_rank, force=True)
     # Set up error/signal handlers
     main.setup_run()
 
@@ -198,7 +176,7 @@ def gmxmmpbsa_ana():
 
 
 def gmxmmpbsa_test():
-    _setup_logging("gmx_MMPBSA_test.log")
+    _setup_logging("gmx_MMPBSA_test.log", force=True)
     try:
         from GMXMMPBSA.test_manifest import build_help_text
         from GMXMMPBSA.commandlineparser import test_action
