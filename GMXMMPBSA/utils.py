@@ -492,6 +492,16 @@ def eq_strs(struct1, struct2):
         return
 
 
+def topology_mismatch_error(system, topology_path, structure_path, error_info):
+    """Raise a contextual error when a topology and structure do not match."""
+    quantity, topology_count, structure_count = error_info
+    GMXMMPBSA_ERROR(
+        f'{system.capitalize()} topology "{topology_path}" contains {topology_count} {quantity}, but '
+        f'{system} structure "{structure_path}" contains {structure_count} {quantity}. Verify that the '
+        'topology, structure, and index describe the same atom selection.'
+    )
+
+
 def check_str(structure, ref=False, skip=False):
     if isinstance(structure, str):
         refstr = parmed.read_PDB(structure)

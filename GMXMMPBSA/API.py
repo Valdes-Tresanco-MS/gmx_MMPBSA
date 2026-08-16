@@ -246,7 +246,7 @@ class MMPBSA_API():
                     continue
                 self._settings[k] = v
             if not_keys:
-                logging.warning(f'Not keys {not_keys}. Will be ignored')
+                logging.warning(f'Unknown settings keys {not_keys}; they will be ignored.')
 
     def setting_time(self, timestart=0, timestep=0, timeunit='ps'):
         self.starttime = timestart

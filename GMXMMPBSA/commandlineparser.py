@@ -58,7 +58,7 @@ def check_arg(str_suffix, path=False):
         def gmx_MMPBSA_file(*args):
             result = f(*args)
             if path and not Path(result).exists():
-                GMXMMPBSA_ERROR(f'{result} do not exist or is inaccessible')
+                GMXMMPBSA_ERROR(f'{result} does not exist or is inaccessible')
             if Path(result).suffix not in str_suffix:
                 GMXMMPBSA_ERROR(f'{result} does not correspond to the required structure format {str_suffix}')
             return result

@@ -182,9 +182,9 @@ class MMPBSA_App(object):
         self.MPI.COMM_WORLD.Barrier()
 
         if master:
-            logging.info('%d frames were processed by cpptraj for use in calculation.' % self.numframes)
+            logging.info('%d frames were prepared by cpptraj for the calculations.' % self.numframes)
             if INPUT['nmode']['nmoderun']:
-                logging.info('%d frames were processed by cpptraj for nmode calculations.' % self.numframes_nmode)
+                logging.info('%d frames were prepared by cpptraj for NMODE calculations.' % self.numframes_nmode)
 
         self.timer.stop_timer('muttraj')
 
@@ -249,10 +249,11 @@ class MMPBSA_App(object):
             self.timer, nframes, nmframes, self.mpi_size, self.FILES.progress_style
         )
         if self.master:
-            logging.info(f'Starting calculations in {self.mpi_size} CPUs...')
+            logging.info(f'Starting calculations across {self.mpi_size} MPI ranks...')
             if (self.INPUT['pb']['pbrun'] or self.INPUT['rism']['rismrun'] or
                 self.INPUT['nmode']['nmoderun']) and self.mpi_size > 1:
-                logging.warning('PB/RISM/NMODE will be calculated with multiple threads, make sure you have enough RAM.')
+                logging.warning(
+                    f'PB/RISM/NMODE will run across {self.mpi_size} MPI ranks; ensure the system has enough RAM.')
         if not self.INPUT['ala']['mutant_only']:
             self.calc_list.append(PrintCalc('Running calculations on normal system...'), timer_key=None)
             self._load_calc_list(self.pre, False, self.normal_system)
@@ -1065,7 +1066,8 @@ class MMPBSA_App(object):
             GMXMMPBSA_ERROR('INDI must be non-negative!', InputError)
         # User warning when intdiel > 10
         if self.INPUT['gb']['intdiel'] > 10:
-            logging.warning('Intdiel is greater than 10...')
+            logging.warning(
+                f"INDI={self.INPUT['gb']['intdiel']} is greater than 10; this unusual dielectric may affect results.")
         if INPUT['gb']['extdiel'] < 0:
             GMXMMPBSA_ERROR('EXDI must be non-negative!', InputError)
         if INPUT['gb']['saltcon'] < 0:
@@ -1077,7 +1079,8 @@ class MMPBSA_App(object):
                 and (INPUT['gb']['msoffset'] != 0 or INPUT['gb']['probe'] != 1.4)
                 and self.master
         ):
-            logging.warning('offset and probe are molsurf-only options')
+            logging.warning(
+                f"msoffset={INPUT['gb']['msoffset']} and probe={INPUT['gb']['probe']} are ignored unless molsurf=1.")
         if INPUT['gb']['alpb'] == 1 and INPUT['gb']['igb'] == 8:
             GMXMMPBSA_ERROR('IGB=8 is incompatible with ALPB=1! IGB must be 1, 2, 5, or 7 if ALPB=1.', InputError)
         if INPUT['gb']['arad_method'] not in [1, 2, 3]:
@@ -1210,7 +1213,7 @@ class MMPBSA_App(object):
         # check mutant definition
         mutant = self.INPUT['ala']['mutant'].upper()
         if mutant not in ['ALA', 'A', 'GLY', 'G']:
-            GMXMMPBSA_ERROR('The mutant most be ALA (or A) or GLY (or G)', InputError)
+            GMXMMPBSA_ERROR('The mutant must be ALA (or A) or GLY (or G).', InputError)
         self.INPUT['ala']['mutant'] = {'A': 'ALA', 'G': 'GLY'}.get(mutant, mutant)
 
         if INPUT['rism']['rismrun']:
@@ -1223,8 +1226,8 @@ class MMPBSA_App(object):
                     GMXMMPBSA_ERROR('TOLERANCE must be positive!', InputError)
             if INPUT['rism']['tolerance'][-1] > 0.00001:
                 logging.warning(
-                    f"Default TOLERANCE value is 0.00001! However {INPUT['rism']['tolerance'][-1]} is been used. "
-                    f"Check documentation for more details...")
+                    f"Default TOLERANCE is 0.00001, but {INPUT['rism']['tolerance'][-1]} is being used. "
+                    f"See the documentation for details.")
             if INPUT['rism']['buffer'] < 0 and INPUT['rism']['ng'] == '':
                 GMXMMPBSA_ERROR('You must specify NG if BUFFER < 0!', InputError)
             if INPUT['rism']['polardecomp'] not in [0, 1]:

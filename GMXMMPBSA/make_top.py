@@ -28,7 +28,7 @@ import parmed
 from GMXMMPBSA.exceptions import *
 from GMXMMPBSA.topology_preprocess import GromacsTopologyPreprocessor
 from GMXMMPBSA.utils import (selector, get_dist, list2range, res2map, get_indexes, log_subprocess_output, check_str,
-                             eq_strs, get_index_groups, Residue)
+                             eq_strs, get_index_groups, topology_mismatch_error, Residue)
 from GMXMMPBSA.alamdcrd import _scaledistance
 import subprocess
 from pathlib import Path
@@ -315,7 +315,7 @@ class CheckMakeTop:
         :return:
         """
 
-        logging.info('Get PDB files from GROMACS structures files...')
+        logging.info('Generating PDB files from GROMACS structure files...')
 
         # wt complex
         # make index for extract pdb structure
@@ -883,14 +883,7 @@ cmd.quit()
             self.FILES.complex_top, self.indexes['COM']['COM'], self.complex_str
         )
         if error_info:
-            if error_info[0] == 'atoms':
-                GMXMMPBSA_ERROR(f"The number of atoms in the topology ({error_info[1]}) and the complex structure "
-                                f"({error_info[2]}) are different. Please check these files and verify that they are "
-                                f"correct. Otherwise report the error...")
-            else:
-                GMXMMPBSA_ERROR(f"The number of residues in the topology ({error_info[1]}) and the complex structure "
-                                f"({error_info[2]}) are different. Please check these files and verify that they are "
-                f"correct. Otherwise report the error...")
+            topology_mismatch_error('complex', self.FILES.complex_top, self.complex_str_file, error_info)
 
         logging.info('Assigning complex coordinates to the selected topology...')
         com_top.coordinates = self.complex_str.coordinates
@@ -948,14 +941,7 @@ cmd.quit()
             )
 
             if error_info:
-                if error_info[0] == 'atoms':
-                    GMXMMPBSA_ERROR(f"The number of atoms in the topology ({error_info[1]}) and the receptor "
-                                    f"structure ({error_info[2]}) are different. Please check this files and verify "
-                                    f"that they are correct. Otherwise report the error...")
-                else:
-                    GMXMMPBSA_ERROR(f"The number of residues in the topology ({error_info[1]}) and the receptor "
-                                    f"structure ({error_info[2]}) are different. Please check this files and verify "
-                                    f"that they are correct. Otherwise report the error...")
+                topology_mismatch_error('receptor', self.FILES.receptor_top, self.receptor_str_file, error_info)
 
             rec_top.coordinates = self.receptor_str.coordinates
             # rec_top.save(f"{self.FILES.prefix}REC.inpcrd", format='rst7', overwrite=True)
@@ -969,7 +955,7 @@ cmd.quit()
                     GMXMMPBSA_ERROR('Inconsistent parameter format. The defined Complex is CHAMBER type while the '
                                     'Receptor is Amber/OPLS type!')
                 rec_amb_prm = parmed.amber.AmberParm.from_structure(rec_top)
-            logging.info('Changing the Receptor residues name format from GROMACS to AMBER...')
+            logging.info('Converting receptor residue names from GROMACS to AMBER...')
 
             # check periodicity
             rec_amb_prm = self._check_periodicity(rec_amb_prm, 'receptor')
@@ -1001,14 +987,7 @@ cmd.quit()
             )
 
             if error_info:
-                if error_info[0] == 'atoms':
-                    GMXMMPBSA_ERROR(f"The number of atoms in the topology ({error_info[1]}) and the ligand "
-                                    f"structure ({error_info[2]}) are different. Please check this files and verify "
-                                    f"that they are correct. Otherwise report the error...")
-                else:
-                    GMXMMPBSA_ERROR(f"The number of residues in the topology ({error_info[1]}) and the ligand "
-                                    f"structure ({error_info[2]}) are different. Please check this files and verify "
-                                    f"that they are correct. Otherwise report the error...")
+                topology_mismatch_error('ligand', self.FILES.ligand_top, self.ligand_str_file, error_info)
 
             lig_top.coordinates = self.ligand_str.coordinates
             # lig_top.save(f"{self.FILES.prefix}LIG.inpcrd", format='rst7', overwrite=True)
@@ -1022,7 +1001,7 @@ cmd.quit()
                     GMXMMPBSA_ERROR('Inconsistent parameter format. The defined Complex is CHAMBER type while the '
                                     'Ligand is Amber/OPLS type!')
                 lig_amb_prm = parmed.amber.AmberParm.from_structure(lig_top)
-            logging.info('Changing the Ligand residues name format from GROMACS to AMBER...')
+            logging.info('Converting ligand residue names from GROMACS to AMBER...')
 
             # check periodicity
             lig_amb_prm = self._check_periodicity(lig_amb_prm, 'ligand')
@@ -1116,11 +1095,11 @@ cmd.quit()
 
         logging.info('Generating AMBER Compatible PDB Files...')
         # fix receptor and structures
-        logging.info('Changing the Complex residues name format from GROMACS to AMBER...')
+        logging.info('Converting complex residue names from GROMACS to AMBER...')
         self.fixparm2amber(self.complex_str, 'COM')
-        logging.info('Changing the Receptor residues name format from GROMACS to AMBER...')
+        logging.info('Converting receptor residue names from GROMACS to AMBER...')
         self.fixparm2amber(self.receptor_str, 'REC')
-        logging.info('Changing the Ligand residues name format from GROMACS to AMBER...')
+        logging.info('Converting ligand residue names from GROMACS to AMBER...')
         self.fixparm2amber(self.ligand_str, 'LIG')
 
         logging.info('Splitting  receptor and ligand in PDB files..')
@@ -1591,7 +1570,7 @@ cmd.quit()
         ca_atom = None
         logging.info(
             f"Mutating {self.complex_str.residues[mut_index].chain}/{self.complex_str.residues[mut_index].number} "
-            f"{self.complex_str.residues[mut_index].name} by {mut_aa}")
+            f"{self.complex_str.residues[mut_index].name} to {mut_aa}")
 
         mutant_resname = mut_top.residues[mut_index].name
 
@@ -1857,7 +1836,7 @@ cmd.quit()
             self.FILES.ligand_trajs = new_trajs
 
     def check_structures(self, com_str, rec_str=None, lig_str=None):
-        logging.info('Checking the structures consistency...')
+        logging.info('Checking structural consistency...')
         logging.info('Validating complex structure...')
         check_str(com_str)
         logging.info('Validating receptor structure...')
@@ -1893,9 +1872,9 @@ cmd.quit()
             if self.INPUT['general']['assign_chainID'] == 1:
                 assign = not com_str.residues[0].chain  # pretty simple
                 if assign:
-                    logging.info('Chains ID not found. Assigning chains IDs...')
+                    logging.info('Chain IDs not found; assigning chain IDs...')
                 else:
-                    logging.info('Chains ID found. Ignoring chains ID assignation...')
+                    logging.info('Chain IDs found; skipping chain-ID assignment...')
             elif self.INPUT['general']['assign_chainID'] == 2:
                 assign = True
                 if com_str.residues[0].chain:

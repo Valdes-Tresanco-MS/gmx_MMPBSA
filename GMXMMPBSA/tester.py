@@ -171,8 +171,8 @@ def run_test(parser):
         }
 
     if parser.num_processors > multiprocessing.cpu_count():
-        logging.warning(f'The number cpus defined {parser.num_processors} is greater than the system cpu'
-                        f' {multiprocessing.cpu_count()}. All the cpus will be used...')
+        logging.warning(f'Requested processes ({parser.num_processors}) exceed available CPU cores '
+                        f'({multiprocessing.cpu_count()}); all available cores will be used.')
         parser.num_processors = multiprocessing.cpu_count()
 
     if parser.num_concurrent < 1:
@@ -182,8 +182,8 @@ def run_test(parser):
     if parser.num_processors * parser.num_concurrent > multiprocessing.cpu_count():
         logging.warning(f'The requested test concurrency can use up to '
                         f'{parser.num_processors * parser.num_concurrent} MPI ranks across '
-                        f'{parser.num_concurrent} examples, which is greater than the system cpu '
-                        f'{multiprocessing.cpu_count()}. Consider reducing -n or -j...')
+                        f'{parser.num_concurrent} examples, which exceeds the available CPU cores '
+                        f'({multiprocessing.cpu_count()}). Consider reducing -n or -j.')
 
     TASKS = []
     for test_id in key_list:
