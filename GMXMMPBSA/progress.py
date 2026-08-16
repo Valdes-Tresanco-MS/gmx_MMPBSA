@@ -18,6 +18,7 @@ TQDM_BAR_FORMAT = (
 )
 PROGRESS_STYLES = ('auto', 'rich', 'classic', 'plain', 'none')
 MAX_RICH_WIDTH = 120
+DEFAULT_STALL_TIMEOUT = 300.0
 
 try:
     from rich.console import Console
@@ -205,6 +206,32 @@ class _PlainReporter:
         self.update(completed)
 
 
+class _StallNotifier:
+    """Rate-limit warnings when an external calculation stops producing frames."""
+
+    def __init__(self, total, timeout, started=None):
+        self.total = total
+        self.timeout = timeout
+        self.last_progress = monotonic() if started is None else started
+        self.last_completed = 0
+        self.last_notice = None
+
+    def check(self, completed, now=None):
+        if self.timeout is None:
+            return None
+        now = monotonic() if now is None else now
+        if completed > self.last_completed:
+            self.last_completed = completed
+            self.last_progress = now
+            return None
+        if completed >= self.total or now - self.last_progress < self.timeout:
+            return None
+        if self.last_notice is not None and now - self.last_notice < self.timeout:
+            return None
+        self.last_notice = now
+        return now - self.last_progress
+
+
 def _format_duration(seconds):
     seconds = max(0, int(seconds))
     hours, remainder = divmod(seconds, 3600)
@@ -223,7 +250,8 @@ def _reporter(style, total, label, mpi_size, stream=None):
 
 
 def monitor_progress(output_basename, nframes=1, mpi_size=1, nmode=False,
-                     style='auto', label='Frames', stream=None, poll_interval=1.0):
+                     style='auto', label='Frames', stream=None, poll_interval=1.0,
+                     stall_timeout=DEFAULT_STALL_TIMEOUT):
     """Monitor calculation outputs and render progress until all frames finish."""
     style = resolve_progress_style(style, stream)
     if style == 'none':
@@ -238,12 +266,19 @@ def monitor_progress(output_basename, nframes=1, mpi_size=1, nmode=False,
     counter = FrameCounter(output_basename, mpi_size, nmode)
     completed = 0
     started = monotonic()
+    stall_notifier = _StallNotifier(nframes, stall_timeout, started)
     try:
         while completed < nframes:
             completed = min(counter.count(), nframes)
             reporter.update(completed)
             if log_reporter:
                 log_reporter.update(completed)
+            stalled_for = stall_notifier.check(completed)
+            if stalled_for is not None:
+                logging.warning(
+                    '%s progress stalled at %d/%d frames for %s; waiting for new output.',
+                    label, completed, nframes, _format_duration(stalled_for),
+                )
             if completed < nframes:
                 sleep(poll_interval)
     finally:

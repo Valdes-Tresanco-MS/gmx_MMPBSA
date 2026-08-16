@@ -7,7 +7,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from GMXMMPBSA.progress import MAX_RICH_WIDTH, FrameCounter, monitor_progress, resolve_progress_style
+from GMXMMPBSA.progress import MAX_RICH_WIDTH, FrameCounter, _StallNotifier, monitor_progress, resolve_progress_style
 
 
 class _Stream(io.StringIO):
@@ -66,6 +66,14 @@ class FrameCounterTest(unittest.TestCase):
 
 
 class PlainProgressTest(unittest.TestCase):
+    def test_stall_notices_are_rate_limited(self):
+        notifier = _StallNotifier(total=10, timeout=5, started=0)
+        self.assertIsNone(notifier.check(0, now=4))
+        self.assertEqual(notifier.check(0, now=5), 5)
+        self.assertIsNone(notifier.check(0, now=9))
+        self.assertEqual(notifier.check(0, now=10), 10)
+        self.assertIsNone(notifier.check(1, now=11))
+
     def test_plain_monitor_reports_completion(self):
         with tempfile.TemporaryDirectory() as directory:
             output = Path(directory, 'complex_gb.mdout.0')
