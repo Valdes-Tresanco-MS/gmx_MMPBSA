@@ -502,6 +502,30 @@ def topology_mismatch_error(system, topology_path, structure_path, error_info):
     )
 
 
+def reconcile_qm_charges(gb_input, receptor_charge, ligand_charge):
+    """Apply or report QM charges consistently for AMBER and GROMACS topologies."""
+    expected = {
+        'qmcharge_com': receptor_charge + ligand_charge,
+        'qmcharge_rec': receptor_charge,
+        'qmcharge_lig': ligand_charge,
+    }
+    user_values = any(gb_input[key] for key in expected)
+
+    for key, value in expected.items():
+        current = gb_input[key]
+        if user_values:
+            logging.info('Using user-defined %s.', key)
+            if current != value:
+                logging.warning(
+                    'Defined %s (%s) differs from the computed value (%s).', key, current, value)
+        elif key == 'qmcharge_com':
+            gb_input[key] = value
+            logging.info('Setting %s = %s', key, value)
+        elif current != value:
+            gb_input[key] = value
+            logging.info('Setting %s = %s', key, value)
+
+
 def check_str(structure, ref=False, skip=False):
     if isinstance(structure, str):
         refstr = parmed.read_PDB(structure)

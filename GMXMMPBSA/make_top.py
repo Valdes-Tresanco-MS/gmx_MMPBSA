@@ -28,7 +28,7 @@ import parmed
 from GMXMMPBSA.exceptions import *
 from GMXMMPBSA.topology_preprocess import GromacsTopologyPreprocessor
 from GMXMMPBSA.utils import (selector, get_dist, list2range, res2map, get_indexes, log_subprocess_output, check_str,
-                             eq_strs, get_index_groups, topology_mismatch_error, Residue)
+                             eq_strs, get_index_groups, reconcile_qm_charges, topology_mismatch_error, Residue)
 from GMXMMPBSA.alamdcrd import _scaledistance
 import subprocess
 from pathlib import Path
@@ -248,43 +248,7 @@ class CheckMakeTop:
             logging.info(f'Selected {len(qm_residues)} residues:\n' + '\n'.join(textwraped) + '\n')
             self.INPUT['gb']['qm_residues'] = ','.join(list2range(qm_residues)['string'])
 
-            user_values = (self.INPUT['gb']['qmcharge_com'] or self.INPUT['gb']['qmcharge_rec'] or
-                           self.INPUT['gb']['qmcharge_lig'])
-
-            if self.INPUT['gb']['qmcharge_com'] != rec_charge + lig_charge:
-                logging.warning(f"System specified with odd number of electrons. Most likely the charge of QM region "
-                                f"(qmcharge_com={self.INPUT['gb']['qmcharge_com']}) have been set incorrectly and"
-                                f" is different than qmcharge_rec + qmcharge_lig ({rec_charge} + "
-                                f"{lig_charge}).")
-            if user_values:
-                logging.info('Using user-defined qmcharge_com.')
-                if self.INPUT['gb']['qmcharge_com'] != rec_charge + lig_charge:
-                    logging.warning(
-                        f"System specified with odd number of electrons. Most likely the charge of QM region "
-                        f"(qmcharge_com={self.INPUT['gb']['qmcharge_com']}) have been set incorrectly and"
-                        f" is different than qmcharge_rec + qmcharge_lig ({rec_charge} + "
-                        f"{lig_charge}). Are you sure of this value?")
-            else:
-                self.INPUT['gb']['qmcharge_com'] = rec_charge + lig_charge
-                logging.info(f'Setting qmcharge_com = {rec_charge + lig_charge}')
-            if user_values:
-                logging.info('Using user-defined qmcharge_rec.')
-                if self.INPUT['gb']['qmcharge_rec'] != rec_charge:
-                    logging.warning(f"Defined qmcharge_rec ({self.INPUT['gb']['qmcharge_rec']}) is different from the "
-                                    f"computed value ({rec_charge}). Are you sure of this value?")
-            else:
-                if self.INPUT['gb']['qmcharge_rec'] != rec_charge:
-                    logging.info(f'Setting qmcharge_rec = {rec_charge}')
-                    self.INPUT['gb']['qmcharge_rec'] = rec_charge
-            if user_values:
-                logging.info('Using user-defined qmcharge_lig.')
-                if self.INPUT['gb']['qmcharge_lig'] != lig_charge:
-                    logging.warning(f"Defined qmcharge_lig ({self.INPUT['gb']['qmcharge_lig']}) is different from the "
-                                    f"computed value ({lig_charge}). Are you sure of this value?")
-            else:
-                if self.INPUT['gb']['qmcharge_lig'] != lig_charge:
-                    logging.info(f'Setting qmcharge_lig = {lig_charge}')
-                    self.INPUT['gb']['qmcharge_lig'] = lig_charge
+            reconcile_qm_charges(self.INPUT['gb'], rec_charge, lig_charge)
 
         elif self.INPUT['gb']['com_qmmask'] != '':
             logging.warning('Overriding automatic assigment of qmcharge_com, qmcharge_rec, and qmcharge_lig. Using '

@@ -28,17 +28,16 @@ class ExpectedActionSeverityTest(unittest.TestCase):
                 'Setting complex arad', 'Setting receptor arad', 'Setting ligand arad',
             ],
             'GMXMMPBSA/make_top.py': [
-                'Setting qmcharge_', 'Using user-defined qmcharge_',
                 'Generating a receptor file internally',
                 'Stability calculation mode does not need',
                 'Assigning missing chain IDs',
             ],
             'GMXMMPBSA/make_top_amber.py': [
-                'Setting qmcharge_', 'Using user-defined qmcharge_',
                 'Generating a receptor file internally',
                 'Stability calculation mode does not need',
                 'Assigning missing chain IDs',
             ],
+            'GMXMMPBSA/utils.py': ['Setting %s =', 'Using user-defined %s.'],
             'GMXMMPBSA/main.py': ['Preparing GBNSR6 topology copies'],
         }
 
