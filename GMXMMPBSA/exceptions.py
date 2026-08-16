@@ -170,8 +170,10 @@ class GMXMMPBSA_ERROR():
         if not isinstance(exc, type) or not issubclass(exc, MMPBSA_Error):
             msg = f'{msg}\n{exc}'.strip()
             exc = MMPBSA_Error
-        logging.error(f"{exc.__name__} \n\n{msg}\n\nCheck the gmx_MMPBSA.log file to report the problem.")
-        raise exc('\n\n' + msg + '\n\nCheck the gmx_MMPBSA.log file to report the problem.')
+        logging.error('%s: %s', exc.__name__, msg)
+        error = exc(msg)
+        error._gmxmmpbsa_logged = True
+        raise error
 
 
 class GMXMMPBSA_INFO():

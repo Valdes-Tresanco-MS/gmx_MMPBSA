@@ -23,7 +23,7 @@ import logging
 from pathlib import Path
 
 try:
-    from GMXMMPBSA.exceptions import GMXMMPBSA_ERROR, InputError, CommandlineError
+    from GMXMMPBSA.exceptions import GMXMMPBSA_ERROR, MMPBSA_Error, InputError, CommandlineError
     from GMXMMPBSA.infofile import InfoFile
     from GMXMMPBSA import main
     from GMXMMPBSA.tester import run_test
@@ -109,6 +109,7 @@ def _gmxmmpbsa_base(parser, engine='gmx'):
             try:
                 app.read_input_file()
             except InputError as e:
+                _log_uncaught_exception(e)
                 _maybe_create_error_bundle(app, e)
                 sys.stderr.write('%s: %s' % (type(e).__name__, e) + '\n')
                 sys.stderr.write('  Enter `%s --help` for help\n' %
@@ -133,8 +134,20 @@ def _gmxmmpbsa_base(parser, engine='gmx'):
     except SystemExit:
         raise
     except Exception as e:
+        _log_uncaught_exception(e)
         _maybe_create_error_bundle(app, e)
         raise
+
+
+def _log_uncaught_exception(exc):
+    """Record an uncaught failure once, with tracebacks only for unexpected errors."""
+    if getattr(exc, '_gmxmmpbsa_logged', False):
+        return
+    if isinstance(exc, MMPBSA_Error):
+        logging.error('%s: %s', type(exc).__name__, exc)
+        exc._gmxmmpbsa_logged = True
+    else:
+        logging.exception('Unexpected internal error: %s', exc)
 
 
 def _maybe_create_error_bundle(app, exc):
@@ -151,6 +164,7 @@ def _maybe_create_error_bundle(app, exc):
     except Exception as bundle_exc:
         sys.stderr.write('\nCould not create gmx_MMPBSA error bundle: %s\n' % bundle_exc)
         return
+    logging.info('Diagnostic error bundle created: %s', bundle)
     sys.stderr.write(
         '\nA gmx_MMPBSA error bundle was created for debugging:\n'
         '  %s\n\n'
