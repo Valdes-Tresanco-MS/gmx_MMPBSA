@@ -64,8 +64,36 @@ class FrameCounterTest(unittest.TestCase):
             output.write_text('Total: 1.0\nTotal: 2.0\n')
             self.assertEqual(FrameCounter(str(output), nmode=True).count(), 2)
 
+    def test_gbnsr6_counts_completed_json_once(self):
+        with tempfile.TemporaryDirectory() as directory:
+            rank0 = Path(directory, 'inpcrd_0')
+            rank1 = Path(directory, 'inpcrd_1')
+            rank0.mkdir()
+            rank1.mkdir()
+            template = str(Path(directory, 'inpcrd_%d', 'complex_gbnsr6.mdout'))
+
+            # The mdout is still present when keep_files=2, but the JSON is
+            # the completion marker and must be counted only once.
+            (rank0 / 'complex_gbnsr6.0.mdout').write_text('running')
+            (rank0 / 'complex_gbnsr6.0.json').write_text('{}')
+            (rank1 / 'complex_gbnsr6.1.json').write_text('{}')
+
+            counter = FrameCounter(template, mpi_size=2)
+            self.assertEqual(counter.count(), 2)
+
 
 class PlainProgressTest(unittest.TestCase):
+    def test_stall_diagnostic_is_debug_only(self):
+        with patch('GMXMMPBSA.progress.FrameCounter.count', side_effect=[0, 1]):
+            with self.assertLogs(level=logging.DEBUG) as messages:
+                monitor_progress(
+                    'complex_gb.mdout.%d', nframes=1, style='plain', label='Complex',
+                    poll_interval=0, stall_timeout=0,
+                )
+        text = '\n'.join(messages.output)
+        self.assertIn('Complex progress stalled at 0/1 frames', text)
+        self.assertNotIn('WARNING', text)
+
     def test_stall_notices_are_rate_limited(self):
         notifier = _StallNotifier(total=10, timeout=5, started=0)
         self.assertIsNone(notifier.check(0, now=4))

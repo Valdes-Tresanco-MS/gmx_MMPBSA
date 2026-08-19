@@ -76,7 +76,11 @@ class FrameCounter:
             output_folder = str(output_path.parent)
             stem = output_path.stem
             return sum(
-                len(list(Path(folder).glob(f'{stem}*')))
+                # GBNSR6 creates the mdout while a frame is running and
+                # writes the JSON only after that frame has been parsed.
+                # Count JSON files so an in-progress frame is not reported
+                # as complete, and so keeping both files cannot double-count.
+                len(list(Path(folder).glob(f'{stem}*.json')))
                 for folder in _rank_names(output_folder, self.mpi_size)
             )
 
@@ -275,7 +279,12 @@ def monitor_progress(output_basename, nframes=1, mpi_size=1, nmode=False,
                 log_reporter.update(completed)
             stalled_for = stall_notifier.check(completed)
             if stalled_for is not None:
-                logging.warning(
+                # A long-running QM/MM frame can legitimately produce no
+                # completion marker for many minutes.  Writing a WARNING to
+                # the terminal while Rich owns the display corrupts the live
+                # bar and makes a healthy calculation look like a failure.
+                # Keep the diagnostic in the debug log instead.
+                logging.debug(
                     '%s progress stalled at %d/%d frames for %s; waiting for new output.',
                     label, completed, nframes, _format_duration(stalled_for),
                 )

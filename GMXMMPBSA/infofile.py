@@ -40,6 +40,7 @@ nl_variables = {
     'gbrun': 'gb', 'igb': 'gb', 'intdiel': 'gb', 'extdiel': 'gb', 'saltcon': 'gb', 'surften': 'gb', 'surfoff': 'gb',
     'molsurf': 'gb', 'msoffset': 'gb', 'probe': 'gb', 'ifqnt': 'gb', 'qm_theory': 'gb', 'qm_residues': 'gb',
     'qmcharge_com': 'gb', 'qmcharge_lig': 'gb', 'qmcharge_rec': 'gb', 'qmcut': 'gb', 'scfconv': 'gb',
+    'itrmax': 'gb',
     'peptide_corr': 'gb', 'writepdb': 'gb', 'verbosity': 'gb', 'alpb': 'gb', 'arad_method': 'gb',
     'pbrun': 'pb', 'ipb': 'pb', 'inp': 'pb', 'sander_apbs': 'pb', 'indi': 'pb', 'exdi': 'pb', 'emem': 'pb',
     'smoothopt': 'pb', 'istrng': 'pb', 'radiopt': 'pb', 'prbrad': 'pb', 'iprob': 'pb', 'sasopt': 'pb',

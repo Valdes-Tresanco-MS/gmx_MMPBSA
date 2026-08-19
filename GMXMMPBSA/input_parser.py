@@ -471,6 +471,7 @@ input_file.addNamelist('gb', 'gb',
 
                            ['qmcut', float, 9999, 'QM cutoff (A); e.g. 9999'],
                            ['scfconv', float, 1.0e-8, 'SCF convergence; e.g. 1.0e-8'],
+                           ['itrmax', int, 1000, 'Maximum SCF iterations; e.g. 5000'],
                            ['peptide_corr', int, 0, 'Peptide correction; 0/1'],
                            ['writepdb', int, 1, 'Write QM PDB; 0/1'],
                            ['verbosity', int, 0, 'QM/MM verbosity; 0-5'],

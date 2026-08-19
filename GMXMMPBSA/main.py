@@ -41,7 +41,7 @@ from GMXMMPBSA.createinput import create_inputs, SanderRISMInput
 from GMXMMPBSA.exceptions import (MMPBSA_Error, InternalError, InputError, GMXMMPBSA_ERROR)
 from GMXMMPBSA.infofile import InfoFile
 from GMXMMPBSA.fake_mpi import MPI as FakeMPI
-from GMXMMPBSA.gbnsr6_topology import strip_dihedral_terms_for_gbnsr6
+from GMXMMPBSA.gbnsr6_topology import prepare_gbnsr6_topology
 from GMXMMPBSA.input_parser import input_file as _input_file
 from GMXMMPBSA.make_top_amber import CheckAmberTop
 from GMXMMPBSA.make_trajs import make_trajectories, make_mutant_trajectories
@@ -402,17 +402,17 @@ class MMPBSA_App(object):
             mdin = self.pre + 'gbnsr6.mdin'
             keep_gbnsr6_mdouts = self.INPUT['general']['keep_files'] == 2
             if self.master:
-                logging.info('Preparing GBNSR6 topology copies with dihedral terms disabled.')
-            gbnsr6_complex_prmtop = strip_dihedral_terms_for_gbnsr6(
+                logging.info('Preparing GBNSR6 topology copies with equivalent LJ types compacted.')
+            gbnsr6_complex_prmtop = prepare_gbnsr6_topology(
                 complex_prmtop_path, f'{prefix}complex_gbnsr6.prmtop'
             )
             gbnsr6_receptor_prmtop = None
             gbnsr6_ligand_prmtop = None
             if not self.stability:
-                gbnsr6_receptor_prmtop = strip_dihedral_terms_for_gbnsr6(
+                gbnsr6_receptor_prmtop = prepare_gbnsr6_topology(
                     receptor_prmtop_path, f'{prefix}receptor_gbnsr6.prmtop'
                 )
-                gbnsr6_ligand_prmtop = strip_dihedral_terms_for_gbnsr6(
+                gbnsr6_ligand_prmtop = prepare_gbnsr6_topology(
                     ligand_prmtop_path, f'{prefix}ligand_gbnsr6.prmtop'
                 )
 
@@ -444,7 +444,10 @@ class MMPBSA_App(object):
                                   output_basename=f'{prefix}complex_mm.mdout.%d')
             # use pre directly to have only one folder per rank
 
-            files = sorted(list(Path(f"{pre}inpcrd_{self.mpi_rank}").glob(f"{prefix}complex*.inpcrd")))
+            files = sorted(
+                Path(f"{pre}inpcrd_{self.mpi_rank}").glob(f"{prefix}complex*.inpcrd"),
+                key=lambda file: int(file.stem.rsplit('.', 1)[-1])
+            )
 
             mdouts = [file.parent.joinpath(f"{file.name.split('.')[0]}_gbnsr6{file.suffixes[0]}.mdout").as_posix()
                       for file in files]
@@ -490,7 +493,10 @@ class MMPBSA_App(object):
 
                     self.calc_list.append(c, '    calculating MM...', timer_key='gbnsr6',
                                           output_basename=f'{prefix}receptor_mm.mdout.%d')
-                    files = sorted(list(Path(f"{pre}inpcrd_{self.mpi_rank}").glob(f"{prefix}receptor*.inpcrd")))
+                    files = sorted(
+                        Path(f"{pre}inpcrd_{self.mpi_rank}").glob(f"{prefix}receptor*.inpcrd"),
+                        key=lambda file: int(file.stem.rsplit('.', 1)[-1])
+                    )
                     mdouts = [
                         file.parent.joinpath(f"{file.name.split('.')[0]}_gbnsr6{file.suffixes[0]}.mdout").as_posix()
                         for file in files]
@@ -534,7 +540,10 @@ class MMPBSA_App(object):
 
                     self.calc_list.append(c, '    calculating MM...', timer_key='gbnsr6',
                                           output_basename=f'{prefix}ligand_mm.mdout.%d')
-                    files = sorted(list(Path(f"{pre}inpcrd_{self.mpi_rank}").glob(f"{prefix}ligand*.inpcrd")))
+                    files = sorted(
+                        Path(f"{pre}inpcrd_{self.mpi_rank}").glob(f"{prefix}ligand*.inpcrd"),
+                        key=lambda file: int(file.stem.rsplit('.', 1)[-1])
+                    )
                     mdouts = [
                         file.parent.joinpath(f"{file.name.split('.')[0]}_gbnsr6{file.suffixes[0]}.mdout").as_posix()
                         for file in files]
@@ -784,7 +793,7 @@ class MMPBSA_App(object):
         # If we have a chamber prmtop, force using sander
         if self.using_chamber:
             if INPUT['rism']['rismrun']:
-                GMXMMPBSA_ERROR('CHAMBER prmtops cannot be used with 3D-RISM')
+                logging.warning('Testing experimental 3D-RISM execution with a CHAMBER topology.')
             # if INPUT['nmode']['nmoderun']:
             #     GMXMMPBSA_ERROR('CHAMBER prmtops cannot be used with NMODE')
 
@@ -1120,6 +1129,8 @@ class MMPBSA_App(object):
             if INPUT['gb']['scfconv'] < 1.0e-12:
                 logging.warning('There is a risk of convergence problems when the requested convergence is less than '
                                 '1.0e-12 kcal/mol')
+            if INPUT['gb']['itrmax'] < 1:
+                GMXMMPBSA_ERROR('ITRMAX must be greater than zero!', InputError)
             if INPUT['gb']['writepdb']:
                 logging.info('Writing qmmm_region.pdb PDB file of the selected QM region...')
             if INPUT['decomp']['decomprun']:

@@ -359,7 +359,8 @@ class SanderGBInput(SanderInput):
                    # QM options
                    'ifqnt': 0, 'qmmask': '', 'qm_theory': '', 'qmcharge': 0,
                    'qmgb': 2, 'qmcut': 999.0,
-                   'scfconv': 1.0e-8, 'peptide_corr': 0, 'writepdb': 1, 'verbosity': 0, 'alpb': 0, 'arad': 15}
+                   'scfconv': 1.0e-8, 'itrmax': 1000, 'peptide_corr': 0, 'writepdb': 1, 'verbosity': 0,
+                   'alpb': 0, 'arad': 15}
 
         self.parent_namelist = {'ntb': 'cntrl', 'cut': 'cntrl', 'nsnb': 'cntrl', 'idecomp': 'cntrl', 'offset': 'cntrl',
                        'imin': 'cntrl', 'maxcyc': 'cntrl', 'ncyc': 'cntrl', 'gbsa': 'cntrl', 'ioutfm': 'cntrl',
@@ -370,7 +371,8 @@ class SanderGBInput(SanderInput):
                        # QM options
                        'ifqnt': 'cntrl', 'qmmask': 'qmmm', 'qm_theory': 'qmmm', 'qmcharge': 'qmmm',
                        'qmgb': 'qmmm', 'qmcut': 'qmmm',
-                       'scfconv': 'qmmm', 'peptide_corr': 'qmmm', 'writepdb': 'qmmm', 'verbosity': 'qmmm'}
+                       'scfconv': 'qmmm', 'itrmax': 'qmmm', 'peptide_corr': 'qmmm', 'writepdb': 'qmmm',
+                       'verbosity': 'qmmm'}
 
         self.name_map = {'ntb': 'ntb', 'cut': 'cut', 'nsnb': 'nsnb', 'idecomp': 'idecomp', 'offset': 'offset',
                 'imin': 'imin', 'gbsa': 'gbsa', 'ioutfm': 'netcdf', 'dec_verbose': 'dec_verbose',
@@ -381,7 +383,8 @@ class SanderGBInput(SanderInput):
                 # QM options
                 'ifqnt': 'ifqnt',  'qmmask': 'qmmask', 'qm_theory': 'qm_theory',
                 'qmcharge': 'qmcharge', 'qmgb': 'qmgb', 'qmcut': 'qmcut',
-                'scfconv': 'scfconv', 'peptide_corr': 'peptide_corr', 'writepdb': 'writepdb', 'verbosity': 'verbosity'}
+                'scfconv': 'scfconv', 'itrmax': 'itrmax', 'peptide_corr': 'peptide_corr',
+                'writepdb': 'writepdb', 'verbosity': 'verbosity'}
         self.namelist = 'gb'
 
 

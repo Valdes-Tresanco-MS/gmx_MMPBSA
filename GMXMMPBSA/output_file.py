@@ -539,10 +539,11 @@ class OutputFile(object):
 
     def print_file_info(self, FILES, INPUT):
         """ Prints the summary information to a file """
-        from GMXMMPBSA import __version__, __mmpbsa_version__
+        from GMXMMPBSA import __version__, __mmpbsa_version__, __ambertools_version__, __gromacs_version__
         stability = not FILES.receptor_prmtop
 
-        self.writeline('|gmx_MMPBSA Version=%s based on MMPBSA.py v.%s' % (__version__, __mmpbsa_version__))
+        self.writeline('|gmx_MMPBSA Version=%s based on MMPBSA.py v.%s, AmberTools %s, GROMACS %s' %
+                       (__version__, __mmpbsa_version__, __ambertools_version__, __gromacs_version__))
         if INPUT['general']['sys_name']:
             self.writeline(f'{"|System name:":40}{INPUT["general"]["sys_name"]:>40}')
 

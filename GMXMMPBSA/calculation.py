@@ -103,7 +103,10 @@ class CalculationList(list):
                             nframes = self.nmframes
                             nmode = True
                         label = self.labels[i].strip().removeprefix('calculating ')
-                        label = label.removesuffix(' contribution...').capitalize()
+                        # Uppercase only the first character; ``capitalize()``
+                        # lowercases the rest, turning ``GB`` into ``Gb``.
+                        label = label.removesuffix(' contribution...')
+                        label = label[:1].upper() + label[1:]
                         pb_thread = threading.Thread(
                             target=pb,
                             args=(self.output_files[i], nframes, self.mpi_size, nmode),
@@ -1002,39 +1005,38 @@ class MergeGBNSR6Output():
 
     @staticmethod
     def _get_energy_decomp(results_section):
+        import re
+
         energy = {}
         decomp = {}
+        energy_term = re.compile(
+            r'([A-Z0-9-]+(?:\s+[A-Z0-9-]+)?)\s*=\s*'
+            r'([-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[Ee][-+]?\d+)?|\*+)'
+        )
 
-        c = 0
-        while True:
-            line = results_section[c]
+        # A single MM output can contain several local coordinate sets when
+        # frames are distributed over MPI ranks.  The old stateful parser
+        # advanced through the energy rows and could leave only the last
+        # frame in ``energy``.  Parse each coordinate-set block independently
+        # so every frame survives the GBNSR6 merge.
+        current_frame = None
+        for line in results_section:
             if line.startswith('minimizing coord set #'):
-                f = int(line.split()[-1])
-                energy[f] = {}
-                decomp[f] = {}
-            if line.startswith(' BOND'):
-                words = line.split()
-                energy[f][words[0].strip()] = float(words[2])
-                energy[f][words[3].strip()] = float(words[5])
-                energy[f][words[6].strip()] = float(words[8])
-                c += 1
-                line = results_section[c]
-                words = line.split()
-                energy[f][words[0].strip()] = float(words[2])
-                energy[f][words[3].strip()] = float(words[5])
-                energy[f][words[6].strip()] = float(words[8])
-                c += 1
-                line = results_section[c]
-                words = line.split()
-                t = ' '.join([words[0].strip(), words[1].strip()])
-                energy[f][t] = float(words[3])
-                t = ' '.join([words[4].strip(), words[5].strip()])
-                energy[f][t] = float(words[7])
-                energy[f][words[8].strip()] = float(words[10])
-                c += 1
-                # line = results_section[c]
-                # words = line.split()
-                # energy[f][words[0].strip()] = float(words[2])
+                current_frame = int(line.split()[-1])
+                energy[current_frame] = {}
+                decomp[current_frame] = {}
+                continue
+
+            if current_frame is None:
+                continue
+
+            for term, value in energy_term.findall(line):
+                # Amber uses asterisks for overflowed values.  They are not
+                # usable as energies, but must not prevent later frames from
+                # being parsed.
+                if '*' not in value:
+                    energy[current_frame][term.strip()] = float(value)
+
             if line[:3] in ['TDC', 'SDC', 'BDC']:
                 data = [x.strip().replace('->', '') for x in line.split()]
                 if len(data) == 8:
@@ -1043,13 +1045,10 @@ class MergeGBNSR6Output():
                 else:
                     _t, _r1, _i, _v, _e, _p, _s = data
                     data = [_t, int(_r1), float(_i), float(_v), float(_e), float(_p), float(_s)]
-                if not decomp[f].get(line[:3]):
-                    decomp[f][line[:3]] = [data]
+                if not decomp[current_frame].get(line[:3]):
+                    decomp[current_frame][line[:3]] = [data]
                 else:
-                    decomp[f][line[:3]].append(data)
-            c +=1
-            if c == len(results_section):
-                break
+                    decomp[current_frame][line[:3]].append(data)
         return {'energy': energy, 'decomp':decomp}
 
     def read_gbnsr6_output(self, res2print):
@@ -1173,37 +1172,48 @@ class MergeGBNSR6Output():
             mmenergy, mmdecomp = mm['results_section'].values()
             gbenergy, gbdecomp = gbnsr6['results_section'].values()
 
-            k2print = [['BOND', 'ANGLE', 'DIHED'], ['VDWAALS', 'EEL', 'EGB'], ['1-4 VDW', '1-4 EEL', 'RESTRAINT'],
-                       ['ESURF']]
-            for i, _ in enumerate(range(len(mmenergy)), start=1):
-                output_file.write(f'minimizing coord set #       {i}\n\n')
-                mmenergy[i].pop('EGB')
-                mmenergy[i].pop('EEL')
-                mmenergy[i].pop('1-4 EEL')
-                for e, ev in gbenergy[i].items():
-                    mmenergy[i][e] = ev
+            frame_ids = sorted(mmenergy)
+            if not frame_ids:
+                raise CalcError(f'No MM energy frames were found in {self.mm_filename}')
+            missing_gb_frames = [frame for frame in frame_ids if frame not in gbenergy]
+            if missing_gb_frames:
+                raise CalcError(
+                    f'Missing GBNSR6 energy frames {missing_gb_frames} for {self.output_filename}'
+                )
+
+            k2print = [['BOND', 'ANGLE', 'DIHED']]
+            if {'UB', 'IMP', 'CMAP'}.issubset(mmenergy[frame_ids[0]]):
+                k2print.append(['UB', 'IMP', 'CMAP'])
+            k2print.extend([['VDWAALS', 'EEL', 'EGB'], ['1-4 VDW', '1-4 EEL', 'RESTRAINT'], ['ESURF']])
+            for frame in frame_ids:
+                output_file.write(f'minimizing coord set #       {frame}\n\n')
+                frame_energy = mmenergy[frame].copy()
+                frame_energy.pop('EGB', None)
+                frame_energy.pop('EEL', None)
+                frame_energy.pop('1-4 EEL', None)
+                frame_energy.update(gbenergy[frame])
                 for kl in k2print:
                     if len(kl) == 3:
                         f = []
                         for klk in kl:
-                            f.extend((klk, mmenergy[i][klk]))
+                            f.extend((klk, frame_energy[klk]))
                         output_file.write(' {:8s}={:>14.4f}  {:8s}={:>14.4f}  {:11s}={:>14.4f}\n'.format(*f))
                     else:
-                        f = [kl[0], mmenergy[i][kl[0]]]
+                        f = [kl[0], frame_energy[kl[0]]]
                         output_file.write(' {:8s}={:>14.4f}\n\n'.format(*f))
 
                 if self.idecomp:
-                    for term in mmdecomp[i]:
+                    for term in mmdecomp.get(frame, {}):
                         if self.idecomp in [1, 2]:
                             output_file.write(self.decomp_headers['pr'].format(self.decomp_labels[term]))
-                            for c, l in enumerate(mmdecomp[i][term]):
-                                r1 = mmdecomp[i][term][c][1]
-                                l[-2] = gbdecomp[i][r1][term]
+                            for c, l in enumerate(mmdecomp[frame][term]):
+                                r1 = mmdecomp[frame][term][c][1]
+                                l[-2] = gbdecomp[frame][r1][term]
                                 output_file.write('{}{:>7d}{:>10.3f}{:>10.3f}{:>10.3f}{:>10.3f}{:>10.3f}\n'.format(*l))
                         else:
                             output_file.write(self.decomp_headers['pw'].format(self.decomp_labels[term]))
-                            for c, l in enumerate(mmdecomp[i][term]):
-                                r1, r2 = mmdecomp[i][term][c][1:3]
-                                l[-2] = gbdecomp[i][r1][r2][term]
+                            for c, l in enumerate(mmdecomp[frame][term]):
+                                r1, r2 = mmdecomp[frame][term][c][1:3]
+                                l[-2] = gbdecomp[frame][r1][r2][term]
                                 output_file.write('{}{:>8d}->{:>7d}{:>13.4f}{:>13.4f}{:>13.4f}{:>13.4f}{:>13.4f}\n'.format(*l))
                         output_file.write('\n')

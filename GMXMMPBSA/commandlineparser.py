@@ -29,7 +29,7 @@ import sys
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter, RawTextHelpFormatter, ArgumentTypeError
 import re
 from pathlib import Path
-from GMXMMPBSA import __version__, __mmpbsa_version__, __ambertools_version__
+from GMXMMPBSA import __version__, __mmpbsa_version__, __ambertools_version__, __gromacs_version__
 from GMXMMPBSA.exceptions import GMXMMPBSA_ERROR
 from types import SimpleNamespace
 
@@ -219,13 +219,13 @@ ligand_group_des = '''Ligand files and info that are needed to perform the calcu
 # noinspection PyTypeChecker
 parser = GMXMMPBSA_ArgParser(epilog=f'''gmx_MMPBSA is an effort to implement the GB/PB and others calculations in GROMACS.
                                     \nBased on MMPBSA.py (version {__mmpbsa_version__}) and 
-                                    AmberTools{__ambertools_version__}''',
+                                    AmberTools {__ambertools_version__} and GROMACS {__gromacs_version__}''',
                         description=(description + '''This is the core of gmx_MMPBSA and it will do all the 
                                     calculations'''),
                         formatter_class=ArgumentDefaultsHelpFormatter)
 parser.add_argument('-v', '--version', action='version',
-                    version='''%%(prog)s %s based on MMPBSA version %s and AmberTools %s''' %
-                            (__version__, __mmpbsa_version__, __ambertools_version__))
+                    version='''%%(prog)s %s based on MMPBSA version %s, AmberTools %s, and GROMACS %s''' %
+                            (__version__, __mmpbsa_version__, __ambertools_version__, __gromacs_version__))
 parser.add_argument('--input-file-help', dest='infilehelp', action='store_true',
                     help='Print all available options in the input file.',
                     default=False)
@@ -347,12 +347,12 @@ group.add_argument('--clean', dest='clean', action='store_true', default=False,
 
 amber_parser = GMXMMPBSA_ArgParser(epilog=f'''amber_MMPBSA runs GB/PB and other end-state free energy calculations from AMBER files.
                                     \nBased on MMPBSA.py (version {__mmpbsa_version__}) and
-                                    AmberTools{__ambertools_version__}''',
+                                    AmberTools {__ambertools_version__} and GROMACS {__gromacs_version__}''',
                         description=amber_description,
                         formatter_class=ArgumentDefaultsHelpFormatter)
 amber_parser.add_argument('-v', '--version', action='version',
-                    version='''%%(prog)s %s based on MMPBSA version %s and AmberTools %s''' %
-                            (__version__, __mmpbsa_version__, __ambertools_version__))
+                    version='''%%(prog)s %s based on MMPBSA version %s, AmberTools %s, and GROMACS %s''' %
+                            (__version__, __mmpbsa_version__, __ambertools_version__, __gromacs_version__))
 amber_parser.add_argument('--input-file-help', dest='infilehelp', action='store_true',
                     help='Print all available options in the input file.',
                     default=False)
@@ -450,11 +450,12 @@ group.add_argument('--clean', dest='clean', action='store_true', default=False,
 description = 'This program is part of gmx_MMPBSA and will show a workspace to analyze the gmx_MMPBSA results'
 anaparser = ArgumentParser(epilog=f'gmx_MMPBSA is an effort to implement the GB/PB and others calculations in '
                                   f'GROMACS. \nBased on MMPBSA.py (version {__mmpbsa_version__}) and '
-                                  f'AmberTools{__ambertools_version__}',
+                                  f'AmberTools {__ambertools_version__} and GROMACS {__gromacs_version__}',
                            description=description,
                            formatter_class=ArgumentDefaultsHelpFormatter)
 anaparser.add_argument('-v', '--version', action='version',
-                       version='%%(prog)s %s based on MMPBSA version %s' % (__version__, __mmpbsa_version__))
+                       version='%%(prog)s %s based on MMPBSA version %s, AmberTools %s, and GROMACS %s' %
+                               (__version__, __mmpbsa_version__, __ambertools_version__, __gromacs_version__))
 group = anaparser.add_argument_group('Info file')
 group.add_argument('-f', '--files', nargs='*', help='gmx_MMPBSA info files or container folder or list of them',
                    type=Path, default=None)
@@ -465,11 +466,12 @@ group.add_argument('-r', '--recursive', help='Search recursively in this folder 
 description = ('This program is part of gmx_MMPBSA and will allow you to run various gmx_MMPBSA examples easily.')
 testparser = ArgumentParser(epilog=f'gmx_MMPBSA is an effort to implement the GB/PB and others calculations in '
                                   f'GROMACS. \nBased on MMPBSA.py (version {__mmpbsa_version__}) and '
-                                  f'AmberTools{__ambertools_version__}',
+                                  f'AmberTools {__ambertools_version__} and GROMACS {__gromacs_version__}',
                            description=description,
                            formatter_class=RawTextHelpFormatter)
 testparser.add_argument('-v', '--version', action='version',
-                       version='%%(prog)s %s based on MMPBSA version %s' % (__version__, __mmpbsa_version__))
+                       version='%%(prog)s %s based on MMPBSA version %s, AmberTools %s, and GROMACS %s' %
+                               (__version__, __mmpbsa_version__, __ambertools_version__, __gromacs_version__))
 group = testparser.add_argument_group('Test options')
 
 
