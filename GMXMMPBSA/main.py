@@ -42,7 +42,7 @@ from GMXMMPBSA.exceptions import (MMPBSA_Error, InternalError, InputError, GMXMM
 from GMXMMPBSA.infofile import InfoFile
 from GMXMMPBSA.fake_mpi import MPI as FakeMPI
 from GMXMMPBSA.gbnsr6_topology import prepare_gbnsr6_topology
-from GMXMMPBSA.input_parser import input_file as _input_file
+from GMXMMPBSA.input_parser import SUPPORTED_QM_THEORIES, input_file as _input_file
 from GMXMMPBSA.make_top_amber import CheckAmberTop
 from GMXMMPBSA.make_trajs import make_trajectories, make_mutant_trajectories
 from GMXMMPBSA.output_file import (write_outputs, write_decomp_output, data2pkl)
@@ -1115,21 +1115,16 @@ class MMPBSA_App(object):
         if INPUT['gb']['ifqnt'] == 1:
 
             """
-            Valid options are: PM3, AM1, RM1, MNDO, PM3-PDDG, PM3-PDDG_08, MNDO-PDDG, PM3-CARB1, PM3-ZNB, 
-            PM3-MAIS, AM1-D*, AM1-DH+, MNDO/D, AM1/D, PM6, PM6-D, PM6-DH+, DFTB, DFTB2, and DFTB3.
+            Valid options are defined by SUPPORTED_QM_THEORIES.
              
             TO DO: add support for externals: QUICK, TCPB (or TC, or TERACHEM), SEBOMD (full QM) and EXTERN (external)
             
             """
 
-            if INPUT['gb']['qm_theory'] not in ['PM3', 'AM1', 'RM1', 'MNDO', 'PM3-PDDG', 'PM3-PDDG_08', 'MNDO-PDDG',
-                                                'PM3-CARB1', 'PM3-ZNB', 'PM3-MAIS', 'AM1-D*', 'AM1-DH+', 'MNDO/D',
-                                                'AM1/D', 'PM6', 'PM6-D', 'PM6-DH+', 'DFTB', 'DFTB2', 'DFTB3']:
+            if INPUT['gb']['qm_theory'] not in SUPPORTED_QM_THEORIES:
                 GMXMMPBSA_ERROR('Invalid QM_THEORY (%s)! ' % INPUT['gb']['qm_theory'] +
                                 'This variable must be set to allowable options.\n' +
-                                'PM3, AM1, RM1, MNDO, PM3-PDDG, PM3-PDDG_08, MNDO-PDDG, \n'
-                                'PM3-CARB1, PM3-ZNB, PM3-MAIS, AM1-D*, AM1-DH+, MNDO/D, \n'
-                                'AM1/D, PM6, PM6-D, PM6-DH+, DFTB, DFTB2, DFTB3', InputError)
+                                ', '.join(SUPPORTED_QM_THEORIES), InputError)
 
 
             if INPUT['gb']['qm_residues'] == '' and INPUT['gb']['com_qmmask'] == '':
@@ -1143,6 +1138,11 @@ class MMPBSA_App(object):
                                 '1.0e-12 kcal/mol')
             if INPUT['gb']['itrmax'] < 1:
                 GMXMMPBSA_ERROR('ITRMAX must be greater than zero!', InputError)
+            ndiis_attempts = INPUT['gb']['ndiis_attempts']
+            if ndiis_attempts is not None and not 0 <= ndiis_attempts <= 1000:
+                GMXMMPBSA_ERROR('NDIIS_ATTEMPTS must be between 0 and 1000!', InputError)
+            if ndiis_attempts and INPUT['gb']['qm_theory'] in {'DFTB', 'DFTB2', 'DFTB3'}:
+                GMXMMPBSA_ERROR('NDIIS_ATTEMPTS is not available for DFTB, DFTB2, or DFTB3!', InputError)
             if INPUT['gb']['writepdb']:
                 logging.info('Writing qmmm_region.pdb PDB file of the selected QM region...')
             if INPUT['decomp']['decomprun']:

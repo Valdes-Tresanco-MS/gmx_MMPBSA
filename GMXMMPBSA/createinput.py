@@ -329,10 +329,12 @@ class SanderInput(object):
                 self.mdin.change('cntrl', 'ioutfm', int(bool(self.INPUT['general']['netcdf'])))
                 continue
             if self.INPUT.get(self.namelist) and self.name_map[key] in self.INPUT[self.namelist]:
-                self.mdin.change(self.parent_namelist[key], key, self.INPUT[self.namelist][self.name_map[key]])
+                value = self.INPUT[self.namelist][self.name_map[key]]
+                if value is not None:
+                    self.mdin.change(self.parent_namelist[key], key, value)
             elif key in ['dec_verbose', 'idecomp']:
                 self.mdin.change(self.parent_namelist[key], key, self.INPUT['decomp'][self.name_map[key]])
-            else:
+            elif value is not None:
                 self.mdin.change(self.parent_namelist[key], key, value)
         if self.namelist in {'gb', 'pb', 'rism'}:
             self.mdin.change('cntrl', 'ioutfm', int(bool(self.INPUT['general']['netcdf'])))
@@ -359,7 +361,8 @@ class SanderGBInput(SanderInput):
                    # QM options
                    'ifqnt': 0, 'qmmask': '', 'qm_theory': '', 'qmcharge': 0,
                    'qmgb': 2, 'qmcut': 999.0,
-                   'scfconv': 1.0e-8, 'itrmax': 1000, 'peptide_corr': 0, 'writepdb': 1, 'verbosity': 0,
+                   'scfconv': 1.0e-8, 'itrmax': 1000, 'ndiis_attempts': None,
+                   'peptide_corr': 0, 'writepdb': 1, 'verbosity': 0,
                    'alpb': 0, 'arad': 15}
 
         self.parent_namelist = {'ntb': 'cntrl', 'cut': 'cntrl', 'nsnb': 'cntrl', 'idecomp': 'cntrl', 'offset': 'cntrl',
@@ -371,7 +374,8 @@ class SanderGBInput(SanderInput):
                        # QM options
                        'ifqnt': 'cntrl', 'qmmask': 'qmmm', 'qm_theory': 'qmmm', 'qmcharge': 'qmmm',
                        'qmgb': 'qmmm', 'qmcut': 'qmmm',
-                       'scfconv': 'qmmm', 'itrmax': 'qmmm', 'peptide_corr': 'qmmm', 'writepdb': 'qmmm',
+                       'scfconv': 'qmmm', 'itrmax': 'qmmm', 'ndiis_attempts': 'qmmm',
+                       'peptide_corr': 'qmmm', 'writepdb': 'qmmm',
                        'verbosity': 'qmmm'}
 
         self.name_map = {'ntb': 'ntb', 'cut': 'cut', 'nsnb': 'nsnb', 'idecomp': 'idecomp', 'offset': 'offset',
@@ -383,7 +387,8 @@ class SanderGBInput(SanderInput):
                 # QM options
                 'ifqnt': 'ifqnt',  'qmmask': 'qmmask', 'qm_theory': 'qm_theory',
                 'qmcharge': 'qmcharge', 'qmgb': 'qmgb', 'qmcut': 'qmcut',
-                'scfconv': 'scfconv', 'itrmax': 'itrmax', 'peptide_corr': 'peptide_corr',
+                'scfconv': 'scfconv', 'itrmax': 'itrmax', 'ndiis_attempts': 'ndiis_attempts',
+                'peptide_corr': 'peptide_corr',
                 'writepdb': 'writepdb', 'verbosity': 'verbosity'}
         self.namelist = 'gb'
 

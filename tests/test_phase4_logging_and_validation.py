@@ -12,7 +12,7 @@ import numpy as np
 
 from GMXMMPBSA.amber_outputs import NMODEout
 from GMXMMPBSA.exceptions import InputError
-from GMXMMPBSA.input_parser import input_file
+from GMXMMPBSA.input_parser import DEFAULT_QM_THEORY, SUPPORTED_QM_THEORIES, input_file
 from GMXMMPBSA.utils import EnergyVector
 
 
@@ -135,6 +135,51 @@ class Phase4ValidationTest(unittest.TestCase):
         with self.assertRaises(InputError) as exc:
             app.check_for_bad_input()
         self.assertIn('ligand MOL2 file (-lm)', str(exc.exception))
+
+    def test_qmmm_default_theory_is_pm6_dh_plus(self):
+        app = self._app()
+        self.assertEqual(app.INPUT['gb']['qm_theory'], DEFAULT_QM_THEORY)
+
+    def test_qmmm_validation_accepts_all_canonical_theories(self):
+        for theory in SUPPORTED_QM_THEORIES:
+            with self.subTest(theory=theory):
+                app = self._app()
+                app.INPUT['gb']['ifqnt'] = 1
+                app.INPUT['gb']['qm_residues'] = ':1'
+                app.INPUT['gb']['qm_theory'] = theory
+                app.check_for_bad_input()
+
+    def test_qmmm_validation_rejects_undocumented_legacy_aliases(self):
+        for theory in ('PDDG-PM3', 'PM3PDDG', 'PDDG-MNDO', 'PDDGMNDO', 'SCC-DFTB',
+                       'PM3-ZnB', 'PM3ZNB', 'MNDOD'):
+            with self.subTest(theory=theory):
+                app = self._app()
+                app.INPUT['gb']['ifqnt'] = 1
+                app.INPUT['gb']['qm_residues'] = ':1'
+                app.INPUT['gb']['qm_theory'] = theory
+                with self.assertRaises(InputError):
+                    app.check_for_bad_input()
+
+    def test_qmmm_validation_rejects_ndiis_attempts_outside_sander_range(self):
+        for value in (-1, 1001):
+            with self.subTest(value=value):
+                app = self._app()
+                app.INPUT['gb']['ifqnt'] = 1
+                app.INPUT['gb']['qm_residues'] = ':1'
+                app.INPUT['gb']['ndiis_attempts'] = value
+                with self.assertRaises(InputError) as exc:
+                    app.check_for_bad_input()
+                self.assertIn('NDIIS_ATTEMPTS must be between 0 and 1000', str(exc.exception))
+
+    def test_qmmm_validation_rejects_ndiis_attempts_for_dftb(self):
+        app = self._app()
+        app.INPUT['gb']['ifqnt'] = 1
+        app.INPUT['gb']['qm_residues'] = ':1'
+        app.INPUT['gb']['qm_theory'] = 'DFTB'
+        app.INPUT['gb']['ndiis_attempts'] = 700
+        with self.assertRaises(InputError) as exc:
+            app.check_for_bad_input()
+        self.assertIn('NDIIS_ATTEMPTS is not available for DFTB', str(exc.exception))
 
     def test_analyzer_startup_failure_is_reported_as_nonfatal(self):
         main = _import_main_with_stubs()

@@ -27,6 +27,14 @@ from GMXMMPBSA import __version__
 import re
 
 
+DEFAULT_QM_THEORY = 'PM6-DH+'
+SUPPORTED_QM_THEORIES = (
+    'PM3', 'AM1', 'RM1', 'MNDO', 'PM3-PDDG', 'PM3-PDDG_08', 'MNDO-PDDG',
+    'PM3-CARB1', 'PM3-ZNB', 'PM3-MAIS', 'AM1-D*', 'AM1-DH+', 'MNDO/D',
+    'AM1/D', 'PM6', 'PM6-D', 'PM6-DH+', 'DFTB', 'DFTB2', 'DFTB3',
+)
+
+
 class Variable(object):
     """
     Base variable class. It has a name and a single value
@@ -457,7 +465,7 @@ input_file.addNamelist('gb', 'gb',
 
                             # Options for QM
                            ['ifqnt', int, 0, 'Enable QM/MM; 0/1'],
-                           ['qm_theory', str, 'PM6-DH+', 'QM theory; e.g. "PM6-DH+"'],
+                           ['qm_theory', str, DEFAULT_QM_THEORY, 'QM theory; e.g. "PM6-DH+"'],
                            ['qm_residues', str, '', 'QM residues; e.g. ":1-5"'],
 
                            ['com_qmmask', str, '', 'Complex QM mask; e.g. ":1-5"'],
@@ -472,6 +480,8 @@ input_file.addNamelist('gb', 'gb',
                            ['qmcut', float, 9999, 'QM cutoff (A); e.g. 9999'],
                            ['scfconv', float, 1.0e-8, 'SCF convergence; e.g. 1.0e-8'],
                            ['itrmax', int, 1000, 'Maximum SCF iterations; e.g. 5000'],
+                           ['ndiis_attempts', int, None,
+                            'Maximum DIIS attempts per SCF cycle; e.g. 700'],
                            ['peptide_corr', int, 0, 'Peptide correction; 0/1'],
                            ['writepdb', int, 1, 'Write QM PDB; 0/1'],
                            ['verbosity', int, 0, 'QM/MM verbosity; 0-5'],

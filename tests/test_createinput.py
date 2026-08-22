@@ -48,6 +48,39 @@ class QMMMInputTest(unittest.TestCase):
         self.assertIn('&qmmm', text)
         self.assertIn('itrmax=5000', text)
 
+    def test_ndiis_attempts_is_optional_and_written_when_set(self):
+        gb = SanderGBInput({
+            'general': {'netcdf': False},
+            'gb': {
+                'ifqnt': 1, 'qmmask': "':1'", 'qm_theory': "'AM1'", 'qmcharge': -2,
+                'ndiis_attempts': 700,
+            },
+            'decomp': {'idecomp': 0, 'dec_verbose': 0},
+        })
+        gb.make_mdin()
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            output = Path(tmpdir) / 'qmmm.mdin'
+            gb.write_input(output)
+            text = output.read_text().replace(' ', '')
+
+        self.assertIn('ndiis_attempts=700', text)
+
+    def test_ndiis_attempts_is_not_written_when_omitted(self):
+        gb = SanderGBInput({
+            'general': {'netcdf': False},
+            'gb': {'ifqnt': 1, 'qmmask': "':1'", 'qm_theory': "'AM1'", 'qmcharge': -2},
+            'decomp': {'idecomp': 0, 'dec_verbose': 0},
+        })
+        gb.make_mdin()
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            output = Path(tmpdir) / 'qmmm.mdin'
+            gb.write_input(output)
+            text = output.read_text().replace(' ', '')
+
+        self.assertNotIn('ndiis_attempts=', text)
+
 
 if __name__ == '__main__':
     unittest.main()
