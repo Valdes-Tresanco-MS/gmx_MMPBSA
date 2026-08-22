@@ -103,7 +103,8 @@ a trajectory file (`com_traj.xtc`), and both the receptor and ligand group numbe
 A ligand .mol2 file is also needed for generating the ligand topology. The `mmpbsa.in` input file will contain all 
 the parameters needed for the QM/MMGBSA calculation. 10 frames are going to be used when performing QM/MMGBSA 
 calculation with the igb1 (GB-HCT) model (note that `mbondi` raddi set `PBRadii=2` 
-is used), **PM6-DH+** (default QM Hamiltonian; dispersion- and H-bond-corrected PM6) and a salt concentration of 0.15 M.
+is used), **PM6-DH+** (the default dispersion- and hydrogen-bond-corrected PM6 Hamiltonian) and a salt concentration of 0.15 M.
+If `qm_theory` is omitted, the same **PM6-DH+** default is used.
 
 A plain text output file with all the statistics (default: `FINAL_RESULTS_MMPBSA.dat`) and a CSV-format 
 output file containing all energy terms for every frame in every calculation will be saved. The file name in 
@@ -126,8 +127,6 @@ are dominated by hydrogen bonding and dispersion - interactions that plain PM3/P
 5. **QM/MMGBSA with gmx_MMPBSA + PM6-DH+:** *Commun. Biol.* **2025**. [doi:10.1038/s42003-025-09143-z](https://doi.org/10.1038/s42003-025-09143-z)
 6. **Host-guest binding with PM6-DH+:** Muddana & Gilson, *J. Chem. Theory Comput.* **2012**, 8, 2868-2880. [doi:10.1021/ct3002738](https://doi.org/10.1021/ct3002738)
 
-`PM6-DH+` is **not** equivalent to GFN-xTB. GFN-xTB requires a separately built XTB-enabled `sander` (not available in the default conda AmberTools package).
-  
   [1]: ../../gmx_MMPBSA_command-line.md#gmx_mmpbsa-command-line
   [2]: ../../input_file.md#the-input-file
   [3]: ../../input_file.md#sample-input-files

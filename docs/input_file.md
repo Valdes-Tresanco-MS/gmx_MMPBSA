@@ -701,11 +701,28 @@ molecular surface.
         [here](examples/QM_MMGBSA/README.md)
 
 `qm_theory` 
-:   Which semi-empirical Hamiltonian should be used for the quantum calculation. Options are `PM3`, `AM1`, `MNDO`, 
-`PDDG-PM3`, `PM3PDDG`, `PDDG-MNDO`, `PDDGMNDO`, `PM3-CARB1`, `PM3CARB1`, `DFTB`, `SCC-DFTB`, `RM1`, `PM6`, 
-`PM3-ZnB`, `PM3-MAIS`, `PM3ZNB`, `MNDO/D`, `MNDOD`. The dispersion correction can be switched on for `AM1` 
-and `PM6` by choosing `AM1-D*` and `PM6-D`, respectively. The dispersion and hydrogen bond correction will be 
-applied for `AM1-DH+` and `PM6-DH+`.
+:   Which semi-empirical Hamiltonian should be used for the quantum calculation. The values accepted by the current
+validator are `PM3`, `AM1`, `RM1`, `MNDO`, `PM3-PDDG`, `PM3-PDDG_08`, `MNDO-PDDG`, `PM3-CARB1`, `PM3-ZNB`,
+`PM3-MAIS`, `AM1-D*`, `AM1-DH+`, `MNDO/D`, `AM1/D`, `PM6`, `PM6-D`, `PM6-DH+`, `DFTB`, `DFTB2`, and `DFTB3`.
+The dispersion correction can be switched on for `AM1` and `PM6` by choosing `AM1-D*` and `PM6-D`, respectively.
+The dispersion and hydrogen bond correction will be applied for `AM1-DH+` and `PM6-DH+`.
+
+    These names are case-sensitive and must be used exactly as shown. Historical aliases such as `PDDG-PM3`,
+    `SCC-DFTB`, and `PM3-ZnB` are not accepted by the current QM/MMGBSA input validator. `DFTB`, `DFTB2`,
+    and `DFTB3` also require the corresponding Amber parameter data to be available. Individual Hamiltonians can
+    have element-specific parameter limitations; for example, PM3-MAIS does not provide parameters for every element.
+
+    The following is a limited smoke-test matrix, not a guarantee of universal support. The current development
+    checkout was tested with a one-frame QM/MMGBSA run using the prepared test system. The following values completed
+    successfully in the configured SANDER environment: `PM3`, `AM1`, `RM1`, `MNDO`,
+    `PM3-PDDG`, `PM3-PDDG_08`, `MNDO-PDDG`, `PM3-CARB1`, `PM3-ZNB`, `AM1-D*`, `AM1-DH+`, `MNDO/D`, `AM1/D`,
+    `PM6`, `PM6-D`, `PM6-DH+`, `DFTB`, `DFTB2`, and `DFTB3`. The DFTB variants required their Amber parameter data
+    to be available. `PM3-MAIS` is accepted by the validator but failed for the tested QM region because SANDER
+    reported missing PM3-MAIS parameters for nitrogen; it should therefore be treated as element-limited rather
+    than universally runnable. `gmx_MMPBSA` validates the method name and writes the QM/MM input; SANDER performs
+    the quantum calculation. Actual availability therefore depends on the SANDER build, Amber parameter data,
+    QM-region elements and charge, and SCF convergence. A successful validator check or one successful smoke test
+    does not guarantee that a Hamiltonian will run for every user-defined QM region.
 
     The default is `PM6-DH+` which includes dispersion and hydrogen-bond corrections missing from plain PM3/PM6,and have been used in the past to study protein-ligand interactions. 
     (see [Řezáč & Hobza, *JCTC* **2009**, 5, 1749](https://doi.org/10.1021/ct9000922); 
@@ -714,8 +731,14 @@ applied for `AM1-DH+` and `PM6-DH+`.
     [Thapa *et al.*, *J. Phys. Chem. B* **2018**, 122, 7866](https://doi.org/10.1021/acs.jpcb.8b03655) and 
     [*Commun. Biol.* **2025**](https://doi.org/10.1038/s42003-025-09143-z).
 
-    !!! danger
-         `qm_theory` must be specified if `ifqnt` = 1 (default: `PM6-DH+`).
+    If `qm_theory` is omitted while `ifqnt` = 1, it defaults to `PM6-DH+`.
+
+    gmx_MMPBSA checks the SANDER output before accepting a QM/MM energy calculation. Fatal diagnostics such as SCF
+    nonconvergence, missing Hamiltonian parameters, missing dispersion-correction parameters, or missing DFTB
+    Slater-Koster files stop the calculation and identify the mdout file, diagnostic class, and suggested remedy.
+    The numerical-derivative message for d orbitals is reported as a performance warning because SANDER can still
+    complete the calculation with numerical derivatives. A final binding result is not considered valid when a
+    QM/MM energy component contains one of the fatal diagnostics.
 
 `qm_residues`
 :   Complex residues to treat with quantum mechanics. All residues treated with quantum mechanics in the complex 
@@ -816,6 +839,18 @@ defined `qmcharge_lig` is used.
 convergence the longer the calculation will take. Values tighter than 1.0e-11 are not recommended as these can lead 
 to oscillations in the SCF, due to limitations in machine precision, that can lead to convergence failures.
 
+`itrmax` (Default = 1000)
+:   Maximum number of SCF iterations allowed for each QM/MM step. If SANDER reports an unconverged SCF step,
+the calculation stops rather than including the unconverged energy in the binding-energy result. Increase `itrmax`
+or adjust `scfconv` only after checking the QM/MM output for stable convergence.
+
+`ndiis_attempts` (Default = 0, SANDER default)
+:   Optional maximum number of DIIS attempts used by SANDER during each QM/MM SCF calculation. Values from 0 to 1000
+are accepted; this option is not available for DFTB, DFTB2, or DFTB3. Set it only when the QM/MM output shows
+repeatable SCF convergence difficulty; increasing it can increase runtime. For example, `ndiis_attempts=700`
+recovered convergence for the Fig3 test system. It does not override the fatal-diagnostic check: unconverged frames
+are still rejected.
+
 `writepdb` (Default = 1)
 :   Write a PDB file of the selected QM region. This option is designed to act as an aid to the user to
 allow easy checking of what atoms were included in the QM region. Write a PDB file of the atoms in the QM region 
@@ -838,7 +873,7 @@ on the very first step to a file named qmmm_region.pdb.
     <img src="../assets/images/peptide_correction.svg" align="center"/>
 
     where _ϕ_ is the dihedral angle of the H-N-C-O linkage and h<sub>type</sub> is a constant dependent on the 
-    Hamiltonian used. Recommended, except for DFTB/SCC-DFTB.
+    Hamiltonian used. Recommended, except for DFTB, DFTB2, and DFTB3.
 
     * 0: Do not apply a MM correction to peptide linkages
     * 1: Apply a MM correction to peptide linkages
