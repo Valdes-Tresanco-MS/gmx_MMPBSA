@@ -582,6 +582,24 @@ def check_str(structure, ref=False, skip=False):
     return refstr
 
 
+def residue_names_match(com_name, ref_name):
+    """Return whether topology/reference residue names identify the same residue.
+
+    ParmEd may decorate terminal residues read from a PDB with ``N`` or ``C``
+    (for example, ``NVAL`` and ``CALA``), while the GROMACS-derived AMBER
+    structure uses the base names (``VAL`` and ``ALA``).  Only these terminal
+    decorations are normalized here; all other residue-name differences remain
+    an error during reference-structure validation.
+    """
+    if com_name == ref_name:
+        return True
+    if ref_name.startswith(('N', 'C')) and ref_name[1:] == com_name:
+        return True
+    if com_name.startswith(('N', 'C')) and com_name[1:] == ref_name:
+        return True
+    return False
+
+
 def res2map(indexes, com_file):
     """
     :param com_str:

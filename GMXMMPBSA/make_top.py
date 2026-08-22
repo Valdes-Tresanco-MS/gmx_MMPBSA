@@ -28,7 +28,8 @@ import parmed
 from GMXMMPBSA.exceptions import *
 from GMXMMPBSA.topology_preprocess import GromacsTopologyPreprocessor
 from GMXMMPBSA.utils import (selector, get_dist, list2range, res2map, get_indexes, log_subprocess_output, check_str,
-                             eq_strs, get_index_groups, reconcile_qm_charges, topology_mismatch_error, Residue)
+                             eq_strs, get_index_groups, reconcile_qm_charges, topology_mismatch_error, Residue,
+                             residue_names_match)
 from GMXMMPBSA.alamdcrd import _scaledistance
 import subprocess
 from pathlib import Path
@@ -1816,7 +1817,8 @@ cmd.quit()
                                 f'reference structure ({len(ref_str.residues)}) are different. Please check that the '
                                 f'reference structure is correct')
             for c, res in enumerate(ref_str.residues):
-                if com_str.residues[c].number != res.number or com_str.residues[c].name != res.name:
+                if com_str.residues[c].number != res.number or not residue_names_match(com_str.residues[c].name,
+                                                                                       res.name):
                     GMXMMPBSA_ERROR('There is no match between the complex and the reference structure used. An '
                                     f'attempt was made to assign the chain ID to "{com_str.residues[c].name}'
                                     f':{com_str.residues[c].number}:{com_str.residues[c].insertion_code}" in the '
@@ -1824,6 +1826,13 @@ cmd.quit()
                                     'based on the reference structure. Please check that the reference structure is '
                                     'correct')
                 com_str.residues[c].chain = res.chain
+                # The explicit-water workflow can include solvent residues in
+                # the full reference structure, while ``self.resl`` contains
+                # only receptor/ligand residues.  Assign the chain to the
+                # complex residue, but do not map solvent residues into the
+                # receptor/ligand residue index list.
+                if c >= len(self.resl):
+                    continue
                 # update the chain id (https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/issues/354)
                 self.resl[c].chain = res.chain
                 i = self.resl[c].id_index - 1

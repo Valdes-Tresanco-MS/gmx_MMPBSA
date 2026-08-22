@@ -29,7 +29,8 @@ import parmed
 from GMXMMPBSA.exceptions import *
 from GMXMMPBSA.make_trajs import Trajectory
 from GMXMMPBSA.utils import (selector, get_dist, list2range, res2map, get_indexes, log_subprocess_output, check_str,
-                             eq_strs, get_index_groups, reconcile_qm_charges, topology_mismatch_error, res2map_amber)
+                             eq_strs, get_index_groups, reconcile_qm_charges, topology_mismatch_error, res2map_amber,
+                             residue_names_match)
 from GMXMMPBSA.alamdcrd import _scaledistance
 import subprocess
 from pathlib import Path
@@ -1135,7 +1136,8 @@ class CheckAmberTop:
                                 f'reference structure ({len(ref_str.residues)}) are different. Please check that the '
                                 f'reference structure is correct')
             for c, res in enumerate(ref_str.residues):
-                if com_str.residues[c].number != res.number or com_str.residues[c].name != res.name:
+                if com_str.residues[c].number != res.number or not residue_names_match(com_str.residues[c].name,
+                                                                                       res.name):
                     GMXMMPBSA_ERROR('There is no match between the complex and the reference structure used. An '
                                     f'attempt was made to assign the chain ID to "{com_str.residues[c].name}'
                                     f':{com_str.residues[c].number}:{com_str.residues[c].insertion_code}" in the '
