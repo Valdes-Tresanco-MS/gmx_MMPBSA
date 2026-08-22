@@ -6,6 +6,19 @@ build/
 dist/
 *.egg-info/
 *.log
+
+# gmx_MMPBSA runtime scratch when a calculation is launched from the repo root.
+/_GMXMMPBSA_*
+/COM.prmtop
+/LIG.prmtop
+/REC.prmtop
+/COMPACT_MMXSA_RESULTS.mmxsa
+/results.dat
+/results.csv
+/qmmm_convergence.txt
+/qmmm_region.pdb
+/gmx_MMPBSA_error_bundle_*.zip
+
 examples/*
 !examples/AMBER/
 examples/AMBER/*
