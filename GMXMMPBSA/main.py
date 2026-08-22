@@ -61,6 +61,18 @@ _rank = 0
 _MPI = FakeMPI()
 
 
+def _gbnsr6_coordinate_rank(path):
+    """Return the rank suffix from a GBNSR6 coordinate filename.
+
+    Single-frame/single-rank preparation can produce an unsuffixed filename
+    such as ``_GMXMMPBSA_complex.inpcrd``.  Multi-rank preparation may append
+    a numeric suffix (for example ``.3``).  Both forms are valid inputs to
+    the subsequent GBNSR6 calculation.
+    """
+    suffix = Path(path).stem.rsplit('.', 1)[-1]
+    return int(suffix) if suffix.isdigit() else 0
+
+
 # Main class
 
 class MMPBSA_App(object):
@@ -446,7 +458,7 @@ class MMPBSA_App(object):
 
             files = sorted(
                 Path(f"{pre}inpcrd_{self.mpi_rank}").glob(f"{prefix}complex*.inpcrd"),
-                key=lambda file: int(file.stem.rsplit('.', 1)[-1])
+                key=lambda file: (_gbnsr6_coordinate_rank(file), file.name)
             )
 
             mdouts = [file.parent.joinpath(f"{file.name.split('.')[0]}_gbnsr6{file.suffixes[0]}.mdout").as_posix()
@@ -495,7 +507,7 @@ class MMPBSA_App(object):
                                           output_basename=f'{prefix}receptor_mm.mdout.%d')
                     files = sorted(
                         Path(f"{pre}inpcrd_{self.mpi_rank}").glob(f"{prefix}receptor*.inpcrd"),
-                        key=lambda file: int(file.stem.rsplit('.', 1)[-1])
+                        key=lambda file: (_gbnsr6_coordinate_rank(file), file.name)
                     )
                     mdouts = [
                         file.parent.joinpath(f"{file.name.split('.')[0]}_gbnsr6{file.suffixes[0]}.mdout").as_posix()
@@ -542,7 +554,7 @@ class MMPBSA_App(object):
                                           output_basename=f'{prefix}ligand_mm.mdout.%d')
                     files = sorted(
                         Path(f"{pre}inpcrd_{self.mpi_rank}").glob(f"{prefix}ligand*.inpcrd"),
-                        key=lambda file: int(file.stem.rsplit('.', 1)[-1])
+                        key=lambda file: (_gbnsr6_coordinate_rank(file), file.name)
                     )
                     mdouts = [
                         file.parent.joinpath(f"{file.name.split('.')[0]}_gbnsr6{file.suffixes[0]}.mdout").as_posix()

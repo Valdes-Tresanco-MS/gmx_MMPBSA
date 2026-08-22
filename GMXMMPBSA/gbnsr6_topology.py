@@ -10,12 +10,15 @@ _LJ_FLAGS = ('LENNARD_JONES_ACOEF', 'LENNARD_JONES_BCOEF')
 
 
 def prepare_gbnsr6_topology(prmtop, output_prmtop):
-    """Create a GBNSR6-only prmtop copy with a compact LJ type table.
+    """Create a GBNSR6-compatible prmtop copy.
 
-    The legacy GBNSR6 reader has a small fixed-size atom-type table.  GROMACS
-    topologies can contain many differently named atom types whose complete LJ
-    interaction rows are nevertheless identical.  Merging only those exact
-    duplicates preserves every LJ A/B coefficient used by GBNSR6.
+    The legacy GBNSR6 reader has fixed-size atom-type and bonded-parameter
+    tables. GROMACS topologies can contain many differently named atom types
+    whose complete LJ interaction rows are nevertheless identical, and large
+    protein topologies can exceed the reader's dihedral table. Merging exact
+    LJ duplicates and clearing dihedral pointers keeps the GB-only input within
+    those limits. Bonded MM terms are still calculated separately with the
+    original topology.
     """
     prmtop = Path(prmtop)
     output_prmtop = Path(output_prmtop)
@@ -23,13 +26,20 @@ def prepare_gbnsr6_topology(prmtop, output_prmtop):
     tmp_prmtop = output_prmtop.with_name(f'{output_prmtop.name}.{os.getpid()}.tmp')
     shutil.copyfile(prmtop, tmp_prmtop)
     _compact_equivalent_lj_types(tmp_prmtop)
+    _strip_dihedral_terms_in_place(tmp_prmtop)
     os.replace(tmp_prmtop, output_prmtop)
     return output_prmtop.as_posix()
 
 
 def strip_dihedral_terms_for_gbnsr6(prmtop, output_prmtop):
-    """Backward-compatible alias; dihedral and 1-4 records are retained."""
+    """Backward-compatible entry point for GBNSR6 topology preparation."""
     return prepare_gbnsr6_topology(prmtop, output_prmtop)
+
+
+def _strip_dihedral_terms_in_place(prmtop):
+    prmtop = Path(prmtop)
+    lines = prmtop.read_text().splitlines(keepends=True)
+    prmtop.write_text(''.join(_strip_dihedral_terms(lines)))
 
 
 def _compact_equivalent_lj_types(prmtop):

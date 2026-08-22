@@ -105,6 +105,18 @@ class Phase4ValidationTest(unittest.TestCase):
                     app.check_for_bad_input()
                 self.assertIn(expected, str(exc.exception))
 
+    def test_gbnsr6_coordinate_rank_accepts_unsuffixed_and_ranked_files(self):
+        main = _import_main_with_stubs()
+
+        self.assertEqual(
+            main._gbnsr6_coordinate_rank(Path('_GMXMMPBSA_complex.inpcrd')),
+            0,
+        )
+        self.assertEqual(
+            main._gbnsr6_coordinate_rank(Path('_GMXMMPBSA_complex.3.inpcrd')),
+            3,
+        )
+
     def test_linit_zero_is_valid(self):
         app = self._app()
         app.INPUT['pb']['linit'] = 0
