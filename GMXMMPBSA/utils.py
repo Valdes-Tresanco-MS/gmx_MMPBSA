@@ -194,8 +194,10 @@ def create_input_args(args: list):
         return 'general', 'gb', 'gbnsr6', 'pb', 'ala', 'nmode', 'decomp', 'rism'
     elif 'gb' not in args and 'pb' not in args and 'rism' not in args and 'nmode' not in args and 'gbnsr6' not in args:
         GMXMMPBSA_ERROR('You did not specify any type of calculation!')
-    elif 'gb' not in args and 'pb' not in args and 'decomp' in args: # FIXME: gbnsr6?
-        logging.warning('&decomp calculation is only compatible with &gb and &pb calculations. Will be ignored!')
+    elif ('gb' not in args and 'pb' not in args and 'gbnsr6' not in args
+          and 'decomp' in args):
+        logging.warning('&decomp calculation is only compatible with &gb, &pb, '
+                        'and &gbnsr6 calculations. Will be ignored!')
         args.remove('decomp')
         return ['general'] + args
     else:
