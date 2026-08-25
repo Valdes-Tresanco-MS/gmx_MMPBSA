@@ -6,6 +6,8 @@ title: Changelog
 
 ## Development changes
 
+### Entropy and QH
+
 - Marked QH as final-release compatibility only: new calculations are unsupported, historical QH results remain
   readable in this release, and all QH support will be removed afterward.
 - Corrected the Interaction Entropy running estimator to apply one shared ensemble mean to every frame in each
@@ -13,6 +15,9 @@ title: Changelog
 - Made the full-ensemble IE value primary, retained `ie_segment` only as a tail-convergence diagnostic, added
   deterministic nonoverlapping-block diagnostics for IE and C2, and corrected the C2 warning boundary to
   approximately 6.0 kcal/mol (25 kJ/mol).
+
+### Logging, progress, and errors
+
 - Improved MPI-safe calculation logging so rank 0 owns `gmx_MMPBSA.log` and informational commands do not replace a
   previous calculation log.
 - Added record-based warning/error totals, cleaner progress checkpoints, rate-limited stalled-progress notices, and
@@ -20,6 +25,29 @@ title: Changelog
 - Normalized warning severity and topology/validation terminology. Expected automatic actions are now informational;
   scientific approximations, fallbacks, incomplete convergence, and user-value mismatches remain warnings.
 - Logging message text is not a stable machine-readable interface; use result files and exit status for automation.
+- Added `--progress-style {auto,rich,classic,plain,none}` and collision-safe calculation error bundles.
+
+### amber_MMPBSA
+
+- Added `amber_MMPBSA` for native AMBER topology/trajectory/mask ST workflows (optional separate receptor/ligand
+  tops). Not full `gmx_MMPBSA` feature parity: no explicit receptor waters, ligand MT unsupported, radii preserved
+  from the input prmtop. See `docs/amber_MMPBSA.md`.
+
+### QM/MM, GBNSR6, and explicit waters
+
+- Default `qm_theory` is now `PM6-DH+`; unconverged QM/MM SCF is a hard error with clearer diagnostics.
+- Added automatic GBNSR6 topology compaction/post-processing for legacy AmberTools NTYPES limits.
+- Added ST explicit receptor waters for GB/PB (GROMACS path only; incompatible with RISM, GBNSR6, normal-mode,
+  quasi-harmonic entropy, MT, and QM/MM). Interaction entropy and C2 remain allowed.
+- Keep nonzero `&decomp` template defaults (`idecomp`/`dec_verbose`) out of normal sander mdins and GBNSR6 merge
+  unless `decomprun` is enabled.
+
+### API, analyzer, tester, and docs
+
+- Modernized the Python API loader and added a runnable API example.
+- Expanded unit tests, manifest-driven `gmx_MMPBSA_test`, example README parity checks, and Colab/local notebooks.
+- Analyzer UI theme and plot robustness updates.
+- Restricted Python to 3.11–3.12 and refreshed conda/pip dependency bounds (including Rich 13–15).
 
 ## gmx_MMPBSA v1.6.5 (05/22/2026)
 
