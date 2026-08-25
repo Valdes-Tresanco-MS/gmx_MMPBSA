@@ -156,6 +156,27 @@ class CommentGromacsCmapTest(unittest.TestCase):
         self.assertIn('omits CMAP energy terms', logs.output[0])
         self.assertIn('approximation', logs.output[0])
 
+
+class ChainAssignmentTest(unittest.TestCase):
+    def test_terminal_residue_number_gap_does_not_index_past_residue_map(self):
+        checker = object.__new__(make_top.CheckMakeTop)
+        checker.resl = [
+            make_top.Residue(1, 153, '', 'R', 1, 'GLY'),
+            make_top.Residue(2, 155, '', 'L', 1, 'HEME'),
+        ]
+        complex_structure = SimpleNamespace(residues=[
+            SimpleNamespace(chain='', number=153, atoms=[], name='GLY'),
+            SimpleNamespace(chain='', number=155, atoms=[], name='HEME'),
+        ])
+        receptor_structure = SimpleNamespace(residues=[SimpleNamespace(chain='')])
+        ligand_structure = SimpleNamespace(residues=[SimpleNamespace(chain='')])
+
+        checker._assign_chains_IDs(complex_structure, receptor_structure, ligand_structure)
+
+        self.assertEqual([res.chain for res in complex_structure.residues], ['A', 'B'])
+        self.assertEqual(receptor_structure.residues[0].chain, 'A')
+        self.assertEqual(ligand_structure.residues[0].chain, 'B')
+
     def test_preserves_relative_path_for_subdirectory_includes(self):
         with TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
