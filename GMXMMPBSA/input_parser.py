@@ -642,8 +642,8 @@ input_file.addNamelist('ala', 'alanine_scanning',
 
 input_file.addNamelist('decomp', 'decomposition',
                        [
-                           ['idecomp', int, 0, 'Decomp mode; 0-4'],
-                           ['dec_verbose', int, 0, 'Decomp verbosity; 0-3'],
+                           ['idecomp', int, 2, 'Decomp mode; 0-4'],
+                           ['dec_verbose', int, 1, 'Decomp verbosity; 0-3'],
                            ['print_res', str, 'within 6',
                             'Residues to print; e.g. "all", "within 6", "A/2-10"'],
                            ['csv_format', int, 1, 'Write CSV output; 0/1']
