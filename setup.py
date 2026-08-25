@@ -54,7 +54,7 @@ setup(
                       'mpi4py>=4.0.1,<5',
                       'parmed>=4.2.2,<5',
                       'tqdm',
-                      'rich>=13,<15'],
+                      'rich>=13,<16'],
     entry_points={
         "console_scripts": [
             "gmx_MMPBSA=GMXMMPBSA.app:gmxmmpbsa",
