@@ -38,7 +38,8 @@ def _combine_entropy(total_energy, entropy_value, entropy_uncertainty):
 
 def _ie_result(ie_output):
     """Return the primary IE value and uncertainty, including legacy results."""
-    value = float(ie_output.get('ie_value', ie_output['data'][-1]))
+    # Legacy 1.6.x results reported the tail mean when ie_value was absent.
+    value = float(ie_output.get('ie_value', ie_output['iedata'].mean()))
     uncertainty = float(ie_output.get('block_std', ie_output['iedata'].std()))
     return value, uncertainty
 

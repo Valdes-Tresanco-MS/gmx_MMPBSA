@@ -98,7 +98,7 @@ class StabilityOutputTest(unittest.TestCase):
 
 
 class InteractionEntropyCompatibilityTest(unittest.TestCase):
-    def test_legacy_compact_result_uses_final_curve_value_and_tail_sd(self):
+    def test_legacy_compact_result_uses_tail_mean_and_tail_sd(self):
         legacy = {
             'data': np.asarray([0.0, 0.1, 0.3]),
             'iedata': np.asarray([0.1, 0.3]),
@@ -106,7 +106,7 @@ class InteractionEntropyCompatibilityTest(unittest.TestCase):
 
         value, uncertainty = output_file._ie_result(legacy)
 
-        self.assertAlmostEqual(value, 0.3)
+        self.assertAlmostEqual(value, 0.2)
         self.assertAlmostEqual(uncertainty, 0.1)
 
     def test_new_compact_result_uses_explicit_primary_and_block_values(self):

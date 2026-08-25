@@ -118,10 +118,12 @@ class InteractionEntropyCalcTest(unittest.TestCase):
         self.assertAlmostEqual(parsed.summary()[1][3], calculated.ie_value, places=4)
 
     def test_legacy_ie_output_remains_readable(self):
+        # 1.6.x reported the tail mean as "| Interaction Entropy (-TΔS):".
+        # The last cumulative curve point must not become the primary value.
         legacy_output = """| Interaction Entropy results for gb calculations
 IE-frames: last 2
 Internal Energy SD (sigma):      1.00
-| Interaction Entropy (-TΔS):      0.3000
+| Interaction Entropy (-TΔS):      0.20 +/-    0.14
 
 | Interaction Entropy per-frame:
 Frame # | IE value
@@ -136,10 +138,31 @@ Frame # | IE value
             parsed = IEout(self._input(), 'gb')
             parsed.parse_from_file(output.name, 3)
 
-        self.assertAlmostEqual(parsed['ie_value'], 0.30)
+        self.assertAlmostEqual(parsed['ie_value'], 0.20)
         self.assertAlmostEqual(parsed['tail_mean'], 0.20)
         self.assertEqual(parsed['block_size'], 0)
         self.assertAlmostEqual(parsed['block_std'], parsed['tail_std'])
+
+    def test_legacy_ie_without_header_uses_tail_mean(self):
+        legacy_output = """| Interaction Entropy results for gb calculations
+IE-frames: last 2
+Internal Energy SD (sigma):      1.00
+
+| Interaction Entropy per-frame:
+Frame # | IE value
+1  0.00
+2  0.10
+3  0.30
+"""
+
+        with tempfile.NamedTemporaryFile(mode='w+', suffix='.dat') as output:
+            output.write(legacy_output)
+            output.flush()
+            parsed = IEout(self._input(), 'gb')
+            parsed.parse_from_file(output.name, 3)
+
+        self.assertAlmostEqual(parsed['ie_value'], 0.20)
+        self.assertNotAlmostEqual(parsed['ie_value'], float(parsed['data'][-1]))
 
 
 class C2EntropyCalcTest(unittest.TestCase):

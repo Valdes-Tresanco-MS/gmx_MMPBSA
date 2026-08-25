@@ -555,7 +555,11 @@ class MMPBSA_API():
                 df = pd.DataFrame({'AccIntEnergy': d[emodel]['data']}, index=index)
                 df1 = pd.DataFrame({'ie': d[emodel]['data'][-ieframes:]}, index=index[-ieframes:])
                 df2 = pd.concat([df, df1], axis=1)
-                ie_value = float(d[emodel].get('ie_value', d[emodel]['data'][-1]))
+                ie_value = float(d[emodel].get(
+                    'ie_value',
+                    d[emodel]['iedata'].mean() if 'iedata' in d[emodel]
+                    else d[emodel]['data'][-ieframes:].mean()
+                ))
                 block_std = float(d[emodel].get('block_std', d[emodel]['iedata'].std()))
                 block_sem = float(d[emodel].get(
                     'block_sem', d[emodel]['iedata'].std() / math.sqrt(ieframes)

@@ -261,6 +261,14 @@ class IEout(dict):
                     })
                     continue
                 if line.startswith('|') or not line.split():
+                    # Legacy 1.6.x wrote "| Interaction Entropy (-TΔS): mean +/- sd"
+                    # on a comment-style line; still parse that primary value.
+                    stripped = line.lstrip('| ').strip()
+                    if stripped.startswith('Interaction Entropy (-TΔS):') and 'ie_value' not in self:
+                        tokens = stripped.split(':', 1)[1].split()
+                        self['ie_value'] = float(tokens[0])
+                        if len(tokens) >= 3 and tokens[1] == '+/-':
+                            self['tail_std'] = float(tokens[2])
                     continue
                 if line.startswith('IE-frames:'):
                     self['ieframes'] = int(line.strip('\n').split()[-1])
@@ -268,6 +276,12 @@ class IEout(dict):
                     self['sigma'] = float(line.strip('\n').split()[-1])
                 elif line.startswith('Full-ensemble Interaction Entropy (-TΔS):'):
                     self['ie_value'] = float(line.split()[-1])
+                elif line.startswith('Interaction Entropy (-TΔS):'):
+                    # Legacy header without the leading comment marker.
+                    tokens = line.split(':', 1)[1].split()
+                    self['ie_value'] = float(tokens[0])
+                    if len(tokens) >= 3 and tokens[1] == '+/-':
+                        self['tail_std'] = float(tokens[2])
                 elif line.startswith('Tail convergence mean'):
                     self['tail_mean'] = float(line.split()[-1])
                 elif line.startswith('Tail convergence SD'):
@@ -286,7 +300,9 @@ class IEout(dict):
                     c += 1
                 f += 1
         self['iedata'] = self['data'][-self['ieframes']:]
-        self['ie_value'] = self.get('ie_value', float(self['data'][-1]))
+        # Prefer the explicit primary value. For legacy files without
+        # Full-ensemble / header text, restore the 1.6.x primary (tail mean).
+        self['ie_value'] = self.get('ie_value', float(self['iedata'].mean()))
         self['tail_mean'] = self.get('tail_mean', float(self['iedata'].mean()))
         self['tail_std'] = self.get('tail_std', float(self['iedata'].std()))
         self['block_size'] = self.get('block_size', 0)
@@ -333,7 +349,7 @@ class IEout(dict):
     def summary(self):
         """ Formatted summary of Interaction Entropy results """
 
-        avg = float(self.get('ie_value', self['data'][-1]))
+        avg = float(self.get('ie_value', self['iedata'].mean()))
         stdev = float(self.get('block_std', self['data'][-self['ieframes']:].stdev()))
         sem = float(self.get('block_sem', self['data'][-self['ieframes']:].sem()))
 
@@ -1394,7 +1410,7 @@ class DeltaIEC2Statistic(dict):
                 ],
                 ['C2', float(self['sigma']), float(self['c2data']), float(self['c2_std'])]
             ]
-        avg = float(self.get('ie_value', self['data'][-1]))
+        avg = float(self.get('ie_value', self['iedata'].mean()))
         stdev = float(self.get('block_std', self['data'][-self['ieframes']:].stdev()))
 
         return [
