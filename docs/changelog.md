@@ -6,6 +6,13 @@ title: Changelog
 
 ## Development changes
 
+- Marked QH as final-release compatibility only: new calculations are unsupported, historical QH results remain
+  readable in this release, and all QH support will be removed afterward.
+- Corrected the Interaction Entropy running estimator to apply one shared ensemble mean to every frame in each
+  trajectory prefix, as required by Equations 6-8 of the original method, and use a stable log-sum-exp evaluation.
+- Made the full-ensemble IE value primary, retained `ie_segment` only as a tail-convergence diagnostic, added
+  deterministic nonoverlapping-block diagnostics for IE and C2, and corrected the C2 warning boundary to
+  approximately 6.0 kcal/mol (25 kJ/mol).
 - Improved MPI-safe calculation logging so rank 0 owns `gmx_MMPBSA.log` and informational commands do not replace a
   previous calculation log.
 - Added record-based warning/error totals, cleaner progress checkpoints, rate-limited stalled-progress notices, and

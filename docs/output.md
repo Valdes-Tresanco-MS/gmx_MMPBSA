@@ -25,7 +25,7 @@ This is how a typical output file ("FINAL_RESULTS_MMPBSA.dat" by default) looks 
 |Ligand residue name is          "RAL"                                                +       
 |                                                                                             
 |Calculations performed using 16 complex frames                                       + # (5) 
-|C2 Entropy Std. Dev. and Conf. Interv. (95%) have been obtained by bootstrapping     |       
+|IE and C2 uncertainty diagnostics are obtained from nonoverlapping trajectory blocks|
 |with number of re-samplings = 2000                                                   |       
 |                                                                                     |       
 |Generalized Born ESURF calculated using 'LCPO' surface areas                         |       

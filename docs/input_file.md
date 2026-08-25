@@ -426,11 +426,13 @@ support for complex systems with several components. It supports all force field
 
 `qh_entropy` (Default = 0)
 :    Legacy quasi-harmonic entropy (QH) calculations are no longer supported for new runs. Keep this value at `0`.
-     Historical result files containing QH data remain readable by the analyzer.
+     Historical result files containing QH data remain readable by the analyzer in this release only. All QH
+     compatibility support will be removed after this release.
 
     !!! important "Keep in mind"
-        QH output is retained only for backward-compatible reading of existing results. Use NMODE, interaction
-        entropy, or C2 entropy for new calculations.
+        QH output is retained only for backward-compatible reading of existing results in this final compatibility
+        release. Use NMODE, interaction entropy, or C2 entropy for new calculations. QH will not be available after
+        this release.
 
     _Implemented in v1.4.2: Equivalent to (Removed) `entropy = 1`_
 
@@ -467,9 +469,10 @@ support for complex systems with several components. It supports all force field
 
 
 `ie_segment` (Default = 25)
-:    Representative segment (in %), starting from the last frame, for the calculation of the
-Interaction Entropy, _e.g._: `ie_segment = 25` means that the last quartile of the total number of frames
-(`(endframe-startframe)/interval`) will be used to calculate the average Interaction Entropy.
+:    Convergence-diagnostic segment (in %), starting from the last frame. The Interaction Entropy reported as the
+primary result is calculated from the full selected ensemble. For example, `ie_segment = 25` retains the last
+quartile of the cumulative IE curve to report its tail mean and fluctuation as a diagnostic; it does not replace the
+full-ensemble IE estimate. Nonoverlapping block results at several values of `N` are also written to the IE output.
 
     _Implemented in v1.4.2_
 
@@ -484,8 +487,8 @@ Interaction Entropy, _e.g._: `ie_segment = 25` means that the last quartile of t
         - A tutorial on the use of C2 Entropy is 
         available [here](examples/Entropy_calculations/C2_Entropy/README.md)
         - The standard deviation of the interaction energy (`σIE`) should always be reported.
-        - The C2 Entropy method should be avoided if `σIE > ~ 3.6 kcal/mol` because it gives unrealistically large 
-        entropies.
+        - C2 Entropy magnitudes may become unrealistic if `σIE > ~ 6.0 kcal/mol` (approximately 25 kJ/mol), even
+        though C2 converges more readily than IE.
         - It is advisable to study how the C2 Entropy depends on N by block averaging (which also provide an 
         estimate of the precision of the calculated entropies).
         - A sampling frequency of 10 fs, seems to be 3-40 times too dense. A sampling frequency of 0.1 ps would be more 

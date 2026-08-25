@@ -84,10 +84,12 @@ in` input file will contain all the parameters needed for the MM/PB(GB)SA calcul
 are going to be used when performing the MM/PB(GB)SA calculation with the igb5 (GB-OBC2) model and a 
 salt concentration = 0.15M.
 
-[C2 Entropy][4] will be calculated using all (100%) the frames. Of note, C2 method tends to give 
-unrealistically large entropies when the standard deviation of the interaction energy > ~ 3.6kcal/mol. Of note, two other 
-methods (`QH` and `nmode`) can be used for estimating the entropic contribution, though they are way more expensive in 
-computation as compared with C2 method.
+[C2 Entropy][4] will be calculated using all (100%) the frames. The C2 magnitude may become unrealistically large when
+the standard deviation of the interaction energy is greater than about 6.0 kcal/mol (25 kJ/mol). Nonoverlapping block
+estimates are reported to assess sampling. Normal-mode entropy (`NMODE`) remains available, although it is considerably
+more computationally expensive than C2. Quasi-harmonic entropy (`QH`) is in its final compatibility release: new QH
+calculations are no longer supported, historical QH results remain readable in this version, and all QH support will
+be removed after this release.
 
 A plain text output file with all the statistics (default: `FINAL_RESULTS_MMPBSA.dat`) and a CSV-format 
 output file containing all energy terms for every frame in every calculation will be saved. The file name in 

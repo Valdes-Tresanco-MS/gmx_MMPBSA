@@ -84,9 +84,12 @@ in` input file will contain all the parameters needed for the MM/PB(GB)SA calcul
 are going to be used when performing the MM/PB(GB)SA 
 calculation with the igb2 (GB-OBC1) model and a salt concentration = 0.15M.
 
-[Interaction Entropy (IE)][4] will be calculated and the average for half (`entropy_seg=50`) of the 
-total number of frames will be reported. Of note, two other methods (`QH` and `NMODE`) can be used for estimating the 
-entropic contribution, though they are way more expensive in computation as compared with IE method.
+[Interaction Entropy (IE)][4] will be calculated from the full selected ensemble. The last half
+(`ie_segment=50`) of the cumulative IE curve is retained only as a convergence diagnostic, and nonoverlapping block
+estimates are reported to assess sampling. Normal-mode entropy (`NMODE`) remains available, although it is considerably
+more computationally expensive than IE. Quasi-harmonic entropy (`QH`) is in its final compatibility release: new QH
+calculations are no longer supported, historical QH results remain readable in this version, and all QH support will
+be removed after this release.
 
 A plain text output file with all the statistics (default: `FINAL_RESULTS_MMPBSA.dat`) and a CSV-format 
 output file containing all energy terms for every frame in every calculation will be saved. The file name in 

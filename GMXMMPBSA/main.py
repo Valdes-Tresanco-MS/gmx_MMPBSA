@@ -1046,7 +1046,8 @@ class MMPBSA_App(object):
             GMXMMPBSA_ERROR(
                 'Quasi-harmonic entropy (qh_entropy=1) is not supported for new calculations. '
                 'Set qh_entropy=0 and use a supported entropy method instead. '
-                'Historical QH result files remain readable by the analyzer.',
+                'Historical QH result files remain readable by the analyzer in this release only; '
+                'all QH support will be removed after this release.',
                 InputError,
             )
 
