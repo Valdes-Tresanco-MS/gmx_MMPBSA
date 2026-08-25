@@ -328,8 +328,10 @@ class SanderInput(object):
             if key == 'ioutfm':
                 self.mdin.change('cntrl', 'ioutfm', int(bool(self.INPUT['general']['netcdf'])))
                 continue
-            if self.INPUT.get(self.namelist) and self.name_map[key] in self.INPUT[self.namelist]:
-                value = self.INPUT[self.namelist][self.name_map[key]]
+            mapped = self.name_map.get(key)
+            if (self.INPUT.get(self.namelist) and mapped is not None
+                    and mapped in self.INPUT[self.namelist]):
+                value = self.INPUT[self.namelist][mapped]
                 if value is not None:
                     self.mdin.change(self.parent_namelist[key], key, value)
             elif key in ['dec_verbose', 'idecomp']:
@@ -346,7 +348,8 @@ class SanderInput(object):
         if self.namelist in {'gb', 'pb', 'rism'}:
             self.mdin.change('cntrl', 'ioutfm', int(bool(self.INPUT['general']['netcdf'])))
 
-        if self.namelist in ['pb', 'gbnsr6']:
+        # sander.APBS uses &apbs ionc for ionic strength, not &pb istrng.
+        if self.namelist in ['pb', 'gbnsr6'] and self.program != 'sander.APBS':
             # in parmed.amber.mdin gbnsr6 namelist not exists, in this case, is gb, we need to change this namelist
             # variable in mdin, but use gbnsr6 as namelist to get parameters from the the INPUT
             nl = 'pb' if self.namelist == 'pb' else 'gb'
@@ -732,7 +735,7 @@ class SanderAPBSInput(SanderInput):
         super().__init__(INPUT)
         self.program = 'sander.APBS'
         self.input_items = {'ntb': 0, 'cut': 999.0, 'nsnb': 99999,
-                       'imin': 5, 'maxcyc': 1, 'igb': 6,
+                       'imin': 5, 'maxcyc': 1, 'igb': 6, 'idecomp': 0, 'inp': 1,
                        'apbs_print': 1, 'calc_type': 0, 'cmeth': 1,
                        'bcfl': 2, 'srfm': 2, 'chgm': 1, 'pdie': 1.0,
                        'sdie': 80.0, 'srad': 1.4, 'nion': 2, 'ionq': '1.0,-1.0',
@@ -740,10 +743,19 @@ class SanderAPBSInput(SanderInput):
                        'calcforce': 0, 'calcnpenergy': 1, 'grid': '0.5,0.5,0.5',
                        'gamma': 0.00542, 'ioutfm': 0}
 
-        self.name_map = {'inp': 'inp', 'idecomp': 'idecomp', 'pdie': 'indi',
-                    'sdie': 'exdi', 'ionc': 'istrng', 'radiopt': 'radiopt',
-                    'srad': 'prbrad', 'grid': 'scale', 'gamma': 'cavity_surften',
-                    'ioutfm': 'netcdf', 'maxcyc': 'pb_maxcyc'}
+        # Keys without a PB INPUT counterpart keep identity mappings so
+        # make_mdin can fall through to the listed defaults safely.
+        self.name_map = {
+            'ntb': 'ntb', 'cut': 'cut', 'nsnb': 'nsnb', 'imin': 'imin',
+            'igb': 'igb', 'apbs_print': 'apbs_print', 'calc_type': 'calc_type',
+            'cmeth': 'cmeth', 'bcfl': 'bcfl', 'srfm': 'srfm', 'chgm': 'chgm',
+            'nion': 'nion', 'ionq': 'ionq', 'ionrr': 'ionrr',
+            'calcforce': 'calcforce', 'calcnpenergy': 'calcnpenergy',
+            'inp': 'inp', 'idecomp': 'idecomp', 'pdie': 'indi',
+            'sdie': 'exdi', 'ionc': 'istrng', 'radiopt': 'radiopt',
+            'srad': 'prbrad', 'grid': 'scale', 'gamma': 'cavity_surften',
+            'ioutfm': 'netcdf', 'maxcyc': 'pb_maxcyc',
+        }
 
         self.parent_namelist = {'ntb': 'cntrl', 'cut': 'cntrl', 'nsnb': 'cntrl',
                            'imin': 'cntrl', 'maxcyc': 'cntrl', 'igb': 'cntrl',
@@ -755,18 +767,16 @@ class SanderAPBSInput(SanderInput):
                            'ionc': 'apbs', 'ionrr': 'apbs', 'radiopt': 'apbs',
                            'calcforce': 'apbs', 'grid': 'apbs', 'gamma': 'apbs',
                            'calcnpenergy': 'apbs'}
+        self.namelist = 'pb'
 
-        self.mdin.change('apbs', 'grid', f"{INPUT['pb']['scale']},{INPUT['pb']['scale']},{INPUT['pb']['scale']}")
-        self.mdin.change('apbs', 'ionc', f"{INPUT['pb']['istrng']},{INPUT['pb']['istrng']}")
-        self.mdin.change('apbs', 'gamma', INPUT['pb']['cavity_surften'] * 4.184)
-    # def __init__(self, INPUT):
-    #     SanderInput.__init__(self, INPUT)
-    #     # We also have to make some modifications specific to sander.APBS
-    #     self.mdin.change('apbs', 'grid', '%s,%s,%s' % (INPUT['pb']['scale'],
-    #                                                    INPUT['pb']['scale'], INPUT['pb']['scale']))
-    #     self.mdin.change('apbs', 'ionc', '%s,%s' % (INPUT['pb']['istrng'],
-    #                                                 INPUT['pb']['istrng']))
-    #     self.mdin.change('apbs', 'gamma', INPUT['pb']['cavity_surften'] * 4.184)
+    def make_mdin(self):
+        # self.mdin is created in SanderInput.make_mdin(); APBS-specific
+        # multi-value overrides must run after PB-mapped defaults are applied.
+        super().make_mdin()
+        scale = self.INPUT['pb']['scale']
+        self.mdin.change('apbs', 'grid', f"{scale},{scale},{scale}")
+        self.mdin.change('apbs', 'ionc', f"{self.INPUT['pb']['istrng']},{self.INPUT['pb']['istrng']}")
+        self.mdin.change('apbs', 'gamma', self.INPUT['pb']['cavity_surften'] * 4.184)
 
 
 class SanderGBDecomp(SanderGBInput):

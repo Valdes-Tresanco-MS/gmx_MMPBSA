@@ -3,10 +3,10 @@ import unittest
 from pathlib import Path
 
 try:
-    from GMXMMPBSA.createinput import SanderGBInput, SanderMMInput, SanderPBSAInput
+    from GMXMMPBSA.createinput import SanderAPBSInput, SanderGBInput, SanderMMInput, SanderPBSAInput
 except ModuleNotFoundError as exc:
     if exc.name == 'parmed':
-        SanderGBInput = SanderMMInput = None
+        SanderAPBSInput = SanderGBInput = SanderMMInput = None
         SanderPBSAInput = None
     else:
         raise
@@ -111,6 +111,49 @@ class QMMMInputTest(unittest.TestCase):
             text = output.read_text().replace(' ', '')
 
         self.assertNotIn('ndiis_attempts=', text)
+
+
+class APBSInputTest(unittest.TestCase):
+    @unittest.skipIf(SanderAPBSInput is None, 'ParmEd is required to generate APBS input files')
+    def test_apbs_mdin_applies_custom_pb_settings(self):
+        pb = SanderAPBSInput({
+            'general': {'netcdf': False},
+            'pb': {
+                'scale': 2.0,
+                'istrng': 0.15,
+                'cavity_surften': 0.0378,
+                # APBS/ParmEd defaults suppress matching values; use non-defaults.
+                'inp': 1,           # APBS cntrl default is 2
+                'radiopt': 1,       # APBS default is 0
+                'prbrad': 1.6,      # APBS default is 1.4
+                'indi': 3.5,        # APBS pdie default is 2.0
+                'exdi': 70.0,       # APBS sdie default is 78.4
+                'pb_maxcyc': 7,
+            },
+            'decomp': {'decomprun': False, 'idecomp': 2, 'dec_verbose': 1},
+        })
+        pb.make_mdin()
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            output = Path(tmpdir) / 'apbs.mdin'
+            pb.write_input(output)
+            text = output.read_text().replace(' ', '')
+
+        self.assertEqual(pb.namelist, 'pb')
+        self.assertIn('&apbs', text)
+        self.assertNotIn('&pb', text)
+        self.assertIn("grid='2.0,2.0,2.0'", text)
+        self.assertIn("ionc='0.15,0.15'", text)
+        self.assertIn('gamma=0.1581552', text)
+        self.assertIn('pdie=3.5', text)
+        self.assertIn('sdie=70.0', text)
+        self.assertIn('radiopt=1', text)
+        self.assertIn('srad=1.6', text)
+        self.assertIn('inp=1', text)
+        self.assertIn('maxcyc=7', text)
+        # decomprun is off, so nonzero template idecomp must not leak
+        self.assertNotIn('idecomp=2', text)
+        self.assertEqual(pb.mdin.cntrl_nml['idecomp'], 0)
 
 
 if __name__ == '__main__':
