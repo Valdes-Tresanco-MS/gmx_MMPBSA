@@ -956,11 +956,11 @@ better agreement with the PB model, regardless of the structure size. For best a
 (TIP3P) solvation energies, optimal value of B depends on the structure size: for small molecules (number of atoms 
 less than 50), B=0 is recommended. With -chagb option, B is calculated automatically based on the solute size.
 
-`alpb` (Default = 0)
-:   Specifies if ALBP correction is to be used.
+`alpb` (Default = 1)
+:   Specifies if ALPB correction is to be used.
 
-    * 0: Use canonical GB (default)
-    * 1: Use ALPB approximation
+    * 0: Use canonical GB
+    * 1: Use ALPB approximation (default)
 
 #### **Options for CHAGB model**
 
