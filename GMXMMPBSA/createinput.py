@@ -333,7 +333,14 @@ class SanderInput(object):
                 if value is not None:
                     self.mdin.change(self.parent_namelist[key], key, value)
             elif key in ['dec_verbose', 'idecomp']:
-                self.mdin.change(self.parent_namelist[key], key, self.INPUT['decomp'][self.name_map[key]])
+                # Amber reads GROUP cards after the namelist whenever
+                # idecomp is nonzero.  Normal calculations do not add those
+                # cards, so keep decomposition disabled in their mdin files
+                # even though the decomposition namelist has nonzero defaults
+                # for decomposition runs.
+                decomp_enabled = self.INPUT.get('decomp', {}).get('decomprun', False)
+                value = self.INPUT['decomp'][self.name_map[key]] if decomp_enabled else 0
+                self.mdin.change(self.parent_namelist[key], key, value)
             elif value is not None:
                 self.mdin.change(self.parent_namelist[key], key, value)
         if self.namelist in {'gb', 'pb', 'rism'}:

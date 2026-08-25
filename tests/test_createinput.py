@@ -3,10 +3,10 @@ import unittest
 from pathlib import Path
 
 try:
-    from GMXMMPBSA.createinput import SanderGBInput, SanderPBSAInput
+    from GMXMMPBSA.createinput import SanderGBInput, SanderMMInput, SanderPBSAInput
 except ModuleNotFoundError as exc:
     if exc.name == 'parmed':
-        SanderGBInput = None
+        SanderGBInput = SanderMMInput = None
         SanderPBSAInput = None
     else:
         raise
@@ -28,6 +28,37 @@ class PBInputDefaultTest(unittest.TestCase):
             text = output.read_text()
 
         self.assertIn('inp=1', text.replace(' ', ''))
+
+
+class DecompositionMdinTest(unittest.TestCase):
+    @unittest.skipIf(SanderMMInput is None, 'ParmEd is required to generate MM input files')
+    def _write_mdin(self, decomprun, idecomp, dec_verbose):
+        mm = SanderMMInput({
+            'general': {'netcdf': False},
+            'decomp': {
+                'decomprun': decomprun,
+                'idecomp': idecomp,
+                'dec_verbose': dec_verbose,
+            },
+        })
+        mm.make_mdin()
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            output = Path(tmpdir) / 'mm.mdin'
+            mm.write_input(output)
+            return output.read_text().replace(' ', '')
+
+    def test_normal_mdin_disables_decomposition(self):
+        text = self._write_mdin(decomprun=False, idecomp=2, dec_verbose=1)
+
+        self.assertNotIn('idecomp=2', text)
+        self.assertIn('dec_verbose=0', text)
+
+    def test_decomposition_mdin_preserves_nonzero_settings(self):
+        text = self._write_mdin(decomprun=True, idecomp=2, dec_verbose=1)
+
+        self.assertIn('idecomp=2', text)
+        self.assertIn('dec_verbose=1', text)
 
 
 class QMMMInputTest(unittest.TestCase):

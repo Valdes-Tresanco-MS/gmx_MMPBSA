@@ -73,6 +73,14 @@ def _gbnsr6_coordinate_rank(path):
     return int(suffix) if suffix.isdigit() else 0
 
 
+def _effective_decomp_settings(input_data):
+    """Return decomposition settings that match the active calculation path."""
+    decomp = input_data.get('decomp', {})
+    if not decomp.get('decomprun', False):
+        return 0, 0
+    return decomp['idecomp'], decomp['dec_verbose']
+
+
 # Main class
 
 class MMPBSA_App(object):
@@ -472,9 +480,9 @@ class MMPBSA_App(object):
             self.calc_list.append(c, '    calculating GB...', timer_key='gbnsr6',
                                       output_basename=f"{pre}inpcrd_%d/{prefix}complex_gbnsr6.mdout")
 
+            idecomp, dec_verbose = _effective_decomp_settings(self.INPUT)
             c = MergeOut(self.FILES.complex_prmtop, f"{prefix}complex_gbnsr6.mdout.%d",
-                         f'{prefix}complex_mm.mdout.%d', mdouts, self.INPUT['decomp']['idecomp'],
-                         self.INPUT['decomp']['dec_verbose'])
+                         f'{prefix}complex_mm.mdout.%d', mdouts, idecomp, dec_verbose)
             self.calc_list.append(c, '', timer_key='gbnsr6')
 
             if not self.stability:
@@ -522,8 +530,7 @@ class MMPBSA_App(object):
                                           output_basename=f"{pre}inpcrd_%d/{prefix}receptor_gbnsr6.mdout")
 
                     c = MergeOut(self.FILES.receptor_prmtop, f"{prefix}receptor_gbnsr6.mdout.%d",
-                                 f'{prefix}receptor_mm.mdout.%d', mdouts, self.INPUT['decomp']['idecomp'],
-                                 self.INPUT['decomp']['dec_verbose'])
+                                 f'{prefix}receptor_mm.mdout.%d', mdouts, idecomp, dec_verbose)
                     self.calc_list.append(c, '', timer_key='gbnsr6')
 
                 try:
@@ -568,8 +575,7 @@ class MMPBSA_App(object):
                     self.calc_list.append(c, '    calculating GB...', timer_key='gbnsr6',
                                           output_basename=f"{pre}inpcrd_%d/{prefix}ligand_gbnsr6.mdout")
                     c = MergeOut(self.FILES.ligand_prmtop, f"{prefix}ligand_gbnsr6.mdout.%d",
-                                 f'{prefix}ligand_mm.mdout.%d', mdouts, self.INPUT['decomp']['idecomp'],
-                                 self.INPUT['decomp']['dec_verbose'])
+                                 f'{prefix}ligand_mm.mdout.%d', mdouts, idecomp, dec_verbose)
                     self.calc_list.append(c, '', timer_key='gbnsr6')
         # end if self.INPUT['gb']['gbrun']
 

@@ -117,6 +117,22 @@ class Phase4ValidationTest(unittest.TestCase):
             3,
         )
 
+    def test_effective_decomp_settings_disable_default_decomp_for_normal_runs(self):
+        main = _import_main_with_stubs()
+
+        self.assertEqual(
+            main._effective_decomp_settings({
+                'decomp': {'decomprun': False, 'idecomp': 2, 'dec_verbose': 1},
+            }),
+            (0, 0),
+        )
+        self.assertEqual(
+            main._effective_decomp_settings({
+                'decomp': {'decomprun': True, 'idecomp': 2, 'dec_verbose': 1},
+            }),
+            (2, 1),
+        )
+
     def test_linit_zero_is_valid(self):
         app = self._app()
         app.INPUT['pb']['linit'] = 0
@@ -127,6 +143,14 @@ class Phase4ValidationTest(unittest.TestCase):
         app.INPUT['decomp']['idecomp'] = 0
         app.INPUT['decomp']['decomprun'] = False
         app.check_for_bad_input()
+
+    def test_idecomp_zero_is_rejected_for_decomposition(self):
+        app = self._app()
+        app.INPUT['decomp']['idecomp'] = 0
+        app.INPUT['decomp']['decomprun'] = True
+
+        with self.assertRaisesRegex(InputError, r'IDECOMP cannot be 0'):
+            app.check_for_bad_input()
 
     def test_ligand_mol2_requires_gaff_forcefield(self):
         app = self._app()
