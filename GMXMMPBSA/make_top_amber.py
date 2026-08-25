@@ -671,11 +671,13 @@ class CheckAmberTop:
                     if i.is_ligand():
                         residues_selection['lig'].append(i)
                         if qm_sele:
-                            lig_charge += round(sum(atm.charge for atm in com_top.residues[i - 1].atoms), 0)
+                            # Sum raw partial charges; round once at the end so
+                            # list / within / all selection paths agree.
+                            lig_charge += sum(atm.charge for atm in com_top.residues[i - 1].atoms)
                     else:
                         residues_selection['rec'].append(i)
                         if qm_sele:
-                            rec_charge += round(sum(atm.charge for atm in com_top.residues[i - 1].atoms), 0)
+                            rec_charge += sum(atm.charge for atm in com_top.residues[i - 1].atoms)
                     res_selection.remove([rres.chain, rres.number, rres.insertion_code])
             for res in res_selection:
                 logging.warning("We couldn't find this residue CHAIN:{} RES_NUM:{} ICODE: {}".format(*res))
@@ -689,11 +691,11 @@ class CheckAmberTop:
                 if i.is_ligand():
                     residues_selection['lig'].append(i)
                     if qm_sele:
-                        lig_charge += round(sum(atm.charge for atm in com_top.residues[i - 1].atoms), 0)
+                        lig_charge += sum(atm.charge for atm in com_top.residues[i - 1].atoms)
                 else:
                     residues_selection['rec'].append(i)
                     if qm_sele:
-                        rec_charge += round(sum(atm.charge for atm in com_top.residues[i - 1].atoms), 0)
+                        rec_charge += sum(atm.charge for atm in com_top.residues[i - 1].atoms)
         if qm_sele:
             rec_charge = int(round(rec_charge))
             lig_charge = int(round(lig_charge))

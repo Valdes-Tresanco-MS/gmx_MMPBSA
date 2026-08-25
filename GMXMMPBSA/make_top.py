@@ -1109,8 +1109,12 @@ cmd.quit()
     def _cleantop_with_retry(self, top_file, ndx, structure, id='complex'):
         logging.info('Preparing %s topology from %s using %d selected atom indexes...',
                      id, top_file, len(ndx))
+        # Keep solvent on the first pass when explicit receptor waters are
+        # requested; otherwise water index atoms vanish and only the retry path
+        # recovers them.
+        keep_solvent = bool(getattr(self, 'explicit_waters', 0))
         try:
-            top = self.cleantop(top_file, ndx, id)
+            top = self.cleantop(top_file, ndx, id, remove_solvent=not keep_solvent)
         except IndexError as err:
             logging.warning(f'{err} Retrying with the full topology before applying the index...')
             try:
@@ -1296,11 +1300,13 @@ cmd.quit()
                     if i.is_ligand():
                         residues_selection['lig'].append(i)
                         if qm_sele:
-                            lig_charge += round(sum(atm.charge for atm in com_top.residues[i - 1].atoms), 0)
+                            # Sum raw partial charges; round once at the end so
+                            # list / within / all selection paths agree.
+                            lig_charge += sum(atm.charge for atm in com_top.residues[i - 1].atoms)
                     else:
                         residues_selection['rec'].append(i)
                         if qm_sele:
-                            rec_charge += round(sum(atm.charge for atm in com_top.residues[i - 1].atoms), 0)
+                            rec_charge += sum(atm.charge for atm in com_top.residues[i - 1].atoms)
                     res_selection.remove([rres.chain, rres.number, rres.insertion_code])
             for res in res_selection:
                 logging.warning("We couldn't find this residue CHAIN:{} RES_NUM:{} ICODE: {}".format(*res))
@@ -1314,11 +1320,11 @@ cmd.quit()
                 if i.is_ligand():
                     residues_selection['lig'].append(i)
                     if qm_sele:
-                        lig_charge += round(sum(atm.charge for atm in com_top.residues[i - 1].atoms), 0)
+                        lig_charge += sum(atm.charge for atm in com_top.residues[i - 1].atoms)
                 else:
                     residues_selection['rec'].append(i)
                     if qm_sele:
-                        rec_charge += round(sum(atm.charge for atm in com_top.residues[i - 1].atoms), 0)
+                        rec_charge += sum(atm.charge for atm in com_top.residues[i - 1].atoms)
         if qm_sele:
             rec_charge = int(round(rec_charge))
             lig_charge = int(round(lig_charge))
