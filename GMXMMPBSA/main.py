@@ -1217,6 +1217,11 @@ class MMPBSA_App(object):
             GMXMMPBSA_ERROR('IDECOMP cannot be 0 for Decomposition analysis!', InputError)
 
         if INPUT['general']['explicit_waters'] > 0:
+            if getattr(self, 'engine', 'gmx') == 'amber':
+                GMXMMPBSA_ERROR('EXPLICIT_WATERS is not supported with amber_MMPBSA. '
+                                'Use gmx_MMPBSA with a GROMACS topology (-cp).', InputError)
+            if INPUT['gb'].get('ifqnt'):
+                GMXMMPBSA_ERROR('EXPLICIT_WATERS cannot be combined with QM/MM (ifqnt=1).', InputError)
             if not (INPUT['gb']['gbrun'] or INPUT['pb']['pbrun']):
                 GMXMMPBSA_ERROR('EXPLICIT_WATERS requires a GB or PB calculation (&gb or &pb).', InputError)
             if not INPUT['general']['explicit_waters_mask'].strip():
@@ -1225,8 +1230,12 @@ class MMPBSA_App(object):
                 GMXMMPBSA_ERROR('EXPLICIT_WATERS requires a GROMACS complex topology (-cp) in this version.',
                                 InputError)
             if any([
-                self.FILES.receptor_tpr, self.FILES.receptor_trajs, self.FILES.receptor_top,
-                self.FILES.ligand_tpr, self.FILES.ligand_trajs, self.FILES.ligand_top,
+                getattr(self.FILES, 'receptor_tpr', None),
+                getattr(self.FILES, 'receptor_trajs', None),
+                getattr(self.FILES, 'receptor_top', None),
+                getattr(self.FILES, 'ligand_tpr', None),
+                getattr(self.FILES, 'ligand_trajs', None),
+                getattr(self.FILES, 'ligand_top', None),
             ]):
                 GMXMMPBSA_ERROR('EXPLICIT_WATERS is supported only for the single-trajectory approach.', InputError)
             if any([
