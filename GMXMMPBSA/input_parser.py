@@ -323,98 +323,104 @@ class InputFile(object):
         namelist_fields = []  # entries in a given namelist
         innml = False  # are we in a namelist now? Don't enter multiple
 
-        # split up the input file into separate fields by comma
+        # Parse marks namelists open while reading; always release that state so
+        # shared InputFile instances remain reusable after success or failure.
+        try:
+            # split up the input file into separate fields by comma
 
-        for line in lines:
-            # Skip title lines (we are flexible here) and comments
-            if not innml and not line.strip().startswith('&'):
-                continue
-            if line.strip().startswith('#') or line.strip().startswith('!'):
-                continue
-
-            # Catch some errors
-            if innml and line.strip().startswith('&') and line.strip() != '&end':
-                raise InputError('Invalid input. Terminate each namelist prior to starting another one.')
-
-            # End of a namelist
-            elif innml and line.strip() in ['/', '&end']:
-                innml = False
-
-            # Now if we finally find a namelist
-            elif not innml and line.strip().startswith('&'):
-                innml = True
-                namelist = line.strip()[1:].lower()
-                namelist = self._full_namelist_name(namelist)
-
-                if namelist in declared_namelists:
-                    raise InputError('Namelist %s specified multiple times' % namelist)
-
-                self.namelists[namelist].Open()
-                declared_namelists.append(namelist)
-                namelist_fields.append([])
-
-            # We are in a namelist here, now fill in the fields
-            elif innml:
-                line = line[:line.strip().index('#')] if '#' in line else line.strip('\n')
-                items = line.strip().split(',')
-                # Screen any blank fields
-                j = 0
-                while j < len(items):
-                    items[j] = items[j].strip()
-                    if len(items[j]) == 0:
-                        items.pop(j)
-                    else:
-                        j += 1
-                namelist_fields[-1].extend(items)
-        # # Combine any multi-element fields into the last field that has a = in it
-        begin_field = -1
-        for i, _ in enumerate(namelist_fields):
-            for j, _ in enumerate(namelist_fields[i]):
-                if '=' in namelist_fields[i][j]:
-                    begin_field = j
-                elif begin_field == -1:
-                    raise InputError(f'Invalid input file! Error reading namelist {declared_namelists[i]}')
-                else:
-                    namelist_fields[i][begin_field] += f',{namelist_fields[i][j]}'
-        # Now parse through the items to add them to the master dictionary. Note
-        # that thanks to the last step, all data in namelist_fields will be
-        # contained within fields that have a '='. All others can be ignored
-        for i in range(len(namelist_fields)):
-            for j in range(len(namelist_fields[i])):
-                if '=' not in namelist_fields[i][j]:
+            for line in lines:
+                # Skip title lines (we are flexible here) and comments
+                if not innml and not line.strip().startswith('&'):
                     continue
-                var = namelist_fields[i][j].split('=')
-                var[0] = var[0].strip()
-                var[1] = var[1].strip()
+                if line.strip().startswith('#') or line.strip().startswith('!'):
+                    continue
 
-                # Now we have to loop through all variables in that namelist to
-                # see if this is the variable we want.
-                found = False
-                for key in self.namelists[declared_namelists[i]].variables:
-                    if self.namelists[declared_namelists[i]].variables[key] == var[0]:
-                        self.namelists[declared_namelists[i]].variables[key].SetValue(var[1])
-                        found = True
-                        break
+                # Catch some errors
+                if innml and line.strip().startswith('&') and line.strip() != '&end':
+                    raise InputError('Invalid input. Terminate each namelist prior to starting another one.')
 
-                if not found:
-                    raise InputError(f'Unknown variable {var[0]} in &{declared_namelists[i]}')
-        # Now it's time to fill the INPUT dictionary
-        INPUT = {}
-        for nml in self.ordered_namelist_keys:
-            INPUT[nml] = {}
-            for var in self.namelists[nml].variables:
-                # Here, the triggers are just bool types, so protect from accessing
-                # an attribute that doesn't exist! We only allow Variable types and
-                # bool types
-                var_object = self.namelists[nml].variables[var]
-                try:
-                    INPUT[nml][var] = self.namelists[nml].variables[var].value
-                except AttributeError:
-                    if isinstance(var_object, bool):
-                        INPUT[nml][var] = var_object
+                # End of a namelist
+                elif innml and line.strip() in ['/', '&end']:
+                    innml = False
+
+                # Now if we finally find a namelist
+                elif not innml and line.strip().startswith('&'):
+                    innml = True
+                    namelist = line.strip()[1:].lower()
+                    namelist = self._full_namelist_name(namelist)
+
+                    if namelist in declared_namelists:
+                        raise InputError('Namelist %s specified multiple times' % namelist)
+
+                    self.namelists[namelist].Open()
+                    declared_namelists.append(namelist)
+                    namelist_fields.append([])
+
+                # We are in a namelist here, now fill in the fields
+                elif innml:
+                    line = line[:line.strip().index('#')] if '#' in line else line.strip('\n')
+                    items = line.strip().split(',')
+                    # Screen any blank fields
+                    j = 0
+                    while j < len(items):
+                        items[j] = items[j].strip()
+                        if len(items[j]) == 0:
+                            items.pop(j)
+                        else:
+                            j += 1
+                    namelist_fields[-1].extend(items)
+            # # Combine any multi-element fields into the last field that has a = in it
+            begin_field = -1
+            for i, _ in enumerate(namelist_fields):
+                for j, _ in enumerate(namelist_fields[i]):
+                    if '=' in namelist_fields[i][j]:
+                        begin_field = j
+                    elif begin_field == -1:
+                        raise InputError(f'Invalid input file! Error reading namelist {declared_namelists[i]}')
                     else:
-                        raise InputError('Disallowed namelist variable type')
-        return INPUT
+                        namelist_fields[i][begin_field] += f',{namelist_fields[i][j]}'
+            # Now parse through the items to add them to the master dictionary. Note
+            # that thanks to the last step, all data in namelist_fields will be
+            # contained within fields that have a '='. All others can be ignored
+            for i in range(len(namelist_fields)):
+                for j in range(len(namelist_fields[i])):
+                    if '=' not in namelist_fields[i][j]:
+                        continue
+                    var = namelist_fields[i][j].split('=')
+                    var[0] = var[0].strip()
+                    var[1] = var[1].strip()
+
+                    # Now we have to loop through all variables in that namelist to
+                    # see if this is the variable we want.
+                    found = False
+                    for key in self.namelists[declared_namelists[i]].variables:
+                        if self.namelists[declared_namelists[i]].variables[key] == var[0]:
+                            self.namelists[declared_namelists[i]].variables[key].SetValue(var[1])
+                            found = True
+                            break
+
+                    if not found:
+                        raise InputError(f'Unknown variable {var[0]} in &{declared_namelists[i]}')
+            # Now it's time to fill the INPUT dictionary
+            INPUT = {}
+            for nml in self.ordered_namelist_keys:
+                INPUT[nml] = {}
+                for var in self.namelists[nml].variables:
+                    # Here, the triggers are just bool types, so protect from accessing
+                    # an attribute that doesn't exist! We only allow Variable types and
+                    # bool types
+                    var_object = self.namelists[nml].variables[var]
+                    try:
+                        INPUT[nml][var] = self.namelists[nml].variables[var].value
+                    except AttributeError:
+                        if isinstance(var_object, bool):
+                            INPUT[nml][var] = var_object
+                        else:
+                            raise InputError('Disallowed namelist variable type')
+            return INPUT
+        finally:
+            for namelist in self.namelists.values():
+                namelist.open = False
 
 
 # Define the MM/PBSA input file here

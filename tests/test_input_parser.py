@@ -29,6 +29,8 @@ class InputParserTest(unittest.TestCase):
 
     def test_create_input_comments_unset_optional_values(self):
         parser = copy.deepcopy(input_file)
+        for namelist in parser.namelists.values():
+            namelist.open = False
         output = Path(tempfile.mkdtemp()) / 'mmpbsa.in'
         try:
             parser.print_contents(output, ('general', 'gb'))
@@ -38,9 +40,24 @@ class InputParserTest(unittest.TestCase):
             self.assertIsNone(re.search(r'(?m)^\s+ndiis_attempts\s*=', text))
             parsed = parser.Parse(output)
             self.assertIsNone(parsed['gb']['ndiis_attempts'])
+            self.assertFalse(any(n.open for n in parser.namelists.values()))
         finally:
             output.unlink(missing_ok=True)
             output.parent.rmdir()
+
+    def test_failed_parse_releases_namelist_open_state(self):
+        parser = copy.deepcopy(input_file)
+        for namelist in parser.namelists.values():
+            namelist.open = False
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            infile = Path(tmpdir) / 'mmpbsa.in'
+            infile.write_text('&general\norphan_value,\n/\n')
+
+            with self.assertRaises(InputError):
+                parser.Parse(infile.as_posix())
+
+        self.assertFalse(any(n.open for n in parser.namelists.values()))
 
 
 if __name__ == '__main__':
