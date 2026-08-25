@@ -54,6 +54,7 @@ class Variable(object):
         self.name = varname
         self.datatype = dat_type
         self.int_datatype = int_dat_type
+        self.allow_none = default is None and self.datatype is not str
         if default is None:
             self.value = None
         elif self.datatype is str:
@@ -78,7 +79,13 @@ class Variable(object):
     def help_str(self):
         """ returns the string [<name> = <value>.... # description] """
         name_width = 30
-        if self.datatype is str:
+        # ``None`` represents an optional value that should be left to the
+        # downstream program.  It is not a valid Fortran namelist literal for
+        # numeric variables, so keep it visible in generated templates but
+        # comment it out instead of emitting e.g. ``ndiis_attempts = None``.
+        if self.value is None:
+            valstring = f'# {self.name:{name_width}s} = None'
+        elif self.datatype is str:
             valstring = f'{self.name:{name_width}s} = "{self.value:s}"'
         elif self.datatype in [list, tuple]:
             v = ','.join(map(str, self.value))
@@ -102,13 +109,23 @@ class Variable(object):
 
     def SetValue(self, value):
         """ Sets the value of the variable """
+        value = value.strip()
+        if self.allow_none and value.lower() == 'none':
+            self.value = None
+            return
+
         if self.datatype is str:
             self.value = value.replace('"', '').replace("'", '')
         elif self.datatype in [list, tuple]:
             data = value.replace('"', '').replace("'", '')
             self.value = [self.int_datatype(x.strip()) for x in re.split(r';\s*|,\s*', data)]
         else:
-            self.value = self.datatype(value)
+            try:
+                self.value = self.datatype(value)
+            except (TypeError, ValueError) as exc:
+                raise InputError(
+                    f'Invalid value {value!r} for {self.name}; expected {self.datatype.__name__}'
+                ) from exc
 
 
 class Namelist(object):
