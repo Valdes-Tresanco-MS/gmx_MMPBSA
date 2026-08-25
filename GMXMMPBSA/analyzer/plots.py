@@ -393,7 +393,12 @@ class BarChart(ChartsBase):
                 ie_color = rgb2rgbf(options[('Bar Plot', 'IE/C2 Entropy', 'ie-color')])
                 r_sigma = rgb2rgbf(options[('Bar Plot', 'IE/C2 Entropy', 'sigma-color', 'reliable')])
                 nr_sigma = rgb2rgbf(options[('Bar Plot', 'IE/C2 Entropy', 'sigma-color', 'non-reliable')])
-                palette = [ie_color, r_sigma if self.data['sigma'].loc[['Average']].values[0] < 3.6 else nr_sigma]
+                # Match FINAL_RESULTS thresholds: IE 3.6 kcal/mol, C2 6.0 kcal/mol.
+                sigma_limit = 6.0 if 'C2' in str(options.get('title', '')) else 3.6
+                palette = [
+                    ie_color,
+                    r_sigma if self.data['sigma'].loc[['Average']].values[0] < sigma_limit else nr_sigma,
+                ]
 
             bar_plot_ax = self._barplot(
                 self.axes, self.data.columns, self.data.loc['Average'].values,

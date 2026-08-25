@@ -436,11 +436,14 @@ class ChartSettings(dict):
                                 'children': {
                                     'reliable': {'type': 'color', 'enabled': True, 'expanded': True, 'name': 'reliable',
                                                  'value': [0, 255, 0, 255], 'default': [0, 255, 0, 255],
-                                                 'action_type': R, 'tip': 'Color if sigma < 3.6kcal/mol'},
+                                                 'action_type': R,
+                                                 'tip': 'Color if sigma is below the method threshold '
+                                                        '(IE: 3.6 kcal/mol; C2: 6.0 kcal/mol)'},
                                     'non-reliable': {'type': 'color', 'enabled': True, 'expanded': True,
                                                      'name': 'non-reliable', 'value': [255, 0, 0, 255],
                                                      'default': [255, 0, 0, 255], 'action_type': R,
-                                                     'tip': 'Color if sigma > 3.6kcal/mol'}}}}},
+                                                     'tip': 'Color if sigma is above the method threshold '
+                                                            '(IE: 3.6 kcal/mol; C2: 6.0 kcal/mol)'}}}}},
                     'error-line': {'type': 'group', 'enabled': True, 'expanded': True, 'name': 'error-line',
                                    'value': None, 'default': None,
                                    'children': {
