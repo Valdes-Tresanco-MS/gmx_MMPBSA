@@ -25,8 +25,8 @@ This is how a typical output file ("FINAL_RESULTS_MMPBSA.dat" by default) looks 
 |Ligand residue name is          "RAL"                                                +       
 |                                                                                             
 |Calculations performed using 16 complex frames                                       + # (5) 
-|IE and C2 uncertainty diagnostics are obtained from nonoverlapping trajectory blocks|
-|with number of re-samplings = 2000                                                   |       
+|IE and C2 uncertainty diagnostics use deterministic nonoverlapping|
+|trajectory blocks (block SD / SEM and percentile ranges)         |       
 |                                                                                     |       
 |Generalized Born ESURF calculated using 'LCPO' surface areas                         |       
 |                                                                                     |       
@@ -40,7 +40,7 @@ This is how a typical output file ("FINAL_RESULTS_MMPBSA.dat" by default) looks 
 -------------------------------------------------------------------------------       +       
 -------------------------------------------------------------------------------       |        
 ENTROPY RESULTS (C2 ENTROPY)                                                          |       
-Model           σ(Int. Energy)    C2 Value         Std. Dev.   Conf. Interv. (95%)    | # (6) 
+Model           σ(Int. Energy)    C2 Value       Block SD   Block P2.5-P97.5          | # (6) 
 -------------------------------------------------------------------------------       |       
 gb                  3.308           9.176           2.086         4.601-12.477        |       
 -------------------------------------------------------------------------------       |       
