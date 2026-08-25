@@ -2,6 +2,8 @@ import unittest
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
+import numpy as np
+
 from GMXMMPBSA import output_file
 
 
@@ -93,6 +95,32 @@ class StabilityOutputTest(unittest.TestCase):
 
         with patch.object(output_file, 'OutputFile', return_value=MagicMock()):
             output_file.write_outputs(app)
+
+
+class InteractionEntropyCompatibilityTest(unittest.TestCase):
+    def test_legacy_compact_result_uses_final_curve_value_and_tail_sd(self):
+        legacy = {
+            'data': np.asarray([0.0, 0.1, 0.3]),
+            'iedata': np.asarray([0.1, 0.3]),
+        }
+
+        value, uncertainty = output_file._ie_result(legacy)
+
+        self.assertAlmostEqual(value, 0.3)
+        self.assertAlmostEqual(uncertainty, 0.1)
+
+    def test_new_compact_result_uses_explicit_primary_and_block_values(self):
+        current = {
+            'data': np.asarray([0.0, 0.1, 0.3]),
+            'iedata': np.asarray([0.1, 0.3]),
+            'ie_value': 0.25,
+            'block_std': 0.05,
+        }
+
+        value, uncertainty = output_file._ie_result(current)
+
+        self.assertAlmostEqual(value, 0.25)
+        self.assertAlmostEqual(uncertainty, 0.05)
 
 
 if __name__ == '__main__':

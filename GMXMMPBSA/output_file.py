@@ -23,9 +23,24 @@ statistics printing.
 
 from types import SimpleNamespace
 from GMXMMPBSA import utils
-from math import sqrt, ceil
+from math import sqrt, ceil, isfinite
 from os import linesep as ls
 import pickle
+
+
+def _combine_entropy(total_energy, entropy_value, entropy_uncertainty):
+    """Combine a scalar entropy estimate with the total-energy statistics."""
+    mean = float(total_energy.mean() + entropy_value)
+    energy_std = float(total_energy.std())
+    std = utils.get_std(energy_std, entropy_uncertainty) if isfinite(entropy_uncertainty) else energy_std
+    return mean, std
+
+
+def _ie_result(ie_output):
+    """Return the primary IE value and uncertainty, including legacy results."""
+    value = float(ie_output.get('ie_value', ie_output['data'][-1]))
+    uncertainty = float(ie_output.get('block_std', ie_output['iedata'].std()))
+    return value, uncertainty
 
 
 def data2pkl(app):
@@ -83,11 +98,14 @@ def write_outputs(app):
         final_output.add_comment('NMODE calculations performed using %s frames' % app.numframes_nmode)
     if not stability:
         if INPUT['general']['interaction_entropy']:
-            final_output.add_comment('Interaction Entropy calculations performed using last %s frames' %
-                                     ceil(app.numframes * (INPUT['general']['ie_segment'] / 100)))
-        if INPUT['general']['c2_entropy']:
-            final_output.add_comment('C2 Entropy Std. Dev. and Conf. Interv. (95%) have been obtained by '
-                                     'bootstrapping with number of re-samplings = 2000')
+            final_output.add_comment(
+                'Interaction Entropy reported from the full ensemble; the last %s cumulative estimates are retained '
+                'only as a convergence diagnostic' % ceil(app.numframes * (INPUT['general']['ie_segment'] / 100))
+            )
+        if INPUT['general']['interaction_entropy'] or INPUT['general']['c2_entropy']:
+            final_output.add_comment(
+                'IE and C2 uncertainty diagnostics use deterministic nonoverlapping trajectory blocks'
+            )
     if INPUT['pb']['pbrun']:
         if INPUT['pb']['sander_apbs']:
             final_output.add_comment('Poisson Boltzmann calculations performed using iAPBS interface to sander '
@@ -167,7 +185,7 @@ def write_outputs(app):
                         #     energyvectors.writerow(['Interaction entropy results'])
                         #     ie_dict['normal'][key]._print_vectors(energyvectors)
                         #     energyvectors.writerow([])
-                        ie_inconsistent = ie_dict['normal'][key]['sigma'] > 3.6
+                        ie_inconsistent = ie_inconsistent or ie_dict['normal'][key]['sigma'] > 3.6
 
             if INPUT['ala']['alarun']:
                 final_output.writeline(mut_str + ' Mutant [ -TΔS ]')
@@ -176,7 +194,7 @@ def write_outputs(app):
                     if key in app.calc_types.mutant:
                         ie_dict['mutant'][key] = app.calc_types.mutant['ie'][key]
                         final_output.add_section(ie_dict['mutant'][key].summary_output())
-                        ie_inconsistent = ie_dict['mutant'][key]['sigma'] > 3.6
+                        ie_inconsistent = ie_inconsistent or ie_dict['mutant'][key]['sigma'] > 3.6
 
             if INPUT['ala']['alarun'] and not INPUT['ala']['mutant_only']:
                 final_output.writeline(f'Delta ( Mutant - Normal ) [ Δ(-TΔS) ]')
@@ -201,7 +219,7 @@ def write_outputs(app):
                     if key in app.calc_types.normal:
                         c2_dict['normal'][key] = app.calc_types.normal['c2'][key]
                         final_output.add_section(c2_dict['normal'][key].summary_output())
-                        c2_inconsistent = c2_dict['normal'][key]['sigma'] > 3.6
+                        c2_inconsistent = c2_inconsistent or c2_dict['normal'][key]['sigma'] > 6.0
 
             if INPUT['ala']['alarun']:
                 final_output.writeline(mut_str + ' Mutant [ -TΔS ]')
@@ -210,8 +228,7 @@ def write_outputs(app):
                     if key in app.calc_types.mutant:
                         c2_dict['mutant'][key] = app.calc_types.mutant['c2'][key]
                         final_output.add_section(c2_dict['mutant'][key].summary_output())
-                        final_output.add_section(c2_dict['mutant'][key].summary_output())
-                        c2_inconsistent = c2_dict['mutant'][key]['sigma'] > 3.6
+                        c2_inconsistent = c2_inconsistent or c2_dict['mutant'][key]['sigma'] > 6.0
 
             if INPUT['ala']['alarun'] and not INPUT['ala']['mutant_only']:
                 final_output.writeline(f'Delta ( Mutant - Normal ) [ Δ(-TΔS) ]')
@@ -224,8 +241,8 @@ def write_outputs(app):
             if c2_inconsistent:
                 final_output.writeline(
                     'WARNING: THE INTERACTION ENERGY STANDARD DEVIATION [ σ(Int. Energy)]\n'
-                    'IS GREATER THAN 3.6 kcal/mol (~15 kJ/mol). THUS, THE C2 ENTROPY VALUES ARE NOT\n'
-                    'RELIABLE. CHECK THIS PAPER FOR MORE INFO (https://doi.org/10.1021/acs.jctc.1c00374)\n')
+                    'IS GREATER THAN 6.0 kcal/mol (~25 kJ/mol). THE C2 ENTROPY MAGNITUDE MAY THEREFORE BE\n'
+                    'UNREALISTIC. CHECK THIS PAPER FOR MORE INFO (https://doi.org/10.1021/acs.jctc.1c00374)\n')
 
     # Now print out the normal mode results
     if INPUT['nmode']['nmoderun']:
@@ -301,7 +318,10 @@ def write_outputs(app):
                                          f'/- {dg_qh_dstd:7.2f}\n')
             if not stability:
                 if INPUT['general']['interaction_entropy']:
-                    dg_ie_davg, dg_ie_dstd = utils.calc_sum(sys_norm['TOTAL'], ie_dict['normal'][key]['iedata'])
+                    ie_value, ie_uncertainty = _ie_result(ie_dict['normal'][key])
+                    dg_ie_davg, dg_ie_dstd = _combine_entropy(
+                        sys_norm['TOTAL'], ie_value, ie_uncertainty
+                    )
                     final_output.add_section(f"Using Interaction Entropy Approximation:\n"
                                              f"ΔG binding = {dg_ie_davg:9.2f} +/- {dg_ie_dstd:7.2f}\n")
                 if INPUT['general']['c2_entropy']:
@@ -339,11 +359,17 @@ def write_outputs(app):
                                          f'ΔG{"" if stability else " binding"} = {mqh_davg:9.2f} +/- {mqh_dstd:7.2f}\n')
             if not stability:
                 if INPUT['general']['interaction_entropy']:
-                    mie_davg, mie_dstd = utils.calc_sum(sys_mut['TOTAL'], ie_dict['normal'][key]['iedata'])
+                    ie_value, ie_uncertainty = _ie_result(ie_dict['mutant'][key])
+                    mie_davg, mie_dstd = _combine_entropy(
+                        sys_mut['TOTAL'], ie_value, ie_uncertainty
+                    )
                     final_output.add_section(f"Using Interaction Entropy Approximation:\n"
                                              f"ΔG binding = {mie_davg:9.2f} +/- {mie_dstd:7.2f}\n")
                 if INPUT['general']['c2_entropy']:
-                    mc2_davg, mc2_dstd = utils.calc_sum(sys_mut['TOTAL'], c2_dict['normal'][key]['c2data'])
+                    mc2_davg, mc2_dstd = _combine_entropy(
+                        sys_mut['TOTAL'], c2_dict['mutant'][key]['c2data'],
+                        c2_dict['mutant'][key]['c2_std']
+                    )
                     final_output.add_section(f"Using C2 Entropy Approximation:\n"
                                              f"ΔG binding = {mc2_davg:9.2f} +/- {mc2_dstd:7.2f}\n")
             if INPUT['nmode']['nmoderun']:
@@ -367,7 +393,7 @@ def write_outputs(app):
                                    f'ΔΔG{"" if stability else " binding"} = {ddgqh_davg:9.2f} +/- {ddh_dstd:7.2f}\n')
             if not stability:
                 if INPUT['general']['interaction_entropy']:
-                    ddie_davg, ddie_dstd = ie_dict['mut_norm'][key]['iedata'].mean(), ie_dict['mut_norm'][key]['iedata'].std()
+                    ddie_davg, ddie_dstd = _ie_result(ie_dict['mut_norm'][key])
                     ddgie_davg = ddh_davg + ddie_davg
                     ddgie_dstd = utils.get_std(ddh_dstd, ddie_dstd)
                     final_output.write('\n   (interaction entropy)\n'

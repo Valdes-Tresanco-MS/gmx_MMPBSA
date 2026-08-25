@@ -233,9 +233,12 @@ class IEout(dict):
         super(IEout, self).__init__(**kwargs)
         self.INPUT = INPUT
         self.method = method
+        self.block_analysis = []
 
     def parse_from_dict(self, d: dict):
-        self.update(d)
+        values = dict(d)
+        self.block_analysis = values.pop('block_analysis', [])
+        self.update(values)
 
     def parse_from_file(self, filename, numframes=1):
         self['data'] = EnergyVector(numframes)
@@ -244,12 +247,37 @@ class IEout(dict):
             f = 0
             while line := of.readline():
                 f += 1
+                if line.startswith('| BLOCK IE '):
+                    fields = line.split()
+                    self.block_analysis.append({
+                        'block_size': int(fields[3]),
+                        'nblocks': int(fields[4]),
+                        'used_frames': int(fields[5]),
+                        'mean': float(fields[6]),
+                        'std': float(fields[7]),
+                        'sem': float(fields[8]),
+                        'p025': float(fields[9]),
+                        'p975': float(fields[10]),
+                    })
+                    continue
                 if line.startswith('|') or not line.split():
                     continue
                 if line.startswith('IE-frames:'):
                     self['ieframes'] = int(line.strip('\n').split()[-1])
                 elif line.startswith('Internal Energy SD (sigma):'):
                     self['sigma'] = float(line.strip('\n').split()[-1])
+                elif line.startswith('Full-ensemble Interaction Entropy (-TΔS):'):
+                    self['ie_value'] = float(line.split()[-1])
+                elif line.startswith('Tail convergence mean'):
+                    self['tail_mean'] = float(line.split()[-1])
+                elif line.startswith('Tail convergence SD'):
+                    self['tail_std'] = float(line.split()[-1])
+                elif line.startswith('Block diagnostic:'):
+                    fields = line.split()
+                    self['block_size'] = int(fields[3])
+                    self['block_nblocks'] = int(fields[5])
+                    self['block_std'] = float(fields[7])
+                    self['block_sem'] = float(fields[9])
                 elif line.startswith('Frame'):
                     continue
                 else:
@@ -258,6 +286,15 @@ class IEout(dict):
                     c += 1
                 f += 1
         self['iedata'] = self['data'][-self['ieframes']:]
+        self['ie_value'] = self.get('ie_value', float(self['data'][-1]))
+        self['tail_mean'] = self.get('tail_mean', float(self['iedata'].mean()))
+        self['tail_std'] = self.get('tail_std', float(self['iedata'].std()))
+        self['block_size'] = self.get('block_size', 0)
+        self['block_nblocks'] = self.get('block_nblocks', 0)
+        self['block_std'] = self.get('block_std', self['tail_std'])
+        self['block_sem'] = self.get(
+            'block_sem', self['tail_std'] / sqrt(self['ieframes'])
+        )
 
     def _print_vectors(self, csvwriter):
         """ Prints the energy vectors to a CSV file for easy viewing
@@ -282,23 +319,32 @@ class IEout(dict):
                 ))
             else:
                 text.append(f'{met:16s} {key:>13s} {sigma:13.2f} {avg:10.2f} {std:12.2f} {sem:10.2f}')
+        if self.get('block_size'):
+            text.append(
+                f"Block diagnostic: {self['block_nblocks']} nonoverlapping blocks "
+                f"of {self['block_size']} frames"
+            )
+        text.append(
+            f"Tail convergence diagnostic: {self['tail_mean']:.2f} +/- {self['tail_std']:.2f} "
+            f"over the last {self['ieframes']} prefixes"
+        )
         return '\n'.join(text) + '\n\n'
 
     def summary(self):
         """ Formatted summary of Interaction Entropy results """
 
-        avg = float(self['data'][-self['ieframes']:].mean())
-        stdev = float(self['data'][-self['ieframes']:].stdev())
-        sem = float(self['data'][-self['ieframes']:].sem())
+        avg = float(self.get('ie_value', self['data'][-1]))
+        stdev = float(self.get('block_std', self['data'][-self['ieframes']:].stdev()))
+        sem = float(self.get('block_sem', self['data'][-self['ieframes']:].sem()))
 
         return [
             [
                 'Energy Method',
                 'Entropy',
                 'σ(Int. Energy)',
-                'Average',
-                'SD',
-                'SEM'
+                'Full IE',
+                'Block SD',
+                'Block SEM'
             ],
             [self.method.upper(), 'IE', self['sigma'], avg, stdev, sem]
         ]
@@ -312,23 +358,48 @@ class C2out(dict):
     def __init__(self, method, **kwargs):
         super(C2out, self).__init__(**kwargs)
         self.method = method
+        self.block_analysis = []
 
     def parse_from_dict(self, d):
-        self.update(d)
+        values = dict(d)
+        self.block_analysis = values.pop('block_analysis', [])
+        self.update(values)
 
     def parse_from_file(self, filename):
         with open(filename) as of:
             while line := of.readline():
+                if line.startswith('| BLOCK C2 '):
+                    fields = line.split()
+                    self.block_analysis.append({
+                        'block_size': int(fields[3]),
+                        'nblocks': int(fields[4]),
+                        'used_frames': int(fields[5]),
+                        'mean': float(fields[6]),
+                        'std': float(fields[7]),
+                        'sem': float(fields[8]),
+                        'p025': float(fields[9]),
+                        'p975': float(fields[10]),
+                    })
+                    continue
                 if line.startswith('|') or not line:
                     continue
                 if line.startswith('C2 Entropy (-TΔS):'):
                     self['c2data'] = float(line.strip('\n').split()[-1])
-                elif line.startswith('C2 Entropy SD:'):
+                elif line.startswith(('C2 Entropy SD:', 'C2 Block SD:')):
                     self['c2_std'] = float(line.strip('\n').split()[-1])
+                elif line.startswith('C2 Block SEM:'):
+                    self['c2_sem'] = float(line.strip('\n').split()[-1])
                 elif line.startswith('Internal Energy SD (sigma):'):
                     self['sigma'] = float(line.strip('\n').split()[-1])
-                elif line.startswith('C2 Entropy CI:'):
+                elif line.startswith(('C2 Entropy CI:', 'C2 Block P2.5-P97.5:')):
                     self['c2_ci'] = [float(line.strip('\n').split()[-2]), float(line.strip('\n').split()[-1])]
+                elif line.startswith('Block diagnostic:'):
+                    fields = line.split()
+                    self['block_size'] = int(fields[3])
+                    self['block_nblocks'] = int(fields[5])
+        self['c2_sem'] = self.get('c2_sem', self['c2_std'])
+        self['block_size'] = self.get('block_size', 0)
+        self['block_nblocks'] = self.get('block_nblocks', 0)
 
     def summary_output(self):
         summary = self.summary()
@@ -339,6 +410,11 @@ class C2out(dict):
                 text.extend((f'{met:16s} {key:>13s} {sigma:>13s} {avg:>10s} {std:>8s} {ci:>14s}', sep))
             else:
                 text.append(f"{met:16s} {key:>13s} {sigma:13.2f} {avg:10.2f} {std:8.2f} {ci:>14s}")
+        if self.get('block_size'):
+            text.append(
+                f"Block diagnostic: {self['block_nblocks']} nonoverlapping blocks "
+                f"of {self['block_size']} frames"
+            )
         return '\n'.join(text) + '\n\n'
 
     def summary(self):
@@ -350,8 +426,8 @@ class C2out(dict):
                 'Entropy',
                 'σ(Int. Energy)',
                 'C2 Value',
-                'SD',
-                'C.Inter.(95%)'
+                'Block SD',
+                'Block P2.5-P97.5'
             ],
             [self.method.upper(), 'C2', float(self['sigma']), float(self['c2data']), float(self['c2_std']),
              f"{self['c2_ci'][0]:.2f}-{self['c2_ci'][1]:.2f}",]
@@ -1261,9 +1337,15 @@ class DeltaIEC2Statistic(dict):
                 self[key] = (self.mut[key] + self.norm[key]) / 2
             elif key == 'ieframes':
                 self[key] = self.norm[key]
+            elif key in ('ie_value', 'tail_mean'):
+                self[key] = self.mut[key] - self.norm[key]
+            elif key in ('tail_std', 'block_std', 'block_sem'):
+                self[key] = get_std(self.mut[key], self.norm[key])
+            elif key in ('block_size', 'block_nblocks'):
+                self[key] = min(self.mut[key], self.norm[key])
             elif key == 'c2data':
                 self[key] = self.mut[key] - self.norm[key]
-            elif key == 'c2_std':
+            elif key in ('c2_std', 'c2_sem'):
                 self[key] = get_std(self.mut[key], self.norm[key])
             elif key == 'c2_ci':
                 continue
@@ -1312,15 +1394,15 @@ class DeltaIEC2Statistic(dict):
                 ],
                 ['C2', float(self['sigma']), float(self['c2data']), float(self['c2_std'])]
             ]
-        avg = float(self['data'][-self['ieframes']:].mean())
-        stdev = float(self['data'][-self['ieframes']:].stdev())
+        avg = float(self.get('ie_value', self['data'][-1]))
+        stdev = float(self.get('block_std', self['data'][-self['ieframes']:].stdev()))
 
         return [
             [
                 'Method',
                 'σ(Int. Energy)',
-                'Average',
-                'SD'
+                'Full IE',
+                'Block SD'
             ],
             ['IE', self['sigma'], avg, stdev]
         ]

@@ -512,9 +512,10 @@ class MMPBSA_API():
             entropy_df[et] = {'c2': {}}
 
             for emodel in d:
+                c2_sem = d[emodel].get('c2_sem', d[emodel]['c2_std'])
                 entropy[et]['c2'][emodel] = {x: None for x in ['c2', 'sigma']}
                 entropy_df[et]['c2'][emodel] = pd.DataFrame({'c2': [d[emodel]['c2data'], d[emodel]['c2_std'],
-                                                                    d[emodel]['c2_std']],
+                                                                    c2_sem],
                                                              'sigma': [d[emodel]['sigma'], 0, 0]},
                                                             index=['Average', 'SD', 'SEM'])
         return {'map': emapping(entropy), 'data': entropy_df, 'summary': entropy_df}
@@ -554,9 +555,12 @@ class MMPBSA_API():
                 df = pd.DataFrame({'AccIntEnergy': d[emodel]['data']}, index=index)
                 df1 = pd.DataFrame({'ie': d[emodel]['data'][-ieframes:]}, index=index[-ieframes:])
                 df2 = pd.concat([df, df1], axis=1)
-                df3 = pd.DataFrame({'ie': [float(d[emodel]['iedata'].mean()),
-                                           float(d[emodel]['iedata'].std()),
-                                           float(d[emodel]['iedata'].std() / math.sqrt(ieframes))],
+                ie_value = float(d[emodel].get('ie_value', d[emodel]['data'][-1]))
+                block_std = float(d[emodel].get('block_std', d[emodel]['iedata'].std()))
+                block_sem = float(d[emodel].get(
+                    'block_sem', d[emodel]['iedata'].std() / math.sqrt(ieframes)
+                ))
+                df3 = pd.DataFrame({'ie': [ie_value, block_std, block_sem],
                                     'sigma': [d[emodel]['sigma'], 0, 0]}, index=['Average', 'SD', 'SEM'])
                 summ_df[et]['ie'][emodel] = df3
                 df4 = pd.concat([df2, df3])
@@ -620,13 +624,24 @@ class MMPBSA_API():
                                                     )},
                                                 key, iesegment=ie_segment)
                     result[key] = IEout({}, key)
-                    result[key].parse_from_dict(dict(data=ie.data, sigma=ie.ie_std, iedata=ie.iedata))
+                    result[key].parse_from_dict(dict(
+                        data=ie.data, sigma=ie.ie_std, iedata=ie.iedata,
+                        ie_value=ie.ie_value, tail_mean=ie.tail_mean, tail_std=ie.tail_std,
+                        block_size=ie.block_size, block_nblocks=ie.block_nblocks,
+                        block_std=ie.block_std, block_sem=ie.block_sem,
+                        block_analysis=ie.block_analysis,
+                    ))
                 else:
                     c2 = C2EntropyCalc(edata, {'general':
                                                     dict(temperature=self.app_namespace.INPUT['general'][
                                                         'temperature'])}, key)
                     result[key] = C2out(key)
-                    result[key].parse_from_dict(dict(c2data=c2.c2data, c2_std=c2.c2_std, sigma=c2.ie_std, c2_ci=c2.c2_ci))
+                    result[key].parse_from_dict(dict(
+                        c2data=c2.c2data, c2_std=c2.c2_std, c2_sem=c2.c2_sem,
+                        sigma=c2.ie_std, c2_ci=c2.c2_ci,
+                        block_size=c2.block_size, block_nblocks=c2.block_nblocks,
+                        block_analysis=c2.block_analysis,
+                    ))
         return result
 
     def get_binding(self, energy_summary=None, entropy_summary=None, verbose=True):
