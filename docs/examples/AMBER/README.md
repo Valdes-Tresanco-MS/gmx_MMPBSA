@@ -18,7 +18,8 @@ In this case, `amber_MMPBSA` requires:
 |:-------------------------------|:--------:|:----:|:------------|
 | Input parameters file          | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } | `in` | Input file containing all calculation specifications |
 | Complex topology file          | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } | `prmtop` | AMBER topology file for the complex |
-| Complex structure file         | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } | `inpcrd` | AMBER coordinate file for the complex |
+| Complex structure file         | :octicons-check-circle-fill-16:{ .req_opt .scale_icon_medium } | `inpcrd` | Optional / currently unused by setup (frame 1 of `-ct` is used). Kept for CLI compatibility |
+
 | Complex trajectory file        | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } | `mdcrd` | AMBER trajectory file for the complex |
 | Receptor and ligand masks      | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } | `masks` | AMBER masks identifying the receptor and ligand in the complex |
 | Receptor topology file         | :octicons-check-circle-fill-16:{ .req_opt .scale_icon_medium } | `prmtop` | AMBER topology file for the receptor |

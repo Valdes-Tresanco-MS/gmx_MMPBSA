@@ -12,23 +12,41 @@ Unlike `gmx_MMPBSA`, which prepares and processes GROMACS files before building 
 workflow, `amber_MMPBSA` starts from AMBER topology, coordinate, trajectory, and mask inputs. This makes it useful
 when the system has already been prepared in the AMBER ecosystem and no GROMACS files are needed.
 
-Although `amber_MMPBSA` is an independent module, the calculation and analysis features available in `gmx_MMPBSA`
-also work with `amber_MMPBSA` workflows. This includes the same input file options for supported calculation types,
-output generation, decomposition analysis, entropy calculations, CSV export, result rewriting, and post-processing
-with `gmx_MMPBSA_ana`.
+`amber_MMPBSA` reuses the same calculation engine, input namelists (where supported), output writers, and
+`gmx_MMPBSA_ana` post-processing as `gmx_MMPBSA`. It is **not** a full feature-parity replacement: several GROMACS-only
+workflows are unsupported. See [Supported and unsupported features](#supported-and-unsupported-features) below.
 
 ## Input files
 
 `amber_MMPBSA` uses native AMBER files:
 
-| Input | Option | Description |
-|:------|:------:|:------------|
-| Complex topology | `-cp` | AMBER topology file for the complex |
-| Complex structure | `-cs` | AMBER coordinate file for the complex. Supported formats include `*.pdb`, `*.inpcrd`, and `*.rst7` |
-| Complex trajectory | `-ct` | Trajectory file readable by cpptraj with the supplied AMBER topology. Supported formats include `*.mdcrd`, `*.nc`, `*.crd`, `*.rst7`, `*.inpcrd`, `*.xtc`, `*.trr`, `*.pdb`, `*.gro`, and `*.dcd` |
-| Complex masks | `-cm` | Receptor and ligand masks from the complex |
-| Receptor topology | `-rp` | AMBER topology file for the receptor |
-| Ligand topology | `-lp` | AMBER topology file for the ligand |
+| Input | Option | Required | Description |
+|:------|:------:|:--------:|:------------|
+| Complex topology | `-cp` | yes | AMBER topology file for the complex |
+| Complex trajectory | `-ct` | yes | Trajectory file readable by cpptraj with the supplied AMBER topology. Supported formats include `*.mdcrd`, `*.nc`, `*.crd`, `*.rst7`, `*.inpcrd`, `*.xtc`, `*.trr`, `*.pdb`, `*.gro`, and `*.dcd` |
+| Complex masks | `-cm` | yes | Receptor and ligand masks from the complex (Amber residue-number masks, including non-contiguous ranges) |
+| Complex structure | `-cs` | no | Currently unused. Setup takes coordinates from frame 1 of `-ct`. Kept for CLI compatibility; prefer ensuring frame 1 matches your intended reference structure |
+| Receptor topology | `-rp` | no | AMBER topology file for the receptor (otherwise built from the complex) |
+| Ligand topology | `-lp` | no | AMBER topology file for the ligand (otherwise built from the complex) |
+
+## Supported and unsupported features
+
+**Supported (single-trajectory focus)**
+
+- ST GB / PB / GBNSR6 / RISM / decomposition / IE / C2 / alanine scanning (with the same input namelists as
+  `gmx_MMPBSA`, where applicable)
+- Optional separate receptor/ligand topologies (`-rp` / `-lp`)
+- Non-contiguous Amber residue masks
+- Radii/`SCREEN` values preserved from the input prmtop (input `PBRadii` does not rebuild normal topologies)
+- Result rewriting and analysis with `gmx_MMPBSA_ana`
+
+**Not supported / different behavior**
+
+- Explicit receptor waters (`explicit_waters`) — GROMACS-only; rejected with a clear error
+- Ligand multiple-trajectory (`-lt`) — rejected
+- Receptor multiple-trajectory (`-rt`) — incomplete; prefer ST
+- Solvent or ions left in the AMBER topologies — rejected
+- QM/MM + explicit waters combinations — rejected (same as `gmx_MMPBSA`)
 
 ## Example
 
@@ -37,12 +55,13 @@ A basic single-trajectory command is:
 ``` bash
 amber_MMPBSA -O -i mmpbsa.in \
   -cp ras-raf_complex.prmtop \
-  -cs ras-raf_complex.inpcrd \
   -ct prod_complex.mdcrd \
   -cm ":1-166" ":167-242" \
   -o FINAL_RESULTS_MMPBSA.dat \
   -eo FINAL_RESULTS_MMPBSA.csv
 ```
+
+`-cs` may still be passed for compatibility, but it does not change the structure used for topology setup.
 
 AMBER masks can also select non-contiguous residue ranges. For example, the receptor can be residues 1-120 and
 181-260 while the ligand is residues 121-180:
@@ -50,7 +69,6 @@ AMBER masks can also select non-contiguous residue ranges. For example, the rece
 ``` bash
 amber_MMPBSA -O -i mmpbsa.in \
   -cp complex.prmtop \
-  -cs complex.inpcrd \
   -ct prod.mdcrd \
   -cm ":1-120,181-260" ":121-180" \
   -o FINAL_RESULTS_MMPBSA.dat \
