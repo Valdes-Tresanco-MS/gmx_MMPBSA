@@ -31,6 +31,7 @@ from GMXMMPBSA.utils import (selector, get_dist, list2range, res2map, get_indexe
                              eq_strs, get_index_groups, reconcile_qm_charges, topology_mismatch_error, Residue,
                              residue_names_match)
 from GMXMMPBSA.alamdcrd import _scaledistance
+from GMXMMPBSA.make_trajs import warn_concatenated_complex_trajectories
 import subprocess
 from pathlib import Path
 import logging
@@ -1762,6 +1763,8 @@ cmd.quit()
         if not self.INPUT['general']['solvated_trajectory']:
             return
         logging.info('Cleaning normal complex trajectories...')
+        if self.explicit_waters:
+            warn_concatenated_complex_trajectories(self.FILES.complex_trajs)
         new_trajs = []
         full_trajs = []
         for i in range(len(self.FILES.complex_trajs)):

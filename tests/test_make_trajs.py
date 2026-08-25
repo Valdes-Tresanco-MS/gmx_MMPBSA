@@ -4,7 +4,7 @@ from types import SimpleNamespace
 from unittest.mock import patch
 
 from GMXMMPBSA.exceptions import MMPBSA_Error
-from GMXMMPBSA.make_trajs import make_trajectories
+from GMXMMPBSA.make_trajs import make_trajectories, warn_concatenated_complex_trajectories
 
 
 def _input():
@@ -109,3 +109,11 @@ class MakeTrajectoriesMPIFrameTest(unittest.TestCase):
             make_trajectories(inp, files, 1, 'cpptraj', '_GMXMMPBSA_')
 
         self.assertEqual(FakeTrajectory.instances[0].setup_args, (1, 3, 1))
+
+    def test_multiple_complex_trajectories_warn_about_pooled_statistics(self):
+        with self.assertLogs(level=logging.WARNING) as captured:
+            warn_concatenated_complex_trajectories(['complex_0.mdcrd', 'complex_1.mdcrd'])
+
+        self.assertEqual(len(captured.records), 1)
+        self.assertIn('one concatenated trajectory', captured.records[0].getMessage())
+        self.assertIn('not independent-replica statistics', captured.records[0].getMessage())

@@ -89,8 +89,10 @@ title:
                              (default: None)
       -ct [TRJ [TRJ ...]]   Complex trajectories. Make sure the trajectory is fitted
                              and pbc have been removed. Allowed formats: *.xtc 
-                             (recommended), *.trr, *.pdb (specify as many as you'd 
-                             like). (default: None)
+                             (recommended), *.trr, *.pdb (specify as many as you'd
+                             like). Multiple files are concatenated in the order given;
+                             frame selection and statistics are pooled over the combined
+                             trajectory, not calculated per independent replica. (default: None)
       -cp <Topology>        The complex Topology file. When it is defined -lm
                              option is not needed (default: None)
       -cr <PDB File>        Complex Reference Structure file. This option is optional

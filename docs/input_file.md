@@ -130,15 +130,22 @@ when loading the system in `gmx_MMPBSA_ana` on a first-come, first-served basis.
 
 `startframe` (Default = 1)
 :   The frame from which to begin extracting snapshots from the full, concatenated trajectory comprised of
-every trajectory file placed on the command-line. This is always the first frame read.
+every trajectory file placed on the command-line, in command-line order. This is always the first frame read.
 
 `endframe` (Default = 9999999)
 :   The frame from which to stop extracting snapshots from the full, concatenated trajectory comprised of every
 trajectory file supplied on the command-line.
 
 `interval` (Default = 1)
-:   The offset from which to choose frames from each trajectory file. For example, an interval of 2 will pull
-every 2nd frame beginning at startframe and ending less than or equal to endframe.
+:   The offset from which to choose frames from the combined trajectory stream. For example, an interval of 2 will
+pull every 2nd frame beginning at `startframe` and ending less than or equal to `endframe`; the interval is not
+restarted when the next trajectory file is read.
+
+    !!! warning "Multiple complex trajectories"
+        Multiple files supplied with `-ct` are concatenated in the order given and analyzed as one trajectory.
+        `startframe`, `endframe`, and `interval` are applied to this combined frame stream. The resulting energy
+        statistics are pooled over the concatenated frames; they are not calculated as independent-replica
+        statistics. If the input files are replicas, this concatenated interpretation should be reported explicitly.
 
 `explicit_waters` (Default = 0)
 :   Number of explicit water molecules to keep in the working complex trajectory and assign to the receptor. A value of
@@ -150,6 +157,11 @@ every 2nd frame beginning at startframe and ending less than or equal to endfram
         Extra-point water models such as OPC or TIP4P can fail in `sander` because of their virtual-site atoms. By
         default, `gmx_MMPBSA` stops when these atoms are found. Set `explicit_waters_extra_points="strip"` only if you
         intentionally want to remove the virtual sites and use the result as an approximate relative comparison.
+
+    !!! note "Multiple trajectories with explicit waters"
+        When multiple `-ct` files are supplied, the concatenated frame selection is performed before
+        `cpptraj closest` selects the nearest explicit waters. The reference/interface mask remains static, while
+        the selected water identities may change from frame to frame.
 
 `explicit_waters_mask` (Default = "")
 :   Reference selection used to choose the closest explicit waters when `explicit_waters > 0`. Accepted values are:

@@ -42,6 +42,16 @@ strip_mask = ':WAT,SOL,TIP3P,TIP3,TP3,TIPS3P,TIP3o,TIP4P,TIP4PEW,T4E,TIP4PD,TIP5
              'Cl*,CIO,Cs+,IB,K*,Li+,MG*,Na+,Rb+,CS,RB,NA,F,CL'
 
 
+def warn_concatenated_complex_trajectories(trajectory_files):
+    """Warn that multiple ``-ct`` files are pooled as one trajectory."""
+    if len(trajectory_files) > 1:
+        logging.warning(
+            'Multiple complex trajectories were supplied with -ct. They are treated as one concatenated '
+            'trajectory in the order given; startframe, endframe, and interval apply to the combined frame '
+            'stream. Reported statistics are pooled over those frames and are not independent-replica statistics.'
+        )
+
+
 def make_trajectories(INPUT, FILES, size, cpptraj, pre):
     """
     This function creates the necessary trajectory files, and creates thread-
@@ -67,6 +77,7 @@ def make_trajectories(INPUT, FILES, size, cpptraj, pre):
     # else:
     #    print FILES.complex_prmtop, FILES.complex_trajs, cpptraj
 
+    warn_concatenated_complex_trajectories(FILES.complex_trajs)
     traj = Trajectory(FILES.complex_prmtop, FILES.complex_trajs, cpptraj)
     if getattr(FILES, 'explicit_waters_preselected', False):
         traj.Setup(1, traj.total_frames, 1)
