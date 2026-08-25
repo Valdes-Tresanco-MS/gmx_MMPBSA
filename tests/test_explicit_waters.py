@@ -352,6 +352,20 @@ class ExplicitWaterCleanupTest(unittest.TestCase):
         self.assertEqual(maketop.FILES.complex_trajs, ['_GMXMMPBSA_COM_traj_0.mdcrd'])
         self.assertTrue(maketop.FILES.explicit_waters_preselected)
 
+    def test_global_frame_ranges_span_multiple_trajectory_files(self):
+        CheckMakeTop = self._import_make_top_with_stubs()
+
+        ranges = CheckMakeTop._global_frame_ranges([11, 11], 10, 15, 2)
+
+        self.assertEqual(ranges, [(0, 10, 10, 2), (1, 1, 3, 2)])
+
+    def test_global_frame_ranges_skip_files_outside_selection(self):
+        CheckMakeTop = self._import_make_top_with_stubs()
+
+        ranges = CheckMakeTop._global_frame_ranges([11, 11], 1, 10, 1)
+
+        self.assertEqual(ranges, [(0, 1, 10, 1)])
+
     def test_rejects_explicit_waters_with_extra_points_by_default(self):
         CheckMakeTop = self._import_make_top_with_stubs()
 

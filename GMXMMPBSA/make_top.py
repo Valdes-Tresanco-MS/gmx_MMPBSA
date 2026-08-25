@@ -35,6 +35,7 @@ import subprocess
 from pathlib import Path
 import logging
 import string
+import re
 from parmed.tools.changeradii import ChRad
 
 if platform.system() == "Darwin":
@@ -1255,6 +1256,47 @@ cmd.quit()
             decomp_res = decomp_res + added
         return sorted(decomp_res, key=lambda res: res.index)
 
+    @staticmethod
+    def _global_frame_ranges(frame_counts, startframe, endframe, interval):
+        """Map global trajectory frame selection to per-file cpptraj ranges.
+
+        ``startframe``, ``endframe`` and ``interval`` refer to the concatenated
+        trajectory supplied by the user.  cpptraj applies a ``trajin`` range to
+        each file independently, so a range must be calculated for every file
+        before building the explicit-water preprocessing script.
+        """
+        ranges = []
+        offset = 0
+        for file_index, frame_count in enumerate(frame_counts):
+            file_start = offset + 1
+            file_end = offset + frame_count
+            selected_start = max(startframe, file_start)
+            selected_end = min(endframe, file_end)
+            if selected_start <= selected_end:
+                first = startframe + ((selected_start - startframe + interval - 1) // interval) * interval
+                if first <= selected_end:
+                    last = first + ((selected_end - first) // interval) * interval
+                    ranges.append((file_index, first - offset, last - offset, interval))
+            offset += frame_count
+        return ranges
+
+    def _cpptraj_frame_count(self, trajectory):
+        """Return the number of frames in one trajectory file."""
+        process = subprocess.Popen(
+            [self.external_progs['cpptraj'], '-p', self.explicit_water_prmtop, '-y', trajectory, '-tl'],
+            stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+        )
+        output, _ = process.communicate(b'')
+        if process.wait():
+            GMXMMPBSA_ERROR(f"{self.external_progs['cpptraj']} failed when querying {trajectory}")
+        if isinstance(output, bytes):
+            output = output.decode()
+        frame_counts = re.findall(r'Frames:\s+(\d+)', output)
+        if len(frame_counts) != 1:
+            GMXMMPBSA_ERROR(f'Could not determine the number of frames in {trajectory} with '
+                            f'{self.external_progs["cpptraj"]}.')
+        return int(frame_counts[0])
+
     def get_selected_residues(self, select, qm_sele=False):
         """
         Convert string selection format to amber index list
@@ -1721,6 +1763,7 @@ cmd.quit()
             return
         logging.info('Cleaning normal complex trajectories...')
         new_trajs = []
+        full_trajs = []
         for i in range(len(self.FILES.complex_trajs)):
             trjconv_echo_args = echo_command + ['GMXMMPBSA_REC_GMXMMPBSA_LIG']
             c5 = subprocess.Popen(trjconv_echo_args, stdout=subprocess.PIPE)
@@ -1737,33 +1780,49 @@ cmd.quit()
             if c6.wait():  # if it quits with return code != 0
                 GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(self.trjconv), self.FILES.complex_trajs[i]))
             if self.explicit_waters:
-                filtered_traj = f'{self.FILES.prefix}COM_traj_{i}.mdcrd'
-                startframe = self.INPUT['general']['startframe']
-                endframe = self.INPUT['general']['endframe']
-                interval = self.INPUT['general']['interval']
-                extra_point_strip = (f'strip {self.explicit_water_extra_point_mask}\n'
-                                     if self.explicit_water_extra_point_mask else '')
-                cpptraj_input = (
-                    f'trajin {com_traj_name} {startframe} {endframe} {interval}\n'
-                    f'strip {explicit_water_ion_mask}\n'
-                    f'closest {self.explicit_waters} {self._explicit_water_closest_reference_mask()} '
-                    f'solventmask {explicit_water_solvent_mask} noimage '
-                    f'closestout {self.FILES.prefix}explicit_waters_closest_{i}.dat\n'
-                    f'{extra_point_strip}'
-                    f'trajout {filtered_traj} nobox\n'
-                )
-                logging.debug('Running command: %s %s', self.external_progs['cpptraj'], self.explicit_water_prmtop)
-                with open(f'{self.FILES.prefix}explicit_waters_cpptraj_{i}.out', 'w') as cpptraj_out:
-                    c7 = subprocess.Popen([self.external_progs['cpptraj'], self.explicit_water_prmtop],
-                                          stdin=subprocess.PIPE, stdout=cpptraj_out, stderr=subprocess.STDOUT)
-                    c7.communicate(cpptraj_input.encode())
-                if c7.wait():
-                    GMXMMPBSA_ERROR(f"{self.external_progs['cpptraj']} failed when selecting explicit waters from "
-                                    f"{com_traj_name}")
-                new_trajs.append(filtered_traj)
-                self.FILES.explicit_waters_preselected = True
+                full_trajs.append(com_traj_name)
             else:
                 new_trajs.append(f'COM_traj_{i}.xtc')
+
+        if self.explicit_waters:
+            startframe = self.INPUT['general']['startframe']
+            endframe = self.INPUT['general']['endframe']
+            interval = self.INPUT['general']['interval']
+            if len(full_trajs) == 1:
+                trajin_commands = f'trajin {full_trajs[0]} {startframe} {endframe} {interval}\n'
+            else:
+                frame_counts = [self._cpptraj_frame_count(trajectory) for trajectory in full_trajs]
+                frame_ranges = self._global_frame_ranges(frame_counts, startframe, endframe, interval)
+                if not frame_ranges:
+                    GMXMMPBSA_ERROR('No frames were selected across the explicit-water trajectories.')
+                logging.info('Applying global frame selection across %d concatenated trajectories.', len(full_trajs))
+                trajin_commands = ''.join(
+                    f'trajin {full_trajs[file_index]} {local_start} {local_end} {local_interval}\n'
+                    for file_index, local_start, local_end, local_interval in frame_ranges
+                )
+
+            filtered_traj = f'{self.FILES.prefix}COM_traj_0.mdcrd'
+            extra_point_strip = (f'strip {self.explicit_water_extra_point_mask}\n'
+                                 if self.explicit_water_extra_point_mask else '')
+            cpptraj_input = (
+                f'{trajin_commands}'
+                f'strip {explicit_water_ion_mask}\n'
+                f'closest {self.explicit_waters} {self._explicit_water_closest_reference_mask()} '
+                f'solventmask {explicit_water_solvent_mask} noimage '
+                f'closestout {self.FILES.prefix}explicit_waters_closest_0.dat\n'
+                f'{extra_point_strip}'
+                f'trajout {filtered_traj} nobox\n'
+            )
+            logging.debug('Running command: %s %s', self.external_progs['cpptraj'], self.explicit_water_prmtop)
+            with open(f'{self.FILES.prefix}explicit_waters_cpptraj_0.out', 'w') as cpptraj_out:
+                c7 = subprocess.Popen([self.external_progs['cpptraj'], self.explicit_water_prmtop],
+                                      stdin=subprocess.PIPE, stdout=cpptraj_out, stderr=subprocess.STDOUT)
+                c7.communicate(cpptraj_input.encode())
+            if c7.wait():
+                GMXMMPBSA_ERROR(f"{self.external_progs['cpptraj']} failed when selecting explicit waters from "
+                                f"{', '.join(full_trajs)}")
+            new_trajs.append(filtered_traj)
+            self.FILES.explicit_waters_preselected = True
         self.FILES.complex_trajs = new_trajs
 
         # clear trajectory
