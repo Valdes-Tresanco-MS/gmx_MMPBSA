@@ -546,28 +546,57 @@ class CheckAmberTop(CheckMakeTop):
 
     def _write_explicit_water_structures(self):
         cpptraj = self.external_progs['cpptraj']
-        keep_complex = f'({self.FILES.complex_mask[0]}|{self.FILES.complex_mask[1]}|'
-        keep_complex += f'{self.explicit_water_source_mask})'
-        keep_receptor = f'({self.FILES.complex_mask[0]}|{self.explicit_water_source_mask})'
-        keep_ligand = f'({self.FILES.complex_mask[1]})'
+        trajectories = list(self.FILES.complex_trajs)
+        source_traj = Trajectory(self.explicit_water_prmtop, trajectories, cpptraj)
+        startframe = self.INPUT['general']['startframe']
+        frame_ranges = self._global_frame_ranges(source_traj.traj_sizes, startframe, startframe, 1)
+        if not frame_ranges:
+            GMXMMPBSA_ERROR('No frames were available to build the explicit-water structure.')
 
-        structures = [
-            ('explicit_complex_str', keep_complex, 'complex'),
-            ('explicit_receptor_str', keep_receptor, 'receptor'),
-            ('explicit_ligand_str', keep_ligand, 'ligand'),
+        # Build the topology template from the first frame that will enter the
+        # calculation, after applying the same closest-water operation used by
+        # _cleanup_explicit_water_trajs(). This keeps the visible PDB and the
+        # first calculation frame spatially consistent.
+        output = f'{self.FILES.prefix}COMPLEX_EXPLICIT.pdb'
+        traj = Trajectory.__new__(Trajectory)
+        traj.exe = cpptraj
+        traj.prmtop = self.explicit_water_prmtop
+        traj.actions = [
+            f'trajin {trajectories[file_index]} {local_start} {local_end} {local_interval}'
+            for file_index, local_start, local_end, local_interval in frame_ranges
         ]
-        for attr, keep_mask, label in structures:
-            output = f'{self.FILES.prefix}{label.upper()}_EXPLICIT.pdb'
-            traj = Trajectory(self.FILES.complex_top, self.FILES.complex_trajs[0], cpptraj)
-            traj.Setup(1, 1, 1)
-            if self.explicit_water_source_ion_mask:
-                traj.Strip(self.explicit_water_source_ion_mask)
-            if self.explicit_water_source_extra_points:
-                traj.Strip(self.explicit_water_source_extra_points)
-            traj.Strip(f'!{keep_mask}')
-            traj.Outtraj(output, frames='1', filetype='pdb')
-            traj.Run(f'{self.FILES.prefix}{label}_explicit_pdb.out')
-            setattr(self, attr, self.molstr(output))
+        traj.actions.append('noprogress')
+        if self.explicit_water_source_ion_mask:
+            traj.Strip(self.explicit_water_source_ion_mask)
+        if self.explicit_water_source_extra_points:
+            traj.Strip(self.explicit_water_source_extra_points)
+        reference = f'({self.explicit_waters_mask})&(!{self.explicit_water_source_all_mask})'
+        traj.actions.append(
+            f'closest {self.explicit_waters} {reference} solventmask {self.explicit_water_source_all_mask} noimage'
+        )
+        traj.Outtraj(output, frames='1', filetype='pdb')
+        traj.Run(f'{self.FILES.prefix}complex_explicit_pdb.out')
+        self.explicit_complex_str = self.molstr(output)
+
+        # The closest action produces a compact complex topology with the
+        # selected waters after the solute. Derive the receptor and ligand
+        # structures from that same frame rather than reintroducing arbitrary
+        # first-in-topology waters.
+        water_numbers = [res.idx + 1 for res in self.explicit_complex_str.residues
+                         if self._amber_residue_is_water(res)]
+        water_mask = self._amber_mask(water_numbers)
+        rec_mask = ':' + ','.join(self.resi['REC']['string'])
+        lig_mask = ':' + ','.join(self.resi['LIG']['string'])
+        structures = [
+            ('explicit_receptor_str', f'!({rec_mask}|{water_mask})', 'receptor'),
+            ('explicit_ligand_str', f'!{lig_mask}', 'ligand'),
+        ]
+        for attr, strip_mask, label in structures:
+            structure = self.molstr(self.explicit_complex_str)
+            structure.strip(strip_mask)
+            structure_file = f'{self.FILES.prefix}{label.upper()}_EXPLICIT.pdb'
+            structure.save(structure_file, 'pdb', overwrite=True, renumber=False)
+            setattr(self, attr, self.molstr(structure_file))
 
     @staticmethod
     def _amber_mask_numbers(mask):
