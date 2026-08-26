@@ -1217,9 +1217,6 @@ class MMPBSA_App(object):
             GMXMMPBSA_ERROR('IDECOMP cannot be 0 for Decomposition analysis!', InputError)
 
         if INPUT['general']['explicit_waters'] > 0:
-            if getattr(self, 'engine', 'gmx') == 'amber':
-                GMXMMPBSA_ERROR('EXPLICIT_WATERS is not supported with amber_MMPBSA. '
-                                'Use gmx_MMPBSA with a GROMACS topology (-cp).', InputError)
             if INPUT['gb'].get('ifqnt'):
                 GMXMMPBSA_ERROR('EXPLICIT_WATERS cannot be combined with QM/MM (ifqnt=1).', InputError)
             if not (INPUT['gb']['gbrun'] or INPUT['pb']['pbrun']):
@@ -1227,7 +1224,9 @@ class MMPBSA_App(object):
             if not INPUT['general']['explicit_waters_mask'].strip():
                 GMXMMPBSA_ERROR('EXPLICIT_WATERS_MASK must be defined when EXPLICIT_WATERS > 0.', InputError)
             if not self.FILES.complex_top:
-                GMXMMPBSA_ERROR('EXPLICIT_WATERS requires a GROMACS complex topology (-cp) in this version.',
+                GMXMMPBSA_ERROR('EXPLICIT_WATERS requires a complex topology (-cp).', InputError)
+            if not INPUT['general']['solvated_trajectory']:
+                GMXMMPBSA_ERROR('EXPLICIT_WATERS requires SOLVATED_TRAJECTORY=1 for solvent preprocessing.',
                                 InputError)
             if any([
                 getattr(self.FILES, 'receptor_tpr', None),

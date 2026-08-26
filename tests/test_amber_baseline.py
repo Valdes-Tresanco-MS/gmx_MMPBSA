@@ -2,7 +2,9 @@ import hashlib
 import shutil
 import unittest
 from pathlib import Path
+from tempfile import TemporaryDirectory
 from types import SimpleNamespace
+from unittest.mock import patch
 
 from GMXMMPBSA.exceptions import MMPBSA_Error
 from GMXMMPBSA.make_trajs import Trajectory
@@ -45,8 +47,8 @@ class AmberDryBaselineTest(unittest.TestCase):
         checker = object.__new__(CheckAmberTop)
         checker.complex_str = complex_structure
 
-        # The current dry AMBER workflow must continue to accept a structure
-        # without solvent or ions before explicit-water support is added.
+        # The dry AMBER workflow must continue to accept a structure without
+        # solvent or ions alongside the new explicit-water path.
         checker.check4water()
 
         self.assertFalse(
@@ -64,6 +66,124 @@ class AmberDryBaselineTest(unittest.TestCase):
 
         with self.assertRaises(MMPBSA_Error):
             checker.check4water()
+
+    def test_hoh_residue_is_rejected_by_dry_builder(self):
+        from GMXMMPBSA.make_top_amber import CheckAmberTop
+
+        checker = object.__new__(CheckAmberTop)
+        checker.complex_str = SimpleNamespace(
+            residues=[SimpleNamespace(name='HOH')]
+        )
+
+        with self.assertRaises(MMPBSA_Error):
+            checker.check4water()
+
+    def test_amber_residue_numbers_are_one_based_for_masks(self):
+        from GMXMMPBSA.make_top_amber import CheckAmberTop
+
+        residues = [SimpleNamespace(idx=0), SimpleNamespace(idx=1), SimpleNamespace(idx=4)]
+
+        self.assertEqual(CheckAmberTop._amber_residue_numbers(residues), [1, 2, 5])
+
+    def test_solvated_masks_classify_complete_receptor_ligand_water_and_ions(self):
+        from GMXMMPBSA.make_top_amber import CheckAmberTop
+
+        def residue(index, name, atom_indexes):
+            return SimpleNamespace(
+                idx=index,
+                name=name,
+                atoms=[SimpleNamespace(idx=atom_index) for atom_index in atom_indexes],
+            )
+
+        parm = SimpleNamespace(residues=[
+            residue(0, 'ALA', [0, 1]),
+            residue(1, 'LIG', [2, 3]),
+            residue(2, 'WAT', [4, 5, 6]),
+            residue(3, 'Na+', [7]),
+        ])
+        selections = {
+            ':1': [1, 1, 0, 0, 0, 0, 0, 0],
+            ':2': [0, 0, 1, 1, 0, 0, 0, 0],
+        }
+        checker = object.__new__(CheckAmberTop)
+        checker.FILES = SimpleNamespace(complex_mask=(':1', ':2'))
+        checker.explicit_waters = 1
+        checker.explicit_waters_group = ''
+
+        with patch('GMXMMPBSA.make_top_amber.parmed.amber.AmberMask',
+                   side_effect=lambda parm, mask: SimpleNamespace(Selection=lambda: selections[mask])):
+            rec, lig, waters, ions = checker._source_residue_classes(parm)
+
+        self.assertEqual([res.idx for res in rec], [0])
+        self.assertEqual([res.idx for res in lig], [1])
+        self.assertEqual([res.idx for res in waters], [2])
+        self.assertEqual([res.idx for res in ions], [3])
+
+    def test_solvated_mask_must_select_complete_residues(self):
+        from GMXMMPBSA.make_top_amber import CheckAmberTop
+
+        residue = SimpleNamespace(
+            idx=0,
+            name='ALA',
+            atoms=[SimpleNamespace(idx=0), SimpleNamespace(idx=1)],
+        )
+        parm = SimpleNamespace(residues=[residue])
+        selections = {':1': [1, 0], ':2': [0, 0]}
+        checker = object.__new__(CheckAmberTop)
+        checker.FILES = SimpleNamespace(complex_mask=(':1', ':2'))
+        checker.explicit_waters = 0
+        checker.explicit_waters_group = ''
+
+        with patch('GMXMMPBSA.make_top_amber.parmed.amber.AmberMask',
+                   side_effect=lambda parm, mask: SimpleNamespace(Selection=lambda: selections[mask])):
+            with self.assertRaises(MMPBSA_Error):
+                checker._source_residue_classes(parm)
+
+
+@unittest.skipUnless(AMBER_RUNTIME, 'AMBER topology/trajectory tools are unavailable')
+class AmberExplicitWaterPreprocessingTest(unittest.TestCase):
+    def test_cleanup_uses_amber_solvent_masks_and_global_frame_selection(self):
+        from GMXMMPBSA.make_top_amber import CheckAmberTop
+
+        class FakeTrajectory:
+            def __init__(self, *args):
+                self.traj_sizes = [11, 11]
+
+        class FakeProcess:
+            cpptraj_input = b''
+
+            def communicate(self, data=None):
+                self.__class__.cpptraj_input = data or b''
+
+            def wait(self):
+                return 0
+
+        with TemporaryDirectory() as tmpdir:
+            prefix = f'{tmpdir}/_GMXMMPBSA_'
+            checker = object.__new__(CheckAmberTop)
+            checker.FILES = SimpleNamespace(
+                prefix=prefix,
+                complex_trajs=['first.mdcrd', 'second.mdcrd'],
+            )
+            checker.INPUT = {'general': {'startframe': 10, 'endframe': 15, 'interval': 2}}
+            checker.external_progs = {'cpptraj': 'cpptraj'}
+            checker.explicit_waters = 10
+            checker.explicit_waters_mask = ':1-166'
+            checker.explicit_water_prmtop = f'{prefix}COM_FULL_SOLVENT.prmtop'
+            checker.explicit_water_source_ion_mask = ':NA,CL'
+            checker.explicit_water_source_all_mask = ':243-11638'
+            checker.explicit_water_source_extra_points = ''
+
+            with patch('GMXMMPBSA.make_top_amber.Trajectory', FakeTrajectory):
+                with patch('GMXMMPBSA.make_top_amber.subprocess.Popen', return_value=FakeProcess()):
+                    checker._cleanup_explicit_water_trajs()
+
+        cpptraj_input = FakeProcess.cpptraj_input.decode()
+        self.assertIn('trajin first.mdcrd 10 10 2', cpptraj_input)
+        self.assertIn('trajin second.mdcrd 1 3 2', cpptraj_input)
+        self.assertIn('strip :NA,CL', cpptraj_input)
+        self.assertIn('closest 10 (:1-166)&(!:243-11638) solventmask :243-11638 noimage', cpptraj_input)
+        self.assertTrue(checker.FILES.explicit_waters_preselected)
 
     def test_checked_in_topologies_match_generated_structure_atom_order(self):
         pairs = (

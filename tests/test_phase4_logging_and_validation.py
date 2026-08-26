@@ -152,15 +152,14 @@ class Phase4ValidationTest(unittest.TestCase):
         with self.assertRaisesRegex(InputError, r'IDECOMP cannot be 0'):
             app.check_for_bad_input()
 
-    def test_explicit_waters_rejected_for_amber_engine(self):
+    def test_explicit_waters_are_allowed_for_amber_engine(self):
         app = self._app()
         app.engine = 'amber'
         app.INPUT['general']['explicit_waters'] = 3
         app.INPUT['general']['explicit_waters_mask'] = ':WAT'
         app.INPUT['gb']['gbrun'] = True
 
-        with self.assertRaisesRegex(InputError, r'not supported with amber_MMPBSA'):
-            app.check_for_bad_input()
+        app.check_for_bad_input()
 
     def test_explicit_waters_rejected_with_qmmm(self):
         app = self._app()
