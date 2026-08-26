@@ -18,7 +18,6 @@ In this case, `amber_MMPBSA` requires:
 |:-------------------------------|:--------:|:----:|:------------|
 | Input parameters file          | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } | `in` | Input file containing all calculation specifications |
 | Complex topology file          | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } | `prmtop` | AMBER topology file for the complex |
-| Complex structure file         | :octicons-check-circle-fill-16:{ .req_opt .scale_icon_medium } | `inpcrd` | Optional / currently unused by setup (frame 1 of `-ct` is used). Kept for CLI compatibility |
 
 | Complex trajectory file        | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } | `mdcrd` | AMBER trajectory file for the complex |
 | Receptor and ligand masks      | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } | `masks` | AMBER masks identifying the receptor and ligand in the complex |
@@ -35,7 +34,7 @@ Once you are in the folder containing all files, the command-line will be as fol
 
 === "Serial"
 
-        amber_MMPBSA -O -i mmpbsa.in -cp ras-raf_complex.prmtop -cs ras-raf_complex.inpcrd -ct prod_complex.mdcrd -rp ras.prmtop -lp raf.prmtop -cm ":1-166" ":167-242" -o FINAL_RESULTS_MMPBSA.dat -eo FINAL_RESULTS_MMPBSA.csv
+        amber_MMPBSA -O -i mmpbsa.in -cp ras-raf_complex.prmtop -ct prod_complex.mdcrd -rp ras.prmtop -lp raf.prmtop -cm ":1-166" ":167-242" -o FINAL_RESULTS_MMPBSA.dat -eo FINAL_RESULTS_MMPBSA.csv
 
 === "gmx_MMPBSA_test"
 

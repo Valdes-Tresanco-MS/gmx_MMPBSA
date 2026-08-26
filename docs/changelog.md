@@ -32,6 +32,7 @@ title: Changelog
 - Added `amber_MMPBSA` for native AMBER topology/trajectory/mask ST workflows (optional separate receptor/ligand
   tops). Not full `gmx_MMPBSA` feature parity: no explicit receptor waters, ligand MT unsupported, radii preserved
   from the input prmtop. See `docs/amber_MMPBSA.md`.
+- Removed the unused `-cs` option from the AMBER workflow because setup derives the structure from frame 1 of `-ct`.
 
 ### QM/MM, GBNSR6, and explicit waters
 

@@ -25,7 +25,6 @@ workflows are unsupported. See [Supported and unsupported features](#supported-a
 | Complex topology | `-cp` | yes | AMBER topology file for the complex |
 | Complex trajectory | `-ct` | yes | Trajectory file readable by cpptraj with the supplied AMBER topology. Supported formats include `*.mdcrd`, `*.nc`, `*.crd`, `*.rst7`, `*.inpcrd`, `*.xtc`, `*.trr`, `*.pdb`, `*.gro`, and `*.dcd` |
 | Complex masks | `-cm` | yes | Receptor and ligand masks from the complex (Amber residue-number masks, including non-contiguous ranges) |
-| Complex structure | `-cs` | no | Currently unused. Setup takes coordinates from frame 1 of `-ct`. Kept for CLI compatibility; prefer ensuring frame 1 matches your intended reference structure |
 | Receptor topology | `-rp` | no | AMBER topology file for the receptor (otherwise built from the complex) |
 | Ligand topology | `-lp` | no | AMBER topology file for the ligand (otherwise built from the complex) |
 
@@ -61,7 +60,8 @@ amber_MMPBSA -O -i mmpbsa.in \
   -eo FINAL_RESULTS_MMPBSA.csv
 ```
 
-`-cs` may still be passed for compatibility, but it does not change the structure used for topology setup.
+No complex structure flag is required. Setup extracts the reference structure from frame 1 of `-ct`; use `-cr` when
+explicit chain and residue mapping should follow a separate reference PDB.
 
 AMBER masks can also select non-contiguous residue ranges. For example, the receptor can be residues 1-120 and
 181-260 while the ligand is residues 121-180:

@@ -399,8 +399,6 @@ group.add_argument('--no-error-bundle', dest='no_error_bundle', action='store_tr
 group = amber_parser.add_argument_group('Complex', complex_group_des)
 group.add_argument('-cp', dest='complex_top', metavar='<Topology>', default=None, type=prmtop,
                    help='''The complex Topology file''')
-group.add_argument('-cs', dest='complex_str', metavar='<Structure File>', default=None, type=amber_structure,
-                   help='''Structure file of the complex. Allowed formats: *.pdb, *.inpcrd, *.rst7''')
 group.add_argument('-cm', dest='complex_mask', metavar='mask', nargs=2, default=None, type=amber_residue_mask_type,
                    help='Receptor and Ligand masks in complex file. The notation is as follows: -cm '
                         '"<Receptor mask>" "<Ligand mask>", ie. -cm ":1-240" ":241"')
@@ -410,10 +408,9 @@ group.add_argument('-ct', dest='complex_trajs', nargs='*', metavar='TRJ', type=a
                          like).'''.format(AMBER_TRAJECTORY_FORMATS_HELP))
 group.add_argument('-cr', dest='reference_structure', metavar='<PDB File>', default=None, type=pdb,
                    help='''Complex Reference Structure file. This option is optional but recommended
-                         (Use the PDB file used to generate the topology in tLEAP). If not defined,
-                         the chains ID assignment (if the structure used in -cs does not have chain
-                         IDs) will be done automatically according to the structure (can generate
-                         wrong mapping).''')
+                         (use the PDB file used to generate the topology in tLEAP). If not defined,
+                         chain IDs are assigned automatically from the complex structure extracted from
+                         frame 1 of -ct (which can generate an incorrect mapping).''')
 
 group = amber_parser.add_argument_group('Receptor', receptor_group_des)
 group.add_argument('-rp', dest='receptor_top', metavar='<Topology>', default=None, type=prmtop,

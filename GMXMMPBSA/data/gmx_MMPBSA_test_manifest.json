@@ -991,8 +991,6 @@
         "mmpbsa.in",
         "-cp",
         "ras-raf_complex.prmtop",
-        "-cs",
-        "ras-raf_complex.inpcrd",
         "-ct",
         "prod_complex.mdcrd",
         "-rp",

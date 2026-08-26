@@ -55,3 +55,15 @@ class ProgressStyleParserTest(unittest.TestCase):
     def test_progress_style_can_be_selected(self):
         self.assertEqual(parser.parse_args(['--progress-style', 'classic']).progress_style, 'classic')
         self.assertEqual(amber_parser.parse_args(['--progress-style', 'none']).progress_style, 'none')
+
+
+class AmberComplexStructureOptionTest(unittest.TestCase):
+    def test_complex_structure_is_not_required_or_advertised(self):
+        self.assertFalse(hasattr(amber_parser.parse_args([]), 'complex_str'))
+        self.assertNotIn('-cs', amber_parser.format_help())
+
+    def test_complex_structure_option_is_not_part_of_amber_interface(self):
+        with self.assertRaises(MMPBSA_Error) as exc:
+            amber_parser.parse_args(['-cs', 'complex.inpcrd'])
+
+        self.assertIn('unrecognized arguments: -cs', str(exc.exception))
