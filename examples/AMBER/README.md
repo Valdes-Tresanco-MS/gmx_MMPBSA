@@ -60,6 +60,11 @@ Input file for a short AMBER input files test
     This example is meant only to show that `amber_MMPBSA` works with native AMBER input files. It uses a short
     five-frame trajectory and preserves the radii already stored in the AMBER topology files.
 
+For an explicit-water AMBER calculation, use a solvated `-cp/-ct` pair, omit `-rp` and `-lp`, and add
+`explicit_waters`, `explicit_waters_mask`, and `solvated_trajectory=1` to the input file. The `-cm` masks must select
+the solute only. The final working complex and receptor topologies contain the selected waters, while the ligand
+topology remains dry.
+
 ## Considerations
 
 In this case, a single trajectory (ST) approximation is followed. The receptor and ligand are selected from the

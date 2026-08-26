@@ -28,12 +28,18 @@ workflows are unsupported. See [Supported and unsupported features](#supported-a
 | Receptor topology | `-rp` | no | AMBER topology file for the receptor (otherwise built from the complex) |
 | Ligand topology | `-lp` | no | AMBER topology file for the ligand (otherwise built from the complex) |
 
+For explicit-water calculations, `-cp` must be the original solvated AMBER topology and `-ct` must contain the
+matching solvated trajectory. The receptor and ligand masks in `-cm` must select solute residues only; solvent and ions
+are removed during setup.
+
 ## Supported and unsupported features
 
 **Supported (single-trajectory focus)**
 
 - ST GB / PB / GBNSR6 / RISM / decomposition / IE / C2 / alanine scanning (with the same input namelists as
   `gmx_MMPBSA`, where applicable)
+- ST GB / PB with `explicit_waters > 0`; selected waters are assigned to the receptor and selected with the same
+  `explicit_waters_mask` and `cpptraj closest` workflow used by `gmx_MMPBSA`
 - Optional separate receptor/ligand topologies (`-rp` / `-lp`)
 - Non-contiguous Amber residue masks
 - Radii/`SCREEN` values preserved from the input prmtop (input `PBRadii` does not rebuild normal topologies)
@@ -41,10 +47,11 @@ workflows are unsupported. See [Supported and unsupported features](#supported-a
 
 **Not supported / different behavior**
 
-- Explicit receptor waters (`explicit_waters`) — GROMACS-only; rejected with a clear error
+- Explicit receptor waters are restricted to ST GB/PB and require `SOLVATED_TRAJECTORY=1`
 - Ligand multiple-trajectory (`-lt`) — rejected
 - Receptor multiple-trajectory (`-rt`) — incomplete; prefer ST
-- Solvent or ions left in the AMBER topologies — rejected
+- Solvent or ions are not retained in the final working topologies; the original solvated `-cp` is accepted only for
+  explicit-water preprocessing
 - QM/MM + explicit waters combinations — rejected (same as `gmx_MMPBSA`)
 
 ## Example
@@ -76,6 +83,36 @@ amber_MMPBSA -O -i mmpbsa.in \
 ```
 
 See the [AMBER input files example](examples/AMBER/README.md) for a complete runnable example.
+
+An explicit-water calculation uses the solvated topology directly:
+
+``` bash
+amber_MMPBSA -O -i mmpbsa_explicit.in \
+  -cp solvated.prmtop \
+  -ct production.mdcrd \
+  -cm ":1-166" ":167-242" \
+  -o FINAL_RESULTS_MMPBSA.dat \
+  -eo FINAL_RESULTS_MMPBSA.csv
+```
+
+The corresponding input contains, for example:
+
+``` text
+&general
+  explicit_waters=10,
+  explicit_waters_mask="within 4",
+  solvated_trajectory=1,
+/
+&gb
+  igb=2,
+/
+```
+
+The interface reference mask is static, while `cpptraj closest` selects the nearest water molecules for each frame.
+The selected waters are kept in `COM.prmtop` and `REC.prmtop`; `LIG.prmtop` remains dry. OPC/TIP4P-style extra-point
+waters are rejected by default and can only be used with the existing explicit-point stripping approximation.
+For AMBER systems with nonstandard water residue names, provide their comma-separated names through
+`explicit_waters_group`.
 
 ## Progress display
 
