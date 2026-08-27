@@ -105,6 +105,30 @@ class AmberDryBaselineTest(unittest.TestCase):
         with self.assertNoLogs(level='WARNING'):
             checker._warn_gb_radius_compatibility(parm, 'complex')
 
+    def test_native_builder_preserves_topology_radii_over_input_pbradii(self):
+        from GMXMMPBSA.make_top_amber import CheckAmberTop
+
+        checker = object.__new__(CheckAmberTop)
+        checker.INPUT = {'general': {'PBRadii': 4}}
+        source = SimpleNamespace(
+            atoms=[SimpleNamespace(), SimpleNamespace()],
+            parm_data={
+                'RADII': [1.1, 1.2],
+                'SCREEN': [0.8, 0.9],
+                'RADIUS_SET': ['modified Bondi radii (mbondi2)'],
+            },
+        )
+        target = SimpleNamespace(
+            atoms=[SimpleNamespace(), SimpleNamespace()],
+            parm_data={},
+        )
+
+        checker._copy_implicit_radii(source, target, 'Complex')
+
+        self.assertEqual(target.parm_data['RADII'], [1.1, 1.2])
+        self.assertEqual(target.parm_data['SCREEN'], [0.8, 0.9])
+        self.assertEqual(target.parm_data['RADIUS_SET'], ['modified Bondi radii (mbondi2)'])
+
     def test_amber_residue_numbers_are_one_based_for_masks(self):
         from GMXMMPBSA.make_top_amber import CheckAmberTop
 
