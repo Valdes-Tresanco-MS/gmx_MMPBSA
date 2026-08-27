@@ -42,13 +42,14 @@ strip_mask = ':WAT,SOL,TIP3P,TIP3,TP3,TIPS3P,TIP3o,TIP4P,TIP4PEW,T4E,TIP4PD,TIP5
              'Cl*,CIO,Cs+,IB,K*,Li+,MG*,Na+,Rb+,CS,RB,NA,F,CL'
 
 
-def warn_concatenated_complex_trajectories(trajectory_files):
-    """Warn that multiple ``-ct`` files are pooled as one trajectory."""
+def warn_concatenated_complex_trajectories(trajectory_files, option='-ct', label='complex'):
+    """Warn that multiple files for one system are pooled as one trajectory."""
     if len(trajectory_files) > 1:
         logging.warning(
-            'Multiple complex trajectories were supplied with -ct. They are treated as one concatenated '
+            'Multiple %s trajectories were supplied with %s. They are treated as one concatenated '
             'trajectory in the order given; startframe, endframe, and interval apply to the combined frame '
-            'stream. Reported statistics are pooled over those frames and are not independent-replica statistics.'
+            'stream. Reported statistics are pooled over those frames and are not independent-replica statistics.',
+            label, option
         )
 
 
@@ -188,6 +189,7 @@ def make_trajectories(INPUT, FILES, size, cpptraj, pre):
         #    rectraj.Setup(INPUT['startframe'],INPUT['endframe'],INPUT['interval'])
         #    rectraj.StripSolvent(strip_mask)
         # else:
+        warn_concatenated_complex_trajectories(FILES.receptor_trajs, option='-rt', label='receptor')
         rectraj = Trajectory(FILES.receptor_prmtop, FILES.receptor_trajs, cpptraj)
         rectraj.Setup(INPUT['general']['startframe'], INPUT['general']['endframe'], INPUT['general']['interval'])
         rec_frames = int(rectraj.processed_frames)
@@ -231,6 +233,7 @@ def make_trajectories(INPUT, FILES, size, cpptraj, pre):
         #    ligtraj.Setup(INPUT['startframe'],INPUT['endframe'],INPUT['interval'])
         #    ligtraj.StripSolvent(strip_mask)
         # else:
+        warn_concatenated_complex_trajectories(FILES.ligand_trajs, option='-lt', label='ligand')
         ligtraj = Trajectory(FILES.ligand_prmtop, FILES.ligand_trajs, cpptraj)
         ligtraj.Setup(INPUT['general']['startframe'], INPUT['general']['endframe'], INPUT['general']['interval'])
         lig_frames = int(ligtraj.processed_frames)

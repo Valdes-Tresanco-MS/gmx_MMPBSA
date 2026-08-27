@@ -117,3 +117,13 @@ class MakeTrajectoriesMPIFrameTest(unittest.TestCase):
         self.assertEqual(len(captured.records), 1)
         self.assertIn('one concatenated trajectory', captured.records[0].getMessage())
         self.assertIn('not independent-replica statistics', captured.records[0].getMessage())
+
+    def test_multiple_unbound_trajectories_use_their_cli_option_in_warning(self):
+        with self.assertLogs(level=logging.WARNING) as captured:
+            warn_concatenated_complex_trajectories(
+                ['ligand_0.mdcrd', 'ligand_1.mdcrd'], option='-lt', label='ligand'
+            )
+
+        self.assertEqual(len(captured.records), 1)
+        self.assertIn('Multiple ligand trajectories were supplied with -lt',
+                      captured.records[0].getMessage())

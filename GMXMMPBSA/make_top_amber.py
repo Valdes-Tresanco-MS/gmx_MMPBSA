@@ -129,6 +129,15 @@ class CheckAmberTop(CheckMakeTop):
         if (not self.FILES.complex_top or not self.FILES.complex_trajs or not self.FILES.complex_mask):
             GMXMMPBSA_ERROR('You must define the complex topology (-cp), trajectory (-ct) and complex masks (-cm).')
 
+        if self.FILES.receptor_trajs and not self.FILES.receptor_top:
+            GMXMMPBSA_ERROR('A receptor topology (-rp) is required when receptor trajectories (-rt) are defined.')
+        if self.FILES.receptor_trajs and not self.FILES.receptor_mask:
+            GMXMMPBSA_ERROR('A receptor mask (-rm) is required when receptor trajectories (-rt) are defined.')
+        if self.FILES.ligand_trajs and not self.FILES.ligand_top:
+            GMXMMPBSA_ERROR('A ligand topology (-lp) is required when ligand trajectories (-lt) are defined.')
+        if self.FILES.ligand_trajs and not self.FILES.ligand_mask:
+            GMXMMPBSA_ERROR('A ligand mask (-lm) is required when ligand trajectories (-lt) are defined.')
+
     def buildTopology(self):
         """
         :return: complex, receptor, ligand topologies and their mutants
@@ -290,13 +299,11 @@ class CheckAmberTop(CheckMakeTop):
         # wt receptor
         if self.FILES.receptor_trajs:
             logging.info('A receptor trajectory file was defined. Using MT approach...')
-
-            # use cpptraj to extract pdb structure
-            rec_traj = Trajectory(self.FILES.receptor_top, self.FILES.receptor_trajs[0])
-            rec_traj.Setup()
-            rec_traj.Strip(f'!{self.FILES.receptor_mask}')
-            rec_traj.Outtraj(self.receptor_str_file, frames='1', filetype='pdb')
-            rec_traj.Run('receptor_pdb.out')
+            self._extract_mtp_structure(
+                self.FILES.receptor_top, self.FILES.receptor_trajs,
+                self.FILES.receptor_mask, self.receptor_str_file,
+                'receptor'
+            )
 
         else:
             logging.info('No receptor structure file was defined. Using ST approach...')
@@ -311,8 +318,12 @@ class CheckAmberTop(CheckMakeTop):
 
         # ligand
         if self.FILES.ligand_trajs:
-            GMXMMPBSA_ERROR('Ligand multiple-trajectory approach (-lt) is not implemented for AMBER mode yet. '
-                            'Please omit -lt and extract the ligand from the complex using -cm.')
+            logging.info('A ligand trajectory file was defined. Using MT approach...')
+            self._extract_mtp_structure(
+                self.FILES.ligand_top, self.FILES.ligand_trajs,
+                self.FILES.ligand_mask, self.ligand_str_file,
+                'ligand'
+            )
         else:
             # wt complex ligand
             logging.info('No ligand structure file was defined. Using ST approach...')
@@ -324,13 +335,6 @@ class CheckAmberTop(CheckMakeTop):
             com_traj.Outtraj(self.ligand_str_file, frames='1', filetype='pdb')
             com_traj.Run('lig_pdb.out')
 
-        # check for IE variable
-        if (self.FILES.receptor_trajs or self.FILES.ligand_trajs) and (
-                self.INPUT['general']['interaction_entropy'] or self.INPUT['general']['c2_entropy']
-        ):
-            logging.warning("The IE or C2 entropy method doesn't support the MTP approach...")
-            self.INPUT['general']['interaction_entropy'] = self.INPUT['general']['c2_entropy'] = 0
-
         # initialize receptor and ligand structures. Needed to get residues map
         self.complex_str = self.molstr(self.complex_str_file)
         self.receptor_str = self.molstr(self.receptor_str_file)
@@ -341,6 +345,15 @@ class CheckAmberTop(CheckMakeTop):
         self.resi, self.resl, self.orderl = res2map_amber({"REC": com_rec_mask, "LIG": com_lig_mask},
                                                           self.complex_str)
         self.check_structures(self.complex_str, self.receptor_str, self.ligand_str)
+
+    @staticmethod
+    def _extract_mtp_structure(topology, trajectories, mask, output, label):
+        """Extract the first unbound MTP frame in the supplied topology order."""
+        traj = Trajectory(topology, trajectories)
+        traj.Setup()
+        traj.Strip(f'!{mask}')
+        traj.Outtraj(output, frames='1', filetype='pdb')
+        traj.Run(f'{label}_pdb.out')
 
     def check4water(self):
         if getattr(self, 'explicit_waters', 0):

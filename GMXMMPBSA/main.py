@@ -1073,6 +1073,20 @@ class MMPBSA_App(object):
             GMXMMPBSA_ERROR('PBRadii must be 1, 2, 3, 4, 5, 6, or 7!', InputError)
         if INPUT['general']['solvated_trajectory'] not in [0, 1]:
             GMXMMPBSA_ERROR('SOLVATED_TRAJECTORY must be 0 or 1!', InputError)
+        if getattr(self, 'traj_protocol', 'STP') == 'MTP' and (
+                INPUT['general']['interaction_entropy'] or INPUT['general']['c2_entropy']
+        ):
+            entropy_methods = []
+            if INPUT['general']['interaction_entropy']:
+                entropy_methods.append('IE')
+            if INPUT['general']['c2_entropy']:
+                entropy_methods.append('C2')
+            logging.warning(
+                f"{'/'.join(entropy_methods)} entropy with the multiple-trajectory protocol is experimental. "
+                'IE/C2 use frame-indexed ΔGGAS values from independently sampled bound and unbound trajectories; '
+                'this pairing is not validated as an independent-ensemble estimator. Prefer the single-trajectory '
+                'protocol or NMODE for production entropy interpretation.'
+            )
         if INPUT['general']['explicit_waters'] < 0:
             GMXMMPBSA_ERROR('EXPLICIT_WATERS must be >= 0!', InputError)
         if INPUT['general']['explicit_waters_dasa_cutoff'] < 0:

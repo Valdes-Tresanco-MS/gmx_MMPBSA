@@ -90,7 +90,22 @@ class Phase4ValidationTest(unittest.TestCase):
             ligand_tpr=None, ligand_trajs=[], ligand_top=None,
         )
         app.INPUT = _parse_base_input()
+        app.traj_protocol = 'STP'
         return app
+
+    def test_mtp_entropy_methods_emit_an_experimental_warning(self):
+        for method in ('interaction_entropy', 'c2_entropy'):
+            with self.subTest(method=method):
+                app = self._app()
+                app.traj_protocol = 'MTP'
+                app.INPUT['general'][method] = 1
+
+                with self.assertLogs(level='WARNING') as messages:
+                    app.check_for_bad_input()
+
+                self.assertIn('experimental', messages.output[0])
+                self.assertIn('multiple-trajectory protocol', messages.output[0])
+                self.assertIn('independently sampled bound and unbound trajectories', messages.output[0])
 
     def test_pb_validation_reports_invalid_value_from_pb_section(self):
         for name, value, expected in (
