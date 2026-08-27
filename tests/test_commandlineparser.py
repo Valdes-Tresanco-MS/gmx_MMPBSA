@@ -11,6 +11,7 @@ from GMXMMPBSA.commandlineparser import (
     testparser,
 )
 from GMXMMPBSA.exceptions import MMPBSA_Error
+from GMXMMPBSA.utils import _get_dup_args
 
 
 class AmberTrajectoryTypeTest(unittest.TestCase):
@@ -67,3 +68,12 @@ class AmberComplexStructureOptionTest(unittest.TestCase):
             amber_parser.parse_args(['-cs', 'complex.inpcrd'])
 
         self.assertIn('unrecognized arguments: -cs', str(exc.exception))
+
+
+class AmberMultipleTrajectoryArgumentTest(unittest.TestCase):
+    def test_reused_amber_masks_are_not_reported_as_duplicate_arguments(self):
+        _get_dup_args([
+            '-cm', ':1-166', ':167-242',
+            '-rm', ':1-166',
+            '-lm', ':167-242',
+        ])

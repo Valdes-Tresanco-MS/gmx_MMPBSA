@@ -456,6 +456,11 @@ def _get_dup_args(args):
         if k in ['-cg', '-rg', '-lg']:
             continue
         for a in v:
+            # AMBER masks are deliberately repeated across complex, receptor,
+            # and ligand options (for example, -cm ':1-166' -rm ':1-166').
+            # Reusing a mask is not a duplicated command-line argument.
+            if a.startswith(':'):
+                continue
             if a not in unique_args:
                 unique_args.append(a)
                 inverted_args_dict[a] = k
