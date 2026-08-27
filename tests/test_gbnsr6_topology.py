@@ -1,11 +1,36 @@
 import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from unittest.mock import patch
 
-from GMXMMPBSA.gbnsr6_topology import prepare_gbnsr6_topology
+from GMXMMPBSA.gbnsr6_topology import _compact_equivalent_lj_types, prepare_gbnsr6_topology
 
 
 class GBNSR6TopologyTest(unittest.TestCase):
+    def test_compaction_preserves_solty_length(self):
+        class FakeAmberFormat:
+            def __init__(self, _path):
+                type(self).last_instance = self
+                self.parm_data = {
+                    'POINTERS': [4, 3] + [0] * 29,
+                    'ATOM_TYPE_INDEX': [1, 2, 1, 2],
+                    'NONBONDED_PARM_INDEX': [1] * 9,
+                    'LENNARD_JONES_ACOEF': [1.0] * 6,
+                    'LENNARD_JONES_BCOEF': [1.0] * 6,
+                    'SOLTY': [0.0] * 4,
+                }
+
+            def write_parm(self, path):
+                Path(path).write_text('prepared')
+
+        with TemporaryDirectory() as tmpdir:
+            source = Path(tmpdir) / 'LIG.prmtop'
+            source.write_text('source')
+            with patch('parmed.amber.AmberFormat', FakeAmberFormat):
+                _compact_equivalent_lj_types(source)
+
+        self.assertEqual(FakeAmberFormat.last_instance.parm_data['SOLTY'], [0.0] * 4)
+
     def test_strips_dihedral_pointers_in_prmtop_copy(self):
         with TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)

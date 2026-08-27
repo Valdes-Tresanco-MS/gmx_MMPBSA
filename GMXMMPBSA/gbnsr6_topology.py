@@ -106,8 +106,9 @@ def _compact_equivalent_lj_types(prmtop):
     data['NONBONDED_PARM_INDEX'] = compact_nonbonded_indexes
     data['LENNARD_JONES_ACOEF'] = compact_acoef
     data['LENNARD_JONES_BCOEF'] = compact_bcoef
-    if 'SOLTY' in data:
-        data['SOLTY'] = data['SOLTY'][:compact_count]
+    # SOLTY is indexed by NATYP, not by the compacted LJ-type count (NTYPES).
+    # Keep the complete array so GBNSR6 can read the topology when an unused
+    # LJ type has been removed.
 
     compacted = Path(prmtop).with_name(f'{Path(prmtop).name}.compact')
     topology.write_parm(str(compacted))
