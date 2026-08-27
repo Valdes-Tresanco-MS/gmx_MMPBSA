@@ -34,7 +34,7 @@ nl_variables = {
     'assign_chainID': 'general', 'exp_ki': 'general', 'full_traj': 'general', 'gmx_path': 'general',
     'keep_files': 'general', 'netcdf': 'general', 'solvated_trajectory': 'general', 'explicit_waters': 'general',
     'explicit_waters_mask': 'general', 'explicit_waters_group': 'general',
-    'explicit_waters_pymol_cutoff': 'general', 'explicit_waters_as': 'general',
+    'explicit_waters_dasa_cutoff': 'general', 'explicit_waters_as': 'general',
     'explicit_waters_extra_points': 'general', 'verbose': 'general',
     'receptor_mask': 'general', 'ligand_mask': 'general',
     'gbrun': 'gb', 'igb': 'gb', 'intdiel': 'gb', 'extdiel': 'gb', 'saltcon': 'gb', 'surften': 'gb', 'surfoff': 'gb',

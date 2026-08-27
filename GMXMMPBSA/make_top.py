@@ -150,12 +150,17 @@ class CheckMakeTop:
         :return: complex, receptor, ligand topologies and their mutants
         """
         self.gmx2pdb()
-        self._resolve_explicit_waters_mask()
+        # dASA needs the full solvated AMBER topology generated below. The
+        # distance and explicit-mask selectors can be resolved immediately.
+        if self.explicit_waters_mask.strip().lower() != 'dasa':
+            self._resolve_explicit_waters_mask()
         if self.FILES.complex_top:
             tops = self.gmxtop2prmtop()
         else:
             self.pdb2prmtop()
             tops = self.makeToptleap()
+        if self.explicit_waters_mask.strip().lower() == 'dasa':
+            self._resolve_explicit_waters_mask()
 
         if self.INPUT['decomp']['decomprun']:
             explicit_water_res = []
@@ -692,8 +697,8 @@ class CheckMakeTop:
             return
 
         selection = self.explicit_waters_mask.strip()
-        if selection.lower() == 'pymol':
-            self._resolve_pymol_explicit_waters_mask()
+        if selection.lower() == 'dasa':
+            self._resolve_dasa_explicit_waters_mask()
             return
 
         if not selection.startswith('within'):
@@ -731,112 +736,72 @@ class CheckMakeTop:
         return f'({self.explicit_waters_mask})&(!{explicit_water_reference_exclusion_mask})'
 
     @staticmethod
-    def _pymol_residue_selector(residues):
-        selectors = []
-        for residue in residues:
-            chain = f'chain {residue.chain} and ' if residue.chain else ''
-            selectors.append(f'({chain}resi {residue.number}{residue.icode})')
-        return ' or '.join(selectors)
+    def _dasa_residue_mask(residues):
+        return ':' + ','.join(list2range(residues)['string'])
 
-    @staticmethod
-    def _pymol_residue_key(chain, resi):
-        resi = resi.strip()
-        number = ''.join(ch for ch in resi if ch.isdigit() or ch == '-')
-        icode = resi[len(number):] if number else ''
-        return chain.strip(), int(number), icode
-
-    def _resolve_pymol_explicit_waters_mask(self):
-        pymol = self.external_progs.get('pymol')
-        if not pymol:
-            GMXMMPBSA_ERROR('EXPLICIT_WATERS_MASK="pymol" requires PyMOL in PATH.')
-
+    def _resolve_dasa_explicit_waters_mask(self):
         receptor_residues = [res for res in self.resl if res.is_receptor()]
         ligand_residues = [res for res in self.resl if res.is_ligand()]
-        receptor_selector = self._pymol_residue_selector(receptor_residues)
-        ligand_selector = self._pymol_residue_selector(ligand_residues)
-        if not receptor_selector or not ligand_selector:
-            GMXMMPBSA_ERROR('EXPLICIT_WATERS_MASK="pymol" requires receptor and ligand residues.')
+        if not receptor_residues or not ligand_residues:
+            GMXMMPBSA_ERROR('EXPLICIT_WATERS_MASK="dASA" requires receptor and ligand residues.')
+        if not self.explicit_water_prmtop:
+            GMXMMPBSA_ERROR('EXPLICIT_WATERS_MASK="dASA" requires a full solvated AMBER topology.')
+        if not self.FILES.complex_trajs:
+            GMXMMPBSA_ERROR('EXPLICIT_WATERS_MASK="dASA" requires a complex trajectory.')
 
-        cutoff = self.INPUT['general']['explicit_waters_pymol_cutoff']
-        pymol_input = f'{self.FILES.prefix}explicit_waters_interface.py'
-        pymol_output = f'{self.FILES.prefix}explicit_waters_interface.dat'
-        pymol_log = f'{self.FILES.prefix}explicit_waters_pymol.log'
-        script = f"""
-from pymol import cmd, stored
+        receptor_mask = self._dasa_residue_mask(receptor_residues)
+        ligand_mask = self._dasa_residue_mask(ligand_residues)
+        solute_mask = f'({receptor_mask}|{ligand_mask})'
+        all_residues = receptor_residues + ligand_residues
+        dataset_names = []
+        actions = [f'trajin {self.FILES.complex_trajs[0]} 1 1', 'noprogress']
+        for prefix, residues, environment in (
+                ('com', all_residues, solute_mask),
+                ('rec', receptor_residues, receptor_mask),
+                ('lig', ligand_residues, ligand_mask)):
+            for residue in residues:
+                name = f'{prefix}{residue.index}'
+                dataset_names.append(name)
+                actions.append(f'surf {name} :{residue.index} solutemask {environment}')
 
-cutoff = float({cutoff!r})
-receptor_selector = {receptor_selector!r}
-ligand_selector = {ligand_selector!r}
+        output = f'{self.FILES.prefix}explicit_waters_dasa.dat'
+        log = f'{self.FILES.prefix}explicit_waters_dasa.out'
+        actions.extend(['run', f'writedata {output} ' + ' '.join(dataset_names)])
+        cutoff = self.INPUT['general']['explicit_waters_dasa_cutoff']
+        logging.info('Selecting interface residues with cpptraj dASA cutoff %.3g for explicit waters...', cutoff)
+        logging.debug('Running cpptraj dASA calculation with topology %s and first frame of %s',
+                      self.explicit_water_prmtop, self.FILES.complex_trajs[0])
+        with open(log, 'w') as log_file:
+            process = subprocess.Popen([self.external_progs['cpptraj'], self.explicit_water_prmtop],
+                                       stdin=subprocess.PIPE, stdout=log_file, stderr=subprocess.STDOUT)
+            process.communicate(('\n'.join(actions) + '\n').encode())
+        if process.wait():
+            GMXMMPBSA_ERROR(f'{self.external_progs["cpptraj"]} failed when calculating dASA. Check {log}.')
 
-oldDS = cmd.get("dot_solvent")
-cmd.set("dot_solvent", 1)
-cmd.load({self.complex_str_file!r}, "complex")
-cmd.create("tempComplex", "complex")
-cmd.remove("tempComplex and not (polymer and (%s or %s))" % (receptor_selector, ligand_selector))
-cmd.get_area("tempComplex", load_b=1)
-cmd.alter("tempComplex", "q=b")
-cmd.create("chA", "tempComplex and (%s)" % receptor_selector)
-cmd.create("chB", "tempComplex and (%s)" % ligand_selector)
-if cmd.count_atoms("chA") == 0 or cmd.count_atoms("chB") == 0:
-    raise RuntimeError("PyMOL receptor or ligand selection is empty")
-cmd.get_area("chA", load_b=1)
-cmd.get_area("chB", load_b=1)
-cmd.alter("chA", "b=b-q")
-cmd.alter("chB", "b=b-q")
-stored.interface = []
-cmd.iterate("chA", "stored.interface.append((chain, resi, resn, b))")
-cmd.iterate("chB", "stored.interface.append((chain, resi, resn, b))")
-cmd.set("dot_solvent", oldDS)
-
-with open({pymol_output!r}, "w") as outfile:
-    seen = set()
-    for chain, resi, resn, diff in stored.interface:
-        key = (chain, resi)
-        if abs(diff) < cutoff or key in seen:
-            continue
-        seen.add(key)
-        outfile.write("%s\\t%s\\t%s\\t%.6f\\n" % (chain, resi, resn, diff))
-cmd.quit()
-"""
-        with open(pymol_input, 'w') as pml:
-            pml.write(script)
-
-        logging.info(f'Selecting interface residues with PyMOL dASA cutoff {cutoff} for explicit waters...')
-        logging.debug('Running command: %s -cq %s', pymol, pymol_input)
-        pymol_env = os.environ.copy()
-        pymol_env['PATH'] = os.path.dirname(pymol) + os.pathsep + pymol_env.get('PATH', '')
-        pymol_env.pop('PYTHONPATH', None)
-        with open(pymol_log, 'w') as log_file:
-            pymol_proc = subprocess.Popen([pymol, '-cq', pymol_input], stdout=log_file, stderr=subprocess.STDOUT,
-                                          env=pymol_env)
-        if pymol_proc.wait():
-            GMXMMPBSA_ERROR(f'{pymol} failed when selecting PyMOL interface residues. Check {pymol_log}.')
-
-        selected_keys = set()
         try:
-            with open(pymol_output) as output:
-                for line in output:
-                    fields = line.split()
-                    if len(fields) < 2:
-                        continue
-                    selected_keys.add(self._pymol_residue_key(fields[0], fields[1]))
+            with open(output) as data_file:
+                data_lines = [line.split() for line in data_file
+                              if line.strip() and not line.lstrip().startswith('#')]
         except FileNotFoundError:
-            GMXMMPBSA_ERROR(f'PyMOL did not write {pymol_output} when selecting interface residues. '
-                            f'Check {pymol_log}.')
+            GMXMMPBSA_ERROR(f'cpptraj did not write {output} when calculating dASA. Check {log}.')
+        if not data_lines or len(data_lines[0]) != len(dataset_names) + 1:
+            GMXMMPBSA_ERROR(f'cpptraj returned an unexpected dASA dataset in {output}. Check {log}.')
 
+        values = dict(zip(dataset_names, map(float, data_lines[0][1:])))
         selected_residues = []
-        for residue in self.resl:
-            key = (residue.chain.strip(), int(residue.number), residue.icode)
-            if key in selected_keys:
+        for residue in all_residues:
+            complex_area = values[f'com{residue.index}']
+            isolated_prefix = 'rec' if residue.is_receptor() else 'lig'
+            isolated_area = values[f'{isolated_prefix}{residue.index}']
+            if abs(isolated_area - complex_area) >= cutoff:
                 selected_residues.append(residue)
-
         if not selected_residues:
-            GMXMMPBSA_ERROR('PyMOL did not select any interface residues for EXPLICIT_WATERS_MASK="pymol".')
+            GMXMMPBSA_ERROR('cpptraj dASA did not select any interface residues for '
+                            'EXPLICIT_WATERS_MASK="dASA".')
 
         textwraped = textwrap.wrap('\t'.join(x.string for x in selected_residues), tabsize=4, width=120)
-        logging.info(f'Selected {len(selected_residues)} PyMOL dASA interface residues:\n' +
-                     '\n'.join(textwraped) + '\n')
-
+        logging.info('Selected %d cpptraj dASA interface residues:\n%s\n', len(selected_residues),
+                     '\n'.join(textwraped))
         resolved_mask = ':' + ','.join(list2range(selected_residues)['string'])
         self.explicit_waters_mask = resolved_mask
         self.INPUT['general']['explicit_waters_mask'] = resolved_mask

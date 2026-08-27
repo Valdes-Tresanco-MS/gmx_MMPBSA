@@ -168,7 +168,7 @@ restarted when the next trajectory file is read.
 
     * An Amber residue mask, for example `":4,6,7,8,9"`
     * A decomposition-style distance selection, for example `"within 4"`
-    * `"pymol"` to identify interface residues with PyMOL dASA before selecting closest waters
+    * `"dASA"` to identify interface residues with cpptraj dASA before selecting closest waters
 
     The selected interface/reference residues are static for the calculation. The water identities can change from frame
     to frame because `cpptraj closest` is applied during trajectory processing.
@@ -178,9 +178,9 @@ restarted when the next trajectory file is read.
 water model names such as `SOLV`, `SOL`, `Water`, `WAT`, `TP3`, `TIP3P`, `SPC`, and `OPC`. Set this option only when
 the solvent group in the index file uses a custom name.
 
-`explicit_waters_pymol_cutoff` (Default = 0.5)
-:   dASA cutoff used when `explicit_waters_mask="pymol"`. PyMOL must be available in `PATH` for this mode. This option
-is ignored for Amber mask and `within <distance>` selections.
+`explicit_waters_dasa_cutoff` (Default = 0.5)
+:   dASA cutoff used when `explicit_waters_mask="dASA"`. This option is ignored for Amber mask and
+    `within <distance>` selections.
 
 `explicit_waters_as` (Default = "receptor")
 :   Molecule that receives the explicit waters. The only supported value is `"receptor"` in the current implementation.

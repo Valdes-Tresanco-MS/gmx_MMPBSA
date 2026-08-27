@@ -134,7 +134,8 @@ class CheckAmberTop(CheckMakeTop):
         :return: complex, receptor, ligand topologies and their mutants
         """
         self.amber2pdb()
-        if self.explicit_waters:
+        if (self.explicit_waters and
+                self.explicit_waters_mask.strip().lower() != 'dasa'):
             self._resolve_explicit_waters_mask()
         tops = self.ambertop2prmtop()
 
@@ -536,6 +537,8 @@ class CheckAmberTop(CheckMakeTop):
 
         self.explicit_water_prmtop = f'{self.FILES.prefix}COM_FULL_SOLVENT.prmtop'
         source.write_parm(self.explicit_water_prmtop)
+        if self.explicit_waters_mask.strip().lower() == 'dasa':
+            self._resolve_explicit_waters_mask()
         self._write_explicit_water_structures()
 
         # The source residue numbers are retained by cpptraj and ParmEd when

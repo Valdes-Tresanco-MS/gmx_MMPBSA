@@ -1,5 +1,4 @@
 import copy
-import io
 import logging
 import sys
 import types
@@ -104,7 +103,7 @@ class ExplicitWaterInputTest(unittest.TestCase):
         self.assertEqual(parsed['general']['explicit_waters'], 0)
         self.assertEqual(parsed['general']['explicit_waters_mask'], '')
         self.assertEqual(parsed['general']['explicit_waters_group'], '')
-        self.assertEqual(parsed['general']['explicit_waters_pymol_cutoff'], 0.5)
+        self.assertEqual(parsed['general']['explicit_waters_dasa_cutoff'], 0.5)
         self.assertEqual(parsed['general']['explicit_waters_as'], 'receptor')
         self.assertEqual(parsed['general']['explicit_waters_extra_points'], 'error')
 
@@ -213,23 +212,21 @@ class ExplicitWaterInputTest(unittest.TestCase):
         finally:
             logging.disable(logging.NOTSET)
 
-    def test_requires_pymol_when_pymol_interface_selection_is_requested(self):
+    def test_dasa_interface_selection_does_not_require_pymol(self):
         from GMXMMPBSA.utils import find_progs
 
         parsed = _base_input()
         parsed['general']['explicit_waters'] = 10
-        parsed['general']['explicit_waters_mask'] = 'pymol'
+        parsed['general']['explicit_waters_mask'] = 'dASA'
 
         def fake_which(program, path=None):
-            return None if program == 'pymol' else f'/usr/bin/{program}'
+            return f'/usr/bin/{program}'
 
-        logging.disable(logging.CRITICAL)
-        try:
-            with patch('GMXMMPBSA.utils.shutil.which', side_effect=fake_which):
-                with self.assertRaises(MMPBSA_Error):
-                    find_progs(parsed, engine='amber')
-        finally:
-            logging.disable(logging.NOTSET)
+        with patch('GMXMMPBSA.utils.shutil.which', side_effect=fake_which):
+            programs = find_progs(parsed, engine='amber')
+
+        self.assertNotIn('pymol', programs)
+        self.assertEqual(programs['cpptraj'], '/usr/bin/cpptraj')
 
 
 class ExplicitWaterCleanupTest(unittest.TestCase):
@@ -269,39 +266,48 @@ class ExplicitWaterCleanupTest(unittest.TestCase):
         self.assertEqual(maketop.explicit_waters_mask, ':1,3,4')
         self.assertEqual(maketop.INPUT['general']['explicit_waters_mask'], ':1,3,4')
 
-    def test_pymol_explicit_water_mask_resolves_to_interface_residue_mask(self):
+    def test_dasa_explicit_water_mask_resolves_to_interface_residue_mask(self):
         CheckMakeTop = self._import_make_top_with_stubs()
         from GMXMMPBSA.utils import Residue
 
         maketop = CheckMakeTop.__new__(CheckMakeTop)
         maketop.explicit_waters = 10
-        maketop.explicit_waters_mask = 'pymol'
-        maketop.external_progs = {'pymol': 'pymol'}
-        maketop.complex_str_file = '_GMXMMPBSA_COM.pdb'
-        maketop.FILES = SimpleNamespace(prefix='_GMXMMPBSA_')
-        maketop.INPUT = {'general': {'explicit_waters_mask': 'pymol', 'explicit_waters_pymol_cutoff': 0.5}}
-        maketop.resl = [
-            Residue(1, 1, 'A', 'R', 1, 'ALA'),
-            Residue(2, 2, 'A', 'R', 2, 'ASP'),
-            Residue(3, 1, 'B', 'L', 1, 'LYS'),
-        ]
+        maketop.explicit_waters_mask = 'dASA'
+        maketop.external_progs = {'cpptraj': 'cpptraj'}
+        with TemporaryDirectory() as tmpdir:
+            prefix = f'{tmpdir}/_GMXMMPBSA_'
+            maketop.explicit_water_prmtop = f'{tmpdir}/full.prmtop'
+            maketop.FILES = SimpleNamespace(prefix=prefix, complex_trajs=[f'{tmpdir}/traj.mdcrd'])
+            maketop.INPUT = {
+                'general': {'explicit_waters_mask': 'dASA', 'explicit_waters_dasa_cutoff': 0.5}
+            }
+            maketop.resl = [
+                Residue(1, 1, 'A', 'R', 1, 'ALA'),
+                Residue(2, 2, 'A', 'R', 2, 'ASP'),
+                Residue(3, 1, 'B', 'L', 1, 'LYS'),
+                Residue(4, 2, 'B', 'L', 2, 'VAL'),
+            ]
 
-        class FakeProcess:
-            def wait(self):
-                return 0
+            class FakeProcess:
+                def communicate(self, data=None):
+                    self.cpptraj_input = data or b''
+                    Path(f'{prefix}explicit_waters_dasa.dat').write_text(
+                        '1 10 10 10 10 11 10 10 12\n')
 
-        def fake_open(name, mode='r', *args, **kwargs):
-            if name == '_GMXMMPBSA_explicit_waters_interface.dat' and 'r' in mode:
-                return io.StringIO('A\t2\tASP\nB\t1\tLYS\n')
-            return mock_open()()
+                def wait(self):
+                    return 0
 
-        with patch('subprocess.Popen', return_value=FakeProcess()) as popen:
-            with patch('builtins.open', side_effect=fake_open):
+            with patch('GMXMMPBSA.make_top.subprocess.Popen', return_value=FakeProcess()) as popen:
                 maketop._resolve_explicit_waters_mask()
 
-        popen.assert_called_once()
-        self.assertEqual(maketop.explicit_waters_mask, ':2,3')
-        self.assertEqual(maketop.INPUT['general']['explicit_waters_mask'], ':2,3')
+            popen.assert_called_once()
+            input_text = popen.return_value.cpptraj_input.decode()
+            self.assertEqual(maketop.explicit_waters_mask, ':1,4')
+            self.assertEqual(maketop.INPUT['general']['explicit_waters_mask'], ':1,4')
+            self.assertIn('surf com1 :1 solutemask (:1,2|:3,4)', input_text)
+            self.assertIn('surf rec1 :1 solutemask :1,2', input_text)
+            self.assertIn('surf lig4 :4 solutemask :3,4', input_text)
+            self.assertNotIn('pymol', input_text.lower())
 
     def test_cleanup_trajs_emits_closest_cpptraj_action(self):
         CheckMakeTop = self._import_make_top_with_stubs()

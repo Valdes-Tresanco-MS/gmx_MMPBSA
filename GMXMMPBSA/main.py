@@ -1075,8 +1075,8 @@ class MMPBSA_App(object):
             GMXMMPBSA_ERROR('SOLVATED_TRAJECTORY must be 0 or 1!', InputError)
         if INPUT['general']['explicit_waters'] < 0:
             GMXMMPBSA_ERROR('EXPLICIT_WATERS must be >= 0!', InputError)
-        if INPUT['general']['explicit_waters_pymol_cutoff'] < 0:
-            GMXMMPBSA_ERROR('EXPLICIT_WATERS_PYMOL_CUTOFF must be >= 0!', InputError)
+        if INPUT['general']['explicit_waters_dasa_cutoff'] < 0:
+            GMXMMPBSA_ERROR('EXPLICIT_WATERS_DASA_CUTOFF must be >= 0!', InputError)
         if INPUT['general']['explicit_waters_as'].lower() != 'receptor':
             GMXMMPBSA_ERROR('EXPLICIT_WATERS_AS only supports "receptor" in this version.', InputError)
         if INPUT['general']['explicit_waters_extra_points'].lower() not in ['error', 'strip']:

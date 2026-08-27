@@ -882,9 +882,7 @@ def find_progs(INPUT, mpi_size=0, engine='gmx'):
                   'mmpbsa_py_nabnmode': INPUT['nmode']['nmoderun'],
                   # 'rism3d.snglpnt': INPUT['rism']['rismrun']
                   'elsize': INPUT['gb']['alpb'],
-                  'gbnsr6': INPUT['gbnsr6']['gbnsr6run'],
-                  'pymol': (INPUT['general']['explicit_waters'] > 0 and
-                            INPUT['general']['explicit_waters_mask'].strip().lower() == 'pymol')
+                  'gbnsr6': INPUT['gbnsr6']['gbnsr6run']
                   }
     gro_exe = {
         'gmx5': [
@@ -901,9 +899,6 @@ def find_progs(INPUT, mpi_size=0, engine='gmx'):
         my_progs[prog] = shutil.which(prog, path=os.environ['PATH'])
         if needed:
             if not my_progs[prog]:
-                if prog == 'pymol':
-                    GMXMMPBSA_ERROR('EXPLICIT_WATERS_MASK="pymol" requires PyMOL in PATH. Install PyMOL, '
-                                    'load a module that provides it, or use an Amber mask/within selection instead.')
                 GMXMMPBSA_ERROR(f'Could not find necessary program [{prog}]')
             logging.info(f'{prog} found! Using {str(my_progs[prog])}')
 

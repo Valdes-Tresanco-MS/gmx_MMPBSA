@@ -22,7 +22,6 @@ In this case, `gmx_MMPBSA` requires:
 | Receptor and ligand group      | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |        `integers`       | Group numbers in the index files |
 | A trajectory file              | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } | `xtc` `pdb` `trr` | Final GROMACS MD trajectory |
 | A topology file                | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |           `top`         | GROMACS topology file. The `*.itp` files defined in the topology must be in the same folder |
-| PyMOL executable               | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |       executable        | Required only when `explicit_waters_mask="pymol"` |
 
 :octicons-check-circle-fill-16:{ .req } -> Must be defined
 
@@ -42,9 +41,9 @@ relative paths:
 
         mpirun -np 2 gmx_MMPBSA -O -i mmpbsa.in -cs ../Protein_protein/com.tpr -ct ../Protein_protein/com_traj.xtc -ci ../Protein_protein/index.ndx -cg 3 4 -cp ../Protein_protein/topol.top -o FINAL_RESULTS_MMPBSA.dat -eo FINAL_RESULTS_MMPBSA.csv
 
-=== "PyMOL interface"
+=== "dASA interface"
 
-        gmx_MMPBSA -O -i mmpbsa_explicit_waters_pymol.in -cs ../Protein_protein/com.tpr -ct ../Protein_protein/com_traj.xtc -ci ../Protein_protein/index.ndx -cg 3 4 -cp ../Protein_protein/topol.top -o FINAL_RESULTS_EXPLICIT_WATERS_PYMOL.dat -eo FINAL_RESULTS_EXPLICIT_WATERS_PYMOL.csv
+        gmx_MMPBSA -O -i mmpbsa_explicit_waters_dasa.in -cs ../Protein_protein/com.tpr -ct ../Protein_protein/com_traj.xtc -ci ../Protein_protein/index.ndx -cg 3 4 -cp ../Protein_protein/topol.top -o FINAL_RESULTS_EXPLICIT_WATERS_DASA.dat -eo FINAL_RESULTS_EXPLICIT_WATERS_DASA.csv
 
 === "gmx_MMPBSA_test"
 
@@ -55,7 +54,7 @@ where the `mmpbsa.in` input file is a text file containing the following lines:
 ``` yaml linenums="1" title="Sample input file for ST GB calculation with explicit receptor waters"
 Sample input file for ST GB calculation with explicit receptor waters
 # This input keeps 10 waters closest to a static within-distance selection.
-# PyMOL is not required for this variant (used by gmx_MMPBSA_test -t 26).
+# The dASA interface variant is available in mmpbsa_explicit_waters_dasa.in.
 
 &general
 sys_name="Prot-Prot-ExpWat",
@@ -70,7 +69,8 @@ igb=2, saltcon=0.150,
 /
 ```
 
-The optional `mmpbsa_explicit_waters_pymol.in` input uses `explicit_waters_mask="pymol"` and requires PyMOL in `PATH`.
+The optional `mmpbsa_explicit_waters_dasa.in` input uses `explicit_waters_mask="dASA"` and
+`explicit_waters_dasa_cutoff=0.5`.
 
 !!! info "Keep in mind"
     See a detailed list of all the options in `gmx_MMPBSA` input file [here][2] as well as several [examples][3].
@@ -83,12 +83,13 @@ This mode keeps a fixed number of explicit water molecules in the working comple
 the receptor. It is currently supported for single-trajectory GB or PB calculations only. RISM, GBNSR6, entropy, and
 multi-trajectory inputs are not supported with `explicit_waters > 0`.
 
-The PyMOL interface mode identifies interface residues from the first extracted complex PDB using a dASA cutoff. Then
-`cpptraj closest` selects the closest waters to that static interface mask in each trajectory frame. This means the
-interface residue mask is static, while the water identities can change frame by frame.
+The dASA interface mode identifies interface residues with cpptraj using a dASA cutoff. Then `cpptraj closest` selects
+the closest waters to that static interface mask in each trajectory frame. This means the interface residue mask is
+static, while the water identities can change frame by frame.
 
-If PyMOL is not available, define `explicit_waters_mask` as an Amber residue mask or as a `within <distance>` selection
-instead. The selected waters are assigned to the receptor internally, and the ligand topology remains dry.
+For a fast geometric alternative, define `explicit_waters_mask` as an Amber residue mask or as a
+`within <distance>` selection. The selected waters are assigned to the receptor internally, and the ligand topology
+remains dry.
 
 By default, the explicit-water setup looks for common solvent index groups such as `SOLV`, `SOL`, `Water`, `WAT`,
 `TP3`, and `OPC`. If the solvent group has a custom name, set `explicit_waters_group` in `&general`.
@@ -99,7 +100,7 @@ want to remove the virtual sites and use the result as an approximate relative c
 
 Useful generated files for checking the setup are:
 
-* `_GMXMMPBSA_explicit_waters_interface.dat`: PyMOL/dASA interface residues used to build the water reference mask
+* `_GMXMMPBSA_explicit_waters_dasa.dat`: cpptraj dASA data used to build the water reference mask
 * `_GMXMMPBSA_explicit_waters_closest_0.dat`: water molecules selected by `cpptraj closest` in each frame
 * `COM.prmtop`: complex topology with the requested number of water residues
 * `REC.prmtop`: receptor topology with those water residues assigned to the receptor
