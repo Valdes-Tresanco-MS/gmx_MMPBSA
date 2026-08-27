@@ -32,6 +32,24 @@ For explicit-water calculations, `-cp` must be the original solvated AMBER topol
 matching solvated trajectory. The receptor and ligand masks in `-cm` must select solute residues only; solvent and ions
 are removed during setup.
 
+### Native AMBER GB radii
+
+Native AMBER topologies already contain the per-atom `RADII` and `SCREEN` values, together with the `RADIUS_SET`
+metadata written during `tleap` preparation. `amber_MMPBSA` preserves these values for the generated working
+topologies; the input-file `PBRadii` setting does not replace them. Choose the radius set when building the AMBER
+topology, for example:
+
+```text
+set default PBradii mbondi3
+saveamberparm complex complex.prmtop
+```
+
+For GB calculations, the conventional pairings are `igb=1`/`mbondi`, `igb=2` or `5`/`mbondi2`, `igb=7`/`bondi`, and
+`igb=8`/`mbondi3`. If a recognized `RADIUS_SET` differs from that pairing, `amber_MMPBSA` prints a warning but still
+uses the radii in the topology. This is intentional: unusual combinations may be valid user choices, so they are
+not changed or rejected automatically. If the warning is not intentional, rebuild the topology with the desired
+`PBradii` in `tleap`.
+
 ## Supported and unsupported features
 
 **Supported (single-trajectory focus)**
@@ -42,7 +60,7 @@ are removed during setup.
   `explicit_waters_mask` and `cpptraj closest` workflow used by `gmx_MMPBSA`
 - Optional separate receptor/ligand topologies (`-rp` / `-lp`)
 - Non-contiguous Amber residue masks
-- Radii/`SCREEN` values preserved from the input prmtop (input `PBRadii` does not rebuild normal topologies)
+- Radii/`SCREEN` values preserved from the input prmtop (input `PBRadii` does not rebuild normal topologies); an advisory warning is emitted when the topology radius set does not match the conventional choice for the selected `igb`
 - Result rewriting and analysis with `gmx_MMPBSA_ana`
 
 **Not supported / different behavior**

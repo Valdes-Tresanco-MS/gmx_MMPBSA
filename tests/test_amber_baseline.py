@@ -78,6 +78,33 @@ class AmberDryBaselineTest(unittest.TestCase):
         with self.assertRaises(MMPBSA_Error):
             checker.check4water()
 
+    def test_warns_for_nonconventional_gb_radius_pairing(self):
+        from GMXMMPBSA.make_top_amber import CheckAmberTop
+
+        checker = object.__new__(CheckAmberTop)
+        checker.INPUT = {'gb': {'gbrun': True, 'igb': 8}}
+        parm = SimpleNamespace(
+            parm_data={'RADIUS_SET': ['modified Bondi radii (mbondi2)']}
+        )
+
+        with self.assertLogs(level='WARNING') as messages:
+            checker._warn_gb_radius_compatibility(parm, 'complex')
+
+        self.assertIn("uses 'mbondi2' radii, while igb=8", messages.output[0])
+        self.assertIn("with 'mbondi3' radii", messages.output[0])
+
+    def test_does_not_warn_for_conventional_gb_radius_pairing(self):
+        from GMXMMPBSA.make_top_amber import CheckAmberTop
+
+        checker = object.__new__(CheckAmberTop)
+        checker.INPUT = {'gb': {'gbrun': True, 'igb': 8}}
+        parm = SimpleNamespace(
+            parm_data={'RADIUS_SET': ['modified Bondi radii (mbondi3)']}
+        )
+
+        with self.assertNoLogs(level='WARNING'):
+            checker._warn_gb_radius_compatibility(parm, 'complex')
+
     def test_amber_residue_numbers_are_one_based_for_masks(self):
         from GMXMMPBSA.make_top_amber import CheckAmberTop
 

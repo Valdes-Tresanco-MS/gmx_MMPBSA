@@ -335,6 +335,15 @@ support for complex systems with several components. It supports all force field
     * 2: mbondi, recommended when igb = 1
     * 3: mbondi2, recommended when igb = 2 or 5
     * 4: mbondi3, recommended when igb = 8
+
+    !!! note "Native AMBER topologies"
+        When using `amber_MMPBSA` with a native AMBER `prmtop`, the per-atom `RADII` and `SCREEN` values already
+        stored in the topology are preserved. In this case, `PBRadii` does not rebuild or replace the normal working
+        topologies; select the radius set during `tleap` preparation. `amber_MMPBSA` warns when the recognized
+        topology `RADIUS_SET` does not conventionally match the selected `igb`, but it does not change or reject the
+        combination automatically. For GROMACS inputs, `gmx_MMPBSA` applies the selected `PBRadii` to the generated
+        AMBER topology and gives the same advisory warning when it differs from the conventional choice for `igb`.
+
     * 5: mbondi_pb2
 
         !!! note "_mbondi_pb2_ radii set"

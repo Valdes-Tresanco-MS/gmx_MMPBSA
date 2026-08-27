@@ -32,6 +32,9 @@ title: Changelog
 - Added `amber_MMPBSA` for native AMBER topology/trajectory/mask ST workflows (optional separate receptor/ligand
   tops). Not full `gmx_MMPBSA` feature parity: explicit receptor waters are restricted to ST GB/GBNSR6/PB/RISM/NMODE, ligand MT unsupported, radii preserved
   from the input prmtop. See `docs/amber_MMPBSA.md`.
+- Added an advisory native-AMBER warning when the preserved `RADIUS_SET` does not conventionally match the selected
+  GB `igb` model; the topology radii are never replaced automatically. Added the corresponding warning for
+  GROMACS-derived topologies when the selected `PBRadii` differs from the conventional `igb` pairing.
 - Removed the unused `-cs` option from the AMBER workflow because setup derives the structure from frame 1 of `-ct`.
 
 ### QM/MM, GBNSR6, and explicit waters

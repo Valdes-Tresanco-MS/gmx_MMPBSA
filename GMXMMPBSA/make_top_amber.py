@@ -28,7 +28,7 @@ import tempfile
 import parmed
 from GMXMMPBSA.exceptions import *
 from GMXMMPBSA.make_trajs import Trajectory
-from GMXMMPBSA.make_top import CheckMakeTop, water_residues, solvent_ion_residues
+from GMXMMPBSA.make_top import (CheckMakeTop, GB_RECOMMENDED_RADII, water_residues, solvent_ion_residues)
 from GMXMMPBSA.utils import (selector, get_dist, list2range, res2map, get_indexes, log_subprocess_output, check_str,
                              eq_strs, get_index_groups, reconcile_qm_charges, topology_mismatch_error, res2map_amber,
                              residue_names_match)
@@ -376,6 +376,43 @@ class CheckAmberTop(CheckMakeTop):
     def _radius_set(parm):
         return parm.parm_data.get('RADIUS_SET', ['unknown'])[0]
 
+    def _topology_radius_name(self, parm):
+        radius_set = self._radius_set(parm).lower()
+        for radius_name in PBRadii.values():
+            if f'({radius_name.lower()})' in radius_set:
+                return radius_name
+        for radius_name in sorted(PBRadii.values(), key=len, reverse=True):
+            if radius_name.lower() in radius_set:
+                return radius_name
+        return None
+
+    def _warn_gb_radius_compatibility(self, parm, system):
+        """Warn when preserved native-AMBER radii differ from the usual GB choice."""
+        if not self.INPUT.get('gb', {}).get('gbrun', False):
+            return
+
+        igb = self.INPUT['gb']['igb']
+        recommended = GB_RECOMMENDED_RADII.get(igb)
+        if recommended is None:
+            return
+
+        actual = self._topology_radius_name(parm)
+        if actual is None:
+            logging.warning(
+                f"Could not identify the GB radii in the {system} AMBER topology from "
+                f"RADIUS_SET '{self._radius_set(parm)}'; compatibility with igb={igb} "
+                f"(normally {recommended}) could not be checked."
+            )
+            return
+
+        if actual != recommended:
+            logging.warning(
+                f"The {system} AMBER topology uses '{actual}' radii, while igb={igb} "
+                f"is conventionally used with '{recommended}' radii. The input topology "
+                f"radii will be preserved; rebuild the AMBER topology with the desired "
+                f"PBradii in tleap if this combination is not intentional."
+            )
+
     def _chrad_radius_name(self, parm):
         radius_set = self._radius_set(parm).lower()
         for radius_name in PBRadii.values():
@@ -631,6 +668,8 @@ class CheckAmberTop(CheckMakeTop):
             logging.debug(f'Stripping complex topology with mask: {"|".join(self.FILES.complex_mask)}')
             com_top.strip(f'!({"|".join(self.FILES.complex_mask)})')
 
+        self._warn_gb_radius_compatibility(com_top, 'complex')
+
         # com_top = self.cleantop(self.FILES.complex_top, self.indexes['COM']['COM'])
         structure_for_topology = self.explicit_complex_str if self.explicit_waters else self.complex_str
         if error_info := eq_strs(com_top, structure_for_topology):
@@ -687,6 +726,7 @@ class CheckAmberTop(CheckMakeTop):
             logging.info('A Receptor topology file was defined. Using MT approach...')
             logging.info('Building AMBER Receptor Topology from AMBER Receptor Topology...')
             rec_top = parmed.amber.AmberParm(self.FILES.receptor_top)
+            self._warn_gb_radius_compatibility(rec_top, 'receptor')
 
             if error_info := eq_strs(rec_top, self.receptor_str):
                 topology_mismatch_error('receptor', self.FILES.receptor_top, self.receptor_str_file, error_info)
@@ -730,6 +770,7 @@ class CheckAmberTop(CheckMakeTop):
             logging.info('A Ligand Topology file was defined. Using MT approach...')
             logging.info('Building AMBER Ligand Topology from AMBER Ligand Topology...')
             lig_top = parmed.amber.AmberParm(self.FILES.ligand_top)
+            self._warn_gb_radius_compatibility(lig_top, 'ligand')
 
             if error_info := eq_strs(lig_top, self.ligand_str):
                 topology_mismatch_error('ligand', self.FILES.ligand_top, self.ligand_str_file, error_info)

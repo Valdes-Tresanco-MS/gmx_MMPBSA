@@ -56,6 +56,7 @@ nonpolar_aa = ['PHE', 'TRP', 'VAL', 'ILE', 'LEU', 'MET', 'PRO', 'CYX', 'ALA', 'G
 polar_aa = ['TYR', 'SER', 'THR', 'CYM', 'CYS', 'HIE', 'HID', 'GLN', 'ASN', 'ASH', 'GLH', 'LYN']
 
 PBRadii = {1: 'bondi', 2: 'mbondi', 3: 'mbondi2', 4: 'mbondi3', 5: 'mbondi_pb2', 6: 'mbondi_pb3', 7: 'charmm_radii'}
+GB_RECOMMENDED_RADII = {1: 'mbondi', 2: 'mbondi2', 5: 'mbondi2', 7: 'bondi', 8: 'mbondi3'}
 
 # ions_para_files = {1: 'frcmod.ions234lm_126_tip3p', 2: 'frcmod.ions234lm_iod_tip4pew', 3: 'frcmod.ions234lm_iod_spce',
 #                    4: 'frcmod.ions234lm_hfe_spce', 5: 'frcmod.ions234lm_126_tip4pew', 6: 'frcmod.ions234lm_126_spce',
@@ -264,6 +265,24 @@ class CheckMakeTop:
 
         self.cleanup_trajs()
         return tops
+
+    def _warn_gmx_gb_radius_compatibility(self):
+        """Warn when the selected GROMACS radius set differs from the usual GB choice."""
+        if not self.INPUT.get('gb', {}).get('gbrun', False):
+            return
+
+        igb = self.INPUT['gb']['igb']
+        recommended = GB_RECOMMENDED_RADII.get(igb)
+        if recommended is None:
+            return
+
+        selected = PBRadii[self.INPUT['general']['PBRadii']]
+        if selected != recommended:
+            logging.warning(
+                f"PBRadii='{selected}' is selected for the GROMACS topology, while igb={igb} "
+                f"is conventionally used with '{recommended}' radii. The selected PBRadii will "
+                f"be used; change PBRadii if this combination is not intentional."
+            )
 
     @staticmethod
     def _get_index_group_names(index_file):
@@ -810,6 +829,7 @@ class CheckMakeTop:
     def gmxtop2prmtop(self):
         logging.info('Using topology conversion. Setting radiopt = 0...')
         self.INPUT['pb']['radiopt'] = 0
+        self._warn_gmx_gb_radius_compatibility()
         logging.info('Building Normal Complex Amber topology...')
         com_top, error_info = self._cleantop_with_retry(
             self.FILES.complex_top, self.indexes['COM']['COM'], self.complex_str
@@ -1021,6 +1041,7 @@ class CheckMakeTop:
         Generate parmed structure object for complex, receptor and ligand ( if it is protein-like)
         :return:
         """
+        self._warn_gmx_gb_radius_compatibility()
         if self.INPUT['general']['PBRadii'] == 7:
             GMXMMPBSA_ERROR(f"The PBRadii {PBRadii[self.INPUT['general']['PBRadii']]} is not compatible with "
                             f"Amber topologies...")
