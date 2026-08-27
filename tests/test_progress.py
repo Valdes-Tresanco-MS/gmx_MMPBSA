@@ -64,6 +64,35 @@ class FrameCounterTest(unittest.TestCase):
             output.write_text('Total: 1.0\nTotal: 2.0\n')
             self.assertEqual(FrameCounter(str(output), nmode=True).count(), 2)
 
+    def test_detects_qmmm_diagnostics_once_across_rank_files(self):
+        with tempfile.TemporaryDirectory() as directory:
+            template = str(Path(directory, 'complex_gb.mdout.%d'))
+            message = 'QMMM: Analytical derivatives for d orbitals are not supported.\n'
+            Path(template % 0).write_text(message)
+            Path(template % 1).write_text(message + message)
+
+            counter = FrameCounter(template, mpi_size=2)
+            self.assertEqual(counter.count(), 0)
+            diagnostics = counter.pop_diagnostics()
+            self.assertEqual([diagnostic.code for diagnostic in diagnostics], ['numerical_qm_derivatives'])
+            self.assertEqual(counter.pop_diagnostics(), [])
+
+    def test_detects_qmmm_diagnostic_after_a_partial_line_is_completed(self):
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory, 'complex_gb.mdout.0')
+            output.write_text('QMMM: Analytical derivatives for d orbitals are not')
+            counter = FrameCounter(str(output))
+            self.assertEqual(counter.count(), 0)
+            self.assertEqual(counter.pop_diagnostics(), [])
+
+            with output.open('a') as stream:
+                stream.write(' supported.\n')
+            counter.count()
+            self.assertEqual(
+                [diagnostic.code for diagnostic in counter.pop_diagnostics()],
+                ['numerical_qm_derivatives'],
+            )
+
     def test_gbnsr6_counts_completed_json_once(self):
         with tempfile.TemporaryDirectory() as directory:
             rank0 = Path(directory, 'inpcrd_0')
@@ -111,6 +140,24 @@ class PlainProgressTest(unittest.TestCase):
             text = '\n'.join(messages.output)
             self.assertIn('Complex completed: 2 frames in', text)
             self.assertEqual(text.count('Complex completed:'), 1)
+
+    def test_monitor_reports_qmmm_diagnostic_before_completion(self):
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory, 'complex_gb.mdout.0')
+            output.write_text(
+                'QMMM: No convergence in SCF after      1 steps.\n'
+                + FrameCounterTest.marker
+            )
+            with self.assertLogs(level=logging.DEBUG) as messages:
+                monitor_progress(
+                    str(output), nframes=1, style='plain', label='Complex', poll_interval=0,
+                )
+            text = '\n'.join(messages.output)
+            self.assertIn('QM/MM diagnostic detected during Complex', text)
+            self.assertLess(
+                text.index('QM/MM diagnostic detected during Complex'),
+                text.index('Complex completed:'),
+            )
 
     def test_rich_monitor_logs_completion_summary(self):
         with tempfile.TemporaryDirectory() as directory:

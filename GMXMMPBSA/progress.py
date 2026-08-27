@@ -11,6 +11,8 @@ from time import monotonic, sleep
 
 from tqdm import tqdm
 
+from GMXMMPBSA.qmmm_diagnostics import parse_qmmm_diagnostics
+
 
 TQDM_BAR_FORMAT = (
     '            {l_bar}{bar:100}| {n_fmt}/{total_fmt} '
@@ -61,7 +63,7 @@ def resolve_progress_style(style='auto', stream=None):
 
 
 class FrameCounter:
-    """Incrementally count completed frames in rank output files."""
+    """Incrementally count frames and diagnostics in rank output files."""
 
     def __init__(self, output_basename, mpi_size=1, nmode=False):
         self.output_basename = output_basename
@@ -69,6 +71,52 @@ class FrameCounter:
         self.marker = 'Total:' if nmode else '                    FINAL RESULTS'
         self._positions = {}
         self._counts = {}
+        self._partial_lines = {}
+        self._diagnostics = []
+        self._seen_diagnostics = set()
+
+    def _scan_output(self, path):
+        size = path.stat().st_size
+        position = self._positions.get(path, 0)
+        if size < position:
+            position = 0
+            self._counts[path] = 0
+            self._partial_lines[path] = ''
+
+        with path.open(errors='replace') as output:
+            output.seek(position)
+            new_text = output.read()
+            self._positions[path] = output.tell()
+
+        text = self._partial_lines.get(path, '') + new_text
+        if text.endswith(('\n', '\r')):
+            complete_text = text
+            self._partial_lines[path] = ''
+        else:
+            complete_text, separator, partial = text.rpartition('\n')
+            if separator:
+                self._partial_lines[path] = partial
+            else:
+                complete_text = ''
+                self._partial_lines[path] = text
+
+        self._counts[path] = self._counts.get(path, 0) + sum(
+            line.startswith(self.marker) for line in complete_text.splitlines()
+        )
+
+        # A diagnostic is meaningful as soon as its line is visible. Include
+        # the current partial line as well: SANDER normally newline-terminates
+        # records, but this also handles a final record without a newline.
+        diagnostic_text = complete_text + self._partial_lines.get(path, '')
+        for diagnostic in parse_qmmm_diagnostics(diagnostic_text):
+            # Repeat the same run-wide event only once across MPI ranks, but
+            # retain distinct parameter diagnostics with different messages.
+            key = diagnostic.code
+            if diagnostic.code == 'qm_parameter_missing':
+                key = diagnostic.code, diagnostic.message
+            if key not in self._seen_diagnostics:
+                self._seen_diagnostics.add(key)
+                self._diagnostics.append(diagnostic)
 
     def count(self):
         if 'gbnsr6' in self.output_basename:
@@ -88,19 +136,14 @@ class FrameCounter:
             path = Path(filename)
             if not path.exists():
                 continue
-            size = path.stat().st_size
-            position = self._positions.get(path, 0)
-            if size < position:
-                position = 0
-                self._counts[path] = 0
-            with path.open(errors='replace') as output:
-                output.seek(position)
-                new_frames = 0
-                while line := output.readline():
-                    new_frames += line.startswith(self.marker)
-                self._counts[path] = self._counts.get(path, 0) + new_frames
-                self._positions[path] = output.tell()
+            self._scan_output(path)
         return sum(self._counts.values())
+
+    def pop_diagnostics(self):
+        """Return newly observed QM/MM diagnostics and clear the queue."""
+        diagnostics = self._diagnostics
+        self._diagnostics = []
+        return diagnostics
 
 
 def _rank_names(template, mpi_size):
@@ -274,6 +317,13 @@ def monitor_progress(output_basename, nframes=1, mpi_size=1, nmode=False,
     try:
         while completed < nframes:
             completed = min(counter.count(), nframes)
+            for diagnostic in counter.pop_diagnostics():
+                level = logging.ERROR if diagnostic.severity == 'error' else logging.WARNING
+                logging.log(
+                    level,
+                    'QM/MM diagnostic detected during %s: %s %s',
+                    label, diagnostic.message, diagnostic.remediation,
+                )
             reporter.update(completed)
             if log_reporter:
                 log_reporter.update(completed)

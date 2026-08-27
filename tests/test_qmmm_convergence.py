@@ -72,6 +72,22 @@ class QMMMConvergenceTest(unittest.TestCase):
             calculation = self._calculation(input_file, output_file)
             calculation._check_qmmm_convergence()
 
+    def test_streamed_qmmm_warning_is_not_repeated_at_end(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmpdir = Path(tmpdir)
+            input_file = tmpdir / 'qmmm.mdin'
+            output_file = tmpdir / 'qmmm.mdout'
+            input_file.write_text('&qmmm\n/\n')
+            output_file.write_text(
+                'QMMM: Analytical derivatives for d orbitals are not supported.\n'
+            )
+
+            calculation = self._calculation(input_file, output_file)
+            calculation._qmmm_diagnostics_streamed = True
+            with patch.object(Calculation, 'run'):
+                with self.assertNoLogs(level='WARNING'):
+                    calculation.run(0)
+
     def test_missing_method_parameters_include_method_and_atomic_number(self):
         diagnostics = parse_qmmm_diagnostics(
             'QMMM: Atom number: 74 has atomic number 12.\n'
