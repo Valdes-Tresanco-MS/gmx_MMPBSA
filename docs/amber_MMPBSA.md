@@ -26,7 +26,11 @@ workflows are unsupported. See [Supported and unsupported features](#supported-a
 | Complex trajectory | `-ct` | yes | Trajectory file readable by cpptraj with the supplied AMBER topology. Supported formats include `*.mdcrd`, `*.nc`, `*.crd`, `*.rst7`, `*.inpcrd`, `*.xtc`, `*.trr`, `*.pdb`, `*.gro`, and `*.dcd` |
 | Complex masks | `-cm` | yes | Receptor and ligand masks from the complex (Amber residue-number masks, including non-contiguous ranges) |
 | Receptor topology | `-rp` | no | AMBER topology file for the receptor (otherwise built from the complex) |
+| Receptor trajectory | `-rt` | no | Unbound receptor trajectory for multiple-trajectory calculations; requires `-rp` and `-rm` |
+| Receptor mask | `-rm` | no | Residue mask in the unbound receptor topology when `-rt` is used |
 | Ligand topology | `-lp` | no | AMBER topology file for the ligand (otherwise built from the complex) |
+| Ligand trajectory | `-lt` | no | Unbound ligand trajectory for multiple-trajectory calculations; requires `-lp` and `-lm` |
+| Ligand mask | `-lm` | no | Residue mask in the unbound ligand topology when `-lt` is used |
 
 For explicit-water calculations, `-cp` must be the original solvated AMBER topology and `-ct` must contain the
 matching solvated trajectory. The receptor and ligand masks in `-cm` must select solute residues only; solvent and ions
@@ -36,8 +40,8 @@ are removed during setup.
 
 Native AMBER topologies already contain the per-atom `RADII` and `SCREEN` values, together with the `RADIUS_SET`
 metadata written during `tleap` preparation. `amber_MMPBSA` preserves these values for the generated working
-topologies; the input-file `PBRadii` setting does not replace them. Choose the radius set when building the AMBER
-topology, for example:
+topologies; the input-file `PBRadii` setting is validated but does not replace them in the normal native-AMBER
+workflow. Choose the radius set when building the AMBER topology, for example:
 
 ```text
 set default PBradii mbondi3
@@ -48,14 +52,18 @@ For GB calculations, the conventional pairings are `igb=1`/`mbondi`, `igb=2` or 
 `igb=8`/`mbondi3`. If a recognized `RADIUS_SET` differs from that pairing, `amber_MMPBSA` prints a warning but still
 uses the radii in the topology. This is intentional: unusual combinations may be valid user choices, so they are
 not changed or rejected automatically. If the warning is not intentional, rebuild the topology with the desired
-`PBradii` in `tleap`.
+`PBradii` in `tleap`. During alanine-scanning mutant construction, the inherited topology radius name is reused; the
+input `PBRadii` value is only a fallback if the source `RADIUS_SET` cannot be identified.
 
 ## Supported and unsupported features
 
-**Supported (single-trajectory focus)**
+**Supported**
 
-- ST GB / PB / GBNSR6 / RISM / decomposition / IE / C2 / alanine scanning (with the same input namelists as
-  `gmx_MMPBSA`, where applicable)
+- ST and MT GB / PB / GBNSR6 / RISM / NMODE / alanine scanning (with the same input namelists as `gmx_MMPBSA`,
+  where applicable)
+- IE/C2 can be requested with MT, but this is experimental: the estimators use frame-indexed ΔGGAS values from
+  independently sampled bound and unbound trajectories and are not validated as independent-ensemble estimators;
+  prefer ST or NMODE for production entropy interpretation
 - ST GB / GBNSR6 / PB / RISM / NMODE / QM/MMGBSA with `explicit_waters > 0`; selected waters are assigned to the receptor and selected with the same
   `explicit_waters_mask` and `cpptraj closest` workflow used by `gmx_MMPBSA`
 - Optional separate receptor/ligand topologies (`-rp` / `-lp`)
@@ -66,8 +74,6 @@ not changed or rejected automatically. If the warning is not intentional, rebuil
 **Not supported / different behavior**
 
 - Explicit receptor waters are restricted to ST GB/GBNSR6/PB/RISM/NMODE/QM/MMGBSA and require `SOLVATED_TRAJECTORY=1`
-- Ligand multiple-trajectory (`-lt`) — rejected
-- Receptor multiple-trajectory (`-rt`) — incomplete; prefer ST
 - Solvent or ions are not retained in the final working topologies; the original solvated `-cp` is accepted only for
   explicit-water preprocessing
 - QM/MM + explicit waters — one-frame native-AMBER smoke-tested with PM6-DH+; the existing 1–4 EEL consistency warning
@@ -102,6 +108,21 @@ amber_MMPBSA -O -i mmpbsa.in \
 ```
 
 See the [AMBER input files example](examples/AMBER/README.md) for a complete runnable example.
+
+For a multiple-trajectory calculation, provide unbound topologies, masks, and trajectories with `-rp/-rm/-rt` and
+`-lp/-lm/-lt`:
+
+``` bash
+amber_MMPBSA -O -i mmpbsa.in \
+  -cp complex.prmtop -ct complex.mdcrd \
+  -cm ":1-166" ":167-242" \
+  -rp receptor.prmtop -rm ":1-166" -rt receptor.mdcrd \
+  -lp ligand.prmtop -lm ":1-76" -lt ligand.mdcrd
+```
+
+The three selected trajectories must have the same number of frames after `startframe`, `endframe`, and `interval`
+are applied. If more than one file is supplied to any trajectory option, files are concatenated in command-line order
+and pooled as one trajectory; they are not treated as independent replicas.
 
 An explicit-water calculation uses the solvated topology directly:
 
