@@ -152,8 +152,9 @@ restarted when the next trajectory file is read.
 0 disables this feature and preserves the standard dry MM/PB(GB)SA workflow.
 
     !!! important "Scope"
-        Explicit receptor waters are currently supported only for single-trajectory GB or PB calculations. This mode is not
-        compatible with RISM, GBNSR6, normal-mode or quasi-harmonic entropy, or multi-trajectory receptor/ligand inputs.
+        Explicit receptor waters are currently supported for single-trajectory GB, GBNSR6, PB, RISM, and normal-mode
+        entropy calculations. Quasi-harmonic entropy is not available for new calculations, and multi-trajectory
+        receptor/ligand inputs are not supported with this mode.
         Extra-point water models such as OPC or TIP4P can fail in `sander` because of their virtual-site atoms. By
         default, `gmx_MMPBSA` stops when these atoms are found. Set `explicit_waters_extra_points="strip"` only if you
         intentionally want to remove the virtual sites and use the result as an approximate relative comparison.
@@ -711,6 +712,7 @@ molecular surface.
 
     !!! note "Keep in mind"
         * Calculations where part of the system is treated with quantum mechanics can be performed only with GB
+        * QM/MMGBSA can be combined with the explicit receptor-water workflow in single-trajectory mode
         * A sample QM/MMGBSA input file is shown [here](input_file.md#qmmmgbsa)
         * A tutorial on binding free energy calculation with QM/MMGBSA is available 
         [here](examples/QM_MMGBSA/README.md)

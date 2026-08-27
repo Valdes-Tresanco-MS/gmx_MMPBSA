@@ -38,7 +38,7 @@ are removed during setup.
 
 - ST GB / PB / GBNSR6 / RISM / decomposition / IE / C2 / alanine scanning (with the same input namelists as
   `gmx_MMPBSA`, where applicable)
-- ST GB / PB with `explicit_waters > 0`; selected waters are assigned to the receptor and selected with the same
+- ST GB / GBNSR6 / PB / RISM / NMODE / QM/MMGBSA with `explicit_waters > 0`; selected waters are assigned to the receptor and selected with the same
   `explicit_waters_mask` and `cpptraj closest` workflow used by `gmx_MMPBSA`
 - Optional separate receptor/ligand topologies (`-rp` / `-lp`)
 - Non-contiguous Amber residue masks
@@ -47,12 +47,13 @@ are removed during setup.
 
 **Not supported / different behavior**
 
-- Explicit receptor waters are restricted to ST GB/PB and require `SOLVATED_TRAJECTORY=1`
+- Explicit receptor waters are restricted to ST GB/GBNSR6/PB/RISM/NMODE/QM/MMGBSA and require `SOLVATED_TRAJECTORY=1`
 - Ligand multiple-trajectory (`-lt`) — rejected
 - Receptor multiple-trajectory (`-rt`) — incomplete; prefer ST
 - Solvent or ions are not retained in the final working topologies; the original solvated `-cp` is accepted only for
   explicit-water preprocessing
-- QM/MM + explicit waters combinations — rejected (same as `gmx_MMPBSA`)
+- QM/MM + explicit waters — one-frame native-AMBER smoke-tested with PM6-DH+; the existing 1–4 EEL consistency warning
+  remains and requires scientific review before production interpretation
 
 ## Example
 

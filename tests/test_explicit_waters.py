@@ -150,7 +150,46 @@ class ExplicitWaterInputTest(unittest.TestCase):
 
         app.check_for_bad_input()
 
-    def test_rejects_explicit_waters_without_gb_or_pb(self):
+    def test_accepts_gbnsr6_only_explicit_water_calculation(self):
+        main = _import_main_with_stubs()
+        app = main.MMPBSA_App.__new__(main.MMPBSA_App)
+        app.master = True
+        app.FILES = _base_files()
+        app.INPUT = _base_input()
+        app.INPUT['gb']['gbrun'] = False
+        app.INPUT['gbnsr6']['gbnsr6run'] = True
+        app.INPUT['general']['explicit_waters'] = 10
+        app.INPUT['general']['explicit_waters_mask'] = ':1-608'
+
+        app.check_for_bad_input()
+
+    def test_accepts_rism_only_explicit_water_calculation(self):
+        main = _import_main_with_stubs()
+        app = main.MMPBSA_App.__new__(main.MMPBSA_App)
+        app.master = True
+        app.FILES = _base_files()
+        app.INPUT = _base_input()
+        app.INPUT['gb']['gbrun'] = False
+        app.INPUT['rism']['rismrun'] = True
+        app.INPUT['general']['explicit_waters'] = 10
+        app.INPUT['general']['explicit_waters_mask'] = ':1-608'
+
+        app.check_for_bad_input()
+
+    def test_accepts_nmode_only_explicit_water_calculation(self):
+        main = _import_main_with_stubs()
+        app = main.MMPBSA_App.__new__(main.MMPBSA_App)
+        app.master = True
+        app.FILES = _base_files()
+        app.INPUT = _base_input()
+        app.INPUT['gb']['gbrun'] = False
+        app.INPUT['nmode']['nmoderun'] = True
+        app.INPUT['general']['explicit_waters'] = 10
+        app.INPUT['general']['explicit_waters_mask'] = ':1-608'
+
+        app.check_for_bad_input()
+
+    def test_rejects_explicit_waters_without_implicit_solvent_method(self):
         main = _import_main_with_stubs()
         app = main.MMPBSA_App.__new__(main.MMPBSA_App)
         app.master = True

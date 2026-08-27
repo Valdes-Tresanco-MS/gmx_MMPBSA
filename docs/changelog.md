@@ -30,7 +30,7 @@ title: Changelog
 ### amber_MMPBSA
 
 - Added `amber_MMPBSA` for native AMBER topology/trajectory/mask ST workflows (optional separate receptor/ligand
-  tops). Not full `gmx_MMPBSA` feature parity: explicit receptor waters are restricted to ST GB/PB, ligand MT unsupported, radii preserved
+  tops). Not full `gmx_MMPBSA` feature parity: explicit receptor waters are restricted to ST GB/GBNSR6/PB/RISM/NMODE, ligand MT unsupported, radii preserved
   from the input prmtop. See `docs/amber_MMPBSA.md`.
 - Removed the unused `-cs` option from the AMBER workflow because setup derives the structure from frame 1 of `-ct`.
 
@@ -38,8 +38,9 @@ title: Changelog
 
 - Default `qm_theory` is now `PM6-DH+`; unconverged QM/MM SCF is a hard error with clearer diagnostics.
 - Added automatic GBNSR6 topology compaction/post-processing for legacy AmberTools NTYPES limits.
-- Added ST explicit receptor waters for GB/PB (GROMACS and native AMBER paths; incompatible with RISM, GBNSR6, normal-mode,
-  quasi-harmonic entropy, MT, and QM/MM). Interaction entropy and C2 remain allowed.
+- Added ST explicit receptor waters for GB/GBNSR6/PB/RISM/NMODE and QM/MMGBSA. Native AMBER explicit-water QM/MM
+  now passes a one-frame PM6-DH+ smoke test; the existing 1–4 EEL consistency warning remains. Quasi-harmonic
+  entropy and MT remain restricted.
 - Keep nonzero `&decomp` template defaults (`idecomp`/`dec_verbose`) out of normal sander mdins and GBNSR6 merge
   unless `decomprun` is enabled.
 

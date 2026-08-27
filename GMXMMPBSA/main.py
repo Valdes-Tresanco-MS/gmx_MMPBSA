@@ -1217,10 +1217,9 @@ class MMPBSA_App(object):
             GMXMMPBSA_ERROR('IDECOMP cannot be 0 for Decomposition analysis!', InputError)
 
         if INPUT['general']['explicit_waters'] > 0:
-            if INPUT['gb'].get('ifqnt'):
-                GMXMMPBSA_ERROR('EXPLICIT_WATERS cannot be combined with QM/MM (ifqnt=1).', InputError)
-            if not (INPUT['gb']['gbrun'] or INPUT['pb']['pbrun']):
-                GMXMMPBSA_ERROR('EXPLICIT_WATERS requires a GB or PB calculation (&gb or &pb).', InputError)
+            if not (INPUT['gb']['gbrun'] or INPUT['pb']['pbrun'] or INPUT['gbnsr6']['gbnsr6run'] or
+                    INPUT['rism']['rismrun'] or INPUT['nmode']['nmoderun']):
+                GMXMMPBSA_ERROR('EXPLICIT_WATERS requires a GB, GBNSR6, PB, RISM, or NMODE calculation.', InputError)
             if not INPUT['general']['explicit_waters_mask'].strip():
                 GMXMMPBSA_ERROR('EXPLICIT_WATERS_MASK must be defined when EXPLICIT_WATERS > 0.', InputError)
             if not self.FILES.complex_top:
@@ -1237,13 +1236,6 @@ class MMPBSA_App(object):
                 getattr(self.FILES, 'ligand_top', None),
             ]):
                 GMXMMPBSA_ERROR('EXPLICIT_WATERS is supported only for the single-trajectory approach.', InputError)
-            if any([
-                INPUT['rism']['rismrun'], INPUT['gbnsr6']['gbnsr6run'],
-                INPUT['nmode']['nmoderun'], INPUT['general']['qh_entropy'],
-            ]):
-                GMXMMPBSA_ERROR('EXPLICIT_WATERS currently supports only ST GB or PB calculations without '
-                                'entropy, RISM, or GBNSR6.', InputError)
-
         if INPUT['ala']['alarun'] and INPUT['general']['netcdf'] != '':
             GMXMMPBSA_ERROR('Alanine scanning requires ASCII trajectories (netcdf=0)!', InputError)
         if INPUT['ala']['cas_intdiel'] not in [0, 1]:

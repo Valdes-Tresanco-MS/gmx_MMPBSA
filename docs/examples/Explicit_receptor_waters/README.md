@@ -80,8 +80,9 @@ The optional `mmpbsa_explicit_waters_dasa.in` input uses `explicit_waters_mask="
 ## Considerations
 
 This mode keeps a fixed number of explicit water molecules in the working complex topology and assigns those waters to
-the receptor. It is currently supported for single-trajectory GB or PB calculations only. RISM, GBNSR6, entropy, and
-multi-trajectory inputs are not supported with `explicit_waters > 0`.
+the receptor. It is currently supported for single-trajectory GB, GBNSR6, PB, RISM, and normal-mode entropy
+calculations. Quasi-harmonic entropy is not available for new calculations, and multi-trajectory inputs are not
+supported with `explicit_waters > 0`.
 
 The dASA interface mode identifies interface residues with cpptraj using a dASA cutoff. Then `cpptraj closest` selects
 the closest waters to that static interface mask in each trajectory frame. This means the interface residue mask is

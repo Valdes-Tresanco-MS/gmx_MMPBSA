@@ -161,18 +161,17 @@ class Phase4ValidationTest(unittest.TestCase):
 
         app.check_for_bad_input()
 
-    def test_explicit_waters_rejected_with_qmmm(self):
+    def test_explicit_waters_are_allowed_with_qmmm(self):
         app = self._app()
         app.engine = 'gmx'
         app.INPUT['general']['explicit_waters'] = 3
         app.INPUT['general']['explicit_waters_mask'] = ':WAT'
         app.INPUT['gb']['gbrun'] = True
         app.INPUT['gb']['ifqnt'] = 1
-        app.INPUT['gb']['qm_residues'] = ':1'
+        app.INPUT['gb']['qm_residues'] = 'within 4'
         app.INPUT['gb']['qm_theory'] = DEFAULT_QM_THEORY
 
-        with self.assertRaisesRegex(InputError, r'cannot be combined with QM/MM'):
-            app.check_for_bad_input()
+        app.check_for_bad_input()
 
     def test_ligand_mol2_requires_gaff_forcefield(self):
         app = self._app()
