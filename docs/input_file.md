@@ -1208,11 +1208,25 @@ that of the water. ([ref.][248])
 
 [<img src="../assets/prot_memb.png" height="200" width="258" align="right"/>]()
 
-`mthick` (Default = 40)
-:   Membrane thickness (in Å). This is different from the previous default of 20 Å.
+`mthick` (Default = `automatic`)
+:   Membrane thickness (in Å), or `automatic` to calculate it from the selected membrane atom coordinates in `-ct`.
+    The automatic value is the mean z coordinate of the upper leaflet minus the mean z coordinate of the lower
+    leaflet. A numeric value can be supplied independently of `mctrdz`.
 
-`mctrdz` (Default = 0.0)
-:   Membrane center (in Å) in the z direction.
+`mctrdz` (Default = `automatic`)
+:   Membrane center (in Å) in the z direction, or `automatic` to use the mean z coordinate of the selected
+    membrane atoms in `-ct`. A numeric value can be supplied independently of `mthick`.
+
+`membrane_atoms` (Default = `P`)
+:   Semicolon-separated atom names used for automatic membrane parameters, for example `membrane_atoms="P;N"`.
+    These are atom names, not cpptraj masks, and must be present in the complex topology/trajectory supplied through
+    `-ct`. The automatic calculation uses only `-ct`, including the selected `startframe`, `endframe`, and `interval`.
+
+    When automatic calculation is used, `GMXMMPBSA_membrane_parameters.csv` and
+    `GMXMMPBSA_membrane_parameters.png` are retained regardless of `keep_files`. The CSV contains per-frame
+    diagnostics and the resolved values; the PNG plots the frame-wise mean z coordinate and thickness.
+    The trajectory must already be oriented with the membrane normal along z and should be made continuous across
+    periodic boundaries before running the calculation; automatic detection does not reorient or unwrap `-ct`.
 
 `poretype` (Default = 1)
 :   Turn on and off the automatic depth-first search method to identify the pore. ([ref.][248])
@@ -2180,7 +2194,7 @@ startframe=1, endframe=100, interval=1,
 
 &pb
 memopt=1, emem=7.0, indi=4.0,
-mctrdz=-10.383, mthick=36.086, poretype=1,
+mctrdz=automatic, mthick=automatic, membrane_atoms="P", poretype=1,
 radiopt=0, indi=4.0, istrng=0.150, fillratio=1.25, inp=2,
 sasopt=0, solvopt=2, ipb=1, bcopt=10, nfocus=1, linit=1000,
 eneopt=1, cutfd=7.0, cutnb=99.0,
