@@ -27,6 +27,20 @@ class InputParserTest(unittest.TestCase):
         with self.assertRaisesRegex(InputError, r"Invalid value 'not-an-int' for itrmax"):
             self._parse('&gb\n  itrmax = not-an-int\n/\n')
 
+    def test_membrane_parameters_accept_automatic_and_atom_names(self):
+        parsed = self._parse('&pb\n  memopt=1, mthick=automatic, mctrdz=automatic, membrane_atoms="P;N"\n/\n')
+
+        self.assertEqual(parsed['pb']['mthick'], 'automatic')
+        self.assertEqual(parsed['pb']['mctrdz'], 'automatic')
+        self.assertEqual(parsed['pb']['membrane_atoms'], 'P;N')
+
+    def test_membrane_parameters_default_to_automatic_phosphorus_detection(self):
+        parsed = self._parse('&pb\n/\n')
+
+        self.assertEqual(parsed['pb']['mthick'], 'automatic')
+        self.assertEqual(parsed['pb']['mctrdz'], 'automatic')
+        self.assertEqual(parsed['pb']['membrane_atoms'], 'P')
+
     def test_create_input_comments_unset_optional_values(self):
         parser = copy.deepcopy(input_file)
         for namelist in parser.namelists.values():

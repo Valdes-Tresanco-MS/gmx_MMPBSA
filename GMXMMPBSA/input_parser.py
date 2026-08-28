@@ -555,8 +555,10 @@ input_file.addNamelist('pb', 'pb',
                            # Options for Implicit Membranes
                            ['memopt', int, 0, 'Use membrane PB; 0/1'],
                            ['mprob', float, 2.70, 'Membrane probe (A); e.g. 2.7'],
-                           ['mthick', float, 40.0, 'Membrane thickness (A); e.g. 40'],
-                           ['mctrdz', float, 0.0, 'Membrane Z offset (A); e.g. 0'],
+                           ['mthick', str, 'automatic', 'Membrane thickness (A), or automatic'],
+                           ['mctrdz', str, 'automatic', 'Membrane Z offset (A), or automatic'],
+                           ['membrane_atoms', str, 'P',
+                            'Atom names for automatic membrane parameters; semicolon-separated'],
                            ['poretype', int, 1, 'Pore type; 1 or 2'],
 
                            # Options to select numerical procedures

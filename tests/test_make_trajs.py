@@ -1,5 +1,8 @@
 import logging
+import os
+import tempfile
 import unittest
+from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
 
@@ -47,6 +50,7 @@ class FakeTrajectory:
         self.processed_frames = 0
         self.total_frames = self.processed_frame_count
         self.setup_args = None
+        self.membrane_output_dir = None
         FakeTrajectory.instances.append(self)
 
     def Setup(self, *args):
@@ -55,6 +59,10 @@ class FakeTrajectory:
 
     def rms(self, mask):
         pass
+
+    def ExtractMembraneAtoms(self, atom_names, output_dir):
+        self.membrane_output_dir = Path(output_dir)
+        self.membrane_atom_names = atom_names
 
     def Strip(self, mask):
         pass
@@ -66,7 +74,14 @@ class FakeTrajectory:
         self.outputs.append((fname, kwargs))
 
     def Run(self, output):
-        pass
+        if self.membrane_output_dir is not None:
+            for frame, z in enumerate(((-20.0, 20.0), (-21.0, 21.0)), start=1):
+                (self.membrane_output_dir / f'P.pdb.{frame}').write_text(
+                    ''.join(
+                        f'HETATM    1  P   POPC A   1       1.000   2.000  {value:6.3f}  1.00  0.00           P\n'
+                        for value in z
+                    )
+                )
 
 
 class MakeTrajectoriesMPIFrameTest(unittest.TestCase):
@@ -109,6 +124,28 @@ class MakeTrajectoriesMPIFrameTest(unittest.TestCase):
             make_trajectories(inp, files, 1, 'cpptraj', '_GMXMMPBSA_')
 
         self.assertEqual(FakeTrajectory.instances[0].setup_args, (1, 3, 1))
+
+    def test_automatic_membrane_parameters_use_the_complex_trajectory(self):
+        inp = _input()
+        inp['pb'] = {
+            'memopt': 1,
+            'mctrdz': 'automatic',
+            'mthick': 'automatic',
+            'membrane_atoms': 'P',
+        }
+        with tempfile.TemporaryDirectory() as tmpdir:
+            old_cwd = os.getcwd()
+            os.chdir(tmpdir)
+            try:
+                with patch('GMXMMPBSA.make_trajs.Trajectory', FakeTrajectory):
+                    make_trajectories(inp, _files(), 1, 'cpptraj', '_GMXMMPBSA_')
+            finally:
+                os.chdir(old_cwd)
+
+            self.assertEqual(inp['pb']['mctrdz'], 0.0)
+            self.assertEqual(inp['pb']['mthick'], 41.0)
+            self.assertTrue(Path(tmpdir, 'GMXMMPBSA_membrane_parameters.csv').exists())
+            self.assertTrue(Path(tmpdir, 'GMXMMPBSA_membrane_parameters.png').exists())
 
     def test_multiple_complex_trajectories_warn_about_pooled_statistics(self):
         with self.assertLogs(level=logging.WARNING) as captured:

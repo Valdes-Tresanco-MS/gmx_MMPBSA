@@ -43,6 +43,7 @@ from GMXMMPBSA.infofile import InfoFile
 from GMXMMPBSA.fake_mpi import MPI as FakeMPI
 from GMXMMPBSA.gbnsr6_topology import prepare_gbnsr6_topology
 from GMXMMPBSA.input_parser import SUPPORTED_QM_THEORIES, input_file as _input_file
+from GMXMMPBSA.membrane import AUTOMATIC, normalize_parameter
 from GMXMMPBSA.make_top_amber import CheckAmberTop
 from GMXMMPBSA.make_trajs import make_trajectories, make_mutant_trajectories
 from GMXMMPBSA.output_file import (write_outputs, write_decomp_output, data2pkl)
@@ -159,9 +160,6 @@ class MMPBSA_App(object):
         # elif master and not FILES.rewrite_output:
         #     self.remove(0)
 
-        # Create input files based on INPUT dict
-        if master:
-            create_inputs(INPUT, self.normal_system, self.pre)
         self.timer.stop_timer('setup')
 
         # Now create our trajectory files
@@ -185,6 +183,11 @@ class MMPBSA_App(object):
 
         mpi_size = self.MPI.COMM_WORLD.bcast(mpi_size, root=0)
         self.set_active_mpi_size(mpi_size)
+
+        # Automatic membrane parameters are resolved while processing the
+        # complex trajectory, so create Sander inputs only after that step.
+        if master:
+            create_inputs(INPUT, self.normal_system, self.pre)
 
         self.MPI.COMM_WORLD.Barrier()
 
@@ -1009,6 +1012,18 @@ class MMPBSA_App(object):
              for entropy requires changes to nmode and cpptraj calcs, meaning it
              is not as easily changed here.
         """
+        # Membrane parameters accept either numeric values or the automatic
+        # marker. With membranes disabled, retain the historical numeric
+        # defaults so the generated PB mdin remains valid and no trajectory
+        # scan is needed.
+        for name in ('mthick', 'mctrdz'):
+            self.INPUT['pb'][name] = normalize_parameter(self.INPUT['pb'][name], name)
+        if self.INPUT['pb']['memopt'] == 0:
+            if self.INPUT['pb']['mthick'] == AUTOMATIC:
+                self.INPUT['pb']['mthick'] = 40.0
+            if self.INPUT['pb']['mctrdz'] == AUTOMATIC:
+                self.INPUT['pb']['mctrdz'] = 0.0
+
         # Invert scale
         self.INPUT['pb']['scale'] = 1 / self.INPUT['pb']['scale']
 

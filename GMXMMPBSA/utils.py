@@ -845,12 +845,15 @@ def remove(flag, fnpre='_GMXMMPBSA_'):
     """ Removes temporary files. Allows for different levels of cleanliness """
     # Collect all of the temporary files (those starting with _GMXMMPBSA_)
     allfiles = os.listdir(os.getcwd())
+    retained_diagnostics = {'GMXMMPBSA_membrane_parameters.csv', 'GMXMMPBSA_membrane_parameters.png'}
 
     other_files = ['COM.prmtop', 'REC.prmtop', 'LIG.prmtop', 'MUT_COM.prmtop', 'MUT_REC.prmtop', 'MUT_LIG.prmtop',
                    'leap.log']
     if flag == -1:
         result_files = ['FINAL_RESULTS_MMPBSA.dat', 'FINAL_DECOMP_MMPBSA.dat']
         for fil in allfiles:
+            if fil in retained_diagnostics:
+                continue
             if (
                     fil.startswith(fnpre) or fil.startswith(f"#{fnpre}") or
                     bool(re.match('#?(COM|REC|LIG|MUT_COM|MUT_REC|MUT_LIG)_traj_(\d)\.xtc', fil)) or
@@ -864,6 +867,9 @@ def remove(flag, fnpre='_GMXMMPBSA_'):
 
     elif flag == 0:  # remove all temporary files
         for fil in allfiles:
+
+            if fil in retained_diagnostics:
+                continue
 
             # Keep the normalized input metadata so the calculation settings
             # remain auditable even when the user requests minimal cleanup.

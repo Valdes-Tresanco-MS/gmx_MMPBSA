@@ -34,8 +34,12 @@ Classes:
 # ##############################################################################
 
 import logging
+import shutil
+import tempfile
 from warnings import warn
 from GMXMMPBSA.exceptions import (TrajError, MMPBSA_Error, InternalError, MutantResError)
+from GMXMMPBSA.membrane import (calculate_parameters, diagnostic_paths, needs_automatic_parameters,
+                                parse_atom_names, read_extracted_coordinates, write_diagnostics)
 from pathlib import Path
 
 strip_mask = ':WAT,SOL,TIP3P,TIP3,TP3,TIPS3P,TIP3o,TIP4P,TIP4PEW,T4E,TIP4PD,TIP5P,SPC,SPCE,OPC,' \
@@ -86,6 +90,13 @@ def make_trajectories(INPUT, FILES, size, cpptraj, pre):
         traj.Setup(INPUT['general']['startframe'], INPUT['general']['endframe'], INPUT['general']['interval'])
     # RMS fit
     traj.rms('!(%s)' % strip_mask)
+
+    membrane_tmpdir = None
+    membrane_atoms = None
+    if needs_automatic_parameters(INPUT):
+        membrane_atoms = parse_atom_names(INPUT['pb']['membrane_atoms'])
+        membrane_tmpdir = Path(tempfile.mkdtemp(prefix='.GMXMMPBSA_membrane_'))
+        traj.ExtractMembraneAtoms(membrane_atoms, membrane_tmpdir)
 
     com_frames = int(traj.processed_frames)
     rec_frames = 0
@@ -177,7 +188,32 @@ def make_trajectories(INPUT, FILES, size, cpptraj, pre):
         lig_frames = com_frames
 
     # Run cpptraj to get the trajectory
-    traj.Run(pre + 'normal_traj_cpptraj.out')
+    try:
+        traj.Run(pre + 'normal_traj_cpptraj.out')
+        if membrane_tmpdir is not None:
+            frame_coordinates = read_extracted_coordinates(membrane_tmpdir, membrane_atoms)
+            center_setting = INPUT['pb']['mctrdz']
+            thickness_setting = INPUT['pb']['mthick']
+            center, thickness, frame_diagnostics = calculate_parameters(
+                frame_coordinates, center_setting, thickness_setting
+            )
+            if center_setting == 'automatic':
+                INPUT['pb']['mctrdz'] = center
+            if thickness_setting == 'automatic':
+                INPUT['pb']['mthick'] = thickness
+            csv_path, png_path = diagnostic_paths(pre)
+            write_diagnostics(
+                frame_diagnostics, csv_path, png_path, membrane_atoms,
+                center_setting, thickness_setting, center, thickness
+            )
+            logging.info(
+                'Membrane parameters from -ct (%s): center=%.3f A, thickness=%.3f A',
+                ';'.join(membrane_atoms), INPUT['pb']['mctrdz'], INPUT['pb']['mthick']
+            )
+            logging.info('Retained membrane diagnostics: %s and %s', csv_path, png_path)
+    finally:
+        if membrane_tmpdir is not None:
+            shutil.rmtree(membrane_tmpdir, ignore_errors=True)
 
     # Go back and do the receptor and ligand if we used a multiple
     # trajectory approach
@@ -703,6 +739,12 @@ class Trajectory(object):
     def rms(self, mask):
         """ Does an RMS fit around a specific mask """
         self.actions.append('rmsd %s mass first' % mask)
+
+    def ExtractMembraneAtoms(self, atom_names, output_dir):
+        """Extract selected atom-name coordinates from every selected frame."""
+        for atom_name in atom_names:
+            output = Path(output_dir) / f'{atom_name}.pdb'
+            self.actions.append(f'mask @{atom_name} maskpdb {output}')
 
     # -#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
 
