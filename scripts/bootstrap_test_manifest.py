@@ -17,7 +17,6 @@ TESTS = {
     8: ('Metalloprotein_ligand', 'Metalloprotein_ligand', 'Metalloprotein-ligand'),
     9: ('Comp_receptor', 'Comp_receptor', 'Comp_receptor'),
     10: ('Protein_ligand_CHARMMff', 'Protein_ligand_CHARMMff', 'Protein-Ligand (CHARMM force field)'),
-    11: ('Protein_membrane_CHARMMff', 'Protein_membrane_CHARMMff', 'Protein-ligand complex in membrane with CHARMMff'),
     12: ('Alanine_scanning', 'Alanine_scanning', 'Alanine Scanning'),
     13: ('Stability', 'Stability', 'Stability calculation'),
     14: ('Decomposition_analysis', 'Decomposition_analysis', 'Decomposition Analysis'),

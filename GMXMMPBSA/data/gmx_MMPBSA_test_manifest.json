@@ -197,7 +197,7 @@
       ]
     },
     "6": {
-      "name": "Protein-Membrane",
+      "name": "Protein-Membrane CHARMM-GUI PROA-UQ2",
       "path": "Protein_membrane",
       "workdir": "Protein_membrane",
       "input": "mmpbsa.in",
@@ -211,12 +211,12 @@
         "-ci",
         "index.ndx",
         "-cg",
-        "1",
-        "13",
+        "6",
+        "5",
         "-ct",
-        "com_traj.pdb",
-        "-lm",
-        "ligand.mol2",
+        "md.xtc",
+        "-cp",
+        "topol.top",
         "-o",
         "FINAL_RESULTS_MMPBSA.dat",
         "-eo",
@@ -387,45 +387,6 @@
       "suites": [
         "all",
         "minimal"
-      ],
-      "slow": true,
-      "requires": [
-        "gmx_MMPBSA",
-        "mpirun"
-      ],
-      "expected_outputs": [
-        "FINAL_RESULTS_MMPBSA.dat",
-        "FINAL_RESULTS_MMPBSA.csv"
-      ]
-    },
-    "11": {
-      "name": "Protein-ligand complex in membrane with CHARMMff",
-      "path": "Protein_membrane_CHARMMff",
-      "workdir": "Protein_membrane_CHARMMff",
-      "input": "mmpbsa.in",
-      "executable": "gmx_MMPBSA",
-      "command_args": [
-        "-O",
-        "-i",
-        "mmpbsa.in",
-        "-cs",
-        "com.pdb",
-        "-ci",
-        "index.ndx",
-        "-cg",
-        "6",
-        "5",
-        "-ct",
-        "md.xtc",
-        "-cp",
-        "topol.top",
-        "-o",
-        "FINAL_RESULTS_MMPBSA.dat",
-        "-eo",
-        "FINAL_RESULTS_MMPBSA.csv"
-      ],
-      "suites": [
-        "all"
       ],
       "slow": true,
       "requires": [

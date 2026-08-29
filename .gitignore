@@ -36,4 +36,8 @@ examples/AMBER/*
 !examples/Explicit_receptor_waters/README.md
 !examples/Explicit_receptor_waters/mmpbsa_explicit_waters_pymol.in
 !examples/Explicit_receptor_waters/mmpbsa.in
+!examples/Protein_membrane/
+!examples/Protein_membrane/*
+!examples/Protein_membrane/toppar/
+!examples/Protein_membrane/toppar/*
 .vscode/settings.json

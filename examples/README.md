@@ -105,7 +105,7 @@ This section focuses on how to work directly with native AMBER topologies, coord
 This section focuses more on how to work with systems prepared with CHARMM force fields. We only show few examples for better clarity.
 
 * [Protein-ligand](Protein_ligand_CHARMMff/README.md)[^1][^2]
-* [Protein-ligand complex embedded in membrane](Protein_membrane_CHARMMff/README.md)[^1]
+* [Protein-ligand membrane system (CHARMM-GUI)](Protein_membrane/README.md)[^1]
 * [Protein-ligand with LPH atoms](Protein_ligand_LPH_atoms_CHARMMff/README.md)[^1]
 
 ## OPLSff support

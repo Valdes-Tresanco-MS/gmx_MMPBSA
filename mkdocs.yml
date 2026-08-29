@@ -210,7 +210,6 @@ nav:
         - Protein-protein: examples/AMBER/README.md
     - CHARMMff Support:
         - Protein-ligand: examples/Protein_ligand_CHARMMff/README.md
-        - Protein-ligand complex embedded in membrane: examples/Protein_membrane_CHARMMff/README.md
         - Protein-ligand with LPH particles (ST): examples/Protein_ligand_LPH_atoms_CHARMMff/README.md
     - OPLSff Support:
         - Protein-protein: examples/OPLS/protein_protein/README.md
