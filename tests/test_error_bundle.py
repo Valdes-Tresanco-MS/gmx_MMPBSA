@@ -95,6 +95,11 @@ class ErrorBundleTest(unittest.TestCase):
 
         self.assertTrue(args.no_error_bundle)
 
+    def test_parser_accepts_membrane_input_template(self):
+        args = parser.parse_args(['--create_input', 'pb_mem'])
+
+        self.assertEqual(args.createinput, ['pb_mem'])
+
 
 if __name__ == '__main__':
     unittest.main()

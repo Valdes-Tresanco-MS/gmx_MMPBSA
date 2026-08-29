@@ -229,7 +229,7 @@ parser.add_argument('-v', '--version', action='version',
 parser.add_argument('--input-file-help', dest='infilehelp', action='store_true',
                     help='Print all available options in the input file.',
                     default=False)
-parser.add_argument('--create_input', dest='createinput', choices=['gb', 'pb', 'rism', 'ala', 'decomp', 'nmode',
+parser.add_argument('--create_input', dest='createinput', choices=['gb', 'pb', 'pb_mem', 'rism', 'ala', 'decomp', 'nmode',
                                                                    'gbnsr6', 'all'],
                     nargs='*', help='Create an new input file with selected calculation type.')
 group = parser.add_argument_group('Miscellaneous Options')
@@ -356,7 +356,7 @@ amber_parser.add_argument('-v', '--version', action='version',
 amber_parser.add_argument('--input-file-help', dest='infilehelp', action='store_true',
                     help='Print all available options in the input file.',
                     default=False)
-amber_parser.add_argument('--create_input', dest='createinput', choices=['gb', 'pb', 'rism', 'ala', 'decomp', 'nmode',
+amber_parser.add_argument('--create_input', dest='createinput', choices=['gb', 'pb', 'pb_mem', 'rism', 'ala', 'decomp', 'nmode',
                                                                    'gbnsr6', 'all'],
                     nargs='*', help='Create an new input file with selected calculation type.')
 amber_parser.set_defaults(ligand_mol2=None)

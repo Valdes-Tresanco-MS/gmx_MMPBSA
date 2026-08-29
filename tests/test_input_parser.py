@@ -1,4 +1,5 @@
 import copy
+from io import StringIO
 import re
 import tempfile
 import unittest
@@ -58,6 +59,45 @@ class InputParserTest(unittest.TestCase):
         finally:
             output.unlink(missing_ok=True)
             output.parent.rmdir()
+
+    def test_create_input_pb_membrane_template_uses_membrane_defaults(self):
+        parser = copy.deepcopy(input_file)
+        output = StringIO()
+
+        parser.print_contents(output, ('general', 'pb_mem'))
+        text = output.getvalue()
+
+        expected_values = {
+            'memopt': '1',
+            'emem': '7.0',
+            'indi': '4.0',
+            'mctrdz': '"automatic"',
+            'mthick': '"automatic"',
+            'poretype': '1',
+            'radiopt': '0',
+            'istrng': '0.15',
+            'fillratio': '1.25',
+            'inp': '2',
+            'sasopt': '0',
+            'solvopt': '2',
+            'ipb': '1',
+            'bcopt': '10',
+            'nfocus': '1',
+            'linit': '1000',
+            'eneopt': '1',
+            'cutfd': '7.0',
+            'cutnb': '99.0',
+            'maxarcdot': '15000',
+            'npbverb': '1',
+            'membrane_atoms': '"P"',
+        }
+        for name, value in expected_values.items():
+            self.assertRegex(text, rf'(?m)^\s+{name}\s*=\s*{re.escape(value)}\s+#')
+
+        self.assertIn('&pb\n', text)
+        self.assertNotIn('&pb_mem', text)
+        self.assertEqual(input_file.namelists['pb'].variables['memopt'].value, 0)
+
 
     def test_failed_parse_releases_namelist_open_state(self):
         parser = copy.deepcopy(input_file)

@@ -11,7 +11,7 @@ title:
     
     $ gmx_MMPBSA -h
     
-    usage: gmx_MMPBSA [-h] [-v] [--input-file-help] [--create_input [{gb,pb,rism,ala,decomp,nmode,all}] 
+    usage: gmx_MMPBSA [-h] [-v] [--input-file-help] [--create_input [{gb,pb,pb_mem,rism,ala,decomp,nmode,all}]
                       [-O] [-prefix <file prefix>] [-sys_name <system name>]
                       [--progress-style {auto,rich,classic,plain,none}] [-i FILE] [-xvvfile XVVFILE] [-o FILE]
                       [-do FILE] [-eo FILE] [-deo FILE] [-nogui] [-s] [-cs <Structure File>] [-ci <Index File>] [-cg index index]
@@ -31,7 +31,7 @@ title:
       -v, --version         show program's version number and exit
       --input-file-help     Print all available options in the input file. (default: False)
       --create_input        Create an new input file with selected calculation type. (default: None)
-                             [{gb,pb,rism,ala,decomp,nmode,all}]
+                             [{gb,pb,pb_mem,rism,ala,decomp,nmode,all}]
     
     Miscellaneous Options:
       -O, --overwrite       Allow output files to be overwritten (default: False)

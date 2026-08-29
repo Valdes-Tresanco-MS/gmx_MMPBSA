@@ -192,16 +192,22 @@ def calc_sum(vector1, vector2, mut=False) -> (float, float):
 def create_input_args(args: list):
     if not args or 'all' in args:
         return 'general', 'gb', 'gbnsr6', 'pb', 'ala', 'nmode', 'decomp', 'rism'
-    elif 'gb' not in args and 'pb' not in args and 'rism' not in args and 'nmode' not in args and 'gbnsr6' not in args:
+    elif ('gb' not in args and 'pb' not in args and 'pb_mem' not in args
+          and 'rism' not in args and 'nmode' not in args and 'gbnsr6' not in args):
         GMXMMPBSA_ERROR('You did not specify any type of calculation!')
-    elif ('gb' not in args and 'pb' not in args and 'gbnsr6' not in args
+    elif ('gb' not in args and 'pb' not in args and 'pb_mem' not in args and 'gbnsr6' not in args
           and 'decomp' in args):
         logging.warning('&decomp calculation is only compatible with &gb, &pb, '
                         'and &gbnsr6 calculations. Will be ignored!')
         args.remove('decomp')
         return ['general'] + args
     else:
-        return ['general'] + args
+        # pb_mem is a membrane-oriented &pb template, so it supersedes a
+        # regular &pb selection if both are requested.
+        selected = list(args)
+        if 'pb_mem' in selected and 'pb' in selected:
+            selected.remove('pb')
+        return ['general'] + selected
 
 
 def mask2list(com_str, rec_mask, lig_mask):

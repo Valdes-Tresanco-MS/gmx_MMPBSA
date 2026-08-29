@@ -32,7 +32,11 @@ The input file can be created using `gmx_MMPBSA` by selecting the calculations y
 ``` title="Command-line"
 gmx_MMPBSA --create_input args
 
-where `args` can be:  gb, gbnsr6, pb, rism, ala, decomp, nmode, all
+where `args` can be:  gb, gbnsr6, pb, pb_mem, rism, ala, decomp, nmode, all
+
+`pb_mem` creates a membrane-oriented `&pb` template with automatic membrane
+center/thickness detection from phosphorus atoms in `-ct` and membrane-specific
+PB defaults.
 ```
 
 Example:
@@ -43,6 +47,10 @@ Example:
 === "PB calculation"
     
         gmx_MMPBSA --create_input pb
+
+=== "Membrane PB calculation"
+
+        gmx_MMPBSA --create_input pb_mem
 
 === "GB, PB and Decomposition calculations"
     
@@ -1219,12 +1227,18 @@ that of the water. ([ref.][248])
 
 `membrane_atoms` (Default = `P`)
 :   Semicolon-separated atom names used for automatic membrane parameters, for example `membrane_atoms="P;N"`.
-    These are atom names, not cpptraj masks, and must be present in the complex topology/trajectory supplied through
-    `-ct`. The automatic calculation uses only `-ct`, including the selected `startframe`, `endframe`, and `interval`.
+    These are atom names, not cpptraj masks, and must be present in the full structure/trajectory supplied through
+    `-cs`/`-ct`. For GROMACS inputs, automatic detection reads the original unstripped `-ct` trajectory, so the
+    membrane does not need to be included in the receptor group given through `-cg`. The automatic calculation uses
+    only `-ct`, including the selected `startframe`, `endframe`, and `interval`.
+
+    Explicit lipids are retained only when they are intentionally included in the selected `-cg` receptor group;
+    their residue names should not be changed.
 
     When automatic calculation is used, `GMXMMPBSA_membrane_parameters.csv` and
     `GMXMMPBSA_membrane_parameters.png` are retained regardless of `keep_files`. The CSV contains per-frame
-    diagnostics and the resolved values; the PNG plots the frame-wise mean z coordinate and thickness.
+    diagnostics and the resolved values; the PNG shows the selected atom z-coordinate distributions, the two
+    leaflets, the resolved center and slab boundaries, and frame-wise center/thickness stability.
     The trajectory must already be oriented with the membrane normal along z and should be made continuous across
     periodic boundaries before running the calculation; automatic detection does not reorient or unwrap `-ct`.
 
@@ -2195,7 +2209,7 @@ startframe=1, endframe=100, interval=1,
 &pb
 memopt=1, emem=7.0, indi=4.0,
 mctrdz=automatic, mthick=automatic, membrane_atoms="P", poretype=1,
-radiopt=0, indi=4.0, istrng=0.150, fillratio=1.25, inp=2,
+radiopt=0, istrng=0.150, fillratio=1.25, inp=2,
 sasopt=0, solvopt=2, ipb=1, bcopt=10, nfocus=1, linit=1000,
 eneopt=1, cutfd=7.0, cutnb=99.0,
 maxarcdot=15000,
