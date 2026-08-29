@@ -173,7 +173,8 @@ class MMPBSA_App(object):
              lig_frames, self.numframes_nmode,
              mpi_size) = make_trajectories(INPUT, FILES, self.mpi_size,
                                            self.external_progs['cpptraj'],
-                                           self.pre)
+                                           self.pre,
+                                           self.external_progs.get('trjconv'))
             if self.traj_protocol == 'MTP' and not self.numframes == rec_frames == lig_frames:
                 GMXMMPBSA_ERROR('The complex, receptor, and ligand trajectories must be the same length. Since v1.5.0 '
                                 'we have simplified a few things to make the code easier to maintain. Please check the '
@@ -761,6 +762,13 @@ class MMPBSA_App(object):
         # Make external_progs an instance attribute
         self.external_progs = external_progs
         if self.master:
+            # ``CheckMakeTop.cleanup_trajs`` replaces the original complex
+            # trajectories with trajectories stripped to the selected
+            # complex. Keep the original -ct files available for automatic
+            # membrane-parameter detection, which must inspect the full MD
+            # system even when lipids are excluded from -cg.
+            if self.engine == 'gmx':
+                self.FILES.original_complex_trajs = list(self.FILES.complex_trajs)
             # Make amber topologies
             if self.engine == 'gmx':
                 logging.info('Building AMBER topologies from GROMACS files...')

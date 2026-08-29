@@ -34,6 +34,8 @@ def _files():
         receptor_prmtop='receptor.prmtop',
         ligand_prmtop='ligand.prmtop',
         complex_trajs=['complex.mdcrd'],
+        original_complex_trajs=['full.mdcrd'],
+        complex_tpr='full.pdb',
         receptor_trajs=[],
         ligand_trajs=[],
     )
@@ -125,7 +127,7 @@ class MakeTrajectoriesMPIFrameTest(unittest.TestCase):
 
         self.assertEqual(FakeTrajectory.instances[0].setup_args, (1, 3, 1))
 
-    def test_automatic_membrane_parameters_use_the_complex_trajectory(self):
+    def test_automatic_membrane_parameters_use_the_original_full_trajectory(self):
         inp = _input()
         inp['pb'] = {
             'memopt': 1,
@@ -146,6 +148,12 @@ class MakeTrajectoriesMPIFrameTest(unittest.TestCase):
             self.assertEqual(inp['pb']['mthick'], 41.0)
             self.assertTrue(Path(tmpdir, 'GMXMMPBSA_membrane_parameters.csv').exists())
             self.assertTrue(Path(tmpdir, 'GMXMMPBSA_membrane_parameters.png').exists())
+
+        self.assertEqual(len(FakeTrajectory.instances), 2)
+        self.assertEqual(FakeTrajectory.instances[0].prmtop, 'complex.prmtop')
+        self.assertEqual(FakeTrajectory.instances[0].traj_files, ['complex.mdcrd'])
+        self.assertEqual(FakeTrajectory.instances[1].prmtop, 'full.pdb')
+        self.assertEqual(FakeTrajectory.instances[1].traj_files, ['full.mdcrd'])
 
     def test_multiple_complex_trajectories_warn_about_pooled_statistics(self):
         with self.assertLogs(level=logging.WARNING) as captured:

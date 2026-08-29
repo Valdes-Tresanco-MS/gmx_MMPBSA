@@ -160,9 +160,39 @@ def diagnostic_paths(prefix=''):
     return (Path('GMXMMPBSA_membrane_parameters.csv'), Path('GMXMMPBSA_membrane_parameters.png'))
 
 
+def _set_context_ylim(axis, values, reference):
+    """Set an honest, readable y-scale for a stability trace.
+
+    Keep a minimum one-percent-of-reference context around small variations so
+    absolute changes are not visually overstated, while retaining extra room
+    around the observed range.
+    """
+    finite_values = np.asarray(values, dtype=float)
+    finite_values = finite_values[np.isfinite(finite_values)]
+    if not len(finite_values):
+        return
+    observed_min = float(np.min(finite_values))
+    observed_max = float(np.max(finite_values))
+    observed_span = observed_max - observed_min
+    minimum_span = max(abs(float(reference)) * 0.01, 0.1)
+    visible_span = max(observed_span * 1.2, minimum_span)
+    observed_midpoint = (observed_min + observed_max) / 2.0
+    axis.set_ylim(
+        observed_midpoint - visible_span / 2.0,
+        observed_midpoint + visible_span / 2.0,
+    )
+
+
 def write_diagnostics(frame_diagnostics, csv_path, png_path, atom_names,
-                      center_setting, thickness_setting, center, thickness):
-    """Write an auditable CSV and a compact diagnostic plot."""
+                      center_setting, thickness_setting, center, thickness,
+                      frame_coordinates=None):
+    """Write an auditable CSV and a leaflet-resolved diagnostic plot.
+
+    ``frame_coordinates`` is optional for compatibility with callers that
+    only have the summary rows. When supplied, the plot shows the selected
+    membrane atom coordinates for each frame instead of reducing each frame
+    to a single mean value.
+    """
     with Path(csv_path).open('w', newline='') as handle:
         handle.write(f'# selected_atoms={";".join(atom_names)}\n')
         handle.write(f'# center_setting={center_setting}\n')
@@ -178,21 +208,193 @@ def write_diagnostics(frame_diagnostics, csv_path, png_path, atom_names,
     import matplotlib
     matplotlib.use('Agg')
     import matplotlib.pyplot as plt
+    import seaborn as sns
+    from matplotlib.lines import Line2D
+    from matplotlib.patches import Patch
+    from matplotlib.ticker import FormatStrFormatter, MaxNLocator
+
+    sns.set_theme(style='white')
 
     frames = [row['frame'] for row in frame_diagnostics]
     means = [row['mean_z_A'] for row in frame_diagnostics]
     frame_thickness = [row['thickness_A'] for row in frame_diagnostics]
-    fig, axes = plt.subplots(2, 1, figsize=(8, 6), sharex=True)
-    axes[0].plot(frames, means, marker='o', markersize=2, linewidth=1)
-    axes[0].axhline(center, color='tab:red', linestyle='--', label=f'resolved center = {center:.3f} Å')
-    axes[0].set_ylabel('Frame mean z (Å)')
-    axes[0].legend(loc='best')
-    axes[1].plot(frames, frame_thickness, marker='o', markersize=2, linewidth=1)
-    axes[1].axhline(thickness, color='tab:red', linestyle='--', label=f'resolved thickness = {thickness:.3f} Å')
-    axes[1].set_xlabel('Selected -ct frame')
-    axes[1].set_ylabel('Frame thickness (Å)')
-    axes[1].legend(loc='best')
-    fig.suptitle(f'Membrane parameters from {"; ".join(atom_names)} atoms')
-    fig.tight_layout()
-    fig.savefig(png_path, dpi=150)
+    if frame_coordinates is None:
+        frame_coordinates = {
+            row['frame']: [row['mean_z_A']] for row in frame_diagnostics
+        }
+
+    fig, axes = plt.subplots(
+        3, 1, figsize=(9, 9.6), sharex=True,
+        gridspec_kw={'height_ratios': (2.4, 1, 1)},
+    )
+    coordinate_axis, center_axis, thickness_axis = axes
+
+    # Plot a deterministic, lightly jittered view of the actual selected
+    # atoms. Limit only the rendered view; the CSV retains every diagnostic
+    # frame. Consolidating points into two scatter collections also keeps
+    # rendering fast for long trajectories.
+    lower_color = '#4C78A8'
+    upper_color = '#C27C5D'
+    center_color = '#8C6BB1'
+    thickness_color = '#4FAF8F'
+    boundary_color = thickness_color
+    slab_color = '#A8DCC6'
+    max_plot_points = 20_000
+    frame_values = []
+    total_points = 0
+    coordinate_min = math.inf
+    coordinate_max = -math.inf
+    for frame in frames:
+        values = np.asarray(frame_coordinates.get(frame, ()), dtype=float)
+        values = values[np.isfinite(values)]
+        frame_values.append(values)
+        if len(values):
+            total_points += len(values)
+            coordinate_min = min(coordinate_min, float(np.min(values)))
+            coordinate_max = max(coordinate_max, float(np.max(values)))
+
+    point_stride = max(1, math.ceil(total_points / max_plot_points))
+    lower_x, lower_y, upper_x, upper_y = [], [], [], []
+    plotted_coordinates = []
+    for x_position, values in enumerate(frame_values, start=1):
+        if not len(values):
+            continue
+        if point_stride > 1:
+            selected = np.linspace(
+                0, len(values) - 1,
+                max(1, math.ceil(len(values) / point_stride)), dtype=int,
+            )
+            values = np.sort(values)[selected]
+        plotted_coordinates.append(values)
+        jitter = ((np.arange(len(values)) * 0.61803398875) % 1.0 - 0.5) * 0.58
+        lower = values <= center
+        upper = ~lower
+        lower_x.extend((x_position + jitter[lower]).tolist())
+        lower_y.extend(values[lower].tolist())
+        upper_x.extend((x_position + jitter[upper]).tolist())
+        upper_y.extend(values[upper].tolist())
+
+    coordinate_axis.scatter(
+        lower_x, lower_y, color=lower_color, s=8, alpha=0.55,
+        linewidths=0, rasterized=True,
+    )
+    coordinate_axis.scatter(
+        upper_x, upper_y, color=upper_color, s=8, alpha=0.55,
+        linewidths=0, rasterized=True,
+    )
+
+    slab_low = center - thickness / 2.0
+    slab_high = center + thickness / 2.0
+    coordinate_axis.axhspan(
+        slab_low, slab_high, color=slab_color, alpha=0.16,
+        label=f'resolved slab = {thickness:.1f} Å',
+    )
+    coordinate_axis.axhline(
+        center, color=center_color, linestyle='--', linewidth=1.4,
+        label=f'center = {center:.3f} Å',
+    )
+    coordinate_axis.axhline(slab_low, color=boundary_color, linestyle=':', linewidth=1)
+    coordinate_axis.axhline(slab_high, color=boundary_color, linestyle=':', linewidth=1)
+    dimension_x = 1 + 0.92 * max(len(frames) - 1, 1)
+    coordinate_axis.annotate(
+        '', xy=(dimension_x, slab_high), xytext=(dimension_x, slab_low),
+        arrowprops={
+            'arrowstyle': '<->', 'color': boundary_color,
+            'linewidth': 1.4, 'shrinkA': 0, 'shrinkB': 0,
+        },
+    )
+    coordinate_axis.text(
+        dimension_x - 0.015 * max(len(frames), 1),
+        center + 0.10 * thickness,
+        f'thickness = {thickness:.1f} Å', color=thickness_color,
+        ha='right', va='bottom', fontsize=9,
+        bbox={'facecolor': 'white', 'alpha': 0.75, 'edgecolor': 'none', 'pad': 2},
+    )
+    coordinate_axis.text(
+        0.06, center + 0.04 * thickness,
+        f'center = {center:.3f} Å', color=center_color,
+        ha='left', va='bottom', fontsize=10,
+        transform=coordinate_axis.get_yaxis_transform(),
+        bbox={'facecolor': 'white', 'alpha': 0.75, 'edgecolor': 'none', 'pad': 2},
+    )
+    coordinate_axis.set_ylabel(f'{"; ".join(atom_names)} atoms z coordinate (Å)')
+    coordinate_axis.set_title(f'Selected membrane atoms {"; ".join(atom_names)} resolve into two leaflets')
+    coordinate_axis.set_xlim(0.5, len(frames) + 0.5)
+    coordinate_axis.xaxis.set_major_locator(MaxNLocator(nbins=8, integer=True))
+    if plotted_coordinates:
+        coordinate_min = min(coordinate_min, slab_low)
+        coordinate_max = max(coordinate_max, slab_high)
+        coordinate_padding = max((coordinate_max - coordinate_min) * 0.06, 0.5)
+        coordinate_axis.set_ylim(
+            coordinate_min - coordinate_padding,
+            coordinate_max + coordinate_padding,
+        )
+    coordinate_axis.legend(handles=(
+        Line2D([], [], marker='o', linestyle='None', color=lower_color,
+               markersize=5, label='lower leaflet'),
+        Line2D([], [], marker='o', linestyle='None', color=upper_color,
+               markersize=5, label='upper leaflet'),
+        Line2D([], [], color=center_color, linestyle='--',
+               label=f'center = {center:.3f} Å'),
+        Line2D([], [], color=boundary_color, linestyle=':',
+               label='slab boundaries'),
+        Line2D([], [], color=thickness_color, linestyle='-', linewidth=1.4,
+               label=f'thickness = {thickness:.1f} Å'),
+        Patch(facecolor=slab_color, alpha=0.16,
+              label=f'resolved slab = {thickness:.1f} Å'),
+    ), loc='lower center', bbox_to_anchor=(0.5, 1.1), borderaxespad=0,
+        ncol=3, frameon=True)
+    # coordinate_axis.grid(axis='y', alpha=0.25)
+
+    center_axis.plot(frames, means, color=center_color, marker='o', markersize=3, linewidth=1.0)
+    center_axis.axhline(
+        center, color=center_color, linestyle='--', linewidth=1.2,
+        label=f'resolved center = {center:.3f} Å',
+    )
+    center_axis.set_ylabel('Frame mean z (Å)')
+    center_axis.set_title('Frame-to-frame center stability', loc='left', fontsize=10)
+    center_axis.ticklabel_format(axis='y', style='plain', useOffset=False)
+    center_axis.yaxis.set_major_formatter(FormatStrFormatter('%.2f'))
+    _set_context_ylim(center_axis, means, center)
+    center_axis.text(
+        0.99, 0.06, f'observed range = {max(means) - min(means):.3f} Å',
+        transform=center_axis.transAxes, ha='right', va='bottom',
+        fontsize=8, color='dimgray',
+    )
+    center_axis.legend(loc='best')
+    # center_axis.grid(axis='y', alpha=0.25)
+
+    thickness_axis.plot(
+        frames, frame_thickness, color=thickness_color, marker='o', markersize=3,
+        linewidth=1.0,
+    )
+    thickness_axis.axhline(
+        thickness, color=thickness_color, linestyle='--', linewidth=1.2,
+        label=f'resolved thickness = {thickness:.1f} Å',
+    )
+    thickness_axis.set_xlabel('Selected -ct frame')
+    thickness_axis.set_ylabel('Thickness (Å)')
+    thickness_axis.set_title('Frame-to-frame thickness stability', loc='left', fontsize=10)
+    thickness_axis.yaxis.set_major_formatter(FormatStrFormatter('%.1f'))
+    _set_context_ylim(thickness_axis, frame_thickness, thickness)
+    finite_thickness = [value for value in frame_thickness if math.isfinite(value)]
+    if finite_thickness:
+        thickness_axis.text(
+            0.99, 0.06,
+            f'observed range = {max(finite_thickness) - min(finite_thickness):.1f} Å',
+            transform=thickness_axis.transAxes, ha='right', va='bottom',
+            fontsize=8, color='dimgray',
+        )
+    thickness_axis.legend(loc='best')
+    # thickness_axis.grid(axis='y', alpha=0.25)
+
+    fig.align_ylabels(axes)
+    # fig.suptitle(
+    #     f'Membrane parameters from {"; ".join(atom_names)} atoms',
+    #     fontsize=14, x=0.55, y=0.97,
+    # )
+    fig.subplots_adjust(
+        left=0.12, right=0.98, bottom=0.09, top=0.84, hspace=0.3,
+    )
+    fig.savefig(png_path, dpi=300, bbox_inches='tight', pad_inches=0.1)
     plt.close(fig)

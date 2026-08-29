@@ -35,6 +35,7 @@ Classes:
 
 import logging
 import shutil
+import subprocess
 import tempfile
 from warnings import warn
 from GMXMMPBSA.exceptions import (TrajError, MMPBSA_Error, InternalError, MutantResError)
@@ -57,7 +58,45 @@ def warn_concatenated_complex_trajectories(trajectory_files, option='-ct', label
         )
 
 
-def make_trajectories(INPUT, FILES, size, cpptraj, pre):
+def _make_membrane_trajectory(FILES, cpptraj, trjconv, output_dir):
+    """Create a trajectory view of the original, unstripped ``-ct`` files.
+
+    The energy trajectory is built from the selected dry complex topology, so
+    it may not contain membrane lipids. Automatic membrane detection must use
+    the original trajectory and its full atom-name topology instead.
+    """
+    source_trajs = getattr(FILES, 'original_complex_trajs', None)
+    source_structure = getattr(FILES, 'complex_tpr', None)
+    if not source_trajs or not source_structure:
+        return Trajectory(FILES.complex_prmtop, FILES.complex_trajs, cpptraj)
+
+    source_structure = Path(source_structure)
+    if source_structure.suffix.lower() == '.pdb':
+        membrane_structure = source_structure
+    else:
+        if trjconv is None:
+            raise MMPBSA_Error(
+                'Automatic membrane parameters require a GROMACS trjconv executable when -cs is not a PDB.'
+            )
+        membrane_structure = Path(output_dir) / 'membrane_structure.pdb'
+        command = list(trjconv) + [
+            '-f', str(source_trajs[0]), '-s', str(source_structure),
+            '-o', str(membrane_structure), '-dump', '0'
+        ]
+        logging.debug('Creating full membrane topology for automatic detection: %s', ' '.join(command))
+        process = subprocess.Popen(command, stdin=subprocess.PIPE,
+                                   stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        output, _ = process.communicate(b'System\n')
+        if process.returncode:
+            raise MMPBSA_Error(
+                'GROMACS trjconv failed while preparing the full topology for automatic membrane parameters:\n'
+                + output.decode(errors='replace')
+            )
+
+    return Trajectory(str(membrane_structure), source_trajs, cpptraj)
+
+
+def make_trajectories(INPUT, FILES, size, cpptraj, pre, trjconv=None):
     """
     This function creates the necessary trajectory files, and creates thread-
     specific trajectories for parallel calculations
@@ -93,10 +132,19 @@ def make_trajectories(INPUT, FILES, size, cpptraj, pre):
 
     membrane_tmpdir = None
     membrane_atoms = None
+    membrane_traj = None
     if needs_automatic_parameters(INPUT):
         membrane_atoms = parse_atom_names(INPUT['pb']['membrane_atoms'])
         membrane_tmpdir = Path(tempfile.mkdtemp(prefix='.GMXMMPBSA_membrane_'))
-        traj.ExtractMembraneAtoms(membrane_atoms, membrane_tmpdir)
+        membrane_traj = _make_membrane_trajectory(
+            FILES, cpptraj, trjconv, membrane_tmpdir
+        )
+        if getattr(FILES, 'explicit_waters_preselected', False):
+            membrane_traj.Setup(1, membrane_traj.total_frames, 1)
+        else:
+            membrane_traj.Setup(INPUT['general']['startframe'], INPUT['general']['endframe'],
+                                INPUT['general']['interval'])
+        membrane_traj.ExtractMembraneAtoms(membrane_atoms, membrane_tmpdir)
 
     com_frames = int(traj.processed_frames)
     rec_frames = 0
@@ -191,6 +239,7 @@ def make_trajectories(INPUT, FILES, size, cpptraj, pre):
     try:
         traj.Run(pre + 'normal_traj_cpptraj.out')
         if membrane_tmpdir is not None:
+            membrane_traj.Run(pre + 'membrane_parameters_cpptraj.out')
             frame_coordinates = read_extracted_coordinates(membrane_tmpdir, membrane_atoms)
             center_setting = INPUT['pb']['mctrdz']
             thickness_setting = INPUT['pb']['mthick']
@@ -204,10 +253,11 @@ def make_trajectories(INPUT, FILES, size, cpptraj, pre):
             csv_path, png_path = diagnostic_paths(pre)
             write_diagnostics(
                 frame_diagnostics, csv_path, png_path, membrane_atoms,
-                center_setting, thickness_setting, center, thickness
+                center_setting, thickness_setting, center, thickness,
+                frame_coordinates=frame_coordinates,
             )
             logging.info(
-                'Membrane parameters from -ct (%s): center=%.3f A, thickness=%.3f A',
+                'Membrane parameters from -ct (%s): center=%.3f A, thickness=%.1f A',
                 ';'.join(membrane_atoms), INPUT['pb']['mctrdz'], INPUT['pb']['mthick']
             )
             logging.info('Retained membrane diagnostics: %s and %s', csv_path, png_path)

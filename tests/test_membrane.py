@@ -69,13 +69,18 @@ class MembraneParametersTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmpdir:
             csv_path = Path(tmpdir) / 'membrane.csv'
             png_path = Path(tmpdir) / 'membrane.png'
+            frame_coordinates = {1: [-20.0, -19.0, 19.0, 20.0], 2: [-21.0, -20.0, 20.0, 21.0]}
             _, _, diagnostics = calculate_parameters(
-                {1: [-20.0, 20.0], 2: [-21.0, 21.0]}, AUTOMATIC, AUTOMATIC
+                frame_coordinates, AUTOMATIC, AUTOMATIC
             )
-            write_diagnostics(diagnostics, csv_path, png_path, ('P',), AUTOMATIC, AUTOMATIC, 0.0, 40.0)
+            write_diagnostics(
+                diagnostics, csv_path, png_path, ('P',), AUTOMATIC, AUTOMATIC,
+                0.0, 40.0, frame_coordinates=frame_coordinates,
+            )
 
             self.assertTrue(csv_path.exists())
             self.assertTrue(png_path.exists())
+            self.assertGreater(png_path.stat().st_size, 10_000)
             with csv_path.open(newline='') as handle:
                 rows = list(csv.DictReader(line for line in handle if not line.startswith('#')))
             self.assertEqual(len(rows), 2)
