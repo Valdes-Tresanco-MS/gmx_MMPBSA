@@ -7,21 +7,21 @@ title: The input file
 
 ## Description
 
-`gmx_MMPBSA` input file contains all the specifications for the calculations. The input file is syntactically similar 
-to other programs in Amber, although we incorporated a new format more similar to the one used on GROMACS *.mdp 
-files (see bleow). The input file contains sections called `namelist` where the variables are defined for each 
+The `gmx_MMPBSA` input file contains the settings for each calculation. Its syntax is similar to that used by other
+Amber programs, but gmx_MMPBSA also accepts a format resembling GROMACS `*.mdp` files (see below). The input file is
+divided into sections called namelists, in which the variables for each
 calculation. The allowed namelists are:
 
 - [`&general`](input_file.md#general-namelist-variables): contains variables that apply to all aspects of the 
   calculation or parameters required for building AMBER topologies from GROMACS files.
-- [`&gb`](input_file.md#gb-namelist-variables): unique variables to Generalized Born (GB) calculations.
-- [`&gbnsr6`](input_file.md#gbnsr6-namelist-variables): unique variables to GBNSR6 calculations.
-- [`&pb`](input_file.md#pb-namelist-variables): unique variables to Poisson Boltzmann (PB) calculations.
-- [`&rism`](input_file.md#rism-namelist-variables): unique variables to 3D-RISM calculations.
-- [`&alanine_scanning`](input_file.md#alanine_scanning-namelist-variables): unique variables to alanine scanning 
+- [`&gb`](input_file.md#gb-namelist-variables): variables specific to Generalized Born (GB) calculations.
+- [`&gbnsr6`](input_file.md#gbnsr6-namelist-variables): variables specific to GBNSR6 calculations.
+- [`&pb`](input_file.md#pb-namelist-variables): variables specific to Poisson–Boltzmann (PB) calculations.
+- [`&rism`](input_file.md#rism-namelist-variables): variables specific to 3D-RISM calculations.
+- [`&alanine_scanning`](input_file.md#alanine_scanning-namelist-variables): variables specific to alanine-scanning
   calculations.
-- [`&decomp`](input_file.md#decomp-namelist-variables): unique variables to the decomposition scheme.
-- [`&nmode`](input_file.md#nmode-namelist-variables): unique variables to the normal mode (NMODE) calculations used to 
+- [`&decomp`](input_file.md#decomp-namelist-variables): variables specific to decomposition calculations.
+- [`&nmode`](input_file.md#nmode-namelist-variables): variables specific to normal-mode (NMODE) calculations used to
   approximate vibrational entropies.
 
   [1]: https://pubs.acs.org/doi/10.1021/ct300418h
@@ -70,16 +70,13 @@ Example:
 _Implemented in v1.5.0_
 
 ## Format
-All the input variables are described below according to their respective namelists. Descriptions are taken from 
-original sources and modified accordingly when needed. Integers and floating point 
-variables should be typed as-is while strings should be put in either single- or double-quotes. All variables should be 
-set with `variable = value` and separated by commas is they appear in the same line. If the variables appear in different 
-lines, the comma is no longer needed. See several [examples](#sample-input-files) are shown below. As you will see, several 
-calculations can be performed in the same run (_i.e._ `&gb` and `&pb`; `&gb` and `&alanine_scanning`; `&pb` and
-`&decomp`; etc). As we have mentioned, the input file can be generated using the `create_input` option of `gmx_MMPBSA`. 
-This style, while retaining the same Amber format (derived from Fortran), is aesthetically more familiar to the GROMACS
-style (`*.mdp`). However, it maintains the same essence, so it could be defined in any of the two format styles or even
-combined. See the formats below:
+The input variables are described below by namelist. Some descriptions are adapted from the original sources. Enter
+integer and floating-point values without quotes, and enclose strings in either single or double quotes. Assign each
+variable with `variable = value`. Variables on the same line must be separated by commas; commas are optional when each
+variable is placed on a separate line. See the [sample input files](#sample-input-files) below. Several calculations can
+be performed in one run (_e.g._, `&gb` with `&pb`, `&gb` with `&alanine_scanning`, or `&pb` with `&decomp`). You can
+also generate an input file with the `--create_input` option. gmx_MMPBSA accepts both the traditional Amber/Fortran
+namelist style and the GROMACS-like multiline style, and the two styles can be combined:
 
 === "New format style "
     ``` title="New format style Input file example"
@@ -131,17 +128,17 @@ the correlation between the predicted and the experimental energies. If the name
 when loading the system in `gmx_MMPBSA_ana` on a first-come, first-served basis.
 
     !!! tip 
-        The definition of the system name is entirely optional, however it can provide a better clarity during 
-        the results analysis. All files associated with this system will be saved using its name.
+        Defining the system name is optional, but a descriptive name can make result analysis clearer. All files
+        associated with the system will be saved using this name.
 
     _Implemented in v1.4.0_  
 
 `startframe` (Default = 1)
-:   The frame from which to begin extracting snapshots from the full, concatenated trajectory comprised of
+:   The frame from which to begin extracting snapshots from the full, concatenated trajectory composed of
 every trajectory file placed on the command-line, in command-line order. This is always the first frame read.
 
 `endframe` (Default = 9999999)
-:   The frame from which to stop extracting snapshots from the full, concatenated trajectory comprised of every
+:   The frame at which to stop extracting snapshots from the full, concatenated trajectory composed of every
 trajectory file supplied on the command-line.
 
 `interval` (Default = 1)
@@ -213,13 +210,12 @@ support for complex systems with several components. It supports all force field
     
     !!! tip Keep in mind
         * The value of this variable depends on the force field you used for your system in GROMACS
-        * You don't need to define forcefields` variable when you using a topology. Please refer to the section 
+        * You do not need to define the `forcefields` variable when using a topology. See
           ["How gmx_MMPBSA works"](howworks.md#how-gmx_mmpbsa-works)
         * The notation format is the one used in tleap
-        * In general, any forcefield present in `$AMBERHOME/dat/leap/cmd` could be use with `forcefields` variable. 
+        * In general, any force field present in `$AMBERHOME/dat/leap/cmd` can be used with the `forcefields` variable.
         (Check [§3](https://ambermd.org/doc12/Amber21.pdf#chapter.3) for more information)
-        * Be cautious when defining this variable since you can define two forces fields with a similar purpose which can 
-          generate inconsistencies. 
+        * Avoid defining two force fields with overlapping purposes because they can generate inconsistencies.
             
         **Input files samples:**
 
@@ -355,7 +351,7 @@ support for complex systems with several components. It supports all force field
     * 5: mbondi_pb2
 
         !!! note "_mbondi_pb2_ radii set"
-            This raddi set haven been added in _gmx_MMPBSA v1.5.0_. It is based on _mbondi_ radii set and contains a 
+            This radii set was added in _gmx_MMPBSA v1.5.0_. It is based on the _mbondi_ radii set and contains a
             new optimized set of halogen PB radii for halogenated compounds (without extra point (EP) of charge) 
             parametrized with General Amber Force Field (GAFF):
 
@@ -389,7 +385,7 @@ support for complex systems with several components. It supports all force field
     * 6: mbondi_pb3
 
         !!! note "_mbondi_pb3_ radii set"
-            This raddi set haven been added in _gmx_MMPBSA v1.5.x_. It is based on _mbondi_ radii set and contains a 
+            This radii set was added in _gmx_MMPBSA v1.5.x_. It is based on the _mbondi_ radii set and contains a
             new optimized set of halogen PB radii for halogenated compounds (without extra point (EP) of charge) 
             parametrized with General Amber Force Field (GAFF):
 
@@ -425,7 +421,7 @@ support for complex systems with several components. It supports all force field
     * 7: charmm_radii (compatible only with &pb)
         
         !!! note "_charmm_radii_ radii set"
-            This raddi set haven been added in _gmx_MMPBSA v1.5.0_. **Use only with systems prepared with CHARMM 
+            This radii set was added in _gmx_MMPBSA v1.5.0_. **Use it only with systems prepared with CHARMM
             force fields**. This atomic radii set for Poisson-Boltzmann calculations has been derived from average 
             solvent electrostatic charge distribution with explicit solvent. The accuracy has been tested with free 
             energy perturbation with explicit solvent. Most of the values were taken from a _*radii.str_ file used in 
@@ -488,7 +484,7 @@ support for complex systems with several components. It supports all force field
         - The Interaction Entropy results may vary depending on the system flexibility or whether constraints were used 
         or not in the MD simulation. 
 
-        Please, check this [paper][10] for further details.
+        See this [paper][10] for further details.
 
     _Implemented in v1.4.2: Equivalent to (Removed) `entropy = 2`_
 
@@ -526,7 +522,7 @@ full-ensemble IE estimate. Nonoverlapping block results at several values of `N`
         - The C2 Entropy results may vary depending on the system flexibility or whether constraints were used 
         or not in the MD simulation.
 
-        Please, check this [paper][10] for further details.
+        See this [paper][10] for further details.
 
     _Implemented in v1.5.0_
 
@@ -567,13 +563,13 @@ in the PATH variable. In this path the following executables will be searched: `
 `gmx_mpi_d` (GROMACS > 5.x.x), and `make_ndx`, `editconf` and `trjconv` (GROMACS 4.x.x)
 
     !!! note "Keep in mind"
-        This variable is used when the GROMACS used to run the system differs from that of will be used for running 
-        the analyses. It takes the path to the GROMACS bin folder where the executables will be searched on. 
+        Use this variable when the GROMACS installation used to run the simulation differs from the installation used
+        for the analysis. Set it to the GROMACS `bin` directory in which the executables should be located.
         An example of the use of this variable is given below:
 
             &general
             sys_name="my_system",
-            verbose=2, forcefields="oldff/leaprc.ff99SBildn",leaprc.gaff"
+            verbose=2, forcefields="oldff/leaprc.ff99SBildn,leaprc.gaff"
             gmx_path="/home/programs/gromacs/bin"
             /
             &gb
@@ -594,8 +590,8 @@ in the PATH variable. In this path the following executables will be searched: `
     !!! note "Keep in mind"
         The binary file contains all the information necessary to analyze the data with gmx_MMPBSA_ana. Its 
         use is only recommended in special cases where the original 
-        raw data is not present. We recommnend to use `keep_files = 1` or `keep_files = 2` to 
-        avoid errors when using `gmx_MMPBSA_ana`
+        raw data are not present. We recommend using `keep_files = 1` or `keep_files = 2` to
+        avoid errors when using `gmx_MMPBSA_ana`.
 
 `netcdf` (Default = 0)
 :   Specifies whether to use NetCDF trajectories internally rather than writing temporary ASCII trajectory
@@ -792,15 +788,15 @@ the same used for `print_res` variable in `&decomp` namelist.
                 qm_residues > 0.
     
             !!! example
-                `qm_residues="within 5"` Residues within 5 Å between receptor and ligand will be treated with quantum 
-                mechanic.
+                `qm_residues="within 5"` treats receptor and ligand residues within 5 Å of one another with quantum
+                mechanics.
 
         === "Amino acid selection"
             Notation: [ `CHAIN`/(`RESNUM` or `RESNUM-RESNUM`) ]
-            :    Treat with quantum mechanics residues individual or ranges. This notation also supports insertion 
-            codes, in which case you must define them individually
+            :    Treat individual residues or residue ranges with quantum mechanics. This notation also supports insertion
+            codes, which must be defined individually.
 
-            `qm_residues="A/1,3-10,15,100"` This treat with quantum mechanic Chain A residues 1, 3 through 10, 15, and 
+            `qm_residues="A/1,3-10,15,100"` treats chain A residues 1, 3 through 10, 15, and
             100 from the complex topology file and the corresponding residues in either the ligand and/or receptor 
             topology files.
     
@@ -812,58 +808,55 @@ the same used for `print_res` variable in `&decomp` namelist.
             === "Right notation"
                 
                 **Ranges selection**
-                :   `qm_residues="A/5-7` Will treat with quantum mechanic all mentioned residues because all residues with 
-                insertion code are contained in the range
+                :   `qm_residues="A/5-7"` treats all listed residues with quantum mechanics because all residues with
+                insertion codes are contained in the range.
                 
                 **Individual selection**
-                :   `qm_residues="A/5,6B,6C,7` Will treat with quantum mechanic all mentioned residues except the 
+                :   `qm_residues="A/5,6B,6C,7"` treats all listed residues with quantum mechanics except
                 residues 6A and 6D from chain A
                 
                 **Multiple chain selection**
-                :   `qm_residues="A/5-10,100 B/34,56` Will treat with quantum mechanic residues 5 through 10, and 100 from 
+                :   `qm_residues="A/5-10,100 B/34,56"` treats residues 5 through 10 and 100 from
                 chain A, and residues 34 and 56 from Chain B.
     
             === "Wrong notation"
-                `qm_residues="A/5-6B,6D-7` Will end in error.
+                `qm_residues="A/5-6B,6D-7"` produces an error.
 
 `com_qmmask` (Default = '')
 :   Amber mask specifying the quantum atoms in the complex. If defined, residues selected with `qm_residues` variable are 
 ignored. When using user defined masks, `com_qmmask`, `rec_qmmask`, and `lig_qmmask` must be defined.
     
     !!! danger
-        When using user defined masks, automatic assigment of `qmcharge_com` is overrided and default or user defined 
-        `qmcharge_com` is used.
+        When using user-defined masks, automatic assignment of `qmcharge_com` is disabled and the default or
+        user-defined `qmcharge_com` value is used.
 
 `rec_qmmask` (Default = '')
 :   Amber mask specifying the quantum atoms in the receptor. When using user defined masks, `com_qmmask`, `rec_qmmask`, 
 and `lig_qmmask` must be defined.
     
     !!! danger
-        When using user defined masks, automatic assigment of `qmcharge_rec` is overrided and default or user defined 
-        `qmcharge_rec` is used.
+        When using user-defined masks, automatic assignment of `qmcharge_rec` is disabled and the default or
+        user-defined `qmcharge_rec` value is used.
 
 `lig_qmmask` (Default = '')
 :   Amber mask specifying the quantum atoms in the receptor. When using user defined masks, `com_qmmask`, `rec_qmmask`, 
 and `lig_qmmask` must be defined.
     
     !!! danger
-        When using user defined masks, automatic assigment of `qmcharge_lig` is overrided and default or user defined 
-        `qmcharge_lig` is used.
+        When using user-defined masks, automatic assignment of `qmcharge_lig` is disabled and the default or
+        user-defined `qmcharge_lig` value is used.
 
 `qmcharge_com` (Default = 0)
-:   The charge of the quantum section for the complex. `qmcharge_com` is automatically assigned based on the selection 
-`qm_residues`. When using user defined masks, automatic assigment of `qmcharge_com` is overrided and default or user 
-defined `qmcharge_com` is used.
+:   Charge of the quantum region in the complex. `qmcharge_com` is assigned automatically from `qm_residues`. When
+using user-defined masks, automatic assignment is disabled and the default or user-defined `qmcharge_com` value is used.
 
 `qmcharge_rec` (Default = 0)
-:   The charge of the quantum section for the receptor. `qmcharge_rec` is automatically assigned based on the selection 
-`qm_residues`. When using user defined masks, automatic assigment of `qmcharge_rec` is overrided and default or user 
-defined `qmcharge_rec` is used.
+:   Charge of the quantum region in the receptor. `qmcharge_rec` is assigned automatically from `qm_residues`. When
+using user-defined masks, automatic assignment is disabled and the default or user-defined `qmcharge_rec` value is used.
 
 `qmcharge_lig` (Default = 0)
-:   The charge of the quantum section for the ligand. `qmcharge_lig` is automatically assigned based on the selection 
-`qm_residues`. When using user defined masks, automatic assigment of `qmcharge_lig` is overrided and default or user 
-defined `qmcharge_lig` is used.
+:   Charge of the quantum region in the ligand. `qmcharge_lig` is assigned automatically from `qm_residues`. When
+using user-defined masks, automatic assignment is disabled and the default or user-defined `qmcharge_lig` value is used.
 
 `qmcut` (Default = 9999.0)
 :   The cutoff for the qm/mm charge interactions.
@@ -886,9 +879,8 @@ recovered convergence for the Fig3 test system. It does not override the fatal-d
 are still rejected.
 
 `writepdb` (Default = 1)
-:   Write a PDB file of the selected QM region. This option is designed to act as an aid to the user to
-allow easy checking of what atoms were included in the QM region. Write a PDB file of the atoms in the QM region 
-on the very first step to a file named qmmm_region.pdb.
+:   Write the atoms selected for the QM region to `qmmm_region.pdb` during the first step. This file makes it easier to
+verify which atoms were included in the QM region.
 
     * 0: Do not write a PDB file of the selected QM region
     * 1: Write a PDB file of the selected QM region
@@ -1018,7 +1010,7 @@ less than 50), B=0 is recommended. With -chagb option, B is calculated automatic
 `roh` (Default = 1)
 :   Sets the value of R<sup>z</sup><sub>OH</sub> for CHAGB model, the default is 0.586Å. This parameter defines which 
 explicit water model is being mimicked with respect to its propensity to cause charge hydration asymmetry. A perfectly 
-tetrahedral water , which can not cause charge hydration asymmetry, would have R<sup>z</sup><sub>OH</sub> = 0. The 
+tetrahedral water, which cannot cause charge-hydration asymmetry, would have R<sup>z</sup><sub>OH</sub> = 0. The
 options for `roh` are:
 
     * 1: R<sup>z</sup><sub>OH</sub> = 0.586Å corresponds to TIP3P and SPC/E. 
@@ -1769,43 +1761,43 @@ accuracy and how this interacts with `ljTolerance`, `buffer`, and `solvbox`. Thr
             === "One closure/One tolerance"
                     closure="pse3", tolerance=0.00001
                 
-                A tolerance of 0.00001 will be used for clousure "pse3"
+                A tolerance of 0.00001 will be used for closure "pse3".
             === "Several closures/One tolerance"
                      closure="kh","pse3", tolerance=0.00001
     
-                A tolerance of 1 will be used for clousure "kh", while 0.00001 will be used for clousure "pse3". 
+                A tolerance of 1 will be used for closure "kh", while 0.00001 will be used for closure "pse3".
                 Equivalent to `closure="kh", "pse3", tolerance=1,0.00001`
             === "Several closures/Two tolerances"
                      closure="kh","pse2","pse3", tolerance=0.01,0.00001
     
-                A tolerance of 0.01 will be used for clousures "kh" and "pse2", while 0.00001 will be used for clousure 
+                A tolerance of 0.01 will be used for closures "kh" and "pse2", while 0.00001 will be used for closure
                 "pse3". Equivalent to `closure="kh","pse2","pse3", tolerance=0.01,0.01,0.00001`
             === "Several closures/Several tolerances"
                      closure="kh","pse2","pse3", tolerance=0.1,0.01,0.00001
     
-                A tolerance of 0.1 will be used for clousure "kh", 0.01 will be used for clousure "pse2", while 0.00001 
-                will be used for clousure "pse3".
+                A tolerance of 0.1 will be used for closure "kh", 0.01 will be used for closure "pse2", while 0.00001
+                will be used for closure "pse3".
 
         === "<v1.5.2"
             === "One closure/One tolerance"
                     closure="pse3", tolerance=0.00001
                 
-                A tolerance of 0.00001 will be used for clousure "pse3"
+                A tolerance of 0.00001 will be used for closure "pse3".
             === "Several closures/One tolerance"
                      closure="kh,pse3", tolerance=0.00001
     
-                A tolerance of 1 will be used for clousure "kh", while 0.00001 will be used for clousure "pse3". 
+                A tolerance of 1 will be used for closure "kh", while 0.00001 will be used for closure "pse3".
                 Equivalent to `closure="kh, pse3", tolerance=1,0.00001`
             === "Several closures/Two tolerances"
                      closure="kh,pse2,pse3", tolerance=0.01,0.00001
     
-                A tolerance of 0.01 will be used for clousures "kh" and "pse2", while 0.00001 will be used for clousure 
+                A tolerance of 0.01 will be used for closures "kh" and "pse2", while 0.00001 will be used for closure
                 "pse3". Equivalent to `closure="kh,pse2,pse3", tolerance=0.01,0.01,0.00001`
             === "Several closures/Several tolerances"
                      closure="kh,pse2,pse3", tolerance=0.1,0.01,0.00001
     
-                A tolerance of 0.1 will be used for clousure "kh", 0.01 will be used for clousure "pse2", while 0.00001 
-                will be used for clousure "pse3".
+                A tolerance of 0.1 will be used for closure "kh", 0.01 will be used for closure "pse2", while 0.00001
+                will be used for closure "pse3".
 
 `ljTolerance` (Default = -1)
 :   Lennard-Jones accuracy (Optional.) Determines the Lennard-Jones cutoff distance based on the desired accuracy of 
@@ -2039,27 +2031,27 @@ sufficient in most cases, however we have added several additional notations
                     make sure to include at least one residue from both the receptor and ligand in the `print_res` mask of 
                     the `&decomp` section. Check http://archive.ambermd.org/201308/0075.html
     
-                Suppost that we can have the following sequence where chain A is the receptor and B is the ligand: 
+                Suppose that the following sequence contains chain A as the receptor and chain B as the ligand:
                 A:LEU:5, A:GLY:6:A, A:THR:6:B, A:SER:6:C A:ASP:6D, A:ILE:7 , B:25
                 
                 === "Supported notation"
                     
                     **Ranges selection**
-                    :   `print_res="A/5-7 B/25` Will print all mentioned residues because all residues with insertion code are 
-                        contained in the range
+                    :   `print_res="A/5-7 B/25"` prints all listed residues because all residues with insertion codes are
+                        contained in the range.
                     
                     **Individual selection**
-                    :   `print_res="A/5,6B,6C,7 B/25` Will print all mentioned residues except the residues 6A and 
+                    :   `print_res="A/5,6B,6C,7 B/25"` prints all listed residues except residues 6A and
                         6D from chain A
     
                 === "Wrong notation"
-                    `print_res="A/5-6B,6D-7` Will end in error.
+                    `print_res="A/5-6B,6D-7"` produces an error.
     
         === "All"
     
             Notation: `all`
-            :   will print all residues. This option is often not recommended since most residues contribution is zero and 
-                it is just going to be a waste of time and computational resources.
+            :   Prints all residues. This option is generally not recommended because most residue contributions are zero,
+                so it can waste time and computational resources.
     
             !!! danger
                 Using `idecomp=3 or 4` (pairwise) with a very large number of printed residues and a large number of frames 
@@ -2313,8 +2305,8 @@ igb=2, saltcon=0.150,
 ```
 
 !!! info
-    Comments are allowed by placing a # at the beginning of the line (whites-space are ignored). Variable 
-    initialization may span multiple lines. In-line comments (_i.e._, putting a # for a comment after a variable is 
-    initialized in the same line) is not allowed and will result in an input error. Variable declarations must be 
+    Add comments by placing `#` at the beginning of a line (leading whitespace is ignored). Variable
+    initialization may span multiple lines. Inline comments (_i.e._, placing `#` after a variable assignment on the
+    same line) are not allowed and will cause an input error. Variable declarations must be
     comma-delimited, though all whitespace is ignored. Finally, all lines between namelists are ignored, so comments can
     be added before each namelist without using #.

@@ -4,7 +4,7 @@ title: Q&A - Calculations
 ---
 
 # `gmx_MMPBSA` Calculations
-Here we describe a series of frequent issues related to calculations and their possible solutions.
+This page describes common calculation problems and possible solutions.
 
 !!! note 
     Most of the errors noted here are the result of inconsistent input files. Please read the documentation and make 
@@ -15,26 +15,26 @@ Here we describe a series of frequent issues related to calculations and their p
 ???+ example "ValueError: could not convert string to float: '*************'"
     : This error has two possible causes:
         
-        1. The structure defined in `-cs`, `-rs`, or `-ls` options is inconsistent, or the trajectory
-        has not been fitted (remove PBC) properly. This is the most common error. Many times it is because the 
-        system under study is longer than some edges of the box.
+        1. The structure supplied with `-cs`, `-rs`, or `-ls` is inconsistent, or the trajectory has not been fitted
+        and processed to remove PBC artifacts correctly. This is the most common cause and often occurs when the system
+        is longer than one or more edges of the simulation box.
         
             #### **Possible solutions:**
             
             ??? tip "Check for structure consistency"
                 
                 Visualize the structure contained in the structure input file given in the `-cs`, `-rs`, or `-ls` 
-                options and make sure it is consistent (as shown in Fig 1, right panel). On the other hand, if the 
-                structure is "broken" (as shown in Fig 1, left panel) this could generate inconsistent results.
+                options and make sure it is intact and centered (Figure 1, right). A "broken" structure (Figure 1,
+                left) can produce inconsistent results.
                 
-                **Generate the structure from tpr file**
+                **Generate the structure from a TPR file**
                     
                     gmx editconf -f md.tpr -o md.pdb
 
                 <figure markdown="1">
                 [![overview][1]][1]
                   <figcaption markdown="1" style="margin-top:0;">
-                **Figure 1.** Vizualization of two different input structures files. Left: "Broken" structure; Right: Centered structure 
+                **Figure 1.** Visualization of two input structures. Left: "broken" structure; right: centered structure
                   </figcaption>
                 </figure>
                 
@@ -42,9 +42,9 @@ Here we describe a series of frequent issues related to calculations and their p
     
             ??? tip "Make sure you have fitted the trajectory"
 
-                Visualize the trajectory given in the `-ct`, `-rt`, or `-lt` options and make sure the PBC has been 
-                removed (as shown in Fig 2, right panel). On the other hand, if the trajectory has not been fitted (as 
-                shown in Fig 2, left panel) this could generate inconsistent results.
+                Visualize the trajectory supplied with `-ct`, `-rt`, or `-lt` and make sure PBC artifacts have been
+                removed (Figure 2, right). An unfitted or broken trajectory (Figure 2, left) can produce inconsistent
+                results.
                 
                 Steps:
     
@@ -58,29 +58,29 @@ Here we describe a series of frequent issues related to calculations and their p
 
                     _Assuming 1 is the receptor and 12 is the ligand. This creates a new group (number 20 in this example)_
                 
-                2. remove the PBC
+                2. Remove PBC artifacts
                     
                         gmx trjconv -s md.tpr -f md.xtc -o md_noPBC.xtc -pbc mol -center -n -ur compact
                         center: 20 (created group)
                         output: 0
                 
-                3. remove the rotation and translation with respect to the reference structure (optional)
+                3. Remove rotation and translation relative to the reference structure (optional)
                     
                         gmx trjconv -s md.tpr -f md_noPBC.xtc -o md_fit.xtc -n -fit rot+trans
                         fit: 20 (created group)
                         output: 0
                     
-                4. Visualization
+                4. Inspect the processed trajectory
                     
-                    Make sure that the trajectory is consistent (as shown in Fig 2, right panel)
+                    Make sure that the trajectory is intact and centered (Figure 2, right).
 
-                5. If the process is not succesful, consider using other options like `-pbc nojump` (as suggested [here][4])
+                5. If the process is unsuccessful, consider another option such as `-pbc nojump` (as suggested [here][4]).
 
                 <figure markdown="1">
                 [![overview][2]][2]
                   <figcaption markdown="1" style="margin-top:0;">
-                **Figure 2.** Vizualization of two different input trajectory files. Left: Trajectory with PBC; 
-                Right: Trajectory centered, fitted and with PBC removed.
+                **Figure 2.** Visualization of two input trajectories. Left: trajectory with PBC artifacts;
+                right: centered and fitted trajectory with PBC artifacts removed.
                   </figcaption>
                 </figure>
                 
@@ -144,10 +144,10 @@ Here we describe a series of frequent issues related to calculations and their p
     two terms, _i.e._, the cavity term and the dispersion term. Sometimes there are imbalances in the 
     cancellation of error between the two components and this can produce unrealistic non-polar energy values.
 
-???+ example "NMODE calculation finish in error"
-    The only error reported is probably related to RAM saturation. NMODE calculations require a considerable amount 
-    of RAM depending on the number of atoms in your system. The amount of total RAM consumed during the calculation 
-    will be: `RAM for 1 frame * number of threads`    
+???+ example "The NMODE calculation ends with an error"
+    This error is often caused by insufficient RAM. NMODE calculations can require a considerable amount of memory,
+    depending on the number of atoms in the system. Estimate the total memory requirement as
+    `RAM for one frame × number of threads`.
 
 
 

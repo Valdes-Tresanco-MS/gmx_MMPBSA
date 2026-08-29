@@ -5,33 +5,32 @@ title:
 
 ## Before running gmx_MMPBSA
 
-gmx_MMPBSA requires minimum processing on the input structure and trajectory files. Before running gmx_MMPBSA, 
-please make sure:
+gmx_MMPBSA requires minimal preprocessing of the input structure and trajectory files. Before running gmx_MMPBSA,
+complete the following checks.
 
-??? tip "The structure defined in `-cs`, `-rs`, or `-ls` options is consistent"
+??? tip "Check the structure supplied with `-cs`, `-rs`, or `-ls`"
         
     Visualize the structure contained in the structure input file given in the `-cs`, `-rs`, or `-ls` 
-    options and make sure it is consistent (as shown in Fig 1, right panel). On the other hand, if the 
-    structure is "broken" (as shown in Fig 1, left panel) this could generate inconsistent results.
+    options and make sure it is intact and centered (Figure 1, right). A "broken" structure (Figure 1, left) can
+    produce inconsistent results.
     
-    _Generate the structure from tpr file:_
+    _Generate the structure from a *.tpr file:_
         
         gmx editconf -f md.tpr -o md.pdb
     
     <figure markdown="1">
     [![overview][4]][4]
       <figcaption markdown="1" style="margin-top:0;">
-    **Figure 1.** Vizualization of two different input structures files. Left: "Broken" structure; Right: Centered structure 
+    **Figure 1.** Visualization of two input structure files. Left: "broken" structure; right: centered structure
       </figcaption>
     </figure>
 
 [4]: assets/images/q_a/inconsistent_str.png
 
-??? tip "The trajectory defined in `-ct`, `-rt`, or `-lt` doesn't contain PBC"
+??? tip "Remove PBC artifacts from trajectories supplied with `-ct`, `-rt`, or `-lt`"
 
-    Visualize the trajectory given in the `-ct`, `-rt`, or `-lt` options and make sure the PBC has been 
-    removed (as shown in Fig 2, right panel). On the other hand, if the trajectory has not been fitted (as 
-    shown in Fig 2, left panel) this could generate inconsistent results.
+    Visualize the trajectory supplied with `-ct`, `-rt`, or `-lt` and make sure periodic-boundary artifacts have
+    been removed (Figure 2, right). An unfitted or broken trajectory (Figure 2, left) can produce inconsistent results.
     
     Steps:
 
@@ -45,29 +44,29 @@ please make sure:
 
         _Assuming 1 is the receptor and 12 is the ligand. This creates a new group (number 20 in this example)_
     
-    2. remove the PBC
+    2. Remove PBC artifacts
         
             gmx trjconv -s md.tpr -f md.xtc -o md_noPBC.xtc -pbc mol -center -n -ur compact
             center: 20 (created group)
             output: 0
     
-    3. remove the rotation and translation with respect to the reference structure (optional)
+    3. Remove rotation and translation relative to the reference structure (optional)
         
             gmx trjconv -s md.tpr -f md_noPBC.xtc -o md_fit.xtc -n -fit rot+trans
             fit: 20 (created group)
             output: 0
         
-    4. Visualization
+    4. Inspect the processed trajectory
         
-        Make sure that the trajectory is consistent (as shown in Fig 2, right panel)
+        Make sure that the trajectory is intact and centered (Figure 2, right).
 
-    5. If the process is not succesful, consider using other options like `-pbc nojump` (as suggested [here][5])
+    5. If the process is unsuccessful, consider another option such as `-pbc nojump` (as suggested [here][5]).
 
     <figure markdown="1">
     [![overview][3]][3]
       <figcaption markdown="1" style="margin-top:0;">
-    **Figure 2.** Vizualization of two different input trajectory files. Left: Trajectory with PBC; 
-    Right: Trajectory centered, fitted and with PBC removed.
+    **Figure 2.** Visualization of two input trajectories. Left: trajectory with PBC artifacts;
+    right: centered and fitted trajectory with PBC artifacts removed.
       </figcaption>
     </figure>
 
@@ -81,13 +80,10 @@ please make sure:
     * **We currently recommend the use of MPI since the computation time decreases considerably.**
 
 === "Parallel (MPI) version"
-    `gmx_MMPBSA` as `MMPBSA.py` uses the `MPI` only to perform the calculations, the rest of 
-    the process (_i.e_, Generation/conversion of Amber topologies, mutation, division of the trajectories, etc) 
-    occurs in a single thread (See **Figure 3** for better reference). This means that it is not necessary to 
-    install any 
-    program (AmberTools or GROMACS) with `MPI`, which can be used in any circumstance, and the time required to 
-    process the data prior to the calculation depends on the system and will be the same for both versions (`Serial` 
-    and `MPI`). 
+    Like `MMPBSA.py`, `gmx_MMPBSA` uses MPI only for the energy calculations. The remaining steps —such as generating
+    or converting Amber topologies, preparing mutations, and dividing trajectories— run in a single thread (see
+    **Figure 3**). AmberTools and GROMACS therefore do not need to be compiled with MPI support. The preprocessing
+    time depends on the system and is the same for serial and MPI runs.
 
     !!! note
         Note that `gmx_MMPBSA` processes, converts, or builds topologies from GROMACS files, so it takes slightly 
@@ -123,10 +119,10 @@ please make sure:
 
     
     !!! danger
-        Unfortunately, when running `gmx_MMPBSA` with `MPI`, GROMACS's `gmx_mpi` can't be used. This is probably 
-        because of `gmx_mpi` conflicts with mpirun. In any case, this is not a problem since `gmx` works correctly 
-        and `gmx_mpi` only parallels `mdrun`, the rest of the GROMACS tools work in a single thread. See this 
-        [issue](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/issues/26) to see the output.
+        When running `gmx_MMPBSA` with MPI, do not use the GROMACS `gmx_mpi` executable because it can conflict with
+        `mpirun`. Use `gmx` instead. Only `mdrun` benefits from GROMACS MPI parallelization; the GROMACS tools called by
+        gmx_MMPBSA run in a single thread. See [issue 26](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/issues/26)
+        for an example.
 
     !!! warning
         The nmode calculations require a considerable amount of RAM. Consider that the total amount of RAM will be:
@@ -148,7 +144,7 @@ please make sure:
     
         gmx_MMPBSA -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 1 13 -ct com_traj.xtc
     
-    You can found test files on [GitHub][1]
+    You can find test files on [GitHub][1].
 
   [1]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/docs/examples
 

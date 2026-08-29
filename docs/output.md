@@ -7,7 +7,7 @@ title: Output files
 
 ## The output file
 
-This is how a typical output file ("FINAL_RESULTS_MMPBSA.dat" by default) looks like:
+The following example shows a typical output file (`FINAL_RESULTS_MMPBSA.dat` by default):
 
 ```  yaml title="Output file"
 | Run on Tue Feb  8 22:31:58 2022                                                     | # (1) 
@@ -375,10 +375,10 @@ functionality in sander. (1)
 
 `_GMXMMPBSA_ligand.pdb` Dummy PDB file of the ligand required to set molecule up in nab programs
 
-`_GMXMMPBSA_complex_nm.mdcrd.#` Trajectory file(s) for each thread with snapshots used for normal mode calcula- tions on
+`_GMXMMPBSA_complex_nm.mdcrd.#` Trajectory file(s) for each thread with snapshots used for normal mode calculations on
 the complex. (1)
 
-`_GMXMMPBSA_receptor_nm.mdcrd.#` Trajectory file for each thread with snapshots used for normal mode calcula- tions on
+`_GMXMMPBSA_receptor_nm.mdcrd.#` Trajectory file for each thread with snapshots used for normal mode calculations on
 the receptor. (1)
 
 `_GMXMMPBSA_ligand_nm.mdcrd.#` Trajectory file for each thread with snapshots used for normal mode calculations on the
@@ -415,10 +415,10 @@ complex are dumped. (1)
 
 `_GMXMMPBSA_ligand_pb.mdout.#` sander output file containing energy components of all ligand snapshots done in PB. (1)
 
-`_GMXMMPBSA_complex_rism.out.#` rism3d.snglpnt output file containing energy components of all complex snap- shots done
+`_GMXMMPBSA_complex_rism.out.#` rism3d.snglpnt output file containing energy components of all complex snapshots calculated
 with 3D-RISM (1)
 
-`_GMXMMPBSA_receptor_rism.out.#` rism3d.snglpnt output file containing energy components of all receptor snap- shots
+`_GMXMMPBSA_receptor_rism.out.#` rism3d.snglpnt output file containing energy components of all receptor snapshots
 done with 3D-RISM (1)
 
 `_GMXMMPBSA_ligand_rism.out.#` rism3d.snglpnt output file containing energy components of all ligand snapshots done with
@@ -432,7 +432,7 @@ snapshots. (1)
 `_GMXMMPBSA_receptor_nm.out.#` Output file from mmpbsa_py_nabnmode that contains the entropy data for the receptor for
 all snapshots. (1)
 
-`_GMXMMPBSA_complex_nm.out.#` Output file from mmpbsa_py_nabnmode that contains the entropy data for the com- plex for
+`_GMXMMPBSA_complex_nm.out.#` Output file from mmpbsa_py_nabnmode that contains the entropy data for the complex for
 all snapshots. (1)
 
 `_GMXMMPBSA_mutant_...` These files are analogs of the files that only start with `_GMXMMPBSA_` described above, but

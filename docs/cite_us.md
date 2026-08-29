@@ -27,14 +27,14 @@ py: An Efficient Program for End-State Free Energy Calculations.  _Journal of Ch
 ## Example
 
 !!! note "Important"
-    This does not constitute by any means the only way to cite `gmx_MMPBSA` and programs/methods implemented in it. It 
-    is just meant to serve as a guidance.
+    This is only one way to cite `gmx_MMPBSA` and the programs and methods it implements. Use it as guidance and adapt
+    it to your work and the journal's requirements.
 
-Here there is an example on how to cite `gmx_MMPBSA` and programs/methods implemented in it:
+The following example shows how to cite `gmx_MMPBSA` and the programs and methods it implements:
 
 **MM/GBSA calculations**
 
-PBC conditions were removed from GROMACS output trajectory before running the calculations with gmx_MMPBSA.[^1^][1]^,^[^2^][2]
+Periodic-boundary artifacts were removed from the GROMACS output trajectory before running the calculations with gmx_MMPBSA.[^1^][1]^,^[^2^][2]
 Energetically relevant residues within 5 Å at the interface were predicted using the per-residue effective free energy 
 decomposition (prEFED) protocol.[^3^][3] The AMBER99SB force field[^5^][5] was used to calculate the internal
 term (ΔE~int~) as well as van der Waals (ΔE~vdW~) and electrostatic (ΔE~ele~) energies. The GB-Neck2 model 
@@ -45,10 +45,10 @@ free energy (∆𝐺~𝑆𝐴~) was obtained by the equation:
     ∆𝐺<sub>𝑆𝐴</sub> = 𝛾 · ∆𝑆𝐴𝑆𝐴 + 𝛽
 </p>
 
-where ∆𝑆𝐴𝑆𝐴 represents the solvent-accessible surface area variation of the solute molecule  upon complex formation, 
-and 𝛾 and 𝛽 are empiric constants whose values for GB models are 0.0072 kcal·Å^-2^·mol^-1^ and 0, 
+where ∆𝑆𝐴𝑆𝐴 represents the change in the solute's solvent-accessible surface area upon complex formation,
+and 𝛾 and 𝛽 are empirical constants whose values for GB models are 0.0072 kcal·Å^-2^·mol^-1^ and 0,
 respectively.[^7^][7]^,^[^8^][8] The entropic term was calculated by the Interaction Entropy method.[^9^][9] The input 
-file for gmx_MMPBSA decomposition calculation is shown below:
+file for the gmx_MMPBSA decomposition calculation is shown below:
 
 ```
 ============================
@@ -69,8 +69,8 @@ print_res="within 5"
 Computational alanine scanning[^10^][10] was performed for five residues (TP62, EP68, EP70, HP76, and EP83) with a 
 specific internal dielectric constant as suggested by Yan et al.[^11^][11] and according to the chemical-physical 
 properties of the mutated amino acid (_i.e._, _e~i~_ = 5 for charged residues; _e~i~_ = 3 for polar residues; 
-and _e~i~_ = 1 for hydrophobic residues). An example of the input file for gmx_MMPBSA alanine scanning 
-(EP68 residue) calculation is shown below:
+and _e~i~_ = 1 for hydrophobic residues). An example input file for a gmx_MMPBSA alanine-scanning calculation of
+residue EP68 is shown below:
 
 ```
 ============================

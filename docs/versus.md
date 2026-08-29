@@ -3,8 +3,8 @@ template: main.html
 title: gmx_MMPBSA vs other programs
 ---
 
-# Comparison of `gmx_MMPBSA` vs other programs
-This comparison is based on the documentation of the different programs
+# Comparison of `gmx_MMPBSA` with other programs
+This comparison is based on each program's documentation.
 
 
 ## Calculation features
@@ -18,7 +18,7 @@ This comparison is based on the documentation of the different programs
 | **Decomposition schemes**        |                  Per-Residues                  |                                           |         Per-Residues and Per-Wise         |         Per-Residues and Per-Wise         |
 | **QM/MMGBSA**                    |                                                |                                           | :material-check-bold:{.scale_icon_medium} | :material-check-bold:{.scale_icon_medium} |
 | **MM/3D-RISM**                   |                                                |                                           | :material-check-bold:{.scale_icon_medium} | :material-check-bold:{.scale_icon_medium} |
-| **Support Membrane Protein**     |                                                |                                           | :material-check-bold:{.scale_icon_medium} | :material-check-bold:{.scale_icon_medium} |
+| **Membrane-protein support**     |                                                |                                           | :material-check-bold:{.scale_icon_medium} | :material-check-bold:{.scale_icon_medium} |
 | **Approximations**               |                       ST                       |                 ST and MT                 |                 ST and MT                 |                 ST and MT                 |
 
 ## Analysis features
@@ -26,7 +26,7 @@ This comparison is based on the documentation of the different programs
 |:--------------------------------|:--------------------------------------------:|:----------------:|:-----------------------------------------:|:-----------------------------------------:|
 | **API**                         |                                              |                  | :material-check-bold:{.scale_icon_medium} | :material-check-bold:{.scale_icon_medium} |
 | **Analyzer Tool**               |                                              |                  |                   [^4]                    | :material-check-bold:{.scale_icon_medium} |
-| * Multiple systems at same time |                                              |                  |                                           | :material-check-bold:{.scale_icon_medium} |
+| * Multiple systems at once      |                                              |                  |                                           | :material-check-bold:{.scale_icon_medium} |
 | * Correlation between systems   |  :material-check-bold:{.scale_icon_medium}   |                  |                                           | :material-check-bold:{.scale_icon_medium} |
 | * Per-residue energies to PDB   |  :material-check-bold:{.scale_icon_medium}   |                  |                                           | :material-check-bold:{.scale_icon_medium} |
 | * Interactive visualization     |                                              |                  |                                           | :material-check-bold:{.scale_icon_medium} |
@@ -50,21 +50,20 @@ This comparison is based on the documentation of the different programs
 
 
 
-  [^1]: [MMPBSA.py][4] is included in AMBER package
+  [^1]: [MMPBSA.py][4] is included in the AMBER package
   [^2]: Without documentation
-  [^3]: NMODE = Normal modes approximation, QH = Quasic-Harmony approximation, IE = Interaction Entropy
+  [^3]: NMODE = normal-mode approximation, QH = quasi-harmonic approximation, IE = interaction entropy
 approximation, and C2 = C2 Entropy
   [^4]: We plan to extend gmx_MMPBSA compatibility to MMPBSA.py's results
-  [^5]: Currently there is a repository ([AmberUtils][5]) for analysing the results
-  [^6]: GROMACS 20xx.x is not officially supported. There is a Pull Request that offers a minimum compatibility 
-with versions higher than 2016.x one, but still with limitations
-  [^7]: It is not clear whether it does support GROMACS versions 20xx.x or not, but we assume that it does since 
-it is script-based
-  [^8]: It is not clear whether it does support APBS versions 3.x.x
+  [^5]: The [AmberUtils][5] repository provides tools for analyzing the results
+  [^6]: GROMACS 20xx.x is not officially supported. A pull request provides limited compatibility with versions
+later than 2016.x
+  [^7]: Support for GROMACS 20xx.x is not documented; the table assumes compatibility because the tool is script-based
+  [^8]: Support for APBS 3.x.x is not documented
   [^9]: The recommended conda dependency boundary is AmberTools `>=24.8,<27`; older compatible AmberTools
 versions may also work when their Python and compiled dependency stack is consistent.
-  [^0]: gmx_MMPBSA supports Linear and Non-Linear PB equations. [MMPBSA.py][4] on the other hand, requires the user to 
-modify manually the *.mdin input files 
+  [^0]: gmx_MMPBSA supports linear and nonlinear PB equations. [MMPBSA.py][4], by contrast, requires the user to
+modify the `*.mdin` input files manually
 
 
   [1]: https://github.com/RashmiKumari/g_mmpbsa
@@ -72,4 +71,3 @@ modify manually the *.mdin input files
   [3]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA
   [4]: https://ambermd.org/doc12/Amber21.pdf#chapter.36
   [5]: https://github.com/williamdlees/AmberUtils
-

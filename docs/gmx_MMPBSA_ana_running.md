@@ -4,15 +4,14 @@ title:
 ---
 
 ## Running gmx_MMPBSA_ana
-In order to analyze multiple systems in the same section and implement the correlation between them, we improved the 
-file input to gmx_MMPBSA_ana. Currently, gmx_MMPBSA_ana supports either several info files, a folder that contains the 
-info file, or a list of folders containing info files.
+To analyze multiple systems in the same session or calculate correlations between them, you can supply several info
+files, a folder containing an info file, or a list of folders containing info files to gmx_MMPBSA_ana.
 
 Make sure to use the following structure when working with several folders:
 
 === "Valid folder structure"
     
-    Here all folders (5 systems) will be processed by `gmx_MMPBSA_ana`
+    Here, all five systems will be processed by `gmx_MMPBSA_ana`:
     ```
     Defined folder
       ├── System-1
@@ -29,7 +28,7 @@ Make sure to use the following structure when working with several folders:
 
 === "Valid folders + files structure"
 
-    Here all systems (4) will be processed by `gmx_MMPBSA_ana`
+    Here, all four systems will be processed by `gmx_MMPBSA_ana`:
     ```
     System-1      
       └──_GMXMMPBSA_info
@@ -46,20 +45,20 @@ Make sure to use the following structure when working with several folders:
 
             gmx_MMPBSA_ana -f /path/to/System-1 /path/to/System-3/_GMXMMPBSA_info /path/to/Folder-1 -r
         
-        This estructure only work if recursive option was defined. See the examples below
+        This structure works only when the recursive option is enabled. See the examples below.
     
     !!! note ""
         Note that:
 
-        * `System-1` is defined as folder that contain a _GMXMMPBSA_info
-        * Folder-1 contain two folder (Systems), each containing a _GMXMMPBSA_info
+        * `System-1` is a folder containing a `_GMXMMPBSA_info` file
+        * `Folder-1` contains two system folders, each containing a `_GMXMMPBSA_info` file
         * System-3 is defined as a _GMXMMPBSA_info file
 
 
 === "Wrong folder structure"
     
-    Here only  4 (systems) folders will be processed by gmx_MMPBSA_ana. The systems in the `Internal folder` will be 
-    ignored 
+    Here, only four system folders will be processed by gmx_MMPBSA_ana. The systems in `Internal folder` will be
+    ignored:
     ```
     Defined folder
       ├── System-1
@@ -87,7 +86,7 @@ Make sure to use the following structure when working with several folders:
         
                 gmx_MMPBSA_ana -f _GMXMMPBSA_info
         
-        * other location  :material-new-box:{: .medium .heart } Version: 1.4.0
+        * Another location  :material-new-box:{: .medium .heart } Version: 1.4.0
 
                 gmx_MMPBSA_ana -f /path/to/_GMXMMPBSA_info
 
@@ -100,7 +99,7 @@ Make sure to use the following structure when working with several folders:
         
                 gmx_MMPBSA_ana -f .
         
-        * other location
+        * Another location
 
                 gmx_MMPBSA_ana -f /path/to/folder
 
@@ -119,27 +118,27 @@ Make sure to use the following structure when working with several folders:
     === "Recursive option"
         :material-new-box:{: .medium .heart } Version: 1.4.0
 
-        Passing a folder as input with `recursive` option:  
+        Passing a folder as input with the `recursive` option:
         
         * Current directory
         
                 gmx_MMPBSA_ana -f . -r
         
-        * other location
+        * Another location
 
                 gmx_MMPBSA_ana -f /path/to/folder --recursive
 
-        * combine multiple folders
+        * Combine multiple folders
 
                 gmx_MMPBSA_ana -f /path/to/folder-1 /path/to/folder-2 /path/to/folder-3  -r
 
             !!! warning ""
             Folders can contain one or more systems
 
-        * combine multiple folders and files
+        * Combine multiple folders and files
 
                 gmx_MMPBSA_ana -f /path/to/folder-1 /path/to/_GMXMMPBSA_info-1 /path/to/folder-3  -r
 
             !!! warning ""
             * Folders can contain one or more systems
-            * Note that if you remove the option -r, each folder must contain a valid _GMXMMPBSA_info file.
+            * If you remove `-r`, each folder must contain a valid `_GMXMMPBSA_info` file.

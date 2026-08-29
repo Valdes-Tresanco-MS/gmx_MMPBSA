@@ -16,10 +16,9 @@ title: Getting started
 
 <!-- [<img src="../assets/TOC.png" height="120%" width="258" align="right"/>]() -->
 
-gmx_MMPBSA is a new tool based on AMBER's MMPBSA.py, aiming to perform end-state free energy calculations with GROMACS 
-files. **_It works with all GROMACS versions and brings improvements in 
-compatibility, versatility, analyses, and parallelization compared to existing programs (see [here](versus.md) for a 
-detailed comparison)_**
+gmx_MMPBSA is a tool based on AMBER's MMPBSA.py that performs end-state free energy calculations using GROMACS
+files. **_It supports a broad range of GROMACS versions and improves compatibility, versatility, analysis, and
+parallelization compared with existing programs (see the [detailed comparison](versus.md))._**
 
 [comment]: <> (<div style="text-align:center">)
 
@@ -34,7 +33,7 @@ detailed comparison)_**
     &amp; Country Rank"><img border="0" align="right" src="https://www.scimagojr.com/journal_img.php?id=5100155074"
     alt="SCImago Journal &amp; Country Rank"/></a>
     
-    `gmx_MMPBSA` official paper has been published on _Journal of Chemical Theory and Computation_ and can be accessed 
+    The official `gmx_MMPBSA` paper was published in the _Journal of Chemical Theory and Computation_ and is available
     [here](https://pubs.acs.org/doi/10.1021/acs.jctc.1c00645). If you use `gmx_MMPBSA`, please cite it as follows:
     
     Valdés-Tresanco, M.S., Valdés-Tresanco, M.E., Valiente, P.A., and Moreno, E. _gmx_MMPBSA: A New Tool to Perform 
@@ -47,7 +46,7 @@ detailed comparison)_**
     
     Download | [*.bib](gmx_MMPBSA_citation.bib) | [*.ris](gmx_MMPBSA_citation.ris)
 
-    **Please, also consider citing MMPBSA.py's paper:**
+    **Please also consider citing the MMPBSA.py paper:**
 
     Bill R. Miller, T. Dwight McGee, Jason M. Swails, Nadine Homeyer, Holger Gohlke, and Adrian E. Roitberg. 
     _MMPBSA.py: An Efficient Program for End-State Free Energy Calculations_. Journal of Chemical Theory and 
@@ -55,11 +54,11 @@ detailed comparison)_**
 
     Download | [*.bib](MMPBSA_py_citation.bib) | [*.ris](MMPBSA_py_citation.ris) | [*.xml](MMPBSA_py_citation.xml)
 
-    Please, visit [Cite gmx_MMPBSA](cite_us.md#example) page for more information on how to cite gmx_MMPBSA and the 
+    Visit the [Cite gmx_MMPBSA](cite_us.md#example) page for more information on how to cite gmx_MMPBSA and the
     programs/methods implemented in it.
 
 ## **Installation**
-Ready to use gmx_MMPBSA 😀? Check the [installation page](installation.md)
+Ready to use gmx_MMPBSA 😀? See the [installation page](installation.md).
 
 ## **What can be done with gmx_MMPBSA?**
 Multiple calculations can be performed with `gmx_MMPBSA`, such as:
@@ -85,7 +84,7 @@ Multiple calculations can be performed with `gmx_MMPBSA`, such as:
 !!! note "There is always more..."
     You can check [`gmx_MMPBSA` in a nutshell page](summary.md) for a more detailed overview of the types of calculations 
     supported in gmx_MMPBSA. Also, check our [example page](examples/README.md) to see a detailed list of all the 
-    examples available
+    examples available.
 
 In the current version, gmx_MMPBSA supports a number of different systems, including but not limited to:
 
@@ -112,20 +111,20 @@ In the current version, gmx_MMPBSA supports a number of different systems, inclu
     potentially any other software that uses *.psf - *.dcd files can be processed in gmx_MMPBSA 😀. Check our 
     [example page](examples/README.md) to see a detailed list of all the examples available.
 
-The following video shows how a typical binding free energy calculation with the GB model and the Interaction entropy method 
-is performed in gmx_MMPBSA.
+The following video shows how to perform a typical binding free energy calculation with the GB model and the interaction entropy method
+in gmx_MMPBSA.
 
 <div class="embed-container">
     <iframe src="https://www.youtube.com/embed/k1aLlBhnkxo" frameborder="0" allowfullscreen></iframe>
 </div>
 
-## **`gmx_MMPBSA` a quick overview**
+## **A quick overview of `gmx_MMPBSA`**
 `gmx_MMPBSA` is a Python module that contains three applications: 
 
-* [gmx_MMPBSA](howworks.md) is the fundamental application and carries out the calculations mentioned above
+* [gmx_MMPBSA](howworks.md) is the main application and carries out the calculations mentioned above
 * [gmx_MMPBSA_ana](analyzer.md) provides an intuitive way to analyze the data from gmx_MMPBSA calculations and save 
   high-quality pictures
-* [gmx_MMPBSA_test](examples/gmx_MMPBSA_test.md#gmx_mmpbsa_test-command-line) is a tool designed to test if the installation 
+* [gmx_MMPBSA_test](examples/gmx_MMPBSA_test.md#gmx_mmpbsa_test-command-line) tests whether the installation
   was successful by running one or more available [examples](examples/README.md) in gmx_MMPBSA.
   
 !!! note "Easy to run"
@@ -139,10 +138,10 @@ is performed in gmx_MMPBSA.
     * a trajectory file (`*.xtc`, `*.pdb`, `*.trr`)
     * a topology file (`*.top`)
 
-    Once the calculation is done, results can be analyzed in [gmx_MMPBSA_ana](analyzer.md)
+    After the calculation, results can be analyzed with [gmx_MMPBSA_ana](analyzer.md).
 
-    You can check [How gmx_MMPBSA works page](howworks.md) to get more details. Also check our 
-    [example page](examples/README.md) to see how gmx_MMPBSA works with real examples
+    See [How gmx_MMPBSA works](howworks.md) for more details. The [examples page](examples/README.md) shows how
+    gmx_MMPBSA works with real systems.
 
 If you prefer a more general overview of the gmx_MMPBSA suite, check this amazing video by Dr. Hymavathi Veeravarapu.
 
@@ -151,9 +150,9 @@ If you prefer a more general overview of the gmx_MMPBSA suite, check this amazin
 </div>
 
 ## **Need help?**
-[Help](Q&A/README.md) section contains the most frequently asked questions and errors. Also, look at our 
+[The help section](Q&A/README.md) contains answers to frequently asked questions and common errors. You can also search our
 [Google group](https://groups.google.com/g/gmx_mmpbsa) or the [issues](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/issues)
-section to find out about specific cases and others.
+for similar cases.
 
 If you still have questions or cannot solve the problem, please consider opening an 
 [issue](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/issues) or posting in our 

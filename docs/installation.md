@@ -6,30 +6,29 @@ title: Installation
 
 ## Requirements
 `gmx_MMPBSA` requires **[GROMACS](https://manual.gromacs.org/)** and
-**[AmberTools](https://ambermd.org/AmberTools.php)** to be installed in your machine with **Python3**.
+**[AmberTools](https://ambermd.org/AmberTools.php)** to be installed on your computer with **Python 3**.
 For conda installations, Python `>=3.11,<3.13`, AmberTools `>=24.8,<27`, and GROMACS `>=2022,<2027`
 are the recommended dependency boundaries. This keeps the environment compatible with the tested Python 3.12
 stack without pinning users to one AmberTools or GROMACS release. `gmx_MMPBSA` supports a broad range of
 GROMACS versions and should run with any GROMACS in the `PATH` that is compatible with the files you are using.
 
-Currently, gmx_MMPBSA can be installed using two ways:
+gmx_MMPBSA can be installed in two ways:
 
 `Conda environment`
-:   **Recommended, especially if you want to keep older versions of gmx_MMPBSA**. The conda environment provides a clean and efficient way of installing gmx_MMPBSA. It also allows to have 
-different versions of gmx_MMPBSA in isolated environments, thus reducing the possibility of incompatibility with 
+:   **Recommended, especially if you want to keep older versions of gmx_MMPBSA**. A conda environment provides a clean and efficient installation. It also allows you to keep
+different versions of gmx_MMPBSA in isolated environments, reducing the possibility of incompatibility with
 other packages. Installation time is also less since it does not require the compilation of AmberTools or GROMACS.
 
 `AmberTools compilation`
-:   In this way, we assume that you have AmberTools compiled on your machine and that you want to do an installation 
-without worrying about enabling or disabling conda environments. It also involves user compilation of GROMACS, which 
-takes considerable installation time. This way also requires installed packages to be compatible and installation 
-errors are more frequent.
+:   This method assumes that AmberTools is compiled on your computer and that you want to use gmx_MMPBSA without
+activating or deactivating a conda environment. You must also compile GROMACS, which increases installation time.
+Because the installed packages must remain compatible, dependency errors are more common with this method.
 
 !!! info "Installation"
     === "Conda environment"
 
         ??? Info "Install Miniconda"
-            To install Miniconda on your computer.
+            Install Miniconda on your computer:
 
             <div class="termy">
 
@@ -40,7 +39,7 @@ errors are more frequent.
 
             $ ./Miniconda3-latest-Linux-x86_64.sh
 
-            Successful miniconda intallation
+            Successful Miniconda installation
             ```
 
             </div>
@@ -78,7 +77,7 @@ errors are more frequent.
             // Install mpi4py and AmberTools
             $ conda install -c conda-forge "mpi4py>=4.0.1,<5" "ambertools>=24.8,<27" -y -q
 
-            // Install dependencies for ploting
+            // Install plotting dependencies
             $ conda install -c conda-forge "numpy>=1.26.4,<2" "matplotlib>=3.8,<4" "scipy>=1.14.1,<2" "pandas>=2.2,<3" "seaborn>=0.13,<0.14" -y -q
 
             // Install PyQt6 required to use the GUI analyzer tool (gmx_MMPBSA_ana). Not needed for HPC
@@ -94,9 +93,9 @@ errors are more frequent.
             </div>
     
     === "AmberTools compilation"
-        [Follow the oficial AmberTools installation according to your OS](https://ambermd.org/Installation.php)
+        [Follow the official AmberTools installation instructions for your OS](https://ambermd.org/Installation.php)
         !!! note
-            We asume that AmberTools and their shell environment are correctly configured
+            We assume that AmberTools and its shell environment are configured correctly.
     
         **Installation**
         <div class="termy">
@@ -121,8 +120,8 @@ errors are more frequent.
             ```
 
 ### Extra Dependencies
-gmx_MMPBSA uses some dependencies for other functions independent of calculations or in some cases they may be 
-necessary due to the nature of your OS.
+Some features require additional dependencies. Your operating system may also require one or more of the packages
+listed below.
 
 `ParmEd`
 :  The current version of ParmEd implemented in AmberTools has some limitations that have been resolved in the [GitHub 
@@ -168,7 +167,7 @@ gmx_MMPBSA via `conda`
    ```
 
 `libxcb`
-: If you get an error related to Qt plugins
+: If you get an error related to Qt plugins:
     ```
     sudo apt install --reinstall libxcb-xinerama0
     ```    
@@ -182,7 +181,7 @@ Once the installation is completed, the following warning may appear:
     are installed in '/home/user/path_to_amber_install/amber20/miniconda/bin'
     which is not on PATH.
 
-This warning is because `pip` installs the executables (`gmx_MMPBSA`, `gmx_MMPBSA_ana` and `gmx_MMPBSA_test`) in 
+This warning appears because `pip` installs the executables (`gmx_MMPBSA`, `gmx_MMPBSA_ana`, and `gmx_MMPBSA_test`) in
 `installation_path/amber20/miniconda/bin`.
 
 You have two options to solve this:
@@ -212,7 +211,7 @@ If when running `gmx_MMPBSA`, you get an error like this:
 
     ModuleNotFoundError: No module named 'parmed'
 
-please see the following [issue][2] to see the solution
+see [issue 2][2] for the solution.
 
   [1]: https://ambermd.org/GetAmber.php#ambertools
   [2]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/issues/2
@@ -221,9 +220,8 @@ please see the following [issue][2] to see the solution
 
 
 ## Autocompletion script
-Since `gmx_MMPBSA` has many flags, we believe that this autocompletion can significantly improve productivity, be
-more user-friendly and reduce the number of unforced errors. That is why we created this script, which manages the
-autocompletion of the `gmx_MMPBSA`, `gmx_MMPBSA_ana` and `gmx_MMPBSA_test`.
+Because `gmx_MMPBSA` has many options, shell autocompletion can improve productivity and reduce typing errors. The
+provided script adds autocompletion for `gmx_MMPBSA`, `gmx_MMPBSA_ana`, and `gmx_MMPBSA_test`.
 
 
 **Execution:**
@@ -236,7 +234,7 @@ Enter the following command in the terminal:
 
 !!! warning
     * This script requires that `gmx_MMPBSA`, `gmx_MMPBSA_ana` and `gmx_MMPBSA_test` be accessible in PATH
-    * If the command-line above end in error, please make sure the file has executed permissions. 
+    * If the command above fails, make sure the file has execute permission.
         
         On Ubuntu, Debian, Linux Mint or related:
         
@@ -248,19 +246,19 @@ Enter the following command in the terminal:
 
             * `Permissions` > 
 
-            * `Mark the checkbox "Allow to execute the file as a program"`
+            * `Select "Allow executing file as program"`
         
         * Terminal:
             
                 chmod 755 /path/to/ambertools/lib/python3.x/site-packages/GMXMMPBSA/GMXMMPBSA.sh
     
         
-**Once you make the source of GMXMMPBSA.sh you can check its operation as follows:**
+**After sourcing `GMXMMPBSA.sh`, check that it works as follows:**
 
 _All you have to do is enter the name of the program in the terminal and press the tab key twice:_
     
     gmx_MMPBSA <tab> <tab>
 
 ## Testing the operation of gmx_MMPBSA
-After preparing everything to run `gmx_MMPBSA`, it only remains to check its correct operation. To know how to do it, 
-consult the documentation of [`gmx_MMPBSA_test`](examples/gmx_MMPBSA_test.md#running-gmx_mmpbsa_test)
+After installing `gmx_MMPBSA`, verify the installation by following the
+[`gmx_MMPBSA_test` instructions](examples/gmx_MMPBSA_test.md#running-gmx_mmpbsa_test).

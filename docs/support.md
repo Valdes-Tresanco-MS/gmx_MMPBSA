@@ -5,13 +5,13 @@ title: Support
 
 # Support
 
-## Report an issue and Getting help
-You can review some answers to the questions that we consider most common here. If you find a bug or have any 
-question, please consider opening an [issue][2] or post in our [Google group][3]
+## Report an issue and get help
+Review the [frequently asked questions](Q&A/README.md) first. If you find a bug or have a question, consider opening an
+[issue][2] or posting in our [Google group][3].
 
 [<img src="../assets/images/jetbrains-variant-4.png" height="100" width="178" align="right" />][4]
 
-## Jetbrains
+## JetBrains
 This project is possible thanks to the Open Source license of the [JetBrains][4] programs. 
 
 ## Acknowledgment

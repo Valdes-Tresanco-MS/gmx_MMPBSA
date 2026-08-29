@@ -388,8 +388,6 @@ benchmark panel based on the documented v1.5.5 analyzer performance table:
 
 - `docs/changelog.md`: release chronology, additions, fixes, and behavior
   changes.
-- `docs/compatibility.md`: v1.4.3 to v1.5.0 breaking changes and input
-  variable migration.
 - `docs/analyzer.md`: analyzer redesign, performance benchmarks, plots, tables,
   PyMOL, and user workflow.
 - `docs/api.md`: current Python API and deprecation of the historical v1.4.x

@@ -4,25 +4,23 @@ title: gmx_MMPBSA in a nutshell
 ---
 
 # `gmx_MMPBSA` in a nutshell
-`gmx_MMPBSA` provides all the [MMPBSA.py][1] functionalities to GROMACS users. 
-In addition, other functionalities have been implemented that ease a number of calculations (_e.g._ MM/PB(GB)SA 
-with user-defined internal dielectric constant, interaction entropy and C2 entropy calculations). A GUI application 
-`gmx_MMPBSA_ana` is also incorporated that allows for visualizing the results and saving high-quality images.
+`gmx_MMPBSA` makes the capabilities of [MMPBSA.py][1] available to GROMACS users. It also supports additional
+functionality, including MM/PB(GB)SA calculations with a user-defined internal dielectric constant and interaction
+entropy and C2 entropy calculations. The `gmx_MMPBSA_ana` graphical application provides interactive result
+visualization and can export high-quality figures.
 
 ## Types of calculations you can do
 There are many options available in `gmx_MMPBSA`. These are some calculations you can perform with `gmx_MMPBSA`:
 
-* **Normal binding free energies**, with either PB, GB or 3D-RISM solvent models. Each can be done with either
-1, 2, or 3 different trajectories. The complex trajectory must always be provided. Whichever trajectories of the 
-receptor and/or ligand that are NOT specified will be extracted from that of the complex. This allows a 1-, 
-2-, or 3-trajectory analysis. All PB calculations and GB models are performed via the `sander` program. Calculations 
-with 3D-RISM solvent model are performed with `rism3d.snglpnt` built with AmberTools.
+* **Standard binding free energies** with PB, GB, or 3D-RISM solvent models. These calculations can use one, two, or
+three trajectories. The complex trajectory is always required. If the receptor and/or ligand trajectories are not
+specified, they are extracted from the complex trajectory. PB and GB calculations are performed with `sander`, while
+3D-RISM calculations use the `rism3d.snglpnt` program included with AmberTools.
 * **Stability** calculations with any solvent model (_i.e_ PB, GB or 3D-RISM).
-* **Alanine scanning** with either PB or GB implicit solvent models. All trajectories will be mutated to match
-the mutated topology files, and whichever calculations that would be carried out for the normal systems are
-also carried out for the mutated systems. Note that only 1 mutation is allowed per simulation, and it must
-be to an alanine or glycine. If `mutant_only` variable is not set to 1, differences resulting from the mutations are 
-calculated.
+* **Alanine scanning** with PB or GB implicit-solvent models. The trajectories are mutated to match the mutant
+topologies, and the requested calculations are performed for both the original and mutant systems. Only one mutation
+is allowed per simulation, and the target residue must be mutated to alanine or glycine. Unless `mutant_only` is set
+to `1`, the output also reports the differences caused by the mutation.
 * **Entropy corrections**. An entropy term can be added to the free energies calculated above using the normal mode,
 interaction entropy or C2 approximations. Quasi-harmonic data from historical result files can still be inspected in
 this final compatibility release; all QH support will be removed afterward.
@@ -38,18 +36,17 @@ that is embedded into a membrane. In this case, the membrane is implemented as a
 heterogeneous dielectric constant depth profile.
   
 
-## `gmx_MMPBSA` a technical view
-`gmx_MMPBSA` is a python module that contains 3 applications: 
+## A technical view of `gmx_MMPBSA`
+`gmx_MMPBSA` is a Python package that contains three applications:
 
-* [`gmx_MMPBSA`][5] is the fundamental application and carries out all the calculations mentioned above
+* [`gmx_MMPBSA`][5] is the main application and carries out the calculations described above
 * [`gmx_MMPBSA_ana`][6] provides an intuitive way to analyze the data from gmx_MMPBSA calculations and save 
   high-quality pictures
-* [`gmx_MMPBSA_test`][7] is a tool designed to test if the installation was successful by running one or more available 
+* [`gmx_MMPBSA_test`][7] tests whether the installation was successful by running one or more available
   [examples][4] in gmx_MMPBSA.
 
 
   [1]: https://pubs.acs.org/doi/10.1021/ct300418h
-  [2]: advanced.md#advanced-options
   [3]: #types-of-calculations-you-can-do
   [4]: examples/README.md
   [5]: howworks.md

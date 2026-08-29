@@ -4,15 +4,14 @@ title: Q&A - Installation
 ---
 
 # Installation
-Here we describe a series of more frequent reported problems related mainly to the installation process and their 
-possible solutions.
+This page describes commonly reported installation problems and possible solutions.
 
-???+ example "I don't find `amber.python` executable"
+???+ example "I cannot find the `amber.python` executable"
 
     #### **Solution:**
     
     1. Make sure that you have installed `Ambertools20` and sourced the `amber.sh(zch)` file
-    2. If you installed `Ambertools20` from conda, use that python executable
+    2. If you installed `AmberTools20` from conda, use the Python executable from that environment
 
 ???+ example "I get an error related to MPI when I try to install gmx_MMPBSA"
     If you get an error like this:    
@@ -21,33 +20,33 @@ possible solutions.
     
     #### **Solution:**
 
-    Please try installing/reinstalling the OpenMPI library like this:
+    Try installing the OpenMPI library:
 
          sudo apt install openmpi-bin libopenmpi-dev openssh-client
 
-    or this way
+    or reinstall it:
 
         sudo apt install --reinstall openmpi-bin libopenmpi-dev openssh-client
 
-???+ example "I don't find the gmx_MMPBSA executable"
+???+ example "I cannot find the gmx_MMPBSA executable"
     
     #### **Solution:**
 
     1. Make sure that you have installed gmx_MMPBSA ([See here][1])
-    2. Check if the miniconda bin folder are in the PATH ([See here][2])
-    3. Check if the gmx_MMPBSA application has permission to run as a program
+    2. Check whether the Miniconda `bin` folder is in `PATH` ([see here][2])
+    3. Check whether the gmx_MMPBSA executable has execute permission
     
 ???+ example "When I run gmx_MMPBSA I get this error `ModuleNotFoundError: No module named 'parmed'`"
 
     #### **Solution:**
 
-    Please see this [issue][3] to see the solution
+    See [issue 2][3] for the solution.
     
     
 
 
 
 
-  [1]: ../installation.md#installation
-  [2]: ../installation.md#after-install
+  [1]: ../installation.md#installing-gmx_mmpbsa
+  [2]: ../installation.md#troubleshooting-after-installation
   [3]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/issues/2

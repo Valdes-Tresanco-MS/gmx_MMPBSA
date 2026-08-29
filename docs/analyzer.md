@@ -8,17 +8,15 @@ title: gmx_MMPBSA_ana
 <a id="gmx_mmpbsa_ana-the-analyzer-tool"></a>
 
 ## Overview
-`gmx_MMPBSA_ana` is a simple but powerful analysis tool. It is mainly focused on providing a fast, easy and 
-efficient access to different graphics and analyze gmx_MMPBSA results (**Figure 1**). In this version, 
-`gmx_MMPBSA_ana` includes a number of options to customize graphs and save high-quality figures. The tool has 
-been optimized to work with many 
-charts ([check this section to learn about the potential of `gmx_MMPBSA_ana`](#gmx_mmpbsa_ana-under-pressure)). It 
-conserves the essence of its predecesor `gmx_MMPBSA_ana v1.4.3`, although the API that uses in the backend is quite 
-different, making it incompatible with files from previous versions.
+`gmx_MMPBSA_ana` is a simple but powerful tool for analyzing gmx_MMPBSA results. It provides fast access to several
+types of plots and includes options for customizing graphs and exporting high-quality figures (**Figure 1**). The tool
+has been optimized to handle many charts ([see the performance section](#gmx_mmpbsa_ana-under-pressure)). It retains
+the core design of its predecessor, `gmx_MMPBSA_ana v1.4.3`, but uses a substantially different back-end API and is
+therefore incompatible with files from earlier versions.
 
 ## Fast like a rocket
-After version 1.5.2 gmx_MMPBSA_ana presented serious performance problems. We set ourselves the task of improving it 
-from the ground up and these are the results:
+After version 1.5.2, gmx_MMPBSA_ana experienced serious performance problems. We reworked its implementation from the
+ground up; the benchmark results are shown below.
 
 This version = v1.5.5
 
@@ -34,9 +32,9 @@ To this end, we have made the following changes:
 - Reimplemented multiprocessing for reading systems.
 - Implemented multithreading for data processing.
 - Improved the reading of output files and optimized data storage. 
-- Eliminated the recalculation of IE and C2 entropies before opening the GUI. Now read from outputs files.
-- Optimized data storage and access to subsets in panda's Dataframes.
-- Now file processing and graphics generation does not freeze the GUI.
+- Eliminated the recalculation of IE and C2 entropies before opening the GUI; values are now read from output files.
+- Optimized data storage and access to subsets in pandas DataFrames.
+- Prevented file processing and figure generation from freezing the GUI.
 - Removed redundant steps and data.
 - Removed line graphs for components in the per-wise decomposition schema.
 - Data access, processing, and storage are done in the API.
@@ -64,35 +62,33 @@ To this end, we have made the following changes:
 [2]: assets/images/gmx_mmpbsa_ana_overview.png
 
 ### 1- System selection window
-This dialog allows you to select the system(s) of interest, as well as its components. In this panel you can check a 
-number of options that will define how `gmx_MMPBSA_ana` process the result file. These options are:
+This dialog allows you to select the systems of interest and their components. The available options control how
+`gmx_MMPBSA_ana` processes the result files:
 
 * select whether you want to include mutants, normals, or both systems when analyzing alanine scanning results
 * delete the terms whose values during the analysis were between `-0.01` and `0.01`
-* show/not-show decomposition analyses (which usually contains lots of data)
-* transform the frames range to timescale
+* show or hide decomposition analyses, which usually contain large amounts of data
+* convert the frame range to a time scale
 * calculate the correlation between various systems
   
 This allows you to take advantage of the flexibility of `gmx_MMPBSA` to carry out several analysis types in the same 
 run and focus on the key elements for each of these analyses.
 
 ### 2- Data/Correlation panel
-This panel is made up of two independent sub-panels: Data and Correlation with slightly different characteristics, 
-but with the same essence.
+This panel contains two independent subpanels, Data and Correlation, which have similar organization but slightly
+different functions.
 
 #### Structure
 === "Data"
-    This panel is tree-like, where each system marked in gray is a top-level element that contains a set 
-    of 'children' elements organized according to the calculation type. Each upper-level element can be 
-    expanded/collapsed, which allows you to take advantage of the space and manipulate a considerable number of systems 
-    at the same time while keeping the elements of interest at sight.
+    This panel uses a tree structure. Each system shown in gray is a top-level item containing child items organized by
+    calculation type. You can expand or collapse each top-level item to manage many systems while keeping the relevant
+    items visible.
 === "Correlation"
     We are working on its implementation.
 
 #### Buttons and Actions
-Each item represents a set of data associated with a type of calculation, and a component (_i.e._ complex, receptor, 
-ligand, delta, etc...). These, in turn, have buttons and actions depending on the data they contain. Each item can 
-have a total of 7 buttons that represent:
+Each item represents data associated with a calculation type and component (_e.g._, complex, receptor, ligand, or
+delta). The available buttons and actions depend on the data in the item. An item can have up to seven buttons:
 
 |       Button       | Visual element             | Description                                                                                                             |
 |:------------------:|----------------------------|-------------------------------------------------------------------------------------------------------------------------|
@@ -101,7 +97,7 @@ have a total of 7 buttons that represent:
 |   ![barplot][5]    | Bar plot                   | Show/hide in a new sub-window a Bar plot                                                                                |
 |   ![heatmap][6]    | Heatmap                    | Show/hide in a new sub-window a Heatmap plot                                                                            |
 |    ![pymol][7]     | PyMOL visualization        | Show/hide the complex per-residue energy representation in a new PyMOL instance                                         |
-| ![summarytable][8] | Summary table              | Show/hide the summary table of the parent element with multiple energetic components as 'childrens'                     |
+| ![summarytable][8] | Summary table              | Show/hide the summary table for a parent item with multiple energy components                                           |
 |  ![multiacti][9]   | Multiple activation button | Show/hide all items (Line, bar, heatmap plots and PyMOL) at the same time                                               |
 
 [3]: assets/images/result_files_icon.svg
@@ -130,14 +126,13 @@ Example:
 In this panel you can find two tabs:
 
 === "Charts Options"
-    Contains five different menus:
+    Contains five menus:
 
-    * `General` controls settings such as theme, figure-save-format, etc.
-    * `Line Plot` controls line plots settings such as line-width, line-color, rolling-average line appearance, etc.
-    * `Bar Plot` controls bar plots settings such as bar-color, bar-label appearance, etc.
-    * `Heatmap Plot` controls heatmap plots settings such as receptor- and ligand-colors, color-palette, etc.
-    * `Visualization` controls PyMOL visualization settings such as color-palette, background-color, 
-    representation, etc.
+    * `General` controls settings such as the theme and figure export format.
+    * `Line Plot` controls settings such as line width, line color, and the appearance of rolling-average lines.
+    * `Bar Plot` controls settings such as bar color and label appearance.
+    * `Heatmap Plot` controls settings such as receptor and ligand colors and the color palette.
+    * `Visualization` controls PyMOL settings such as the color palette, background color, and representation.
 
 === "Frames"
     Contains two windows:
@@ -180,11 +175,10 @@ organized, and fluid workspace to analyze a vast number of graphs.
     </figure>
 
 === "Bar plot"
-    Represents the total contribution of a component for the simulation. In some cases, it is the average of the 
-    calculated 
-    parameter, _e.g._: `TOTAL DELTA`, `VDWAALS`, RESIDUES in per-residue calculation, etc., and in others, it is the 
-    sum of the elements it contains, _e.g._: NMODE and QH Entropy, ΔG Binding, etc. The bars that represent averages 
-    also have a solid line that represents the standard deviation.
+    Shows the aggregate contribution of a component over the simulation. Depending on the quantity, a bar represents
+    either an average (for example, `TOTAL DELTA`, `VDWAALS`, or per-residue contributions) or a sum (for example,
+    NMODE entropy, QH entropy, or binding free energy). Bars that represent averages also include a solid line for
+    the standard deviation.
     
     <figure markdown="2">
         ![barplot1](assets/images/bar_plot.png){ width=60%; style="display: block; margin: 0 auto"}
@@ -204,20 +198,18 @@ organized, and fluid workspace to analyze a vast number of graphs.
     </figure>
 
 === "Heatmap plot"
-    Represents the evolution of several components at the same time during the simulation. It is used to represent the 
-    contribution of all residues in per-residue calculation or all pairs of atoms for each residue in the per-wise 
-    calculation. It could also represent the relationship between components. This is explicit for per-wise 
-    calculations and represents the contribution of each residue with its respective pairs.
+    Shows how several components evolve during the simulation. A heatmap can display all residue contributions in a
+    per-residue calculation or the relationships between residue pairs in a pairwise calculation.
     
     !!! tip
-        The relational heatmap graph is the best representation in the per-wise analysis.
+        The relational heatmap is usually the clearest representation for pairwise decomposition analysis.
     
     <figure markdown="1">
     ![heatmapplot1](assets/images/heatmap_plot.png){ width=75% style="display: block; margin: 0 auto"}
     ![heatmapplot2](assets/images/heatmap_plot2.png){ width=60% style="display: block; margin: 0 auto"}
       <figcaption markdown="1" style="margin-top:0;">
-      **Figure 5**. Heatmap plot examples. **Up:** Per-residue contribution per-frame, **Down:** Inter Residue-pair 
-    contribution
+      **Figure 5.** Heatmap examples. **Top:** Per-residue contribution by frame. **Bottom:** Inter-residue pair
+      contributions.
       </figcaption>
     </figure>
 
@@ -240,12 +232,12 @@ This section contains three drop-down menus:
     * Show Data -- shows data subpanel
     * Show Correlation -- shows correlation subpanel
     * Show Options -- shows options panel
-    * Tile SubWindows -- organizes graphs as tile
-    * Cascade SubWindows -- organizes graphs as cascade
+    * Tile SubWindows -- arranges graphs in a tiled layout
+    * Cascade SubWindows -- arranges graphs in a cascading layout
 === "About"
     * Help -- shows [gmx_MMPBSA_ana page](analyzer.md)
     * Documentation -- shows [gmx_MMPBSA page](getting-started.md)
-    * Report a bug -- opens issue and report a bug on [GitHub](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/issues/new/choose)
+    * Report a bug -- opens the [GitHub issue form](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/issues/new/choose)
     * Google group -- opens [gmx_MMPBSA Google Group](https://groups.google.com/g/gmx_mmpbsa)
     * About gmx_MMPBSA_ana -- shows gmx_MMPBSA citation
 
@@ -254,13 +246,11 @@ This section contains three drop-down menus:
 ## Representations
 
 !!! note
-    The following videos provide a visual medium to facilitate the use of `gmx_MMPBSA_ana`. These videos were recorded 
-    with the previous version of `gmx_MMPBSA_ana`, v1.4.3. We are working with several content creators to provide 
-    more accurate video tutorials. 
+    The following videos demonstrate how to use `gmx_MMPBSA_ana`. They were recorded with an earlier version
+    (`v1.4.3`), so some interface details may differ from the current release.
 
-    If you find our tool 
-    useful and want to use it for a visual project, such as tutorials, examples, etc., we will gladly include it 
-    in the documentation as well as in the list of acknowledgments and collaborators.
+    If you create a tutorial or another visual resource featuring the tool, contact us and we can consider linking it
+    from the documentation and acknowledging your contribution.
 
 ### Functionalities
 
@@ -297,26 +287,24 @@ This section contains three drop-down menus:
 ## `gmx_MMPBSA_ana` under pressure
 
 !!! warning
-    Around 1.8 million graphs were loaded in gmx_MMPBSA_ana, and it is showed only for educational purposes.
+    This stress test loaded approximately 1.8 million graphs. It is shown only to demonstrate performance at an
+    unusually large scale.
 
 <div class="embed-container">
     <iframe src="https://www.youtube.com/embed/xRIi3LtB7wU" frameborder="0" allowfullscreen></iframe>
 </div>
 
-In this experiment, we replicated our examples folder 9 times (differs from the one available on GitHub) giving us a 
-total of 99 systems. As you can see in the video, gmx_MMPBSA_ana manages to deal well with the incredible amount of ~1.6 
-million items. Every item contains between 1 and 3 graphics, for a total of ~1.8 million graphics loaded. This feat is 
-accomplished in ~11 minutes. Most of this time is consumed processing the data associated with each graph. At the 
-moment, gmx_MMPBSA_ana processes this data serially, since parallelizing this process would be a bit difficult. In 
-any case, for the usual processes, this will take a maximum of 25-30 seconds, depending on your hardware. Each item has 
-associated the data of each of its graphs, which is stored in memory. In this experiment, RAM consumption reached up 
-to 14 GB.
+For this experiment, the examples directory was replicated nine times to produce 99 systems; this differs from the
+examples available on GitHub. The analyzer loaded approximately 1.6 million items, each containing one to three
+graphs, for a total of roughly 1.8 million graphs. Loading took about 11 minutes, primarily because the data associated
+with each graph was processed serially. Typical workloads take about 25-30 seconds, depending on the hardware and data.
+Because each graph's data is retained in memory, RAM use reached approximately 14 GB during this stress test.
 
 !!! danger
     Be aware that if you run out of available RAM, your OS could crash, freeze, or slow down.
 
 Does this mean that you will not be able to load 100 systems in `gmx_MMPBSA_ana`?
 Not at all. Consumption depends on the type of calculation you have made, and the data you want to analyze. In this
-experiment, there were several systems that contain the `decomp` data. We also selected to show the complex, receptor, and 
-ligand data, which usually can be skipped. Only a system calculated with per-wise selecting about 40 amino acids 
-generates about 11 thousand items.
+experiment, several systems contained decomposition data, and the complex, receptor, and ligand components were all
+selected even though some are usually omitted. A single pairwise calculation involving about 40 amino acids can
+generate approximately 11,000 items.

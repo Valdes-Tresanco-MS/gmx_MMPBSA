@@ -376,8 +376,7 @@ class EnergyCalculation(Calculation):
         if self.xvv is not None:
             self.command_args.extend(('-xvv', self.xvv))  # xvv file flag
 
-        # Now test to make sure that the input file exists, since that's the only
-        # one that may be absent (due to the use of -use-mdins)
+        # Verify that the calculation input file exists.
         if not os.path.exists(self.input_file):
             raise IOError("Input file (%s) doesn't exist" % self.input_file)
 
@@ -412,8 +411,7 @@ class ListEnergyCalculation(MultiCalculation):
             command_args.extend(('-o', o))  # output file flag
             self.list_calc.append(command_args)
 
-            # Now test to make sure that the input file exists, since that's the only
-            # one that may be absent (due to the use of -use-mdins)
+            # Input-file validation is handled when the calculation is prepared.
             # if not os.path.exists(self.input_file):
             #     raise IOError("Input file (%s) doesn't exist" % self.input_file)
 

@@ -5,7 +5,7 @@ title: Introduction
 
 # Introduction
 
-MM/PB(GB)SA method can be used for calculating binding free energies of non covalently bound complexes.
+The MM/PB(GB)SA method can be used to calculate the binding free energies of noncovalently bound complexes.
 
 <figure markdown="1">
 ![drawing](assets/images/cycle.png){ width=50% style="display: block; margin: 0 auto"}
@@ -16,7 +16,7 @@ MM/PB(GB)SA method can be used for calculating binding free energies of non cova
 
 [16]: assets/images/cycle.png
 
-The free binding energy for a complex can be estimated as follows:
+The binding free energy of a complex can be estimated as follows:
 
 <p align="center">
     ∆𝐺<sub>𝑏𝑖𝑛𝑑</sub> = 〈𝐺<sub>𝐶𝑂𝑀</sub>〉−〈𝐺<sub>𝑅𝐸𝐶</sub>〉−〈𝐺<sub>𝐿𝐼𝐺</sub>〉
@@ -25,7 +25,7 @@ The free binding energy for a complex can be estimated as follows:
     (1)
 </p>
 
-where each term to the right in the equation is given by:
+where each term on the right-hand side is given by:
 
 <p align="center">
 〈𝐺<sub>𝑥</sub>〉 = 〈𝐸<sub>𝑀𝑀</sub>〉 + 〈𝐺<sub>𝑠𝑜𝑙</sub>〉 − 〈𝑇𝑆〉
@@ -44,10 +44,10 @@ In turn, ∆𝐺<sub>𝑏𝑖𝑛𝑑</sub> can also be represented as:
 </p>
 
 where ∆𝐻 corresponds to the enthalpy of binding and −𝑇∆𝑆 to the conformational entropy after ligand binding. When the 
-entropic term is dismissed, the computed value is the effective free energy, which is usually sufficient for 
+entropic term is omitted, the computed value is the effective free energy, which is usually sufficient for
 comparing relative binding free energies of related ligands.
 
-The ∆𝐻 can be decomposed into different terms:
+The enthalpy, ∆𝐻, can be decomposed into different terms:
 
 <p align="center">
 ∆𝐻 = ∆𝐸<sub>𝑀𝑀</sub> + ∆𝐺<sub>𝑠𝑜𝑙</sub>
@@ -99,13 +99,13 @@ or,
 In the above equations, ∆𝐸<sub>𝑀𝑀</sub> corresponds to the molecular mechanical energy changes in the
 gas phase. ∆𝐸<sub>𝑀𝑀</sub> includes ∆𝐸<sub>𝑏𝑜𝑛𝑑𝑒𝑑</sub>, also known as internal energy, and 
 ∆𝐸<sub>𝑛𝑜𝑛𝑏𝑜𝑛𝑑𝑒𝑑</sub>, corresponding to the van der Waals and electrostatic contributions. The solvation energy is 
-determined differently, depending on the method employed. In the 3D-RISM model, both components -polar and non-polar- 
+determined differently depending on the method employed. In the 3D-RISM model, both the polar and nonpolar components
 of the solvation energy are calculated. However, the PB and GB models estimate only the polar component of the 
-solvation. The non-polar component is usually assumed to be proportional to the molecule's total solvent accessible 
-surface area (SASA), with a proportionality constant derived from experimental solvation energies of small non-polar 
-molecules (eq. 7). Alternatively, a modern approach that separates non-polar solvation free energies into cavity and 
+solvation energy. The nonpolar component is usually assumed to be proportional to the molecule's total solvent-accessible
+surface area (SASA), with a proportionality constant derived from experimental solvation energies of small nonpolar
+molecules (Eq. 7). Alternatively, a modern approach that separates nonpolar solvation free energies into cavity and
 dispersion terms can be used. In this approach, SASA is used to correlate the cavity term only, while a 
-surface-integration method is employed to compute the dispersion term (eq. 8).
+surface-integration method is employed to compute the dispersion term (Eq. 8).
 
 Furthermore, the entropic component is usually calculated by normal modes analysis (NMODE). The translational and
 rotational entropies can be estimated using standard statistical mechanical formulas. Nevertheless, calculating
@@ -118,15 +118,15 @@ computational cost. This method is numerically reliable, more computationally ef
 standard NMODE approach, as shown in an extensive study of over a dozen randomly selected protein-ligand binding 
 systems.
 
-Typically, two approaches are used for MM/PB(GB)SA calculations, known as Single Trajectory Protocol (STP) and 
-Multiple Trajectory Protocol (MTP). In STP, both the receptor and the ligand trajectories are extracted 
-from that of the complex. This approach is valid when the bound and unbound states of the receptor, and the ligand 
+Typically, MM/PB(GB)SA calculations use one of two approaches: the single-trajectory protocol (STP) or the
+multiple-trajectory protocol (MTP). In STP, both the receptor and ligand trajectories are extracted
+from the complex trajectory. This approach is valid when the bound and unbound states of the receptor and ligand
 are similar. It is computationally less expensive than the MTP approach since only a simulation of the complex is 
 required. Additionally, the potential internal terms (_e.g._, bonds, angles, and dihedrals) cancel exactly in STP 
 since these terms are the same in both bound and unbound states. On the other hand, the MTP is a more realistic 
-approach because it considers multiple trajectories (_i.e._, complex, receptor, and ligand). However, significant 
-conformational changes can lead to numerous errors. In practice, a detailed study of the system is required to 
-select the approach to be used.
+approach because it considers separate trajectories for the complex, receptor, and ligand. However, subtracting
+energies from independently sampled conformations can introduce substantial uncertainty. In practice, the system
+must be studied carefully to select the appropriate approach.
 
 
 ## Literature

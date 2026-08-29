@@ -81,7 +81,7 @@ title: gmx_MMPBSA_test
 </div>
 
 ## Running gmx_MMPBSA_test
-gmx_MMPBSA_test is designed to run a set of samples (all or minimal) or a specific example efficiently.
+gmx_MMPBSA_test can run a predefined set of examples or an individual example.
 By default, examples run sequentially. To run multiple examples at the same time, use `-j/--num_concurrent`.
 Each example can use up to `-n/--num_processors` MPI ranks.
 
@@ -100,7 +100,7 @@ Named selectors such as `-t explicit_receptor_waters` or `-t gbnsr6` are equival
 
             gmx_MMPBSA_test -f /tmp/gmx_test --examples-dir ./examples -t 2 -ng
 
-        Through this command-line, gmxMMPBSA_test will:
+        This command makes `gmx_MMPBSA_test`:
 
         * Use the local `./examples` directory instead of cloning GitHub
         * Run the `Fast` set (`-t 2`) against the checkout you are developing
@@ -116,19 +116,19 @@ Named selectors such as `-t explicit_receptor_waters` or `-t gbnsr6` are equival
         
             gmx_MMPBSA_test -f /home/user/Documents -n 10
         
-        Through this command-line, gmxMMPBSA_test will:
+        This command makes `gmx_MMPBSA_test`:
         
-        * Download gmx_MMPBSA repository content in `/home/user/Documents`
-        * Works with `Fast` set of examples [-t 2 is the default]
-        * Perform the calculation on 9 examples sequentially, using 10 cpus each time
+        * Download the gmx_MMPBSA repository to `/home/user/Documents`
+        * Use the `Fast` set of examples (`-t 2`, the default)
+        * Run nine examples sequentially, using 10 CPUs for each example
 
     === "Parallel examples"
 
             gmx_MMPBSA_test -f /home/user/Documents -t 3 5 7 -n 4 -j 2
 
-        Through this command-line, gmxMMPBSA_test will:
+        This command makes `gmx_MMPBSA_test`:
 
-        * Download gmx_MMPBSA repository content in `/home/user/Documents`
+        * Download the gmx_MMPBSA repository to `/home/user/Documents`
         * Execute examples `3`, `5`, and `7`
         * Run up to 2 examples at the same time
         * Use up to 4 MPI ranks per example
@@ -137,29 +137,29 @@ Named selectors such as `-t explicit_receptor_waters` or `-t gbnsr6` are equival
         
             gmx_MMPBSA_test -f /home/user/Documents -n 10 -t 1
         
-        Through this command-line, gmxMMPBSA_test will:
+        This command makes `gmx_MMPBSA_test`:
         
-        * Download gmx_MMPBSA repository content in `/home/user/Documents`
-        * Works with `Minimal` set of examples [-t 1]
-        * Perform the calculation on 12 examples sequentially, using 10 cpus each time
+        * Download the gmx_MMPBSA repository to `/home/user/Documents`
+        * Use the `Minimal` set of examples (`-t 1`)
+        * Run 12 examples sequentially, using 10 CPUs for each example
     
     === "All"
         
             gmx_MMPBSA_test -f /home/user/Documents -t 0 -n 10
         
-        Through this command-line, gmxMMPBSA_test will:
+        This command makes `gmx_MMPBSA_test`:
         
-        * Download gmx_MMPBSA repository content in `/home/user/Documents`
-        * Works with `All` set of examples
-        * Perform the calculation on 24 examples sequentially, using 10 cpus each time
+        * Download the gmx_MMPBSA repository to `/home/user/Documents`
+        * Use the `All` set of examples
+        * Run 24 examples sequentially, using 10 CPUs for each example
         
     === "Multiple selection"
         
             gmx_MMPBSA_test -f /home/user/Documents -t 3 5 7
         
-        Through this command-line, gmxMMPBSA_test will:
+        This command makes `gmx_MMPBSA_test`:
         
-        * Download gmx_MMPBSA repository content in `/home/user/Documents`
+        * Download the gmx_MMPBSA repository to `/home/user/Documents`
         * Execute `3` [Protein-Ligand (Single Trajectory approach)], `5` [Protein-DNA], and `7` [Protein-Glycan]
         examples
 
@@ -167,29 +167,29 @@ Named selectors such as `-t explicit_receptor_waters` or `-t gbnsr6` are equival
         
             gmx_MMPBSA_test -f /home/user/Documents -t 3
         
-        Through this command-line, gmxMMPBSA_test will:
+        This command makes `gmx_MMPBSA_test`:
         
-        * Download gmx_MMPBSA repository content in `/home/user/Documents`
-        * Execute `3` [Protein-Ligand (Single Trajectory approach)] example
+        * Download the gmx_MMPBSA repository to `/home/user/Documents`
+        * Run example `3` [Protein-Ligand (Single Trajectory approach)]
 
     === "Explicit receptor waters"
 
             gmx_MMPBSA_test -f /home/user/Documents -t 26
 
-        Through this command-line, gmxMMPBSA_test will:
+        This command makes `gmx_MMPBSA_test`:
 
-        * Download gmx_MMPBSA repository content in `/home/user/Documents`
-        * Execute `26` [ST MM/PB(GB)SA with explicit receptor waters] example
+        * Download the gmx_MMPBSA repository to `/home/user/Documents`
+        * Run example `26` [ST MM/PB(GB)SA with explicit receptor waters]
         * Run from the `Explicit_receptor_waters` example folder using its local `mmpbsa.in` input
 
     === "AMBER input files"
 
             gmx_MMPBSA_test -f /home/user/Documents -t 25
 
-        Through this command-line, gmxMMPBSA_test will:
+        This command makes `gmx_MMPBSA_test`:
 
-        * Download gmx_MMPBSA repository content in `/home/user/Documents`
-        * Execute `25` [AMBER input files] example
+        * Download the gmx_MMPBSA repository to `/home/user/Documents`
+        * Run example `25` [AMBER input files]
 
 !!! warning "3D-RISM AmberTools runtime failures"
     Test `18` uses AmberTools 3D-RISM. If this test fails while the other examples pass and the log contains

@@ -435,7 +435,7 @@ Fixed minor issues
 ### Changes
 #### `gmx_MMPBSA`
 - Recalculate the PB energy with --rewrite-output changing the value of `inp` (#144)
-- Removed [deprecated variables](compatibility.md#variables)
+- Removed deprecated variables
 - Input file format. Although it kept the structure of the previous version, the current one is more GROMACS alike
 - `EnergyVector` changed to `ndarray` subclass
 - Regen expression for `mutant_res`
