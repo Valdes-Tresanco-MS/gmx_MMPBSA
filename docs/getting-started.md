@@ -14,12 +14,10 @@ title: Getting started
 [![Support](https://img.shields.io/badge/Support-JetBrains-brightgreen)](https://www.jetbrains.com/?from=gmx_MMPBSA)
 [![Support](https://img.shields.io/badge/Support-Sourcery-orange)](https://sourcery.ai/invite/gndRrjlo)
 
-[<img src="../assets/TOC.png" height="120%" width="258" align="right"/>]()
-
-## [Help needed for gmx_MMPBSA! To the content creators out there...](#colaboration)
+<!-- [<img src="../assets/TOC.png" height="120%" width="258" align="right"/>]() -->
 
 gmx_MMPBSA is a new tool based on AMBER's MMPBSA.py, aiming to perform end-state free energy calculations with GROMACS 
-files. **_It works with all GROMACS versions along with AmberTools >=20 and brings improvements in 
+files. **_It works with all GROMACS versions and brings improvements in 
 compatibility, versatility, analyses, and parallelization compared to existing programs (see [here](versus.md) for a 
 detailed comparison)_**
 
@@ -137,11 +135,11 @@ is performed in gmx_MMPBSA.
     to be performed)
     * a MD Structure+mass(db) file (`*.tpr`, `*.pdb`)
     * an index file (`*.ndx`)
-    * receptor and ligand groups (group numbers in the index file)
+    * receptor and ligand groups (group numbers or names in the index file)
     * a trajectory file (`*.xtc`, `*.pdb`, `*.trr`)
-    * On certain occasions, defining a topology file (`*.top`) may be required.
+    * a topology file (`*.top`)
 
-    Once the calculation is done, you can analyze the results in [gmx_MMPBSA_ana](analyzer.md)
+    Once the calculation is done, results can be analyzed in [gmx_MMPBSA_ana](analyzer.md)
 
     You can check [How gmx_MMPBSA works page](howworks.md) to get more details. Also check our 
     [example page](examples/README.md) to see how gmx_MMPBSA works with real examples
@@ -157,26 +155,13 @@ If you prefer a more general overview of the gmx_MMPBSA suite, check this amazin
 [Google group](https://groups.google.com/g/gmx_mmpbsa) or the [issues](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/issues)
 section to find out about specific cases and others.
 
-If you still have doubts or cannot solve the problem, please consider opening an 
+If you still have questions or cannot solve the problem, please consider opening an 
 [issue](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/issues) or posting in our 
 [Google group](https://groups.google.com/g/gmx_mmpbsa)
 
 ## **Follow gmx_MMPBSA**
 Visit [Pypi Stats](https://pypistats.org/packages/gmx-mmpbsa) or [PePy](https://pepy.tech/project/gmx-mmpbsa)
-to see how gmx_MMPBSA is doing.
-
-## **Collaboration**
-
-gmx_MMPBSA is rapidly becoming one of the main programs to perform end-point free energy calculations out there 
-(~29k downloads so far). We are currently focused on optimizing the program, supporting new types of calculations, 
-force fields, etc. However, the video tutorials are not that great.
-
-That being said, **and here is where we need help**, we will appreciate any collaboration in making video tutorials for 
-the documentation. The video tutorial will be included as a link to YouTube in the gmx_MMPBSA documentation with full 
-acknowledgment of the person who created the video tutorial. It will also be acknowledged as a contributor of 
-gmx_MMPBSA... 😃
-
-Feel free to contact us through our Google group (https://groups.google.com/g/gmx_mmpbsa) for more details...
+to see the latest stats for gmx_MMPBSA.
 
 ## **Acknowledgments**
 - First of all, to Amber and GROMACS developers. Without their incredible and hard work, gmx_MMPBSA would not exist.

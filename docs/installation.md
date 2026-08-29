@@ -12,19 +12,12 @@ are the recommended dependency boundaries. This keeps the environment compatible
 stack without pinning users to one AmberTools or GROMACS release. `gmx_MMPBSA` supports a broad range of
 GROMACS versions and should run with any GROMACS in the `PATH` that is compatible with the files you are using.
 
-## Installing gmx_MMPBSA v1.5.x
-
-!!! danger
-    gmx_MMPBSA v1.5.x includes a number of new functionalities and parts of the code have been completely rewritten, 
-    hence it is incompatible with previous versions.
-
 Currently, gmx_MMPBSA can be installed using two ways:
 
-`conda environment`
-:   The conda environment provides a clean and efficient way of installing gmx_MMPBSA. It also allows to have 
+`Conda environment`
+:   **Recommended, especially if you want to keep older versions of gmx_MMPBSA**. The conda environment provides a clean and efficient way of installing gmx_MMPBSA. It also allows to have 
 different versions of gmx_MMPBSA in isolated environments, thus reducing the possibility of incompatibility with 
-other packages. Installation time is also less since it does not require the compilation of AmberTools or GROMACS. 
-(**Recommended, especially if you want to keep older versions of gmx_MMPBSA**)
+other packages. Installation time is also less since it does not require the compilation of AmberTools or GROMACS.
 
 `AmberTools compilation`
 :   In this way, we assume that you have AmberTools compiled on your machine and that you want to do an installation 
@@ -33,14 +26,27 @@ takes considerable installation time. This way also requires installed packages 
 errors are more frequent.
 
 !!! info "Installation"
-    === "conda environment"
+    === "Conda environment"
 
-        !!! Info "Important"
-            Make sure to have conda installed in your computer. Check the third tab "Miniconda installation" for more 
-            info. 
+        ??? Info "Install Miniconda"
+            To install Miniconda on your computer.
+
+            <div class="termy">
+
+            ```bash
+            $ curl -O https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+
+            $ chmod +x Miniconda3-latest-Linux-x86_64.sh
+
+            $ ./Miniconda3-latest-Linux-x86_64.sh
+
+            Successful miniconda intallation
+            ```
+
+            </div>
 
         === "`*.yml file`"    
-            Installing gmx_MMPBSA using a yml file. 
+            Assuming miniconda is installed, we can install gmx_MMPBSA using a yml file. 
 
             :material-file-download-outline:{:.heart } Download **[env.yml](env.yml)** file
     
@@ -55,18 +61,6 @@ errors are more frequent.
             ```
                 
             </div>
-
-            ??? note "Copy described intructions"     
-
-                ``` bash 
-                conda env create -f env.yml                                                     # (1)
-                conda activate gmxMMPBSA                                                        # (2)
-               
-                ```
-            
-                1. Create the `gmxMMPBSA` environment and use the *.yml file to install dependencies
-                2. Activate `gmxMMPBSA` environment
-
 
         === "`pip`"    
             Installing dependencies
@@ -92,124 +86,25 @@ errors are more frequent.
 
             // (Optional) Install GROMACS
             $ conda install -c conda-forge "gromacs>=2022,<2027" pocl -y -q
+
+            // Install gmx_MMPBSA
+            $ python -m pip install gmx_MMPBSA
             ```
                 
             </div>
-
-            ??? note "Copy described intructions"     
-
-                ``` bash 
-                conda update conda
-                conda create -n gmxMMPBSA python=3.12 -y -q                                      # (1)
-                conda activate gmxMMPBSA                                                        # (2)
-                conda install -c conda-forge "mpi4py>=4.0.1,<5" "ambertools>=24.8,<27" -y -q   # (3)
-                conda install -c conda-forge "numpy>=1.26.4,<2" "matplotlib>=3.8,<4" "scipy>=1.14.1,<2" "pandas>=2.2,<3" "seaborn>=0.13,<0.14" -y -q # (4)
-                conda install -c conda-forge pyqt6 -y -q                                        # (5)
-                # Optional
-                conda install -c conda-forge "gromacs>=2022,<2027" pocl -y -q                  # (6)
-               
-                ```
-            
-                1. Create `gmxMMPBSA` environment
-                2. Activate `gmxMMPBSA` environment
-                3. Install importantdependencies
-                4. Intall dependencies for ploting
-                5. Install PyQt6 if you will use gmx_MMPBSA_ana
-                6. (Optional) Install GROMACS if GROMACS is not installed in your machine
-
-        Install gmx_MMPBSA using pip
-
-        === "Rolling/stable release"
-            
-            **INSTALLATION**
-            <div class="termy">
-            ```console
-            // INSTALLATION
-            $ python -m pip install gmx_MMPBSA
-            ```
-            </div>
-
-            **UPDATE**
-            <div class="termy">
-            ```console
-            // UPDATE
-            $ python -m pip install gmx_MMPBSA -U
-            ```
-            </div>
-
-            !!! info 
-                Install/update gmx_MMPBSA from PyPI. PyPI has the latest version of *gmx_MMPBSA* including stable 
-                and beta versions.
-        
-        === "development version" 
-
-            **INSTALLATION**
-            <div class="termy">
-            ```console
-            // INSTALLATION
-            $ python -m pip install git+https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA.git
-            ```
-            </div>
-
-            **UPDATE**
-            <div class="termy">
-            ```console
-            // UPDATE
-            $ python -m pip install git+https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA.git -U
-            ```
-            </div>
-
-            !!! warning
-                Install gmx_MMPBSA from the master branch of GitHub repository. This is only recommended 
-                for testing new versions or temporary solutions to reported bugs.
-    
-        [Miniconda]: https://docs.conda.io/en/latest/miniconda.html
     
     === "AmberTools compilation"
         [Follow the oficial AmberTools installation according to your OS](https://ambermd.org/Installation.php)
         !!! note
             We asume that AmberTools and their shell environment are correctly configured
     
-        === "Rolling/stable release"
-            **INSTALLATION**
-            <div class="termy">
-            ```console
-            // Install gmx_MMPBSA
-            $ amber.python -m pip install gmx_MMPBSA                                               
-            ```
-            </div>
-
-            **UPDATE**
-            <div class="termy">
-            ```console
-            // Update gmx_MMPBSA
-            $ amber.python -m pip install gmx_MMPBSA -U
-            ```
-            </div>
-    
-            !!! info 
-                Install gmx_MMPBSA from PyPI PyPI has the latest version of *gmx_MMPBSA* including stable and beta
-                versions.
-            
-        === "development version" 
-            **INSTALLATION**
-            <div class="termy">
-            ```bash
-            // Install gmx_MMPBSA
-            $ amber.python -m pip install git+https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA     
-            ```
-            </div>
-
-            **UPDATE**
-            <div class="termy">
-            ```bash
-            amber.python -m pip install git+https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA -U
-            ```
-            </div>
-
-            !!! warning
-                Install/update gmx_MMPBSA from the master branch of GitHub repository. This version is only recommended 
-                to test a new version or to try temporary solutions to reported bugs.
+        **Installation**
+        <div class="termy">
+        ```console
+        // Install gmx_MMPBSA
+        $ amber.python -m pip install gmx_MMPBSA                                               
+        ```
+        </div>
     
         !!! danger
             If you get an error related to installing `mpi4py`, you may want to install this package manually from 
@@ -224,40 +119,6 @@ errors are more frequent.
             ```
             amber.conda install pip
             ```
-            
-    
-    === "Miniconda Installation"
-    
-        Download and install [Miniconda]
-
-        <div class="termy">
-
-        ```bash
-        $ curl -O https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
-        ---> 100%
-
-        $ chmod +x Miniconda3-latest-Linux-x86_64.sh
-
-        $ ./Miniconda3-latest-Linux-x86_64.sh
-        ---> 100%
-
-        Successful miniconda intallation
-        ```
-
-        </div>
-
-        ??? note "Copy described intructions"     
-
-            ``` bash 
-            curl -O https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh   # (1)
-            chmod +x Miniconda3-latest-Linux-x86_64.sh                                      # (2)
-            ./Miniconda3-latest-Linux-x86_64.sh                                             # (3) 
-           
-            ```
-        
-            1. Download Miniconda installer
-            2. Change permissions for the installer
-            3. Execute and install miniconda
 
 ### Extra Dependencies
 gmx_MMPBSA uses some dependencies for other functions independent of calculations or in some cases they may be 
