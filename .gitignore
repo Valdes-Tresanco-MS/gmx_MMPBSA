@@ -34,6 +34,10 @@ examples/AMBER/*
 !examples/API/gb_delta_total.csv
 !examples/Alanine_scanning/
 !examples/Alanine_scanning/reference.pdb
+!examples/Correlation/
+!examples/Correlation/topol.top
+!examples/Correlation/toppar/
+!examples/Correlation/toppar/*
 !examples/Explicit_receptor_waters/
 !examples/Explicit_receptor_waters/README.md
 !examples/Explicit_receptor_waters/mmpbsa_explicit_waters_pymol.in
