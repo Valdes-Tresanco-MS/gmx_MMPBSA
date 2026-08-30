@@ -7,8 +7,9 @@
 Selector resolution precedence:
 1. Suite IDs 0, 1, 2 expand the suite test list.
 2. Literal "101" resolves to suite "all" (same as 0).
-3. Numeric strings "3"..."26" resolve to individual tests.
-4. Named aliases resolve to a test ID or suite name.
+3. Legacy test ID "11" resolves to the consolidated membrane test 6.
+4. Numeric strings "3"..."26" resolve to individual tests.
+5. Named aliases resolve to a test ID or suite name.
 """
 
 from __future__ import annotations
@@ -80,12 +81,6 @@ class Manifest:
         if token == '101':
             return self._suite_tests('all')
 
-        if token.isdigit():
-            test_id = int(token)
-            if 3 <= test_id <= 26:
-                return [test_id]
-            raise ManifestError(f'Invalid test selector: {token}')
-
         if token in self.aliases:
             target = self.aliases[token]
             if isinstance(target, int):
@@ -93,6 +88,12 @@ class Manifest:
             if isinstance(target, str):
                 return self._suite_tests(target)
             raise ManifestError(f'Invalid alias target for {token!r}: {target!r}')
+
+        if token.isdigit():
+            test_id = int(token)
+            if test_id in self.tests:
+                return [test_id]
+            raise ManifestError(f'Invalid test selector: {token}')
 
         raise ManifestError(f'Invalid test selector: {token}')
 
@@ -110,9 +111,9 @@ class Manifest:
 
     def all_valid_choices(self) -> list[str]:
         choices = ['0', '1', '2', '101']
-        choices.extend(str(test_id) for test_id in range(3, 27))
+        choices.extend(str(test_id) for test_id in sorted(self.tests))
         choices.extend(name for name in self.aliases if name != '101')
-        return choices
+        return list(dict.fromkeys(choices))
 
 
 _MANIFEST: Manifest | None = None
@@ -148,11 +149,11 @@ def load_manifest() -> Manifest:
         test_id = int(key)
         tests[test_id] = _parse_test_entry(test_id, entry)
 
-    expected_ids = set(range(3, 27))
+    expected_ids = set(range(3, 27)) - {11}
     if set(tests) != expected_ids:
         missing = sorted(expected_ids - set(tests))
         extra = sorted(set(tests) - expected_ids)
-        raise ManifestError(f'Manifest tests must be 3-26. Missing={missing}, extra={extra}')
+        raise ManifestError(f'Manifest tests must be 3-26 except legacy alias 11. Missing={missing}, extra={extra}')
 
     for suite_name, suite in suites.items():
         for test_id in suite['tests']:
@@ -241,7 +242,7 @@ def build_help_text() -> str:
     lines = [
         'The level the test is going to be run at. Multiple systems and analysis can be run at the same time.',
         '      Nr. of Sys  ',
-        '* 0      24     All -- Run all examples (Can take a long time!!!)',
+        '* 0      23     All -- Run all examples (Can take a long time!!!)',
         '* 1      12     Minimal -- Does a minimal test with a set of systems and analyzes',
         '                that show that gmx_MMPBSA runs correctly. Only exclude 3drism, nmode',
         '                protein-ligand MT because take a long time or are redundant',
@@ -250,9 +251,10 @@ def build_help_text() -> str:
         '     Slow Frames',
     ]
 
-    system_ids = [3, 4, 5, 6, 7, 8, 9, 10, 11]
+    system_ids = [3, 4, 5, 6, 7, 8, 9, 10]
     for test_id in system_ids:
         lines.append(_format_help_line(manifest.get_test(test_id)))
+    lines.append('* 11       |     Legacy alias for test 6 (consolidated membrane example)')
 
     lines.extend([
         '[Analysis]:',

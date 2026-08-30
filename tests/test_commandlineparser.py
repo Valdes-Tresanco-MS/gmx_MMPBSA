@@ -42,6 +42,10 @@ class TestParserSelectorTest(unittest.TestCase):
         parser = testparser.parse_args(['-t', 'gbnsr6'])
         self.assertEqual(parser.test, ['gbnsr6'])
 
+    def test_accepts_legacy_membrane_test_selector(self):
+        parser = testparser.parse_args(['-t', '11'])
+        self.assertEqual(parser.test, ['11'])
+
     def test_rejects_unknown_test_selector(self):
         with self.assertRaises(SystemExit) as exc:
             testparser.parse_args(['-t', 'not-a-test'])

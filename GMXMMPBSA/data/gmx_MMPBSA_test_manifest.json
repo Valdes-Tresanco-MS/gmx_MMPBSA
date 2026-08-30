@@ -12,7 +12,6 @@
         8,
         9,
         10,
-        11,
         12,
         13,
         14,
@@ -64,6 +63,7 @@
   },
   "aliases": {
     "101": "all",
+    "11": 6,
     "protein_ligand_st": 3,
     "protein_ligand_mt": 16,
     "explicit_receptor_waters": 26,

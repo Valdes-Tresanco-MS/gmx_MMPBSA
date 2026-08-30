@@ -483,7 +483,7 @@ def _test_selector(value: str) -> str:
 _DEFAULT_TEST_HELP = '''\
 The level the test is going to be run at. Multiple systems and analysis can be run at the same time.
       Nr. of Sys  
-* 0      24     All -- Run all examples (Can take a long time!!!)
+* 0      23     All -- Run all examples (Can take a long time!!!)
 * 1      12     Minimal -- Does a minimal test with a set of systems and analyzes
                 that show that gmx_MMPBSA runs correctly. Only exclude 3drism, nmode
                 protein-ligand MT because take a long time or are redundant
@@ -498,7 +498,7 @@ The level the test is going to be run at. Multiple systems and analysis can be r
 * 8    x |  4   Metalloprotein-Peptide
 * 9    . | 10   Protein-DNA-RNA-IONs-Ligand
 * 10   x |  4   Protein-Ligand (CHARMM force field)
-* 11   x |  4   Protein-ligand complex in membrane with CHARMMff 
+* 11     |      Legacy alias for test 6 (consolidated membrane example)
 [Analysis]:
      Slow Frames
 * 12   . | 10   Alanine Scanning
