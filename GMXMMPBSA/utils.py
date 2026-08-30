@@ -381,16 +381,22 @@ def emapping(d):
 def get_index_groups(ndx, group):
     groups = []
     with open(ndx) as ndx_file:
-        groups.extend(line.split()[1] for line in ndx_file if line.startswith('['))
+        groups.extend(line.strip('\n[] ') for line in ndx_file if line.startswith('['))
 
     if isinstance(group, int):
-        if group > len(groups):
+        if group < 0 or group >= len(groups):
             GMXMMPBSA_ERROR('Define a valid index group')
         return group, groups[group]
     else:
-        if group not in groups:
+        matches = [index for index, name in enumerate(groups) if name == group]
+        if not matches:
             GMXMMPBSA_ERROR('Define a valid index group')
-        return groups.index(group), group
+        if len(matches) > 1:
+            GMXMMPBSA_ERROR(
+                f'Index group name {group!r} is ambiguous because it occurs at group numbers '
+                f'{", ".join(map(str, matches))}. Select the group by number instead.'
+            )
+        return matches[0], group
 
 def get_indexes(com_ndx, rec_ndx=None, lig_ndx=None):
     ndx_files = {'COM': com_ndx, 'REC': rec_ndx, 'LIG': lig_ndx}

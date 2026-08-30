@@ -279,9 +279,9 @@ group.add_argument('-cs', dest='complex_tpr', metavar='<Structure File>', defaul
                          below. Allowed formats: *.tpr (recommended), *.pdb''')
 group.add_argument('-ci', dest='complex_index', metavar='<Index File>', default=None, type=index,
                    help='Index file of the bound complex.')
-group.add_argument('-cg', dest='complex_groups', metavar='index', nargs=2, default=None, type=index_groups,
-                   help='Groups of receptor and ligand in complex index file. The notation is as follows: "-cg '
-                        '<Receptor group> <Ligand group>", ie. -cg 1 13')
+group.add_argument('-cg', dest='complex_groups', metavar='group', nargs=2, default=None, type=index_groups,
+                   help='Receptor and ligand groups in the complex index file, specified by zero-based group number '
+                        'or group name. For example: -cg 1 13 or -cg Protein LIG')
 group.add_argument('-ct', dest='complex_trajs', nargs='*', metavar='TRJ', type=trajectory,
                    help='''Complex trajectories. Make sure the trajectory is fitted and
                          pbc have been removed. Allowed formats: *.xtc (recommended), *.trr, *.pdb
@@ -301,9 +301,9 @@ group.add_argument('-rs', dest='receptor_tpr', metavar='<Structure File>', defau
                          Allowed formats: *.tpr (recommended), *.pdb''')
 group.add_argument('-ri', dest='receptor_index', metavar='<Index File>', default=None, type=index,
                    help='Index file of the unbound receptor.')
-group.add_argument('-rg', dest='receptor_group', metavar='index', default=None, type=int,
-                   help='''Receptor group in receptor index file. Notation: "-lg <Receptor group>", 
-                         e.g. -rg 1''')
+group.add_argument('-rg', dest='receptor_group', metavar='group', default=None, type=index_groups,
+                   help='Receptor group in the receptor index file, specified by zero-based group number or group '
+                        'name. For example: -rg 1 or -rg Protein')
 group.add_argument('-rt', dest='receptor_trajs', nargs='*', metavar='TRJ', type=trajectory,
                    help='''Input trajectories of the unbound receptor for multiple trajectory approach.
                          Allowed formats: *.xtc (recommended), *.trr, *.pdb, *.gro (specify as many
@@ -323,9 +323,9 @@ group.add_argument('-ls', dest='ligand_tpr', metavar='<Structure File>', default
                    make sure that you define above -lm option. Allowed formats: *.tpr (recommended), *.pdb''')
 group.add_argument('-li', dest='ligand_index', metavar='<Index File>', type=index,
                    default=None, help='Index file of the unbound ligand. Only if tpr file was define in -ls.')
-group.add_argument('-lg', dest='ligand_group', metavar='index', default=None, type=int,
-                   help='''Ligand group in ligand index file. Notation: "-lg <Ligand group>", 
-                         e.g. -lg 13''')
+group.add_argument('-lg', dest='ligand_group', metavar='group', default=None, type=index_groups,
+                   help='Ligand group in the ligand index file, specified by zero-based group number or group name. '
+                        'For example: -lg 13 or -lg LIG')
 group.add_argument('-lt', dest='ligand_trajs', nargs='*', metavar='TRJ', type=trajectory,
                    help='''Input trajectories of the unbound ligand for multiple trajectory approach. 
                          Allowed formats: *.xtc (recommended), *.trr, *.pdb, *.gro (specify as many

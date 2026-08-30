@@ -11,7 +11,7 @@ from GMXMMPBSA.commandlineparser import (
     testparser,
 )
 from GMXMMPBSA.exceptions import MMPBSA_Error
-from GMXMMPBSA.utils import _get_dup_args
+from GMXMMPBSA.utils import _get_dup_args, get_index_groups
 
 
 class AmberTrajectoryTypeTest(unittest.TestCase):
@@ -68,6 +68,68 @@ class AmberComplexStructureOptionTest(unittest.TestCase):
             amber_parser.parse_args(['-cs', 'complex.inpcrd'])
 
         self.assertIn('unrecognized arguments: -cs', str(exc.exception))
+
+
+class GromacsGroupArgumentTest(unittest.TestCase):
+    def test_receptor_and_ligand_groups_accept_numbers(self):
+        args = parser.parse_args(['-rg', '1', '-lg', '2'])
+
+        self.assertEqual(args.receptor_group, 1)
+        self.assertEqual(args.ligand_group, 2)
+
+    def test_receptor_and_ligand_groups_accept_names(self):
+        args = parser.parse_args(['-rg', 'Protein chain A', '-lg', 'Ligand'])
+
+        self.assertEqual(args.receptor_group, 'Protein chain A')
+        self.assertEqual(args.ligand_group, 'Ligand')
+
+    def test_named_receptor_and_ligand_groups_are_resolved(self):
+        with TemporaryDirectory() as tmpdir:
+            index_file = Path(tmpdir) / 'index.ndx'
+            index_file.write_text('[ System ]\n1 2 3\n[ Protein chain A ]\n1 2\n[ Ligand ]\n3\n')
+
+            self.assertEqual(get_index_groups(index_file, 'Protein chain A'), (1, 'Protein chain A'))
+            self.assertEqual(get_index_groups(index_file, 'Ligand'), (2, 'Ligand'))
+
+    def test_numeric_receptor_and_ligand_groups_are_resolved(self):
+        with TemporaryDirectory() as tmpdir:
+            index_file = Path(tmpdir) / 'index.ndx'
+            index_file.write_text('[ System ]\n1 2 3\n[ Protein ]\n1 2\n[ Ligand ]\n3\n')
+
+            self.assertEqual(get_index_groups(index_file, 1), (1, 'Protein'))
+            self.assertEqual(get_index_groups(index_file, 2), (2, 'Ligand'))
+
+    def test_duplicate_group_names_require_a_numeric_selection(self):
+        with TemporaryDirectory() as tmpdir:
+            index_file = Path(tmpdir) / 'index.ndx'
+            index_file.write_text('[ System ]\n1 2 3\n[ Ligand ]\n2\n[ Ligand ]\n3\n')
+
+            logging.disable(logging.CRITICAL)
+            try:
+                with self.assertRaisesRegex(
+                    MMPBSA_Error,
+                    r"Index group name 'Ligand' is ambiguous because it occurs at group numbers 1, 2\. "
+                    r'Select the group by number instead\.',
+                ):
+                    get_index_groups(index_file, 'Ligand')
+            finally:
+                logging.disable(logging.NOTSET)
+
+            self.assertEqual(get_index_groups(index_file, 2), (2, 'Ligand'))
+
+    def test_unknown_group_name_and_out_of_range_number_are_rejected(self):
+        with TemporaryDirectory() as tmpdir:
+            index_file = Path(tmpdir) / 'index.ndx'
+            index_file.write_text('[ Protein ]\n1 2\n')
+
+            logging.disable(logging.CRITICAL)
+            try:
+                for group in ('Missing', -1, 1):
+                    with self.subTest(group=group):
+                        with self.assertRaisesRegex(MMPBSA_Error, 'Define a valid index group'):
+                            get_index_groups(index_file, group)
+            finally:
+                logging.disable(logging.NOTSET)
 
 
 class AmberMultipleTrajectoryArgumentTest(unittest.TestCase):

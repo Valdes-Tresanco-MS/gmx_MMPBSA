@@ -14,10 +14,11 @@ title:
     usage: gmx_MMPBSA [-h] [-v] [--input-file-help] [--create_input [{gb,pb,pb_mem,rism,ala,decomp,nmode,all}]
                       [-O] [-prefix <file prefix>] [-sys_name <system name>]
                       [--progress-style {auto,rich,classic,plain,none}] [-i FILE] [-xvvfile XVVFILE] [-o FILE]
-                      [-do FILE] [-eo FILE] [-deo FILE] [-nogui] [-s] [-cs <Structure File>] [-ci <Index File>] [-cg index index]
+                      [-do FILE] [-eo FILE] [-deo FILE] [-nogui] [-s] [-cs <Structure File>]
+                      [-ci <Index File>] [-cg group group]
                       [-ct [TRJ [TRJ ...]]] [-cp <Topology>] [-cr <PDB File>] [-rs <Structure File>] [-ri <Index File>] 
-                      [-rg index] [-rt [TRJ [TRJ ...]]] [-rp <Topology>] [-lm <Structure File>] [-ls <Structure File>] 
-                      [-li <Index File>] [-lg index] [-lt [TRJ [TRJ ...]]] [-lp <Topology>] [--rewrite-output] [--clean]
+                      [-rg group] [-rt [TRJ [TRJ ...]]] [-rp <Topology>] [-lm <Structure File>] [-ls <Structure File>]
+                      [-li <Index File>] [-lg group] [-lt [TRJ [TRJ ...]]] [-lp <Topology>] [--rewrite-output] [--clean]
     
     gmx_MMPBSA is a new tool based on AMBER's MMPBSA.py aiming to perform end-state 
     free energy calculations with GROMACS files. This program is an adaptation of 
@@ -83,9 +84,9 @@ title:
                              below Allowed formats: *.tpr (recommended), *.pdb,
                              *.gro (default: None)
       -ci <Index File>      Index file of the bound complex. (default: None)
-      -cg index index       Groups of receptor and ligand in complex index file. The
-                            notation is as follows:
-                            "-cg <Receptor group> <Ligand group>", ie. -cg 1 13
+      -cg group group       Receptor and ligand groups in the complex index file,
+                            specified by zero-based group number or group name. For
+                            example: -cg 1 13 or -cg Protein LIG
                              (default: None)
       -ct [TRJ [TRJ ...]]   Complex trajectories. Make sure the trajectory is fitted
                              and pbc have been removed. Allowed formats: *.xtc 
@@ -110,8 +111,9 @@ title:
                              trajectory approach. Allowed formats: *.tpr (recommended),
                              *.pdb (default: None)
       -ri <Index File>      Index file of the unbound receptor. (default: None)
-      -rg index             Receptor group in receptor index file. Notation:
-                             "-lg <Receptor group>", e.g. -rg 1 (default: None)
+      -rg group             Receptor group in the receptor index file, specified by
+                             zero-based group number or group name. For example: -rg 1
+                             or -rg Protein (default: None)
       -rt [TRJ [TRJ ...]]   Input trajectories of the unbound receptor for multiple
                              trajectory approach. Allowed formats: *.xtc (recommended),
                              *.trr, *.pdb (specify as many as you'd like).
@@ -135,8 +137,9 @@ title:
                              (recommended), *.pdb (default: None)
       -li <Index File>      Index file of the unbound ligand. Only if tpr file was
                              define in -ls. (default: None)
-      -lg index             Ligand group in ligand index file. Notation:
-                             "-lg <Ligand group>", e.g. -lg 13 (default: None)
+      -lg group             Ligand group in the ligand index file, specified by zero-
+                             based group number or group name. For example: -lg 13 or
+                             -lg LIG (default: None)
       -lt [TRJ [TRJ ...]]   Input trajectories of the unbound ligand for multiple
                              trajectory approach. Allowed formats: *.xtc
                             (recommended), *.trr, *.pdb (specify as many as
