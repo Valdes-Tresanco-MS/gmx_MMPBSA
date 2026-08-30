@@ -50,6 +50,15 @@ examples/AMBER/*
 !examples/Protein_ligand/MT/toppar/PROA.itp
 !examples/Protein_ligand/MT/toppar/TP3.itp
 !examples/Protein_ligand/MT/toppar/forcefield.itp
+!examples/QM_MMGBSA/
+!examples/QM_MMGBSA/topol.top
+!examples/QM_MMGBSA/toppar/
+!examples/QM_MMGBSA/toppar/36X.itp
+!examples/QM_MMGBSA/toppar/Cl-.itp
+!examples/QM_MMGBSA/toppar/Na+.itp
+!examples/QM_MMGBSA/toppar/PROA.itp
+!examples/QM_MMGBSA/toppar/TP3.itp
+!examples/QM_MMGBSA/toppar/forcefield.itp
 !examples/Protein_membrane/
 !examples/Protein_membrane/*
 !examples/Protein_membrane/toppar/

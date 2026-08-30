@@ -1,27 +1,23 @@
 Sample input file for QM/MMGBSA calculation
-This input file is meant to show only that gmx_MMPBSA works.
-Although, we tried to use the input files as recommended in the
-Amber manual, some parameters have been changed to perform more
-expensive calculations in a reasonable amount of time. Feel free
-to change the parameters according to what is better for your system.
+# This input provides a practical starting point for QM/MMGBSA calculations.
+# Review the QM region, charge, Hamiltonian, and convergence settings for your system.
 
 &general
 sys_name="QM/MMGBSA",
-startframe=5,
-endframe=14,
+startframe=1,
+endframe=10,
 PBRadii=2,
-forcefields="oldff/leaprc.ff99SB,leaprc.gaff"
 /
 &gb
 igb=1, saltcon=0.150,
 ifqnt=1, qm_theory=PM6-DH+,
 
-# Residues to be treated with QM can be selected using different approaches. Please, make sure to include at least
+# Residues to be treated with QM can be selected using different approaches. Make sure to include at least
 # one residue from both the receptor and ligand in the qm_residues mask when using 'ifqnt'. This requirement is
 # automatically fulfilled when using the within keyword https://groups.google.com/g/gmx_mmpbsa/c/GNb4q4YGCH8
 
 # Residue selection by distance (recommended)
-qm_residues="within 4"
+qm_residues="within 4",
 
 ## Explicit residue selection
 #qm_residues="A/40-41,44,47,78,81-82,85,88,115,118,122,215,218-220,232 B/241"
