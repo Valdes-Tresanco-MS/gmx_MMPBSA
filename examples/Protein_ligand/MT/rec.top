@@ -1,0 +1,12 @@
+;; Receptor topology extracted from the Protein_ligand/ST example system
+
+#include "toppar/forcefield.itp"
+#include "toppar/PROA.itp"
+
+[ system ]
+; Name
+Protein receptor
+
+[ molecules ]
+; Compound    #mols
+PROA          1

@@ -1,0 +1,12 @@
+;; Ligand topology extracted from the Protein_ligand/ST example system
+
+#include "toppar/forcefield.itp"
+#include "toppar/36X.itp"
+
+[ system ]
+; Name
+Small-molecule ligand
+
+[ molecules ]
+; Compound    #mols
+36X           1
