@@ -71,10 +71,15 @@ def resolve_test_ids(selectors):
 
 
 class TestManifestCommandArgs(unittest.TestCase):
-    def test_explicit_waters_uses_cross_example_paths(self):
+    def test_explicit_waters_uses_self_contained_paths(self):
         test = load_manifest().get_test(26)
-        joined = ' '.join(test.command_args)
-        self.assertIn('../Protein_protein/com.tpr', joined)
+        self.assertNotIn('../', ' '.join(test.command_args))
+
+        example_dir = Path(__file__).resolve().parents[1] / 'examples' / test.workdir
+        for option in ('-i', '-cs', '-ct', '-ci', '-cp'):
+            with self.subTest(option=option):
+                value = test.command_args[test.command_args.index(option) + 1]
+                self.assertTrue((example_dir / value).is_file(), msg=f'{option} references missing file {value}')
 
     def test_amber_executable(self):
         test = load_manifest().get_test(25)

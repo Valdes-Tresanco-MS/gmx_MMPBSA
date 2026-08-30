@@ -1,15 +1,15 @@
 Sample input file for ST GB calculation with explicit receptor waters
-# This input keeps 10 waters closest to a static within-distance selection.
-# PyMOL is not required for this variant (used by gmx_MMPBSA_test -t 26).
+# This input keeps 10 waters closest to a static cpptraj dASA interface.
 
 &general
 sys_name="Prot-Prot-ExpWat",
 startframe=1,
 endframe=10,
-forcefields="leaprc.protein.ff14SB",
+PBRadii=4,
 explicit_waters=10,
-explicit_waters_mask="within 4",
+explicit_waters_mask="dASA",
+explicit_waters_dasa_cutoff=0.5,
 /
 &gb
-igb=2, saltcon=0.150,
+igb=8, saltcon=0.150,
 /
