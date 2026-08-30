@@ -32,6 +32,8 @@ examples/AMBER/*
 !examples/API/COMPACT_MMXSA_RESULTS.mmxsa
 !examples/API/extract_api_data.py
 !examples/API/gb_delta_total.csv
+!examples/Alanine_scanning/
+!examples/Alanine_scanning/reference.pdb
 !examples/Explicit_receptor_waters/
 !examples/Explicit_receptor_waters/README.md
 !examples/Explicit_receptor_waters/mmpbsa_explicit_waters_pymol.in
