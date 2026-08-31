@@ -159,8 +159,8 @@ and topology/coordinate mismatches are common sources of failure.
 
 ### psf/dcd and AMBER-native inputs
 
-The documentation now includes tutorials for `psf`/`dcd` files used by NAMD,
-OpenMM, GENESIS, and related workflows. These examples extend the user base
+The documentation now includes a protein-protein tutorial for `psf`/`dcd` files used by NAMD,
+OpenMM, GENESIS, and related workflows. This example extends the user base
 beyond standard GROMACS file sets while preserving the same end-state
 free-energy analysis logic.
 
