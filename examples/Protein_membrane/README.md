@@ -1,196 +1,319 @@
 ---
 template: main.html
-title: Protein-ligand embedded in membrane (CHARMM-GUI PROA-UQ2)
+title: Protein-ligand in a membrane
 ---
 
-!!! danger "CHARMM and MM(PB/GB)SA"
-    PB model is recommended when working with CHARMMff files. Nevertheless, the combination of PB/GB models with radii
-    optimized for amber atom types (_i.e._ bondi, mbondi, mbondi2, mbondi3) and CHARMM force field hasn't been tested
-    extensively. Please, check this [thread][1] for more information and proceed with caution.
+# Protein-ligand binding in a membrane
 
-    **:material-new-box:{:.heart } in gmx_MMPBSA v1.5.0!!!**
+This example calculates the binding free energy of ubiquinone (`UQ2`) to a membrane protein (`PROA`). The source
+system was prepared with CHARMM-GUI and contains an explicit DOPC/POPC bilayer, solvent, and ions. The calculation
+uses a heterogeneous implicit-membrane PB model.
 
-    In gmx_MMPBSA v1.5.0 we have added a new PB radii set named _charmm_radii_. **This radii set should be used only
-    with systems prepared with CHARMM force fields**. The atomic radii set for Poisson-Boltzmann calculations has been
-    derived from average solvent electrostatic charge distribution with explicit solvent. The accuracy has been tested
-    with free energy perturbation with explicit solvent [ref.](https://pubs.acs.org/doi/10.1021/jp970736r). Most of
-    the values were taken from a _*radii.str_ file used in PBEQ Solver
-    in [charmm-gui](https://www.charmm-gui.org/?doc=input/pbeqsolver).
+<div class="example-card-grid" markdown>
 
-    * Radii for protein atoms in 20 standard amino acids from
-    [Nina, Belogv, and Roux](https://pubs.acs.org/doi/10.1021/jp970736r)
-    * Radii for nucleic acid atoms (RNA and DNA) from
-    [Banavali and Roux](https://pubs.acs.org/doi/abs/10.1021/jp025852v)
-    * Halogens and other atoms from [Fortuna and Costa](https://pubs.acs.org/doi/10.1021/acs.jcim.1c00177)
+-   **Protocol**
 
-# Protein-ligand embedded in membrane binding free energy calculations (Single Trajectory method) with CHARMMff files
+    Single trajectory
 
-This is the single repository protein-membrane example, using the smaller
-CHARMM-GUI system `PROA-UQ2`. `PROA` is the receptor (2,985 atoms) and `UQ2`
-is the ligand (49 atoms). The source trajectory was already fitted. The
-calculation structure `com.pdb` was generated from
-`step6.6_equilibration.tpr`, and `md.xtc` contains its first four
-frames from `step6.6_equilibration_fit.xtc`.
+-   **Force field**
 
-!!! info
-    This example can be found in the [examples/Protein_membrane][6] directory in the repository folder. If you didn't
-    use gmx_MMPBSA_test before, use [downgit](https://downgit.github.io/#/home) to download the specific folder from
-    gmx_MMPBSA GitHub repository.
+    CHARMM
 
-## Requirements
+-   **Membrane model**
 
-In this case, `gmx_MMPBSA` requires:
+    Heterogeneous PB (`memopt=2`)
 
-| Input File required            | Required |           Type             | Description |
-|:-------------------------------|:--------:|:--------------------------:|:-------------------------------------------------------------------------------------------------------------|
-| Input parameters file          | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |           `in`             | input file containing all the specifications regarding the type of calculation that is going to be performed |
-| The MD Structure+mass(db) file | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |    `tpr` `pdb`     | Structure file containing the system coordinates|
-| Receptor and ligand group      | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |        `integers`          | Receptor and ligand group numbers in the index file |
-| A trajectory file              | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } | `xtc` `pdb` `trr` | final GROMACS MD trajectory, fitted and with no pbc.|
-| A topology file                | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |           `top`            | take into account that *.itp files belonging to the topology file should be also present in the folder       |
-| A Reference Structure file     | :octicons-check-circle-fill-16:{ .req_optrec .scale_icon_medium } |           `pdb`            |  Complex reference structure file (without hydrogens) with the desired assignment of chain ID and residue numbers       |
+-   **Bundled test**
 
-:octicons-check-circle-fill-16:{ .req } -> Must be defined -- :octicons-check-circle-fill-16:{ .req_optrec } ->
-Optional, but recommended -- :octicons-check-circle-fill-16:{ .req_opt } -> Optional
+    `gmx_MMPBSA_test -t 6`
 
-_See a detailed list of all the flags in gmx_MMPBSA command line [here][2]_
+</div>
 
-## Command-line
-That being said, once you are in the folder containing all files, the command-line will be as follows:
+!!! info "Representative system"
+    This membrane protein-ligand complex demonstrates the heterogeneous implicit-membrane PB workflow for a CHARMM
+    topology. CHARMM support is not limited to this molecular composition, but implicit-membrane calculations
+    require compatible membrane geometry and method-specific settings.
+
+!!! warning "CHARMM CMAP conversion"
+    The current GROMACS-to-AMBER topology conversion omits CHARMM CMAP terms and reports this during setup. The
+    example exercises the complete implicit-membrane workflow, but quantitative CHARMM applications should assess
+    the effect of the missing CMAP contribution before interpreting binding energies.
+
+!!! note "CHARMM PB radii"
+    `PBRadii=7` selects the `charmm_radii` set, which is intended only for systems prepared with CHARMM force fields.
+    Its protein radii draw on work by [Nina, Belogv, and Roux][10], nucleic-acid radii on [Banavali and Roux][11],
+    and additional elements on [Fortuna and Costa][12]. With `radiopt=0`, PBSA uses these radii from the generated
+    AMBER topologies.
+
+## Before you begin
+
+The manual workflow uses the following files and selections:
+
+<div class="example-card-grid" markdown>
+
+-   **Calculation settings**
+
+    `mmpbsa.in` (`-i`)
+
+-   **GROMACS system**
+
+    Structure `com.pdb` (`-cs`) and topology `topol.top` (`-cp`). Keep the `toppar` directory containing the
+    referenced CHARMM `*.itp` files beside `topol.top`.
+
+-   **Trajectory**
+
+    Fitted four-frame trajectory `md.xtc` (`-ct`), with the membrane normal aligned to the *z* axis
+
+-   **Molecular selections**
+
+    Index `index.ndx` (`-ci`) with receptor `PROA` and ligand `UQ2` (`-cg`)
+
+</div>
+
+The complete structure contains 95,472 atoms: protein, ligand, DOPC/POPC lipids, ions, and TIP3 water. The selected
+binding system contains the 2,985-atom receptor and 49-atom ligand. See the [complete command-line reference][2] for
+all options.
+
+## Run the example
+
+### Run the bundled test
+
+The quickest way to reproduce this example is through the test runner:
+
+```bash
+gmx_MMPBSA_test -t 6
+```
+
+This is a slow test because PB calculations are performed for a membrane protein. See the
+[`gmx_MMPBSA_test` documentation][7] for download, selection, and cleanup options.
+
+### Run it manually
+
+[Download the protein-membrane example as a ZIP archive][6].
+
+Extract the archive, change to the `Protein_membrane` directory, and choose either the serial or MPI command. You can
+also [view the example files on GitHub][8] before downloading them.
 
 === "Serial"
 
-        gmx_MMPBSA -O -i mmpbsa.in -cs com.pdb -ci index.ndx -cg 6 5 -ct md.xtc -cp topol.top -o FINAL_RESULTS_MMPBSA.dat -eo FINAL_RESULTS_MMPBSA.csv
+    ```bash
+    gmx_MMPBSA -O \
+      -i mmpbsa.in \
+      -cs com.pdb \
+      -ct md.xtc \
+      -ci index.ndx \
+      -cg PROA UQ2 \
+      -cp topol.top \
+      -o FINAL_RESULTS_MMPBSA.dat \
+      -eo FINAL_RESULTS_MMPBSA.csv
+    ```
 
 === "With MPI"
 
-        mpirun -np 2 gmx_MMPBSA -O -i mmpbsa.in -cs com.pdb -ci index.ndx -cg 6 5 -ct md.xtc -cp topol.top -o FINAL_RESULTS_MMPBSA.dat -eo FINAL_RESULTS_MMPBSA.csv
+    ```bash
+    mpirun -np 2 gmx_MMPBSA -O \
+      -i mmpbsa.in \
+      -cs com.pdb \
+      -ct md.xtc \
+      -ci index.ndx \
+      -cg PROA UQ2 \
+      -cp topol.top \
+      -o FINAL_RESULTS_MMPBSA.dat \
+      -eo FINAL_RESULTS_MMPBSA.csv
+    ```
 
-=== "gmx_MMPBSA_test"
+## Configure the calculation
 
-        gmx_MMPBSA_test -t 6
+The example uses the concise `mmpbsa.in` shown first below. The all-options version was generated with
+`gmx_MMPBSA --create_input pb_mem` and then updated with the same example-specific values. Both inputs therefore
+describe the same implicit-membrane PB calculation.
 
-where the `mmpbsa.in` input file, is a text file containing the following lines:
+=== "Concise input"
 
-``` yaml linenums="1" title="Sample input file for MMPBSA with membrane proteins"
-Sample input file for MMPBSA with membrane proteins
-This input file is meant to show only that gmx_MMPBSA works. Althought,
-we tried to used the input files as recommended in the Amber manual,
-some parameters have been changed to perform more expensive calculations
-in a reasonable amount of time. Feel free to change the parameters
-according to what is better for your system.
+    ```yaml linenums="1" title="mmpbsa.in"
+    Sample input file for MMPBSA with membrane proteins
+    # This input provides a practical starting point for implicit-membrane PB calculations.
+    # Review the membrane geometry, dielectric model, and PB settings for your system.
 
-&general
-sys_name="Prot-Memb-PROA-UQ2",
-startframe=1,
-endframe=4,
-# In gmx_MMPBSA v1.5.0 we have added a new PB radii set named charmm_radii.
-# This radii set should be used only with systems prepared with CHARMM force fields.
-# Uncomment the line below to use charmm_radii set
-#PBRadii=7,
-/
-&pb
-memopt=1, emem=7.0, indi=1.0,
-mctrdz=automatic, mthick=automatic, membrane_atoms="P", poretype=1,
-radiopt=0, istrng=0.150, fillratio=1.25, inp=2,
-sasopt=0, solvopt=2, ipb=1, bcopt=10, nfocus=1, linit=1000,
-eneopt=1, cutfd=7.0, cutnb=99.0,
-maxarcdot=15000,
-npbverb=1,
-/
-```
+    &general
+    sys_name="Prot-Memb-PROA-UQ2",
+    startframe=1,
+    endframe=4,
+    PBRadii=7,
+    /
+    &pb
+    memopt=2, emem=7.0, indi=1.0,
+    mctrdz=automatic, mthick=automatic, membrane_atoms="P", poretype=1,
+    radiopt=0, istrng=0.150, fillratio=1.25, inp=2,
+    sasopt=0, solvopt=2, ipb=1, bcopt=10, nfocus=1, linit=1000,
+    eneopt=1, cutfd=7.0, cutnb=99.0,
+    maxarcdot=15000,
+    npbverb=1,
+    /
+    ```
 
-!!! warning "Remember"
-    `radiopt = 0` is recommended which means using radii from the `prmtop` file
+=== "Generated input — all options"
 
-_See a detailed list of all the options in `gmx_MMPBSA` input file [here][3] as well as several [examples][4]_
+    ```yaml linenums="1" title="mmpbsa.in generated with --create_input pb_mem"
+    Input file generated by gmx_MMPBSA (1.6.5+177.g31e12ce1.dirty)
+    Be careful with the variables you modify, some can have severe consequences on the results you obtain.
 
-!!! note "Automatic membrane parameters"
-    The membrane center and thickness are determined automatically from the selected complex trajectory using
-    `mctrdz=automatic`, `mthick=automatic`, and `membrane_atoms="P"`. The phosphorus atoms in the
-    phospholipid headgroups define the two leaflets. The membrane normal must be aligned with *z*, and the trajectory
-    should be continuous across periodic boundaries.
+    # General namelist variables
+    &general
+      sys_name                       = "Prot-Memb-PROA-UQ2"                   # System name; e.g. "complex"
+      startframe                     = 1                                      # First frame; e.g. 1
+      endframe                       = 4                                      # Last frame; e.g. 100
+      interval                       = 1                                      # Frame interval; e.g. 1
+      forcefields                    = "oldff/leaprc.ff99SB,leaprc.gaff"      # Force fields; e.g. "leaprc.protein.ff14SB"
+      ions_parameters                = 1                                      # Ion params; e.g. 1
+      PBRadii                        = 7                                      # PB radii set; 1-7
+      temperature                    = 298.15                                 # Temperature (K); e.g. 298.15
+      qh_entropy                     = 0                                      # Legacy QH output reader; new calculations reject 1
+      interaction_entropy            = 0                                      # Run IE entropy; 0/1
+      ie_segment                     = 25                                     # IE segment length (%); e.g. 25
+      c2_entropy                     = 0                                      # Run C2 entropy; 0/1
+      assign_chainID                 = 0                                      # Assign chain IDs; 0/1
+      exp_ki                         = 0.0                                    # Experimental Ki (nM); e.g. 0.0
+      full_traj                      = 0                                      # Write full trajectory; 0/1
+      gmx_path                       = ""                                     # GROMACS path; e.g. "/usr/bin"
+      keep_files                     = 2                                      # Files to keep; 0-2
+      netcdf                         = 0                                      # Use NetCDF; 0/1
+      solvated_trajectory            = 1                                      # Clean solvated traj.; 0/1
+      explicit_waters                = 0                                      # Explicit waters; e.g. 10
+      explicit_waters_mask           = ""                                     # Water reference; e.g. ":1-10", "within 4", "dASA"
+      explicit_waters_group          = ""                                     # Solvent group; e.g. "TIP3"
+      explicit_waters_dasa_cutoff    = 0.5                                    # dASA cutoff; e.g. 0.5
+      explicit_waters_as             = "receptor"                             # Water owner; e.g. "receptor"
+      explicit_waters_extra_points   = "error"                                # Virtual sites; "error" or "strip"
+      verbose                        = 1                                      # Output verbosity; 0-2
+    /
 
-    Automatic detection reads the original, unstripped `-ct` trajectory, so membrane lipids do not need to be part of
-    the receptor group selected with `-cg`. The calculation retains
-    `GMXMMPBSA_membrane_parameters.csv` and `GMXMMPBSA_membrane_parameters.png` as diagnostics.
+    # (AMBER) Poisson-Boltzmann namelist variables
+    &pb
+      ipb                            = 1                                      # PB model; e.g. 2
+      inp                            = 2                                      # Nonpolar method; 1 or 2
+      sander_apbs                    = 0                                      # Use sander.APBS; 0/1
+      indi                           = 1.0                                    # Internal dielectric; e.g. 1.0
+      exdi                           = 78.5                                   # External dielectric; e.g. 78.5
+      emem                           = 7.0                                    # Membrane dielectric; e.g. 4.0
+      smoothopt                      = 1                                      # Dielectric smoothing; 0-2
+      istrng                         = 0.150                                  # Ionic strength (M); e.g. 0.150
+      radiopt                        = 0                                      # Use optimized radii; 0/1
+      prbrad                         = 1.4                                    # Probe radius (A); e.g. 1.4
+      iprob                          = 2.0                                    # Ion probe (A); e.g. 2.0
+      sasopt                         = 0                                      # PB surface option; 0/1
+      arcres                         = 0.25                                   # Arc resolution (A); e.g. 0.25
+      memopt                         = 2                                      # Use membrane PB; 0-3
+      mprob                          = 2.7                                    # Membrane probe (A); e.g. 2.7
+      mthick                         = "automatic"                            # Membrane thickness (A), or automatic
+      mctrdz                         = "automatic"                            # Membrane Z offset (A), or automatic
+      membrane_atoms                 = "P"                                    # Atom names for automatic membrane parameters; semicolon-separated
+      poretype                       = 1                                      # Pore type; 1 or 2
+      npbopt                         = 0                                      # Use nonlinear PB; 0/1
+      solvopt                        = 2                                      # PB solver; e.g. 1
+      accept                         = 0.001                                  # Convergence; e.g. 0.001
+      linit                          = 1000                                   # SCF iterations; e.g. 1000
+      fillratio                      = 1.25                                   # Grid fill ratio; e.g. 4
+      scale                          = 2.0                                    # Grid scale; e.g. 2
+      nbuffer                        = 0.0                                    # Grid buffer; e.g. 0
+      nfocus                         = 1                                      # Focus levels; e.g. 2
+      fscale                         = 8                                      # Focus scale; e.g. 8
+      npbgrid                        = 1                                      # Grid update freq.; e.g. 1
+      bcopt                          = 10                                     # Boundary condition; e.g. 5
+      eneopt                         = 1                                      # Energy option; e.g. 2
+      frcopt                         = 0                                      # Force output; e.g. 0
+      scalec                         = 0                                      # Reaction field option; e.g. 0
+      cutfd                          = 7.0                                    # FD cutoff (A); e.g. 5
+      cutnb                          = 99.0                                   # Nonbonded cutoff (A); e.g. 0
+      nsnba                          = 1                                      # Pairlist frequency; e.g. 1
+      decompopt                      = 2                                      # Decomp scheme; 1 or 2
+      use_rmin                       = 1                                      # Use Rmin radii; 0/1
+      sprob                          = 0.557                                  # SASA probe (A); e.g. 0.557
+      vprob                          = 1.3                                    # Volume probe (A); e.g. 1.3
+      rhow_effect                    = 1.129                                  # Water density; e.g. 1.129
+      use_sav                        = 1                                      # Use SAV cavity; 0/1
+      cavity_surften                 = 0.0378                                 # Cavity surften; e.g. 0.0378
+      cavity_offset                  = -0.5692                                # Cavity offset; e.g. -0.5692
+      maxsph                         = 400                                    # Max surface dots; e.g. 400
+      maxarcdot                      = 15000                                  # Max arc dots; e.g. 1500
+      npbverb                        = 1                                      # PB verbosity; 0/1
+    /
+    ```
 
-    ![Example automatic membrane center and thickness detection](../../docs/assets/membrane_parameters.png)
+!!! info "Keep in mind"
+    This input provides a practical starting point for implicit-membrane PB calculations. Review membrane placement,
+    dielectric treatment, PB radii, grid convergence, sampling, and the CMAP limitation for the intended system.
+    Additional [input-file options][3] may be needed for a production protocol.
 
-    Fixed numeric values can be supplied instead when preferred. Automatic and numeric center/thickness settings can
-    also be mixed.
+## How this example works
 
-## Considerations
-The system contains one `PROA` protein, one `UQ2` ligand, a DOPC/POPC
-membrane, sodium and chloride ions, and TIP3 water from CHARMM-GUI. The
-single-trajectory calculation uses `com.pdb`, `index.ndx`, `md.xtc`,
-`topol.top`, and the receptor/ligand groups `6 5`, corresponding to `PROA`
-and `UQ2`, respectively. The topology and all included CHARMM force-field
-files are kept together under `toppar/`.
+The ST approximation extracts `PROA` and `UQ2` from the same four trajectory frames. The explicit DOPC/POPC bilayer,
+ions, and water remain available in the full source structure and trajectory but are not retained in the final
+complex, receptor, or ligand calculation topologies. The unstripped trajectory is used to resolve the implicit
+membrane geometry before the selected solute trajectory is prepared.
 
-The membrane is represented through the implicit membrane PB settings in
-`mmpbsa.in`; the explicit membrane, solvent, and ions remain in the
-calculation-ready coordinate/topology package. The input keeps the repository
-example's four-frame demonstration range (`startframe=1`, `endframe=4`).
+`PBRadii=7` assigns CHARMM-specific radii during topology conversion. Because `topol.top` is provided, no
+`forcefields` variable is needed in the concise input; the CHARMM bonded and nonbonded parameters are read from the
+topology include tree. CMAP terms are the stated exception.
 
-!!! note "Comments on parameters for implicit membranes"
-    The inclusion of an implicit membrane region in implicit solvation calculations is enabled by setting
-    `memopt` to 1 (default value is 0, for off). The membrane will extend the solute dielectric region to include a
-    slab-like planar region of uniform dielectric constant running parallel to the xy plane. The dielectric constant
-    can be controlled using `emem`. We set the membrane interior dielectric constant to a value of 7.0 in this example.
-    The value of `emem` should always be set to a value greater than or equal to `indi` (solute dielectric constant,
-    1 in this example) and less than `exdi` (solvent dielectric constant, 78.5 default).
+## Automatic membrane placement
 
-    [<img src="../../assets/prot_memb.png" height="200" width="258" align="right"/>]()
+`mctrdz=automatic`, `mthick=automatic`, and `membrane_atoms="P"` use lipid phosphorus atoms from the original
+trajectory to determine the bilayer center and leaflet separation. For the bundled four frames, the calculation
+resolves a center of approximately 62.316 Å and a thickness of 37.3 Å.
 
-    The membrane center and thickness are resolved automatically from the selected trajectory using
-    `mctrdz=automatic`, `mthick=automatic`, and `membrane_atoms="P"`. Fixed numeric values can be supplied
-    instead when a specific membrane placement is required. If calculations are performed on a protein with a
-    solvent-filled channel region, this region is identified automatically by setting `poretype=1`.
+The membrane normal must already be aligned with *z*, and the trajectory should be continuous across periodic
+boundaries. Automatic detection does not reorient or unwrap the trajectory. Numeric center and thickness values can
+be supplied independently when a fixed placement is preferred.
 
-    When using the implicit membrane model, the default `sasopt=0`, _i.e._ the classical solvent excluded
-    surface, is recommended due to its better numerical behavior. When running with the default options, the program
-    will compute solvent excluded surfaces both with the water probe (`prbrad=1.40` by default) and the membrane probe
-    (`mprob=2.70` by default). This setting was found to be consistent with the explicit solvent MD simulations.
+The calculation retains two diagnostics:
 
-    It is also suggested that periodic boundary conditions be used to avoid unphysical edge effects. This is supported
-    in all linear solvers. In the following, Geometric multigrid is chosen (`solvopt=2`) with `ipb=1` and `bcopt=10`.
-    The `linit=1000` should work fine, but take into account that working with linear and periodic boundary conditions
-    could require more iterations.
+- `GMXMMPBSA_membrane_parameters.csv`: per-frame membrane centers, thicknesses, and resolved values.
+- `GMXMMPBSA_membrane_parameters.png`: phosphorus distributions, leaflet assignments, and slab boundaries.
 
-    In addition, `eneopt` needs to be set to 1 because the charge-view method (`eneopt = 2`) is not supported for
-    this application. When `eneopt=1`, the total electrostatic energy and forces will be
-    computed with the particle-particle particle-mesh (P3M) procedure outlined in Lu and Luo.[8] In doing so,
-    energy term `EPB` in the output file is set to zero, while `EEL` term includes both the reaction field
-    energy (`EPB`) and the Coulombic energy (`EEL`). The van der Waals energy is computed along with the
-    particle-particle portion of the Coulombic energy. This option requires a nonzero CUTNB (in this case, `cutnb=8.0`).
-    It's noteworthy mentioning that `ΔGGAS` and `ΔGSOLV` as reported are no longer
-    properly decomposed. Since `EPB` and `EEL` are combined into the "gas phase" term, the gas and solvation terms
-    can't be separated. Nevertheless, the total ΔTOTAL should be perfectly fine, since everything is sum up together
-    in the end.
+![Automatic membrane center and thickness diagnostics](../../assets/membrane_parameters.png)
 
-    !!! Danger
-        Note that a smaller `fillratio=1.25` is used compared to the defult one (4.0). The use of a periodic boundary
-        also allowed a somewhat small fill ratio (_i.e._, the ratio of the finite-difference box dimension over the
-        solute dimension) of 1.25 to be used in these
-        calculations ([ref](https://pubs.acs.org/doi/full/10.1021/acs.jctc.7b00382)). Be cautious when changing this
-        parameter as its increase may lead to a considerable RAM usage (specially when running the program in parralel).
+## Implicit-membrane PB settings
 
-A plain text output file with all the statistics (default: `FINAL_RESULTS_MMPBSA.dat`) and a CSV-format
-output file containing all energy terms for every frame in every calculation will be saved. The file name in
-'-eo' flag will be forced to end in [.csv] (`FINAL_RESULTS_MMPBSA.csv` in this case). This file is only written when
-specified on the command-line.
+`memopt=2` selects the heterogeneous dielectric profile fitted with PCHIP, while `poretype=1` enables automatic pore
+detection. See the [heterogeneous implicit-membrane model][13] for the method and model assessment.
 
+The calculation uses the linear PB equation with periodic boundary conditions (`ipb=1`, `bcopt=10`) and the geometric
+multigrid solver (`solvopt=2`). `sasopt=0` uses the solvent-excluded surface, and `eneopt=1` selects the P3M total
+electrostatic-energy treatment required by this periodic setup. The nonzero `cutnb=99.0` is the van der Waals cutoff
+used with `eneopt=1`; `cutfd=7.0` controls the finite-difference direct-sum cutoff.
 
-!!! note
-    Once the calculation is done, the results can be analyzed in `gmx_MMPBSA_ana` (if `-nogui` flag was not used in the command-line).
-    Please, check the [gmx_MMPBSA_ana][5] section for more information
+With `eneopt=1`, the PB reaction-field and Coulombic contributions are combined in `EEL`, while `EPB` is reported as
+zero. Consequently, the separately labeled gas and solvation subtotals should not be interpreted as the usual
+MM/PBSA partition; the combined total retains the solver's complete electrostatic contribution. Periodic PB methods
+for membrane MMPBSA are discussed in the corresponding [implementation study][14].
 
+The reduced `fillratio=1.25` keeps this example's memory requirements manageable. Increasing it enlarges the
+finite-difference grid and can substantially increase RAM use, particularly with multiple MPI ranks. Grid and solver
+convergence should be checked before quantitative application.
 
-  [1]: http://archive.ambermd.org/201508/0382.html
+## Expected outputs
+
+A successful calculation produces:
+
+- `FINAL_RESULTS_MMPBSA.dat`: the implicit-membrane MM/PBSA summary and binding-energy statistics.
+- `FINAL_RESULTS_MMPBSA.csv`: the per-frame energy terms requested with `-eo`.
+- The CSV and PNG membrane-placement diagnostics described above.
+
+## Analyze the results
+
+Open the result with `gmx_MMPBSA_ana` for interactive inspection and plotting. Remember that `EEL` contains the
+combined electrostatic contribution for this `eneopt=1` calculation. See the [`gmx_MMPBSA_ana` documentation][5]
+for usage details.
+
   [2]: ../../gmx_MMPBSA_command-line.md#gmx_mmpbsa-command-line
   [3]: ../../input_file.md#the-input-file
-  [4]: ../../input_file.md#sample-input-files
   [5]: ../../analyzer.md#gmx_mmpbsa_ana-the-analyzer-tool
-  [6]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/examples/Protein_membrane
+  [6]: https://downgit.github.io/#/home?url=https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/examples/Protein_membrane&fileName=gmx_MMPBSA-Protein-Membrane&rootDirectory=Protein_membrane
   [7]: ../gmx_MMPBSA_test.md#gmx_mmpbsa_test-command-line
+  [8]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/examples/Protein_membrane
+  [10]: https://doi.org/10.1021/jp970736r
+  [11]: https://doi.org/10.1021/jp025852v
+  [12]: https://doi.org/10.1021/acs.jcim.1c00177
+  [13]: https://doi.org/10.1021/acs.jcim.9b00363
+  [14]: https://doi.org/10.1021/acs.jcim.5b00341
