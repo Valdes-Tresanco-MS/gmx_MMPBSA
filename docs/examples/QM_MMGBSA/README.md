@@ -3,133 +3,259 @@ template: main.html
 title: QM/MMGBSA
 ---
 
-# QM/MMGBSA binding free energy calculations
+# QM/MMGBSA binding free energy
 
-!!! info
-    This example can be found in the [examples/QM_MMGBSA][6] directory in the repository folder. If you didn't
-    use gmx_MMPBSA_test before, use [downgit](https://downgit.github.io/#/home) to download the specific folder from 
-    gmx_MMPBSA GitHub repository.
+This example combines a semiempirical QM/MM energy model with GB solvation in a single-trajectory binding free-energy
+calculation. Residues close to the ligand form the QM region; the remainder of the system is treated classically.
 
+<div class="example-card-grid" markdown>
 
-## Requirements
-!!! danger
-    The ligand mol2 file must be the Antechamber output.
+-   **Protocol**
 
-In this case, `gmx_MMPBSA` requires:
+    Single trajectory
 
-| Input File required            |                             Required                              |       Type        | Description                                                                                                      |
-|:-------------------------------|:-----------------------------------------------------------------:|:-----------------:|:-----------------------------------------------------------------------------------------------------------------|
-| Input parameters file          |    :octicons-check-circle-fill-16:{ .req .scale_icon_medium }     |       `in`        | Input file containing all the specifications regarding the type of calculation that is going to be performed     |
-| The MD Structure+mass(db) file |    :octicons-check-circle-fill-16:{ .req .scale_icon_medium }     |    `tpr` `pdb`    | Structure file containing the system coordinates                                                                 |
-| An index file                  |    :octicons-check-circle-fill-16:{ .req .scale_icon_medium }     |       `ndx`       | File containing the receptor and ligand in separated groups                                                      |
-| Receptor and ligand group      |    :octicons-check-circle-fill-16:{ .req .scale_icon_medium }     |    `integers`     | Group numbers in the index files                                                                                 |
-| A trajectory file              |    :octicons-check-circle-fill-16:{ .req .scale_icon_medium }     | `xtc` `pdb` `trr` | Final GROMACS MD trajectory, fitted and with no pbc.                                                             |
-| Ligand parameters file         |    :octicons-check-circle-fill-16:{ .req .scale_icon_medium }     |      `mol2`       | The Antechamber output  `mol2` file of ligand parametrization                                                    |
-| A topology file (not included) |  :octicons-check-circle-fill-16:{ .req_opt .scale_icon_medium }   |       `top`       | GROMACS topology file (The `* .itp` files defined in the topology must be in the same folder                     |
-| A Reference Structure file     | :octicons-check-circle-fill-16:{ .req_optrec .scale_icon_medium } |       `pdb`       | Complex reference structure file (without hydrogens) with the desired assignment of chain ID and residue numbers |
-              
-:octicons-check-circle-fill-16:{ .req } -> Must be defined -- :octicons-check-circle-fill-16:{ .req_optrec } -> 
-Optional, but recommended -- :octicons-check-circle-fill-16:{ .req_opt } -> Optional
+-   **QM method**
 
-!!! tip "Remember"
-    When a topology file is defined, the ligand mol2 file is not needed. The ligand mol2 file only required when  
-    `gmx_MMPBSA` build the amber topology from a structure  
-_See a detailed list of all the flags in gmx_MMPBSA command line [here][1]_
+    PM6-DH+
 
-## Command-line
-That being said, once you are in the folder containing all files, the command-line will be as follows:
+-   **QM region**
+
+    Residues within 4 Å
+
+-   **Bundled test**
+
+    `gmx_MMPBSA_test -t 23`
+
+</div>
+
+## Before you begin
+
+The manual workflow uses the following files and selections:
+
+<div class="example-card-grid" markdown>
+
+-   **Calculation settings**
+
+    `mmpbsa.in` (`-i`)
+
+-   **GROMACS system**
+
+    Structure `com.tpr` (`-cs`) and topology `topol.top` (`-cp`). Keep the `toppar` directory containing the
+    referenced `*.itp` files beside `topol.top`.
+
+-   **Trajectory**
+
+    PBC-corrected and fitted trajectory `com_traj.xtc` (`-ct`)
+
+-   **Molecular selections**
+
+    Index `index.ndx` (`-ci`) with the `receptor` and `ligand` groups (`-cg`)
+
+</div>
+
+A complex reference structure without hydrogens may also be supplied with `-cr`. It is optional but recommended
+when you need specific chain IDs or residue numbering. See the [complete command-line reference][1] for all options.
+
+## Run the example
+
+### Run the bundled test
+
+The quickest way to reproduce this example is through the test runner:
+
+```bash
+gmx_MMPBSA_test -t 23
+```
+
+See the [`gmx_MMPBSA_test` documentation][7] for download, selection, and cleanup options.
+
+### Run it manually
+
+[Download the QM/MMGBSA example as a ZIP archive][6].
+
+Extract the archive, change to the `QM_MMGBSA` directory, and choose either the serial or MPI command. You can also
+[view the example files on GitHub][8] before downloading them.
 
 === "Serial"
 
-        gmx_MMPBSA -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 1 13 -ct com_traj.xtc -lm ligand.mol2 -o FINAL_RESULTS_MMPBSA.dat -eo FINAL_RESULTS_MMPBSA.csv
+    ```bash
+    gmx_MMPBSA -O \
+      -i mmpbsa.in \
+      -cs com.tpr \
+      -ct com_traj.xtc \
+      -ci index.ndx \
+      -cg receptor ligand \
+      -cp topol.top \
+      -o FINAL_RESULTS_MMPBSA.dat \
+      -eo FINAL_RESULTS_MMPBSA.csv
+    ```
 
 === "With MPI"
 
-        mpirun -np 2 gmx_MMPBSA -O -i mmpbsa.in -cs com.tpr -ci index.ndx -cg 1 13 -ct com_traj.xtc -lm ligand.mol2 -o FINAL_RESULTS_MMPBSA.dat -eo FINAL_RESULTS_MMPBSA.csv
+    ```bash
+    mpirun -np 2 gmx_MMPBSA -O \
+      -i mmpbsa.in \
+      -cs com.tpr \
+      -ct com_traj.xtc \
+      -ci index.ndx \
+      -cg receptor ligand \
+      -cp topol.top \
+      -o FINAL_RESULTS_MMPBSA.dat \
+      -eo FINAL_RESULTS_MMPBSA.csv
+    ```
 
-=== "gmx_MMPBSA_test"
+## Configure the calculation
 
-        gmx_MMPBSA_test -t 23
+The example uses the concise `mmpbsa.in` shown first below. The all-options version was generated with
+`gmx_MMPBSA --create_input gb` and then updated with the same example-specific values. Both inputs describe the
+same calculation.
 
-where the `mmpbsa.in` input file, is a text file containing the following lines:
+=== "Concise input"
 
-``` yaml linenums="1" title="Sample input file for QM/MMGBSA calculation"
-Sample input file for QM/MMGBSA calculation
-This input file is meant to show only that gmx_MMPBSA works. 
-Although, we tried to use the input files as recommended in the
-Amber manual, some parameters have been changed to perform more 
-expensive calculations in a reasonable amount of time. Feel free 
-to change the parameters according to what is better for your system.
+    ```yaml linenums="1" title="mmpbsa.in"
+    Sample input file for QM/MMGBSA calculation
+    # This input provides a practical starting point for QM/MMGBSA calculations.
+    # Review the QM region, charge, Hamiltonian, and convergence settings for your system.
 
-&general
-sys_name="QM/MMGBSA",
-startframe=5,
-endframe=14,
-PBRadii=2,
-forcefields="oldff/leaprc.ff99SB,leaprc.gaff"
-/
-&gb
-igb=1, saltcon=0.150,
-ifqnt=1, qm_theory=PM6-DH+,
+    &general
+    sys_name="QM/MMGBSA",
+    startframe=1,
+    endframe=10,
+    PBRadii=2,
+    /
+    &gb
+    igb=1, saltcon=0.150,
+    ifqnt=1, qm_theory=PM6-DH+,
 
-# Residues to be treated with QM can be selected using different approaches. Please, make sure to include at least
-# one residue from both the receptor and ligand in the qm_residues mask when using 'ifqnt'. This requirement is
-# automatically fulfilled when using the within keyword https://groups.google.com/g/gmx_mmpbsa/c/GNb4q4YGCH8
+    # Residues to be treated with QM can be selected using different approaches. Make sure to include at least
+    # one residue from both the receptor and ligand in the qm_residues mask when using 'ifqnt'. This requirement is
+    # automatically fulfilled when using the within keyword https://groups.google.com/g/gmx_mmpbsa/c/GNb4q4YGCH8
 
-# Residue selection by distance (recommended)
-qm_residues="within 4"
+    # Residue selection by distance (recommended)
+    qm_residues="within 4",
 
-## Explicit residue selection
-#qm_residues="A/40-41,44,47,78,81-82,85,88,115,118,122,215,218-220,232 B/241"
+    ## Explicit residue selection
+    #qm_residues="A/40-41,44,47,78,81-82,85,88,115,118,122,215,218-220,232 B/241"
 
-# Residue selection with amber masks
-#com_qmmask="(:44,47,85,88,218&!@N,H,CA,HA,C,O) | :241"
-#rec_qmmask="(:44,47,85,88,218&!@N,H,CA,HA,C,O)"
-#lig_qmmask=":1"
-/
-```
+    # Residue selection with amber masks
+    #com_qmmask="(:44,47,85,88,218&!@N,H,CA,HA,C,O) | :241"
+    #rec_qmmask="(:44,47,85,88,218&!@N,H,CA,HA,C,O)"
+    #lig_qmmask=":1"
+    /
+    ```
+
+=== "Generated input - all options"
+
+    ```yaml linenums="1" title="mmpbsa.in generated with --create_input gb"
+    Input file generated by gmx_MMPBSA (1.6.5+177.g31e12ce1.dirty)
+    Be careful with the variables you modify, some can have severe consequences on the results you obtain.
+
+    # General namelist variables
+    &general
+      sys_name                       = "QM/MMGBSA"                            # System name; e.g. "complex"
+      startframe                     = 1                                      # First frame; e.g. 1
+      endframe                       = 10                                     # Last frame; e.g. 100
+      interval                       = 1                                      # Frame interval; e.g. 1
+      forcefields                    = "oldff/leaprc.ff99SB,leaprc.gaff"      # Force fields; e.g. "leaprc.protein.ff14SB"
+      ions_parameters                = 1                                      # Ion params; e.g. 1
+      PBRadii                        = 2                                      # PB radii set; 1-7
+      temperature                    = 298.15                                 # Temperature (K); e.g. 298.15
+      qh_entropy                     = 0                                      # Legacy QH output reader; new calculations reject 1
+      interaction_entropy            = 0                                      # Run IE entropy; 0/1
+      ie_segment                     = 25                                     # IE segment length (%); e.g. 25
+      c2_entropy                     = 0                                      # Run C2 entropy; 0/1
+      assign_chainID                 = 0                                      # Assign chain IDs; 0/1
+      exp_ki                         = 0.0                                    # Experimental Ki (nM); e.g. 0.0
+      full_traj                      = 0                                      # Write full trajectory; 0/1
+      gmx_path                       = ""                                     # GROMACS path; e.g. "/usr/bin"
+      keep_files                     = 2                                      # Files to keep; 0-2
+      netcdf                         = 0                                      # Use NetCDF; 0/1
+      solvated_trajectory            = 1                                      # Clean solvated traj.; 0/1
+      explicit_waters                = 0                                      # Explicit waters; e.g. 10
+      explicit_waters_mask           = ""                                     # Water reference; e.g. ":1-10", "within 4", "dASA"
+      explicit_waters_group          = ""                                     # Solvent group; e.g. "TIP3"
+      explicit_waters_dasa_cutoff    = 0.5                                    # dASA cutoff; e.g. 0.5
+      explicit_waters_as             = "receptor"                             # Water owner; e.g. "receptor"
+      explicit_waters_extra_points   = "error"                                # Virtual sites; "error" or "strip"
+      verbose                        = 1                                      # Output verbosity; 0-2
+    /
+
+    # (AMBER) Generalized-Born namelist variables
+    &gb
+      igb                            = 1                                      # GB model, e.g. 2 or 8
+      intdiel                        = 1.0                                    # Internal dielectric; e.g. 1.0
+      extdiel                        = 78.5                                   # External dielectric; e.g. 78.5
+      saltcon                        = 0.150                                  # Salt conc. (M); e.g. 0.150
+      surften                        = 0.0072                                 # Surface tension; e.g. 0.0072
+      surfoff                        = 0.0                                    # Surface offset; e.g. 0.0
+      molsurf                        = 0                                      # Use molsurf; 0/1
+      msoffset                       = 0.0                                    # Molsurf offset; e.g. 0.0
+      probe                          = 1.4                                    # Probe radius (A); e.g. 1.4
+      ifqnt                          = 1                                      # Enable QM/MM; 0/1
+      qm_theory                      = "PM6-DH+"                              # QM theory; e.g. "PM6-DH+"
+      qm_residues                    = "within 4"                             # QM residues; e.g. ":1-5"
+      com_qmmask                     = ""                                     # Complex QM mask; e.g. ":1-5"
+      rec_qmmask                     = ""                                     # Receptor QM mask; e.g. ":1-5"
+      lig_qmmask                     = ""                                     # Ligand QM mask; e.g. ":1"
+      qmcharge_com                   = 0                                      # Complex QM charge; e.g. 0
+      qmcharge_lig                   = 0                                      # Ligand QM charge; e.g. 0
+      qmcharge_rec                   = 0                                      # Receptor QM charge; e.g. 0
+      qmcut                          = 9999.0                                 # QM cutoff (A); e.g. 9999
+      scfconv                        = 1e-08                                  # SCF convergence; e.g. 1.0e-8
+      itrmax                         = 1000                                   # Maximum SCF iterations; e.g. 5000
+      # ndiis_attempts                 = None                                 # Maximum DIIS attempts per SCF cycle; e.g. 700
+      peptide_corr                   = 0                                      # Peptide correction; 0/1
+      writepdb                       = 1                                      # Write QM PDB; 0/1
+      verbosity                      = 0                                      # QM/MM verbosity; 0-5
+      alpb                           = 0                                      # Use ALPB; 0/1
+      arad_method                    = 1                                      # ALPB size method; e.g. 1
+    /
+    ```
 
 !!! info "Keep in mind"
-    See a detailed list of all the options in `gmx_MMPBSA` input file [here][2] as well as several [examples][3]. 
-    These examples are meant only to show that gmx_MMPBSA works. It is recommended to go over these variables, even 
-    the ones that are not included in this input file but are available for the calculation that it's performed and
-    see the values they can take (check the [input file section](../../input_file.md)). This will allow you to 
-    tackle a number of potential problems or simply use fancier approximations in your calculations.
+    QM/MM results can be sensitive to the QM-region boundary, net charge, Hamiltonian, and SCF convergence. Inspect
+    `qmmm_region.pdb`, confirm that the selected residues form a chemically sensible region, and validate the setup
+    before applying it to production calculations.
 
-## Considerations
-In this case, a single trajectory (ST) approximation is followed, which means the receptor and ligand structures and 
-trajectories will be obtained from that of the complex. To do so, an MD Structure+mass(db) file (`com.tpr`), an index file (`index.ndx`),
-a trajectory file (`com_traj.xtc`), and both the receptor and ligand group numbers in the index file (`1 13`) are needed.
-A ligand .mol2 file is also needed for generating the ligand topology. The `mmpbsa.in` input file will contain all 
-the parameters needed for the QM/MMGBSA calculation. 10 frames are going to be used when performing QM/MMGBSA 
-calculation with the igb1 (GB-HCT) model (note that `mbondi` raddi set `PBRadii=2` 
-is used), **PM6-DH+** (the default dispersion- and hydrogen-bond-corrected PM6 Hamiltonian) and a salt concentration of 0.15 M.
-If `qm_theory` is omitted, the same **PM6-DH+** default is used.
+## How this example works
 
-A plain text output file with all the statistics (default: `FINAL_RESULTS_MMPBSA.dat`) and a CSV-format 
-output file containing all energy terms for every frame in every calculation will be saved. The file name in 
-'-eo' flag will be forced to end in [.csv] (`FINAL_RESULTS_MMPBSA.csv` in this case). This file is only written when 
-specified on the command-line.
+The ST approximation extracts the 893-atom receptor and 30-atom ligand from each selected complex frame. With
+`qm_residues="within 4"`, `gmx_MMPBSA` identifies residues from both components that lie within 4 Å of their interface.
+For this bundle, the selection contains five receptor residues plus the ligand. The corresponding QM charges are
+calculated from the topology and assigned automatically when explicit QM masks and user-defined charges are absent.
 
-!!! note
-    Once the calculation is done, the results can be analyzed in `gmx_MMPBSA_ana` (if `-nogui` flag was not used in the command-line). 
-    Please, check the [gmx_MMPBSA_ana][5] section for more information
+The calculation processes frames 1 through 10 using the GB-HCT model (`igb=1`), mbondi radii (`PBRadii=2`), a salt
+concentration of 0.15 M, and PM6-DH+. The alternative selections retained in the concise input show how to specify
+residues directly or provide separate Amber masks. Every QM region must contain atoms from both receptor and ligand.
 
-## References for `PM6-DH+`
+## References for PM6-DH+
 
-`PM6-DH+` is the default `qm_theory` because protein-ligand, nucleic-acid-ligand, and carbohydrate interfaces
-are dominated by hydrogen bonding and dispersion - interactions that plain PM3/PM6 treat poorly. Key references:
+PM6-DH+ adds dispersion and hydrogen-bond corrections that are important for many biomolecular noncovalent
+interactions. Relevant method and application studies include:
 
-1. **Method development:** Řezáč & Hobza, *J. Chem. Theory Comput.* **2009**, 5, 1749-1760. [doi:10.1021/ct9000922](https://doi.org/10.1021/ct9000922) - PM6-DH dispersion/H-bond corrections; tested on DNA base pairs.
-2. **PM6-DH+ H-bond correction:** Korth, *J. Chem. Theory Comput.* **2010**, 6, 3808-3816. [doi:10.1021/ct100408b](https://doi.org/10.1021/ct100408b)
-3. **Protein-ligand review:** Grimme & Brandenburg, *Front. Chem.* **2015**, 3, 8. [PMC4881564](https://pmc.ncbi.nlm.nih.gov/articles/PMC4881564/) - SQM-DH methods (incl. PM6-DH+) for non-covalent interactions.
-4. **QM/MM-GBSA benchmark (protein-carbohydrate):** Thapa *et al.*, *J. Phys. Chem. B* **2018**, 122, 7866-7878. [doi:10.1021/acs.jpcb.8b03655](https://doi.org/10.1021/acs.jpcb.8b03655)
-5. **QM/MMGBSA with gmx_MMPBSA + PM6-DH+:** *Commun. Biol.* **2025**. [doi:10.1038/s42003-025-09143-z](https://doi.org/10.1038/s42003-025-09143-z)
-6. **Host-guest binding with PM6-DH+:** Muddana & Gilson, *J. Chem. Theory Comput.* **2012**, 8, 2868-2880. [doi:10.1021/ct3002738](https://doi.org/10.1021/ct3002738)
+1. Řezáč and Hobza, *J. Chem. Theory Comput.* **2009**, 5, 1749-1760. [doi:10.1021/ct9000922](https://doi.org/10.1021/ct9000922)
+2. Korth, *J. Chem. Theory Comput.* **2010**, 6, 3808-3816. [doi:10.1021/ct100408b](https://doi.org/10.1021/ct100408b)
+3. Grimme and Brandenburg, *Front. Chem.* **2015**, 3, 8. [PMC4881564](https://pmc.ncbi.nlm.nih.gov/articles/PMC4881564/)
+4. Thapa *et al.*, *J. Phys. Chem. B* **2018**, 122, 7866-7878. [doi:10.1021/acs.jpcb.8b03655](https://doi.org/10.1021/acs.jpcb.8b03655)
+5. *Commun. Biol.* **2025**. [doi:10.1038/s42003-025-09143-z](https://doi.org/10.1038/s42003-025-09143-z)
+6. Muddana and Gilson, *J. Chem. Theory Comput.* **2012**, 8, 2868-2880. [doi:10.1021/ct3002738](https://doi.org/10.1021/ct3002738)
+
+## Expected outputs
+
+A successful calculation produces:
+
+- `FINAL_RESULTS_MMPBSA.dat`: the QM/MMGBSA summary and binding-energy statistics.
+- `FINAL_RESULTS_MMPBSA.csv`: the per-frame energy terms requested with `-eo`.
+- `qmmm_region.pdb`: the selected QM region for visual inspection.
+
+## Analyze the results
+
+Open the results with `gmx_MMPBSA_ana` for interactive inspection and plotting. See the
+[`gmx_MMPBSA_ana` documentation][5] for usage details.
 
   [1]: ../../gmx_MMPBSA_command-line.md#gmx_mmpbsa-command-line
   [2]: ../../input_file.md#the-input-file
   [3]: ../../input_file.md#sample-input-files
   [5]: ../../analyzer.md#gmx_mmpbsa_ana-the-analyzer-tool
-  [6]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/examples/QM_MMGBSA
-  [7]: ../../gmx_MMPBSA_test.md#gmx_mmpbsa_test-command-line
+  [6]: https://downgit.github.io/#/home?url=https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/examples/QM_MMGBSA&fileName=gmx_MMPBSA-QM-MMGBSA&rootDirectory=QM_MMGBSA
+  [7]: ../gmx_MMPBSA_test.md#gmx_mmpbsa_test-command-line
+  [8]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/examples/QM_MMGBSA
