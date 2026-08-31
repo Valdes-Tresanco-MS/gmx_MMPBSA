@@ -3,113 +3,228 @@ template: main.html
 title: GBNSR6
 ---
 
-# Binding free energy calculation with GBNSR6 model
+# Binding free energy calculation with the GBNSR6 model
 
-!!! info
-    This example can be found in the [examples/GBNSR6][6] directory in the repository folder. If you didn't
-    use gmx_MMPBSA_test before, use [downgit](https://downgit.github.io/#/home) to download the specific folder from 
-    gmx_MMPBSA GitHub repository.
+This example calculates the binding free energy of a protein-protein complex with the single-trajectory protocol
+and the GBNSR6 implicit-solvent model. It processes ten frames and uses an ionic strength of 0.15 M.
 
-## Requirements
+<div class="example-card-grid" markdown>
 
-In this case, `gmx_MMPBSA` requires:
+-   **Method**
 
-| Input File required            | Required |           Type             | Description |
-|:-------------------------------|:--------:|:--------------------------:|:-------------------------------------------------------------------------------------------------------------|
-| Input parameters file          | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |           `in`          | Input file containing all the specifications regarding the type of calculation that is going to be performed |
-| The MD Structure+mass(db) file | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |    `tpr` `pdb`    | Structure file containing the system coordinates |
-| An index file                  | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |          `ndx`    | File containing the receptor and ligand in separated groups |
-| Receptor and ligand group      | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |        `integers`       | Group numbers in the index files |
-| A trajectory file              | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } | `xtc` `pdb` `trr` | Final GROMACS MD trajectory, fitted and with no pbc. |
-| A topology file                | :octicons-check-circle-fill-16:{ .req_opt .scale_icon_medium }    |           `top`         | GROMACS topology file (The `* .itp` files defined in the topology must be in the same folder |
-| A Reference Structure file     | :octicons-check-circle-fill-16:{ .req_optrec .scale_icon_medium } |           `pdb`         | Complex reference structure file (without hydrogens) with the desired assignment of chain ID and residue numbers |
-              
-:octicons-check-circle-fill-16:{ .req } -> Must be defined -- :octicons-check-circle-fill-16:{ .req_optrec } -> 
-Optional, but recommended -- :octicons-check-circle-fill-16:{ .req_opt } -> Optional
+    GBNSR6
 
-_See a detailed list of all the flags in gmx_MMPBSA command line [here][1]_
+-   **System**
 
-## Command-line
-That being said, once you are in the folder containing all files, the command-line will be as follows:
+    Protein-protein complex
+
+-   **Protocol**
+
+    Single trajectory
+
+-   **Bundled test**
+
+    `gmx_MMPBSA_test -t 24`
+
+</div>
+
+## Before you begin
+
+The manual workflow uses the following files and selections:
+
+<div class="example-card-grid" markdown>
+
+-   **Calculation settings**
+
+    `mmpbsa.in` (`-i`)
+
+-   **GROMACS system**
+
+    Structure `com.tpr` (`-cs`) and topology `topol.top` (`-cp`). Keep any `*.itp` files referenced by the topology
+    in the same directory.
+
+-   **Trajectory**
+
+    PBC-corrected and fitted trajectory `com_traj.xtc` (`-ct`)
+
+-   **Molecular selections**
+
+    Index `index.ndx` (`-ci`) and receptor/ligand group names or zero-based group numbers (`-cg`)
+
+</div>
+
+A complex reference structure without hydrogens may also be supplied with `-cr`. It is optional but recommended
+when you need specific chain IDs or residue numbering. See the [complete command-line reference][1] for all options.
+
+## Run the example
+
+### Run the bundled test
+
+The quickest way to reproduce this example is through the test runner:
+
+```bash
+gmx_MMPBSA_test -t 24
+```
+
+See the [`gmx_MMPBSA_test` documentation][7] for download, selection, and cleanup options.
+
+### Run it manually
+
+[Download the GBNSR6 example as a ZIP archive][6].
+
+Extract the archive, change to the `GBNSR6` directory, and choose either the serial or MPI command. You can also
+[view the example files on GitHub][8] before downloading them.
 
 === "Serial"
 
-        gmx_MMPBSA -O -i mmpbsa.in -cs com.tpr -ct com_traj.xtc -ci index.ndx -cg 3 4 -cp topol.top -o FINAL_RESULTS_MMPBSA.dat -eo FINAL_RESULTS_MMPBSA.csv
+    ```bash
+    gmx_MMPBSA -O \
+      -i mmpbsa.in \
+      -cs com.tpr \
+      -ct com_traj.xtc \
+      -ci index.ndx \
+      -cg 3 4 \
+      -cp topol.top \
+      -o FINAL_RESULTS_MMPBSA.dat \
+      -eo FINAL_RESULTS_MMPBSA.csv
+    ```
 
 === "With MPI"
 
-        mpirun -np 2 gmx_MMPBSA -O -i mmpbsa.in -cs com.tpr -ct com_traj.xtc -ci index.ndx -cg 3 4 -cp topol.top -o FINAL_RESULTS_MMPBSA.dat -eo FINAL_RESULTS_MMPBSA.csv
+    ```bash
+    mpirun -np 2 gmx_MMPBSA -O \
+      -i mmpbsa.in \
+      -cs com.tpr \
+      -ct com_traj.xtc \
+      -ci index.ndx \
+      -cg 3 4 \
+      -cp topol.top \
+      -o FINAL_RESULTS_MMPBSA.dat \
+      -eo FINAL_RESULTS_MMPBSA.csv
+    ```
 
-=== "gmx_MMPBSA_test"
+## Configure the calculation
 
-        gmx_MMPBSA_test -t 24
+The example uses the minimal `mmpbsa.in` shown first below. The all-options version was generated with
+`gmx_MMPBSA --create_input gbnsr6` and then updated with the same example-specific values. Both inputs therefore
+describe the same calculation.
 
-where the `mmpbsa.in` input file, is a text file containing the following lines:
+=== "Minimal input"
 
-``` yaml linenums="1" title="Sample input file for GB calculation using GBNSR6 model"
-Sample input file for GB calculation using GBNSR6 model
-#This input file is meant to show only that gmx_MMPBSA works. 
-Although, we tried to use the input files as recommended in the
-#Amber manual, some parameters have been changed to perform 
-more expensive calculations in a reasonable amount of time. 
-Feel free to change the parameters 
-#according to what is better 
-for your system.
+    ```yaml linenums="1" title="mmpbsa.in"
+    Sample input file for GB calculation using GBNSR6 model
+    # This sample input is intended only to demonstrate that gmx_MMPBSA works.
+    # Although it follows the recommendations in the Amber manual, some parameters
+    # have been adjusted to keep the computational cost reasonable. Modify them as
+    # appropriate for your system.
 
-&general
-sys_name="GBNSR6",
-startframe=1,
-endframe=10,
-forcefields="leaprc.protein.ff14SB"
-/
+    &general
+    sys_name="GBNSR6",
+    startframe=1,
+    endframe=10,
+    /
 
-&gbnsr6
-istrng=0.15
-/
-```
+    &gbnsr6
+    istrng=0.15
+    /
+    ```
+
+=== "Generated input - all options"
+
+    ```yaml linenums="1" title="mmpbsa.in generated with --create_input gbnsr6"
+    Input file generated by gmx_MMPBSA (1.6.5+177.g31e12ce1.dirty)
+    Be careful with the variables you modify, some can have severe consequences on the results you obtain.
+
+    # General namelist variables
+    &general
+      sys_name                       = "GBNSR6"                       # System name; e.g. "complex"
+      startframe                     = 1                                      # First frame; e.g. 1
+      endframe                       = 10                                     # Last frame; e.g. 100
+      interval                       = 1                                      # Frame interval; e.g. 1
+      forcefields                    = "leaprc.protein.ff14SB"      # Force fields; e.g. "leaprc.protein.ff14SB"
+      ions_parameters                = 1                                      # Ion params; e.g. 1
+      PBRadii                        = 4                                      # PB radii set; 1-7
+      temperature                    = 298.15                                 # Temperature (K); e.g. 298.15
+      qh_entropy                     = 0                                      # Legacy QH output reader; new calculations reject 1
+      interaction_entropy            = 0                                      # Run IE entropy; 0/1
+      ie_segment                     = 25                                     # IE segment length (%); e.g. 25
+      c2_entropy                     = 0                                      # Run C2 entropy; 0/1
+      assign_chainID                 = 0                                      # Assign chain IDs; 0/1
+      exp_ki                         = 0.0                                    # Experimental Ki (nM); e.g. 0.0
+      full_traj                      = 0                                      # Write full trajectory; 0/1
+      gmx_path                       = ""                                     # GROMACS path; e.g. "/usr/bin"
+      keep_files                     = 2                                      # Files to keep; 0-2
+      netcdf                         = 0                                      # Use NetCDF; 0/1
+      solvated_trajectory            = 1                                      # Clean solvated traj.; 0/1
+      explicit_waters                = 0                                      # Explicit waters; e.g. 10
+      explicit_waters_mask           = ""                                     # Water reference; e.g. ":1-10", "within 4", "dASA"
+      explicit_waters_group          = ""                                     # Solvent group; e.g. "TIP3"
+      explicit_waters_dasa_cutoff    = 0.5                                    # dASA cutoff; e.g. 0.5
+      explicit_waters_as             = "receptor"                             # Water owner; e.g. "receptor"
+      explicit_waters_extra_points   = "error"                                # Virtual sites; "error" or "strip"
+      verbose                        = 1                                      # Output verbosity; 0-2
+    /
+
+    # GBNSR6 namelist variables
+    &gbnsr6
+      b                              = 0.028                                  # GBNSR6 offset; e.g. 0.028
+      alpb                           = 1                                      # Use ALPB; 0/1
+      epsin                          = 1.0                                    # Solute dielectric; e.g. 1.0
+      epsout                         = 78.5                                   # Solvent dielectric; e.g. 78.5
+      istrng                         = 0.15                                    # Ionic strength (M); e.g. 0.150
+      rs                             = 0.52                                   # Boundary shift; e.g. 0.52
+      dprob                          = 1.4                                    # Probe radius (A); e.g. 1.4
+      space                          = 0.5                                    # Grid spacing (A); e.g. 0.5
+      arcres                         = 0.2                                    # Arc resolution; e.g. 0.2
+      radiopt                        = 0                                      # Radii option; e.g. 0
+      chagb                          = 0                                      # Use CHAGB; 0/1
+      roh                            = 1                                      # RzOH value; e.g. 1
+      tau                            = 1.47                                   # CHAGB tau; e.g. 1.47
+      cavity_surften                 = 0.005                                  # Cavity surften; e.g. 0.005
+    /
+
+    ```
 
 !!! info "Keep in mind"
-    See a detailed list of all the options in `gmx_MMPBSA` input file [here][2] as well as several [examples][3]. 
-    These examples are meant only to show that gmx_MMPBSA works. It is recommended to go over these variables, even 
-    the ones that are not included in this input file but are available for the calculation that it's performed and
-    see the values they can take (check the [input file section](../../input_file.md)). This will allow you to 
-    tackle a number of potential problems or simply use fancier approximations in your calculations.
+    This input provides a practical starting point and can serve as the basis for production calculations. Review the
+    available [input-file options][2], their accepted values, and adjust settings that depend on your system or protocol.
+    Additional sample inputs are available [here][3].
 
-## Considerations
-In this case, a single trajectory (ST) approximation is followed, which means the receptor and ligand structures and 
-trajectories will be obtained from that of the complex. To do so, an MD Structure+mass(db) file (`com.tpr`), an 
-index file (`index.ndx`), a trajectory file (`com_traj.xtc`), and both the receptor and ligand group numbers in the 
-index file (`3 4`) are needed. The `mmpbsa.in` input file will contain all the 
-parameters needed for the MM/PB(GB)SA calculation. In this case, 10 frames are going to be used when performing the 
-MM/PB(GB)SA calculation using the GBNSR6 model.
+## How this example works
 
-!!! note "Comments on GBNSR6 model"
-    * GBNSR6 is an implementation of the Generalized Born (GB) model in which the effective Born radii are computed 
-    numerically, via the so-called "R6" integration ([ref.][222]) over molecular surface of the solute. 
-    * In contrast to most GB practical models, GBNSR6 model is parameter free in the same sense as the numerical 
-    PB framework is. Thus, accuracy of GBNSR6 relative to the PB standard is virtually unaffected by the choice of 
-    input atomic radii. 
-    * `gmx_MMPBSA` automatically prepares temporary GBNSR6 topology copies for the calculation and keeps the original
-    COM/REC/LIG topology files for output parsing. No extra input option is required.
-    * Check Chapter [§5](https://ambermd.org/doc12/Amber21.pdf#chapter.5) in Amber manual for a more thorough 
-    description of the GBNSR6 model and its parameters.
+The single-trajectory approximation generates the receptor and ligand structures and trajectories from the complex.
+In this protein-protein system, the second protein is treated as the ligand. The command selects index groups `3`
+and `4` as the receptor and ligand, respectively.
 
-  [222]: https://pubs.acs.org/doi/abs/10.1021/ct200786m
+The input processes ten frames with the GBNSR6 model and an ionic strength of 0.15 M.
 
-A plain text output file with all the statistics (default: `FINAL_RESULTS_MMPBSA.dat`) and a CSV-format 
-output file containing all energy terms for every frame in every calculation will be saved. The file name in 
-'-eo' flag will be forced to end in [.csv] (`FINAL_RESULTS_MMPBSA.csv` in this case). This file is only written when 
-specified on the command-line.
+!!! note "About the GBNSR6 model"
+    - GBNSR6 computes effective Born radii numerically through R6 integration over the solute molecular surface
+      ([reference][222]).
+    - Unlike most practical GB models, GBNSR6 is parameter-free in the same sense as the numerical PB framework.
+      Consequently, its accuracy relative to the PB standard is largely unaffected by the selected input atomic radii.
+    - `gmx_MMPBSA` automatically prepares temporary GBNSR6 topology copies for the calculation while preserving the
+      original complex, receptor, and ligand topologies for output parsing. No additional input option is required.
+    - Chapter [5 of the Amber 2021 Reference Manual](https://ambermd.org/doc12/Amber21.pdf#chapter.5) provides a more
+      detailed description of the model and its parameters.
 
+## Expected outputs
 
-!!! note
-    Once the calculation is done, the results can be analyzed in `gmx_MMPBSA_ana` (if `-nogui` flag was not used in 
-    the command-line). 
-    Please, check the [gmx_MMPBSA_ana][5] section for more information.
-  
+A successful calculation produces:
+
+- `FINAL_RESULTS_MMPBSA.dat`: the plain-text energy summary and statistics.
+- `FINAL_RESULTS_MMPBSA.csv`: the per-frame energy terms requested with `-eo`.
+
+## Analyze the results
+
+Open the results with `gmx_MMPBSA_ana` for interactive inspection and plotting. See the
+[`gmx_MMPBSA_ana` documentation][5] for usage details.
+
   [1]: ../../gmx_MMPBSA_command-line.md#gmx_mmpbsa-command-line
   [2]: ../../input_file.md#the-input-file
   [3]: ../../input_file.md#sample-input-files
   [5]: ../../analyzer.md#gmx_mmpbsa_ana-the-analyzer-tool
-  [6]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/examples/GBNSR6
+  [6]: https://downgit.github.io/#/home?url=https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/examples/GBNSR6&fileName=gmx_MMPBSA-GBNSR6&rootDirectory=GBNSR6
   [7]: ../gmx_MMPBSA_test.md#gmx_mmpbsa_test-command-line
+  [8]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/examples/GBNSR6
+  [222]: https://pubs.acs.org/doi/abs/10.1021/ct200786m
