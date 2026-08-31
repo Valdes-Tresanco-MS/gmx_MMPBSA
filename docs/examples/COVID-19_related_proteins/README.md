@@ -4,13 +4,12 @@ title: COVID-19 related proteins
 ---
 
 
-Given its relevance, we have tested gmx_MMPBSA with multiple COVID-19 related systems. The ultimate goal is to provide 
-a useful tool for those researchers working on COVID-19 projects. The capability of gmx_MMPBSA to handle systems 
-that combine a number of characteristics (i.e. metalloprotein-ligand, Protein-protein, Membrane proteins, glycosylated 
-proteins etc.) constitutes a tremendous help for those researchers that use MD simulations and binding free energy 
-calculations in their projects. We plan to incorporate more systems as they arise in the literature and databases.
+We have tested gmx_MMPBSA with several COVID-19-related systems to provide useful examples for researchers working on
+COVID-19 projects. gmx_MMPBSA can handle systems that combine several characteristics, including metalloprotein-ligand
+and protein-protein complexes, membrane proteins, and glycosylated proteins. We plan to add more systems as they appear
+in the literature and databases.
 
-All these systems haven been previously prepared in CHARMM-GUI, and they are available at the [CHARMM-GUI Archive - COVID-19 Proteins Library](https://charmm-gui.org/?doc=archive&lib=covid19).
+All these systems were prepared with CHARMM-GUI and are available from the [CHARMM-GUI Archive: COVID-19 Proteins Library](https://charmm-gui.org/?doc=archive&lib=covid19).
 
 ## References
 
