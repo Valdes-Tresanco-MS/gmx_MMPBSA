@@ -25,10 +25,10 @@ In this case, `gmx_MMPBSA` requires:
 | Input parameters file          | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |           `in`          | Input file containing all the specifications regarding the type of calculation that is going to be performed |
 | The MD Structure+mass(db) file | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |    `tpr` `pdb`    | Structure file containing the system coordinates |
 | An index file                  | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |          `ndx`    | file containing the receptor and ligand in separated groups |
-| Receptor and ligand group      | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |        `integers`       | Receptor and ligand group numbers in the index file |
-| A trajectory file              | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } | `xtc` `pdb` `trr` | Final GROMACS MD trajectory, fitted and with no pbc. |
+| Receptor and ligand groups     | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } | `integers` `strings` | Receptor and ligand single-token group names or zero-based group numbers in the complex index file |
+| A trajectory file              | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } | `xtc` `pdb` `trr` | Final GROMACS MD trajectory, fitted and free of PBC artifacts. |
 | Ligand parameters file         | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |          `mol2`         | The Antechamber output  `mol2` file of ligand parametrization|
-| A topology file (not included) | :octicons-check-circle-fill-16:{ .req_opt .scale_icon_medium }    |           `top`         | GROMACS topology file (The `* .itp` files defined in the topology must be in the same folder |
+| A topology file                | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |           `top`         | GROMACS topology file; any referenced `*.itp` files must be in the same directory |
 | A Reference Structure file     | :octicons-check-circle-fill-16:{ .req_optrec .scale_icon_medium } |           `pdb`         | Complex reference structure file (without hydrogens) with the desired assignment of chain ID and residue numbers |
               
 :octicons-check-circle-fill-16:{ .req } -> Must be defined -- :octicons-check-circle-fill-16:{ .req_optrec } -> 
@@ -37,7 +37,7 @@ Optional, but recommended -- :octicons-check-circle-fill-16:{ .req_opt } -> Opti
 _See a detailed list of all the flags in gmx_MMPBSA command line [here][1]_
 
 ## Command-line
-That being said, once you are in the folder containing all files, the command-line will be as follows:
+Once you are in the folder containing all files, the command-line will be as follows:
 
 === "Serial"
 
@@ -53,15 +53,13 @@ That being said, once you are in the folder containing all files, the command-li
 
 This example uses the same test case as [Comp_receptor](../Comp_receptor/README.md) (`-t 9`).
 
-where the `mmpbsa.in` input file, is a text file containing the following lines:
+where the `mmpbsa.in` input file is a text file containing the following lines:
 
 ``` yaml linenums="1" title="Sample input file for GB calculation"
 Sample input file for GB calculation
-This input file is meant to show only that gmx_MMPBSA works. Althought,
-we tried to used the input files as recommended in the Amber manual,
-some parameters have been changed to perform more expensive calculations
-in a reasonable amount of time. Feel free to change the parameters 
-according to what is better for your system.
+This sample input is intended only to demonstrate that gmx_MMPBSA works. Although
+it follows the recommendations in the Amber manual, some parameters have been adjusted
+to keep the computational cost reasonable. Modify them as appropriate for your system.
 
 &general
 sys_name="Prot-DNA-RNA-ION-Lig",
@@ -76,35 +74,32 @@ igb=8, saltcon=0.150, intdiel=10
 ```
 
 !!! info "Keep in mind"
-    See a detailed list of all the options in `gmx_MMPBSA` input file [here][2] as well as several [examples][3]. 
-    These examples are meant only to show that gmx_MMPBSA works. It is recommended to go over these variables, even 
-    the ones that are not included in this input file but are available for the calculation that it's performed and
-    see the values they can take (check the [input file section](../../input_file.md)). This will allow you to 
-    tackle a number of potential problems or simply use fancier approximations in your calculations.
+    See all `gmx_MMPBSA` input-file options [here][2] and additional examples [here][3].
+    These examples are intended only to demonstrate that gmx_MMPBSA works. Review all variables available for the
+    selected calculation, including those not shown here, and confirm their accepted values in the
+    [input file section](../../input_file.md). This can help you avoid problems and select suitable approximations.
 
 
 ## Considerations
-In this case, a single trajectory (ST) approximation is followed, which means the receptor (Protein+DNA+RNA+Ions) and 
-ligand amber format topologies and trajectories will be obtained from that of the complex. To 
+This example uses the single-trajectory (ST) approximation, so the receptor (protein, DNA, RNA, and ions) and ligand Amber-format topologies and trajectories are generated from the complex. To
 do so, an MD Structure+mass(db) file (`com.tpr`), an index file (`index.ndx`), a trajectory file (`com_traj.xtc`), and
 both the receptor and ligand group numbers in the index file (`33 14`) are needed. A ligand .mol2 file is also needed 
-for generating the ligand topology.The `mmpbsa.in` input file will contain all  the parameters needed for the 
-MM/PB(GB)SA calculation. In this case, 11 frames are going to be used when performing the MM/PB(GB)SA calculation 
-with the igb8 (GB-Neck2) model and a salt concentration = 0.15M. Of note, mbondi3 radii (`PBRadii=4`) will be used as 
-recommended for GB-Neck2 solvation model. Also, a high dielectric constant `intdiel=10` will be used because of the 
+for generating the ligand topology. The `mmpbsa.in` input file contains all the parameters needed for the
+MM/PB(GB)SA calculation. In this case, 11 frames are used for MM/PB(GB)SA calculation
+with the igb8 (GB-Neck2) model and a salt concentration of 0.15 M. The `mbondi3` radii (`PBRadii=4`) are used, as
+recommended for the GB-Neck2 solvation model. A high internal dielectric constant (`intdiel=10`) is used because of the
 high number of charged residues at the interface.
 
 In this case, Li/Merz ion parameters (12-6 normal usage set) for Mg ions were used. Check 
 [Amber manual](https://ambermd.org/doc12/Amber20.pdf#section.3.6) for more info on ion parameters.
 
-A plain text output file with all the statistics (default: `FINAL_RESULTS_MMPBSA.dat`) and a CSV-format 
-output file containing all energy terms for every frame in every calculation will be saved. The file name in 
-'-eo' flag will be forced to end in [.csv] (`FINAL_RESULTS_MMPBSA.csv` in this case). This file is only written when 
-specified on the command-line.
+The calculation writes a plain-text statistics file (`FINAL_RESULTS_MMPBSA.dat` by default). When `-eo` is
+specified, it also writes all energy terms for every frame to a CSV file. The file name supplied to `-eo` is given
+the `.csv` extension (`FINAL_RESULTS_MMPBSA.csv` in this example).
 
 !!! note
-    Once the calculation is done, the results can be analyzed in `gmx_MMPBSA_ana` (if `-nogui` flag was not used in the command-line). 
-    Please, check the [gmx_MMPBSA_ana][4] section for more information
+    After the calculation, the results can be analyzed with `gmx_MMPBSA_ana` unless `-nogui` was used.
+    See the [gmx_MMPBSA_ana][4] section for more information
   
   [1]: ../../gmx_MMPBSA_command-line.md#gmx_mmpbsa-command-line
   [2]: ../../input_file.md#the-input-file
