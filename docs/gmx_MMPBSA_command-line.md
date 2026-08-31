@@ -14,7 +14,7 @@ title:
     usage: gmx_MMPBSA [-h] [-v] [--input-file-help] [--create_input [{gb,pb,pb_mem,rism,ala,decomp,nmode,all}]
                       [-O] [-prefix <file prefix>] [-sys_name <system name>]
                       [--progress-style {auto,rich,classic,plain,none}] [-i FILE] [-xvvfile XVVFILE] [-o FILE]
-                      [-do FILE] [-eo FILE] [-deo FILE] [-nogui] [-s] [-cs <Structure File>]
+                      [-do FILE] [-eo FILE] [-deo FILE] [-nogui] [-s] [--no-error-bundle] [-cs <Structure File>]
                       [-ci <Index File>] [-cg group group]
                       [-ct [TRJ [TRJ ...]]] [-cp <Topology>] [-cr <PDB File>] [-rs <Structure File>] [-ri <Index File>] 
                       [-rg group] [-rt [TRJ [TRJ ...]]] [-rp <Topology>] [-lm <Structure File>] [-ls <Structure File>]
@@ -72,6 +72,8 @@ title:
                              then ligand *.mol2 file is required. In any other case
                              receptor and ligand parameters will be ignored. See
                              description bellow (default: False)
+      --no-error-bundle     Do not create a diagnostic zip bundle automatically when
+                             gmx_MMPBSA fails. (default: False)
     
     Complex:
       Complex files and info that are needed to perform the calculation. If the

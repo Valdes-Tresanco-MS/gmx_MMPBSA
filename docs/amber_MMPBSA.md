@@ -162,3 +162,9 @@ an interactive terminal and falls back to the classic bar when MPI or output for
 `rich` to force the richer renderer through MPI, `plain` for milestone log messages, or `none` to disable progress.
 Rich and classic displays also record clean 10% checkpoints in `gmx_MMPBSA.log`, including frame count, processing
 rate, elapsed time, ETA, and MPI ranks, so cluster jobs can be followed with `tail -f gmx_MMPBSA.log`.
+
+## Diagnostic error bundles
+
+Failed calculations create a diagnostic zip bundle by default. Use `--no-error-bundle` to disable that behavior. This
+option does not suppress logging or change the exit status. See [Logging and progress](logging.md#warnings-and-errors)
+for the bundle contents and data-sharing considerations.

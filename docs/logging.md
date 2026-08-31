@@ -56,7 +56,19 @@ missing chain IDs—are informational records. Scientific approximations, fallba
 user-value mismatches remain warnings.
 
 Fatal input and setup errors are recorded once with a concise message. Unexpected internal exceptions include traceback
-context in the log. When an error bundle is created, its path is recorded so it can be attached to a bug report.
+context in the log. By default, a failed `gmx_MMPBSA` or `amber_MMPBSA` calculation creates a diagnostic zip bundle and
+records its path so the archive can be attached to a bug report. The bundle can contain logs, input and setup files,
+generated intermediates, and samples of up to five trajectory frames; review its contents before sharing it.
+
+Use `--no-error-bundle` to disable automatic bundle creation, for example when input coordinates must not be copied into
+an archive:
+
+```bash
+gmx_MMPBSA --no-error-bundle -O -i mmpbsa.in ...
+```
+
+The same option is accepted by `amber_MMPBSA`. It affects only diagnostic bundle creation after a failure; normal
+logging and the calculation exit status are unchanged.
 
 Message text is intended for people, not as a stable machine-readable interface. Scripts should use result files and
 exit status rather than parsing logging wording.
