@@ -5,56 +5,241 @@ title: 3D-RISM
 
 # Protein-protein binding free energy calculations with MM/3D-RISM
 
-!!! info
-    This example can be found in the [examples/3D-RISM][5] directory in the repository folder. If you didn't
-    use gmx_MMPBSA_test before, use [downgit](https://downgit.github.io/#/home) to download the specific folder from 
-    gmx_MMPBSA GitHub repository.
+This example calculates the binding free energy of a protein-protein complex with the single-trajectory protocol
+and the MM/3D-RISM method. It uses four frames and the Kovalenko-Hirata closure to provide a short, reproducible
+demonstration rather than a production calculation.
 
-## Requirements
-In its simplest version, `gmx_MMPBSA` requires:
+<div class="example-card-grid" markdown>
 
-| Input File required            | Required |           Type             | Description |
-|:-------------------------------|:--------:|:--------------------------:|:-------------------------------------------------------------------------------------------------------------|
-| Input parameters file          | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |           `in`          | Input file containing all the specifications regarding the type of calculation that is going to be performed |
-| The MD Structure+mass(db) file | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |    `tpr` `pdb`    | Structure file containing the system coordinates |
-| An index file                  | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |          `ndx`    | file containing the receptor and ligand in separated groups |
-| Receptor and ligand group      | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |        `integers`       | Receptor and ligand group numbers in the index file |
-| A trajectory file              | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } | `xtc` `pdb` `trr` | Final GROMACS MD trajectory, fitted and with no pbc. |
-| A topology file  | :octicons-check-circle-fill-16:{ .req_opt .scale_icon_medium }    |           `top`         | GROMACS topology file (The `* .itp` files defined in the topology must be in the same folder |
-| A Reference Structure file     | :octicons-check-circle-fill-16:{ .req_optrec .scale_icon_medium } |           `pdb`         | Complex reference structure file (without hydrogens) with the desired assignment of chain ID and residue numbers |
-              
-:octicons-check-circle-fill-16:{ .req } -> Must be defined -- :octicons-check-circle-fill-16:{ .req_optrec } -> 
-Optional, but recommended -- :octicons-check-circle-fill-16:{ .req_opt } -> Optional
+-   **Method**
 
-_See a detailed list of all the flags in gmx_MMPBSA command line [here][1]_
+    MM/3D-RISM
 
-## Command-line
-That being said, once you are in the folder containing all files, the command-line will be as follows:
+-   **System**
+
+    Protein-protein complex
+
+-   **Protocol**
+
+    Single trajectory
+
+-   **Bundled test**
+
+    `gmx_MMPBSA_test -t 18`
+
+</div>
+
+## Before you begin
+
+The manual workflow uses the following files and selections:
+
+<div class="example-card-grid" markdown>
+
+-   **Calculation settings**
+
+    `mmpbsa.in` (`-i`)
+
+-   **GROMACS system**
+
+    Structure `com.tpr` (`-cs`) and topology `topol.top` (`-cp`). Keep any `*.itp` files referenced by the topology
+    in the same directory.
+
+-   **Trajectory**
+
+    PBC-corrected and fitted trajectory `com_traj.xtc` (`-ct`)
+
+-   **Molecular selections**
+
+    Index `index.ndx` (`-ci`) and receptor/ligand group names or zero-based group numbers (`-cg`)
+
+</div>
+
+A complex reference structure without hydrogens may also be supplied with `-cr`. It is optional but recommended
+when you need specific chain IDs or residue numbering. See the [complete command-line reference][1] for all options.
+
+## Run the example
+
+### Run the bundled test
+
+The quickest way to reproduce this example is through the test runner:
+
+```bash
+gmx_MMPBSA_test -t 18
+```
+
+See the [`gmx_MMPBSA_test` documentation][6] for download, selection, and cleanup options.
+
+### Run it manually
+
+[Download the 3D-RISM example as a ZIP archive][5].
+
+Extract the archive, change to the `3D-RISM` directory, and choose either the serial or MPI command. You can also
+[view the example files on GitHub][7] before downloading them.
 
 === "Serial"
 
-        gmx_MMPBSA -O -i mmpbsa.in -cs com.tpr -ct com_traj.xtc -ci index.ndx -cg 3 4 -cp topol.top -o FINAL_RESULTS_MMPBSA.dat -eo FINAL_RESULTS_MMPBSA.csv
+    ```bash
+    gmx_MMPBSA -O \
+      -i mmpbsa.in \
+      -cs com.tpr \
+      -ct com_traj.xtc \
+      -ci index.ndx \
+      -cg 3 4 \
+      -cp topol.top \
+      -o FINAL_RESULTS_MMPBSA.dat \
+      -eo FINAL_RESULTS_MMPBSA.csv
+    ```
 
 === "With MPI"
 
-        mpirun -np 2 gmx_MMPBSA -O -i mmpbsa.in -cs com.tpr -ct com_traj.xtc -ci index.ndx -cg 3 4 -cp topol.top -o FINAL_RESULTS_MMPBSA.dat -eo FINAL_RESULTS_MMPBSA.csv
+    ```bash
+    mpirun -np 2 gmx_MMPBSA -O \
+      -i mmpbsa.in \
+      -cs com.tpr \
+      -ct com_traj.xtc \
+      -ci index.ndx \
+      -cg 3 4 \
+      -cp topol.top \
+      -o FINAL_RESULTS_MMPBSA.dat \
+      -eo FINAL_RESULTS_MMPBSA.csv
+    ```
 
-=== "gmx_MMPBSA_test"
+## Configure the calculation
 
-        gmx_MMPBSA_test -t 18
+The example uses the minimal `mmpbsa.in` shown first below. The all-options version was generated with
+`gmx_MMPBSA --create_input rism` and then updated with the same example-specific values. Both inputs therefore
+describe the same calculation; the generated version also documents every available `&general` and `&rism` variable.
+
+=== "Minimal input"
+
+    ```yaml linenums="1" title="mmpbsa.in"
+    Sample input file for MM/3D-RISM
+    # This sample input is intended only to demonstrate that gmx_MMPBSA works. Although
+    # it follows the recommendations in the Amber manual, some parameters have been adjusted
+    # to keep the computational cost reasonable. Modify them as appropriate for your system.
+
+    &general
+    sys_name="3D-RISM",
+    startframe=5,
+    endframe=8,
+    /
+    &rism
+    polardecomp=0, tolerance=0.001, rism_verbose=2, closure="kh"
+    /
+    ```
+
+=== "Generated input - all options"
+
+    ```yaml linenums="1" title="mmpbsa.in generated with --create_input rism"
+    Input file generated by gmx_MMPBSA (1.6.5+177.g31e12ce1.dirty)
+    Be careful with the variables you modify, some can have severe consequences on the results you obtain.
+
+    # General namelist variables
+    &general
+      sys_name                       = "3D-RISM"                # System name; e.g. "complex"
+      startframe                     = 5                                      # First frame; e.g. 1
+      endframe                       = 8                                           # Last frame; e.g. 100
+      interval                       = 1                                      # Frame interval; e.g. 1
+      forcefields                    = "oldff/leaprc.ff99SB,leaprc.gaff"      # Force fields; e.g. "leaprc.protein.ff14SB"
+      ions_parameters                = 1                                      # Ion params; e.g. 1
+      PBRadii                        = 4                                      # PB radii set; 1-7
+      temperature                    = 298.15                                 # Temperature (K); e.g. 298.15
+      qh_entropy                     = 0                                      # Legacy QH output reader; new calculations reject 1
+      interaction_entropy            = 0                                      # Run IE entropy; 0/1
+      ie_segment                     = 25                                     # IE segment length (%); e.g. 25
+      c2_entropy                     = 0                                      # Run C2 entropy; 0/1
+      assign_chainID                 = 0                                      # Assign chain IDs; 0/1
+      exp_ki                         = 0.0                                    # Experimental Ki (nM); e.g. 0.0
+      full_traj                      = 0                                      # Write full trajectory; 0/1
+      gmx_path                       = ""                                     # GROMACS path; e.g. "/usr/bin"
+      keep_files                     = 2                                      # Files to keep; 0-2
+      netcdf                         = 0                                      # Use NetCDF; 0/1
+      solvated_trajectory            = 1                                      # Clean solvated traj.; 0/1
+      explicit_waters                = 0                                      # Explicit waters; e.g. 10
+      explicit_waters_mask           = ""                                     # Water reference; e.g. ":1-10", "within 4", "dASA"
+      explicit_waters_group          = ""                                     # Solvent group; e.g. "TIP3"
+      explicit_waters_dasa_cutoff    = 0.5                                    # dASA cutoff; e.g. 0.5
+      explicit_waters_as             = "receptor"                             # Water owner; e.g. "receptor"
+      explicit_waters_extra_points   = "error"                                # Virtual sites; "error" or "strip"
+      verbose                        = 1                                      # Output verbosity; 0-2
+    /
+
+    # 3D-RISM namelist variables
+    &rism
+      closure                        = "kh"                                   # Closure equation; e.g. "kh"
+      gfcorrection                   = 0                                      # GF correction; 0/1
+      pcpluscorrection               = 0                                      # PC+ correction; 0/1
+      noasympcorr                    = 1                                      # Disable asymptotic corr.; 0/1
+      buffer                         = 14.0                                   # Grid buffer (A); e.g. 14
+      solvcut                        = -1.0                                   # Solvent cutoff (A); e.g. -1
+      grdspc                         = 0.5,0.5,0.5                            # Grid spacing; e.g. 0.5,0.5,0.5
+      ng                             = -1,-1,-1                               # Grid points; e.g. -1,-1,-1
+      solvbox                        = -1,-1,-1                               # Solvent box; e.g. -1,-1,-1
+      tolerance                      = 0.001                                  # Convergence tol.; e.g. 1.0e-5
+      ljTolerance                    = -1.0                                   # LJ tolerance; e.g. -1.0
+      asympKSpaceTolerance           = -1.0                                   # K-space tolerance; e.g. -1.0
+      treeDCF                        = 1                                      # Use DCF treecode; 0/1
+      treeTCF                        = 1                                      # Use TCF treecode; 0/1
+      treeCoulomb                    = 0                                      # Use Coulomb treecode; 0/1
+      treeDCFMAC                     = 0.1                                    # DCF MAC; e.g. 0.1
+      treeTCFMAC                     = 0.1                                    # TCF MAC; e.g. 0.1
+      treeCoulombMAC                 = 0.1                                    # Coulomb MAC; e.g. 0.1
+      treeDCFOrder                   = 2                                      # DCF tree order; e.g. 2
+      treeTCFOrder                   = 2                                      # TCF tree order; e.g. 2
+      treeCoulombOrder               = 2                                      # Coulomb tree order; e.g. 2
+      treeDCFN0                      = 500                                    # DCF leaf size; e.g. 500
+      treeTCFN0                      = 500                                    # TCF leaf size; e.g. 500
+      treeCoulombN0                  = 500                                    # Coulomb leaf size; e.g. 500
+      mdiis_del                      = 0.7                                    # MDIIS step size; e.g. 0.7
+      mdiis_nvec                     = 5                                      # MDIIS vectors; e.g. 5
+      mdiis_restart                  = 10.0                                   # MDIIS restart; e.g. 10.0
+      maxstep                        = 10000                                  # Max iterations; e.g. 10000
+      npropagate                     = 5                                      # Propagation history; e.g. 5
+      polardecomp                    = 0                                      # Polar decomposition; 0/1
+      entropicdecomp                 = 0                                      # Entropic decomposition; 0/1
+      rism_verbose                   = 2                                      # RISM verbosity; 0-2
+    /
+
+    ```
+
+!!! info "Keep in mind"
+    This input provides a practical starting point and can serve as the basis for production calculations. Review the
+    available [input-file options][2], their accepted values, and adjust settings that depend on your system or protocol.
+    Additional sample inputs are available [here][3].
+
+## How this example works
+
+The single-trajectory approximation generates the receptor and ligand Amber topologies and trajectories from the
+complex. In this protein-protein system, the second protein is treated as the ligand. The command selects index
+groups `3` and `4` as the receptor and ligand, respectively.
+
+The input processes four frames with the Kovalenko-Hirata closure. Its convergence tolerance is `0.001`, increased
+from the default of `0.00001` to keep the runtime practical for a test calculation.
+
+## Expected outputs
+
+A successful calculation produces:
+
+- `FINAL_RESULTS_MMPBSA.dat`: the plain-text energy summary and statistics.
+- `FINAL_RESULTS_MMPBSA.csv`: the per-frame energy terms requested with `-eo`.
+
+## Troubleshooting
 
 !!! warning "AmberTools/Fortran runtime compatibility"
-    The 3D-RISM calculation is run by AmberTools. Some conda AmberTools builds linked with newer Fortran runtime
-    libraries can abort before the RISM calculation starts with:
+    Some conda AmberTools builds linked with newer Fortran runtime libraries can stop before the 3D-RISM calculation
+    starts. This is an AmberTools/runtime compatibility problem, not an input-preparation error in `gmx_MMPBSA`.
+
+??? example "Show the error and a tested workaround"
+
+    The affected runtime can report:
 
     ```text
     Fortran runtime error: Missing comma between descriptors
     amber_rism_interface.F90
     ```
 
-    This is an AmberTools/runtime compatibility issue, not an input preparation error in `gmx_MMPBSA`. A tested
-    workaround is to use `gmx_MMPBSA` 1.6.4 with Python 3.9 and an AmberTools runtime built with compatible
-    GCC runtime libraries, for example AmberTools 23 with `libgfortran5`/`libgcc-ng` 12.x:
+    One tested workaround uses `gmx_MMPBSA` 1.6.4 with Python 3.9, AmberTools 23, and compatible GCC runtime
+    libraries:
 
     ```bash
     conda create -n gmxMMPBSA_rism -c conda-forge python=3.9 ambertools=23 "libgfortran5<13" "libgcc-ng<13"
@@ -62,55 +247,15 @@ That being said, once you are in the folder containing all files, the command-li
     python -m pip install "gmx_MMPBSA==1.6.4"
     ```
 
-where the `mmpbsa.in` input file, is a text file containing the following lines:
+## Analyze the results
 
-``` yaml linenums="1" title="Sample input file for MM/3D-RISM"
-Sample input file for MM/3D-RISM
-This input file is meant to show only that gmx_MMPBSA works. Althought,
-we tried to used the input files as recommended in the Amber manual,
-some parameters have been changed to perform more expensive calculations
-in a reasonable amount of time. Feel free to change the parameters 
-according to what is better for your system.
-
-&general
-sys_name="3D-RISM",
-startframe=5,
-endframe=8,
-/
-&rism
-polardecomp=0, tolerance=0.001, rism_verbose=2, closure="kh"
-/
-```
-
-!!! info "Keep in mind"
-    See a detailed list of all the options in `gmx_MMPBSA` input file [here][2] as well as several [examples][3]. 
-    These examples are meant only to show that gmx_MMPBSA works. It is recommended to go over these variables, even 
-    the ones that are not included in this input file but are available for the calculation that it's performed and
-    see the values they can take (check the [input file section](../../input_file.md)). This will allow you to 
-    tackle a number of potential problems or simply use fancier approximations in your calculations.
-
-## Considerations
-In this case, a single trajectory (ST) approximation is followed, which means the receptor and ligand (in this case, 
-the ligand is also another protein) amber format topologies and trajectories will be obtained from that of the 
-complex. To do so, an MD Structure+mass(db) file (`com.tpr`), an index file (`index.ndx`), a trajectory file 
-(`com_traj.xtc`), and both the receptor and ligand group numbers in the index file (`3 4`) are needed. The `mmpbsa.
-in` input file will contain all the parameters needed for the MM/PB(GB)SA calculation. In this case, 4 frames 
-are going to be used when performing the MM/PB(GB)SA calculation with the 3D-RISM model using Kovalenko-Hirata 
-clousure with a 0.001. Note that we have increased the tolerance from 0.00001 (default) to 0.001 in order to reduce the 
-computation time.
-
-A plain text output file with all the statistics (default: `FINAL_RESULTS_MMPBSA.dat`) and a CSV-format 
-output file containing all energy terms for every frame in every calculation will be saved. The file name in 
-'-eo' flag will be forced to end in [.csv] (`FINAL_RESULTS_MMPBSA.csv` in this case). This file is only written when 
-specified on the command-line.
-
-!!! note
-    Once the calculation is done, the results can be analyzed in `gmx_MMPBSA_ana` (if `-nogui` flag was not used in the command-line). 
-    Please refer to the [gmx_MMPBSA_ana][4] section for more information
+Open the results with `gmx_MMPBSA_ana` for interactive inspection and plotting. See the
+[`gmx_MMPBSA_ana` documentation][4] for usage details.
 
   [1]: ../../gmx_MMPBSA_command-line.md#gmx_mmpbsa-command-line
   [2]: ../../input_file.md#the-input-file
   [3]: ../../input_file.md#sample-input-files
   [4]: ../../analyzer.md#gmx_mmpbsa_ana-the-analyzer-tool
-  [5]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/examples/3D-RISM
+  [5]: https://downgit.github.io/#/home?url=https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/examples/3D-RISM&fileName=gmx_MMPBSA-3D-RISM&rootDirectory=3D-RISM
   [6]: ../gmx_MMPBSA_test.md#gmx_mmpbsa_test-command-line
+  [7]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/examples/3D-RISM
