@@ -1,23 +1,26 @@
-Sample input file for entropy calculations
-#This input file is meant to show only that gmx_MMPBSA works. Although, we tried to use the input files as recommended in the
-#Amber manual, some parameters have been changed to perform more expensive calculations in a reasonable amount of time. Feel free to change the parameters
-#according to what is better for your system.
+Sample input file for entropy calculations (nmode)
+# This sample input is intended only to demonstrate that gmx_MMPBSA works.
+# Although it follows the recommendations in the Amber manual, some parameters
+# have been adjusted to keep the computational cost reasonable. Modify them as
+# appropriate for your system.
 
 &general
 sys_name="NMode",
 startframe=1,
 endframe=10,
-forcefields="leaprc.protein.ff14SB",
-PBRadii=2,
+PBRadii=4,
+temperature=303.15,
 /
 &gb
-igb=1, saltcon=0.150,
+igb=8, saltcon=0.150,
 /
-#note that nmode will use only a fraction of the no. of frames selected in &general variable. This way, nmode will only process 8 frames (3rd to 10th frames)
-#note also that some parameters have been change to perform the calculation faster (maxcyc=5, drms=2). The typical values for these parameters are (maxcyc=50000, drms=0.001)
+# nmode processes the same ten frames selected in &general. The intentionally
+# relaxed maxcyc and drms settings reduce the runtime and are not appropriate
+# for a production calculation.
 &nmode
-nmstartframe=3,
+nmstartframe=1,
 nmendframe=10,
 nminterval=1,
+nmode_igb=1, nmode_istrng=0.150,
 maxcyc=5, drms=2,
 /
