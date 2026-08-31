@@ -1,22 +1,19 @@
 Sample input file with decomposition analysis
-#This input file is meant to show only that gmx_MMPBSA works. Although, we tried to use the input files as recommended in the
-#Amber manual, some parameters have been changed to perform more expensive calculations in a reasonable amount of time. Feel free to change the parameters
-#according to what is better for your system.
+# This input provides a practical starting point for decomposition analysis.
+# Review the selected residues and decomposition output settings for your system.
 
 &general
 sys_name="Decomposition",
 startframe=1,
 endframe=10,
-forcefields="leaprc.protein.ff14SB"
+PBRadii=4,
 /
 &gb
 igb=8, saltcon=0.150,
 /
-#make sure to include at least one residue from both the receptor
-#and ligand in the print_res mask of the &decomp section.
-#this requirement is automatically fulfilled when using the within keyword.
-#http://archive.ambermd.org/201308/0075.html
+# Include at least one residue from both the receptor and ligand in print_res.
+# The "within" selection satisfies this requirement automatically.
 &decomp
-idecomp=2, dec_verbose=3,
-print_res="within 4"
+idecomp=2, dec_verbose=1,
+print_res="within 4",
 /
