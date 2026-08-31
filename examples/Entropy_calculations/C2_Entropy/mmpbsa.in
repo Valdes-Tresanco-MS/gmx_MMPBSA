@@ -1,12 +1,14 @@
-Sample input file for GB calculation
-#This input file is meant to show only that gmx_MMPBSA works. Although, we tried to use the input files as recommended in the
-#Amber manual, some parameters have been changed to perform more expensive calculations in a reasonable amount of time. Feel free to change the parameters
-#according to what is better for your system.
+Sample input file for entropy calculations (C2)
+# This sample input is intended only to demonstrate that gmx_MMPBSA works.
+# Although it follows the recommendations in the Amber manual, some parameters
+# have been adjusted to keep the computational cost reasonable. Modify them as
+# appropriate for your system.
 
 &general
 sys_name="C2_entropy",
 startframe=1,
 endframe=10,
+PBRadii=4,
 c2_entropy=1, temperature=303.15,
 /
 &gb
