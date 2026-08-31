@@ -6,6 +6,7 @@ build/
 dist/
 *.egg-info/
 *.log
+/site/
 
 # gmx_MMPBSA runtime scratch when a calculation is launched from the repo root.
 /_GMXMMPBSA_*
