@@ -269,7 +269,7 @@ class InputFile(object):
         sd = {'general': '# General namelist variables',
               'gb': '# (AMBER) Generalized-Born namelist variables',
               'gbnsr6': '# GBNSR6 namelist variables',
-              'pb': '# (AMBER) Possion-Boltzmann namelist variables',
+              'pb': '# (AMBER) Poisson-Boltzmann namelist variables',
               'rism': '# 3D-RISM namelist variables',
               'decomp': '# Decomposition namelist variables',
               'ala': '# Alanine scanning namelist variables',
@@ -597,7 +597,7 @@ input_file.addNamelist('pb', 'pb',
                            ['arcres', float, 0.25, 'Arc resolution (A); e.g. 0.25'],
 
                            # Options for Implicit Membranes
-                           ['memopt', int, 0, 'Use membrane PB; 0/1'],
+                           ['memopt', int, 0, 'Use membrane PB; 0-3'],
                            ['mprob', float, 2.70, 'Membrane probe (A); e.g. 2.7'],
                            ['mthick', str, 'automatic', 'Membrane thickness (A), or automatic'],
                            ['mctrdz', str, 'automatic', 'Membrane Z offset (A), or automatic'],
