@@ -1,124 +1,279 @@
 ---
 template: main.html
-title: Alanine scanning
+title: Nonlinear PB
 ---
 
+# Binding free energy calculation with the nonlinear PB equation
 
-# Binding free energy calculation with linear PB (NLPBE)
+This example calculates the binding free energy of a protein-protein complex with the single-trajectory protocol
+and the nonlinear Poisson-Boltzmann equation (NLPBE). It processes ten frames at an ionic strength of 0.15 M.
+Nonlinear PB calculations have been available in `gmx_MMPBSA` since version 1.5.0.
 
-!!! info
-    **:material-new-box:{:.heart } in gmx_MMPBSA v1.5.0!!!**
+<div class="example-card-grid" markdown>
 
-    This example can be found in the [examples/NonLinear_PB_solver][6] directory in the repository folder. If you
-    didn't use gmx_MMPBSA_test before, use [downgit](https://downgit.github.io/#/home) to download the specific folder 
-    from gmx_MMPBSA GitHub repository.
+-   **Method**
 
+    Nonlinear PB (NLPBE)
 
-## Requirements
+-   **System**
 
-In this case, `gmx_MMPBSA` requires:
+    Protein-protein complex
 
-| Input File required            | Required |           Type             | Description |
-|:-------------------------------|:--------:|:--------------------------:|:-------------------------------------------------------------------------------------------------------------|
-| Input parameters file          | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |           `in`          | Input file containing all the specifications regarding the type of calculation that is going to be performed |
-| The MD Structure+mass(db) file | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |    `tpr` `pdb`    | Structure file containing the system coordinates |
-| An index file                  | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |          `ndx`    | file containing the receptor and ligand in separated groups |
-| Receptor and ligand group      | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |        `integers`       | Receptor and ligand group numbers in the index file |
-| A trajectory file              | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } | `xtc` `pdb` `trr` | Final GROMACS MD trajectory, fitted and with no pbc. |
-| A topology file                | :octicons-check-circle-fill-16:{ .req_opt .scale_icon_medium }    |           `top`         | GROMACS topology file (The `* .itp` files defined in the topology must be in the same folder |
-| A Reference Structure file     | :octicons-check-circle-fill-16:{ .req_optrec .scale_icon_medium } |           `pdb`         | Complex reference structure file (without hydrogens) with the desired assignment of chain ID and residue numbers |
-              
-:octicons-check-circle-fill-16:{ .req } -> Must be defined -- :octicons-check-circle-fill-16:{ .req_optrec } -> 
-Optional, but recommended -- :octicons-check-circle-fill-16:{ .req_opt } -> Optional
+-   **Protocol**
 
-_See a detailed list of all the flags in gmx_MMPBSA command line [here][1]_
+    Single trajectory
 
-## Command-line
-That being said, once you are in the folder containing all files, the command-line will be as follows:
+-   **Bundled test**
+
+    `gmx_MMPBSA_test -t 21`
+
+</div>
+
+## Before you begin
+
+The manual workflow uses the following files and selections:
+
+<div class="example-card-grid" markdown>
+
+-   **Calculation settings**
+
+    `mmpbsa.in` (`-i`)
+
+-   **GROMACS system**
+
+    Structure `com.tpr` (`-cs`) and topology `topol.top` (`-cp`). Keep any `*.itp` files referenced by the topology
+    in the same directory.
+
+-   **Trajectory**
+
+    PBC-corrected and fitted trajectory `com_traj.xtc` (`-ct`)
+
+-   **Molecular selections**
+
+    Index `index.ndx` (`-ci`) and receptor/ligand group names or zero-based group numbers (`-cg`)
+
+</div>
+
+A complex reference structure without hydrogens may also be supplied with `-cr`. It is optional but recommended
+when you need specific chain IDs or residue numbering. See the [complete command-line reference][1] for all options.
+
+## Run the example
+
+### Run the bundled test
+
+The quickest way to reproduce this example is through the test runner:
+
+```bash
+gmx_MMPBSA_test -t 21
+```
+
+See the [`gmx_MMPBSA_test` documentation][7] for download, selection, and cleanup options.
+
+### Run it manually
+
+[Download the nonlinear PB example as a ZIP archive][6].
+
+Extract the archive, change to the `NonLinear_PB_solver` directory, and choose either the serial or MPI command.
+You can also [view the example files on GitHub][9] before downloading them.
 
 === "Serial"
 
-        gmx_MMPBSA -O -i mmpbsa.in -cs com.tpr -ct com_traj.xtc -ci index.ndx -cg 3 4 -cp topol.top -o FINAL_RESULTS_MMPBSA.dat -eo FINAL_RESULTS_MMPBSA.csv
+    ```bash
+    gmx_MMPBSA -O \
+      -i mmpbsa.in \
+      -cs com.tpr \
+      -ct com_traj.xtc \
+      -ci index.ndx \
+      -cg 3 4 \
+      -cp topol.top \
+      -o FINAL_RESULTS_MMPBSA.dat \
+      -eo FINAL_RESULTS_MMPBSA.csv
+    ```
 
 === "With MPI"
 
-        mpirun -np 2 gmx_MMPBSA -O -i mmpbsa.in -cs com.tpr -ct com_traj.xtc -ci index.ndx -cg 3 4 -cp topol.top -o FINAL_RESULTS_MMPBSA.dat -eo FINAL_RESULTS_MMPBSA.csv
+    ```bash
+    mpirun -np 2 gmx_MMPBSA -O \
+      -i mmpbsa.in \
+      -cs com.tpr \
+      -ct com_traj.xtc \
+      -ci index.ndx \
+      -cg 3 4 \
+      -cp topol.top \
+      -o FINAL_RESULTS_MMPBSA.dat \
+      -eo FINAL_RESULTS_MMPBSA.csv
+    ```
 
-=== "gmx_MMPBSA_test"
+## Configure the calculation
 
-        gmx_MMPBSA_test -t 21
+The example uses the minimal `mmpbsa.in` shown first below. The all-options version was generated with
+`gmx_MMPBSA --create_input pb` and then updated with the same example-specific values. Both inputs therefore
+describe the same nonlinear PB calculation.
 
-where the `mmpbsa.in` input file, is a text file containing the following lines:
+=== "Minimal input"
 
-``` yaml linenums="1" title="Sample input file for NLPB calculation"
-Sample input file for NLPB
-This input file is meant to show only that gmx_MMPBSA works. Althought,
-we tried to used the input files as recommended in the Amber manual,
-some parameters have been changed to perform more expensive calculations
-in a reasonable amount of time. Feel free to change the parameters 
-according to what is better for your system.
+    ```yaml linenums="1" title="mmpbsa.in"
+    Sample input file for nonlinear PB calculation
+    # This sample input is intended only to demonstrate that gmx_MMPBSA works.
+    # Although it follows the recommendations in the Amber manual, some parameters
+    # have been adjusted to keep the computational cost reasonable. Modify them as
+    # appropriate for your system.
 
-&general
-sys_name="NonLinear_PB",
-startframe=1,
-endframe=10,
-forcefields="leaprc.protein.ff14SB",
-/
-&pb
-npbopt=1,
-indi=1.0, istrng=0.15,                                                     
-radiopt=0,                                           
-eneopt=1, cutnb=8.0,
-/
-# check these threads 
-# http://archive.ambermd.org/201203/0191.html
-# http://archive.ambermd.org/201610/0114.html
-# for more info on NLPB
-```
+    &general
+    sys_name="NonLinear_PB",
+    startframe=1,
+    endframe=10,
+    /
+    &pb
+    npbopt=1,
+    indi=1.0, istrng=0.15,
+    radiopt=0,
+    eneopt=1, cutnb=8.0,
+    /
+    # Check these threads
+    # http://archive.ambermd.org/201203/0191.html
+    # http://archive.ambermd.org/201610/0114.html
+    # for more information about NLPB.
+    ```
+
+=== "Generated input - all options"
+
+    ```yaml linenums="1" title="mmpbsa.in generated with --create_input pb"
+    Input file generated by gmx_MMPBSA (1.6.5+177.g31e12ce1.dirty)
+    Be careful with the variables you modify, some can have severe consequences on the results you obtain.
+
+    # General namelist variables
+    &general
+      sys_name                       = "NonLinear_PB"                       # System name; e.g. "complex"
+      startframe                     = 1                                      # First frame; e.g. 1
+      endframe                       = 10                                     # Last frame; e.g. 100
+      interval                       = 1                                      # Frame interval; e.g. 1
+      forcefields                    = "leaprc.protein.ff14SB"      # Force fields; e.g. "leaprc.protein.ff14SB"
+      ions_parameters                = 1                                      # Ion params; e.g. 1
+      PBRadii                        = 4                                      # PB radii set; 1-7
+      temperature                    = 298.15                                 # Temperature (K); e.g. 298.15
+      qh_entropy                     = 0                                      # Legacy QH output reader; new calculations reject 1
+      interaction_entropy            = 0                                      # Run IE entropy; 0/1
+      ie_segment                     = 25                                     # IE segment length (%); e.g. 25
+      c2_entropy                     = 0                                      # Run C2 entropy; 0/1
+      assign_chainID                 = 0                                      # Assign chain IDs; 0/1
+      exp_ki                         = 0.0                                    # Experimental Ki (nM); e.g. 0.0
+      full_traj                      = 0                                      # Write full trajectory; 0/1
+      gmx_path                       = ""                                     # GROMACS path; e.g. "/usr/bin"
+      keep_files                     = 2                                      # Files to keep; 0-2
+      netcdf                         = 0                                      # Use NetCDF; 0/1
+      solvated_trajectory            = 1                                      # Clean solvated traj.; 0/1
+      explicit_waters                = 0                                      # Explicit waters; e.g. 10
+      explicit_waters_mask           = ""                                     # Water reference; e.g. ":1-10", "within 4", "dASA"
+      explicit_waters_group          = ""                                     # Solvent group; e.g. "TIP3"
+      explicit_waters_dasa_cutoff    = 0.5                                    # dASA cutoff; e.g. 0.5
+      explicit_waters_as             = "receptor"                             # Water owner; e.g. "receptor"
+      explicit_waters_extra_points   = "error"                                # Virtual sites; "error" or "strip"
+      verbose                        = 1                                      # Output verbosity; 0-2
+    /
+
+    # (AMBER) Poisson-Boltzmann namelist variables
+    &pb
+      ipb                            = 2                                      # PB model; e.g. 2
+      inp                            = 1                                      # Nonpolar method; 1 or 2
+      sander_apbs                    = 0                                      # Use sander.APBS; 0/1
+      indi                           = 1.0                                    # Internal dielectric; e.g. 1.0
+      exdi                           = 78.5                                   # External dielectric; e.g. 78.5
+      emem                           = 4.0                                    # Membrane dielectric; e.g. 4.0
+      smoothopt                      = 1                                      # Dielectric smoothing; 0-2
+      istrng                         = 0.15                                    # Ionic strength (M); e.g. 0.150
+      radiopt                        = 0                                      # Use optimized radii; 0/1
+      prbrad                         = 1.4                                    # Probe radius (A); e.g. 1.4
+      iprob                          = 2.0                                    # Ion probe (A); e.g. 2.0
+      sasopt                         = 0                                      # PB surface option; 0/1
+      arcres                         = 0.25                                   # Arc resolution (A); e.g. 0.25
+      memopt                         = 0                                      # Use membrane PB; 0/1
+      mprob                          = 2.7                                    # Membrane probe (A); e.g. 2.7
+      mthick                         = "automatic"                            # Membrane thickness (A), or automatic
+      mctrdz                         = "automatic"                            # Membrane Z offset (A), or automatic
+      membrane_atoms                 = "P"                                    # Atom names for automatic membrane parameters; semicolon-separated
+      poretype                       = 1                                      # Pore type; 1 or 2
+      npbopt                         = 1                                      # Use nonlinear PB; 0/1
+      solvopt                        = 1                                      # PB solver; e.g. 1
+      accept                         = 0.001                                  # Convergence; e.g. 0.001
+      linit                          = 1000                                   # SCF iterations; e.g. 1000
+      fillratio                      = 4.0                                    # Grid fill ratio; e.g. 4
+      scale                          = 2.0                                    # Grid scale; e.g. 2
+      nbuffer                        = 0.0                                    # Grid buffer; e.g. 0
+      nfocus                         = 2                                      # Focus levels; e.g. 2
+      fscale                         = 8                                      # Focus scale; e.g. 8
+      npbgrid                        = 1                                      # Grid update freq.; e.g. 1
+      bcopt                          = 5                                      # Boundary condition; e.g. 5
+      eneopt                         = 1                                      # Energy option; e.g. 2
+      frcopt                         = 0                                      # Force output; e.g. 0
+      scalec                         = 0                                      # Reaction field option; e.g. 0
+      cutfd                          = 5.0                                    # FD cutoff (A); e.g. 5
+      cutnb                          = 8.0                                    # Nonbonded cutoff (A); e.g. 0
+      nsnba                          = 1                                      # Pairlist frequency; e.g. 1
+      decompopt                      = 2                                      # Decomp scheme; 1 or 2
+      use_rmin                       = 1                                      # Use Rmin radii; 0/1
+      sprob                          = 0.557                                  # SASA probe (A); e.g. 0.557
+      vprob                          = 1.3                                    # Volume probe (A); e.g. 1.3
+      rhow_effect                    = 1.129                                  # Water density; e.g. 1.129
+      use_sav                        = 1                                      # Use SAV cavity; 0/1
+      cavity_surften                 = 0.0378                                 # Cavity surften; e.g. 0.0378
+      cavity_offset                  = -0.5692                                # Cavity offset; e.g. -0.5692
+      maxsph                         = 400                                    # Max surface dots; e.g. 400
+      maxarcdot                      = 1500                                   # Max arc dots; e.g. 1500
+      npbverb                        = 0                                      # PB verbosity; 0/1
+    /
+
+    ```
 
 !!! info "Keep in mind"
-    See a detailed list of all the options in `gmx_MMPBSA` input file [here][2] as well as several [examples][3]. 
-    These examples are meant only to show that gmx_MMPBSA works. It is recommended to go over these variables, even 
-    the ones that are not included in this input file but are available for the calculation that it's performed and
-    see the values they can take (check the [input file section](../../input_file.md)). This will allow you to 
-    tackle a number of potential problems or simply use fancier approximations in your calculations.
+    This input provides a practical starting point and can serve as the basis for production calculations. Review the
+    available [input-file options][2], their accepted values, and adjust settings that depend on your system or protocol.
+    Additional sample inputs are available [here][3].
 
-## Considerations
-In this case, a single trajectory (ST) approximation is followed, which means the receptor and ligand 
-amber format topologies and trajectories will be obtained from that of the complex. To do so, an 
-MD Structure+mass(db) file (`com.tpr`), an index file (`index.ndx`), a trajectory file (`com_traj.xtc`), and both 
-the receptor and ligand group numbers in the index file (`3 4`) are needed. The `mmpbsa.in` input file will contain
-all the parameters needed for the MM/PB(GB)SA calculation. In this case, 6 frames are going to be used when 
-performing the MM/PB(GB)SA calculation with the Non-Linear PB solver (`npbopt=1`). The dielectric constant 
-(`indi`) is set = 1. 
+## How this example works
+
+The single-trajectory approximation generates the receptor and ligand Amber-format topologies and trajectories from
+the complex. In this protein-protein system, the second protein is treated as the ligand. The command selects index
+groups `3` and `4` as the receptor and ligand, respectively.
+
+The input processes ten frames with the nonlinear PB solver (`npbopt=1`), an internal dielectric constant of 1.0,
+and an ionic strength of 0.15 M. It uses topology radii (`radiopt=0`) and a nonbonded cutoff of 8.0 Å.
+
+## Interpreting nonlinear PB energies
 
 !!! warning
-    When running a NLPB solver, `eneopt` is set = 1. That way, the total electrostatic energy and forces will be 
-    computed with the particle-particle particle-mesh (P3M) procedure outlined in [Lu and Luo][8]. In doing so, 
-    energy term `EPB` in the output file is set to zero, while `EEL` term includes both the reaction field 
-    energy (`EPB`) and the Coulombic energy (`EEL`). The van der Waals energy is computed along with the 
-    particle-particle portion of the Coulombic energy. This option requires a nonzero `cutnb` (in this 
-    case, `cutnb=8.0`) and `bcopt = 5` (default option).
+    With `eneopt=1`, total electrostatic energies and forces are computed with the particle-particle
+    particle-mesh (P3M) procedure described by [Lu and Luo][8]. The output therefore reports `EPB` as zero and
+    combines the reaction-field and Coulombic energies in `EEL`. The van der Waals energy is evaluated together
+    with the particle-particle contribution to the Coulombic energy.
 
-    It's noteworthy mentioning that `ΔGGAS` and `ΔGSOLV` as reported are no longer properly decomposed. Since 
-    `EPB` and `EEL` are combined into the "gas phase" term, the gas and solvation terms can't be separated. 
-    Nevertheless, the total ΔTOTAL should be perfectly fine, since everything is sum up together in the end.
+    This setting requires a nonzero `cutnb` (`8.0` Å here) and `bcopt=5`, which is the default boundary
+    condition used by this input.
 
-A plain text output file with all the statistics (default: `FINAL_RESULTS_MMPBSA.dat`) and a CSV-format 
-output file containing all energy terms for every frame in every calculation will be saved. The file name in 
-'-eo' flag will be forced to end in [.csv] (`FINAL_RESULTS_MMPBSA.csv` in this case). This file is only written when 
-specified on the command-line.
+    Because `EPB` and `EEL` are combined in the gas-phase term, ΔGGAS and ΔGSOLV are not separately meaningful
+    for this calculation. ΔTOTAL remains the relevant combined result because it includes both contributions.
 
+The comments at the end of `mmpbsa.in` link to additional Amber mailing-list discussions of
+[nonlinear PB settings from 2012](http://archive.ambermd.org/201203/0191.html) and
+[2016](http://archive.ambermd.org/201610/0114.html).
 
-!!! note
-    Once the calculation is done, the results can be analyzed in `gmx_MMPBSA_ana` (if `-nogui` flag was not used in the command-line). 
-    Please, check the [gmx_MMPBSA_ana][4] section for more information
+## Expected outputs
+
+A successful calculation produces:
+
+- `FINAL_RESULTS_MMPBSA.dat`: the plain-text energy summary and statistics.
+- `FINAL_RESULTS_MMPBSA.csv`: the per-frame energy terms requested with `-eo`.
+
+## Analyze the results
+
+Open the results with `gmx_MMPBSA_ana` for interactive inspection and plotting. See the
+[`gmx_MMPBSA_ana` documentation][4] for usage details.
 
   [1]: ../../gmx_MMPBSA_command-line.md#gmx_mmpbsa-command-line
   [2]: ../../input_file.md#the-input-file
   [3]: ../../input_file.md#sample-input-files
-  [4]: ../../analyzer.md#gmx_mmpbsa_ana-the-analyzer-tool  
-  [5]: ../../input_file.md#general-namelist-variables
-  [6]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/examples/NonLinear_PB_solver
+  [4]: ../../analyzer.md#gmx_mmpbsa_ana-the-analyzer-tool
+  [6]: https://downgit.github.io/#/home?url=https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/examples/NonLinear_PB_solver&fileName=gmx_MMPBSA-Nonlinear-PB&rootDirectory=NonLinear_PB_solver
   [7]: ../gmx_MMPBSA_test.md#gmx_mmpbsa_test-command-line
-  [8]: https://aip.scitation.org/doi/10.1063/1.1622376
+  [8]: https://doi.org/10.1063/1.1622376
+  [9]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/examples/NonLinear_PB_solver
