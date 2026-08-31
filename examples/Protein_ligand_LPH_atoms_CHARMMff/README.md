@@ -1,254 +1,360 @@
 ---
 template: main.html
-title: Protein-ligand LPH (Charmm)
+title: Halogenated CHARMM ligand with LPH sites
 ---
 
-!!! danger "CHARMM and MM(PB/GB)SA"
-    PB model is recommended when working with CHARMMff files. Nevertheless, the combination of PB/GB models with radii 
-    optimized for amber atom types (_i.e._ bondi, mbondi, mbondi2, mbondi3) and CHARMM force field hasn't been tested 
-    extensively. Please, check this [thread][1] for more information and proceed with caution.
+# Halogenated CHARMM ligand with LPH virtual sites
 
-    **:material-new-box:{:.heart } in gmx_MMPBSA v1.5.0!!!**
+This example shows how a CHARMM protein-ligand system containing lone-pair halogen (`LPH`) virtual sites can be
+converted into an input that gmx_MMPBSA can process. The calculation uses the single-trajectory approximation and
+the linear PB model.
 
-    In gmx_MMPBSA v1.5.0 we have added a new PB radii set named _charmm_radii_. **This radii set should be used only 
-    with systems prepared with CHARMM force fields**. The atomic radii set for Poisson-Boltzmann calculations has been 
-    derived from average solvent electrostatic charge distribution with explicit solvent. The accuracy has been tested 
-    with free energy perturbation with explicit solvent [ref.](https://pubs.acs.org/doi/10.1021/jp970736r). Most of 
-    the values were taken from a _*radii.str_ file used in PBEQ Solver 
-    in [charmm-gui](https://www.charmm-gui.org/?doc=input/pbeqsolver).
+<div class="example-card-grid" markdown>
 
-    * Radii for protein atoms in 20 standard amino acids from 
-    [Nina, Belogv, and Roux](https://pubs.acs.org/doi/10.1021/jp970736r)
-    * Radii for nucleic acid atoms (RNA and DNA) from 
-    [Banavali and Roux](https://pubs.acs.org/doi/abs/10.1021/jp025852v)
-    * Halogens and other atoms from [Fortuna and Costa](https://pubs.acs.org/doi/10.1021/acs.jcim.1c00177)
+-   **Protocol**
 
-# Protein-ligand with LPH atoms BFE calculations (Single Trajectory method) -- CHARMMff files
+    Single trajectory
 
-!!! info
+-   **Force field**
 
-    This example can be found in the [examples/Protein_ligand_LPH_atoms_CHARMMff][6] directory in the repository
-    folder
+    CHARMM with LPH sites removed
 
-    LPH is a positively charged virtual particle attached to halogen atoms. This strategy aims to get a better 
-    representation of the halogen bond which is a highly directional, non-covalent interaction between a halogen atom 
-    and another electronegative atom (See [here][8] for more info). Unfortunately, including these particles in the 
-    topology will cause gmx_MMPBSA to end in an error. However, there is a way to generate the files without these 
-    particles and get gmx_MMPBSA up and running.
+-   **Solvent model**
 
-    
-!!! danger "Keep in mind"
+    Linear PB with CHARMM radii
 
-    As the LPH particle is not considered during the calculations in gmx_MMPBSA, take the results with a grain of 
-    salt, especially when working with systems where the halogen bond is determinant for the binding.
+-   **Bundled test**
 
-    **:material-new-box:{:.heart } in gmx_MMPBSA v1.5.0!!!**
+    `gmx_MMPBSA_test -t 22`
 
-    We have included standard radii for halogens in _charmm_radii_ set:
+</div>
 
-    * Cl: 1.86
-    * Br: 1.98
-    * I: 2.24
+!!! info "Representative system"
+    The protein-ligand complex is a representative CHARMM system. The CHARMM topology workflow is not limited to
+    protein-ligand complexes, although the manual LPH-removal steps on this page apply specifically to unsupported
+    ligand virtual sites.
 
-    This radii set should be used with the following PBSA setup:
+!!! danger "Removing LPH sites changes the electrostatic model"
+    gmx_MMPBSA does not support the massless LPH sites in the original topology. When removing an LPH site, transfer
+    its charge to the parent halogen instead of simply deleting it. In this example, each removed LPH site carries
+    `+0.05 e`; therefore, the charge of each parent bromine is changed from `-0.180 e` to `-0.130 e`. This preserves
+    the original ligand charge of `-1.00 e`.
 
-    ```
-    Sample input file for PB calculation with halogenated compounds
-            
-    &general
-    sys_name="PB_Halogens",
-    PBRadii=7,
-    /
-    &pb
-    inp=1, radiopt=0, cavity_surften=0.005, cavity_offset=0.0000
-    /
-    ```
+    Charge conservation does not restore the off-center positive sites or their directional halogen-bonding
+    electrostatics. For quantitative work, a validated site-free ligand parameterization remains preferable to
+    treating LPH removal and charge transfer as a complete reparameterization.
 
+!!! warning "CHARMM CMAP conversion"
+    The current GROMACS-to-AMBER topology conversion also omits CHARMM CMAP terms and reports this during setup.
+    Quantitative CHARMM applications should assess this additional approximation before interpreting binding energies.
 
-## Requirements
+!!! note "Halogen and CHARMM PB radii"
+    `PBRadii=7` selects `charmm_radii`, including radii of 1.86 Å for Cl, 1.98 Å for Br, and 2.24 Å for I. These
+    radii are intended for CHARMM systems without explicit halogen extra-point charges. With `radiopt=0`, PBSA reads
+    the assigned radii from the generated AMBER topologies. See the underlying CHARMM radii sources for
+    [proteins][9], [nucleic acids][10], and [additional elements][11].
 
-In this case, `gmx_MMPBSA` requires:
+LPH sites are positively charged virtual particles placed near halogens to represent the anisotropic electrostatic
+potential associated with halogen bonding. See the [LPH parameterization study][12] for background.
 
-| Input File required            | Required |           Type             | Description |
-|:-------------------------------|:--------:|:--------------------------:|:-------------------------------------------------------------------------------------------------------------|
-| Input parameters file          | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |           `in`             | input file containing all the specifications regarding the type of calculation that is going to be performed |
-| The MD Structure+mass(db) file | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |    `tpr` `pdb`     | Structure file containing the system coordinates|
-| Receptor and ligand group      | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |        `integers`          | Receptor and ligand group numbers in the index file |
-| A trajectory file              | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } | `xtc` `pdb` `trr` | final GROMACS MD trajectory, fitted and with no pbc.|
-| A topology file                | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |           `top`            | take into account that *.itp files belonging to the topology file should be also present in the folder       |
-| A Reference Structure file     | :octicons-check-circle-fill-16:{ .req_optrec .scale_icon_medium } |           `pdb`            |  Complex reference structure file (without hydrogens) with the desired assignment of chain ID and residue numbers       |
-              
-:octicons-check-circle-fill-16:{ .req } -> Must be defined -- :octicons-check-circle-fill-16:{ .req_optrec } -> 
-Optional, but recommended -- :octicons-check-circle-fill-16:{ .req_opt } -> Optional
+## Before you begin
 
-_See a detailed list of all the flags in gmx_MMPBSA command line [here][2]_
+The runnable, LPH-free calculation uses the following files and selections:
 
-In order to generate the corresponding files (The MD Structure+mass(db), index, trajectory and the topology files) 
-without the LPH particles, it's necessary to run a few commands. Bear with me!
+<div class="example-card-grid" markdown>
 
-Let's generate the index file first:
+-   **Calculation settings**
 
-!!! important
-    The main idea here is to generate a receptor group, a 
-    ligand group without the LPH particles and a complex group containing both the receptor and the ligand without 
-    the LPH particles. In general, index files generated with GROMACS directly will contain more detailed information 
-    (_i.e._, receptor and ligand separated)
+    `mmpbsa.in` (`-i`)
 
-```
+-   **Prepared system**
+
+    LPH-free structure `str_noLP.pdb` (`-cs`) and modified topology `topol.top` (`-cp`). Keep the `toppar` directory
+    containing the referenced CHARMM `*.itp` files beside `topol.top`.
+
+-   **Prepared trajectory**
+
+    LPH-free, fitted trajectory `com_traj.xtc` (`-ct`)
+
+-   **Molecular selections**
+
+    Index `index_mod_gromacs.ndx` (`-ci`) with receptor `Protein` and LPH-free ligand `lig` (`-cg`)
+
+</div>
+
+The prepared complex contains 5,610 atoms: a 5,580-atom protein and a 30-atom ligand. The original ligand and
+solvated system contain 32 and 70,483 atoms, respectively. See the [complete command-line reference][1] for all
+options.
+
+## Prepare an LPH-free input
+
+The runnable files are already included with the example. The following steps document how they were derived from
+`com.tpr`, `traj_fit.xtc`, and the original LPH-containing ligand topology.
+
+### 1. Create LPH-free index groups
+
+Start `make_ndx` with the original TPR:
+
+```bash
 gmx make_ndx -f com.tpr -o index_mod_gromacs.ndx
-
-  0 System              : 70483 atoms
-  1 Protein             :  5580 atoms
-  2 Protein-H           :  2817 atoms
-  3 C-alpha             :   334 atoms
-  4 Backbone            :  1002 atoms
-  5 MainChain           :  1335 atoms
-  6 MainChain+Cb        :  1654 atoms
-  7 MainChain+H         :  1654 atoms
-  8 SideChain           :  3926 atoms
-  9 SideChain-H         :  1482 atoms
- 10 Prot-Masses         :  5580 atoms
- 11 non-Protein         : 64903 atoms
- 12 Other               : 64903 atoms
- 13 3G5                 :    32 atoms
- 14 CLA                 :    62 atoms
- 15 SOD                 :    63 atoms
- 16 TIP3                : 64746 atoms
-
-Splitting the ligand (group 13) by atoms
->splitat 13
-
-Grouping both LPH particles
->47|48
-
-Excluding both LPH particles from the ligand
->13&!49
-
-Naming ligand as lig
->name 50 lig
-
-Grouping rec and lig
->1|50
-
-Cleaning
->del 17-49
-
-save and quit
->q
-
-This is how it should look like at the end
-
-  0 System              : 70483 atoms
-  1 Protein             :  5580 atoms
-  2 Protein-H           :  2817 atoms
-  3 C-alpha             :   334 atoms
-  4 Backbone            :  1002 atoms
-  5 MainChain           :  1335 atoms
-  6 MainChain+Cb        :  1654 atoms
-  7 MainChain+H         :  1654 atoms
-  8 SideChain           :  3926 atoms
-  9 SideChain-H         :  1482 atoms
- 10 Prot-Masses         :  5580 atoms
- 11 non-Protein         : 64903 atoms
- 12 Other               : 64903 atoms
- 13 3G5                 :    32 atoms
- 14 CLA                 :    62 atoms
- 15 SOD                 :    63 atoms
- 16 TIP3                : 64746 atoms
- 17 lig                 :    30 atoms
- 18 Protein_lig         :  5610 atoms
 ```
 
-!!! note
-    Note that the number of atoms in the generated complex is 5610 because it doesn't include the LPH particles.
+In the interactive prompt, split the original 32-atom ligand group (`13`), select its two LPH sites, exclude them,
+and combine the resulting 30-atom ligand with the protein:
 
-Let's generate the MD Structure+mass(db) file:
+```text
+splitat 13
+47|48
+13&!49
+name 50 lig
+1|50
+del 17-49
+q
+```
 
-    echo 18 | gmx trjconv -s com.tpr -f traj_fit.xtc -dump 0 -o str_noLP.pdb -n index_mod_gromacs.ndx
+After the intermediate groups are deleted and the remaining groups are renumbered, `lig` is group 17 and
+`Protein_lig` is group 18. The latter contains 5,610 atoms.
 
-Open `str_noLP.pdb` in your favorite visualizer and see it doesn't contain the LPH particles. Now, let's generate 
-the trajectory with no LPH particles:
+### 2. Strip the LPH sites from the coordinates
 
-    echo 18 | gmx trjconv -s com.tpr -f traj_fit.xtc -o com_traj.xtc -n index_mod_gromacs.ndx
+Use the `Protein_lig` group to create a matching structure and trajectory:
 
-Finally, let's edit the topology file. Go inside the toppar folder and open the `HETA.itp` file. As you will see, we
-deleted all the information related with LPH particles (atom numbers 31, and 32 respectively). In this case, we
-deleted the information for LPH particles in `atoms` (lines 47, 48) and `pairs` (lines 124, 132, 150, 153, 154, 157, 
-158, 159). Besides, delete the whole `[ virtual_sites3 ]` (lines 296-299) and `[ exclusions ]` (lines 301-318) 
-fields. The original .itp (`HETA_original_with_LPH_info.itp`) is included for comparison purposes.
+```bash
+echo 18 | gmx trjconv \
+  -s com.tpr \
+  -f traj_fit.xtc \
+  -dump 0 \
+  -n index_mod_gromacs.ndx \
+  -o str_noLP.pdb
 
+echo 18 | gmx trjconv \
+  -s com.tpr \
+  -f traj_fit.xtc \
+  -n index_mod_gromacs.ndx \
+  -o com_traj.xtc
+```
 
-## Command-line
-That being said, once you are in the folder containing all files, the command-line will be as follows:
+Inspect `str_noLP.pdb` and confirm that it contains 5,610 atoms and no `LP1` or `LP2` records.
+
+### 3. Prepare a matching topology
+
+The example retains the source topology as `toppar/HETA_original_with_LPH_info.itp` and uses the modified
+`toppar/HETA.itp` in `topol.top`. Relative to the source file, prepare the modified file manually as follows:
+
+- Remove atoms 31 and 32 (`LP1` and `LP2`) from `[ atoms ]`.
+- Remove every `[ pairs ]` entry involving atoms 31 or 32.
+- Delete the `[ virtual_sites3 ]` definitions for the two sites.
+- Delete the corresponding `[ exclusions ]` records.
+
+Then transfer each removed site charge to its parent halogen in `[ atoms ]`:
+
+```text
+BR1: -0.180 + 0.050 = -0.130
+BR2: -0.180 + 0.050 = -0.130
+```
+
+Finally, sum the ligand charges and confirm that they remain equal to the original molecular charge (`-1.00 e` in
+this example). Apply the same accounting to the actual LPH charges and parent halogens in your topology; do not
+assume that every LPH model uses `+0.05 e`.
+
+Coordinate removal and topology removal must be performed together so that the atom order and count remain
+consistent. A reusable scientific model also requires validation of the resulting site-free charge distribution.
+
+## Run the example
+
+### Run the bundled test
+
+The quickest way to reproduce the prepared example is through the test runner:
+
+```bash
+gmx_MMPBSA_test -t 22
+```
+
+See the [`gmx_MMPBSA_test` documentation][7] for download, selection, and cleanup options.
+
+### Run it manually
+
+[Download the LPH CHARMM example as a ZIP archive][6].
+
+Extract the archive, change to the `Protein_ligand_LPH_atoms_CHARMMff` directory, and choose either the serial or
+MPI command. You can also [view the example files on GitHub][8] before downloading them.
 
 === "Serial"
 
-        gmx_MMPBSA -O -i mmpbsa.in -cs str_noLP.pdb -ci index_mod_gromacs.ndx -cg 1 17 -ct com_traj.xtc -cp topol.top -o FINAL_RESULTS_MMPBSA.dat -eo FINAL_RESULTS_MMPBSA.csv
+    ```bash
+    gmx_MMPBSA -O \
+      -i mmpbsa.in \
+      -cs str_noLP.pdb \
+      -ct com_traj.xtc \
+      -ci index_mod_gromacs.ndx \
+      -cg Protein lig \
+      -cp topol.top \
+      -o FINAL_RESULTS_MMPBSA.dat \
+      -eo FINAL_RESULTS_MMPBSA.csv
+    ```
 
 === "With MPI"
 
-        mpirun -np 2 gmx_MMPBSA -O -i mmpbsa.in -cs str_noLP.pdb -ci index_mod_gromacs.ndx -cg 1 17 -ct com_traj.xtc -cp topol.top -o FINAL_RESULTS_MMPBSA.dat -eo FINAL_RESULTS_MMPBSA.csv
+    ```bash
+    mpirun -np 2 gmx_MMPBSA -O \
+      -i mmpbsa.in \
+      -cs str_noLP.pdb \
+      -ct com_traj.xtc \
+      -ci index_mod_gromacs.ndx \
+      -cg Protein lig \
+      -cp topol.top \
+      -o FINAL_RESULTS_MMPBSA.dat \
+      -eo FINAL_RESULTS_MMPBSA.csv
+    ```
 
-=== "gmx_MMPBSA_test"
+## Configure the calculation
 
-        gmx_MMPBSA_test -t 22
+The example uses the concise `mmpbsa.in` shown first below. The all-options version was generated with
+`gmx_MMPBSA --create_input pb` and then updated with the same example-specific values. Both inputs describe the same
+linear PB calculation using the already prepared LPH-free files.
 
-where the `mmpbsa.in` input file, is a text file containing the following lines:
+=== "Concise input"
 
-``` yaml linenums="1" title="Sample input file for PB calculation"
-Sample input file for PB calculation
-This input file is meant to show only that gmx_MMPBSA works. Althought,
-we tried to used the input files as recommended in the Amber manual,
-some parameters have been changed to perform more expensive calculations
-in a reasonable amount of time. Feel free to change the parameters 
-according to what is better for your system.
+    ```yaml linenums="1" title="mmpbsa.in"
+    Sample input file for PB calculation with a halogenated CHARMM ligand
+    # This input demonstrates the PB setup for the bundled topology from which the
+    # LPH virtual sites have been removed. Review the approximation before reuse.
 
-&general
-sys_name="Prot-Lig-ST",
-startframe=5,
-endframe=9,
-solvated_trajectory=0,
-# In gmx_MMPBSA v1.5.0 we have added a new PB radii set named charmm_radii. 
-# This radii set should be used only with systems prepared with CHARMM force fields. 
-# Uncomment the line below to use charmm_radii set
-#PBRadii=7,
-/
-&pb
-# radiopt=0 is recommended which means using radii from the prmtop file
-# for both the PB calculation and for the NP calculation
+    &general
+    sys_name="Prot-Lig-LPH-CHARMM",
+    startframe=5,
+    endframe=9,
+    solvated_trajectory=0,
+    PBRadii=7,
+    /
+    &pb
+    radiopt=0, istrng=0.150, fillratio=1.25, inp=1,
+    cavity_surften=0.005, cavity_offset=0.0,
+    /
+    ```
 
-istrng=0.15, fillratio=4, radiopt=0, inp=1,
-/
-```
+=== "Generated input — all options"
 
-!!! warning "Remember"
-    `radiopt = 0` is recommended which means using radii from the `prmtop` file
+    ```yaml linenums="1" title="mmpbsa.in generated with --create_input pb"
+    Input file generated by gmx_MMPBSA (1.6.5+177.g31e12ce1.dirty)
+    Be careful with the variables you modify, some can have severe consequences on the results you obtain.
 
-_See a detailed list of all the options in `gmx_MMPBSA` input file [here][3] as well as several [examples][4]_
+    # General namelist variables
+    &general
+      sys_name                       = "Prot-Lig-LPH-CHARMM"                # System name; e.g. "complex"
+      startframe                     = 5                                      # First frame; e.g. 1
+      endframe                       = 9                                      # Last frame; e.g. 100
+      interval                       = 1                                      # Frame interval; e.g. 1
+      forcefields                    = "leaprc.protein.ff14SB"               # Force fields; e.g. "leaprc.protein.ff14SB"
+      ions_parameters                = 1                                      # Ion params; e.g. 1
+      PBRadii                        = 7                                      # PB radii set; 1-7
+      temperature                    = 298.15                                 # Temperature (K); e.g. 298.15
+      qh_entropy                     = 0                                      # Legacy QH output reader; new calculations reject 1
+      interaction_entropy            = 0                                      # Run IE entropy; 0/1
+      ie_segment                     = 25                                     # IE segment length (%); e.g. 25
+      c2_entropy                     = 0                                      # Run C2 entropy; 0/1
+      assign_chainID                 = 0                                      # Assign chain IDs; 0/1
+      exp_ki                         = 0.0                                    # Experimental Ki (nM); e.g. 0.0
+      full_traj                      = 0                                      # Write full trajectory; 0/1
+      gmx_path                       = ""                                     # GROMACS path; e.g. "/usr/bin"
+      keep_files                     = 2                                      # Files to keep; 0-2
+      netcdf                         = 0                                      # Use NetCDF; 0/1
+      solvated_trajectory            = 0                                      # Clean solvated traj.; 0/1
+      explicit_waters                = 0                                      # Explicit waters; e.g. 10
+      explicit_waters_mask           = ""                                     # Water reference; e.g. ":1-10", "within 4", "dASA"
+      explicit_waters_group          = ""                                     # Solvent group; e.g. "TIP3"
+      explicit_waters_dasa_cutoff    = 0.5                                    # dASA cutoff; e.g. 0.5
+      explicit_waters_as             = "receptor"                             # Water owner; e.g. "receptor"
+      explicit_waters_extra_points   = "error"                                # Virtual sites; "error" or "strip"
+      verbose                        = 1                                      # Output verbosity; 0-2
+    /
 
-## Considerations
-In this case, a single trajectory (ST) approximation is followed, which means the receptor and ligand structures and 
-trajectories will be obtained from that of the complex. To do so, an MD Structure+mass(db) file (`str_noLP.pdb`), an 
-index file (`index_mod_gromacs.ndx`), a trajectory file (`com_traj.xtc`), and both the receptor and ligand group 
-numbers in the index file (`1 17`) are needed. The `mmpbsa.in` input file will contain all the parameters needed for 
-the MM/PB(GB)SA calculation. A topology file is also needed (mandatory) in this case to generate the topology files 
-in amber format with all the terms for CHARMM force field.
+    # (AMBER) Poisson-Boltzmann namelist variables
+    &pb
+      ipb                            = 2                                      # PB model; e.g. 2
+      inp                            = 1                                      # Nonpolar method; 1 or 2
+      sander_apbs                    = 0                                      # Use sander.APBS; 0/1
+      indi                           = 1.0                                    # Internal dielectric; e.g. 1.0
+      exdi                           = 78.5                                   # External dielectric; e.g. 78.5
+      emem                           = 4.0                                    # Membrane dielectric; e.g. 4.0
+      smoothopt                      = 1                                      # Dielectric smoothing; 0-2
+      istrng                         = 0.150                                  # Ionic strength (M); e.g. 0.150
+      radiopt                        = 0                                      # Use optimized radii; 0/1
+      prbrad                         = 1.4                                    # Probe radius (A); e.g. 1.4
+      iprob                          = 2.0                                    # Ion probe (A); e.g. 2.0
+      sasopt                         = 0                                      # PB surface option; 0/1
+      arcres                         = 0.25                                   # Arc resolution (A); e.g. 0.25
+      memopt                         = 0                                      # Use membrane PB; 0-3
+      mprob                          = 2.7                                    # Membrane probe (A); e.g. 2.7
+      mthick                         = "automatic"                            # Membrane thickness (A), or automatic
+      mctrdz                         = "automatic"                            # Membrane Z offset (A), or automatic
+      membrane_atoms                 = "P"                                    # Atom names for automatic membrane parameters; semicolon-separated
+      poretype                       = 1                                      # Pore type; 1 or 2
+      npbopt                         = 0                                      # Use nonlinear PB; 0/1
+      solvopt                        = 1                                      # PB solver; e.g. 1
+      accept                         = 0.001                                  # Convergence; e.g. 0.001
+      linit                          = 1000                                   # SCF iterations; e.g. 1000
+      fillratio                      = 1.25                                   # Grid fill ratio; e.g. 4
+      scale                          = 2.0                                    # Grid scale; e.g. 2
+      nbuffer                        = 0.0                                    # Grid buffer; e.g. 0
+      nfocus                         = 2                                      # Focus levels; e.g. 2
+      fscale                         = 8                                      # Focus scale; e.g. 8
+      npbgrid                        = 1                                      # Grid update freq.; e.g. 1
+      bcopt                          = 5                                      # Boundary condition; e.g. 5
+      eneopt                         = 2                                      # Energy option; e.g. 2
+      frcopt                         = 0                                      # Force output; e.g. 0
+      scalec                         = 0                                      # Reaction field option; e.g. 0
+      cutfd                          = 5.0                                    # FD cutoff (A); e.g. 5
+      cutnb                          = 0.0                                    # Nonbonded cutoff (A); e.g. 0
+      nsnba                          = 1                                      # Pairlist frequency; e.g. 1
+      decompopt                      = 2                                      # Decomp scheme; 1 or 2
+      use_rmin                       = 1                                      # Use Rmin radii; 0/1
+      sprob                          = 0.557                                  # SASA probe (A); e.g. 0.557
+      vprob                          = 1.3                                    # Volume probe (A); e.g. 1.3
+      rhow_effect                    = 1.129                                  # Water density; e.g. 1.129
+      use_sav                        = 1                                      # Use SAV cavity; 0/1
+      cavity_surften                 = 0.005                                  # Cavity surften; e.g. 0.0378
+      cavity_offset                  = 0.0                                    # Cavity offset; e.g. -0.5692
+      maxsph                         = 400                                    # Max surface dots; e.g. 400
+      maxarcdot                      = 1500                                   # Max arc dots; e.g. 1500
+      npbverb                        = 0                                      # PB verbosity; 0/1
+    /
+    ```
 
-A plain text output file with all the statistics (default: `FINAL_RESULTS_MMPBSA.dat`) and a CSV-format 
-output file containing all energy terms for every frame in every calculation will be saved. The file name in 
-'-eo' flag will be forced to end in [.csv] (`FINAL_RESULTS_MMPBSA.csv` in this case). This file is only written when 
-specified on the command-line.
+!!! warning "Interpretation"
+    The PB settings and CHARMM halogen radii are internally documented, but they do not restore the directional LPH
+    electrostatics. The manual charge transfer preserves the ligand's `-1.00 e` total charge, but a validated
+    site-free ligand model is still preferable before drawing quantitative conclusions.
 
-!!! note
-    Once the calculation is done, the results can be analyzed in `gmx_MMPBSA_ana` (if `-nogui` flag was not used in the command-line). 
-    Please, check the [gmx_MMPBSA_ana][5] section for more information
+## How this example works
 
+The prepared trajectory already contains only `Protein` and the 30-atom `lig`, so
+`solvated_trajectory=0` prevents an unnecessary solvent-stripping step. The calculation processes frames 5 through
+9 with the linear PB equation, an ionic strength of 0.15 M, and the CHARMM-specific PB radii.
 
-  [1]: http://archive.ambermd.org/201508/0382.html 
-  [2]: ../../gmx_MMPBSA_command-line.md#gmx_mmpbsa-command-line
-  [3]: ../../input_file.md#the-input-file
-  [4]: ../../input_file.md#sample-input-files
-  [5]: ../../analyzer.md#gmx_mmpbsa_ana-the-analyzer-tool
-  [6]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/examples/Protein_ligand_LPH_atoms_CHARMMff
+Because `topol.top` is provided, no `forcefields` variable is needed in the concise input; the CHARMM parameters are
+read from the topology include tree. The topology has already been modified to match the LPH-free structure and
+trajectory, with its total charge preserved and the directional-electrostatics and CMAP limitations stated above.
+
+## Expected outputs
+
+A successful calculation produces:
+
+- `FINAL_RESULTS_MMPBSA.dat`: the MM/PBSA summary and binding-energy statistics.
+- `FINAL_RESULTS_MMPBSA.csv`: the per-frame energy terms requested with `-eo`.
+
+## Analyze the results
+
+Open the results with `gmx_MMPBSA_ana` for interactive inspection and plotting. See the
+[`gmx_MMPBSA_ana` documentation][5] for usage details.
+
+  [1]: ../../docs/gmx_MMPBSA_command-line.md#gmx_mmpbsa-command-line
+  [2]: ../../docs/input_file.md#the-input-file
+  [5]: ../../docs/analyzer.md#gmx_mmpbsa_ana-the-analyzer-tool
+  [6]: https://downgit.github.io/#/home?url=https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/examples/Protein_ligand_LPH_atoms_CHARMMff&fileName=gmx_MMPBSA-Protein-Ligand-LPH-CHARMM&rootDirectory=Protein_ligand_LPH_atoms_CHARMMff
   [7]: ../gmx_MMPBSA_test.md#gmx_mmpbsa_test-command-line
-  [8]: https://www.sciencedirect.com/science/article/abs/pii/S0968089616304576?via%3Dihub
+  [8]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/examples/Protein_ligand_LPH_atoms_CHARMMff
+  [9]: https://doi.org/10.1021/jp970736r
+  [10]: https://doi.org/10.1021/jp025852v
+  [11]: https://doi.org/10.1021/acs.jcim.1c00177
+  [12]: https://doi.org/10.1016/j.bmc.2016.06.034
