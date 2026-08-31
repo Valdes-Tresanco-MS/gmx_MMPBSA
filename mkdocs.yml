@@ -221,6 +221,7 @@ nav:
     - Calculations: Q&A/calculations.md
     - Info:
       - Changelog: changelog.md
+      - Compatibility and upgrades: compatibility.md
       - Private Policy: private_policy.md
   - Cite gmx_MMPBSA: cite_us.md
 
