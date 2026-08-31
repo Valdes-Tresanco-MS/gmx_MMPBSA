@@ -226,6 +226,7 @@ calculated from the topology and assigned automatically when explicit QM masks a
 The calculation processes frames 1 through 10 using the GB-HCT model (`igb=1`), mbondi radii (`PBRadii=2`), a salt
 concentration of 0.15 M, and PM6-DH+. The alternative selections retained in the concise input show how to specify
 residues directly or provide separate Amber masks. Every QM region must contain atoms from both receptor and ligand.
+If `qm_theory` is omitted, `gmx_MMPBSA` uses PM6-DH+ by default.
 
 ## References for PM6-DH+
 
