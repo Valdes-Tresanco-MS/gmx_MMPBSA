@@ -3,97 +3,243 @@ template: main.html
 title: Protein-DNA
 ---
 
-# Protein-DNA binding free energy calculations
+# Protein-DNA binding free energy
 
-!!! info
-    This example can be found in the [examples/Protein_DNA][6] directory in the repository folder. If you didn't
-    use gmx_MMPBSA_test before, use [downgit](https://downgit.github.io/#/home) to download the specific folder from 
-    gmx_MMPBSA GitHub repository.
+This example calculates the binding free energy of a protein-DNA complex with the single-trajectory approximation.
+The protein is the receptor and DNA is treated as the ligand.
 
-## Requirements
+<div class="example-card-grid" markdown>
 
-In this case, `gmx_MMPBSA` requires:
+-   **Protocol**
 
-| Input File required            | Required |           Type             | Description |
-|:-------------------------------|:--------:|:--------------------------:|:-------------------------------------------------------------------------------------------------------------|
-| Input parameters file          | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |           `in`          | Input file containing all the specifications regarding the type of calculation that is going to be performed |
-| The MD Structure+mass(db) file | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |    `tpr` `pdb`    | Structure file containing the system coordinates |
-| An index file                  | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |          `ndx`    | file containing the receptor and ligand in separated groups |
-| Receptor and ligand group      | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } |        `integers`       | Receptor and ligand group numbers in the index file |
-| A trajectory file              | :octicons-check-circle-fill-16:{ .req .scale_icon_medium } | `xtc` `pdb` `trr` | Final GROMACS MD trajectory, fitted and with no pbc. |
-| A topology file  | :octicons-check-circle-fill-16:{ .req_opt .scale_icon_medium }    |           `top`         | GROMACS topology file (The `* .itp` files defined in the topology must be in the same folder |
-| A Reference Structure file     | :octicons-check-circle-fill-16:{ .req_optrec .scale_icon_medium } |           `pdb`         | Complex reference structure file (without hydrogens) with the desired assignment of chain ID and residue numbers |
-              
-:octicons-check-circle-fill-16:{ .req } -> Must be defined -- :octicons-check-circle-fill-16:{ .req_optrec } -> 
-Optional, but recommended -- :octicons-check-circle-fill-16:{ .req_opt } -> Optional
+    Single trajectory
 
-_See a detailed list of all the flags in gmx_MMPBSA command line [here][1]_
-## Command-line
-That being said, once you are in the folder containing all files, the command-line will be as follows:
+-   **System**
+
+    Protein-DNA complex
+
+-   **Solvent model**
+
+    GB-Neck2 (`igb=8`)
+
+-   **Bundled test**
+
+    `gmx_MMPBSA_test -t 5`
+
+</div>
+
+## Before you begin
+
+The manual workflow uses the following files and selections:
+
+<div class="example-card-grid" markdown>
+
+-   **Calculation settings**
+
+    `mmpbsa.in` (`-i`)
+
+-   **GROMACS system**
+
+    Structure `com.tpr` (`-cs`) and topology `topol.top` (`-cp`). Keep the `toppar` directory containing the
+    referenced `*.itp` files beside `topol.top`.
+
+-   **Trajectory**
+
+    PBC-corrected and fitted trajectory `com_traj.xtc` (`-ct`)
+
+-   **Molecular selections**
+
+    Index `index.ndx` (`-ci`) with the `receptor` and `dna` groups (`-cg`)
+
+</div>
+
+A complex reference structure without hydrogens may also be supplied with `-cr`. It is optional but recommended
+when you need specific chain IDs or residue numbering. See the [complete command-line reference][1] for all options.
+
+## Run the example
+
+### Run the bundled test
+
+The quickest way to reproduce this example is through the test runner:
+
+```bash
+gmx_MMPBSA_test -t 5
+```
+
+See the [`gmx_MMPBSA_test` documentation][7] for download, selection, and cleanup options.
+
+### Run it manually
+
+[Download the protein-DNA example as a ZIP archive][6].
+
+Extract the archive, change to the `Protein_DNA` directory, and choose either the serial or MPI command. You can also
+[view the example files on GitHub][8] before downloading them.
 
 === "Serial"
 
-        gmx_MMPBSA -O -i mmpbsa.in -cs com.tpr -ct com_traj.xtc -ci index.ndx -cg 3 4 -cp topol.top -o FINAL_RESULTS_MMPBSA.dat -eo FINAL_RESULTS_MMPBSA.csv
+    ```bash
+    gmx_MMPBSA -O \
+      -i mmpbsa.in \
+      -cs com.tpr \
+      -ct com_traj.xtc \
+      -ci index.ndx \
+      -cg receptor dna \
+      -cp topol.top \
+      -o FINAL_RESULTS_MMPBSA.dat \
+      -eo FINAL_RESULTS_MMPBSA.csv
+    ```
 
 === "With MPI"
 
-        mpirun -np 2 gmx_MMPBSA -O -i mmpbsa.in -cs com.tpr -ct com_traj.xtc -ci index.ndx -cg 3 4 -cp topol.top -o FINAL_RESULTS_MMPBSA.dat -eo FINAL_RESULTS_MMPBSA.csv
+    ```bash
+    mpirun -np 2 gmx_MMPBSA -O \
+      -i mmpbsa.in \
+      -cs com.tpr \
+      -ct com_traj.xtc \
+      -ci index.ndx \
+      -cg receptor dna \
+      -cp topol.top \
+      -o FINAL_RESULTS_MMPBSA.dat \
+      -eo FINAL_RESULTS_MMPBSA.csv
+    ```
 
-=== "gmx_MMPBSA_test"
+## Configure the calculation
 
-        gmx_MMPBSA_test -t 5
+The example uses the minimal `mmpbsa.in` shown first below. The all-options version was generated with
+`gmx_MMPBSA --create_input gb` and then updated with the same example-specific values. Both inputs therefore
+describe the same calculation.
 
-where the `mmpbsa.in` input file, is a text file containing the following lines:
+=== "Minimal input"
 
-``` yaml linenums="1" title="Sample input file for GB calculation"
-Sample input file for GB calculation
-This input file is meant to show only that gmx_MMPBSA works. Althought,
-we tried to used the input files as recommended in the Amber manual,
-some parameters have been changed to perform more expensive calculations
-in a reasonable amount of time. Feel free to change the parameters 
-according to what is better for your system.
+    ```yaml linenums="1" title="mmpbsa.in"
+    Sample input file for GB calculation
+    # This input provides a practical starting point for protein-DNA calculations.
+    # Review the dielectric model and other settings for your system.
 
-&general
-sys_name="Prot-DNA"
-startframe=1,
-endframe=10,
-PBRadii=4
-/
-&gb
-igb=8, saltcon=0.150, intdiel=10
-/
-```
+    &general
+    sys_name="Prot-DNA",
+    startframe=1,
+    endframe=10,
+    PBRadii=4,
+    /
+    &gb
+    igb=8, saltcon=0.150, intdiel=10,
+    /
+    ```
+
+=== "Generated input — all options"
+
+    ```yaml linenums="1" title="mmpbsa.in generated with --create_input gb"
+    Input file generated by gmx_MMPBSA (1.6.5+177.g31e12ce1.dirty)
+    Be careful with the variables you modify, some can have severe consequences on the results you obtain.
+
+    # General namelist variables
+    &general
+      sys_name                       = "Prot-DNA"                       # System name; e.g. "complex"
+      startframe                     = 1                                      # First frame; e.g. 1
+      endframe                       = 10                                     # Last frame; e.g. 100
+      interval                       = 1                                      # Frame interval; e.g. 1
+      forcefields                    = "oldff/leaprc.ff99SB,leaprc.gaff"      # Force fields; e.g. "leaprc.protein.ff14SB"
+      ions_parameters                = 1                                      # Ion params; e.g. 1
+      PBRadii                        = 4                                      # PB radii set; 1-7
+      temperature                    = 298.15                                 # Temperature (K); e.g. 298.15
+      qh_entropy                     = 0                                      # Legacy QH output reader; new calculations reject 1
+      interaction_entropy            = 0                                      # Run IE entropy; 0/1
+      ie_segment                     = 25                                     # IE segment length (%); e.g. 25
+      c2_entropy                     = 0                                      # Run C2 entropy; 0/1
+      assign_chainID                 = 0                                      # Assign chain IDs; 0/1
+      exp_ki                         = 0.0                                    # Experimental Ki (nM); e.g. 0.0
+      full_traj                      = 0                                      # Write full trajectory; 0/1
+      gmx_path                       = ""                                     # GROMACS path; e.g. "/usr/bin"
+      keep_files                     = 2                                      # Files to keep; 0-2
+      netcdf                         = 0                                      # Use NetCDF; 0/1
+      solvated_trajectory            = 1                                      # Clean solvated traj.; 0/1
+      explicit_waters                = 0                                      # Explicit waters; e.g. 10
+      explicit_waters_mask           = ""                                     # Water reference; e.g. ":1-10", "within 4", "dASA"
+      explicit_waters_group          = ""                                     # Solvent group; e.g. "TIP3"
+      explicit_waters_dasa_cutoff    = 0.5                                    # dASA cutoff; e.g. 0.5
+      explicit_waters_as             = "receptor"                             # Water owner; e.g. "receptor"
+      explicit_waters_extra_points   = "error"                                # Virtual sites; "error" or "strip"
+      verbose                        = 1                                      # Output verbosity; 0-2
+    /
+
+    # (AMBER) Generalized-Born namelist variables
+    &gb
+      igb                            = 8                                      # GB model, e.g. 2 or 8
+      intdiel                        = 10                                    # Internal dielectric; e.g. 1.0
+      extdiel                        = 78.5                                   # External dielectric; e.g. 78.5
+      saltcon                        = 0.150                                  # Salt conc. (M); e.g. 0.150
+      surften                        = 0.0072                                 # Surface tension; e.g. 0.0072
+      surfoff                        = 0.0                                    # Surface offset; e.g. 0.0
+      molsurf                        = 0                                      # Use molsurf; 0/1
+      msoffset                       = 0.0                                    # Molsurf offset; e.g. 0.0
+      probe                          = 1.4                                    # Probe radius (A); e.g. 1.4
+      ifqnt                          = 0                                      # Enable QM/MM; 0/1
+      qm_theory                      = "PM6-DH+"                              # QM theory; e.g. "PM6-DH+"
+      qm_residues                    = ""                                     # QM residues; e.g. ":1-5"
+      com_qmmask                     = ""                                     # Complex QM mask; e.g. ":1-5"
+      rec_qmmask                     = ""                                     # Receptor QM mask; e.g. ":1-5"
+      lig_qmmask                     = ""                                     # Ligand QM mask; e.g. ":1"
+      qmcharge_com                   = 0                                      # Complex QM charge; e.g. 0
+      qmcharge_lig                   = 0                                      # Ligand QM charge; e.g. 0
+      qmcharge_rec                   = 0                                      # Receptor QM charge; e.g. 0
+      qmcut                          = 9999.0                                 # QM cutoff (A); e.g. 9999
+      scfconv                        = 1e-08                                  # SCF convergence; e.g. 1.0e-8
+      itrmax                         = 1000                                   # Maximum SCF iterations; e.g. 5000
+      # ndiis_attempts                 = None                                 # Maximum DIIS attempts per SCF cycle; e.g. 700
+      peptide_corr                   = 0                                      # Peptide correction; 0/1
+      writepdb                       = 1                                      # Write QM PDB; 0/1
+      verbosity                      = 0                                      # QM/MM verbosity; 0-5
+      alpb                           = 0                                      # Use ALPB; 0/1
+      arad_method                    = 1                                      # ALPB size method; e.g. 1
+    /
+
+    ```
 
 !!! info "Keep in mind"
-    See a detailed list of all the options in `gmx_MMPBSA` input file [here][2] as well as several [examples][3]. 
-    These examples are meant only to show that gmx_MMPBSA works. It is recommended to go over these variables, even 
-    the ones that are not included in this input file but are available for the calculation that it's performed and
-    see the values they can take (check the [input file section](../../input_file.md)). This will allow you to 
-    tackle a number of potential problems or simply use fancier approximations in your calculations.
-  
-## Considerations
-In this case, a single trajectory (ST) approximation is followed, which means the receptor and ligand (in this case, 
-the ligand is DNA) amber format topologies and trajectories will be obtained from that of the complex. To do so, an 
-MD Structure+mass(db) file (`com.tpr`), an index file (`index.ndx`), a trajectory file (`com_traj.xtc`), and both 
-the receptor and ligand group numbers in the index file (`3 4`) are needed. The `mmpbsa.in` input file will contain
-all  the parameters needed for the MM/PB(GB)SA calculation. In this case, 10 frames 
-are going to be used when performing the MM/PB(GB)SA 
-calculation with the igb8 (GB-Neck2) model and a salt concentration = 0.15M. Of note, mbondi3 radii (`PBRadii=4`) 
-will be used as recommended for GB-Neck2 solvation model. Also, a high dielectric constant `intdiel=10` will be used 
-because of the high number of charged residues at the interface.
+    This input provides a practical starting point and can serve as the basis for production calculations. Review the
+    available [input-file options][2], their accepted values, and adjust settings that depend on your system or protocol.
+    Additional sample inputs are available [here][3].
 
-A plain text output file with all the statistics (default: `FINAL_RESULTS_MMPBSA.dat`) and a CSV-format 
-output file containing all energy terms for every frame in every calculation will be saved. The file name in 
-'-eo' flag will be forced to end in [.csv] (`FINAL_RESULTS_MMPBSA.csv` in this case). This file is only written when 
-specified on the command-line.
+## How this example works
 
-!!! note
-    Once the calculation is done, the results can be analyzed in `gmx_MMPBSA_ana` (if `-nogui` flag was not used in the command-line). 
-    Please, check the [gmx_MMPBSA_ana][4] section for more information
-  
+The ST approximation reads the complex simulation and extracts the protein receptor and DNA ligand from every
+selected frame. The `receptor` selection contains the protein and its two zinc ions; the `dna` selection contains
+the nucleic-acid component. Together they define an 835-atom complex from the solvated source trajectory.
+
+The calculation processes frames 1 through 10 with GB-Neck2 (`igb=8`), the matching mbondi3 radii (`PBRadii=4`),
+and a salt concentration of 0.15 M. This example uses `intdiel=10` to screen the highly charged interface.
+
+!!! note "Internal dielectric"
+    Our work and other MM/PB(GB)SA studies support considering a larger solute dielectric for highly charged
+    interfaces. It damps otherwise overly favorable electrostatic interactions and empirically compensates, in part,
+    for polarization effects omitted by typical fixed-charge calculations. This behavior has been observed for
+    [charged ligand-binding sites][9], while our systematic [computational alanine-scanning assessment][10] identified
+    the internal dielectric as the most influential parameter examined and showed that its appropriate value depends
+    on the energetic character of the interface.
+
+    Accordingly, `intdiel=10` is a motivated but system-specific choice, not a universal setting for protein-DNA
+    complexes. Its suitability should be evaluated for the system, protonation states, ionic conditions, and intended
+    comparison.
+
+## Expected outputs
+
+A successful calculation produces:
+
+- `FINAL_RESULTS_MMPBSA.dat`: the MM/GBSA summary and binding-energy statistics.
+- `FINAL_RESULTS_MMPBSA.csv`: the per-frame energy terms requested with `-eo`.
+
+## Analyze the results
+
+Open the results with `gmx_MMPBSA_ana` for interactive inspection and plotting. See the
+[`gmx_MMPBSA_ana` documentation][5] for usage details.
+
   [1]: ../../gmx_MMPBSA_command-line.md#gmx_mmpbsa-command-line
   [2]: ../../input_file.md#the-input-file
   [3]: ../../input_file.md#sample-input-files
-  [4]: ../../analyzer.md#gmx_mmpbsa_ana-the-analyzer-tool
-  [6]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/examples/Protein_DNA
+  [5]: ../../analyzer.md#gmx_mmpbsa_ana-the-analyzer-tool
+  [6]: https://downgit.github.io/#/home?url=https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/examples/Protein_DNA&fileName=gmx_MMPBSA-Protein-DNA&rootDirectory=Protein_DNA
   [7]: ../gmx_MMPBSA_test.md#gmx_mmpbsa_test-command-line
+  [8]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/examples/Protein_DNA
+  [9]: https://pmc.ncbi.nlm.nih.gov/articles/PMC5460638/
+  [10]: https://doi.org/10.1021/acs.jpcb.2c07079
