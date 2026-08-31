@@ -1,11 +1,12 @@
 Input file for a short AMBER input files test
+# This input provides a practical starting point for native AMBER calculations.
+# Review the model settings and frame range for your system.
+
 &general
-   sys_name="AMBER",
-   startframe=1,
-   endframe=5,
-   interval=1,
-   verbose=1,
+sys_name="AMBER",
+startframe=1,
+endframe=5,
 /
 &gb
-   igb=2, saltcon=0.100,
+igb=1, saltcon=0.100,
 /
