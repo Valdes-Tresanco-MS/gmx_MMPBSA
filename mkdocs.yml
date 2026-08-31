@@ -215,8 +215,6 @@ nav:
         - Protein-protein: examples/OPLS/protein_protein/README.md
     - Support for psf_dcd files:
         - Protein-protein: examples/psf_dcd/protein_protein/README.md
-        - Protein-ligand: examples/psf_dcd/protein_ligand/README.md
-        - Multicomponent system: examples/psf_dcd/multicomponent_system/README.md
 
   - Help:
     - Help: Q&A/README.md
