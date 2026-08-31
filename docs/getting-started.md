@@ -94,7 +94,7 @@ In the current version, gmx_MMPBSA supports a number of different systems, inclu
 * [Metalloprotein-ligand][15]
 * [Protein-glycan][16]
 * [Membrane proteins][17]
-* Multicomponent systems (_e.g._, [Protein-DNA-RNA-Ions-Ligand][18])
+<!-- * Multicomponent systems (_e.g._, [Protein-DNA-RNA-Ions-Ligand][18]) -->
 
   [12]: examples/Protein_protein/README.md
   [13]: examples/Protein_ligand/ST/README.md
@@ -102,7 +102,7 @@ In the current version, gmx_MMPBSA supports a number of different systems, inclu
   [15]: examples/Metalloprotein_ligand/README.md
   [16]: examples/Protein_glycan/README.md
   [17]: examples/Protein_membrane/README.md
-  [18]: examples/Comp_receptor/README.md
+<!-- [18]: examples/Comp_receptor/README.md -->
 
 !!! note "Support for Amber, OPLS, and CHARMM force fields"
     In the current version, gmx_MMPBSA supports Amber, OPLS, and CHARMM force fields. Any system built for GROMACS with 

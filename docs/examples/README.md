@@ -3,11 +3,10 @@ template: main.html
 title: Examples
 ---
 
-Here you can find a representation of almost all the types of calculations and analyses that you can perform 
-with `gmx_MMPBSA`. Although each example focuses on specific cases, you can use `gmx_MMPBSA` on systems that combine 
-a number of different components (_i.e._ metalloprotein-ligand complex, Protein-DNA-ligand, etc.). In addition, 
-several types of calculations (_e.g._ GB, Alanine scanning and Per-residue decomposition; PB, Interaction Entropy, 
-and Per-wise decomposition) can be also performed in the same run for a specific system.
+These examples cover most of the calculations and analyses available in `gmx_MMPBSA`. Although each example focuses on
+a specific case, gmx_MMPBSA can process systems containing several components (_e.g._, metalloprotein-ligand or
+protein-DNA-ligand complexes). A single run can also combine multiple calculation types, such as GB with alanine
+scanning and per-residue decomposition, or PB with interaction entropy and pairwise decomposition.
 
 ## Maintaining example documentation
 
@@ -49,9 +48,8 @@ Two Jupyter notebooks are available for interactive use:
 
 ## Systems
 
-This is a representation of the systems that can be processed and analyzed with gmx_MMPBSA. Our program has a robust 
-method to process input structures. Even if your system is not represented here, still have a go, you won't 
-be disappointed! 😀
+The following examples represent systems that gmx_MMPBSA can process and analyze. The list is not exhaustive;
+gmx_MMPBSA can also process other systems with compatible input structures.
 
 * [Protein-protein](Protein_protein/README.md)[^1][^2][^3]
 * [Protein-ligand](Protein_ligand/ST/README.md)[^1][^2]
@@ -59,19 +57,24 @@ be disappointed! 😀
 * [Protein-glycan](Protein_glycan/README.md)[^1][^2][^3]
 * [MMPBSA with membrane proteins](Protein_membrane/README.md)[^1][^2]
 * [Metalloprotein-ligand](Metalloprotein_ligand/README.md)[^1][^2]
+<!--
 * [Multicomponent system (Protein-DNA-RNA-Ions-Ligand)](Comp_receptor/README.md)[^1][^2][^3]
+* [Protein-DNA-RNA-Ion-ligand](Protein_DNA_RNA_Ion_ligand/README.md)[^1][^2][^3]
+-->
+<!--
 * COVID-19 related proteins
     * [Info](COVID-19_related_proteins/README.md)
     * [Main protease](COVID-19_related_proteins/Main_protease_7l5d/README.md)
     * [Papain-like protease](COVID-19_related_proteins/Papain-like_protease_7koj/README.md)
     * [S1-ACE2 complex](COVID-19_related_proteins/S1-ACE2_complex_7dmu/README.md)
     * [S1 RBD with antibody](COVID-19_related_proteins/S1_RBD_with_antibody_6zlr/README.md)
+-->
 
 ## Analyses
 
-This section focuses on the analysis that can be performed with gmx_MMPBSA. Although each example focuses on specific 
-cases, you can use gmx_MMPBSA to perform several types of calculations (_e.g._ GB, Alanine scanning and Per-residue 
-decomposition; PB, Interaction Entropy, and Per-residue decomposition) in the same run for a specific system.
+This section covers the analyses available in gmx_MMPBSA. Although each example focuses on a specific case, one run
+can combine several calculation types (_e.g._, GB with alanine scanning and per-residue decomposition, or PB with
+interaction entropy and per-residue decomposition).
 
 * [Single Trajectory Protocol](Protein_ligand/ST/README.md)[^1][^2][^3]
 * [Multiple Trajectory Protocol](Protein_ligand/MT/README.md)[^1]
@@ -94,32 +97,42 @@ decomposition; PB, Interaction Entropy, and Per-residue decomposition) in the sa
 * [Python API extraction](API/README.md)
 * [Local API/seaborn notebook](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/blob/colab-notebook/notebooks/gmx_MMPBSA_Local.ipynb)
 
-## AMBER support
+## Input formats and force-field workflows
 
-This section focuses on how to work directly with native AMBER topologies, coordinates, and trajectory files.
+The examples below demonstrate preparation workflows for different input formats and force fields. The molecular
+systems shown are representative examples, not a list of supported receptor-ligand compositions. For example, a
+protein-protein tutorial under native AMBER or PSF/DCD does not mean that the workflow is restricted to
+protein-protein complexes. The same preparation principles apply to other systems when the resulting topologies,
+structures, trajectories, and molecular selections are compatible with `gmx_MMPBSA` or `amber_MMPBSA`.
 
-* [AMBER input files](AMBER/README.md)[^1]
+Individual calculation models can impose narrower requirements. Review each tutorial's topology-conversion notes
+and the restrictions of the selected energy, entropy, decomposition, or membrane method.
 
-## CHARMMff support
+### Native AMBER inputs
 
-This section focuses more on how to work with systems prepared with CHARMM force fields. We only show few examples for better clarity.
+Use native AMBER topologies and trajectories directly with `amber_MMPBSA`.
 
-* [Protein-ligand](Protein_ligand_CHARMMff/README.md)[^1][^2]
-* [Protein-ligand membrane system (CHARMM-GUI)](Protein_membrane/README.md)[^1]
-* [Protein-ligand with LPH atoms](Protein_ligand_LPH_atoms_CHARMMff/README.md)[^1]
+* [Representative protein-protein example](AMBER/README.md)[^1]
 
-## OPLSff support
+### GROMACS topologies prepared with CHARMM
 
-This section focuses more on how to work with systems prepared with OPLS force fields. We only show few examples for better clarity.
+These examples use supplied GROMACS topologies containing CHARMM parameters, including specialized membrane and LPH
+workflows.
 
-* [Protein-protein](OPLS/protein_protein/README.md)
+* [Representative protein-ligand example](Protein_ligand_CHARMMff/README.md)[^1][^2]
+* [Specialized membrane protein-ligand example (CHARMM-GUI)](Protein_membrane/README.md)[^1]
+* [Specialized ligand example with LPH virtual sites](Protein_ligand_LPH_atoms_CHARMMff/README.md)[^1]
 
-## Support for psf_dcd files
+### GROMACS topologies prepared with OPLS
 
-This section focuses on how to work with psf-dcd files. These files are used for several MD simulation 
-programs such as NAMD, OpenMM or GENESIS. We plan to add more examples in the near future.
+* [Representative protein-protein example](OPLS/protein_protein/README.md)
 
-* [Protein-protein binding free energy calculations](psf_dcd/protein_protein/README.md)
+### Converting PSF/DCD simulations
+
+PSF and DCD files are preparation sources, not files read directly by `gmx_MMPBSA`. Convert them into a compatible
+topology, structure, trajectory, index, and receptor/ligand selections before analysis.
+
+* [Representative protein-protein conversion example](psf_dcd/protein_protein/README.md)
 
  [^1]: It is part of the `All` set defined with `-t 0` in `gmx_MMPBSA_test`
  [^2]: It is part of the `Minimal` set defined with `-t 1` in `gmx_MMPBSA_test`

@@ -179,13 +179,14 @@ nav:
       - Protein-glycan: examples/Protein_glycan/README.md
       - Membrane proteins: examples/Protein_membrane/README.md
       - Metalloprotein-ligand: examples/Metalloprotein_ligand/README.md
-      - Multicomponent system: examples/Comp_receptor/README.md
-      - COVID-19 related proteins:
-          - Info: examples/COVID-19_related_proteins/README.md
-          - Main protease: examples/COVID-19_related_proteins/Main_protease_7l5d/README.md
-          - Papain-like protease: examples/COVID-19_related_proteins/Papain-like_protease_7koj/README.md
-          - S1-ACE2 complex: examples/COVID-19_related_proteins/S1-ACE2_complex_7dmu/README.md
-          - S1 RBD with antibody: examples/COVID-19_related_proteins/S1_RBD_with_antibody_6zlr/README.md
+      # - Multicomponent system: examples/Comp_receptor/README.md
+      # - Protein-DNA-RNA-Ion-ligand: examples/Protein_DNA_RNA_Ion_ligand/README.md
+      # - COVID-19 related proteins:
+      #     - Info: examples/COVID-19_related_proteins/README.md
+      #     - Main protease: examples/COVID-19_related_proteins/Main_protease_7l5d/README.md
+      #     - Papain-like protease: examples/COVID-19_related_proteins/Papain-like_protease_7koj/README.md
+      #     - S1-ACE2 complex: examples/COVID-19_related_proteins/S1-ACE2_complex_7dmu/README.md
+      #     - S1 RBD with antibody: examples/COVID-19_related_proteins/S1_RBD_with_antibody_6zlr/README.md
     - Analyses:
         - Single Trajectory Protocol: examples/Protein_ligand/ST/README.md
         - Multiple Trajectory Protocol: examples/Protein_ligand/MT/README.md
@@ -206,15 +207,12 @@ nav:
         - QM/MMGBSA: examples/QM_MMGBSA/README.md
         - Correlation: examples/Correlation/README.md
         - Python API extraction: examples/API/README.md
-    - AMBER Support:
-        - Protein-protein: examples/AMBER/README.md
-    - CHARMMff Support:
-        - Protein-ligand: examples/Protein_ligand_CHARMMff/README.md
-        - Protein-ligand with LPH particles (ST): examples/Protein_ligand_LPH_atoms_CHARMMff/README.md
-    - OPLSff Support:
-        - Protein-protein: examples/OPLS/protein_protein/README.md
-    - Support for psf_dcd files:
-        - Protein-protein: examples/psf_dcd/protein_protein/README.md
+    - Input formats and force-field workflows:
+        - Native AMBER - representative protein-protein: examples/AMBER/README.md
+        - CHARMM topology - representative protein-ligand: examples/Protein_ligand_CHARMMff/README.md
+        - CHARMM LPH sites - specialized protein-ligand: examples/Protein_ligand_LPH_atoms_CHARMMff/README.md
+        - OPLS topology - representative protein-protein: examples/OPLS/protein_protein/README.md
+        - PSF/DCD conversion - representative protein-protein: examples/psf_dcd/protein_protein/README.md
 
   - Help:
     - Help: Q&A/README.md
