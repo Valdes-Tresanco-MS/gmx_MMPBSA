@@ -453,20 +453,21 @@ def make_mutant_trajectories(INPUT, FILES, rank, cpptraj, norm_sys, mut_sys, pre
             or FILES.receptor_prmtop != FILES.mutant_receptor_prmtop
         )
     ):
-        raise MMPBSA_Error('Alanine/Glycine scanning requires either a mutated '
-                           'ligand or receptor topology file with only 1 mutant residue, but not '
-                           'both')
+        raise MMPBSA_Error('Alanine/Glycine scanning supports one mutated component at a time; '
+                           'mixed receptor/ligand composite mutations are not supported')
 
     master = rank == 0
     # FIXME: create folders for mutants
 
     # Have each rank mutate our rank's normal complex trajectory
-    try:
-        com_mut = MutantMdcrd(pre + 'complex.%s.%d' % (trj_suffix, rank),
-                              norm_sys.complex_prmtop, mut_sys.complex_prmtop)
-    except MutantResError:
-        com_mut = GlyMutantMdcrd(pre + 'complex.%s.%d' % (trj_suffix, rank),
-                                 norm_sys.complex_prmtop, mut_sys.complex_prmtop)
+    def make_mutant_traj(path, normal_topology, mutant_topology):
+        try:
+            return MutantMdcrd(path, normal_topology, mutant_topology)
+        except MutantResError:
+            return GlyMutantMdcrd(path, normal_topology, mutant_topology)
+
+    com_mut = make_mutant_traj(pre + 'complex.%s.%d' % (trj_suffix, rank),
+                               norm_sys.complex_prmtop, mut_sys.complex_prmtop)
     com_mut.MutateTraj(pre + 'mutant_complex.%s.%d' % (trj_suffix, rank))
 
     # Have each rank mutate our rank's normal receptor or ligand trajectory
@@ -474,23 +475,15 @@ def make_mutant_trajectories(INPUT, FILES, rank, cpptraj, norm_sys, mut_sys, pre
     # present in there
     if not stability:
         if FILES.receptor_prmtop != FILES.mutant_receptor_prmtop:
-            try:
-                rec_mut = MutantMdcrd(pre + 'receptor.%s.%d' % (trj_suffix, rank),
-                                      norm_sys.receptor_prmtop, mut_sys.receptor_prmtop)
-            except MutantResError:
-                rec_mut = GlyMutantMdcrd(pre + 'receptor.%s.%d' % (trj_suffix, rank),
-                                         norm_sys.receptor_prmtop, mut_sys.receptor_prmtop)
+            rec_mut = make_mutant_traj(pre + 'receptor.%s.%d' % (trj_suffix, rank),
+                                       norm_sys.receptor_prmtop, mut_sys.receptor_prmtop)
             rec_mut.MutateTraj(pre + 'mutant_receptor.%s.%d' % (trj_suffix, rank))
             shutil.copyfile(pre + 'ligand.%s.%d' % (trj_suffix, rank),
                             pre + 'mutant_ligand.%s.%d' % (trj_suffix, rank))
 
         elif FILES.ligand_prmtop != FILES.mutant_ligand_prmtop:
-            try:
-                lig_mut = MutantMdcrd(pre + 'ligand.%s.%d' % (trj_suffix, rank),
-                                      norm_sys.ligand_prmtop, mut_sys.ligand_prmtop)
-            except MutantResError:
-                lig_mut = GlyMutantMdcrd(pre + 'ligand.%s.%d' % (trj_suffix, rank),
-                                         norm_sys.ligand_prmtop, mut_sys.ligand_prmtop)
+            lig_mut = make_mutant_traj(pre + 'ligand.%s.%d' % (trj_suffix, rank),
+                                       norm_sys.ligand_prmtop, mut_sys.ligand_prmtop)
             lig_mut.MutateTraj(pre + 'mutant_ligand.%s.%d' % (trj_suffix, rank))
             shutil.copyfile(pre + 'receptor.%s.%d' % (trj_suffix, rank),
                             pre + 'mutant_receptor.%s.%d' % (trj_suffix, rank))
@@ -538,20 +531,20 @@ def make_mutant_trajectories(INPUT, FILES, rank, cpptraj, norm_sys, mut_sys, pre
 
     # Mutate our nmode trajectories if need be
     if INPUT['nmode']['nmoderun']:
-        com_mut = MutantMdcrd(pre + 'complex_nm.%s.%d' % (trj_suffix, rank),
-                              norm_sys.complex_prmtop, mut_sys.complex_prmtop)
+        com_mut = make_mutant_traj(pre + 'complex_nm.%s.%d' % (trj_suffix, rank),
+                                   norm_sys.complex_prmtop, mut_sys.complex_prmtop)
         com_mut.MutateTraj(pre + 'mutant_complex_nm.%s.%d' % (trj_suffix, rank))
         if not stability and FILES.receptor_prmtop != FILES.mutant_receptor_prmtop:
-            rec_mut = MutantMdcrd(pre + 'receptor_nm.%s.%d' % (trj_suffix, rank),
-                                  norm_sys.receptor_prmtop, mut_sys.receptor_prmtop)
+            rec_mut = make_mutant_traj(pre + 'receptor_nm.%s.%d' % (trj_suffix, rank),
+                                       norm_sys.receptor_prmtop, mut_sys.receptor_prmtop)
             rec_mut.MutateTraj(pre + 'mutant_receptor_nm.%s.%d' %
                                (trj_suffix, rank))
             shutil.copyfile(pre + 'ligand_nm.%s.%d' % (trj_suffix, rank),
                             pre + 'mutant_ligand_nm.%s.%d' % (trj_suffix, rank))
 
         if not stability and FILES.ligand_prmtop != FILES.mutant_ligand_prmtop:
-            lig_mut = MutantMdcrd(pre + 'ligand_nm.%s.%d' % (trj_suffix, rank),
-                                  norm_sys.ligand_prmtop, mut_sys.ligand_prmtop)
+            lig_mut = make_mutant_traj(pre + 'ligand_nm.%s.%d' % (trj_suffix, rank),
+                                       norm_sys.ligand_prmtop, mut_sys.ligand_prmtop)
             lig_mut.MutateTraj(pre + 'mutant_ligand_nm.%s.%d' %
                                (trj_suffix, rank))
             shutil.copyfile(pre + 'ligand_nm.%s.%d' % (trj_suffix, rank),
@@ -559,7 +552,8 @@ def make_mutant_trajectories(INPUT, FILES, rank, cpptraj, norm_sys, mut_sys, pre
 
     # If we're doing a quasi-harmonic approximation we need the full com traj
     if (INPUT['general']['full_traj'] or INPUT['general']['qh_entropy']) and master:
-        com_mut = MutantMdcrd(pre + 'complex.%s' % trj_suffix, norm_sys.complex_prmtop, mut_sys.complex_prmtop)
+        com_mut = make_mutant_traj(pre + 'complex.%s' % trj_suffix,
+                                   norm_sys.complex_prmtop, mut_sys.complex_prmtop)
         com_mut.MutateTraj(pre + 'mutant_complex.%s' % trj_suffix)
 
     return str(com_mut), com_mut.mutres

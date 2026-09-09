@@ -52,6 +52,8 @@ def data2pkl(app):
         numframes=app.numframes,
         numframes_nmode=app.numframes_nmode,
         mutant_index=app.mutant_index,
+        mutant_indices=getattr(app, 'mutant_indices',
+                               [app.mutant_index] if app.mutant_index is not None else []),
         mut_str=app.mut_str,
         using_chamber=app.using_chamber,
         input_file=app.input_file_text,

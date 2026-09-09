@@ -103,6 +103,8 @@ class CheckMakeTop:
         self.external_progs = external_programs
         self.use_temp = False
         self.com_mut_index = None
+        self.com_mut_indices = []
+        self.part_indices = []
 
         # Define Gromacs executable
         self.make_ndx = self.external_progs['make_ndx']
@@ -978,8 +980,10 @@ class CheckMakeTop:
         if self.INPUT['ala']['alarun']:
             logging.info('Building Mutant Complex Topology...')
             # get mutation index in complex
-            self.com_mut_index, self.part_mut, self.part_index = self.getMutationInfo()
-            mut_com_amb_prm = self.makeMutTop(com_amb_prm, self.com_mut_index)
+            self.com_mut_indices, self.part_mut, self.part_indices = self.getMutationInfo()
+            self.com_mut_index = self.com_mut_indices[0] if len(self.com_mut_indices) == 1 else None
+            self.part_index = self.part_indices[0] if len(self.part_indices) == 1 else None
+            mut_com_amb_prm = self.makeMutTop(com_amb_prm, self.com_mut_indices)
             logging.info(f"Assigning PBRadii {PBRadii[self.INPUT['general']['PBRadii']]} to Mutant Complex...")
             action = ChRad(mut_com_amb_prm, PBRadii[self.INPUT['general']['PBRadii']])
             logging.info('Writing Mutant Complex AMBER topology...')
@@ -990,7 +994,7 @@ class CheckMakeTop:
                 out_prmtop = self.mutant_receptor_pmrtop
                 self.mutant_ligand_pmrtop = None
                 if rec_hastop:
-                    mtop = self.makeMutTop(rec_amb_prm, self.part_index)
+                    mtop = self.makeMutTop(rec_amb_prm, self.part_indices)
                 else:
                     mut_rec_keep = rec_indexes_string
                     if explicit_water_range:
@@ -1002,7 +1006,7 @@ class CheckMakeTop:
                 out_prmtop = self.mutant_ligand_pmrtop
                 self.mutant_receptor_pmrtop = None
                 if lig_hastop:
-                    mtop = self.makeMutTop(lig_amb_prm, self.part_index)
+                    mtop = self.makeMutTop(lig_amb_prm, self.part_indices)
                 else:
                     mut_lig_strip = rec_indexes_string
                     if explicit_water_range:
@@ -1025,11 +1029,11 @@ class CheckMakeTop:
         return (self.complex_pmrtop, self.receptor_pmrtop, self.ligand_pmrtop, self.mutant_complex_pmrtop,
                 self.mutant_receptor_pmrtop, self.mutant_ligand_pmrtop)
 
-    def _split_str(self, start, r, c, basename, struct, mut_index=0):
+    def _split_str(self, start, r, c, basename, struct, mut_index=None):
         end = start + (r[1] - r[0])
         mask = f'!:{start}-{end}'
         str_ = self.molstr(struct)
-        if mut_index:
+        if mut_index is not None and (not isinstance(mut_index, (list, tuple)) or mut_index):
             str_ = self.makeMutTop(str_, mut_index, True)
         str_.strip(mask)
         str_file = f'{self.FILES.prefix}{basename}_F{c}.pdb'
@@ -1061,38 +1065,46 @@ class CheckMakeTop:
         for c, r in enumerate(self.resi['REC']['num'], start=1):
             end, sfile = self._split_str(start, r, c, 'REC', self.receptor_str)
             self.receptor_list[f'REC{c}'] = sfile
-            start += end
+            start = end + 1
 
         self.ligand_list = {}
         start = 1
         for c, r in enumerate(self.resi['LIG']['num'], start=1):
             end, sfile = self._split_str(start, r, c, 'LIG', self.ligand_str)
             self.ligand_list[f'LIG{c}'] = sfile
-            start += end
+            start = end + 1
 
         self.mut_receptor_list = {}
         self.mut_ligand_list = {}
         if self.INPUT['ala']['alarun']:
-            self.com_mut_index, self.part_mut, self.part_index = self.getMutationInfo()
+            self.com_mut_indices, self.part_mut, self.part_indices = self.getMutationInfo()
+            self.com_mut_index = self.com_mut_indices[0] if len(self.com_mut_indices) == 1 else None
+            self.part_index = self.part_indices[0] if len(self.part_indices) == 1 else None
             start = 1
             if self.part_mut == 'REC':
                 logging.info('Detecting mutation in Receptor. Building Mutant Receptor structure...')
                 self.mutant_ligand_pmrtop = None
                 for c, r in enumerate(self.resi['REC']['num']):
+                    segment_end = start + (r[1] - r[0])
+                    segment_mut_indices = [index for index in self.part_indices
+                                           if start - 1 <= index < segment_end]
                     end, sfile = self._split_str(
-                        start, r, c, 'MUT_REC', self.receptor_str, self.part_index
+                        start, r, c, 'MUT_REC', self.receptor_str, segment_mut_indices
                     )
                     self.mut_receptor_list[f'MREC{c}'] = sfile
-                    start += end
+                    start = end + 1
             else:
                 logging.info('Detecting mutation in Ligand. Building Mutant Ligand Structure...')
                 self.mutant_receptor_pmrtop = None
                 for c, r in enumerate(self.resi['LIG']['num']):
+                    segment_end = start + (r[1] - r[0])
+                    segment_mut_indices = [index for index in self.part_indices
+                                           if start - 1 <= index < segment_end]
                     end, sfile = self._split_str(
-                        start, r, c, 'MUT_LIG', self.ligand_str, self.part_index
+                        start, r, c, 'MUT_LIG', self.ligand_str, segment_mut_indices
                     )
                     self.mut_ligand_list[f'MLIG{c}'] = sfile
-                    start += end
+                    start = end + 1
 
     def _cleantop_with_retry(self, top_file, ndx, structure, id='complex'):
         logging.info('Preparing %s topology from %s using %d selected atom indexes...',
@@ -1191,7 +1203,8 @@ class CheckMakeTop:
             rec_mask = f'{rec_mask},{first_water}-{last_water}'
 
         if self.INPUT['ala']['alarun']:
-            self.resl[self.com_mut_index].set_mut(self.INPUT['ala']['mutant'])
+            for index in self.com_mut_indices:
+                self.resl[index].set_mut(self.INPUT['ala']['mutant'])
         return rec_mask, lig_mask, self.resl
 
     @staticmethod
@@ -1432,35 +1445,36 @@ class CheckMakeTop:
             GMXMMPBSA_ERROR("No residue for mutation was defined")
         # dict = { resind: [chain, resnum, icode]
         sele_res_dict = self.get_selected_residues(self.INPUT['ala']['mutant_res'])
-        if len(sele_res_dict) != 1:
-            GMXMMPBSA_ERROR('Only ONE mutant residue is allowed!')
-        r = sele_res_dict[0]
-        res = self.complex_str.residues[r - 1]
-        icode = f':{res.insertion_code}' if res.insertion_code else ''
-        if (
-            not parmed.residue.AminoAcidResidue.has(res.name) and res.name not in ['HSP', 'HSE', 'HSD']
-            or res.name in ['CYX', 'PRO', 'GLY']
-            or res.name == 'ALA' and self.INPUT['ala']['mutant'] == 'ALA'
-        ):
-            GMXMMPBSA_ERROR(f"Selecting residue {res.chain}:{res.name}:{res.number}{icode} can't be mutated. Please, "
-                            f"define a valid residue...")
+        if not sele_res_dict:
+            GMXMMPBSA_ERROR('No valid residue was found for mutation')
 
-        if r.is_receptor():
-            part_index = r.id_index - 1
-            part_mut = 'REC'
-        elif r.is_ligand():
-            part_index = r.id_index - 1
-            part_mut = 'LIG'
-        else:
-            part_index = None
-            part_mut = None
-            if icode:
-                GMXMMPBSA_ERROR(f'Residue {res.chain}:{res.number}:{res.insertion_code} not found')
-            else:
-                GMXMMPBSA_ERROR(f'Residue {res.chain}:{res.number} not found')
+        parts = {'REC' if residue.is_receptor() else 'LIG' if residue.is_ligand() else None
+                 for residue in sele_res_dict}
+        if None in parts:
+            residue = next(residue for residue in sele_res_dict
+                           if not residue.is_receptor() and not residue.is_ligand())
+            GMXMMPBSA_ERROR(f'Residue {residue.chain}:{residue.number} not found')
+        if len(parts) > 1:
+            GMXMMPBSA_ERROR('Composite alanine/glycine mutations cannot mix receptor and ligand residues.')
+        if len(sele_res_dict) > 1 and self.INPUT['ala']['cas_intdiel']:
+            GMXMMPBSA_ERROR('cas_intdiel=1 is ambiguous for composite mutations. Set cas_intdiel=0 or select one residue.')
 
-        # return r - 1 since r is the complex mutant index from amber selection format. Needed for top mutation only
-        return r - 1, part_mut, part_index
+        com_mut_indices = []
+        part_indices = []
+        for residue_ref in sele_res_dict:
+            res = self.complex_str.residues[residue_ref - 1]
+            icode = f':{res.insertion_code}' if res.insertion_code else ''
+            if (
+                not parmed.residue.AminoAcidResidue.has(res.name) and res.name not in ['HSP', 'HSE', 'HSD']
+                or res.name in ['CYX', 'PRO', 'GLY']
+                or res.name == 'ALA' and self.INPUT['ala']['mutant'] == 'ALA'
+            ):
+                GMXMMPBSA_ERROR(f"Selecting residue {res.chain}:{res.name}:{res.number}{icode} can't be mutated. Please, "
+                                f"define a valid residue...")
+            com_mut_indices.append(residue_ref - 1)
+            part_indices.append(residue_ref.id_index - 1)
+
+        return com_mut_indices, next(iter(parts)), part_indices
 
     def _assign_ter(self):
         for res in self.complex_str.residues:
@@ -1484,13 +1498,25 @@ class CheckMakeTop:
                     res.ter = False
 
     def makeMutTop(self, wt_top, mut_index, pdb=False):
+        """Apply the requested mutation to one or more residue indices."""
+        mut_indices = [mut_index] if isinstance(mut_index, int) else list(mut_index)
+        if not mut_indices:
+            return self.molstr(wt_top)
+        if len(mut_indices) == 1:
+            return self._makeMutTopSingle(wt_top, mut_indices[0], pdb)
+        mut_top = self.molstr(wt_top)
+        for index in mut_indices:
+            mut_top = self._makeMutTopSingle(mut_top, index, pdb, copy=False)
+        return mut_top
+
+    def _makeMutTopSingle(self, wt_top, mut_index, pdb=False, copy=True):
         """
 
         :param wt_top: Amber parm from GROMACS topology
         :param mut_index: index of mutation in structure
         :return: Mutant AmberParm
         """
-        mut_top = self.molstr(wt_top)
+        mut_top = self.molstr(wt_top) if copy else wt_top
         mut_aa = self.INPUT['ala']['mutant']
 
         bb_atoms = 'N,H,CA,HA,C,O,HN'

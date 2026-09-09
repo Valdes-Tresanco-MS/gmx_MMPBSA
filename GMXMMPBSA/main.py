@@ -786,8 +786,9 @@ class MMPBSA_App(object):
             else:
                 logging.info('Building AMBER topologies... Done.\n')
             self.INPUT['general']['receptor_mask'], self.INPUT['general']['ligand_mask'], self.resl = maketop.get_masks()
-            self.mutant_index = maketop.com_mut_index
-            self.mut_str = self.resl[maketop.com_mut_index].mutant_label if self.mutant_index is not None else ''
+            self.mutant_indices = list(getattr(maketop, 'com_mut_indices', []))
+            self.mutant_index = self.mutant_indices[0] if len(self.mutant_indices) == 1 else None
+            self.mut_str = '; '.join(self.resl[index].mutant_label for index in self.mutant_indices)
             self.FILES.complex_fixed = f'{self.FILES.prefix}COM_FIXED.pdb'
         self.FILES = self.MPI.COMM_WORLD.bcast(self.FILES, root=0)
         self.INPUT = self.MPI.COMM_WORLD.bcast(self.INPUT, root=0)
@@ -1458,7 +1459,12 @@ class MMPBSA_App(object):
             from GMXMMPBSA.utils import mask2list
             self.resl = mask2list(FILES.complex_fixed, INPUT['general']['receptor_mask'], INPUT['general']['ligand_mask'])
             if INPUT['ala']['alarun']:
-                self.resl[self.mutant_index].set_mut(INPUT['ala']['mutant'])
+                mutant_indices = getattr(self, 'mutant_indices', None)
+                if mutant_indices is None:
+                    mutant_indices = [self.mutant_index] if self.mutant_index is not None else []
+                for index in mutant_indices:
+                    self.resl[index].set_mut(INPUT['ala']['mutant'])
+                self.mut_str = '; '.join(self.resl[index].mutant_label for index in mutant_indices)
 
         if INPUT['decomp']['decomprun']:
             self._get_decomp()

@@ -682,7 +682,7 @@ input_file.addNamelist('rism', 'rism',
 
 input_file.addNamelist('ala', 'alanine_scanning',
                        [
-                           ['mutant_res', str, '', 'Residue to mutate; e.g. "A/23"'],
+                           ['mutant_res', str, '', 'Residues to mutate; e.g. "A/23,25" or "A/23 B/25"'],
                            ['mutant', str, 'ALA', 'Mutation target; "ALA" or "GLY"'],
                            ['mutant_only', int, 0, 'Mutant energies only; 0/1'],
                            ['cas_intdiel', int, 0, 'Set intdiel by residue; 0/1'],

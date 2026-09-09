@@ -25,6 +25,7 @@ scanning.
 
 from GMXMMPBSA.exceptions import MutateError, MutantResError
 import contextlib
+from pathlib import Path
 
 
 def _getCoords(line, coordsperline, coordsize):
@@ -153,6 +154,8 @@ class MutantMdcrd(object):
     """ Class for an alanine-mutated amber trajectory file.
         ASCII only (no netcdf)
     """
+    target_resname = 'ALA'
+
     def __init__(self, trajname, prm1, prm2):
         self.traj = trajname
         self.orig_prm = prm1
@@ -161,17 +164,19 @@ class MutantMdcrd(object):
         self.hasbox = bool(prm1.ptr('ifbox'))
 
     def __str__(self):
-        return '%s%d%s' % (_ressymbol(
-            self.orig_prm.parm_data['RESIDUE_LABEL'][self.mutres-1]),
-                           self.mutres, _ressymbol('ALA'))
+        mutation_indices = self.mutres if isinstance(self.mutres, list) else [self.mutres]
+        return '; '.join(
+            '%s%d%s' % (_ressymbol(self.orig_prm.parm_data['RESIDUE_LABEL'][index - 1]),
+                        index, _ressymbol(self.target_resname))
+            for index in mutation_indices
+        )
 
     def FindMutantResidue(self):
         """ Finds which residue is the alanine mutant in a pair of prmtop files
         """
         origres = self.orig_prm.parm_data['RESIDUE_LABEL']
         newres = self.new_prm.parm_data['RESIDUE_LABEL']
-        diffs = 0
-        mutres = -1
+        mutation_indices = []
 
         if len(origres) != len(newres):
             raise MutateError(('Mutant prmtop (%s) has a different number of ' +
@@ -180,133 +185,79 @@ class MutantMdcrd(object):
 
         for i in range(len(origres)):
             if origres[i] != newres[i]:
-                diffs += 1
-                if newres[i] != 'ALA':
-                    raise MutantResError(f'Mutant residue {i + 1} is {newres[i]} but must be ALA!')
-                mutres = i + 1
-        if diffs == 0:
+                if newres[i] != self.target_resname:
+                    raise MutantResError(f'Mutant residue {i + 1} is {newres[i]} but must be {self.target_resname}!')
+                mutation_indices.append(i + 1)
+        if not mutation_indices:
             raise MutateError(f'Mutant prmtop ({self.new_prm.prm_name}) has the same sequence as the original!')
-        elif diffs > 1:
-            raise MutateError(f'Mutant prmtop ({self.new_prm.prm_name}) can only have one mutation!')
-        return mutres
+        return mutation_indices[0] if len(mutation_indices) == 1 else mutation_indices
 
     def MutateTraj(self, newname):
         """ Mutates a given mdcrd file based on 2 prmtops """
 
-        mutres = self.mutres
+        mutation_indices = self.mutres if isinstance(self.mutres, list) else [self.mutres]
+        original_atoms = self.orig_prm.ptr('natom')
+        coordinates_per_frame = original_atoms * 3 + (3 if self.hasbox else 0)
+        residue_labels = self.orig_prm.parm_data['RESIDUE_LABEL']
+        residue_pointers = self.orig_prm.parm_data['RESIDUE_POINTER']
 
-        orig_resname = self.orig_prm.parm_data['RESIDUE_LABEL'][mutres-1]
-        resstart = self.orig_prm.parm_data['RESIDUE_POINTER'][mutres-1]
+        if Path(self.traj).resolve() == Path(newname).resolve():
+            raise MutateError('Original and mutated trajectory paths must differ.')
+        output_started = False
         try:
-            nextresstart = self.orig_prm.parm_data['RESIDUE_POINTER'][mutres]
-        except IndexError:
-            nextresstart = self.orig_prm.ptr('natom')
-        number_atoms_mut = self.new_prm.ptr('natom')
-        if self.orig_prm.ptr('ifbox'):
-            number_atoms_mut += 1
-
-        coordsperline = 10  # number of coordinates in each line
-        coordsize = 8       # how large coordinates are in characters
-        counter = 0
-        coords_done = 0
-        coords_tomutate = []
-        temp_holder = []
-
-        # location is 0 before modified coordinates, 1 during modified
-        # coordinates, and 2 after modified coordinates
-        location = 0
-
-        if orig_resname == 'GLY':
-            raise MutateError('Trying to mutate GLY to ALA! Not currently supported.')
-
-        with open(self.traj) as mdcrd:
-            with open(newname, 'w') as new_mdcrd:
-                for line in mdcrd:
-                    counter += 1
-                    # First line is always a comment
-                    if counter == 1:
-                        new_mdcrd.write('%-80s' % f'{line.strip()} and mutated by gmx_MMPBSA for alanine scanning')
-                        continue
-
-                    if (
-                            location == 0 and
-                            coords_done <= max(resstart * 3 - 4, 0) < coords_done + coordsperline
-                    ):
-                        location = 1
-                        words = _getCoords(line, coordsperline, coordsize)
-                        for i in range(coordsperline):
-                            if coords_done <= resstart * 3 - 4:
-                                if coords_done % coordsperline == 0:
-                                    new_mdcrd.write('\n')
-                                new_mdcrd.write('%8.3f' % words[i])
-                                coords_done += 1
-                            else:
-                                coords_tomutate.append(words[i])
-                    elif location == 1:
-                        words = _getCoords(line, coordsperline, coordsize)
-                        if coordsperline + len(coords_tomutate) >= 3 * (nextresstart - resstart):
-                            location = 2
-                            if nextresstart == self.orig_prm.ptr('natom'):
-                                for i in range(len(words)):
-                                    if len(coords_tomutate) < 3 * (nextresstart - resstart):
-                                        coords_tomutate.append(words[i])
-                                    else:
-                                        temp_holder.append(words[i])
-                            else:
-                                for i in range(coordsperline):
-                                    if len(coords_tomutate) < 3 * (nextresstart - resstart):
-                                        coords_tomutate.append(words[i])
-                                    else:
-                                        temp_holder.append(words[i])
-
-                            new_coords = self._mutate(orig_resname, coords_tomutate)
-                            for i in range(len(new_coords)):
-                                if coords_done % coordsperline == 0:
-                                    new_mdcrd.write('\n')
-                                new_mdcrd.write('%8.3f' % new_coords[i])
-                                coords_done += 1
-                            if len(temp_holder) != 0:
-                                for i in range(len(temp_holder)):
-                                    if coords_done % coordsperline == 0:
-                                        new_mdcrd.write('\n')
-                                    new_mdcrd.write('%8.3f' % temp_holder[i])
-                                    coords_done += 1
-                                    if self.hasbox and coords_done == number_atoms_mut * 3 - 3:
-                                        new_mdcrd.write('\n')
-                                if coords_done == number_atoms_mut * 3:
-                                    coords_done = 0
-                                    location = 0
-
-                            coords_tomutate = []
-                            temp_holder = []
+            with open(self.traj) as mdcrd, open(newname, 'w') as new_mdcrd:
+                output_started = True
+                title = next(mdcrd, '').strip()
+                new_mdcrd.write('%-80s' % f'{title} and mutated by gmx_MMPBSA for scanning')
+                frames = 0
+                for frame in self._iter_frames(mdcrd, coordinates_per_frame):
+                    atom_coordinates = frame[:original_atoms * 3]
+                    mutated_coordinates = []
+                    for residue_index, residue_name in enumerate(residue_labels):
+                        atom_start = (residue_pointers[residue_index] - 1) * 3
+                        atom_end = ((residue_pointers[residue_index + 1] - 1) * 3
+                                    if residue_index + 1 < len(residue_pointers) else original_atoms * 3)
+                        residue_coordinates = atom_coordinates[atom_start:atom_end]
+                        if residue_index + 1 in mutation_indices:
+                            mutated_coordinates.extend(self._mutate(residue_name, residue_coordinates))
                         else:
-                            for i in range(coordsperline):
-                                coords_tomutate.append(words[i])
-
-                    elif location == 2:
-                        words = _getCoords(line, coordsperline, coordsize)
-                        for i in range(len(words)):
-                            if (
-                                    coords_done % coordsperline == 0 and
-                                    (not self.hasbox or coords_done < number_atoms_mut * 3 - 3)
-                            ):
-                                new_mdcrd.write('\n')
-                            new_mdcrd.write('%8.3f' % words[i])
-                            coords_done += 1
-                            if self.hasbox and coords_done == number_atoms_mut * 3 - 3:
-                                new_mdcrd.write('\n')
-
-                        if coords_done == number_atoms_mut * 3:
-                            coords_done = 0
-                            location = 0
-                    else:
-                        if coords_done % coordsperline == 0:
+                            mutated_coordinates.extend(residue_coordinates)
+                    mutated_coordinates.extend(frame[original_atoms * 3:])
+                    expected = self.new_prm.ptr('natom') * 3 + (3 if self.hasbox else 0)
+                    if len(mutated_coordinates) != expected:
+                        raise MutateError(
+                            f'Mutated trajectory frame has {len(mutated_coordinates)} coordinates; expected {expected}.'
+                        )
+                    for coordinate_index, value in enumerate(mutated_coordinates):
+                        if coordinate_index % 10 == 0:
                             new_mdcrd.write('\n')
-                        new_mdcrd.write(line[:-1])
-                        coords_done = coords_done + coordsperline
-                    continue
-
+                        new_mdcrd.write('%8.3f' % value)
+                    frames += 1
+                if not frames:
+                    raise MutateError(f'Trajectory {self.traj} contains no complete frames.')
                 new_mdcrd.write('\n')
+        except BaseException:
+            if output_started:
+                Path(newname).unlink(missing_ok=True)
+            raise
+
+    def _iter_frames(self, mdcrd, coordinates_per_frame):
+        """Yield complete frames while buffering at most one frame."""
+        frame = []
+        for line in mdcrd:
+            for start in range(0, len(line.rstrip('\r\n')), 8):
+                field = line[start:start + 8].strip()
+                if not field:
+                    continue
+                try:
+                    frame.append(float(field))
+                except ValueError as exc:
+                    raise MutateError(f'Invalid coordinate in trajectory {self.traj}: {field!r}') from exc
+                if len(frame) == coordinates_per_frame:
+                    yield frame
+                    frame = []
+        if frame:
+            raise MutateError(f'Trajectory {self.traj} does not contain complete frames for the original topology.')
 
     def _mutate(self, resname, coords):
         list_one = 'ARG ASH ASN ASP CYM CYS CYX GLH GLN GLU HID HIE HIP LEU LYN LYS MET PHE SER TRP TYR'
@@ -369,10 +320,7 @@ class MutantMdcrd(object):
 
 
 class GlyMutantMdcrd(MutantMdcrd):
-    def __str__(self):
-        return '%s%d%s' % (_ressymbol(
-            self.orig_prm.parm_data['RESIDUE_LABEL'][self.mutres-1]),
-                           self.mutres, _ressymbol('GLY'))
+    target_resname = 'GLY'
 
     def _mutate(self, resname, coords):
         list_one = 'ARG ASH ASN ASP CYM CYS CYX GLH GLN GLU HID HIE HIP LEU LYN LYS MET PHE SER TRP TYR ALA ILE THR VAL'
@@ -425,31 +373,3 @@ class GlyMutantMdcrd(MutantMdcrd):
         else:
             new_coords.extend(coords[len(coords)-6+i] for i in range(6))
         return new_coords
-
-    def FindMutantResidue(self):
-        """ Finds which residue is the alanine mutant in a pair of prmtop files
-        """
-        origres = self.orig_prm.parm_data['RESIDUE_LABEL']
-        newres = self.new_prm.parm_data['RESIDUE_LABEL']
-        diffs = 0
-        mutres = -1
-
-        if len(origres) != len(newres):
-            raise MutateError(f'Mutant prmtop ({self.new_prm.prm_name}) has a different number of residues than '
-                              f'the original ({self.orig_prm.prm_name})!')
-
-        for i in range(len(origres)):
-            if origres[i] != newres[i]:
-                diffs += 1
-                if newres[i] != 'GLY':
-                    raise MutantResError(f'Mutant residue {i + 1} is {newres[i]} but must be GLY!')
-                mutres = i + 1
-
-        if diffs == 0:
-            raise MutateError(('Your mutant prmtop (%s) has the same sequence ' +
-                               'as the original!') % (self.new_prm.prm_name,
-                                                      self.orig_prm.prm_name))
-        elif diffs > 1:
-            raise MutateError(f'Your mutant prmtop ({self.new_prm.prm_name}) can only have one mutation!')
-
-        return mutres
