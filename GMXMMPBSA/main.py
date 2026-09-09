@@ -36,7 +36,7 @@ from GMXMMPBSA.amber_outputs import (QHout, NMODEout, QMMMout, GBout, PBout, Pol
 from GMXMMPBSA.calculation import (CalculationList, EnergyCalculation, PBEnergyCalculation,
                                    NmodeCalc, QuasiHarmCalc, CopyCalc, PrintCalc, LcpoCalc, MolsurfCalc,
                                    InteractionEntropyCalc, C2EntropyCalc, MergeOut, ListEnergyCalculation)
-from GMXMMPBSA.commandlineparser import parser
+from GMXMMPBSA.commandlineparser import parser, validate_output_paths
 from GMXMMPBSA.createinput import create_inputs, SanderRISMInput
 from GMXMMPBSA.exceptions import (MMPBSA_Error, InternalError, InputError, GMXMMPBSA_ERROR)
 from GMXMMPBSA.infofile import InfoFile
@@ -1083,6 +1083,7 @@ class MMPBSA_App(object):
                 InputError,
             )
 
+        validate_output_paths(self.FILES, INPUT.get('decomp', {}).get('decomprun', False))
         logging.info(f'Checking {self.FILES.input_file} input file...')
 
         if self.FILES.ligand_mol2:

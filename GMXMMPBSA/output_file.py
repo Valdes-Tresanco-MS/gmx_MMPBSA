@@ -22,6 +22,7 @@ statistics printing.
 # ##############################################################################
 
 from types import SimpleNamespace
+from GMXMMPBSA.commandlineparser import validate_output_paths
 from GMXMMPBSA import utils
 from math import sqrt, ceil, isfinite
 from os import linesep as ls
@@ -85,6 +86,8 @@ def write_outputs(app):
     mut_str = app.mut_str
     prmtop_system = app.normal_system
     stability = app.stability
+
+    validate_output_paths(FILES, INPUT.get('decomp', {}).get('decomprun', False))
 
     # Open the energy vector CSV output file if we are writing one
     if FILES.energyout:
@@ -444,6 +447,7 @@ def write_decomp_output(app):
     FILES = app.FILES
     INPUT = app.INPUT
 
+    validate_output_paths(FILES, True)
     stability = app.stability
     nmls = ('gb', 'pb', 'gbnsr6')
     outkeys = ('gb', 'pb', 'gbnsr6')

@@ -9,6 +9,7 @@ from GMXMMPBSA.commandlineparser import (
     amber_trajectory,
     parser,
     testparser,
+    validate_output_paths,
 )
 from GMXMMPBSA.exceptions import MMPBSA_Error
 from GMXMMPBSA.utils import _get_dup_args, get_index_groups
@@ -60,6 +61,65 @@ class ProgressStyleParserTest(unittest.TestCase):
     def test_progress_style_can_be_selected(self):
         self.assertEqual(parser.parse_args(['--progress-style', 'classic']).progress_style, 'classic')
         self.assertEqual(amber_parser.parse_args(['--progress-style', 'none']).progress_style, 'none')
+
+
+class CsvOutputFilenameTest(unittest.TestCase):
+    def test_csv_outputs_follow_summary_names_by_default(self):
+        args = parser.parse_args(['-o', 'results.dat', '-do', 'decomposition.dat'])
+
+        self.assertEqual(args.energyout, 'results.csv')
+        self.assertEqual(args.dec_energies, 'decomposition.csv')
+
+    def test_explicit_csv_names_override_the_defaults(self):
+        args = parser.parse_args([
+            '-o', 'results.dat', '-do', 'decomposition.dat',
+            '-eo', 'energies_for_analysis.csv', '-deo', 'residue_energies.csv',
+        ])
+
+        self.assertEqual(args.energyout, 'energies_for_analysis.csv')
+        self.assertEqual(args.dec_energies, 'residue_energies.csv')
+
+    def test_defaulting_helper_supports_amber_parser_options(self):
+        args = amber_parser.parse_args(['-o', 'amber.out', '-do', 'amber_decomp.out'])
+
+        self.assertEqual(args.energyout, 'amber.csv')
+        self.assertEqual(args.dec_energies, 'amber_decomp.csv')
+
+    def test_csv_summary_uses_distinct_automatic_name_for_both_engines(self):
+        for cli in (parser, amber_parser):
+            args = cli.parse_args(['-o', 'results.csv', '-do', 'residues.csv'])
+            self.assertEqual(args.energyout, 'results.frames.csv')
+            self.assertEqual(args.dec_energies, 'residues.frames.csv')
+            validate_output_paths(args, True)
+
+    def test_active_output_collisions_leave_existing_file_untouched(self):
+        for cli in (parser, amber_parser):
+            with TemporaryDirectory() as directory:
+                dest = Path(directory) / 'summary.dat'
+                dest.write_text('preserve me')
+                alias = Path(directory) / 'alias.dat'
+                alias.symlink_to(dest)
+                for option, value in [('-eo', str(dest.parent / '.' / dest.name)),
+                                      ('-eo', str(alias)), ('-do', str(dest)), ('-deo', str(dest))]:
+                    args = cli.parse_args(['-o', str(dest), option, value])
+                    with self.assertRaisesRegex(MMPBSA_Error, 'Output paths for'):
+                        validate_output_paths(args, True)
+                    self.assertEqual(dest.read_text(), 'preserve me')
+                args = cli.parse_args(['-o', str(dest), '-do', str(dest)])
+                validate_output_paths(args, False)
+
+    def test_writer_rejects_collision_before_truncating(self):
+        from types import SimpleNamespace
+        from GMXMMPBSA.output_file import write_outputs
+        with TemporaryDirectory() as directory:
+            path = Path(directory) / 'results.csv'
+            path.write_text('preserve me')
+            files = parser.parse_args(['-o', str(path), '-eo', str(path)])
+            app = SimpleNamespace(FILES=files, INPUT={'decomp': {'decomprun': False}},
+                                  normal_system=None, mut_str='', stability=False)
+            with self.assertRaisesRegex(MMPBSA_Error, 'Output paths for -o and -eo'):
+                write_outputs(app)
+            self.assertEqual(path.read_text(), 'preserve me')
 
 
 class AmberComplexStructureOptionTest(unittest.TestCase):

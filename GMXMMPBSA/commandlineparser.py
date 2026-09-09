@@ -26,7 +26,8 @@ in gmx_MMPBSA will be assigned as attributes to the returned class.
 
 import os
 import sys
-from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter, RawTextHelpFormatter, ArgumentTypeError
+from argparse import (ArgumentParser, ArgumentDefaultsHelpFormatter, RawTextHelpFormatter, ArgumentTypeError,
+                      SUPPRESS)
 import re
 from pathlib import Path
 from GMXMMPBSA import __version__, __mmpbsa_version__, __ambertools_version__, __gromacs_version__
@@ -192,10 +193,57 @@ def amber_coordinates(arg):
 
 class GMXMMPBSA_ArgParser(ArgumentParser):
 
+    def parse_args(self, args=None, namespace=None):
+        options = super().parse_args(args=args, namespace=namespace)
+        set_output_file_defaults(options)
+        return options
+
     def exit(self, status=0, message=None):
         if message:
             GMXMMPBSA_ERROR(message)
         sys.exit(status)
+
+
+def _default_csv_name(summary):
+    summary_path = Path(summary)
+    csv_path = summary_path.with_suffix('.csv')
+    if csv_path.resolve() == summary_path.resolve():
+        csv_path = summary_path.with_suffix('.frames.csv')
+    return str(csv_path)
+
+
+def validate_output_paths(options, decomprun=False):
+    """Reject aliases among active outputs before any writer truncates them."""
+    outputs = [('-o', getattr(options, 'output_file', None)), ('-eo', getattr(options, 'energyout', None))]
+    if decomprun:
+        outputs.extend([('-do', getattr(options, 'decompout', None)), ('-deo', getattr(options, 'dec_energies', None))])
+    seen = []
+    for option, filename in outputs:
+        if not filename:
+            continue
+        path = Path(filename).resolve()
+        for previous_option, previous_path in seen:
+            if path == previous_path or (path.exists() and previous_path.exists()
+                                         and path.samefile(previous_path)):
+                GMXMMPBSA_ERROR(
+                    f'Output paths for {previous_option} and {option} refer to the same file: {path}. '
+                    'Choose distinct output filenames.'
+                )
+        seen.append((option, path))
+
+
+def set_output_file_defaults(options):
+    """Set the default CSV names from the corresponding summary outputs.
+
+    ``-eo`` and ``-deo`` remain explicit overrides.  The helper is applied by
+    every gmx_MMPBSA argument parser, while parsers that do not define these
+    output options are left unchanged.
+    """
+    if hasattr(options, 'output_file') and getattr(options, 'energyout', None) is None:
+        options.energyout = _default_csv_name(options.output_file)
+    if hasattr(options, 'decompout') and getattr(options, 'dec_energies', None) is None:
+        options.dec_energies = _default_csv_name(options.decompout)
+    return options
 
 
 description = ("gmx_MMPBSA is a new tool based on AMBER's MMPBSA.py aiming to perform end-state free energy calculations"
@@ -252,15 +300,16 @@ group.add_argument('-o', dest='output_file', default='FINAL_RESULTS_MMPBSA.dat',
 group.add_argument('-do', dest='decompout', metavar='FILE', default='FINAL_DECOMP_MMPBSA.dat',
                    help='Output file for decomposition statistics summary.')
 group.add_argument('-eo', dest='energyout', metavar='FILE',
+                   default=SUPPRESS,
                    help='''CSV-format output of all energy terms for every frame
-                  in every calculation. File name forced to end in [.csv].
-                  This file is only written when specified on the
-                  command-line.''')
+                  in every calculation. Defaults to the .csv counterpart of
+                  the file specified with -o; use -eo to override its name.''')
 group.add_argument('-deo', dest='dec_energies', metavar='FILE',
+                   default=SUPPRESS,
                    help='''CSV-format output of all energy terms for each printed
-                  residue in decomposition calculations. File name forced to end
-                  in [.csv]. This file is only written when specified on the
-                  command-line.''')
+                  residue in decomposition calculations. Defaults to the .csv
+                  counterpart of the file specified with -do; use -deo to
+                  override its name.''')
 group.add_argument('-nogui', dest='gui', action='store_false', default=True,
                    help='No open gmx_MMPBSA_ana after all calculations finished')
 group.add_argument('-s', '--stability', dest='stability', action='store_true', default=False,
@@ -380,15 +429,16 @@ group.add_argument('-o', dest='output_file', default='FINAL_RESULTS_MMPBSA.dat',
 group.add_argument('-do', dest='decompout', metavar='FILE', default='FINAL_DECOMP_MMPBSA.dat',
                    help='Output file for decomposition statistics summary.')
 group.add_argument('-eo', dest='energyout', metavar='FILE',
+                   default=SUPPRESS,
                    help='''CSV-format output of all energy terms for every frame
-                  in every calculation. File name forced to end in [.csv].
-                  This file is only written when specified on the
-                  command-line.''')
+                  in every calculation. Defaults to the .csv counterpart of
+                  the file specified with -o; use -eo to override its name.''')
 group.add_argument('-deo', dest='dec_energies', metavar='FILE',
+                   default=SUPPRESS,
                    help='''CSV-format output of all energy terms for each printed
-                  residue in decomposition calculations. File name forced to end
-                  in [.csv]. This file is only written when specified on the
-                  command-line.''')
+                  residue in decomposition calculations. Defaults to the .csv
+                  counterpart of the file specified with -do; use -deo to
+                  override its name.''')
 group.add_argument('-nogui', dest='gui', action='store_false', default=True,
                    help='No open gmx_MMPBSA_ana after all calculations finished')
 group.add_argument('-s', '--stability', dest='stability', action='store_true', default=False,

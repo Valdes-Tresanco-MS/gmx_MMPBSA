@@ -7,6 +7,28 @@ from GMXMMPBSA.utils import remove
 
 
 class CleanupTest(unittest.TestCase):
+    def test_clean_removes_default_csv_outputs_with_summary_outputs(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            for filename in (
+                'FINAL_RESULTS_MMPBSA.dat', 'FINAL_RESULTS_MMPBSA.csv',
+                'FINAL_DECOMP_MMPBSA.dat', 'FINAL_DECOMP_MMPBSA.csv',
+            ):
+                (root / filename).write_text('results\n')
+
+            old_cwd = os.getcwd()
+            os.chdir(tmpdir)
+            try:
+                remove(-1)
+            finally:
+                os.chdir(old_cwd)
+
+            for filename in (
+                'FINAL_RESULTS_MMPBSA.dat', 'FINAL_RESULTS_MMPBSA.csv',
+                'FINAL_DECOMP_MMPBSA.dat', 'FINAL_DECOMP_MMPBSA.csv',
+            ):
+                self.assertFalse((root / filename).exists())
+
     def test_minimal_cleanup_preserves_info_metadata(self):
         with tempfile.TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
