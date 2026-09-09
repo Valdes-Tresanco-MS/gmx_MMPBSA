@@ -93,9 +93,8 @@ high number of charged residues at the interface.
 In this case, Li/Merz ion parameters (12-6 normal usage set) for Mg ions were used. Check 
 [Amber manual](https://ambermd.org/doc12/Amber20.pdf#section.3.6) for more info on ion parameters.
 
-The calculation writes a plain-text statistics file (`FINAL_RESULTS_MMPBSA.dat` by default). When `-eo` is
-specified, it also writes all energy terms for every frame to a CSV file. The file name supplied to `-eo` is given
-the `.csv` extension (`FINAL_RESULTS_MMPBSA.csv` in this example).
+The calculation writes a plain-text statistics file (`FINAL_RESULTS_MMPBSA.dat` by default) and the corresponding
+per-frame energy CSV (`FINAL_RESULTS_MMPBSA.csv` by default). Use `-eo` when a different CSV filename is needed.
 
 !!! note
     After the calculation, the results can be analyzed with `gmx_MMPBSA_ana` unless `-nogui` was used.

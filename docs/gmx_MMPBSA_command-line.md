@@ -57,13 +57,13 @@ title:
       -do FILE              Output file for decomposition statistics summary.
                              (default: FINAL_DECOMP_MMPBSA.dat)
       -eo FILE              CSV-format output of all energy terms for every frame in
-                             every calculation. File name forced to end in [.csv].
-                             This file is only written when specified on the
-                             command-line. (default: None)
+                             every calculation. Defaults to the .csv counterpart of
+                             the file specified with -o; use -eo to override its name.
+                             (default: derived from -o)
       -deo FILE             CSV-format output of all energy terms for each printed
-                             residue in decomposition calculations. File name forced
-                             to end in [.csv]. This file is only written when
-                             specified on the command-line. (default: None)
+                             residue in decomposition calculations. Defaults to the
+                             .csv counterpart of the file specified with -do; use -deo
+                             to override its name. (default: derived from -do)
       -nogui                No open gmx_MMPBSA_ana after all calculations finished
                              (default: True)
       -s, --stability       Perform stability calculation. Only the complex parameters
@@ -158,3 +158,11 @@ title:
     Based on MMPBSA.py (version 16.0) and AmberTools20
     ```
 </div>
+
+### Automatic CSV filenames
+
+Per-frame CSV output is generated automatically. The default is the summary filename with its suffix
+replaced by `.csv`. If that would name the summary itself, `.frames.csv` is used instead: `-o results.csv`
+produces the text summary `results.csv` and the energy vectors `results.frames.csv`. The same rule applies
+to decomposition output (`-do`/`-deo`). Explicit `-eo` and `-deo` values are preserved. Active output paths
+must refer to distinct files; collisions are rejected before opening the output files.

@@ -55,6 +55,19 @@ not changed or rejected automatically. If the warning is not intentional, rebuil
 `PBradii` in `tleap`. During alanine-scanning mutant construction, the inherited topology radius name is reused; the
 input `PBRadii` value is only a fallback if the source `RADIUS_SET` cannot be identified.
 
+Every calculation writes `GMXMMPBSA_radii.json`. It records requested versus effective radius sets separately for the
+complex, receptor, ligand, and any mutant topologies, the `RADIUS_SET` label, ParmEd version, assignment route,
+source force-field family, atom representation, active GB/PB/GBNSR6 models, and SHA-256 checksums of the final
+`RADII` and `SCREEN` arrays. The record explicitly states that native topology arrays take precedence over the input
+`PBRadii`; generated GROMACS topologies record when `PBRadii` was applied through ParmEd. Set `radii_audit=1` to
+additionally write one per-atom CSV file per topology.
+
+The provenance warnings are advisory. CHARMM with AMBER `mbondi*` radii for GB is a cross-parameterization protocol;
+`charmm_radii` is suggested for CHARMM PB but is never selected automatically. OPLS with AMBER GB radii is labeled
+empirically unvalidated, and GROMOS or united-atom inputs receive a strong experimental-support warning. GBNSR6 is
+reported independently rather than being judged by the pairwise-GB `igb`/radius compatibility map. No warning silently
+changes a force field, radius set, or topology.
+
 ## Supported and unsupported features
 
 **Supported**
@@ -168,3 +181,11 @@ rate, elapsed time, ETA, and MPI ranks, so cluster jobs can be followed with `ta
 Failed calculations create a diagnostic zip bundle by default. Use `--no-error-bundle` to disable that behavior. This
 option does not suppress logging or change the exit status. See [Logging and progress](logging.md#warnings-and-errors)
 for the bundle contents and data-sharing considerations.
+
+### Automatic CSV filenames
+
+Per-frame CSV output is generated automatically. The default is the summary filename with its suffix
+replaced by `.csv`. If that would name the summary itself, `.frames.csv` is used instead: `-o results.csv`
+produces the text summary `results.csv` and the energy vectors `results.frames.csv`. The same rule applies
+to decomposition output (`-do`/`-deo`). Explicit `-eo` and `-deo` values are preserved. Active output paths
+must refer to distinct files; collisions are rejected before opening the output files.

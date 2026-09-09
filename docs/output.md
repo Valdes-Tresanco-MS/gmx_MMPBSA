@@ -33,8 +33,9 @@ The following example shows a typical output file (`FINAL_RESULTS_MMPBSA.dat` by
 |Using temperature = 300.00 K)                                                        |       
 |All units are reported in kcal/mol.                                                  |       
 |                                                                                     |       
-|SD - Sample standard deviation, SEM - Sample standard error of the mean              |       
+|SD - Population standard deviation of the frames (ddof=0), SEM - SD / sqrt(number of frames) |
 |SD(Prop.), SEM(Prop.) - SD and SEM obtained with propagation of uncertainty formula  |       
+|Block SD, Block SEM - sample SD and SEM of deterministic nonoverlapping block means |
 |https://en.wikipedia.org/wiki/Propagation_of_uncertainty#Example_formulae            +
        
 -------------------------------------------------------------------------------       +       
@@ -170,11 +171,20 @@ receptor/ligand structures. Thus, when subtracted they cancel completely. If not
 inconsistency warnings are printed. When this occurs the results are generally useless. Of course this does not 
 hold for the multiple trajectory protocol as independent trajectories are used for the complex, receptor and ligand. 
 Two approaches are used when calculating the standard deviation, and the standard error of the mean. The `SD` and `SEM`
-values are calculated using a sample (array) of values. On the other hand, `SD(Prop.)` and `SEM(Prop.)` are 
-obtained with the 
+values are calculated from the frame array using the population convention (`ddof=0`), with `SEM = SD / sqrt(N)`. On the
+other hand, `SD(Prop.)` and `SEM(Prop.)` are obtained with the
 [propagation of uncertainty formula](https://en.wikipedia.org/wiki/Propagation_of_uncertainty#Example_formulae) for 
 _f_ = _A_ - _B_. Check this [thread](http://archive.ambermd.org/201202/0317.html) for more details on MM/PB(GB)SA 
-statistics.
+statistics. Main energy and binding summaries also include adjacent `Block SD` and `Block SEM` columns. These are
+calculated from deterministic nonoverlapping block means; `Block SEM` is the preferred uncertainty when trajectory
+frames are correlated, while the legacy SD/SEM fields remain available for compatibility.
+
+Decomposition summaries report `Avg.`, `SD(Prop.)`, `SD`, `SEM(Prop.)`, `SEM`, `Block SD`, and `Block SEM` for each component. The propagated
+columns are the uncertainty of the composed or subtracted quantity; the unqualified columns are calculated directly from
+the per-frame vector. Block statistics are calculated from deterministic nonoverlapping block means; `Block SEM` is the
+primary uncertainty for reported estimates when enough trajectory blocks are available. In the ASCII decomposition form,
+values are displayed as `Avg. +/- Block SEM [SD(Prop.)/SD/SEM] / Block SD`. Decomposition
+vector CSV files contain per-frame values only and are rounded to two decimals.
 
 This is how a typical decomposition output file (`FINAL_DECOMP_MMPBSA.dat` by default) looks like:
 
@@ -440,3 +450,16 @@ instead refer to the mutant system of alanine scanning calculations.
 
 `_GMXMMPBSA_*out.#` These files are thread-specific files. For serial simulations, only #=0 files are created. For
 parallel, #=0 through NUM_PROC - 1 are created.
+
+### Compatibility of statistics and radius provenance
+
+`MMPBSA_API.get_binding()` accepts legacy summaries containing `Average`, `SD`, and `SEM`, as well as
+summaries with `Block SD` and `Block SEM`. Missing block statistics are reported as `NaN`; frame-based
+uncertainties are not relabeled as block estimates. Reference-system plots adjust SD and SEM separately,
+including their block equivalents, using the existing correlated-difference convention.
+
+For native AMBER, normal components use `assignment_route=native_amber_topology_preserved`. Mutated
+components use `assignment_route=native_amber_mutant_inherited_ChRad`: ParmEd reapplies the radius family
+inherited from the normal topology. Neither route applies the input `PBRadii` selection. An unchanged
+component reusing its normal topology retains the preserved route. GROMACS conversion continues to use
+`assignment_route=parmed_ChRad` with the requested `PBRadii` applied.

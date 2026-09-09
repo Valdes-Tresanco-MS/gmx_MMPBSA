@@ -330,7 +330,10 @@ support for complex systems with several components. It supports all force field
     _Updated in v1.5.0: Add new ion parameters sets_
 
 `PBRadii` (Default = 4)
-:   PBRadii to build amber topology files:
+:   Continuum-radius set used to build AMBER topology files:
+
+    This is the continuum-radius set used by GB, PB, and GBNSR6 topology preparation. Continuum radii are distinct
+    from Lennard-Jones radii and are part of the scoring-model parameterization.
 
     The default value is `4` (`mbondi3`) to match the default GB-Neck2 model (`igb = 8`), so it does not need to be
     specified for standard GB calculations using the default GB model.
@@ -440,6 +443,17 @@ support for complex systems with several components. It supports all force field
                 ```
 
     _Updated in v1.5.0: New PB radii sets have been added_
+
+`radii_audit` (Default = 0)
+:   Set to `1` to write `GMXMMPBSA_radii_<component>.csv` files with per-atom continuum-radius provenance. Normal runs
+    always write the compact `GMXMMPBSA_radii.json` summary and include the same summary in `_GMXMMPBSA_info`.
+    The audit flags metals, dummy/extra-point atoms, unknown elements, nonstandard residues, and assignments whose
+    exact rule cannot be established. It records the final topology arrays; it does not change them.
+
+`source_force_field` (Default = "auto")
+:   Optional source force-field family override used for provenance and advisories. Allowed values are `auto`,
+    `amber`, `charmm`, `opls`, `gromos`, and `other`. Automatic classification is conservative; use an override when
+    the topology or force-field list is ambiguous. This setting never selects a radius set or changes a topology.
 
 `temperature` (Default = 298.15)  
 :   Specify the temperature (in K) used in the calculations.
@@ -1896,17 +1910,17 @@ See [§7.1.3](https://ambermd.org/doc12/Amber21.pdf#subsection.7.1.3) and
     * A tutorial on alanine scanning is available [here](examples/Alanine_scanning/README.md)
 
 `mutant_res` (Default = None. Must be defined)
-:   Define the specific residue that is going to be mutated. Use the following format CHAIN/RESNUM (_e.g._: 'A/350') or 
-CHAIN/RESNUM:INSERTION_CODE if applicable (_e.g._: "A/27:B").
+:   Select one or more residues using `CHAIN/RESNUM`, with an optional insertion code
+    (`A/27:B`). For example, `A/13,25` mutates two residues together in one composite mutant.
+    Selections across chains are allowed only when all selected residues belong to the same component.
 
     !!! important
-        * Only one residue can be mutated per calculation!
-        * We recommend using the reference structure (-cr) to ensure the perfect match between the selected residue in 
-        the defined structure or topology 
-        * Wehn this varibale is defined, `gmx_MMPBSA` performs the mutation. This way the user does not have to 
-        provide the mutant topology
-    
-    _Changed in v1.4.0: Allows mutation in antibodies since it support insertion code notation_
+        * All selected residues must belong to the receptor or all to the ligand; mixing components is rejected.
+        * Every selected residue uses the same `mutant` target (`ALA` or `GLY`). A composite run reports one
+          combined mutation effect, not separate single-residue scans.
+        * Composite mutations require `cas_intdiel=0`; set the desired dielectric explicitly in the GB/PB namelist.
+        * Use a reference structure (`-cr`) when specific chain IDs, residue numbers, or insertion codes are needed.
+        * The program builds mutant topologies and trajectories from the selected residues.
 
 `mutant` (Default = "ALA") 
 :   Defines the residue that it is going to be mutated for. Allowed values are: 

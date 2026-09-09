@@ -240,9 +240,9 @@ terms included in VDW. `dec_verbose=1` reports the delta total, side-chain, and 
 A successful calculation produces:
 
 - `FINAL_RESULTS_MMPBSA.dat`: the MM/GBSA summary and binding-energy statistics.
-- `FINAL_RESULTS_MMPBSA.csv`: the per-frame energy terms requested with `-eo`.
+- `FINAL_RESULTS_MMPBSA.csv`: the per-frame energy terms (or the filename supplied with `-eo`).
 - `FINAL_DECOMP_MMPBSA.dat`: the per-residue decomposition summary requested with `-do`.
-- `FINAL_DECOMP_MMPBSA.csv`: the per-residue decomposition data requested with `-deo`.
+- `FINAL_DECOMP_MMPBSA.csv`: the per-residue decomposition data (or the filename supplied with `-deo`).
 
 ## Visualize residue contributions
 
