@@ -830,13 +830,16 @@ class MMPBSA_System(object):
 
         if self.stability: return None
 
-        # Check that our radii sets are consistent
+        # Check that the required implicit-solvent arrays are present.  The
+        # RADIUS_SET label is descriptive metadata and may differ between
+        # correctly mapped ST/MT topologies, so compare the mapped values
+        # below instead of rejecting labels alone.
         try:
-            com_radii = self.complex_prmtop.parm_data['RADIUS_SET'][0]
-            rec_radii = self.receptor_prmtop.parm_data['RADIUS_SET'][0]
-            lig_radii = self.ligand_prmtop.parm_data['RADIUS_SET'][0]
-            if com_radii != rec_radii or com_radii != lig_radii:
-                raise PrmtopError('Topology files have inconsistent RADIUS_SETs')
+            for topology in (self.complex_prmtop, self.receptor_prmtop, self.ligand_prmtop):
+                for flag in ('RADII', 'SCREEN'):
+                    values = topology.parm_data[flag]
+                    if len(values) != topology.ptr('natom'):
+                        raise PrmtopError('The %s array length does not match the topology atom count' % flag)
         except KeyError:
             raise PrmtopError('Topology files have no Implicit radii! You can ' +
                               'add implicit radii using xparmed.py or parmed.py')
@@ -864,6 +867,12 @@ class MMPBSA_System(object):
             if abs(lig_or_rec_chg - com_chg) > TINY:
                 raise PrmtopError('Inconsistent charge definition for atom %d!' %
                                   (i + 1))
+
+            for flag in ('RADII', 'SCREEN'):
+                com_value = self.complex_prmtop.parm_data[flag][i]
+                other_value = otherparm.parm_data[flag][atnum]
+                if abs(other_value - com_value) > TINY:
+                    raise PrmtopError('Inconsistent %s definition for atom %d!' % (flag, i + 1))
 
 
 def range_string(num1, num2):

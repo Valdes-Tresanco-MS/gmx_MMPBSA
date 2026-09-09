@@ -286,12 +286,14 @@ class AmberExplicitWaterPreprocessingTest(unittest.TestCase):
         log_text = (EXAMPLE_DIR / 'gmx_MMPBSA.log').read_text()
         csv_bytes = (EXAMPLE_DIR / 'FINAL_RESULTS_MMPBSA.csv').read_bytes()
 
-        self.assertIn('5 frames were processed by cpptraj', log_text)
-        self.assertIn('[ERROR  ] = 0', log_text)
+        self.assertIn('5 frames were prepared by cpptraj', log_text)
+        self.assertIn('Run completed with 0 errors and 0 warnings.', log_text)
         self.assertNotIn(' -cs ', log_text)
+        # Reproduced byte-for-byte with local master 5b9f2f95 and the repaired branch
+        # using the bundled five frames and native topology radii (igb=1).
         self.assertEqual(
             hashlib.sha256(csv_bytes).hexdigest(),
-            '51f945296ddcecc3ddcaac49d24f27ad6e99ee0de12f44c8637f20e74e2267c7',
+            'd95c50d03a418e49dd0dea2955aab60fb957e9689ed0417837740c82a0b28801',
         )
 
 

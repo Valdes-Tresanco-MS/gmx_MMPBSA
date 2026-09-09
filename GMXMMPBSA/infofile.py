@@ -29,7 +29,8 @@ import warnings
 # For compatibility with v1.5.x. Will be removed in v1.8.x
 nl_variables = {
     'sys_name': 'general', 'startframe': 'general', 'endframe': 'general', 'interval': 'general',
-    'forcefields': 'general', 'ions_parameters': 'general', 'PBRadii': 'general', 'temperature': 'general',
+    'forcefields': 'general', 'ions_parameters': 'general', 'PBRadii': 'general', 'radii_audit': 'general',
+    'source_force_field': 'general', 'temperature': 'general',
     'qh_entropy': 'general', 'interaction_entropy': 'general', 'ie_segment': 'general', 'c2_entropy': 'general',
     'assign_chainID': 'general', 'exp_ki': 'general', 'full_traj': 'general', 'gmx_path': 'general',
     'keep_files': 'general', 'netcdf': 'general', 'solvated_trajectory': 'general', 'explicit_waters': 'general',
@@ -142,6 +143,11 @@ class InfoFile(object):
                                                            if self.app.mutant_index is not None else [])))
         outfile.write("mut_str = '%s'\n" % getattr(self.app, 'mut_str', ''))
         outfile.write('using_chamber = %s\n' % self.app.using_chamber)
+        radii_provenance = getattr(self.app, 'radii_provenance', None)
+        if radii_provenance is not None:
+            import json
+            provenance_json = json.dumps(radii_provenance, sort_keys=True, separators=(',', ':'))
+            outfile.write("radii_provenance_json = '%s'\n" % provenance_json.replace("'", "\\'"))
         outfile.write(self.app.input_file_text)
 
     def read_info(self, name=None):
@@ -208,6 +214,12 @@ class InfoFile(object):
             if rematch := otherre.match(line):
                 var, val = rematch.groups()
                 val = _determine_type(val.strip())
+                if var == 'radii_provenance_json' and isinstance(val, str):
+                    try:
+                        import json
+                        self.app.radii_provenance = json.loads(val)
+                    except (TypeError, ValueError):
+                        warnings.warn('Could not decode radii provenance from info file.')
                 if var == 'size':
                     self.app.mpi_size = val
                 else:

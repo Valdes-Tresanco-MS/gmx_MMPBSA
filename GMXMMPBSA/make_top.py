@@ -32,6 +32,7 @@ from GMXMMPBSA.utils import (selector, get_dist, list2range, res2map, get_indexe
                              residue_names_match)
 from GMXMMPBSA.alamdcrd import _scaledistance
 from GMXMMPBSA.make_trajs import warn_concatenated_complex_trajectories
+from GMXMMPBSA.radii import source_force_field_family
 import subprocess
 from pathlib import Path
 import logging
@@ -279,6 +280,21 @@ class CheckMakeTop:
             return
 
         selected = PBRadii[self.INPUT['general']['PBRadii']]
+        source_family = source_force_field_family(self.INPUT)
+        if source_family == 'charmm' and selected.startswith(('bondi', 'mbondi')):
+            logging.warning(
+                "CHARMM input with AMBER %s radii for GB is a cross-parameterization protocol; "
+                "charmm_radii is available for CHARMM PB but is not selected automatically.", selected
+            )
+        elif source_family == 'opls' and selected.startswith(('bondi', 'mbondi')):
+            logging.warning(
+                "OPLS input with AMBER %s radii for GB is empirically unvalidated; interpret this "
+                "combination as a calibrated scoring protocol.", selected
+            )
+        elif source_family == 'gromos':
+            logging.warning(
+                "GROMOS input uses a united-atom-oriented force field; standard all-atom continuum-radius "
+                "rules have strong experimental-support limitations.")
         if selected != recommended:
             logging.warning(
                 f"PBRadii='{selected}' is selected for the GROMACS topology, while igb={igb} "
@@ -2209,7 +2225,7 @@ class CheckMakeTop:
                 if not self.FILES.stability:
                     mrec_prmtop = parmed.load_file(self.mutant_receptor_pmrtop)
                     mrec_amb_parm = parmed.amber.AmberParm.from_structure(mrec_prmtop)
-                    action = ChRad(rec_amb_parm, PBRadii[self.INPUT['general']['PBRadii']])
+                    action = ChRad(mrec_amb_parm, PBRadii[self.INPUT['general']['PBRadii']])
                     logging.info(
                         f"Assigning modified PBRadii {PBRadii[self.INPUT['general']['PBRadii']]} to Mutant Receptor "
                         f"AMBER topology...")

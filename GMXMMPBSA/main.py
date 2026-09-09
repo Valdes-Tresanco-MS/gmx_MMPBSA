@@ -42,6 +42,7 @@ from GMXMMPBSA.exceptions import (MMPBSA_Error, InternalError, InputError, GMXMM
 from GMXMMPBSA.infofile import InfoFile
 from GMXMMPBSA.fake_mpi import MPI as FakeMPI
 from GMXMMPBSA.gbnsr6_topology import prepare_gbnsr6_topology
+from GMXMMPBSA.radii import collect_radii_provenance
 from GMXMMPBSA.input_parser import SUPPORTED_QM_THEORIES, input_file as _input_file
 from GMXMMPBSA.membrane import AUTOMATIC, normalize_parameter
 from GMXMMPBSA.make_top_amber import CheckAmberTop
@@ -781,6 +782,7 @@ class MMPBSA_App(object):
             (self.FILES.complex_prmtop, self.FILES.receptor_prmtop, self.FILES.ligand_prmtop,
              self.FILES.mutant_complex_prmtop,
              self.FILES.mutant_receptor_prmtop, self.FILES.mutant_ligand_prmtop) = maketop.buildTopology()
+            self.radii_provenance = collect_radii_provenance(self.FILES, self.INPUT, self.engine)
             if self.engine == 'gmx':
                 logging.info('Building AMBER topologies from GROMACS files... Done.\n')
             else:
@@ -1095,6 +1097,14 @@ class MMPBSA_App(object):
             GMXMMPBSA_ERROR('Ions parameters file name must be in %s!' % range(1, 17), InputError)
         if INPUT['general']['PBRadii'] not in range(1, 8):
             GMXMMPBSA_ERROR('PBRadii must be 1, 2, 3, 4, 5, 6, or 7!', InputError)
+        if INPUT['general']['radii_audit'] not in [0, 1, False, True]:
+            GMXMMPBSA_ERROR('RADII_AUDIT must be 0 or 1!', InputError)
+        source_force_field = str(INPUT['general'].get('source_force_field', 'auto')).lower()
+        if source_force_field not in {'auto', 'amber', 'charmm', 'opls', 'gromos', 'other'}:
+            GMXMMPBSA_ERROR(
+                'SOURCE_FORCE_FIELD must be one of auto, amber, charmm, opls, gromos, or other!', InputError
+            )
+        INPUT['general']['source_force_field'] = source_force_field
         if INPUT['general']['solvated_trajectory'] not in [0, 1]:
             GMXMMPBSA_ERROR('SOLVATED_TRAJECTORY must be 0 or 1!', InputError)
         if getattr(self, 'traj_protocol', 'STP') == 'MTP' and (

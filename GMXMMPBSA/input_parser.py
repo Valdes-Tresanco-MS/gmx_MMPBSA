@@ -487,6 +487,9 @@ input_file.addNamelist('general', 'general',
                             'Force fields; e.g. "leaprc.protein.ff14SB"'],
                            ['ions_parameters', int, 1, 'Ion params; e.g. 1'],
                            ['PBRadii', int, 4, 'PB radii set; 1-7'],
+                           ['radii_audit', int, 0, 'Write per-atom continuum-radius CSV files; 0/1'],
+                           ['source_force_field', str, 'auto',
+                            'Source force-field family; auto, amber, charmm, opls, gromos, or other'],
                            ['temperature', float, 298.15, 'Temperature (K); e.g. 298.15'],
 
                            # Entropy options
