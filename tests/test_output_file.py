@@ -1,4 +1,6 @@
 import unittest
+from pathlib import Path
+from tempfile import TemporaryDirectory
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
@@ -8,11 +10,17 @@ from GMXMMPBSA import output_file
 
 
 class _Value:
+    def __array__(self, dtype=None):
+        return np.asarray([1.0], dtype=dtype)
+
     def mean(self):
         return 1.0
 
     def std(self):
         return 0.1
+
+    def stdev(self):
+        return 0.2
 
 
 class _Stats:
@@ -32,6 +40,15 @@ class _Stats:
 
 
 class StabilityOutputTest(unittest.TestCase):
+    def test_output_separator_covers_extended_statistics_columns(self):
+        with TemporaryDirectory() as tmpdir:
+            output_path = Path(tmpdir) / 'output.dat'
+            output = output_file.OutputFile(output_path, 'w')
+            output.separate()
+            output._handle.close()
+
+            self.assertEqual(output_path.read_text().splitlines(), ['-' * 101, '-' * 101])
+
     def test_stability_alanine_scan_uses_complex_mutant_delta(self):
         normal = _Stats()
         mutant = _Stats()
@@ -98,7 +115,7 @@ class StabilityOutputTest(unittest.TestCase):
 
 
 class InteractionEntropyCompatibilityTest(unittest.TestCase):
-    def test_legacy_compact_result_uses_tail_mean_and_tail_sd(self):
+    def test_legacy_compact_result_uses_primary_fallback_uncertainty(self):
         legacy = {
             'data': np.asarray([0.0, 0.1, 0.3]),
             'iedata': np.asarray([0.1, 0.3]),
@@ -107,7 +124,7 @@ class InteractionEntropyCompatibilityTest(unittest.TestCase):
         value, uncertainty = output_file._ie_result(legacy)
 
         self.assertAlmostEqual(value, 0.2)
-        self.assertAlmostEqual(uncertainty, 0.1)
+        self.assertAlmostEqual(uncertainty, np.std([0.1, 0.3], ddof=0) / np.sqrt(2))
 
     def test_new_compact_result_uses_explicit_primary_and_block_values(self):
         current = {
@@ -115,12 +132,13 @@ class InteractionEntropyCompatibilityTest(unittest.TestCase):
             'iedata': np.asarray([0.1, 0.3]),
             'ie_value': 0.25,
             'block_std': 0.05,
+            'block_sem': 0.025,
         }
 
         value, uncertainty = output_file._ie_result(current)
 
         self.assertAlmostEqual(value, 0.25)
-        self.assertAlmostEqual(uncertainty, 0.05)
+        self.assertAlmostEqual(uncertainty, 0.025)
 
 
 if __name__ == '__main__':

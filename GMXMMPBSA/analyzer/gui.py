@@ -131,9 +131,10 @@ class GMX_MMPBSA_ANA(QMainWindow):
         cheader = self.correlation_tableWidget.horizontalHeader()
         cheader.setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
 
-        self.data_table_widget = QTableWidget(0, 6)
+        self.data_table_widget = QTableWidget(0, 8)
         polish_table(self.data_table_widget, single_selection=True)
-        self.data_table_widget.setHorizontalHeaderLabels(['Sys.', 'Type', 'Exp.ΔG', 'Avg.', 'SD', 'SEM'])
+        self.data_table_widget.setHorizontalHeaderLabels(
+            ['Sys.', 'Type', 'Exp.ΔG', 'Avg.', 'Block SD', 'Block SEM', 'SD', 'SEM'])
         self.data_table_widget.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
 
         self.corr_parm_tree_w = ParameterTree()
@@ -987,7 +988,8 @@ class GMX_MMPBSA_ANA(QMainWindow):
         if not item.keys_path:
             return
         df = self.correlation['items_data'][item.keys_path][0]
-        data = df.loc[df['Selection'] == True][['Number', 'Type', 'ExpΔG', 'Average', 'SD', 'SEM']]
+        data = df.loc[df['Selection'] == True][
+            ['Number', 'Type', 'ExpΔG', 'Average', 'Block SD', 'Block SEM', 'SD', 'SEM']]
         self.data_table_widget.setRowCount(len(data.index))
         for i, c in enumerate(data):
             for j, r in enumerate(data[c]):
@@ -1083,21 +1085,11 @@ class GMX_MMPBSA_ANA(QMainWindow):
                     self.correlation['data'][m] = pd.concat([d, cdf], ignore_index=True).sort_values(
                         by=[('System', 'Number'), ('System', 'Type')])
 
-        def subtract_custom_value(x, custom_value):
-            return x - custom_value
-
         for r, (m, v) in enumerate(self.correlation['data'].items()):
             ref = v.loc[v[('System', 'Reference')] == True].loc[:, ~v.columns.get_level_values(1).isin(
                 ['Number', 'Type', 'Reference', 'Selection'])]
             if len(ref.index):
-                for k in ref:
-                    if k[-1] == 'SEM':
-                        continue
-                    elif k[-1] == 'SD':
-                        v[k] = v[k].apply(utils.get_corrstd, args=(ref[k].values[0],))
-                        v[(k[0], 'SEM')] = v[k]
-                    else:
-                        v[k] = v[k].apply(subtract_custom_value, args=(ref[k].values[0],))
+                v = utils.adjust_reference_statistics(v, ref.iloc[0])
 
             met = v.columns.get_level_values(0).unique().to_list()[1:]
             for m1 in met:

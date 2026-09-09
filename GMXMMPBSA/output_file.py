@@ -29,10 +29,16 @@ import pickle
 
 
 def _combine_entropy(total_energy, entropy_value, entropy_uncertainty):
-    """Combine a scalar entropy estimate with the total-energy statistics."""
+    """Combine a scalar entropy estimate with frame-based energy statistics.
+
+    Both inputs use the primary uncertainty policy: Block SEM for correlated
+    frame vectors and block-based entropy diagnostics. The two uncertainties
+    are then combined by quadrature.
+    """
     mean = float(total_energy.mean() + entropy_value)
-    energy_std = float(total_energy.std())
-    std = utils.get_std(energy_std, entropy_uncertainty) if isfinite(entropy_uncertainty) else energy_std
+    energy_uncertainty = utils.primary_uncertainty(total_energy)
+    std = (utils.get_std(energy_uncertainty, entropy_uncertainty)
+           if isfinite(entropy_uncertainty) else energy_uncertainty)
     return mean, std
 
 
@@ -40,7 +46,9 @@ def _ie_result(ie_output):
     """Return the primary IE value and uncertainty, including legacy results."""
     # Legacy 1.6.x results reported the tail mean when ie_value was absent.
     value = float(ie_output.get('ie_value', ie_output['iedata'].mean()))
-    uncertainty = float(ie_output.get('block_std', ie_output['iedata'].std()))
+    block_sem = ie_output.get('block_sem')
+    uncertainty = float(block_sem if block_sem is not None
+                       else utils.primary_uncertainty(ie_output['iedata']))
     return value, uncertainty
 
 
@@ -127,8 +135,11 @@ def write_outputs(app):
     final_output.add_comment('Using temperature = %.2f K' % INPUT['general']['temperature'])
     final_output.add_comment('All units are reported in kcal/mol')
     final_output.add_comment('')
-    final_output.add_comment('SD - Sample standard deviation, SEM - Sample standard error of the mean')
+    final_output.add_comment('SD - Population standard deviation of the frames (ddof=0), '
+                             'SEM - SD / sqrt(number of frames)')
     final_output.add_comment('SD(Prop.), SEM(Prop.) - SD and SEM obtained with propagation of uncertainty formula')
+    final_output.add_comment('Block SD, Block SEM - sample SD and SEM of deterministic nonoverlapping block means; '
+                             'Block SEM is used for primary estimates')
     final_output.add_comment('https://en.wikipedia.org/wiki/Propagation_of_uncertainty#Example_formulae')
     final_output.add_comment('')
 
@@ -329,7 +340,7 @@ def write_outputs(app):
                                              f"ΔG binding = {dg_ie_davg:9.2f} +/- {dg_ie_dstd:7.2f}\n")
                 if INPUT['general']['c2_entropy']:
                     dg_c2_davg, dh_dstd = utils.calc_sum(sys_norm['TOTAL'], c2_dict['normal'][key]['c2data'])
-                    dg_c2_dstd = utils.get_std(dh_dstd, c2_dict['normal'][key]['c2_std'])
+                    dg_c2_dstd = utils.get_std(dh_dstd, c2_dict['normal'][key]['c2_sem'])
                     final_output.add_section(f"Using C2 Entropy Approximation:\n"
                                              f"ΔG binding = {dg_c2_davg:9.2f} +/- {dg_c2_dstd:7.2f}\n")
             if INPUT['nmode']['nmoderun']:
@@ -371,7 +382,7 @@ def write_outputs(app):
                 if INPUT['general']['c2_entropy']:
                     mc2_davg, mc2_dstd = _combine_entropy(
                         sys_mut['TOTAL'], c2_dict['mutant'][key]['c2data'],
-                        c2_dict['mutant'][key]['c2_std']
+                        c2_dict['mutant'][key]['c2_sem']
                     )
                     final_output.add_section(f"Using C2 Entropy Approximation:\n"
                                              f"ΔG binding = {mc2_davg:9.2f} +/- {mc2_dstd:7.2f}\n")
@@ -384,10 +395,14 @@ def write_outputs(app):
             mut_norm = app.calc_types.mut_norm[key]['complex' if stability else 'delta']
             final_output.add_section(mut_norm.summary_output())
             ddh_davg = mut_norm['TOTAL'].mean()
-            ddh_dstd = mut_norm['TOTAL'].std()
+            ddh_dstd = utils.primary_uncertainty(mut_norm['TOTAL'])
+            ddh_dstd_raw = mut_norm['TOTAL'].std()
+            ddh_dstd_prop = mut_norm['TOTAL'].stdev()
 
             final_output.write(f'\nRESULT OF ALANINE SCANNING ({mut_str}):\n' 
-                               f"ΔΔH binding = {ddh_davg:9.2f} +/- {ddh_dstd:7.2f}\n")
+                               f"ΔΔH binding = {ddh_davg:9.2f} +/- {ddh_dstd:7.2f} (Block SEM; "
+                               f"Block SD = {utils.block_statistics(mut_norm['TOTAL'])[2]:7.2f}; "
+                               f"SD = {ddh_dstd_raw:7.2f}; SD(Prop.) = {ddh_dstd_prop:7.2f})\n")
 
             if INPUT['general']['qh_entropy']:
                 ddgqh_davg = ddh_davg + qhmut_norm['TOTAL']
@@ -402,13 +417,13 @@ def write_outputs(app):
                     final_output.write('\n   (interaction entropy)\n'
                                        f'ΔΔG binding = {ddgie_davg:9.2f} +/- {ddgie_dstd:7.2f}\n')
                 if INPUT['general']['c2_entropy']:
-                    ddc2_davg, ddc2_dstd = c2_dict['mut_norm'][key]['c2data'], c2_dict['mut_norm'][key]['c2_std']
+                    ddc2_davg, ddc2_dstd = c2_dict['mut_norm'][key]['c2data'], c2_dict['mut_norm'][key]['c2_sem']
                     ddgc2_davg = ddh_davg + ddc2_davg
                     ddgc2_dstd = utils.get_std(ddh_dstd, ddc2_dstd)
                     final_output.write('\n   (C2 entropy)\n'
                                        f'ΔΔG binding = {ddgc2_davg:9.2f} +/- {ddgc2_dstd:7.2f}\n')
             if INPUT['nmode']['nmoderun']:
-                ddnm_davg, ddnm_dstd = nm_sys_mut_norm.mean(), nm_sys_mut_norm.std()
+                ddnm_davg, ddnm_dstd = nm_sys_mut_norm.mean(), utils.primary_uncertainty(nm_sys_mut_norm)
                 ddgnm_davg = ddh_davg + ddnm_davg
                 ddgnm_dstd = utils.get_std(ddh_dstd, ddnm_dstd)
                 final_output.write('\n   (normal mode entropy)\n'
@@ -547,7 +562,7 @@ class OutputFile(object):
     def separate(self):
         """ Delimiter between fields in output file """
         for _ in range(2):
-            self.write('-' * 79)
+            self.write('-' * 101)
             self.write(ls)
 
     # ==================================================

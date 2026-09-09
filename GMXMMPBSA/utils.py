@@ -83,7 +83,14 @@ class EnergyVector(np.ndarray):
         super(EnergyVector, self).__setstate__(state[:-1])
 
     def stdev(self):
-        return self.com_std or self.std()
+        """Return propagated SD when available, otherwise the frame SD.
+
+        Frame standard deviations use NumPy's population convention
+        (``ddof=0``).  ``com_std`` may legitimately be zero, so it must not
+        be tested by truth value here.
+        """
+        return (float(self.com_std) if self.com_std is not None
+                else float(self.std()))
 
     def sem(self):
         return float(self.std() / sqrt(len(self)))
@@ -98,34 +105,34 @@ class EnergyVector(np.ndarray):
         return np.average(self)
 
     def corr_add(self, other):
-        selfstd = self.com_std or float(self.std())
+        selfstd = self.com_std if self.com_std is not None else float(self.std())
         comp_std = None
         if isinstance(other, EnergyVector):
-            otherstd = other.com_std or float(other.std())
+            otherstd = other.com_std if other.com_std is not None else float(other.std())
             comp_std = get_corrstd(selfstd, otherstd)
         return EnergyVector(np.add(self, other), comp_std)
 
     def corr_sub(self, other):
-        self_std = self.com_std or float(np.asarray(self).std())
+        self_std = self.com_std if self.com_std is not None else float(np.asarray(self).std())
         comp_std = None
         if isinstance(other, EnergyVector):
-            other_std = other.com_std or float(np.asarray(other).std())
+            other_std = other.com_std if other.com_std is not None else float(np.asarray(other).std())
             comp_std = get_corrstd(self_std, other_std)
         return EnergyVector(np.subtract(self, other), comp_std)
 
     def __add__(self, other):
-        selfstd = self.com_std or float(self.std())
+        selfstd = self.com_std if self.com_std is not None else float(self.std())
         comp_std = None
         if isinstance(other, EnergyVector):
-            otherstd = other.com_std or float(other.std())
+            otherstd = other.com_std if other.com_std is not None else float(other.std())
             comp_std = get_std(selfstd, otherstd)
         return EnergyVector(np.add(self, other), comp_std)
 
     def __sub__(self, other):
-        self_std = self.com_std or float(np.asarray(self).std())
+        self_std = self.com_std if self.com_std is not None else float(np.asarray(self).std())
         comp_std = None
         if isinstance(other, EnergyVector):
-            other_std = other.com_std or float(np.asarray(other).std())
+            other_std = other.com_std if other.com_std is not None else float(np.asarray(other).std())
             comp_std = get_std(self_std, other_std)
         return EnergyVector(np.subtract(self, other), comp_std)
 
@@ -157,32 +164,100 @@ def get_corrstd(val1, val2):
     return sqrt(max(0, val1 ** 2 + val2 ** 2 - 2 * val1 * val2))
 
 
+def adjust_reference_statistics(data, reference):
+    """Return reference-relative summaries, adjusting each uncertainty separately.
+
+    Preserve the existing correlated-difference convention, without treating an
+    SD as an SEM. Missing uncertainties remain unavailable rather than becoming zero.
+    """
+    result = data.copy()
+    for key in reference.index:
+        if key[-1] in ('SD', 'SEM', 'Block SD', 'Block SEM'):
+            ref_value = reference[key]
+            result[key] = result[key].apply(
+                lambda value: get_corrstd(value, ref_value)
+                if pd.notna(value) and pd.notna(ref_value) else float('nan')
+            )
+        else:
+            result[key] = result[key] - reference[key]
+    return result
+
+
+def block_statistics(values):
+    """Return block SD/SEM for a frame vector.
+
+    Blocks are deterministic, non-overlapping, and selected from the same
+    frame-count-based candidates used by the entropy diagnostics.  The
+    uncertainty is the sample SD of the block means (``ddof=1``) and its SEM.
+    Incomplete trailing frames are excluded.  The returned tuple is
+    ``(block_size, nblocks, block_sd, block_sem)``.
+    """
+    values = np.asarray(values, dtype=float)
+    numframes = values.size
+    if numframes < 2:
+        return 0, 0, float('nan'), float('nan')
+
+    block_sizes = sorted({max(2, numframes // divisor) for divisor in (16, 8, 4, 2, 1)})
+    block_size = None
+    for minimum_blocks in (8, 2, 1):
+        eligible = [size for size in block_sizes if numframes // size >= minimum_blocks]
+        if eligible:
+            block_size = max(eligible)
+            break
+    if block_size is None:
+        return 0, 0, float('nan'), float('nan')
+
+    nblocks = numframes // block_size
+    block_means = values[:nblocks * block_size].reshape(nblocks, block_size).mean(axis=1)
+    if nblocks < 2:
+        return block_size, nblocks, float('nan'), float('nan')
+    block_sd = float(np.std(block_means, ddof=1))
+    return block_size, nblocks, block_sd, float(block_sd / sqrt(nblocks))
+
+
+def primary_uncertainty(values):
+    """Return the uncertainty used for primary reported estimates.
+
+    The preferred value is the SEM of deterministic non-overlapping block
+    means.  Very short vectors cannot provide two block estimates, so they
+    fall back to the legacy population frame SEM.
+    """
+    values = np.asarray(values, dtype=float)
+    if values.size == 0:
+        return float('nan')
+    block_sem = block_statistics(values)[3]
+    if np.isfinite(block_sem):
+        return float(block_sem)
+    return float(values.std(ddof=0) / sqrt(values.size))
+
+
 def calc_sum(vector1, vector2, mut=False) -> (float, float):
     """
     Calculate the mean and std of the two vector/numbers sum
     Args:
         vector1: EnergyVector or float
         vector2: EnergyVector or float
-        mut: If mutant, the SD is the standard deviation of the array
+        mut: If mutant, combine the frame vectors before calculating the
+            primary block SEM
 
     Returns:
         dmean: Mean of the sum
-        dstd: Standard deviation
+        dstd: Primary block SEM, with the legacy population frame SEM fallback
     """
     if isinstance(vector2, EnergyVector) and isinstance(vector1, EnergyVector):
         if mut:
             d = vector2 + vector1
             dmean = float(d.mean())
-            dstd = float(d.std())
+            dstd = primary_uncertainty(d)
         else:
             dmean = float(vector2.mean() + vector1.mean())
-            dstd = float(get_std(vector2.std(), vector1.std()))
+            dstd = float(get_std(primary_uncertainty(vector2), primary_uncertainty(vector1)))
     elif isinstance(vector2, EnergyVector) and isinstance(vector1, (int, float)):
         dmean = float(vector2.mean() + vector1)
-        dstd = vector2.std()
+        dstd = primary_uncertainty(vector2)
     elif isinstance(vector2, (int, float)) and isinstance(vector1, EnergyVector):
         dmean = float(vector2 + vector1.mean())
-        dstd = vector1.std()
+        dstd = primary_uncertainty(vector1)
     else:
         dmean = float(vector2 + vector1)
         dstd = 0.0

@@ -56,10 +56,13 @@ def _working_directory(path: Path):
         os.chdir(cwd)
 
 
-def _series_with_summary(data, mean, std, sem):
+def _series_with_summary(data, mean, std, sem, block_sd=None, block_sem=None):
+    if block_sd is None or block_sem is None:
+        _, _, block_sd, block_sem = utils.block_statistics(data)
     if not isinstance(data, (pd.Series, pd.DataFrame)):
-        return data.append([mean, std, sem])
-    return pd.concat([data, pd.Series([mean, std, sem], index=['Average', 'SD', 'SEM'])])
+        return data.append([mean, std, sem, block_sd, block_sem])
+    return pd.concat([data, pd.Series([mean, std, sem, block_sd, block_sem],
+                                      index=['Average', 'SD', 'SEM', 'Block SD', 'Block SEM'])])
 
 
 def _require_parquet_engine():
@@ -140,7 +143,7 @@ def _setup_data(data: pd.DataFrame, level=0, iec2=False, name=None, index=None,
     if level == 0:
         options = {'iec2': iec2}
         data.name = data.name[-1]
-        line_plot_data = data[:-3].to_frame()
+        line_plot_data = data[:-5].to_frame()
         if inmemory:
             cont['line_plot_data'] = [line_plot_data, options, change]
         else:
@@ -150,7 +153,7 @@ def _setup_data(data: pd.DataFrame, level=0, iec2=False, name=None, index=None,
         options = ({'iec2': True} if iec2 else {}) | {
             'groups': _itemdata_properties(data)
         }
-        bar_plot_data = data[-3:].reindex(columns=index)
+        bar_plot_data = data[-5:].reindex(columns=index)
         if inmemory:
             cont['bar_plot_data'] = [bar_plot_data, options, change]
         else:
@@ -158,8 +161,8 @@ def _setup_data(data: pd.DataFrame, level=0, iec2=False, name=None, index=None,
             cont['bar_plot_data'] = [parquet_file % 'bp', options, change]
     elif level == 1.5:
         options = {'iec2': True}
-        line_plot_data = data[['AccIntEnergy', 'ie']][:-3]
-        bar_plot_data = data[['ie', 'sigma']][-3:]
+        line_plot_data = data[['AccIntEnergy', 'ie']][:-5]
+        bar_plot_data = data[['ie', 'sigma']][-5:]
         if inmemory:
             cont['line_plot_data'] = [line_plot_data, options, change]
             cont['bar_plot_data'] = [bar_plot_data, options, change]
@@ -172,9 +175,9 @@ def _setup_data(data: pd.DataFrame, level=0, iec2=False, name=None, index=None,
     elif level == 2:
         tempdf = data.loc[:, data.columns.get_level_values(1) == 'tot'].droplevel(level=1, axis=1)
         temp_data = tempdf.reindex(columns=index)
-        line_plot_data = temp_data[:-3].sum(axis=1).rename(name).to_frame()
-        bar_plot_data = tempdf[-3:]
-        heatmap_plot_data = tempdf[:-3].T
+        line_plot_data = temp_data[:-5].sum(axis=1).rename(name).to_frame()
+        bar_plot_data = tempdf[-5:]
+        heatmap_plot_data = tempdf[:-5].T
         if memory:
             cont['line_plot_data'] = [line_plot_data, {}, change]
             cont['bar_plot_data'] = [bar_plot_data, dict(groups=_itemdata_properties(bar_plot_data)), change]
@@ -190,12 +193,13 @@ def _setup_data(data: pd.DataFrame, level=0, iec2=False, name=None, index=None,
         # Select only the "tot" column, remove the level, change first level of columns to rows and remove the mean
         # index
         tempdf = data.loc[:, data.columns.get_level_values(2) == 'tot']
-        line_plot_data = tempdf[:-3].groupby(axis=1, level=0, sort=False).sum().reindex(
+        line_plot_data = tempdf[:-5].groupby(axis=1, level=0, sort=False).sum().reindex(
             columns=index).sum(axis=1).rename(name).to_frame()
-        bar_plot_data = tempdf[:-3].groupby(axis=1, level=0, sort=False).sum().agg(
-            [lambda x: x.mean(), lambda x: x.std(ddof=0), lambda x: x.std(ddof=0)/ math.sqrt(len(x))]
+        bar_plot_data = tempdf[:-5].groupby(axis=1, level=0, sort=False).sum().agg(
+            [lambda x: x.mean(), lambda x: x.std(ddof=0), lambda x: x.std(ddof=0) / math.sqrt(len(x)),
+             lambda x: utils.block_statistics(x)[2], lambda x: utils.block_statistics(x)[3]]
             ).reindex(columns=index)
-        bar_plot_data.index = ['Average', 'SD', 'SEM']
+        bar_plot_data.index = ['Average', 'SD', 'SEM', 'Block SD', 'Block SEM']
         heatmap_plot_data = tempdf.loc[["Average"]].droplevel(level=2, axis=1).stack().droplevel(level=0).reindex(
             columns=index, index=index)
         if memory:
@@ -412,8 +416,14 @@ class MMPBSA_API():
 
     def _model2df(self, energy, index):
         energy_df = pd.DataFrame(flatten(energy), index=index)
-        s = pd.concat([energy_df.mean(), energy_df.std(ddof=0), energy_df.std(ddof=0) / math.sqrt(len(index))], axis=1)
-        s.columns = ['Average', 'SD', 'SEM']
+        s = pd.concat([
+            energy_df.mean(),
+            energy_df.std(ddof=0),
+            energy_df.std(ddof=0) / math.sqrt(len(index)),
+            energy_df.apply(lambda x: utils.block_statistics(x)[2]),
+            energy_df.apply(lambda x: utils.block_statistics(x)[3]),
+        ], axis=1)
+        s.columns = ['Average', 'SD', 'SEM', 'Block SD', 'Block SEM']
         summary_df = s.T
         df = pd.concat([energy_df, summary_df])
         df.index.name = index.name
@@ -514,10 +524,11 @@ class MMPBSA_API():
             for emodel in d:
                 c2_sem = d[emodel].get('c2_sem', d[emodel]['c2_std'])
                 entropy[et]['c2'][emodel] = {x: None for x in ['c2', 'sigma']}
-                entropy_df[et]['c2'][emodel] = pd.DataFrame({'c2': [d[emodel]['c2data'], d[emodel]['c2_std'],
-                                                                    c2_sem],
-                                                             'sigma': [d[emodel]['sigma'], 0, 0]},
-                                                            index=['Average', 'SD', 'SEM'])
+                entropy_df[et]['c2'][emodel] = pd.DataFrame(
+                    {'c2': [d[emodel]['c2data'], d[emodel]['c2_std'], c2_sem,
+                            d[emodel]['c2_std'], c2_sem],
+                     'sigma': [d[emodel]['sigma'], 0, 0, 0, 0]},
+                    index=['Average', 'SD', 'SEM', 'Block SD', 'Block SEM'])
         return {'map': emapping(entropy), 'data': entropy_df, 'summary': entropy_df}
 
     def get_ie_entropy(self, ietype: tuple = None, startframe=None, endframe=None, interval=None,
@@ -560,12 +571,15 @@ class MMPBSA_API():
                     d[emodel]['iedata'].mean() if 'iedata' in d[emodel]
                     else d[emodel]['data'][-ieframes:].mean()
                 ))
-                block_std = float(d[emodel].get('block_std', d[emodel]['iedata'].std()))
+                block_std = float(d[emodel].get('block_std', utils.block_statistics(d[emodel]['iedata'])[2]))
                 block_sem = float(d[emodel].get(
-                    'block_sem', d[emodel]['iedata'].std() / math.sqrt(ieframes)
+                    'block_sem', utils.primary_uncertainty(d[emodel]['iedata'])
                 ))
-                df3 = pd.DataFrame({'ie': [ie_value, block_std, block_sem],
-                                    'sigma': [d[emodel]['sigma'], 0, 0]}, index=['Average', 'SD', 'SEM'])
+                raw_sd = float(d[emodel]['iedata'].std(ddof=0))
+                raw_sem = raw_sd / math.sqrt(ieframes)
+                df3 = pd.DataFrame({'ie': [ie_value, raw_sd, raw_sem, block_std, block_sem],
+                                    'sigma': [d[emodel]['sigma'], 0, 0, 0, 0]},
+                                   index=['Average', 'SD', 'SEM', 'Block SD', 'Block SEM'])
                 summ_df[et]['ie'][emodel] = df3
                 df4 = pd.concat([df2, df3])
                 df4.index.name = df.index.name
@@ -678,13 +692,21 @@ class MMPBSA_API():
                                 entdata = etv[mol]['TOTAL']
                             entdata.name = '-TΔS'
                             dg = edata.loc['Average'] + entdata.loc['Average']
-                            std = utils.get_std(edata.loc['SD'], entdata.loc['SD'])
-                            dgdata = pd.Series([dg, std, std], index=['Average', 'SD', 'SEM'], name='ΔG')
+                            legacy_sd = utils.get_std(edata.loc['SD'], entdata.loc['SD'])
+                            legacy_sem = utils.get_std(edata.loc['SEM'], entdata.loc['SEM'])
+                            block_sd = utils.get_std(edata.get('Block SD', float('nan')),
+                                                     entdata.get('Block SD', float('nan')))
+                            block_sem = utils.get_std(edata.get('Block SEM', float('nan')),
+                                                      entdata.get('Block SEM', float('nan')))
+                            dgdata = pd.Series([dg, legacy_sd, legacy_sem, block_sd, block_sem],
+                                               index=['Average', 'SD', 'SEM', 'Block SD', 'Block SEM'], name='ΔG')
                             binding[et][em][ent] = pd.concat([edata, entdata, dgdata], axis=1)
                             if mol == 'delta':
                                 c[(dg_string[ent], 'Average')] = dg
-                                c[(dg_string[ent], 'SD')] = std
-                                c[(dg_string[ent], 'SEM')] = std
+                                c[(dg_string[ent], 'SD')] = legacy_sd
+                                c[(dg_string[ent], 'SEM')] = legacy_sem
+                                c[(dg_string[ent], 'Block SD')] = block_sd
+                                c[(dg_string[ent], 'Block SEM')] = block_sem
                         if mol == 'delta':
                             corr[et][em] = pd.DataFrame(c, index=[0])
         return {'map': b_map, 'data': binding, 'correlation': corr}
@@ -695,7 +717,7 @@ class MMPBSA_API():
 
         s, e, index = self._get_frames_index('energy', startframe, endframe, interval)
         name = index.name
-        index = pd.concat([index, pd.Series(['Average', 'SD', 'SEM'])])
+        index = pd.concat([index, pd.Series(['Average', 'SD', 'SEM', 'Block SD', 'Block SEM'])])
         index.name = name
 
         temp_print_keys = etype or tuple(x for x in ['decomp_normal', 'decomp_mutant'] if self.data.get(x))
@@ -761,10 +783,11 @@ class MMPBSA_API():
                                                             temp_energy[t] = self.data[et][m][m1][c][r1][t][s:e:interval]
                                                             temp_emap.append(t)
                                                             mean = temp_energy[t].mean()
-                                                            std = temp_energy[t].std()
+                                                            std = temp_energy[t].std(ddof=0)
                                                             sem = std / math.sqrt(len(temp_energy[t]))
+                                                            block_sd, block_sem = utils.block_statistics(temp_energy[t])[2:]
                                                             temp_energy[t] = _series_with_summary(
-                                                                temp_energy[t], mean, std, sem
+                                                                temp_energy[t], mean, std, sem, block_sd, block_sem
                                                             )
                                                             if (t == 'tot' and res_threshold > 0 and
                                                                     abs(mean) < res_threshold):
@@ -795,10 +818,12 @@ class MMPBSA_API():
                                                                     temp_energy_r2[t] = self.data[et][m][m1][c][r1][
                                                                                             r2][t][s:e:interval]
                                                                     mean = temp_energy_r2[t].mean()
-                                                                    std = temp_energy_r2[t].std()
+                                                                    std = temp_energy_r2[t].std(ddof=0)
                                                                     sem = std / math.sqrt(len(temp_energy_r2[t]))
+                                                                    block_sd, block_sem = utils.block_statistics(temp_energy_r2[t])[2:]
                                                                     temp_energy_r2[t] = _series_with_summary(
-                                                                        temp_energy_r2[t], mean, std, sem
+                                                                        temp_energy_r2[t], mean, std, sem,
+                                                                        block_sd, block_sem
                                                                     )
                                                                     if t == 'tot':
                                                                         res1_contrib += mean

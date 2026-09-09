@@ -27,7 +27,7 @@ import logging
 from copy import deepcopy
 from math import sqrt
 from GMXMMPBSA.exceptions import (OutputError, LengthError, DecompError, GMXMMPBSA_ERROR)
-from GMXMMPBSA.utils import EnergyVector, get_std
+from GMXMMPBSA.utils import EnergyVector, block_statistics, get_std
 from types import SimpleNamespace
 import numpy as np
 import sys
@@ -39,7 +39,8 @@ idecompString = ['idecomp = 0: No decomposition analysis',
                  'idecomp = 2: Per-residue decomp adding 1-4 interactions to EEL and VDW.',
                  'idecomp = 3: Pairwise decomp adding 1-4 interactions to Internal.',
                  'idecomp = 4: Pairwise decomp adding 1-4 interactions to EEL and VDW.']
-sep = '-------------------------------------------------------------------------------'
+# Keep the summary rule aligned with the current eight-column statistics rows.
+sep = '-' * 101
 
 data_key_owner = {'BOND': ['GGAS', 'TOTAL'], 'ANGLE': ['GGAS', 'TOTAL'], 'DIHED': ['GGAS', 'TOTAL'],
                   'VDWAALS': ['GGAS', 'TOTAL'], 'EEL': ['GGAS', 'TOTAL'], '1-4 VDW': ['GGAS', 'TOTAL'],
@@ -60,6 +61,14 @@ data_key_owner = {'BOND': ['GGAS', 'TOTAL'], 'ANGLE': ['GGAS', 'TOTAL'], 'DIHED'
                   # NMODE and QH
                   'TRANSLATIONAL': ['TOTAL'], 'ROTATIONAL': ['TOTAL'], 'VIBRATIONAL': ['TOTAL']
                   }
+
+
+def _vector_statistics(vector):
+    """Return legacy and block statistics for one energy vector."""
+    block_sd = block_sem = float('nan')
+    _, _, block_sd, block_sem = block_statistics(vector)
+    return (float(vector.mean()), float(vector.stdev()), float(vector.std()),
+            float(vector.semp()), float(vector.sem()), block_sd, block_sem)
 
 
 class AmberOutput(dict):
@@ -138,18 +147,20 @@ class AmberOutput(dict):
         text = [f'{self.mol.capitalize()}:']
         summary = self.summary()
         for c, row in enumerate(summary, start=1):
-            key, avg, stdev, std, semp, sem = row
+            key, avg, stdev, std, semp, sem, block_sd, block_sem = row
             if key in ['GGAS', 'TOTAL']:
                 text.append('')
             if isinstance(avg, str):
                 text.extend(
                     (
-                        f'{key:16s} {avg:>13s} {stdev:>13s} {std:>10s} {semp:>12s} {sem:>10s}',
+                        f'{key:16s} {avg:>13s} {stdev:>13s} {std:>10s} {semp:>12s} {sem:>10s} '
+                        f'{block_sd:>10s} {block_sem:>10s}',
                         sep,
                     )
                 )
             else:
-                text.append(f'{key:16s} {avg:13.2f} {stdev:13.2f} {std:10.2f} {semp:12.2f} {sem:10.2f}')
+                text.append(f'{key:16s} {avg:13.2f} {stdev:13.2f} {std:10.2f} {semp:12.2f} {sem:10.2f} '
+                            f'{block_sd:10.2f} {block_sem:10.2f}')
         return '\n'.join(text) + '\n\n'
 
     def summary(self):
@@ -161,7 +172,7 @@ class AmberOutput(dict):
 
         comp_name = 'Entropy Component' if self.__class__ in [NMODEout, QHout] else 'Energy Component'
 
-        summary_list = [[comp_name, 'Average', 'SD(Prop.)', 'SD', 'SEM(Prop.)', 'SEM']]
+        summary_list = [[comp_name, 'Average', 'SD(Prop.)', 'SD', 'SEM(Prop.)', 'SEM', 'Block SD', 'Block SEM']]
 
         for key in self.data_keys:
             # Skip the composite terms, since we print those at the end
@@ -172,7 +183,8 @@ class AmberOutput(dict):
             semp = float(self[key].semp())
             std = float(self[key].std())
             sem = float(self[key].sem())
-            summary_list.append([key, avg, stdev, std, semp, sem])
+            _, _, block_sd, block_sem = block_statistics(self[key])
+            summary_list.append([key, avg, stdev, std, semp, sem, block_sd, block_sem])
 
         for key in self.composite_keys:
             # Now print out the composite terms
@@ -181,7 +193,8 @@ class AmberOutput(dict):
             semp = float(self[key].semp())
             std = float(self[key].std())
             sem = float(self[key].sem())
-            summary_list.append([key, avg, stdev, std, semp, sem])
+            _, _, block_sd, block_sem = block_statistics(self[key])
+            summary_list.append([key, avg, stdev, std, semp, sem, block_sd, block_sem])
 
         return summary_list
 
@@ -421,11 +434,11 @@ class C2out(dict):
         summary = self.summary()
         text = []
         for row in summary:
-            met, key, sigma, avg, std, ci = row
+            met, key, sigma, avg, std, sem, ci = row
             if isinstance(avg, str):
-                text.extend((f'{met:16s} {key:>13s} {sigma:>13s} {avg:>10s} {std:>8s} {ci:>14s}', sep))
+                text.extend((f'{met:16s} {key:>13s} {sigma:>13s} {avg:>10s} {std:>8s} {sem:>8s} {ci:>14s}', sep))
             else:
-                text.append(f"{met:16s} {key:>13s} {sigma:13.2f} {avg:10.2f} {std:8.2f} {ci:>14s}")
+                text.append(f"{met:16s} {key:>13s} {sigma:13.2f} {avg:10.2f} {std:8.2f} {sem:8.2f} {ci:>14s}")
         if self.get('block_size'):
             text.append(
                 f"Block diagnostic: {self['block_nblocks']} nonoverlapping blocks "
@@ -443,10 +456,11 @@ class C2out(dict):
                 'σ(Int. Energy)',
                 'C2 Value',
                 'Block SD',
+                'Block SEM',
                 'Block P2.5-P97.5'
             ],
             [self.method.upper(), 'C2', float(self['sigma']), float(self['c2data']), float(self['c2_std']),
-             f"{self['c2_ci'][0]:.2f}-{self['c2_ci'][1]:.2f}",]
+             float(self.get('c2_sem', self['c2_std'])), f"{self['c2_ci'][0]:.2f}-{self['c2_ci'][1]:.2f}",]
         ]
 
 
@@ -1183,19 +1197,21 @@ class BindingStatistics(dict):
             if _output_format:
                 text.append(row)
             else:
-                key, avg, stdev, std, semp, sem = row
+                key, avg, stdev, std, semp, sem, block_sd, block_sem = row
                 if key in ['GGAS', 'TOTAL']:
                     text.append('')
                 if isinstance(avg, str):
                     text.extend(
                         (
-                            f'{key:16s} {avg:>13s} {stdev:>13s} {std:>10s} {semp:>12s} {sem:>10s}',
+                            f'{key:16s} {avg:>13s} {stdev:>13s} {std:>10s} {semp:>12s} {sem:>10s} '
+                            f'{block_sd:>10s} {block_sem:>10s}',
                             sep,
                         )
                     )
 
                 else:
-                    text.append(f'{f"Δ{key}":16s} {avg:13.2f} {stdev:13.2f} {std:10.2f} {semp:12.2f} {sem:10.2f}')
+                    text.append(f'{f"Δ{key}":16s} {avg:13.2f} {stdev:13.2f} {std:10.2f} {semp:12.2f} {sem:10.2f} '
+                                f'{block_sd:10.2f} {block_sem:10.2f}')
         return text if _output_format else '\n'.join(text) + '\n'
 
     def summary(self):
@@ -1206,7 +1222,7 @@ class BindingStatistics(dict):
             col_name = '%-16s' % 'Energy Component'
 
         summary_list = [
-            [col_name] + ['Average', 'SD(Prop.)', 'SD', 'SEM(Prop.)', 'SEM']
+            [col_name] + ['Average', 'SD(Prop.)', 'SD', 'SEM(Prop.)', 'SEM', 'Block SD', 'Block SEM']
         ]
 
         for key in self.data_keys:
@@ -1219,7 +1235,8 @@ class BindingStatistics(dict):
             std = float(self[key].std())
             semp = float(self[key].semp())
             sem = float(self[key].sem())
-            summary_list.append([key, avg, stdev, std, semp, sem])
+            _, _, block_sd, block_sem = block_statistics(self[key])
+            summary_list.append([key, avg, stdev, std, semp, sem, block_sd, block_sem])
 
         for key in self.composite_keys:
             # Now print out the composite terms
@@ -1228,7 +1245,8 @@ class BindingStatistics(dict):
             std = float(self[key].std())
             semp = float(self[key].semp())
             sem = float(self[key].sem())
-            summary_list.append([key, avg, stdev, std, semp, sem])
+            _, _, block_sd, block_sem = block_statistics(self[key])
+            summary_list.append([key, avg, stdev, std, semp, sem, block_sd, block_sem])
 
         return summary_list
 
@@ -1290,26 +1308,28 @@ class DeltaDeltaStatistics(dict):
         text = ['Delta Delta (Mutant - Normal):']
         for c, row in enumerate(summary, start=1):
             # Skip the composite terms, since we print those at the end
-            key, avg, stdev, std, semp, sem = row
+            key, avg, stdev, std, semp, sem, block_sd, block_sem = row
             if key in ['GGAS', 'TOTAL']:
                 text.append('')
             if isinstance(avg, str):
                 text.extend(
                     (
-                        f'{key:16s} {avg:>13s} {stdev:>13s} {std:>10s} {semp:>12s} {sem:>10s}',
+                        f'{key:16s} {avg:>13s} {stdev:>13s} {std:>10s} {semp:>12s} {sem:>10s} '
+                        f'{block_sd:>10s} {block_sem:>10s}',
                         sep,
                     )
                 )
 
             else:
-                text.append(f'{f"ΔΔ{key}":16s} {avg:13.2f} {stdev:13.2f} {std:10.2f} {semp:12.2f} {sem:10.2f}')
+                text.append(f'{f"ΔΔ{key}":16s} {avg:13.2f} {stdev:13.2f} {std:10.2f} {semp:12.2f} {sem:10.2f} '
+                            f'{block_sd:10.2f} {block_sem:10.2f}')
         return '\n'.join(text) + '\n'
 
     def summary(self):
         """ Returns a string printing the summary of the binding statistics """
 
         summary_list = [
-            [f'{self.term_text} Component'] + ['Average', 'SD(Prop.)', 'SD', 'SEM(Prop.)', 'SEM']
+            [f'{self.term_text} Component'] + ['Average', 'SD(Prop.)', 'SD', 'SEM(Prop.)', 'SEM', 'Block SD', 'Block SEM']
         ]
 
         for key in self.norm.data_keys:
@@ -1319,7 +1339,8 @@ class DeltaDeltaStatistics(dict):
             std = float(self[key].std())
             sem = float(self[key].sem())
             semp = float(self[key].semp())
-            summary_list.append([key, avg, stdev, std, semp, sem])
+            _, _, block_sd, block_sem = block_statistics(self[key])
+            summary_list.append([key, avg, stdev, std, semp, sem, block_sd, block_sem])
 
         for key in self.composite_keys:
             # Now print out the composite terms
@@ -1328,7 +1349,8 @@ class DeltaDeltaStatistics(dict):
             std = float(self[key].std())
             sem = float(self[key].sem())
             semp = float(self[key].semp())
-            summary_list.append([key, avg, stdev, std, semp, sem])
+            _, _, block_sd, block_sem = block_statistics(self[key])
+            summary_list.append([key, avg, stdev, std, semp, sem, block_sd, block_sem])
 
         return summary_list
 
@@ -1391,11 +1413,11 @@ class DeltaIEC2Statistic(dict):
         summary = self.summary()
         text = []
         for row in summary:
-            key, sigma, avg, std = row
+            key, sigma, avg, std, sem = row
             if isinstance(avg, str):
-                text.extend((f'{key:15s} {sigma:>14s} {avg:>16s} {std:>14s}', sep))
+                text.extend((f'{key:15s} {sigma:>14s} {avg:>16s} {std:>14s} {sem:>14s}', sep))
             else:
-                text.append(f"Δ{key:14s} {sigma:14.2f} {avg:16.2f} {std:14.2f}")
+                text.append(f"Δ{key:14s} {sigma:14.2f} {avg:16.2f} {std:14.2f} {sem:14.2f}")
         return '\n'.join(text) + '\n\n'
 
     def summary(self):
@@ -1406,9 +1428,11 @@ class DeltaIEC2Statistic(dict):
                     'Method',
                     'σ(Int. Energy)',
                     'C2 Value',
-                    'SD'
+                    'Block SD',
+                    'Block SEM'
                 ],
-                ['C2', float(self['sigma']), float(self['c2data']), float(self['c2_std'])]
+                ['C2', float(self['sigma']), float(self['c2data']), float(self['c2_std']),
+                 float(self.get('c2_sem', self['c2_std']))]
             ]
         avg = float(self.get('ie_value', self['iedata'].mean()))
         stdev = float(self.get('block_std', self['data'][-self['ieframes']:].stdev()))
@@ -1418,9 +1442,11 @@ class DeltaIEC2Statistic(dict):
                 'Method',
                 'σ(Int. Energy)',
                 'Full IE',
-                'Block SD'
+                'Block SD',
+                'Block SEM'
             ],
-            ['IE', self['sigma'], avg, stdev]
+            ['IE', self['sigma'], avg, stdev,
+             float(self.get('block_sem', self['data'][-self['ieframes']:].sem()))]
         ]
 
 
@@ -1588,45 +1614,40 @@ class DecompOut(dict):
                              ['Residue', 'Internal', '', '', 'van der Waals', '',
                               '', 'Electrostatic', '', '', 'Polar Solvation', '',
                               '', 'Non-Polar Solv.', '', '', 'TOTAL', '', ''],
-                             [''] + ['Avg.', 'Std. Dev.', 'Std. Err. of Mean'] * 6])
+                             [''] + ['Avg.', 'SD(Prop.)', 'SD', 'SEM(Prop.)', 'SEM', 'Block SD', 'Block SEM'] * 6])
             else:
                 text.extend([self.descriptions[term],
-                             'Residue        |       Internal      |    van der Waals    |    Electrostatic    |   '
-                             'Polar Solvation   |   Non-Polar Solv.   |       TOTAL',
+                             'Residue        | Internal Avg +/- Block SEM [SD(Prop.)/SD/SEM] / Block SD '
+                             '| van der Waals Avg +/- Block SEM [SD(Prop.)/SD/SEM] / Block SD '
+                             '| Electrostatic Avg +/- Block SEM [SD(Prop.)/SD/SEM] / Block SD '
+                             '| Polar Solvation Avg +/- Block SEM [SD(Prop.)/SD/SEM] / Block SD '
+                             '| Non-Polar Solv. Avg +/- Block SEM [SD(Prop.)/SD/SEM] / Block SD '
+                             '| TOTAL Avg +/- Block SEM [SD(Prop.)/SD/SEM] / Block SD',
                              '-------------------------------------------------------------------------------------'
                              '-------------------------------------------------------------'])
             for res in self[term]:
-                int_avg = self[term][res]['int'].mean()
-                int_std = self[term][res]['int'].stdev()
-                vdw_avg = self[term][res]['vdw'].mean()
-                vdw_std = self[term][res]['vdw'].stdev()
-                eel_avg = self[term][res]['eel'].mean()
-                eel_std = self[term][res]['eel'].stdev()
-                pol_avg = self[term][res]['pol'].mean()
-                pol_std = self[term][res]['pol'].stdev()
-                sas_avg = self[term][res]['sas'].mean()
-                sas_std = self[term][res]['sas'].stdev()
-                tot_avg = self[term][res]['tot'].mean()
-                tot_std = self[term][res]['tot'].stdev()
-                sqrt_frames = sqrt(self.numframes)
-
+                int_avg, int_stdev, int_std, int_semp, int_sem, int_block_sd, int_block_sem = _vector_statistics(self[term][res]['int'])
+                vdw_avg, vdw_stdev, vdw_std, vdw_semp, vdw_sem, vdw_block_sd, vdw_block_sem = _vector_statistics(self[term][res]['vdw'])
+                eel_avg, eel_stdev, eel_std, eel_semp, eel_sem, eel_block_sd, eel_block_sem = _vector_statistics(self[term][res]['eel'])
+                pol_avg, pol_stdev, pol_std, pol_semp, pol_sem, pol_block_sd, pol_block_sem = _vector_statistics(self[term][res]['pol'])
+                sas_avg, sas_stdev, sas_std, sas_semp, sas_sem, sas_block_sd, sas_block_sem = _vector_statistics(self[term][res]['sas'])
+                tot_avg, tot_stdev, tot_std, tot_semp, tot_sem, tot_block_sd, tot_block_sem = _vector_statistics(self[term][res]['tot'])
                 if _output_format:
-                    # FIXME: use EnergyVector.sem or EnergyVector.semp
                     text.append([res,
-                                 int_avg, int_std, int_std / sqrt_frames,
-                                 vdw_avg, vdw_std, vdw_std / sqrt_frames,
-                                 eel_avg, eel_std, eel_std / sqrt_frames,
-                                 pol_avg, pol_std, pol_std / sqrt_frames,
-                                 sas_avg, sas_std, sas_std / sqrt_frames,
-                                 tot_avg, tot_std, tot_std / sqrt_frames])
+                                 int_avg, int_stdev, int_std, int_semp, int_sem, int_block_sd, int_block_sem,
+                                 vdw_avg, vdw_stdev, vdw_std, vdw_semp, vdw_sem, vdw_block_sd, vdw_block_sem,
+                                 eel_avg, eel_stdev, eel_std, eel_semp, eel_sem, eel_block_sd, eel_block_sem,
+                                 pol_avg, pol_stdev, pol_std, pol_semp, pol_sem, pol_block_sd, pol_block_sem,
+                                 sas_avg, sas_stdev, sas_std, sas_semp, sas_sem, sas_block_sd, sas_block_sem,
+                                 tot_avg, tot_stdev, tot_std, tot_semp, tot_sem, tot_block_sd, tot_block_sem])
                 else:
                     text.append(f"{res:14s} "
-                                f"|{int_avg:9.3f} +/- {int_std:6.3f} "
-                                f"|{vdw_avg:9.3f} +/- {vdw_std:6.3f} "
-                                f"|{eel_avg:9.3f} +/- {eel_std:6.3f} "
-                                f"|{pol_avg:9.3f} +/- {pol_std:6.3f} "
-                                f"|{sas_avg:9.3f} +/- {sas_std:6.3f} "
-                                f"|{tot_avg:9.3f} +/- {tot_std:6.3f}")
+                                f"|{int_avg:9.3f} +/- {int_block_sem:6.3f} [{int_stdev:6.3f}/{int_std:6.3f}/{int_sem:6.3f}] / {int_block_sd:6.3f} "
+                                f"|{vdw_avg:9.3f} +/- {vdw_block_sem:6.3f} [{vdw_stdev:6.3f}/{vdw_std:6.3f}/{vdw_sem:6.3f}] / {vdw_block_sd:6.3f} "
+                                f"|{eel_avg:9.3f} +/- {eel_block_sem:6.3f} [{eel_stdev:6.3f}/{eel_std:6.3f}/{eel_sem:6.3f}] / {eel_block_sd:6.3f} "
+                                f"|{pol_avg:9.3f} +/- {pol_block_sem:6.3f} [{pol_stdev:6.3f}/{pol_std:6.3f}/{pol_sem:6.3f}] / {pol_block_sd:6.3f} "
+                                f"|{sas_avg:9.3f} +/- {sas_block_sem:6.3f} [{sas_stdev:6.3f}/{sas_std:6.3f}/{sas_sem:6.3f}] / {sas_block_sd:6.3f} "
+                                f"|{tot_avg:9.3f} +/- {tot_block_sem:6.3f} [{tot_stdev:6.3f}/{tot_std:6.3f}/{tot_sem:6.3f}] / {tot_block_sd:6.3f}")
             if _output_format:
                 text.append([])
             else:
@@ -1714,45 +1735,39 @@ class PairDecompOut(DecompOut):
                 text.extend([[self.descriptions[term]],
                              ['Resid 1', 'Resid 2', 'Internal', '', '', 'van der Waals', '', '', 'Electrostatic',
                               '', '', 'Polar Solvation', '', '', 'Non-Polar Solv.', '', '', 'TOTAL', '', ''],
-                             [''] * 2 + ['Avg.', 'Std. Dev.', 'Std. Err. of Mean'] * 6])
+                             [''] * 2 + ['Avg.', 'SD(Prop.)', 'SD', 'SEM(Prop.)', 'SEM', 'Block SD', 'Block SEM'] * 6])
             else:
                 text.append(self.descriptions[term] + '\n' +
-                            'Resid 1        | Resid 2        |       Internal      |    van der Waals    '
-                            '|    Electrostatic    |   Polar Solvation   |   Non-Polar Solv.   |       TOTAL\n' +
+                             'Resid 1        | Resid 2        | Internal Avg +/- Block SEM [SD(Prop.)/SD/SEM] / Block SD | '
+                            'van der Waals Avg +/- Block SEM [SD(Prop.)/SD/SEM] / Block SD | Electrostatic Avg +/- Block SEM [SD(Prop.)/SD/SEM] / Block SD '
+                            '| Polar Solvation Avg +/- Block SEM [SD(Prop.)/SD/SEM] / Block SD | Non-Polar Solv. Avg +/- Block SEM [SD(Prop.)/SD/SEM] / Block SD '
+                            '| TOTAL Avg +/- Block SEM [SD(Prop.)/SD/SEM] / Block SD\n' +
                             '-----------------------------------------------------------------------------'
                             '--------------------------------------------------------------------------------------')
             for res in self[term]:
                 for res2 in self[term][res]:
-                    int_avg = self[term][res][res2]['int'].mean()
-                    int_std = self[term][res][res2]['int'].stdev()
-                    vdw_avg = self[term][res][res2]['vdw'].mean()
-                    vdw_std = self[term][res][res2]['vdw'].stdev()
-                    eel_avg = self[term][res][res2]['eel'].mean()
-                    eel_std = self[term][res][res2]['eel'].stdev()
-                    pol_avg = self[term][res][res2]['pol'].mean()
-                    pol_std = self[term][res][res2]['pol'].stdev()
-                    sas_avg = self[term][res][res2]['sas'].mean()
-                    sas_std = self[term][res][res2]['sas'].stdev()
-                    tot_avg = self[term][res][res2]['tot'].mean()
-                    tot_std = self[term][res][res2]['tot'].stdev()
-                    sqrt_frames = sqrt(len(self[term][res][res2]['int']))
+                    int_avg, int_stdev, int_std, int_semp, int_sem, int_block_sd, int_block_sem = _vector_statistics(self[term][res][res2]['int'])
+                    vdw_avg, vdw_stdev, vdw_std, vdw_semp, vdw_sem, vdw_block_sd, vdw_block_sem = _vector_statistics(self[term][res][res2]['vdw'])
+                    eel_avg, eel_stdev, eel_std, eel_semp, eel_sem, eel_block_sd, eel_block_sem = _vector_statistics(self[term][res][res2]['eel'])
+                    pol_avg, pol_stdev, pol_std, pol_semp, pol_sem, pol_block_sd, pol_block_sem = _vector_statistics(self[term][res][res2]['pol'])
+                    sas_avg, sas_stdev, sas_std, sas_semp, sas_sem, sas_block_sd, sas_block_sem = _vector_statistics(self[term][res][res2]['sas'])
+                    tot_avg, tot_stdev, tot_std, tot_semp, tot_sem, tot_block_sd, tot_block_sem = _vector_statistics(self[term][res][res2]['tot'])
                     if _output_format:
-                        # FIXME: use EnergyVector.sem or EnergyVector.semp
                         text.append([res, res2,
-                                     int_avg, int_std, int_std / sqrt_frames,
-                                     vdw_avg, vdw_std, vdw_std / sqrt_frames,
-                                     eel_avg, eel_std, eel_std / sqrt_frames,
-                                     pol_avg, pol_std, pol_std / sqrt_frames,
-                                     sas_avg, sas_std, sas_std / sqrt_frames,
-                                     tot_avg, tot_std, tot_std / sqrt_frames])
+                                     int_avg, int_stdev, int_std, int_semp, int_sem, int_block_sd, int_block_sem,
+                                     vdw_avg, vdw_stdev, vdw_std, vdw_semp, vdw_sem, vdw_block_sd, vdw_block_sem,
+                                     eel_avg, eel_stdev, eel_std, eel_semp, eel_sem, eel_block_sd, eel_block_sem,
+                                     pol_avg, pol_stdev, pol_std, pol_semp, pol_sem, pol_block_sd, pol_block_sem,
+                                     sas_avg, sas_stdev, sas_std, sas_semp, sas_sem, sas_block_sd, sas_block_sem,
+                                     tot_avg, tot_stdev, tot_std, tot_semp, tot_sem, tot_block_sd, tot_block_sem])
                     else:
                         text.append(f"{res:14s} | {res2:14s} "
-                                    f"|{int_avg:9.3f} +/- {int_std:6.3f} "
-                                    f"|{vdw_avg:9.3f} +/- {vdw_std:6.3f} "
-                                    f"|{eel_avg:9.3f} +/- {eel_std:6.3f} "
-                                    f"|{pol_avg:9.3f} +/- {pol_std:6.3f} "
-                                    f"|{sas_avg:9.3f} +/- {sas_std:6.3f} "
-                                    f"|{tot_avg:9.3f} +/- {tot_std:6.3f}")
+                                    f"|{int_avg:9.3f} +/- {int_block_sem:6.3f} [{int_stdev:6.3f}/{int_std:6.3f}/{int_sem:6.3f}] / {int_block_sd:6.3f} "
+                                    f"|{vdw_avg:9.3f} +/- {vdw_block_sem:6.3f} [{vdw_stdev:6.3f}/{vdw_std:6.3f}/{vdw_sem:6.3f}] / {vdw_block_sd:6.3f} "
+                                    f"|{eel_avg:9.3f} +/- {eel_block_sem:6.3f} [{eel_stdev:6.3f}/{eel_std:6.3f}/{eel_sem:6.3f}] / {eel_block_sd:6.3f} "
+                                    f"|{pol_avg:9.3f} +/- {pol_block_sem:6.3f} [{pol_stdev:6.3f}/{pol_std:6.3f}/{pol_sem:6.3f}] / {pol_block_sd:6.3f} "
+                                    f"|{sas_avg:9.3f} +/- {sas_block_sem:6.3f} [{sas_stdev:6.3f}/{sas_std:6.3f}/{sas_sem:6.3f}] / {sas_block_sd:6.3f} "
+                                    f"|{tot_avg:9.3f} +/- {tot_block_sem:6.3f} [{tot_stdev:6.3f}/{tot_std:6.3f}/{tot_sem:6.3f}] / {tot_block_sd:6.3f}")
             if _output_format:
                 text.append([])
             else:
@@ -1841,44 +1856,40 @@ class DecompBinding(dict):
                 text.extend([[DecompOut.descriptions[term]],
                              ['Residue', 'Internal', '', '', 'van der Waals', '', '', 'Electrostatic',
                               '', '', 'Polar Solvation', '', '', 'Non-Polar Solv.', '', '', 'TOTAL', '', ''],
-                             [''] + ['Avg.', 'Std. Dev.', 'Std. Err. of Mean'] * 6])
+                             [''] + ['Avg.', 'SD(Prop.)', 'SD', 'SEM(Prop.)', 'SEM', 'Block SD', 'Block SEM'] * 6])
             else:
                 text.extend([DecompOut.descriptions[term],
-                             'Residue        |       Internal      |    van der Waals    |    Electrostatic    '
-                             '|   Polar Solvation   |    Non-Polar Solv.  |       TOTAL',
+                             'Residue        | Internal Avg +/- Block SEM [SD(Prop.)/SD/SEM] / Block SD '
+                             '| van der Waals Avg +/- Block SEM [SD(Prop.)/SD/SEM] / Block SD '
+                             '| Electrostatic Avg +/- Block SEM [SD(Prop.)/SD/SEM] / Block SD '
+                             '| Polar Solvation Avg +/- Block SEM [SD(Prop.)/SD/SEM] / Block SD '
+                             '| Non-Polar Solv. Avg +/- Block SEM [SD(Prop.)/SD/SEM] / Block SD '
+                             '| TOTAL Avg +/- Block SEM [SD(Prop.)/SD/SEM] / Block SD',
                              '----------------------------------------------------------------------------------'
                              '----------------------------------------------------------------'])
             for res in self[term]:
-                int_avg = self[term][res]['int'].mean()
-                int_std = self[term][res]['int'].stdev()
-                vdw_avg = self[term][res]['vdw'].mean()
-                vdw_std = self[term][res]['vdw'].stdev()
-                eel_avg = self[term][res]['eel'].mean()
-                eel_std = self[term][res]['eel'].stdev()
-                pol_avg = self[term][res]['pol'].mean()
-                pol_std = self[term][res]['pol'].stdev()
-                sas_avg = self[term][res]['sas'].mean()
-                sas_std = self[term][res]['sas'].stdev()
-                tot_avg = self[term][res]['tot'].mean()
-                tot_std = self[term][res]['tot'].stdev()
-                sqrt_frames = sqrt(len(self[term][res]['int']))
+                int_avg, int_stdev, int_std, int_semp, int_sem, int_block_sd, int_block_sem = _vector_statistics(self[term][res]['int'])
+                vdw_avg, vdw_stdev, vdw_std, vdw_semp, vdw_sem, vdw_block_sd, vdw_block_sem = _vector_statistics(self[term][res]['vdw'])
+                eel_avg, eel_stdev, eel_std, eel_semp, eel_sem, eel_block_sd, eel_block_sem = _vector_statistics(self[term][res]['eel'])
+                pol_avg, pol_stdev, pol_std, pol_semp, pol_sem, pol_block_sd, pol_block_sem = _vector_statistics(self[term][res]['pol'])
+                sas_avg, sas_stdev, sas_std, sas_semp, sas_sem, sas_block_sd, sas_block_sem = _vector_statistics(self[term][res]['sas'])
+                tot_avg, tot_stdev, tot_std, tot_semp, tot_sem, tot_block_sd, tot_block_sem = _vector_statistics(self[term][res]['tot'])
                 if _output_format:
-                    # FIXME: use EnergyVector.sem or EnergyVector.semp
                     text.append([res,
-                                 int_avg, int_std, int_std / sqrt_frames,
-                                 vdw_avg, vdw_std, vdw_std / sqrt_frames,
-                                 eel_avg, eel_std, eel_std / sqrt_frames,
-                                 pol_avg, pol_std, pol_std / sqrt_frames,
-                                 sas_avg, sas_std, sas_std / sqrt_frames,
-                                 tot_avg, tot_std, tot_std / sqrt_frames])
+                                 int_avg, int_stdev, int_std, int_semp, int_sem, int_block_sd, int_block_sem,
+                                 vdw_avg, vdw_stdev, vdw_std, vdw_semp, vdw_sem, vdw_block_sd, vdw_block_sem,
+                                 eel_avg, eel_stdev, eel_std, eel_semp, eel_sem, eel_block_sd, eel_block_sem,
+                                 pol_avg, pol_stdev, pol_std, pol_semp, pol_sem, pol_block_sd, pol_block_sem,
+                                 sas_avg, sas_stdev, sas_std, sas_semp, sas_sem, sas_block_sd, sas_block_sem,
+                                 tot_avg, tot_stdev, tot_std, tot_semp, tot_sem, tot_block_sd, tot_block_sem])
                 else:
                     text.append(f"{res:14s} "
-                                f"|{int_avg:9.3f} +/- {int_std:6.3f} "
-                                f"|{vdw_avg:9.3f} +/- {vdw_std:6.3f} "
-                                f"|{eel_avg:9.3f} +/- {eel_std:6.3f} "
-                                f"|{pol_avg:9.3f} +/- {pol_std:6.3f} "
-                                f"|{sas_avg:9.3f} +/- {sas_std:6.3f} "
-                                f"|{tot_avg:9.3f} +/- {tot_std:6.3f}")
+                                f"|{int_avg:9.3f} +/- {int_block_sem:6.3f} [{int_stdev:6.3f}/{int_std:6.3f}/{int_sem:6.3f}] / {int_block_sd:6.3f} "
+                                f"|{vdw_avg:9.3f} +/- {vdw_block_sem:6.3f} [{vdw_stdev:6.3f}/{vdw_std:6.3f}/{vdw_sem:6.3f}] / {vdw_block_sd:6.3f} "
+                                f"|{eel_avg:9.3f} +/- {eel_block_sem:6.3f} [{eel_stdev:6.3f}/{eel_std:6.3f}/{eel_sem:6.3f}] / {eel_block_sd:6.3f} "
+                                f"|{pol_avg:9.3f} +/- {pol_block_sem:6.3f} [{pol_stdev:6.3f}/{pol_std:6.3f}/{pol_sem:6.3f}] / {pol_block_sd:6.3f} "
+                                f"|{sas_avg:9.3f} +/- {sas_block_sem:6.3f} [{sas_stdev:6.3f}/{sas_std:6.3f}/{sas_sem:6.3f}] / {sas_block_sd:6.3f} "
+                                f"|{tot_avg:9.3f} +/- {tot_block_sem:6.3f} [{tot_stdev:6.3f}/{tot_std:6.3f}/{tot_sem:6.3f}] / {tot_block_sd:6.3f}")
             if _output_format:
                 text.append([])
             else:
@@ -1958,47 +1969,40 @@ class PairDecompBinding(DecompBinding):
                 text.extend([[DecompOut.descriptions[term]],
                              ['Resid 1', 'Resid 2', 'Internal', '', '', 'van der Waals', '', '', 'Electrostatic', '',
                               '', 'Polar Solvation', '', '', 'Non-Polar Solv.', '', '', 'TOTAL', '', ''],
-                             ['', ''] + ['Avg.', 'Std. Dev.', 'Std. Err. of Mean'] * 6])
+                             ['', ''] + ['Avg.', 'SD(Prop.)', 'SD', 'SEM(Prop.)', 'SEM', 'Block SD', 'Block SEM'] * 6])
             else:
                 text.extend([DecompOut.descriptions[term],
-                             'Resid 1        | Resid 2        |       Internal      |    van der Waals    '
-                             '|    Electrostatic    |   Polar Solvation   |    Non-Polar Solv.  |       TOTAL',
+                             'Resid 1        | Resid 2        | Internal Avg +/- Block SEM [SD(Prop.)/SD/SEM] / Block SD | '
+                            'van der Waals Avg +/- Block SEM [SD(Prop.)/SD/SEM] / Block SD | Electrostatic Avg +/- Block SEM [SD(Prop.)/SD/SEM] / Block SD '
+                            '| Polar Solvation Avg +/- Block SEM [SD(Prop.)/SD/SEM] / Block SD | Non-Polar Solv. Avg +/- Block SEM [SD(Prop.)/SD/SEM] / Block SD '
+                            '| TOTAL Avg +/- Block SEM [SD(Prop.)/SD/SEM] / Block SD',
                              '-----------------------------------------------------------------------------------------'
                              '--------------------------------------------------------------------------'])
 
             for res in self[term]:
                 for res2 in self[term][res]:
-                    int_avg = self[term][res][res2]['int'].mean()
-                    int_std = self[term][res][res2]['int'].stdev()
-                    vdw_avg = self[term][res][res2]['vdw'].mean()
-                    vdw_std = self[term][res][res2]['vdw'].stdev()
-                    eel_avg = self[term][res][res2]['eel'].mean()
-                    eel_std = self[term][res][res2]['eel'].stdev()
-                    pol_avg = self[term][res][res2]['pol'].mean()
-                    pol_std = self[term][res][res2]['pol'].stdev()
-                    sas_avg = self[term][res][res2]['sas'].mean()
-                    sas_std = self[term][res][res2]['sas'].stdev()
-                    tot_avg = self[term][res][res2]['tot'].mean()
-                    tot_std = self[term][res][res2]['tot'].stdev()
-                    sqrt_frames = sqrt(len(self[term][res][res2]['int']))
-
+                    int_avg, int_stdev, int_std, int_semp, int_sem, int_block_sd, int_block_sem = _vector_statistics(self[term][res][res2]['int'])
+                    vdw_avg, vdw_stdev, vdw_std, vdw_semp, vdw_sem, vdw_block_sd, vdw_block_sem = _vector_statistics(self[term][res][res2]['vdw'])
+                    eel_avg, eel_stdev, eel_std, eel_semp, eel_sem, eel_block_sd, eel_block_sem = _vector_statistics(self[term][res][res2]['eel'])
+                    pol_avg, pol_stdev, pol_std, pol_semp, pol_sem, pol_block_sd, pol_block_sem = _vector_statistics(self[term][res][res2]['pol'])
+                    sas_avg, sas_stdev, sas_std, sas_semp, sas_sem, sas_block_sd, sas_block_sem = _vector_statistics(self[term][res][res2]['sas'])
+                    tot_avg, tot_stdev, tot_std, tot_semp, tot_sem, tot_block_sd, tot_block_sem = _vector_statistics(self[term][res][res2]['tot'])
                     if _output_format:
-                        # FIXME: use EnergyVector.sem or EnergyVector.semp
                         text.append([res, res2,
-                                     int_avg, int_std, int_std / sqrt_frames,
-                                     vdw_avg, vdw_std, vdw_std / sqrt_frames,
-                                     eel_avg, eel_std, eel_std / sqrt_frames,
-                                     pol_avg, pol_std, pol_std / sqrt_frames,
-                                     sas_avg, sas_std, sas_std / sqrt_frames,
-                                     tot_avg, tot_std, tot_std / sqrt_frames])
+                                     int_avg, int_stdev, int_std, int_semp, int_sem, int_block_sd, int_block_sem,
+                                     vdw_avg, vdw_stdev, vdw_std, vdw_semp, vdw_sem, vdw_block_sd, vdw_block_sem,
+                                     eel_avg, eel_stdev, eel_std, eel_semp, eel_sem, eel_block_sd, eel_block_sem,
+                                     pol_avg, pol_stdev, pol_std, pol_semp, pol_sem, pol_block_sd, pol_block_sem,
+                                     sas_avg, sas_stdev, sas_std, sas_semp, sas_sem, sas_block_sd, sas_block_sem,
+                                     tot_avg, tot_stdev, tot_std, tot_semp, tot_sem, tot_block_sd, tot_block_sem])
                     else:
                         text.append(f"{res:14s} | {res2:14s} "
-                                    f"|{int_avg:9.3f} +/- {int_std:6.3f} "
-                                    f"|{vdw_avg:9.3f} +/- {vdw_std:6.3f} "
-                                    f"|{eel_avg:9.3f} +/- {eel_std:6.3f} "
-                                    f"|{pol_avg:9.3f} +/- {pol_std:6.3f} "
-                                    f"|{sas_avg:9.3f} +/- {sas_std:6.3f} "
-                                    f"|{tot_avg:9.3f} +/- {tot_std:6.3f}")
+                                    f"|{int_avg:9.3f} +/- {int_block_sem:6.3f} [{int_stdev:6.3f}/{int_std:6.3f}/{int_sem:6.3f}] / {int_block_sd:6.3f} "
+                                    f"|{vdw_avg:9.3f} +/- {vdw_block_sem:6.3f} [{vdw_stdev:6.3f}/{vdw_std:6.3f}/{vdw_sem:6.3f}] / {vdw_block_sd:6.3f} "
+                                    f"|{eel_avg:9.3f} +/- {eel_block_sem:6.3f} [{eel_stdev:6.3f}/{eel_std:6.3f}/{eel_sem:6.3f}] / {eel_block_sd:6.3f} "
+                                    f"|{pol_avg:9.3f} +/- {pol_block_sem:6.3f} [{pol_stdev:6.3f}/{pol_std:6.3f}/{pol_sem:6.3f}] / {pol_block_sd:6.3f} "
+                                    f"|{sas_avg:9.3f} +/- {sas_block_sem:6.3f} [{sas_stdev:6.3f}/{sas_std:6.3f}/{sas_sem:6.3f}] / {sas_block_sd:6.3f} "
+                                    f"|{tot_avg:9.3f} +/- {tot_block_sem:6.3f} [{tot_stdev:6.3f}/{tot_std:6.3f}/{tot_sem:6.3f}] / {tot_block_sd:6.3f}")
             if _output_format:
                 text.append([])
             else:

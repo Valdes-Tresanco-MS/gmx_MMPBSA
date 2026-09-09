@@ -449,7 +449,7 @@ class InitDialog(QDialog):
                                 while basename in names:
                                     basename = f"{basename}-{names.count(basename) + 1}"
                                 names.append(basename)
-                        if line.startswith("INPUT['general']['mutant_only']"):
+                        if line.startswith("INPUT['ala']['mutant_only']"):
                             mut_only = int(line.split()[2])
                         if line.startswith("mut_str"):
                             mutant = line.split('=')[1].strip(" '")

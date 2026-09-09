@@ -457,13 +457,12 @@ class ChartSettings(dict):
                                                     'name': 'cap-size', 'value': 0, 'step': 1, 'limits': (0, 50),
                                                     'accelerated': True, 'default': 0, 'action_type': R},
                                        'representation': {'type': 'list', 'enabled': True, 'expanded': True,
-                                                          'name': 'representation', 'value': 'SD',
-                                                          'values': ['SD', 'SEM'], 'default': 'SD', 'action_type': R,
-                                                          'tip': "The metric representing the error line. SD, the "
-                                                                 "Standard Deviation, describes the data distribution "
-                                                                 "around the mean, while SEM, the Standard Error of "
-                                                                 "the Mean, describes how representative the mean is "
-                                                                 "of the population."},
+                                                          'name': 'representation', 'value': 'Block SEM',
+                                                          'values': ['Block SEM', 'Block SD', 'SD', 'SEM'],
+                                                          'default': 'Block SEM', 'action_type': R,
+                                                          'tip': "Block SEM is the recommended uncertainty for "
+                                                                 "correlated trajectories. Block SD, SD, and SEM are "
+                                                                 "retained for diagnostics and compatibility."},
 
 
                                    }},
@@ -861,14 +860,12 @@ class CorrChartSettings(dict):
                                                             'limits': (0, 50),
                                                             'accelerated': True, 'default': 0, 'action_type': R},
                                                'representation': {'type': 'list', 'enabled': True, 'expanded': True,
-                                                                  'name': 'representation', 'value': 'SD',
-                                                                  'values': ['SD', 'SEM'], 'default': 'SD',
-                                                                  'action_type': R,
-                                                                  'tip': "The metric representing the error line. SD, the "
-                                                                         "Standard Deviation, describes the data distribution "
-                                                                         "around the mean, while SEM, the Standard Error of "
-                                                                         "the Mean, describes how representative the mean is "
-                                                                         "of the population."}}}}},
+                                                                  'name': 'representation', 'value': 'Block SEM',
+                                                                  'values': ['Block SEM', 'Block SD', 'SD', 'SEM'],
+                                                                  'default': 'Block SEM', 'action_type': R,
+                                                                  'tip': "Block SEM is the recommended uncertainty for "
+                                                                         "correlated trajectories. Block SD, SD, and SEM "
+                                                                         "are retained for diagnostics and compatibility."}}}}},
                     'Distribution': {
                         'type': 'group', 'enabled': True, 'expanded': True, 'name': 'Distribution', 'value': None,
                         'default': None,
