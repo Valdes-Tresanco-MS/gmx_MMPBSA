@@ -197,6 +197,8 @@ def _record(parm, component, requested, route, input_data, source_family):
             'topology RADII/SCREEN preserved' if route == 'native_amber_topology_preserved'
             else 'Inherited radius family reapplied through ParmEd ChRad'
             if route == 'native_amber_mutant_inherited_ChRad'
+            else 'GBNSR6-compatible topology copy derived from the prepared topology'
+            if route == 'gbnsr6_prepared_copy'
             else 'PBRadii applied through ParmEd ChRad'
         ),
         'source_force_field_family': source_family,
@@ -247,7 +249,31 @@ def _write_audit_csv(parm, component, output_path):
             })
 
 
-def collect_radii_provenance(files, input_data, engine):
+def _load_prepared_topology_for_provenance(path, source_path=None):
+    """Load a prepared topology while tolerating GBNSR6's reduced pointers.
+
+    GBNSR6-compatible copies intentionally retain parameter arrays whose
+    corresponding dihedral pointers are zeroed. ParmEd therefore rejects
+    them as ordinary Amber topologies. The atom/radius data are unchanged by
+    preparation, so use the source topology for atom metadata and replace its
+    radius arrays with the raw arrays from the prepared copy.
+    """
+    path = str(path)
+    source_path = str(source_path) if source_path is not None else None
+    try:
+        return parmed.load_file(path)
+    except parmed.exceptions.AmberError:
+        if source_path is None:
+            raise
+        source = parmed.load_file(source_path)
+        raw = parmed.amber.AmberFormat(str(path))
+        for key in ('RADIUS_SET', 'RADII', 'SCREEN'):
+            if key in raw.parm_data:
+                source.parm_data[key] = raw.parm_data[key]
+        return source
+
+
+def collect_radii_provenance(files, input_data, engine, additional_topologies=None):
     """Collect final topology provenance and write the requested artifacts."""
     requested = RADIUS_NAMES.get(input_data.get('general', {}).get('PBRadii'), 'unknown')
     route = 'native_amber_topology_preserved' if engine == 'amber' else 'parmed_ChRad'
@@ -282,6 +308,28 @@ def collect_radii_provenance(files, input_data, engine):
                 _write_audit_csv(parm, component, audit_path)
                 records[component]['audit_csv'] = str(audit_path)
 
+    prepared_records = {}
+    for component, topology in (additional_topologies or {}).items():
+        if isinstance(topology, (tuple, list)):
+            path, source_path = topology
+        else:
+            path, source_path = topology, None
+        if not path or not Path(path).exists():
+            continue
+        parm = _load_prepared_topology_for_provenance(path, source_path)
+        family = source_force_field_family(input_data, parm)
+        prepared_records[component] = _record(
+            parm, component, requested, 'gbnsr6_prepared_copy', input_data, family
+        )
+        prepared_records[component]['topology_path'] = str(path)
+        if source_path is not None:
+            prepared_records[component]['source_topology_path'] = str(source_path)
+        _log_advisories(prepared_records[component], input_data)
+        if input_data.get('general', {}).get('radii_audit', 0):
+            audit_path = Path(f'GMXMMPBSA_radii_{component}.csv')
+            _write_audit_csv(parm, component, audit_path)
+            prepared_records[component]['audit_csv'] = str(audit_path)
+
     provenance = {
         'schema_version': 1,
         'requested_radius_set': requested,
@@ -294,11 +342,20 @@ def collect_radii_provenance(files, input_data, engine):
         ),
         'models': _models(input_data),
         'components': records,
+        'prepared_topologies': prepared_records,
     }
     output_path = Path('GMXMMPBSA_radii.json')
     output_path.write_text(json.dumps(provenance, indent=2, sort_keys=True) + '\n', encoding='utf-8')
     logging.info('Continuum-radius provenance written to %s', output_path)
     for component, record in records.items():
+        logging.info(
+            'Radii %-15s requested=%s effective=%s RADIUS_SET=%r route=%s source=%s '
+            'RADII=%s SCREEN=%s',
+            component, record['requested_radius_set'], record['effective_radius_set'], record['RADIUS_SET'],
+            record['assignment_route'], record['source_force_field_family'], record['radii_sha256'],
+            record['screen_sha256'],
+        )
+    for component, record in prepared_records.items():
         logging.info(
             'Radii %-15s requested=%s effective=%s RADIUS_SET=%r route=%s source=%s '
             'RADII=%s SCREEN=%s',

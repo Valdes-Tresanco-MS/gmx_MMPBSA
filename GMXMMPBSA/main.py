@@ -273,6 +273,7 @@ class MMPBSA_App(object):
         self.calc_list = CalculationList(
             self.timer, nframes, nmframes, self.mpi_size, self.FILES.progress_style
         )
+        self._gbnsr6_prepared_topologies = {}
         if self.master:
             logging.info(f'Starting calculations across {self.mpi_size} MPI ranks...')
             if (self.INPUT['pb']['pbrun'] or self.INPUT['rism']['rismrun'] or
@@ -285,6 +286,11 @@ class MMPBSA_App(object):
         if self.INPUT['ala']['alarun']:
             self.calc_list.append(PrintCalc('Running calculations on mutant system...'), timer_key=None)
             self._load_calc_list(f'{self.pre}', True, self.mutant_system)
+        if self.master and self.INPUT['gbnsr6']['gbnsr6run']:
+            self.radii_provenance = collect_radii_provenance(
+                self.FILES, self.INPUT, self.engine,
+                additional_topologies=self._gbnsr6_prepared_topologies,
+            )
 
     def _load_calc_list(self, pre, mutant, parm_system):
         """
@@ -426,20 +432,28 @@ class MMPBSA_App(object):
             incrd = '%sdummy%%s.inpcrd' % prefix
             mdin = self.pre + 'gbnsr6.mdin'
             keep_gbnsr6_mdouts = self.INPUT['general']['keep_files'] == 2
-            if self.master:
-                logging.info('Preparing GBNSR6 topology copies with equivalent LJ types compacted.')
-            gbnsr6_complex_prmtop = prepare_gbnsr6_topology(
-                complex_prmtop_path, f'{prefix}complex_gbnsr6.prmtop'
-            )
+            gbnsr6_complex_prmtop = f'{prefix}complex_gbnsr6.prmtop'
             gbnsr6_receptor_prmtop = None
             gbnsr6_ligand_prmtop = None
             if not self.stability:
-                gbnsr6_receptor_prmtop = prepare_gbnsr6_topology(
-                    receptor_prmtop_path, f'{prefix}receptor_gbnsr6.prmtop'
-                )
-                gbnsr6_ligand_prmtop = prepare_gbnsr6_topology(
-                    ligand_prmtop_path, f'{prefix}ligand_gbnsr6.prmtop'
-                )
+                gbnsr6_receptor_prmtop = f'{prefix}receptor_gbnsr6.prmtop'
+                gbnsr6_ligand_prmtop = f'{prefix}ligand_gbnsr6.prmtop'
+            if self.master:
+                logging.info('Preparing GBNSR6 topology copies with equivalent LJ types compacted.')
+                prepare_gbnsr6_topology(complex_prmtop_path, gbnsr6_complex_prmtop)
+                self._gbnsr6_prepared_topologies[
+                    f"gbnsr6_{'mutant_' if mutant else ''}complex"
+                ] = (gbnsr6_complex_prmtop, complex_prmtop_path)
+                if not self.stability:
+                    prepare_gbnsr6_topology(receptor_prmtop_path, gbnsr6_receptor_prmtop)
+                    prepare_gbnsr6_topology(ligand_prmtop_path, gbnsr6_ligand_prmtop)
+                    self._gbnsr6_prepared_topologies.update({
+                        f"gbnsr6_{'mutant_' if mutant else ''}receptor":
+                            (gbnsr6_receptor_prmtop, receptor_prmtop_path),
+                        f"gbnsr6_{'mutant_' if mutant else ''}ligand":
+                            (gbnsr6_ligand_prmtop, ligand_prmtop_path),
+                    })
+            self.sync_mpi()
 
             # Mdin depends on decomp or not
             if self.INPUT['decomp']['decomprun']:

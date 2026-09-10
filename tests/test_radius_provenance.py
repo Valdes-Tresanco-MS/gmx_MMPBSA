@@ -155,6 +155,33 @@ class RadiusProvenanceTest(unittest.TestCase):
                 payload = json.load(handle)
             self.assertEqual(payload['components']['complex']['screen_sha256'], radius_checksum([0.8, 0.85]))
 
+    def test_records_prepared_gbnsr6_topologies_separately(self):
+        files = SimpleNamespace(
+            complex_prmtop='COM.prmtop', receptor_prmtop='REC.prmtop', ligand_prmtop='LIG.prmtop',
+            mutant_complex_prmtop=None, mutant_receptor_prmtop=None, mutant_ligand_prmtop=None,
+        )
+        input_data = {
+            'general': {'PBRadii': 4, 'radii_audit': 0},
+            'gb': {'gbrun': False}, 'pb': {'pbrun': False},
+            'gbnsr6': {'gbnsr6run': True},
+        }
+        with TemporaryDirectory() as directory, patch('GMXMMPBSA.radii.parmed.load_file', return_value=_parm()):
+            old_cwd = __import__('os').getcwd()
+            __import__('os').chdir(directory)
+            try:
+                for filename in ('COM.prmtop', 'REC.prmtop', 'LIG.prmtop', 'prepared.prmtop'):
+                    Path(filename).touch()
+                result = collect_radii_provenance(
+                    files, input_data, 'gmx',
+                    additional_topologies={'gbnsr6_complex': 'prepared.prmtop'},
+                )
+            finally:
+                __import__('os').chdir(old_cwd)
+
+        prepared = result['prepared_topologies']['gbnsr6_complex']
+        self.assertEqual(prepared['assignment_route'], 'gbnsr6_prepared_copy')
+        self.assertEqual(prepared['effective_radius_set'], 'mbondi3')
+
 
 class MappedRadiusConsistencyTest(unittest.TestCase):
     @staticmethod
