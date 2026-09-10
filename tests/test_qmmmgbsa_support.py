@@ -32,7 +32,7 @@ class QMMMGBSASupportDocumentationTest(unittest.TestCase):
     def test_qmmm_documentation_describes_scf_iteration_limit(self):
         documentation = (ROOT / 'docs' / 'input_file.md').read_text()
         self.assertIn('`itrmax` (Default = 1000)', documentation)
-        self.assertIn('`ndiis_attempts` (Default = 0, SANDER default)', documentation)
+        self.assertIn('`ndiis_attempts` (Default = None)', documentation)
         self.assertIn('calculation stops rather than including the unconverged energy', documentation)
 
     def test_qmmm_documentation_distinguishes_validation_from_runtime_support(self):
