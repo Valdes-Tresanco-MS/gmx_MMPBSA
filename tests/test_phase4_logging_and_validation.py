@@ -120,6 +120,16 @@ class Phase4ValidationTest(unittest.TestCase):
                     app.check_for_bad_input()
                 self.assertIn(expected, str(exc.exception))
 
+    def test_sander_apbs_is_rejected_for_new_calculations(self):
+        app = self._app()
+        app.INPUT['pb']['sander_apbs'] = 1
+
+        with self.assertRaises(InputError) as exc:
+            app.check_for_bad_input()
+
+        self.assertIn('SANDER_APBS is deprecated', str(exc.exception))
+        self.assertIn('built-in PBSA solver', str(exc.exception))
+
     def test_gbnsr6_coordinate_rank_accepts_unsuffixed_and_ranked_files(self):
         main = _import_main_with_stubs()
 

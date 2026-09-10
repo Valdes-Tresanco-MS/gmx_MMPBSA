@@ -265,6 +265,7 @@ class ExplicitWaterInputTest(unittest.TestCase):
             programs = find_progs(parsed, engine='amber')
 
         self.assertNotIn('pymol', programs)
+        self.assertNotIn('sander.APBS', programs)
         self.assertEqual(programs['cpptraj'], '/usr/bin/cpptraj')
 
 

@@ -488,7 +488,7 @@ The `#` suffix identifies the wrapper MPI rank. These rank-specific files reflec
 `gmx_MMPBSA`; they should not be read as evidence that the RISM solver itself was launched as a separate
 `rism3d.snglpnt` process. (1)
 
-`_GMXMMPBSA_pbsanderoutput.junk.#` File containing the information dumped by sander.APBS to STDOUT. (1)
+`_GMXMMPBSA_pbsanderoutput.junk.#` Historical APBS solver output file. New calculations do not create this file. (1)
 
 `_GMXMMPBSA_ligand_nm.out.#` Output file from mmpbsa_py_nabnmode that contains the entropy data for the ligand for all
 snapshots. (1)

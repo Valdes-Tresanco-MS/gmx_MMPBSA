@@ -26,6 +26,8 @@ calculation or rewriting an archived result.
   default GB and radius pairing and the PB external dielectric. Existing inputs that explicitly set these values are
   unchanged; inputs that omit them can produce different energies and must be checked against the
   [1.6.5-to-1.7.0 migration guidance](compatibility.md#migrating-from-165-to-170).
+- Deprecated the `sander_apbs` input option. New calculations reject `sander_apbs=1` and use the built-in PBSA solver;
+  the legacy value remains recognized for archived-result compatibility.
 
 ### Logging, progress, and errors
 

@@ -306,9 +306,6 @@ class MMPBSA_App(object):
                  'qh': self.external_progs['cpptraj'],
                  'nmode': self.external_progs['mmpbsa_py_nabnmode']
                  }
-        if self.INPUT['pb']['sander_apbs']:
-            progs['pb'] = self.external_progs['sander.APBS']
-
         # NetCDF or ASCII intermediate trajectories?
         trj_sfx = 'nc' if self.INPUT['general']['netcdf'] else 'mdcrd'
 
@@ -1254,6 +1251,12 @@ class MMPBSA_App(object):
             GMXMMPBSA_ERROR('RADIOPT (%s) must be 0 or 1!' % INPUT['pb']['radiopt'], InputError)
         if INPUT['pb']['sander_apbs'] not in [0, 1]:
             GMXMMPBSA_ERROR('SANDER_APBS must be 0 or 1!', InputError)
+        if INPUT['pb']['sander_apbs']:
+            GMXMMPBSA_ERROR(
+                'SANDER_APBS is deprecated and no longer supported for new calculations. '
+                'Set sander_apbs=0 and use the built-in PBSA solver.',
+                InputError,
+            )
 
         if INPUT['nmode']['nmoderun']:
             if self.INPUT['nmode']['nmstartframe'] < 1:
@@ -1274,8 +1277,6 @@ class MMPBSA_App(object):
 
         if INPUT['decomp']['idecomp'] not in [0, 1, 2, 3, 4]:
             GMXMMPBSA_ERROR('IDECOMP (%s) must be 0, 1, 2, 3, or 4!' % INPUT['decomp']['idecomp'], InputError)
-        if INPUT['decomp']['idecomp'] != 0 and INPUT['pb']['sander_apbs'] == 1:
-            GMXMMPBSA_ERROR('IDECOMP cannot be used with sander.APBS!', InputError)
         if INPUT['decomp']['decomprun'] and INPUT['decomp']['idecomp'] == 0:
             GMXMMPBSA_ERROR('IDECOMP cannot be 0 for Decomposition analysis!', InputError)
 
@@ -1569,7 +1570,7 @@ class MMPBSA_App(object):
 
     def _get_mm_data(self):
 
-        # # FIXME: add pbsa.cuda, APBS and PBDelphi
+        # # FIXME: add pbsa.cuda and PBDelphi
         # if not self.INPUT['gbnsr6']['gbnsr6run']:
         #     return
 

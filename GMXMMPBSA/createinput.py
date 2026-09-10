@@ -10,8 +10,8 @@ Classes:
     SanderInput -- Base class for sander input files
     SanderGBInput -- writes input files for sander GB (derived from SanderInput)
     SanderPBSAInput- writes input files for sander PB (derived from SanderInput)
-    SanderAPBSInput -- writes input files for sander.APBS PB 
-                       (derived from SanderInput)
+    SanderAPBSInput -- legacy input writer retained for archived compatibility;
+                       new calculations reject sander.APBS
     SanderGBDecomp -- writes GB decomp input files (derived from SanderInput)
     SanderPBDecomp -- writes PB decomp input files (derived from SanderInput)
     QuasiHarmonicInput -- writes a cpptraj input file for quasi-harmonic calcs
@@ -148,7 +148,7 @@ def create_inputs(INPUT, prmtop_system, pre):
                 rec_mdin.write_input(f"{pre}pb_decomp_rec.mdin")
                 lig_mdin.write_input(f"{pre}pb_decomp_lig.mdin")
 
-        # Require one file for GBNSR6, pbsa.cuda and APBS calculations.
+        # Require one file for GBNSR6 calculations.
         # TODO: we need to define the intdiel for decomp because the eel term is computed by sander and not by GBNSR6
         if INPUT['gbnsr6']['gbnsr6run']:
             rec_res = ['Residues considered as REC', full_rc]
@@ -272,7 +272,7 @@ def create_inputs(INPUT, prmtop_system, pre):
                 gb_mdin.make_mdin()
                 gb_mdin.write_input(f'{pre}gb.mdin')
 
-        # We only need to run it once for the GBNSR6, pbsa.cuda and APBS calculations.
+        # We only need to run it once for the GBNSR6 calculation.
         if INPUT['gbnsr6']['gbnsr6run']:
             mm_mdin = SanderMMInput(INPUT)
             mm_mdin.set_gbnsr6_param()
@@ -280,13 +280,8 @@ def create_inputs(INPUT, prmtop_system, pre):
             mm_mdin.write_input(f'{pre}mm.mdin')
 
         if INPUT['pb']['pbrun']:
-            pb_prog = 'sander.APBS' if INPUT['pb']['sander_apbs'] else 'sander'
-            if pb_prog == 'sander.APBS':
-                pb_mdin = SanderAPBSInput(INPUT)
-                pb_mdin.make_mdin()
-            else:
-                pb_mdin = SanderPBSAInput(INPUT)
-                pb_mdin.make_mdin()
+            pb_mdin = SanderPBSAInput(INPUT)
+            pb_mdin.make_mdin()
             pb_mdin.write_input(f'{pre}pb.mdin')
 
         if INPUT['rism']['rismrun']:
@@ -730,7 +725,7 @@ class SanderPBSAInput(SanderInput):
 
 
 class SanderAPBSInput(SanderInput):
-    """ PB sander input file using APBS as the PB solver """
+    """Legacy APBS input writer retained for compatibility with archived tooling."""
     def __init__(self, INPUT):
         super().__init__(INPUT)
         self.program = 'sander.APBS'

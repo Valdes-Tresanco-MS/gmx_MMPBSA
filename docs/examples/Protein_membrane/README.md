@@ -192,7 +192,6 @@ describe the same implicit-membrane PB calculation.
     &pb
       ipb                            = 1                                      # PB model; e.g. 2
       inp                            = 2                                      # Nonpolar method; 1 or 2
-      sander_apbs                    = 0                                      # Use sander.APBS; 0/1
       indi                           = 1.0                                    # Internal dielectric; e.g. 1.0
       exdi                           = 78.5                                   # External dielectric; e.g. 78.5
       emem                           = 7.0                                    # Membrane dielectric; e.g. 4.0

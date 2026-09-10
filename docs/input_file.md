@@ -1120,11 +1120,8 @@ method, while a level-set based algebraic method is used when `ipb > 2`.
   [229]: https://onlinelibrary.wiley.com/doi/10.1002/jcc.540100504
 
 `sander_apbs` (Default = 0)
-:   Option to use `APBS` for `PB` calculation instead of the built-in `PBSA` solver. This will work only through the
-    `iAPBS` interface built into `sander.APBS`. Instructions for this can be found online at the iAPBS/APBS websites.
-    
-    * 0: Do not use `sander.APBS`
-    * 1: Use `sander.APBS`
+:   Deprecated legacy compatibility option. New calculations reject `sander_apbs = 1`; keep it at `0` and use the
+    built-in `PBSA` solver. Historical APBS result files remain readable where the analyzer still needs this value.
 
 #### **Options to define the physical constants**
 
@@ -1155,7 +1152,7 @@ solute/solvent dielectric boundary.
     _Implemented in v1.5.0_
 
 `istrng` (Default = 0.0)
-:   Ionic strength in Molarity (M). It is converted to mM for `PBSA` and kept as M for `APBS`.
+:   Ionic strength in Molarity (M). It is converted to mM for `PBSA`.
 
 `radiopt` (Default = 1)
 :   The option to set up atomic radii.

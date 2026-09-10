@@ -977,7 +977,6 @@ def find_progs(INPUT, mpi_size=0, engine='gmx'):
                   'tleap': True,
                   'parmchk2': True,
                   'sander': True,
-                  'sander.APBS': INPUT['pb']['sander_apbs'] == 1,
                   'mmpbsa_py_nabnmode': INPUT['nmode']['nmoderun'],
                   # 'rism3d.snglpnt': INPUT['rism']['rismrun']
                   'elsize': INPUT['gb']['alpb'],
