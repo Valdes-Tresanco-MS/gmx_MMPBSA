@@ -26,6 +26,7 @@ from GMXMMPBSA.commandlineparser import validate_output_paths
 from GMXMMPBSA import utils
 from math import sqrt, ceil, isfinite
 from os import linesep as ls
+from pathlib import Path
 import pickle
 
 
@@ -65,10 +66,11 @@ def data2pkl(app):
                                [app.mutant_index] if app.mutant_index is not None else []),
         mut_str=app.mut_str,
         using_chamber=app.using_chamber,
+        radii_provenance=getattr(app, 'radii_provenance', None),
         input_file=app.input_file_text,
-        COM_PDB=''.join(open(app.FILES.complex_fixed).readlines()),
-        output_file=''.join(open(app.FILES.output_file).readlines()),
-        decomp_output_file=''.join(open(app.FILES.decompout).readlines()) if app.INPUT['decomp']['decomprun']
+        COM_PDB=Path(app.FILES.complex_fixed).read_text(),
+        output_file=Path(app.FILES.output_file).read_text(),
+        decomp_output_file=Path(app.FILES.decompout).read_text() if app.INPUT['decomp']['decomprun']
         else None
     )
 
@@ -426,7 +428,8 @@ def write_outputs(app):
                     final_output.write('\n   (C2 entropy)\n'
                                        f'ΔΔG binding = {ddgc2_davg:9.2f} +/- {ddgc2_dstd:7.2f}\n')
             if INPUT['nmode']['nmoderun']:
-                ddnm_davg, ddnm_dstd = nm_sys_mut_norm.mean(), utils.primary_uncertainty(nm_sys_mut_norm)
+                ddnm_total = nm_sys_mut_norm['TOTAL']
+                ddnm_davg, ddnm_dstd = ddnm_total.mean(), utils.primary_uncertainty(ddnm_total)
                 ddgnm_davg = ddh_davg + ddnm_davg
                 ddgnm_dstd = utils.get_std(ddh_dstd, ddnm_dstd)
                 final_output.write('\n   (normal mode entropy)\n'

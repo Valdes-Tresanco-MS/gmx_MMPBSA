@@ -1,4 +1,5 @@
 import unittest
+import pickle
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from types import SimpleNamespace
@@ -7,6 +8,7 @@ from unittest.mock import MagicMock, patch
 import numpy as np
 
 from GMXMMPBSA import output_file
+from GMXMMPBSA.utils import EnergyVector
 
 
 class _Value:
@@ -36,6 +38,15 @@ class _Stats:
     def __getitem__(self, key):
         if key == 'TOTAL':
             return _Value()
+        raise KeyError(key)
+
+
+class _BindingStats(_Stats):
+    inconsistent = False
+
+    def __getitem__(self, key):
+        if key == 'TOTAL':
+            return EnergyVector([1.0])
         raise KeyError(key)
 
 
@@ -113,6 +124,48 @@ class StabilityOutputTest(unittest.TestCase):
         with patch.object(output_file, 'OutputFile', return_value=MagicMock()):
             output_file.write_outputs(app)
 
+    def test_binding_alanine_scan_uses_nmode_total_delta_vector(self):
+        normal = {name: _BindingStats() for name in ('complex', 'receptor', 'ligand', 'delta')}
+        mutant = {name: _BindingStats() for name in ('complex', 'receptor', 'ligand', 'delta')}
+        mut_norm = {'delta': _BindingStats()}
+        app = SimpleNamespace(
+            FILES=SimpleNamespace(output_file='ignored.dat', energyout=None),
+            normal_system=SimpleNamespace(
+                ligand_prmtop=SimpleNamespace(
+                    ptr=lambda key: 1,
+                    parm_data={'RESIDUE_LABEL': ['LIG']},
+                )
+            ),
+            numframes=1,
+            numframes_nmode=1,
+            INPUT={
+                'general': {
+                    'sys_name': 'binding',
+                    'interaction_entropy': 0,
+                    'c2_entropy': 0,
+                    'qh_entropy': 0,
+                    'temperature': 298.15,
+                    'receptor_mask': ':1',
+                    'ligand_mask': ':2',
+                },
+                'ala': {'alarun': True, 'mutant_only': False},
+                'nmode': {'nmoderun': True},
+                'gb': {'gbrun': True, 'molsurf': False, 'ifqnt': 0},
+                'pb': {'pbrun': False},
+            },
+            calc_types=SimpleNamespace(
+                normal={'gb': normal, 'nmode': {'delta': _BindingStats()}},
+                mutant={'gb': mutant, 'nmode': {'delta': _BindingStats()}},
+                mut_norm={'gb': mut_norm, 'nmode': {'delta': _BindingStats()}},
+            ),
+            mut_str='ALA',
+            stability=False,
+        )
+
+        with TemporaryDirectory() as tmpdir, patch.object(output_file, 'OutputFile', return_value=MagicMock()):
+            app.FILES.output_file = str(Path(tmpdir) / 'output.dat')
+            output_file.write_outputs(app)
+
 
 class InteractionEntropyCompatibilityTest(unittest.TestCase):
     def test_legacy_compact_result_uses_primary_fallback_uncertainty(self):
@@ -139,6 +192,39 @@ class InteractionEntropyCompatibilityTest(unittest.TestCase):
 
         self.assertAlmostEqual(value, 0.25)
         self.assertAlmostEqual(uncertainty, 0.025)
+
+
+class CompactResultProvenanceTest(unittest.TestCase):
+    def test_binary_result_preserves_radii_provenance(self):
+        app = SimpleNamespace(
+            INPUT={'decomp': {'decomprun': False}},
+            FILES=SimpleNamespace(complex_fixed='complex.pdb', output_file='output.dat'),
+            mpi_size=1,
+            numframes=1,
+            numframes_nmode=0,
+            mutant_index=None,
+            mutant_indices=[],
+            mut_str='',
+            using_chamber=False,
+            input_file_text='input',
+            calc_types=SimpleNamespace(),
+            radii_provenance={'schema_version': 1, 'components': {'complex': {'effective_radius_set': 'mbondi3'}}},
+        )
+        with TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            (root / 'complex.pdb').write_text('PDB\n')
+            (root / 'output.dat').write_text('RESULTS\n')
+            import os
+            old_cwd = os.getcwd()
+            os.chdir(root)
+            try:
+                output_file.data2pkl(app)
+                with (root / 'COMPACT_MMXSA_RESULTS.mmxsa').open('rb') as handle:
+                    info = pickle.load(handle)
+            finally:
+                os.chdir(old_cwd)
+
+        self.assertEqual(info.radii_provenance['components']['complex']['effective_radius_set'], 'mbondi3')
 
 
 if __name__ == '__main__':

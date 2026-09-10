@@ -52,6 +52,29 @@ class BindingSummaryCompatibilityTest(unittest.TestCase):
                         self.assertTrue(math.isnan(total['Block SD']))
                         self.assertTrue(math.isnan(total['Block SEM']))
 
+    def test_ie_and_c2_dataframe_summaries_preserve_block_uncertainties(self):
+        import math
+
+        energy = pd.Series({'Average': -10., 'SD': 4., 'SEM': 1., 'Block SD': 2., 'Block SEM': .8})
+        for entropy_name in ('ie', 'c2'):
+            with self.subTest(entropy=entropy_name):
+                api = MMPBSA_API()
+                api.app_namespace = SimpleNamespace(FILES=SimpleNamespace(stability=False))
+                entropy = pd.DataFrame(
+                    {entropy_name: [3., 3., .5, 1., .6], 'sigma': [0., 0., 0., 0., 0.]},
+                    index=['Average', 'SD', 'SEM', 'Block SD', 'Block SEM'],
+                )
+
+                result = api.get_binding(
+                    {'normal': {'gb': {'delta': {'TOTAL': energy}}}},
+                    {'normal': {entropy_name: {'gb': {entropy_name: entropy}}}},
+                )
+                total = result['data']['normal']['gb'][entropy_name]['ΔG']
+
+                self.assertEqual(total['Average'], -7.)
+                self.assertAlmostEqual(total['Block SD'], math.sqrt(5.))
+                self.assertAlmostEqual(total['Block SEM'], 1.)
+
 
 class ReferenceStatisticsTest(unittest.TestCase):
     def test_reference_adjusts_each_uncertainty_without_mutating_source(self):

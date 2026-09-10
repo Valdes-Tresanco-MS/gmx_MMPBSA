@@ -662,6 +662,16 @@ class MMPBSA_API():
                     ))
         return result
 
+    @staticmethod
+    def _binding_series(data, term):
+        """Return the primary summary column from a term summary DataFrame."""
+        if isinstance(data, pd.DataFrame):
+            if term in data.columns:
+                return data[term]
+            if len(data.columns) == 1:
+                return data.iloc[:, 0]
+        return data
+
     def get_binding(self, energy_summary=None, entropy_summary=None, verbose=True):
         binding  = {}
         b_map = {}
@@ -676,7 +686,7 @@ class MMPBSA_API():
                     binding[et][em] = {}
                     b_map[et][em] = []
                     mol = 'complex' if self.app_namespace.FILES.stability else 'delta'
-                    edata = emv[mol]['TOTAL']
+                    edata = self._binding_series(emv[mol]['TOTAL'], 'TOTAL')
                     edata.name = 'ΔH'
                     if et in entropy_summary:
                         if mol == 'delta':
@@ -690,6 +700,7 @@ class MMPBSA_API():
                                 entdata = etv[em]['c2']
                             else:
                                 entdata = etv[mol]['TOTAL']
+                            entdata = self._binding_series(entdata, ent if ent in ('ie', 'c2') else 'TOTAL')
                             entdata.name = '-TΔS'
                             dg = edata.loc['Average'] + entdata.loc['Average']
                             legacy_sd = utils.get_std(edata.loc['SD'], entdata.loc['SD'])
@@ -1004,10 +1015,10 @@ class MMPBSA_API():
     def _get_namespace(app, tfile):
 
         if tfile == 'App':
-            com_pdb = ''.join(open(app.FILES.complex_fixed).readlines())
+            com_pdb = Path(app.FILES.complex_fixed).read_text()
             input_file = app.input_file_text
-            output_file = ''.join(open(app.FILES.output_file).readlines())
-            decomp_output_file = ''.join(open(app.FILES.decompout).readlines()) if app.INPUT['decomp']['decomprun'] \
+            output_file = Path(app.FILES.output_file).read_text()
+            decomp_output_file = Path(app.FILES.decompout).read_text() if app.INPUT['decomp']['decomprun'] \
                 else None
             size = app.mpi_size
         else:
@@ -1033,6 +1044,7 @@ class MMPBSA_API():
                 'output_file': output_file,
                 'size': size,
                 'using_chamber': app.using_chamber,
+                'radii_provenance': getattr(app, 'radii_provenance', None),
                 'decomp_output_file': decomp_output_file}
 
         return SimpleNamespace(FILES=app.FILES, INPUT=app.INPUT, INFO=INFO)
