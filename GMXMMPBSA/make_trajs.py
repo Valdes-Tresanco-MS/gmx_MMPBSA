@@ -182,7 +182,7 @@ def make_trajectories(INPUT, FILES, size, cpptraj, pre, trjconv=None):
         frame_string = '%d-%d' % (last_frame, last_frame + frame_count[i] - 1)
         traj.Outtraj(pre + 'complex.%s.%d' % (trj_suffix, i),
                      frames=frame_string, filetype=INPUT['general']['netcdf'])
-        # TODO: include pbsa.cuda. For APBS and PBDelphi we need to generate pqr instead
+        # TODO: include pbsa.cuda and PBDelphi, which require PQR trajectory output.
         if INPUT['gbnsr6']['gbnsr6run']:
             temp_dir = Path(f"{pre}inpcrd_{i}")
             temp_dir.mkdir()
@@ -204,7 +204,7 @@ def make_trajectories(INPUT, FILES, size, cpptraj, pre, trjconv=None):
             frame_string = '%d-%d' % (last_frame, last_frame + frame_count[i] - 1)
             traj.Outtraj(pre + 'receptor.%s.%d' % (trj_suffix, i),
                          frames=frame_string, filetype=INPUT['general']['netcdf'])
-            # FIXME: include pbsa.cuda. For APBS and PBDelphi we need to generate pqr instead
+            # FIXME: include pbsa.cuda and PBDelphi, which require PQR trajectory output.
             if INPUT['gbnsr6']['gbnsr6run']:
                 traj.Outtraj(f"{pre}inpcrd_{i}/{pre}receptor.inpcrd", frames=frame_string, filetype='restart',
                              options=['keepext'])
@@ -225,7 +225,7 @@ def make_trajectories(INPUT, FILES, size, cpptraj, pre, trjconv=None):
             frame_string = '%d-%d' % (last_frame, last_frame + frame_count[i] - 1)
             traj.Outtraj(pre + 'ligand.%s.%d' % (trj_suffix, i),
                          frames=frame_string, filetype=INPUT['general']['netcdf'])
-            # FIXME: include pbsa.cuda. For APBS and PBDelphi we need to generate pqr instead
+            # FIXME: include pbsa.cuda and PBDelphi, which require PQR trajectory output.
             if INPUT['gbnsr6']['gbnsr6run']:
                 traj.Outtraj(f"{pre}inpcrd_{i}/{pre}ligand.inpcrd", frames=frame_string, filetype='restart',
                              options=['keepext'])
@@ -301,7 +301,7 @@ def make_trajectories(INPUT, FILES, size, cpptraj, pre, trjconv=None):
             frame_string = '%d-%d' % (last_frame, last_frame + frame_count[i] - 1)
             rectraj.Outtraj(pre + 'receptor.%s.%d' % (trj_suffix, i),
                             frames=frame_string, filetype=INPUT['general']['netcdf'])
-            # FIXME: include pbsa.cuda. For APBS and PBDelphi we need to generate pqr instead
+            # FIXME: include pbsa.cuda and PBDelphi, which require PQR trajectory output.
             if INPUT['gbnsr6']['gbnsr6run']:
                 rectraj.Outtraj(f"{pre}inpcrd_{i}/{pre}receptor.inpcrd", frames=frame_string, filetype='restart',
                              options=['keepext'])
@@ -343,7 +343,7 @@ def make_trajectories(INPUT, FILES, size, cpptraj, pre, trjconv=None):
             frame_string = '%d-%d' % (last_frame, last_frame + frame_count[i] - 1)
             ligtraj.Outtraj(pre + 'ligand.%s.%d' % (trj_suffix, i),
                             frames=frame_string, filetype=INPUT['general']['netcdf'])
-            # FIXME: include pbsa.cuda. For APBS and PBDelphi we need to generate pqr instead
+            # FIXME: include pbsa.cuda and PBDelphi, which require PQR trajectory output.
             if INPUT['gbnsr6']['gbnsr6run']:
                 ligtraj.Outtraj(f"{pre}inpcrd_{i}/{pre}ligand.inpcrd", frames=frame_string, filetype='restart',
                              options=['keepext'])
@@ -547,8 +547,8 @@ def make_mutant_trajectories(INPUT, FILES, rank, cpptraj, norm_sys, mut_sys, pre
                                        norm_sys.ligand_prmtop, mut_sys.ligand_prmtop)
             lig_mut.MutateTraj(pre + 'mutant_ligand_nm.%s.%d' %
                                (trj_suffix, rank))
-            shutil.copyfile(pre + 'ligand_nm.%s.%d' % (trj_suffix, rank),
-                            pre + 'mutant_ligand_nm.%s.%d' % (trj_suffix, rank))
+            shutil.copyfile(pre + 'receptor_nm.%s.%d' % (trj_suffix, rank),
+                            pre + 'mutant_receptor_nm.%s.%d' % (trj_suffix, rank))
 
     # If we're doing a quasi-harmonic approximation we need the full com traj
     if (INPUT['general']['full_traj'] or INPUT['general']['qh_entropy']) and master:

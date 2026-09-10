@@ -844,6 +844,16 @@ class CheckMakeTop:
         self.INPUT['general']['explicit_waters_mask'] = resolved_mask
         logging.info(f'Resolved explicit water reference mask for cpptraj closest: {resolved_mask}')
 
+    def _assign_component_radii(self, parm, component, has_topology):
+        if has_topology:
+            logging.info(f"Assigning PBRadii {PBRadii[self.INPUT['general']['PBRadii']]} to {component}...")
+            ChRad(parm, PBRadii[self.INPUT['general']['PBRadii']])
+        else:
+            logging.info(
+                f"Preserving {component} GB radii inherited from Complex: "
+                f"{parm.parm_data.get('RADIUS_SET', ['unknown'])[0]}"
+            )
+
     def gmxtop2prmtop(self):
         logging.info('Using topology conversion. Setting radiopt = 0...')
         self.INPUT['pb']['radiopt'] = 0
@@ -942,8 +952,7 @@ class CheckMakeTop:
             rec_amb_prm.strip(f'!:{rec_keep}')
             rec_hastop = False
 
-        logging.info(f"Assigning PBRadii {PBRadii[self.INPUT['general']['PBRadii']]} to Receptor...")
-        action = ChRad(rec_amb_prm, PBRadii[self.INPUT['general']['PBRadii']])
+        self._assign_component_radii(rec_amb_prm, 'Receptor', rec_hastop)
         logging.info('Writing Normal Receptor AMBER topology...')
         rec_amb_prm.write_parm(self.receptor_pmrtop)
         rec_amb_prm.save(f"{self.FILES.prefix}REC.inpcrd", format='rst7', overwrite=True)
@@ -987,8 +996,7 @@ class CheckMakeTop:
                 lig_strip = f'{lig_strip},{explicit_water_range}'
             lig_amb_prm.strip(f':{lig_strip}')
             lig_hastop = False
-        logging.info(f"Assigning PBRadii {PBRadii[self.INPUT['general']['PBRadii']]} to Ligand...")
-        action = ChRad(lig_amb_prm, PBRadii[self.INPUT['general']['PBRadii']])
+        self._assign_component_radii(lig_amb_prm, 'Ligand', lig_hastop)
         logging.info('Writing Normal Ligand AMBER topology...')
         lig_amb_prm.write_parm(self.ligand_pmrtop)
         lig_amb_prm.save(f"{self.FILES.prefix}LIG.inpcrd", format='rst7', overwrite=True)
@@ -1492,8 +1500,9 @@ class CheckMakeTop:
 
         return com_mut_indices, next(iter(parts)), part_indices
 
-    def _assign_ter(self):
-        for res in self.complex_str.residues:
+    def _assign_ter(self, structure=None):
+        structure = self.complex_str if structure is None else structure
+        for res in structure.residues:
             # evident terminal
             if len(res.name) == 4:
                 if res.name.startswith('N'):
@@ -1558,7 +1567,7 @@ class CheckMakeTop:
         mut_top.strip(strip_mask)
 
         # add terminals only for mutation
-        self._assign_ter()
+        self._assign_ter(mut_top)
 
         # solution for issue #364
         # NOTE: We selected the charge from  Amber14SB because it is the same as amber99sb, amber99SB-ILDN, amber12SB,
@@ -1580,10 +1589,11 @@ class CheckMakeTop:
         # ALA: C: 0.0764, N: 0.0300, int: 0.0603
         # GLY: C: 0.1056, N: 0.0895, int: 0.0698
 
-        if self.complex_str.residues[mut_index].ter == 'C':
+        mutation_residue = mut_top.residues[mut_index]
+        if mutation_residue.ter == 'C':
             h_ala_charge = 0.0764
             h_gly_charge = 0.1056
-        elif self.complex_str.residues[mut_index].ter == 'N':
+        elif mutation_residue.ter == 'N':
             h_ala_charge = 0.0300
             h_gly_charge = 0.0895
         else:
@@ -1611,8 +1621,8 @@ class CheckMakeTop:
         cb_atom = None
         ca_atom = None
         logging.info(
-            f"Mutating {self.complex_str.residues[mut_index].chain}/{self.complex_str.residues[mut_index].number} "
-            f"{self.complex_str.residues[mut_index].name} to {mut_aa}")
+            f"Mutating {mutation_residue.chain}/{mutation_residue.number} "
+            f"{mutation_residue.name} to {mut_aa}")
 
         mutant_resname = mut_top.residues[mut_index].name
 
@@ -2170,7 +2180,7 @@ class CheckMakeTop:
                     if not self.FILES.stability:
                         mtif.write(f'MREC_OUT = combine {{ {mrec_out} }}\n')
                         for cys1, cys2 in self.cys_bonds['REC']:
-                            tif.write(f'bond MREC_OUT.{cys1}.SG MREC_OUT.{cys2}.SG\n')
+                            mtif.write(f'bond MREC_OUT.{cys1}.SG MREC_OUT.{cys2}.SG\n')
                         mtif.write(
                             'saveamberparm MREC_OUT {t} {p}MUT_REC.inpcrd\n'.format(t=self.mutant_receptor_pmrtop,
                                                                                     p=self.FILES.prefix))
@@ -2198,7 +2208,7 @@ class CheckMakeTop:
                     if not self.FILES.stability:
                         mtif.write(f'MLIG_OUT = combine {{ {mlig_out} }}\n')
                         for cys1, cys2 in self.cys_bonds['LIG']:
-                            tif.write(f'bond MLIG_OUT.{cys1}.SG MLIG_OUT.{cys2}.SG\n')
+                            mtif.write(f'bond MLIG_OUT.{cys1}.SG MLIG_OUT.{cys2}.SG\n')
                         mtif.write('saveamberparm MLIG_OUT {t} {p}MUT_LIG.inpcrd\n'.format(
                             t=self.mutant_ligand_pmrtop, p=self.FILES.prefix))
                     else:
@@ -2210,7 +2220,7 @@ class CheckMakeTop:
                 mcom_out = ' '.join(MCOM)
                 mtif.write(f'MCOM_OUT = combine {{ {mcom_out} }}\n')
                 for cys1, cys2 in self.cys_bonds['COM']:
-                    tif.write(f'bond MCOM_OUT.{cys1}.SG MCOM_OUT.{cys2}.SG\n')
+                    mtif.write(f'bond MCOM_OUT.{cys1}.SG MCOM_OUT.{cys2}.SG\n')
                 mtif.write('saveamberparm MCOM_OUT {t} {p}MUT_COM.inpcrd\n'.format(t=self.mutant_complex_pmrtop,
                                                                                    p=self.FILES.prefix))
                 mtif.write('quit')

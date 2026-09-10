@@ -2,6 +2,7 @@ import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from types import SimpleNamespace
+from unittest.mock import patch
 
 import parmed
 
@@ -9,6 +10,7 @@ from GMXMMPBSA.alamdcrd import GlyMutantMdcrd, MutantMdcrd, _getnumatms
 from GMXMMPBSA.exceptions import MMPBSA_Error
 from GMXMMPBSA.make_top import CheckMakeTop
 from GMXMMPBSA.make_top_amber import CheckAmberTop
+from GMXMMPBSA.make_trajs import make_mutant_trajectories
 from GMXMMPBSA.utils import Residue, selector
 
 
@@ -137,6 +139,59 @@ class CompositeTopologyMutationDispatchTest(unittest.TestCase):
                     ('WT', 3, True, True),
                 ])
 
+    def test_terminal_metadata_can_be_assigned_on_component_structures(self):
+        for builder in (CheckMakeTop, CheckAmberTop):
+            with self.subTest(builder=builder.__name__):
+                checker = object.__new__(builder)
+                complex_residue = SimpleNamespace(name='ALA', atoms=[SimpleNamespace(name='CA')])
+                component_residue = SimpleNamespace(name='ALA', atoms=[SimpleNamespace(name='OXT')])
+                checker.complex_str = SimpleNamespace(residues=[complex_residue])
+                component = SimpleNamespace(residues=[component_residue])
+
+                checker._assign_ter(component)
+
+                self.assertEqual(component_residue.ter, 'C')
+                self.assertFalse(hasattr(complex_residue, 'ter'))
+
+    def test_mutant_tleap_script_keeps_disulfide_bonds_in_mutant_file(self):
+        with TemporaryDirectory() as directory:
+            prefix = directory + '/'
+            checker = object.__new__(CheckMakeTop)
+            checker.FILES = SimpleNamespace(
+                prefix=prefix,
+                ligand_mol2=None,
+                stability=False,
+            )
+            checker.INPUT = {
+                'general': {'forcefields': [], 'PBRadii': 4},
+                'ala': {'alarun': True},
+            }
+            checker.receptor_list = {'REC': 'receptor.pdb'}
+            checker.ligand_list = {'LIG': 'ligand.pdb'}
+            checker.mut_receptor_list = {'MREC': 'mutant_receptor.pdb'}
+            checker.cys_bonds = {
+                'REC': [[1, 2]],
+                'LIG': [[3, 4]],
+                'COM': [[5, 6]],
+            }
+            checker.receptor_pmrtop = 'receptor.prmtop'
+            checker.ligand_pmrtop = 'ligand.prmtop'
+            checker.complex_pmrtop = 'complex.prmtop'
+            checker.mutant_receptor_pmrtop = 'mutant_receptor.prmtop'
+            checker.mutant_ligand_pmrtop = 'mutant_ligand.prmtop'
+            checker.mutant_complex_pmrtop = 'mutant_complex.prmtop'
+            checker.external_progs = {'tleap': 'tleap'}
+            checker._write_ff = lambda handle: handle.write('source test\n')
+            checker._set_com_order = lambda receptor, ligand: receptor + ligand
+            checker._run_tleap = lambda *args: None
+
+            checker.makeToptleap()
+
+            mutant_script = (Path(directory) / 'mut_leap.in').read_text()
+            self.assertIn('bond MREC_OUT.1.SG MREC_OUT.2.SG', mutant_script)
+            self.assertIn('bond MCOM_OUT.5.SG MCOM_OUT.6.SG', mutant_script)
+            self.assertNotIn('bond MLIG_OUT.3.SG MLIG_OUT.4.SG', mutant_script)
+
 
 class CompositeTrajectoryMutationTest(unittest.TestCase):
     @staticmethod
@@ -196,6 +251,61 @@ class CompositeTrajectoryMutationTest(unittest.TestCase):
 
     def test_double_glycine_trajectory_mutation(self):
         self._run(GlyMutantMdcrd)
+
+
+class NmodeLigandMutationDispatchTest(unittest.TestCase):
+    def test_ligand_nmode_output_is_mutated_and_receptor_is_copied(self):
+        class FakeMutant:
+            def __init__(self, source, normal_topology, mutant_topology):
+                self.mutres = [1]
+
+            def MutateTraj(self, output):
+                Path(output).write_text('mutated')
+
+        inputs = {
+            'ala': {'alarun': True},
+            'general': {'netcdf': 0, 'full_traj': False, 'qh_entropy': False},
+            'nmode': {'nmoderun': True},
+            'gbnsr6': {'gbnsr6run': False},
+        }
+        files = SimpleNamespace(
+            stability=False,
+            receptor_prmtop='receptor.prmtop',
+            mutant_receptor_prmtop='receptor.prmtop',
+            ligand_prmtop='ligand.prmtop',
+            mutant_ligand_prmtop='mutant_ligand.prmtop',
+        )
+        normal = SimpleNamespace(
+            complex_prmtop='complex.prmtop',
+            receptor_prmtop='receptor.prmtop',
+            ligand_prmtop='ligand.prmtop',
+        )
+        mutant = SimpleNamespace(
+            complex_prmtop='mutant_complex.prmtop',
+            receptor_prmtop='mutant_receptor.prmtop',
+            ligand_prmtop='mutant_ligand.prmtop',
+        )
+
+        with TemporaryDirectory() as directory, patch('GMXMMPBSA.alamdcrd.MutantMdcrd', FakeMutant):
+            prefix = Path(directory)
+            for name, contents in (
+                ('complex_nm.mdcrd.1', 'complex'),
+                ('ligand_nm.mdcrd.1', 'normal ligand'),
+                ('receptor_nm.mdcrd.1', 'normal receptor'),
+                ('complex.mdcrd.1', 'complex'),
+                ('ligand.mdcrd.1', 'normal ligand'),
+                ('receptor.mdcrd.1', 'normal receptor'),
+            ):
+                (prefix / name).write_text(contents)
+
+            make_mutant_trajectories(
+                inputs, files, 1, None, normal, mutant, str(prefix) + '/'
+            )
+
+            self.assertEqual((prefix / 'mutant_ligand_nm.mdcrd.1').read_text(), 'mutated')
+            self.assertEqual(
+                (prefix / 'mutant_receptor_nm.mdcrd.1').read_text(), 'normal receptor'
+            )
 
 
 class SegmentedMutationTest(unittest.TestCase):

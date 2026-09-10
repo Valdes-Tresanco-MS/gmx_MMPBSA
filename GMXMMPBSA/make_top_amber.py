@@ -1119,8 +1119,9 @@ class CheckAmberTop(CheckMakeTop):
 
         return com_mut_indices, next(iter(parts)), part_indices
 
-    def _assign_ter(self):
-        for res in self.complex_str.residues:
+    def _assign_ter(self, structure=None):
+        structure = self.complex_str if structure is None else structure
+        for res in structure.residues:
             # evident terminal
             if len(res.name) == 4:
                 if res.name.startswith('N'):
@@ -1185,7 +1186,7 @@ class CheckAmberTop(CheckMakeTop):
         mut_top.strip(strip_mask)
 
         # add terminals only for mutation
-        self._assign_ter()
+        self._assign_ter(mut_top)
 
         # solution for issue #364
         # NOTE: We selected the charge from  Amber14SB because it is the same as amber99sb, amber99SB-ILDN, amber12SB,
@@ -1207,10 +1208,11 @@ class CheckAmberTop(CheckMakeTop):
         # ALA: C: 0.0764, N: 0.0300, int: 0.0603
         # GLY: C: 0.1056, N: 0.0895, int: 0.0698
 
-        if self.complex_str.residues[mut_index].ter == 'C':
+        mutation_residue = mut_top.residues[mut_index]
+        if mutation_residue.ter == 'C':
             h_ala_charge = 0.0764
             h_gly_charge = 0.1056
-        elif self.complex_str.residues[mut_index].ter == 'N':
+        elif mutation_residue.ter == 'N':
             h_ala_charge = 0.0300
             h_gly_charge = 0.0895
         else:
@@ -1238,8 +1240,8 @@ class CheckAmberTop(CheckMakeTop):
         cb_atom = None
         ca_atom = None
         logging.info(
-            f"Mutating {self.complex_str.residues[mut_index].chain}/{self.complex_str.residues[mut_index].number} "
-            f"{self.complex_str.residues[mut_index].name} to {mut_aa}")
+            f"Mutating {mutation_residue.chain}/{mutation_residue.number} "
+            f"{mutation_residue.name} to {mut_aa}")
 
         mutant_resname = mut_top.residues[mut_index].name
 
