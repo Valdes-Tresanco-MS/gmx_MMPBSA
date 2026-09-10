@@ -318,7 +318,7 @@
       ]
     },
     "9": {
-      "name": "Comp_receptor",
+      "name": "Multicomponent system (Comp_receptor)",
       "path": "Comp_receptor",
       "workdir": "Comp_receptor",
       "input": "mmpbsa.in",

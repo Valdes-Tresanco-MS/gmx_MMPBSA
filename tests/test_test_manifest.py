@@ -43,6 +43,10 @@ class TestManifest(unittest.TestCase):
         self.assertIn('* 26', help_text)
         self.assertIn('* 0      23', help_text)
         self.assertIn('Legacy alias for test 6', help_text)
+        self.assertIn('* 8    x | 10  Metalloprotein-ligand', help_text)
+        self.assertIn('* 9    . | 10  Multicomponent system (Comp_receptor)', help_text)
+        self.assertIn('* 15   . | 10  Interaction Entropy approximation', help_text)
+        self.assertIn('* 17   x | 10  Entropy calculation using Normal Mode approximation', help_text)
 
     def test_legacy_membrane_selector_remains_a_valid_choice(self):
         self.assertEqual(self.manifest.all_valid_choices().count('11'), 1)

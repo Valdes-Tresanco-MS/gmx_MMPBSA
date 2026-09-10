@@ -4,6 +4,8 @@
 from __future__ import annotations
 
 import argparse
+from collections.abc import Sequence
+import re
 import shlex
 import sys
 from pathlib import Path
@@ -18,41 +20,113 @@ EXAMPLES = REPO / 'examples'
 DOCS = REPO / 'docs' / 'examples' / 'gmx_MMPBSA_test.md'
 
 
-def _normalize_command(command: str) -> str:
-    return ' '.join(shlex.split(command.strip()))
+def _command_tokens(command: str | Sequence[str]) -> list[str]:
+    if isinstance(command, str):
+        # A shell continuation is part of one command. Removing it before
+        # shlex.split avoids treating a captured first line ending in '\\' as
+        # an unterminated escape.
+        command = re.sub(r'\\\s*\n', ' ', command.strip())
+        return shlex.split(command)
+    return list(command)
+
+
+def _normalize_command(command: str | Sequence[str]) -> str:
+    return shlex.join(_command_tokens(command))
+
+
+def _command_signature(command: str | Sequence[str]) -> tuple[str, tuple[tuple[str, tuple[str, ...]], ...]]:
+    """Return an order-independent executable/options representation."""
+    tokens = _command_tokens(command)
+    if not tokens:
+        return '', ()
+
+    executable = tokens[0]
+    options: list[tuple[str, tuple[str, ...]]] = []
+    index = 1
+    while index < len(tokens):
+        option = tokens[index]
+        if not option.startswith('-'):
+            raise ValueError(f'Unexpected positional argument {option!r}')
+        index += 1
+        values: list[str] = []
+        while index < len(tokens) and not tokens[index].startswith('-'):
+            values.append(tokens[index])
+            index += 1
+        options.append((option, tuple(values)))
+    return executable, tuple(sorted(options))
+
+
+def _section_text(text: str, heading: str) -> str:
+    lines = text.splitlines()
+    for index, line in enumerate(lines):
+        if line.strip() != heading:
+            continue
+        section = []
+        for candidate in lines[index + 1:]:
+            stripped = candidate.strip()
+            if (stripped.startswith('#') or stripped.startswith('=== ')) and stripped != heading:
+                break
+            section.append(candidate)
+        return '\n'.join(section)
+    return ''
+
+
+def _command_from_lines(lines: list[str], prefixes: tuple[str, ...]) -> str | None:
+    for index, line in enumerate(lines):
+        candidate = line.strip()
+        if not candidate.startswith(prefixes):
+            continue
+
+        command = [candidate]
+        next_index = index + 1
+        while command[-1].rstrip().endswith('\\') and next_index < len(lines):
+            continuation = lines[next_index].strip()
+            next_index += 1
+            if continuation:
+                command.append(continuation)
+        return '\n'.join(command)
+    return None
+
+
+def _command_from_section(section: str, prefixes: tuple[str, ...]) -> str | None:
+    fenced_blocks = re.findall(r'```[^\n]*\n(.*?)```', section, flags=re.DOTALL)
+    for block in fenced_blocks:
+        command = _command_from_lines(block.splitlines(), prefixes)
+        if command:
+            return command
+    return _command_from_lines(section.splitlines(), prefixes)
 
 
 def _parse_serial_command(readme_path: Path) -> str | None:
     text = readme_path.read_text()
-    in_serial = False
-    for line in text.splitlines():
-        if '=== "Serial"' in line:
-            in_serial = True
-            continue
-        if in_serial and line.startswith('==='):
-            break
-        if in_serial and line.strip():
-            command = line.strip()
-            if command.startswith('gmx_MMPBSA ') or command.startswith('amber_MMPBSA '):
-                return command
-            if command.startswith('ggmx_MMPBSA '):
-                return command.replace('ggmx_MMPBSA', 'gmx_MMPBSA', 1)
-    return None
+    section = _section_text(text, '=== "Serial"')
+    command = _command_from_section(section, ('gmx_MMPBSA ', 'amber_MMPBSA ', 'ggmx_MMPBSA '))
+    if command and command.startswith('ggmx_MMPBSA '):
+        return command.replace('ggmx_MMPBSA', 'gmx_MMPBSA', 1)
+    return command
 
 
-def _extract_gmx_test_tab(readme_path: Path) -> str:
+def _parse_bundled_test_command(readme_path: Path) -> str | None:
     text = readme_path.read_text()
-    in_tab = False
-    lines = []
-    for line in text.splitlines():
-        if '=== "gmx_MMPBSA_test"' in line:
-            in_tab = True
-            continue
-        if in_tab and line.startswith('==='):
-            break
-        if in_tab and line.strip():
-            lines.append(line.strip())
-    return '\n'.join(lines)
+    # Current guides use a dedicated heading and fenced command.
+    section = _section_text(text, '### Run the bundled test')
+    command = _command_from_section(section, ('gmx_MMPBSA_test ',))
+    if command:
+        return command
+
+    # Retain compatibility with the two legacy guides that still use a tab.
+    section = _section_text(text, '=== "gmx_MMPBSA_test"')
+    return _command_from_section(section, ('gmx_MMPBSA_test ',))
+
+
+def _test_selector(command: str) -> str | None:
+    tokens = _command_tokens(command)
+    if not tokens or tokens[0] != 'gmx_MMPBSA_test':
+        return None
+    for index, token in enumerate(tokens[:-1]):
+        if token in {'-t', '--test'}:
+            return tokens[index + 1]
+    return None
 
 
 def _validate_readmes(manifest, examples_dir: Path, errors: list[str]) -> None:
@@ -62,18 +136,21 @@ def _validate_readmes(manifest, examples_dir: Path, errors: list[str]) -> None:
             errors.append(f'Test {test_id}: missing README {readme}')
             continue
 
-        tab = _extract_gmx_test_tab(readme)
-        expected_tab = f'gmx_MMPBSA_test -t {test_id}'
-        if expected_tab not in tab:
-            errors.append(f'Test {test_id}: README tab missing {expected_tab!r} in {readme}')
+        bundled_test = _parse_bundled_test_command(readme)
+        selector = _test_selector(bundled_test) if bundled_test else None
+        if selector != str(test_id):
+            errors.append(
+                f'Test {test_id}: bundled-test command selects {selector!r}; '
+                f'expected {test_id} in {readme}'
+            )
 
         serial = _parse_serial_command(readme)
         if not serial:
             errors.append(f'Test {test_id}: no Serial command in {readme}')
             continue
 
-        manifest_cmd = test.executable + ' ' + ' '.join(shlex.quote(arg) for arg in test.command_args)
-        if _normalize_command(serial) != _normalize_command(manifest_cmd):
+        manifest_cmd = [test.executable, *test.command_args]
+        if _command_signature(serial) != _command_signature(manifest_cmd):
             errors.append(
                 f'Test {test_id}: Serial command mismatch\n'
                 f'  README:   {_normalize_command(serial)}\n'

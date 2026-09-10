@@ -34,10 +34,10 @@ title: gmx_MMPBSA_test
                             * 3    . | 10   Protein-Ligand (Single trajectory approximation)
                             * 4    . | 10   Protein-Protein
                             * 5    . | 10   Protein-DNA
-                            * 6    x |  4   Protein-Membrane
+                            * 6    x |  4   Protein-Membrane CHARMM-GUI PROA-UQ2
                             * 7    . | 10   Protein-Glycan
-                            * 8    x |  4   Metalloprotein-Peptide
-                            * 9    . | 10   Protein-DNA-RNA-IONs-Ligand
+                            * 8    x | 10  Metalloprotein-ligand
+                            * 9    . | 10  Multicomponent system (Comp_receptor)
                             * 10   x |  4   Protein-Ligand (CHARMM force field)
                             * 11     |      Legacy alias for test 6 (consolidated membrane example)
                             [Analysis]:
@@ -45,9 +45,9 @@ title: gmx_MMPBSA_test
                             * 12   . | 10   Alanine Scanning
                             * 13   . | 10   Stability calculation
                             * 14   . | 10   Decomposition Analysis
-                            * 15   . | 16   Interaction Entropy approximation
+                            * 15   . | 10  Interaction Entropy approximation
                             * 16   . | 10   Protein-Ligand (Multiple trajectory approximation)
-                            * 17   x |  4   Entropy calculation using Normal Mode approximation 
+                            * 17   x | 10  Entropy calculation using Normal Mode approximation
                             * 18   x |  4   Calculations using 3D-RISM approximation
                             * 19          C2 Entropy approximation
                             * 20          LPB Calculation
@@ -100,13 +100,23 @@ the full suite runs that example only once.
 
     === "Local examples (development)"
 
-            gmx_MMPBSA_test -f /tmp/gmx_test --examples-dir ./examples -t 2 -ng
+            TMP_EXAMPLES=$(mktemp -d)
+            cp -a ./examples/. "$TMP_EXAMPLES/"
+            gmx_MMPBSA_test -f /tmp/gmx_test --examples-dir "$TMP_EXAMPLES" -t 2 -ng
 
         This command makes `gmx_MMPBSA_test`:
 
-        * Use the local `./examples` directory instead of cloning GitHub
+        * Use the copied temporary examples tree instead of cloning GitHub
         * Run the `Fast` set (`-t 2`) against the checkout you are developing
         * Skip opening `gmx_MMPBSA_ana` at the end (`-ng`)
+
+        `--examples-dir` is the directory whose individual example folders become
+        worker directories; it is not redirected by `-f`. Copy the examples to a
+        physical temporary tree before local-mode runs so generated files do not
+        enter the source checkout. In clone mode, `-f` is the parent directory for
+        `gmx_MMPBSA_test/`. That clone is replaced on a normal run when it already
+        exists; use `-r/--reuse` to keep and reuse it, and use a new temporary
+        parent when an isolated clone is required.
 
     === "Named selector"
 

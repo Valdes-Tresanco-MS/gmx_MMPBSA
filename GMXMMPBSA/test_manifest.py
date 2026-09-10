@@ -275,7 +275,7 @@ def _format_help_line(test: TestEntry) -> str:
 def _estimate_frame_count_label(test: TestEntry) -> str:
     # Help text historically shows approximate frame counts; keep simple labels.
     defaults = {
-        6: 4, 8: 4, 10: 4, 11: 4, 15: 16, 17: 4, 18: 4, 25: 5,
+        6: 4, 8: 10, 10: 4, 11: 4, 15: 10, 17: 10, 18: 4, 25: 5,
     }
     return str(defaults.get(test.id, 10))
 
