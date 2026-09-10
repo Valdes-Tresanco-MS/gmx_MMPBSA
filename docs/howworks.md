@@ -9,7 +9,9 @@ gmx_MMPBSA is a tool based on AMBER's MMPBSA.py that performs end-state free ene
 
 **But, what does that mean?**
 
-Basically, `gmx_MMPBSA` provides all the [MMPBSA.py][1] functionalities and more to GROMACS users.
+Basically, `gmx_MMPBSA` provides many supported [MMPBSA.py][1] workflows and additional GROMACS-oriented tooling.
+The supported subset depends on the input format, force field, solvent model, entropy method, and trajectory protocol;
+see [compatibility and upgrades](compatibility.md) and the [native-AMBER guide](amber_MMPBSA.md) for explicit limits.
 
 [MMPBSA.py][1] is a well-established tool for performing end-state binding free energy calculations in AMBER.
 Tools such as `g_mmpbsa` are also well known within the GROMACS community. However, using MMPBSA.py with GROMACS

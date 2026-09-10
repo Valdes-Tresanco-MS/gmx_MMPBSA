@@ -8,7 +8,7 @@ title: Introduction
 The MM/PB(GB)SA method can be used to calculate the binding free energies of noncovalently bound complexes.
 
 <figure markdown="1">
-![drawing](assets/images/cycle.png){ width=50% style="display: block; margin: 0 auto"}
+![Thermodynamic cycle for binding free energy calculations](assets/images/cycle.png){ width=50% style="display: block; margin: 0 auto"}
   <figcaption markdown="1" style="margin-top:0;">
 **Figure 1.** Thermodynamic cycle for binding free energy calculations
   </figcaption>
@@ -43,9 +43,10 @@ In turn, ∆𝐺<sub>𝑏𝑖𝑛𝑑</sub> can also be represented as:
     (3)
 </p>
 
-where ∆𝐻 corresponds to the enthalpy of binding and −𝑇∆𝑆 to the conformational entropy after ligand binding. When the 
-entropic term is omitted, the computed value is the effective free energy, which is usually sufficient for
-comparing relative binding free energies of related ligands.
+where ∆𝐻 corresponds to the enthalpy of binding and −𝑇∆𝑆 to the conformational entropy after ligand binding. When the
+entropic term is omitted, the computed value is an enthalpy-like effective binding estimate. It can be useful for a
+defined relative-comparison protocol, but omitting entropy is an approximation whose adequacy depends on the systems,
+sampling, and scientific question; it is not generally sufficient by itself for relative affinity claims.
 
 The enthalpy, ∆𝐻, can be decomposed into different terms:
 
@@ -59,14 +60,16 @@ The enthalpy, ∆𝐻, can be decomposed into different terms:
 where:
 
 <p align="center">
-∆𝐸<sub>𝑀𝑀</sub> = ∆𝐸<sub>𝑏𝑜𝑛𝑑𝑒𝑑</sub> + ∆𝐸<sub>𝑛𝑜𝑛𝑏𝑜𝑛𝑑𝑒𝑑</sub> = (∆𝐸<sub>𝑏𝑜𝑛𝑑</sub> + ∆𝐸<sub>𝑎𝑛𝑔𝑙𝑒</sub> + ∆𝐸<sub>𝑑𝑖ℎ𝑒𝑑𝑟𝑎𝑙</sub>) + (∆𝐸<sub>𝑒𝑙𝑒</sub> + ∆𝐸<sub>𝑣𝑑𝑊</sub>)
+∆𝐸<sub>𝑀𝑀</sub> = ∆𝐸<sub>𝑏𝑜𝑛𝑑</sub> + ∆𝐸<sub>𝑎𝑛𝑔𝑙𝑒</sub> + ∆𝐸<sub>𝑑𝑖ℎ𝑒𝑑</sub> + ∆𝐸<sub>𝑣𝑑𝑊</sub> + ∆𝐸<sub>𝑒𝑙𝑒</sub> + ∆𝐸<sub>1-4 VDW</sub> + ∆𝐸<sub>1-4 EEL</sub>
 </p>
 <p align="center">
     (5)
 </p>
 
-The gas phase free energy contributions (∆𝐸<sub>𝑀𝑀</sub>) are calculated by `sander` within the AmberTools package 
-according to the force field used in the MD simulation. 
+The gas-phase contributions are calculated by `sander` within AmberTools according to the force field and method. The
+ordinary terms above are supplemented by `UB`, `IMP`, and `CMAP` for applicable CHARMM calculations and by `ESCF` for
+QM/MMGBSA. These terms are included when the output parser reports them. In ST, component differences for matching
+topologies can cancel; that cancellation does not redefine the component totals or apply automatically to MT.
 
 The ∆𝐺<sub>𝑠𝑜𝑙</sub> is given by:
 
@@ -107,16 +110,20 @@ molecules (Eq. 7). Alternatively, a modern approach that separates nonpolar solv
 dispersion terms can be used. In this approach, SASA is used to correlate the cavity term only, while a 
 surface-integration method is employed to compute the dispersion term (Eq. 8).
 
-Furthermore, the entropic component is usually calculated by normal modes analysis (NMODE). The translational and
-rotational entropies can be estimated using standard statistical mechanical formulas. Nevertheless, calculating
-vibrational entropy using normal modes is computationally expensive because it requires expanding the internal
-coordinate covariance matrix for all degrees of freedom for a set of minimized structures. Recently, other
-alternatives have been developed, such as NMODE in truncated systems, which considerably reduces the computational
-cost. Interaction Entropy (IE) is another method that
-calculates the entropic component of the binding free energy directly from MD simulations without any extra 
-computational cost. This method is numerically reliable, more computationally efficient, and superior to the 
-standard NMODE approach, as shown in an extensive study of over a dozen randomly selected protein-ligand binding 
-systems.
+Furthermore, the entropic component can be estimated with normal-mode analysis (NMODE). NMODE is Hessian-based: the
+energy is minimized and a mass-weighted Hessian is diagonalized around the minimized structure to obtain vibrational
+modes and frequencies. It is therefore distinct from quasi-harmonic (QH) analysis, which estimates fluctuations from
+a coordinate covariance matrix over a sampled trajectory. NMODE can be computationally expensive, although truncated
+systems can reduce the cost. New QH calculations are not supported in 1.7.0; historical
+QH results remain readable for compatibility only.
+
+Interaction Entropy (IE) estimates an entropic contribution from the fluctuation of the interaction energy along an MD
+trajectory and has low additional post-processing cost. Its numerical behavior depends strongly on the distribution,
+fluctuations, and convergence of the sampled interaction energies; it is not universally superior to NMODE and should
+be checked with block or cumulative convergence diagnostics before interpretation. Multiple-trajectory IE/C2 use is
+experimental in this release because the bound and unbound trajectories are independently sampled. See the
+[GROMACS normal-mode reference](https://manual.gromacs.org/current/reference-manual/algorithms/normal-mode-analysis.html)
+and [Ekberg and Ryde (2021)](https://pmc.ncbi.nlm.nih.gov/articles/PMC8389774/) for methodological context.
 
 Typically, MM/PB(GB)SA calculations use one of two approaches: the single-trajectory protocol (STP) or the
 multiple-trajectory protocol (MTP). In STP, both the receptor and ligand trajectories are extracted

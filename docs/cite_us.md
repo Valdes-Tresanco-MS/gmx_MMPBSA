@@ -63,6 +63,7 @@ igb=8, saltcon=0.150, intdiel=5,
 &decomp
 idecomp=2, dec_verbose=3,
 print_res="within 5"
+/
 ============================
 ```
 

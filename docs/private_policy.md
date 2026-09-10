@@ -5,16 +5,17 @@ title: Privacy Policy
 
 # Privacy Policy
 
-Effective date: May 13, 2021
+Last reviewed: September 9, 2026
 
 Welcome to the gmx_MMPBSA documentation. We believe in protecting the privacy of our users and readers.
 
 ## The short version
-We use Google Analytics as a third-party tracking service. We collect usage data only through Google Analytics. This
-data may include the pages you visit, the date and time of your visit, the time spent on those pages, unique device
-identifiers, and other diagnostic data. It helps us evaluate how readers use the gmx_MMPBSA documentation. **We do not
-share, sell, rent, or trade this information with third parties for commercial purposes, and we use it only as
-described in this Privacy Policy.**
+The documentation site is configured to use Google Analytics only when the site owner provides the
+`GOOGLE_ANALYTICS_KEY` build setting. If enabled, Google Analytics may receive usage and diagnostic information such
+as pages visited, timestamps, browser details, and referring pages. The site also contains links, badges, and embedded
+or externally hosted content supplied by third parties; those providers may receive requests directly according to
+their own policies. The site owner should review this page whenever the analytics or embedded-content configuration
+changes.
 
 ## Our services
 gmx_MMPBSA Documentation is made up of:
@@ -27,18 +28,18 @@ All use of gmx_MMPBSA Documentation is subject to this Privacy Policy.
 
 ## What information the gmx_MMPBSA documentation collects and why
 
-We use Google Analytics as a third party tracking service, but we don’t use it to track you individually or collect 
-your User Personal Information. We use Google Analytics to collect information about how our website performs and 
-how our users, in general, navigate through and use gmx_MMPBSA Documentation. This helps us evaluate our users’ use of 
-gmx_MMPBSA Documentation; compile statistical reports on activity; and improve our content and website performance.
+When enabled, Google Analytics is used as a third-party tracking service to collect information about how the site
+performs and how users navigate through the documentation. This helps us compile statistical reports and improve the
+content and website performance. This page does not make claims about how Google or other third-party providers use
+data they receive; consult their policies for those details.
 
 Google Analytics gathers certain simple, non-personally identifying information over time, such as your IP address, 
 browser type, internet service provider, referring and exit pages, time stamp, and similar data about your use of 
 gmx_MMPBSA Documentation.
 
-We will not allow any third party to use Google Analytics to track our users individually; collect any
-User Personal Information other than IP address; or correlate your IP address with your identity. Google provides 
-further information about its own privacy practices and offers a browser add-on to opt out of Google Analytics tracking.
+Google provides further information about its own privacy practices and offers controls for opting out of Google
+Analytics tracking. The site may also load third-party resources such as embedded videos, external badges, or linked
+services; blocking third-party requests may affect their display or functionality.
 
 ## Why do we collect this?
 We collect this information to better understand how our website visitors use gmx_MMPBSA Documentation, and to monitor 

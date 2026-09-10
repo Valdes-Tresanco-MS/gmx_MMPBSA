@@ -12,7 +12,6 @@ title: Getting started
 [![Issue tracking](https://img.shields.io/badge/Issue_tracking-GitHub-blue)](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/issues)
 
 [![Support](https://img.shields.io/badge/Support-JetBrains-brightgreen)](https://www.jetbrains.com/?from=gmx_MMPBSA)
-[![Support](https://img.shields.io/badge/Support-Sourcery-orange)](https://sourcery.ai/invite/gndRrjlo)
 
 <!-- [<img src="../assets/TOC.png" height="120%" width="258" align="right"/>]() -->
 
@@ -94,7 +93,7 @@ In the current version, gmx_MMPBSA supports a number of different systems, inclu
 * [Metalloprotein-ligand][15]
 * [Protein-glycan][16]
 * [Membrane proteins][17]
-<!-- * Multicomponent systems (_e.g._, [Protein-DNA-RNA-Ions-Ligand][18]) -->
+* [Multicomponent system (Comp_receptor)][18]
 
   [12]: examples/Protein_protein/README.md
   [13]: examples/Protein_ligand/ST/README.md
@@ -102,14 +101,15 @@ In the current version, gmx_MMPBSA supports a number of different systems, inclu
   [15]: examples/Metalloprotein_ligand/README.md
   [16]: examples/Protein_glycan/README.md
   [17]: examples/Protein_membrane/README.md
-<!-- [18]: examples/Comp_receptor/README.md -->
+  [18]: examples/Comp_receptor/README.md
 
-!!! note "Support for Amber, OPLS, and CHARMM force fields"
-    In the current version, gmx_MMPBSA supports Amber, OPLS, and CHARMM force fields. Any system built for GROMACS with 
-    either [pdb2gmx](https://manual.gromacs.org/documentation/current/onlinehelp/gmx-pdb2gmx.html) or 
-    [CHARMM-GUI](https://www.charmm-gui.org/) is supported in gmx_MMPBSA. Likewise, any system built for NAMD and 
-    potentially any other software that uses *.psf - *.dcd files can be processed in gmx_MMPBSA 😀. Check our 
-    [example page](examples/README.md) to see a detailed list of all the examples available.
+!!! note "Supported input and force-field workflows"
+    The 1.7.0 release includes tested conversion paths for representative Amber, OPLS, and CHARMM GROMACS
+    topologies, plus a native-AMBER entry point and a PSF/DCD example. This does not mean that every system built by
+    `pdb2gmx`, CHARMM-GUI, NAMD, or another package is validated automatically. Topology completeness, conversion
+    limitations such as omitted CHARMM CMAP terms, the selected implicit-solvent model, and the trajectory protocol
+    still determine whether a calculation is scientifically appropriate. See the [compatibility guide](compatibility.md)
+    and the [example page](examples/README.md) for tested representatives and known restrictions.
 
 The following video shows how to perform a typical binding free energy calculation with the GB model and the interaction entropy method
 in gmx_MMPBSA.
@@ -119,13 +119,17 @@ in gmx_MMPBSA.
 </div>
 
 ## **A quick overview of `gmx_MMPBSA`**
-`gmx_MMPBSA` is a Python module that contains three applications: 
+`gmx_MMPBSA` is a Python module that contains four applications:
 
 * [gmx_MMPBSA](howworks.md) is the main application and carries out the calculations mentioned above
+* [amber_MMPBSA](amber_MMPBSA.md) runs supported native-AMBER topology/trajectory/mask workflows without GROMACS input files
 * [gmx_MMPBSA_ana](analyzer.md) provides an intuitive way to analyze the data from gmx_MMPBSA calculations and save 
   high-quality pictures
 * [gmx_MMPBSA_test](examples/gmx_MMPBSA_test.md#gmx_mmpbsa_test-command-line) tests whether the installation
   was successful by running one or more available [examples](examples/README.md) in gmx_MMPBSA.
+
+The native-AMBER command supports ST and MT workflows where applicable; explicit-water and MT entropy restrictions are
+described in the [native-AMBER guide](amber_MMPBSA.md).
   
 !!! note "Easy to run"
     gmx_MMPBSA can run in parallel and requires only a few things to perform any calculation. That is:
@@ -172,11 +176,6 @@ to see the latest stats for gmx_MMPBSA.
 
 - To the Open Source license of the [JetBrains](https://www.jetbrains.com) programs.
 
-[<img src="../assets/images/sourcery.png" height="40" width="108" align="right" />][19]
-
-- To the [Sourcery](https://sourcery.ai/invite/gndRrjlo) team for supporting us 
-  with the [Pro version](https://sourcery.ai/pro/).
 - To all researchers who help improve gmx_MMPBSA with comments, feedback, and bug reports.
 
   [11]: https://www.jetbrains.com/?from=gmx_MMPBSA
-  [19]: https://sourcery.ai/?from=gmx_MMPBSA

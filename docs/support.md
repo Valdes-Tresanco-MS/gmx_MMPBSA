@@ -14,9 +14,6 @@ Review the [frequently asked questions](Q&A/README.md) first. If you find a bug 
 ## JetBrains
 This project is possible thanks to the Open Source license of the [JetBrains][4] programs. 
 
-## Acknowledgment
-
-
 
   [1]: https://doi.org/10.1021/ct300418h
   [2]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/issues

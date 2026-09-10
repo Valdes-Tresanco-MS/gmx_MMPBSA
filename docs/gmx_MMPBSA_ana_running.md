@@ -7,6 +7,16 @@ title:
 To analyze multiple systems in the same session or calculate correlations between them, you can supply several info
 files, a folder containing an info file, or a list of folders containing info files to gmx_MMPBSA_ana.
 
+!!! note "Current result summaries"
+    Current results can expose frame-based `SD`/`SEM` and deterministic block-based `Block SD`/`Block SEM` values.
+    `Block SEM` is the recommended uncertainty representation when at least two complete blocks are available; it
+    does not establish convergence or block independence. The analyzer keeps the legacy fields for compatibility.
+
+!!! note "Correlation systems"
+    The bundled correlation example contains one wild-type system and six mutant-only systems. Frames from different
+    systems are not paired automatically, so interpret correlations from the resulting system summaries rather than
+    assuming frame-by-frame correspondence.
+
 Make sure to use the following structure when working with several folders:
 
 === "Valid folder structure"
@@ -86,13 +96,11 @@ Make sure to use the following structure when working with several folders:
         
                 gmx_MMPBSA_ana -f _GMXMMPBSA_info
         
-        * Another location  :material-new-box:{: .medium .heart } Version: 1.4.0
+        * Another location
 
                 gmx_MMPBSA_ana -f /path/to/_GMXMMPBSA_info
 
     === "One folder" 
-        :material-new-box:{: .medium .heart } Version: 1.4.0
-
         Passing a folder as input:  
         
         * Current directory
@@ -107,8 +115,6 @@ Make sure to use the following structure when working with several folders:
             This folder must contain a valid `_GMXMMPBSA_info` file
     
     === "Files + Folders"
-        :material-new-box:{: .medium .heart } Version: 1.4.0
-        
             gmx_MMPBSA_ana -f /path/to/folder-1 /path/to/_GMXMMPBSA_info-1 /path/to/folder-2
         
         !!! warning "Remember"
@@ -116,8 +122,6 @@ Make sure to use the following structure when working with several folders:
             * All `_GMXMMPBSA_info` files defined must be valid
     
     === "Recursive option"
-        :material-new-box:{: .medium .heart } Version: 1.4.0
-
         Passing a folder as input with the `recursive` option:
         
         * Current directory

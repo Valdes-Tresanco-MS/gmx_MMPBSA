@@ -33,8 +33,46 @@ workflows are unsupported. See [Supported and unsupported features](#supported-a
 | Ligand mask | `-lm` | no | Residue mask in the unbound ligand topology when `-lt` is used |
 
 For explicit-water calculations, `-cp` must be the original solvated AMBER topology and `-ct` must contain the
-matching solvated trajectory. The receptor and ligand masks in `-cm` must select solute residues only; solvent and ions
-are removed during setup.
+matching solvated trajectory. The receptor and ligand masks in `-cm` must select solute residues only. Unselected bulk
+solvent and ions are removed during setup; explicitly selected receptor waters are retained only in supported
+single-trajectory workflows with `explicit_waters > 0` (and `solvated_trajectory=1` where that setting is required).
+
+## Command-line reference
+
+The complete native-AMBER option set is available from the installed executable with:
+
+```bash
+amber_MMPBSA -h
+```
+
+The command shares the input/output and action options with `gmx_MMPBSA`:
+
+```text
+--input-file-help
+--create_input {gb,pb,pb_mem,rism,ala,decomp,nmode,gbnsr6,all} [...]
+-O, --overwrite              -prefix PREFIX       -sys_name NAME
+--progress-style {auto,rich,classic,plain,none}
+-i FILE                       -xvvfile XVVFILE     -o FILE
+-do FILE                      -eo FILE             -deo FILE
+-nogui                        -s, --stability      --no-error-bundle
+--rewrite-output              --clean
+```
+
+Native-AMBER topology, mask, and trajectory options are:
+
+```text
+-cp TOPOLOGY                  -cm RECEPTOR LIGAND  -ct [TRJ ...]
+-cr PDB                       -rp TOPOLOGY         -rm MASK
+-rt [TRJ ...]                 -lp TOPOLOGY         -lm MASK
+-lt [TRJ ...]
+```
+
+`-cp` and `-ct` with `-cm` are required. Use `-rp/-rm/-rt` and/or `-lp/-lm/-lt`
+for multiple-trajectory calculations; the unbound topology and mask are required
+when the corresponding unbound trajectory is supplied. The `--create_input`
+choices and `-nogui` option are supported by `amber_MMPBSA` even though this
+workflow does not require GROMACS files. The installed help remains the
+authoritative source for option descriptions and defaults.
 
 ### Native AMBER GB radii
 
@@ -45,7 +83,7 @@ workflow. Choose the radius set when building the AMBER topology, for example:
 
 ```text
 set default PBradii mbondi3
-saveamberparm complex complex.prmtop
+saveamberparm complex complex.prmtop complex.inpcrd
 ```
 
 For GB calculations, the conventional pairings are `igb=1`/`mbondi`, `igb=2` or `5`/`mbondi2`, `igb=7`/`bondi`, and
@@ -86,7 +124,7 @@ changes a force field, radius set, or topology.
 
 **Not supported / different behavior**
 
-- Explicit receptor waters are restricted to ST GB/GBNSR6/PB/RISM/NMODE/QM/MMGBSA and require `SOLVATED_TRAJECTORY=1`
+- Explicit receptor waters are restricted to ST GB/GBNSR6/PB/RISM/NMODE/QM/MMGBSA and require `solvated_trajectory=1`
 - Solvent or ions are not retained in the final working topologies; the original solvated `-cp` is accepted only for
   explicit-water preprocessing
 - QM/MM + explicit waters — one-frame native-AMBER smoke-tested with PM6-DH+; the existing 1–4 EEL consistency warning

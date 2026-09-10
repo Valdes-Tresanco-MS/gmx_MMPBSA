@@ -3,7 +3,7 @@ template: main.html
 title: gmx_MMPBSA_ana
 ---
 
-# gmx_MMPBSA_ana v1.5.x: The analyzer tool
+# gmx_MMPBSA_ana: The analyzer tool
 
 <a id="gmx_mmpbsa_ana-the-analyzer-tool"></a>
 
@@ -18,9 +18,11 @@ therefore incompatible with files from earlier versions.
 After version 1.5.2, gmx_MMPBSA_ana experienced serious performance problems. We reworked its implementation from the
 ground up; the benchmark results are shown below.
 
-This version = v1.5.5
+!!! note "Historical benchmark"
+    The performance table below is a historical v1.5.5 benchmark. Hardware and software details are not recorded
+    here, so it should not be interpreted as a current performance claim for the 1.7.0 release.
 
-| Number of systems/CPUs | Type                    | Frames | v1.5.2 | v1.5.2+20 | This version | Improvement |
+| Number of systems/CPUs | Type                    | Frames | v1.5.2 | v1.5.2+20 | v1.5.5 | Improvement |
 |:----------------------:|-------------------------|:------:|:------:|:---------:|:------------:|:-----------:|
 |           1            | Energy                  | 200000 |  fail  |   960s    |     17s      |   **56x**   |
 |           4            | Energy                  | 200000 |  fail  |   4515s   |     17s      |  **265x**   |

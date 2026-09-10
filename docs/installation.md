@@ -110,13 +110,19 @@ Because the installed packages must remain compatible, dependency errors are mor
             `conda-forge` as follows:
     
             ```
-            amber.conda install -c conda-forge mpi4py=3.1.3
+            amber.conda install -c conda-forge "mpi4py>=4.0.1,<5"
             ```
             
             If you get an error related to `pip`, you may want to install this package manually as follows:
             
             ```
             amber.conda install pip
+            ```
+
+            After installing `gmx_MMPBSA`, verify the Python dependency versions:
+
+            ```
+            amber.python -m pip check
             ```
 
 ### Extra Dependencies

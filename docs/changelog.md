@@ -4,7 +4,11 @@ title: Changelog
 ---
 # Changelog
 
-## Development changes
+## gmx_MMPBSA v1.7.0
+
+For users moving from 1.6.5 to 1.7.0, see the
+[migration guide](compatibility.md#migrating-from-165-to-170) before starting a new
+calculation or rewriting an archived result.
 
 ### Entropy and QH
 
@@ -15,6 +19,13 @@ title: Changelog
 - Made the full-ensemble IE value primary, retained `ie_segment` only as a tail-convergence diagnostic, added
   deterministic nonoverlapping-block diagnostics for IE and C2, and corrected the C2 warning boundary to
   approximately 6.0 kcal/mol (25 kJ/mol).
+
+### Input defaults and migration
+
+- Changed the omitted implicit-solvent defaults to `igb=8`, `PBRadii=4` (`mbondi3`), and `exdi=78.5` to align the
+  default GB and radius pairing and the PB external dielectric. Existing inputs that explicitly set these values are
+  unchanged; inputs that omit them can produce different energies and must be checked against the
+  [1.6.5-to-1.7.0 migration guidance](compatibility.md#migrating-from-165-to-170).
 
 ### Logging, progress, and errors
 
@@ -29,9 +40,10 @@ title: Changelog
 
 ### amber_MMPBSA
 
-- Added `amber_MMPBSA` for native AMBER topology/trajectory/mask ST workflows (optional separate receptor/ligand
-  tops). Not full `gmx_MMPBSA` feature parity: explicit receptor waters are restricted to ST GB/GBNSR6/PB/RISM/NMODE, ligand MT unsupported, radii preserved
-  from the input prmtop. See `docs/amber_MMPBSA.md`.
+- Added `amber_MMPBSA` for native AMBER topology/trajectory/mask workflows, including supported ST and MT paths where
+  applicable, with optional separate receptor/ligand tops. It is not full `gmx_MMPBSA` feature parity: explicit
+  receptor waters remain restricted to ST GB/GBNSR6/PB/RISM/NMODE, IE/C2 with MT is experimental, and radii are
+  preserved from the input prmtop. See `docs/amber_MMPBSA.md`.
 - Added an advisory native-AMBER warning when the preserved `RADIUS_SET` does not conventionally match the selected
   GB `igb` model; the topology radii are never replaced automatically. Added the corresponding warning for
   GROMACS-derived topologies when the selected `PBRadii` differs from the conventional `igb` pairing.
@@ -43,7 +55,7 @@ title: Changelog
 - Added automatic GBNSR6 topology compaction/post-processing for legacy AmberTools NTYPES limits.
 - Added ST explicit receptor waters for GB/GBNSR6/PB/RISM/NMODE and QM/MMGBSA. Native AMBER explicit-water QM/MM
   now passes a one-frame PM6-DH+ smoke test; the existing 1–4 EEL consistency warning remains. Quasi-harmonic
-  entropy and MT remain restricted.
+  entropy remains restricted, while MT entropy is documented as experimental.
 - Keep nonzero `&decomp` template defaults (`idecomp`/`dec_verbose`) out of normal sander mdins and GBNSR6 merge
   unless `decomprun` is enabled.
 
@@ -457,7 +469,7 @@ Fixed minor issues
 
 ## [gxm_MMPBSA v1.4.3 (05/26/2021)](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/releases/tag/v1.4.3)
 ### Additions
-- Added two new tutorials [Protein_ligand_LPH_atoms_CHARMMff](https://valdes-tresanco-ms.github.io/gmx_MMPBSA/dev/examples/Protein_ligand_LPH_atoms_CHARMMff/) and [QM/MMGBSA calculations](https://valdes-tresanco-ms.github.io/gmx_MMPBSA/examples/QM_MMGBSA/)
+- Added two new tutorials [Protein_ligand_LPH_atoms_CHARMMff](examples/Protein_ligand_LPH_atoms_CHARMMff/README.md) and [QM/MMGBSA calculations](examples/QM_MMGBSA/README.md)
 - Now the program reports the `p-value` associated with the correlation coefficient when performing the correlation analysis
 - Google Analytics is used as a third-party tracking service to improve documentation. Check our [Private Policy](https://valdes-tresanco-ms.github.io/gmx_MMPBSA/dev/private_policy/) for more details
 

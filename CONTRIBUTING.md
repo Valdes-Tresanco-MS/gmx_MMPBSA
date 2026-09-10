@@ -2,36 +2,36 @@
 
 ## How to start?
 
-You can contribute in multiples ways:
+You can contribute in multiple ways:
 - Reporting an issue
 - Requiring a new feature
 - Testing the code and the software in different PC configurations and OS
 - Improving the code
 - Checking the documentation content
-- Generating a new o improving the current BFE methods
+- Generating a new or improving the current BFE methods
 - and much more...
 
-For issues reporting we have created a templete, which contain almost everything needed to identify the problem. 
+For issue reporting we have created a template, which contains almost everything needed to identify the problem.
 
 ## Step-by-step guide
 
-### Before reporting an issue, require for a new feature or make a question
+### Before reporting an issue, requesting a feature, or asking a question
 Please ensure that you have read the following docs:
-- [documentation and FAQ]()
-- [minimal examples section]()
-- [Previous reported issues]()
-- [Previous discussions]()
+- [documentation and FAQ](docs/Q&A/README.md)
+- [minimal examples section](examples/README.md)
+- [previous reported issues](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/issues)
+- [previous discussions](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/discussions)
 
 ### New feature
 
-1. Make an issue with your feature description;
+1. Open an issue with your feature description;
 2. We shall discuss the design and its implementation details;
 3. Once we agree that the plan looks good, go ahead and implement it.
 
 
 ### Bugfix
 
-1. Goto [GitHub issues]();
+1. Go to [GitHub issues](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/issues);
 2. Pick an issue and comment on the task that you want to work on this feature;
 3. If you need more context on a specific issue, please ask, and we will discuss the details.
 
@@ -43,12 +43,19 @@ If you are not familiar with creating a Pull Request, here are some guides:
 
 
 ## Contribution best practices
-Coming soon! 
+
+- Keep scientific/model changes separate from documentation and formatting changes.
+- Add or update focused tests for changed behavior and document any limitations.
+- Keep canonical example READMEs under `examples/` authoritative; run
+  `python scripts/sync_example_docs.py --check` after editing them.
+- Run the relevant focused tests and `mkdocs build --strict` before opening a pull request.
 
 
-## Github CI
+## GitHub CI
 
-Coming soon!
+The continuous-integration workflow runs the project's test and documentation checks.
+Reproduce the documentation gate locally with `mkdocs build --strict` after installing
+`docs/requirements.txt`.
 
 ### Documentation
 
@@ -57,14 +64,25 @@ The gmx_MMPBSA's documentation is based in Mkdocs-Material. We additionally use 
 If you have some issues with building docs - please make sure that you installed the required pip packages.
 
 ### Tests
-Coming soon!
+
+Run the full unit-test discovery when practical:
+
+```bash
+python -m unittest discover -s tests
+```
+
+For a focused change, run the affected test module and record the exact command and
+result in the pull request.
 
 #### Adding new tests
 
-Coming soon!
+Add regression coverage for user-visible behavior, parser contracts, documentation
+examples, or manifest changes. Keep fixtures small and avoid silently changing
+scientific settings to make a test pass.
 
 ### Integrations
 
-If you have contributed a new functionality with extra dependencies, please ensure you have submitted the required 
-tests (Coming soon!).
-
+If a contribution adds dependencies or an external workflow, update the relevant
+installation/environment documentation and add a focused validation path. Keep the
+supported dependency ranges aligned with `setup.py`, `docs/env.yml`, and the release
+documentation.

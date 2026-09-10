@@ -87,9 +87,12 @@ input namelists. `get_files()` returns the file namespace stored in the result.
 `get_energy()` returns a dictionary with four main entries:
 
 * `map`: available result keys after filtering.
-* `data`: pandas DataFrames containing per-frame values plus `Average`, `SD`,
-  and `SEM` rows.
-* `summary`: pandas DataFrames containing only `Average`, `SD`, and `SEM`.
+* `data`: pandas DataFrames containing numeric per-frame values plus `Average`,
+  `SD`, `SEM`, `Block SD`, and `Block SEM` summary rows.
+* `summary`: pandas DataFrames containing only `Average`, `SD`, `SEM`, `Block SD`,
+  and `Block SEM`.
+  `SD` and `SEM` are frame-based population statistics; `Block SD` and `Block SEM`
+  are statistics of the selected nonoverlapping block means.
 * `correlation`: compact energy summary used by correlation analysis.
 
 Example:
@@ -241,7 +244,7 @@ print(entropy["map"])
 | --- | --- | --- |
 | `map` | `get_energy()`, `get_entropy()`, `get_decomp_energy()`, `get_binding()` | Nested dictionary/list of available keys after filtering. |
 | `data` | `get_energy()`, `get_entropy()`, `get_decomp_energy()`, `get_binding()` | Main pandas result objects. |
-| `summary` | `get_energy()`, `get_entropy()` | `Average`, `SD`, and `SEM` summaries. |
+| `summary` | `get_energy()`, `get_entropy()` | `Average`, `SD`, `SEM`, `Block SD`, and `Block SEM` summaries. |
 | `correlation` | `get_energy()`, `get_binding()`, optional `get_ana_data()` | Compact values prepared for correlation analysis. |
 | `keys` | `get_ana_data()` | Analyzer chart-data keys. |
 
@@ -340,13 +343,19 @@ object. Scripts written for the old dict-like API should be migrated to
 
 ## Validation Status
 
-This API modernization is intentionally staged on a separate branch. The current
-minimum validation target is:
+The API documented here is part of the 1.7.0 release. Focused
+tests in `tests/test_api_stability.py` cover legacy and extended summary rows,
+reference-statistics adjustment, and stability entropy handling. The documentation
+tests also load the bundled compact-result fixture and verify the extraction example.
+
+These checks establish API and fixture compatibility; they are not a substitute for
+scientific validation of every supported calculation method. Run the focused checks
+with the project's supported Python environment:
 
 ```bash
-python3 -m py_compile GMXMMPBSA/API.py
+python -m unittest discover -s tests -p 'test_api_stability.py'
+python -m unittest discover -s tests -p 'test_phase10_docs.py'
 ```
 
-Import and fixture-loading smoke tests should be run in the supported Python
-3.11 or 3.12 environment with the project dependencies installed. Full API regression
-coverage is deferred until the public interface is reviewed.
+The compatibility loader remains available for older imports, but new code should use
+`API.load()` and the documented accessor methods.

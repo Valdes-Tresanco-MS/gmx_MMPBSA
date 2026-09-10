@@ -9,8 +9,8 @@ title: The input file
 
 The `gmx_MMPBSA` input file contains the settings for each calculation. Its syntax is similar to that used by other
 Amber programs, but gmx_MMPBSA also accepts a format resembling GROMACS `*.mdp` files (see below). The input file is
-divided into sections called namelists, in which the variables for each
-calculation. The allowed namelists are:
+divided into sections called namelists, in which the variables for each calculation are defined. The allowed
+namelists are:
 
 - [`&general`](input_file.md#general-namelist-variables): contains variables that apply to all aspects of the 
   calculation or parameters required for building AMBER topologies from GROMACS files.
@@ -67,7 +67,15 @@ Example:
 !!! Danger 
     Note that several variables must be explicitly defined in the input file
 
-_Implemented in v1.5.0_
+!!! note "Historical version markers"
+    Version markers such as “Implemented in v1.5.0” below record when an option was introduced or changed. They are
+    historical provenance, not claims that the option is new in the 1.7.0 release.
+
+_Introduced in v1.5.0 (historical)_
+
+!!! tip "Viewing wide examples"
+    Generated input examples and option tables are intentionally wide. On a narrow screen, scroll horizontally to
+    view the complete lines and values.
 
 ## Format
 The input variables are described below by namelist. Some descriptions are adapted from the original sources. Enter
@@ -78,8 +86,8 @@ be performed in one run (_e.g._, `&gb` with `&pb`, `&gb` with `&alanine_scanning
 also generate an input file with the `--create_input` option. gmx_MMPBSA accepts both the traditional Amber/Fortran
 namelist style and the GROMACS-like multiline style, and the two styles can be combined:
 
-=== "New format style "
-    ``` title="New format style Input file example"
+=== "Multiline format style "
+    ``` title="Multiline format style input file example"
             
     # General namelist variables
     &general
@@ -94,7 +102,7 @@ namelist style and the GROMACS-like multiline style, and the two styles can be c
     &gb
       igb                  = 8                       # GB model to use
       ...
-      probe                = 1.4                     # Solvent probe radius for surface area calc
+      probe                = 1.4                     # Solvent probe radius (Å) for surface-area calculation
     /
     ```
 
@@ -568,8 +576,8 @@ will be omitted in the correlation analysis
 `full_traj` (Default = 0)
 :   Print trajectories
 
-    * 0: Print only thread trajectories in *.mdcrd format
-    * 1: Print a full traj and the thread trajectories in *.mdcrd format
+    * 0: Print only MPI-rank trajectories in *.mdcrd format
+    * 1: Print a full trajectory and the MPI-rank trajectories in *.mdcrd format
 
 `gmx_path` 
 :   Define a path to search for GROMACS executables. This path takes precedence over the path defined
@@ -597,7 +605,7 @@ in the PATH variable. In this path the following executables will be searched: `
 `keep_files` (Default = 2)
 :   Specifies which files are kept.
 
-    * 0: Keep only the normalized input metadata and binary file (_GMXMMPBSA_info_ and _COMPACT_gmx_MMPBSA_RESULTS.mmxsa_)
+    * 0: Keep only the normalized input metadata and compact result (_GMXMMPBSA_info_ and _COMPACT_MMXSA_RESULTS.mmxsa_)
     * 1: Keep all temporary files (_prefix_*)
     * 2: Keep all temporary files (_prefix_*) and binary file
 
@@ -631,10 +639,11 @@ However, this option is incompatible with alanine scanning.
     _Removed in v1.5.0: Now `sander` is used in all calculations_
 
 `verbose` (Default = 1)
-:   Specifies how much output is printed in the output file.
+:   Specifies how much output is printed in the output file. The accepted levels are 0, 1, and 2.
 
     * 0: Print only difference terms
     * 1: Print all complex, receptor, ligand, and difference terms
+    * 2: Print the full component terms, including the terms that cancel in a single-trajectory calculation
 
     _Updated in v1.5.0_
 
@@ -703,11 +712,8 @@ within the implicit solvent model (see [§4.2](https://ambermd.org/doc12/Amber21
 `saltcon` (Default = 0.0)
 :   Salt concentration in Molarity (M).
 
-`rgbmax` (Default = 999.0)
-:   Distance cutoff in Å to use when computing effective GB radii.
-
 `surften` (Default = 0.0072)
-:   Surface tension value. Units in kcal/mol/Å^2^
+:   Surface tension value. Units are kcal/mol/Å².
 
 `surfoff` (Default = 0.0)
 :   Offset to correct (by addition) the value of the non-polar contribution to the solvation free energy term.
@@ -806,9 +812,10 @@ the same used for `print_res` variable in `&decomp` namelist.
                 mechanics.
 
         === "Amino acid selection"
-            Notation: [ `CHAIN`/(`RESNUM` or `RESNUM-RESNUM`) ]
-            :    Treat individual residues or residue ranges with quantum mechanics. This notation also supports insertion
-            codes, which must be defined individually.
+            Notation: [ `CHAIN`/(`RESNUM`, `RESNUM` + `INSERTION_CODE`, or `RESNUM-RESNUM`) ]
+            :    Treat individual residues or residue ranges with quantum mechanics. An insertion code is appended directly
+            to the residue number, for example `A/27B`; the colon form `A/27:B` is invalid. Numeric ranges select only
+            residues with a blank insertion code, so insertion-coded residues must be listed individually.
 
             `qm_residues="A/1,3-10,15,100"` treats chain A residues 1, 3 through 10, 15, and
             100 from the complex topology file and the corresponding residues in either the ligand and/or receptor 
@@ -817,23 +824,25 @@ the same used for `print_res` variable in `&decomp` namelist.
             Let's suppose that we can have the following sequence: - A:LEU:5 - A:GLY:6:A - A:THR:6:B - A:SER:6:C - 
             A:ASP:6:D - A:ILE:7
     
-            with the format `CHAIN`/`RESNUMBER`:`INSERTION_CODE`
+            with the format `CHAIN`/`RESNUMBER` followed immediately by `INSERTION_CODE`
             
             === "Right notation"
                 
                 **Ranges selection**
-                :   `qm_residues="A/5-7"` treats all listed residues with quantum mechanics because all residues with
-                insertion codes are contained in the range.
+                :   `qm_residues="A/5-7"` selects only the blank-code residues A/5 and A/7. Numeric ranges do not include
+                    insertion-coded residues such as A/6A through A/6D.
                 
                 **Individual selection**
-                :   `qm_residues="A/5,6B,6C,7"` treats all listed residues with quantum mechanics except
-                residues 6A and 6D from chain A
+                :   `qm_residues="A/5,6A,6B,6C,6D,7"` treats all listed residues with quantum mechanics, including
+                    every insertion-coded residue in the sequence.
                 
                 **Multiple chain selection**
                 :   `qm_residues="A/5-10,100 B/34,56"` treats residues 5 through 10 and 100 from
                 chain A, and residues 34 and 56 from Chain B.
     
             === "Wrong notation"
+                `qm_residues="A/27:B"` is invalid; use `qm_residues="A/27B"` for an insertion code.
+
                 `qm_residues="A/5-6B,6D-7"` produces an error.
 
 `com_qmmask` (Default = '')
@@ -853,7 +862,7 @@ and `lig_qmmask` must be defined.
         user-defined `qmcharge_rec` value is used.
 
 `lig_qmmask` (Default = '')
-:   Amber mask specifying the quantum atoms in the receptor. When using user defined masks, `com_qmmask`, `rec_qmmask`, 
+:   Amber mask specifying the quantum atoms in the ligand. When using user defined masks, `com_qmmask`, `rec_qmmask`,
 and `lig_qmmask` must be defined.
     
     !!! danger
@@ -873,7 +882,7 @@ using user-defined masks, automatic assignment is disabled and the default or us
 using user-defined masks, automatic assignment is disabled and the default or user-defined `qmcharge_lig` value is used.
 
 `qmcut` (Default = 9999.0)
-:   The cutoff for the qm/mm charge interactions.
+:   The QM/MM charge-interaction cutoff in Å.
 
 `scfconv` (Default = 1.0e-8)
 :   Controls the convergence criteria for the SCF calculation, in kcal/mol. The tighter the 
@@ -885,12 +894,12 @@ to oscillations in the SCF, due to limitations in machine precision, that can le
 the calculation stops rather than including the unconverged energy in the binding-energy result. Increase `itrmax`
 or adjust `scfconv` only after checking the QM/MM output for stable convergence.
 
-`ndiis_attempts` (Default = 0, SANDER default)
-:   Optional maximum number of DIIS attempts used by SANDER during each QM/MM SCF calculation. Values from 0 to 1000
-are accepted; this option is not available for DFTB, DFTB2, or DFTB3. Set it only when the QM/MM output shows
-repeatable SCF convergence difficulty; increasing it can increase runtime. For example, `ndiis_attempts=700`
-recovered convergence for the Fig3 test system. It does not override the fatal-diagnostic check: unconverged frames
-are still rejected.
+`ndiis_attempts` (Default = None)
+:   Optional maximum number of DIIS attempts used by SANDER during each QM/MM SCF calculation. `None` leaves the
+SANDER default unchanged; explicit values from 0 to 1000 are accepted. This option is not available for DFTB, DFTB2,
+or DFTB3. Set it only when the QM/MM output shows repeatable SCF convergence difficulty; increasing it can increase
+runtime. For example, `ndiis_attempts=700` recovered convergence for the Fig3 test system. It does not override the
+fatal-diagnostic check: unconverged frames are still rejected.
 
 `writepdb` (Default = 1)
 :   Write the atoms selected for the QM region to `qmmm_region.pdb` during the first step. This file makes it easier to
@@ -1518,8 +1527,12 @@ summation of the atomic SASA’s. A molecular SASA is used for both PB dielectri
         gmx_MMPBSA --create_input rism
         ```
     
-    * `3D-RISM` calculations are performed with the `rism3d.snglpnt` program built with AmberTools, written by Tyler 
-    Luchko. It is the most expensive, yet most statistical mechanically rigorous solvation model. See 
+    * `3D-RISM` calculations are launched through the AmberTools `sander` backend by the
+    `EnergyCalculation` wrapper. For each processed frame, `gmx_MMPBSA` generates a Sander RISM input
+    file and collects rank-specific `*_rism.mdout.<rank>` output. The wrapper distributes frame work
+    across MPI ranks; this is separate from any solver-level parallelism provided by the AmberTools
+    backend. `rism3d.snglpnt` is retained below only as the historical pre-v1.5.2 backend reference.
+    3D-RISM is the most expensive, yet most statistical mechanically rigorous solvation model. See
         * [Introduction to RISM](https://ambermd.org/doc12/Amber21.pdf#section.7.1) for a thorough description RISM 
         theory.
         * [General workflow for using 3D-RISM](https://ambermd.org/doc12/Amber21.pdf#section.7.3)
@@ -1531,12 +1544,11 @@ summation of the atomic SASA’s. A molecular SASA is used for both PB dielectri
     * A tutorial on binding free energy calculation with 3D-RISM is available [here](examples/3D-RISM/README.md)
     * We have included more variables in 3D-RISM calculations than the ones available in the MMPBSA.py original code. 
     That way, users can be more in control and tackle various issues (_e.g._, convergence issues).
-    * One advantage of `3D-RISM` is that an arbitrary solvent can be chosen; you just need to change the `xvvfile` 
-    specified on the command line (see `-xvvfile` flag in [gmx_MMPBSA command line](gmx_MMPBSA_command-line.md). The 
-    default solvent is `$AMBERHOME/AmberTools/test/rism1d/tip3p-kh/tip3p.xvv.save`. In case this file 
-    doesn't exist, a copy `path_to_GMXMMPBSA/data/xvv_files/tip3p.xvv` is used. You can find examples of precomputed 
-    `.xvv` files for SPC/E and TIP3P water in `$AMBERHOME/AmberTools/test/rism1d` or 
-    `path_to_GMXMMPBSA/data/xvv_files` folders.
+    * One advantage of `3D-RISM` is that an arbitrary solvent can be chosen; change the `-xvvfile` command-line option
+    to point to the desired XVV file. By default, the command first uses
+    `$AMBERHOME/AmberTools/test/rism1d/tip3p-kh/tip3p.xvv.save` when that file exists; otherwise it uses the bundled
+    `GMXMMPBSA/data/xvv_files/tip3p.xvv` file resolved from the installed package. You can provide any other
+    precomputed `.xvv` file explicitly with `-xvvfile`.
 
   [7]: https://ambermd.org/doc12/Amber21.pdf#chapter.7
   [8]: https://ambermd.org/doc12/Amber21.pdf#subsection.36.3.2
@@ -1608,11 +1620,13 @@ pdf#subsection.7.3.1))
     Long-range asymptotics are always used when calculating a solution but can be omitted for
     the subsequent thermodynamic calculations, though it is not recommended.
 
-`noasympcorr` (Default = 1) 
-:   Use long-range asymptotic corrections for thermodynamic calculations.
+`noasympcorr` (Default = 1)
+:   Disable long-range asymptotic corrections for thermodynamic output only. Long-range asymptotics are still used to
+    calculate the 3D-RISM solution. This follows the AmberTools `rism3d.snglpnt` definition of the `--noasympcorr`
+    switch.
 
-    * 0: Do not use long-range corrections
-    * 1: Use the long-range corrections
+    * 0: Use long-range asymptotic corrections for thermodynamic output
+    * 1: Disable long-range asymptotic corrections for thermodynamic output
 
     _Implemented in v1.5.0_
 
@@ -1634,7 +1648,7 @@ correction.
 
     _Implemented in v1.5.0_
 
-`treeCoulomb` (Default = 1)
+`treeCoulomb` (Default = 0)
 :   Use direct sum, or the treecode approximation to calculate the Coulomb potential energy.
 
     * 0: Use direct sum
@@ -1729,17 +1743,17 @@ exclusive with `buffer` and `grdspc` above, and paired with `solvbox` below.
 
     !!! warning 
         No default, this must be set if buffer < 0. As a general requirement, the number of grids points in each 
-        dimension must be divisible by two, and the number of grid points in the z-axis must be divisible by the 
-        number of processes.
+        dimension must be divisible by two, and the number of grid points in the z-axis must be divisible by the
+        number of MPI processes.
 
         As an example: define like `ng=1000,1000,1000`, where all numbers are divisible by two 
-        and you can use 1, 2, 4, 5, 8, 10... pocessors, all divisors of 1000 (value in the z-axis).
+        and you can use 1, 2, 4, 5, 8, 10... processors, all divisors of 1000 (value in the z-axis).
 
         Take into account that at a certain level, running RISM in 
         parallel may actually hurt performance, since previous solutions are used 
         as an initial guess for the next frame, hastening convergence. Running in parallel loses this advantage. Also, 
-        due to the overhead involved in which each thread is required to load every topology file when calculating 
-        energies, parallel scaling will begin to fall off as the number of threads reaches the number of frames. 
+        due to the overhead involved in which each MPI rank is required to load every topology file when calculating
+        energies, parallel scaling will begin to fall off as the number of MPI ranks reaches the number of frames.
 
 `solvbox` (Default = -1,-1,-1)
 :    Sets the size in Å of the fixed size solvation box. Used only if `buffer` < 0. Mutually exclusive with `buffer` 
@@ -1748,10 +1762,10 @@ and `grdspc` above, and paired with `ng` above.
     !!! warning 
         No default, this must be set if buffer < 0. Define like `solvbox=20,20,20`
 
-`solvcut`  (Default = 14)
-:   Cutoff used for solute-solvent interactions. The default value is that of buffer. Therefore, if you set `buffer` < 
-0 and specify `ng` and `solvbox` instead, you must set `solvcut` to a nonzero value; otherwise the program will quit in 
-error.
+`solvcut` (Default = -1)
+:   Cutoff used for solute-solvent interactions. The parser default `-1` delegates the cutoff to the RISM engine,
+which resolves it from `buffer` when a variable-size box is used. If `buffer < 0`, specify a positive `solvcut` together
+with `ng` and `solvbox`; otherwise the program stops before the calculation.
 
 #### **Solution convergence**
 
@@ -1910,8 +1924,9 @@ See [§7.1.3](https://ambermd.org/doc12/Amber21.pdf#subsection.7.1.3) and
     * A tutorial on alanine scanning is available [here](examples/Alanine_scanning/README.md)
 
 `mutant_res` (Default = None. Must be defined)
-:   Select one or more residues using `CHAIN/RESNUM`, with an optional insertion code
-    (`A/27:B`). For example, `A/13,25` mutates two residues together in one composite mutant.
+:   Select one or more residues using `CHAIN/RESNUM`. Append an insertion code directly to the residue number
+    (`A/27B`); the colon form (`A/27:B`) is invalid. Numeric ranges select only blank-code residues, so list
+    insertion-coded residues individually. For example, `A/13,25` mutates two residues together in one composite mutant.
     Selections across chains are allowed only when all selected residues belong to the same component.
 
     !!! important
@@ -1991,7 +2006,7 @@ mutated.
     * A sample decomp input file is shown [here](input_file.md#decomposition-analysis)
     * A tutorial on binding free energy decomposition is available [here](examples/Decomposition_analysis/README.md)
 
-`idecomp`
+`idecomp` (Default = 2)
 :   Energy decomposition scheme to use:
     
     * 1: Per-residue decomp with 1-4 terms added to internal potential terms
@@ -1999,10 +2014,7 @@ mutated.
     * 3: Pairwise decomp with 1-4 terms added to internal potential terms
     * 4: Pairwise decomp with 1-4 EEL added to EEL and 1-4 VDW added to VDW potential terms
 
-    !!! warning
-        * No default. This must be specified!
-
-`dec_verbose` (Default = 0)
+`dec_verbose` (Default = 1)
 :   Set the level of output to print in the decomp_output file.
 
     * 0: DELTA energy, total contribution only
@@ -2032,9 +2044,10 @@ sufficient in most cases, however we have added several additional notations
                 ligand including both.
     
         === "Amino acid selection"
-            Notation: [ `CHAIN`/(`RESNUM` or `RESNUM-RESNUM`) ]
-            :   Print residues individual or ranges. This notation also supports insertion codes, in which case you must 
-                define them individually
+            Notation: [ `CHAIN`/(`RESNUM`, `RESNUM` + `INSERTION_CODE`, or `RESNUM-RESNUM`) ]
+            :   Print individual residues or ranges. Append an insertion code directly to the residue number, for example
+            `A/27B`; the colon form `A/27:B` is invalid. Numeric ranges select only blank-code residues, so insertion-coded
+            residues must be defined individually.
     
             !!! example
                 `print_res="A/1,3-10,15,100 B/25"` This will print Chain A residues 1, 3 through 10, 15, and 100 along with 
@@ -2046,17 +2059,17 @@ sufficient in most cases, however we have added several additional notations
                     the `&decomp` section. Check http://archive.ambermd.org/201308/0075.html
     
                 Suppose that the following sequence contains chain A as the receptor and chain B as the ligand:
-                A:LEU:5, A:GLY:6:A, A:THR:6:B, A:SER:6:C A:ASP:6D, A:ILE:7 , B:25
+                A:LEU:5, A:GLY:6:A, A:THR:6:B, A:SER:6:C, A:ASP:6:D, A:ILE:7, B:25
                 
                 === "Supported notation"
                     
                     **Ranges selection**
-                    :   `print_res="A/5-7 B/25"` prints all listed residues because all residues with insertion codes are
-                        contained in the range.
+                    :   `print_res="A/5-7 B/25"` prints only the blank-code residues A/5 and A/7 from chain A, plus
+                        B/25. It does not include insertion-coded residues A/6A through A/6D.
                     
                     **Individual selection**
-                    :   `print_res="A/5,6B,6C,7 B/25"` prints all listed residues except residues 6A and
-                        6D from chain A
+                    :   `print_res="A/5,6A,6B,6C,6D,7 B/25"` prints all listed residues, including the insertion-coded
+                        residues from chain A.
     
                 === "Wrong notation"
                     `print_res="A/5-6B,6D-7"` produces an error.
@@ -2104,8 +2117,8 @@ spreadsheets.
 
 #### **Basic input options**
 
-`nmstartframe`[^2]
-:   Frame number to begin performing `nmode` calculations on 
+`nmstartframe`[^2] (Default = 1)
+:   Frame number to begin performing `nmode` calculations on.
 
   [^2]: _These variables will choose a subset of the frames chosen from the variables in the `&general` namelist. Thus,
         the "trajectory" from which snapshots will be chosen for `nmode` calculations will be the collection of 
@@ -2233,7 +2246,7 @@ startframe=20, endframe=100, interval=5,
 /
 
 &rism
-polardecomp=1, thermo="gf"
+polardecomp=1, gfcorrection=1
 /
 ```
 
@@ -2318,9 +2331,11 @@ igb=2, saltcon=0.150,
 /
 ```
 
-!!! info
-    Add comments by placing `#` at the beginning of a line (leading whitespace is ignored). Variable
-    initialization may span multiple lines. Inline comments (_i.e._, placing `#` after a variable assignment on the
-    same line) are not allowed and will cause an input error. Variable declarations must be
-    comma-delimited, though all whitespace is ignored. Finally, all lines between namelists are ignored, so comments can
-    be added before each namelist without using #.
+!!! info "Accepted input syntax"
+    The parser accepts one namelist per block. Start a block with `&general`, `&gb`, `&pb`, `&rism`, `&gbnsr6`,
+    `&alanine_scanning`, `&decomp`, or `&nmode` on its own line and close it with `/` or `&end` on its own line.
+    Variable assignments use `name = value`; numeric values are unquoted and strings may use single or double quotes.
+    Separate assignments with commas, or put one assignment on each line without commas. Comma-separated values are
+    supported for list variables. Lines beginning with `#` or `!` are ignored, and `#` starts an inline comment inside a
+    namelist. Text outside namelist blocks is ignored. Unknown variables, duplicate namelists, and unterminated blocks
+    are rejected.

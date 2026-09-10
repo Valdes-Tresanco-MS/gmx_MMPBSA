@@ -16,6 +16,14 @@ edit_uri: ""
 copyright: Copyright &copy; 2020 - 2022 MS. and ME. Valdés-Tresanco
 
 # Configuration
+# Keep drafts, experiments, and unvalidated historical examples in the repository,
+# but do not publish or index them until they have an explicit release decision.
+exclude_docs: |
+  application_note_advances_since_1_4_3.md
+  spikes/**
+  examples/COVID-19_related_proteins/**
+  examples/Protein_DNA_RNA_Ion_ligand/**
+
 theme:
   name: material
   logo: assets/logo_white_border.svg
@@ -179,7 +187,7 @@ nav:
       - Protein-glycan: examples/Protein_glycan/README.md
       - Membrane proteins: examples/Protein_membrane/README.md
       - Metalloprotein-ligand: examples/Metalloprotein_ligand/README.md
-      # - Multicomponent system: examples/Comp_receptor/README.md
+      - Multicomponent system: examples/Comp_receptor/README.md
       # - Protein-DNA-RNA-Ion-ligand: examples/Protein_DNA_RNA_Ion_ligand/README.md
       # - COVID-19 related proteins:
       #     - Info: examples/COVID-19_related_proteins/README.md
@@ -223,6 +231,7 @@ nav:
       - Changelog: changelog.md
       - Compatibility and upgrades: compatibility.md
       - Private Policy: private_policy.md
+    - Support: support.md
   - Cite gmx_MMPBSA: cite_us.md
 
 extra_css:

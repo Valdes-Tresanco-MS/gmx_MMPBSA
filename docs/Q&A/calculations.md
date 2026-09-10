@@ -123,20 +123,23 @@ This page describes common calculation problems and possible solutions.
             /
             ```
 
-        : Another way to avoid the EDISPER contribution is by modifying the `_GMXMMPBSA_info` file. Changing the value of
-        `INPUT['pb']['inp']` to 1 and running:
+        : A legacy post-processing workaround can remove the stored EDISPER column from a rewritten report, but it is
+        not an alternative PB calculation. Work on a copy of the complete result bundle, preserve the original
+        `_GMXMMPBSA_info` and output files, change the copied value of `INPUT['pb']['inp']` to 1, and run:
 
             ```
             gmx_MMPBSA --rewrite-output
             ```
 
-        :  will avoid the calculation of the EDISPER contribution and report just the ENPOLAR contribution as a term 
-        linearly proportional to the molecular volume enclosed by SASA. 
+        :  `--rewrite-output` reparses the energies already stored in the copied result; it does not rerun PB or
+        recompute the alternate `inp=1` non-polar model. The rewritten report therefore reports the existing ENPOLAR
+        term while omitting EDISPER from the displayed model metadata. Do not present it as a recalculated `inp=1`
+        result, and do not edit the original result in place.
 
         
         !!! info
-            **Note that these two approximations will yield different values for the non-polar component of the 
-            solvation energy 
+            **The deliberate `inp=1` rerun and this post-processing workaround are different operations and can yield
+            different values for the non-polar component of the solvation energy.
             (see [here](https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/issues/273#issuecomment-1207144247)).** 
             Use one or another depending on your interest.
 
