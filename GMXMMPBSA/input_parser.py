@@ -352,7 +352,8 @@ class InputFile(object):
             raise InputError("Can't find input file (%s)" % filename)
 
         # Load the whole thing into memory. This should be plenty short enough.
-        lines = open(filename, 'r').readlines()
+        with open(filename, 'r') as input_handle:
+            lines = input_handle.readlines()
 
         # Save the text of the input file so we can echo it back later
         self.text = ''.join(lines)
@@ -402,7 +403,9 @@ class InputFile(object):
 
                 # We are in a namelist here, now fill in the fields
                 elif innml:
-                    line = line[:line.strip().index('#')] if '#' in line else line.strip('\n')
+                    # Strip inline comments from the original line so that the
+                    # comment index remains correct when assignments are indented.
+                    line = line.split('#', 1)[0]
                     items = line.strip().split(',')
                     # Screen any blank fields
                     j = 0
@@ -413,6 +416,8 @@ class InputFile(object):
                         else:
                             j += 1
                     namelist_fields[-1].extend(items)
+            if innml:
+                raise InputError(f'Unterminated namelist {declared_namelists[-1]}')
             # # Combine any multi-element fields into the last field that has a = in it
             begin_field = -1
             for i, _ in enumerate(namelist_fields):

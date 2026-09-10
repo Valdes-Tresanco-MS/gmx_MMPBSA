@@ -28,6 +28,22 @@ class InputParserTest(unittest.TestCase):
         with self.assertRaisesRegex(InputError, r"Invalid value 'not-an-int' for itrmax"):
             self._parse('&gb\n  itrmax = not-an-int\n/\n')
 
+    def test_indented_inline_comments_are_accepted(self):
+        parsed = self._parse('&general\n  startframe = 7 # first production frame\n/\n')
+
+        self.assertEqual(parsed['general']['startframe'], 7)
+
+    def test_implicit_solvent_defaults_match_170_contract(self):
+        parsed = self._parse('&general\n/\n&gb\n/\n&pb\n/\n')
+
+        self.assertEqual(parsed['general']['PBRadii'], 4)
+        self.assertEqual(parsed['gb']['igb'], 8)
+        self.assertEqual(parsed['pb']['exdi'], 78.5)
+
+    def test_unterminated_namelist_is_rejected(self):
+        with self.assertRaisesRegex(InputError, r'Unterminated namelist general'):
+            self._parse('&general\n  startframe = 7\n')
+
     def test_membrane_parameters_accept_automatic_and_atom_names(self):
         parsed = self._parse('&pb\n  memopt=1, mthick=automatic, mctrdz=automatic, membrane_atoms="P;N"\n/\n')
 
