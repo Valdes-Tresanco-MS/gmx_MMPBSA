@@ -57,8 +57,8 @@ gmx_MMPBSA can also process other systems with compatible input structures.
 * [Protein-glycan](Protein_glycan/README.md)[^1][^2][^3]
 * [MMPBSA with membrane proteins](Protein_membrane/README.md)[^1][^2]
 * [Metalloprotein-ligand](Metalloprotein_ligand/README.md)[^1][^2]
+* [Multicomponent system (Comp_receptor)](Comp_receptor/README.md)[^1][^2][^3]
 <!--
-* [Multicomponent system (Protein-DNA-RNA-Ions-Ligand)](Comp_receptor/README.md)[^1][^2][^3]
 * [Protein-DNA-RNA-Ion-ligand](Protein_DNA_RNA_Ion_ligand/README.md)[^1][^2][^3]
 -->
 <!--

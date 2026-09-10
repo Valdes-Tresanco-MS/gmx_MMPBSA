@@ -38,6 +38,8 @@ def main() -> None:
     print("GB delta TOTAL average:", f"{summary['Average']:.6f}")
     print("GB delta TOTAL SD:", f"{summary['SD']:.6f}")
     print("GB delta TOTAL SEM:", f"{summary['SEM']:.6f}")
+    print("GB delta TOTAL Block SD:", f"{summary['Block SD']:.6f}")
+    print("GB delta TOTAL Block SEM:", f"{summary['Block SEM']:.6f}")
     print("Wrote:", OUTPUT_CSV.relative_to(ROOT))
 
     if GENERATED_PDB.exists():

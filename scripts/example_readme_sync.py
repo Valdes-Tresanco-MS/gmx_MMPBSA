@@ -35,7 +35,14 @@ def iter_example_readmes(examples_root: Path) -> list[Path]:
 
 
 def transform_readme_content(content: str) -> str:
-    transformed = content.replace('../../docs/', '../../')
+    # Canonical READMEs use repository-root `docs/` targets so their links work
+    # when viewed directly on GitHub.  The mirrored `docs/examples/` tree is
+    # one directory deeper, so remove the docs prefix for each supported depth.
+    transformed = content.replace('../../../docs/examples/gmx_MMPBSA_test.md', '../../gmx_MMPBSA_test.md')
+    transformed = transformed.replace('../../docs/examples/gmx_MMPBSA_test.md', '../gmx_MMPBSA_test.md')
+    transformed = transformed.replace('../../../docs/', '../../../')
+    transformed = transformed.replace('../../docs/', '../../')
+    transformed = transformed.replace('../docs/', '../')
     transformed = transformed.replace('\u2013', '-').replace('\u2014', '-')
     return transformed
 

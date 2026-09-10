@@ -93,12 +93,18 @@ Temperature: 298.15
 GB delta TOTAL average: -15.017773
 GB delta TOTAL SD: 1.686023
 GB delta TOTAL SEM: 0.533167
+GB delta TOTAL Block SD: 1.529166
+GB delta TOTAL Block SEM: 1.081284
 Wrote: examples/API/gb_delta_total.csv
 ```
 
 ## Extracted CSV
 
 The run writes `examples/API/gb_delta_total.csv`:
+
+The CSV contains the numeric frame rows first, followed by `Average`, `SD`, and
+`SEM` frame statistics, then `Block SD` and `Block SEM` statistics of the
+selected nonoverlapping block means. All energy values are in kcal/mol.
 
 ```csv
 Frames,GB delta TOTAL
@@ -115,4 +121,6 @@ Frames,GB delta TOTAL
 Average,-15.017773103999914
 SD,1.6860229037427301
 SEM,0.5331672563037857
+Block SD,1.529166180793172
+Block SEM,1.081283775999986
 ```

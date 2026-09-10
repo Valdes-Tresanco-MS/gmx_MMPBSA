@@ -70,7 +70,7 @@ igb=8, saltcon=0.150, intdiel=10
     See all `gmx_MMPBSA` input-file options [here][2] and additional examples [here][3].
     These examples are intended only to demonstrate that gmx_MMPBSA works. Review all variables available for the
     selected calculation, including those not shown here, and confirm their accepted values in the
-    [input file section](../../input_file.md). This can help you avoid problems and select suitable approximations.
+    [input file section](../../docs/input_file.md). This can help you avoid problems and select suitable approximations.
 
 
 ## Considerations
@@ -94,9 +94,9 @@ per-frame energy CSV (`FINAL_RESULTS_MMPBSA.csv` by default). Use `-eo` when a d
     After the calculation, the results can be analyzed with `gmx_MMPBSA_ana` unless `-nogui` was used.
     See the [gmx_MMPBSA_ana][4] section for more information
   
-  [1]: ../../gmx_MMPBSA_command-line.md#gmx_mmpbsa-command-line
-  [2]: ../../input_file.md#the-input-file
-  [3]: ../../input_file.md#sample-input-files
-  [4]: ../../analyzer.md#gmx_mmpbsa_ana-the-analyzer-tool
+  [1]: ../../docs/gmx_MMPBSA_command-line.md#gmx_mmpbsa-command-line
+  [2]: ../../docs/input_file.md#the-input-file
+  [3]: ../../docs/input_file.md#sample-input-files
+  [4]: ../../docs/analyzer.md#gmx_mmpbsa_ana-the-analyzer-tool
   [6]: https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/examples/Comp_receptor
-  [7]: ../gmx_MMPBSA_test.md#gmx_mmpbsa_test-command-line
+  [7]: ../../docs/examples/gmx_MMPBSA_test.md#gmx_mmpbsa_test-command-line
