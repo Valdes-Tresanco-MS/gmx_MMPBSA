@@ -3,6 +3,8 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from types import SimpleNamespace
 
+import parmed
+
 from GMXMMPBSA.alamdcrd import GlyMutantMdcrd, MutantMdcrd, _getnumatms
 from GMXMMPBSA.exceptions import MMPBSA_Error
 from GMXMMPBSA.make_top import CheckMakeTop
@@ -34,6 +36,15 @@ class CompositeMutationSelectionTest(unittest.TestCase):
     def test_selector_accepts_multiple_residues_in_existing_syntax(self):
         self.assertEqual(selector('A/13,25')[1], [['A', 13, ''], ['A', 25, '']])
 
+    def test_selector_requires_direct_insertion_code_suffix_and_excludes_it_from_ranges(self):
+        self.assertEqual(selector('A/27B')[1], [['A', 27, 'B']])
+        self.assertEqual(
+            selector('A/5-7')[1],
+            [['A', 5, ''], ['A', 6, ''], ['A', 7, '']],
+        )
+        with self.assertRaises(MMPBSA_Error):
+            selector('A/27:B')
+
     def test_both_topology_builders_return_composite_indices(self):
         for checker_type in (CheckMakeTop, CheckAmberTop):
             with self.subTest(checker=checker_type.__name__):
@@ -59,6 +70,53 @@ class CompositeMutationSelectionTest(unittest.TestCase):
                 with self.assertRaisesRegex(MMPBSA_Error, 'cas_intdiel=1 is ambiguous'):
                     checker.getMutationInfo()
 
+
+class ReferenceInsertionCodePropagationTest(unittest.TestCase):
+    @staticmethod
+    def _structure(residues):
+        structure = parmed.Structure()
+        for index, (name, chain, number, insertion_code) in enumerate(residues, start=1):
+            atom = parmed.Atom(name='CA', atomic_number=6, mass=12.011)
+            atom.xx, atom.xy, atom.xz = float(index), 0.0, 0.0
+            structure.add_atom(atom, name, number, chain=chain, inscode=insertion_code)
+        return structure
+
+    def test_reference_insertion_code_reaches_all_structure_maps(self):
+        reference_pdb = (
+            'ATOM      1  CA  SER A  27B      1.000   0.000   0.000  1.00  0.00           C\n'
+            'ATOM      2  CA  LYS B   1      2.000   0.000   0.000  1.00  0.00           C\n'
+            'END\n'
+        )
+        for builder in (CheckMakeTop, CheckAmberTop):
+            with self.subTest(builder=builder.__name__), TemporaryDirectory() as directory:
+                reference_path = Path(directory) / 'reference.pdb'
+                reference_path.write_text(reference_pdb)
+                complex_str = self._structure([
+                    ('SER', 'X', 27, ''),
+                    ('LYS', 'Y', 1, ''),
+                ])
+                receptor_str = self._structure([('SER', 'X', 27, '')])
+                ligand_str = self._structure([('LYS', 'Y', 1, '')])
+                checker = object.__new__(builder)
+                checker.FILES = SimpleNamespace(
+                    reference_structure=str(reference_path),
+                    prefix=str(Path(directory) / 'fixed_'),
+                )
+                checker.INPUT = {'ala': {'alarun': True}}
+                checker.complex_str = complex_str
+                checker.resl = [
+                    Residue(1, 27, 'X', 'R', 1, 'SER'),
+                    Residue(2, 1, 'Y', 'L', 1, 'LYS'),
+                ]
+
+                checker.check_structures(complex_str, receptor_str, ligand_str)
+
+                self.assertEqual(complex_str.residues[0].chain, 'A')
+                self.assertEqual(complex_str.residues[0].insertion_code, 'B')
+                self.assertEqual(receptor_str.residues[0].insertion_code, 'B')
+                self.assertEqual(checker.resl[0].chain, 'A')
+                self.assertEqual(checker.resl[0].icode, 'B')
+                self.assertEqual(checker.get_selected_residues('A/27B'), [checker.resl[0]])
 
 class CompositeTopologyMutationDispatchTest(unittest.TestCase):
     def test_single_and_multiple_indices_are_dispatched_for_both_builders(self):

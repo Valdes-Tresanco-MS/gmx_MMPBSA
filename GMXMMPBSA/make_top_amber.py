@@ -1514,7 +1514,7 @@ class CheckAmberTop(CheckMakeTop):
         check_str(lig_str, skip=True)
 
         if self.FILES.reference_structure:
-            logging.info('Assigning chain ID to structures files according to the reference structure...')
+            logging.info('Assigning chain IDs and insertion codes to structure files according to the reference structure...')
             ref_str = check_str(self.FILES.reference_structure)
             if len(ref_str.residues) != len(com_str.residues):
                 GMXMMPBSA_ERROR(f'The number of residues of the complex ({len(com_str.residues)}) and of the '
@@ -1530,13 +1530,17 @@ class CheckAmberTop(CheckMakeTop):
                                     'based on the reference structure. Please check that the reference structure is '
                                     'correct')
                 com_str.residues[c].chain = res.chain
-                # update the chain id (https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/issues/354)
+                com_str.residues[c].insertion_code = res.insertion_code
+                # update the chain and insertion code (https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/issues/354)
                 self.resl[c].chain = res.chain
+                self.resl[c].icode = res.insertion_code
                 i = self.resl[c].id_index - 1
                 if self.resl[c].is_receptor():
                     rec_str.residues[i].chain = res.chain
+                    rec_str.residues[i].insertion_code = res.insertion_code
                 else:
                     lig_str.residues[i].chain = res.chain
+                    lig_str.residues[i].insertion_code = res.insertion_code
         else:
             assign = False
             if self.INPUT['general']['assign_chainID'] == 1:
