@@ -8,6 +8,7 @@ from GMXMMPBSA.commandlineparser import (
     amber_parser,
     amber_trajectory,
     parser,
+    trajectory,
     testparser,
     validate_output_paths,
 )
@@ -34,6 +35,20 @@ class AmberTrajectoryTypeTest(unittest.TestCase):
             try:
                 with self.assertRaises(MMPBSA_Error):
                     amber_trajectory(traj.as_posix())
+            finally:
+                logging.disable(logging.NOTSET)
+
+
+class GromacsTrajectoryTypeTest(unittest.TestCase):
+    def test_rejects_gro_when_help_lists_gromacs_trajectory_formats(self):
+        with TemporaryDirectory() as tmpdir:
+            traj = Path(tmpdir) / 'traj.gro'
+            traj.touch()
+
+            logging.disable(logging.CRITICAL)
+            try:
+                with self.assertRaises(MMPBSA_Error):
+                    trajectory(traj.as_posix())
             finally:
                 logging.disable(logging.NOTSET)
 

@@ -355,7 +355,7 @@ group.add_argument('-rg', dest='receptor_group', metavar='group', default=None, 
                         'name. For example: -rg 1 or -rg Protein')
 group.add_argument('-rt', dest='receptor_trajs', nargs='*', metavar='TRJ', type=trajectory,
                    help='''Input trajectories of the unbound receptor for multiple trajectory approach.
-                         Allowed formats: *.xtc (recommended), *.trr, *.pdb, *.gro (specify as many
+                         Allowed formats: *.xtc (recommended), *.trr, *.pdb (specify as many
                          as you'd like).''')
 group.add_argument('-rp', dest='receptor_top', metavar='<Topology>', default=None, type=topology,
                    help='''Topology file of the receptor.''')
@@ -377,7 +377,7 @@ group.add_argument('-lg', dest='ligand_group', metavar='group', default=None, ty
                         'For example: -lg 13 or -lg LIG')
 group.add_argument('-lt', dest='ligand_trajs', nargs='*', metavar='TRJ', type=trajectory,
                    help='''Input trajectories of the unbound ligand for multiple trajectory approach. 
-                         Allowed formats: *.xtc (recommended), *.trr, *.pdb, *.gro (specify as many
+                         Allowed formats: *.xtc (recommended), *.trr, *.pdb (specify as many
                          as you'd like).''')
 group.add_argument('-lp', dest='ligand_top', metavar='<Topology>', default=None, type=topology,
                    help='''Topology file of the ligand.''')
