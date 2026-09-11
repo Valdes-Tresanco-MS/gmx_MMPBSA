@@ -313,19 +313,14 @@ group.add_argument('-deo', dest='dec_energies', metavar='FILE',
 group.add_argument('-nogui', dest='gui', action='store_false', default=True,
                    help='No open gmx_MMPBSA_ana after all calculations finished')
 group.add_argument('-s', '--stability', dest='stability', action='store_true', default=False,
-                   help='''Perform stability calculation. Only the complex parameters are required. If
-                         ligand is non-Protein (small molecule) type, then ligand *.mol2 file is 
-                         required. In any other case receptor and ligand parameters will be ignored.
-                         See description bellow''')
+                   help='''Perform stability calculation. Only the complex parameters are required.
+                         Receptor and ligand parameters are ignored.''')
 group.add_argument('--no-error-bundle', dest='no_error_bundle', action='store_true', default=False,
                    help='Do not create a diagnostic zip bundle automatically when gmx_MMPBSA fails.')
 
 group = parser.add_argument_group('Complex', complex_group_des)
 group.add_argument('-cs', dest='complex_tpr', metavar='<Structure File>', default=None, type=structure,
-                   help='''Structure file of the complex. If it is Protein-Ligand 
-                         (small molecule) complex and -cp is not defined, make 
-                         sure that you define -lm option. See -lm description 
-                         below. Allowed formats: *.tpr (recommended), *.pdb''')
+                   help='''Structure file of the complex. Allowed formats: *.tpr (recommended), *.pdb''')
 group.add_argument('-ci', dest='complex_index', metavar='<Index File>', default=None, type=index,
                    help='Index file of the bound complex.')
 group.add_argument('-cg', dest='complex_groups', metavar='group', nargs=2, default=None, type=index_groups,
@@ -336,7 +331,9 @@ group.add_argument('-ct', dest='complex_trajs', nargs='*', metavar='TRJ', type=t
                          pbc have been removed. Allowed formats: *.xtc (recommended), *.trr, *.pdb
                          (specify as many as you'd like).''')
 group.add_argument('-cp', dest='complex_top', metavar='<Topology>', default=None, type=topology,
-                   help='''The complex Topology file. When it is defined -lm option is not needed''')
+                   help='''Required GROMACS complex topology (*.top). Parameters are converted with ParmEd;
+                         structure-only tleap rebuilds are not supported. Small-molecule ligands must be
+                         included in this topology.''')
 group.add_argument('-cr', dest='reference_structure', metavar='<PDB File>', default=None, type=pdb,
                    help='''Complex Reference Structure file. This option is optional but recommended 
                          (Use the PDB file used to generate the topology in GROMACS). If not defined,
@@ -358,18 +355,16 @@ group.add_argument('-rt', dest='receptor_trajs', nargs='*', metavar='TRJ', type=
                          Allowed formats: *.xtc (recommended), *.trr, *.pdb (specify as many
                          as you'd like).''')
 group.add_argument('-rp', dest='receptor_top', metavar='<Topology>', default=None, type=topology,
-                   help='''Topology file of the receptor.''')
+                   help='''GROMACS topology of the unbound receptor. Required with -rs/-rt (MT).''')
 
 group = parser.add_argument_group('Ligand', ligand_group_des)
 group.add_argument('-lm', dest='ligand_mol2', metavar='<Structure File>', default=None, type=mol2,
-                   help='''A *.mol2 file of the unbound ligand used to parametrize
-                         ligand for GROMACS using Antechamber. Must be defined
-                         if Protein-Ligand (small molecule) complex was define and -cp or -lp option are not defined.
-                         No needed for Proteins, DNA, RNA, Ions, Glycans or any ligand parametrized in the Amber 
-                         force fields. Must be the Antechamber output *.mol2.''')
+                   help='''Deprecated. Ignored when -cp is used. Small-molecule ligands must be present in
+                         the GROMACS topology (-cp / -lp). Historical Antechamber *.mol2 input for the
+                         removed tleap path.''')
 group.add_argument('-ls', dest='ligand_tpr', metavar='<Structure File>', default=None, type=structure,
-                   help='''Structure file of the unbound ligand. If ligand is a small molecule and -lp is not defined,
-                   make sure that you define above -lm option. Allowed formats: *.tpr (recommended), *.pdb''')
+                   help='''Structure file of the unbound ligand for multiple trajectory approach.
+                         Allowed formats: *.tpr (recommended), *.pdb''')
 group.add_argument('-li', dest='ligand_index', metavar='<Index File>', type=index,
                    default=None, help='Index file of the unbound ligand. Only if tpr file was define in -ls.')
 group.add_argument('-lg', dest='ligand_group', metavar='group', default=None, type=index_groups,
@@ -380,7 +375,7 @@ group.add_argument('-lt', dest='ligand_trajs', nargs='*', metavar='TRJ', type=tr
                          Allowed formats: *.xtc (recommended), *.trr, *.pdb (specify as many
                          as you'd like).''')
 group.add_argument('-lp', dest='ligand_top', metavar='<Topology>', default=None, type=topology,
-                   help='''Topology file of the ligand.''')
+                   help='''GROMACS topology of the unbound ligand. Required with -ls/-lt (MT).''')
 
 group = parser.add_argument_group('Miscellaneous Actions')
 group.add_argument('--rewrite-output', dest='rewrite_output', default=False,

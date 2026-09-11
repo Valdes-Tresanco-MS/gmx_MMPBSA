@@ -154,6 +154,8 @@ class CommentGromacsCmapTest(unittest.TestCase):
                 make_top.CheckMakeTop.cleantop('topol.top', [1])
 
         self.assertIn('omits CMAP energy terms', logs.output[0])
+        self.assertIn('not an issue', logs.output[0])
+        self.assertIn('MTP', logs.output[0])
         self.assertTrue(logs.output[0].startswith('WARNING:'))
 
 

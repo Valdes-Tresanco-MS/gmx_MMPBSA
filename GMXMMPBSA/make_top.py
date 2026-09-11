@@ -147,7 +147,25 @@ class CheckMakeTop:
     def checkFiles(self):
         if (not self.FILES.complex_tpr or not self.FILES.complex_index or
                 not self.FILES.complex_trajs or not self.FILES.complex_groups):
-            GMXMMPBSA_ERROR('You must define the structure, topology and index files, as well as the groups!')
+            GMXMMPBSA_ERROR(
+                'You must define the complex structure (-cs), index (-ci), trajectory (-ct), and groups (-cg).'
+            )
+        if not self.FILES.complex_top:
+            GMXMMPBSA_ERROR(
+                'A GROMACS complex topology (-cp) is required. Structure-only tleap rebuilds are no longer '
+                'supported; convert parameters from the GROMACS topology used in the MD. For a small-molecule '
+                'ligand, include it in that topology (for example via ACPYPE) rather than relying on -lm alone.'
+            )
+        if (self.FILES.receptor_tpr or self.FILES.receptor_trajs) and not self.FILES.receptor_top:
+            GMXMMPBSA_ERROR(
+                'A receptor topology (-rp) is required when unbound receptor structure (-rs) or trajectories '
+                '(-rt) are defined (multiple-trajectory approach).'
+            )
+        if (self.FILES.ligand_tpr or self.FILES.ligand_trajs) and not self.FILES.ligand_top:
+            GMXMMPBSA_ERROR(
+                'A ligand topology (-lp) is required when unbound ligand structure (-ls) or trajectories '
+                '(-lt) are defined (multiple-trajectory approach).'
+            )
 
     def buildTopology(self):
         """
@@ -158,11 +176,9 @@ class CheckMakeTop:
         # distance and explicit-mask selectors can be resolved immediately.
         if self.explicit_waters_mask.strip().lower() != 'dasa':
             self._resolve_explicit_waters_mask()
-        if self.FILES.complex_top:
-            tops = self.gmxtop2prmtop()
-        else:
-            self.pdb2prmtop()
-            tops = self.makeToptleap()
+        # GROMACS calculations always convert the user topology (-cp). The legacy
+        # structure→PDB→tleap path is removed to avoid termini/FF mismatches.
+        tops = self.gmxtop2prmtop()
         if self.explicit_waters_mask.strip().lower() == 'dasa':
             self._resolve_explicit_waters_mask()
 
@@ -414,29 +430,13 @@ class CheckMakeTop:
         if c4.wait():  # if it quits with return code != 0
             GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(comprog), self.FILES.complex_trajs[0]))
         # Put receptor and ligand (explicitly defined) to avoid overwrite them
-        # check if ligand is not protein. In any case, non-protein ligand always most be processed
+        # -lm is legacy for the removed tleap path; ligand parameters come from -cp/-lp.
         if self.FILES.ligand_mol2:
-            logging.info(f'Generating ligand parameters from {self.FILES.ligand_mol2} file...')
-            lig_name = os.path.splitext(os.path.split(self.FILES.ligand_mol2)[1])[0]
-            self.ligand_frcmod = self.FILES.prefix + lig_name + '.frcmod'
-            # run parmchk2
-            parmchk2 = self.external_progs['parmchk2']
-            lig_ff = '2' if "leaprc.gaff2" in self.INPUT['general']['forcefields'] else '1'
-            parmchk2_args = [parmchk2, '-i', self.FILES.ligand_mol2, '-f', 'mol2', '-o', self.ligand_frcmod, '-s',
-                             lig_ff]
-            logging.debug('Running command: ' + ' '.join(parmchk2_args))
-            l3 = subprocess.Popen(parmchk2_args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-            log_subprocess_output(l3)
-            if l3.wait():
-                GMXMMPBSA_ERROR('%s failed when querying %s' % (parmchk2, self.FILES.ligand_mol2))
-
-        # check if the ligand force field is gaff or gaff2 and get if the ligand mol2 was defined
-        elif (any(ff in self.INPUT['general']['forcefields'] for ff in ('leaprc.gaff', 'leaprc.gaff2'))
-              and not self.FILES.complex_top):
             logging.warning(
-                'No ligand MOL2 file (-lm) was provided while a GAFF force field is selected. '
-                'Provide -lm so tleap can assign ligand parameters. If the ligand is already parameterized '
-                'by an Amber force field, this warning does not apply.')
+                '-lm (%s) is ignored when using GROMACS topology conversion (-cp). '
+                'Ligand parameters must already be present in the complex (and, for MT, ligand) topology.',
+                self.FILES.ligand_mol2,
+            )
 
         # make a temp receptor pdb (even when stability) if decomp to get correct receptor residues from complex. This
         # avoids get multiples molecules from complex.split()
@@ -531,8 +531,7 @@ class CheckMakeTop:
                 GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(comprog), self.FILES.complex_trajs[0]))
         # ligand
         # # check consistence
-        if self.FILES.ligand_tpr:  # ligand is protein
-            # FIXME: if ligand is a zwitterionic aa fail
+        if self.FILES.ligand_tpr:  # unbound ligand structure/trajs (MT)
             logging.info('A ligand structure file was defined. Using MT approach...')
             num_lig_group, str_lig_group = get_index_groups(self.FILES.ligand_index, self.FILES.ligand_group)
 
@@ -1065,8 +1064,10 @@ class CheckMakeTop:
         return end, str_file
 
     def pdb2prmtop(self):
-        """
-        Generate parmed structure object for complex, receptor and ligand ( if it is protein-like)
+        """Legacy structure→PDB prep for the removed tleap topology path.
+
+        Retained only for unit tests that exercise PDB splitting/mutation helpers.
+        Production GROMACS runs use ``gmxtop2prmtop`` exclusively.
         :return:
         """
         self._warn_gmx_gb_radius_compatibility()
@@ -1182,7 +1183,10 @@ class CheckMakeTop:
         if preprocessor.cmap_found:
             logging.warning(
                 'Ignoring CMAP terms in %s include tree for GROMACS topology conversion. '
-                'The converted topology omits CMAP energy terms.',
+                'The converted topology omits CMAP energy terms. For STP (single-trajectory) '
+                'MM/PB(GB)SA this is not an issue: CMAP contributions cancel in the C−R−L '
+                'difference. Consider the omission only for MTP (multiple-trajectory) '
+                'calculations, where receptor and ligand come from separate ensembles.',
                 top_file)
 
         # read the temp topology with parmed
@@ -2088,6 +2092,11 @@ class CheckMakeTop:
             ofile.write('set default PBRadii {}\n'.format(PBRadii[self.INPUT['general']['PBRadii']]))
 
     def makeToptleap(self):
+        """Legacy tleap topology builder (structure→loadpdb/mol2).
+
+        Removed from the production GROMACS path; ``-cp`` topology conversion is required.
+        Kept for unit tests that still call this helper directly.
+        """
         logging.info('Building tleap input files...')
         with open(f'{self.FILES.prefix}leap.in', 'w') as tif:
             self._write_ff(tif)
