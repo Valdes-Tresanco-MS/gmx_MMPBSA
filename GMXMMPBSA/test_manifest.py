@@ -242,11 +242,12 @@ def build_help_text() -> str:
     lines = [
         'The level the test is going to be run at. Multiple systems and analysis can be run at the same time.',
         '      Nr. of Sys  ',
-        '* 0      23     All -- Run all examples (Can take a long time!!!)',
-        '* 1      12     Minimal -- Does a minimal test with a set of systems and analyzes',
-        '                that show that gmx_MMPBSA runs correctly. Only exclude 3drism, nmode',
-        '                protein-ligand MT because take a long time or are redundant',
-        '* 2       9     Fast -- Only the calculations that take a short time are run (Default)',
+        '* 0      22     All -- Run all examples (Can take a long time!!!)',
+        '* 1      11     Minimal -- Does a minimal test with a set of systems and analyzes',
+        '                that show that gmx_MMPBSA runs correctly. Comp_receptor is excluded',
+        '                until its required GROMACS topology is shipped; slow or redundant',
+        '                cases are omitted from this suite',
+        '* 2       8     Fast -- Only the calculations that take a short time are run (Default)',
         '[Systems]:',
         '     Slow Frames',
     ]

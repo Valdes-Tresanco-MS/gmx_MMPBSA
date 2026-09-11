@@ -1,0 +1,55 @@
+{
+  "version": 1,
+  "cases": {
+    "6": {
+      "csv_scope": "delta",
+      "reason": "The canonical example uses automatic membrane parameters, which 1.6.5 cannot parse. An explicit-value compatibility run is required for direct membrane parity.",
+      "baseline": {
+        "status": "unsupported",
+        "log_patterns": [
+          "could not convert string to float: 'automatic'"
+        ],
+        "reason": "gmx_MMPBSA 1.6.5 cannot parse automatic membrane parameters."
+      }
+    },
+    "10": {
+      "csv_scope": "delta",
+      "reason": "STP CHARMM calculations compare binding deltas; current GROMACS topology conversion intentionally omits component-level CMAP terms that cancel in C-R-L."
+    },
+    "18": {
+      "baseline": {
+        "status": "unsupported",
+        "log_patterns": [
+          "Fortran runtime error: Missing comma between descriptors"
+        ],
+        "reason": "The installed 1.6.5-era AmberTools RISM runtime fails before producing results."
+      }
+    },
+    "22": {
+      "csv_scope": "delta",
+      "reason": "STP CHARMM calculations compare binding deltas; current GROMACS topology conversion intentionally omits component-level CMAP terms that cancel in C-R-L."
+    },
+    "24": {
+      "outcome": "expected-difference",
+      "reason": "The current GBNSR6 parser and frame-ID merge intentionally correct post-1.6.5 frame and term handling."
+    },
+    "25": {
+      "baseline": {
+        "status": "unsupported",
+        "log_patterns": [
+          "cannot import name 'gmxmmpbsa_amber'"
+        ],
+        "reason": "The official 1.6.5 source has no AMBER input entry point."
+      }
+    },
+    "26": {
+      "baseline": {
+        "status": "unsupported",
+        "log_patterns": [
+          "Unknown variable explicit_waters in &general"
+        ],
+        "reason": "The official 1.6.5 input parser has no explicit_waters option."
+      }
+    }
+  }
+}

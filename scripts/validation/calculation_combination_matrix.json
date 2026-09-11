@@ -1,0 +1,365 @@
+{
+  "version": 1,
+  "name": "calculation-combination-matrix",
+  "purpose": "Pairwise and one-factor-at-a-time calculation coverage beyond the canonical examples.",
+  "execution": {
+    "default_environment": "gmxMMPBSA_dev",
+    "results_root": "/tmp/gmx_MMPBSA-validation",
+    "one_physical_copy_per_case": true,
+    "never_write_generated_outputs_to_git": true,
+    "comparison_policy": "Run current-only first. Add 1.6.5 parity only to rows marked legacy_candidate after the current result is stable."
+  },
+  "assertions": [
+    "calculation exits successfully",
+    "all manifest-declared outputs are newly created",
+    "requested frame count and interval are reflected in output rows",
+    "no fatal Amber diagnostic is present",
+    "selected settings are echoed in the log and generated input",
+    "expected warnings are present when a deliberately unusual but valid combination is used"
+  ],
+  "dimensions": {
+    "gb_model": [1, 2, 5, 7, 8],
+    "conventional_gb_radii": {
+      "1": 2,
+      "2": 3,
+      "5": 3,
+      "7": 1,
+      "8": 4
+    },
+    "pb_branch": ["linear", "nonlinear"],
+    "pb_nonpolar": [1, 2],
+    "pb_radii": [0, 1],
+    "trajectory": ["ST", "MT", "strided"],
+    "analysis": ["standard", "decomposition", "alanine", "IE", "C2", "NMODE"],
+    "advanced": ["QM/MM", "3D-RISM", "GBNSR6", "membrane", "explicit-waters", "native-AMBER"]
+  },
+  "tiers": {
+    "core": [
+      "GB-01", "GB-02", "GB-03", "GB-04", "GB-05", "GB-07", "GB-08",
+      "PB-01", "PB-02", "PB-03", "PB-05", "TR-01", "TR-02", "TR-03"
+    ],
+    "analysis": [
+      "AN-01", "AN-02", "AN-03", "AN-04", "AN-05", "AN-06", "AN-07", "AN-08", "AN-09"
+    ],
+    "advanced": [
+      "ADV-01", "ADV-02", "ADV-03", "ADV-04", "ADV-05", "ADV-06", "ADV-07",
+      "ADV-08", "ADV-09", "ADV-10", "ADV-11", "ADV-12", "ADV-13"
+    ],
+    "full": [
+      "GB-01", "GB-02", "GB-03", "GB-04", "GB-05", "GB-06", "GB-07", "GB-08", "GB-09", "GB-10",
+      "PB-01", "PB-02", "PB-03", "PB-04", "PB-05", "PB-06", "PB-07", "PB-08",
+      "TR-01", "TR-02", "TR-03", "TR-04",
+      "AN-01", "AN-02", "AN-03", "AN-04", "AN-05", "AN-06", "AN-07", "AN-08", "AN-09",
+      "ADV-01", "ADV-02", "ADV-03", "ADV-04", "ADV-05", "ADV-06", "ADV-07", "ADV-08",
+      "ADV-09", "ADV-10", "ADV-11", "ADV-12", "ADV-13"
+    ]
+  },
+  "cases": [
+    {
+      "id": "GB-01",
+      "base_case": 3,
+      "description": "GB-HCT with conventional bondi radii",
+      "overrides": {"general": {"PBRadii": 2}, "gb": {"igb": 1}},
+      "legacy_candidate": true
+    },
+    {
+      "id": "GB-02",
+      "base_case": 3,
+      "description": "GB-OBC1 with conventional mbondi2 radii",
+      "overrides": {"general": {"PBRadii": 3}, "gb": {"igb": 2}},
+      "legacy_candidate": true
+    },
+    {
+      "id": "GB-03",
+      "base_case": 3,
+      "description": "GB-OBC2 with conventional mbondi2 radii",
+      "overrides": {"general": {"PBRadii": 3}, "gb": {"igb": 5}},
+      "legacy_candidate": true
+    },
+    {
+      "id": "GB-04",
+      "base_case": 3,
+      "description": "GBn with conventional bondi radii",
+      "overrides": {"general": {"PBRadii": 1}, "gb": {"igb": 7}},
+      "legacy_candidate": true
+    },
+    {
+      "id": "GB-05",
+      "base_case": 3,
+      "description": "GB-Neck2 with conventional mbondi3 radii",
+      "overrides": {"general": {"PBRadii": 4}, "gb": {"igb": 8}},
+      "legacy_candidate": true
+    },
+    {
+      "id": "GB-06",
+      "base_case": 3,
+      "description": "Valid unusual GB/radii pairing with warning provenance",
+      "overrides": {"general": {"PBRadii": 3}, "gb": {"igb": 8}},
+      "expected_log": ["radii", "warning"]
+    },
+    {
+      "id": "GB-07",
+      "base_case": 3,
+      "description": "GB internal/external dielectric and salt variation",
+      "overrides": {"general": {"PBRadii": 3}, "gb": {"igb": 5, "intdiel": 2.0, "extdiel": 80.0, "saltcon": 0.15}}
+    },
+    {
+      "id": "GB-08",
+      "base_case": 3,
+      "description": "ALPB with an allowed GB model and alternate radius method",
+      "overrides": {"general": {"PBRadii": 3}, "gb": {"igb": 5, "alpb": 1, "arad_method": 2}}
+    },
+    {
+      "id": "GB-09",
+      "base_case": 3,
+      "description": "Molsurf nonpolar surface with non-default probe and offset",
+      "overrides": {"general": {"PBRadii": 4}, "gb": {"igb": 8, "molsurf": 1, "msoffset": 0.2, "probe": 1.6}}
+    },
+    {
+      "id": "GB-10",
+      "base_case": 3,
+      "description": "GB frame window and interval selection",
+      "overrides": {"general": {"startframe": 2, "endframe": 10, "interval": 2}}
+    },
+    {
+      "id": "PB-01",
+      "base_case": 20,
+      "description": "Linear PB with INP=1 and prmtop radii",
+      "overrides": {"general": {"PBRadii": 4}, "pb": {"ipb": 1, "inp": 1, "radiopt": 0, "istrng": 0.15}},
+      "legacy_candidate": true
+    },
+    {
+      "id": "PB-02",
+      "base_case": 20,
+      "description": "Linear PB with INP=2 and prmtop radii",
+      "overrides": {"general": {"PBRadii": 4}, "pb": {"ipb": 2, "inp": 2, "radiopt": 0, "istrng": 0.15}},
+      "legacy_candidate": true
+    },
+    {
+      "id": "PB-03",
+      "base_case": 20,
+      "description": "Linear PB with Tan-Luo radii",
+      "overrides": {"general": {"PBRadii": 4}, "pb": {"radiopt": 1, "istrng": 0.15}}
+    },
+    {
+      "id": "PB-04",
+      "base_case": 20,
+      "description": "Linear PB with alternate surface option",
+      "overrides": {"general": {"PBRadii": 4}, "pb": {"inp": 2, "sasopt": 1, "istrng": 0.15}}
+    },
+    {
+      "id": "PB-05",
+      "base_case": 21,
+      "description": "Nonlinear PB baseline branch",
+      "overrides": {"general": {"PBRadii": 4}, "pb": {"npbopt": 1, "radiopt": 0, "istrng": 0.15}}
+    },
+    {
+      "id": "PB-06",
+      "base_case": 21,
+      "description": "Nonlinear PB with alternate radii source",
+      "overrides": {"general": {"PBRadii": 4}, "pb": {"npbopt": 1, "radiopt": 1, "istrng": 0.15}}
+    },
+    {
+      "id": "PB-07",
+      "base_case": 20,
+      "description": "Linear PB dielectric, salt, and grid-fill combination",
+      "overrides": {"general": {"PBRadii": 4}, "pb": {"indi": 1.0, "exdi": 80.0, "istrng": 0.15, "fillratio": 1.25}}
+    },
+    {
+      "id": "PB-08",
+      "base_case": 20,
+      "description": "Linear PB energy and boundary-condition combination",
+      "overrides": {"general": {"PBRadii": 4}, "pb": {"eneopt": 1, "bcopt": 10, "nfocus": 1, "cutfd": 7.0, "cutnb": 99.0}}
+    },
+    {
+      "id": "TR-01",
+      "base_case": 3,
+      "description": "Single-trajectory reference",
+      "overrides": {},
+      "legacy_candidate": true
+    },
+    {
+      "id": "TR-02",
+      "base_case": 16,
+      "description": "Multiple-trajectory reference",
+      "overrides": {},
+      "legacy_candidate": true
+    },
+    {
+      "id": "TR-03",
+      "base_case": 3,
+      "description": "Single trajectory with non-unit frame interval",
+      "overrides": {"general": {"startframe": 1, "endframe": 9, "interval": 2}}
+    },
+    {
+      "id": "TR-04",
+      "base_case": 16,
+      "description": "Multiple trajectory with shifted frame window",
+      "overrides": {"general": {"startframe": 2, "endframe": 10, "interval": 2}}
+    },
+    {
+      "id": "AN-01",
+      "base_case": 14,
+      "description": "Per-residue decomposition",
+      "overrides": {"decomp": {"idecomp": 1, "dec_verbose": 0, "csv_format": 1}}
+    },
+    {
+      "id": "AN-02",
+      "base_case": 14,
+      "description": "Per-residue decomposition with distance selection",
+      "overrides": {"decomp": {"idecomp": 2, "print_res": "within 6", "csv_format": 1}}
+    },
+    {
+      "id": "AN-03",
+      "base_case": 14,
+      "description": "Pairwise decomposition mode 3",
+      "overrides": {"decomp": {"idecomp": 3, "csv_format": 1}}
+    },
+    {
+      "id": "AN-04",
+      "base_case": 14,
+      "description": "Pairwise decomposition mode 4 with explicit residue range",
+      "overrides": {"decomp": {"idecomp": 4, "print_res": "A/10-20 B/1-5", "csv_format": 1}}
+    },
+    {
+      "id": "AN-05",
+      "base_case": 12,
+      "description": "Alanine scan with standard dielectric assignment",
+      "overrides": {"alanine_scanning": {"mutant_only": 0, "cas_intdiel": 0}}
+    },
+    {
+      "id": "AN-06",
+      "base_case": 12,
+      "description": "Alanine scan with residue-dependent dielectric assignment",
+      "overrides": {"alanine_scanning": {"mutant_only": 1, "cas_intdiel": 1}}
+    },
+    {
+      "id": "AN-07",
+      "base_case": 15,
+      "description": "Interaction entropy with tail diagnostic",
+      "overrides": {"general": {"ie_segment": 25, "temperature": 303.15}}
+    },
+    {
+      "id": "AN-08",
+      "base_case": 19,
+      "description": "C2 entropy with non-default temperature",
+      "overrides": {"general": {"temperature": 303.15}}
+    },
+    {
+      "id": "AN-09",
+      "base_case": 17,
+      "description": "Normal-mode entropy with non-unit mode-frame interval",
+      "overrides": {"nmode": {"nmstartframe": 1, "nmendframe": 10, "nminterval": 2}}
+    },
+    {
+      "id": "ADV-01",
+      "base_case": 23,
+      "description": "QM/MM reference Hamiltonian",
+      "overrides": {"gb": {"ifqnt": 1, "qm_theory": "PM6-DH+"}},
+      "slow": true,
+      "requires": ["Amber QM parameter data"]
+    },
+    {
+      "id": "ADV-02",
+      "base_case": 23,
+      "description": "QM/MM alternate semi-empirical Hamiltonian",
+      "overrides": {"gb": {"ifqnt": 1, "qm_theory": "PM3"}},
+      "slow": true,
+      "requires": ["Amber QM parameter data"]
+    },
+    {
+      "id": "ADV-03",
+      "base_case": 23,
+      "description": "QM/MM DFTB branch",
+      "overrides": {"gb": {"ifqnt": 1, "qm_theory": "DFTB"}},
+      "slow": true,
+      "requires": ["Amber DFTB parameter data"]
+    },
+    {
+      "id": "ADV-04",
+      "base_case": 18,
+      "description": "3D-RISM KH closure reference",
+      "overrides": {"rism": {"closure": "kh", "tolerance": 0.001}},
+      "slow": true,
+      "requires": ["compatible AmberTools RISM runtime"]
+    },
+    {
+      "id": "ADV-05",
+      "base_case": 18,
+      "description": "3D-RISM with GF correction",
+      "overrides": {"rism": {"closure": "kh", "gfcorrection": 1, "tolerance": 0.001}},
+      "slow": true,
+      "requires": ["compatible AmberTools RISM runtime"]
+    },
+    {
+      "id": "ADV-06",
+      "base_case": 18,
+      "description": "3D-RISM with PC+ correction",
+      "overrides": {"rism": {"closure": "kh", "pcpluscorrection": 1, "tolerance": 0.001}},
+      "slow": true,
+      "requires": ["compatible AmberTools RISM runtime"]
+    },
+    {
+      "id": "ADV-07",
+      "base_case": 24,
+      "description": "GBNSR6 without ALPB",
+      "overrides": {"gbnsr6": {"alpb": 0}}
+    },
+    {
+      "id": "ADV-08",
+      "base_case": 24,
+      "description": "GBNSR6 with alternate radii option",
+      "overrides": {"gbnsr6": {"radiopt": 1}}
+    },
+    {
+      "id": "ADV-09",
+      "base_case": 6,
+      "description": "Membrane PB with explicit center and thickness",
+      "overrides": {"pb": {"mctrdz": 62.315825, "mthick": 37.29835, "memopt": 2}},
+      "slow": true
+    },
+    {
+      "id": "ADV-10",
+      "base_case": 6,
+      "description": "Membrane PB with automatic center and thickness",
+      "overrides": {"pb": {"mctrdz": "automatic", "mthick": "automatic", "memopt": 2}},
+      "slow": true,
+      "requires": ["membrane parameter diagnostics"]
+    },
+    {
+      "id": "ADV-11",
+      "base_case": 26,
+      "description": "Explicit receptor waters using a geometric mask",
+      "overrides": {"general": {"explicit_waters": 10, "explicit_waters_mask": "within 4", "explicit_waters_as": "receptor"}}
+    },
+    {
+      "id": "ADV-12",
+      "base_case": 26,
+      "description": "Explicit receptor waters with virtual-site stripping policy",
+      "overrides": {"general": {"explicit_waters": 10, "explicit_waters_mask": "dASA", "explicit_waters_extra_points": "strip"}},
+      "expected_log": ["explicit_waters_extra_points"]
+    },
+    {
+      "id": "ADV-13",
+      "base_case": 25,
+      "description": "Native AMBER workflow with alternate GB model",
+      "overrides": {"gb": {"igb": 2, "saltcon": 0.1}},
+      "slow": true
+    }
+  ],
+  "excluded_until_round_2": {
+    "reason": "These need dedicated negative/error or interface harnesses rather than positive calculation rows.",
+    "cases": [
+      "invalid namelist values and malformed files",
+      "QM/MM plus PB or decomposition incompatibilities",
+      "IGB=8 plus ALPB=1 incompatibility",
+      "PBRadii=7 with GB incompatibility",
+      "QH entropy rejection",
+      "error bundles and traceback contents",
+      "cleanup, restart, and stale-output detection",
+      "MPI ranks and concurrent case execution",
+      "GUI/analyzer/API loading and output-schema compatibility",
+      "installation, packaging, and entry-point checks"
+    ]
+  }
+}

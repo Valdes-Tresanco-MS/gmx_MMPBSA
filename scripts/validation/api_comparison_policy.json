@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "cases": {
+    "Entropy_calculations/C2_Entropy": {
+      "outcome": "expected-difference",
+      "reason": "Current C2 retains the corrected estimator and deterministic block diagnostics; historical 1.6.5 C2 summary fields are not numerically identical."
+    },
+    "Entropy_calculations/Interaction_Entropy": {
+      "outcome": "expected-difference",
+      "reason": "Current IE uses the full selected ensemble, a shared running mean, stable log-sum-exp, and deterministic block diagnostics; 1.6.5 used the historical estimator."
+    },
+    "GBNSR6": {
+      "outcome": "expected-difference",
+      "reason": "The current GBNSR6 parser and frame/term merge intentionally correct post-1.6.5 frame and term handling."
+    },
+    "Protein_ligand_LPH_atoms_CHARMMff": {
+      "outcome": "expected-difference",
+      "reason": "Current GROMACS topology conversion omits component-level CHARMM CMAP terms that cancel in the binding delta; component API fields therefore differ while the delta remains the compatibility quantity."
+    }
+  }
+}
