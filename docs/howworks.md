@@ -50,7 +50,7 @@ gmx_MMPBSA requires several input files to prepare the topologies for the calcul
 
 `MD Structure+mass(db) (*.tpr, *.pdb)`
 :   This file is used with `editconf` or `trjconv` to generate the complex structure in PDB format. We recommend
-    using the `*.tpr` (production `*.tpr`) format.
+    using the `*.tpr` (production `*.tpr`) format. Coordinates and atom order must match the GROMACS topology.
 
 `Index (*.ndx)` 
 :   This file organizes atoms from the `*.tpr` file into index groups. It is required to identify the groups
@@ -59,9 +59,10 @@ gmx_MMPBSA requires several input files to prepare the topologies for the calcul
 `Trajectory (*.xtc, *.trr, *.pdb)`
 :   Trajectory files.
 
-`Topology (top)`
-:   This file contains all the parameters corresponding to the force field selected during the system setup. When using 
-    a GROMACS topology, `parmed` is used to convert the topologies.
+`Topology (*.top)` **required**
+:   GROMACS topology containing the force-field parameters used in the MD. `gmx_MMPBSA` converts this topology with
+    ParmEd (`-cp`; and `-rp`/`-lp` for unbound MT tops). Structure-only rebuilds through tleap from extracted PDBs are
+    not supported. Small-molecule ligands must already be present in the topology tree.
 
 `Reference Structure`
 :   This optional PDB file must contain the complete complex, with the same atoms and residues as the structure supplied

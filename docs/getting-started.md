@@ -107,7 +107,8 @@ In the current version, gmx_MMPBSA supports a number of different systems, inclu
     The 1.7.0 release includes tested conversion paths for representative Amber, OPLS, and CHARMM GROMACS
     topologies, plus a native-AMBER entry point and a PSF/DCD example. This does not mean that every system built by
     `pdb2gmx`, CHARMM-GUI, NAMD, or another package is validated automatically. Topology completeness, conversion
-    limitations such as omitted CHARMM CMAP terms, the selected implicit-solvent model, and the trajectory protocol
+    limitations such as omitted CHARMM CMAP terms (relevant mainly for MTP; they cancel under STP), the selected
+    implicit-solvent model, and the trajectory protocol
     still determine whether a calculation is scientifically appropriate. See the [compatibility guide](compatibility.md)
     and the [example page](examples/README.md) for tested representatives and known restrictions.
 
@@ -140,7 +141,7 @@ described in the [native-AMBER guide](amber_MMPBSA.md).
     * an index file (`*.ndx`)
     * receptor and ligand groups (group numbers or names in the index file)
     * a trajectory file (`*.xtc`, `*.pdb`, `*.trr`)
-    * a topology file (`*.top`)
+    * a topology file (`*.top`) — **required**; parameters are converted from the GROMACS topology (`-cp`)
 
     After the calculation, results can be analyzed with [gmx_MMPBSA_ana](analyzer.md).
 

@@ -83,7 +83,7 @@ class FeatureOverviewDocumentationTest(unittest.TestCase):
 
 class CommandReferenceDocumentationTest(unittest.TestCase):
     def test_gmx_command_reference_matches_current_help_contract(self):
-        document = (ROOT / 'docs/gmx_MMPBSA_command-line.md').read_text()
+        document = ' '.join((ROOT / 'docs/gmx_MMPBSA_command-line.md').read_text().split())
         for text in (
                 'gbnsr6',
                 'Allowed formats: *.tpr (recommended), *.pdb',
@@ -158,7 +158,9 @@ class RismAndStatisticsDocumentationTest(unittest.TestCase):
                 '`ddof=1`',
                 'legacy population frame SEM',
                 'does not establish convergence',
-                'force-field, solvent-model, or other model error'):
+                'force-field, solvent-model, or other model error',
+                'Frame `ddof=0` vs block `ddof=1`',
+                'Average** column is unaffected'):
             with self.subTest(text=text):
                 self.assertIn(text, document)
 
@@ -279,6 +281,10 @@ class ReleasePublicationDocumentationTest(unittest.TestCase):
                 'Support: support.md'):
             with self.subTest(text=text):
                 self.assertIn(text, config)
+        app_note = (ROOT / 'docs/application_note_advances_since_1_4_3.md').read_text()
+        self.assertIn('frozen through v1.6.5', app_note)
+        self.assertIn('1.6.5→1.7.0 migration guide', app_note)
+        self.assertNotIn('summarizes advances through v1.6.5', app_note)
         self.assertIn('versioned example archive', explicit_waters)
         self.assertNotIn('downgit.github.io/#/home?url=https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/examples/Explicit_receptor_waters', explicit_waters)
         self.assertIn('examples/QM_MMGBSA/README.md', changelog)

@@ -338,7 +338,8 @@ support for complex systems with several components. It supports all force field
     _Updated in v1.5.0: Add new ion parameters sets_
 
 `PBRadii` (Default = 4)
-:   Continuum-radius set used to build AMBER topology files:
+:   Continuum-radius set used to build AMBER topology files. The value may be given as the numeric code or the
+    corresponding named set (for example, `PBRadii=mbondi3`):
 
     This is the continuum-radius set used by GB, PB, and GBNSR6 topology preparation. Continuum radii are distinct
     from Lennard-Jones radii and are part of the scoring-model parameterization.
@@ -965,12 +966,26 @@ verify which atoms were included in the QM region.
     * A tutorial on binding free energy calculation with GBNSR6 model is available 
     [here](examples/GBNSR6/README.md)
 
+    !!! warning "GBNSR6 + decomposition is hybrid"
+        Each frame runs **sander (MM)** and **`gbnsr6`**, then merges the outputs.
+
+        * **System totals:** `EEL`, `1-4 EEL`, and `EGB` come from GBNSR6.
+        * **Decomposition columns:** `internal`, `vdw`, **`eel`**, and `sas` come from sander; only **`pol`**
+          is replaced with GBNSR6 residue/pair energies from `DGij`. Amber GBNSR6 does not provide a
+          sander-style gas-phase Coulomb decomposition, so residue `eel` is not a per-residue split of the
+          GBNSR6 total `EEL`.
+        * `epsin` is copied to sander `intdiel` (and related MM settings) so the sander Coulomb terms use the
+          same solute dielectric as GBNSR6.
+
+        Do not treat decomp `eel + pol` as a pure GBNSR6 electrostatic partition when comparing to totals.
+
   [222]: https://pubs.acs.org/doi/abs/10.1021/ct200786m
 
 #### **Basic input options**
 
 `epsin` (Default = 1.0)
-:   Dielectric constant of the solute region.
+:   Dielectric constant of the solute region. When decomposition is enabled, this value is also passed to the
+sander MM input as `intdiel` so gas-phase Coulomb (`eel`) uses the same dielectric as GBNSR6.
 
 `epsout` (Default = 78.5)
 :   Implicit solvent dielectric constant for the solvent.
@@ -1099,11 +1114,17 @@ method, while a level-set based algebraic method is used when `ipb > 2`.
 :   Option to select different methods to compute non-polar solvation free energy.
 
     * 1: The total non-polar solvation free energy is modeled as a single term linearly proportional to the
-    solvent accessible surface area ([ref.][227]). When using `inp = 1`:
+    solvent accessible surface area ([ref.][227]). When using `inp = 1`, `gmx_MMPBSA` aligns the INPUT
+    nonpolar parameters with Amber PBSA before writing mdins and parsing decomposition:
 
         * `sprob` is reset to 1.4
         * `cavity_surften` is reset to 0.005
         * `cavity_offset` is reset to 0.000
+        * `radiopt` is reset to 0 (use prmtop / `PBRadii` radii)
+
+    This keeps `_GMXMMPBSA_info` and decomp SAS scaling consistent with the γ Amber actually used for
+    ENPOLAR/ECAVITY (Amber also applies the cavity/sprob reset at runtime; `radiopt` is only warned about
+    unless gmx_MMPBSA aligns it).
 
     * 2: The total non-polar solvation free energy is modeled as two terms: the cavity term and the
     dispersion term. The dispersion term is computed with a surface-based integration method
@@ -1154,15 +1175,20 @@ solute/solvent dielectric boundary.
 `istrng` (Default = 0.0)
 :   Ionic strength in Molarity (M). It is converted to mM for `PBSA`.
 
-`radiopt` (Default = 1)
+`radiopt` (Default = 0)
 :   The option to set up atomic radii.
 
-    * 0: Use radii from the prmtop file for both the PB calculation and for the non-polar calculation (see `inp`) 
+    * 0: Use radii from the prmtop file for both the PB calculation and for the non-polar calculation (see `inp`).
+      This is required when `inp = 1` (Amber PBSA warns otherwise and still runs Tan–Luo radii if `radiopt = 1`).
+      Topology conversion (`-cp` / amber conversion) also forces `radiopt = 0` so the PB solver uses the
+      `PBRadii` / ChRad radii written into the generated prmtops.
     * 1: Use atom-type/charge-based radii by Tan and Luo ([ref.][244]) for the PB calculation. Note that the
     radii are optimized for Amber atom types as in standard residues from the Amber database and should work fine for
     `standard` complexes such as protein-protein, protein-DNA. On the other hand, if a molecule in your system was 
     built by antechamber, _i.e._, if GAFF atom types are used, or any other extrenal software, radii from the prmtop 
     file should be used (`radiopt = 0`). Check this [thread](http://archive.ambermd.org/201303/0548.html) for more info.
+
+    When `inp = 1`, `gmx_MMPBSA` aligns `radiopt` to `0` during input processing if it was left at `1`.
 
   [244]: https://pubs.acs.org/doi/abs/10.1021/jp063479b
 
@@ -1262,20 +1288,22 @@ that of the water. ([ref.][248])
 
 #### **Options to select numerical procedures**
 
-`npbopt` (Default = 0)
+`npbopt` (Default = 0) {#npbopt}
 :   Option to select the linear, or the full nonlinear PB equation.
 
     * 0: Linear PB equation (LPBE) is solved
     * 1: Nonlinear PB equation (NLPBE) is solved
 
     !!! note
-        While the linear PB equation (see [tutorial](examples/Linear_PB_solver/README.md)) will suffice for most 
-        calculations, the nonlinear PB equation (see [tutorial](examples/NonLinear_PB_solver/README.md)) is recommended 
-        for highly charged systems. Parameters such as `eneopt` or `cutnb` should be adjusted accordingly when 
-        using the NLPBE. Check the following threads ([T1](http://archive.ambermd.org/201203/0191.html) and 
-        [T2](http://archive.ambermd.org/201610/0114.html)) on how to proceed when using NLPBE. Last but not 
-        least, take into account that using NLPBE can significantly increase the calculation time required for 
-        PB calculation.
+        While the linear PB equation (see [tutorial](examples/Linear_PB_solver/README.md)) will suffice for most
+        calculations, the nonlinear PB equation (see [tutorial](examples/NonLinear_PB_solver/README.md)) is recommended
+        for highly charged systems. Take into account that NLPBE can significantly increase PB wall time.
+
+        Amber PBSA **forces `eneopt = 1` (P3M)** when `npbopt = 1` and requires a nonzero `cutnb`. That is Amber's
+        bookkeeping for nonlinear PB, not a gmx_MMPBSA preference: `EPB` is reported as zero and reaction-field plus
+        Coulombic energy are combined in `EEL`, so ΔGGAS / ΔGSOLV are not a meaningful gas/solv split. Use ΔTOTAL.
+        See `eneopt` below and Amber threads ([T1](http://archive.ambermd.org/201203/0191.html),
+        [T2](http://archive.ambermd.org/201610/0114.html)).
 
     _Implemented in v1.5.0_
 
@@ -1351,7 +1379,7 @@ molecule. When `nfocus` = 1, no focusing is used. It is recommended that `nfocus
 
   [236]: https://aip.scitation.org/doi/abs/10.1063/1.3099708
 
-`eneopt` (Default = 2)
+`eneopt` (Default = 2) {#eneopt}
 :   Option to compute total electrostatic energy and forces.
 
     * 1: Compute total electrostatic energy and forces with the particle-particle particle-mesh (P3M)
@@ -1369,6 +1397,13 @@ molecule. When `nfocus` = 1, no focusing is used. It is recommended that `nfocus
     * 4: Similar to the third option above, a P3M procedure for the full nonlinear PB equation is applied
     for both solvation and Coulombic energy and forces for larger systems. A more robust and
     clean set of routines were used for the P3M and dielectric surface force calculations.
+
+    !!! warning "Reporting with `eneopt = 1` (and similar P3M modes 3/4)"
+        `EPB ≈ 0` and a larger `EEL` are expected Amber output, not a missing polar term. gmx_MMPBSA still
+        places `EEL` under GGAS and `EPB` under GSOLV, so ΔGGAS / ΔGSOLV are **not** the usual gas/solv
+        partition; ΔTOTAL remains valid. The same applies when Amber resets `eneopt` to `1` for
+        `npbopt = 1` (NLPBE). Linear PB with `eneopt = 1` (for example some membrane setups) has the same
+        reporting implication without NLPB.
 
   [223]: https://aip.scitation.org/doi/10.1063/1.1622376
 
@@ -1478,15 +1513,17 @@ biomacromolecules.
     _Implemented in v1.5.0_
 
 `cavity_surften` (Default = 0.0378)
-:   The regression coefficient for the linear relation between the total non-polar solvation free energy (`inp` = 1), or 
-the cavity free energy (`inp = 2`) and SASA/volume enclosed by SASA. The default value is for `inp = 2` and set to the 
-best of three tested schemes as reported in ([ref.][227]), _i.e._ `decompopt = 2`, `use_rmin = 1`, and `use_sav = 1`. See 
+:   The regression coefficient for the linear relation between the total non-polar solvation free energy (`inp` = 1), or
+the cavity free energy (`inp = 2`) and SASA/volume enclosed by SASA. The parser default is for `inp = 2` and set to the
+best of three tested schemes as reported in ([ref.][227]), _i.e._ `decompopt = 2`, `use_rmin = 1`, and `use_sav = 1`.
+When `inp = 1` (the PB default), `gmx_MMPBSA` resets this value to `0.005` during input processing. See
 recommended values in Tables 1-3 for other schemes.
 
 `cavity_offset` (Default = -0.5692)
-:   The regression offset for the linear relation between the total non-polar solvation free energy (`inp`= 1), or 
-the cavity free energy (`inp = 2`) and SASA/volume enclosed by SASA. The default value is for `inp` = 2 and set to 
-the best of three tested schemes as reported in ([ref.][227]), _i.e._ `decompopt = 2`, `use_rmin = 1`, and `use_sav = 1`. 
+:   The regression offset for the linear relation between the total non-polar solvation free energy (`inp`= 1), or
+the cavity free energy (`inp = 2`) and SASA/volume enclosed by SASA. The parser default is for `inp` = 2 and set to
+the best of three tested schemes as reported in ([ref.][227]), _i.e._ `decompopt = 2`, `use_rmin = 1`, and `use_sav = 1`.
+When `inp = 1`, `gmx_MMPBSA` resets this value to `0.0` during input processing.
 See recommended values in Tables 1-3 for other schemes.
 
 `maxsph` (Default = 400)
@@ -2002,6 +2039,8 @@ mutated.
     
     * A sample decomp input file is shown [here](input_file.md#decomposition-analysis)
     * A tutorial on binding free energy decomposition is available [here](examples/Decomposition_analysis/README.md)
+    * With **`&gbnsr6`**, decomposition is a hybrid sander + GBNSR6 merge: only the polar (`pol`) column comes
+      from GBNSR6. See the [GBNSR6 decomposition warning](input_file.md#gbnsr6-namelist-variables).
 
 `idecomp` (Default = 2)
 :   Energy decomposition scheme to use:
@@ -2147,6 +2186,9 @@ is 0 above.
 
 `maxcyc` (Default = 10000)
 :   Maximum number of minimization cycles to use per snapshot in sander.
+
+    Frames that fail the minimized-energy-gradient criterion (`drms` / `maxcyc`) remain `NaN` and are omitted from
+    NMODE averages and uncertainties. Increase `drms` or `maxcyc` if more frames should converge.
 
 ## Sample input files
 

@@ -258,7 +258,7 @@ linear PB calculation.
       temperature                    = 298.15                                 # Temperature (K); e.g. 298.15
       qh_entropy                     = 0                                      # Legacy QH output reader; new calculations reject 1
       interaction_entropy            = 0                                      # Run IE entropy; 0/1
-      ie_segment                     = 25                                     # IE segment length (%); e.g. 25
+      ie_segment                     = 25                                     # IE tail diagnostic only (%); not primary IE; e.g. 25
       c2_entropy                     = 0                                      # Run C2 entropy; 0/1
       assign_chainID                 = 1                                      # Assign chain IDs; 0/1
       exp_ki                         = 0.0                                    # Experimental Ki (nM); e.g. 0.0
@@ -315,12 +315,12 @@ linear PB calculation.
       nsnba                          = 1                                      # Pairlist frequency; e.g. 1
       decompopt                      = 2                                      # Decomp scheme; 1 or 2
       use_rmin                       = 1                                      # Use Rmin radii; 0/1
-      sprob                          = 0.557                                  # SASA probe (A); e.g. 0.557
+      sprob                          = 1.4                                    # SASA probe (A); e.g. 1.4
       vprob                          = 1.3                                    # Volume probe (A); e.g. 1.3
       rhow_effect                    = 1.129                                  # Water density; e.g. 1.129
       use_sav                        = 1                                      # Use SAV cavity; 0/1
-      cavity_surften                 = 0.0378                                 # Cavity surften; e.g. 0.0378
-      cavity_offset                  = -0.5692                                # Cavity offset; e.g. -0.5692
+      cavity_surften                 = 0.005                                  # Cavity surften; e.g. 0.005
+      cavity_offset                  = 0.0                                    # Cavity offset; e.g. 0.0
       maxsph                         = 400                                    # Max surface dots; e.g. 400
       maxarcdot                      = 1500                                   # Max arc dots; e.g. 1500
       npbverb                        = 0                                      # PB verbosity; 0/1

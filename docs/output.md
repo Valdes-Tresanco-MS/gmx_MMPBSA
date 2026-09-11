@@ -164,7 +164,7 @@ Using C2 Entropy Approximation:                                                 
 21. = ΔBOND + ΔANGLE + ΔDIHED + ΔVDWAALS + ΔEEL + Δ1-4 VDW + Δ1-4 EEL (plus applicable method-specific terms)
 22. = ΔEGB + ΔESURF
 23. = ΔGGAS + ΔGSOLV
-24. Binding free energy<br>ΔG binding = ΔTOTAL - TΔS
+24. Binding free energy<br>ΔG binding = ΔTOTAL + (−TΔS)<br>Use the printed `[ -TΔS ]` value as-is (it already includes the minus sign). Do not subtract that column again from ΔTOTAL.
 
 The header of the output file will contain information about the calculation. It will also show the names of all files 
 that were used in the calculation (topology files and coordinate file(s)). If the masks
@@ -182,6 +182,12 @@ trajectory protocol can cancel differences in bond, angle, dihedral, and 1-4 ter
 frames are used; those terms still contribute to each component's `GGAS` and can remain nonzero in MT calculations.
 If ST terms do not cancel, inconsistency warnings are printed and the results require review. Independent trajectories
 in the multiple-trajectory protocol do not provide that cancellation automatically.
+
+!!! note "PB with `eneopt = 1` (P3M), including NLPB"
+    Amber reports `EPB = 0` and folds reaction-field plus Coulomb into `EEL`. ΔGGAS / ΔGSOLV are then not a
+    meaningful gas/solv split; use ΔTOTAL. Amber forces this bookkeeping for `npbopt = 1`. See
+    [`eneopt`](input_file.md#eneopt) and the [NLPB example](examples/NonLinear_PB_solver/README.md).
+
 Two approaches are used when calculating the standard deviation, and the standard error of the mean. The `SD` and `SEM`
 values are calculated from the frame array using the population convention (`ddof=0`), with `SEM = SD / sqrt(N)`. On the
 other hand, `SD(Prop.)` and `SEM(Prop.)` are obtained with the
@@ -190,6 +196,13 @@ _f_ = _A_ - _B_. Check this [thread](http://archive.ambermd.org/201202/0317.html
 statistics. Main energy and binding summaries also include adjacent `Block SD` and `Block SEM` columns. These are
 calculated from deterministic nonoverlapping block means; `Block SEM` is the preferred uncertainty when trajectory
 frames are correlated, while the legacy SD/SEM fields remain available for compatibility.
+
+!!! note "Frame `ddof=0` vs block `ddof=1`"
+    The **Average** column is unaffected by this choice: it is always the arithmetic mean of the frames (or of the
+    selected block means for block diagnostics). Only the ± / SD / SEM columns differ by convention. Frame SD/SEM keep
+    the historical MMPBSA.py population convention (`ddof=0`). Block SD uses the sample SD of the block means
+    (`ddof=1`) because those means are treated as independent replicate estimates. Do not mix the two when comparing
+    uncertainties across tools.
 
 The block algorithm is deterministic. For a vector with `N` frames, candidate block sizes are
 `max(2, N // d)` for `d` in `(16, 8, 4, 2, 1)`. The largest candidate that gives at least eight
@@ -330,6 +343,11 @@ RAL 241	L RAL   1	0.00	0.00	    0.00	            0.00	0.00	    0.00	            
 The header of the output file will contain information about the calculation and parameters specified. Next, the TDC,
 SDC, and BDC data are shown for the complex, receptor and ligand, respectively. Finally, the delta energies are shown 
 by terms for TDC, SDC, and BDC, respectively.
+
+!!! note "GBNSR6 decomposition"
+    With `&gbnsr6`, the Electrostatic column is sander Coulomb and Polar Solvation comes from GBNSR6 `DGij`.
+    System totals still take `EEL`/`EGB` from GBNSR6. See
+    [GBNSR6 namelist](input_file.md#gbnsr6-namelist-variables).
 
 ## Temporary files
 

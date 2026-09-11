@@ -68,11 +68,8 @@ title:
       -nogui                No open gmx_MMPBSA_ana after all calculations finished
                              (default: True)
       -s, --stability       Perform stability calculation. Only the complex parameters
-                             are required. Only If the ligand is non-Protein (small
-                             molecule) type and you not define a complex topology,
-                             then ligand *.mol2 file is required. In any other case
-                             receptor and ligand parameters will be ignored. See
-                             description bellow (default: False)
+                             are required. Receptor and ligand parameters are ignored.
+                             (default: False)
       --no-error-bundle     Do not create a diagnostic zip bundle automatically when
                              gmx_MMPBSA fails. (default: False)
     
@@ -81,11 +78,8 @@ title:
       receptor and/or the ligand info is not defined, we generate them from that of
       the complex.
     
-      -cs <Structure File>  Structure file of the complex. If it is Protein-Ligand
-                             (small molecule) complex and -cp is not defined, make
-                             sure that you define -lm option. See -lm description
-                             below. Allowed formats: *.tpr (recommended), *.pdb
-                             (default: None)
+      -cs <Structure File>  Structure file of the complex. Allowed formats: *.tpr
+                             (recommended), *.pdb (default: None)
       -ci <Index File>      Index file of the bound complex. (default: None)
       -cg group group       Receptor and ligand groups in the complex index file,
                             specified by zero-based group number or group name. For
@@ -95,8 +89,10 @@ title:
                             fitted and pbc have been removed. Allowed formats:
                             *.xtc (recommended), *.trr, *.pdb (specify as many as
                             you'd like). (default: None)
-      -cp <Topology>        The complex Topology file. When it is defined -lm
-                             option is not needed (default: None)
+      -cp <Topology>        Required GROMACS complex topology (*.top). Parameters
+                             are converted with ParmEd; structure-only tleap
+                             rebuilds are not supported. Small-molecule ligands
+                             must be included in this topology. (default: None)
       -cr <PDB File>        Complex Reference Structure file. This option is optional
                              but recommended (Use the PDB file used to generate the 
                              topology in GROMACS). If not defined, the chains ID 
@@ -119,22 +115,18 @@ title:
                             multiple trajectory approach. Allowed formats: *.xtc
                             (recommended), *.trr, *.pdb (specify as many as
                             you'd like). (default: None)
-      -rp <Topology>        Topology file of the receptor. (default: None)
+      -rp <Topology>        GROMACS topology of the unbound receptor. Required with
+                             -rs/-rt (MT). (default: None)
     
     Ligand:
       Ligand files and info that are needed to perform the calculation. If the ligand
       are not defined, we generate it from that of the complex.
     
-      -lm <Structure File>  A *.mol2 file of the unbound ligand used to parametrize
-                             ligand for GROMACS using Antechamber. Must be defined
-                             if Protein-Ligand (small molecule) complex was define 
-                             and -cp or -lp option are not defined. No needed for 
-                             Proteins, DNA, RNA, Ions, Glycans or any ligand 
-                             parametrized in the Amber force fields. Must be the 
-                             Antechamber output *.mol2. (default: None)
-      -ls <Structure File>  Structure file of the unbound ligand. If ligand is a 
-                             small molecule and -lp is not defined, make sure that you
-                             define above -lm option. Allowed formats: *.tpr 
+      -lm <Structure File>  Deprecated. Ignored when -cp is used. Small-molecule
+                             ligands must be present in the GROMACS topology
+                             (-cp / -lp). (default: None)
+      -ls <Structure File>  Structure file of the unbound ligand for multiple
+                             trajectory approach. Allowed formats: *.tpr
                              (recommended), *.pdb (default: None)
       -li <Index File>      Index file of the unbound ligand. Only if tpr file was
                              define in -ls. (default: None)
@@ -145,7 +137,8 @@ title:
                             trajectory approach. Allowed formats: *.xtc
                             (recommended), *.trr, *.pdb (specify as many as
                             you'd like). (default: None)
-      -lp <Topology>        Topology file of the ligand. (default: None)
+      -lp <Topology>        GROMACS topology of the unbound ligand. Required with
+                             -ls/-lt (MT). (default: None)
     
     Miscellaneous Actions:
       -rewrite-output       Do not re-run any calculations, just parse the output

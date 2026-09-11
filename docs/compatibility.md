@@ -86,6 +86,13 @@ an older 1.6.5 calculation, preserve the original input or specify the correspon
 1.6.5 and 1.7.0 results until the GB model, topology radii, PB dielectric, topology route, and trajectory frames have
 been confirmed to match.
 
+#### Required GROMACS topology (`-cp`)
+
+GROMACS calculations now **require** a complex topology (`-cp`). The legacy path that rebuilt Amber topologies with
+tleap from extracted PDBs (optionally with `-lm` mol2) is removed. Always pass the GROMACS `*.top` (and referenced
+`*.itp` files) from the MD setup. For unbound MT trajectories, also supply `-rp` / `-lp` with matching tops.
+Small-molecule ligands must already be included in that topology tree.
+
 #### Native AMBER workflows
 
 The 1.7.0 release includes the separate `amber_MMPBSA` entry point for native AMBER topology workflows. It is not a

@@ -5,11 +5,15 @@ title: Application note draft - Advances since v1.4.3
 
 # gmx_MMPBSA advances since v1.4.3: structured report for a JCIM application note
 
-!!! note "Draft status"
+!!! note "Draft status — frozen through v1.6.5"
     This document is a structured report draft for an application note. It uses
-    `gmx_MMPBSA` v1.4.3 as the baseline and summarizes advances through v1.6.5.
-    Claims are grounded in the local project changelog, compatibility notes,
-    analyzer/API documentation, examples, and GitHub release metadata.
+    `gmx_MMPBSA` v1.4.3 as the baseline and is **frozen through v1.6.5 only**.
+    Do not treat it as a description of the 1.7.0 science defaults, IE primary
+    estimator, QH policy, or topology requirements. For the current release, use
+    the [changelog](changelog.md), [1.6.5→1.7.0 migration guide](compatibility.md#migrating-from-165-to-170),
+    and [output](output.md) / [input](input_file.md) docs. Claims here are grounded
+    in the project changelog, compatibility notes, analyzer/API documentation,
+    examples, and GitHub release metadata up to v1.6.5.
 
 ## Abstract / Overview
 
@@ -57,15 +61,14 @@ in rewrite-output workflows, fixed Delta Delta entropy values for alanine
 scanning, removed duplicated entropy items in analyzer output, and improved
 the handling of `ie_segment` changes inside `gmx_MMPBSA_ana`.
 
-The current entropy portfolio includes normal-mode, interaction-entropy, and
-C2 approximations. Quasi-harmonic output is retained for reading historical
-result files in this final compatibility release but is no longer supported for new calculations; all QH support will
-be removed afterward. Normal-mode calculations remain
+Through v1.6.5, the entropy portfolio includes quasi-harmonic (QH), normal-mode,
+interaction-entropy, and C2 approximations. Normal-mode calculations remain
 available through AmberTools, and v1.6.5 adds experimental normal-mode support
 for CHARMM topologies. The report should clearly distinguish this CHARMM nmode
 work as experimental, while presenting C2 and interaction entropy as established
-post-v1.4.3 additions that are now integrated into output, analyzer, and API
-workflows.
+post-v1.4.3 additions that are integrated into output, analyzer, and API
+workflows by v1.6.5. (Later 1.7.0 changes to IE primacy, QH support, and related
+defaults are out of scope for this frozen draft.)
 
 ### PB, GB, ALPB, and GBNSR6
 

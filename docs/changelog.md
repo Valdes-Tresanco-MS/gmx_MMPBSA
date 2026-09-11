@@ -10,6 +10,12 @@ For users moving from 1.6.5 to 1.7.0, see the
 [migration guide](compatibility.md#migrating-from-165-to-170) before starting a new
 calculation or rewriting an archived result.
 
+### Topology preparation
+
+- Required GROMACS complex topology (`-cp`) for all GROMACS calculations; removed the structure-only tleap rebuild
+  path (including `-lm` as a substitute for ligand parameters). Unbound MT tops (`-rp`/`-lp`) are required when
+  unbound structures or trajectories are supplied.
+
 ### Entropy and QH
 
 - Marked QH as final-release compatibility only: new calculations are unsupported, historical QH results remain
@@ -19,6 +25,17 @@ calculation or rewriting an archived result.
 - Made the full-ensemble IE value primary, retained `ie_segment` only as a tail-convergence diagnostic, added
   deterministic nonoverlapping-block diagnostics for IE and C2, and corrected the C2 warning boundary to
   approximately 6.0 kcal/mol (25 kJ/mol).
+- Fixed `ie_segment=0` handling so a zero diagnostic segment is not treated as falsy and does not expand to the
+  full IE curve via Python's `data[-0:]` slice.
+- Left unconverged NMODE frames as NaN (omitted from averages) instead of substituting the mean of converged frames.
+
+### Documentation and validation
+
+- Froze `docs/application_note_advances_since_1_4_3.md` as a v1.4.3→v1.6.5 draft; 1.7.0 science belongs in the
+  changelog and migration guide.
+- Clarified that frame SD uses `ddof=0` and block SD uses `ddof=1` by design; averages are unaffected.
+- Documented the Amber kcal/mol golden gap and added a fixture-based GB parse golden for Δ component means.
+- Clarified GBNSR6/PB `istrng` units (M in input; M→mM only when writing Amber mdin).
 
 ### Input defaults and migration
 

@@ -170,7 +170,7 @@ describe the same implicit-membrane PB calculation.
       temperature                    = 298.15                                 # Temperature (K); e.g. 298.15
       qh_entropy                     = 0                                      # Legacy QH output reader; new calculations reject 1
       interaction_entropy            = 0                                      # Run IE entropy; 0/1
-      ie_segment                     = 25                                     # IE segment length (%); e.g. 25
+      ie_segment                     = 25                                     # IE tail diagnostic only (%); not primary IE; e.g. 25
       c2_entropy                     = 0                                      # Run C2 entropy; 0/1
       assign_chainID                 = 0                                      # Assign chain IDs; 0/1
       exp_ki                         = 0.0                                    # Experimental Ki (nM); e.g. 0.0
@@ -279,13 +279,15 @@ detection. See the [heterogeneous implicit-membrane model][13] for the method an
 
 The calculation uses the linear PB equation with periodic boundary conditions (`ipb=1`, `bcopt=10`) and the geometric
 multigrid solver (`solvopt=2`). `sasopt=0` uses the solvent-excluded surface, and `eneopt=1` selects the P3M total
-electrostatic-energy treatment required by this periodic setup. The nonzero `cutnb=99.0` is the van der Waals cutoff
-used with `eneopt=1`; `cutfd=7.0` controls the finite-difference direct-sum cutoff.
+electrostatic-energy treatment required by this periodic setup (this is **not** NLPB: `npbopt=0`). The nonzero
+`cutnb=99.0` is the van der Waals cutoff used with `eneopt=1`; `cutfd=7.0` controls the finite-difference direct-sum
+cutoff.
 
 With `eneopt=1`, the PB reaction-field and Coulombic contributions are combined in `EEL`, while `EPB` is reported as
-zero. Consequently, the separately labeled gas and solvation subtotals should not be interpreted as the usual
-MM/PBSA partition; the combined total retains the solver's complete electrostatic contribution. Periodic PB methods
-for membrane MMPBSA are discussed in the corresponding [implementation study][14].
+zero — the same Amber P3M bookkeeping as for NLPB. Consequently, the separately labeled gas and solvation subtotals
+(ΔGGAS / ΔGSOLV) should not be interpreted as the usual MM/PBSA partition; **ΔTOTAL** retains the solver's complete
+electrostatic contribution. See [`eneopt`](../../docs/input_file.md#eneopt). Periodic PB methods for membrane
+MMPBSA are discussed in the corresponding [implementation study][14].
 
 The reduced `fillratio=1.25` keeps this example's memory requirements manageable. Increasing it enlarges the
 finite-difference grid and can substantially increase RAM use, particularly with multiple MPI ranks. Grid and solver

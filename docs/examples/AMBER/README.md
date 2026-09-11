@@ -151,7 +151,7 @@ describe the same native AMBER MM/GBSA calculation.
       temperature                    = 298.15                                 # Temperature (K); e.g. 298.15
       qh_entropy                     = 0                                      # Legacy QH output reader; new calculations reject 1
       interaction_entropy            = 0                                      # Run IE entropy; 0/1
-      ie_segment                     = 25                                     # IE segment length (%); e.g. 25
+      ie_segment                     = 25                                     # IE tail diagnostic only (%); not primary IE; e.g. 25
       c2_entropy                     = 0                                      # Run C2 entropy; 0/1
       assign_chainID                 = 0                                      # Assign chain IDs; 0/1
       exp_ki                         = 0.0                                    # Experimental Ki (nM); e.g. 0.0
