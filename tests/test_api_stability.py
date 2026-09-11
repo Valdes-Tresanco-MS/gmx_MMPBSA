@@ -1,8 +1,13 @@
 import unittest
+import shutil
+import tempfile
+from pathlib import Path
 from types import SimpleNamespace
 
+import numpy as np
 import pandas as pd
 
+from GMXMMPBSA import API
 from GMXMMPBSA.API import MMPBSA_API
 
 
@@ -22,6 +27,28 @@ class StabilityAPITest(unittest.TestCase):
 
         self.assertEqual(result['summary'].columns.tolist(), [('normal', 'qh')])
         self.assertEqual(result['summary'].iloc[:, 0].tolist(), [1.0, 2.0])
+
+    def test_nmode_sem_uses_converged_frame_count(self):
+        api = MMPBSA_API()
+        api.app_namespace = SimpleNamespace(
+            INPUT={'general': {'startframe': 1, 'endframe': 3, 'interval': 1}},
+            FILES=SimpleNamespace(stability=False),
+        )
+        api.nmframes = {1: 1, 2: 2, 3: 3}
+        api.frames = {1: 1, 2: 2, 3: 3}
+        api.data = {
+            'normal': {
+                'nmode': {
+                    'complex': {'TOTAL': pd.Series([1.0, np.nan, 3.0], index=[1, 2, 3])},
+                },
+            },
+        }
+
+        summary = api.get_nmode_entropy()['summary']['normal']['nmode']
+
+        self.assertAlmostEqual(summary.loc['Average', ('complex', 'TOTAL')], 2.0)
+        self.assertAlmostEqual(summary.loc['SD', ('complex', 'TOTAL')], 1.0)
+        self.assertAlmostEqual(summary.loc['SEM', ('complex', 'TOTAL')], 1 / np.sqrt(2))
 
 
 class BindingSummaryCompatibilityTest(unittest.TestCase):
@@ -92,6 +119,26 @@ class ReferenceStatisticsTest(unittest.TestCase):
         original = pd.DataFrame({('GB', 'Block SEM'): [float('nan'), 1.5]})
         result = adjust_reference_statistics(original, original.iloc[0])
         self.assertTrue(result[('GB', 'Block SEM')].isna().all())
+
+
+class AnalyzerCompatibilityTest(unittest.TestCase):
+    def test_decomposition_analyzer_data_handles_current_pandas(self):
+        fixture = Path(__file__).parents[1] / 'examples' / 'Decomposition_analysis' / 'COMPACT_MMXSA_RESULTS.mmxsa'
+        with tempfile.TemporaryDirectory() as tmpdir:
+            result = Path(tmpdir) / fixture.name
+            shutil.copy2(fixture, result)
+            api = API.load(result)
+            decomposition = api.get_decomp_energy(verbose=False)
+            self.assertTrue(decomposition['map'])
+
+            analyzer = api.get_ana_data(
+                decomp_options={'res_threshold': 0},
+                performance_options={'energy_memory': True, 'decomp_memory': True},
+                verbose=False,
+            )
+
+            self.assertIn('decomposition', analyzer)
+            self.assertTrue(analyzer['decomposition']['keys'])
 
 
 if __name__ == '__main__':

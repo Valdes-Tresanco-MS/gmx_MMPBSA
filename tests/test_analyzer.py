@@ -34,3 +34,25 @@ class AnalyzerInfoLoadingTest(unittest.TestCase):
             self.assertEqual(system.child(0).text(2), 'A/15 - HIDxALA')
 
             dialog.close()
+
+    def test_duplicate_system_names_are_disambiguated(self):
+        with TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            files = []
+            for number in (1, 2):
+                info_file = root / f'_GMXMMPBSA_info.{number}'
+                info_file.write_text(
+                    "INPUT['general']['exp_ki'] = [15.0]\n"
+                    "INPUT['general']['sys_name'] = 'duplicate'\n"
+                    "INPUT['ala']['mutant_only'] = 0\n"
+                    "FILES.stability = False\n",
+                    encoding='utf-8',
+                )
+                files.append(info_file)
+
+            dialog = InitDialog(None)
+            dialog.get_files_info(files)
+
+            self.assertEqual(dialog.f_item.child(0).text(2), 'duplicate')
+            self.assertEqual(dialog.f_item.child(1).text(2), 'duplicate-1')
+            dialog.close()

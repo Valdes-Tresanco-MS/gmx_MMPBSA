@@ -87,22 +87,46 @@ class EnergyVector(np.ndarray):
 
         Frame standard deviations use NumPy's population convention
         (``ddof=0``).  ``com_std`` may legitimately be zero, so it must not
-        be tested by truth value here.
+        be tested by truth value here. Non-finite frames (e.g. unconverged
+        NMODE) are omitted.
         """
         return (float(self.com_std) if self.com_std is not None
                 else float(self.std()))
 
+    def mean(self, *args, **kwargs):
+        """Frame mean omitting non-finite values."""
+        arr = np.asarray(self, dtype=float)
+        if args or kwargs:
+            return np.nanmean(arr, *args, **kwargs)
+        return float(np.nanmean(arr))
+
+    def std(self, *args, **kwargs):
+        """Frame SD omitting non-finite values (default ``ddof=0``)."""
+        arr = np.asarray(self, dtype=float)
+        if args or kwargs:
+            return np.nanstd(arr, *args, **kwargs)
+        finite = arr[np.isfinite(arr)]
+        if finite.size == 0:
+            return float('nan')
+        return float(finite.std(ddof=0))
+
     def sem(self):
-        return float(self.std() / sqrt(len(self)))
+        n = int(np.isfinite(np.asarray(self, dtype=float)).sum())
+        if n == 0:
+            return float('nan')
+        return float(self.std() / sqrt(n))
 
     def semp(self):
-        return float(self.stdev() / sqrt(len(self)))
+        n = int(np.isfinite(np.asarray(self, dtype=float)).sum())
+        if n == 0:
+            return float('nan')
+        return float(self.stdev() / sqrt(n))
 
     def append(self, values):
         return EnergyVector(np.append(self, values))
 
     def avg(self):
-        return np.average(self)
+        return self.mean()
 
     def corr_add(self, other):
         selfstd = self.com_std if self.com_std is not None else float(self.std())
@@ -189,10 +213,12 @@ def block_statistics(values):
     Blocks are deterministic, non-overlapping, and selected from the same
     frame-count-based candidates used by the entropy diagnostics.  The
     uncertainty is the sample SD of the block means (``ddof=1``) and its SEM.
-    Incomplete trailing frames are excluded.  The returned tuple is
+    Incomplete trailing frames are excluded.  Non-finite frames are omitted
+    before blocking.  The returned tuple is
     ``(block_size, nblocks, block_sd, block_sem)``.
     """
     values = np.asarray(values, dtype=float)
+    values = values[np.isfinite(values)]
     numframes = values.size
     if numframes < 2:
         return 0, 0, float('nan'), float('nan')
@@ -220,15 +246,16 @@ def primary_uncertainty(values):
 
     The preferred value is the SEM of deterministic non-overlapping block
     means.  Very short vectors cannot provide two block estimates, so they
-    fall back to the legacy population frame SEM.
+    fall back to the legacy population frame SEM. Non-finite frames are omitted.
     """
     values = np.asarray(values, dtype=float)
-    if values.size == 0:
+    finite = values[np.isfinite(values)]
+    if finite.size == 0:
         return float('nan')
-    block_sem = block_statistics(values)[3]
+    block_sem = block_statistics(finite)[3]
     if np.isfinite(block_sem):
         return float(block_sem)
-    return float(values.std(ddof=0) / sqrt(values.size))
+    return float(finite.std(ddof=0) / sqrt(finite.size))
 
 
 def calc_sum(vector1, vector2, mut=False) -> (float, float):

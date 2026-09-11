@@ -302,13 +302,14 @@ class Phase4ScientificWarningTest(unittest.TestCase):
             output[key] = EnergyVector(values)
         return output
 
-    def test_nmode_warning_counts_frames_and_describes_substitution(self):
+    def test_nmode_unconverged_frames_remain_nan(self):
         output = self._nmode([1.0, np.nan, 3.0])
         with self.assertLogs(level='WARNING') as logs:
             output._fill_nmode_values()
         self.assertIn('1 of 3 NMODE frames', logs.output[0])
-        self.assertIn('replaced with the mean', logs.output[0])
-        self.assertAlmostEqual(output['TRANSLATIONAL'][1], 2.0)
+        self.assertIn('remain NaN', logs.output[0])
+        self.assertTrue(np.isnan(output['TRANSLATIONAL'][1]))
+        self.assertAlmostEqual(float(output['TRANSLATIONAL'].mean()), 2.0)
 
     def test_nmode_all_unconverged_frames_are_not_substituted(self):
         output = self._nmode([np.nan, np.nan])
@@ -316,7 +317,8 @@ class Phase4ScientificWarningTest(unittest.TestCase):
             output._fill_nmode_values()
         self.assertTrue(output.no_nmode_convergence)
         self.assertIn('2 of 2 NMODE frames', logs.output[0])
-        self.assertIn('no substitution was performed', logs.output[0])
+        self.assertIn('No converged values are available', logs.output[0])
+        self.assertTrue(np.isnan(output['TRANSLATIONAL']).all())
 
 
 if __name__ == '__main__':

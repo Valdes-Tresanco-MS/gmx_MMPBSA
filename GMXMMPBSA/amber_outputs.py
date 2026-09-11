@@ -687,29 +687,30 @@ class NMODEout(AmberOutput):
                 self.frame_idx += 1
 
     def _fill_nmode_values(self):
+        """Leave unconverged NMODE frames as NaN; do not impute values.
+
+        Averages and uncertainties omit non-finite frames. If every frame
+        failed minimization, NMODE is disabled for the run.
+        """
         nonfinite_frames = np.zeros(self.numframes, dtype=bool)
         for term in self.data_keys + ['TOTAL']:
             nonfinite_frames |= ~np.isfinite(self[term])
         unconverged = int(nonfinite_frames.sum())
+        if unconverged == 0:
+            return
 
         if np.isnan(self['TOTAL']).all():
             logging.warning(
                 f'{self.mol.capitalize()}: {unconverged} of {self.numframes} NMODE frames did not satisfy the '
-                'minimized-energy-gradient convergence criterion. No converged values are available, so no '
-                'substitution was performed. Increase drms or maxcyc in the NMODE settings.')
+                'minimized-energy-gradient convergence criterion. No converged values are available. '
+                'Increase drms or maxcyc in the NMODE settings.')
             self.no_nmode_convergence = True
             return
 
-        filling = False
-        for t in self.data_keys:
-            if np.isnan(self[t]).any():
-                filling = True
-                self[t] = EnergyVector(np.nan_to_num(self[t], nan=float(np.nanmean(self[t]))))
-        if filling:
-            logging.warning(
-                f'{self.mol.capitalize()}: {unconverged} of {self.numframes} NMODE frames did not satisfy the '
-                'minimized-energy-gradient convergence criterion. Nonfinite values were replaced with the mean '
-                'of the converged frames for each entropy term. Consider increasing drms or maxcyc.')
+        logging.warning(
+            f'{self.mol.capitalize()}: {unconverged} of {self.numframes} NMODE frames did not satisfy the '
+            'minimized-energy-gradient convergence criterion. Those frames remain NaN and are omitted from '
+            'NMODE averages and uncertainties. Increase drms or maxcyc if more frames should converge.')
 
 
 def conv_float(word):
@@ -843,7 +844,8 @@ class PBout(AmberOutput):
 
     def __init__(self, mol, INPUT, chamber=False, **kwargs):
         AmberOutput.__init__(self, mol, INPUT, chamber, **kwargs)
-        # FIXME: include Non linear PB
+        # EPB is still parsed when eneopt=1/P3M (incl. Amber-forced NLPB): Amber reports EPB≈0 and
+        # folds RF+Coulomb into EEL. GGAS/GSOLV labels are then not a separable partition; TOTAL is.
         self.data_keys.extend(['EPB', 'ENPOLAR', 'EDISPER'])
 
     def _get_energies(self, outfile):

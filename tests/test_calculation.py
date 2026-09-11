@@ -21,7 +21,19 @@ if 'parmed' not in sys.modules:
 from GMXMMPBSA.amber_outputs import C2out, IEout
 from GMXMMPBSA.calculation import (
     C2EntropyCalc, InteractionEntropyCalc, ListEnergyCalculation, MergeGBNSR6Output,
+    MolsurfCalc,
 )
+
+
+class MolsurfCalcTest(unittest.TestCase):
+    def test_cpptraj_input_terminates_molsurf_action(self):
+        calculation = MolsurfCalc(
+            'cpptraj', 'COM.prmtop', 'complex.mdcrd.%d',
+            'complex_surf.dat.%d', probe=1.6, offset=0.2,
+        )
+        script = calculation._get_instring(0)
+        self.assertTrue(script.endswith('\n'))
+        self.assertIn('molsurf :* out complex_surf.dat.0 probe 1.6 offset 0.2\n', script)
 
 
 class InteractionEntropyCalcTest(unittest.TestCase):
@@ -101,6 +113,21 @@ class InteractionEntropyCalcTest(unittest.TestCase):
         self.assertEqual(calculated.block_nblocks, 8)
         self.assertGreater(calculated.block_size, 1)
         self.assertTrue(np.isfinite(calculated.block_std))
+
+    def test_ie_segment_zero_keeps_empty_tail_diagnostic(self):
+        energies = np.array([-2.0, -1.0, 0.0, 1.0, 2.0])
+        with patch('GMXMMPBSA.calculation.tqdm', side_effect=lambda values, **kwargs: values):
+            calculated = InteractionEntropyCalc(
+                energies, self._input(ie_segment=25), 'gb', iesegment=0
+            )
+
+        self.assertEqual(calculated.isegment, 0)
+        self.assertEqual(calculated.ieframes, 0)
+        self.assertEqual(calculated.iedata.size, 0)
+        self.assertTrue(np.isnan(calculated.tail_mean))
+        self.assertAlmostEqual(calculated.ie_value, calculated.data[-1])
+        # Falsy ``or`` would have fallen back to INPUT ie_segment=25 (2 frames).
+        self.assertNotEqual(calculated.ieframes, math.ceil(energies.size * 0.25))
 
     def test_ie_output_round_trip_preserves_block_diagnostics(self):
         energies = np.sin(np.arange(64, dtype=float) / 5.0)

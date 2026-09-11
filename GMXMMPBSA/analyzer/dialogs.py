@@ -415,10 +415,6 @@ class InitDialog(QDialog):
                                         'current version.')
 
                     basename = info.INPUT['general']['sys_name']
-                    if basename in names:
-                        while basename in names:
-                            basename = f"{basename}-{names.count(basename) + 1}"
-                        names.append(basename)
                     temp_ki = [info.INPUT['general']['exp_ki']] if isinstance(info.INPUT['general']['exp_ki'], float) \
                         else info.INPUT['general']['exp_ki']
                     mut_only = info.INPUT['ala']['mutant_only']
@@ -445,16 +441,19 @@ class InitDialog(QDialog):
 
                         if line.startswith("INPUT['general']['sys_name']"):
                             basename = str(line.split()[2]).strip('"\'')
-                            if basename in names:
-                                while basename in names:
-                                    basename = f"{basename}-{names.count(basename) + 1}"
-                                names.append(basename)
                         if line.startswith("INPUT['ala']['mutant_only']"):
                             mut_only = int(line.split()[2])
                         if line.startswith("mut_str"):
                             mutant = line.split('=')[1].strip(" '")
                         if line.startswith("FILES.stability"):
                             stability = ast.literal_eval(line.split()[2])
+            if basename in names:
+                original_name = basename
+                suffix = 1
+                basename = f'{original_name}-{suffix}'
+                while basename in names:
+                    suffix += 1
+                    basename = f'{original_name}-{suffix}'
             # check for custom settings
             custom_settings = fname.parent.joinpath('settings.json').exists()
 
@@ -495,6 +494,7 @@ class InitDialog(QDialog):
                 item.addChild(mitem)
 
             self.systems_list[c] = [basename, Path(fname), stability]
+            names.append(basename)
 
             item.setExpanded(True)
             self.result_tree.setItemWidget(item, 6, cb)

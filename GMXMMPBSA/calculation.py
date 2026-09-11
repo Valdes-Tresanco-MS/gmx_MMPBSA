@@ -750,8 +750,8 @@ class MolsurfCalc(SurfCalc):
     def _get_instring(self, rank):
         inptraj = self.inptraj % rank
         output = self.output % rank
-        return "trajin %s\nmolsurf :* out %s probe %s offset %s" % (inptraj,
-                                                                    output, self.probe, self.offset)
+        return "trajin %s\nmolsurf :* out %s probe %s offset %s\n" % (inptraj,
+                                                                       output, self.probe, self.offset)
 
 
 class CopyCalc(Calculation):
@@ -873,12 +873,16 @@ class InteractionEntropyCalc:
         Args:
             ggas: Model GGAS energy
             INPUT: INPUT dict
-            iesegment: If not defined, iesegment = INPUT['ie_segment']
+            iesegment: If not defined, iesegment = INPUT['general']['ie_segment'].
+                Use ``None`` for the input default; ``0`` is a valid diagnostic
+                segment (empty IE tail) and must not fall back via truthiness.
         """
         self.ggas = ggas
         self.INPUT = INPUT
         self.method = method
-        self.isegment = iesegment or INPUT['general']['ie_segment']
+        self.isegment = (
+            INPUT['general']['ie_segment'] if iesegment is None else iesegment
+        )
         self.data = []
 
         self._calculate()
@@ -912,7 +916,8 @@ class InteractionEntropyCalc:
         numframes = len(self.data)
         self.ie_std = float(self.ggas.std())
         self.ieframes = math.ceil(numframes * (self.isegment / 100))
-        self.iedata = self.data[-self.ieframes:]
+        # ``data[-0:]`` is the full array in Python; keep an empty tail for 0%.
+        self.iedata = self.data[-self.ieframes:] if self.ieframes else np.asarray([], dtype=float)
         self.ie_value = float(self.data[-1]) if numframes else float('nan')
         self.tail_mean = float(self.iedata.mean()) if self.ieframes else float('nan')
         self.tail_std = float(self.iedata.std()) if self.ieframes else float('nan')
@@ -1074,6 +1079,11 @@ def _get_decomp(pw, idecomp, dec_verbose, t):
 
 
 class MergeGBNSR6Output():
+    """Merge sander MM (+ optional decomp) with GBNSR6 energies into one mdout-like file.
+
+    Totals replace EEL / 1-4 EEL / EGB from GBNSR6. Decomposition keeps sander
+    internal/vdw/eel/sas and overwrites only the polar column from GBNSR6 DGij.
+    """
     def __init__(self, topology, output_filename, mm_filename, mdout_filenames, idecomp, dec_verbose):
         self.topology = topology
         self.output_filename = output_filename
@@ -1082,6 +1092,7 @@ class MergeGBNSR6Output():
         self.idecomp = idecomp
 
         self.dec_verbose = dec_verbose
+        # Totals: EEL/1-4 EEL/EGB from GBNSR6. Decomp: eel from sander, pol from GBNSR6 DGij.
         self.header = '''
           -------------------------------------------------------
           SANDER + GBNSR6

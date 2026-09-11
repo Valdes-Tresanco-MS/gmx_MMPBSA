@@ -32,6 +32,8 @@ from multiprocessing.pool import ThreadPool
 from copy import copy
 from typing import Union
 
+import numpy as np
+
 from GMXMMPBSA.calculation import InteractionEntropyCalc, C2EntropyCalc
 
 from GMXMMPBSA import infofile, main, utils
@@ -116,7 +118,8 @@ def _extracted_from__itemdata_properties_5(data, groups):
     sep_ggas_keys = []
     sep_gsolv_keys = []
     # remove empty charts? (BOND, ANGLE and DIHEDRAL for STP)
-    # FIXME: NLPBsolver ?
+    # With eneopt=1/P3M (incl. Amber-forced NLPB), EEL already contains RF+Coulomb and EPB≈0,
+    # so GGAS/GSOLV chart groups are labeled partitions only — TOTAL remains the meaningful sum.
     ggas_keys = ['BOND', 'ANGLE', 'DIHED', 'VDWAALS', 'EEL', '1-4 VDW', '1-4 EEL', 'UB', 'IMP', 'CMAP', 'ESCF']
     gsolv_keys = ['EGB', 'ESURF', 'EPB', 'ENPOLAR', 'EDISPER', 'POLAR SOLV', 'APOLAR SOLV', 'ERISM']
     for k in data.columns:
@@ -178,7 +181,7 @@ def _setup_data(data: pd.DataFrame, level=0, iec2=False, name=None, index=None,
         line_plot_data = temp_data[:-5].sum(axis=1).rename(name).to_frame()
         bar_plot_data = tempdf[-5:]
         heatmap_plot_data = tempdf[:-5].T
-        if memory:
+        if inmemory:
             cont['line_plot_data'] = [line_plot_data, {}, change]
             cont['bar_plot_data'] = [bar_plot_data, dict(groups=_itemdata_properties(bar_plot_data)), change]
             cont['heatmap_plot_data'] = [heatmap_plot_data, {}, change]
@@ -193,16 +196,20 @@ def _setup_data(data: pd.DataFrame, level=0, iec2=False, name=None, index=None,
         # Select only the "tot" column, remove the level, change first level of columns to rows and remove the mean
         # index
         tempdf = data.loc[:, data.columns.get_level_values(2) == 'tot']
-        line_plot_data = tempdf[:-5].groupby(axis=1, level=0, sort=False).sum().reindex(
-            columns=index).sum(axis=1).rename(name).to_frame()
-        bar_plot_data = tempdf[:-5].groupby(axis=1, level=0, sort=False).sum().agg(
-            [lambda x: x.mean(), lambda x: x.std(ddof=0), lambda x: x.std(ddof=0) / math.sqrt(len(x)),
-             lambda x: utils.block_statistics(x)[2], lambda x: utils.block_statistics(x)[3]]
-            ).reindex(columns=index)
-        bar_plot_data.index = ['Average', 'SD', 'SEM', 'Block SD', 'Block SEM']
+        grouped = tempdf[:-5].T.groupby(level=0, sort=False).sum().T
+        line_plot_data = grouped.reindex(columns=index).sum(axis=1).rename(name).to_frame()
+        # Build this summary explicitly. Recent pandas rejects the previous
+        # mixed scalar/list-like DataFrame.aggregate call.
+        bar_plot_data = pd.DataFrame({
+            'Average': grouped.mean(axis=0),
+            'SD': grouped.std(axis=0, ddof=0),
+            'SEM': grouped.std(axis=0, ddof=0) / math.sqrt(len(grouped)),
+            'Block SD': grouped.apply(lambda column: utils.block_statistics(column)[2], axis=0),
+            'Block SEM': grouped.apply(lambda column: utils.block_statistics(column)[3], axis=0),
+        }).T.reindex(columns=index)
         heatmap_plot_data = tempdf.loc[["Average"]].droplevel(level=2, axis=1).stack().droplevel(level=0).reindex(
             columns=index, index=index)
-        if memory:
+        if inmemory:
             cont['line_plot_data'] = [line_plot_data, {}, change]
             cont['bar_plot_data'] = [bar_plot_data, dict(groups=_itemdata_properties(bar_plot_data)), change]
             cont['heatmap_plot_data'] = [heatmap_plot_data, {}, change]
@@ -416,10 +423,17 @@ class MMPBSA_API():
 
     def _model2df(self, energy, index):
         energy_df = pd.DataFrame(flatten(energy), index=index)
+        # Use the converged finite frames for both summary values and SEM.
+        # The denominator is per term because NMODE terms can converge on
+        # different frames.
+        finite_energy = energy_df.where(np.isfinite(energy_df))
+        finite_counts = finite_energy.count()
+        frame_std = finite_energy.std(ddof=0)
+        frame_sem = frame_std.div(np.sqrt(finite_counts)).where(finite_counts > 0)
         s = pd.concat([
-            energy_df.mean(),
-            energy_df.std(ddof=0),
-            energy_df.std(ddof=0) / math.sqrt(len(index)),
+            finite_energy.mean(),
+            frame_std,
+            frame_sem,
             energy_df.apply(lambda x: utils.block_statistics(x)[2]),
             energy_df.apply(lambda x: utils.block_statistics(x)[3]),
         ], axis=1)
@@ -506,9 +520,11 @@ class MMPBSA_API():
                                           self.data[x])
         entropy = {}
         entropy_df = {}
-        recalc = bool((startframe and startframe != self.app_namespace.INPUT['general']['startframe'] or
-                       endframe and endframe != self.app_namespace.INPUT['general']['endframe'] or
-                       interval and interval != self.app_namespace.INPUT['general']['interval']))
+        recalc = bool(
+            (startframe is not None and startframe != self.app_namespace.INPUT['general']['startframe'])
+            or (endframe is not None and endframe != self.app_namespace.INPUT['general']['endframe'])
+            or (interval is not None and interval != self.app_namespace.INPUT['general']['interval'])
+        )
 
         for et in temp_print_keys:
             if et not in self.data and verbose:
@@ -538,12 +554,15 @@ class MMPBSA_API():
         entropy = {}
         summ_df = {}
         entropy_df = {}
-        recalc = bool((startframe and startframe != self.app_namespace.INPUT['general']['startframe'] or
-                       endframe and endframe != self.app_namespace.INPUT['general']['endframe'] or
-                       interval and interval != self.app_namespace.INPUT['general']['interval']) or
-                       ie_segment and ie_segment != self.app_namespace.INPUT['general']['ie_segment'])
+        recalc = bool(
+            (startframe is not None and startframe != self.app_namespace.INPUT['general']['startframe'])
+            or (endframe is not None and endframe != self.app_namespace.INPUT['general']['endframe'])
+            or (interval is not None and interval != self.app_namespace.INPUT['general']['interval'])
+            or (ie_segment is not None and ie_segment != self.app_namespace.INPUT['general']['ie_segment'])
+        )
 
-        ie_segment = ie_segment or self.app_namespace.INPUT['general']['ie_segment']
+        if ie_segment is None:
+            ie_segment = self.app_namespace.INPUT['general']['ie_segment']
         s, e, index = self._get_frames_index('energy', startframe, endframe, interval)
         for et in temp_print_keys:
             if et not in self.data:
@@ -564,19 +583,27 @@ class MMPBSA_API():
                 entropy[et]['ie'][emodel] = {x: None for x in ['AccIntEnergy', 'ie', 'sigma']}
 
                 df = pd.DataFrame({'AccIntEnergy': d[emodel]['data']}, index=index)
-                df1 = pd.DataFrame({'ie': d[emodel]['data'][-ieframes:]}, index=index[-ieframes:])
+                if ieframes:
+                    df1 = pd.DataFrame(
+                        {'ie': d[emodel]['data'][-ieframes:]}, index=index[-ieframes:]
+                    )
+                else:
+                    df1 = pd.DataFrame({'ie': []}, index=pd.Index([], name=index.name))
                 df2 = pd.concat([df, df1], axis=1)
                 ie_value = float(d[emodel].get(
                     'ie_value',
-                    d[emodel]['iedata'].mean() if 'iedata' in d[emodel]
-                    else d[emodel]['data'][-ieframes:].mean()
+                    d[emodel]['iedata'].mean() if 'iedata' in d[emodel] and ieframes
+                    else (d[emodel]['data'][-ieframes:].mean() if ieframes else float('nan'))
                 ))
                 block_std = float(d[emodel].get('block_std', utils.block_statistics(d[emodel]['iedata'])[2]))
                 block_sem = float(d[emodel].get(
                     'block_sem', utils.primary_uncertainty(d[emodel]['iedata'])
                 ))
-                raw_sd = float(d[emodel]['iedata'].std(ddof=0))
-                raw_sem = raw_sd / math.sqrt(ieframes)
+                if ieframes:
+                    raw_sd = float(d[emodel]['iedata'].std(ddof=0))
+                    raw_sem = raw_sd / math.sqrt(ieframes)
+                else:
+                    raw_sd = raw_sem = float('nan')
                 df3 = pd.DataFrame({'ie': [ie_value, raw_sd, raw_sem, block_std, block_sem],
                                     'sigma': [d[emodel]['sigma'], 0, 0, 0, 0]},
                                    index=['Average', 'SD', 'SEM', 'Block SD', 'Block SEM'])
@@ -628,8 +655,8 @@ class MMPBSA_API():
     def _recalc_iec2(self, method, etype, startframe=None, endframe=None, interval=None, ie_segment=25):
         allowed_met = ['gb', 'pb', 'rism std', 'rism gf', 'rism pcplus', 'gbnsr6']
         result = {}
-        start = list(self.frames.keys()).index(startframe) if startframe else startframe
-        end = list(self.frames.keys()).index(endframe) + 1 if endframe else endframe
+        start = list(self.frames.keys()).index(startframe) if startframe is not None else startframe
+        end = list(self.frames.keys()).index(endframe) + 1 if endframe is not None else endframe
         for key in allowed_met:
             if key in self.data[etype]:
                 edata = self.data[etype][key]['delta']['GGAS'][start:end:interval]
