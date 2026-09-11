@@ -148,8 +148,9 @@ def create_inputs(INPUT, prmtop_system, pre):
                 rec_mdin.write_input(f"{pre}pb_decomp_rec.mdin")
                 lig_mdin.write_input(f"{pre}pb_decomp_lig.mdin")
 
-        # Require one file for GBNSR6 calculations.
-        # TODO: we need to define the intdiel for decomp because the eel term is computed by sander and not by GBNSR6
+        # GBNSR6 decomp is intentionally hybrid: sander supplies MM + Coulomb (eel) decomposition;
+        # gbnsr6 supplies polar (pol) via DGij. SanderMMDecomp maps epsin -> intdiel so eel uses
+        # the same solute dielectric as GBNSR6. Totals later replace EEL/EGB from gbnsr6.
         if INPUT['gbnsr6']['gbnsr6run']:
             rec_res = ['Residues considered as REC', full_rc]
             if stability:
@@ -345,8 +346,8 @@ class SanderInput(object):
 
         # sander.APBS uses &apbs ionc for ionic strength, not &pb istrng.
         if self.namelist in ['pb', 'gbnsr6'] and self.program != 'sander.APBS':
-            # in parmed.amber.mdin gbnsr6 namelist not exists, in this case, is gb, we need to change this namelist
-            # variable in mdin, but use gbnsr6 as namelist to get parameters from the the INPUT
+            # INPUT istrng is M; Amber &pb/&gb expect mM. Do not also scale in main.py.
+            # For gbnsr6, ParmEd writes the &gb namelist; values still come from INPUT['gbnsr6'].
             nl = 'pb' if self.namelist == 'pb' else 'gb'
             self.mdin.change(nl, 'istrng', self.INPUT[self.namelist]['istrng'] * 1000)
 
@@ -558,7 +559,7 @@ class SanderPBSADECOMPInput(SanderInput):
                    'ipb': 2, 'inp': 1,
                    # Options to define the physical constants
                    'epsin': 1.0, 'epsout': 78.5, 'epsmem': 1.0, 'smoothopt': 1, 'istrng': 0.0,
-                   'radiopt': 1, 'dprob': 1.4, 'iprob': 2.0, 'sasopt': 0, 'arcres': 0.25,
+                   'radiopt': 0, 'dprob': 1.4, 'iprob': 2.0, 'sasopt': 0, 'arcres': 0.25,
                    # Options for Implicit Membranes
                    'membraneopt': 0, 'mprob': 2.70, 'mthick': 40, 'mctrdz': 0.0,
                    'poretype': 1,
@@ -569,9 +570,10 @@ class SanderPBSADECOMPInput(SanderInput):
                    'bcopt': 5, 'eneopt': 2, 'frcopt': 0, 'scalec': 0, 'cutfd': 5.0, 'cutnb': 0.0,
                    'nsnba': 1,
                    # Options to select a non - polar solvation treatment
-                   'decompopt': 2, 'use_rmin': 1, 'sprob': 0.557, 'vprob': 1.300,
-                   'rhow_effect': 1.129, 'use_sav': 1, 'cavity_surften': 0.0378,
-                   'cavity_offset': -0.5692, 'maxsph': 400, 'maxarcdot': 1500,
+                   # Fallbacks match inp=1 (default). inp=2 values come from INPUT.
+                   'decompopt': 2, 'use_rmin': 1, 'sprob': 1.4, 'vprob': 1.300,
+                   'rhow_effect': 1.129, 'use_sav': 1, 'cavity_surften': 0.005,
+                   'cavity_offset': 0.0, 'maxsph': 400, 'maxarcdot': 1500,
                    # Options for output
                    'npbverb': 0}
 
@@ -646,7 +648,7 @@ class SanderPBSAInput(SanderInput):
                    'ipb': 2, 'inp': 1,
                    # Options to define the physical constants
                    'epsin': 1.0, 'epsout': 78.5, 'epsmem': 1.0, 'smoothopt': 1, 'istrng': 0.0,
-                   'radiopt': 1, 'dprob': 1.4, 'iprob': 2.0, 'sasopt': 0, 'arcres': 0.25,
+                   'radiopt': 0, 'dprob': 1.4, 'iprob': 2.0, 'sasopt': 0, 'arcres': 0.25,
                    # Options for Implicit Membranes
                    'membraneopt': 0, 'mprob': 2.70, 'mthick': 40, 'mctrdz': 0.0,
                    'poretype': 1,
@@ -657,9 +659,10 @@ class SanderPBSAInput(SanderInput):
                    'bcopt': 5, 'eneopt': 2, 'frcopt': 0, 'scalec': 0, 'cutfd': 5.0, 'cutnb': 0.0,
                    'nsnba': 1,
                    # Options to select a non - polar solvation treatment
-                   'decompopt': 2, 'use_rmin': 1, 'sprob': 0.557, 'vprob': 1.300,
-                   'rhow_effect': 1.129, 'use_sav': 1, 'cavity_surften': 0.0378,
-                   'cavity_offset': -0.5692, 'maxsph': 400, 'maxarcdot': 1500,
+                   # Fallbacks match inp=1 (default). inp=2 values come from INPUT.
+                   'decompopt': 2, 'use_rmin': 1, 'sprob': 1.4, 'vprob': 1.300,
+                   'rhow_effect': 1.129, 'use_sav': 1, 'cavity_surften': 0.005,
+                   'cavity_offset': 0.0, 'maxsph': 400, 'maxarcdot': 1500,
                    # Options for output
                    'npbverb': 0}
 

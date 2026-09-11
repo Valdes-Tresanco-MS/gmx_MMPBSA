@@ -35,6 +35,17 @@ SUPPORTED_QM_THEORIES = (
 )
 
 
+PBRADII_ALIASES = {
+    'bondi': 1,
+    'mbondi': 2,
+    'mbondi2': 3,
+    'mbondi3': 4,
+    'mbondi_pb2': 5,
+    'mbondi_pb3': 6,
+    'charmm_radii': 7,
+}
+
+
 PB_MEMBRANE_TEMPLATE = {
     'memopt': 1,  #Use a heterogeneous membrane dielectric constant in a slab-like implicit membrane
     'emem': 7.0,
@@ -70,7 +81,7 @@ class Variable(object):
     Base variable class. It has a name and a single value
     """
 
-    def __init__(self, varname, dat_type=int, default=None, description='', int_dat_type=str):
+    def __init__(self, varname, dat_type=int, default=None, description='', int_dat_type=str, aliases=None):
         """ Initializes the variable type. Sets the default value as well as
           specifying how many characters are required by the parser to trigger
           recognition
@@ -84,6 +95,7 @@ class Variable(object):
         self.name = varname
         self.datatype = dat_type
         self.int_datatype = int_dat_type
+        self.aliases = {str(key).lower(): value for key, value in (aliases or {}).items()}
         self.allow_none = default is None and self.datatype is not str
         if default is None:
             self.value = None
@@ -152,11 +164,19 @@ class Variable(object):
             data = value.replace('"', '').replace("'", '')
             self.value = [self.int_datatype(x.strip()) for x in re.split(r';\s*|,\s*', data)]
         else:
+            if self.aliases:
+                alias = value.strip().strip('"').strip("'").lower()
+                if alias in self.aliases:
+                    self.value = self.aliases[alias]
+                    return
             try:
                 self.value = self.datatype(value)
             except (TypeError, ValueError) as exc:
+                expected = self.datatype.__name__
+                if self.aliases:
+                    expected += ' or one of ' + ', '.join(sorted(self.aliases))
                 raise InputError(
-                    f'Invalid value {value!r} for {self.name}; expected {self.datatype.__name__}'
+                    f'Invalid value {value!r} for {self.name}; expected {expected}'
                 ) from exc
 
 
@@ -197,13 +217,13 @@ class Namelist(object):
         """ Not equal """
         return not self.__eq__(nml)
 
-    def addVariable(self, varname, datatype, default=None, description=None, int_dat_type=str):
+    def addVariable(self, varname, datatype, default=None, description=None, int_dat_type=str, aliases=None):
         """ Adds a variable to this namelist. It checks to make sure that it's
           going to create a conflict with an existing variable.
         """
         if varname in self.variables:
             raise InternalError(f'Duplicated variable {varname} in Namelist')
-        self.variables[varname] = Variable(varname, datatype, default, description, int_dat_type)
+        self.variables[varname] = Variable(varname, datatype, default, description, int_dat_type, aliases)
 
     def Open(self):
         """ Signifies that the namelist is open """
@@ -312,14 +332,16 @@ class InputFile(object):
 
         for var in variable_list:
 
-            if not isinstance(var, (list, tuple)) or len(var) not in [4, 5]:
+            if not isinstance(var, (list, tuple)) or len(var) not in [4, 5, 6]:
                 raise InputError('variables in variable_list must be lists of ' +
-                                 'length 4 or 5. [varname, datatype, default, description, internal_datatype ('
-                                 'Optional)]')
+                                 'length 4, 5, or 6. [varname, datatype, default, description, internal_datatype ('
+                                 'Optional), aliases (Optional)]')
             if len(var) == 4:
                 self.namelists[name].addVariable(var[0], var[1], var[2], var[3])
-            else:
+            elif len(var) == 5:
                 self.namelists[name].addVariable(var[0], var[1], var[2], var[3], var[4])
+            else:
+                self.namelists[name].addVariable(var[0], var[1], var[2], var[3], var[4], var[5])
 
     def _full_namelist_name(self, nml):
         """ Determines what the full namelist name is. We try to make as many
@@ -491,7 +513,7 @@ input_file.addNamelist('general', 'general',
                            ['forcefields', list, 'oldff/leaprc.ff99SB, leaprc.gaff',
                             'Force fields; e.g. "leaprc.protein.ff14SB"'],
                            ['ions_parameters', int, 1, 'Ion params; e.g. 1'],
-                           ['PBRadii', int, 4, 'PB radii set; 1-7'],
+                           ['PBRadii', int, 4, 'PB radii set; 1-7 or a named set', str, PBRADII_ALIASES],
                            ['radii_audit', int, 0, 'Write per-atom continuum-radius CSV files; 0/1'],
                            ['source_force_field', str, 'auto',
                             'Source force-field family; auto, amber, charmm, opls, gromos, or other'],
@@ -500,7 +522,8 @@ input_file.addNamelist('general', 'general',
                            # Entropy options
                            ['qh_entropy', int, 0, 'Legacy QH output reader; new calculations reject 1'],
                            ['interaction_entropy', int, 0, 'Run IE entropy; 0/1'],
-                           ['ie_segment', int, 25, 'IE segment length (%); e.g. 25'],
+                           ['ie_segment', int, 25,
+                            'IE tail diagnostic only (% of frames); not the primary IE; e.g. 25'],
                            ['c2_entropy', int, 0, 'Run C2 entropy; 0/1'],
 
                            # Miscellaneous options
@@ -572,7 +595,7 @@ input_file.addNamelist('gbnsr6', 'gbnsr6',
                            ['alpb', int, 1, 'Use ALPB; 0/1'],
                            ['epsin', float, 1.0, 'Solute dielectric; e.g. 1.0'],
                            ['epsout', float, 78.5, 'Solvent dielectric; e.g. 78.5'],
-                           # FIXME: convert to M
+                           # User units are M; createinput converts to mM for Amber (&gb/&pb istrng).
                            ['istrng', float, 0.0, 'Ionic strength (M); e.g. 0.150'],
                            ['rs', float, 0.52, 'Boundary shift; e.g. 0.52'],
                            ['dprob', float, 1.4, 'Probe radius (A); e.g. 1.4'],
@@ -598,7 +621,7 @@ input_file.addNamelist('pb', 'pb',
                            ['emem', float, 4.0, 'Membrane dielectric; e.g. 4.0'],
                            ['smoothopt', int, 1, 'Dielectric smoothing; 0-2'],
                            ['istrng', float, 0.0, 'Ionic strength (M); e.g. 0.150'],
-                           ['radiopt', int, 1, 'Use optimized radii; 0/1'],
+                           ['radiopt', int, 0, 'Use prmtop radii (0) or Tan-Luo (1)'],
                            ['prbrad', float, 1.4, 'Probe radius (A); e.g. 1.4'],
                            ['iprob', float, 2.0, 'Ion probe (A); e.g. 2.0'],
                            ['sasopt', int, 0, 'PB surface option; 0/1'],

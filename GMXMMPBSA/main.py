@@ -1049,6 +1049,9 @@ class MMPBSA_App(object):
         # Invert scale
         self.INPUT['pb']['scale'] = 1 / self.INPUT['pb']['scale']
 
+        # Keep INPUT aligned with Amber when inp=1 (cavity/sprob reset + radiopt=0).
+        utils.sync_pb_nonpolar_for_inp(self.INPUT)
+
         # Set up netcdf variables and decide trajectory suffix
         if self.INPUT['general']['netcdf'] == 0:
             self.INPUT['general']['netcdf'] = ''
@@ -1354,6 +1357,24 @@ class MMPBSA_App(object):
                 not (INPUT['gb']['gbrun'] or INPUT['pb']['pbrun'] or INPUT['gbnsr6']['gbnsr6run']):
             GMXMMPBSA_ERROR('DECOMP must be run with GB, GBNSR6, or PB!', InputError)
 
+        if INPUT['decomp']['decomprun'] and INPUT['gbnsr6']['gbnsr6run']:
+            logging.info(
+                'GBNSR6 + decomp: hybrid merge — system EEL/EGB from GBNSR6; decomp eel from sander, '
+                'pol from GBNSR6 DGij (epsin mapped to sander intdiel).'
+            )
+
+        if INPUT['pb']['pbrun'] and int(INPUT['pb'].get('eneopt', 2)) in (1, 3, 4):
+            reason = (
+                'Amber forces eneopt=1 for npbopt=1 (NLPB)'
+                if int(INPUT['pb'].get('npbopt', 0)) == 1
+                else f"eneopt={INPUT['pb']['eneopt']} (P3M)"
+            )
+            logging.info(
+                'PB %s: EPB is expected ~0 and EEL holds RF+Coulomb; '
+                'ΔGGAS/ΔGSOLV are not a separable gas/solv split — use ΔTOTAL.',
+                reason,
+            )
+
         if '-deo' in sys.argv and not INPUT['decomp']['decomprun']:
             logging.warning("&decomp namelist has not been defined in the input file. Ignoring '-deo' flag... ")
 
@@ -1363,7 +1384,7 @@ class MMPBSA_App(object):
         # Assigning variables
         # set the pbtemp = temperature
         self.INPUT['pb']['pbtemp'] = self.INPUT['general']['temperature']
-        # self.INPUT['gbnsr6']['istrng'] = self.INPUT['gbnsr6']['istrng'] * 1000
+        # Keep gbnsr6/pb istrng in M here; SanderInput converts M→mM when writing mdin.
 
         logging.info(f'Checking {self.FILES.input_file} input file...Done.\n')
 

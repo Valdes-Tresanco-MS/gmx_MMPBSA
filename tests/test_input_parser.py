@@ -40,6 +40,25 @@ class InputParserTest(unittest.TestCase):
         self.assertEqual(parsed['gb']['igb'], 8)
         self.assertEqual(parsed['pb']['exdi'], 78.5)
 
+    def test_pbradii_accepts_named_sets_case_insensitively(self):
+        expected = {
+            'bondi': 1,
+            'mbondi': 2,
+            'mbondi2': 3,
+            'mbondi3': 4,
+            'mbondi_pb2': 5,
+            'mbondi_pb3': 6,
+            'charmm_radii': 7,
+        }
+
+        for name, number in expected.items():
+            parsed = self._parse(f'&general\n  PBRadii = "{name.upper()}"\n/\n')
+            self.assertEqual(parsed['general']['PBRadii'], number)
+
+    def test_pbradii_invalid_named_set_reports_allowed_names(self):
+        with self.assertRaisesRegex(InputError, r'expected int or one of .*mbondi3'):
+            self._parse('&general\n  PBRadii = not_a_radius_set\n/\n')
+
     def test_unterminated_namelist_is_rejected(self):
         with self.assertRaisesRegex(InputError, r'Unterminated namelist general'):
             self._parse('&general\n  startframe = 7\n')

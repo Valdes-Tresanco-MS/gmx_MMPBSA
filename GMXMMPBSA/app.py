@@ -125,6 +125,9 @@ def _gmxmmpbsa_base(parser, engine='gmx'):
         else:
             info = InfoFile(app, True)
             info.read_info()
+            # Legacy info files may still store inp=2 cavity defaults with inp=1.
+            from GMXMMPBSA.utils import sync_pb_nonpolar_for_inp
+            sync_pb_nonpolar_for_inp(app.INPUT)
             app.loadcheck_prmtops()
 
         # Now we parse the output, print, and finish

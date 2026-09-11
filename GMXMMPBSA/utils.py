@@ -180,6 +180,55 @@ class EnergyVector(np.ndarray):
         return np.any(np.greater(np.abs(self), val))
 
 
+# Amber PBSA expects these when inp=1 (linear SASA nonpolar model).
+# cavity_*/sprob are reset by Amber at runtime; radiopt is only warned about
+# unless we align INPUT here (Tan–Luo radiopt=1 still runs and changes EPB).
+PB_INP1_DEFAULTS = {
+    'sprob': 1.4,
+    'cavity_surften': 0.005,
+    'cavity_offset': 0.0,
+    'radiopt': 0,
+}
+# Backward-compatible alias used by tests/callers.
+PB_INP1_NONPOLAR = PB_INP1_DEFAULTS
+
+
+def sync_pb_nonpolar_for_inp(INPUT):
+    """Align INPUT PB parameters with Amber guidance when ``inp=1``.
+
+    Amber PBSA resets ``sprob``, ``cavity_surften``, and ``cavity_offset`` for
+    ``inp=1``, and warns that ``radiopt`` should be 0 (use prmtop / PBRadii
+    radii). Keep the in-memory INPUT dict synchronized so generated mdins,
+    ``_GMXMMPBSA_info``, and decomposition SAS scaling match the continuum
+    model Amber applies for ENPOLAR/ECAVITY.
+
+    Returns:
+        True if any PB value was changed.
+    """
+    pb = INPUT.get('pb') if INPUT is not None else None
+    if not pb or int(pb.get('inp', 0)) != 1:
+        return False
+
+    changed = []
+    for key, value in PB_INP1_DEFAULTS.items():
+        if key not in pb:
+            continue
+        current = pb[key]
+        if current != value:
+            changed.append((key, current, value))
+            pb[key] = value
+
+    if changed:
+        details = ', '.join(f'{key}: {old} -> {new}' for key, old, new in changed)
+        logging.warning(
+            'PB inp=1: aligning parameters with Amber PBSA guidance (%s). '
+            'These values are used for generated mdins, saved INPUT metadata, and '
+            'decomposition nonpolar scaling.',
+            details,
+        )
+    return bool(changed)
+
+
 def get_std(val1, val2):
     return sqrt(val1 ** 2 + val2 ** 2)
 
