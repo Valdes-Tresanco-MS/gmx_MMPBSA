@@ -67,11 +67,18 @@ To this end, we have made the following changes:
 This dialog allows you to select the systems of interest and their components. The available options control how
 `gmx_MMPBSA_ana` processes the result files:
 
-* select whether you want to include mutants, normals, or both systems when analyzing alanine scanning results
-* delete the terms whose values during the analysis were between `-0.01` and `0.01`
-* show or hide decomposition analyses, which usually contain large amounts of data
-* convert the frame range to a time scale
-* calculate the correlation between various systems
+* `Energy Options` selects which complex (COM), receptor (REC), ligand (LIG), and delta data are loaded. `Remove empty
+  terms` hides terms whose absolute value is below the configured threshold (the default is `0.01` kcal/mol).
+* `Decomposition Options` selects which decomposition data are loaded. `Remove non-contributing residues` hides residues
+  below the configured per-residue threshold (the default is `0.5` kcal/mol).
+* The result tree lets you include normal and mutant systems, enter experimental `Ki` values, select systems for
+  correlation, and choose a reference system for a ΔΔG correlation. The `Chart Settings` column selects the saved chart
+  configuration for each system.
+* `Correlation` enables between-system analysis when more than three systems are loaded and lets you choose ΔG or ΔΔG.
+* `Convert frames to time` changes the x-axis from frame numbers to a user-defined start, scale, and time unit.
+* `Charts options` controls whether chart toolbars are hidden and whether the current chart configuration is reset.
+* `Performance Options` provides a simple performance preset or advanced controls for in-memory loading and the number
+  of multiprocessing jobs.
   
 This allows you to take advantage of the flexibility of `gmx_MMPBSA` to carry out several analysis types in the same 
 run and focus on the key elements for each of these analyses.
@@ -86,7 +93,23 @@ different functions.
     calculation type. You can expand or collapse each top-level item to manage many systems while keeping the relevant
     items visible.
 === "Correlation"
-    We are working on its implementation.
+    The correlation panel is available when `Between systems` was enabled during initialization. It compares experimental
+    binding free energies with calculated system summaries; trajectory frames from different systems are not paired.
+
+    The panel contains:
+
+    * a model table with the available `ΔG` models. Depending on the loaded data, these can include `ΔG effective`,
+      `ΔG IE`, `ΔG C2`, `ΔG NMODE`, and `ΔG QH`. Each model provides a regression-chart button.
+    * a data table showing the systems used by the selected model: system number, normal or mutant type, experimental
+      ΔG, calculated average, `Block SD`, `Block SEM`, `SD`, and `SEM`.
+    * a `Charts` tab for regression-plot settings and a `Selections` tab for choosing systems and the reference system.
+
+    The `Selections` table contains `Id`, `Sel.`, `Ref.`, `Type`, `Exp. Ki`, and `Name`. `Sel.` includes a system in the
+    correlation, while `Ref.` selects the normal system used as the reference for a ΔΔG correlation. Experimental `Ki`
+    values are converted to ΔG using each system's temperature. A regression chart requires at least four valid selected
+    systems with both experimental and calculated values. The chart uses experimental ΔG on the x-axis and calculated ΔG
+    on the y-axis; its settings include a confidence interval, Pearson and Spearman statistics, the regression equation,
+    optional marginal distributions, and optional uncertainty bars.
 
 #### Buttons and Actions
 Each item represents data associated with a calculation type and component (_e.g._, complex, receptor, ligand, or
@@ -94,13 +117,13 @@ delta). The available buttons and actions depend on the data in the item. An ite
 
 |       Button       | Visual element             | Description                                                                                                             |
 |:------------------:|----------------------------|-------------------------------------------------------------------------------------------------------------------------|
-| ![resultfiles][3]  | Result files               | Show/hide in a new sub-window the **gmx_MMPBSA** output files: `FINAL_RESULTS_MMPBSA.dat` and `FINAL_DECOMP_MMPBSA.dat` |
-|   ![lineplot][4]   | Line plot                  | Show/hide in a new sub-window a Line plot                                                                               |
-|   ![barplot][5]    | Bar plot                   | Show/hide in a new sub-window a Bar plot                                                                                |
-|   ![heatmap][6]    | Heatmap                    | Show/hide in a new sub-window a Heatmap plot                                                                            |
-|    ![pymol][7]     | PyMOL visualization        | Show/hide the complex per-residue energy representation in a new PyMOL instance                                         |
-| ![summarytable][8] | Summary table              | Show/hide the summary table for a parent item with multiple energy components                                           |
-|  ![multiacti][9]   | Multiple activation button | Show/hide all items (Line, bar, heatmap plots and PyMOL) at the same time                                               |
+| ![resultfiles][3]  | Result files               | Open the calculation output; the decomposition output is available when decomposition data were loaded.                |
+|   ![lineplot][4]   | Line plot                  | Show or hide the component by frame, with an optional `Show in table` action.                                          |
+|   ![barplot][5]    | Bar plot                   | Show or hide the aggregate component plot, with an optional `Show in table` action.                                    |
+|   ![heatmap][6]    | Heatmap                    | Show or hide the per-residue or pairwise heatmap, with an optional `Show in table` action.                             |
+|    ![pymol][7]     | PyMOL visualization        | Open the complex per-residue energy representation in PyMOL; PyMOL must be available in `PATH`.                       |
+| ![summarytable][8] | Summary table              | Show or hide the summary table for a parent item with multiple energy components.                                     |
+|  ![multiacti][9]   | Multiple activation button | Toggle all available actions for the item at the same time.                                                           |
 
 [3]: assets/images/result_files_icon.svg
 [4]: assets/images/line_plot_icon.svg
@@ -110,9 +133,8 @@ delta). The available buttons and actions depend on the data in the item. An ite
 [8]: assets/images/summary_table_icon.svg
 [9]: assets/images/multi_button_icon.svg
 
-In turn, some buttons have a drop-down menu that allows you to display the content of that specific graph in table 
-form. In particular, the multiple activation button allows you to show/hide all the visual elements associated with a 
-certain item.
+The line, bar, and heatmap buttons have a drop-down menu with a `Show in table` action. The multiple activation button
+toggles all available actions for the selected item, including the result table when that action is available.
 
 Example:
 <figure markdown="1">
@@ -125,9 +147,10 @@ Example:
 [10]: assets/images/buttons_example.png
 
 ### 3- Options panel
-In this panel you can find two tabs:
+The panel starts with a selection control and contains two tabs. `Selected System` applies changes to the current system;
+`All Systems` becomes available when multiple systems are loaded.
 
-=== "Charts Options"
+=== "Charts"
     Contains five menus:
 
     * `General` controls settings such as the theme and figure export format.
@@ -136,11 +159,18 @@ In this panel you can find two tabs:
     * `Heatmap Plot` controls settings such as receptor and ligand colors and the color palette.
     * `Visualization` controls PyMOL settings such as the color palette, background color, and representation.
 
-=== "Frames"
-    Contains two windows:
+    The configuration menu can set the current settings as defaults, restore developer defaults, save a system-specific
+    configuration, or use an existing system-specific configuration.
 
-    * `Energy` changes start, end and interval between frames.
-    * `IE` changes segment considered for calculating the Interaction Entropy.
+=== "Frames"
+    Contains three windows:
+
+    * `Energy` changes the start, end, and interval between frames used for energy and decomposition plots.
+    * `NMODE` changes the start, end, and interval between frames used for normal-mode calculations.
+    * `IE` changes the percentage of the selected energy frames used for Interaction Entropy.
+
+    Press `Update` after changing frame or chart settings. An alert icon indicates that a changed frame range has not
+    yet been applied.
 
 ### 4- Plot area
 In this area, the graphs and tables included in each system will be displayed in the form of sub-windows 
@@ -179,8 +209,9 @@ organized, and fluid workspace to analyze a vast number of graphs.
 === "Bar plot"
     Shows the aggregate contribution of a component over the simulation. Depending on the quantity, a bar represents
     either an average (for example, `TOTAL DELTA`, `VDWAALS`, or per-residue contributions) or a sum (for example,
-    NMODE entropy, QH entropy, or binding free energy). Bars that represent averages also include a solid line for
-    the standard deviation.
+    NMODE entropy, QH entropy, or binding free energy). Bars that represent averages can include an uncertainty line.
+    The uncertainty representation is configurable as `Block SEM`, `Block SD`, `SD`, or `SEM`; `Block SEM` is the
+    default for correlated trajectories.
     
     <figure markdown="2">
         ![barplot1](assets/images/bar_plot.png){ width=60%; style="display: block; margin: 0 auto"}
@@ -200,8 +231,9 @@ organized, and fluid workspace to analyze a vast number of graphs.
     </figure>
 
 === "Heatmap plot"
-    Shows how several components evolve during the simulation. A heatmap can display all residue contributions in a
-    per-residue calculation or the relationships between residue pairs in a pairwise calculation.
+    Shows how several components vary across frames or residue relationships. A per-residue heatmap displays residue
+    contributions by frame, while a per-wise heatmap displays the relationships between residue pairs. Receptor and
+    ligand residues can be highlighted with separate colors.
     
     !!! tip
         The relational heatmap is usually the clearest representation for pairwise decomposition analysis.
