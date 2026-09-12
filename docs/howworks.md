@@ -38,6 +38,7 @@ free energies and/or entropies using the selected models. During `Analysis`, the
   </figcaption>
 </figure>
 
+[1]: https://ambermd.org/doc12/Amber21.pdf#chapter.36=&page=790.15
 [2]: assets/images/workflow.svg
 
 [comment]: <> (![Placeholder]&#40;assets/images/workflow.svg&#41;)
