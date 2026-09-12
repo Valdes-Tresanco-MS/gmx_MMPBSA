@@ -130,6 +130,30 @@ trajectories when enough blocks are available. The legacy frame-based SD/SEM val
 should not be relabeled as block estimates. Short trajectories provide weak block evidence, so report the block size
 and number of blocks when interpreting the uncertainty.
 
+#### Deprecated `sander_apbs`
+
+New calculations reject `sander_apbs=1`. Use the built-in PBSA solver. The legacy value remains recognized only so
+archived results can still be read; do not carry `sander_apbs=1` forward into a 1.7.0 input file.
+
+#### Expected numeric differences vs 1.6.5
+
+Even when the GB model, `PBRadii`, PB dielectric, topology route, and trajectory frames are matched, some quantities
+are intentionally not numerically identical to 1.6.5. Treat the following as accepted known differences, not as
+regression failures:
+
+- **IE and C2.** The corrected full-ensemble IE estimator, shared running mean, stable log-sum-exp evaluation, and
+  deterministic block diagnostics change primary IE/C2 values and uncertainty columns relative to 1.6.5. Do not expect
+  bit-for-bit or kcal/mol parity with historical IE or C2 summaries.
+- **GBNSR6.** The 1.7.0 parser and frame-ID/term merge correct post-1.6.5 frame and term handling. GBNSR6 totals,
+  per-frame series, and related API fields can differ from 1.6.5 even with matched inputs.
+- **CHARMM CMAP components.** GROMACS topology conversion omits component-level CHARMM CMAP terms that cancel in the
+  single-trajectory binding delta (`C − R − L`). Complex/receptor/ligand component totals and API component fields may
+  therefore differ from 1.6.5 while the STP binding Δ remains the compatibility quantity. Multiple-trajectory workflows
+  do not get that cancellation, so MT CHARMM CMAP cases can differ in both components and Δ.
+
+Parity checks that pin legacy `igb` / `PBRadii` / `exdi` values still allow these documented exceptions. Compare 1.6.5
+and 1.7.0 results only after confirming the model settings above and after accounting for this list.
+
 ### 4. Check output paths and result consumers
 
 Per-frame CSV output is generated automatically from the summary output name. For example:
@@ -164,7 +188,8 @@ creation only, not logging or the calculation exit status.
 5. If entropy is enabled, record whether the result is full-ensemble IE, a tail diagnostic, C2, or historical QH, and
    report block size and block count with block uncertainties.
 6. Compare the 1.7.0 result with the preserved 1.6.5 result only after confirming that the model, topology route,
-   frames, and uncertainty convention are the same.
+   frames, and uncertainty convention are the same, and after accounting for the
+   [expected numeric differences](#expected-numeric-differences-vs-165) above.
 
 ## Upgrading from 1.4.3 to 1.5.x
 

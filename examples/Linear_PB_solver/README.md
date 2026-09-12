@@ -109,7 +109,7 @@ can also [view the example files on GitHub][8] before downloading them.
 The example uses the minimal `mmpbsa.in` shown first below. The all-options version was generated with
 `gmx_MMPBSA --create_input pb` and then adapted with the example-specific values. The concise block is the
 runnable starting point; the generated block exposes additional options and defaults, so the two blocks are not
-textually identical. Because 1.7.0 is still proposed, the generator's development-version header is omitted.
+textually identical.
 
 For this example, `-cp topol.top` supplies the GROMACS topology parameters used by the calculation. The generated
 `forcefields` line is retained as an all-options/default field and should not be read as evidence that both input

@@ -141,7 +141,7 @@ describe the same MM/GBSA decomposition calculation.
 === "Generated input - all options"
 
     ```yaml linenums="1" title="mmpbsa.in generated with --create_input gb decomp"
-    Input block generated for the 1.7.0 release; the generator's development-version header is omitted from this documentation.
+    Input block generated for the 1.7.0 release.
     Be careful with the variables you modify, some can have severe consequences on the results you obtain.
 
     # General namelist variables

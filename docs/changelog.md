@@ -4,11 +4,21 @@ title: Changelog
 ---
 # Changelog
 
-## gmx_MMPBSA v1.7.0
+## gmx_MMPBSA v1.7.0 (09/11/2026)
 
 For users moving from 1.6.5 to 1.7.0, see the
 [migration guide](compatibility.md#migrating-from-165-to-170) before starting a new
-calculation or rewriting an archived result.
+calculation or rewriting an archived result. Accepted numeric differences versus 1.6.5
+(IE/C2, GBNSR6, CHARMM CMAP components) are listed under
+[Expected numeric differences vs 1.6.5](compatibility.md#expected-numeric-differences-vs-165).
+
+### Release knowns
+
+- The Comp_receptor example does not ship a `topol.top` (+ referenced `*.itp` files) in this release, so
+  `gmx_MMPBSA_test -t 9` remains excluded from the default test suites until those topologies are added.
+- Pre-release calculation validation for the combination matrix is a composite authority: a full matrix run plus
+  targeted re-runs after one application fix (molsurf stdin termination) and matrix/harness corrections. It is not a
+  single post-fix full-matrix replay.
 
 ### Topology preparation
 
@@ -33,8 +43,11 @@ calculation or rewriting an archived result.
 
 - Froze `docs/application_note_advances_since_1_4_3.md` as a v1.4.3→v1.6.5 draft; 1.7.0 science belongs in the
   changelog and migration guide.
+- Documented expected numeric differences versus 1.6.5 (IE/C2, GBNSR6 parser/frame-term merge, CHARMM CMAP
+  components) in the migration guide.
 - Clarified that frame SD uses `ddof=0` and block SD uses `ddof=1` by design; averages are unaffected.
-- Documented the Amber kcal/mol golden gap and added a fixture-based GB parse golden for Δ component means.
+- Documented the Amber kcal/mol golden gap (developer validation notes) and added a fixture-based GB parse golden
+  for Δ component means.
 - Clarified GBNSR6/PB `istrng` units (M in input; M→mM only when writing Amber mdin).
 
 ### Input defaults and migration

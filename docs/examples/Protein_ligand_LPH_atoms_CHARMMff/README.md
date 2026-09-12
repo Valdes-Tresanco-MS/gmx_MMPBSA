@@ -236,7 +236,7 @@ linear PB calculation using the already prepared LPH-free files.
 === "Generated input - all options"
 
     ```yaml linenums="1" title="mmpbsa.in generated with --create_input pb"
-    Input block generated for the 1.7.0 release; the generator's development-version header is omitted from this documentation.
+    Input block generated for the 1.7.0 release.
     Be careful with the variables you modify, some can have severe consequences on the results you obtain.
 
     # General namelist variables
