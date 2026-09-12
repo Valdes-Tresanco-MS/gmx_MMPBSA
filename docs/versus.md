@@ -41,7 +41,7 @@ This comparison is based on each program's documentation.
 ## Technical features
 | Feature                   |        [g_mmpbsa][1]         |               [GMXPBSA 2.1][2]               |              MMPBSA.py [^1]               |              [gmx_MMPBSA][3]              |
 |:--------------------------|:----------------------------:|:--------------------------------------------:|:-----------------------------------------:|:-----------------------------------------:|
-| **GROMACS Version**       |   4.x, 5.x and 2016+ [^6]    |           4.x, 5.x and 20xx.x [^7]           |                    ---                    |              `>=2022,<2027` [^10]        |
+| **GROMACS Version**       |   4.x, 5.x and 2016+ [^6]    |           4.x, 5.x and 20xx.x [^7]           |                    ---                    |              Any compatible version [^10] |
 | **Dependencies**          | APBS (1.2.x, 1.3.x or 1.4.x) |              APBS (1.x.x) [^8]               |              AmberTools                   |             AmberTools [^9]               |
 | **Parallel computation**  |       Depends on APBS        | Locally using APBS or in HPC divided in jobs | :material-check-bold:{.scale_icon_medium} | :material-check-bold:{.scale_icon_medium} |
 | **Steps for:**            |                              |                                              |                                           |                                           |
@@ -61,10 +61,12 @@ historical QH result files remain readable only during the compatibility window.
 later than 2016.x
   [^7]: Support for GROMACS 20xx.x is not documented; the table assumes compatibility because the tool is script-based
   [^8]: Support for APBS 3.x.x is not documented
-  [^9]: The recommended conda dependency boundary is AmberTools `>=24.8,<27`; older compatible AmberTools
-versions may also work when their Python and compiled dependency stack is consistent.
-  [^10]: This is the 1.7.0 tested environment boundary, not a claim that every GROMACS release is supported.
-Conversion paths and force-field/model restrictions still apply; see [compatibility and upgrades](compatibility.md).
+  [^9]: AmberTools executables are resolved from the active environment/PATH. The 1.7.0 tested and recommended conda
+range is `>=24.8,<27`, but other compatible AmberTools versions may also work when their Python and compiled
+dependency stack is consistent.
+  [^10]: The 1.7.0 tested and recommended conda range is GROMACS `>=2022,<2027`, not a hard runtime limit. GROMACS
+executables can be supplied through `PATH` or `gmx_path`; conversion paths and force-field/model restrictions still
+apply. See [compatibility and upgrades](compatibility.md).
   [^0]: gmx_MMPBSA supports linear and nonlinear PB equations. [MMPBSA.py][4], by contrast, requires the user to
 modify the `*.mdin` input files manually
 

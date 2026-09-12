@@ -59,8 +59,11 @@ status, result schema, warnings, and provenance files before starting a producti
 
 ### 2. Create a separate environment and verify dependencies
 
-The 1.7.0 dependency boundaries are Python `>=3.11,<3.13`, AmberTools `>=24.8,<27`, and GROMACS
-`>=2022,<2027`. The Python package also requires NumPy `>=1.26.4,<2`, pandas `>=2.2,<3`, Matplotlib `>=3.8,<4`,
+The 1.7.0 Python requirement is `>=3.11,<3.13`. Release validation used AmberTools `>=24.8,<27` and GROMACS
+`>=2022,<2027` as the tested and recommended conda ranges; these ranges are not hard runtime version checks for the
+external programs. At runtime, AmberTools executables are resolved from the active environment/PATH, while GROMACS
+executables are resolved from `PATH` or the `gmx_path` input variable. Other installed versions can work when their
+executables and the selected input/topology workflow are compatible. The Python package also requires NumPy `>=1.26.4,<2`, pandas `>=2.2,<3`, Matplotlib `>=3.8,<4`,
 SciPy `>=1.14.1,<2`, Seaborn `>=0.13,<0.14`, `mpi4py >=4.0.1,<5`, ParmEd `>=4.2.2,<5`, and Rich `>=13,<16`.
 Use the matching [conda environment file](env.yml) or the [installation instructions](installation.md#requirements),
 then run `python -m pip check` before testing a calculation.

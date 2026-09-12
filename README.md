@@ -12,9 +12,11 @@
 
 # Welcome to gmx_MMPBSA!
 gmx_MMPBSA is a tool based on AMBER's MMPBSA.py for end-state free-energy calculations with GROMACS files.
-The 1.7.0 release is tested against GROMACS `>=2022,<2027` and AmberTools `>=24.8,<27`; this is a
-supported environment boundary, not a claim that every GROMACS version, force-field conversion, or scientific protocol
-has been validated. See the [compatibility guide](docs/compatibility.md) before using another stack.
+The 1.7.0 release was validated with GROMACS `>=2022,<2027` and AmberTools `>=24.8,<27`; these are the
+tested and recommended conda ranges, not hard runtime limits for the external programs. At runtime, gmx_MMPBSA
+uses AmberTools executables available in the active environment and locates GROMACS from `PATH` or the `gmx_path`
+input variable. Other installed versions can work when their executables and the selected input/topology workflow are
+compatible. See the [compatibility guide](docs/compatibility.md) for tested representatives and known restrictions.
 
 **Please see the documentation [here](https://valdes-tresanco-ms.github.io/gmx_MMPBSA/dev/getting-started)**
 

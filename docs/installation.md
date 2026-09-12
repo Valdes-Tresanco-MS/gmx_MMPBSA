@@ -8,9 +8,11 @@ title: Installation
 `gmx_MMPBSA` requires **[GROMACS](https://manual.gromacs.org/)** and
 **[AmberTools](https://ambermd.org/AmberTools.php)** to be installed on your computer with **Python 3**.
 For conda installations, Python `>=3.11,<3.13`, AmberTools `>=24.8,<27`, and GROMACS `>=2022,<2027`
-are the recommended dependency boundaries. This keeps the environment compatible with the tested Python 3.12
-stack without pinning users to one AmberTools or GROMACS release. `gmx_MMPBSA` supports a broad range of
-GROMACS versions and should run with any GROMACS in the `PATH` that is compatible with the files you are using.
+are the tested and recommended dependency ranges for the current release. They keep the environment compatible with
+the tested Python 3.12 stack without pinning users to one AmberTools or GROMACS release, and they are not hard runtime
+limits for those external programs. `gmx_MMPBSA` supports a broad range of GROMACS and AmberTools versions: it finds
+AmberTools executables in the active environment/PATH and GROMACS executables in `PATH` or the `gmx_path` input
+variable. Other versions can work when their executable layout and the selected input/topology workflow are compatible.
 
 gmx_MMPBSA can be installed in two ways:
 
@@ -21,8 +23,9 @@ other packages. Installation time is also less since it does not require the com
 
 `AmberTools compilation`
 :   This method assumes that AmberTools is compiled on your computer and that you want to use gmx_MMPBSA without
-activating or deactivating a conda environment. You must also compile GROMACS, which increases installation time.
-Because the installed packages must remain compatible, dependency errors are more common with this method.
+activating or deactivating a conda environment. GROMACS must also be available, either from the same installation or
+from another installation selected with `gmx_path`. Because the installed packages must remain compatible, dependency
+errors are more common with this method.
 
 !!! info "Installation"
     === "Conda environment"
