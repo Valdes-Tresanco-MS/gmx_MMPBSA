@@ -133,15 +133,9 @@ Some features require additional dependencies. Your operating system may also re
 listed below.
 
 `ParmEd`
-:  The current version of ParmEd implemented in AmberTools has some limitations that have been resolved in the [GitHub 
-repository](https://github.com/ParmEd/ParmEd/tree/16fb2364c284f7c1dd716ee912c5c674b5d31e46) by its author Jason 
-Swails and others with our help.
-
-    Some of these limitations are:
-
-    - Error reading topology when it has insertion codes
-    - Error processing topologies generated with the Amber ff19SB force field
-    - New PBRadii sets for GAFF and CHARMM force fields
+:  ParmEd is installed as a runtime dependency in the supported range `>=4.2.2,<5`. This range includes the
+   documented GB and PB radii sets; no separate GitHub checkout is required. Verify the installed environment with
+   `python -m pip check` before running a calculation.
 
 !!! danger
     The gmx_MMPBSA installation process has been optimized to be as straightforward as possible. In rare cases, a 

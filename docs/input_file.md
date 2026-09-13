@@ -5,6 +5,8 @@ title: The input file
 
 # The input file
 
+
+
 ## Description
 
 The `gmx_MMPBSA` input file contains the settings for each calculation. Its syntax is similar to that used by other
@@ -13,7 +15,7 @@ divided into sections called namelists, in which the variables for each calculat
 namelists are:
 
 - [`&general`](input_file.md#general-namelist-variables): contains variables that apply to all aspects of the 
-  calculation or parameters required for building AMBER topologies from GROMACS files.
+  calculation.
 - [`&gb`](input_file.md#gb-namelist-variables): variables specific to Generalized Born (GB) calculations.
 - [`&gbnsr6`](input_file.md#gbnsr6-namelist-variables): variables specific to GBNSR6 calculations.
 - [`&pb`](input_file.md#pb-namelist-variables): variables specific to Poisson–Boltzmann (PB) calculations.
@@ -63,19 +65,6 @@ Example:
     or 
         
         gmx_MMPBSA --create_input all
-        
-!!! Danger 
-    Note that several variables must be explicitly defined in the input file
-
-!!! note "Historical version markers"
-    Version markers such as “Implemented in v1.5.0” below record when an option was introduced or changed. They are
-    historical provenance, not claims that the option is new in the 1.7.0 release.
-
-_Introduced in v1.5.0 (historical)_
-
-!!! tip "Viewing wide examples"
-    Generated input examples and option tables are intentionally wide. On a narrow screen, scroll horizontally to
-    view the complete lines and values.
 
 ## Format
 The input variables are described below by namelist. Some descriptions are adapted from the original sources. Enter
@@ -138,6 +127,8 @@ when loading the system in `gmx_MMPBSA_ana` on a first-come, first-served basis.
     !!! tip 
         Defining the system name is optional, but a descriptive name can make result analysis clearer. All files
         associated with the system will be saved using this name.
+        Optionally, the system name can be defined in the command-line using the `-sys_name` or `--sys_name` options, in
+        which case `sys_name` in the input file is overridden.
 
     _Implemented in v1.4.0_  
 
@@ -169,32 +160,34 @@ restarted when the next trajectory file is read.
         entropy calculations. Quasi-harmonic entropy is not available for new calculations, and multi-trajectory
         receptor/ligand inputs are not supported with this mode.
         Extra-point water models such as OPC or TIP4P can fail in `sander` because of their virtual-site atoms. By
-        default, `gmx_MMPBSA` stops when these atoms are found. Set `explicit_waters_extra_points="strip"` only if you
-        intentionally want to remove the virtual sites and use the result as an approximate relative comparison.
+        default, `gmx_MMPBSA` stops when these atoms are found and reports the available options. Set
+        `explicit_waters_extra_points="strip"` to remove the virtual sites and continue for a controlled relative
+        comparison, or use a 3-site water model such as TIP3P/SPC when preserving the original water electrostatics
+        is important.
 
     !!! note "Multiple trajectories with explicit waters"
         When multiple `-ct` files are supplied, the concatenated frame selection is performed before
         `cpptraj closest` selects the nearest explicit waters. The reference/interface mask remains static, while
         the selected water identities may change from frame to frame.
 
-`explicit_waters_mask` (Default = "")
-:   Reference selection used to choose the closest explicit waters when `explicit_waters > 0`. Accepted values are:
+`explicit_waters_mask` (Default = "dASA")
+:   Reference selection used to choose the closest explicit waters when `explicit_waters > 0`. The default `"dASA"`
+    automatically identifies interface residues from the relative solvent-accessible surface area. Other accepted values are:
 
-    * An Amber residue mask, for example `":4,6,7,8,9"`
-    * A decomposition-style distance selection, for example `"within 4"`
     * `"dASA"` to identify interface residues with cpptraj dASA before selecting closest waters
+    * A decomposition-style distance selection, for example `"within 4"`
+    * An Amber residue mask, for example `":4,6,7,8,9"`
 
     The selected interface/reference residues are static for the calculation. The water identities can change from frame
     to frame because `cpptraj closest` is applied during trajectory processing.
 
-`explicit_waters_group` (Default = "")
-:   Solvent group name in the complex index file. When empty, `gmx_MMPBSA` looks for common solvent group names and
-water model names such as `SOLV`, `SOL`, `Water`, `WAT`, `TP3`, `TIP3P`, `SPC`, and `OPC`. Set this option only when
-the solvent group in the index file uses a custom name.
-
 `explicit_waters_dasa_cutoff` (Default = 0.5)
-:   dASA cutoff used when `explicit_waters_mask="dASA"`. This option is ignored for Amber mask and
-    `within <distance>` selections.
+:   dASA cutoff used when `explicit_waters_mask="dASA"`. This option is ignored for Amber mask and `within <distance>` selections.
+
+`explicit_waters_group` (Default = automatic)
+:   Solvent group name in the complex index file. When omitted, `gmx_MMPBSA` searches for common solvent group names
+    and water model names such as `SOLV`, `SOL`, `Water`, `WAT`, `TP3`, `TIP3P`, `SPC`, and `OPC`. Set this option
+    only when the solvent group in the index file uses a custom name.
 
 `explicit_waters_as` (Default = "receptor")
 :   Molecule that receives the explicit waters. The only supported value is `"receptor"` in the current implementation.
@@ -202,11 +195,13 @@ the solvent group in the index file uses a custom name.
 `explicit_waters_extra_points` (Default = "error")
 :   How to handle virtual-site/extra-point atoms in selected explicit waters. Accepted values are:
 
-    * `"error"`: stop when extra-point atoms are found.
-    * `"strip"`: remove extra-point atoms from the explicit-water topologies and trajectories, with a warning.
+    * `"error"`: stop when extra-point atoms are found and report the two supported remedies. This is the safe
+      default because it prevents an unintentional change to the water model.
+    * `"strip"`: remove extra-point atoms from the explicit-water topologies and trajectories, with a warning. Use
+      this for controlled relative comparisons only.
 
-    The `"strip"` option changes the electrostatics of OPC/TIP4P-style waters and should be used only for controlled
-    relative comparisons where this approximation is acceptable.
+    For OPC/TIP4P-style waters, `"strip"` changes the electrostatics. If that approximation is not acceptable, use a
+    3-site water model such as TIP3P or SPC and rerun the calculation with the matching topology and trajectory.
 
 #### **Topology and parameter provenance**
 
@@ -226,18 +221,8 @@ topologies.
 
 `PBRadii` (Default = 4)
 :   Continuum-radius set used by the implicit-solvent calculation. The value may be given as the numeric code or the
-    corresponding named set (for example, `PBRadii=mbondi3`). It does not select a bonded or nonbonded force field.
-
-    This is the continuum-radius set used by GB, PB, and GBNSR6 topology preparation. Continuum radii are distinct
-    from Lennard-Jones radii and are part of the scoring-model parameterization.
-
-    The default value is `4` (`mbondi3`) to match the default GB-Neck2 model (`igb = 8`), so it does not need to be
+    corresponding named set (for example, `PBRadii=mbondi3`). It does not select a bonded or nonbonded force field. The default value is `4` (`mbondi3`) to match the default GB-Neck2 model (`igb = 8`), so it does not need to be
     specified for standard GB calculations using the default GB model.
-
-    * 1: bondi, recommended when igb = 7
-    * 2: mbondi, recommended when igb = 1
-    * 3: mbondi2, recommended when igb = 2 or 5
-    * 4: mbondi3, recommended when igb = 8
 
     !!! note "Native AMBER topologies"
         When using `amber_MMPBSA` with a native AMBER `prmtop`, the per-atom `RADII` and `SCREEN` values already
@@ -246,6 +231,11 @@ topologies.
         topology `RADIUS_SET` does not conventionally match the selected `igb`, but it does not change or reject the
         combination automatically. For GROMACS inputs, `gmx_MMPBSA` applies the selected `PBRadii` to the generated
         AMBER topology and gives the same advisory warning when it differs from the conventional choice for `igb`.
+
+    * 1: bondi, recommended when igb = 7
+    * 2: mbondi, recommended when igb = 1
+    * 3: mbondi2, recommended when igb = 2 or 5
+    * 4: mbondi3, recommended when igb = 8
 
     * 5: mbondi_pb2
 
@@ -260,12 +250,6 @@ topologies.
             * Br: 1.97
             * I: 2.09
     
-            !!! warning 
-                Make sure that you installed the updated ParmEd
-                ```
-                python -m pip install git+https://github.com/ParmEd/ParmEd.git@16fb236
-                ```
-
             This radii set should be used with the following PBSA setup:
     
             ```
@@ -293,12 +277,6 @@ topologies.
             * Br: 2.04
             * I: 2.19
                     
-            !!! warning 
-                Make sure that you installed the updated ParmEd
-                ```
-                python -m pip install git+https://github.com/ParmEd/ParmEd.git@16fb236
-                ```
-
             This radii set should be used with the following PBSA setup:
     
             ```
@@ -330,12 +308,6 @@ topologies.
             [Banavali and Roux](https://pubs.acs.org/doi/abs/10.1021/jp025852v)
             * Halogens and other atoms from [Fortuna and Costa](https://pubs.acs.org/doi/10.1021/acs.jcim.1c00177)
             
-            !!! warning 
-                Make sure that you installed the updated ParmEd
-                ```
-                python -m pip install git+https://github.com/ParmEd/ParmEd.git@16fb236
-                ```
-
     _Updated in v1.5.0: New PB radii sets have been added_
 
 `radii_audit` (Default = 0)
@@ -785,7 +757,7 @@ or adjust `scfconv` only after checking the QM/MM output for stable convergence.
 :   Optional maximum number of DIIS attempts used by SANDER during each QM/MM SCF calculation. `None` leaves the
 SANDER default unchanged; explicit values from 0 to 1000 are accepted. This option is not available for DFTB, DFTB2,
 or DFTB3. Set it only when the QM/MM output shows repeatable SCF convergence difficulty; increasing it can increase
-runtime. For example, `ndiis_attempts=700` recovered convergence for the Fig3 test system. It does not override the
+runtime. It does not override the
 fatal-diagnostic check: unconverged frames are still rejected.
 
 `writepdb` (Default = 1)
