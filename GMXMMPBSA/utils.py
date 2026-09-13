@@ -1020,7 +1020,7 @@ def remove(flag, fnpre='_GMXMMPBSA_'):
                 continue
             if (
                     fil.startswith(fnpre) or fil.startswith(f"#{fnpre}") or
-                    bool(re.match('#?(COM|REC|LIG|MUT_COM|MUT_REC|MUT_LIG)_traj_(\d)\.xtc', fil)) or
+                    bool(re.match(r'#?(COM|REC|LIG|MUT_COM|MUT_REC|MUT_LIG)_traj_\d+\.xtc\Z', fil)) or
                     fil == 'COMPACT_MMXSA_RESULTS.mmxsa' or
                     fil in other_files or
                     fil in result_files):
@@ -1040,7 +1040,7 @@ def remove(flag, fnpre='_GMXMMPBSA_'):
             if fil == f'{fnpre}info':
                 continue
 
-            if fil.startswith(fnpre) or bool(re.match('#?(COM|REC|LIG|MUT_COM|MUT_REC|MUT_LIG)_traj_(\d)\.xtc',
+            if fil.startswith(fnpre) or bool(re.match(r'#?(COM|REC|LIG|MUT_COM|MUT_REC|MUT_LIG)_traj_\d+\.xtc\Z',
                                                       fil)) or fil in other_files:
                 os.remove(fil)
 

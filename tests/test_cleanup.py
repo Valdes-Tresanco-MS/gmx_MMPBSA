@@ -53,6 +53,34 @@ class CleanupTest(unittest.TestCase):
             self.assertFalse((root / '_GMXMMPBSA_pb.mdin').exists())
             self.assertFalse((root / 'COM.prmtop').exists())
 
+    def test_cleanup_removes_multi_digit_trajectory_files_only(self):
+        for flag in (-1, 0):
+            with self.subTest(flag=flag), tempfile.TemporaryDirectory() as tmpdir:
+                root = Path(tmpdir)
+                removable = (
+                    'COM_traj_0.xtc',
+                    'COM_traj_10.xtc',
+                    '#REC_traj_12.xtc',
+                )
+                retained = (
+                    'COM_traj_10.xtc.backup',
+                    'COM_traj_a.xtc',
+                )
+                for filename in removable + retained:
+                    (root / filename).write_text('trajectory\n')
+
+                old_cwd = os.getcwd()
+                os.chdir(tmpdir)
+                try:
+                    remove(flag)
+                finally:
+                    os.chdir(old_cwd)
+
+                for filename in removable:
+                    self.assertFalse((root / filename).exists())
+                for filename in retained:
+                    self.assertTrue((root / filename).exists())
+
 
 if __name__ == '__main__':
     unittest.main()
