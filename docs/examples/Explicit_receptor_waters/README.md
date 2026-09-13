@@ -155,7 +155,7 @@ The concise `mmpbsa.in` is shown first. The all-options version was generated wi
       solvated_trajectory            = 1                                      # Clean solvated traj.; 0/1
       explicit_waters                = 10                                     # Explicit waters; e.g. 10
       explicit_waters_mask           = "dASA"                                 # Water reference; e.g. ":1-10", "within 4", "dASA"
-      explicit_waters_group          = ""                                     # Solvent group; e.g. "TIP3"
+      explicit_waters_group          = "automatic"                                     # Solvent group; e.g. "TIP3" or "automatic"
       explicit_waters_dasa_cutoff    = 0.5                                    # dASA cutoff; e.g. 0.5
       explicit_waters_as             = "receptor"                             # Water owner; e.g. "receptor"
       explicit_waters_extra_points   = "error"                                # Virtual sites; "error" or "strip"
@@ -210,8 +210,9 @@ dry Protein-protein example except for the explicit waters.
 
 This mode is supported for single-trajectory GB, GBNSR6, PB, RISM, and normal-mode calculations. It is not supported
 with multiple-trajectory inputs. If the solvent index group has a custom name, set `explicit_waters_group`. For
-extra-point water models such as OPC or TIP4P, the default is to stop; use
-`explicit_waters_extra_points="strip"` only when removing virtual sites is an intentional approximation.
+extra-point water models such as OPC or TIP4P, the default is to stop and report the available remedies. Set
+`explicit_waters_extra_points="strip"` to continue for a controlled relative comparison, or use a 3-site water model
+such as TIP3P/SPC when preserving the original water electrostatics is important.
 
 ## Inspect the selection
 

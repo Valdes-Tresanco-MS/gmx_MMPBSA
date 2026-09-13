@@ -155,8 +155,8 @@ describe the same calculation.
       netcdf                         = 0                                      # Use NetCDF; 0/1
       solvated_trajectory            = 1                                      # Clean solvated traj.; 0/1
       explicit_waters                = 0                                      # Explicit waters; e.g. 10
-      explicit_waters_mask           = ""                                     # Water reference; e.g. ":1-10", "within 4", "dASA"
-      explicit_waters_group          = ""                                     # Solvent group; e.g. "TIP3"
+      explicit_waters_mask           = "dASA"                                     # Water reference; e.g. ":1-10", "within 4", "dASA"
+      explicit_waters_group          = "automatic"                                     # Solvent group; e.g. "TIP3" or "automatic"
       explicit_waters_dasa_cutoff    = 0.5                                    # dASA cutoff; e.g. 0.5
       explicit_waters_as             = "receptor"                             # Water owner; e.g. "receptor"
       explicit_waters_extra_points   = "error"                                # Virtual sites; "error" or "strip"
