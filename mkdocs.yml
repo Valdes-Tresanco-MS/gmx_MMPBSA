@@ -22,7 +22,6 @@ exclude_docs: |
   application_note_advances_since_1_4_3.md
   spikes/**
   examples/COVID-19_related_proteins/**
-  examples/Protein_DNA_RNA_Ion_ligand/**
 
 theme:
   name: material
@@ -188,7 +187,6 @@ nav:
       - Membrane proteins: examples/Protein_membrane/README.md
       - Metalloprotein-ligand: examples/Metalloprotein_ligand/README.md
       - Multicomponent system: examples/Comp_receptor/README.md
-      # - Protein-DNA-RNA-Ion-ligand: examples/Protein_DNA_RNA_Ion_ligand/README.md
       # - COVID-19 related proteins:
       #     - Info: examples/COVID-19_related_proteins/README.md
       #     - Main protease: examples/COVID-19_related_proteins/Main_protease_7l5d/README.md

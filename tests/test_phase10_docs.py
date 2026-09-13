@@ -277,7 +277,6 @@ class ReleasePublicationDocumentationTest(unittest.TestCase):
                 'application_note_advances_since_1_4_3.md',
                 'spikes/**',
                 'examples/COVID-19_related_proteins/**',
-                'examples/Protein_DNA_RNA_Ion_ligand/**',
                 'Support: support.md'):
             with self.subTest(text=text):
                 self.assertIn(text, config)

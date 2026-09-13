@@ -59,9 +59,6 @@ gmx_MMPBSA can also process other systems with compatible input structures.
 * [Metalloprotein-ligand](Metalloprotein_ligand/README.md)[^1][^2]
 * [Multicomponent system (Comp_receptor)](Comp_receptor/README.md)[^1][^2][^3]
 <!--
-* [Protein-DNA-RNA-Ion-ligand](Protein_DNA_RNA_Ion_ligand/README.md)[^1][^2][^3]
--->
-<!--
 * COVID-19 related proteins
     * [Info](COVID-19_related_proteins/README.md)
     * [Main protease](COVID-19_related_proteins/Main_protease_7l5d/README.md)
