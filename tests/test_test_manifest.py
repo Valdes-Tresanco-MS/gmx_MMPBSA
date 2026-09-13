@@ -24,11 +24,11 @@ class TestManifest(unittest.TestCase):
                          [3, 4, 5, 6, 7, 8, 10, 12, 13, 14, 15])
         self.assertEqual(
             self.manifest.suites['all']['tests'],
-            [test_id for test_id in range(3, 27) if test_id not in {9, 11}],
+            [test_id for test_id in range(3, 27) if test_id != 11],
         )
 
     def test_resolve_suite_and_alias(self):
-        all_tests = [test_id for test_id in range(3, 27) if test_id not in {9, 11}]
+        all_tests = [test_id for test_id in range(3, 27) if test_id != 11]
         self.assertEqual(self.manifest.resolve_test_ids(['0']), all_tests)
         self.assertEqual(self.manifest.resolve_test_ids(['101']), all_tests)
         self.assertEqual(self.manifest.resolve_test_ids(['2']), [3, 4, 5, 7, 12, 13, 14, 15])
@@ -44,10 +44,10 @@ class TestManifest(unittest.TestCase):
     def test_build_help_text_contains_latest_test(self):
         help_text = build_help_text()
         self.assertIn('* 26', help_text)
-        self.assertIn('* 0      22', help_text)
+        self.assertIn('* 0      23', help_text)
         self.assertIn('Legacy alias for test 6', help_text)
         self.assertIn('* 8    x | 10  Metalloprotein-ligand', help_text)
-        self.assertIn('* 9    . | 10  Multicomponent system (Comp_receptor)', help_text)
+        self.assertIn('* 9    x | 10  Multicomponent system (Comp_receptor)', help_text)
         self.assertIn('* 15   . | 10  Interaction Entropy approximation', help_text)
         self.assertIn('* 17   x | 10  Entropy calculation using Normal Mode approximation', help_text)
 

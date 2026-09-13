@@ -24,11 +24,10 @@ title: gmx_MMPBSA_test
                             time. Numeric ids, suite ids (`0`/`1`/`2`), legacy `101` (same as `0`), and named aliases
                             such as `explicit_receptor_waters` or `gbnsr6` are supported.
                                   Nr. of Sys  
-                            * 0      22     All -- Run all examples (Can take a long time!!!)
+                            * 0      23     All -- Run all examples (Can take a long time!!!)
                             * 1      11     Minimal -- Does a minimal test with a set of systems and analyzes
-                                            that show that gmx_MMPBSA runs correctly. Comp_receptor is excluded
-                                            until its required GROMACS topology is shipped; slow or redundant
-                                            cases are omitted from this suite
+                                            that show that gmx_MMPBSA runs correctly; slow or redundant cases
+                                            are omitted from this suite
                             * 2       8     Fast -- Only the calculations that take a short time are run (Default)
                             [Systems]:
                                  Slow Frames
@@ -38,7 +37,7 @@ title: gmx_MMPBSA_test
                             * 6    x |  4   Protein-Membrane CHARMM-GUI PROA-UQ2
                             * 7    . | 10   Protein-Glycan
                             * 8    x | 10  Metalloprotein-ligand
-                            * 9    . | 10  Multicomponent system (Comp_receptor)
+                            * 9    x | 10  Multicomponent system (Comp_receptor)
                             * 10   x |  4   Protein-Ligand (CHARMM force field)
                             * 11     |      Legacy alias for test 6 (consolidated membrane example)
                             [Analysis]:
@@ -164,7 +163,7 @@ the full suite runs that example only once.
         
         * Download the gmx_MMPBSA repository to `/home/user/Documents`
         * Use the `All` set of examples
-        * Run 22 examples sequentially, using 10 CPUs for each example
+        * Run 23 examples sequentially, using 10 CPUs for each example
         
     === "Multiple selection"
         

@@ -13,9 +13,9 @@ python scripts/validation/run_calculation_matrix.py \
   --label current-all
 ```
 
-The default selector `101` means all 22 currently runnable manifest examples.
-The manifest still defines 23 examples, but `Comp_receptor` (case 9) is
-excluded until its required `topol.top` topology is shipped. Selectors can also
+The default selector `101` means all 23 currently runnable manifest examples.
+The manifest defines 23 runnable examples, including `Comp_receptor` (case 9),
+whose required `topol.top` topology is now shipped. Selectors can also
 be individual IDs such as `4 12 23` or aliases such as `gbnsr6`.
 
 The legacy comparison runner uses a conservative set of examples shared by the
