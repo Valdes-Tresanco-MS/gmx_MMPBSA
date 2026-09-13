@@ -101,19 +101,38 @@ class ExplicitWaterInputTest(unittest.TestCase):
             parsed = _parse_input(infile)
 
         self.assertEqual(parsed['general']['explicit_waters'], 0)
-        self.assertEqual(parsed['general']['explicit_waters_mask'], '')
-        self.assertEqual(parsed['general']['explicit_waters_group'], '')
+        self.assertEqual(parsed['general']['explicit_waters_mask'], 'dASA')
+        self.assertEqual(parsed['general']['explicit_waters_group'], 'automatic')
         self.assertEqual(parsed['general']['explicit_waters_dasa_cutoff'], 0.5)
         self.assertEqual(parsed['general']['explicit_waters_as'], 'receptor')
         self.assertEqual(parsed['general']['explicit_waters_extra_points'], 'error')
 
-    def test_rejects_missing_explicit_water_mask(self):
+    def test_default_explicit_water_mask_allows_explicit_waters(self):
         main = _import_main_with_stubs()
         app = main.MMPBSA_App.__new__(main.MMPBSA_App)
         app.master = True
         app.FILES = _base_files()
         app.INPUT = _base_input()
         app.INPUT['general']['explicit_waters'] = 10
+
+        app.check_for_bad_input()
+
+    def test_automatic_explicit_water_group_value_is_parsed(self):
+        with TemporaryDirectory() as tmpdir:
+            infile = Path(tmpdir) / 'mmpbsa.in'
+            infile.write_text('&general\nexplicit_waters_group="automatic"\n/\n&gb\n/\n')
+            parsed = _parse_input(infile)
+
+        self.assertEqual(parsed['general']['explicit_waters_group'], 'automatic')
+
+    def test_rejects_explicitly_blank_explicit_water_mask(self):
+        main = _import_main_with_stubs()
+        app = main.MMPBSA_App.__new__(main.MMPBSA_App)
+        app.master = True
+        app.FILES = _base_files()
+        app.INPUT = _base_input()
+        app.INPUT['general']['explicit_waters'] = 10
+        app.INPUT['general']['explicit_waters_mask'] = ''
 
         logging.disable(logging.CRITICAL)
         try:
@@ -487,6 +506,28 @@ class ExplicitWaterCleanupTest(unittest.TestCase):
         self.assertIn('SOLV', candidates)
         self.assertIn('OPC', candidates)
         self.assertIn('TP3', candidates)
+
+    def test_automatic_explicit_water_group_uses_common_candidates(self):
+        CheckMakeTop = self._import_make_top_with_stubs()
+
+        maketop = CheckMakeTop.__new__(CheckMakeTop)
+        maketop.explicit_waters_group = 'automatic'
+
+        candidates = maketop._explicit_water_group_candidates()
+
+        self.assertIn('SOLV', candidates)
+        self.assertIn('OPC', candidates)
+
+    def test_auto_explicit_water_group_alias_uses_common_candidates(self):
+        CheckMakeTop = self._import_make_top_with_stubs()
+
+        maketop = CheckMakeTop.__new__(CheckMakeTop)
+        maketop.explicit_waters_group = 'auto'
+
+        candidates = maketop._explicit_water_group_candidates()
+
+        self.assertIn('SOLV', candidates)
+        self.assertIn('OPC', candidates)
 
     def test_explicit_water_group_override_is_used_as_only_candidate(self):
         CheckMakeTop = self._import_make_top_with_stubs()

@@ -455,8 +455,9 @@ class CheckAmberTop(CheckMakeTop):
     def _amber_water_names(self):
         names = {name.upper() for name in water_residues}
         names.add('HOH')
-        if self.explicit_waters_group:
-            names.update(name.strip().upper() for name in self.explicit_waters_group.split(',') if name.strip())
+        group = self.explicit_waters_group.strip()
+        if group and group.lower() not in {'auto', 'automatic'}:
+            names.update(name.strip().upper() for name in group.split(',') if name.strip())
         return names
 
     @staticmethod

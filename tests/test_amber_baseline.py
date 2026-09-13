@@ -170,6 +170,17 @@ class AmberDryBaselineTest(unittest.TestCase):
         self.assertEqual([res.idx for res in waters], [2])
         self.assertEqual([res.idx for res in ions], [3])
 
+    def test_automatic_explicit_water_group_is_not_a_custom_water_name(self):
+        from GMXMMPBSA.make_top_amber import CheckAmberTop
+
+        checker = object.__new__(CheckAmberTop)
+        checker.explicit_waters_group = 'automatic'
+
+        self.assertNotIn('AUTOMATIC', checker._amber_water_names())
+
+        checker.explicit_waters_group = 'CUSTOM_WATER,Water'
+        self.assertIn('CUSTOM_WATER', checker._amber_water_names())
+
     def test_solvated_mask_must_select_complete_residues(self):
         from GMXMMPBSA.make_top_amber import CheckAmberTop
 

@@ -325,8 +325,9 @@ class CheckMakeTop:
                     for line in ndx_file if line.lstrip().startswith('[')]
 
     def _explicit_water_group_candidates(self):
-        if self.explicit_waters_group.strip():
-            return [self.explicit_waters_group.strip()]
+        group = self.explicit_waters_group.strip()
+        if group and group.lower() not in {'auto', 'automatic'}:
+            return [group]
 
         candidates = []
         for group_name in explicit_water_group_names:
