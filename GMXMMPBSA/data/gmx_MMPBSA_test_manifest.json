@@ -10,6 +10,7 @@
         6,
         7,
         8,
+        9,
         10,
         12,
         13,
@@ -329,8 +330,8 @@
         "-ci",
         "index.ndx",
         "-cg",
-        "33",
-        "14",
+        "Protein_MG_RNA",
+        "TPP",
         "-ct",
         "com_traj.xtc",
         "-cp",
@@ -340,8 +341,10 @@
         "-eo",
         "FINAL_RESULTS_MMPBSA.csv"
       ],
-      "suites": [],
-      "slow": false,
+      "suites": [
+        "all"
+      ],
+      "slow": true,
       "requires": [
         "gmx_MMPBSA",
         "mpirun"
@@ -350,7 +353,7 @@
         "FINAL_RESULTS_MMPBSA.dat",
         "FINAL_RESULTS_MMPBSA.csv"
       ],
-      "notes": "Temporarily removed from default suites until a GROMACS topol.top (and referenced itp files) are shipped with Comp_receptor. Structure-only tleap + -lm is no longer supported."
+      "notes": "Uses the CHARMM-GUI 3K0J GROMACS topology with named Protein_MG_RNA and TPP groups. The bundled trajectory is a short minimization regression input; topology-only conversion is required."
     },
     "10": {
       "name": "Protein-Ligand (CHARMM force field)",

@@ -21,6 +21,7 @@ dist/
 /gmx_MMPBSA_error_bundle_*.zip
 
 examples/*
+!examples/Comp_receptor/
 !examples/AMBER/
 examples/AMBER/*
 !examples/AMBER/README.md
