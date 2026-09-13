@@ -55,7 +55,6 @@ file for the gmx_MMPBSA decomposition calculation is shown below:
 Sample input file with decomposition analysis
 &general
 startframe=1750, endframe=2400, interval=1, PBRadii=4,
-forcefields="oldff/leaprc.ff99SB"
 /
 &gb
 igb=8, saltcon=0.150, intdiel=5,
@@ -78,7 +77,7 @@ residue EP68 is shown below:
 Sample input file for alanine scanning analysis
 &general
 startframe=1750, endframe=2400, interval=1, PBRadii=4,
-forcefields="oldff/leaprc.ff99SB", interaction_entropy=1, ie_segment=25, temperature=298
+interaction_entropy=1, ie_segment=25, temperature=298
 /
 &gb
 igb=8, saltcon=0.150,

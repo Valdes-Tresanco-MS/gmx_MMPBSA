@@ -139,8 +139,8 @@ describe the same linear-PB calculation.
       startframe                     = 1                                      # First frame; e.g. 1
       endframe                       = 8                                      # Last frame; e.g. 100
       interval                       = 1                                      # Frame interval; e.g. 1
-      forcefields                    = "oldff/leaprc.ff99SB,leaprc.gaff"      # Force fields; e.g. "leaprc.protein.ff14SB"
-      ions_parameters                = 1                                      # Ion params; e.g. 1
+
+
       PBRadii                        = 4                                      # PB radii set; 1-7
       temperature                    = 298.15                                 # Temperature (K); e.g. 298.15
       qh_entropy                     = 0                                      # Legacy QH output reader; new calculations reject 1
@@ -231,7 +231,7 @@ uses the linear PB equation and an ionic strength of 0.15 M.
 
 ## PB radii and OPLS parameters
 
-Because `topol.top` is supplied, the concise input does not need a `forcefields` setting: the OPLS bonded, charge, and
+Because `topol.top` is supplied, the concise input does not need a topology-preparation setting: the OPLS bonded, charge, and
 Lennard-Jones parameters are read from the GROMACS topology. During conversion, `PBRadii=4` assigns mbondi3 radii to
 the generated AMBER topologies. `radiopt=0` then instructs PBSA to use those stored topology radii rather than its
 optimized PB radii.

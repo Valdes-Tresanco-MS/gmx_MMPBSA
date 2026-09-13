@@ -116,7 +116,6 @@ This page describes common calculation problems and possible solutions.
             ```
             &general
             startframe=5, endframe=100, interval=5, verbose=2, 
-            forcefields="oldff/leaprc.ff99SB,leaprc.gaff"
             /
             &pb
             istrng=0.15, fillratio=4.0, inp=1

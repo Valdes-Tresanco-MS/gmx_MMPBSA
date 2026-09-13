@@ -252,8 +252,8 @@ linear PB calculation.
       startframe                     = 5                                      # First frame; e.g. 1
       endframe                       = 15                                     # Last frame; e.g. 100
       interval                       = 1                                      # Frame interval; e.g. 1
-      forcefields                    = "leaprc.protein.ff14SB"               # Force fields; e.g. "leaprc.protein.ff14SB"
-      ions_parameters                = 1                                      # Ion params; e.g. 1
+
+
       PBRadii                        = 7                                      # PB radii set; 1-7
       temperature                    = 298.15                                 # Temperature (K); e.g. 298.15
       qh_entropy                     = 0                                      # Legacy QH output reader; new calculations reject 1
@@ -345,8 +345,8 @@ trajectory is already dry, `solvated_trajectory=0` avoids a redundant stripping 
 in `gromacs.pdb` are therefore retained throughout the calculation.
 
 The calculation processes 11 of the 17 available frames (frames 5 through 15) with the linear PB equation, an ionic
-strength of 0.15 M, and CHARMM-specific topology radii. Since `gromacs.top` is supplied, no `forcefields` variable is
-needed in the concise input; the bonded and nonbonded parameters come from the converted CHARMM topology. CMAP terms
+strength of 0.15 M, and CHARMM-specific topology radii. Since `gromacs.top` is supplied, no topology-preparation
+setting is needed in the concise input; the bonded and nonbonded parameters come from the converted CHARMM topology. CMAP terms
 are the stated exception.
 
 ## Expected outputs

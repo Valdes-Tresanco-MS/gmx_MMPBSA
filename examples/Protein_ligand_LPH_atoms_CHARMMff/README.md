@@ -245,8 +245,8 @@ linear PB calculation using the already prepared LPH-free files.
       startframe                     = 5                                      # First frame; e.g. 1
       endframe                       = 9                                      # Last frame; e.g. 100
       interval                       = 1                                      # Frame interval; e.g. 1
-      forcefields                    = "leaprc.protein.ff14SB"               # Force fields; e.g. "leaprc.protein.ff14SB"
-      ions_parameters                = 1                                      # Ion params; e.g. 1
+
+
       PBRadii                        = 7                                      # PB radii set; 1-7
       temperature                    = 298.15                                 # Temperature (K); e.g. 298.15
       qh_entropy                     = 0                                      # Legacy QH output reader; new calculations reject 1
@@ -331,8 +331,7 @@ The prepared trajectory already contains only `Protein` and the 30-atom `lig`, s
 `solvated_trajectory=0` prevents an unnecessary solvent-stripping step. The calculation processes frames 5 through
 9 with the linear PB equation, an ionic strength of 0.15 M, and the CHARMM-specific PB radii.
 
-Because `topol.top` is provided, no `forcefields` variable is needed in the concise input; the CHARMM parameters are
-read from the topology include tree. The topology has already been modified to match the LPH-free structure and
+The CHARMM parameters are read from the topology include tree. The topology has already been modified to match the LPH-free structure and
 trajectory, with its total charge preserved and the directional-electrostatics and CMAP limitations stated above.
 
 ## Expected outputs

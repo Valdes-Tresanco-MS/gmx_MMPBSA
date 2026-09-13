@@ -108,7 +108,7 @@ Extract the archive, change to the `3D-RISM` directory, and choose either the se
 
 The example uses the minimal `mmpbsa.in` shown first below. The all-options version was generated with
 `gmx_MMPBSA --create_input rism` and then adapted with the same example-specific values. The concise block is the runnable starting point; the generated block includes additional options and defaults, so the two blocks are not textually identical. Both blocks therefore
-describe the same calculation; the generated version also documents every available `&general` and `&rism` variable.
+describe the same calculation; the generated version exposes additional `&general` and `&rism` settings relevant to this example.
 
 === "Minimal input"
 
@@ -140,8 +140,8 @@ describe the same calculation; the generated version also documents every availa
       startframe                     = 5                                      # First frame; e.g. 1
       endframe                       = 8                                           # Last frame; e.g. 100
       interval                       = 1                                      # Frame interval; e.g. 1
-      forcefields                    = "oldff/leaprc.ff99SB,leaprc.gaff"      # Force fields; e.g. "leaprc.protein.ff14SB"
-      ions_parameters                = 1                                      # Ion params; e.g. 1
+
+
       PBRadii                        = 4                                      # PB radii set; 1-7
       temperature                    = 298.15                                 # Temperature (K); e.g. 298.15
       qh_entropy                     = 0                                      # Legacy QH output reader; new calculations reject 1

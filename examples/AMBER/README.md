@@ -145,8 +145,8 @@ describe the same native AMBER MM/GBSA calculation.
       startframe                     = 1                                      # First frame; e.g. 1
       endframe                       = 5                                      # Last frame; e.g. 100
       interval                       = 1                                      # Frame interval; e.g. 1
-      forcefields                    = "oldff/leaprc.ff99SB,leaprc.gaff"      # Force fields; e.g. "leaprc.protein.ff14SB"
-      ions_parameters                = 1                                      # Ion params; e.g. 1
+
+
       PBRadii                        = 4                                      # PB radii set; 1-7
       temperature                    = 298.15                                 # Temperature (K); e.g. 298.15
       qh_entropy                     = 0                                      # Legacy QH output reader; new calculations reject 1
@@ -215,8 +215,8 @@ component topology from the complex.
 
 The three bundled topologies store `mbondi` radii. This example therefore uses the conventionally matched GB-HCT
 model (`igb=1`) with a salt concentration of 0.10 M. Native AMBER topologies already contain atomic parameters,
-charges, radii, and screening values, so the `forcefields` and `PBRadii` variables shown in the generated all-options
-input do not rebuild or replace those data during the normal native AMBER workflow.
+charges, radii, and screening values. The legacy topology-preparation settings do not rebuild or replace those data
+during the normal native AMBER workflow.
 
 ## Native topology radii
 

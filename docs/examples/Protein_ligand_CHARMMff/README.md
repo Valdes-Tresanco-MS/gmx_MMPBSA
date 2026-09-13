@@ -158,8 +158,8 @@ linear PB calculation.
       startframe                     = 1                                      # First frame; e.g. 1
       endframe                       = 4                                      # Last frame; e.g. 100
       interval                       = 1                                      # Frame interval; e.g. 1
-      forcefields                    = "leaprc.protein.ff14SB"               # Force fields; e.g. "leaprc.protein.ff14SB"
-      ions_parameters                = 1                                      # Ion params; e.g. 1
+
+
       PBRadii                        = 7                                      # PB radii set; 1-7
       temperature                    = 298.15                                 # Temperature (K); e.g. 298.15
       qh_entropy                     = 0                                      # Legacy QH output reader; new calculations reject 1
@@ -245,8 +245,8 @@ remain present in the source TPR and trajectory but are not retained in the fina
 calculation topologies.
 
 `PBRadii=7` assigns CHARMM-specific radii during topology conversion, while `radiopt=0` instructs PBSA to use those
-topology radii. Because `topol.top` is provided, no `forcefields` variable is needed in the concise input; the CHARMM
-bonded and nonbonded parameters are read from the topology include tree. CMAP terms are the stated exception.
+topology radii. The CHARMM bonded and nonbonded parameters are read from the topology include tree. CMAP terms are the
+stated exception.
 
 The calculation processes frames 1 through 4 with the linear PB equation (`npbopt=0`), an ionic strength of 0.15 M,
 and a grid fill ratio of 4.0.

@@ -59,7 +59,7 @@ status, result schema, warnings, and provenance files before starting a producti
 
 ### 2. Create a separate environment and verify dependencies
 
-The 1.7.0 Python requirement is `>=3.11,<3.13`. Release validation used AmberTools `>=24.8,<27` and GROMACS
+The 1.7.0 Python `>=3.11,<3.13` requirement is part of the supported environment. Release validation used AmberTools `>=24.8,<27` and GROMACS
 `>=2022,<2027` as the tested and recommended conda ranges; these ranges are not hard runtime version checks for the
 external programs. At runtime, AmberTools executables are resolved from the active environment/PATH, while GROMACS
 executables are resolved from `PATH` or the `gmx_path` input variable. Other installed versions can work when their
@@ -213,8 +213,9 @@ The 1.5 series introduced or exposed additional controls, including:
 The behavior or interpretation of `PBRadii`, `interaction_entropy`, `assign_chainID`, `solvated_trajectory`, `verbose`,
 and `temperature` also changed. Review their current definitions before reusing an old input file.
 
-The old `protein_forcefield`, `ligand_forcefield`, and `use_sander` variables were removed. Use the consolidated
-`forcefields` setting where force-field selection is required.
+The old topology-preparation settings `protein_forcefield`, `ligand_forcefield`, `forcefields`, and `use_sander` are
+not part of the current topology-based workflow. Bonded, nonbonded, charge, ligand, and ion parameters must already
+be present in the supplied topology files.
 
 ### Calculations and analyzer
 

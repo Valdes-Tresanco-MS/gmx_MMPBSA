@@ -164,8 +164,8 @@ describe the same implicit-membrane PB calculation.
       startframe                     = 1                                      # First frame; e.g. 1
       endframe                       = 4                                      # Last frame; e.g. 100
       interval                       = 1                                      # Frame interval; e.g. 1
-      forcefields                    = "oldff/leaprc.ff99SB,leaprc.gaff"      # Force fields; e.g. "leaprc.protein.ff14SB"
-      ions_parameters                = 1                                      # Ion params; e.g. 1
+
+
       PBRadii                        = 7                                      # PB radii set; 1-7
       temperature                    = 298.15                                 # Temperature (K); e.g. 298.15
       qh_entropy                     = 0                                      # Legacy QH output reader; new calculations reject 1
@@ -251,9 +251,8 @@ ions, and water remain available in the full source structure and trajectory but
 complex, receptor, or ligand calculation topologies. The unstripped trajectory is used to resolve the implicit
 membrane geometry before the selected solute trajectory is prepared.
 
-`PBRadii=7` assigns CHARMM-specific radii during topology conversion. Because `topol.top` is provided, no
-`forcefields` variable is needed in the concise input; the CHARMM bonded and nonbonded parameters are read from the
-topology include tree. CMAP terms are the stated exception.
+`PBRadii=7` assigns CHARMM-specific radii during topology conversion. The CHARMM bonded and nonbonded parameters are
+read from the topology include tree. CMAP terms are the stated exception.
 
 ## Automatic membrane placement
 

@@ -208,138 +208,25 @@ the solvent group in the index file uses a custom name.
     The `"strip"` option changes the electrostatics of OPC/TIP4P-style waters and should be used only for controlled
     relative comparisons where this approximation is acceptable.
 
-#### **Parameter options**
+#### **Topology and parameter provenance**
 
-`forcefields` (Default = "oldff/leaprc.ff99SB,leaprc.gaff")
-:   Comma-separated list of force fields used to build Amber topologies. This variable is more flexible than the 
-previous ones (`protein_forcefield` and `ligand_forcefield`). The goal of this variable is to provide convenient 
-support for complex systems with several components. It supports all force fields tested in previous 
-`protein_forcefield` and `ligand_forcefield` variables.
-    
-    !!! tip Keep in mind
-        * The value of this variable depends on the force field you used for your system in GROMACS
-        * You do not need to define the `forcefields` variable when using a topology. See
-          ["How gmx_MMPBSA works"](howworks.md#how-gmx_mmpbsa-works)
-        * The notation format is the one used in tleap
-        * In general, any force field present in `$AMBERHOME/dat/leap/cmd` can be used with the `forcefields` variable.
-        (Check [§3](https://ambermd.org/doc12/Amber21.pdf#chapter.3) for more information)
-        * Avoid defining two force fields with overlapping purposes because they can generate inconsistencies.
-            
-        **Input files samples:**
+The calculation uses the supplied topology rather than rebuilding parameters from structures. Bonded terms,
+nonbonded terms, charges, ligand parameters, and ion parameters must already be present in the topology used for the
+MD system. For GROMACS calculations, provide the complex topology with `-cp` and the unbound topologies with `-rp`
+and `-lp` when using the multiple-trajectory protocol. Native AMBER calculations use the corresponding AMBER
+topologies.
 
-        === "Protein and/or Nucleic acids" 
-            ``` title="Input file with forcefield variable defined for a system with protein and/or nucleic acids"
-            &general
-            forcefields="oldff/leaprc.ff99SB" 
-            /
-            ```
+`forcefields`, `protein_forcefield`, `ligand_forcefield`, and `ions_parameters`
+:   Legacy topology-preparation settings. They are retained only for compatibility with older input files and are not
+    used to parameterize current topology-based calculations. Do not add them to new input files. Prepare the
+    topology externally with the force field and ion model intended for the MD simulation.
 
-        === "Protein only"
-            ``` title="Input file with forcefield variable defined for a system with only protein"
-            &general
-            forcefields="leaprc.protein.ff14SB" 
-            /
-            ```
-
-        === "Protein + DNA"
-            ``` title="Input file with forcefield variable defined for a system with protein and nucleic acids (DNA)"        
-            &general
-            forcefields="leaprc.protein.ff14SB,leaprc.DNA.bsc1" 
-            /
-            ```
-
-        === "Protein + RNA + Organic mol."
-            ``` title="Input file with forcefield variable defined for a system with protein, nucleic acids (RNA) and a organic molecule"
-            &general
-            forcefields="leaprc.protein.ff14SB,leaprc.RNA.OL3,leaprc.gaff2" 
-            /
-            ```
-
-    **Forcefields for Protein/Nucleic Acids**
-
-    | Name                      | Description                                                              |
-    |:--------------------------|:-------------------------------------------------------------------------|
-    | "oldff/leaprc.ff99"       | ff99 for proteins and nucleic acids                                      |
-    | "oldff/leaprc.ff03"       | ff03 (Duan et al.) for proteins and nucleic acids                        |
-    | "oldff/leaprc.ff99SB"     | ff99SB for proteins and nucleic acids                                    |
-    | "oldff/leaprc.ff99SBildn" | ff99SB modified for the "ILDN" changes for proteins and nucleic acids    |
-    | "oldff/leaprc.ff99bsc0"   | ff99SB force field using parmbsc0 for nucleic acid                       |
-
-    **Forcefields only for proteins**
-       
-    | Name                    | Description               |
-    |:------------------------|:--------------------------|
-    | "leaprc.protein.ff14SB" | ff14SB only for proteins  |
-    | "leaprc.protein.ff19SB" | ff19SB only for proteins  |
-
-    **Forcefields only for Nucleic Acids**
-     
-    | Name              | Description                  |
-    |:------------------|:-----------------------------|    
-    | "leaprc.DNA.bsc1" | ff99bsc0+bsc1 only for DNA   |
-    | "leaprc.DNA.OL15" | ff99bsc0+OL15 only for DNA   |
-    | "leaprc.RNA.OL3"  | ff99bsc0_chiOL3 only for RNA |
-
-    **Forcefields for organic molecules, glycans and zwitterionic amino acids**
-       
-    | Name                             | Description                                                               |
-    |:---------------------------------|:--------------------------------------------------------------------------|    
-    | "leaprc.gaff"                    | General Amber Force Field for organic molecules                           |
-    | "leaprc.gaff2"                   | General Amber Force Field 2 for organic molecules                         |
-    | "leaprc.GLYCAM_06j-1"            | Glycam_06j-1 carbohydrate ff (_Compatible with ff12SB and later_)         |
-    | "leaprc.GLYCAM_06EPb"            | GLYCAM-06EPb carbohydrate ff (_Compatible with ff12SB and later_)         |
-    | "gmxMMPBSA/leaprc.GLYCAM_06h-1"  | `*` GLYCAM-0606h-1 carbohydrate ff (_Compatible with ff99SB and earlier_) |
-    | "gmxMMPBSA/leaprc.zaa99SB"       | `*` Force field for Zwitterionic amino acids (_Compatible with ff99SB_)   |
-
-    !!! tip Keep in mind
-        `*` We added the gmxMMPBSA data to the tleap path. This way, we keep `gmx_MMPBSA` data separated from Amber's.
-
-    _Implemented in v1.4.1_
-
-    _Modified in v1.4.3: Internal change_
-
-    _Updated in v1.5.0: Documentation updated_
-
-`protein_forcefield`
-:   Define the force field to build Amber topology for protein
-
-    _Removed in v1.5.0: Use `forcefields` variable_
-
-`ligand_forcefield`
-:   Define the force field to build Amber topology for ligand (small molecule)
-
-    _Removed in v1.5.0: Use `forcefields` variable_
-
-`ions_parameters` (Default = 1)
-:   Define ions parameters to build the Amber topology (see [§3.6](https://ambermd.org/doc12/Amber21.pdf#section.3.6)). 
-
-    * 1: _frcmod.ions234lm_126_tip3p_ (Li/Merz ion parameters for +2 to +4 ions in TIP3P water (12-6 normal usage set))
-    * 2: _frcmod.ions234lm_126_spce_ (same, but in SPC/E water)
-    * 3: _frcmod.ions234lm_126_tip4pew_ (same, but in TIP4P/EW water) 
-    * 4: _frcmod.ions234lm_hfe_tip3p_ (Li/Merz ion parameters for +2 to +4 ions in TIP3P water (12-6 HFE set))
-    * 5: _frcmod.ions234lm_hfe_spce_ (same, but in SPC/E water)
-    * 6: _frcmod.ions234lm_hfe_tip4pew_ (same, but in TIP4P/EW water)
-    * 7: _frcmod.ions234lm_iod_tip3p_ (Li/Merz ion parameters for +2 to +4 ions in TIP3P water (12-6 IOD set))
-    * 8: _frcmod.ions234lm_iod_spce_ (same, but in SPC/E water)
-    * 9: _frcmod.ions234lm_iod_tip4pew_ (same, but in TIP4P/EW water)
-    * 10: _frcmod.ionslm_126_opc_ (Li/Merz ion parameters for -1 to +4 in OPC water (12-6 normal usage set))
-    * 11: _frcmod.ionslm_hfe_opc_ (Li/Merz ion parameters for -1 to +4 in OPC water (12-6 HFE set))
-    * 12: _frcmod.ionslm_iod_opc_ (Li/Merz ion parameters for -1 to +4 in OPC water (12-6 IOD set))
-    * 13: _frcmod.ions1lm_126_tip3p_ (Li/Merz ion parameters for +1 and -1 ions in TIP3P water (12-6 normal usage set))
-    * 14: _frcmod.ions1lm_126_spce_ (same, but in SPC/E water)
-    * 15: _frcmod.ions1lm_126_tip4pew_ (same, but in TIP4P/EW water)
-    * 16: _frcmod.ions1lm_iod_ (Li/Merz ion parameters for +1/-1 ions in TIP3P, SPC/E, and TIP4P/EW waters (12-6 IOD set))
-
-    !!! important "Keep in mind"
-        * You don't need to define it when you use a topology. Please refer to the section 
-          ["How gmx_MMPBSA works"](howworks.md#how-gmx_mmpbsa-works)   
-        * This notation is simpler since these parameter files are generally the same for all systems
-
-    _Updated in v1.5.0: Add new ion parameters sets_
+    Historical structure-to-topology workflows using `tleap`, `parmchk2`, and `-lm` are not part of the current
+    GROMACS calculation path. A small-molecule ligand must already be represented in the supplied GROMACS topology.
 
 `PBRadii` (Default = 4)
-:   Continuum-radius set used to build AMBER topology files. The value may be given as the numeric code or the
-    corresponding named set (for example, `PBRadii=mbondi3`):
+:   Continuum-radius set used by the implicit-solvent calculation. The value may be given as the numeric code or the
+    corresponding named set (for example, `PBRadii=mbondi3`). It does not select a bonded or nonbonded force field.
 
     This is the continuum-radius set used by GB, PB, and GBNSR6 topology preparation. Continuum radii are distinct
     from Lennard-Jones radii and are part of the scoring-model parameterization.
@@ -386,7 +273,6 @@ support for complex systems with several components. It supports all force field
             
             &general
             sys_name="PB_Halogens",
-            forcefields="oldff/leaprc.ff99SB,leaprc.gaff"
             PBRadii=5,
             /
             &pb
@@ -420,7 +306,6 @@ support for complex systems with several components. It supports all force field
             
             &general
             sys_name="PB_Halogens",
-            forcefields="oldff/leaprc.ff99SB,leaprc.gaff"
             PBRadii=6,
             /
             &pb
@@ -462,7 +347,8 @@ support for complex systems with several components. It supports all force field
 `source_force_field` (Default = "auto")
 :   Optional source force-field family override used for provenance and advisories. Allowed values are `auto`,
     `amber`, `charmm`, `opls`, `gromos`, and `other`. Automatic classification is conservative; use an override when
-    the topology or force-field list is ambiguous. This setting never selects a radius set or changes a topology.
+    the topology does not identify the source family clearly. This setting never selects a radius set or changes a
+    topology.
 
 `temperature` (Default = 298.15)  
 :   Specify the temperature (in K) used in the calculations.
@@ -592,7 +478,7 @@ in the PATH variable. In this path the following executables will be searched: `
 
             &general
             sys_name="my_system",
-            verbose=2, forcefields="oldff/leaprc.ff99SBildn,leaprc.gaff"
+            verbose=2
             gmx_path="/home/programs/gromacs/bin"
             /
             &gb
@@ -2361,7 +2247,7 @@ Sample input file for entropy calculations
 startframe=5, endframe=21, interval=1,
 # Interaction Entropy (IE)
 # (https://pubs.acs.org/doi/abs/10.1021/jacs.6b02682) approximation
-forcefields="oldff/leaprc.ff99SB", interaction_entropy=1, ie_segment=25,
+interaction_entropy=1, ie_segment=25,
 temperature=298
 /
 
