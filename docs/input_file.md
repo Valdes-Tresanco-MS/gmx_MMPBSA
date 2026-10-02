@@ -311,7 +311,7 @@ topologies.
     _Updated in v1.5.0: New PB radii sets have been added_
 
 `radii_audit` (Default = 0)
-:   Set to `1` to write `GMXMMPBSA_radii_<component>.csv` files with per-atom continuum-radius provenance. Normal runs
+:   Set to `1` to write `GMXMMPBSA_radii_<component>.csv` files with per-atom continuum-radius source. Normal runs
     always write the compact `GMXMMPBSA_radii.json` summary and include the same summary in `_GMXMMPBSA_info`.
     The audit flags metals, dummy/extra-point atoms, unknown elements, nonstandard residues, and assignments whose
     exact rule cannot be established. It records the final topology arrays; it does not change them.

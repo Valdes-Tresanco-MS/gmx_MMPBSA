@@ -281,8 +281,9 @@ class ReleasePublicationDocumentationTest(unittest.TestCase):
             with self.subTest(text=text):
                 self.assertIn(text, config)
         app_note = (ROOT / 'docs/application_note_advances_since_1_4_3.md').read_text()
-        self.assertIn('frozen through v1.6.5', app_note)
-        self.assertIn('1.6.5→1.7.0 migration guide', app_note)
+        self.assertIn('updated through v1.7.0', app_note)
+        self.assertIn('v1.6.5-to-v1.7.0 migration guide', app_note)
+        self.assertIn('Interpreting v1.6.5-to-v1.7.0 comparisons', app_note)
         self.assertNotIn('summarizes advances through v1.6.5', app_note)
         self.assertIn('versioned example archive', explicit_waters)
         self.assertNotIn('downgit.github.io/#/home?url=https://github.com/Valdes-Tresanco-MS/gmx_MMPBSA/tree/master/examples/Explicit_receptor_waters', explicit_waters)

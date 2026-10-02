@@ -377,7 +377,7 @@ decomposition is enabled.
 `COMPACT_MMXSA_RESULTS.mmxsa` The compact binary result consumed by `gmx_MMPBSA_ana` and the Python API. This is the
 portable compact filename; the obsolete `_COMPACT_gmx_MMPBSA_RESULTS.mmxsa` spelling should not be used.
 
-`GMXMMPBSA_radii.json` Continuum-radius provenance written for every calculation. When `radii_audit=1`,
+`GMXMMPBSA_radii.json` Continuum-radius source written for every calculation. When `radii_audit=1`,
 `GMXMMPBSA_radii_<component>.csv` files add per-atom provenance.
 
 `GMXMMPBSA_membrane_parameters.csv` and `GMXMMPBSA_membrane_parameters.png` Automatic membrane diagnostics, retained
