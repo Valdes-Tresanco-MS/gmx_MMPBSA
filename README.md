@@ -23,20 +23,32 @@ compatible. See the [compatibility guide](https://valdes-tresanco-ms.github.io/g
 ## Cite us
 
 <a href="https://www.scimagojr.com/journalsearch.php?q=5100155074&amp;tip=sid&amp;exact=no" title="SCImago Journal 
-&amp; Country Rank"><img border="0" align="right" src="https://www.scimagojr.com/journal_img.php?id=5100155074" 
-alt="SCImago Journal &amp; Country Rank"  /></a>
+&amp; Country Rank"><img border="0" align="right" src="https://www.scimagojr.com/journal_img.php?id=5100155074"
+alt="SCImago Journal &amp; Country Rank"/></a>
 
-Valdés-Tresanco, M.S., Valdés-Tresanco, M.E., Valiente, P.A. and Moreno E. **gmx_MMPBSA: A New Tool to Perform 
-End-State Free Energy Calculations with GROMACS**. _Journal of Chemical Theory and Computation_, 2021 17 (10), 6281-6291
-https://pubs.acs.org/doi/10.1021/acs.jctc.1c00645
+The official `gmx_MMPBSA` paper was published in the _Journal of Chemical Theory and Computation_ and is available
+[here](https://pubs.acs.org/doi/10.1021/acs.jctc.1c00645). If you use `gmx_MMPBSA`, please cite it as follows:
 
-Please also consider citing MMPBSA.py's paper:
+Valdés-Tresanco, M.S., Valdés-Tresanco, M.E., Valiente, P.A., and Moreno, E. _gmx_MMPBSA: A New Tool to Perform 
+End-State Free Energy Calculations with GROMACS_. Journal of Chemical Theory and Computation, 2021 17 (10), 6281-6291. 
+https://pubs.acs.org/doi/10.1021/acs.jctc.1c00645. 
 
-Bill R. Miller, T. Dwight McGee, Jason M. Swails, Nadine Homeyer, Holger Gohlke, and Adrian E. Roitberg. **MMPBSA.py: 
-An Efficient Program for End-State Free Energy Calculations**. _Journal of Chemical Theory and Computation_, 2012 8 
-(9), 3314-3321. https://pubs.acs.org/doi/10.1021/ct300418h
+<span class="__dimensions_badge_embed__" data-doi="10.1021/acs.jctc.1c00645"  data-style="medium_circle" 
+data-legend="always"></span><script async src="https://badge.dimensions.ai/badge.js" charset="utf-8" align="right"> 
+    </script>
 
-Please, visit [Cite gmx_MMPBSA](docs/cite_us.md) page for more information on how to cite gmx_MMPBSA and the programs/methods implemented in it.
+Download | [*.bib](gmx_MMPBSA_citation.bib) | [*.ris](gmx_MMPBSA_citation.ris)
+
+**Please also consider citing the MMPBSA.py paper:**
+
+Bill R. Miller, T. Dwight McGee, Jason M. Swails, Nadine Homeyer, Holger Gohlke, and Adrian E. Roitberg. 
+_MMPBSA.py: An Efficient Program for End-State Free Energy Calculations_. Journal of Chemical Theory and 
+Computation, 2012 8 (9), 3314-3321. https://pubs.acs.org/doi/10.1021/ct300418h. 
+
+Download | [*.bib](MMPBSA_py_citation.bib) | [*.ris](MMPBSA_py_citation.ris) | [*.xml](MMPBSA_py_citation.xml)
+
+Visit the [Cite gmx_MMPBSA](cite_us.md#example) page for more information on how to cite gmx_MMPBSA and the
+programs/methods implemented in it.
 
 ---------------------------------------
 
