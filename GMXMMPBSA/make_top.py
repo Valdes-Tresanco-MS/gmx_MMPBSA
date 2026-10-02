@@ -33,6 +33,7 @@ from GMXMMPBSA.utils import (selector, get_dist, list2range, res2map, get_indexe
 from GMXMMPBSA.alamdcrd import _scaledistance
 from GMXMMPBSA.make_trajs import warn_concatenated_complex_trajectories
 from GMXMMPBSA.radii import source_force_field_family
+from GMXMMPBSA.logging_utils import elapsed_progress
 import subprocess
 from pathlib import Path
 import logging
@@ -786,12 +787,42 @@ class CheckMakeTop:
         if not self.FILES.complex_trajs:
             GMXMMPBSA_ERROR('EXPLICIT_WATERS_MASK="dASA" requires a complex trajectory.')
 
+        dasa_trajectory = self.FILES.complex_trajs[0]
+        generated_dasa_trajectory = None
+        if hasattr(self, 'trjconv'):
+            # The selected GROMACS complex topology excludes atoms outside the
+            # receptor/ligand/solvent index group (commonly ions), while the
+            # original trajectory still contains the full system. Match the
+            # first trajectory frame to the topology before cpptraj reads it.
+            generated_dasa_trajectory = f'{self.FILES.prefix}COM_dasa_first.xtc'
+            Path(generated_dasa_trajectory).unlink(missing_ok=True)
+            trjconv_log = f'{self.FILES.prefix}explicit_waters_dasa_trjconv.out'
+            trjconv_command = self.trjconv + [
+                '-f', self.FILES.complex_trajs[0], '-s', self.FILES.complex_tpr,
+                '-o', generated_dasa_trajectory, '-n', self.FILES.complex_index, '-dump', '0',
+            ]
+            logging.info('Selecting the complex index group from the first trajectory frame for dASA...')
+            with elapsed_progress('Preparing topology-matched trajectory for dASA'):
+                result = subprocess.run(
+                    trjconv_command,
+                    input='GMXMMPBSA_REC_GMXMMPBSA_LIG\n',
+                    text=True,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.STDOUT,
+                )
+            with open(trjconv_log, 'w') as log_file:
+                log_file.write(result.stdout or '')
+            if result.returncode:
+                GMXMMPBSA_ERROR(f"{self.trjconv[0]} failed when preparing the dASA trajectory. "
+                                f'Check {trjconv_log}.')
+            dasa_trajectory = generated_dasa_trajectory
+
         receptor_mask = self._dasa_residue_mask(receptor_residues)
         ligand_mask = self._dasa_residue_mask(ligand_residues)
         solute_mask = f'({receptor_mask}|{ligand_mask})'
         all_residues = receptor_residues + ligand_residues
         dataset_names = []
-        actions = [f'trajin {self.FILES.complex_trajs[0]} 1 1', 'noprogress']
+        actions = [f'trajin {dasa_trajectory} 1 1', 'noprogress']
         for prefix, residues, environment in (
                 ('com', all_residues, solute_mask),
                 ('rec', receptor_residues, receptor_mask),
@@ -807,13 +838,16 @@ class CheckMakeTop:
         cutoff = self.INPUT['general']['explicit_waters_dasa_cutoff']
         logging.info('Selecting interface residues with cpptraj dASA cutoff %.3g for explicit waters...', cutoff)
         logging.debug('Running cpptraj dASA calculation with topology %s and first frame of %s',
-                      self.explicit_water_prmtop, self.FILES.complex_trajs[0])
-        with open(log, 'w') as log_file:
-            process = subprocess.Popen([self.external_progs['cpptraj'], self.explicit_water_prmtop],
-                                       stdin=subprocess.PIPE, stdout=log_file, stderr=subprocess.STDOUT)
-            process.communicate(('\n'.join(actions) + '\n').encode())
+                      self.explicit_water_prmtop, dasa_trajectory)
+        with elapsed_progress('Calculating explicit-water dASA with cpptraj'):
+            with open(log, 'w') as log_file:
+                process = subprocess.Popen([self.external_progs['cpptraj'], self.explicit_water_prmtop],
+                                           stdin=subprocess.PIPE, stdout=log_file, stderr=subprocess.STDOUT)
+                process.communicate(('\n'.join(actions) + '\n').encode())
         if process.wait():
             GMXMMPBSA_ERROR(f'{self.external_progs["cpptraj"]} failed when calculating dASA. Check {log}.')
+        if generated_dasa_trajectory:
+            Path(generated_dasa_trajectory).unlink(missing_ok=True)
 
         try:
             with open(output) as data_file:
