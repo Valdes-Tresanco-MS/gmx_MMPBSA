@@ -172,6 +172,8 @@ class CheckMakeTop:
         """
         :return: complex, receptor, ligand topologies and their mutants
         """
+        if self.explicit_waters:
+            logging.info('Explicit-water processing can take a while for large solvated systems. Please be patient.')
         self.gmx2pdb()
         # dASA needs the full solvated AMBER topology generated below. The
         # distance and explicit-mask selectors can be resolved immediately.
@@ -609,9 +611,10 @@ class CheckMakeTop:
 
         # initialize receptor and ligand structures. Needed to get residues map
         logging.info('Loading extracted complex, receptor, and ligand PDB files with ParmEd...')
-        self.complex_str = self.molstr(self.complex_str_file)
-        self.receptor_str = self.molstr(self.receptor_str_file)
-        self.ligand_str = self.molstr(self.ligand_str_file)
+        with elapsed_progress('Loading structures with ParmEd'):
+            self.complex_str = self.molstr(self.complex_str_file)
+            self.receptor_str = self.molstr(self.receptor_str_file)
+            self.ligand_str = self.molstr(self.ligand_str_file)
         logging.info('Loaded structures: complex %d atoms/%d residues, receptor %d atoms/%d residues, '
                      'ligand %d atoms/%d residues.',
                      len(self.complex_str.atoms), len(self.complex_str.residues),
@@ -622,10 +625,11 @@ class CheckMakeTop:
             self.ref_str = check_str(self.FILES.reference_structure, ref=True)
         self.check4water()
         logging.info('Reading receptor/ligand atom indexes and building residue maps...')
-        self.indexes = get_indexes(com_ndx=self.FILES.complex_index,
-                                   rec_ndx=self.FILES.receptor_index,
-                                   lig_ndx=self.FILES.ligand_index)
-        self.resi, self.resl, self.orderl = res2map(self.indexes, self.complex_str)
+        with elapsed_progress('Building receptor/ligand residue maps'):
+            self.indexes = get_indexes(com_ndx=self.FILES.complex_index,
+                                       rec_ndx=self.FILES.receptor_index,
+                                       lig_ndx=self.FILES.ligand_index)
+            self.resi, self.resl, self.orderl = res2map(self.indexes, self.complex_str)
         logging.info('Residue map built: %d receptor residues, %d ligand residues.',
                      sum(end - start + 1 for start, end in self.resi['REC']['num']),
                      sum(end - start + 1 for start, end in self.resi['LIG']['num']))
@@ -906,17 +910,19 @@ class CheckMakeTop:
         # try:
         if com_top.impropers or com_top.urey_bradleys:
             logging.info('Converting selected complex topology to AMBER ChamberParm...')
-            com_amb_prm = parmed.amber.ChamberParm.from_structure(com_top)
-            com_top_parm = 'chamber'
+            with elapsed_progress('Converting selected complex topology to AMBER ChamberParm'):
+                com_amb_prm = parmed.amber.ChamberParm.from_structure(com_top)
+                com_top_parm = 'chamber'
 
-            title = com_amb_prm.parm_data['CTITLE']
-            com_amb_prm.add_flag('TITLE', '20a4', title or '', after='CTITLE')
+                title = com_amb_prm.parm_data['CTITLE']
+                com_amb_prm.add_flag('TITLE', '20a4', title or '', after='CTITLE')
 
             logging.info('Detected CHARMM force field topology format...')
         else:
             logging.info('Converting selected complex topology to AMBER AmberParm...')
-            com_amb_prm = parmed.amber.AmberParm.from_structure(com_top)
-            com_top_parm = 'amber'
+            with elapsed_progress('Converting selected complex topology to AMBER AmberParm'):
+                com_amb_prm = parmed.amber.AmberParm.from_structure(com_top)
+                com_top_parm = 'amber'
             logging.info('Detected Amber/OPLS force field topology format...')
 
         # IMPORTANT: make_trajs ends in error if the box is defined
@@ -1226,25 +1232,31 @@ class CheckMakeTop:
 
         # read the temp topology with parmed
         logging.info('Reading preprocessed %s topology with ParmEd...', id)
-        rtemp_top = parmed.gromacs.GromacsTopologyFile(temp_top.as_posix())
+        with elapsed_progress(f'Reading preprocessed {id} topology with ParmEd'):
+            rtemp_top = parmed.gromacs.GromacsTopologyFile(temp_top.as_posix())
         # get the residues in the top from the com_ndx
         logging.info('Applying %s index selection to topology (%d atoms selected)...', id, len(ndx))
-        res_list = []
+        with elapsed_progress(f'Applying {id} index selection to topology'):
+            res_list = []
+            seen_residues = set()
 
-        for i in ndx:
-            try:
-                idx = rtemp_top.atoms[i - 1].residue.idx + 1
-                if idx not in res_list:
-                    res_list.append(rtemp_top.atoms[i - 1].residue.number + 1)
-            except IndexError:
-                for temp_file in preprocessor.created_files:
-                    temp_file.unlink(missing_ok=True)
-                raise IndexError(
-                    f'The atom {i} in the {id} index is not found in the topology generated from {top_file}'
-                )
+            for i in ndx:
+                try:
+                    residue = rtemp_top.atoms[i - 1].residue
+                    idx = residue.idx + 1
+                    residue_number = residue.number + 1
+                    if idx not in seen_residues:
+                        res_list.append(residue_number)
+                        seen_residues.add(idx)
+                except IndexError:
+                    for temp_file in preprocessor.created_files:
+                        temp_file.unlink(missing_ok=True)
+                    raise IndexError(
+                        f'The atom {i} in the {id} index is not found in the topology generated from {top_file}'
+                    )
 
-        ranges = list2range(res_list)
-        rtemp_top.strip(f"!:{','.join(ranges['string'])}")
+            ranges = list2range(res_list)
+            rtemp_top.strip(f"!:{','.join(ranges['string'])}")
         logging.info('Prepared %s topology selection: %d atoms/%d residues retained.',
                      id, len(rtemp_top.atoms), len(rtemp_top.residues))
 
@@ -1948,15 +1960,19 @@ class CheckMakeTop:
     def check_structures(self, com_str, rec_str=None, lig_str=None):
         logging.info('Checking structural consistency...')
         logging.info('Validating complex structure...')
-        check_str(com_str)
+        with elapsed_progress('Complex structure validation'):
+            check_str(com_str)
         logging.info('Validating receptor structure...')
-        check_str(rec_str, skip=True)
+        with elapsed_progress('Receptor structure validation'):
+            check_str(rec_str, skip=True)
         logging.info('Validating ligand structure...')
-        check_str(lig_str, skip=True)
+        with elapsed_progress('Ligand structure validation'):
+            check_str(lig_str, skip=True)
 
         if self.FILES.reference_structure:
             logging.info('Assigning chain IDs and insertion codes to structure files according to the reference structure...')
-            ref_str = check_str(self.FILES.reference_structure)
+            with elapsed_progress('Reference structure validation'):
+                ref_str = check_str(self.FILES.reference_structure)
             if len(ref_str.residues) != len(com_str.residues):
                 GMXMMPBSA_ERROR(f'The number of residues of the complex ({len(com_str.residues)}) and of the '
                                 f'reference structure ({len(ref_str.residues)}) are different. Please check that the '
