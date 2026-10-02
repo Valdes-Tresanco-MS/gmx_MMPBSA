@@ -35,6 +35,7 @@ import platform
 import re
 import shutil
 import sys
+from collections import Counter
 from pathlib import Path
 import json
 import logging
@@ -732,11 +733,12 @@ def check_str(structure, ref=False, skip=False):
             res_dict[res.chain].append([res.number, res.name, res.insertion_code])
 
     for chain, resl in res_dict.items():
-        res_id_list = [[x, x2] for x, x1, x2 in resl]
+        res_id_list = [(x, x2) for x, x1, x2 in resl]
+        res_id_counts = Counter(res_id_list)
         duplicates.extend(
             f'{chain}:{resl[c][0]}:{resl[c][1]}:{resl[c][2]}'
             for c, x in enumerate(res_id_list)
-            if res_id_list.count(x) > 1
+            if res_id_counts[x] > 1
         )
 
     if ref:
