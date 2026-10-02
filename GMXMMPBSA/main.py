@@ -290,6 +290,7 @@ class MMPBSA_App(object):
             self.radii_provenance = collect_radii_provenance(
                 self.FILES, self.INPUT, self.engine,
                 additional_topologies=self._gbnsr6_prepared_topologies,
+                logged_messages=getattr(self, '_logged_radii_messages', None),
             )
 
     def _load_calc_list(self, pre, mutant, parm_system):
@@ -793,7 +794,11 @@ class MMPBSA_App(object):
             (self.FILES.complex_prmtop, self.FILES.receptor_prmtop, self.FILES.ligand_prmtop,
              self.FILES.mutant_complex_prmtop,
              self.FILES.mutant_receptor_prmtop, self.FILES.mutant_ligand_prmtop) = maketop.buildTopology()
-            self.radii_provenance = collect_radii_provenance(self.FILES, self.INPUT, self.engine)
+            self._logged_radii_messages = set()
+            self.radii_provenance = collect_radii_provenance(
+                self.FILES, self.INPUT, self.engine,
+                logged_messages=self._logged_radii_messages,
+            )
             if self.engine == 'gmx':
                 logging.info('Building AMBER topologies from GROMACS files... Done.\n')
             else:
@@ -904,7 +909,7 @@ class MMPBSA_App(object):
         )
 
         logging.info(
-            '\n Thank you for using gmx_MMPBSA. Please consider supporting gmx_MMPBSA by citing our publication:'
+            '\nThank you for using gmx_MMPBSA. Please consider supporting gmx_MMPBSA by citing our publication:'
             '\n    Valdés-Tresanco, M.S., Valdés-Tresanco, M.E., Valiente, P.A. and Moreno E. '
             '\n    gmx_MMPBSA: A New Tool to Perform End-State Free Energy Calculations with GROMACS. '
             '\n    J Chem Theory Comput., 2021, 17 (10):6281-6291. Epub 2021 Sep 29. PMID: 34586825.'

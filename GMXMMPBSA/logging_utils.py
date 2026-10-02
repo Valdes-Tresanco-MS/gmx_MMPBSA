@@ -2,6 +2,9 @@
 
 import logging
 import shlex
+import sys
+import threading
+import time
 from pathlib import Path
 
 
@@ -18,6 +21,67 @@ class WarningSpacingFormatter(logging.Formatter):
             return f'{prefix}{message}\n'
         self._previous_was_warning = False
         return message
+
+
+class ElapsedProgress:
+    """Show a small elapsed-time spinner on an interactive terminal."""
+
+    _frames = ('|', '/', '-', '\\')
+
+    def __init__(self, label='Operation', message='This can take a while; please wait...', stream=None, interval=1):
+        self.label = label
+        self.message = message
+        self.stream = stream or sys.stderr
+        self.interval = interval
+        self._stop = threading.Event()
+        self._thread = None
+        self._started_at = None
+
+    def __enter__(self):
+        self._started_at = time.monotonic()
+        if not getattr(self.stream, 'isatty', lambda: False)():
+            return self
+        self._thread = threading.Thread(target=self._run, daemon=True)
+        self._thread.start()
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        elapsed = time.monotonic() - self._started_at
+        if self._thread is not None:
+            self._stop.set()
+            self._thread.join()
+            self.stream.write('\r\033[K')
+            self.stream.flush()
+        if exc_type is None:
+            logging.info('%s completed in %.1f seconds.', self.label, elapsed)
+        else:
+            logging.info('%s stopped after %.1f seconds.', self.label, elapsed)
+
+    def _run(self):
+        tick = 0
+        while not self._stop.wait(self.interval):
+            elapsed = int(time.monotonic() - self._started_at)
+            frame = self._frames[tick % len(self._frames)]
+            prefix = f'{self.message} ' if self.message else ''
+            self.stream.write(f'\r{prefix}[{frame}] {elapsed}s')
+            self.stream.flush()
+            tick += 1
+
+
+def elapsed_progress(label='Operation', message='This can take a while; please wait...', stream=None, interval=1):
+    """Return a context manager that reports elapsed time and spins on interactive terminals."""
+    return ElapsedProgress(label=label, message=message, stream=stream, interval=interval)
+
+
+class _MasterConsoleFilter(logging.Filter):
+    """Keep informational and warning output on the master MPI rank."""
+
+    def __init__(self, master):
+        super().__init__()
+        self.master = master
+
+    def filter(self, record):
+        return self.master or record.levelno >= logging.ERROR
 
 
 class RecordCountingHandler(logging.Handler):
@@ -87,6 +151,7 @@ def setup_logging(log_file, master=True, rank=0, *, force=False, file_enabled=Tr
     stream_handler = logging.StreamHandler()
     stream_handler.setLevel(logging.INFO)
     stream_handler.setFormatter(WarningSpacingFormatter("[%(levelname)-7s] %(message)s"))
+    stream_handler.addFilter(_MasterConsoleFilter(master))
     handlers = [stream_handler]
     if master and file_enabled:
         handlers.insert(0, _new_file_handler(log_file, rank))

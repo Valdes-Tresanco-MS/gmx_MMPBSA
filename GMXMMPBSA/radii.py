@@ -1,4 +1,4 @@
-"""Continuum-radius provenance and audit helpers.
+"""Continuum-radius source and audit helpers.
 
 The values used by Amber's continuum-solvation routines live in the final
 prmtop arrays.  This module records those values without attempting to infer
@@ -273,8 +273,11 @@ def _load_prepared_topology_for_provenance(path, source_path=None):
         return source
 
 
-def collect_radii_provenance(files, input_data, engine, additional_topologies=None):
+def collect_radii_provenance(files, input_data, engine, additional_topologies=None,
+                             logged_messages=None):
     """Collect final topology provenance and write the requested artifacts."""
+    if logged_messages is None:
+        logged_messages = set()
     requested = RADIUS_NAMES.get(input_data.get('general', {}).get('PBRadii'), 'unknown')
     route = 'native_amber_topology_preserved' if engine == 'amber' else 'parmed_ChRad'
     components = {
@@ -302,7 +305,7 @@ def collect_radii_provenance(files, input_data, engine, additional_topologies=No
                 if not unchanged:
                     component_route = 'native_amber_mutant_inherited_ChRad'
             records[component] = _record(parm, component, requested, component_route, input_data, family)
-            _log_advisories(records[component], input_data)
+            _log_advisories(records[component], input_data, logged_messages)
             if input_data.get('general', {}).get('radii_audit', 0):
                 audit_path = Path(f'GMXMMPBSA_radii_{component}.csv')
                 _write_audit_csv(parm, component, audit_path)
@@ -324,7 +327,7 @@ def collect_radii_provenance(files, input_data, engine, additional_topologies=No
         prepared_records[component]['topology_path'] = str(path)
         if source_path is not None:
             prepared_records[component]['source_topology_path'] = str(source_path)
-        _log_advisories(prepared_records[component], input_data)
+        _log_advisories(prepared_records[component], input_data, logged_messages)
         if input_data.get('general', {}).get('radii_audit', 0):
             audit_path = Path(f'GMXMMPBSA_radii_{component}.csv')
             _write_audit_csv(parm, component, audit_path)
@@ -346,9 +349,10 @@ def collect_radii_provenance(files, input_data, engine, additional_topologies=No
     }
     output_path = Path('GMXMMPBSA_radii.json')
     output_path.write_text(json.dumps(provenance, indent=2, sort_keys=True) + '\n', encoding='utf-8')
-    logging.info('Continuum-radius provenance written to %s', output_path)
+    _log_once(logged_messages, logging.INFO, 'Continuum-radius source written to %s', output_path)
     for component, record in records.items():
-        logging.info(
+        _log_once(
+            logged_messages, logging.INFO,
             'Radii %-15s requested=%s effective=%s RADIUS_SET=%r route=%s source=%s '
             'RADII=%s SCREEN=%s',
             component, record['requested_radius_set'], record['effective_radius_set'], record['RADIUS_SET'],
@@ -356,7 +360,8 @@ def collect_radii_provenance(files, input_data, engine, additional_topologies=No
             record['screen_sha256'],
         )
     for component, record in prepared_records.items():
-        logging.info(
+        _log_once(
+            logged_messages, logging.INFO,
             'Radii %-15s requested=%s effective=%s RADIUS_SET=%r route=%s source=%s '
             'RADII=%s SCREEN=%s',
             component, record['requested_radius_set'], record['effective_radius_set'], record['RADIUS_SET'],
@@ -366,32 +371,32 @@ def collect_radii_provenance(files, input_data, engine, additional_topologies=No
     return provenance
 
 
-def _log_advisories(record, input_data):
+def _log_advisories(record, input_data, logged_messages=None):
     family = record['source_force_field_family']
     effective = record['effective_radius_set']
     models = record['models']
     if family == 'charmm' and 'gb' in models and effective.startswith(('bondi', 'mbondi')):
-        logging.warning(
+        _log_once(logged_messages, logging.WARNING,
             'CHARMM topology with AMBER %s radii for GB is a cross-parameterization protocol; '
             'a native CHARMM implicit-solvent parameterization has not been established here.', effective
         )
     if family == 'charmm' and 'pb' in models and effective != 'charmm_radii':
-        logging.info(
+        _log_once(logged_messages, logging.INFO,
             'CHARMM PB topology uses %s radii; charmm_radii is available as the CHARMM-specific PB option '
             'but will not be selected automatically.', effective
         )
     if family == 'opls' and 'gb' in models and effective.startswith(('bondi', 'mbondi')):
-        logging.warning(
+        _log_once(logged_messages, logging.WARNING,
             'OPLS topology with AMBER %s radii for GB is empirically unvalidated; interpret the calculation '
             'as a calibrated scoring protocol.', effective
         )
     if family == 'gromos' or record['atom_representation'] == 'united_atom_or_unknown':
-        logging.warning(
+        _log_once(logged_messages, logging.WARNING,
             'GROMOS/united-atom or incompletely typed topology detected; standard all-atom continuum-radius '
             'rules have strong experimental-support limitations for this input.'
         )
     if 'gbnsr6' in models:
-        logging.info(
+        _log_once(logged_messages, logging.INFO,
             'GBNSR6 radius provenance is reported independently; pairwise-GB igb/radius compatibility rules '
             'are not applied to GBNSR6.'
         )
@@ -401,8 +406,18 @@ def _log_advisories(record, input_data):
         nuance = ''
         if igb == 8 and effective == 'mbondi2':
             nuance = ' Historical mbondi2 energy-only usage exists, but it is not the conventional igb=8 pairing.'
-        logging.warning(
+        _log_once(logged_messages, logging.WARNING,
             'The %s topology uses %s radii, while igb=%s is conventionally used with %s radii.%s '
             'Stored topology values are preserved.',
             record['component'], effective, igb, recommended, nuance,
         )
+
+
+def _log_once(logged_messages, level, message, *args):
+    """Log a provenance message once across topology records and collections."""
+    rendered = message % args if args else message
+    if logged_messages is not None and rendered in logged_messages:
+        return
+    logging.log(level, message, *args)
+    if logged_messages is not None:
+        logged_messages.add(rendered)
