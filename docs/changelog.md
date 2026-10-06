@@ -41,8 +41,9 @@ calculation or rewriting an archived result. Accepted numeric differences versus
 
 ### Documentation and validation
 
-- Froze `docs/application_note_advances_since_1_4_3.md` as a v1.4.3→v1.6.5 draft; 1.7.0 science belongs in the
-  changelog and migration guide.
+- The published tag kept `docs/application_note_advances_since_1_4_3.md` as a v1.4.3→v1.6.5 draft. Subsequent
+  documentation updates extend it through v1.7.0 and separately identify development after the published tag;
+  the changelog and migration guide remain the references for release behavior and upgrade requirements.
 - Documented expected numeric differences versus 1.6.5 (IE/C2, GBNSR6 parser/frame-term merge, CHARMM CMAP
   components) in the migration guide.
 - Clarified that frame SD uses `ddof=0` and block SD uses `ddof=1` by design; averages are unaffected.
