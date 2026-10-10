@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import os
+import re
 import shutil
 import sys
 from pathlib import Path
@@ -177,10 +178,44 @@ class _FrameRateColumn(ProgressColumn):
         return Text(value, style='progress.data.speed', no_wrap=True)
 
 
+class _LineBufferedRichStream:
+    """Forward live redraws through launchers that wait for complete lines.
+
+    End each redraw with a newline, then compensate for that extra cursor
+    movement before the next redraw. Rich retains control of its own cursor
+    positioning, including displays occupying more than one terminal line.
+    """
+
+    _ansi = re.compile(r'\x1b\[[0-?]*[ -/]*[@-~]')
+
+    def __init__(self, stream):
+        self.stream = stream
+        self._extra_line = False
+
+    def write(self, text):
+        visible = self._ansi.sub('', text).replace('\r', '')
+        if not visible:
+            # Cursor visibility controls do not need their own display line.
+            return self.stream.write(text)
+        prefix = '\x1b[1A' if self._extra_line else ''
+        self._extra_line = not visible.endswith('\n')
+        self.stream.write(prefix + text + ('\n' if self._extra_line else ''))
+        self.stream.flush()
+        return len(text)
+
+    def flush(self):
+        self.stream.flush()
+
+    def __getattr__(self, name):
+        return getattr(self.stream, name)
+
+
 class _RichReporter:
     def __init__(self, total, label, mpi_size, stream=None):
         stream = stream or sys.stderr
         is_terminal = bool(getattr(stream, 'isatty', lambda: False)())
+        if not is_terminal:
+            stream = _LineBufferedRichStream(stream)
         width = min(
             shutil.get_terminal_size(fallback=(MAX_RICH_WIDTH, 24)).columns,
             MAX_RICH_WIDTH,

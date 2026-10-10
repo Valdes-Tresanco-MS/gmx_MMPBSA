@@ -48,6 +48,25 @@ checkpoints use MPI-rank terminology and are emitted at bounded percentage miles
 producing frames for the default five-minute stall interval, the log emits a rate-limited waiting notice rather than
 repeating a warning on every poll.
 
+### Rich progress through Open MPI 5
+
+Open MPI 5 can buffer rank output into complete lines. When output is forwarded through a pipe, gmx_MMPBSA terminates
+each Rich redraw with a newline and compensates for the added cursor movement on the next redraw. This lets the live
+bar update without special launcher options. Direct terminal output uses Rich's native redraws.
+
+For older gmx_MMPBSA installations whose Rich bar appears only after a calculation contribution finishes,
+pass `--output :raw` to the Open MPI 5 launcher:
+
+```bash
+mpirun --output :raw -np 8 gmx_MMPBSA -O -i mmpbsa.in -cs com.tpr -cp topol.top \
+    -ci index.ndx -cg 1 13 -ct com_traj.xtc --progress-style rich
+```
+
+The package-level forwarding and this launcher option were verified with Open MPI 5.0.8. The launcher option must be
+supplied before gmx_MMPBSA starts. For other MPI implementations,
+check their output-forwarding options. `--progress-style plain` provides newline-terminated milestones when live
+redraws cannot be forwarded.
+
 ## Warnings and errors
 
 Warnings are reserved for conditions that may affect interpretation, accuracy, performance, compatibility, or requested

@@ -7,7 +7,10 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from GMXMMPBSA.progress import MAX_RICH_WIDTH, FrameCounter, _StallNotifier, monitor_progress, resolve_progress_style
+from GMXMMPBSA.progress import (
+    MAX_RICH_WIDTH, FrameCounter, _LineBufferedRichStream, _RichReporter,
+    _StallNotifier, monitor_progress, resolve_progress_style,
+)
 
 
 class _Stream(io.StringIO):
@@ -30,6 +33,57 @@ class ProgressStyleTest(unittest.TestCase):
     def test_explicit_styles_are_preserved(self):
         for style in ('classic', 'plain', 'none'):
             self.assertEqual(resolve_progress_style(style, _Stream(False)), style)
+
+
+class RichForwardingTest(unittest.TestCase):
+    def test_live_updates_reach_a_line_buffered_pipe_before_close(self):
+        class LineBufferedPipe(_Stream):
+            def __init__(self):
+                super().__init__(False)
+                self.pending = ''
+
+            def write(self, text):
+                self.pending += text
+                while '\n' in self.pending:
+                    line, self.pending = self.pending.split('\n', 1)
+                    super().write(line + '\n')
+                return len(text)
+
+        stream = LineBufferedPipe()
+        with patch.dict(os.environ, {'TERM': 'xterm-256color'}):
+            reporter = _RichReporter(10, 'Complex', 8, stream)
+            try:
+                self.assertIn('0/10', stream.getvalue())
+                reporter.update(5)
+                self.assertIn('5/10', stream.getvalue())
+            finally:
+                reporter.close(10)
+        self.assertIn('10/10', stream.getvalue())
+
+    def test_added_newline_is_compensated_and_final_newline_is_preserved(self):
+        stream = _Stream(False)
+        forwarding = _LineBufferedRichStream(stream)
+        forwarding.write('\x1b[?25l')
+        forwarding.write('first')
+        forwarding.write('\r\x1b[2Ksecond')
+        forwarding.write('\r\x1b[2Kfinished\n')
+        forwarding.write('\x1b[?25h')
+        self.assertEqual(
+            stream.getvalue(),
+            '\x1b[?25lfirst\n\x1b[1A\r\x1b[2Ksecond\n'
+            '\x1b[1A\r\x1b[2Kfinished\n\x1b[?25h',
+        )
+
+    def test_terminal_stream_keeps_native_rich_redraws(self):
+        stream = _Stream(True)
+        with patch.dict(os.environ, {'TERM': 'xterm-256color'}):
+            reporter = _RichReporter(10, 'Complex', 8, stream)
+            try:
+                reporter.update(5)
+                self.assertIn('5/10', stream.getvalue())
+                self.assertNotIn('\n', stream.getvalue())
+            finally:
+                reporter.close(10)
 
 
 class FrameCounterTest(unittest.TestCase):
