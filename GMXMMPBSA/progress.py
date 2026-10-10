@@ -157,9 +157,12 @@ def _rank_names(template, mpi_size):
 
 class _ClassicReporter:
     def __init__(self, total, stream=None, **_):
+        stream = stream or sys.stderr
+        if not getattr(stream, 'isatty', lambda: False)():
+            stream = _LineBufferedProgressStream(stream)
         self.progress = tqdm(
             total=total, ascii=True, bar_format=TQDM_BAR_FORMAT,
-            file=stream or sys.stderr,
+            file=stream,
         )
 
     def update(self, completed):
@@ -178,11 +181,11 @@ class _FrameRateColumn(ProgressColumn):
         return Text(value, style='progress.data.speed', no_wrap=True)
 
 
-class _LineBufferedRichStream:
+class _LineBufferedProgressStream:
     """Forward live redraws through launchers that wait for complete lines.
 
     End each redraw with a newline, then compensate for that extra cursor
-    movement before the next redraw. Rich retains control of its own cursor
+    movement before the next redraw. The renderer retains control of its own cursor
     positioning, including displays occupying more than one terminal line.
     """
 
@@ -215,7 +218,7 @@ class _RichReporter:
         stream = stream or sys.stderr
         is_terminal = bool(getattr(stream, 'isatty', lambda: False)())
         if not is_terminal:
-            stream = _LineBufferedRichStream(stream)
+            stream = _LineBufferedProgressStream(stream)
         width = min(
             shutil.get_terminal_size(fallback=(MAX_RICH_WIDTH, 24)).columns,
             MAX_RICH_WIDTH,

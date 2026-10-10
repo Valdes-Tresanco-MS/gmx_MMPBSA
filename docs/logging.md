@@ -52,7 +52,8 @@ repeating a warning on every poll.
 
 Open MPI 5 can buffer rank output into complete lines. When output is forwarded through a pipe, gmx_MMPBSA terminates
 each Rich redraw with a newline and compensates for the added cursor movement on the next redraw. This lets the live
-bar update without special launcher options. Direct terminal output uses Rich's native redraws.
+bar update without special launcher options. The classic bar uses the same forwarding protection, including when
+`auto` selects classic because MPI hides the terminal. Direct terminal output uses each renderer's native redraws.
 
 For older gmx_MMPBSA installations whose Rich bar appears only after a calculation contribution finishes,
 pass `--output :raw` to the Open MPI 5 launcher:

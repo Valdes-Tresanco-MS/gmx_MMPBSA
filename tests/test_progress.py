@@ -8,7 +8,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from GMXMMPBSA.progress import (
-    MAX_RICH_WIDTH, FrameCounter, _LineBufferedRichStream, _RichReporter,
+    MAX_RICH_WIDTH, FrameCounter, _ClassicReporter, _LineBufferedProgressStream, _RichReporter,
     _StallNotifier, monitor_progress, resolve_progress_style,
 )
 
@@ -62,7 +62,7 @@ class RichForwardingTest(unittest.TestCase):
 
     def test_added_newline_is_compensated_and_final_newline_is_preserved(self):
         stream = _Stream(False)
-        forwarding = _LineBufferedRichStream(stream)
+        forwarding = _LineBufferedProgressStream(stream)
         forwarding.write('\x1b[?25l')
         forwarding.write('first')
         forwarding.write('\r\x1b[2Ksecond')
@@ -84,6 +84,28 @@ class RichForwardingTest(unittest.TestCase):
                 self.assertNotIn('\n', stream.getvalue())
             finally:
                 reporter.close(10)
+
+    def test_classic_pipe_updates_are_newline_terminated_before_close(self):
+        stream = _Stream(False)
+        reporter = _ClassicReporter(10, stream)
+        try:
+            self.assertIn('0/10', stream.getvalue())
+            self.assertTrue(stream.getvalue().endswith('\n'))
+            reporter.progress.mininterval = 0
+            reporter.update(5)
+            self.assertIn('5/10', stream.getvalue())
+            self.assertTrue(stream.getvalue().endswith('\n'))
+        finally:
+            reporter.close(10)
+
+    def test_classic_terminal_keeps_native_redraws(self):
+        stream = _Stream(True)
+        reporter = _ClassicReporter(10, stream)
+        try:
+            self.assertIn('0/10', stream.getvalue())
+            self.assertNotIn('\n', stream.getvalue())
+        finally:
+            reporter.close(10)
 
 
 class FrameCounterTest(unittest.TestCase):

@@ -211,6 +211,9 @@ For AMBER systems with nonstandard water residue names, provide their comma-sepa
 `--progress-style {auto,rich,classic,plain,none}`. The default `auto` mode uses an adaptive Rich progress display in
 an interactive terminal and falls back to the classic bar when MPI or output forwarding hides the terminal. Use
 `rich` to force the richer renderer through MPI, `plain` for milestone log messages, or `none` to disable progress.
+Both entry points use the same progress reporters. Rich and classic redraws sent through a pipe are newline-terminated with cursor
+compensation so MPI can forward updates during the calculation. Older installations can use Open MPI 5's
+`mpirun --output :raw` workaround; see [Rich progress through Open MPI 5](logging.md#rich-progress-through-open-mpi-5).
 Rich and classic displays also record clean 10% checkpoints in `gmx_MMPBSA.log`, including frame count, processing
 rate, elapsed time, ETA, and MPI ranks, so cluster jobs can be followed with `tail -f gmx_MMPBSA.log`.
 
