@@ -7,6 +7,8 @@ title: Alanine scanning
 
 This example estimates the effect of mutating receptor residue Tyr23 to alanine in a protein-protein complex. It
 uses the same solvated simulation, frame range, and GB-Neck2 model as the decomposition and stability examples.
+The [multiple-mutant example](#run-a-multiple-alanine-or-glycine-mutant) below extends this calculation to two
+receptor residues mutated together.
 
 <div class="example-card-grid" markdown>
 
@@ -16,7 +18,9 @@ uses the same solvated simulation, frame range, and GB-Neck2 model as the decomp
 
 -   **Mutation**
 
-    `R:23` Tyr to Ala
+    Single: Tyr23 to Ala
+
+    Multiple: Thr13 + Tyr23 to Ala or Gly
 
 -   **Solvent model**
 
@@ -230,14 +234,94 @@ variant without requiring a separately prepared mutant topology. With `mutant_on
 both the original and mutant systems. Because tyrosine is classified as polar, `cas_intdiel=1` applies
 `intdiel_polar=3` to the relevant GB calculations.
 
+## Run a multiple alanine or glycine mutant
+
+To estimate the combined effect of two mutations, select Thr13 and Tyr23 together with `mutant_res="R/13,23"`.
+Both residues are present in chain `R` of the supplied `reference.pdb` and belong to the receptor. With
+`mutant="ALA"`, this produces the **T13A/Y23A multiple alanine mutant**. With `mutant="GLY"`, it produces the
+**T13G/Y23G multiple glycine mutant**.
+
+Make a separate copy of the example folder for each variant so its inputs and results stay together. Save one of
+the following inputs as `mmpbsa_multiple.in` in that folder. Both variants use the same trajectory frames, radii,
+salt concentration, and internal dielectric.
+
+=== "Multiple alanine mutant"
+
+    ```yaml linenums="1" title="mmpbsa_multiple.in"
+    &general
+    sys_name="Multiple_Alanine_Mutant",
+    startframe=1,
+    endframe=10,
+    PBRadii=4,
+    /
+    &gb
+    igb=8, saltcon=0.150, intdiel=3,
+    /
+    &alanine_scanning
+    mutant="ALA", mutant_res="R/13,23",
+    cas_intdiel=0, mutant_only=0,
+    /
+    ```
+
+=== "Multiple glycine mutant"
+
+    ```yaml linenums="1" title="mmpbsa_multiple.in"
+    &general
+    sys_name="Multiple_Glycine_Mutant",
+    startframe=1,
+    endframe=10,
+    PBRadii=4,
+    /
+    &gb
+    igb=8, saltcon=0.150, intdiel=3,
+    /
+    &alanine_scanning
+    mutant="GLY", mutant_res="R/13,23",
+    cas_intdiel=0, mutant_only=0,
+    /
+    ```
+
+Multiple mutations require `cas_intdiel=0`; choose the dielectric explicitly in the solvent-model namelist.
+Here, `intdiel=3` matches the dielectric applied to the single Tyr23 mutation above. For comparisons with other
+single mutants, use the same explicit dielectric and the same frame range in every calculation. All selected
+residues must belong to one component and use the same target, either `ALA` or `GLY`.
+
+From the folder containing the chosen input, run:
+
+```bash
+gmx_MMPBSA -O \
+  -i mmpbsa_multiple.in \
+  -cs com.tpr \
+  -ct com_traj.xtc \
+  -ci index.ndx \
+  -cg SOLU_chain1 SOLU_chain2 \
+  -cp topol.top \
+  -cr reference.pdb \
+  -o MULTIPLE_MUTANT_RESULTS.dat \
+  -eo MULTIPLE_MUTANT_RESULTS.csv
+```
+
+For MPI, prepend `mpirun -np 2` to the same command.
+
+### Interpret the multiple-mutant result
+
+With `mutant_only=0`, the output includes the original system, the multiple mutant, and their difference. The
+mutation effect is the change in binding energy for **both substitutions together**, relative to the original
+system. This run does not calculate separate T13A and Y23A effects (or T13G and Y23G effects); run each selection
+separately if those individual effects are needed. The combined effect need not equal the sum of the individual
+effects.
+
+The program generates mutant topologies and trajectory coordinates from the original system. Check that both
+selected residues have become ALA or GLY in the generated mutant structures before interpreting the result.
+
 ## Verify the mutation selection
 
 Residue selection depends on stable chain IDs and residue numbers. Supplying `reference.pdb` with `-cr` makes the
 mapping explicit while `com.pdb` retains the complete solvated snapshot for consistency. Confirm the selected
 mutation in `_GMXMMPBSA_COM_FIXED.pdb` and the generated mutant structures before interpreting results.
 
-One run can mutate one residue or several residues together in one composite mutant; it does not independently scan
-each selected residue. `mutant_res` also accepts `CHAIN/RESNUM` notation and insertion codes as described in the
+One run can mutate a single residue or change several residues together to produce a multiple alanine mutant or
+a multiple glycine mutant. It does not independently scan each selected residue. `mutant_res` also accepts `CHAIN/RESNUM` notation and insertion codes as described in the
 [alanine-scanning input options][9].
 
 ## Expected outputs
