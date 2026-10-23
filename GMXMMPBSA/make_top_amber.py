@@ -209,7 +209,8 @@ class CheckAmberTop(CheckMakeTop):
                                     f"significant amount of time to print!")
 
             self.INPUT['decomp']['print_res'] = ','.join(list2range(decomp_res)['string'])
-        if self.INPUT['gb']['ifqnt'] and self.INPUT['gb']['com_qmmask'] == '':
+        qmmm_active = self.INPUT['gb'].get('gbrun', False) and self.INPUT['gb']['ifqnt']
+        if qmmm_active and self.INPUT['gb']['com_qmmask'] == '':
             qm_residues, (rec_charge, lig_charge) = self.get_selected_residues(self.INPUT['gb']['qm_residues'], True)
 
             if 'within' in self.INPUT['gb']['qm_residues']:
@@ -247,7 +248,7 @@ class CheckAmberTop(CheckMakeTop):
 
             reconcile_qm_charges(self.INPUT['gb'], rec_charge, lig_charge)
 
-        elif self.INPUT['gb']['com_qmmask'] != '':
+        elif qmmm_active and self.INPUT['gb']['com_qmmask'] != '':
             logging.warning('Overriding automatic assigment of qmcharge_com, qmcharge_rec, and qmcharge_lig. Using '
                             'default or user defined qmcharge_com, qmcharge_rec, and qmcharge_lig instead...')
 
@@ -668,8 +669,9 @@ class CheckAmberTop(CheckMakeTop):
         return numbers
 
     def ambertop2prmtop(self):
-        logging.info('Using topology conversion. Setting radiopt = 0...')
-        self.INPUT['pb']['radiopt'] = 0
+        if self.INPUT.get('pb', {}).get('pbrun', False):
+            logging.info('Using topology radii for PB (radiopt=0).')
+            self.INPUT['pb']['radiopt'] = 0
         logging.info('Building Normal Complex Amber topology...')
 
         if self.explicit_waters:

@@ -93,7 +93,9 @@ class RadiusProvenanceTest(unittest.TestCase):
                 os.chdir(directory)
                 for filename in vars(files).values():
                     Path(filename).touch()
-                records = collect_radii_provenance(files, data, 'amber')['components']
+                with self.assertLogs(level='INFO') as logs:
+                    records = collect_radii_provenance(files, data, 'amber')['components']
+                self.assertIn('Radii for complex: mbondi3', '\n'.join(logs.output))
                 for name in ('mutant_complex', 'mutant_receptor'):
                     self.assertEqual(records[name]['assignment_route'], 'native_amber_mutant_inherited_ChRad')
                     self.assertFalse(records[name]['input_pbradii_applied'])
@@ -139,7 +141,8 @@ class RadiusProvenanceTest(unittest.TestCase):
             try:
                 for filename in ('COM.prmtop', 'REC.prmtop', 'LIG.prmtop'):
                     Path(filename).touch()
-                result = collect_radii_provenance(files, input_data, 'amber')
+                with self.assertLogs(level='INFO') as logs:
+                    result = collect_radii_provenance(files, input_data, 'amber')
             finally:
                 os.chdir(old_cwd)
             self.assertEqual(set(result['components']), {'complex', 'receptor', 'ligand'})
@@ -154,6 +157,14 @@ class RadiusProvenanceTest(unittest.TestCase):
             with open(Path(directory) / 'GMXMMPBSA_radii.json', encoding='utf-8') as handle:
                 payload = json.load(handle)
             self.assertEqual(payload['components']['complex']['screen_sha256'], radius_checksum([0.8, 0.85]))
+            self.assertEqual(payload['components']['complex']['radii_sha256'], radius_checksum([1.7, 1.5]))
+            output = '\n'.join(logs.output)
+            for component in ('complex', 'receptor', 'ligand'):
+                self.assertIn(f'Radii for {component}: mbondi3', output)
+            for detail in ('RADII=', 'SCREEN=', 'requested=', 'route=', 'source=',
+                           payload['components']['complex']['radii_sha256'],
+                           payload['components']['complex']['screen_sha256']):
+                self.assertNotIn(detail, output)
 
     def test_records_prepared_gbnsr6_topologies_separately(self):
         files = SimpleNamespace(
@@ -171,16 +182,23 @@ class RadiusProvenanceTest(unittest.TestCase):
             try:
                 for filename in ('COM.prmtop', 'REC.prmtop', 'LIG.prmtop', 'prepared.prmtop'):
                     Path(filename).touch()
-                result = collect_radii_provenance(
-                    files, input_data, 'gmx',
-                    additional_topologies={'gbnsr6_complex': 'prepared.prmtop'},
-                )
+                logged_messages = set()
+                with self.assertLogs(level='INFO') as logs:
+                    collect_radii_provenance(files, input_data, 'gmx', logged_messages=logged_messages)
+                    result = collect_radii_provenance(
+                        files, input_data, 'gmx',
+                        additional_topologies={'gbnsr6_complex': 'prepared.prmtop'},
+                        logged_messages=logged_messages,
+                    )
             finally:
                 __import__('os').chdir(old_cwd)
 
         prepared = result['prepared_topologies']['gbnsr6_complex']
         self.assertEqual(prepared['assignment_route'], 'gbnsr6_prepared_copy')
         self.assertEqual(prepared['effective_radius_set'], 'mbondi3')
+        output = '\n'.join(logs.output)
+        for component in ('complex', 'receptor', 'ligand', 'GBNSR6 complex'):
+            self.assertEqual(output.count(f'Radii for {component}: mbondi3'), 1)
 
 
 class MappedRadiusConsistencyTest(unittest.TestCase):

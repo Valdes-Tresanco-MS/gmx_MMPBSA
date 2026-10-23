@@ -349,25 +349,14 @@ def collect_radii_provenance(files, input_data, engine, additional_topologies=No
     }
     output_path = Path('GMXMMPBSA_radii.json')
     output_path.write_text(json.dumps(provenance, indent=2, sort_keys=True) + '\n', encoding='utf-8')
-    _log_once(logged_messages, logging.INFO, 'Continuum-radius source written to %s', output_path)
-    for component, record in records.items():
-        _log_once(
-            logged_messages, logging.INFO,
-            'Radii %-15s requested=%s effective=%s RADIUS_SET=%r route=%s source=%s '
-            'RADII=%s SCREEN=%s',
-            component, record['requested_radius_set'], record['effective_radius_set'], record['RADIUS_SET'],
-            record['assignment_route'], record['source_force_field_family'], record['radii_sha256'],
-            record['screen_sha256'],
-        )
-    for component, record in prepared_records.items():
-        _log_once(
-            logged_messages, logging.INFO,
-            'Radii %-15s requested=%s effective=%s RADIUS_SET=%r route=%s source=%s '
-            'RADII=%s SCREEN=%s',
-            component, record['requested_radius_set'], record['effective_radius_set'], record['RADIUS_SET'],
-            record['assignment_route'], record['source_force_field_family'], record['radii_sha256'],
-            record['screen_sha256'],
-        )
+    _log_once(logged_messages, logging.INFO, 'Detailed radius provenance saved to %s', output_path)
+    for component_records in (records, prepared_records):
+        for component, record in component_records.items():
+            label = component.replace('gbnsr6', 'GBNSR6').replace('_', ' ')
+            radius_set = record['effective_radius_set']
+            if radius_set == 'unknown':
+                radius_set = record['RADIUS_SET']
+            _log_once(logged_messages, logging.INFO, 'Radii for %s: %s', label, radius_set)
     return provenance
 
 

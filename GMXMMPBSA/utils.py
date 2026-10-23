@@ -195,19 +195,20 @@ PB_INP1_NONPOLAR = PB_INP1_DEFAULTS
 
 
 def sync_pb_nonpolar_for_inp(INPUT):
-    """Align INPUT PB parameters with Amber guidance when ``inp=1``.
+    """Align enabled PB calculations with Amber guidance when ``inp=1``.
 
     Amber PBSA resets ``sprob``, ``cavity_surften``, and ``cavity_offset`` for
     ``inp=1``, and warns that ``radiopt`` should be 0 (use prmtop / PBRadii
     radii). Keep the in-memory INPUT dict synchronized so generated mdins,
     ``_GMXMMPBSA_info``, and decomposition SAS scaling match the continuum
     model Amber applies for ENPOLAR/ECAVITY.
+    Skip inactive PB settings, which the parser also supplies for non-PB runs.
 
     Returns:
         True if any PB value was changed.
     """
     pb = INPUT.get('pb') if INPUT is not None else None
-    if not pb or int(pb.get('inp', 0)) != 1:
+    if not pb or not pb.get('pbrun', False) or int(pb.get('inp', 0)) != 1:
         return False
 
     changed = []
