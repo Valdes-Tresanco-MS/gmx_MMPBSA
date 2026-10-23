@@ -22,6 +22,7 @@ Generate Amber topology files from GROMACS files
 
 import os
 import platform
+import shutil
 import textwrap
 
 import parmed
@@ -33,6 +34,8 @@ from GMXMMPBSA.utils import (selector, get_dist, list2range, res2map, get_indexe
 from GMXMMPBSA.alamdcrd import _scaledistance
 from GMXMMPBSA.make_trajs import warn_concatenated_complex_trajectories
 from GMXMMPBSA.radii import source_force_field_family
+from GMXMMPBSA.mutation import (MutationForceField, ensure_lj_type, mutation_atom_names,
+                               missing_lj14_pairs, fill_lj14_pairs)
 from GMXMMPBSA.logging_utils import elapsed_progress
 import subprocess
 from pathlib import Path
@@ -902,6 +905,10 @@ class CheckMakeTop:
         )
         if error_info:
             topology_mismatch_error('complex', self.FILES.complex_top, self.complex_str_file, error_info)
+        if self.INPUT.get('ala', {}).get('alarun', False):
+            self._mutation_gromacs_parameters = getattr(com_top, 'parameterset', None)
+            self._mutation_source_files = getattr(com_top, '_mutation_source_files', ())
+            self._mutation_combining_rule = getattr(com_top, 'combining_rule', 'lorentz')
 
         logging.info('Assigning complex coordinates to the selected topology...')
         com_top.coordinates = self.complex_str.coordinates
@@ -1172,6 +1179,16 @@ class CheckMakeTop:
                     self.mut_ligand_list[f'MLIG{c}'] = sfile
                     start = end + 1
 
+    def _gromacs_library_dirs(self):
+        if not hasattr(self, '_gromacs_library_directories'):
+            command = getattr(self, 'external_progs', {}).get('trjconv')
+            search_path = getattr(self, 'INPUT', {}).get('general', {}).get('gmx_path', '')
+            if command is None and search_path:
+                command = next((exe for name in ('gmx', 'gmx_mpi', 'gmx_d', 'gmx_mpi_d', 'trjconv')
+                                if (exe := shutil.which(name, path=search_path))), None)
+            self._gromacs_library_directories = MutationForceField.gromacs_library_dirs(command)
+        return self._gromacs_library_directories
+
     def _cleantop_with_retry(self, top_file, ndx, structure, id='complex'):
         logging.info('Preparing %s topology from %s using %d selected atom indexes...',
                      id, top_file, len(ndx))
@@ -1179,13 +1196,17 @@ class CheckMakeTop:
         # requested; otherwise water index atoms vanish and only the retry path
         # recovers them.
         keep_solvent = bool(getattr(self, 'explicit_waters', 0))
+        def prepare(remove_solvent):
+            with MutationForceField.gromacs_library(self._gromacs_library_dirs()):
+                return self.cleantop(top_file, ndx, id, remove_solvent=remove_solvent)
+
         try:
-            top = self.cleantop(top_file, ndx, id, remove_solvent=not keep_solvent)
+            top = prepare(not keep_solvent)
         except IndexError as err:
             logging.warning(f'{err} Retrying with the full topology before applying the index...')
             try:
                 logging.info('Preparing %s topology again without removing solvent before applying the index...', id)
-                top = self.cleantop(top_file, ndx, id, remove_solvent=False)
+                top = prepare(False)
             except IndexError:
                 GMXMMPBSA_ERROR(f'The atom index in the {id} index is not found in the topology file. Please check '
                                 'that the files are consistent.')
@@ -1199,7 +1220,7 @@ class CheckMakeTop:
             )
             try:
                 logging.info('Preparing %s topology again without removing solvent before applying the index...', id)
-                top = self.cleantop(top_file, ndx, id, remove_solvent=False)
+                top = prepare(False)
             except IndexError:
                 GMXMMPBSA_ERROR(f'The atom index in the {id} index is not found in the topology file. Please check '
                                 'that the files are consistent.')
@@ -1234,6 +1255,19 @@ class CheckMakeTop:
         logging.info('Reading preprocessed %s topology with ParmEd...', id)
         with elapsed_progress(f'Reading preprocessed {id} topology with ParmEd'):
             rtemp_top = parmed.gromacs.GromacsTopologyFile(temp_top.as_posix())
+        original = {temporary.resolve(): source.resolve()
+                    for source, temporary in getattr(preprocessor, '_processed', {}).items()}
+        def source_path(include):
+            path = Path(include)
+            if not path.is_absolute():
+                roots = (temp_top.parent, Path(parmed.gromacs.GROMACS_TOPDIR))
+                path = next((root / path for root in roots if (root / path).is_file()), temp_top.parent / path)
+            resolved = path.resolve()
+            return original.get(resolved, resolved)
+
+        rtemp_top._mutation_source_files = tuple(dict.fromkeys([
+            Path(top_file).resolve(),
+            *(source_path(p) for p in getattr(rtemp_top, 'itps', ()))]))
         # get the residues in the top from the com_ndx
         logging.info('Applying %s index selection to topology (%d atoms selected)...', id, len(ndx))
         with elapsed_progress(f'Applying {id} index selection to topology'):
@@ -1564,7 +1598,7 @@ class CheckMakeTop:
                     res.ter = False
             else:
                 atms_name = [at.name for at in res.atoms]
-                if 'OXT' in atms_name or 'OT1' in atms_name or 'OT2' in atms_name:  # already used, but is better to get here anyway
+                if {'OXT', 'OT1', 'OT2', 'O1', 'O2', 'OC1', 'OC2'} & set(atms_name):
                     res.ter = 'C'  # ter is a boolean variable, but it is not used anyway
                 elif (('H3' in atms_name or 'HT3' in atms_name) and
                       parmed.residue.AminoAcidResidue.has(res.name)  # exclude other residues with H3, for examples ligs
@@ -1573,14 +1607,213 @@ class CheckMakeTop:
                 else:
                     res.ter = False
 
+    @staticmethod
+    def _mutation_atom_names(residue, mutant):
+        return mutation_atom_names(residue, mutant)
+
+    def _warn_mutation_estimate(self, key, message, *args):
+        if not hasattr(self, '_mutation_estimate_warnings'):
+            self._mutation_estimate_warnings = set()
+        if key not in self._mutation_estimate_warnings:
+            logging.warning(message, *args)
+            self._mutation_estimate_warnings.add(key)
+
+    def _estimate_mutation_parameters(self, mutant, names, topology, residue):
+        library, fit = MutationForceField.infer(
+            self._mutation_reference_topology, mutant, names,
+            getattr(self, '_mutation_gromacs_parameters', None), self._gromacs_library_dirs())
+        if library is None:
+            return []
+        self._mutation_forcefield = library
+        # Replace ambiguous profiles only for this target and atom/terminal set.
+        self._mutant_parameter_templates[mutant].pop(names, None)
+        self._remember_native_mutant_parameters(library.topology(mutant), mutant, overwrite=False)
+        patterns = self._mutant_parameter_templates[mutant].get(names, [])
+        if patterns:
+            target_charge = sum(p['charge'] for p in patterns[0].values())
+            original_charge = sum(a.charge for a in self._mutation_reference_topology.residues[
+                self._mutation_reference_index].atoms)
+            other_charge = sum(a.charge for r in topology.residues if r.idx != residue.idx for a in r.atoms)
+            self._warn_mutation_estimate(
+                ('forcefield', mutant, names),
+                'Estimated %s mutation parameters using %s: residue-charge RMS %.4g e, '
+                'hydrogen-charge RMS %.4g e, %d matched atoms; target residue charge %+.4f e, '
+                'system charge %+.4f -> %+.4f e. %s'
+                'This is an inferred assignment; check the parameters before interpreting mutation energies.',
+                mutant, fit['source'], fit['charge_rms'], fit['hydrogen_rms'], fit['matched_atoms'],
+                target_charge, other_charge + original_charge, other_charge + target_charge,
+                '' if fit['matched_atoms'] else 'No complete residue charge profile matched; the fit relies on LJ types. ')
+        return patterns
+
+    def _remember_native_mutant_parameters(self, topology, mutant, overwrite=True):
+        """Retain force-field parameters before stripping/renaming any residues."""
+        templates = {}
+        for residue in topology.residues:
+            if residue.name not in (mutant, 'N' + mutant, 'C' + mutant):
+                continue
+            names = self._mutation_atom_names(residue, mutant)
+            parameters = {name: dict(charge=atom.charge, type=atom.type, mass=atom.mass,
+                                     atomic_number=atom.atomic_number, atom_type=atom.atom_type,
+                                     lj=(atom.rmin, atom.epsilon, atom.rmin_14, atom.epsilon_14))
+                          for name, atom in zip(names, residue.atoms)}
+            if isinstance(topology, parmed.amber.AmberParm):
+                flags = ['LENNARD_JONES_ACOEF', 'LENNARD_JONES_BCOEF']
+                if topology.chamber:
+                    flags += ['LENNARD_JONES_14_ACOEF', 'LENNARD_JONES_14_BCOEF']
+                ntypes = topology.ptr('ntypes')
+                for name, atom in zip(names, residue.atoms):
+                    pairs = {}
+                    for typename, index in topology.LJ_types.items():
+                        pair = topology.parm_data['NONBONDED_PARM_INDEX'][ntypes*(atom.nb_idx-1)+index-1] - 1
+                        if pair >= 0:
+                            pairs[typename] = tuple(topology.parm_data[flag][pair] for flag in flags)
+                    parameters[name]['pairs'] = pairs
+            if len(parameters) != len(residue.atoms):
+                continue
+            patterns = templates.setdefault(frozenset(parameters), [])
+            if not any(all(parameters[name]['type'] == pattern[name]['type'] and
+                           parameters[name]['atomic_number'] == pattern[name]['atomic_number'] and
+                           all(abs(a - b) <= 1e-6 for a, b in zip(
+                               (parameters[name]['charge'], parameters[name]['mass'], *parameters[name]['lj']),
+                               (pattern[name]['charge'], pattern[name]['mass'], *pattern[name]['lj'])))
+                           for name in parameters)
+                       for pattern in patterns):
+                patterns.append(parameters)
+        # The complex is processed first. Keep its templates available when an
+        # independently supplied receptor/ligand topology has no native target.
+        # References in the current topology take precedence over cached ones.
+        if not hasattr(self, '_mutant_parameter_templates'):
+            self._mutant_parameter_templates = {}
+        cache = self._mutant_parameter_templates.setdefault(mutant, {})
+        for names, patterns in templates.items():
+            if overwrite or names not in cache:
+                cache[names] = patterns
+
+    def _load_mutation_forcefield(self):
+        if not hasattr(self, '_mutation_forcefield'):
+            source = getattr(getattr(self, 'FILES', None), 'complex_top', None)
+            try:
+                with MutationForceField.gromacs_library(self._gromacs_library_dirs()):
+                    self._mutation_forcefield = MutationForceField.load(
+                        topology_file=source, includes=getattr(self, '_mutation_source_files', ()),
+                        gromacs_parameters=getattr(self, '_mutation_gromacs_parameters', None),
+                        combining_rule=getattr(self, '_mutation_combining_rule', 'lorentz'))
+                if hasattr(self, '_mutation_reference_topology'):
+                    try:
+                        self._mutation_forcefield.validate_topology(self._mutation_reference_topology)
+                    except ValueError as exc:
+                        self._warn_mutation_estimate('source-mismatch',
+                            '%s. Continuing with estimated mutation parameters from the discovered '
+                            'force-field source. Check that it is the force field used for the input topology.', str(exc))
+            except (OSError, ValueError, parmed.exceptions.ParameterError) as exc:
+                GMXMMPBSA_ERROR(f'Cannot read mutation force-field parameters: {exc}', MutateError)
+            if self._mutation_forcefield.sources:
+                logging.info('Using mutation force-field templates from %s',
+                             ', '.join(self._mutation_forcefield.sources))
+        return self._mutation_forcefield
+
+    def _assign_native_mutant_parameters(self, topology, residue, lj_type_indices):
+        mutant = residue.name
+        atom_names = self._mutation_atom_names(residue, mutant)
+        names = frozenset(atom_names)
+        patterns = self._mutant_parameter_templates[mutant].get(names, [])
+        if len(patterns) != 1:
+            library = self._load_mutation_forcefield()
+            # A known source can resolve conflicting native references before
+            # resorting to inference. Keep native candidates if it has no match.
+            native_patterns = patterns
+            self._mutant_parameter_templates[mutant].pop(names, None)
+            self._remember_native_mutant_parameters(library.topology(mutant), mutant, overwrite=False)
+            patterns = self._mutant_parameter_templates[mutant].get(names, native_patterns)
+            self._mutant_parameter_templates[mutant][names] = patterns
+        if not patterns or len(patterns) > 1:
+            estimated = self._estimate_mutation_parameters(mutant, names, topology, residue)
+            if estimated:
+                patterns = estimated
+        if not patterns or len(names) != len(residue.atoms):
+            GMXMMPBSA_ERROR(
+                f'No native {mutant} with matching atom names (same terminal state) is available for '
+                'the mutation, and no matching template was found in the available force-field files. '
+                'Keep the original GROMACS .ff or CHARMM-GUI toppar directory available alongside '
+                'the topology, and check that the AmberTools force-field libraries are installed.', MutateError)
+        if len(patterns) != 1:
+            # Prefer a chemically integral residue charge and the closest
+            # backbone/hydrogen charges when no library resolves the ambiguity.
+            parent = self._mutation_reference_topology.residues[residue.idx]
+            original = dict(zip(self._mutation_atom_names(parent, mutant), parent.atoms))
+            def score(pattern):
+                total = sum(p['charge'] for p in pattern.values())
+                return abs(total - round(total)) + sum(
+                    (p['charge'] - original[name].charge)**2 for name, p in pattern.items() if name in original)
+            patterns = [min(patterns, key=score)]
+            self._warn_mutation_estimate(('native', mutant, names),
+                'Estimated %s mutation parameters from ambiguous native references using residue '
+                'net charge and closest atom-charge patterns. Check the parameters before interpreting '
+                'mutation energies and verify the original force-field files available with the topology.', mutant)
+        resolved = {}
+        for name, atom in zip(atom_names, residue.atoms):
+            parameters = patterns[0][name]
+            nb_indices = lj_type_indices.get(parameters['type'], set())
+            if not nb_indices:
+                library = self._load_mutation_forcefield()
+                try:
+                    resolved[name] = ensure_lj_type(topology, parameters, atom, lj_type_indices,
+                                                   library.atom_types, library.combining_rule,
+                                                   library.pair_types)
+                except ValueError as exc:
+                    GMXMMPBSA_ERROR(str(exc), MutateError)
+            elif len(nb_indices) != 1:
+                radius, epsilon = parameters['lj'][:2]
+                resolved[name] = min(nb_indices, key=lambda index:
+                    ((topology.LJ_radius[index-1] - radius) / max(radius, .1))**2 +
+                    ((topology.LJ_depth[index-1] - epsilon) / max(epsilon, .01))**2)
+                self._warn_mutation_estimate(('lj', parameters['type']),
+                    'Estimated mutation LJ assignment for ambiguous type %s: selected the closest '
+                    'reference radius/epsilon at nonbonded index %d. Existing LJ pair tables are retained. '
+                    'Check the parameters before interpreting mutation energies.',
+                    parameters['type'], resolved[name])
+            else:
+                resolved[name] = next(iter(nb_indices))
+        for name, atom in zip(atom_names, residue.atoms):
+            parameters = patterns[0][name]
+            for attribute in ('charge', 'type', 'mass', 'atomic_number', 'atom_type'):
+                setattr(atom, attribute, parameters[attribute])
+            # ParmEd serializes ATOM_TYPE_INDEX from nb_idx. Resolve it in the
+            # current topology, whose LJ table may differ from a cached complex.
+            # Reusing the table also preserves NBFIX and Chamber 1-4 parameters.
+            atom.nb_idx = resolved[name]
+        missing = missing_lj14_pairs(topology, self._mutation_reference_topology, residue)
+        if missing:
+            library = self._load_mutation_forcefield()
+            inferred = False
+            if not library.atom_types:
+                candidate, _ = MutationForceField.infer(
+                    self._mutation_reference_topology, mutant, names,
+                    getattr(self, '_mutation_gromacs_parameters', None), self._gromacs_library_dirs())
+                if candidate is not None:
+                    library = candidate
+                inferred = True
+            estimated = fill_lj14_pairs(topology, missing, library)
+            if inferred or estimated:
+                self._warn_mutation_estimate(('lj14', mutant, names),
+                    'Estimated %d newly needed CHARMM 1-4 LJ pairs for %s using %s. '
+                    'Check the parameters before interpreting mutation energies.', len(missing), mutant,
+                    ', '.join(library.sources) or 'available topology atom types')
+
     def makeMutTop(self, wt_top, mut_index, pdb=False):
         """Apply the requested mutation to one or more residue indices."""
+        if not pdb:
+            # Fit the force field to the unmodified source, including when
+            # composite mutations modify their working copy in place.
+            self._mutation_reference_topology = wt_top
         mut_indices = [mut_index] if isinstance(mut_index, int) else list(mut_index)
         if not mut_indices:
             return self.molstr(wt_top)
         if len(mut_indices) == 1:
             return self._makeMutTopSingle(wt_top, mut_indices[0], pdb)
         mut_top = self.molstr(wt_top)
+        if not pdb and isinstance(mut_top, parmed.amber.AmberParm):
+            mut_top.LJ_types = wt_top.LJ_types.copy()
         for index in mut_indices:
             mut_top = self._makeMutTopSingle(mut_top, index, pdb, copy=False)
         return mut_top
@@ -1593,18 +1826,30 @@ class CheckMakeTop:
         :return: Mutant AmberParm
         """
         mut_top = self.molstr(wt_top) if copy else wt_top
-        mut_aa = self.INPUT['ala']['mutant']
+        if copy and not pdb and isinstance(mut_top, parmed.amber.AmberParm):
+            # ParmEd copies rebuild this map from atoms, dropping unused types
+            # even though their entries remain in the copied LJ tables.
+            mut_top.LJ_types = wt_top.LJ_types.copy()
+        mut_aa = {'A': 'ALA', 'G': 'GLY'}.get(self.INPUT['ala']['mutant'], self.INPUT['ala']['mutant'])
+        if not pdb:
+            # Capture references before a composite mutation can rename residues.
+            if copy or not hasattr(self, '_mutation_reference_topology'):
+                self._mutation_reference_topology = wt_top if copy else self.molstr(wt_top)
+            self._mutation_reference_index = mut_index
+            self._remember_native_mutant_parameters(wt_top, mut_aa)
 
         # Preserve the original type-to-index mapping before stripping or retyping
         # atoms. A reference hydrogen may belong to the residue being mutated.
         lj_type_indices = {}
         if not pdb and isinstance(mut_top, parmed.amber.AmberParm):
+            # Stripped component topologies can retain valid, unused LJ types.
+            lj_type_indices = {name: {index} for name, index in mut_top.LJ_types.items()}
             for atom in mut_top.atoms:
                 lj_type_indices.setdefault(atom.type, set()).add(atom.nb_idx)
 
         bb_atoms = 'N,H,CA,HA,C,O,HN'
         nterm_atoms = 'H1,H2,H3,HT1,HT2,HT3'
-        cterm_atoms = 'OXT,OT1,OT2'  # OXT amber, OTx charmm
+        cterm_atoms = 'OXT,OT1,OT2,O1,O2,OC1,OC2'
         sc_cb_atom = 'CB'
         sc_ala_atoms = ('HB,' +  # VAL, ILE, THR
                         'HB1,HB2,' +  # charmm -> HB1, HB2
@@ -1627,9 +1872,8 @@ class CheckMakeTop:
         # add terminals only for mutation
         self._assign_ter(mut_top)
 
-        # solution for issue #364
-        # NOTE: We selected the charge from  Amber14SB because it is the same as amber99sb, amber99SB-ILDN, amber12SB,
-        # etc. In any case, the error associated with this charge must be small.
+        # Hydrogen defaults for mutation geometry. All atom parameters are
+        # replaced with a native source-topology pattern below (issues #655/656).
         # GLY-HB atom type - amber 14SB
         hc = parmed.AtomType('HC', None, 1.008, 1)
         hc.set_lj_params(eps=0.0157, rmin=1.4870, eps14=0.0157, rmin14=1.4870)
@@ -1675,18 +1919,6 @@ class CheckMakeTop:
                     'charge': h_gly_charge}}
         }
         ff_rep = 'charmm' if isinstance(mut_top, parmed.amber.ChamberParm) else 'amber'
-        if not pdb and isinstance(mut_top, parmed.amber.AmberParm):
-            hydrogen_properties = h_atoms_prop[ff_rep]['GLY' if mut_aa == 'GLY' else 'ALA']
-            new_type = hydrogen_properties['type']
-            nb_indices = lj_type_indices.get(new_type, set())
-            if len(nb_indices) != 1:
-                GMXMMPBSA_ERROR(
-                    f'Cannot assign Lennard-Jones parameters to mutation hydrogen type {new_type}: '
-                    f'expected one nonbonded index in the original topology, found {len(nb_indices)}. '
-                    'Use a topology with an unambiguous parameterization of this hydrogen type.', MutateError)
-            # ParmEd writes ATOM_TYPE_INDEX from nb_idx, independently of type
-            # and atom_type. Reuse the existing LJ table, including NBFIX/1-4 terms.
-            hydrogen_properties['nb_idx'] = next(iter(nb_indices))
 
         cb_atom = None
         ca_atom = None
@@ -1783,6 +2015,9 @@ class CheckMakeTop:
                 elif at.name in ['HB1', 'HB2', 'HB3']:
                     for p in h_atoms_prop[ff_rep]['ALA']:
                         setattr(at, p, h_atoms_prop[ff_rep]['ALA'][p])
+
+        if not pdb:
+            self._assign_native_mutant_parameters(mut_top, mutation_residue, lj_type_indices)
 
         # change intdiel if cas_intdiel was defined before end the mutation process
         if self.INPUT['ala']['cas_intdiel']:

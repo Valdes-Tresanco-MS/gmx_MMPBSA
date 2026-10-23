@@ -32,7 +32,6 @@ from GMXMMPBSA.make_top import (CheckMakeTop, GB_RECOMMENDED_RADII, water_residu
 from GMXMMPBSA.utils import (selector, get_dist, list2range, res2map, get_indexes, log_subprocess_output, check_str,
                              eq_strs, get_index_groups, reconcile_qm_charges, topology_mismatch_error, res2map_amber,
                              residue_names_match)
-from GMXMMPBSA.alamdcrd import _scaledistance
 import subprocess
 from pathlib import Path
 import logging
@@ -561,7 +560,7 @@ class CheckAmberTop(CheckMakeTop):
         ]
 
     def _prepare_explicit_water_source(self):
-        source = parmed.amber.AmberParm(self.FILES.complex_top)
+        source = parmed.amber.LoadParm(self.FILES.complex_top)
         rec_residues, lig_residues, waters, ions_found = self._source_residue_classes(source)
         water_names = self._amber_water_names()
 
@@ -676,13 +675,13 @@ class CheckAmberTop(CheckMakeTop):
 
         if self.explicit_waters:
             self._prepare_explicit_water_source()
-            com_top = parmed.amber.AmberParm(self.FILES.complex_top)
+            com_top = parmed.amber.LoadParm(self.FILES.complex_top)
             keep_mask = f'({self.FILES.complex_mask[0]}|{self.FILES.complex_mask[1]}|'
             keep_mask += f'{self.explicit_water_source_mask})'
             logging.debug(f'Stripping solvated complex topology with mask: {keep_mask}')
             com_top.strip(f'!{keep_mask}')
         else:
-            com_top = parmed.amber.AmberParm(self.FILES.complex_top)
+            com_top = parmed.amber.LoadParm(self.FILES.complex_top)
             logging.debug(f'Stripping complex topology with mask: {"|".join(self.FILES.complex_mask)}')
             com_top.strip(f'!({"|".join(self.FILES.complex_mask)})')
 
@@ -711,7 +710,7 @@ class CheckAmberTop(CheckMakeTop):
             self.explicit_ligand_mask = self._amber_mask(lig_numbers)
         com_top.save(f"{self.FILES.prefix}COM.inpcrd", format='rst7', overwrite=True)
         # try:
-        if com_top.impropers or com_top.urey_bradleys:
+        if isinstance(com_top, parmed.amber.ChamberParm) or com_top.impropers or com_top.urey_bradleys:
             com_amb_prm = parmed.amber.ChamberParm.from_structure(com_top)
             com_top_parm = 'chamber'
 
@@ -743,7 +742,7 @@ class CheckAmberTop(CheckMakeTop):
         if self.FILES.receptor_top:
             logging.info('A Receptor topology file was defined. Using MT approach...')
             logging.info('Building AMBER Receptor Topology from AMBER Receptor Topology...')
-            rec_top = parmed.amber.AmberParm(self.FILES.receptor_top)
+            rec_top = parmed.amber.LoadParm(self.FILES.receptor_top)
             self._warn_gb_radius_compatibility(rec_top, 'receptor')
 
             if error_info := eq_strs(rec_top, self.receptor_str):
@@ -751,7 +750,7 @@ class CheckAmberTop(CheckMakeTop):
 
             rec_top.coordinates = self.receptor_str.coordinates
             # rec_top.save(f"{self.FILES.prefix}REC.inpcrd", format='rst7', overwrite=True)
-            if rec_top.impropers or rec_top.urey_bradleys:
+            if isinstance(rec_top, parmed.amber.ChamberParm) or rec_top.impropers or rec_top.urey_bradleys:
                 if com_top_parm == 'amber':
                     GMXMMPBSA_ERROR('Inconsistent parameter format. The defined Complex is Amber/OPLS type while the '
                                     'Receptor is CHAMBER type!')
@@ -787,7 +786,7 @@ class CheckAmberTop(CheckMakeTop):
         if self.FILES.ligand_top:
             logging.info('A Ligand Topology file was defined. Using MT approach...')
             logging.info('Building AMBER Ligand Topology from AMBER Ligand Topology...')
-            lig_top = parmed.amber.AmberParm(self.FILES.ligand_top)
+            lig_top = parmed.amber.LoadParm(self.FILES.ligand_top)
             self._warn_gb_radius_compatibility(lig_top, 'ligand')
 
             if error_info := eq_strs(lig_top, self.ligand_str):
@@ -795,7 +794,7 @@ class CheckAmberTop(CheckMakeTop):
 
             lig_top.coordinates = self.ligand_str.coordinates
             # lig_top.save(f"{self.FILES.prefix}LIG.inpcrd", format='rst7', overwrite=True)
-            if lig_top.impropers or lig_top.urey_bradleys:
+            if isinstance(lig_top, parmed.amber.ChamberParm) or lig_top.impropers or lig_top.urey_bradleys:
                 if com_top_parm == 'amber':
                     GMXMMPBSA_ERROR('Inconsistent parameter format. The defined Complex is Amber/OPLS type while the '
                                     'Ligand is CHAMBER type!')
@@ -1135,7 +1134,7 @@ class CheckAmberTop(CheckMakeTop):
                     res.ter = False
             else:
                 atms_name = [at.name for at in res.atoms]
-                if 'OXT' in atms_name or 'OT1' in atms_name or 'OT2' in atms_name:  # already used, but is better to get here anyway
+                if {'OXT', 'OT1', 'OT2', 'O1', 'O2', 'OC1', 'OC2'} & set(atms_name):
                     res.ter = 'C'  # ter is a boolean variable, but it is not used anyway
                 elif (('H3' in atms_name or 'HT3' in atms_name) and
                       parmed.residue.AminoAcidResidue.has(res.name)  # exclude other residues with H3, for examples ligs
@@ -1145,278 +1144,11 @@ class CheckAmberTop(CheckMakeTop):
                     res.ter = False
 
     def makeMutTop(self, wt_top, mut_index, pdb=False):
-        """Apply the requested mutation to one or more residue indices."""
-        mut_indices = [mut_index] if isinstance(mut_index, int) else list(mut_index)
-        if not mut_indices:
-            return self.molstr(wt_top)
-        if len(mut_indices) == 1:
-            return self._makeMutTopSingle(wt_top, mut_indices[0], pdb)
-        mut_top = self.molstr(wt_top)
-        for index in mut_indices:
-            mut_top = self._makeMutTopSingle(mut_top, index, pdb, copy=False)
-        return mut_top
+        return super().makeMutTop(wt_top, mut_index, pdb=pdb)
 
     def _makeMutTopSingle(self, wt_top, mut_index, pdb=False, copy=True):
-        """
-
-        :param wt_top: Amber parm from GROMACS topology
-        :param mut_index: index of mutation in structure
-        :return: Mutant AmberParm
-        """
-        mut_top = self.molstr(wt_top) if copy else wt_top
-        mut_aa = self.INPUT['ala']['mutant']
-
-        bb_atoms = 'N,H,CA,HA,C,O,HN'
-        nterm_atoms = 'H1,H2,H3,HT1,HT2,HT3'
-        cterm_atoms = 'OXT,OT1,OT2'  # OXT amber, OTx charmm
-        sc_cb_atom = 'CB'
-        sc_ala_atoms = ('HB,' +  # VAL, ILE, THR
-                        'HB1,HB2,' +  # charmm -> HB1, HB2
-                        'HB3,' +  # amber -> HB2, HB3
-                        'CG1,CG2,OG1,' +  # VAL, ILE, THR
-                        'OG,' +  # SER
-                        'SG,' +  # CYS
-                        'CG')
-
-        if mut_aa in ['GLY', 'G']:
-            strip_mask = f":{mut_index + 1} &!@{','.join([bb_atoms, nterm_atoms, cterm_atoms])}"
-            if not pdb:
-                strip_mask += f",{sc_cb_atom}"
-        else:
-            strip_mask = f":{mut_index + 1} &!@{','.join([bb_atoms, sc_cb_atom, nterm_atoms, cterm_atoms])}"
-            if not pdb:
-                strip_mask += f",{sc_ala_atoms}"
-        mut_top.strip(strip_mask)
-
-        # add terminals only for mutation
-        self._assign_ter(mut_top)
-
-        # solution for issue #364
-        # NOTE: We selected the charge from  Amber14SB because it is the same as amber99sb, amber99SB-ILDN, amber12SB,
-        # etc. In any case, the error associated with this charge must be small.
-        # GLY-HB atom type - amber 14SB
-        hc = parmed.AtomType('HC', None, 1.008, 1)
-        hc.set_lj_params(eps=0.0157, rmin=1.4870, eps14=0.0157, rmin14=1.4870)
-        # GLY-HA atom type - amber 14SB
-        h1 = parmed.AtomType('H1', None, 1.008, 1)
-        h1.set_lj_params(eps=0.0157, rmin=1.3870, eps14=0.0157, rmin14=1.3870)
-        # GLY-HB atom type - charmm
-        ha3 = parmed.AtomType('HA3', None, 1.008, 1)
-        ha3.set_lj_params(eps=1.3400, rmin=0.0240, eps14=1.3400, rmin14=0.0240)
-        # GLY-HA atom type - charmm
-        hb2 = parmed.AtomType('HB2', None, 1.008, 1)
-        hb2.set_lj_params(eps=1.3400, rmin=0.0280, eps14=1.3400, rmin14=0.0280)
-
-        # In amber the charge depend on aa position in the sequence.
-        # ALA: C: 0.0764, N: 0.0300, int: 0.0603
-        # GLY: C: 0.1056, N: 0.0895, int: 0.0698
-
-        mutation_residue = mut_top.residues[mut_index]
-        if mutation_residue.ter == 'C':
-            h_ala_charge = 0.0764
-            h_gly_charge = 0.1056
-        elif mutation_residue.ter == 'N':
-            h_ala_charge = 0.0300
-            h_gly_charge = 0.0895
-        else:
-            h_ala_charge = 0.0603
-            h_gly_charge = 0.0698
-
-        h_atoms_prop = {
-            'charmm': {
-                'ALA': {
-                    'mass': 1.008, 'element': 'H', 'atomic_number': 1, 'atom_type': ha3, 'type': 'HA3',
-                    'charge': 0.09},
-                'GLY': {
-                    'mass': 1.008, 'element': 'H', 'atomic_number': 1, 'atom_type': hb2, 'type': 'HB2',
-                    'charge': 0.09}},
-            'amber': {
-                'ALA': {
-                    'mass': 1.008, 'element': 'H', 'atomic_number': 1, 'atom_type': hc, 'type': 'HC',
-                    'charge': h_ala_charge},
-                'GLY': {
-                    'mass': 1.008, 'element': 'H', 'atomic_number': 1, 'atom_type': h1, 'type': 'H1',
-                    'charge': h_gly_charge}}
-        }
-        ff_rep = 'charmm' if isinstance(mut_top, parmed.amber.ChamberParm) else 'amber'
-
-        cb_atom = None
-        ca_atom = None
-        logging.info(
-            f"Mutating {mutation_residue.chain}/{mutation_residue.number} "
-            f"{mutation_residue.name} to {mut_aa}")
-
-        mutant_resname = mut_top.residues[mut_index].name
-
-        mut_top.residues[mut_index].name = mut_aa
-
-        for at in mut_top.residues[mut_index].atoms:
-            if mut_aa == 'GLY':
-                if at.name == 'CA':
-                    ca_atom = at
-                if at.name in ['CB']:
-                    at.name = 'HA2'
-                    ca_atom.xx, ca_atom.xy, ca_atom.xz, at.xx, at.xy, at.xz = _scaledistance(
-                        [ca_atom.xx, ca_atom.xy,
-                         ca_atom.xz, at.xx, at.xy,
-                         at.xz], 1.09)
-                    for p in h_atoms_prop[ff_rep]['GLY']:
-                        setattr(at, p, h_atoms_prop[ff_rep]['GLY'][p])
-                elif at.name in ['HA']:
-                    at.name = 'HA1'
-                    for p in h_atoms_prop[ff_rep]['GLY']:
-                        setattr(at, p, h_atoms_prop[ff_rep]['GLY'][p])
-            else:
-                # ARG, ASN, ASP, GLN, GLU, HIS, LEU, LYS, MET, PHE, TYR, TRP
-                #    |
-                # HN-N
-                #    |   HB1
-                #    |   |
-                # HA-CA--CB--CG (ARG, ASN, ASP, GLN, GLU, HIS, LEU, LYS, MET, PHE, TYR, TRP)
-                #    |   |
-                #    |   HB2
-                #  O=C
-                #    |
-                #
-                # CYS (no S-S), SER
-                #    |
-                # HN-N
-                #    |   HB1
-                #    |   |
-                # HA-CA--CB--SG|OG (CYS | SER)
-                #    |   |
-                #    |   HB2
-                #  O=C
-                #    |
-                #
-                # ILE, THR, VAL
-                #    |
-                # HN-N
-                #    |     CG2 (ILE, VAL, THR)
-                #    |    /
-                # HA-CA--CB-HB
-                #    |    \
-                #    |     CG1|OG1  (ILE, VAL | THR)
-                #  O=C
-                #    |
-                #
-                # EXCLUDE: GLY, PRO, ALA
-
-                if at.name == 'CB':
-                    cb_atom = at
-                    continue
-                if at.name == 'CG2':  # VAL, ILE and THR
-                    at.name = 'HB2'
-                    cb_atom.xx, cb_atom.xy, cb_atom.xz, at.xx, at.xy, at.xz = _scaledistance(
-                        [cb_atom.xx, cb_atom.xy,
-                         cb_atom.xz, at.xx, at.xy,
-                         at.xz], 1.09)
-                    for p in h_atoms_prop[ff_rep]['ALA']:
-                        setattr(at, p, h_atoms_prop[ff_rep]['ALA'][p])
-                elif at.name in ['HB']:  # ILE, VAL and THR
-                    at.name = 'HB1'
-                    for p in h_atoms_prop[ff_rep]['ALA']:
-                        setattr(at, p, h_atoms_prop[ff_rep]['ALA'][p])
-                elif at.name in ['CG',  # LEU, PHE, TRP, MET, TYR, ARG, LYS, ASN, GLN, ASP, GLU, HIS,
-                                 'OG',  # SER
-                                 'SG',  # CYS (no S-S)
-                                 'CG1',  # VAL, ILE and THR
-                                 'OG1'  # THR
-                                 ]:
-                    # check if it was assigned. In some cases, the HB can be HB2 and HB3 instead HB1 and HB2
-                    if 'HB3' not in [atm.name for atm in mut_top.residues[mut_index].atoms]:
-                        at.name = 'HB3'
-                    else:
-                        at.name = 'HB1'
-                    cb_atom.xx, cb_atom.xy, cb_atom.xz, at.xx, at.xy, at.xz = _scaledistance(
-                        [cb_atom.xx, cb_atom.xy, cb_atom.xz, at.xx, at.xy, at.xz], 1.09)
-                    for p in h_atoms_prop[ff_rep]['ALA']:
-                        setattr(at, p, h_atoms_prop[ff_rep]['ALA'][p])
-                elif at.name in ['HB1', 'HB2', 'HB3']:
-                    for p in h_atoms_prop[ff_rep]['ALA']:
-                        setattr(at, p, h_atoms_prop[ff_rep]['ALA'][p])
-
-        # change intdiel if cas_intdiel was defined before end the mutation process
-        if self.INPUT['ala']['cas_intdiel']:
-            if self.INPUT['gb']['gbrun']:
-                if self.INPUT['gb']['intdiel'] != 1.0:
-                    logging.warning('Both cas_intdiel and intdiel were defined. The dielectric constants associated '
-                                    'with cas_intdiel will be ignored and intdiel will be used instead')
-                elif mutant_resname in polar_aa:
-                    self.INPUT['gb']['intdiel'] = self.INPUT['ala']['intdiel_polar']
-                    logging.info(f"Setting intdiel = intdiel_polar = {self.INPUT['ala']['intdiel_polar']} for "
-                                 f"Alanine scanning")
-                elif mutant_resname in nonpolar_aa:
-                    self.INPUT['gb']['intdiel'] = self.INPUT['ala']['intdiel_nonpolar']
-                    logging.info(
-                        f"Setting intdiel = intdiel_nonpolar = {self.INPUT['ala']['intdiel_nonpolar']} for Alanine "
-                        f"scanning")
-                elif mutant_resname in positive_aa:
-                    self.INPUT['gb']['intdiel'] = self.INPUT['ala']['intdiel_positive']
-                    logging.info(
-                        f"Setting intdiel = intdiel_positive = {self.INPUT['ala']['intdiel_positive']} for Alanine "
-                        f"scanning")
-                elif mutant_resname in negative_aa:
-                    self.INPUT['gb']['intdiel'] = self.INPUT['ala']['intdiel_negative']
-                    logging.info(
-                        f"Setting intdiel = intdiel_negative = {self.INPUT['ala']['intdiel_negative']} for Alanine "
-                        f"scanning")
-                else:
-                    logging.warning(f"Unclassified mutant residue {mutant_resname}. The default "
-                                    f"intdiel will be used")
-            if self.INPUT['gbnsr6']['gbnsr6run']:
-                if self.INPUT['gbnsr6']['epsin'] != 1.0:
-                    logging.warning('Both cas_intdiel and epsin were defined. The dielectric constants associated '
-                                    'with cas_intdiel will be ignored and epsin will be used instead')
-                elif mutant_resname in polar_aa:
-                    self.INPUT['gbnsr6']['epsin'] = self.INPUT['ala']['intdiel_polar']
-                    logging.info(f"Setting epsin = intdiel_polar = {self.INPUT['ala']['intdiel_polar']} for "
-                                 f"Alanine scanning")
-                elif mutant_resname in nonpolar_aa:
-                    self.INPUT['gbnsr6']['epsin'] = self.INPUT['ala']['intdiel_nonpolar']
-                    logging.info(
-                        f"Setting epsin = intdiel_nonpolar = {self.INPUT['ala']['intdiel_nonpolar']} for Alanine "
-                        f"scanning")
-                elif mutant_resname in positive_aa:
-                    self.INPUT['gbnsr6']['epsin'] = self.INPUT['ala']['intdiel_positive']
-                    logging.info(
-                        f"Setting epsin = intdiel_positive = {self.INPUT['ala']['intdiel_positive']} for Alanine "
-                        f"scanning")
-                elif mutant_resname in negative_aa:
-                    self.INPUT['gbnsr6']['epsin'] = self.INPUT['ala']['intdiel_negative']
-                    logging.info(
-                        f"Setting epsin = intdiel_negative = {self.INPUT['ala']['intdiel_negative']} for Alanine "
-                        f"scanning")
-                else:
-                    logging.warning(f"Unclassified mutant residue {mutant_resname}. The default "
-                                    f"intdiel will be used")
-
-            if self.INPUT['pb']['pbrun']:
-                if self.INPUT['pb']['indi'] != 1.0:
-                    logging.warning('Both cas_intdiel and indi were defined. The dielectric constants associated with '
-                                    'cas_intdiel will be ignored and indi will be used instead')
-                elif mutant_resname in polar_aa:
-                    self.INPUT['pb']['indi'] = self.INPUT['ala']['intdiel_polar']
-                    logging.info(
-                        f"Setting indi = intdiel_polar = {self.INPUT['ala']['intdiel_polar']} for Alanine scanning")
-                elif mutant_resname in nonpolar_aa:
-                    self.INPUT['pb']['indi'] = self.INPUT['ala']['intdiel_nonpolar']
-                    logging.info(
-                        f"Setting indi = intdiel_nonpolar = {self.INPUT['ala']['intdiel_nonpolar']} for Alanine "
-                        f"scanning")
-                elif mutant_resname in positive_aa:
-                    self.INPUT['pb']['indi'] = self.INPUT['ala']['intdiel_positive']
-                    logging.info(
-                        f"Setting intdiel = indi = intdiel_positive = {self.INPUT['ala']['intdiel_positive']} for "
-                        f"Alanine scanning")
-                elif mutant_resname in negative_aa:
-                    self.INPUT['pb']['indi'] = self.INPUT['ala']['intdiel_negative']
-                    logging.info(
-                        f"Setting indi = intdiel_negative = {self.INPUT['ala']['intdiel_negative']} for Alanine "
-                        f"scanning")
-                else:
-                    logging.warning(f"Unclassified mutant residue {mutant_resname}. The default indi will be used")
-        return mut_top
+        # Share charge, atom-type and LJ-index assignment with gmx_MMPBSA.
+        return super()._makeMutTopSingle(wt_top, mut_index, pdb=pdb, copy=copy)
 
     def cleanup_trajs(self):
         # clear trajectory
