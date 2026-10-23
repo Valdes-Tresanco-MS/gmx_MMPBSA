@@ -108,11 +108,11 @@ Native AMBER and GROMACS-derived calculations also differ in radius handling. Na
 the input `RADII`, `SCREEN`, and `RADIUS_SET` values. GROMACS conversion applies the selected `PBRadii` through ParmEd.
 Do not assume that setting the same `PBRadii` value makes those two workflows equivalent.
 
-#### Composite alanine/glycine mutations
+#### Multiple alanine/glycine mutations
 
-`mutant_res` can now select one or several residues for one composite mutation. All selected residues must belong to the
-same component and use the same `mutant` target (`ALA` or `GLY`). The result is one combined mutant effect; it is not an
-independent per-residue scan. Composite mutations require `cas_intdiel=0`, with the dielectric chosen explicitly in the
+`mutant_res` can now select one residue for a single mutation or several residues for multiple mutations together.
+All selected residues must belong to the same component and use the same `mutant` target (`ALA` or `GLY`). The result is one combined mutant effect; it is not an
+independent per-residue scan. Multiple mutations require `cas_intdiel=0`, with the dielectric chosen explicitly in the
 GB/PB input. Use `-cr` when chain IDs, residue numbering, or insertion codes are significant.
 
 #### Quasi-harmonic entropy

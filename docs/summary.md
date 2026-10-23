@@ -20,8 +20,8 @@ across MPI ranks and collects rank-specific RISM output.
 * **Stability** calculations with any solvent model (_i.e_ PB, GB or 3D-RISM).
 * **Alanine scanning** with PB or GB implicit-solvent models. The trajectories are mutated to match the mutant
   topologies, and the requested calculations are performed for both the original and mutant systems. A run can mutate
-  one residue or several residues together in one composite mutant; it does not independently scan each selected
-  residue. The target residues must be mutated to alanine or glycine. Unless `mutant_only` is set to `1`, the output
+  one residue or several residues together to produce a multiple alanine mutant or a multiple glycine mutant; it
+  does not independently scan each selected residue. The target residues must be mutated to alanine or glycine. Unless `mutant_only` is set to `1`, the output
   also reports the differences caused by the mutation.
 * **Entropy corrections**. An entropy term can be added to the free energies calculated above using the normal mode,
 interaction entropy or C2 approximations. Quasi-harmonic data from historical result files can still be inspected in

@@ -31,7 +31,7 @@ continuum-radius assignment is recorded, and output, logging, error reporting,
 testing, and dependency boundaries are more rigorously defined.
 
 The scientific scope has expanded through nonlinear PB, C2 entropy, ALPB,
-PC+-corrected 3D-RISM, GBNSR6, improved QM/MMGBSA, composite alanine/glycine
+PC+-corrected 3D-RISM, GBNSR6, improved QM/MMGBSA, multiple alanine/glycine
 mutations, decomposition analysis, membrane workflows, explicit receptor
 waters, and experimental normal-mode support for CHARMM topologies. Version
 1.7.0 also changes how several results must be interpreted: it corrects the
@@ -68,7 +68,7 @@ experimental CHARMM normal-mode support.
 
 Version 1.7.0 is both a feature release and a reproducibility boundary. Its new
 capabilities include native-AMBER execution, explicit receptor waters,
-composite mutations, automatic membrane parameter detection, GBNSR6 topology
+multiple mutations, automatic membrane parameter detection, GBNSR6 topology
 handling, a modernized API, and stronger
 validation infrastructure. At the same time, it changes topology requirements,
 implicit-solvent defaults, the IE estimator, uncertainty reporting, output
@@ -163,9 +163,10 @@ of arbitrary solvent in every calculation type.
 
 Alanine/glycine scanning has accumulated fixes for CHARMM systems, terminal
 residues, THR-to-ALA mutation, mutant-normal output, and entropy differences.
-In v1.7.0, `mutant_res` can select several residues for one composite mutation.
+In v1.7.0, `mutant_res` can select several residues to produce a multiple alanine
+mutant or a multiple glycine mutant.
 All selected residues must belong to the same component and share one mutation
-target. The reported result is the combined effect of that composite mutant,
+target. The reported result is the combined effect of that multiple mutant,
 not an independent scan of each selected residue.
 
 ### Decomposition and membrane systems
@@ -383,7 +384,7 @@ auditable free-energy analysis platform. Important boundaries remain:
 | v1.5.5-v1.5.7 | 2022-06-10 to 2022-09-10 | Analyzer/API and correctness | Modern API foundations, analyzer concurrency and correlation, compact results, output/entropy/decomposition fixes, progress and MPI logging. |
 | v1.6.0 | 2023-02-19 | GBNSR6 and compatibility | GBNSR6 enthalpy and decomposition, named/numbered index groups, GROMACS 2023 compatibility, and entropy fixes. |
 | v1.6.1-v1.6.5 | 2023-04-04 to 2026-05-22 | Maintenance and CHARMM support | PB/decomposition and analyzer fixes, additional residue handling, automatic CMAP omission during conversion, bounded dependencies, and experimental CHARMM normal mode. |
-| v1.7.0 | 2026-09-11 | Reproducibility and workflow expansion | Required GROMACS topology, native `amber_MMPBSA`, explicit receptor waters, composite mutations, corrected IE and revised C2 uncertainty with block diagnostics, automatic membrane parameters, new solvent defaults, radius provenance, GBNSR6/QM/MM improvements, modernized API/logging/testing, and QH compatibility-only status. |
+| v1.7.0 | 2026-09-11 | Reproducibility and workflow expansion | Required GROMACS topology, native `amber_MMPBSA`, explicit receptor waters, multiple mutations, corrected IE and revised C2 uncertainty with block diagnostics, automatic membrane parameters, new solvent defaults, radius provenance, GBNSR6/QM/MM improvements, modernized API/logging/testing, and QH compatibility-only status. |
 
 The tables below compare the published release endpoints; the updates in
 [Subsequent development](#subsequent-development-after-the-published-v170-tag)
@@ -396,7 +397,7 @@ are recorded separately.
 | GB/PB | Established AmberTools GB and linear-PB workflows, including basic membrane controls. | Nonlinear PB, ALPB, expanded controls, radii sets, membrane workflow improvements, and GBNSR6. | New `igb=8`, `PBRadii=4`, and `exdi=78.5` defaults; radius provenance; GBNSR6 compaction; automatic membrane parameters and diagnostics; legacy APBS route rejected. |
 | 3D-RISM | Available within the solvent-model portfolio. | Expanded variables, bundled `.xvv`, PC+, and `sander` execution. | Integrated provenance/output contract and explicit-water ST support; external AmberTools runtime caveat remains. |
 | Entropy | QH, normal mode, and IE already implemented. | C2 added; IE/C2 output and analyzer handling improved; experimental CHARMM normal mode. | Corrected full-ensemble IE, stable evaluation, revised C2 uncertainty, block diagnostics, missing unconverged NMODE frames, and no new QH calculations. |
-| QM/MM and scanning | QM/MMGBSA and single-residue alanine/glycine scanning. | Automatic charges, selection improvements, CHARMM/terminal fixes, and term-level mutation differences. | `PM6-DH+` default, hard SCF failure, explicit receptor waters, and multi-residue composite mutations. |
+| QM/MM and scanning | QM/MMGBSA and single-residue alanine/glycine scanning. | Automatic charges, selection improvements, CHARMM/terminal fixes, and term-level mutation differences. | `PM6-DH+` default, hard SCF failure, explicit receptor waters, and multiple alanine/glycine mutations. |
 | Topology routes | GROMACS-centered conversion with structure-assisted reconstruction. | Broader Amber/CHARMM/OPLS and preparation-workflow support. | Original GROMACS complex topology required; separate native-AMBER command added. |
 | Analyzer/API | Functional GUI and early dict-like API. | Redesigned high-capacity analyzer, pandas-backed API, compact results, correlation, tables, and documented performance gains. | Modernized canonical loader and runnable API example; theme/plot robustness updates. |
 | Reproducibility | Basic logs, outputs, examples, and version reporting. | Better command reconstruction, checks, tester concurrency, and dependency guidance. | Radius manifest, automatic CSV naming, collision checks, MPI-safe logs, diagnostic bundles, manifest-driven tests, and bounded validated environment. |
@@ -406,7 +407,7 @@ are recorded separately.
 | Interface area | Important changes from v1.4.3 to v1.7.0 |
 | --- | --- |
 | Command line | Added `--create_input` (including `pb_mem`), progress-style and error-bundle controls, improved `gmx_MMPBSA_test`, and the new `amber_MMPBSA` entry point. Output rewriting and `--clean` already existed in v1.4.3; their behavior and compatibility handling subsequently evolved. GROMACS calculations require `-cp`. |
-| Input namelists | Reworked variables across GB, GBNSR6, PB, RISM, decomposition, normal mode, alanine scanning, and QM/MM; changed solvent defaults; automatic membrane parameters; composite mutations; QH and APBS restrictions. |
+| Input namelists | Reworked variables across GB, GBNSR6, PB, RISM, decomposition, normal mode, alanine scanning, and QM/MM; changed solvent defaults; automatic membrane parameters; multiple mutations; QH and APBS restrictions. |
 | Output and provenance | Compact `.mmxsa` results, automatic per-frame CSV paths, block statistics, `GMXMMPBSA_radii.json`, optional per-atom radius audit, retained membrane CSV/PNG diagnostics, and diagnostic error bundles. |
 | Analyzer | New backend and result model with multi-system plots, tables, PyMOL, correlation, and frame/time controls; historical files should be read with their matching environment when reproducibility matters. |
 | Python API | Canonical `GMXMMPBSA.API.load()` interface with pandas-based energy, entropy, decomposition, metadata, input, and file access. |

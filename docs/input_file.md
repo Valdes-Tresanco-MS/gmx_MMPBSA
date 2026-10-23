@@ -1821,14 +1821,15 @@ See [§7.1.3](https://ambermd.org/doc12/Amber21.pdf#subsection.7.1.3) and
 `mutant_res` (Default = None. Must be defined)
 :   Select one or more residues using `CHAIN/RESNUM`. Append an insertion code directly to the residue number
     (`A/27B`); the colon form (`A/27:B`) is invalid. Numeric ranges select only blank-code residues, so list
-    insertion-coded residues individually. For example, `A/13,25` mutates two residues together in one composite mutant.
+    insertion-coded residues individually. For example, `A/13,25` mutates two residues together to produce a multiple alanine mutant
+    (`mutant="ALA"`) or a multiple glycine mutant (`mutant="GLY"`).
     Selections across chains are allowed only when all selected residues belong to the same component.
 
     !!! important
         * All selected residues must belong to the receptor or all to the ligand; mixing components is rejected.
-        * Every selected residue uses the same `mutant` target (`ALA` or `GLY`). A composite run reports one
+        * Every selected residue uses the same `mutant` target (`ALA` or `GLY`). A run with multiple mutations reports one
           combined mutation effect, not separate single-residue scans.
-        * Composite mutations require `cas_intdiel=0`; set the desired dielectric explicitly in the GB/PB namelist.
+        * Multiple mutations require `cas_intdiel=0`; set the desired dielectric explicitly in the GB/PB namelist.
         * Use a reference structure (`-cr`) when specific chain IDs, residue numbers, or insertion codes are needed.
         * The program builds mutant topologies and trajectories from the selected residues.
 
