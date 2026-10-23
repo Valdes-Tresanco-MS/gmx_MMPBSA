@@ -172,8 +172,6 @@ class CheckMakeTop:
         """
         :return: complex, receptor, ligand topologies and their mutants
         """
-        if self.explicit_waters:
-            logging.info('Explicit-water processing can take a while for large solvated systems. Please be patient.')
         self.gmx2pdb()
         # dASA needs the full solvated AMBER topology generated below. The
         # distance and explicit-mask selectors can be resolved immediately.
@@ -1225,7 +1223,7 @@ class CheckMakeTop:
             logging.warning(
                 'Ignoring CMAP terms in %s include tree for GROMACS topology conversion. '
                 'The converted topology omits CMAP energy terms. For STP (single-trajectory) '
-                'MM/PB(GB)SA this is not an issue: CMAP contributions cancel in the C−R−L '
+                'MM/PB(GB)SA this is not an issue: CMAP contributions cancel in the C-R-L '
                 'difference. Consider the omission only for MTP (multiple-trajectory) '
                 'calculations, where receptor and ligand come from separate ensembles.',
                 top_file)
@@ -1595,6 +1593,13 @@ class CheckMakeTop:
         mut_top = self.molstr(wt_top) if copy else wt_top
         mut_aa = self.INPUT['ala']['mutant']
 
+        # Preserve the original type-to-index mapping before stripping or retyping
+        # atoms. A reference hydrogen may belong to the residue being mutated.
+        lj_type_indices = {}
+        if not pdb and isinstance(mut_top, parmed.amber.AmberParm):
+            for atom in mut_top.atoms:
+                lj_type_indices.setdefault(atom.type, set()).add(atom.nb_idx)
+
         bb_atoms = 'N,H,CA,HA,C,O,HN'
         nterm_atoms = 'H1,H2,H3,HT1,HT2,HT3'
         cterm_atoms = 'OXT,OT1,OT2'  # OXT amber, OTx charmm
@@ -1668,6 +1673,18 @@ class CheckMakeTop:
                     'charge': h_gly_charge}}
         }
         ff_rep = 'charmm' if isinstance(mut_top, parmed.amber.ChamberParm) else 'amber'
+        if not pdb and isinstance(mut_top, parmed.amber.AmberParm):
+            hydrogen_properties = h_atoms_prop[ff_rep]['GLY' if mut_aa == 'GLY' else 'ALA']
+            new_type = hydrogen_properties['type']
+            nb_indices = lj_type_indices.get(new_type, set())
+            if len(nb_indices) != 1:
+                GMXMMPBSA_ERROR(
+                    f'Cannot assign Lennard-Jones parameters to mutation hydrogen type {new_type}: '
+                    f'expected one nonbonded index in the original topology, found {len(nb_indices)}. '
+                    'Use a topology with an unambiguous parameterization of this hydrogen type.', MutateError)
+            # ParmEd writes ATOM_TYPE_INDEX from nb_idx, independently of type
+            # and atom_type. Reuse the existing LJ table, including NBFIX/1-4 terms.
+            hydrogen_properties['nb_idx'] = next(iter(nb_indices))
 
         cb_atom = None
         ca_atom = None
@@ -1867,10 +1884,12 @@ class CheckMakeTop:
             logging.debug('Running command: ' + ' '.join(echo_command) + ' "' +
                           (' '.join(trjconv_echo_args[len(echo_command):]).replace('\n', '\\n')) + '"' +
                           '| ' + ' '.join(trjconv_args))
-            c6 = subprocess.Popen(trjconv_args, stdin=c5.stdout, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-            log_subprocess_output(c6)
-            if c6.wait():  # if it quits with return code != 0
-                GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(self.trjconv), self.FILES.complex_trajs[i]))
+            with elapsed_progress(f'Extracting complex trajectory {i + 1}/{len(self.FILES.complex_trajs)}'):
+                c6 = subprocess.Popen(trjconv_args, stdin=c5.stdout, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                log_subprocess_output(c6)
+                if c6.wait():  # if it quits with return code != 0
+                    GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(self.trjconv),
+                                                                    self.FILES.complex_trajs[i]))
             if self.explicit_waters:
                 full_trajs.append(com_traj_name)
             else:
@@ -1906,13 +1925,14 @@ class CheckMakeTop:
                 f'trajout {filtered_traj} nobox\n'
             )
             logging.debug('Running command: %s %s', self.external_progs['cpptraj'], self.explicit_water_prmtop)
-            with open(f'{self.FILES.prefix}explicit_waters_cpptraj_0.out', 'w') as cpptraj_out:
-                c7 = subprocess.Popen([self.external_progs['cpptraj'], self.explicit_water_prmtop],
-                                      stdin=subprocess.PIPE, stdout=cpptraj_out, stderr=subprocess.STDOUT)
-                c7.communicate(cpptraj_input.encode())
-            if c7.wait():
-                GMXMMPBSA_ERROR(f"{self.external_progs['cpptraj']} failed when selecting explicit waters from "
-                                f"{', '.join(full_trajs)}")
+            with elapsed_progress('Selecting explicit waters for trajectory frames with cpptraj'):
+                with open(f'{self.FILES.prefix}explicit_waters_cpptraj_0.out', 'w') as cpptraj_out:
+                    c7 = subprocess.Popen([self.external_progs['cpptraj'], self.explicit_water_prmtop],
+                                          stdin=subprocess.PIPE, stdout=cpptraj_out, stderr=subprocess.STDOUT)
+                    c7.communicate(cpptraj_input.encode())
+                if c7.wait():
+                    GMXMMPBSA_ERROR(f"{self.external_progs['cpptraj']} failed when selecting explicit waters from "
+                                    f"{', '.join(full_trajs)}")
             new_trajs.append(filtered_traj)
             self.FILES.explicit_waters_preselected = True
         self.FILES.complex_trajs = new_trajs
