@@ -162,6 +162,65 @@ class MutantMdcrd(object):
         self.new_prm = prm2
         self.mutres = self.FindMutantResidue()
         self.hasbox = bool(prm1.ptr('ifbox'))
+        self._coordinate_maps = self._build_coordinate_maps()
+
+    def _build_coordinate_maps(self):
+        """Use topology atom names; force fields need not share AMBER atom order."""
+        if 'ATOM_NAME' not in self.orig_prm.parm_data or 'ATOM_NAME' not in self.new_prm.parm_data:
+            return {}  # Legacy topology adapters without atom-name information.
+        aliases = {'HN': 'H', 'HT1': 'H1', 'HT2': 'H2', 'HT3': 'H3',
+                   'OT1': 'O', 'OT2': 'OXT', 'O1': 'O', 'O2': 'OXT',
+                   'OC1': 'O', 'OC2': 'OXT'}
+
+        def names(topology, index):
+            pointers = topology.parm_data['RESIDUE_POINTER']
+            start = pointers[index] - 1
+            end = pointers[index + 1] - 1 if index + 1 < len(pointers) else topology.ptr('natom')
+            return [aliases.get(name, name) for name in topology.parm_data['ATOM_NAME'][start:end]]
+
+        plans = {}
+        indices = self.mutres if isinstance(self.mutres, list) else [self.mutres]
+        for number in indices:
+            index = number - 1
+            resname = self.orig_prm.parm_data['RESIDUE_LABEL'][index]
+            if resname == 'PRO':
+                continue  # Retain the dedicated proline ring geometry conversion.
+            old_names, new_names = names(self.orig_prm, index), names(self.new_prm, index)
+            if len(set(old_names)) != len(old_names):
+                raise MutateError(f'Ambiguous atom names in mutant source residue {number}.')
+            old = {name: position for position, name in enumerate(old_names)}
+            plan = []
+            for name in new_names:
+                source, anchor = name, None
+                if self.target_resname == 'GLY':
+                    if name in ('HA1', 'HA3'):
+                        source = 'HA'
+                    elif name == 'HA2':
+                        source, anchor = 'CB', 'CA'
+                elif name.startswith('HB'):
+                    if resname in ('ILE', 'THR', 'VAL'):
+                        source = {'HB1': 'HB', 'HB2': 'CG2',
+                                  'HB3': 'OG1' if resname == 'THR' else 'CG1'}[name]
+                        anchor = None if source == 'HB' else 'CB'
+                    elif name not in old:
+                        source = next((candidate for candidate in ('CG', 'OG', 'SG') if candidate in old), None)
+                        anchor = 'CB'
+                if source not in old or (anchor is not None and anchor not in old):
+                    raise MutateError(f'Cannot map mutant atom {name} in residue {number} from topology atom names.')
+                plan.append((old[source], old[anchor] if anchor is not None else None))
+            plans[number] = plan
+        return plans
+
+    @staticmethod
+    def _mutate_by_name(coords, plan):
+        result = []
+        for source, anchor in plan:
+            position = coords[3 * source:3 * source + 3]
+            if anchor is not None:
+                origin = coords[3 * anchor:3 * anchor + 3]
+                position = _scaledistance(origin + position, 1.09)[3:]
+            result.extend(position)
+        return result
 
     def __str__(self):
         mutation_indices = self.mutres if isinstance(self.mutres, list) else [self.mutres]
@@ -219,7 +278,9 @@ class MutantMdcrd(object):
                                     if residue_index + 1 < len(residue_pointers) else original_atoms * 3)
                         residue_coordinates = atom_coordinates[atom_start:atom_end]
                         if residue_index + 1 in mutation_indices:
-                            mutated_coordinates.extend(self._mutate(residue_name, residue_coordinates))
+                            plan = self._coordinate_maps.get(residue_index + 1)
+                            mutated_coordinates.extend(self._mutate_by_name(residue_coordinates, plan) if plan is not None
+                                                       else self._mutate(residue_name, residue_coordinates))
                         else:
                             mutated_coordinates.extend(residue_coordinates)
                     mutated_coordinates.extend(frame[original_atoms * 3:])

@@ -252,6 +252,50 @@ class CompositeTrajectoryMutationTest(unittest.TestCase):
     def test_double_glycine_trajectory_mutation(self):
         self._run(GlyMutantMdcrd)
 
+    def test_named_mapping_handles_alternative_branched_atom_orders_and_termini(self):
+        core = ['N', 'H', 'CA', 'HA', 'CB', 'HB', 'OG1', 'HG1',
+                'CG2', 'HG21', 'HG22', 'HG23', 'C', 'O']
+        for terminus in ('internal', 'N', 'C'):
+            old_names = list(core)
+            if terminus == 'N':
+                old_names[1:2] = ['H1', 'H2', 'H3']
+            elif terminus == 'C':
+                old_names[-1:] = ['O1', 'O2']
+            values = [(float(i), float(i % 3), float(i % 2)) for i in range(len(old_names))]
+            old_positions = dict(zip(old_names, values))
+            for mutant_type, target in ((MutantMdcrd, 'ALA'), (GlyMutantMdcrd, 'GLY')):
+                with self.subTest(target=target, terminus=terminus), TemporaryDirectory() as tmp:
+                    new_names = [name for name in old_names if name not in
+                                 ('HG1', 'HG21', 'HG22', 'HG23')]
+                    rename = ({'HB': 'HB1', 'OG1': 'HB3', 'CG2': 'HB2'} if target == 'ALA'
+                              else {'HA': 'HA1', 'CB': 'HA2'})
+                    if target == 'GLY':
+                        new_names = [name for name in new_names if name not in ('HB', 'OG1', 'CG2')]
+                    new_names = [rename.get(name, name) for name in new_names]
+                    original = self._topology(['THR'], [1], len(old_names))
+                    original.parm_data['ATOM_NAME'] = old_names
+                    mutant = self._topology([target], [1], len(new_names))
+                    mutant.parm_data['ATOM_NAME'] = new_names
+                    src, dst = Path(tmp) / 'wt.mdcrd', Path(tmp) / 'mut.mdcrd'
+                    self._write_trajectory(src, [v for xyz in values for v in xyz], frames=1)
+                    mutant_type(str(src), original, mutant).MutateTraj(str(dst))
+                    observed = []
+                    for line in dst.read_text().splitlines()[1:]:
+                        observed.extend(float(line[i:i+8]) for i in range(0, len(line), 8)
+                                        if line[i:i+8].strip())
+                    expected = []
+                    for name in new_names:
+                        source = next((old for old, new in rename.items() if new == name), name)
+                        xyz = old_positions[source]
+                        if (target == 'ALA' and source in ('OG1', 'CG2')) or (target == 'GLY' and source == 'CB'):
+                            anchor = old_positions['CB' if target == 'ALA' else 'CA']
+                            direction = [x - a for x, a in zip(xyz, anchor)]
+                            distance = sum(d*d for d in direction)**.5
+                            xyz = [a + 1.09*d/distance for a, d in zip(anchor, direction)]
+                        expected.extend(xyz)
+                    self.assertEqual(len(observed), len(expected))
+                    self.assertLess(max(abs(x-y) for x, y in zip(observed, expected)), .00051)
+
 
 class NmodeLigandMutationDispatchTest(unittest.TestCase):
     def test_ligand_nmode_output_is_mutated_and_receptor_is_copied(self):
