@@ -443,6 +443,9 @@ will be omitted in the correlation analysis
 in the PATH variable. In this path the following executables will be searched: `gmx`, `gmx_mpi`, `gmx_d`, or
 `gmx_mpi_d` (GROMACS > 5.x.x), and `make_ndx`, `editconf` and `trjconv` (GROMACS 4.x.x)
 
+    The selected executable's data directory is also used to locate topology includes and mutation force-field
+    templates, including installations outside conda. `GMXLIB`, when set, takes precedence over installed data.
+
     !!! note "Keep in mind"
         Use this variable when the GROMACS installation used to run the simulation differs from the installation used
         for the analysis. Set it to the GROMACS `bin` directory in which the executables should be located.
@@ -1834,6 +1837,36 @@ See [§7.1.3](https://ambermd.org/doc12/Amber21.pdf#subsection.7.1.3) and
 
     * `"ALA"` or `"A"`: Alanine scanning
     * `"GLY"` or `"G"`: Glycine scanning
+
+    Both `gmx_MMPBSA` and `amber_MMPBSA` assign all mutant charges and Lennard-Jones parameters using a native
+    target residue when available, or the source force-field residue templates otherwise. The reference must match
+    the terminal state; AMBER GLY `HA2/HA3` and CHARMM GLY `HA1/HA2` naming are supported. Missing LJ types are
+    added from the source parameters, retaining pair-specific interactions and CHARMM 1–4 terms.
+    GROMACS terminal oxygen aliases and terminal mass overrides are preserved. Newly needed CHARMM 1–4
+    pairs are filled from the source definitions when absent from a sparse input table. Mutant trajectory atoms
+    are mapped by topology names so different force-field atom orders are supported.
+    Bonded parameters on surviving atom connections are retained from the parent topology. In a single-trajectory
+    calculation, their energies cancel between the complex and its separated components.
+
+    Force-field lookup is automatic. GROMACS runs search the force-field directories referenced by the active
+    topology includes for `.rtp` residue templates and terminal definitions. CHARMM-GUI runs also search the
+    sibling `toppar` directory for protein `.rtf` templates. Keep the complete source bundle available:
+    `forcefield.itp` supplies nonbonded parameters but usually does not contain the residue charge templates.
+    The fallback also searches compatible `.ff` libraries in the selected GROMACS installation, located using
+    its reported data prefix or executable path, as well as `GMXLIB` and installed AmberTools libraries.
+
+    If these references cannot provide an unambiguous assignment, an estimated assignment is used as a last
+    resort. Available force-field libraries are compared against residue charges, hydrogen charges, residue net
+    charges, and existing LJ types. Known topology LJ parameters are retained; the closest compatible reference
+    supplies missing values. Ambiguous native/LJ references are resolved using their charge and radius/epsilon
+    patterns. A warning identifies the estimated assignment, its source, and available charge-fit information so
+    you can decide whether to use the result. Matching total charge alone does not establish the correct per-atom
+    parameters: estimated results remain approximate. Conflicting source charges or LJ parameters also produce
+    a warning and the discovered source is used as an estimate. A calculation still stops if no usable template or
+    compatible LJ assignment is available after the fallback.
+    Adding a missing LJ type to a 12–6–4 topology requires source C-coefficients and is currently rejected.
+    Scanning requires an all-atom topology supported by the topology converter; force-field discovery does not
+    add support for united-atom models or unsupported GROMACS bonded functions.
 
     _Changed in v1.3.0: Change mol (receptor or ligand) by mutant aminoacid (ALA or GLY)_
 
