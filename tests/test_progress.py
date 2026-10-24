@@ -23,8 +23,23 @@ class _Stream(io.StringIO):
 
 
 class ProgressStyleTest(unittest.TestCase):
-    def test_auto_uses_classic_when_mpi_hides_terminal(self):
-        self.assertEqual(resolve_progress_style('auto', _Stream(False)), 'classic')
+    def test_auto_uses_rich_when_mpi_hides_terminal(self):
+        for term in ('xterm-256color', ''):
+            with self.subTest(term=term), patch.dict(os.environ, {'TERM': term}):
+                self.assertEqual(resolve_progress_style('auto', _Stream(False)), 'rich')
+
+    def test_auto_retains_fallback_for_dumb_terminals(self):
+        with patch.dict(os.environ, {'TERM': 'dumb'}):
+            for interactive in (True, False):
+                self.assertEqual(resolve_progress_style('auto', _Stream(interactive)), 'classic')
+
+    def test_missing_rich_falls_back_for_terminal_and_forwarded_output(self):
+        with patch('GMXMMPBSA.progress.Progress', None):
+            for interactive in (True, False):
+                self.assertEqual(resolve_progress_style('auto', _Stream(interactive)), 'classic')
+            with self.assertLogs(level='WARNING') as messages:
+                self.assertEqual(resolve_progress_style('rich', _Stream(False)), 'classic')
+            self.assertIn('Rich is unavailable', messages.output[0])
 
     def test_auto_uses_rich_for_terminal(self):
         with patch.dict(os.environ, {'TERM': 'xterm-256color'}):

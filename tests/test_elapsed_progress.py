@@ -1,5 +1,6 @@
 import io
 import logging
+import os
 import threading
 import unittest
 from contextlib import contextmanager
@@ -53,6 +54,52 @@ class ElapsedPreparationProgressTest(unittest.TestCase):
                     self.assertTrue(output.endswith('\n'))
                 self.assertEqual(len(records.output), 1)
                 self.assertIn('Preparing test structure completed in', records.output[0])
+
+    def test_mpi_forwarding_redraws_one_line_and_clears_before_completion(self):
+        class LineBufferedPipe(ObservedStream):
+            def __init__(self):
+                super().__init__(False)
+                self.pending = ''
+                self.forwarded = []
+                self.second_update = threading.Event()
+
+            def write(self, value):
+                self.pending += value
+                while '\n' in self.pending:
+                    line, self.pending = self.pending.split('\n', 1)
+                    self.forwarded.append(line)
+                    super().write(line + '\n')
+                    if '[/]' in line:
+                        self.second_update.set()
+                return len(value)
+
+        for rank_variable in ('OMPI_COMM_WORLD_RANK', 'PMI_RANK', 'PMIX_RANK', 'MPI_LOCALRANKID'):
+            with self.subTest(launcher=rank_variable), patch.dict(os.environ, {rank_variable: '0'}, clear=True):
+                stream = LineBufferedPipe()
+                console = logging.StreamHandler(stream)
+                with self.assertLogs(level='INFO') as records:
+                    logger = logging.getLogger()
+                    logger.addHandler(console)
+                    try:
+                        with elapsed_progress('MPI preparation', stream=stream, interval=.01) as timer:
+                            self.assertTrue(stream.second_update.wait(2), 'MPI launcher buffered live redraws')
+                            self.assertTrue(timer._thread.is_alive())
+                            self.assertIn('\x1b[1A\r', stream.getvalue())
+                    finally:
+                        logger.removeHandler(console)
+                self.assertFalse(timer._thread.is_alive())
+                self.assertEqual(stream.pending, '')
+                self.assertTrue(stream.forwarded[-1].startswith('\x1b[1A\r'))
+                self.assertIn('MPI preparation completed in', stream.forwarded[-1])
+                self.assertEqual(len(records.output), 1)
+
+    def test_mpi_fast_step_does_not_move_cursor(self):
+        with patch.dict(os.environ, {'OMPI_COMM_WORLD_RANK': '0'}, clear=True):
+            stream = ObservedStream(False)
+            with self.assertLogs(level='INFO'):
+                with elapsed_progress('Fast MPI step', stream=stream, interval=60):
+                    pass
+            self.assertEqual(stream.getvalue(), '')
 
     def test_exception_cleans_up_and_logs_stopped_duration_without_swallowing_error(self):
         for interactive in (True, False):

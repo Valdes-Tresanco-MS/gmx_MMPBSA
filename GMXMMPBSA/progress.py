@@ -53,13 +53,10 @@ def resolve_progress_style(style='auto', stream=None):
             return 'classic'
         return style
 
-    stream = stream or sys.stderr
-    is_terminal = bool(getattr(stream, 'isatty', lambda: False)())
-    if is_terminal and os.getenv('TERM', '').lower() != 'dumb' and Progress is not None:
+    # Both renderers already handle MPI's line-buffered forwarding. A pipe
+    # must not downgrade the display merely because it hides the terminal.
+    if os.getenv('TERM', '').lower() != 'dumb' and Progress is not None:
         return 'rich'
-    # MPI launchers commonly replace stderr with a forwarding pipe even when the
-    # user is watching an interactive terminal. Preserve the live classic bar in
-    # that ambiguous case; plain milestone logs remain available explicitly.
     return 'classic'
 
 

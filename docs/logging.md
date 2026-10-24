@@ -42,8 +42,9 @@ This can take a while; please wait... [|] 12s
 ```
 
 Updates start after one second. On a terminal, carriage returns redraw the same line; no ANSI terminal features
-are required. Redirected output and MPI forwarding receive flushed, newline-terminated updates, so feedback
-remains visible while a step runs. Short steps may finish before the first update. Each timed step logs its
+are required for direct terminal output. MPI forwarding uses the same line-buffered redraw handling as
+calculation progress, keeping the timer on one line while flushing live updates. Ordinary redirected output
+uses newline-terminated updates. Short steps may finish before the first update. Each timed step logs its
 completion or interruption duration; animated updates are not written to `gmx_MMPBSA.log`.
 
 Topology preparation is performed by the master MPI rank. The calculation progress styles below control the
@@ -56,7 +57,7 @@ Select a mode with `--progress-style`:
 
 | Mode | Terminal | `gmx_MMPBSA.log` |
 |---|---|---|
-| `auto` | Rich in a normal interactive terminal; classic when output is forwarded or hidden by MPI | Clean debug checkpoints and one completion record |
+| `auto` | Rich for terminal and MPI-forwarded output; classic if Rich is unavailable or `TERM=dumb` | Clean debug checkpoints and one completion record |
 | `rich` | Rich live progress display | Clean debug checkpoints and one completion record |
 | `classic` | Original-style ASCII progress bar | Clean debug checkpoints and one completion record |
 | `plain` | Text milestones | Text milestones and one completion record |
@@ -71,8 +72,9 @@ repeating a warning on every poll.
 
 Open MPI 5 can buffer rank output into complete lines. When output is forwarded through a pipe, gmx_MMPBSA terminates
 each Rich redraw with a newline and compensates for the added cursor movement on the next redraw. This lets the live
-bar update without special launcher options. The classic bar uses the same forwarding protection, including when
-`auto` selects classic because MPI hides the terminal. Direct terminal output uses each renderer's native redraws.
+bar update without special launcher options. Automatic selection uses Rich even when MPI hides the terminal;
+`TERM=dumb` or an unavailable Rich installation retains the classic fallback. The classic bar uses the same
+forwarding protection. Direct terminal output uses each renderer's native redraws.
 
 For older gmx_MMPBSA installations whose Rich bar appears only after a calculation contribution finishes,
 pass `--output :raw` to the Open MPI 5 launcher:

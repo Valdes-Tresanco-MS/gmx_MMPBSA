@@ -1,6 +1,7 @@
 """Logging setup shared by the command-line entry points."""
 
 import logging
+import os
 import shlex
 import sys
 import threading
@@ -37,11 +38,18 @@ class ElapsedProgress:
         self._thread = None
         self._started_at = None
         self._interactive = False
+        self._forwarded = False
         self._line_length = 0
 
     def __enter__(self):
         self._started_at = time.monotonic()
         self._interactive = bool(getattr(self.stream, 'isatty', lambda: False)())
+        self._forwarded = not self._interactive and any(
+            name in os.environ for name in ('OMPI_COMM_WORLD_RANK', 'PMI_RANK', 'PMIX_RANK', 'MPI_LOCALRANKID')
+        )
+        if self._forwarded:
+            from GMXMMPBSA.progress import _LineBufferedProgressStream
+            self.stream = _LineBufferedProgressStream(self.stream)
         self._thread = threading.Thread(target=self._run, daemon=True)
         self._thread.start()
         return self
@@ -51,9 +59,17 @@ class ElapsedProgress:
         if self._thread is not None:
             self._stop.set()
             self._thread.join()
-            if self._interactive and self._line_length:
-                self.stream.write('\r' + ' ' * self._line_length + '\r')
-                self.stream.flush()
+            if self._line_length:
+                clear = '\r' + ' ' * self._line_length + '\r'
+                if self._forwarded:
+                    # The last forwarded redraw ends one line below the timer.
+                    # Queue the clear with the following newline-terminated log
+                    # record so even a line-buffering launcher forwards both.
+                    self.stream.stream.write('\x1b[1A' + clear)
+                    self.stream.stream.flush()
+                elif self._interactive:
+                    self.stream.write(clear)
+                    self.stream.flush()
         if exc_type is None:
             logging.info('%s completed in %.1f seconds.', self.label, elapsed)
         else:
@@ -66,9 +82,9 @@ class ElapsedProgress:
             frame = self._frames[tick % len(self._frames)]
             prefix = f'{self.message} ' if self.message else ''
             line = f'{prefix}[{frame}] {elapsed}s'
-            # MPI launchers may buffer carriage-return redraws until a newline.
-            # Forwarded/batch output therefore uses ordinary complete lines.
-            self.stream.write('\r' + line if self._interactive else line + '\n')
+            # The MPI wrapper flushes whole lines and compensates for their
+            # cursor movement, keeping live updates on one terminal line.
+            self.stream.write('\r' + line if self._interactive or self._forwarded else line + '\n')
             self._line_length = len(line)
             self.stream.flush()
             tick += 1
