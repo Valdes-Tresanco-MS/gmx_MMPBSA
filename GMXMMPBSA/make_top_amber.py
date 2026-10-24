@@ -32,6 +32,7 @@ from GMXMMPBSA.make_top import (CheckMakeTop, GB_RECOMMENDED_RADII, water_residu
 from GMXMMPBSA.utils import (selector, get_dist, list2range, res2map, get_indexes, log_subprocess_output, check_str,
                              eq_strs, get_index_groups, reconcile_qm_charges, topology_mismatch_error, res2map_amber,
                              residue_names_match)
+from GMXMMPBSA.logging_utils import elapsed_progress
 import subprocess
 from pathlib import Path
 import logging
@@ -338,14 +339,16 @@ class CheckAmberTop(CheckMakeTop):
             com_traj.Run('lig_pdb.out')
 
         # initialize receptor and ligand structures. Needed to get residues map
-        self.complex_str = self.molstr(self.complex_str_file)
-        self.receptor_str = self.molstr(self.receptor_str_file)
-        self.ligand_str = self.molstr(self.ligand_str_file)
+        with elapsed_progress('Loading structures with ParmEd'):
+            self.complex_str = self.molstr(self.complex_str_file)
+            self.receptor_str = self.molstr(self.receptor_str_file)
+            self.ligand_str = self.molstr(self.ligand_str_file)
         if self.FILES.reference_structure:
             self.ref_str = check_str(self.FILES.reference_structure, ref=True)
         self.check4water()
-        self.resi, self.resl, self.orderl = res2map_amber({"REC": com_rec_mask, "LIG": com_lig_mask},
-                                                          self.complex_str)
+        with elapsed_progress('Building receptor/ligand residue maps'):
+            self.resi, self.resl, self.orderl = res2map_amber({"REC": com_rec_mask, "LIG": com_lig_mask},
+                                                              self.complex_str)
         self.check_structures(self.complex_str, self.receptor_str, self.ligand_str)
 
     @staticmethod
@@ -675,15 +678,19 @@ class CheckAmberTop(CheckMakeTop):
 
         if self.explicit_waters:
             self._prepare_explicit_water_source()
-            com_top = parmed.amber.LoadParm(self.FILES.complex_top)
+            with elapsed_progress('Reading complex topology with ParmEd'):
+                com_top = parmed.amber.LoadParm(self.FILES.complex_top)
             keep_mask = f'({self.FILES.complex_mask[0]}|{self.FILES.complex_mask[1]}|'
             keep_mask += f'{self.explicit_water_source_mask})'
             logging.debug(f'Stripping solvated complex topology with mask: {keep_mask}')
-            com_top.strip(f'!{keep_mask}')
+            with elapsed_progress('Applying complex selection to topology'):
+                com_top.strip(f'!{keep_mask}')
         else:
-            com_top = parmed.amber.LoadParm(self.FILES.complex_top)
+            with elapsed_progress('Reading complex topology with ParmEd'):
+                com_top = parmed.amber.LoadParm(self.FILES.complex_top)
             logging.debug(f'Stripping complex topology with mask: {"|".join(self.FILES.complex_mask)}')
-            com_top.strip(f'!({"|".join(self.FILES.complex_mask)})')
+            with elapsed_progress('Applying complex selection to topology'):
+                com_top.strip(f'!({"|".join(self.FILES.complex_mask)})')
 
         self._warn_gb_radius_compatibility(com_top, 'complex')
 
@@ -696,7 +703,8 @@ class CheckAmberTop(CheckMakeTop):
         if self.explicit_waters and self.explicit_water_source_extra_points:
             extra_points = self._water_extra_point_indices(com_top, self._amber_water_names())
             if extra_points:
-                com_top.strip('@' + ','.join(list2range(extra_points)['string']))
+                with elapsed_progress('Applying complex selection to topology'):
+                    com_top.strip('@' + ','.join(list2range(extra_points)['string']))
 
         if self.explicit_waters:
             water_numbers = [res.idx + 1 for res in com_top.residues
@@ -711,7 +719,7 @@ class CheckAmberTop(CheckMakeTop):
         com_top.save(f"{self.FILES.prefix}COM.inpcrd", format='rst7', overwrite=True)
         # try:
         if isinstance(com_top, parmed.amber.ChamberParm) or com_top.impropers or com_top.urey_bradleys:
-            com_amb_prm = parmed.amber.ChamberParm.from_structure(com_top)
+            com_amb_prm = self._convert_amber_topology(com_top, parmed.amber.ChamberParm, 'complex')
             com_top_parm = 'chamber'
 
             title = com_amb_prm.parm_data['CTITLE']
@@ -719,7 +727,7 @@ class CheckAmberTop(CheckMakeTop):
 
             logging.info('Detected CHARMM force field topology format...')
         else:
-            com_amb_prm = parmed.amber.AmberParm.from_structure(com_top)
+            com_amb_prm = self._convert_amber_topology(com_top, parmed.amber.AmberParm, 'complex')
             com_top_parm = 'amber'
             logging.info('Detected Amber/OPLS force field topology format...')
 
@@ -742,7 +750,8 @@ class CheckAmberTop(CheckMakeTop):
         if self.FILES.receptor_top:
             logging.info('A Receptor topology file was defined. Using MT approach...')
             logging.info('Building AMBER Receptor Topology from AMBER Receptor Topology...')
-            rec_top = parmed.amber.LoadParm(self.FILES.receptor_top)
+            with elapsed_progress('Reading receptor topology with ParmEd'):
+                rec_top = parmed.amber.LoadParm(self.FILES.receptor_top)
             self._warn_gb_radius_compatibility(rec_top, 'receptor')
 
             if error_info := eq_strs(rec_top, self.receptor_str):
@@ -754,12 +763,12 @@ class CheckAmberTop(CheckMakeTop):
                 if com_top_parm == 'amber':
                     GMXMMPBSA_ERROR('Inconsistent parameter format. The defined Complex is Amber/OPLS type while the '
                                     'Receptor is CHAMBER type!')
-                rec_amb_prm = parmed.amber.ChamberParm.from_structure(rec_top)
+                rec_amb_prm = self._convert_amber_topology(rec_top, parmed.amber.ChamberParm, 'receptor')
             else:
                 if com_top_parm == 'chamber':
                     GMXMMPBSA_ERROR('Inconsistent parameter format. The defined Complex is CHAMBER type while the '
                                     'Receptor is Amber/OPLS type!')
-                rec_amb_prm = parmed.amber.AmberParm.from_structure(rec_top)
+                rec_amb_prm = self._convert_amber_topology(rec_top, parmed.amber.AmberParm, 'receptor')
             logging.info('Converting receptor residue names from GROMACS to AMBER...')
 
             # check periodicity
@@ -786,7 +795,8 @@ class CheckAmberTop(CheckMakeTop):
         if self.FILES.ligand_top:
             logging.info('A Ligand Topology file was defined. Using MT approach...')
             logging.info('Building AMBER Ligand Topology from AMBER Ligand Topology...')
-            lig_top = parmed.amber.LoadParm(self.FILES.ligand_top)
+            with elapsed_progress('Reading ligand topology with ParmEd'):
+                lig_top = parmed.amber.LoadParm(self.FILES.ligand_top)
             self._warn_gb_radius_compatibility(lig_top, 'ligand')
 
             if error_info := eq_strs(lig_top, self.ligand_str):
@@ -798,12 +808,12 @@ class CheckAmberTop(CheckMakeTop):
                 if com_top_parm == 'amber':
                     GMXMMPBSA_ERROR('Inconsistent parameter format. The defined Complex is Amber/OPLS type while the '
                                     'Ligand is CHAMBER type!')
-                lig_amb_prm = parmed.amber.ChamberParm.from_structure(lig_top)
+                lig_amb_prm = self._convert_amber_topology(lig_top, parmed.amber.ChamberParm, 'ligand')
             else:
                 if com_top_parm == 'chamber':
                     GMXMMPBSA_ERROR('Inconsistent parameter format. The defined Complex is CHAMBER type while the '
                                     'Ligand is Amber/OPLS type!')
-                lig_amb_prm = parmed.amber.AmberParm.from_structure(lig_top)
+                lig_amb_prm = self._convert_amber_topology(lig_top, parmed.amber.AmberParm, 'ligand')
             logging.info('Converting ligand residue names from GROMACS to AMBER...')
 
             # check periodicity
@@ -1170,7 +1180,8 @@ class CheckAmberTop(CheckMakeTop):
             com_traj.Setup()
             com_traj.Strip(f'!({"|".join(self.FILES.complex_mask)})')
             com_traj.Outtraj(f'COM_traj_{i}.{trj_suffix}', filetype=self.INPUT['general']['netcdf'])
-            com_traj.Run(f'COM_traj_{i}_cpptraj.out')
+            with elapsed_progress(f'Extracting complex trajectory {i + 1}/{len(self.FILES.complex_trajs)}'):
+                com_traj.Run(f'COM_traj_{i}_cpptraj.out')
             new_trajs.append(f'COM_traj_{i}.{trj_suffix}')
         self.FILES.complex_trajs = new_trajs
 
@@ -1183,7 +1194,8 @@ class CheckAmberTop(CheckMakeTop):
                 rec_traj.Setup()
                 rec_traj.Strip(f'!{self.FILES.receptor_mask}')
                 rec_traj.Outtraj(f'REC_traj_{i}.{trj_suffix}', filetype=self.INPUT['general']['netcdf'])
-                rec_traj.Run(f'REC_traj_{i}_cpptraj.out')
+                with elapsed_progress(f'Extracting receptor trajectory {i + 1}/{len(self.FILES.receptor_trajs)}'):
+                    rec_traj.Run(f'REC_traj_{i}_cpptraj.out')
                 new_trajs.append(f'REC_traj_{i}.{trj_suffix}')
             self.FILES.receptor_trajs = new_trajs
 
@@ -1195,7 +1207,8 @@ class CheckAmberTop(CheckMakeTop):
                 lig_traj.Setup()
                 lig_traj.Strip(f'!{self.FILES.ligand_mask}')
                 lig_traj.Outtraj(f'LIG_traj_{i}.{trj_suffix}', filetype=self.INPUT['general']['netcdf'])
-                lig_traj.Run(f'LIG_traj_{i}_cpptraj.out')
+                with elapsed_progress(f'Extracting ligand trajectory {i + 1}/{len(self.FILES.ligand_trajs)}'):
+                    lig_traj.Run(f'LIG_traj_{i}_cpptraj.out')
                 new_trajs.append(f'LIG_traj_{i}.{trj_suffix}')
             self.FILES.ligand_trajs = new_trajs
 
@@ -1233,26 +1246,31 @@ class CheckAmberTop(CheckMakeTop):
             f'noimage closestout {self.FILES.prefix}explicit_waters_closest_0.dat\n'
             f'trajout {filtered} nobox\n'
         )
-        with open(f'{self.FILES.prefix}explicit_waters_cpptraj_0.out', 'w') as output:
-            process = subprocess.Popen([cpptraj, self.explicit_water_prmtop], stdin=subprocess.PIPE,
-                                       stdout=output, stderr=subprocess.STDOUT)
-            process.communicate(cpptraj_input.encode())
-        if process.wait():
-            GMXMMPBSA_ERROR(
-                f'{cpptraj} failed when selecting explicit waters from {", ".join(trajectories)}'
-            )
+        with elapsed_progress('Selecting explicit waters for trajectory frames with cpptraj'):
+            with open(f'{self.FILES.prefix}explicit_waters_cpptraj_0.out', 'w') as output:
+                process = subprocess.Popen([cpptraj, self.explicit_water_prmtop], stdin=subprocess.PIPE,
+                                           stdout=output, stderr=subprocess.STDOUT)
+                process.communicate(cpptraj_input.encode())
+            if process.wait():
+                GMXMMPBSA_ERROR(
+                    f'{cpptraj} failed when selecting explicit waters from {", ".join(trajectories)}'
+                )
         self.FILES.complex_trajs = [filtered]
         self.FILES.explicit_waters_preselected = True
 
     def check_structures(self, com_str, rec_str=None, lig_str=None):
         logging.info('Checking structural consistency...')
-        check_str(com_str)
-        check_str(rec_str, skip=True)
-        check_str(lig_str, skip=True)
+        with elapsed_progress('Complex structure validation'):
+            check_str(com_str)
+        with elapsed_progress('Receptor structure validation'):
+            check_str(rec_str, skip=True)
+        with elapsed_progress('Ligand structure validation'):
+            check_str(lig_str, skip=True)
 
         if self.FILES.reference_structure:
             logging.info('Assigning chain IDs and insertion codes to structure files according to the reference structure...')
-            ref_str = check_str(self.FILES.reference_structure)
+            with elapsed_progress('Reference structure validation'):
+                ref_str = check_str(self.FILES.reference_structure)
             if len(ref_str.residues) != len(com_str.residues):
                 GMXMMPBSA_ERROR(f'The number of residues of the complex ({len(com_str.residues)}) and of the '
                                 f'reference structure ({len(ref_str.residues)}) are different. Please check that the '

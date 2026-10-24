@@ -31,6 +31,25 @@ tail -f gmx_MMPBSA.log
 The final summary reports warning and error records counted directly by the logging system. Multiline messages count as
 one record. Fatal exceptions terminate the run; a nonfatal error record does not change the exit status.
 
+## Preparation timers
+
+Existing preparation steps use the same basic elapsed-time feedback in `gmx_MMPBSA` and `amber_MMPBSA`,
+regardless of the selected energy method. This covers structure loading and validation, residue mapping,
+topology reading/selection/conversion, trajectory cleanup, and dASA preparation when applicable.
+
+```text
+This can take a while; please wait... [|] 12s
+```
+
+Updates start after one second. On a terminal, carriage returns redraw the same line; no ANSI terminal features
+are required. Redirected output and MPI forwarding receive flushed, newline-terminated updates, so feedback
+remains visible while a step runs. Short steps may finish before the first update. Each timed step logs its
+completion or interruption duration; animated updates are not written to `gmx_MMPBSA.log`.
+
+Topology preparation is performed by the master MPI rank. The calculation progress styles below control the
+energy-calculation monitor separately; they do not disable these preparation timers. No additional input option
+is needed for preparation feedback.
+
 ## Progress display modes
 
 Select a mode with `--progress-style`:

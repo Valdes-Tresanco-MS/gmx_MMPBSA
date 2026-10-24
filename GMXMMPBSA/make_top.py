@@ -894,6 +894,11 @@ class CheckMakeTop:
                 f"{parm.parm_data.get('RADIUS_SET', ['unknown'])[0]}"
             )
 
+    @staticmethod
+    def _convert_amber_topology(topology, parm_class, component):
+        with elapsed_progress(f'Converting selected {component} topology to AMBER {parm_class.__name__}'):
+            return parm_class.from_structure(topology)
+
     def gmxtop2prmtop(self):
         if self.INPUT.get('pb', {}).get('pbrun', False):
             logging.info('Using topology radii for PB (radiopt=0).')
@@ -917,19 +922,17 @@ class CheckMakeTop:
         # try:
         if com_top.impropers or com_top.urey_bradleys:
             logging.info('Converting selected complex topology to AMBER ChamberParm...')
-            with elapsed_progress('Converting selected complex topology to AMBER ChamberParm'):
-                com_amb_prm = parmed.amber.ChamberParm.from_structure(com_top)
-                com_top_parm = 'chamber'
+            com_amb_prm = self._convert_amber_topology(com_top, parmed.amber.ChamberParm, 'complex')
+            com_top_parm = 'chamber'
 
-                title = com_amb_prm.parm_data['CTITLE']
-                com_amb_prm.add_flag('TITLE', '20a4', title or '', after='CTITLE')
+            title = com_amb_prm.parm_data['CTITLE']
+            com_amb_prm.add_flag('TITLE', '20a4', title or '', after='CTITLE')
 
             logging.info('Detected CHARMM force field topology format...')
         else:
             logging.info('Converting selected complex topology to AMBER AmberParm...')
-            with elapsed_progress('Converting selected complex topology to AMBER AmberParm'):
-                com_amb_prm = parmed.amber.AmberParm.from_structure(com_top)
-                com_top_parm = 'amber'
+            com_amb_prm = self._convert_amber_topology(com_top, parmed.amber.AmberParm, 'complex')
+            com_top_parm = 'amber'
             logging.info('Detected Amber/OPLS force field topology format...')
 
         # IMPORTANT: make_trajs ends in error if the box is defined
@@ -976,12 +979,12 @@ class CheckMakeTop:
                 if com_top_parm == 'amber':
                     GMXMMPBSA_ERROR('Inconsistent parameter format. The defined Complex is Amber/OPLS type while the '
                                     'Receptor is CHAMBER type!')
-                rec_amb_prm = parmed.amber.ChamberParm.from_structure(rec_top)
+                rec_amb_prm = self._convert_amber_topology(rec_top, parmed.amber.ChamberParm, 'receptor')
             else:
                 if com_top_parm == 'chamber':
                     GMXMMPBSA_ERROR('Inconsistent parameter format. The defined Complex is CHAMBER type while the '
                                     'Receptor is Amber/OPLS type!')
-                rec_amb_prm = parmed.amber.AmberParm.from_structure(rec_top)
+                rec_amb_prm = self._convert_amber_topology(rec_top, parmed.amber.AmberParm, 'receptor')
             logging.info('Converting receptor residue names from GROMACS to AMBER...')
 
             # check periodicity
@@ -1021,12 +1024,12 @@ class CheckMakeTop:
                 if com_top_parm == 'amber':
                     GMXMMPBSA_ERROR('Inconsistent parameter format. The defined Complex is Amber/OPLS type while the '
                                     'Ligand is CHAMBER type!')
-                lig_amb_prm = parmed.amber.ChamberParm.from_structure(lig_top)
+                lig_amb_prm = self._convert_amber_topology(lig_top, parmed.amber.ChamberParm, 'ligand')
             else:
                 if com_top_parm == 'chamber':
                     GMXMMPBSA_ERROR('Inconsistent parameter format. The defined Complex is CHAMBER type while the '
                                     'Ligand is Amber/OPLS type!')
-                lig_amb_prm = parmed.amber.AmberParm.from_structure(lig_top)
+                lig_amb_prm = self._convert_amber_topology(lig_top, parmed.amber.AmberParm, 'ligand')
             logging.info('Converting ligand residue names from GROMACS to AMBER...')
 
             # check periodicity
@@ -2187,11 +2190,12 @@ class CheckMakeTop:
                 logging.debug('Running command: ' + ' '.join(echo_command) + ' "' +
                               (' '.join(trjconv_echo_args[len(echo_command):]).replace('\n', '\\n')) + '"' +
                               '| ' + ' '.join(trjconv_args))
-                c6 = subprocess.Popen(trjconv_args, stdin=c5.stdout, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-                log_subprocess_output(c6)
-                if c6.wait():  # if it quits with return code != 0
-                    GMXMMPBSA_ERROR(
-                        '%s failed when querying %s' % (' '.join(self.trjconv), self.FILES.receptor_trajs[i]))
+                with elapsed_progress(f'Extracting receptor trajectory {i + 1}/{len(self.FILES.receptor_trajs)}'):
+                    c6 = subprocess.Popen(trjconv_args, stdin=c5.stdout, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                    log_subprocess_output(c6)
+                    if c6.wait():  # if it quits with return code != 0
+                        GMXMMPBSA_ERROR(
+                            '%s failed when querying %s' % (' '.join(self.trjconv), self.FILES.receptor_trajs[i]))
                 new_trajs.append('REC_traj_{}.xtc'.format(i))
             self.FILES.receptor_trajs = new_trajs
 
@@ -2207,10 +2211,11 @@ class CheckMakeTop:
                 logging.debug('Running command: ' + ' '.join(echo_command) + ' "' +
                               (' '.join(trjconv_echo_args[len(echo_command):]).replace('\n', '\\n')) + '"' +
                               '| ' + ' '.join(trjconv_args))
-                c6 = subprocess.Popen(trjconv_args, stdin=c5.stdout, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-                log_subprocess_output(c6)
-                if c6.wait():  # if it quits with return code != 0
-                    GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(self.trjconv), self.FILES.ligand_trajs[i]))
+                with elapsed_progress(f'Extracting ligand trajectory {i + 1}/{len(self.FILES.ligand_trajs)}'):
+                    c6 = subprocess.Popen(trjconv_args, stdin=c5.stdout, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                    log_subprocess_output(c6)
+                    if c6.wait():  # if it quits with return code != 0
+                        GMXMMPBSA_ERROR('%s failed when querying %s' % (' '.join(self.trjconv), self.FILES.ligand_trajs[i]))
                 new_trajs.append('LIG_traj_{}.xtc'.format(i))
             self.FILES.ligand_trajs = new_trajs
 

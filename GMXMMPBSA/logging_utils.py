@@ -24,7 +24,7 @@ class WarningSpacingFormatter(logging.Formatter):
 
 
 class ElapsedProgress:
-    """Show a small elapsed-time spinner on an interactive terminal."""
+    """Report elapsed preparation time on terminals and forwarded streams."""
 
     _frames = ('|', '/', '-', '\\')
 
@@ -36,11 +36,12 @@ class ElapsedProgress:
         self._stop = threading.Event()
         self._thread = None
         self._started_at = None
+        self._interactive = False
+        self._line_length = 0
 
     def __enter__(self):
         self._started_at = time.monotonic()
-        if not getattr(self.stream, 'isatty', lambda: False)():
-            return self
+        self._interactive = bool(getattr(self.stream, 'isatty', lambda: False)())
         self._thread = threading.Thread(target=self._run, daemon=True)
         self._thread.start()
         return self
@@ -50,8 +51,9 @@ class ElapsedProgress:
         if self._thread is not None:
             self._stop.set()
             self._thread.join()
-            self.stream.write('\r\033[K')
-            self.stream.flush()
+            if self._interactive and self._line_length:
+                self.stream.write('\r' + ' ' * self._line_length + '\r')
+                self.stream.flush()
         if exc_type is None:
             logging.info('%s completed in %.1f seconds.', self.label, elapsed)
         else:
@@ -63,13 +65,17 @@ class ElapsedProgress:
             elapsed = int(time.monotonic() - self._started_at)
             frame = self._frames[tick % len(self._frames)]
             prefix = f'{self.message} ' if self.message else ''
-            self.stream.write(f'\r{prefix}[{frame}] {elapsed}s')
+            line = f'{prefix}[{frame}] {elapsed}s'
+            # MPI launchers may buffer carriage-return redraws until a newline.
+            # Forwarded/batch output therefore uses ordinary complete lines.
+            self.stream.write('\r' + line if self._interactive else line + '\n')
+            self._line_length = len(line)
             self.stream.flush()
             tick += 1
 
 
 def elapsed_progress(label='Operation', message='This can take a while; please wait...', stream=None, interval=1):
-    """Return a context manager that reports elapsed time and spins on interactive terminals."""
+    """Return preparation feedback independent of terminal interactivity."""
     return ElapsedProgress(label=label, message=message, stream=stream, interval=interval)
 
 
