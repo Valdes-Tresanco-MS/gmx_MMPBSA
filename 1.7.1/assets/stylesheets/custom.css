@@ -1,0 +1,51 @@
+.termynal-comment {
+    color: #4a968f;
+    font-style: italic;
+    display: block;
+}
+
+.termy [data-termynal] {
+    white-space: pre-wrap;
+}
+
+a.external-link::after {
+    /* \00A0 is a non-breaking space
+        to make the mark be on the same line as the link
+    */
+    content: "\00A0[↪]";
+}
+
+a.internal-link::after {
+    /* \00A0 is a non-breaking space
+        to make the mark be on the same line as the link
+    */
+    content: "\00A0↪";
+}
+
+/* Compact summary cards used by the redesigned example-page pilot. */
+.md-typeset .example-card-grid > ul {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+    gap: 0.8rem;
+    list-style: none;
+    margin: 1rem 0;
+    padding: 0;
+}
+
+.md-typeset .example-card-grid > ul > li {
+    background: var(--md-default-bg-color);
+    border: 0.05rem solid var(--md-default-fg-color--lightest);
+    border-radius: 0.2rem;
+    box-shadow: var(--md-shadow-z1);
+    margin: 0;
+    padding: 0.8rem;
+}
+
+.md-typeset .example-card-grid > ul > li > p {
+    margin: 0;
+}
+
+.md-typeset .example-card-grid > ul > li > p + p {
+    color: var(--md-default-fg-color--light);
+    margin-top: 0.35rem;
+}
