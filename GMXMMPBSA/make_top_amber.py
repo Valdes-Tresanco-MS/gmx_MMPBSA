@@ -562,6 +562,41 @@ class CheckAmberTop(CheckMakeTop):
             )
         ]
 
+    def _explicit_water_preprocessing_actions(self, source):
+        """Resolve source masks before stripping, then renumber surviving atoms.
+
+        cpptraj evaluates each action against the topology produced by the
+        preceding action. Both the structure and trajectory must use these
+        same remapped selections.
+        """
+        masks = [mask for mask in (self.explicit_water_source_ion_mask,
+                                  self.explicit_water_source_extra_points) if mask]
+        strip_mask = '|'.join(f'({mask})' for mask in masks)
+        removed = (parmed.amber.AmberMask(source, strip_mask).Selection()
+                   if strip_mask else [0] * len(source.atoms))
+        reference = parmed.amber.AmberMask(
+            source, f'({self.explicit_waters_mask})&(!{self.explicit_water_source_all_mask})'
+        ).Selection()
+        solvent = parmed.amber.AmberMask(source, self.explicit_water_source_all_mask).Selection()
+        reference_atoms, solvent_atoms = [], []
+        current_index = 0
+        for index, remove in enumerate(removed):
+            if remove:
+                continue
+            current_index += 1
+            if reference[index]:
+                reference_atoms.append(current_index)
+            if solvent[index]:
+                solvent_atoms.append(current_index)
+        if not reference_atoms:
+            GMXMMPBSA_ERROR('EXPLICIT_WATERS_MASK selected no solute atoms after removing ions/extra points.')
+        def atom_mask(indices):
+            return '@' + ','.join(list2range(indices)['string'])
+        actions = [f'strip {strip_mask}'] if strip_mask else []
+        actions.append(f'closest {self.explicit_waters} {atom_mask(reference_atoms)} '
+                       f'solventmask {atom_mask(solvent_atoms)} noimage')
+        return actions
+
     def _prepare_explicit_water_source(self):
         source = parmed.amber.LoadParm(self.FILES.complex_top)
         rec_residues, lig_residues, waters, ions_found = self._source_residue_classes(source)
@@ -595,13 +630,17 @@ class CheckAmberTop(CheckMakeTop):
         source.write_parm(self.explicit_water_prmtop)
         if self.explicit_waters_mask.strip().lower() == 'dasa':
             self._resolve_explicit_waters_mask()
+        self.explicit_water_actions = self._explicit_water_preprocessing_actions(source)
         self._write_explicit_water_structures()
 
-        # The source residue numbers are retained by cpptraj and ParmEd when
-        # solvent/ions are removed. These masks are used for the final
-        # topology and are checked again by MMPBSA_System.Map().
-        self.explicit_source_receptor_mask = self._amber_mask(self._amber_residue_numbers(rec_residues))
-        self.explicit_source_ligand_mask = self._amber_mask(self._amber_residue_numbers(lig_residues))
+        # ParmEd renumbers residues when unselected solvent/ions are removed.
+        retained = set(self._amber_residue_numbers(rec_residues + lig_residues)
+                       + self.explicit_water_source_residues)
+        compact = {number: index + 1 for index, number in enumerate(sorted(retained))}
+        self.explicit_source_receptor_mask = self._amber_mask(
+            [compact[number] for number in self._amber_residue_numbers(rec_residues)])
+        self.explicit_source_ligand_mask = self._amber_mask(
+            [compact[number] for number in self._amber_residue_numbers(lig_residues)])
 
     def _write_explicit_water_structures(self):
         cpptraj = self.external_progs['cpptraj']
@@ -625,14 +664,7 @@ class CheckAmberTop(CheckMakeTop):
             for file_index, local_start, local_end, local_interval in frame_ranges
         ]
         traj.actions.append('noprogress')
-        if self.explicit_water_source_ion_mask:
-            traj.Strip(self.explicit_water_source_ion_mask)
-        if self.explicit_water_source_extra_points:
-            traj.Strip(self.explicit_water_source_extra_points)
-        reference = f'({self.explicit_waters_mask})&(!{self.explicit_water_source_all_mask})'
-        traj.actions.append(
-            f'closest {self.explicit_waters} {reference} solventmask {self.explicit_water_source_all_mask} noimage'
-        )
+        traj.actions.extend(self.explicit_water_actions)
         traj.Outtraj(output, frames='1', filetype='pdb')
         traj.Run(f'{self.FILES.prefix}complex_explicit_pdb.out')
         self.explicit_complex_str = self.molstr(output)
@@ -694,17 +726,19 @@ class CheckAmberTop(CheckMakeTop):
 
         self._warn_gb_radius_compatibility(com_top, 'complex')
 
+        if self.explicit_waters and self.explicit_water_source_extra_points:
+            extra_points = self._water_extra_point_indices(com_top, self._amber_water_names())
+            if extra_points:
+                with elapsed_progress('Applying complex selection to topology'):
+                    com_top.strip('@' + ','.join(list2range(extra_points)['string']))
+
+
         # com_top = self.cleantop(self.FILES.complex_top, self.indexes['COM']['COM'])
         structure_for_topology = self.explicit_complex_str if self.explicit_waters else self.complex_str
         if error_info := eq_strs(com_top, structure_for_topology):
             topology_mismatch_error('complex', self.FILES.complex_top, self.complex_str_file, error_info)
 
         com_top.coordinates = structure_for_topology.coordinates
-        if self.explicit_waters and self.explicit_water_source_extra_points:
-            extra_points = self._water_extra_point_indices(com_top, self._amber_water_names())
-            if extra_points:
-                with elapsed_progress('Applying complex selection to topology'):
-                    com_top.strip('@' + ','.join(list2range(extra_points)['string']))
 
         if self.explicit_waters:
             water_numbers = [res.idx + 1 for res in com_top.residues
@@ -1234,18 +1268,9 @@ class CheckAmberTop(CheckMakeTop):
             )
 
         filtered = f'{self.FILES.prefix}COM_traj_0.mdcrd'
-        ion_strip = f'strip {self.explicit_water_source_ion_mask}\n' if self.explicit_water_source_ion_mask else ''
-        extra_strip = (f'strip {self.explicit_water_source_extra_points}\n'
-                       if self.explicit_water_source_extra_points else '')
-        reference = f'({self.explicit_waters_mask})&(!{self.explicit_water_source_all_mask})'
-        cpptraj_input = (
-            f'{trajin}'
-            f'{ion_strip}'
-            f'{extra_strip}'
-            f'closest {self.explicit_waters} {reference} solventmask {self.explicit_water_source_all_mask} '
-            f'noimage closestout {self.FILES.prefix}explicit_waters_closest_0.dat\n'
-            f'trajout {filtered} nobox\n'
-        )
+        actions = list(self.explicit_water_actions)
+        actions[-1] += f' closestout {self.FILES.prefix}explicit_waters_closest_0.dat'
+        cpptraj_input = trajin + '\n'.join(actions) + f'\ntrajout {filtered} nobox\n'
         with elapsed_progress('Selecting explicit waters for trajectory frames with cpptraj'):
             with open(f'{self.FILES.prefix}explicit_waters_cpptraj_0.out', 'w') as output:
                 process = subprocess.Popen([cpptraj, self.explicit_water_prmtop], stdin=subprocess.PIPE,

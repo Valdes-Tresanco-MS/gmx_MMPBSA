@@ -204,6 +204,55 @@ class AmberDryBaselineTest(unittest.TestCase):
 
 @unittest.skipUnless(AMBER_RUNTIME, 'AMBER topology/trajectory tools are unavailable')
 class AmberExplicitWaterPreprocessingTest(unittest.TestCase):
+    def _water_mask_fixture(self):
+        from GMXMMPBSA.make_top_amber import CheckAmberTop
+        source = parmed.Structure()
+        # Ions precede the reference; each water also contains a virtual site.
+        for residue, names in enumerate((('NA',), ('CA', 'CB'), ('CL',),
+                                         ('O', 'H1', 'H2', 'EP'),
+                                         ('O', 'H1', 'H2', 'EP')), 1):
+            for name in names:
+                source.add_atom(parmed.Atom(name=name), str(residue), residue)
+        checker = object.__new__(CheckAmberTop)
+        checker.explicit_waters = 1
+        checker.explicit_waters_mask = ':2@CB'
+        checker.explicit_water_source_all_mask = ':4-5'
+        checker.explicit_water_source_ion_mask = ':1,3'
+        checker.explicit_water_source_extra_points = '@8,12'
+        return checker, source
+
+    def test_closest_masks_follow_combined_ion_and_virtual_site_removal(self):
+        checker, source = self._water_mask_fixture()
+        actions = checker._explicit_water_preprocessing_actions(source)
+        self.assertEqual(actions, ['strip (:1,3)|(@8,12)',
+                                  'closest 1 @2 solventmask @3-8 noimage'])
+        # Verify those masks on the actual topology after the strip action.
+        source.strip(actions[0].removeprefix('strip '))
+        reference = parmed.amber.AmberMask(source, '@2').Selection()
+        solvent = parmed.amber.AmberMask(source, '@3-8').Selection()
+        self.assertEqual([a.name for a, keep in zip(source.atoms, reference) if keep], ['CB'])
+        self.assertEqual([a.name for a, keep in zip(source.atoms, solvent) if keep],
+                         ['O', 'H1', 'H2'] * 2)
+
+    def test_closest_masks_follow_ion_removal_without_virtual_sites(self):
+        checker, source = self._water_mask_fixture()
+        checker.explicit_water_source_extra_points = ''
+        self.assertEqual(checker._explicit_water_preprocessing_actions(source),
+                         ['strip (:1,3)', 'closest 1 @2 solventmask @3-10 noimage'])
+
+    def test_closest_masks_without_removal_keep_source_atom_selection(self):
+        checker, source = self._water_mask_fixture()
+        checker.explicit_water_source_ion_mask = ''
+        checker.explicit_water_source_extra_points = ''
+        self.assertEqual(checker._explicit_water_preprocessing_actions(source),
+                         ['closest 1 @3 solventmask @5-12 noimage'])
+
+    def test_closest_rejects_reference_removed_with_ions(self):
+        checker, source = self._water_mask_fixture()
+        checker.explicit_waters_mask = ':1'
+        with self.assertRaises(MMPBSA_Error):
+            checker._explicit_water_preprocessing_actions(source)
+
     def test_cleanup_uses_amber_solvent_masks_and_global_frame_selection(self):
         from GMXMMPBSA.make_top_amber import CheckAmberTop
 
@@ -235,6 +284,10 @@ class AmberExplicitWaterPreprocessingTest(unittest.TestCase):
             checker.explicit_water_source_ion_mask = ':NA,CL'
             checker.explicit_water_source_all_mask = ':243-11638'
             checker.explicit_water_source_extra_points = ''
+            checker.explicit_water_actions = [
+                'strip (:NA,CL)',
+                'closest 10 @1-100 solventmask @101-200 noimage',
+            ]
 
             with patch('GMXMMPBSA.make_top_amber.Trajectory', FakeTrajectory):
                 with patch('GMXMMPBSA.make_top_amber.subprocess.Popen', return_value=FakeProcess()):
@@ -243,8 +296,8 @@ class AmberExplicitWaterPreprocessingTest(unittest.TestCase):
         cpptraj_input = FakeProcess.cpptraj_input.decode()
         self.assertIn('trajin first.mdcrd 10 10 2', cpptraj_input)
         self.assertIn('trajin second.mdcrd 1 3 2', cpptraj_input)
-        self.assertIn('strip :NA,CL', cpptraj_input)
-        self.assertIn('closest 10 (:1-166)&(!:243-11638) solventmask :243-11638 noimage', cpptraj_input)
+        self.assertIn('strip (:NA,CL)', cpptraj_input)
+        self.assertIn('closest 10 @1-100 solventmask @101-200 noimage', cpptraj_input)
         self.assertTrue(checker.FILES.explicit_waters_preselected)
 
     def test_checked_in_topologies_match_generated_structure_atom_order(self):
