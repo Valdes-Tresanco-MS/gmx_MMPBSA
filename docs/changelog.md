@@ -4,7 +4,7 @@ title: Changelog
 ---
 # Changelog
 
-## Unreleased — fixes since v1.7.0
+## gmx_MMPBSA v1.7.1 (10/24/2026)
 
 These changes follow the published `1.7.0` tag (`8d7aad33`).
 
@@ -32,11 +32,17 @@ These changes follow the published `1.7.0` tag (`8d7aad33`).
   water count and matching structure/trajectory atom order.
 - Count duplicate residue identifiers once per chain instead of repeatedly scanning the residue list.
 
+### Result statistics
+
+- Preserve finite-frame propagated uncertainties when subtracting results containing missing frames, and
+  keep unavailable correlated uncertainties as NaN rather than reporting zero. Omit non-finite frames
+  consistently in energy-vector means and standard deviations.
+
 ### Logging and maintenance
 
 - Apply existing preparation timers consistently in both topology workflows, including redirected and
-  MPI-forwarded output without ANSI terminal requirements. Improve calculation progress output for Open MPI 5
-  and native `amber_MMPBSA` runs.
+  MPI-forwarded output with in-place timer redraws. Improve calculation progress output for Open MPI 5
+  and native `amber_MMPBSA` runs. Automatic progress selection uses Rich through MPI forwarding when available.
 - Suppress PB and QM/MM setup messages when those calculations are inactive. Show concise radius-set summaries
   while retaining detailed provenance in `GMXMMPBSA_radii.json`.
 - Restore the topology-backed `Comp_receptor` example and tester coverage, including its referenced `*.itp` files.

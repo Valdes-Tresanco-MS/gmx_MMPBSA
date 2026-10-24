@@ -307,10 +307,9 @@ categorically incompatible.
 
 ## Subsequent development after the published v1.7.0 tag
 
-The following updates cover implementation and documentation through commit
-`ed206128`, beyond the
-published tag `8d7aad33`. They extend or repair the v1.7.0 workflows rather than
-representing additional methods in the tagged release:
+The v1.7.1 patch release includes the following updates beyond the published
+v1.7.0 tag (`8d7aad33`). They extend or repair the v1.7.0 workflows rather than
+representing additional methods in the original tagged release:
 
 - **ALA/GLY scanning correctness:** both topology builders assign complete target
   residue charge and nonbonded parameter profiles using native references or
@@ -329,7 +328,9 @@ representing additional methods in the tagged release:
   group names. Custom group names remain selectable. The dASA preparation path
   also extracts a first trajectory frame matching the selected complex topology
   before passing it to cpptraj, avoiding mismatches when other atoms, such as
-  ions, have been excluded from that topology.
+  ions, have been excluded from that topology. Native AMBER preprocessing also
+  remaps water and reference selections after removing ions or water virtual
+  sites, preserving the requested water count and structure/trajectory ordering.
 - **Topology preparation and logging:** elapsed progress is reported for
   structure loading, validation, residue mapping, topology conversion, and dASA
   preparation in both topology workflows. Basic elapsed updates also remain
@@ -337,9 +338,15 @@ representing additional methods in the tagged release:
   durations are logged. Routine console messages and radius
   warnings are further deduplicated across MPI ranks and topology records.
   Calculation progress handles line buffering under Open MPI 5 and native-AMBER
-  execution. PB/QM/MM setup messages are restricted to active calculations, and
+  execution. Automatic selection uses Rich through MPI forwarding, and preparation
+  timers redraw on one line rather than adding one line per second. PB/QM/MM setup
+  messages are restricted to active calculations, and
   console radius summaries show the effective set while detailed provenance
   remains in JSON.
+- **Missing-frame statistics:** result differences use finite-frame standard
+  deviations when propagating uncertainty. Unavailable correlated uncertainties
+  remain NaN rather than becoming zero, and non-finite values are omitted
+  consistently from energy-vector means and standard deviations.
 - **Structure validation:** duplicate residue IDs are counted once per chain
   rather than repeatedly scanning the residue list, removing the quadratic
   duplicate-detection step. This is an implementation improvement; no measured
