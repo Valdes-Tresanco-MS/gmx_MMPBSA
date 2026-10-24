@@ -9,7 +9,7 @@ if 'parmed' not in sys.modules:
     parmed.__version__ = 'stub'
     sys.modules['parmed'] = parmed
 
-from GMXMMPBSA.amber_outputs import DecompOut
+from GMXMMPBSA.amber_outputs import BindingStatistics, DecompOut, NMODEout
 from GMXMMPBSA.output_file import _combine_entropy
 from GMXMMPBSA.utils import EnergyVector, block_statistics, calc_sum
 
@@ -35,6 +35,48 @@ class EnergyVectorStatisticsTest(unittest.TestCase):
         self.assertEqual(values.stdev(), 2.0)
         self.assertEqual(values.semp(), 1.0)
         self.assertAlmostEqual(values.std(), np.std(values, ddof=0))
+
+    def test_subtraction_uses_finite_frames_for_propagated_uncertainty(self):
+        left = EnergyVector([1., np.nan, 3.])
+        right = EnergyVector([2., np.nan, 6.])
+        result = left - right
+        np.testing.assert_allclose(result, [-1., np.nan, -3.], equal_nan=True)
+        self.assertAlmostEqual(result.stdev(), np.sqrt(5.))
+        self.assertAlmostEqual(result.semp(), np.sqrt(5.) / np.sqrt(2.))
+        self.assertAlmostEqual(left.corr_sub(right).stdev(), 1.)
+
+    def test_missing_uncertainty_is_not_reported_as_zero(self):
+        missing = EnergyVector([np.nan])
+        finite = EnergyVector([1.])
+        self.assertTrue(np.isnan(missing.corr_sub(finite).stdev()))
+        self.assertTrue(np.isnan(missing.corr_add(finite).stdev()))
+
+    def test_nonfinite_frames_are_omitted_consistently_with_axis_arguments(self):
+        values = EnergyVector([[1., np.nan, 3.], [2., np.inf, 6.]])
+        np.testing.assert_allclose(values.mean(axis=1), [2., 4.])
+        np.testing.assert_allclose(values.std(axis=1), [1., 2.])
+        self.assertAlmostEqual(values.mean(), 3.)
+        self.assertAlmostEqual(values.std(), np.std([1., 3., 2., 6.]))
+
+    def test_nmode_binding_statistics_retain_missing_frames_and_valid_uncertainties(self):
+        def component(name, values):
+            output = NMODEout(name, {'pb': {'sander_apbs': 0}})
+            output.numframes = 3
+            for key in output.data_keys:
+                output[key] = EnergyVector(values)
+            output._fill_composite_terms()
+            return output
+
+        complex_output = component('complex', [1., np.nan, 3.])
+        receptor = component('receptor', [2., np.nan, 6.])
+        ligand = component('ligand', [0., np.nan, 0.])
+        for protocol, expected in [('STP', 1.), ('MTP', np.sqrt(5.))]:
+            with self.subTest(protocol=protocol):
+                result = BindingStatistics(complex_output, receptor, ligand, traj_protocol=protocol)
+                self.assertAlmostEqual(result['TRANSLATIONAL'].mean(), -2.)
+                self.assertAlmostEqual(result['TRANSLATIONAL'].stdev(), expected)
+                self.assertTrue(np.isnan(result['TRANSLATIONAL'][1]))
+                self.assertTrue(np.isnan(result['TOTAL'][1]))
 
     def test_scalar_combinations_use_primary_block_sem(self):
         values = EnergyVector([1.0, 2.0, 3.0, 4.0])

@@ -97,6 +97,7 @@ class EnergyVector(np.ndarray):
     def mean(self, *args, **kwargs):
         """Frame mean omitting non-finite values."""
         arr = np.asarray(self, dtype=float)
+        arr = np.where(np.isfinite(arr), arr, np.nan)
         if args or kwargs:
             return np.nanmean(arr, *args, **kwargs)
         return float(np.nanmean(arr))
@@ -104,6 +105,7 @@ class EnergyVector(np.ndarray):
     def std(self, *args, **kwargs):
         """Frame SD omitting non-finite values (default ``ddof=0``)."""
         arr = np.asarray(self, dtype=float)
+        arr = np.where(np.isfinite(arr), arr, np.nan)
         if args or kwargs:
             return np.nanstd(arr, *args, **kwargs)
         finite = arr[np.isfinite(arr)]
@@ -138,10 +140,10 @@ class EnergyVector(np.ndarray):
         return EnergyVector(np.add(self, other), comp_std)
 
     def corr_sub(self, other):
-        self_std = self.com_std if self.com_std is not None else float(np.asarray(self).std())
+        self_std = self.com_std if self.com_std is not None else float(self.std())
         comp_std = None
         if isinstance(other, EnergyVector):
-            other_std = other.com_std if other.com_std is not None else float(np.asarray(other).std())
+            other_std = other.com_std if other.com_std is not None else float(other.std())
             comp_std = get_corrstd(self_std, other_std)
         return EnergyVector(np.subtract(self, other), comp_std)
 
@@ -154,10 +156,10 @@ class EnergyVector(np.ndarray):
         return EnergyVector(np.add(self, other), comp_std)
 
     def __sub__(self, other):
-        self_std = self.com_std if self.com_std is not None else float(np.asarray(self).std())
+        self_std = self.com_std if self.com_std is not None else float(self.std())
         comp_std = None
         if isinstance(other, EnergyVector):
-            other_std = other.com_std if other.com_std is not None else float(np.asarray(other).std())
+            other_std = other.com_std if other.com_std is not None else float(other.std())
             comp_std = get_std(self_std, other_std)
         return EnergyVector(np.subtract(self, other), comp_std)
 
@@ -236,6 +238,8 @@ def get_std(val1, val2):
 
 
 def get_corrstd(val1, val2):
+    if not np.isfinite(val1) or not np.isfinite(val2):
+        return float('nan')
     return sqrt(max(0, val1 ** 2 + val2 ** 2 - 2 * val1 * val2))
 
 
