@@ -307,10 +307,23 @@ categorically incompatible.
 
 ## Subsequent development after the published v1.7.0 tag
 
-The following updates are present through commit `ac637eba`, beyond the
+The following updates cover implementation and documentation through commit
+`ed206128`, beyond the
 published tag `8d7aad33`. They extend or repair the v1.7.0 workflows rather than
 representing additional methods in the tagged release:
 
+- **ALA/GLY scanning correctness:** both topology builders assign complete target
+  residue charge and nonbonded parameter profiles using native references or
+  automatically discovered force-field templates. The implementation corrects
+  stale LJ indices, parent-residue charges, terminal aliases and masses, and
+  missing newly active CHARMM 1–4 pairs. When an exact source cannot be established,
+  inferred assignments remain visible as warnings. Mutant trajectories are mapped
+  by topology atom names to accommodate different force-field atom orders.
+- **Native CHAMBER preservation:** format-aware loading retains CHARMM
+  Urey-Bradley, improper, CMAP, and normal/1–4 LJ data during native topology
+  preparation, including components without their own Urey-Bradley or improper
+  terms. Surviving bonded terms in generated mutants still come from the parent
+  topology; a full mutant force-field rebuild is not implied.
 - **Explicit-water setup:** the default `explicit_waters_mask` is now `dASA`,
   and `explicit_waters_group="automatic"` searches common solvent and water-model
   group names. Custom group names remain selectable. The dASA preparation path
@@ -319,9 +332,14 @@ representing additional methods in the tagged release:
   ions, have been excluded from that topology.
 - **Topology preparation and logging:** elapsed progress is reported for
   structure loading, validation, residue mapping, topology conversion, and dASA
-  preparation. Interactive terminals show a spinner and elapsed time; completion
-  or interruption durations are logged. Routine console messages and radius
+  preparation in both topology workflows. Basic elapsed updates also remain
+  visible in redirected and MPI-forwarded output; completion or interruption
+  durations are logged. Routine console messages and radius
   warnings are further deduplicated across MPI ranks and topology records.
+  Calculation progress handles line buffering under Open MPI 5 and native-AMBER
+  execution. PB/QM/MM setup messages are restricted to active calculations, and
+  console radius summaries show the effective set while detailed provenance
+  remains in JSON.
 - **Structure validation:** duplicate residue IDs are counted once per chain
   rather than repeatedly scanning the residue list, removing the quadratic
   duplicate-detection step. This is an implementation improvement; no measured
@@ -331,6 +349,14 @@ representing additional methods in the tagged release:
   coverage, resolving the missing-topology limitation of the published release.
   Example guidance, analyzer documentation, and Colab runtime checks have also
   been refreshed, and cleanup now matches multi-digit trajectory filenames.
+  The scanning example now includes multiple alanine and glycine mutants with
+  explicit dielectric settings and combined-effect interpretation.
+
+The scanning corrections can change numerical results. Affected earlier ALA/GLY
+scans and native CHAMBER calculations should be rerun from their original inputs
+and trajectories; rewriting archived outputs does not repair incorrect topology
+parameters or mutant coordinates. Multiple-mutant support itself was already
+present in the published v1.7.0 release.
 
 Calculations using these updates should record their exact commit or installed
 build in addition to the displayed version. Published-release validation does

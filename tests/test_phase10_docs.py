@@ -35,7 +35,7 @@ class CompatibilityMigrationDocumentationTest(unittest.TestCase):
             '1.6.5 environment',
             'Python `>=3.11,<3.13`',
             '`amber_MMPBSA`',
-            'Composite alanine/glycine mutations',
+            'Multiple alanine/glycine mutations',
             '`qh_entropy=1` is rejected',
             'full selected ensemble',
             '`Block SD`',
@@ -64,13 +64,14 @@ class FeatureOverviewDocumentationTest(unittest.TestCase):
                 self.assertIn('gmx_MMPBSA_test', document)
                 self.assertIn('four applications', document)
 
-    def test_overviews_describe_composite_mutation_semantics(self):
+    def test_overviews_describe_multiple_mutation_semantics(self):
         overview = (ROOT / 'docs/summary.md').read_text()
         alanine = (ROOT / 'docs/examples/Alanine_scanning/README.md').read_text()
         for document in (overview, alanine):
             normalized = ' '.join(document.split())
             with self.subTest(document=document[:30]):
-                self.assertIn('one residue or several residues together in one composite mutant', normalized)
+                self.assertIn('multiple alanine mutant', normalized)
+                self.assertIn('multiple glycine mutant', normalized)
                 self.assertIn('does not independently scan each selected residue', normalized)
                 self.assertNotIn('Only one residue can be mutated per calculation', normalized)
 

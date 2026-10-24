@@ -4,6 +4,46 @@ title: Changelog
 ---
 # Changelog
 
+## Unreleased — fixes since v1.7.0
+
+These changes follow the published `1.7.0` tag (`8d7aad33`).
+
+### Mutation correctness and force-field handling
+
+- Corrected ALA/GLY scanning in both `gmx_MMPBSA` and `amber_MMPBSA`: assign the complete target residue's
+  charges, atom types, masses, and Lennard-Jones indices rather than retaining parent-residue parameters.
+- Resolve missing target references automatically from topology-referenced GROMACS force fields, CHARMM-GUI
+  bundles, the selected GROMACS installation, and AmberTools libraries. Inferred assignments produce warnings;
+  no additional mutation input options are required.
+- Preserve terminal oxygen aliases, terminal mass overrides, pair-specific LJ interactions, and CHARMM 1-4
+  parameters, including newly needed interactions absent from sparse input tables.
+- Map mutant trajectory coordinates by topology atom names, fixing atom-order assumptions affecting branched
+  residues in OPLS/CHARMM force fields.
+- Read native AMBER/CHAMBER inputs with format-aware loading, preserving CHARMM Urey-Bradley, improper,
+  CMAP, and normal/1-4 LJ data during topology preparation.
+
+### Explicit waters and topology preparation
+
+- Default interface-water reference selection to `explicit_waters_mask="dASA"` and detect common solvent groups
+  with `explicit_waters_group="automatic"`. Explicit group names remain supported; explicit waters remain opt-in.
+- Extract a trajectory frame matching the selected complex topology before dASA analysis, avoiding mismatches
+  when ions or other atoms have been excluded.
+- Remap native AMBER explicit-water selections after stripping ions/virtual sites, keeping the requested
+  water count and matching structure/trajectory atom order.
+- Count duplicate residue identifiers once per chain instead of repeatedly scanning the residue list.
+
+### Logging and maintenance
+
+- Apply existing preparation timers consistently in both topology workflows, including redirected and
+  MPI-forwarded output without ANSI terminal requirements. Improve calculation progress output for Open MPI 5
+  and native `amber_MMPBSA` runs.
+- Suppress PB and QM/MM setup messages when those calculations are inactive. Show concise radius-set summaries
+  while retaining detailed provenance in `GMXMMPBSA_radii.json`.
+- Restore the topology-backed `Comp_receptor` example and tester coverage, including its referenced `*.itp` files.
+- Fix cleanup of multi-digit trajectory filenames and refresh Colab runtime checks, analyzer guidance, and examples.
+- Expand the scanning example with runnable multiple alanine/glycine mutants and use “multiple mutant” terminology
+  consistently in the scanning documentation.
+
 ## gmx_MMPBSA v1.7.0 (09/11/2026)
 
 For users moving from 1.6.5 to 1.7.0, see the
